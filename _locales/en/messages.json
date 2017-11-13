@@ -1,0 +1,109 @@
+{
+    "extensionName": {
+        "message": "Simple Tab Groups (beta)",
+        "description": "Name of the extension."
+    },
+
+    "extensionDescription": {
+        "message": "Create, modify and quick change tab groups.\nInspired by the \"Tab Groups\" app :)",
+        "description": "Description of the extension."
+    },
+
+    "authorName": {
+        "message": "Vitaliy Bavykin",
+        "description": "Author name"
+    },
+
+    "save": {
+        "message": "Save",
+        "description": "Save"
+    },
+
+    "delete": {
+        "message": "Delete",
+        "description": "Delete"
+    },
+
+    "cancel": {
+        "message": "Cancel",
+        "description": "Cancel"
+    },
+
+    "closePopupAfterChangeGroup": {
+        "message": "Close popup after change group",
+        "description": "Close popup after change group"
+    },
+
+    "newGroupTitle": {
+        "message": "Group #$id$",
+        "description": "Close popup after change group",
+        "placeholders": {
+            "id" : {
+                "content" : "$1",
+                "example" : "1"
+            }
+        }
+    },
+
+    "groupSettings": {
+        "message": "Group settings",
+        "description": "Group settings"
+    },
+
+    "removeGroup": {
+        "message": "Remove group",
+        "description": "Remove group"
+    },
+
+    "removeGroupPopupTitle": {
+        "message": "Delete group?",
+        "description": "Delete group?"
+    },
+
+    "removeGroupPopupBody": {
+        "message": "Do you want to delete group \"$name$\"?",
+        "description": "Delete group?",
+        "placeholders": {
+            "name": {
+                "content" : "$1",
+                "example" : "Group #4"
+            }
+        }
+    },
+
+    "removeTab": {
+        "message": "Remove tab",
+        "description": "Remove tab"
+    },
+
+    "createNewTab": {
+        "message": "Create new tab",
+        "description": "Create new tab"
+    },
+
+    "createNewGroup": {
+        "message": "Create new group",
+        "description": "Create new group"
+    },
+
+    "groupTitle": {
+        "message": "Group title",
+        "description": "Group title"
+    },
+
+    "groupDomains": {
+        "message": "Group domains",
+        "description": "Group domains"
+    },
+
+    "groupDomainsPlaceholder": {
+        "message": "Domain rules",
+        "description": "Domains placeholders and helper"
+    },
+
+    "groupDomainsHelp": {
+        "message": "Insert domain(s) to catch tab there. Matching tabs with this domains will be moved to this group. One rule per line:\ndomain.com - tabs with this domain\n*.second-domain.com - tabs with this third-level domain\n*third-domain.com\n*third-domain*sufix.com",
+        "description": "Domains placeholders and helper"
+    }
+
+}

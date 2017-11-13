@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="/bulma.min.css">
+    <link rel="stylesheet" type="text/css" href="popup.css">
+</head>
+
+<body>
+    <div id="simple-tab-groups" v-cloak>
+        <aside class="menu">
+            <ul class="menu-list">
+                <li v-for="group in groups">
+                    <a :class="['item', {'is-active': group.id === currentGroupId}]" @click="expandGroup(group)">
+                        <img src="/icons/right-arrow.svg" :class="['icon-arrow size-20', {rotate: group.isExpanded}]" />
+                        <span v-html="group.title"></span>
+                        <img @click.stop.prevent="openSettingsGroup(group)" src="/icons/settings.svg" class="size-20 cursor-pointer" :title="getMessage('groupSettings')" />
+                        <img @click.stop.prevent="groupToDelete = group" src="/icons/trash.svg" class="size-20 cursor-pointer" :title="getMessage('removeGroup')" />
+                    </a>
+                    <ul v-show="group.isExpanded">
+                        <li v-if="group.tabs.length" v-for="(tab, tabIndex) in group.tabs" @click="loadGroup(group, tabIndex)">
+                            <a :class="['item', {'is-active': (group.id === currentGroupId && tabIndex === activeTabIndex)}]">
+                                <img v-if="tab.favIconUrl" :src="tab.favIconUrl" class="size-16" alt="icon" />
+                                <span v-html="tab.title || tab.url"></span>
+                                <img class="size-16 cursor-pointer" @click.stop.prevent="removeTab(tab, tabIndex, group)" src="/icons/delete-tab.svg" :title="getMessage('removeTab')" />
+                            </a>
+                        </li>
+                        <li @click="addTab(group)">
+                            <a class="item">
+                                <img src="/icons/plus.svg" class="size-20" />
+                                <span v-html="getMessage('createNewTab')"></span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <a class="item" href="#" @click="createNewGroup">
+                        <img src="/icons/plus.svg" class="size-20" />
+                        <span v-html="getMessage('createNewGroup')"></span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <div v-if="groupToEdit" class="modal is-active">
+            <div class="modal-background" @click="groupToEdit = null"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                    <p class="modal-card-title" v-html="getMessage('groupSettings')"></p>
+                    <button class="delete" aria-label="close" @click="groupToEdit = null"></button>
+                </header>
+                <section class="modal-card-body">
+                    <div class="field">
+                        <label class="label" v-html="getMessage('groupTitle')"></label>
+                        <div class="control">
+                            <input class="input" v-model.trim="groupToEdit.title" type="text" :placeholder="getMessage('groupTitle')">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">
+                            <span v-html="getMessage('groupDomains')"></span>
+                            <span class="question" :title="getMessage('groupDomainsHelp')">?</span>
+                        </label>
+                        <div class="control">
+                            <textarea class="textarea" v-model.trim="groupToEdit.moveNewTabsToThisGroupByRegExp" type="text" :placeholder="getMessage('groupDomainsPlaceholder')"></textarea>
+                        </div>
+                    </div>
+                </section>
+                <footer class="modal-card-foot">
+                    <button @click="saveSettingsGroup" class="button is-small is-success" v-html="getMessage('save')"></button>
+                    <button @click="groupToEdit = null" class="button is-small" v-html="getMessage('cancel')"></button>
+                </footer>
+            </div>
+        </div>
+
+        <div v-if="groupToDelete" class="modal is-active">
+            <div class="modal-background" @click="groupToDelete = null"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                    <p class="modal-card-title" v-html="getMessage('removeGroupPopupTitle')"></p>
+                    <button class="delete" aria-label="close" @click="groupToDelete = null"></button>
+                </header>
+                <section class="modal-card-body">
+                    <span v-html="getMessage('removeGroupPopupBody', groupToDelete.title)"></span>
+                </section>
+                <footer class="modal-card-foot">
+                    <button @click="removeGroup" class="button is-small is-danger" v-html="getMessage('delete')"></button>
+                    <button @click="groupToDelete = null" class="button is-small" v-html="getMessage('cancel')"></button>
+                </footer>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="text/javascript" src="/vue.min.js"></script>
+    <script type="text/javascript" src="/utils.js"></script>
+    <script type="text/javascript" src="popup.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,98 @@
+html {
+    overflow: auto;
+}
+
+body {
+    padding: 10px 25px 10px 10px;
+}
+
+[v-cloak] {
+    visibility: hidden;
+}
+
+#simple-tab-groups {
+    width: 400px;
+    height: 550px;
+}
+
+#simple-tab-groups .menu {
+    margin-bottom: 10px;
+}
+
+#simple-tab-groups .item {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    cursor: default;
+}
+
+#simple-tab-groups .item > span {
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 21px;
+    -moz-user-select: none;
+    user-select: none;
+}
+
+#simple-tab-groups .item > img:first-child {
+    margin-right: 10px;
+}
+
+#simple-tab-groups .item > img:not(:first-child) {
+    margin-left: 10px;
+}
+
+#simple-tab-groups .icon-arrow {
+    transition: transform .3s ease;
+}
+
+#simple-tab-groups .icon-arrow.rotate {
+    transform: rotate(90deg);
+}
+
+#simple-tab-groups .item .size-16 {
+    width: 16px;
+    height: 16px;
+}
+
+#simple-tab-groups .item .size-20 {
+    width: 20px;
+    height: 20px;
+}
+
+#simple-tab-groups .cursor-pointer {
+    cursor: pointer;
+}
+
+#simple-tab-groups .modal-card-foot,
+#simple-tab-groups .modal-card-head,
+#simple-tab-groups .modal-card-body {
+    padding: 10px;
+}
+
+#simple-tab-groups .modal-card-title {
+    font-size: 1.1rem;
+}
+
+#simple-tab-groups .menu-list a.is-active {
+    background-color: rgba(50, 115, 220, 0.8);
+}
+
+#simple-tab-groups .question {
+    display: inline-block;
+    cursor: pointer;
+    border-radius: 50%;
+    height: 20px;
+    width: 20px;
+    background-color: rgba(10,10,10,.2);
+    color: #fff;
+    text-align: center;
+    line-height: 20px;
+}
+
+#simple-tab-groups .question:hover {
+    background-color: rgba(10,10,10,.3);
+}

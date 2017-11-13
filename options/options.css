@@ -1,0 +1,12 @@
+html {
+    overflow: auto;
+}
+
+body {
+    background-color: #fbfbfb;
+    padding: 0 4px;
+}
+
+[v-cloak] {
+    display: none;
+}

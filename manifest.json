@@ -1,0 +1,48 @@
+{
+    "manifest_version": 2,
+
+    "applications": {
+        "gecko": {
+            "id": "simple-tab-groups@drive4ik",
+            "strict_min_version": "53.0"
+        }
+    },
+
+    "name": "__MSG_extensionName__",
+    "description": "__MSG_extensionDescription__",
+    "version": "1.0.2",
+    "author": "__MSG_authorName__",
+    "developer": {
+        "name": "__MSG_authorName__",
+        "url": "https://github.com/drive4ik/simple-tab-groups"
+    },
+
+    "icons": {
+        "48": "icons/icon.svg",
+        "96": "icons/icon.svg"
+    },
+
+    "permissions": [
+        "tabs",
+        "storage"
+    ],
+
+    "browser_action": {
+        "default_icon": "icons/icon.svg",
+        "default_title": "__MSG_extensionName__",
+        "default_popup": "popup/popup.html"
+    },
+
+    "options_ui": {
+        "page": "options/options.html"
+    },
+
+    "background": {
+        "scripts": ["utils.js", "background.js"]
+    },
+
+    "content_security_policy": "default-src 'self'; script-src 'self' 'unsafe-eval'; img-src * data:",
+
+    "default_locale": "en"
+
+}
