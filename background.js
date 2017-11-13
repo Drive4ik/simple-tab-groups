@@ -237,31 +237,10 @@
 
         return getCurrentData()
             .then(function(result) {
-                let emptyTab = null;
-
                 result.windowsGroup[result.currentWindowId] = group.id;
 
                 return storage.set({
                         windowsGroup: result.windowsGroup,
-                    })
-                    .then(function() {
-                        if (!result.currentWindowTabs.length) {
-                            return;
-                        }
-
-                        return new Promise(function(resolve) {
-                            browser.tabs.create({
-                                    url: 'about:blank',
-                                    active: false,
-                                })
-                                .then(function(newTab) {
-                                    emptyTab = newTab;
-                                    browser.tabs.remove(result.currentWindowTabs.map(tab => tab.id))
-                                        .then(resolve)
-                                        .catch(resolve);
-                                });
-
-                        });
                     })
                     .then(function() {
                         return new Promise(function(resolve, reject) {
@@ -275,8 +254,12 @@
                         });
                     })
                     .then(function() {
-                        if (emptyTab) {
-                            return browser.tabs.remove(emptyTab.id);
+                        if (result.currentWindowTabs.length) {
+                            return new Promise(function(resolve) {
+                                browser.tabs.remove(result.currentWindowTabs.map(tab => tab.id))
+                                    .then(resolve)
+                                    .catch(resolve);
+                            });
                         }
                     });
             })
