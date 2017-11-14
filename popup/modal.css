@@ -1,0 +1,316 @@
+.modal {
+    bottom: 0;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    align-items: center;
+    display: none;
+    justify-content: center;
+    overflow: hidden;
+    position: fixed;
+    z-index: 20;
+}
+
+.modal.is-active {
+    display: flex;
+}
+
+.modal-background {
+    bottom: 0;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    background-color: rgba(10, 10, 10, 0.6);
+}
+
+.modal-card {
+    margin: 0 10px;
+    max-height: calc(100vh - 160px);
+    overflow: auto;
+    position: relative;
+    width: 100%;
+}
+
+@media screen and (min-width:769px), print {
+    .modal-card {
+        margin: 0 auto;
+        max-height: calc(100vh - 40px);
+        width: 640px;
+    }
+
+}
+
+.modal-close {
+    -moz-user-select: none;
+    user-select: none;
+    -moz-appearance: none;
+    background-color: rgba(10, 10, 10, 0.2);
+    border: none;
+    border-radius: 290486px;
+    cursor: pointer;
+    display: inline-block;
+    flex-grow: 0;
+    flex-shrink: 0;
+    font-size: 0;
+    height: 20px;
+    max-height: 20px;
+    max-width: 20px;
+    min-height: 20px;
+    min-width: 20px;
+    outline: none;
+    position: relative;
+    vertical-align: top;
+    width: 20px;
+    background: none;
+    height: 40px;
+    position: fixed;
+    right: 20px;
+    top: 20px;
+    width: 40px;
+}
+
+.modal-close::before,
+.modal-close::after {
+    background-color: white;
+    content: "";
+    display: block;
+    left: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translateX(-50%) translateY(-50%) rotate(45deg);
+    transform-origin: center center;
+}
+
+.modal-close::before {
+    height: 2px;
+    width: 50%;
+}
+
+.modal-close::after {
+    height: 50%;
+    width: 2px;
+}
+
+.modal-close:hover,
+.modal-close:focus {
+    background-color: rgba(10, 10, 10, 0.3);
+}
+
+.modal-close:active {
+    background-color: rgba(10, 10, 10, 0.4);
+}
+
+.modal-close.is-small {
+    height: 16px;
+    max-height: 16px;
+    max-width: 16px;
+    min-height: 16px;
+    min-width: 16px;
+    width: 16px;
+}
+
+.modal-close.is-medium {
+    height: 24px;
+    max-height: 24px;
+    max-width: 24px;
+    min-height: 24px;
+    min-width: 24px;
+    width: 24px;
+}
+
+.modal-close.is-large {
+    height: 32px;
+    max-height: 32px;
+    max-width: 32px;
+    min-height: 32px;
+    min-width: 32px;
+    width: 32px;
+}
+
+.modal-card {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 40px);
+    overflow: hidden;
+}
+
+.modal-card-head,
+.modal-card-foot {
+    align-items: center;
+    background-color: whitesmoke;
+    display: flex;
+    flex-shrink: 0;
+    justify-content: flex-start;
+    padding: 10px;
+    position: relative;
+}
+
+.modal-card-head {
+    border-bottom: 1px solid #dbdbdb;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+
+.modal-card-title {
+    color: #363636;
+    flex-grow: 1;
+    flex-shrink: 0;
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.modal-card-foot {
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    border-top: 1px solid #dbdbdb;
+}
+
+.modal-card-foot .button:not(:last-child) {
+    margin-right: 10px;
+}
+
+.modal-card-body {
+    background-color: white;
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: auto;
+    padding: 10px;
+}
+
+.field:not(:first-child) {
+    margin-top: 10px;
+}
+
+.field .label {
+    margin-bottom: 5px;
+    display: inline-block;
+}
+
+.control .input,
+.control .textarea {
+    width: 100%;
+    border: 1px solid #c0c0c0;
+    padding: 3px 5px;
+    border-radius: 3px;
+    font-family: Arial;
+    font-size: 14px;
+}
+
+.control .textarea {
+    resize: vertical;
+}
+
+.delete {
+    -moz-user-select: none;
+    user-select: none;
+    -moz-appearance: none;
+    background-color: rgba(10, 10, 10, 0.2);
+    border: none;
+    border-radius: 290486px;
+    cursor: pointer;
+    display: inline-block;
+    flex-grow: 0;
+    flex-shrink: 0;
+    font-size: 0;
+    height: 20px;
+    max-height: 20px;
+    max-width: 20px;
+    min-height: 20px;
+    min-width: 20px;
+    outline: none;
+    position: relative;
+    vertical-align: top;
+    width: 20px;
+}
+
+.delete::before,
+.delete::after {
+    background-color: white;
+    content: "";
+    display: block;
+    left: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translateX(-50%) translateY(-50%) rotate(45deg);
+    transform-origin: center center;
+}
+
+.delete::before {
+    height: 2px;
+    width: 50%;
+}
+
+.delete::after {
+    height: 50%;
+    width: 2px;
+}
+
+.delete:hover,
+.delete:focus {
+    background-color: rgba(10, 10, 10, 0.3);
+}
+
+.delete:active {
+    background-color: rgba(10, 10, 10, 0.4);
+}
+
+.button {
+    -moz-appearance: none;
+    align-items: center;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    box-shadow: none;
+    display: inline-flex;
+    font-size: 0.75rem;
+    height: 2.25em;
+    justify-content: flex-start;
+    line-height: 1.5;
+    padding-bottom: calc(0.375em - 1px);
+    padding-left: calc(0.625em - 1px);
+    padding-right: calc(0.625em - 1px);
+    padding-top: calc(0.375em - 1px);
+    position: relative;
+    vertical-align: top;
+    -moz-user-select: none;
+    user-select: none;
+    background-color: white;
+    border-color: #dbdbdb;
+    color: #363636;
+    cursor: pointer;
+    justify-content: center;
+    padding-left: 0.75em;
+    padding-right: 0.75em;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.button:hover {
+    border-color: #b5b5b5;
+    color: #363636;
+}
+
+.button.is-success {
+    background-color: #23d160;
+    border-color: transparent;
+    color: #fff;
+}
+
+.button.is-success:hover {
+    background-color: #22c65b;
+    border-color: transparent;
+    color: #fff;
+}
+
+.button.is-danger {
+    background-color: #ff3860;
+    border-color: transparent;
+    color: #fff;
+}
+
+.button.is-danger:hover {
+    background-color: #ff2b56;
+    border-color: transparent;
+    color: #fff;
+}

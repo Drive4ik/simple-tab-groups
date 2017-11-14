@@ -4,46 +4,115 @@
 <head>
     <title></title>
     <meta charset="utf-8">
-    <link rel="stylesheet" type="text/css" href="/bulma.min.css">
+    <!-- <link rel="stylesheet" type="text/css" href="/bulma.min.css"> -->
     <link rel="stylesheet" type="text/css" href="popup.css">
+    <link rel="stylesheet" type="text/css" href="modal.css">
 </head>
 
 <body>
-    <div id="simple-tab-groups" v-cloak>
-        <aside class="menu">
-            <ul class="menu-list">
-                <li v-for="group in groups">
-                    <a :class="['item', {'is-active': group.id === currentGroupId}]" @click="expandGroup(group)">
-                        <img src="/icons/right-arrow.svg" :class="['icon-arrow size-20', {rotate: group.isExpanded}]" />
-                        <span v-html="group.title"></span>
-                        <img @click.stop.prevent="openSettingsGroup(group)" src="/icons/settings.svg" class="size-20 cursor-pointer" :title="getMessage('groupSettings')" />
-                        <img @click.stop.prevent="groupToDelete = group" src="/icons/trash.svg" class="size-20 cursor-pointer" :title="getMessage('removeGroup')" />
-                    </a>
-                    <ul v-show="group.isExpanded">
-                        <li v-if="group.tabs.length" v-for="(tab, tabIndex) in group.tabs" @click="loadGroup(group, tabIndex)">
-                            <a :class="['item', {'is-active': (group.id === currentGroupId && tabIndex === activeTabIndex)}]">
-                                <img v-if="tab.favIconUrl" :src="tab.favIconUrl" class="size-16" alt="icon" />
-                                <span v-html="tab.title || tab.url"></span>
-                                <img class="size-16 cursor-pointer" @click.stop.prevent="removeTab(tab, tabIndex, group)" src="/icons/delete-tab.svg" :title="getMessage('removeTab')" />
-                            </a>
-                        </li>
-                        <li @click="addTab(group)">
-                            <a class="item">
-                                <img src="/icons/plus.svg" class="size-20" />
-                                <span v-html="getMessage('createNewTab')"></span>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-                <li>
-                    <a class="item" href="#" @click="createNewGroup">
-                        <img src="/icons/plus.svg" class="size-20" />
-                        <span v-html="getMessage('createNewGroup')"></span>
-                    </a>
+    <div id="stg" v-cloak>
+        <div class="search-wrapper">
+            <input type="text" v-model.trim="searchTab" placeholder="Search a tab..." />
+        </div>
+
+        <div v-if="searchTab" class="search-tabs">
+            <ul>
+                <template v-for="group in groups">
+                    <li v-for="(tab, tabIndex) in group.tabs" v-if="isTabVisibleInSearch(tab)" @click="loadGroup(group, group.tabs.indexOf(tab))">
+                        <div :class="['item', {'is-active': (group.id === currentGroupId && tabIndex === activeTabIndex)}]">
+                            <div class="item-icon">
+                                <img v-show="tab.favIconUrl" :src="tab.favIconUrl" class="size-16" alt="" />
+                                <img v-else src="/icons/tab.svg" class="size-16" alt="" />
+                            </div>
+                            <div class="item-title">
+                                <span v-text="tab.title || tab.url"></span>
+                            </div>
+                        </div>
+                    </li>
+                </template>
+            </ul>
+        </div>
+
+        <div class="groups" v-if="!searchTab && !groupToShowId">
+            <div v-for="group in groups" :class="['item', {
+                    'is-active': group.id === currentGroupId,
+                    'no-hover': !group.tabs.length
+                }]">
+                <div class="item-icon" @click="group.id === currentGroupId ? (groupToShowId = group.id) : loadGroup(group, 0)">
+                    <div class="circle" :style="{backgroundColor: group.iconColor}"></div>
+                </div>
+                <div class="item-title" v-text="group.title" @click="group.id === currentGroupId ? (groupToShowId = group.id) : loadGroup(group, 0)"></div>
+                <div class="item-action go-to-tabs hover" @click="groupToShowId = group.id">
+                    <span>&#10095;</span>
+                    <span class="go-to-tabs-title" v-html="getMessage('groupTabsCount', group.tabs.length)"></span>
+                </div>
+            </div>
+            <hr>
+            <div class="create-new-group">
+                <div class="item" @click="createNewGroup">
+                    <div class="item-icon">
+                        <img class="icon" src="/icons/group-new.svg" alt="" />
+                    </div>
+                    <div class="item-title" v-html="getMessage('createNewGroup')"></div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="show-group" v-if="!searchTab && groupToShowId">
+            <div class="item" @click="groupToShowId = 0">
+                <span class="item-icon">&#10094;</span>
+                <span class="item-title" v-html="getMessage('goBackButtonTitle')"></span>
+            </div>
+
+            <hr>
+
+            <div class="group-info item no-hover">
+                <div class="item-icon">
+                    <div class="circle" :style="{backgroundColor: groupToShow.iconColor}"></div>
+                </div>
+                <div class="item-title" v-text="groupToShow.title"></div>
+                <div class="item-action">
+                    <img @click.stop.prevent="openSettingsGroup(groupToShow)" src="/icons/settings.svg" class="size-16 cursor-pointer icon" :title="getMessage('groupSettings')" />
+                    <img @click.stop.prevent="groupToDeleteId = groupToShowId" src="/icons/clear.svg" class="size-16 cursor-pointer icon" :title="getMessage('removeGroup')" />
+                </div>
+            </div>
+
+            <ul class="tabs" v-if="groupToShowId && groupToShow.tabs.length">
+                <li v-for="(tab, tabIndex) in groupToShow.tabs">
+                    <div :class="['item', {'is-active': (groupToShow.id === currentGroupId && tabIndex === activeTabIndex)}]" @click="loadGroup(groupToShow, tabIndex)">
+                        <div class="item-icon">
+                            <img :src="tab.favIconUrl ? tab.favIconUrl : '/icons/tab.svg'" class="size-16" alt="" />
+                        </div>
+                        <div class="item-title">
+                            <span v-text="tab.title || tab.url"></span>
+                        </div>
+                        <div class="item-action">
+                            <span class="icon cursor-pointer" @click.stop.prevent="removeTab(tab, tabIndex, groupToShow)" :title="getMessage('removeTab')">&#10006;</span>
+                        </div>
+                    </div>
                 </li>
             </ul>
-        </aside>
 
+            <hr>
+
+            <div class="create-new-tab">
+                <div class="item" @click="addTab">
+                    <div class="item-icon">
+                        <img class="icon" src="/icons/tab-new.svg" alt="">
+                    </div>
+                    <div class="item-title" v-html="getMessage('createNewTab')"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings" @click="openOptions">
+            <img class="icon" src="/icons/settings.svg" alt="" />
+            <span v-html="getMessage('settingsTitle')"></span>
+        </div>
+
+
+        <!-- modals -->
         <div v-if="groupToEdit" class="modal is-active">
             <div class="modal-background" @click="groupToEdit = null"></div>
             <div class="modal-card">
@@ -56,6 +125,13 @@
                         <label class="label" v-html="getMessage('groupTitle')"></label>
                         <div class="control">
                             <input class="input" v-model.trim="groupToEdit.title" type="text" :placeholder="getMessage('groupTitle')">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label" v-html="getMessage('groupColor')"></label>
+                        <span class="simple-circle" :style="{backgroundColor: groupToEdit.iconColor}"></span>
+                        <div class="control">
+                            <input class="input" v-model.trim="groupToEdit.iconColor" type="text" placeholder="Ex.: blue, #0f0, rgb(0, 255, 0)...">
                         </div>
                     </div>
                     <div class="field">
@@ -75,19 +151,19 @@
             </div>
         </div>
 
-        <div v-if="groupToDelete" class="modal is-active">
-            <div class="modal-background" @click="groupToDelete = null"></div>
+        <div v-if="groupToDeleteId" class="modal is-active">
+            <div class="modal-background" @click="groupToDeleteId = 0"></div>
             <div class="modal-card">
                 <header class="modal-card-head">
                     <p class="modal-card-title" v-html="getMessage('removeGroupPopupTitle')"></p>
-                    <button class="delete" aria-label="close" @click="groupToDelete = null"></button>
+                    <button class="delete" aria-label="close" @click="groupToDeleteId = 0"></button>
                 </header>
                 <section class="modal-card-body">
                     <span v-html="getMessage('removeGroupPopupBody', groupToDelete.title)"></span>
                 </section>
                 <footer class="modal-card-foot">
                     <button @click="removeGroup" class="button is-small is-danger" v-html="getMessage('delete')"></button>
-                    <button @click="groupToDelete = null" class="button is-small" v-html="getMessage('cancel')"></button>
+                    <button @click="groupToDeleteId = 0" class="button is-small" v-html="getMessage('cancel')"></button>
                 </footer>
             </div>
         </div>

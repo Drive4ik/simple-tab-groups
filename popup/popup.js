@@ -4,7 +4,7 @@
     let background = browser.extension.getBackgroundPage().background;
 
     new Vue({
-        el: '#simple-tab-groups',
+        el: '#stg',
         name: 'simple-tab-groups',
         data: {
             groups: [],
@@ -12,11 +12,22 @@
 
             activeTabIndex: -1,
 
+            groupToShowId: 0,
             groupToEdit: null,
-            groupToDelete: null,
+            groupToDeleteId: 0,
+
+            searchTab: '',
 
             options: {
                 closePopupAfterChangeGroup: true,
+            },
+        },
+        computed: {
+            groupToShow() {
+                return this.groups.find(group => group.id === this.groupToShowId) || null;
+            },
+            groupToDelete() {
+                return this.groups.find(group => group.id === this.groupToDeleteId) || null;
             },
         },
         created() {
@@ -54,12 +65,26 @@
                     .then(options => this.options = options);
             },
 
+            openOptions() {
+                browser.runtime.openOptionsPage();
+            },
+
             expandGroup(group) {
                 group.isExpanded = !group.isExpanded;
                 background.saveGroup(group);
             },
 
+            isTabVisibleInSearch(tab) {
+                let search = this.searchTab.toLowerCase();
+
+                return (tab.title || '').toLowerCase().indexOf(search) !== -1 || (tab.url || '').toLowerCase().indexOf(search) !== -1;
+            },
+
             loadGroup(group, tabIndex) {
+                if (!group.tabs.length) {
+                    return;
+                }
+
                 let isCurrentGroup = group.id === this.currentGroupId;
 
                 background.loadGroup(group, isCurrentGroup, tabIndex)
@@ -80,7 +105,10 @@
 
             removeGroup() {
                 background.removeGroup(this.groupToDelete)
-                    .then(() => this.groupToDelete = null);
+                    .then(function() {
+                        this.groupToShowId = 0;
+                        this.groupToDeleteId = 0;
+                    }.bind(this));
             },
 
             openSettingsGroup(group) {
@@ -92,8 +120,8 @@
                     .then(() => this.groupToEdit = null);
             },
 
-            addTab(group) {
-                background.addTab(group);
+            addTab() {
+                background.addTab(this.groupToShow);
             },
 
             removeTab(tab, tabIndex, group) {
