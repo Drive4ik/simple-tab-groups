@@ -42,6 +42,7 @@
     }
 
     function mapTab(tab) {
+        tab.url = tab.url || 'about:blank';
         tab.url = 'about:newtab' === tab.url ? 'about:blank' : tab.url;
 
         return {
@@ -56,7 +57,8 @@
         return {
             id,
             title: browser.i18n.getMessage('newGroupTitle', id),
-            tabs: [],
+            iconColor: 'hsla(' + (Math.random() * 360).toFixed(0) + ', 100%, 50%, 1)',
+            tabs: [mapTab({})],
             isExpanded: true,
             moveNewTabsToThisGroupByRegExp: '',
         };

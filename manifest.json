@@ -10,11 +10,12 @@
 
     "name": "__MSG_extensionName__",
     "description": "__MSG_extensionDescription__",
-    "version": "1.0.3",
+    "version": "1.5",
     "author": "__MSG_authorName__",
+    "homepage_url": "https://github.com/drive4ik/simple-tab-groups",
     "developer": {
         "name": "__MSG_authorName__",
-        "url": "https://github.com/drive4ik/simple-tab-groups"
+        "url": "https://github.com/drive4ik"
     },
 
     "icons": {
@@ -28,7 +29,7 @@
     ],
 
     "browser_action": {
-        "default_icon": "icons/icon.svg",
+        "default_icon": "icons/icon2.svg",
         "default_title": "__MSG_extensionName__",
         "default_popup": "popup/popup.html"
     },

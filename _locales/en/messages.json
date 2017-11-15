@@ -1,6 +1,6 @@
 {
     "extensionName": {
-        "message": "Simple Tab Groups (beta)",
+        "message": "Simple Tab Groups",
         "description": "Name of the extension."
     },
 
@@ -45,6 +45,11 @@
         }
     },
 
+    "settingsTitle": {
+        "message": "Settings",
+        "description": "Settings"
+    },
+
     "groupSettings": {
         "message": "Group settings",
         "description": "Group settings"
@@ -71,14 +76,25 @@
         }
     },
 
+    "groupTabsCount": {
+        "message": "$count$ tabs",
+        "description": "Group tabs count",
+        "placeholders": {
+            "count": {
+                "content" : "$1",
+                "example" : "4"
+            }
+        }
+    },
+
     "removeTab": {
         "message": "Remove tab",
         "description": "Remove tab"
     },
 
     "createNewTab": {
-        "message": "Create new tab",
-        "description": "Create new tab"
+        "message": "Open new tab",
+        "description": "Open new tab"
     },
 
     "createNewGroup": {
@@ -86,9 +102,19 @@
         "description": "Create new group"
     },
 
+    "goBackButtonTitle": {
+        "message": "Go back to groups",
+        "description": "Go back to groups"
+    },
+
     "groupTitle": {
         "message": "Group title",
         "description": "Group title"
+    },
+
+    "groupColor": {
+        "message": "Group icon color",
+        "description": "Group color"
     },
 
     "groupDomains": {
