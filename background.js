@@ -46,7 +46,7 @@
         tab.url = 'about:newtab' === tab.url ? 'about:blank' : tab.url;
 
         return {
-            id: tab.id,
+            // id: tab.id,
             title: tab.title || tab.url,
             url: tab.url,
             favIconUrl: tab.favIconUrl,
@@ -59,7 +59,6 @@
             title: browser.i18n.getMessage('newGroupTitle', id),
             iconColor: 'hsla(' + (Math.random() * 360).toFixed(0) + ', 100%, 50%, 1)',
             tabs: [mapTab({})],
-            isExpanded: true,
             moveNewTabsToThisGroupByRegExp: '',
         };
     }

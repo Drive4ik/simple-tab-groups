@@ -214,7 +214,7 @@ html {
     background-color: #d4d4d4; /* dark-dark */
 }
 
-#stg .show-group > .item:first-child {
+#stg .tabs-list > .item:first-child {
     margin-top: 10px;
 }
 
@@ -247,11 +247,11 @@ html {
     margin-left: 5px;
 }
 
-#stg .show-group .group-info {
+#stg .tabs-list .group-info {
     margin-bottom: 5px;
 }
 
-#stg .show-group .group-info.item .item-title {
+#stg .tabs-list .group-info.item .item-title {
     text-align: center;
 }
 

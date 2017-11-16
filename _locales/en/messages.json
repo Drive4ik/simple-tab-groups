@@ -5,7 +5,7 @@
     },
 
     "extensionDescription": {
-        "message": "Create, modify and quick change tab groups.\nInspired by the \"Tab Groups\" app :)",
+        "message": "Create, modify and quick change tab groups. \nInspired by the \"Tab Groups\" app :)",
         "description": "Description of the extension."
     },
 
@@ -27,6 +27,11 @@
     "cancel": {
         "message": "Cancel",
         "description": "Cancel"
+    },
+
+    "searchTabPlaceholder": {
+        "message": "Search a tab...",
+        "description": "Search a tab placeholder"
     },
 
     "closePopupAfterChangeGroup": {
