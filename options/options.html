@@ -4,19 +4,25 @@
 <head>
     <title></title>
     <meta charset="utf-8">
-    <link rel="stylesheet" type="text/css" href="/bulma.min.css">
     <link rel="stylesheet" type="text/css" href="options.css">
 </head>
 
 <body>
-    <div id="simple-tab-groups-options" v-cloak>
-        <label class="checkbox">
-            <input type="checkbox" v-model="options.closePopupAfterChangeGroup" />
-            <span v-html="getMessage('closePopupAfterChangeGroup')"></span>
-        </label>
+    <div id="simple-tab-groups-options">
+        <div>
+            <label class="checkbox">
+                <input id="closePopupAfterChangeGroup" type="checkbox" />
+                <span data-i18n="closePopupAfterChangeGroup"></span>
+            </label>
+        </div>
+        <div>
+            <label class="checkbox">
+                <input id="openGroupAfterChange" type="checkbox" />
+                <span data-i18n="openGroupAfterChange"></span>
+            </label>
+        </div>
     </div>
 
-    <script type="text/javascript" src="/vue.min.js"></script>
     <script type="text/javascript" src="/utils.js"></script>
     <script type="text/javascript" src="options.js"></script>
 </body>

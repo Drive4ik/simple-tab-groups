@@ -1,26 +1,22 @@
 (function() {
     'use strict';
 
-    storage.get({
-            closePopupAfterChangeGroup: true,
-        })
-        .then(function(result) {
-            new Vue({
-                el: '#simple-tab-groups-options',
-                name: 'simple-tab-groups-options',
-                data: {
-                    options: result,
-                },
-                watch: {
-                    'options.closePopupAfterChangeGroup': 'saveOptions',
-                },
-                methods: {
-                    getMessage: browser.i18n.getMessage,
-                    saveOptions() {
-                        storage.set(JSON.parse(JSON.stringify(this.options)));
-                    },
-                },
-            });
+    let $on = on.bind({});
+
+    function saveOptions() {
+        return storage.set({
+            closePopupAfterChangeGroup: $('#closePopupAfterChangeGroup').checked,
+            openGroupAfterChange: $('#openGroupAfterChange').checked,
         });
+    }
+
+    $on('change', '#closePopupAfterChangeGroup, #openGroupAfterChange', saveOptions);
+
+    storage.get(defaultOptions)
+        .then(function(result) {
+            $('#closePopupAfterChangeGroup').checked = result.closePopupAfterChangeGroup;
+            $('#openGroupAfterChange').checked = result.openGroupAfterChange;
+        })
+        .then(translatePage);
 
 })();

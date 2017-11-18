@@ -5,122 +5,120 @@
         VIEW_SEARCH_TABS = 'search-tabs',
         VIEW_GROUP_TABS = 'group-tabs';
 
-    let $ = document.querySelector.bind(document),
-        background = browser.extension.getBackgroundPage().background,
+    let background = browser.extension.getBackgroundPage().background,
         getMessage = browser.i18n.getMessage,
         options = null,
         allData = null,
         state = {
             view: VIEW_GROUPS,
-        };
+        },
+        $on = on.bind({});
 
-    storage.get({
-            closePopupAfterChangeGroup: true,
-        })
+    storage.get(defaultOptions)
         .then(result => options = result);
 
     loadData();
     addEvents();
 
-    function on(event, query, func, stopPropagation) {
-        document.body.addEventListener(event, function(e) {
-            let el = e.target;
+    function addEvents() {
+        $on('input', '#searchTab', function() {
+            renderSearchTabsList();
+        });
 
-            // let node = document.querySelector(query);
+        $on('input', '#groupEditIconColor', function() {
+            $('#groupEditIconColorCircle').style.backgroundColor = '';
+            $('#groupEditIconColorCircle').style.backgroundColor = safeHtml(this.value.trim());
+        });
 
-            if (el.matches(query)) {
-                // if (stopPropagation || undefined === stopPropagation) {
-                //     e.stopPropagation();
-                // }
+        $on('click', '[data-action="load-group"]', function(data) {
+            let isCurrentGroup = data.groupId == allData.currentGroupId;
 
-                func.call(el, el.dataset);
-                translatePage();
-            } else {
-                // while (el.parentNode) {
-                //     // let node = el.parentNode;
-
-                //     if (el.parentNode.matches(query)) {
-                //         if (stopPropagation || undefined === stopPropagation) {
-                //             e.stopPropagation();
-                //         }
-
-                //         func.call(el.parentNode, el.parentNode.dataset);
-                //         translatePage();
-                //         break;
-                //     }
-
-                //     el = el.parentNode;
-                // }
-
-                // let node = Array.from(document.querySelectorAll(query))
-                //     .find(n => n.contains(el));
-
-                // if (node) {
-                //     if (stopPropagation || undefined === stopPropagation) {
-                //         e.stopPropagation();
-                //     }
-
-                //     func.call(node, node.dataset);
-                //     translatePage();
-                // }
+            if (isCurrentGroup && data.openGroupIfCurrent === 'true') {
+                return renderTabsList(data.groupId);
             }
 
-            //  else if (node && node.contains(el)) {
-            //     func.call(node, node.dataset);
-            //     translatePage();
-            // }
-
-        }, false);
-    }
-
-    function addEvents() {
-        on('click', '[data-load-group-id]', function(data) {
-            let group = getGroupById(data.loadGroupId),
-                isCurrentGroup = group.id === allData.currentGroupId,
-                tabIndex = parseInt(data.tabIndex, 10) || 0;
-
-            background.loadGroup(group, isCurrentGroup, tabIndex)
-                .then(loadData);
+            background.loadGroup(getGroupById(data.groupId), isCurrentGroup, data.tabIndex)
+                .then(loadData)
+                .then(function() {
+                    if (!options.closePopupAfterChangeGroup && options.openGroupAfterChange) {
+                        renderTabsList(data.groupId);
+                    }
+                });
 
             if (options.closePopupAfterChangeGroup && !isCurrentGroup) {
                 window.close();
             }
         });
 
-        on('click', '#settings', function() {
+        $on('click', '#settings', function() {
             browser.runtime.openOptionsPage();
         });
 
-        on('click', '[data-show-group-id]', function(data) {
-            renderTabsList(data.showGroupId);
+        $on('click', '[data-action="show-group"]', function(data) {
+            renderTabsList(data.groupId);
         });
 
-        on('click', '[data-show-groups-list]', function(data) {
+        $on('click', '[data-show-groups-list]', function() {
             renderGroupsList();
         });
 
-        on('click', '[data-remove-tab-index]', function(data) {
-            let group = getGroupById(state.groupId),
-                tabIndex = parseInt(data.removeTabIndex, 10),
-                tab = group.tabs.find((tab, index) => index == tabIndex);
+        $on('click', '[data-action="remove-tab"]', function(data) {
+            let group = getGroupById(data.groupId);
 
-            background.removeTab(tab, tabIndex, group, group.id === allData.currentGroupId);
+            background.removeTab(group.tabs[data.tabIndex], group, group.id == allData.currentGroupId);
         });
 
-        on('click', '[data-add-tab]', function(data) {
-            let group = getGroupById(state.groupId);
-
-            background.addTab(group);
+        $on('click', '[data-action="add-tab"]', function(data) {
+            background.addTab(getGroupById(data.groupId));
         });
 
-        on('click', '[data-open-group-settings-popup]', function(data) {
-            let group = getGroupById(state.groupId);
-            // background.addTab(group);
+        $on('click', '[data-action="open-group-settings-popup"]', function(data) {
+            let group = getGroupById(data.groupId);
+
+            $('#groupEditTitle').value = unSafeHtml(group.title);
+            $('#groupEditIconColorCircle').style.backgroundColor = unSafeHtml(group.iconColor);
+            $('#groupEditIconColor').value = group.iconColor;
+            $('#groupEditMoveNewTabsToThisGroupByRegExp').value = group.moveNewTabsToThisGroupByRegExp;
+            $('#groupEditPopup').classList.add('is-active');
         });
 
-        on('click', '[data-show-delete-group-popup]', function(data) {
+        $on('click', '[data-submit-edit-popup]', function() {
             let group = getGroupById(state.groupId);
-            // background.addTab(group);
+
+            group.title = safeHtml($('#groupEditTitle').value.trim());
+            group.iconColor = safeHtml($('#groupEditIconColor').value.trim());
+            group.moveNewTabsToThisGroupByRegExp = $('#groupEditMoveNewTabsToThisGroupByRegExp').value.trim();
+
+            background.saveGroup(group)
+                .then(() => renderTabsList(state.groupId));
+
+            $('#groupEditPopup').classList.remove('is-active');
+        });
+
+        $on('click', '[data-close-edit-popup]', function() {
+            $('#groupEditPopup').classList.remove('is-active');
+        });
+
+        $on('click', '[data-action="show-delete-group-popup"]', function(data) {
+            let group = getGroupById(data.groupId);
+
+            $('#groupDeleteQuestion').innerHTML = browser.i18n.getMessage('removeGroupPopupBody', group.title);
+            $('#groupDeletePopup').classList.add('is-active');
+        });
+
+        $on('click', '[data-close-delete-popup]', function() {
+            $('#groupDeletePopup').classList.remove('is-active');
+        });
+
+        $on('click', '[data-submit-remove-group]', function() {
+            background.removeGroup(getGroupById(state.groupId))
+                .then(renderGroupsList);
+
+            $('#groupDeletePopup').classList.remove('is-active');
+        });
+
+        $on('click', '[data-add-group]', function() {
+            background.addGroup();
         });
 
         // setTabEventsListener
@@ -135,7 +133,6 @@
     }
 
     function getGroupById(groupId) {
-        console.log(allData, allData.groups, groupId);
         return allData.groups.find(group => String(group.id) === String(groupId));
     }
 
@@ -143,7 +140,7 @@
         return format($('#' + templateId).innerHTML, data);
     }
 
-    function showHtmlResult(html) {
+    function showResultHtml(html) {
         $('#result').innerHTML = html;
         translatePage();
     }
@@ -175,68 +172,64 @@
         } else if (state.view === VIEW_GROUP_TABS) {
             renderTabsList(state.groupId || allData.currentGroupId);
         }
-
-        // translatePage();
     }
 
+    function getPreparedTabsHtml(tabs) {
+        return tabs
+            .map(tab => render('tab-tmpl', tab))
+            .join('');
+    }
+
+    function prepareTabToView(groupId, tab, tabIndex) {
+        tab.classList = (groupId == allData.currentGroupId && tabIndex == allData.activeTabIndex) ? 'is-active' : '';
+        tab.tabIndex = tabIndex;
+        tab.groupId = groupId;
+        tab.title = safeHtml(unSafeHtml(tab.title || tab.url));
+        tab.favIconUrl = tab.favIconUrl || '/icons/tab.svg';
+        return tab;
+    }
 
     function renderSearchTabsList() {
         state.view = VIEW_SEARCH_TABS;
+        state.searchStr = safeHtml($('#searchTab').value.trim().toLowerCase());
 
-        let searchStr = $('#searchTab').value.trim().toLowerCase(),
-            showTabs = [];
-
-        state.searchStr = searchStr;
-
-        if (!searchStr.length) {
-            return showTabs;
+        if (!state.searchStr.length) {
+            return renderGroupsList();
         }
+
+        let tabsToView = [],
+            searchHtml = null;
 
         allData.groups.forEach(function(group) {
             group.tabs.forEach(function(tab, tabIndex) {
-                if ((tab.title || '').toLowerCase().indexOf(search) !== -1 || (tab.url || '').toLowerCase().indexOf(search) !== -1) {
-                    tab.isActive = (group.id === allData.currentGroupId && tabIndex === allData.activeTabIndex);
-                    tab.tabIndex = tabIndex;
-                    tab.groupId = group.id;
-                    tab.title = tab.title || tab.url;
-                    tab.favIconUrl = tab.favIconUrl || '/icons/tab.svg';
-                    showTabs.push(tab);
+                if ((tab.title || '').toLowerCase().indexOf(state.searchStr) !== -1 || (tab.url || '').toLowerCase().indexOf(state.searchStr) !== -1) {
+                    tabsToView.push(prepareTabToView(group.id, tab, tabIndex));
                 }
             });
         });
 
-        let searchHtml = render('search-tabs', {
-            tabs: showTabs,
+        searchHtml = render('tabs-list-tmpl', {
+            classList: 'h-margin-top-10',
+            tabsHtml: getPreparedTabsHtml(tabsToView) || render('search-not-found-tmpl', state),
         });
 
-        showHtmlResult(searchHtml);
+        showResultHtml(searchHtml);
     }
 
     function renderGroupsList() {
         state.view = VIEW_GROUPS;
 
         let groupsHtml = allData.groups.map(function(group) {
-                let classList = [];
-
-                if (group.id === allData.currentGroupId) {
-                    classList.push('is-active');
-                }
-
-                if (!group.tabs.length) {
-                    classList.push('no-hover');
-                }
-
-                group.classList = classList.join(' ');
-
-                return render('show-groups-group', group);
+                group.classList = group.id == allData.currentGroupId ? 'is-active' : '';
+                return render('group-tmpl', group);
             })
             .join('');
 
-        let showGroupsHtml = render('show-groups', {
-            groups: groupsHtml,
+        let showGroupsHtml = render('groups-list-tmpl', {
+            groupsHtml,
         });
 
-        showHtmlResult(showGroupsHtml);
+        showResultHtml(showGroupsHtml);
     }
 
     function renderTabsList(groupId) {
@@ -245,174 +238,22 @@
 
         let group = getGroupById(groupId);
 
-        let tabsList = '';
+        let tabsListHtml = '';
 
         if (group.tabs.length) {
-            let tabs = group.tabs.map(function(tab, tabIndex) {
-                    let classList = [];
+            let tabs = group.tabs.map((tab, tabIndex) => prepareTabToView(groupId, tab, tabIndex));
 
-                    if (group.id === allData.currentGroupId && tabIndex === allData.activeTabIndex) {
-                        classList.push('is-active');
-                    }
-
-                    tab.classList = classList.join(' ');
-                    tab.groupId = group.id;
-                    tab.tabIndex = tabIndex;
-                    tab.favIconUrl = tab.favIconUrl || '/icons/tab.svg';
-                    tab.title = tab.title || tab.url;
-
-                    return render('group-tab', tab);
-                })
-                .join('');
-
-            tabsList = render('group-tabs-list', {
-                tabs,
+            tabsListHtml = render('tabs-list-tmpl', {
+                tabsHtml: getPreparedTabsHtml(tabs),
             });
         }
 
-        let result = render('tabs-list', {
+        let result = render('tabs-list-wrapper-tmpl', {
             group,
-            tabsList,
+            tabsListHtml,
         });
 
-        showHtmlResult(result);
+        showResultHtml(result);
     }
-
-
-    /*
-        new Vue({
-            el: '#stg',
-            name: 'simple-tab-groups',
-            data: {
-                groups: [],
-                currentGroupId: 0,
-
-                activeTabIndex: -1,
-
-                groupToShowId: 0,
-                groupToEdit: null,
-                groupToDeleteId: 0,
-
-                searchTab: '',
-
-                options: {
-                    closePopupAfterChangeGroup: true,
-                },
-            },
-            computed: {
-                groupToShow() {
-                    return this.groups.find(group => group.id === this.groupToShowId) || null;
-                },
-                groupToDelete() {
-                    return this.groups.find(group => group.id === this.groupToDeleteId) || null;
-                },
-            },
-            created() {
-                this.loadData();
-                this.loadOptions();
-                this.setTabEventsListener();
-            },
-            methods: {
-                getMessage: browser.i18n.getMessage,
-
-                loadData() {
-                    Promise.all([
-                            background.getCurrentData(),
-                            background.getNotPinnedTabs(true)
-                        ])
-                        .then(function(result) {
-                            let [data, tabs] = result;
-
-                            this.groups = data.groups;
-                            this.currentGroupId = data.currentGroup.id;
-
-                            tabs.some(function(tab, tabIndex) {
-                                if (tab.active) {
-                                    this.activeTabIndex = tabIndex;
-                                    return true;
-                                }
-                            }, this);
-                        }.bind(this));
-                },
-
-                loadOptions() {
-                    storage.get({
-                            closePopupAfterChangeGroup: true,
-                        })
-                        .then(options => this.options = options);
-                },
-
-                openOptions() {
-                    browser.runtime.openOptionsPage();
-                },
-
-                isTabVisibleInSearch(tab) {
-                    let search = this.searchTab.toLowerCase();
-
-                    return (tab.title || '').toLowerCase().indexOf(search) !== -1 || (tab.url || '').toLowerCase().indexOf(search) !== -1;
-                },
-
-                loadGroup(group, tabIndex) {
-                    if (!group.tabs.length) {
-                        return;
-                    }
-
-                    let isCurrentGroup = group.id === this.currentGroupId;
-
-                    background.loadGroup(group, isCurrentGroup, tabIndex)
-                        .then(function() {
-                            if (this.options.closePopupAfterChangeGroup && !isCurrentGroup) {
-                                return window.close();
-                            }
-
-                            if (isCurrentGroup) {
-                                this.activeTabIndex = tabIndex;
-                            }
-                        }.bind(this));
-                },
-
-                createNewGroup() {
-                    background.addGroup();
-                },
-
-                removeGroup() {
-                    background.removeGroup(this.groupToDelete)
-                        .then(function() {
-                            this.groupToShowId = 0;
-                            this.groupToDeleteId = 0;
-                        }.bind(this));
-                },
-
-                openSettingsGroup(group) {
-                    this.groupToEdit = JSON.parse(JSON.stringify(group));
-                },
-
-                saveSettingsGroup() {
-                    background.saveGroup(this.groupToEdit)
-                        .then(() => this.groupToEdit = null);
-                },
-
-                addTab() {
-                    background.addTab(this.groupToShow);
-                },
-
-                removeTab(tab, tabIndex, group) {
-                    background.removeTab(tab, tabIndex, group, group.id === this.currentGroupId);
-                },
-
-
-                setTabEventsListener() {
-                    let listener = function(request, sender, sendResponse) {
-                        if (request.storageUpdated) {
-                            this.loadData();
-                        }
-                    }.bind(this);
-
-                    browser.runtime.onMessage.addListener(listener);
-                    window.addEventListener('unload', () => browser.runtime.onMessage.removeListener(listener));
-                },
-            },
-        });
-    /**/
 
 })();

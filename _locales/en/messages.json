@@ -39,13 +39,29 @@
         "description": "Close popup after change group"
     },
 
+    "openGroupAfterChange": {
+        "message": "Open group after change to it (if popup dont't closed)",
+        "description": "Open group after change to it (if popup dont't closed)"
+    },
+
     "newGroupTitle": {
-        "message": "Group #$id$",
+        "message": "Group $id$",
         "description": "Close popup after change group",
         "placeholders": {
             "id" : {
                 "content" : "$1",
                 "example" : "1"
+            }
+        }
+    },
+
+    "searchTabNotFoundTitle": {
+        "message": "Search for tabs for \"$search$\" not found",
+        "description": "Search for tabs not found",
+        "placeholders": {
+            "search" : {
+                "content" : "$1",
+                "example" : "mail"
             }
         }
     },

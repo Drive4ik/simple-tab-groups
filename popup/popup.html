@@ -2,159 +2,89 @@
 <html>
 
 <head>
-    <title></title>
+    <title data-i18n="extensionName"></title>
     <meta charset="utf-8">
-    <!-- <link rel="stylesheet" type="text/css" href="/bulma.min.css"> -->
     <link rel="stylesheet" type="text/css" href="popup.css">
     <link rel="stylesheet" type="text/css" href="modal.css">
 </head>
 
 <body>
     <div id="stg">
-        <div class="search-wrapper">
-            <input id="searchTab" type="text" data-i18n="searchTabPlaceholder:placeholder" />
+        <div class="search-wrapper control">
+            <input id="searchTab" type="text" class="input" autocomplete="off" data-i18n="searchTabPlaceholder:placeholder" />
         </div>
 
-
         <div id="result"></div>
-
 
         <div id="settings" class="settings">
             <img class="icon" src="/icons/settings.svg" alt="" />
             <span data-i18n="settingsTitle"></span>
         </div>
 
-
-<!--
-        <div class="show-group" v-if="!searchTab && groupToShowId">
-            <div class="item" @click="groupToShowId = 0">
-                <span class="item-icon">&#10094;</span>
-                <span class="item-title" v-html="getMessage('goBackButtonTitle')"></span>
-            </div>
-
-            <hr>
-
-            <div class="group-info item no-hover">
-                <div class="item-icon">
-                    <div class="circle" :style="{backgroundColor: groupToShow.iconColor}"></div>
-                </div>
-                <div class="item-title" v-text="groupToShow.title"></div>
-                <div class="item-action">
-                    <img @click.stop.prevent="openSettingsGroup(groupToShow)" src="/icons/settings.svg" class="size-16 cursor-pointer icon" :title="getMessage('groupSettings')" />
-                    <img @click.stop.prevent="groupToDeleteId = groupToShowId" src="/icons/clear.svg" class="size-16 cursor-pointer icon" :title="getMessage('removeGroup')" />
-                </div>
-            </div>
-
-            <ul class="tabs" v-if="groupToShowId && groupToShow.tabs.length">
-                <li v-for="(tab, tabIndex) in groupToShow.tabs">
-                    <div :class="['item', {'is-active': (groupToShow.id === currentGroupId && tabIndex === activeTabIndex)}]" @click="loadGroup(groupToShow, tabIndex)">
-                        <div class="item-icon">
-                            <img :src="tab.favIconUrl ? tab.favIconUrl : '/icons/tab.svg'" class="size-16" alt="" />
-                        </div>
-                        <div class="item-title">
-                            <span v-text="tab.title || tab.url"></span>
-                        </div>
-                        <div class="item-action">
-                            <span class="icon cursor-pointer" @click.stop.prevent="removeTab(tab, tabIndex, groupToShow)" :title="getMessage('removeTab')">&#10006;</span>
-                        </div>
-                    </div>
-                </li>
-            </ul>
-
-            <hr>
-
-            <div class="create-new-tab">
-                <div class="item" @click="addTab">
-                    <div class="item-icon">
-                        <img class="icon" src="/icons/tab-new.svg" alt="">
-                    </div>
-                    <div class="item-title" v-html="getMessage('createNewTab')"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="settings" @click="openOptions">
-            <img class="icon" src="/icons/settings.svg" alt="" />
-            <span v-html="getMessage('settingsTitle')"></span>
-        </div>
-
-        <div v-if="groupToEdit" class="modal is-active_">
-            <div class="modal-background" @click="groupToEdit = null"></div>
+        <div id="groupEditPopup" class="modal">
+            <div class="modal-background" data-close-edit-popup></div>
             <div class="modal-card">
                 <header class="modal-card-head">
-                    <p class="modal-card-title" v-html="getMessage('groupSettings')"></p>
-                    <button class="delete" aria-label="close" @click="groupToEdit = null"></button>
+                    <p class="modal-card-title" data-i18n="groupSettings"></p>
+                    <button class="delete" aria-label="close" data-close-edit-popup></button>
                 </header>
                 <section class="modal-card-body">
                     <div class="field">
-                        <label class="label" v-html="getMessage('groupTitle')"></label>
+                        <label class="label" data-i18n="groupTitle"></label>
                         <div class="control">
-                            <input class="input" v-model.trim="groupToEdit.title" type="text" :placeholder="getMessage('groupTitle')">
+                            <input id="groupEditTitle" type="text" class="input" maxlength="120" data-i18n="groupTitle:placeholder">
                         </div>
                     </div>
                     <div class="field">
-                        <label class="label" v-html="getMessage('groupColor')"></label>
-                        <span class="simple-circle" :style="{backgroundColor: groupToEdit.iconColor}"></span>
+                        <label class="label" data-i18n="groupColor"></label>
+                        <span class="simple-circle" id="groupEditIconColorCircle"></span>
                         <div class="control">
-                            <input class="input" v-model.trim="groupToEdit.iconColor" type="text" placeholder="Ex.: blue, #0f0, rgb(0, 255, 0)...">
+                            <input id="groupEditIconColor" type="text" class="input" maxlength="40" placeholder="blue, #0f0, rgb(0, 255, 0)...">
                         </div>
                     </div>
                     <div class="field">
                         <label class="label">
-                            <span v-html="getMessage('groupDomains')"></span>
-                            <span class="question" :title="getMessage('groupDomainsHelp')">?</span>
+                            <span data-i18n="groupDomains"></span>
+                            <span class="question" data-i18n="groupDomainsHelp:title">?</span>
                         </label>
                         <div class="control">
-                            <textarea class="textarea" v-model.trim="groupToEdit.moveNewTabsToThisGroupByRegExp" type="text" :placeholder="getMessage('groupDomainsPlaceholder')"></textarea>
+                            <textarea id="groupEditMoveNewTabsToThisGroupByRegExp" class="textarea" data-i18n="groupDomainsPlaceholder:placeholder"></textarea>
                         </div>
                     </div>
                 </section>
                 <footer class="modal-card-foot">
-                    <button @click="saveSettingsGroup" class="button is-small is-success" v-html="getMessage('save')"></button>
-                    <button @click="groupToEdit = null" class="button is-small" v-html="getMessage('cancel')"></button>
+                    <button data-submit-edit-popup class="button is-small is-success" data-i18n="save"></button>
+                    <button data-close-edit-popup class="button is-small" data-i18n="cancel"></button>
                 </footer>
             </div>
         </div>
 
-        <div v-if="groupToDeleteId" class="modal is-active_">
-            <div class="modal-background" @click="groupToDeleteId = 0"></div>
+        <div id="groupDeletePopup" class="modal">
+            <div class="modal-background" data-close-delete-popup></div>
             <div class="modal-card">
                 <header class="modal-card-head">
-                    <p class="modal-card-title" v-html="getMessage('removeGroupPopupTitle')"></p>
-                    <button class="delete" aria-label="close" @click="groupToDeleteId = 0"></button>
+                    <p class="modal-card-title" data-i18n="removeGroupPopupTitle"></p>
+                    <button class="delete" aria-label="close" data-close-delete-popup></button>
                 </header>
                 <section class="modal-card-body">
-                    <span v-html="getMessage('removeGroupPopupBody', groupToDelete.title)"></span>
+                    <span id="groupDeleteQuestion"></span>
                 </section>
                 <footer class="modal-card-foot">
-                    <button @click="removeGroup" class="button is-small is-danger" v-html="getMessage('delete')"></button>
-                    <button @click="groupToDeleteId = 0" class="button is-small" v-html="getMessage('cancel')"></button>
+                    <button data-submit-remove-group class="button is-small is-danger" data-i18n="delete"></button>
+                    <button data-close-delete-popup class="button is-small" data-i18n="cancel"></button>
                 </footer>
             </div>
         </div>
-
--->
     </div>
 
-    <script id="search-tabs" type="text/template">
-        <ul class="search-tabs">
-            {{#tabs}}
-                <li data-load-group-id="{{groupId}}" data-tab-index="{{tabIndex}}">
-                    <div class="item {{#isActive}}is-active{{/isActive}}">
-                        <div class="item-icon">
-                            <img src="{{favIconUrl}}" class="size-16" alt="" />
-                        </div>
-                        <div class="item-title">
-                            <span>{{title}}</span>
-                        </div>
-                    </div>
-                </li>
-            {{/tabs}}
-        </ul>
+    <script id="search-not-found-tmpl" type="text/template">
+        <li class="item no-hover text-italic">
+            <span class="item-title" data-i18n="searchTabNotFoundTitle::{{searchStr}}"></span>
+        </li>
     </script>
 
     <!-- tabs list -->
-    <script id="tabs-list" type="text/template">
+    <script id="tabs-list-wrapper-tmpl" type="text/template">
         <div class="tabs-list">
             <div class="item" data-show-groups-list>
                 <span class="item-icon">&#10094;</span>
@@ -169,17 +99,17 @@
                 </div>
                 <div class="item-title">{{group.title}}</div>
                 <div class="item-action">
-                    <img data-open-group-settings-popup src="/icons/settings.svg" class="size-16 cursor-pointer icon" data-i18n="groupSettings:title" />
-                    <img data-show-delete-group-popup src="/icons/clear.svg" class="size-16 cursor-pointer icon" data-i18n="removeGroup:title" />
+                    <img data-action="open-group-settings-popup" data-group-id="{{group.id}}" src="/icons/settings.svg" class="size-16 cursor-pointer icon" data-i18n="groupSettings:title" />
+                    <img data-action="show-delete-group-popup" data-group-id="{{group.id}}" src="/icons/clear.svg" class="size-16 cursor-pointer icon" data-i18n="removeGroup:title" />
                 </div>
             </div>
 
-            {{tabsList}}
+            {{tabsListHtml}}
 
             <hr>
 
             <div class="create-new-tab">
-                <div class="item" data-add-tab>
+                <div class="item" data-action="add-tab" data-group-id="{{group.id}}">
                     <div class="item-icon">
                         <img class="icon" src="/icons/tab-new.svg" alt="">
                     </div>
@@ -189,15 +119,15 @@
         </div>
     </script>
 
-    <script id="group-tabs-list" type="text/template">
-        <ul class="tabs">
-            {{tabs}}
+    <script id="tabs-list-tmpl" type="text/template">
+        <ul class="tabs {{classList}}">
+            {{tabsHtml}}
         </ul>
     </script>
 
-    <script id="group-tab" type="text/template">
+    <script id="tab-tmpl" type="text/template">
         <li>
-            <div class="item {{classList}}" data-load-group-id="{{groupId}}" data-tab-index="{{tabIndex}}">
+            <div class="item {{classList}}" data-action="load-group" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}">
                 <div class="item-icon">
                     <img src="{{favIconUrl}}" class="size-16" alt="" />
                 </div>
@@ -205,7 +135,7 @@
                     <span>{{title}}</span>
                 </div>
                 <div class="item-action">
-                    <span class="icon cursor-pointer" data-remove-tab-index="{{tabIndex}}" data-i18n="removeTab:title">&#10006;</span>
+                    <span class="icon cursor-pointer" data-action="remove-tab" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}" data-i18n="removeTab:title">&#10006;</span>
                 </div>
             </div>
         </li>
@@ -213,13 +143,13 @@
 
 
     <!-- groups list -->
-    <script id="show-groups" type="text/template">
-        <div class="groups">
-            {{groups}}
+    <script id="groups-list-tmpl" type="text/template">
+        <div class="groups h-margin-top-10">
+            {{groupsHtml}}
         </div>
         <hr>
         <div class="create-new-group">
-            <div class="item">
+            <div class="item" data-add-group>
                 <div class="item-icon">
                     <img class="icon" src="/icons/group-new.svg" alt="" />
                 </div>
@@ -228,15 +158,15 @@
         </div>
     </script>
 
-    <script id="show-groups-group" type="text/template">
-        <div class="item {{classList}}" data-load-group-id="{{id}}" data-tab-index="0">
+    <script id="group-tmpl" type="text/template">
+        <div class="item {{classList}}" data-action="load-group" data-group-id="{{id}}" data-tab-index="0" data-open-group-if-current="true">
             <div class="item-icon">
                 <div class="circle" style="background-color: {{iconColor}};"></div>
             </div>
             <div class="item-title">{{title}}</div>
-            <div class="item-action go-to-tabs hover" data-show-group-id="{{id}}">
+            <div class="item-action hover" data-action="show-group" data-group-id="{{id}}">
                 <span>&#10095;</span>
-                <span class="go-to-tabs-title" data-i18n="groupTabsCount::{{tabs.length}}"></span>
+                <span data-i18n="groupTabsCount::{{tabs.length}}"></span>
             </div>
         </div>
     </script>

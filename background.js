@@ -41,12 +41,19 @@
         }, dontUseMapTab);
     }
 
+    function hasAnotherTabs() {
+        return browser.tabs.query({
+                currentWindow: true,
+            })
+            .then(tabs => tabs.filter(tab => tab.pinned || notAllowedURLs.test(tab.url)).length > 0);
+    }
+
     function mapTab(tab) {
         tab.url = tab.url || 'about:blank';
         tab.url = 'about:newtab' === tab.url ? 'about:blank' : tab.url;
 
         return {
-            // id: tab.id,
+            id: tab.id,
             title: tab.title || tab.url,
             url: tab.url,
             favIconUrl: tab.favIconUrl,
@@ -58,7 +65,7 @@
             id,
             title: browser.i18n.getMessage('newGroupTitle', id),
             iconColor: 'hsla(' + (Math.random() * 360).toFixed(0) + ', 100%, 50%, 1)',
-            tabs: [mapTab({})],
+            tabs: [],
             moveNewTabsToThisGroupByRegExp: '',
         };
     }
@@ -79,7 +86,7 @@
                     windowsGroup: data.windowsGroup,
                     currentWindowId: currentWindow.id,
                     currentWindowTabs: currentWindow.tabs,
-                    currentGroup: data.groups.find(group => group.id === data.windowsGroup[currentWindow.id]) || {}, // ???????????????? need empty obj ?
+                    currentGroup: data.groups.find(group => group.id == data.windowsGroup[currentWindow.id]) || {}, // ???????????????? need empty obj ?
                 };
             });
     }
@@ -130,7 +137,7 @@
             })
             .then(function(result) {
                 return storage.set({
-                    groups: result.groups.map(group => savedGroup.id === group.id ? savedGroup : group),
+                    groups: result.groups.map(group => savedGroup.id == group.id ? savedGroup : group),
                     dontEventUpdateStorage,
                 });
             });
@@ -141,7 +148,7 @@
 
         return getCurrentData()
             .then(function(result) {
-                isCurrentGroup = oldGroup.id === result.currentGroup.id;
+                isCurrentGroup = oldGroup.id == result.currentGroup.id;
 
                 if (1 === result.groups.length) { // remove last group
                     return addGroup(true); // reset, crete new group and return all groups
@@ -164,35 +171,31 @@
     function addTab(group) {
         return getCurrentData()
             .then(function(result) {
-                if (group.id === result.currentGroup.id) { // after this - will trigger events on create tab and add tab in group
+                if (group.id == result.currentGroup.id) { // after this - will trigger events on create tab and add tab in group
                     return browser.tabs.create({
                         active: false,
                         url: 'about:blank',
                     });
                 }
 
-                let newTab = {
-                        url: 'about:blank',
-                    },
-                    groupClone = JSON.parse(JSON.stringify(group));
+                group.tabs.push({
+                    url: 'about:blank',
+                });
 
-                groupClone.tabs.push(newTab);
-
-                return saveGroup(groupClone);
+                return saveGroup(group);
             });
     }
 
-    function removeTab(tabToRemove, tabIndex, group, isCurrentGroup) {
-        let groupClone = JSON.parse(JSON.stringify(group));
+    function removeTab(tabToRemove, group, isCurrentGroup) {
+        let tabIndex = group.tabs.indexOf(tabToRemove);
 
-        groupClone.tabs.splice(group.tabs.indexOf(tabToRemove), 1);
+        group.tabs.splice(tabIndex, 1);
 
-        return saveGroup(groupClone)
+        return saveGroup(group)
             .then(function() {
                 if (isCurrentGroup) {
                     return getNotPinnedTabs()
-                        .then(tabs => tabs.find((tab, i) => i === tabIndex).id)
-                        .then(browser.tabs.remove);
+                        .then(tabs => browser.tabs.remove(tabs[tabIndex].id));
                 } else {
                     return new Promise(function(resolve) { // find tab in other window
                         Promise.all([
@@ -217,15 +220,11 @@
     function setActiveTab(activeTabIndex) {
         return getNotPinnedTabs()
             .then(function(tabs) {
-                let tab = tabs.find((tab, i) => i === activeTabIndex);
-
-                if (!tab) {
-                    return;
+                if (tabs[activeTabIndex]) {
+                    return browser.tabs.update(tabs[activeTabIndex].id, {
+                        active: true,
+                    });
                 }
-
-                return browser.tabs.update(tab.id, {
-                    active: true,
-                });
             });
     }
 
@@ -236,7 +235,24 @@
 
         removeTabEvents();
 
-        return getCurrentData()
+        return Promise.all([
+                getCurrentData(),
+                hasAnotherTabs()
+            ])
+            .then(function(result) {
+                let [data, hasAnotherTabs] = result;
+
+                if (!group.tabs.length && !hasAnotherTabs) {
+                    group.tabs.push({
+                        url: 'about:blank',
+                    });
+
+                    return saveGroup(group, true)
+                        .then(() => data);
+                }
+
+                return data;
+            })
             .then(function(result) {
                 result.windowsGroup[result.currentWindowId] = group.id;
 
@@ -244,15 +260,17 @@
                         windowsGroup: result.windowsGroup,
                     })
                     .then(function() {
-                        return new Promise(function(resolve, reject) {
-                            Promise.all(group.tabs.map(function(tab) {
-                                    return browser.tabs.create({
-                                        url: tab.url,
-                                    });
-                                }))
-                                .then(resolve)
-                                .catch(resolve);
-                        });
+                        if (group.tabs.length) {
+                            return new Promise(function(resolve, reject) {
+                                Promise.all(group.tabs.map(function(tab) {
+                                        return browser.tabs.create({
+                                            url: tab.url,
+                                        });
+                                    }))
+                                    .then(resolve)
+                                    .catch(resolve);
+                            });
+                        }
                     })
                     .then(function() {
                         if (result.currentWindowTabs.length) {
@@ -380,7 +398,7 @@
             })
             .then(function(result) {
                 result.groups.some(function(group) {
-                    if (group.id === result.windowsGroup[detachInfo.oldWindowId]) {
+                    if (group.id == result.windowsGroup[detachInfo.oldWindowId]) {
                         group.tabs = group.tabs.filter(tab => tab.id != tabId);
                         return saveGroup(group);
                     }

@@ -152,6 +152,11 @@ html {
     border-radius: 50%;
     margin-left: 5px;
 }
+
+#stg .text-italic {
+    font-style: italic;
+}
+
 /* END HELPERS */
 
 
@@ -161,21 +166,6 @@ html {
 
 #stg .search-wrapper {
     padding: 10px 25px 0 10px;
-}
-
-#stg .search-wrapper input {
-    width: 100%;
-    border: 1px solid #c0c0c0;
-    padding: 3px 5px;
-    font-family: Arial;
-}
-
-#stg .search-tabs {
-    margin-top: 10px;
-}
-
-#stg .groups {
-    margin-top: 10px;
 }
 
 #stg hr {
@@ -202,7 +192,7 @@ html {
     border-bottom-color: #c6c6c6;
 }
 
-#stg .item:not(.no-hover):hover {
+#stg .item:not(.no-hover):not(.is-active):hover {
     background-color: #eceded; /* light */
 }
 
@@ -241,6 +231,7 @@ html {
     align-self: stretch;
     padding-left: 5px;
     padding-right: 25px;
+    white-space: nowrap;
 }
 
 #stg .item .item-action > :not(:first-child) {
@@ -255,13 +246,18 @@ html {
     text-align: center;
 }
 
-#stg .go-to-tabs.item-action {
+#stg .tabs-list .group-info.item .item-action {
+    min-width: 67px;
+}
+
+#stg .groups .item .item-action {
     width: 100px;
+    min-width: 100px;
     line-height: 1;
     padding-left: 10px;
 }
 
-#stg .go-to-tabs .go-to-tabs-title {
+#stg .groups .item .item-action > :not(:first-child) {
     margin-left: 5px;
 }
 
@@ -281,6 +277,10 @@ html {
     justify-content: center;
     background-color: #e3e3e3;
     cursor: default;
+}
+
+#stg .settings:hover {
+    background-color: #d4d4d4; /* dark-dark */
 }
 
 #stg .settings > :not(:first-child) {
