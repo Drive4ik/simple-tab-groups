@@ -102,7 +102,7 @@
         $on('click', '[data-action="show-delete-group-popup"]', function(data) {
             let group = getGroupById(data.groupId);
 
-            $('#groupDeleteQuestion').innerHTML = browser.i18n.getMessage('removeGroupPopupBody', group.title);
+            $('#groupDeleteQuestion').innerText = browser.i18n.getMessage('removeGroupPopupBody', unSafeHtml(group.title));
             $('#groupDeletePopup').classList.add('is-active');
         });
 
