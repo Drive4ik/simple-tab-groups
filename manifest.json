@@ -3,8 +3,7 @@
 
     "applications": {
         "gecko": {
-            "id": "simple-tab-groups@drive4ik",
-            "strict_min_version": "53.0"
+            "id": "simple-tab-groups@drive4ik"
         }
     },
 
@@ -29,7 +28,7 @@
     ],
 
     "browser_action": {
-        "default_icon": "icons/icon2.svg",
+        "default_icon": "icons/icon.svg",
         "default_title": "__MSG_extensionName__",
         "default_popup": "popup/popup.html"
     },

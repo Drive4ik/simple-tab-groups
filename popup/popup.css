@@ -88,10 +88,6 @@ html {
     overflow-x: hidden;
 }
 
-[v-cloak] {
-    visibility: hidden;
-}
-
 #stg {
     background-color: #fff;
     width: 425px;
@@ -134,6 +130,11 @@ html {
     height: 20px;
 }
 
+#stg .no-text-select {
+    -moz-user-select: none;
+    user-select: none;
+}
+
 #stg .cursor-pointer {
     cursor: pointer;
 }
@@ -143,6 +144,8 @@ html {
     height: 14px;
     margin: 0 auto;
     border-radius: 50%;
+    display: inline-block;
+    vertical-align: text-top;
 }
 
 #stg .simple-circle {

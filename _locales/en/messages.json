@@ -44,6 +44,16 @@
         "description": "Open group after change to it (if popup dont't closed)"
     },
 
+    "showGroupCircleInSearchedTab": {
+        "message": "Show group circle in searched tab",
+        "description": "Show group circle in searched tab"
+    },
+
+    "showUrlTooltipOnTabHover": {
+        "message": "Show url tooltip when hover on tab",
+        "description": "Show url tooltip when hover on tab"
+    },
+
     "newGroupTitle": {
         "message": "Group $id$",
         "description": "Close popup after change group",

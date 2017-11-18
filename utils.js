@@ -3,6 +3,8 @@
 const defaultOptions = {
     closePopupAfterChangeGroup: true,
     openGroupAfterChange: true,
+    showGroupCircleInSearchedTab: true,
+    showUrlTooltipOnTabHover: false,
 };
 
 let $ = document.querySelector.bind(document),
@@ -50,12 +52,12 @@ let $ = document.querySelector.bind(document),
     },
     safeHtml = function(html) {
         let regExp = new RegExp('[' + Object.keys(tagsToReplace).join('') + ']', 'g');
-        return html.replace(regExp, tag => tagsToReplace[tag] || tag);
+        return (html || '').replace(regExp, tag => tagsToReplace[tag] || tag);
     },
     unSafeHtml = function(html) {
         let replasedTags = objectReplaceKeyValue(tagsToReplace),
             regExp = new RegExp('(' + Object.keys(replasedTags).join('|') + ')', 'g');
-        return html.replace(regExp, tag => replasedTags[tag] || tag);
+        return (html || '').replace(regExp, tag => replasedTags[tag] || tag);
     },
     translatePage = function() {
         Array.from(document.querySelectorAll('[data-i18n]')).forEach(function(node) {
@@ -113,16 +115,7 @@ let $ = document.querySelector.bind(document),
         get: browser.storage.local.get,
         clear: browser.storage.local.clear,
         remove: browser.storage.local.remove,
-        set(keys) {
-            let dontEventUpdateStorage = false;
-
-            if (keys.dontEventUpdateStorage) {
-                dontEventUpdateStorage = true;
-                delete keys.dontEventUpdateStorage;
-            } else if ('dontEventUpdateStorage' in keys) {
-                delete keys.dontEventUpdateStorage;
-            }
-
+        set(keys, dontEventUpdateStorage) {
             return browser.storage.local.set(keys)
                 .then(function() {
                     if (dontEventUpdateStorage) {

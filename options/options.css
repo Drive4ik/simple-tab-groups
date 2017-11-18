@@ -1,8 +1,8 @@
-html {
-    overflow: auto;
-}
-
 body {
     background-color: #fbfbfb;
     padding: 0 4px;
+}
+
+.h-margin-left-10 {
+    margin-left: 10px;
 }

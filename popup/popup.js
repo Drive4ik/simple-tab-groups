@@ -181,12 +181,15 @@
     }
 
     function prepareTabToView(groupId, tab, tabIndex) {
-        tab.classList = (groupId == allData.currentGroupId && tabIndex == allData.activeTabIndex) ? 'is-active' : '';
-        tab.tabIndex = tabIndex;
-        tab.groupId = groupId;
-        tab.title = safeHtml(unSafeHtml(tab.title || tab.url));
-        tab.favIconUrl = tab.favIconUrl || '/icons/tab.svg';
-        return tab;
+        return {
+            urlTitle: options.showUrlTooltipOnTabHover ? tab.url : '',
+            classList: (groupId == allData.currentGroupId && tabIndex == allData.activeTabIndex) ? 'is-active' : '',
+            tabIndex: tabIndex,
+            groupId: groupId,
+            title: safeHtml(unSafeHtml(tab.title || tab.url)),
+            url: tab.url,
+            favIconUrl: tab.favIconUrl || '/icons/tab.svg',
+        };
     }
 
     function renderSearchTabsList() {
@@ -203,7 +206,13 @@
         allData.groups.forEach(function(group) {
             group.tabs.forEach(function(tab, tabIndex) {
                 if ((tab.title || '').toLowerCase().indexOf(state.searchStr) !== -1 || (tab.url || '').toLowerCase().indexOf(state.searchStr) !== -1) {
-                    tabsToView.push(prepareTabToView(group.id, tab, tabIndex));
+                    let preparedTab = prepareTabToView(group.id, tab, tabIndex);
+
+                    if (options.showGroupCircleInSearchedTab) {
+                        preparedTab.title = render('color-circle-tmpl', group) + preparedTab.title;
+                    }
+
+                    tabsToView.push(preparedTab);
                 }
             });
         });
@@ -221,6 +230,10 @@
 
         let groupsHtml = allData.groups.map(function(group) {
                 group.classList = group.id == allData.currentGroupId ? 'is-active' : '';
+                group.colorCircleHtml = render('color-circle-tmpl', {
+                    title: '',
+                    iconColor: group.iconColor,
+                });
                 return render('group-tmpl', group);
             })
             .join('');
@@ -249,6 +262,10 @@
         }
 
         let result = render('tabs-list-wrapper-tmpl', {
+            colorCircleHtml: render('color-circle-tmpl', {
+                title: '',
+                iconColor: group.iconColor,
+            }),
             group,
             tabsListHtml,
         });

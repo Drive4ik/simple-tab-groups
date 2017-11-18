@@ -172,7 +172,7 @@
 }
 
 .modal-card-body {
-    background-color: white;
+    background-color: #fff;
     flex-grow: 1;
     flex-shrink: 1;
     overflow: auto;

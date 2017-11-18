@@ -138,8 +138,7 @@
             .then(function(result) {
                 return storage.set({
                     groups: result.groups.map(group => savedGroup.id == group.id ? savedGroup : group),
-                    dontEventUpdateStorage,
-                });
+                }, dontEventUpdateStorage);
             });
     }
 
@@ -323,7 +322,7 @@
     }
 
     function onCreatedTab(tab) {
-        saveCurrentTabs(null, [tab]);
+        saveCurrentTabs(null, [tab], true);
     }
 
     function onUpdatedTab(tabId, changeInfo, tabInfo) {
