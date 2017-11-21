@@ -45,7 +45,7 @@
         return browser.tabs.query({
                 currentWindow: true,
             })
-            .then(tabs => tabs.filter(tab => tab.pinned || notAllowedURLs.test(tab.url)).length > 0);
+            .then(tabs => tabs.some(tab => tab.pinned || notAllowedURLs.test(tab.url)));
     }
 
     function mapTab(tab) {
@@ -241,7 +241,7 @@
             .then(function(result) {
                 let [data, hasAnotherTabs] = result;
 
-                if (!group.tabs.length && !hasAnotherTabs) {
+                if (!group.tabs.length && !hasAnotherTabs) { // TODO fix bug with tabs
                     group.tabs.push({
                         url: 'about:blank',
                     });
@@ -301,7 +301,7 @@
             });
     }
 
-    function testUrl(domainForTest, group) {
+    function testUrl(url, group) {
         if (!group.moveNewTabsToThisGroupByRegExp.trim().length) {
             return false;
         }
@@ -309,15 +309,10 @@
         return group.moveNewTabsToThisGroupByRegExp
             .split(/\s*\n\s*/)
             .filter(Boolean)
-            .some(function(domain) {
-                if (domain === domainForTest) {
-                    return true;
-                }
-
-                return new RegExp(domain
-                    .replace(/\*/g, '.*?')
-                    .replace(/\./g, '\\.')
-                ).test(domainForTest);
+            .some(function(regExpStr) {
+                try {
+                    return new RegExp(regExpStr).test(url);
+                } catch (e) { };
             });
     }
 
@@ -326,31 +321,37 @@
     }
 
     function onUpdatedTab(tabId, changeInfo, tabInfo) {
-        let saveCurrentTabsIfNeed = function(changeInfo) {
+        let saveCurrentTabsIfNeed = function() {
             if ( /*changeInfo.favIconUrl ||*/ changeInfo.status === 'complete' || 'pinned' in changeInfo) {
                 saveCurrentTabs();
             }
         };
 
-        if (changeInfo.url) {
+        if (changeInfo.url && !tabInfo.pinned && !notAllowedURLs.test(changeInfo.url)) {
             return getCurrentData()
                 .then(function(result) {
-                    let domainForTest = new URL(changeInfo.url).hostname,
-                        destGroup = result.groups.find(testUrl.bind(null, domainForTest));
+                    let destGroup = result.groups.find(testUrl.bind(null, changeInfo.url));
 
                     if (destGroup && destGroup.id !== result.currentGroup.id) {
-                        browser.tabs.remove(tabInfo.id);
-
                         destGroup.tabs.push(mapTab(tabInfo));
 
-                        return saveGroup(destGroup);
+                        return saveGroup(destGroup)
+                            .then(function() {
+                                let message = browser.i18n.getMessage('moveTabToGroupMessage', [
+                                    destGroup.title,
+                                    (tabInfo.title || tabInfo.url)
+                                ]);
+                                notify(message, 5000);
+
+                                browser.tabs.remove(tabInfo.id);
+                            });
                     }
 
                     return saveCurrentTabs();
                 });
         }
 
-        saveCurrentTabsIfNeed(changeInfo);
+        saveCurrentTabsIfNeed();
     }
 
     function onRemovedTab(removedTabId, removeInfo) {
@@ -432,7 +433,7 @@
         })
         .then(result => result.groups)
         .then(function(groups) {
-            if (groups.length) {
+            if (groups.length) { // TODO fix bug when current window is new
                 return saveCurrentTabs();
             }
 
@@ -441,15 +442,31 @@
         })
         .then(addTabEvents);
 
+    browser.contextMenus.create({
+        id: 'openSettings',
+        title: browser.i18n.getMessage('openSettings'),
+        onclick: () => browser.runtime.openOptionsPage(),
+        contexts: ['browser_action'],
+        icons: {
+            16: 'icons/settings.svg',
+            32: 'icons/settings.svg',
+        },
+    });
+
+
     window.background = {
         getCurrentData,
         getNotPinnedTabs,
 
         loadGroup,
 
+        mapTab,
+        notAllowedURLs,
+
         addTab,
         removeTab,
 
+        createGroup,
         addGroup,
         saveGroup,
         removeGroup,

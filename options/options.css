@@ -6,3 +6,9 @@ body {
 .h-margin-left-10 {
     margin-left: 10px;
 }
+
+hr {
+    margin: 10px -4px;
+    color: transparent;
+    border-top: 1px solid #e3e3e3;
+}

@@ -14,6 +14,26 @@
         "description": "Author name"
     },
 
+    "openSettings": {
+        "message": "Settings",
+        "description": "Settings context button title"
+    },
+
+    "moveTabToGroupMessage": {
+        "message": "Tab \"$tabtitle$\" was moved to group \"$grouptitle$\".",
+        "description": "Tab moved popup title",
+        "placeholders": {
+            "grouptitle" : {
+                "content" : "$1",
+                "example" : "Group 2"
+            },
+            "tabtitle" : {
+                "content" : "$2",
+                "example" : "tab title"
+            }
+        }
+    },
+
     "save": {
         "message": "Save",
         "description": "Save"
@@ -158,9 +178,9 @@
         "description": "Domains placeholders and helper"
     },
 
-    "groupDomainsHelp": {
-        "message": "Insert domain(s) to catch tab there. Matching tabs with this domains will be moved to this group. One rule per line:\ndomain.com - tabs with this domain\n*.second-domain.com - tabs with this third-level domain\n*third-domain.com\n*third-domain*sufix.com",
-        "description": "Domains placeholders and helper"
+    "groupExceptionsHelp": {
+        "message": "Insert regular expressions for web addresses here. Matching tabs will be moved automatically to this group.\nUse one line per rule, there can be as many as you want.\nExamples:\ngithub\\.com/drive4ik/simple-tab-groups - catch all pages in the add-on's repository\nbugzilla\\.mozilla\\.org - catch Firefox bug reports\n(facebook|twitter|youtube)\\.com - catch all your social pages",
+        "description": "Regular exceptions helper"
     }
 
 }

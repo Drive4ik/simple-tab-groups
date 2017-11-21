@@ -59,6 +59,20 @@ let $ = document.querySelector.bind(document),
             regExp = new RegExp('(' + Object.keys(replasedTags).join('|') + ')', 'g');
         return (html || '').replace(regExp, tag => replasedTags[tag] || tag);
     },
+    notify = function(message, timer) {
+        let id = String(Date.now());
+
+        // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/notifications/NotificationOptions
+        // Only 'type', 'iconUrl', 'title', and 'message' are supported.
+        browser.notifications.create(id, {
+            type: 'basic',
+            iconUrl: browser.extension.getURL('icons/icon.svg'),
+            title: browser.i18n.getMessage('extensionName'),
+            message: String(message),
+        });
+
+        timer && setTimeout(() => browser.notifications.clear(id), timer);
+    },
     translatePage = function() {
         Array.from(document.querySelectorAll('[data-i18n]')).forEach(function(node) {
             node.dataset.i18n

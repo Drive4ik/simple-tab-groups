@@ -1,3 +1,88 @@
+/*! minireset.css v0.0.3 | MIT License | github.com/jgthms/minireset.css */
+html,
+body,
+p,
+ol,
+ul,
+li,
+dl,
+dt,
+dd,
+blockquote,
+figure,
+fieldset,
+legend,
+textarea,
+pre,
+iframe,
+hr,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    margin: 0;
+    padding: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-size: 100%;
+    font-weight: normal;
+}
+
+ul {
+    list-style: none;
+}
+
+button,
+input,
+select,
+textarea {
+    margin: 0;
+}
+
+html {
+    box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+img,
+embed,
+iframe,
+object,
+audio,
+video {
+    height: auto;
+    max-width: 100%;
+}
+
+iframe {
+    border: 0;
+}
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+td,
+th {
+    padding: 0;
+    text-align: left;
+}
+/*! minireset.css END */
+
 .modal {
     bottom: 0;
     left: 0;
@@ -179,6 +264,10 @@
     padding: 10px;
 }
 
+.modal-card-body > .field {
+    background-color: #fff;
+}
+
 .field:not(:first-child) {
     margin-top: 10px;
 }
@@ -263,7 +352,7 @@
     border-radius: 3px;
     box-shadow: none;
     display: inline-flex;
-    font-size: 0.75rem;
+    font-size: 1rem;
     height: 2.25em;
     justify-content: flex-start;
     line-height: 1.5;
@@ -284,6 +373,19 @@
     padding-right: 0.75em;
     text-align: center;
     white-space: nowrap;
+}
+
+.button.is-small {
+  border-radius: 2px;
+  font-size: 0.75rem;
+}
+
+.button.is-medium {
+  font-size: 1.25rem;
+}
+
+.button.is-large {
+  font-size: 1.5rem;
 }
 
 .button:hover {
