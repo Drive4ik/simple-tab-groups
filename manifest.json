@@ -3,13 +3,14 @@
 
     "applications": {
         "gecko": {
-            "id": "simple-tab-groups@drive4ik"
+            "id": "simple-tab-groups@drive4ik",
+            "strict_min_version": "57.0"
         }
     },
 
     "name": "__MSG_extensionName__",
     "description": "__MSG_extensionDescription__",
-    "version": "1.6.1",
+    "version": "1.6.2",
     "author": "__MSG_authorName__",
     "homepage_url": "https://github.com/drive4ik/simple-tab-groups",
     "developer": {
@@ -25,7 +26,7 @@
     "permissions": [
         "tabs",
         "notifications",
-        "contextMenus",
+        "menus",
         "storage"
     ],
 

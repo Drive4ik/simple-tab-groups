@@ -9,6 +9,10 @@ html {
     font-size: 14px;
 }
 
+#stg.fix-height-popup {
+    min-height: 400px;
+}
+
 /* HEPLERS */
 #stg .question {
     display: inline-block;

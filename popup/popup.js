@@ -6,9 +6,10 @@
         VIEW_GROUP_TABS = 'group-tabs';
 
     let background = browser.extension.getBackgroundPage().background,
-        getMessage = browser.i18n.getMessage,
+        templates = {},
         options = null,
         allData = null,
+        moveTabToGroupTabIndex = null,
         state = {
             view: VIEW_GROUPS,
         },
@@ -80,6 +81,7 @@
             $('#groupEditIconColor').value = group.iconColor;
             $('#groupEditMoveNewTabsToThisGroupByRegExp').value = group.moveNewTabsToThisGroupByRegExp;
             $('#groupEditPopup').classList.add('is-active');
+            $('#stg').classList.add('fix-height-popup');
         });
 
         $on('click', '[data-submit-edit-popup]', function() {
@@ -93,10 +95,12 @@
                 .then(() => renderTabsList(state.groupId));
 
             $('#groupEditPopup').classList.remove('is-active');
+            $('#stg').classList.remove('fix-height-popup');
         });
 
         $on('click', '[data-close-edit-popup]', function() {
             $('#groupEditPopup').classList.remove('is-active');
+            $('#stg').classList.remove('fix-height-popup');
         });
 
         $on('click', '[data-action="show-delete-group-popup"]', function(data) {
@@ -121,6 +125,16 @@
             background.addGroup();
         });
 
+        $on('contextmenu', '[data-is-tab="true"]', function(data) {
+            moveTabToGroupTabIndex = data.tabIndex;
+        });
+
+        $on('click', '[data-action="move-tab-to-group"]', function(data) {
+            let tab = allData.groups.find(group => group.id == state.groupId).tabs[moveTabToGroupTabIndex];
+
+            background.moveTabToGroup(tab, state.groupId, data.groupId);
+        });
+
         // setTabEventsListener
         let listener = function(request, sender, sendResponse) {
             if (request.storageUpdated) {
@@ -137,7 +151,15 @@
     }
 
     function render(templateId, data) {
-        return format($('#' + templateId).innerHTML, data);
+        let tmplHtml = null;
+
+        if (templates[templateId]) {
+            tmplHtml = templates[templateId];
+        } else {
+            tmplHtml = templates[templateId] = $('#' + templateId).innerHTML;
+        }
+
+        return format(tmplHtml, data);
     }
 
     function showResultHtml(html) {
@@ -268,6 +290,22 @@
             }),
             group,
             tabsListHtml,
+        });
+
+        // prepare context menus for tab moving to other group
+        let menuItemsHtml = allData.groups
+            .filter(gr => gr.id !== group.id)
+            .map(function(gr) {
+                return render('#move-tab-to-group-menu-item-tmpl', {
+                    title: gr.title,
+                    groupId: gr.id,
+                    icon: createSvgColoredIcon(group.iconColor),
+                });
+            })
+            .join('');
+
+        $('#move-tab-to-group-menu').innerHTML = render('#move-tab-to-group-menu-tmpl', {
+            menuItemsHtml,
         });
 
         showResultHtml(result);
