@@ -85,14 +85,30 @@
         });
 
         $on('click', '[data-submit-edit-popup]', function() {
-            let group = getGroupById(state.groupId);
+            let group = getGroupById(state.groupId),
+                iconColor = $('#groupEditIconColor').value.trim();
 
             group.title = safeHtml($('#groupEditTitle').value.trim());
-            group.iconColor = safeHtml($('#groupEditIconColor').value.trim());
+
+            group.iconColor = iconColor === safeHtml(iconColor) ? iconColor : '';
+
             group.moveNewTabsToThisGroupByRegExp = $('#groupEditMoveNewTabsToThisGroupByRegExp').value.trim();
 
+            group.moveNewTabsToThisGroupByRegExp
+                .split(/\s*\n\s*/)
+                .filter(Boolean)
+                .forEach(function(regExpStr) {
+                    try {
+                        new RegExp(regExpStr);
+                    } catch (e) {
+                        notify(browser.i18n.getMessage('invalidRegExpRuleTitle', regExpStr));
+                    }
+                });
+
             background.saveGroup(group)
-                .then(() => renderTabsList(state.groupId));
+                .then(() => renderTabsList(state.groupId))
+                .then(background.prepareMoveTabMenus)
+                .then(createMoveTabContextMenu);
 
             $('#groupEditPopup').classList.remove('is-active');
             $('#stg').classList.remove('fix-height-popup');
@@ -116,7 +132,9 @@
 
         $on('click', '[data-submit-remove-group]', function() {
             background.removeGroup(getGroupById(state.groupId))
-                .then(renderGroupsList);
+                .then(renderGroupsList)
+                .then(background.prepareMoveTabMenus)
+                .then(createMoveTabContextMenu);
 
             $('#groupDeletePopup').classList.remove('is-active');
         });
@@ -132,7 +150,17 @@
         $on('click', '[data-action="move-tab-to-group"]', function(data) {
             let tab = allData.groups.find(group => group.id == state.groupId).tabs[moveTabToGroupTabIndex];
 
-            background.moveTabToGroup(tab, state.groupId, data.groupId);
+            background.moveTabToGroup(tab, moveTabToGroupTabIndex, state.groupId, data.groupId);
+        });
+
+        $on('click', '[data-move-tab-to-new-group]', function(data) {
+            let expandedGroup = allData.groups.find(group => group.id == state.groupId),
+                tab = expandedGroup.tabs[moveTabToGroupTabIndex];
+
+            background.addGroup()
+                .then(function(newGroup) {
+                    background.moveTabToGroup(tab, moveTabToGroupTabIndex, state.groupId, newGroup.id);
+                });
         });
 
         // setTabEventsListener
@@ -292,23 +320,34 @@
             tabsListHtml,
         });
 
-        // prepare context menus for tab moving to other group
+        createMoveTabContextMenu();
+
+        showResultHtml(result);
+    }
+
+    function createMoveTabContextMenu(translatePageAfterRender) {
+        if (state.view != VIEW_GROUP_TABS) {
+            return;
+        }
+
         let menuItemsHtml = allData.groups
-            .filter(gr => gr.id !== group.id)
             .map(function(gr) {
-                return render('#move-tab-to-group-menu-item-tmpl', {
+                return render('move-tab-to-group-menu-item-tmpl', {
                     title: gr.title,
                     groupId: gr.id,
-                    icon: createSvgColoredIcon(group.iconColor),
+                    icon: background.createSvgColoredIcon(gr.iconColor),
+                    disabled: gr.id == state.groupId ? 'disabled' : '',
                 });
             })
             .join('');
 
-        $('#move-tab-to-group-menu').innerHTML = render('#move-tab-to-group-menu-tmpl', {
+        $('#move-tab-to-group-menu').innerHTML = render('move-tab-to-group-menu-tmpl', {
             menuItemsHtml,
         });
 
-        showResultHtml(result);
+        if (translatePageAfterRender) {
+            translatePage();
+        }
     }
 
 })();

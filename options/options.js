@@ -1,18 +1,20 @@
 (function() {
     'use strict';
 
-    let $on = on.bind({});
+    let $on = on.bind({}),
+        allCheckBoxes = Object.keys(defaultOptions).filter(key => 'boolean' === type(defaultOptions[key]));
 
     function saveOptions() {
-        return storage.set({
-            closePopupAfterChangeGroup: $('#closePopupAfterChangeGroup').checked,
-            openGroupAfterChange: $('#openGroupAfterChange').checked,
-            showGroupCircleInSearchedTab: $('#showGroupCircleInSearchedTab').checked,
-            showUrlTooltipOnTabHover: $('#showUrlTooltipOnTabHover').checked,
+        let options = {};
+
+        allCheckBoxes.forEach(function(key) {
+            options[key] = $('#' + key).checked;
         });
+
+        return storage.set(options);
     }
 
-    $on('change', '#closePopupAfterChangeGroup, #openGroupAfterChange, #showGroupCircleInSearchedTab, #showUrlTooltipOnTabHover', saveOptions);
+    $on('change', '#' + allCheckBoxes.join(', #'), saveOptions);
 
     $on('click', '#importSettingsOldTabGroupsAddon', function() {
         Promise.all([
@@ -100,11 +102,10 @@
     });
 
     storage.get(defaultOptions)
-        .then(function(result) {
-            $('#closePopupAfterChangeGroup').checked = result.closePopupAfterChangeGroup;
-            $('#openGroupAfterChange').checked = result.openGroupAfterChange;
-            $('#showGroupCircleInSearchedTab').checked = result.showGroupCircleInSearchedTab;
-            $('#showUrlTooltipOnTabHover').checked = result.showUrlTooltipOnTabHover;
+        .then(function(options) {
+            allCheckBoxes.forEach(function(key) {
+                $('#' + key).checked = options[key];
+            });
         })
         .then(translatePage);
 

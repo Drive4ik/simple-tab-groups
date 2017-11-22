@@ -5,6 +5,7 @@ const defaultOptions = {
     openGroupAfterChange: true,
     showGroupCircleInSearchedTab: true,
     showUrlTooltipOnTabHover: false,
+    showNotificationAfterMoveTab: true,
 };
 
 let $ = document.querySelector.bind(document),
@@ -59,6 +60,22 @@ let $ = document.querySelector.bind(document),
             regExp = new RegExp('(' + Object.keys(replasedTags).join('|') + ')', 'g');
         return (html || '').replace(regExp, tag => replasedTags[tag] || tag);
     },
+    b64EncodeUnicode = function(str) {
+        // first we use encodeURIComponent to get percent-encoded UTF-8,
+        // then we convert the percent encodings into raw bytes which
+        // can be fed into btoa.
+        return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+            function toSolidBytes(match, p1) {
+                return String.fromCharCode('0x' + p1);
+            }));
+    },
+    b64DecodeUnicode = function(str) {
+        // Going backwards: from bytestream, to percent-encoding, to original string.
+        return decodeURIComponent(atob(str).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+    },
+    notificationsClickCallbackObj = {},
     notify = function(message, timer) {
         let id = String(Date.now());
 
@@ -66,12 +83,27 @@ let $ = document.querySelector.bind(document),
         // Only 'type', 'iconUrl', 'title', and 'message' are supported.
         browser.notifications.create(id, {
             type: 'basic',
-            iconUrl: browser.extension.getURL('icons/icon.svg'),
+            iconUrl: '/icons/icon.svg',
             title: browser.i18n.getMessage('extensionName'),
             message: String(message),
         });
 
         timer && setTimeout(() => browser.notifications.clear(id), timer);
+
+        return new Promise(function(resolve, reject) {
+            let called = false,
+                listener = function(id, notificationId) {
+                if (id === notificationId) {
+                    browser.notifications.onClicked.removeListener(listener);
+                    called = true;
+                    resolve(id);
+                }
+            }.bind(null, id);
+
+            setTimeout(() => called ? null : reject, 30000, id);
+
+            browser.notifications.onClicked.addListener(listener);
+        });
     },
     translatePage = function() {
         Array.from(document.querySelectorAll('[data-i18n]')).forEach(function(node) {

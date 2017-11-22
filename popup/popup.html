@@ -130,11 +130,11 @@
     <script id="move-tab-to-group-menu-tmpl" type="text/template">
         <menuitem label="Move to group:" disabled></menuitem>
         {{menuItemsHtml}}
-        <menuitem label="Create new group" data-create-new-group="true" icon="/icons/group-new.svg"></menuitem>
+        <menuitem label="Create new group" data-move-tab-to-new-group icon="/icons/group-new.svg"></menuitem>
     </script>
 
     <script id="move-tab-to-group-menu-item-tmpl" type="text/template">
-        <menuitem data-action="move-tab-to-group" data-group-id="{{groupId}}" icon="{{icon}}" label="{{title}}"></menuitem>
+        <menuitem data-action="move-tab-to-group" data-group-id="{{groupId}}" icon="{{icon}}" label="{{title}}" {{disabled}}></menuitem>
     </script>
 
     <script id="tab-tmpl" type="text/template">

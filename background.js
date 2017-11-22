@@ -120,26 +120,38 @@
 
                 return Promise.all(promArr);
             })
-            .then(function(res) {
-                let [result, winId] = res,
-                newGroup = result.groups.slice(-1).pop(); // get last group
+            .then(function(result) {
+                let [data, winId] = result,
+                newGroup = data.groups.slice(-1).pop(); // get last group
 
                 if (winId) {
-                    result.windowsGroup[winId] = newGroup.id;
+                    data.windowsGroup[winId] = newGroup.id;
                 }
 
-                return storage.set(result)
-                    .then(() => resetGroups ? result.groups : newGroup);
+                return storage.set(data)
+                    .then(() => resetGroups ? data.groups : newGroup);
             });
     }
 
-    function saveGroup(savedGroup, dontEventUpdateStorage) {
+    // saveGroups : Object or array of Object
+    function saveGroup(saveGroups, dontEventUpdateStorage) {
         return storage.get({
                 groups: [],
             })
             .then(function(result) {
+                let groups = [];
+
+                if (Array.isArray(saveGroups)) {
+                    groups = result.groups.map(function(group) {
+                        let groupIndex = saveGroups.findIndex(gr => gr.id === group.id);
+                        return groupIndex > -1 ? saveGroups[groupIndex] : group;
+                    });
+                } else {
+                    groups = result.groups.map(group => saveGroups.id == group.id ? saveGroups : group);
+                }
+
                 return storage.set({
-                    groups: result.groups.map(group => savedGroup.id == group.id ? savedGroup : group),
+                    groups,
                 }, dontEventUpdateStorage);
             });
     }
@@ -194,7 +206,7 @@
             ])
             .then(function(result) {
                 let [tabs, hasAnotherTabs] = result,
-                    tabId = tabs[tabIndex].id;
+                tabId = tabs[tabIndex].id;
 
                 if (!hasAnotherTabs && isLastTabInGroup) {
                     return browser.tabs.create({
@@ -364,19 +376,6 @@
                     if (destGroup && destGroup.id !== data.currentGroup.id) {
                         let tabIndex = tabs.findIndex(tab => tab.id === tabId);
                         return moveTabToGroup(tabInfo, tabIndex, data.currentGroup.id, destGroup.id);
-
-                        // destGroup.tabs.push(mapTab(tabInfo));
-
-                        // return saveGroup(destGroup)
-                        //     .then(function() {
-                        //         let message = browser.i18n.getMessage('moveTabToGroupMessage', [
-                        //             destGroup.title,
-                        //             (tabInfo.title || tabInfo.url)
-                        //         ]);
-                        //         notify(message, 5000);
-
-                        //         browser.tabs.remove(tabInfo.id);
-                        //     });
                     }
 
                     return saveCurrentTabs();
@@ -460,18 +459,6 @@
         browser.tabs.onDetached.removeListener(onDetachedTab);
     }
 
-    getCurrentData()
-        .then(function(result) {
-            if (!result.groups.length || !result.currentGroup.id) {
-                return addGroup(false, result.currentWindowId)
-                    .then(() => saveCurrentTabs());
-            }
-
-            return saveCurrentTabs();
-        })
-        .then(createMoveTabMenus)
-        .then(addTabEvents);
-
     browser.menus.create({
         id: 'openSettings',
         title: browser.i18n.getMessage('openSettings'),
@@ -486,29 +473,62 @@
     function moveTabToGroup(tab, tabIndex, srcGroupId, destGroupId) {
         return getCurrentData()
             .then(function(result) {
-                let destGroup = result.groups.find(group => group.id === destGroupId),
-                    srcGroup = result.groups.find(group => group.id === srcGroupId),
-                    mappedTab = mapTab(tab);
+                let destGroup = result.groups.find(group => group.id == destGroupId),
+                    srcGroup = result.groups.find(group => group.id == srcGroupId),
+                    currentGroupId = result.currentGroup.id,
+                    mappedTab = mapTab(tab),
+                    groupsToSave = [];
+                promise = Promise.resolve();
 
-                destGroup.tabs.push(mappedTab);
+                // add tab
+                if (currentGroupId == destGroupId) {
+                    promise = browser.tabs.create({
+                        active: false,
+                        url: tab.url,
+                    });
+                } else {
+                    destGroup.tabs.push(mappedTab);
+                    groupsToSave.push(destGroup);
+                }
 
-                return saveGroup(destGroup, result.currentGroup.id == srcGroupId) // ?????????????????
+                // remove tab
+                promise
                     .then(function() {
-                        if (result.currentGroup.id == srcGroupId) {
-                            return removeCurrentTabByIndex(tabIndex, 1 === srcGroup.tabs.length);
+                        if (currentGroupId == srcGroupId) {
+                            return removeCurrentTabByIndex(tabIndex, 1 === srcGroup.tabs.length)
+                                .then(() => result);
                         } else {
                             srcGroup.tabs.splice(tabIndex, 1);
-                            return saveGroup(srcGroup);
+                            groupsToSave.push(srcGroup);
                         }
                     })
-                    .then(function() {
+                    .then(storage.get(defaultOptions))
+                    .then(function(options) { // show notification
+                        if (!options.showNotificationAfterMoveTab) {
+                            return;
+                        }
+
                         let message = browser.i18n.getMessage('moveTabToGroupMessage', [destGroup.title, mappedTab.title]);
-                        notify(message, 5000);
+
+                        return notify(message, 60000)
+                            .then(getCurrentData)
+                            .then(function(result) {
+                                let group = result.groups.find(gr => gr.id == destGroupId),
+                                    isCurrentGroup = result.currentGroup.id == destGroupId;
+
+                                if (isCurrentGroup && createdTabId) {
+                                    return browser.tabs.update(createdTabId, {
+                                        active: true,
+                                    });
+                                }
+
+                                return loadGroup(group, isCurrentGroup, group.tabs.length - 1);
+                            });
                     });
             });
     }
 
-    function createMoveTabMenus() {
+    function prepareMoveTabMenus() {
         let oldMenusRemoved = new Promise(function(resolve) {
             if (moveTabToGroupMenusIds.length) {
                 Promise.all(moveTabToGroupMenusIds.map(browser.menus.remove))
@@ -530,28 +550,30 @@
 
                 moveTabToGroupMenusIds.push(browser.menus.create({
                     id: 'stg-move-tab-helper',
-                    title: 'title1',
+                    title: 'Move tab to group:',
                     enabled: false,
                     contexts: ['tab'],
                 }));
 
                 data.groups.forEach(function(group) {
-                    if (group.id == data.currentGroup.id) {
-                        return;
-                    }
-
                     moveTabToGroupMenusIds.push(browser.menus.create({
                         id: 'stg-move-group-id-' + group.id,
                         title: group.title,
+                        enabled: group.id !== data.currentGroup.id,
                         icons: {
                             16: createSvgColoredIcon(group.iconColor),
                         },
-                        onclick: function(destGroupId, info, tab) {
-                            //
-                            moveTabToGroup(tab, tabIndex, data.currentGroup.id, destGroupId);
-                            console.log('move tab code', info.menuItemId);
-                        }.bind(null, group.id),
                         contexts: ['tab'],
+                        onclick: function(destGroupId, info, tab) {
+                            getCurrentData()
+                                .then(function(result) {
+                                    let tabIndex = result.currentWindowTabs.findIndex(t => t.id === tab.id);
+
+                                    if (tabIndex > -1) {
+                                        moveTabToGroup(tab, tabIndex, result.currentGroup.id, destGroupId);
+                                    }
+                                })
+                        }.bind(null, group.id),
                     }));
                 });
 
@@ -564,7 +586,26 @@
                 moveTabToGroupMenusIds.push(browser.menus.create({
                     id: 'stg-move-tab-new-group',
                     contexts: ['tab'],
-                    title: 'New Group'
+                    title: 'New Group',
+                    icons: {
+                        16: '/icons/group-new.svg',
+                    },
+                    onclick: function(info, tab) {
+                        addGroup()
+                            .then(function(newGroup) {
+                                newGroup.tabs.push(mapTab(tab));
+                                return saveGroup(newGroup, true);
+                            })
+                            .then(getCurrentData)
+                            .then(function(result) {
+                                let tabIndex = result.currentWindowTabs.findIndex(t => t.id === tab.id),
+                                    isLastTabInGroup = result.currentGroup.tabs.length > 1;
+
+                                if (tabIndex > -1) {
+                                    removeCurrentTabByIndex(tabIndex, isLastTabInGroup);
+                                }
+                            });
+                    },
                 }));
             });
     }
@@ -574,15 +615,31 @@
             return '';
         }
 
-        return `data:image/svg+xml,<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="124px" height="124px" viewBox="0 0 124 124" style="enable-background:new 0 0 124 124;" xml:space="preserve"><g><circle fill="${color}" cx="62" cy="62" r="62"/></g></svg>`;
+        let svg = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="124px" height="124px" viewBox="0 0 124 124" style="enable-background:new 0 0 124 124;" xml:space="preserve"><g><circle fill="${color}" cx="62" cy="62" r="62"/></g></svg>`;
+
+        return 'data:image/svg+xml;base64,' + b64EncodeUnicode(svg);
     }
 
+
+    getCurrentData()
+        .then(function(result) {
+            if (!result.groups.length || !result.currentGroup.id) {
+                return addGroup(false, result.currentWindowId)
+                    .then(() => saveCurrentTabs());
+            }
+
+            return saveCurrentTabs();
+        })
+        .then(prepareMoveTabMenus)
+        .then(addTabEvents);
 
 
     window.background = {
         getCurrentData,
         getNotPinnedTabs,
         createSvgColoredIcon,
+        moveTabToGroup,
+        prepareMoveTabMenus,
 
         loadGroup,
 
