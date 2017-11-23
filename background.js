@@ -4,7 +4,7 @@
     let moveTabToGroupMenusIds = [];
 
     const notAllowedURLs = /^(chrome:|javascript:|data:|file:|view-source:|about(?!\:(blank|newtab|home)))/;
-
+storage.get(null).then(console.log);
     function filterTabs(tabs) {
         return Array.from(tabs)
             .filter(tab => !notAllowedURLs.test(tab.url) && !tab.pinned)
@@ -88,7 +88,7 @@
                     windowsGroup: data.windowsGroup,
                     currentWindowId: currentWindow.id,
                     currentWindowTabs: currentWindow.tabs,
-                    currentGroup: data.groups.find(group => group.id == data.windowsGroup[currentWindow.id]) || {}, // ???????????????? need empty obj ?
+                    currentGroup: data.groups.find(group => group.id === data.windowsGroup[currentWindow.id]) || {}, // ???????????????? need empty obj ?
                 };
             });
     }
@@ -133,25 +133,16 @@
             });
     }
 
-    // saveGroups : Object or array of Object
-    function saveGroup(saveGroups, dontEventUpdateStorage) {
+    // groups : Object or array of Object
+    function saveGroup(groups, dontEventUpdateStorage) {
         return storage.get({
                 groups: [],
             })
             .then(function(result) {
-                let groups = [];
-
-                if (Array.isArray(saveGroups)) {
-                    groups = result.groups.map(function(group) {
-                        let groupIndex = saveGroups.findIndex(gr => gr.id === group.id);
-                        return groupIndex > -1 ? saveGroups[groupIndex] : group;
-                    });
-                } else {
-                    groups = result.groups.map(group => saveGroups.id == group.id ? saveGroups : group);
-                }
+                groups = Array.isArray(groups) ? groups : [groups];
 
                 return storage.set({
-                    groups,
+                    groups: result.groups.map(group => groups.find(gr => gr.id === group.id) || group),
                 }, dontEventUpdateStorage);
             });
     }
@@ -161,7 +152,7 @@
 
         return getCurrentData()
             .then(function(result) {
-                isCurrentGroup = oldGroup.id == result.currentGroup.id;
+                isCurrentGroup = oldGroup.id === result.currentGroup.id;
 
                 if (1 === result.groups.length) { // remove last group
                     return addGroup(true); // reset, crete new group and return all groups
@@ -184,7 +175,7 @@
     function addTab(group) {
         return getCurrentData()
             .then(function(result) {
-                if (group.id == result.currentGroup.id) { // after this - will trigger events on create tab and add tab in group
+                if (group.id === result.currentGroup.id) { // after this - will trigger events on create tab and add tab in group
                     return browser.tabs.create({
                         active: false,
                         url: 'about:blank',
@@ -280,7 +271,7 @@
                         url: 'about:blank',
                     });
 
-                    let indexGroup = data.groups.findIndex(gr => gr.id == group.id);
+                    let indexGroup = data.groups.findIndex(gr => gr.id === group.id);
                     data.groups[indexGroup].tabs = group.tabs;
 
                     return saveGroup(group, true)
@@ -318,6 +309,7 @@
                     });
             })
             .then(() => setActiveTab(activeTabIndex))
+            .then(prepareMoveTabMenus)
             .then(addTabEvents);
     }
 
@@ -332,7 +324,7 @@
                 result.currentGroup.tabs = result.currentWindowTabs
                     .filter(tab => !excludeTabIds.includes(tab.id))
                     .concat(addTabs.map(mapTab));
-
+console.log('saveCurrentTabs');
                 return saveGroup(result.currentGroup, dontEventUpdateStorage);
             });
     }
@@ -429,7 +421,7 @@
             })
             .then(function(result) {
                 result.groups.some(function(group) {
-                    if (group.id == result.windowsGroup[detachInfo.oldWindowId]) {
+                    if (group.id === result.windowsGroup[detachInfo.oldWindowId]) {
                         group.tabs = group.tabs.filter(tab => tab.id != tabId);
                         return saveGroup(group);
                     }
@@ -473,16 +465,17 @@
     function moveTabToGroup(tab, tabIndex, srcGroupId, destGroupId) {
         return getCurrentData()
             .then(function(result) {
-                let destGroup = result.groups.find(group => group.id == destGroupId),
-                    srcGroup = result.groups.find(group => group.id == srcGroupId),
+                let destGroup = result.groups.find(group => group.id === destGroupId),
+                    srcGroup = result.groups.find(group => group.id === srcGroupId),
                     currentGroupId = result.currentGroup.id,
                     mappedTab = mapTab(tab),
-                    groupsToSave = [];
-                promise = Promise.resolve();
+                    groupsToSave = [],
+                    finishTabActionFunc = null,
+                    promise = Promise.resolve();
 
                 // add tab
-                if (currentGroupId == destGroupId) {
-                    promise = browser.tabs.create({
+                if (currentGroupId === destGroupId) {
+                    finishTabActionFunc = browser.tabs.create.bind(null, {
                         active: false,
                         url: tab.url,
                     });
@@ -492,38 +485,37 @@
                 }
 
                 // remove tab
-                promise
-                    .then(function() {
-                        if (currentGroupId == srcGroupId) {
-                            return removeCurrentTabByIndex(tabIndex, 1 === srcGroup.tabs.length)
-                                .then(() => result);
-                        } else {
-                            srcGroup.tabs.splice(tabIndex, 1);
-                            groupsToSave.push(srcGroup);
-                        }
-                    })
-                    .then(storage.get(defaultOptions))
-                    .then(function(options) { // show notification
-                        if (!options.showNotificationAfterMoveTab) {
-                            return;
-                        }
+                if (currentGroupId === srcGroupId) {
+                    finishTabActionFunc = removeCurrentTabByIndex.bind(null, tabIndex, 1 === srcGroup.tabs.length);
+                } else {
+                    srcGroup.tabs.splice(tabIndex, 1);
+                    groupsToSave.push(srcGroup);
+                }
 
-                        let message = browser.i18n.getMessage('moveTabToGroupMessage', [destGroup.title, mappedTab.title]);
+                return saveGroup(groupsToSave)
+                    .then(finishTabActionFunc);
+            })
+            .then(() => storage.get('showNotificationAfterMoveTab'))
+            .then(function(options) { // show notification
+                if (!options.showNotificationAfterMoveTab) {
+                    return;
+                }
 
-                        return notify(message, 60000)
-                            .then(getCurrentData)
-                            .then(function(result) {
-                                let group = result.groups.find(gr => gr.id == destGroupId),
-                                    isCurrentGroup = result.currentGroup.id == destGroupId;
+                let message = browser.i18n.getMessage('moveTabToGroupMessage', [destGroup.title, mappedTab.title]);
 
-                                if (isCurrentGroup && createdTabId) {
-                                    return browser.tabs.update(createdTabId, {
-                                        active: true,
-                                    });
-                                }
+                return notify(message, 60000)
+                    .then(getCurrentData)
+                    .then(function(result) {
+                        let group = result.groups.find(gr => gr.id === destGroupId),
+                            isCurrentGroup = result.currentGroup.id === destGroupId;
 
-                                return loadGroup(group, isCurrentGroup, group.tabs.length - 1);
+                        if (isCurrentGroup && createdTabId) {
+                            return browser.tabs.update(createdTabId, {
+                                active: true,
                             });
+                        }
+
+                        return loadGroup(group, isCurrentGroup, group.tabs.length - 1);
                     });
             });
     }
@@ -531,7 +523,7 @@
     function prepareMoveTabMenus() {
         let oldMenusRemoved = new Promise(function(resolve) {
             if (moveTabToGroupMenusIds.length) {
-                Promise.all(moveTabToGroupMenusIds.map(browser.menus.remove))
+                Promise.all(moveTabToGroupMenusIds.map(id => browser.menus.remove(id)))
                     .then(resolve)
                     .catch(resolve);
             }

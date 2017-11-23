@@ -32,7 +32,7 @@
         });
 
         $on('click', '[data-action="load-group"]', function(data) {
-            let isCurrentGroup = data.groupId == allData.currentGroupId;
+            let isCurrentGroup = data.groupId === allData.currentGroupId;
 
             if (isCurrentGroup && data.openGroupIfCurrent === 'true') {
                 return renderTabsList(data.groupId);
@@ -66,7 +66,7 @@
         $on('click', '[data-action="remove-tab"]', function(data) {
             let group = getGroupById(data.groupId);
 
-            background.removeTab(group.tabs[data.tabIndex], group, group.id == allData.currentGroupId);
+            background.removeTab(group.tabs[data.tabIndex], group, group.id === allData.currentGroupId);
         });
 
         $on('click', '[data-action="add-tab"]', function(data) {
@@ -81,7 +81,6 @@
             $('#groupEditIconColor').value = group.iconColor;
             $('#groupEditMoveNewTabsToThisGroupByRegExp').value = group.moveNewTabsToThisGroupByRegExp;
             $('#groupEditPopup').classList.add('is-active');
-            $('#stg').classList.add('fix-height-popup');
         });
 
         $on('click', '[data-submit-edit-popup]', function() {
@@ -111,12 +110,10 @@
                 .then(createMoveTabContextMenu);
 
             $('#groupEditPopup').classList.remove('is-active');
-            $('#stg').classList.remove('fix-height-popup');
         });
 
         $on('click', '[data-close-edit-popup]', function() {
             $('#groupEditPopup').classList.remove('is-active');
-            $('#stg').classList.remove('fix-height-popup');
         });
 
         $on('click', '[data-action="show-delete-group-popup"]', function(data) {
@@ -148,13 +145,13 @@
         });
 
         $on('click', '[data-action="move-tab-to-group"]', function(data) {
-            let tab = allData.groups.find(group => group.id == state.groupId).tabs[moveTabToGroupTabIndex];
+            let tab = allData.groups.find(group => group.id === state.groupId).tabs[moveTabToGroupTabIndex];
 
             background.moveTabToGroup(tab, moveTabToGroupTabIndex, state.groupId, data.groupId);
         });
 
         $on('click', '[data-move-tab-to-new-group]', function(data) {
-            let expandedGroup = allData.groups.find(group => group.id == state.groupId),
+            let expandedGroup = allData.groups.find(group => group.id === state.groupId),
                 tab = expandedGroup.tabs[moveTabToGroupTabIndex];
 
             background.addGroup()
@@ -175,7 +172,7 @@
     }
 
     function getGroupById(groupId) {
-        return allData.groups.find(group => String(group.id) === String(groupId));
+        return allData.groups.find(group => group.id === groupId);
     }
 
     function render(templateId, data) {
@@ -233,7 +230,7 @@
     function prepareTabToView(groupId, tab, tabIndex) {
         return {
             urlTitle: options.showUrlTooltipOnTabHover ? tab.url : '',
-            classList: (groupId == allData.currentGroupId && tabIndex == allData.activeTabIndex) ? 'is-active' : '',
+            classList: (groupId === allData.currentGroupId && tabIndex === allData.activeTabIndex) ? 'is-active' : '',
             tabIndex: tabIndex,
             groupId: groupId,
             title: safeHtml(unSafeHtml(tab.title || tab.url)),
@@ -279,12 +276,13 @@
         state.view = VIEW_GROUPS;
 
         let groupsHtml = allData.groups.map(function(group) {
-                group.classList = group.id == allData.currentGroupId ? 'is-active' : '';
-                group.colorCircleHtml = render('color-circle-tmpl', {
-                    title: '',
-                    iconColor: group.iconColor,
-                });
-                return render('group-tmpl', group);
+                return render('group-tmpl', Object.assign({}, group, {
+                    classList: group.id === allData.currentGroupId ? 'is-active' : '',
+                    colorCircleHtml: render('color-circle-tmpl', {
+                        title: '',
+                        iconColor: group.iconColor,
+                    }),
+                }));
             })
             .join('');
 
@@ -336,7 +334,7 @@
                     title: gr.title,
                     groupId: gr.id,
                     icon: background.createSvgColoredIcon(gr.iconColor),
-                    disabled: gr.id == state.groupId ? 'disabled' : '',
+                    disabled: gr.id === state.groupId ? 'disabled' : '',
                 });
             })
             .join('');

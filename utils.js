@@ -19,7 +19,7 @@ let $ = document.querySelector.bind(document),
 
         let args = [].slice.call(arguments, 1);
 
-        if (1 === args.length && 'object' == type(args[0])) {
+        if (1 === args.length && 'object' === type(args[0])) {
             args = args[0];
         }
 
@@ -130,7 +130,14 @@ let $ = document.querySelector.bind(document),
 
                 function checkQueryByElement(element, data) {
                     if (element.matches && element.matches(data.query)) {
-                        data.func.call(element, element.dataset);
+                        let elementData = {};
+
+                        Object.keys(element.dataset)
+                            .forEach(function(key) {
+                                elementData[key] = isFinite(element.dataset[key]) ? parseInt(element.dataset[key], 10) : element.dataset[key];
+                            });
+
+                        data.func.call(element, elementData);
                         translatePage();
                         return true;
                     }
@@ -162,6 +169,7 @@ let $ = document.querySelector.bind(document),
         clear: browser.storage.local.clear,
         remove: browser.storage.local.remove,
         set(keys, dontEventUpdateStorage) {
+            console.log('save data', keys);
             return browser.storage.local.set(keys)
                 .then(function() {
                     if (dontEventUpdateStorage) {

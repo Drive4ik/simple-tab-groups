@@ -3,14 +3,17 @@ html {
 }
 
 #stg {
+    display: flex;
+    flex-direction: column;
     background-color: #fff;
     width: 425px;
+    min-height: 400px;
     font-family: Arial;
     font-size: 14px;
 }
 
-#stg.fix-height-popup {
-    min-height: 400px;
+#result {
+    flex-grow: 1;
 }
 
 /* HEPLERS */
