@@ -9,13 +9,13 @@
         templates = {},
         options = null,
         allData = null,
-        moveTabToGroupTabIndex = null,
+        moveTabToGroupTabIndex = -1,
         state = {
             view: VIEW_GROUPS,
         },
         $on = on.bind({});
 
-    storage.get(defaultOptions)
+    storage.get(['closePopupAfterChangeGroup', 'openGroupAfterChange', 'showGroupCircleInSearchedTab', 'showUrlTooltipOnTabHover', 'showNotificationAfterMoveTab'])
         .then(result => options = result);
 
     loadData();
@@ -77,19 +77,20 @@
             let group = getGroupById(data.groupId);
 
             $('#groupEditTitle').value = unSafeHtml(group.title);
-            $('#groupEditIconColorCircle').style.backgroundColor = unSafeHtml(group.iconColor);
+            $('#groupEditIconColorCircle').style.backgroundColor = group.iconColor;
             $('#groupEditIconColor').value = group.iconColor;
             $('#groupEditMoveNewTabsToThisGroupByRegExp').value = group.moveNewTabsToThisGroupByRegExp;
-            $('#groupEditPopup').classList.add('is-active');
+
+            $('html').classList.add('no-scroll');
+            $('#groupEditPopup').classList.add('is-flex');
         });
 
         $on('click', '[data-submit-edit-popup]', function() {
-            let group = getGroupById(state.groupId),
-                iconColor = $('#groupEditIconColor').value.trim();
+            let group = getGroupById(state.groupId);
 
             group.title = safeHtml($('#groupEditTitle').value.trim());
 
-            group.iconColor = iconColor === safeHtml(iconColor) ? iconColor : '';
+            group.iconColor = $('#groupEditIconColorCircle').style.backgroundColor; // safe color
 
             group.moveNewTabsToThisGroupByRegExp = $('#groupEditMoveNewTabsToThisGroupByRegExp').value.trim();
 
@@ -109,11 +110,13 @@
                 .then(background.prepareMoveTabMenus)
                 .then(createMoveTabContextMenu);
 
-            $('#groupEditPopup').classList.remove('is-active');
+            $('html').classList.remove('no-scroll');
+            $('#groupEditPopup').classList.remove('is-flex');
         });
 
         $on('click', '[data-close-edit-popup]', function() {
-            $('#groupEditPopup').classList.remove('is-active');
+            $('html').classList.remove('no-scroll');
+            $('#groupEditPopup').classList.remove('is-flex');
         });
 
         $on('click', '[data-action="show-delete-group-popup"]', function(data) {
@@ -137,7 +140,9 @@
         });
 
         $on('click', '[data-add-group]', function() {
-            background.addGroup();
+            background.addGroup()
+                .then(background.prepareMoveTabMenus)
+                .then(createMoveTabContextMenu);
         });
 
         $on('contextmenu', '[data-is-tab="true"]', function(data) {
@@ -276,13 +281,18 @@
         state.view = VIEW_GROUPS;
 
         let groupsHtml = allData.groups.map(function(group) {
-                return render('group-tmpl', Object.assign({}, group, {
+                let customData = {
                     classList: group.id === allData.currentGroupId ? 'is-active' : '',
                     colorCircleHtml: render('color-circle-tmpl', {
                         title: '',
                         iconColor: group.iconColor,
                     }),
-                }));
+                };
+
+                delete group.classList; // TMP
+                delete group.colorCircleHtml; // TMP
+
+                return render('group-tmpl', Object.assign({}, group, customData));
             })
             .join('');
 

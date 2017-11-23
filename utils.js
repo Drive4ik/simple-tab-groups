@@ -1,6 +1,11 @@
 'use strict';
 
 const defaultOptions = {
+    groups: [],
+    windowsGroup: {},
+    lastCreatedGroupPosition: 0,
+
+    // options
     closePopupAfterChangeGroup: true,
     openGroupAfterChange: true,
     showGroupCircleInSearchedTab: true,
@@ -75,7 +80,6 @@ let $ = document.querySelector.bind(document),
             return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
         }).join(''));
     },
-    notificationsClickCallbackObj = {},
     notify = function(message, timer) {
         let id = String(Date.now());
 
@@ -119,6 +123,13 @@ let $ = document.querySelector.bind(document),
 
             delete node.dataset.i18n;
         });
+    },
+    isAllowUrl = function(url) {
+        if (!url) {
+            return false;
+        }
+
+        return ! /^(chrome:|javascript:|data:|file:|view-source:|about(?!\:(blank|newtab|home)))/.test(url);
     },
     on = function(event, query, func) {
         let events = this;
@@ -165,11 +176,32 @@ let $ = document.querySelector.bind(document),
         });
     },
     storage = {
-        get: browser.storage.local.get,
+        get(keys) {
+            return browser.storage.local.get(keys)
+                .then(function(result) {
+                    if (null === keys) {
+                        if (Object.keys(result).length === 0) {
+                            Object.assign(result, defaultOptions);
+                        }
+                    } else if ('string' === type(keys)) {
+                        if (undefined === result[keys]) {
+                            result[keys] = defaultOptions[keys];
+                        }
+                    } else if (Array.isArray(keys)) {
+                        keys.forEach(function(key) {
+                            if (undefined === result[key]) {
+                                result[key] = defaultOptions[key];
+                            }
+                        });
+                    }
+
+                    return result;
+                });
+        },
         clear: browser.storage.local.clear,
         remove: browser.storage.local.remove,
         set(keys, dontEventUpdateStorage) {
-            console.log('save data', keys);
+            // console.log('save data', keys);
             return browser.storage.local.set(keys)
                 .then(function() {
                     if (dontEventUpdateStorage) {
@@ -186,3 +218,6 @@ let $ = document.querySelector.bind(document),
                 });
         },
     };
+
+
+

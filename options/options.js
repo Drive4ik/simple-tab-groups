@@ -71,7 +71,7 @@
                         }
 
                         oldTab.entries.forEach(function(t) {
-                            if (t.url && !background.notAllowedURLs.test(t.url)) {
+                            if (isAllowUrl(t.url)) {
                                 newGroups[oldGroupId].tabs.push(background.mapTab({
                                     title: (t.title || t.url),
                                     url: t.url,

@@ -9,53 +9,65 @@
 </head>
 
 <body>
-    <div id="stg">
+    <div id="stg" class="is-flex is-column">
         <div class="search-wrapper control">
             <input id="searchTab" type="text" class="input" autocomplete="off" data-i18n="searchTabPlaceholder:placeholder" />
         </div>
 
-        <div id="result"></div>
+        <div id="result" class="is-full-width"></div>
 
-        <div id="settings" class="settings no-text-select">
+        <div id="settings" class="settings is-flex no-text-select">
             <img class="icon" src="/icons/settings.svg" alt="" />
             <span data-i18n="settingsTitle"></span>
         </div>
 
-        <div id="groupEditPopup" class="modal">
-            <div class="modal-background" data-close-edit-popup></div>
-            <div class="modal-card">
-                <header class="modal-card-head">
-                    <p class="modal-card-title" data-i18n="groupSettings"></p>
-                    <button class="delete" aria-label="close" data-close-edit-popup></button>
-                </header>
-                <section class="modal-card-body">
-                    <div class="field">
-                        <label class="label" data-i18n="groupTitle"></label>
-                        <div class="control">
-                            <input id="groupEditTitle" type="text" class="input" maxlength="120" data-i18n="groupTitle:placeholder">
-                        </div>
+        <div id="groupEditPopup" class="is-column">
+            <div class="item" data-close-edit-popup>
+                <span class="item-icon">&#10094;</span>
+                <span class="item-title" data-i18n="goBackButtonTitle"></span>
+            </div>
+
+            <hr>
+
+            <div class="body is-full-width">
+                <h3 data-i18n="groupSettings"></h3>
+
+                <div class="field">
+                    <label class="label" data-i18n="title"></label>
+                    <div class="control">
+                        <input id="groupEditTitle" type="text" class="input" maxlength="120" data-i18n="title:placeholder" />
                     </div>
-                    <div class="field">
+                </div>
+                <div class="field">
+                    <div class="is-flex">
                         <label class="label" data-i18n="groupColor"></label>
-                        <span class="simple-circle" id="groupEditIconColorCircle"></span>
-                        <div class="control">
-                            <input id="groupEditIconColor" type="text" class="input" maxlength="40" placeholder="blue, #0f0, rgb(0, 255, 0)...">
+                        <div class="is-full-width">
+                            <span class="simple-circle" id="groupEditIconColorCircle"></span>
                         </div>
+                        <a href="https://www.google.com/search?q=rgb+color+picker" target="_blank">Google RGB color picker</a>
                     </div>
-                    <div class="field">
-                        <label class="label">
-                            <span data-i18n="groupDomains"></span>
-                            <span class="question" data-i18n="groupExceptionsHelp:title">?</span>
-                        </label>
-                        <div class="control">
-                            <textarea id="groupEditMoveNewTabsToThisGroupByRegExp" class="textarea" data-i18n="groupDomainsPlaceholder:placeholder"></textarea>
-                        </div>
+                    <div class="control">
+                        <input id="groupEditIconColor" type="text" class="input" maxlength="40" placeholder="blue, #0f0, rgb(0, 255, 0)..." />
                     </div>
-                </section>
-                <footer class="modal-card-foot">
+                </div>
+                <div class="field">
+                    <label class="label">
+                        <span data-i18n="regexpForTabsTitle"></span>
+                        <span class="question" data-i18n="regexpForTabsHelp:title">?</span>
+                    </label>
+                    <div class="control">
+                        <textarea id="groupEditMoveNewTabsToThisGroupByRegExp" class="textarea" data-i18n="regexpForTabsPlaceholder:placeholder"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field is-grouped action-buttons">
+                <div class="control">
                     <button data-submit-edit-popup class="button is-small is-success" data-i18n="save"></button>
+                </div>
+                <div class="control">
                     <button data-close-edit-popup class="button is-small" data-i18n="cancel"></button>
-                </footer>
+                </div>
             </div>
         </div>
 
@@ -88,7 +100,7 @@
         <div class="tabs-list">
             <div class="item" data-show-groups-list>
                 <span class="item-icon">&#10094;</span>
-                <span class="item-title" data-i18n="goBackButtonTitle"></span>
+                <span class="item-title" data-i18n="goBackToGroupsButtonTitle"></span>
             </div>
 
             <hr>
@@ -128,9 +140,10 @@
     <menu id="move-tab-to-group-menu" type="context"></menu>
 
     <script id="move-tab-to-group-menu-tmpl" type="text/template">
-        <menuitem label="Move to group:" disabled></menuitem>
+        <menuitem data-i18n="moveTabToGroupDisabledTitle::label" disabled></menuitem>
         {{menuItemsHtml}}
-        <menuitem label="Create new group" data-move-tab-to-new-group icon="/icons/group-new.svg"></menuitem>
+        <hr>
+        <menuitem data-i18n="createNewGroup::label" data-move-tab-to-new-group icon="/icons/group-new.svg"></menuitem>
     </script>
 
     <script id="move-tab-to-group-menu-item-tmpl" type="text/template">

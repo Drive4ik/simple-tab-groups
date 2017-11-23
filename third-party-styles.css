@@ -277,6 +277,12 @@ th {
     display: inline-block;
 }
 
+.control {
+    font-size: 1rem;
+    position: relative;
+    text-align: left;
+}
+
 .control .input,
 .control .textarea {
     width: 100%;
@@ -289,6 +295,30 @@ th {
 
 .control .textarea {
     resize: vertical;
+    height: 100px;
+    min-height: 75px;
+}
+
+.field.is-grouped {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.field.is-grouped > .control {
+    flex-shrink: 0;
+}
+
+.field.is-grouped > .control:not(:last-child) {
+    margin-bottom: 0;
+    margin-right: 0.75rem;
+}
+
+.field.is-grouped.is-grouped-centered {
+    justify-content: center;
+}
+
+.field.is-grouped.is-grouped-right {
+    justify-content: flex-end;
 }
 
 .delete {

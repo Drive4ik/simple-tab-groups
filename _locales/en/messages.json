@@ -19,6 +19,11 @@
         "description": "Settings context button title"
     },
 
+    "moveTabToGroupDisabledTitle": {
+        "message": "Move tab to group:",
+        "description": "Move tab to group title"
+    },
+
     "moveTabToGroupMessage": {
         "message": "Tab \"$tabtitle$\" was moved to group \"$grouptitle$\".\n\nClick here to show this tab.",
         "description": "Tab moved popup title",
@@ -170,31 +175,36 @@
     },
 
     "goBackButtonTitle": {
+        "message": "Go back",
+        "description": "Go back"
+    },
+
+    "goBackToGroupsButtonTitle": {
         "message": "Go back to groups",
         "description": "Go back to groups"
     },
 
-    "groupTitle": {
-        "message": "Group title",
-        "description": "Group title"
+    "title": {
+        "message": "Title",
+        "description": "Title"
     },
 
     "groupColor": {
-        "message": "Group icon color",
+        "message": "Icon color",
         "description": "Group color"
     },
 
-    "groupDomains": {
-        "message": "Group domains",
-        "description": "Group domains"
+    "regexpForTabsTitle": {
+        "message": "Regular expressions for catch tabs",
+        "description": "Regular expressions for catch tabs"
     },
 
-    "groupDomainsPlaceholder": {
-        "message": "Domain rules",
-        "description": "Domains placeholders and helper"
+    "regexpForTabsPlaceholder": {
+        "message": "Regular expressions",
+        "description": "Regular expressions"
     },
 
-    "groupExceptionsHelp": {
+    "regexpForTabsHelp": {
         "message": "Insert regular expressions for web addresses here. Matching tabs will be moved automatically to this group.\nUse one line per rule, there can be as many as you want.\nExamples:\ngithub\\.com/drive4ik/simple-tab-groups - catch all pages in the add-on's repository\nbugzilla\\.mozilla\\.org - catch Firefox bug reports\n(facebook|twitter|youtube)\\.com - catch all your social pages",
         "description": "Regular exceptions helper"
     }
