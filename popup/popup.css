@@ -161,6 +161,16 @@ html {
     margin-left: 5px;
 }
 
+#stg .item .item-title .bordered {
+    display: inline-block;
+    border-bottom-right-radius: 5px;
+    border-bottom-left-radius: 5px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+}
+
 #stg .tabs-list .group-info {
     margin-bottom: 5px;
 }

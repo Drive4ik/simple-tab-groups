@@ -1,17 +1,19 @@
 'use strict';
 
-const defaultOptions = {
-    groups: [],
-    windowsGroup: {},
-    lastCreatedGroupPosition: 0,
+const DEFAULT_COOKIE_STORE_ID = 'firefox-default',
+    CONTEXT_MENU_PREFIX_GROUP = 'stg-move-group-id-',
+    defaultOptions = {
+        groups: [],
+        windowsGroup: {},
+        lastCreatedGroupPosition: 0,
 
-    // options
-    closePopupAfterChangeGroup: true,
-    openGroupAfterChange: true,
-    showGroupCircleInSearchedTab: true,
-    showUrlTooltipOnTabHover: false,
-    showNotificationAfterMoveTab: true,
-};
+        // options
+        closePopupAfterChangeGroup: true,
+        openGroupAfterChange: true,
+        showGroupCircleInSearchedTab: true,
+        showUrlTooltipOnTabHover: false,
+        showNotificationAfterMoveTab: true,
+    };
 
 let $ = document.querySelector.bind(document),
     type = function(obj) {
@@ -136,9 +138,7 @@ let $ = document.querySelector.bind(document),
 
         if (!events[event]) {
             events[event] = [];
-            document.body.addEventListener(event, function(e) {
-                let el = e.target;
-
+            document.body.addEventListener(event, function({target:el}) {
                 function checkQueryByElement(element, data) {
                     if (element.matches && element.matches(data.query)) {
                         let elementData = {};

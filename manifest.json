@@ -10,7 +10,7 @@
 
     "name": "__MSG_extensionName__",
     "description": "__MSG_extensionDescription__",
-    "version": "1.7",
+    "version": "1.7.1",
     "author": "__MSG_authorName__",
     "homepage_url": "https://github.com/drive4ik/simple-tab-groups",
     "developer": {
@@ -27,6 +27,8 @@
         "tabs",
         "notifications",
         "menus",
+        "contextualIdentities",
+        "cookies",
         "storage"
     ],
 

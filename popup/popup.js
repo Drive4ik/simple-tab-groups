@@ -27,22 +27,21 @@
         });
 
         $on('input', '#groupEditIconColor', function() {
-            $('#groupEditIconColorCircle').style.backgroundColor = '';
-            $('#groupEditIconColorCircle').style.backgroundColor = safeHtml(this.value.trim());
+            $('#groupEditIconColorCircle').style.backgroundColor = this.value.trim();
         });
 
-        $on('click', '[data-action="load-group"]', function(data) {
-            let isCurrentGroup = data.groupId === allData.currentGroupId;
+        $on('click', '[data-action="load-group"]', function({groupId, tabIndex, openGroupIfCurrent}) {
+            let isCurrentGroup = groupId === allData.currentGroupId;
 
-            if (isCurrentGroup && data.openGroupIfCurrent === 'true') {
-                return renderTabsList(data.groupId);
+            if (isCurrentGroup && openGroupIfCurrent === 'true') {
+                return renderTabsList(groupId);
             }
 
-            background.loadGroup(getGroupById(data.groupId), isCurrentGroup, data.tabIndex)
+            background.loadGroup(getGroupById(groupId), isCurrentGroup, tabIndex)
                 .then(loadData)
                 .then(function() {
                     if (!options.closePopupAfterChangeGroup && options.openGroupAfterChange) {
-                        renderTabsList(data.groupId);
+                        renderTabsList(groupId);
                     }
                 });
 
@@ -55,26 +54,26 @@
             browser.runtime.openOptionsPage();
         });
 
-        $on('click', '[data-action="show-group"]', function(data) {
-            renderTabsList(data.groupId);
+        $on('click', '[data-action="show-group"]', function({groupId}) {
+            renderTabsList(groupId);
         });
 
         $on('click', '[data-show-groups-list]', function() {
             renderGroupsList();
         });
 
-        $on('click', '[data-action="remove-tab"]', function(data) {
-            let group = getGroupById(data.groupId);
+        $on('click', '[data-action="remove-tab"]', function({groupId, tabIndex}) {
+            let group = getGroupById(groupId);
 
-            background.removeTab(group.tabs[data.tabIndex], group, group.id === allData.currentGroupId);
+            background.removeTab(group.tabs[tabIndex], group, groupId === allData.currentGroupId);
         });
 
-        $on('click', '[data-action="add-tab"]', function(data) {
-            background.addTab(getGroupById(data.groupId));
+        $on('click', '[data-action="add-tab"]', function({groupId, cookieStoreId}) {
+            background.addTab(getGroupById(groupId), cookieStoreId);
         });
 
-        $on('click', '[data-action="open-group-settings-popup"]', function(data) {
-            let group = getGroupById(data.groupId);
+        $on('click', '[data-action="open-group-settings-popup"]', function({groupId}) {
+            let group = getGroupById(groupId);
 
             $('#groupEditTitle').value = unSafeHtml(group.title);
             $('#groupEditIconColorCircle').style.backgroundColor = group.iconColor;
@@ -90,7 +89,7 @@
 
             group.title = safeHtml($('#groupEditTitle').value.trim());
 
-            group.iconColor = $('#groupEditIconColorCircle').style.backgroundColor; // safe color
+            group.iconColor = $('#groupEditIconColorCircle').style.backgroundColor; // safed color
 
             group.moveNewTabsToThisGroupByRegExp = $('#groupEditMoveNewTabsToThisGroupByRegExp').value.trim();
 
@@ -107,7 +106,8 @@
 
             background.saveGroup(group)
                 .then(() => renderTabsList(state.groupId))
-                .then(background.prepareMoveTabMenus)
+                .then(background.removeMoveTabMenus)
+                .then(background.createMoveTabMenus)
                 .then(createMoveTabContextMenu);
 
             $('html').classList.remove('no-scroll');
@@ -133,7 +133,8 @@
         $on('click', '[data-submit-remove-group]', function() {
             background.removeGroup(getGroupById(state.groupId))
                 .then(renderGroupsList)
-                .then(background.prepareMoveTabMenus)
+                .then(background.removeMoveTabMenus)
+                .then(background.createMoveTabMenus)
                 .then(createMoveTabContextMenu);
 
             $('#groupDeletePopup').classList.remove('is-active');
@@ -141,21 +142,22 @@
 
         $on('click', '[data-add-group]', function() {
             background.addGroup()
-                .then(background.prepareMoveTabMenus)
+                .then(background.removeMoveTabMenus)
+                .then(background.createMoveTabMenus)
                 .then(createMoveTabContextMenu);
         });
 
-        $on('contextmenu', '[data-is-tab="true"]', function(data) {
-            moveTabToGroupTabIndex = data.tabIndex;
+        $on('contextmenu', '[data-is-tab="true"]', function({tabIndex}) {
+            moveTabToGroupTabIndex = tabIndex;
         });
 
-        $on('click', '[data-action="move-tab-to-group"]', function(data) {
+        $on('click', '[data-action="move-tab-to-group"]', function({groupId}) {
             let tab = allData.groups.find(group => group.id === state.groupId).tabs[moveTabToGroupTabIndex];
 
-            background.moveTabToGroup(tab, moveTabToGroupTabIndex, state.groupId, data.groupId);
+            background.moveTabToGroup(tab, moveTabToGroupTabIndex, state.groupId, groupId);
         });
 
-        $on('click', '[data-move-tab-to-new-group]', function(data) {
+        $on('click', '[data-move-tab-to-new-group]', function() {
             let expandedGroup = allData.groups.find(group => group.id === state.groupId),
                 tab = expandedGroup.tabs[moveTabToGroupTabIndex];
 
@@ -193,25 +195,29 @@
     }
 
     function showResultHtml(html) {
-        $('#result').innerHTML = html;
+        setHtml('result', html);
         translatePage();
+    }
+
+    function setHtml(id, html) {
+        $('#' + id).innerHTML = html;
     }
 
     function loadData() {
         return Promise.all([
                 background.getCurrentData(),
-                background.getNotPinnedTabs(true)
+                background.getNotPinnedTabs(true),
+                browser.contextualIdentities.query({}).then(Array.from)
             ])
             .then(function(result) {
-                let [curData, tabs] = result;
+                let [curData, tabs, containers] = result;
 
                 allData = {
                     groups: curData.groups,
                     currentGroupId: curData.currentGroup.id,
                     activeTabIndex: tabs.findIndex(tab => tab.active),
+                    containers,
                 };
-
-                window.allData = allData;
             })
             .then(selectRender);
     }
@@ -233,6 +239,12 @@
     }
 
     function prepareTabToView(groupId, tab, tabIndex) {
+        let containerColorCode = '';
+
+        if (tab.cookieStoreId && tab.cookieStoreId !== DEFAULT_COOKIE_STORE_ID) {
+            containerColorCode = 'border-bottom: 2px solid ' + allData.containers.find(container => container.cookieStoreId === tab.cookieStoreId).colorCode;
+        }
+
         return {
             urlTitle: options.showUrlTooltipOnTabHover ? tab.url : '',
             classList: (groupId === allData.currentGroupId && tabIndex === allData.activeTabIndex) ? 'is-active' : '',
@@ -240,6 +252,7 @@
             groupId: groupId,
             title: safeHtml(unSafeHtml(tab.title || tab.url)),
             url: tab.url,
+            containerColorCode: containerColorCode,
             favIconUrl: tab.favIconUrl || '/icons/tab.svg',
         };
     }
@@ -326,6 +339,7 @@
             }),
             group,
             tabsListHtml,
+            cookieStoreId: DEFAULT_COOKIE_STORE_ID,
         });
 
         createMoveTabContextMenu();
@@ -349,9 +363,23 @@
             })
             .join('');
 
-        $('#move-tab-to-group-menu').innerHTML = render('move-tab-to-group-menu-tmpl', {
+        setHtml('move-tab-to-group-menu', render('move-tab-to-group-menu-tmpl', {
             menuItemsHtml,
-        });
+        }));
+
+
+        menuItemsHtml = allData.containers
+            .map(function(container) {
+                return render('create-tab-with-container-item-tmpl', {
+                    cookieStoreId: container.cookieStoreId,
+                    icon: container.iconUrl,
+                    title: container.name,
+                    groupId: state.groupId,
+                });
+            })
+            .join('');
+
+        setHtml('create-tab-with-container-menu', menuItemsHtml);
 
         if (translatePageAfterRender) {
             translatePage();

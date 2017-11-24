@@ -121,7 +121,7 @@
             <hr>
 
             <div class="create-new-tab">
-                <div class="item" data-action="add-tab" data-group-id="{{group.id}}">
+                <div class="item" data-action="add-tab" data-group-id="{{group.id}}" data-cookie-store-id="{{cookieStoreId}}" contextmenu="create-tab-with-container-menu">
                     <div class="item-icon">
                         <img class="icon" src="/icons/tab-new.svg" alt="">
                     </div>
@@ -150,6 +150,12 @@
         <menuitem data-action="move-tab-to-group" data-group-id="{{groupId}}" icon="{{icon}}" label="{{title}}" {{disabled}}></menuitem>
     </script>
 
+    <menu id="create-tab-with-container-menu" type="context"></menu>
+
+    <script id="create-tab-with-container-item-tmpl" type="text/template">
+        <menuitem data-action="add-tab" data-group-id="{{groupId}}" data-cookie-store-id="{{cookieStoreId}}" icon="{{icon}}" label="{{title}}"></menuitem>
+    </script>
+
     <script id="tab-tmpl" type="text/template">
         <li>
             <div contextmenu="move-tab-to-group-menu" class="item {{classList}}" title="{{urlTitle}}" data-is-tab="true" data-action="load-group" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}">
@@ -157,7 +163,7 @@
                     <img src="{{favIconUrl}}" class="size-16" alt="" />
                 </div>
                 <div class="item-title">
-                    {{title}}
+                    <span class="bordered" style="{{containerColorCode}}">{{title}}</span>
                 </div>
                 <div class="item-action">
                     <span class="icon cursor-pointer no-text-select" data-action="remove-tab" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}" data-i18n="removeTab:title">&#10006;</span>
