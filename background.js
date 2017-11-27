@@ -5,48 +5,40 @@
     // fix bugs loadGroup
     // fix bugs contexmenu with other window
     // fix bugs create new tab
+// storage.get(null).then(console.log);
+    let emptyUrls = ['about:blank', 'about:newtab', 'about:home'];
 
-    function filterTabs(tabs) {
-        return Array.from(tabs)
-            .filter(tab => isAllowUrl(tab.url) && !tab.pinned);
+    function getCurrentWindow() {
+        return browser.windows.getCurrent({
+            windowTypes: ['normal'],
+        });
     }
 
-    function getCurrentWindow(populate = false) {
-        return browser.windows.getCurrent({
-                populate: Boolean(populate),
-                windowTypes: ['normal'],
+    function getNotPinnedTabs(filterTabs = true, mapTabs = true) {
+        return browser.tabs.query({
+                currentWindow: true,
+                pinned: false,
             })
-            .then(function(currentWindow) {
-                if (populate) {
-                    return {
-                        id: currentWindow.id,
-                        tabs: filterTabs(currentWindow.tabs).map(mapTab),
-                    };
+            .then(function(tabs) {
+                tabs = Array.from(tabs);
+
+                if (filterTabs) {
+                    tabs = tabs.filter(tab => isAllowUrl(tab.url));
                 }
 
-                return currentWindow;
+                if (mapTabs) {
+                    tabs = tabs.map(mapTab);
+                }
+
+                return tabs;
             });
     }
 
-    function getTabs(options, dontUseMapTab) {
-        return browser.tabs.query(Object.assign(options, {
-                currentWindow: true,
-            }))
-            .then(filterTabs)
-            .then(tabs => dontUseMapTab ? tabs : tabs.map(mapTab));
-    }
-
-    function getNotPinnedTabs(dontUseMapTab) {
-        return getTabs({
-            pinned: false,
-        }, dontUseMapTab);
-    }
-
-    function hasAnotherTabs() {
+    function hasAnotherTabs(eachFunc = 'some') {
         return browser.tabs.query({
                 currentWindow: true,
             })
-            .then(tabs => tabs.some(tab => tab.pinned || !isAllowUrl(tab.url)));
+            .then(tabs => tabs[eachFunc](tab => tab.pinned || !isAllowUrl(tab.url)));
     }
 
     function mapTab(tab) {
@@ -69,24 +61,23 @@
             title: browser.i18n.getMessage('newGroupTitle', id),
             iconColor: 'hsla(' + (Math.random() * 360).toFixed(0) + ', 100%, 50%, 1)',
             tabs: [],
-            catchRegExpRules: '',
+            moveNewTabsToThisGroupByRegExp: '',
         };
     }
 
-    function getCurrentData() {
+    function getCurrentData(filterTabs = true, mapTabs = true) {
         return Promise.all([
                 storage.get(['groups', 'windowsGroup']),
-                getCurrentWindow(true)
+                getCurrentWindow(),
+                getNotPinnedTabs(filterTabs, mapTabs),
             ])
-            .then(function(result) {
-                let [data, currentWindow] = result;
-
+            .then(function([result, currentWindow, tabs]) {
                 return {
-                    groups: data.groups,
-                    windowsGroup: data.windowsGroup,
+                    groups: result.groups,
+                    windowsGroup: result.windowsGroup,
                     currentWindowId: currentWindow.id,
-                    currentWindowTabs: currentWindow.tabs,
-                    currentGroup: data.groups.find(group => group.id === data.windowsGroup[currentWindow.id]) || {}, // ???????????????? need empty obj ?
+                    currentWindowTabs: tabs,
+                    currentGroup: result.groups.find(group => group.id === result.windowsGroup[currentWindow.id]) || {}, // ???? need empty obj ? use on init background and saveCurrentTabs
                 };
             });
     }
@@ -209,7 +200,7 @@
             .then(browser.tabs.remove);
     }
 
-    function removeTab(tabToRemove, group, isCurrentGroup) {
+    function removeTab(tabToRemove, group, isCurrentGroup) { // TODO refactor this
         let tabIndex = group.tabs.indexOf(tabToRemove);
 
         group.tabs.splice(tabIndex, 1);
@@ -239,33 +230,10 @@
             });
     }
 
-    // function setActiveTab(activeTabIndex) {
-    //     if (activeTabIndex < 0) {
-    //         return;
-    //     }
-
-    //     return getNotPinnedTabs()
-    //         .then(function(tabs) {
-    //             if (tabs[activeTabIndex]) {
-    //                 return browser.tabs.update(tabs[activeTabIndex].id, {
-    //                     active: true,
-    //                 });
-    //             }
-    //         });
-    // }
-
-
-
     let loadingGroups = {}; // windowId: true
 
-    // if activeTabIndex === -1 active last active tab
     function loadGroup(group, isCurrentGroup, activeTabIndex) {
-        // if (-1 === activeTabIndex) {
-        //     activeTabIndex = group.tabs.findIndex(tab => tab.active);
-        // }
-
         if (isCurrentGroup) {
-            // return setActiveTab(activeTabIndex);
             return getNotPinnedTabs()
                 .then(function(tabs) {
                     if (tabs[activeTabIndex]) {
@@ -278,20 +246,25 @@
 
         removeTabEvents();
 
-        let currentWindowId = null,
-            tempEmptyTabIdPromise = null;
+        let tempEmptyTabIdPromise = null;
+
+        browser.runtime.sendMessage({
+            loadingGroupPosition: 10,
+        });
 
         return Promise.all([
                 getCurrentData(),
                 hasAnotherTabs()
             ])
-            // .catch(notify)
             .then(function([result, hasAnotherTabs]) {
                 if (loadingGroups[result.currentWindowId]) {
-                    throw 'Another group loading...';
+                    throw browser.i18n.getMessage('errorAnotherGroupAreLoading');
                 }
 
-                currentWindowId = result.currentWindowId;
+                browser.runtime.sendMessage({
+                    loadingGroupPosition: 30,
+                });
+
                 loadingGroups[result.currentWindowId] = true;
 
                 tempEmptyTabIdPromise = browser.tabs.create({
@@ -315,11 +288,18 @@
 
                 return result;
             })
-            .catch(notify)
+            .catch(error => notify(error, false, 'error-load-group-notification'))
             .then(function(result) { // remove tabs
                 return browser.tabs.remove(result.currentWindowTabs.map(tab => tab.id))
                     .then(() => result)
                     .catch(() => loadGroup(result.currentGroup, true, -1));
+            })
+            .then(function(result) {
+                browser.runtime.sendMessage({
+                    loadingGroupPosition: 50,
+                });
+
+                return result;
             })
             .then(function(result) { // create tabs
                 if (group.tabs.length) {
@@ -336,6 +316,13 @@
                 return result;
             })
             .then(function(result) {
+                browser.runtime.sendMessage({
+                    loadingGroupPosition: 90,
+                });
+
+                return result;
+            })
+            .then(function(result) {
                 tempEmptyTabIdPromise.then(browser.tabs.remove);
 
                 browser.menus.update(CONTEXT_MENU_PREFIX_GROUP + result.windowsGroup[result.currentWindowId], {
@@ -348,39 +335,51 @@
                 result.windowsGroup[result.currentWindowId] = group.id;
 
                 return storage.set({
-                    windowsGroup: result.windowsGroup,
+                        windowsGroup: result.windowsGroup,
+                    })
+                    .then(() => result);
+            })
+            // .then(result => delete loadingGroups[result.currentWindowId])
+            .then(function(result) {
+                delete loadingGroups[result.currentWindowId];
+
+                browser.runtime.sendMessage({
+                    loadingGroupPosition: false,
                 });
             })
-            .then(() => delete loadingGroups[currentWindowId])
             .then(addTabEvents);
     }
 
-    // @excludeTabIds : Array of integer
-    // @addTabs : array of tabs
-    function saveCurrentTabs(excludeTabIds, addTabs, dontEventUpdateStorage) {
-        return getCurrentData()
+    function saveCurrentTabs(excludeTabIds = [], dontEventUpdateStorage) {
+        console.log('saveCurrentTabs => excludeTabIds', excludeTabIds);
+        return getCurrentData(true, false)
             .then(function(result) {
-                excludeTabIds = excludeTabIds || [];
-                addTabs = addTabs || [];
-
                 if (!result.currentGroup.id) {
                     return;
                 }
-
+console.log('excludeTabIds', excludeTabIds);
+console.log('result.currentWindowTabs ids', result.currentWindowTabs.map(t => t.id));
                 result.currentGroup.tabs = result.currentWindowTabs
                     .filter(tab => !excludeTabIds.includes(tab.id))
-                    .concat(addTabs.map(mapTab));
+                    .map(function(tab, tabIndex) {
+                        console.log('tab.id', tab.id);
+                        if (emptyUrls.includes(tab.url) && 'loading' === tab.status) {
+                            return result.currentGroup.tabs[tabIndex] ? result.currentGroup.tabs[tabIndex] : mapTab(tab);
+                        }
+
+                        return mapTab(tab);
+                    });
 
                 return saveGroup(result.currentGroup, dontEventUpdateStorage);
             });
     }
 
     function isCatchedUrl(url, group) {
-        if (!group.catchRegExpRules.trim().length) {
+        if (!group.moveNewTabsToThisGroupByRegExp) {
             return false;
         }
 
-        return group.catchRegExpRules
+        return group.moveNewTabsToThisGroupByRegExp
             .split(/\s*\n\s*/)
             .filter(Boolean)
             .some(function(regExpStr) {
@@ -390,67 +389,54 @@
             });
     }
 
-    // function onCreatedTab(tab) {
-    //     console.log('onCreatedTab', tab);
-    //     // console.log('browser.windows.WINDOW_ID_CURRENT', browser.windows.WINDOW_ID_CURRENT);
-    //     // if (tab.incognito) {
-    //     //     return;
-    //     // }
+    function onActivatedTab() {
+        console.log('onActivatedTab', onActivatedTab);
+        // saveCurrentTabs();
+        setTimeout(saveCurrentTabs, 100);
+    }
 
-    //     // saveCurrentTabs(null, [tab], true);
-    // }
-
-    function onUpdatedTab(tabId, changeInfo, tab) {
-        // console.log('onUpdatedTab', tab);
-
-        if (tab.status === 'loading' && tab.url === 'about:blank') {
+    function onUpdatedTab(tabId, changeInfo, tab) { // TODO fix this
+        console.log('onUpdatedTab', tab);
+        if (tab.status === 'loading' && emptyUrls.includes(tab.url)) {
             return;
         }
-
+console.log(1);
         if (tab.incognito || !isAllowUrl(tab.url)) {
             return;
         }
-
-
-        // if (!changeInfo.url || tab.incognito || !isAllowUrl(changeInfo.url)) {
-        //     return;
-        // }
-
-        if (changeInfo.url && !tab.pinned) {
-            return Promise.all([
-                    getCurrentData(),
-                    getNotPinnedTabs(),
-                ])
+console.log(2);
+        if (!tab.pinned && !emptyUrls.includes(tab.url)) {
+            console.log(3);
+            return getCurrentData()
                 .then(function(result) {
-                    let [data, tabs] = result;
+                    let destGroup = result.groups.find(isCatchedUrl.bind(null, tab.url));
 
-                    let destGroup = data.groups.find(isCatchedUrl.bind(null, changeInfo.url));
-
-                    if (destGroup && destGroup.id !== data.currentGroup.id) {
-                        let tabIndex = tabs.findIndex(tab => tab.id === tabId);
-                        return moveTabToGroup(tab, tabIndex, data.currentGroup.id, destGroup.id);
+                    if (destGroup && destGroup.id !== result.currentGroup.id) {
+                        let tabIndex = result.currentWindowTabs.findIndex(tab => tab.id === tabId);
+                        return moveTabToGroup(tab, tabIndex, result.currentGroup.id, destGroup.id);
                     }
-
-                    // return saveCurrentTabs();
+console.log(4);
+                    return saveCurrentTabs();
                 });
         }
 
-        if ('pinned' in changeInfo || /*'url' in changeInfo || */'complete' === changeInfo.status) {
+        if ('pinned' in changeInfo || /*'url' in changeInfo || */'complete' === tab.status) {
+            console.log(5);
             saveCurrentTabs();
         }
     }
 
+    // removeInfo: {windowId, isWindowClosing}
     function onRemovedTab(removedTabId, removeInfo) {
         if (removeInfo.isWindowClosing) {
             return;
         }
-
+console.log('onRemovedTab => removedTabId', removedTabId);
         saveCurrentTabs([removedTabId]);
     }
 
     function onMovedTab(tabId, moveInfo) {
-        // console.log('onMovedTab', moveInfo);
-        saveCurrentTabs(null, null, true); // no need event because popup isHidded when tabs is moved
+        saveCurrentTabs([], true); // no need event because popup isHidded when tabs is moved
     }
 
     function onAttachedTab(tabId, attachInfo) {
@@ -489,6 +475,7 @@
 
     function addTabEvents() {
         // browser.tabs.onCreated.addListener(onCreatedTab);
+        browser.tabs.onActivated.addListener(onActivatedTab);
         browser.tabs.onUpdated.addListener(onUpdatedTab);
         browser.tabs.onRemoved.addListener(onRemovedTab);
 
@@ -500,6 +487,7 @@
 
     function removeTabEvents() {
         // browser.tabs.onCreated.removeListener(onCreatedTab);
+        browser.tabs.onActivated.removeListener(onActivatedTab);
         browser.tabs.onUpdated.removeListener(onUpdatedTab);
         browser.tabs.onRemoved.removeListener(onRemovedTab);
 
@@ -527,11 +515,12 @@
                     srcGroup = groups.find(({id}) => id === srcGroupId),
                     mappedTab = mapTab(tab),
                     groupsToSave = [],
-                    createdTabId = null;
+                    createdTabId = 0,
+                    createdTabIndex = -1;
 
                 // work with storage
                 if (currentGroup.id !== destGroupId) {
-                    destGroup.tabs.push(mappedTab);
+                    createdTabIndex = destGroup.tabs.push(mappedTab) - 1;
                     groupsToSave.push(destGroup);
                 }
 
@@ -546,6 +535,7 @@
                             return browser.tabs.create({
                                     active: false,
                                     url: tab.url,
+                                    cookieStoreId: tab.cookieStoreId || DEFAULT_COOKIE_STORE_ID,
                                 })
                                 .then(tab => createdTabId = tab.id);
                         } else if (currentGroup.id === srcGroupId) {
@@ -560,8 +550,8 @@
 
                         let message = browser.i18n.getMessage('moveTabToGroupMessage', [destGroup.title, mappedTab.title]);
 
-                        return notify(message, 60000)
-                            .then(getCurrentData)
+                        return notify(message)
+                            .then(() => getCurrentData())
                             .then(function({groups, currentGroup}) {
                                 let group = groups.find(({id}) => id === destGroupId),
                                     isCurrentGroup = currentGroup.id === destGroupId;
@@ -572,7 +562,7 @@
                                     });
                                 }
 
-                                return loadGroup(group, isCurrentGroup, group.tabs.length - 1);
+                                return loadGroup(group, isCurrentGroup, createdTabIndex);
                             });
                     });
             });
@@ -644,7 +634,7 @@
                                 newGroup.tabs.push(mapTab(tab));
                                 return saveGroup(newGroup, true);
                             })
-                            .then(getCurrentData)
+                            .then(() => getCurrentData())
                             .then(function(result) {
                                 let tabIndex = result.currentWindowTabs.findIndex(({id}) => id === tab.id),
                                     isLastTabInGroup = result.currentGroup.tabs.length > 1;

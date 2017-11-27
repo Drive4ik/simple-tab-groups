@@ -30,7 +30,7 @@
             $('#groupEditIconColorCircle').style.backgroundColor = this.value.trim();
         });
 
-        $on('click', '[data-action="load-group"]', function({groupId, tabIndex, openGroupIfCurrent}) {
+        $on('click', '[data-action="load-group"]', function({groupId, tabIndex, openGroupIfCurrent}) { // TODO refactor this func
             let isCurrentGroup = groupId === allData.currentGroupId;
 
             if (isCurrentGroup && openGroupIfCurrent === 'true') {
@@ -78,7 +78,7 @@
             $('#groupEditTitle').value = unSafeHtml(group.title);
             $('#groupEditIconColorCircle').style.backgroundColor = group.iconColor;
             $('#groupEditIconColor').value = group.iconColor;
-            $('#groupEditCatchRegExpRules').value = group.catchRegExpRules;
+            $('#groupEditMoveNewTabsToThisGroupByRegExp').value = group.moveNewTabsToThisGroupByRegExp;
 
             $('html').classList.add('no-scroll');
             $('#groupEditPopup').classList.add('is-flex');
@@ -91,9 +91,9 @@
 
             group.iconColor = $('#groupEditIconColorCircle').style.backgroundColor; // safed color
 
-            group.catchRegExpRules = $('#groupEditCatchRegExpRules').value.trim();
+            group.moveNewTabsToThisGroupByRegExp = $('#groupEditMoveNewTabsToThisGroupByRegExp').value.trim();
 
-            group.catchRegExpRules
+            group.moveNewTabsToThisGroupByRegExp
                 .split(/\s*\n\s*/)
                 .filter(Boolean)
                 .forEach(function(regExpStr) {
@@ -164,9 +164,18 @@
         });
 
         // setTabEventsListener
-        let listener = function(request, sender, sendResponse) {
+        let loadDataTimer = null,
+            listener = function(request, sender, sendResponse) {
             if (request.storageUpdated) {
-                loadData();
+                clearTimeout(loadDataTimer);
+                loadDataTimer = setTimeout(loadData, 100);
+            } else if (undefined !== request.loadingGroupPosition) {
+                if (request.loadingGroupPosition) {
+                    $('#loading').classList.remove('is-hidden');
+                    $('#loading').firstElementChild.style.width = request.loadingGroupPosition + 'vw';
+                } else {
+                    $('#loading').classList.add('is-hidden');
+                }
             }
         };
 
@@ -200,9 +209,11 @@
     }
 
     function loadData() {
+        console.log('loadData');
+
         return Promise.all([
                 background.getCurrentData(),
-                background.getNotPinnedTabs(true),
+                background.getNotPinnedTabs(true, false),
                 browser.contextualIdentities.query({}).then(Array.from)
             ])
             .then(function(result) {

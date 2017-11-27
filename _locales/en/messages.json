@@ -24,6 +24,11 @@
         "description": "Move tab to group title"
     },
 
+    "errorAnotherGroupAreLoading": {
+        "message": "Please wait, another group are loading",
+        "description": "Please wait, another group are loading"
+    },
+
     "moveTabToGroupMessage": {
         "message": "Tab \"$tabtitle$\" was moved to group \"$grouptitle$\".\n\nClick here to show this tab.",
         "description": "Tab moved popup title",

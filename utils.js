@@ -82,8 +82,12 @@ let $ = document.querySelector.bind(document),
             return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
         }).join(''));
     },
-    notify = function(message, timer) {
-        let id = String(Date.now());
+    notify = function(message, timer, id) {
+        if (id) {
+            browser.notifications.clear(id);
+        } else {
+            id = String(Date.now());
+        }
 
         // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/notifications/NotificationOptions
         // Only 'type', 'iconUrl', 'title', and 'message' are supported.
@@ -94,7 +98,7 @@ let $ = document.querySelector.bind(document),
             message: String(message),
         });
 
-        timer && setTimeout(() => browser.notifications.clear(id), timer);
+        timer && setTimeout(browser.notifications.clear, timer, id);
 
         return new Promise(function(resolve, reject) {
             let called = false,
