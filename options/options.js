@@ -14,6 +14,13 @@
         return storage.set(options);
     }
 
+    $on('click', '#eee', function() {
+        browser.tabs.create({
+            active: null,
+            url: 'about:blank',
+        });
+    });
+
     $on('change', '#' + allCheckBoxes.join(', #'), saveOptions);
 
     $on('click', '#importSettingsOldTabGroupsAddon', function() {

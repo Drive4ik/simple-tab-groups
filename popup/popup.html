@@ -56,7 +56,7 @@
                         <span class="question" data-i18n="regexpForTabsHelp:title">?</span>
                     </label>
                     <div class="control">
-                        <textarea id="groupEditMoveNewTabsToThisGroupByRegExp" class="textarea" data-i18n="regexpForTabsPlaceholder:placeholder"></textarea>
+                        <textarea id="groupEditCatchRegExpRules" class="textarea" data-i18n="regexpForTabsPlaceholder:placeholder"></textarea>
                     </div>
                 </div>
             </div>
@@ -194,7 +194,7 @@
     </script>
 
     <script id="group-tmpl" type="text/template">
-        <div class="item {{classList}}" data-action="load-group" data-group-id="{{id}}" data-tab-index="0" data-open-group-if-current="true">
+        <div class="item {{classList}}" data-action="load-group" data-group-id="{{id}}" data-tab-index="-1" data-open-group-if-current="true">
             <div class="item-icon">
                 {{colorCircleHtml}}
             </div>

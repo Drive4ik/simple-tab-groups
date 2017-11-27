@@ -78,7 +78,7 @@
             $('#groupEditTitle').value = unSafeHtml(group.title);
             $('#groupEditIconColorCircle').style.backgroundColor = group.iconColor;
             $('#groupEditIconColor').value = group.iconColor;
-            $('#groupEditMoveNewTabsToThisGroupByRegExp').value = group.moveNewTabsToThisGroupByRegExp;
+            $('#groupEditCatchRegExpRules').value = group.catchRegExpRules;
 
             $('html').classList.add('no-scroll');
             $('#groupEditPopup').classList.add('is-flex');
@@ -91,9 +91,9 @@
 
             group.iconColor = $('#groupEditIconColorCircle').style.backgroundColor; // safed color
 
-            group.moveNewTabsToThisGroupByRegExp = $('#groupEditMoveNewTabsToThisGroupByRegExp').value.trim();
+            group.catchRegExpRules = $('#groupEditCatchRegExpRules').value.trim();
 
-            group.moveNewTabsToThisGroupByRegExp
+            group.catchRegExpRules
                 .split(/\s*\n\s*/)
                 .filter(Boolean)
                 .forEach(function(regExpStr) {
@@ -133,8 +133,6 @@
         $on('click', '[data-submit-remove-group]', function() {
             background.removeGroup(getGroupById(state.groupId))
                 .then(renderGroupsList)
-                .then(background.removeMoveTabMenus)
-                .then(background.createMoveTabMenus)
                 .then(createMoveTabContextMenu);
 
             $('#groupDeletePopup').classList.remove('is-active');
@@ -142,8 +140,6 @@
 
         $on('click', '[data-add-group]', function() {
             background.addGroup()
-                .then(background.removeMoveTabMenus)
-                .then(background.createMoveTabMenus)
                 .then(createMoveTabContextMenu);
         });
 
