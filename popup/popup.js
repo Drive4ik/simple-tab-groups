@@ -213,7 +213,7 @@
 
         return Promise.all([
                 background.getCurrentData(),
-                background.getNotPinnedTabs(true, false),
+                background.getNotPinnedTabs(undefined, false),
                 browser.contextualIdentities.query({}).then(Array.from)
             ])
             .then(function(result) {

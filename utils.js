@@ -82,6 +82,9 @@ let $ = document.querySelector.bind(document),
             return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
         }).join(''));
     },
+    isEmptyUrl = function(url) {
+        return ['about:blank', 'about:newtab', 'about:home'].includes(url);
+    },
     notify = function(message, timer, id) {
         if (id) {
             browser.notifications.clear(id);
@@ -204,11 +207,11 @@ let $ = document.querySelector.bind(document),
         },
         clear: browser.storage.local.clear,
         remove: browser.storage.local.remove,
-        set(keys, dontEventUpdateStorage) {
+        set(keys, sendEventUpdateStorage = true) {
             // console.log('save data', keys);
             return browser.storage.local.set(keys)
                 .then(function() {
-                    if (dontEventUpdateStorage) {
+                    if (!sendEventUpdateStorage) {
                         return keys;
                     }
 
