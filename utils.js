@@ -4,7 +4,7 @@ const DEFAULT_COOKIE_STORE_ID = 'firefox-default',
     CONTEXT_MENU_PREFIX_GROUP = 'stg-move-group-id-',
     defaultOptions = {
         groups: [],
-        windowsGroup: {},
+        windowsGroup: {}, // windowId: groupId
         lastCreatedGroupPosition: 0,
 
         // options
@@ -215,7 +215,7 @@ let $ = document.querySelector.bind(document),
                         return keys;
                     }
 
-                    if ('groups' in keys || 'activeTabIndex' in keys || 'windowsGroup' in keys) {
+                    if ('groups' in keys || 'windowsGroup' in keys) {
                         browser.runtime.sendMessage({
                             storageUpdated: true,
                         });

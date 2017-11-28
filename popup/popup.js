@@ -212,8 +212,8 @@
         console.log('loadData');
 
         return Promise.all([
-                background.getCurrentData(),
-                background.getNotPinnedTabs(undefined, false),
+                background.getData(),
+                background.getTabs(undefined, false),
                 browser.contextualIdentities.query({}).then(Array.from)
             ])
             .then(function(result) {
@@ -328,6 +328,10 @@
         state.groupId = groupId;
 
         let group = getGroupById(groupId);
+
+        if (!group) {
+            return console.error(`group id ${groupId} not found`);
+        }
 
         let tabsListHtml = '';
 
