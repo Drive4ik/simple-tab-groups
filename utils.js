@@ -208,23 +208,48 @@ let $ = document.querySelector.bind(document),
         clear: browser.storage.local.clear,
         remove: browser.storage.local.remove,
         set(keys, sendEventUpdateStorage = true) {
-            // console.log('save data', keys);
             return browser.storage.local.set(keys)
                 .then(function() {
-                    if (!sendEventUpdateStorage) {
-                        return keys;
-                    }
-
-                    if ('groups' in keys || 'windowsGroup' in keys) {
-                        browser.runtime.sendMessage({
-                            storageUpdated: true,
-                        });
+                    if (sendEventUpdateStorage) {
+                        if ('groups' in keys || 'windowsGroup' in keys) {
+                            browser.runtime.sendMessage({
+                                storageUpdated: true,
+                            });
+                        }
                     }
 
                     return keys;
                 });
         },
+    },
+    createGroupSvgColoredIcon = function(color) {
+        if (!color) {
+            return '';
+        }
+
+        let svg = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="124px" height="124px" viewBox="0 0 124 124" style="enable-background:new 0 0 124 124;" xml:space="preserve"><g><circle fill="${color}" cx="62" cy="62" r="62"/></g></svg>`;
+
+        return 'data:image/svg+xml;base64,' + b64EncodeUnicode(svg);
+    },
+    getBrowserActionSvgWithGroupColor = function(color) {
+        if (!color) {
+            return '';
+        }
+
+        return `
+            <svg width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+                <g fill="#606060">
+                    <rect height="8" width="8" y="0" x="0" />
+                    <rect height="8" width="8" y="0" x="12" />
+                    <rect height="8" width="8" y="12" x="24" />
+                    <rect height="8" width="8" y="12" x="0" />
+                    <rect height="8" width="8" y="12" x="12" />
+                    <rect height="8" width="8" y="0" x="24" />
+                    <rect height="8" width="8" y="24" x="0" />
+                    <rect height="8" width="8" y="24" x="12" />
+                    <rect height="8" width="8" y="24" x="24" />
+                    <path transform="rotate(-90, 18, 18)" d="m3.87079,31.999319l0,-28.125684l28.126548,28.125684l-28.126548,0z" fill="${color}" />
+                </g>
+            </svg>
+        `;
     };
-
-
-

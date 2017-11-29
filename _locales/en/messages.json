@@ -122,6 +122,16 @@
         }
     },
 
+    "moveGroupUp": {
+        "message": "Move group up",
+        "description": "Move group up"
+    },
+
+    "moveGroupDown": {
+        "message": "Move group down",
+        "description": "Move group down"
+    },
+
     "settingsTitle": {
         "message": "Settings",
         "description": "Settings"

@@ -239,29 +239,30 @@ html {
     margin-left: 5px;
 }
 
-#groupEditPopup {
+#editGroupPopup {
     display: none;
     position: fixed;
+    padding-top: 10px;
     width: 100vw;
     height: 100vh;
     background-color: #ffffff;
 }
 
-#groupEditPopup h3 {
+#editGroupPopup h3 {
     font-size: 1.2rem;
     font-weight: bold;
 }
 
-#groupEditPopup > [data-close-edit-popup] {
+#editGroupPopup > [data-close-edit-popup] {
     margin-top: 10px;
 }
 
-#groupEditPopup .body {
+#editGroupPopup .body {
     padding: 0 10px;
     overflow-y: auto;
 }
 
-#groupEditPopup .action-buttons {
+#editGroupPopup .action-buttons {
     margin: 10px;
 }
 

@@ -21,8 +21,8 @@
             <span data-i18n="settingsTitle"></span>
         </div>
 
-        <div id="groupEditPopup" class="is-column">
-            <div class="item" data-close-edit-popup>
+        <div id="editGroupPopup" class="is-column">
+            <div class="item" data-action="close-edit-group-popup">
                 <span class="item-icon">&#10094;</span>
                 <span class="item-title" data-i18n="goBackButtonTitle"></span>
             </div>
@@ -63,27 +63,27 @@
 
             <div class="field is-grouped action-buttons">
                 <div class="control">
-                    <button data-submit-edit-popup class="button is-small is-success" data-i18n="save"></button>
+                    <button data-action="submit-edit-group-popup" class="button is-small is-success" data-i18n="save"></button>
                 </div>
                 <div class="control">
-                    <button data-close-edit-popup class="button is-small" data-i18n="cancel"></button>
+                    <button data-action="close-edit-group-popup" class="button is-small" data-i18n="cancel"></button>
                 </div>
             </div>
         </div>
 
-        <div id="groupDeletePopup" class="modal">
-            <div class="modal-background" data-close-delete-popup></div>
+        <div id="deleteGroupPopup" class="modal">
+            <div class="modal-background" data-action="close-delete-group-popup"></div>
             <div class="modal-card">
                 <header class="modal-card-head">
                     <p class="modal-card-title" data-i18n="removeGroupPopupTitle"></p>
-                    <button class="delete" aria-label="close" data-close-delete-popup></button>
+                    <button class="delete" aria-label="close" data-action="close-delete-group-popup"></button>
                 </header>
                 <section class="modal-card-body">
                     <span id="groupDeleteQuestion"></span>
                 </section>
                 <footer class="modal-card-foot">
-                    <button data-submit-remove-group class="button is-small is-danger" data-i18n="delete"></button>
-                    <button data-close-delete-popup class="button is-small" data-i18n="cancel"></button>
+                    <button data-action="submit-delete-group-popup" class="button is-small is-danger" data-i18n="delete"></button>
+                    <button data-action="close-delete-group-popup" class="button is-small" data-i18n="cancel"></button>
                 </footer>
             </div>
         </div>
@@ -102,7 +102,7 @@
     <!-- tabs list -->
     <script id="tabs-list-wrapper-tmpl" type="text/template">
         <div class="tabs-list">
-            <div class="item" data-show-groups-list>
+            <div class="item" data-action="show-groups-list">
                 <span class="item-icon">&#10094;</span>
                 <span class="item-title" data-i18n="goBackToGroupsButtonTitle"></span>
             </div>
@@ -115,7 +115,7 @@
                 </div>
                 <div class="item-title">{{group.title}}</div>
                 <div class="item-action">
-                    <img data-action="open-group-settings-popup" data-group-id="{{group.id}}" src="/icons/settings.svg" class="size-16 cursor-pointer icon" data-i18n="groupSettings:title" />
+                    <img data-action="open-settings-group-popup" data-group-id="{{group.id}}" src="/icons/settings.svg" class="size-16 cursor-pointer icon" data-i18n="groupSettings:title" />
                     <img data-action="show-delete-group-popup" data-group-id="{{group.id}}" src="/icons/clear.svg" class="size-16 cursor-pointer icon" data-i18n="removeGroup:title" />
                 </div>
             </div>
@@ -141,28 +141,9 @@
         </ul>
     </script>
 
-    <menu id="move-tab-to-group-menu" type="context"></menu>
-
-    <script id="move-tab-to-group-menu-tmpl" type="text/template">
-        <menuitem data-i18n="moveTabToGroupDisabledTitle::label" disabled></menuitem>
-        {{menuItemsHtml}}
-        <hr>
-        <menuitem data-i18n="createNewGroup::label" data-move-tab-to-new-group icon="/icons/group-new.svg"></menuitem>
-    </script>
-
-    <script id="move-tab-to-group-menu-item-tmpl" type="text/template">
-        <menuitem data-action="move-tab-to-group" data-group-id="{{groupId}}" icon="{{icon}}" label="{{title}}" {{disabled}}></menuitem>
-    </script>
-
-    <menu id="create-tab-with-container-menu" type="context"></menu>
-
-    <script id="create-tab-with-container-item-tmpl" type="text/template">
-        <menuitem data-action="add-tab" data-group-id="{{groupId}}" data-cookie-store-id="{{cookieStoreId}}" icon="{{icon}}" label="{{title}}"></menuitem>
-    </script>
-
     <script id="tab-tmpl" type="text/template">
         <li>
-            <div contextmenu="move-tab-to-group-menu" class="item {{classList}}" title="{{urlTitle}}" data-is-tab="true" data-action="load-group" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}">
+            <div contextmenu="move-tab-to-group-menu" class="item {{classList}}" title="{{urlTitle}}" data-action="load-group" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}">
                 <div class="item-icon">
                     <img src="{{favIconUrl}}" class="size-16" alt="" />
                 </div>
@@ -188,7 +169,7 @@
         </div>
         <hr>
         <div class="create-new-group">
-            <div class="item" data-add-group>
+            <div class="item" data-action="add-group">
                 <div class="item-icon">
                     <img class="icon" src="/icons/group-new.svg" alt="" />
                 </div>
@@ -198,7 +179,7 @@
     </script>
 
     <script id="group-tmpl" type="text/template">
-        <div class="item {{classList}}" data-action="load-group" data-group-id="{{id}}" data-tab-index="-1" data-open-group-if-current="true">
+        <div contextmenu="group-menu" class="item {{classList}}" data-action="load-group" data-group-id="{{id}}" data-tab-index="-1">
             <div class="item-icon">
                 {{colorCircleHtml}}
             </div>
@@ -208,6 +189,29 @@
                 <span data-i18n="groupTabsCount::{{tabs.length}}"></span>
             </div>
         </div>
+    </script>
+
+    <menu id="group-menu" type="context">
+        <menuitem data-action="context-move-group-up" icon="/icons/arrow-up.svg" data-i18n="moveGroupUp::label"></menuitem>
+        <menuitem data-action="context-move-group-down" icon="/icons/arrow-down.svg" data-i18n="moveGroupDown::label"></menuitem>
+        <menuitem data-action="context-open-settings-group-popup" icon="/icons/settings.svg" data-i18n="groupSettings::label"></menuitem>
+        <menuitem data-action="context-show-delete-group-popup" icon="/icons/clear.svg" data-i18n="removeGroup::label"></menuitem>
+    </menu>
+
+    <menu id="move-tab-to-group-menu" type="context"></menu>
+    <script id="move-tab-to-group-menu-tmpl" type="text/template">
+        <menuitem data-i18n="moveTabToGroupDisabledTitle::label" disabled></menuitem>
+        {{groupsMenuItems}}
+        <hr>
+        <menuitem data-i18n="createNewGroup::label" data-action="move-tab-to-new-group" icon="/icons/group-new.svg"></menuitem>
+    </script>
+    <script id="move-tab-to-group-menu-item-tmpl" type="text/template">
+        <menuitem data-action="move-tab-to-group" data-group-id="{{groupId}}" icon="{{icon}}" label="{{title}}" {{disabled}}></menuitem>
+    </script>
+
+    <menu id="create-tab-with-container-menu" type="context"></menu>
+    <script id="create-tab-with-container-item-tmpl" type="text/template">
+        <menuitem data-action="add-tab" data-group-id="{{groupId}}" data-cookie-store-id="{{cookieStoreId}}" icon="{{icon}}" label="{{title}}"></menuitem>
     </script>
 
     <script type="text/javascript" src="/utils.js"></script>

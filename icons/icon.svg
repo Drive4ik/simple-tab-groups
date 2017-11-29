@@ -1,4 +1,13 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
-<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="408px" height="408px" viewBox="0 0 408 408" style="enable-background:new 0 0 408 408;" xml:space="preserve">
-    <path fill="#4e4f50" d="M0,102h102V0H0V102z M153,408h102V306H153V408z M0,408h102V306H0V408z M0,255h102V153H0V255z M153,255h102V153H153V255z M306,0v102h102V0H306z M153,102h102V0H153V102z M306,255h102V153H306V255z M306,408h102V306H306V408z"/>
+<svg width="96" height="96" xmlns="http://www.w3.org/2000/svg">
+    <g fill="#606060">
+        <rect height="24" width="24" y="0" x="0" />
+        <rect height="24" width="24" y="0" x="36" />
+        <rect height="24" width="24" y="36" x="0" />
+        <rect height="24" width="24" y="36" x="36" />
+        <rect height="24" width="24" y="72" x="0" />
+        <rect height="24" width="24" y="72" x="36" />
+        <rect height="24" width="24" y="0" x="72" />
+        <rect height="24" width="24" y="36" x="72" />
+        <rect height="24" width="24" y="72" x="72" />
+    </g>
 </svg>

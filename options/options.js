@@ -14,28 +14,16 @@
         return storage.set(options);
     }
 
-    $on('click', '#eee', function() {
-        browser.tabs.create({
-            active: null,
-            url: 'about:blank',
-        });
-    });
-
     $on('change', '#' + allCheckBoxes.join(', #'), saveOptions);
 
     $on('click', '#importSettingsOldTabGroupsAddon', function() {
         Promise.all([
-                storage.get({
-                    groups: [],
-                    lastCreatedGroupPosition: 0,
-                }),
+                storage.get(['groups', 'lastCreatedGroupPosition']),
                 importFromFile()
             ])
-            .then(function(result) {
-                let background = browser.extension.getBackgroundPage().background;
-                let [data, oldOptions] = result;
-
-                let newGroups = {};
+            .then(function([result, oldOptions]) {
+                let background = browser.extension.getBackgroundPage().background,
+                    newGroups = {};
 
                 oldOptions.windows.forEach(function(win) {
                     let oldGroups = {};
@@ -50,9 +38,9 @@
                         let oldGroup = oldGroups[key];
 
                         if (!newGroups[oldGroup.id]) {
-                            data.lastCreatedGroupPosition++;
+                            result.lastCreatedGroupPosition++;
 
-                            newGroups[oldGroup.id] = background.createGroup(data.lastCreatedGroupPosition);
+                            newGroups[oldGroup.id] = background.createGroup(result.lastCreatedGroupPosition);
                             newGroups[oldGroup.id].title = oldGroup.title || browser.i18n.getMessage('newGroupTitle', newGroups[oldGroup.id].id);
                             newGroups[oldGroup.id].moveNewTabsToThisGroupByRegExp = (oldGroup.catchRules || '');
                             newGroups[oldGroup.id].slot = oldGroup.slot;
@@ -97,8 +85,8 @@
                     });
 
                 if (groups.length) {
-                    data.groups = data.groups.concat(groups);
-                    storage.set(data)
+                    result.groups = result.groups.concat(groups);
+                    storage.set(result)
                         .then(function() {
                             notify('Old "Tab Groups" groups are imported successfully!');
                         });
