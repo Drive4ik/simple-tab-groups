@@ -32,7 +32,7 @@
                     return renderTabsList(data.groupId);
                 }
 
-                background.loadGroup(getGroupById(data.groupId), isCurrentGroup, data.tabIndex)
+                background.loadGroup(undefined, getGroupById(data.groupId), isCurrentGroup, data.tabIndex)
                     .then(function() {
                         if (!options.closePopupAfterChangeGroup && options.openGroupAfterChange) {
                             renderTabsList(data.groupId);
@@ -139,6 +139,19 @@
                 background.moveGroup(getGroupById(groupIdInContext), 'up');
             } else if ('context-move-group-down' === action) {
                 background.moveGroup(getGroupById(groupIdInContext), 'down');
+            } else if ('context-open-group-in-new-window' === action) {
+                let group = getGroupById(groupIdInContext);
+
+                background.isGroupLoadInWindow(group)
+                    .then(function() {
+                        notify(browser.i18n.getMessage('errorThisGroupAlreadyLoadedInOtherWindow'));
+                    })
+                    .catch(function() {
+                        browser.windows.create({
+                                state: 'maximized',
+                            })
+                            .then(win => background.loadGroup(win.id, group));
+                    });
             }
         }
 
