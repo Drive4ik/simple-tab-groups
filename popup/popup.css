@@ -242,10 +242,11 @@ html {
 #editGroupPopup {
     display: none;
     position: fixed;
-    padding-top: 10px;
+    padding: 10px 0;
     width: 100vw;
     height: 100vh;
     background-color: #ffffff;
+    z-index: 5;
 }
 
 #editGroupPopup h3 {
@@ -263,7 +264,7 @@ html {
 }
 
 #editGroupPopup .action-buttons {
-    margin: 10px;
+    margin: 10px 10px 0 10px;
 }
 
 

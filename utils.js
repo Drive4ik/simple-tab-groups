@@ -231,25 +231,30 @@ let $ = document.querySelector.bind(document),
 
         return 'data:image/svg+xml;base64,' + b64EncodeUnicode(svg);
     },
-    getBrowserActionSvgWithGroupColor = function(color) {
+    getBrowserActionSvgPath = function(color) {
         if (!color) {
-            return '';
+            return '/icons/icon.svg';
         }
 
-        return `
-            <svg width="32" height="32" xmlns="http://www.w3.org/2000/svg">
-                <g fill="#606060">
-                    <rect height="8" width="8" y="0" x="0" />
-                    <rect height="8" width="8" y="0" x="12" />
-                    <rect height="8" width="8" y="12" x="24" />
-                    <rect height="8" width="8" y="12" x="0" />
-                    <rect height="8" width="8" y="12" x="12" />
-                    <rect height="8" width="8" y="0" x="24" />
-                    <rect height="8" width="8" y="24" x="0" />
-                    <rect height="8" width="8" y="24" x="12" />
-                    <rect height="8" width="8" y="24" x="24" />
-                    <path transform="rotate(-90, 18, 18)" d="m3.87079,31.999319l0,-28.125684l28.126548,28.125684l-28.126548,0z" fill="${color}" />
-                </g>
-            </svg>
-        `;
+        let svg = `
+                <svg width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+                    <g fill="#606060">
+                        <rect height="8" width="8" y="0" x="0" />
+                        <rect height="8" width="8" y="0" x="12" />
+                        <rect height="8" width="8" y="12" x="24" />
+                        <rect height="8" width="8" y="12" x="0" />
+                        <rect height="8" width="8" y="12" x="12" />
+                        <rect height="8" width="8" y="0" x="24" />
+                        <rect height="8" width="8" y="24" x="0" />
+                        <rect height="8" width="8" y="24" x="12" />
+                        <rect height="8" width="8" y="24" x="24" />
+                        <path transform="rotate(-90, 18, 18)" d="m3.87079,31.999319l0,-28.125684l28.126548,28.125684l-28.126548,0z" fill="${color}" />
+                    </g>
+                </svg>
+            `,
+            blobIcon = new Blob([svg], {
+                type: 'image/svg+xml',
+            });
+
+        return URL.createObjectURL(blobIcon);
     };

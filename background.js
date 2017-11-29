@@ -1,28 +1,6 @@
 (function() {
     'use strict';
 
-    // TODO
-    // refactor for fully support multi windows
-    // fix bugs create new tab
-// storage.get(null).then(console.log);
-// return browser.windows.get(browser.windows.WINDOW_ID_CURRENT, {
-//             windowTypes: ['normal'],
-//             populate: true,
-//         })
-//     .then(win => console.log(type(win.tabs)));
-
-// async function aaa() {
-//     var a = await Promise.resolve(1);
-//     var b = await Promise.reject(2);
-
-//     console.info(a, b);
-// }
-// aaa();
-// Promise.all([Promise.resolve(1), Promise.reject(2)])
-// .then(console.log, console.warn);
-
-// return;
-
     let isTabCurrentlyRemoving = false,
         currentlyLoadingGroups = {}; // windowId: true
 
@@ -576,7 +554,6 @@
     }
 
     function addTabEvents() {
-        // browser.tabs.onCreated.addListener(onCreatedTab);
         browser.tabs.onActivated.addListener(onActivatedTab);
         browser.tabs.onUpdated.addListener(onUpdatedTab);
         browser.tabs.onRemoved.addListener(onRemovedTab);
@@ -588,7 +565,6 @@
     }
 
     function removeTabEvents() {
-        // browser.tabs.onCreated.removeListener(onCreatedTab);
         browser.tabs.onActivated.removeListener(onActivatedTab);
         browser.tabs.onUpdated.removeListener(onUpdatedTab);
         browser.tabs.onRemoved.removeListener(onRemovedTab);
@@ -765,14 +741,8 @@
                 title: currentGroup.title + ' - ' + browser.i18n.getMessage('extensionName'),
             });
 
-            let svg = getBrowserActionSvgWithGroupColor(currentGroup.iconColor),
-                blobIcon = new Blob([svg], {
-                    type: 'image/svg+xml',
-                }),
-                path = URL.createObjectURL(blobIcon);
-
             browser.browserAction.setIcon({
-                path,
+                path: getBrowserActionSvgPath(currentGroup.iconColor),
             });
         });
     }
