@@ -150,7 +150,11 @@
                         browser.windows.create({
                                 state: 'maximized',
                             })
-                            .then(win => background.loadGroup(win.id, group));
+                            // .then(win => background.loadGroup(win.id, group));
+                            .then(function(win) {
+                                console.log('create new windowId %s, groupId %s', win.id, group.id);
+                                background.loadGroup(win.id, group);
+                            });
                     });
             }
         }

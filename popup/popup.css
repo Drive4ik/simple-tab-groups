@@ -37,7 +37,7 @@ html {
 
 #stg .question {
     display: inline-block;
-    cursor: pointer;
+    cursor: help;
     border-radius: 50%;
     height: 18px;
     width: 18px;

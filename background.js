@@ -278,127 +278,400 @@
     }
 
     function loadGroup(windowId = browser.windows.WINDOW_ID_CURRENT, group, isCurrentGroup = false, activeTabIndex = -1) {
-        if (isCurrentGroup) {
-            return getTabs(windowId)
-                .then(function(tabs) {
-                    if (tabs[activeTabIndex]) {
-                        return browser.tabs.update(tabs[activeTabIndex].id, {
-                            active: true,
-                        });
+        isGroupLoadInWindow(group)
+            .then(function(groupWindow) {
+                getWindow(windowId).then(function(selectedWindow) {
+                    if (groupWindow.id === selectedWindow.id) {
+                        return getTabs(windowId)
+                            .then(function(tabs) {
+                                if (tabs[activeTabIndex]) {
+                                    return browser.tabs.update(tabs[activeTabIndex].id, {
+                                        active: true,
+                                    });
+                                }
+                            });
+                    } else {
+                        notify(browser.i18n.getMessage('errorThisGroupAlreadyLoadedInOtherWindow'));
                     }
                 });
-        }
+            })
+            .catch(function() {
+                // magic
 
-        removeTabEvents();
+                removeTabEvents();
 
-        let tempEmptyTabIdPromise = null;
-
-        browser.runtime.sendMessage({
-            loadingGroupPosition: 10,
-        });
-
-        return Promise.all([
-                getData(windowId),
-                hasAnotherTabs(windowId)
-            ])
-            .then(function([result, hasAnotherTabs]) {
-                if (currentlyLoadingGroups[result.windowId]) {
-                    throw browser.i18n.getMessage('errorAnotherGroupAreLoading');
-                }
+                let tempEmptyTabIdPromise = null;
 
                 browser.runtime.sendMessage({
-                    loadingGroupPosition: 30,
+                    loadingGroupPosition: 10,
                 });
 
-                currentlyLoadingGroups[result.windowId] = true;
+                return Promise.all([
+                        getData(windowId),
+                        hasAnotherTabs(windowId)
+                    ])
+                    .then(function([result, hasAnotherTabs]) {
+                        console.log('result', result);
+                        if (currentlyLoadingGroups[result.windowId]) {
+                            throw browser.i18n.getMessage('errorAnotherGroupAreLoading');
+                        }
 
-                if (result.tabs.length || !hasAnotherTabs) { // create empty tab (for quickly change group and not blinking)
-                    tempEmptyTabIdPromise = browser.tabs.create({
-                            active: true,
-                            url: 'about:blank',
-                            windowId: windowId,
-                        })
-                        .then(tab => tab.id);
-                }
+                        browser.runtime.sendMessage({
+                            loadingGroupPosition: 30,
+                        });
 
-                if (!group.tabs.length && !hasAnotherTabs) {
-                    group.tabs.push({
-                        active: true,
-                        url: 'about:blank',
+                        currentlyLoadingGroups[result.windowId] = true;
+
+                        if (result.tabs.length || !hasAnotherTabs) { // create empty tab (for quickly change group and not blinking)
+                            tempEmptyTabIdPromise = browser.tabs.create({
+                                    active: true,
+                                    url: 'about:blank',
+                                    windowId: windowId,
+                                })
+                                .then(tab => tab.id);
+                        }
+
+                        if (!group.tabs.length && !hasAnotherTabs) {
+                            group.tabs.push({
+                                active: true,
+                                url: 'about:blank',
+                            });
+
+                            let indexGroup = result.groups.findIndex(gr => gr.id === group.id);
+                            result.groups[indexGroup].tabs = group.tabs;
+
+                            return saveGroup(group, false)
+                                .then(() => result);
+                        }
+
+                        return result;
+                    })
+                    .catch(error => notify(error, false, 'error-load-group-notification'))
+                    .then(function(result) { // remove tabs
+                        browser.runtime.sendMessage({
+                            loadingGroupPosition: 50,
+                        });
+
+                        return browser.tabs.remove(result.tabs.map(tab => tab.id))
+                            .then(() => result)
+                            .catch(() => loadGroup(undefined, result.currentGroup)); // maybe not ever called
+                    })
+                    .then(function(result) { // create tabs
+                        browser.runtime.sendMessage({
+                            loadingGroupPosition: 70,
+                        });
+
+                        if (group.tabs.length) {
+                            return Promise.all(group.tabs.map(function(tab, tabIndex) {
+                                    return browser.tabs.create({
+                                        active: -1 === activeTabIndex ? Boolean(tab.active) : tabIndex === activeTabIndex,
+                                        url: tab.url,
+                                        windowId: windowId,
+                                        cookieStoreId: tab.cookieStoreId || DEFAULT_COOKIE_STORE_ID,
+                                    });
+                                }))
+                                .then(() => result, notify);
+                        }
+
+                        return result;
+                    })
+                    .then(function(result) {
+                        browser.runtime.sendMessage({
+                            loadingGroupPosition: 90,
+                        });
+
+                        if (tempEmptyTabIdPromise) {
+                            tempEmptyTabIdPromise.then(browser.tabs.remove);
+                        }
+
+                        browser.menus.update(CONTEXT_MENU_PREFIX_GROUP + result.windowsGroup[result.windowId], {
+                            enabled: true,
+                        });
+                        browser.menus.update(CONTEXT_MENU_PREFIX_GROUP + group.id, {
+                            enabled: false,
+                        });
+
+                        result.windowsGroup[result.windowId] = group.id;
+
+                        return storage.set({
+                                windowsGroup: result.windowsGroup,
+                            })
+                            .then(() => result);
+                    })
+                    .then(function(result) {
+                        delete currentlyLoadingGroups[result.windowId];
+
+                        browser.runtime.sendMessage({
+                            loadingGroupPosition: false,
+                        });
+
+                        updateBrowserActionIcon();
+
+                        addTabEvents();
                     });
 
-                    let indexGroup = result.groups.findIndex(gr => gr.id === group.id);
-                    result.groups[indexGroup].tabs = group.tabs;
-
-                    return saveGroup(group, false)
-                        .then(() => result);
-                }
-
-                return result;
-            })
-            .catch(error => notify(error, false, 'error-load-group-notification'))
-            .then(function(result) { // remove tabs
-                browser.runtime.sendMessage({
-                    loadingGroupPosition: 50,
-                });
-
-                return browser.tabs.remove(result.tabs.map(tab => tab.id))
-                    .then(() => result)
-                    .catch(() => loadGroup(undefined, result.currentGroup)); // maybe not ever called
-            })
-            .then(function(result) { // create tabs
-                browser.runtime.sendMessage({
-                    loadingGroupPosition: 70,
-                });
-
-                if (group.tabs.length) {
-                    return Promise.all(group.tabs.map(function(tab, tabIndex) {
-                            return browser.tabs.create({
-                                active: -1 === activeTabIndex ? Boolean(tab.active) : tabIndex === activeTabIndex,
-                                url: tab.url,
-                                windowId: windowId,
-                                cookieStoreId: tab.cookieStoreId || DEFAULT_COOKIE_STORE_ID,
-                            });
-                        }))
-                        .then(() => result, notify);
-                }
-
-                return result;
-            })
-            .then(function(result) {
-                browser.runtime.sendMessage({
-                    loadingGroupPosition: 90,
-                });
-
-                if (tempEmptyTabIdPromise) {
-                    tempEmptyTabIdPromise.then(browser.tabs.remove);
-                }
-
-                browser.menus.update(CONTEXT_MENU_PREFIX_GROUP + result.windowsGroup[result.windowId], {
-                    enabled: true,
-                });
-                browser.menus.update(CONTEXT_MENU_PREFIX_GROUP + group.id, {
-                    enabled: false,
-                });
-
-                result.windowsGroup[result.windowId] = group.id;
-
-                return storage.set({
-                        windowsGroup: result.windowsGroup,
-                    })
-                    .then(() => result);
-            })
-            .then(function(result) {
-                delete currentlyLoadingGroups[result.windowId];
-
-                browser.runtime.sendMessage({
-                    loadingGroupPosition: false,
-                });
-
-                updateBrowserActionIcon();
-
-                addTabEvents();
             });
+
+
+
+
+
+        // if (isCurrentGroup) {
+        //     return getTabs(windowId)
+        //         .then(function(tabs) {
+        //             if (tabs[activeTabIndex]) {
+        //                 return browser.tabs.update(tabs[activeTabIndex].id, {
+        //                     active: true,
+        //                 });
+        //             }
+        //         });
+        // }
+
+        // removeTabEvents();
+
+        // let tempEmptyTabIdPromise = null;
+
+        // browser.runtime.sendMessage({
+        //     loadingGroupPosition: 10,
+        // });
+
+        // return Promise.all([
+        //         getData(windowId),
+        //         hasAnotherTabs(windowId)
+        //     ])
+        //     .then(function([result, hasAnotherTabs]) {
+        //         if (currentlyLoadingGroups[result.windowId]) {
+        //             throw browser.i18n.getMessage('errorAnotherGroupAreLoading');
+        //         }
+
+        //         browser.runtime.sendMessage({
+        //             loadingGroupPosition: 30,
+        //         });
+
+        //         currentlyLoadingGroups[result.windowId] = true;
+
+        //         if (result.tabs.length || !hasAnotherTabs) { // create empty tab (for quickly change group and not blinking)
+        //             tempEmptyTabIdPromise = browser.tabs.create({
+        //                     active: true,
+        //                     url: 'about:blank',
+        //                     windowId: windowId,
+        //                 })
+        //                 .then(tab => tab.id);
+        //         }
+
+        //         if (!group.tabs.length && !hasAnotherTabs) {
+        //             group.tabs.push({
+        //                 active: true,
+        //                 url: 'about:blank',
+        //             });
+
+        //             let indexGroup = result.groups.findIndex(gr => gr.id === group.id);
+        //             result.groups[indexGroup].tabs = group.tabs;
+
+        //             return saveGroup(group, false)
+        //                 .then(() => result);
+        //         }
+
+        //         return result;
+        //     })
+        //     .catch(error => notify(error, false, 'error-load-group-notification'))
+        //     .then(function(result) { // remove tabs
+        //         browser.runtime.sendMessage({
+        //             loadingGroupPosition: 50,
+        //         });
+
+        //         return browser.tabs.remove(result.tabs.map(tab => tab.id))
+        //             .then(() => result)
+        //             .catch(() => loadGroup(undefined, result.currentGroup)); // maybe not ever called
+        //     })
+        //     .then(function(result) { // create tabs
+        //         browser.runtime.sendMessage({
+        //             loadingGroupPosition: 70,
+        //         });
+
+        //         if (group.tabs.length) {
+        //             return Promise.all(group.tabs.map(function(tab, tabIndex) {
+        //                     return browser.tabs.create({
+        //                         active: -1 === activeTabIndex ? Boolean(tab.active) : tabIndex === activeTabIndex,
+        //                         url: tab.url,
+        //                         windowId: windowId,
+        //                         cookieStoreId: tab.cookieStoreId || DEFAULT_COOKIE_STORE_ID,
+        //                     });
+        //                 }))
+        //                 .then(() => result, notify);
+        //         }
+
+        //         return result;
+        //     })
+        //     .then(function(result) {
+        //         browser.runtime.sendMessage({
+        //             loadingGroupPosition: 90,
+        //         });
+
+        //         if (tempEmptyTabIdPromise) {
+        //             tempEmptyTabIdPromise.then(browser.tabs.remove);
+        //         }
+
+        //         browser.menus.update(CONTEXT_MENU_PREFIX_GROUP + result.windowsGroup[result.windowId], {
+        //             enabled: true,
+        //         });
+        //         browser.menus.update(CONTEXT_MENU_PREFIX_GROUP + group.id, {
+        //             enabled: false,
+        //         });
+
+        //         result.windowsGroup[result.windowId] = group.id;
+
+        //         return storage.set({
+        //                 windowsGroup: result.windowsGroup,
+        //             })
+        //             .then(() => result);
+        //     })
+        //     .then(function(result) {
+        //         delete currentlyLoadingGroups[result.windowId];
+
+        //         browser.runtime.sendMessage({
+        //             loadingGroupPosition: false,
+        //         });
+
+        //         updateBrowserActionIcon();
+
+        //         addTabEvents();
+        //     });
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // if (isCurrentGroup) {
+        //     return getTabs(windowId)
+        //         .then(function(tabs) {
+        //             if (tabs[activeTabIndex]) {
+        //                 return browser.tabs.update(tabs[activeTabIndex].id, {
+        //                     active: true,
+        //                 });
+        //             }
+        //         });
+        // }
+
+        // removeTabEvents();
+
+        // let tempEmptyTabIdPromise = null;
+
+        // browser.runtime.sendMessage({
+        //     loadingGroupPosition: 10,
+        // });
+
+        // return Promise.all([
+        //         getData(windowId),
+        //         hasAnotherTabs(windowId)
+        //     ])
+        //     .then(function([result, hasAnotherTabs]) {
+        //         if (currentlyLoadingGroups[result.windowId]) {
+        //             throw browser.i18n.getMessage('errorAnotherGroupAreLoading');
+        //         }
+
+        //         browser.runtime.sendMessage({
+        //             loadingGroupPosition: 30,
+        //         });
+
+        //         currentlyLoadingGroups[result.windowId] = true;
+
+        //         if (result.tabs.length || !hasAnotherTabs) { // create empty tab (for quickly change group and not blinking)
+        //             tempEmptyTabIdPromise = browser.tabs.create({
+        //                     active: true,
+        //                     url: 'about:blank',
+        //                     windowId: windowId,
+        //                 })
+        //                 .then(tab => tab.id);
+        //         }
+
+        //         if (!group.tabs.length && !hasAnotherTabs) {
+        //             group.tabs.push({
+        //                 active: true,
+        //                 url: 'about:blank',
+        //             });
+
+        //             let indexGroup = result.groups.findIndex(gr => gr.id === group.id);
+        //             result.groups[indexGroup].tabs = group.tabs;
+
+        //             return saveGroup(group, false)
+        //                 .then(() => result);
+        //         }
+
+        //         return result;
+        //     })
+        //     .catch(error => notify(error, false, 'error-load-group-notification'))
+        //     .then(function(result) { // remove tabs
+        //         browser.runtime.sendMessage({
+        //             loadingGroupPosition: 50,
+        //         });
+
+        //         return browser.tabs.remove(result.tabs.map(tab => tab.id))
+        //             .then(() => result)
+        //             .catch(() => loadGroup(undefined, result.currentGroup)); // maybe not ever called
+        //     })
+        //     .then(function(result) { // create tabs
+        //         browser.runtime.sendMessage({
+        //             loadingGroupPosition: 70,
+        //         });
+
+        //         if (group.tabs.length) {
+        //             return Promise.all(group.tabs.map(function(tab, tabIndex) {
+        //                     return browser.tabs.create({
+        //                         active: -1 === activeTabIndex ? Boolean(tab.active) : tabIndex === activeTabIndex,
+        //                         url: tab.url,
+        //                         windowId: windowId,
+        //                         cookieStoreId: tab.cookieStoreId || DEFAULT_COOKIE_STORE_ID,
+        //                     });
+        //                 }))
+        //                 .then(() => result, notify);
+        //         }
+
+        //         return result;
+        //     })
+        //     .then(function(result) {
+        //         browser.runtime.sendMessage({
+        //             loadingGroupPosition: 90,
+        //         });
+
+        //         if (tempEmptyTabIdPromise) {
+        //             tempEmptyTabIdPromise.then(browser.tabs.remove);
+        //         }
+
+        //         browser.menus.update(CONTEXT_MENU_PREFIX_GROUP + result.windowsGroup[result.windowId], {
+        //             enabled: true,
+        //         });
+        //         browser.menus.update(CONTEXT_MENU_PREFIX_GROUP + group.id, {
+        //             enabled: false,
+        //         });
+
+        //         result.windowsGroup[result.windowId] = group.id;
+
+        //         return storage.set({
+        //                 windowsGroup: result.windowsGroup,
+        //             })
+        //             .then(() => result);
+        //     })
+        //     .then(function(result) {
+        //         delete currentlyLoadingGroups[result.windowId];
+
+        //         browser.runtime.sendMessage({
+        //             loadingGroupPosition: false,
+        //         });
+
+        //         updateBrowserActionIcon();
+
+        //         addTabEvents();
+        //     });
+
     }
 
     function saveTabs(windowId = browser.windows.WINDOW_ID_CURRENT, excludeTabIds = [], sendEventUpdateStorage) {
@@ -762,6 +1035,7 @@
     }
 
     browser.windows.onFocusChanged.addListener(function(windowId) {
+        console.log('onFocusChanged windowId', windowId);
         if (browser.windows.WINDOW_ID_NONE === windowId) {
             resetBrowserActionIcon();
             return removeMoveTabMenus();
@@ -793,6 +1067,47 @@
             32: 'icons/settings.svg',
         },
     });
+
+    Promise.all([
+            storage.get(null),
+            getWindow()
+        ])
+        .then(function([result, win]) { // migration
+            let currentVerion = Number(browser.runtime.getManifest().version.match(/\d/g).join('')),
+                promises = [];
+
+            if (result.version === currentVerion) {
+                return [result, win];
+            }
+
+            if (result.version < 182) {
+                promises.push(storage.remove('windowsGroup'));
+            }
+// versionCompare = function(left, right) {
+//     if (typeof left + typeof right != 'stringstring')
+//         return false;
+
+//     var a = left.split('.')
+//     ,   b = right.split('.')
+//     ,   i = 0, len = Math.max(a.length, b.length);
+
+//     for (; i < len; i++) {
+//         if ((a[i] && !b[i] && parseInt(a[i]) > 0) || (parseInt(a[i]) > parseInt(b[i]))) {
+//             return 1;
+//         } else if ((b[i] && !a[i] && parseInt(b[i]) > 0) || (parseInt(a[i]) < parseInt(b[i]))) {
+//             return -1;
+//         }
+//     }
+
+//     return 0;
+// }
+
+
+            storage.set({
+                version: currentVerion,
+            });
+
+        });
 
     getData()
         .then(function(result) {

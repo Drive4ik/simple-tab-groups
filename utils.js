@@ -4,15 +4,17 @@ const DEFAULT_COOKIE_STORE_ID = 'firefox-default',
     CONTEXT_MENU_PREFIX_GROUP = 'stg-move-group-id-',
     defaultOptions = {
         groups: [],
-        windowsGroup: {}, // windowId: groupId
+        // windowsGroup: {}, // windowId: groupId
         lastCreatedGroupPosition: 0,
+        version: 1,
 
-        // options
-        closePopupAfterChangeGroup: true,
-        openGroupAfterChange: true,
-        showGroupCircleInSearchedTab: true,
-        showUrlTooltipOnTabHover: false,
-        showNotificationAfterMoveTab: true,
+        options: {
+            closePopupAfterChangeGroup: true,
+            openGroupAfterChange: true,
+            showGroupCircleInSearchedTab: true,
+            showUrlTooltipOnTabHover: false,
+            showNotificationAfterMoveTab: true,
+        },
     };
 
 let $ = document.querySelector.bind(document),
@@ -187,9 +189,7 @@ let $ = document.querySelector.bind(document),
             return browser.storage.local.get(keys)
                 .then(function(result) {
                     if (null === keys) {
-                        if (Object.keys(result).length === 0) {
-                            Object.assign(result, defaultOptions);
-                        }
+                        Object.assign(result, defaultOptions, result);
                     } else if ('string' === type(keys)) {
                         if (undefined === result[keys]) {
                             result[keys] = defaultOptions[keys];
