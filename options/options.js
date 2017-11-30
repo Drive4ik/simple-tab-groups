@@ -31,7 +31,7 @@
                     try {
                         oldGroups = JSON.parse(win.extData['tabview-group']);
                     } catch (e) {
-                        return console.error('Cannot parse groups', e);
+                        return notify('Cannot parse groups: ' + e);
                     }
 
                     Object.keys(oldGroups).forEach(function(key) {
@@ -53,16 +53,16 @@
                         try {
                             let extData = JSON.parse(oldTab.extData['tabview-tab']);
                             if (!extData || !extData.groupID) {
-                                return console.error('Cannot parse tab extData', oldTab);
+                                return notify('Cannot parse tab extData: ' + oldTab);
                             }
                             oldGroupId = extData.groupID;
                         } catch (e) {
-                            return console.error('Cannot parse groups', e);
+                            return notify('Cannot parse groups: ' + e);
                         }
 
 
                         if (!newGroups[oldGroupId]) {
-                            return console.error('not found group', oldGroupId);
+                            return notify('not found group: ' + oldGroupId);
                         }
 
                         oldTab.entries.forEach(function(t) {

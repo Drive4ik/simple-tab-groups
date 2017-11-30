@@ -19,8 +19,8 @@
     storage.get(['closePopupAfterChangeGroup', 'openGroupAfterChange', 'showGroupCircleInSearchedTab', 'showUrlTooltipOnTabHover', 'showNotificationAfterMoveTab'])
         .then(result => options = result);
 
-    loadData();
     addEvents();
+    loadData();
 
     function addEvents() {
 
@@ -28,21 +28,20 @@
             if ('load-group' === action) {
                 let isCurrentGroup = data.groupId === allData.currentGroup.id;
 
-                if (isCurrentGroup && -1 === data.tabIndex) {
+                if (isCurrentGroup && -1 === data.tabIndex) { // open group
                     return renderTabsList(data.groupId);
                 }
 
                 background.loadGroup(allData.currentGroup.windowId, getGroupById(data.groupId), data.tabIndex)
-                    .catch(notify)
                     .then(function() {
                         if (!options.closePopupAfterChangeGroup && options.openGroupAfterChange) {
                             renderTabsList(data.groupId);
                         }
-                    });
 
-                if (options.closePopupAfterChangeGroup && !isCurrentGroup) {
-                    window.close();
-                }
+                        if (options.closePopupAfterChangeGroup && !isCurrentGroup) {
+                            window.close();
+                        }
+                    });
             } else if ('show-group' === action) {
                 renderTabsList(data.groupId);
             } else if ('remove-tab' === action) {
@@ -105,7 +104,7 @@
                 let group = getGroupById(data.groupId);
 
                 $('#deleteGroupPopup').dataset.groupId = data.groupId;
-                $('#groupDeleteQuestion').innerText = browser.i18n.getMessage('removeGroupPopupBody', unSafeHtml(group.title));
+                $('#groupDeleteQuestion').innerText = browser.i18n.getMessage('deleteGroupPopupBody', unSafeHtml(group.title));
                 $('#deleteGroupPopup').classList.add('is-active');
             } else if ('context-show-delete-group-popup' === action) {
                 doAction('show-delete-group-popup', {
@@ -117,7 +116,7 @@
             } else if ('submit-delete-group-popup' === action) {
                 let groupId = Number($('#deleteGroupPopup').dataset.groupId);
 
-                background.removeGroup(getGroupById(groupId));
+                background.removeGroup(getGroupById(groupId)).then(renderGroupsList);
 
                 $('#deleteGroupPopup').classList.remove('is-active');
             } else if ('move-tab-to-group' === action) {
@@ -170,11 +169,13 @@
             browser.runtime.openOptionsPage();
         });
 
-        $on('mouseup', '[data-is-tab]', function(data, event) {
-            if (1 === event.button) { // if miggle button click on tab
-                console.log('middle click');
-                event.preventDefault();
-                return doAction('remove-tab', data);
+        $on('mousedown mouseup', '[data-is-tab]', function(data, event) {
+            if (1 === event.button) {
+                if ('mousedown' === event.type) {
+                    event.preventDefault();
+                } else if ('mouseup' === event.type) {
+                    doAction('remove-tab', data);
+                }
             }
         });
 
@@ -190,9 +191,8 @@
         let loadDataTimer = null,
             listener = function(request, sender, sendResponse) {
                 if (request.storageUpdated) {
-                    loadData();
-                    // clearTimeout(loadDataTimer);
-                    // loadDataTimer = setTimeout(loadData, 100);
+                    clearTimeout(loadDataTimer);
+                    loadDataTimer = setTimeout(loadData, 100);
                 } else if (undefined !== request.loadingGroupPosition) {
                     if (request.loadingGroupPosition) {
                         $('#loading').firstElementChild.style.width = request.loadingGroupPosition + 'vw';
@@ -238,7 +238,6 @@
     }
 
     function loadData() {
-        console.log('loadData called');
         return Promise.all([
                 background.getData(undefined, false),
                 browser.contextualIdentities.query({})
@@ -250,8 +249,6 @@
                     activeTabIndex: result.tabs.findIndex(tab => tab.active),
                     containers,
                 };
-
-                // console.log('allData.groups', JSON.stringify(allData.groups, null, '    '));
             })
             .then(selectRender);
     }

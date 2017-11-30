@@ -231,6 +231,13 @@ html {
     padding-left: 10px;
 }
 
+#stg .groups .tabs-text {
+    white-space: nowrap;
+    overflow: hidden;
+    display: inline-block;
+    text-overflow: ellipsis;
+}
+
 #stg .icon {
     display: inline-block;
     text-align: center;

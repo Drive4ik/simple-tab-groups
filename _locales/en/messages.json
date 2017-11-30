@@ -152,17 +152,17 @@
         "description": "Group settings"
     },
 
-    "removeGroup": {
-        "message": "Remove group",
-        "description": "Remove group"
+    "deleteGroup": {
+        "message": "Delete group",
+        "description": "Delete group"
     },
 
-    "removeGroupPopupTitle": {
+    "deleteGroupPopupTitle": {
         "message": "Delete group?",
         "description": "Delete group?"
     },
 
-    "removeGroupPopupBody": {
+    "deleteGroupPopupBody": {
         "message": "Do you want to delete group \"$name$\"?",
         "description": "Delete group?",
         "placeholders": {
@@ -184,9 +184,9 @@
         }
     },
 
-    "removeTab": {
-        "message": "Remove tab",
-        "description": "Remove tab"
+    "deleteTab": {
+        "message": "Delete tab",
+        "description": "Delete tab"
     },
 
     "createNewTab": {

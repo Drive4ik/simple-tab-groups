@@ -109,12 +109,12 @@ let $ = document.querySelector.bind(document),
         return new Promise(function(resolve, reject) {
             let called = false,
                 listener = function(id, notificationId) {
-                if (id === notificationId) {
-                    browser.notifications.onClicked.removeListener(listener);
-                    called = true;
-                    resolve(id);
-                }
-            }.bind(null, id);
+                    if (id === notificationId) {
+                        browser.notifications.onClicked.removeListener(listener);
+                        called = true;
+                        resolve(id);
+                    }
+                }.bind(null, id);
 
             setTimeout(() => called ? null : reject, 30000, id);
 
@@ -141,49 +141,57 @@ let $ = document.querySelector.bind(document),
             return false;
         }
 
-        return ! /^(chrome:|javascript:|data:|file:|view-source:|about(?!\:(blank|newtab|home)))/.test(url);
+        return !/^(chrome:|javascript:|data:|file:|view-source:|about(?!\:(blank|newtab|home)))/.test(url);
     },
-    on = function(event, query, func) {
+    on = function(eventsStr, query, func) {
         let events = this;
 
-        if (!events[event]) {
-            events[event] = [];
-            document.body.addEventListener(event, function({target:el}) {
-                function checkQueryByElement(element, data) {
-                    if (element.matches && element.matches(data.query)) {
-                        let elementData = {};
+        eventsStr
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean)
+            .forEach(function(eventStr) {
+                if (!events[eventStr]) {
+                    events[eventStr] = [];
+                    document.body.addEventListener(eventStr, function(event) {
 
-                        Object.keys(element.dataset)
-                            .forEach(function(key) {
-                                elementData[key] = isFinite(element.dataset[key]) ? parseInt(element.dataset[key], 10) : element.dataset[key];
-                            });
+                        function checkQueryByElement(element, data) {
+                            if (element.matches && element.matches(data.query)) {
+                                let elementData = {};
 
-                        data.func.call(element, elementData, event);
-                        translatePage();
-                        return true;
-                    }
-                }
+                                Object.keys(element.dataset)
+                                    .forEach(function(key) {
+                                        elementData[key] = isFinite(element.dataset[key]) ? parseInt(element.dataset[key], 10) : element.dataset[key];
+                                    });
 
-                let found = events[event].some(data => checkQueryByElement(el, data));
-
-                if (!found) {
-                    while (el.parentNode) {
-                        found = events[event].some(data => checkQueryByElement(el.parentNode, data));
-
-                        if (found) {
-                            break;
+                                data.func.call(element, elementData, event);
+                                translatePage();
+                                return true;
+                            }
                         }
 
-                        el = el.parentNode;
-                    }
-                }
-            }, false);
-        }
+                        let el = event.target,
+                            found = events[eventStr].some(data => checkQueryByElement(el, data));
 
-        events[event].push({
-            query,
-            func,
-        });
+                        if (!found) {
+                            while (el.parentNode) {
+                                found = events[eventStr].some(data => checkQueryByElement(el.parentNode, data));
+
+                                if (found) {
+                                    break;
+                                }
+
+                                el = el.parentNode;
+                            }
+                        }
+                    }, false);
+                }
+
+                events[eventStr].push({
+                    query,
+                    func,
+                });
+            });
     },
     storage = {
         get(keys) {
