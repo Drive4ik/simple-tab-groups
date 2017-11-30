@@ -35,22 +35,6 @@ html {
     display: none !important;
 }
 
-#stg .question {
-    display: inline-block;
-    cursor: help;
-    border-radius: 50%;
-    height: 18px;
-    width: 18px;
-    background-color: rgba(10, 10, 10, .2);
-    color: #fff;
-    text-align: center;
-    line-height: 18px;
-}
-
-#stg .question:hover {
-    background-color: rgba(10, 10, 10, .3);
-}
-
 #stg .h-margin-top-10 {
     margin-top: 10px;
 }
@@ -62,6 +46,11 @@ html {
 #stg .size-16 {
     width: 16px;
     height: 16px;
+}
+
+#stg .size-18 {
+    width: 18px;
+    height: 18px;
 }
 
 #stg .size-20 {
@@ -76,6 +65,10 @@ html {
 
 #stg .cursor-pointer {
     cursor: pointer;
+}
+
+#stg .cursor-help {
+    cursor: help;
 }
 
 #stg .circle {
@@ -100,6 +93,18 @@ html {
     font-style: italic;
 }
 
+#stg .rotate-90 {
+    transform: rotate(90deg);
+}
+
+#stg .rotate-180 {
+    transform: rotate(180deg);
+}
+
+#stg .rotate-270 {
+    transform: rotate(270deg);
+}
+
 /* END HELPERS */
 
 
@@ -112,7 +117,7 @@ html {
 }
 
 #searchTab {
-    background: url('/icons/search.svg') no-repeat 4px center;
+    background: url('chrome://browser/skin/search-glass.svg') no-repeat 4px center;
     padding-left: calc(16px + (2 * 4px));
 }
 
@@ -130,6 +135,7 @@ html {
     cursor: default;
     height: 28px;
     padding-left: 10px;
+    padding-right: 15px;
     border-top: 1px solid transparent;
     border-bottom: 1px solid transparent;
 }
@@ -170,6 +176,7 @@ html {
     overflow: hidden;
     text-overflow: ellipsis;
     padding-left: 5px;
+    padding-right: 5px;
     cursor: default;
 }
 
@@ -180,6 +187,7 @@ html {
     padding-left: 5px;
     padding-right: 25px;
     white-space: nowrap;
+    margin-right: -15px;
 }
 
 #stg .item .item-action > :not(:first-child) {
@@ -196,8 +204,16 @@ html {
     vertical-align: middle;
 }
 
+#stg .item .flex-on-hover {
+    display: none;
+}
+
+#stg .item:hover .flex-on-hover {
+    display: flex;
+}
+
 #stg .tabs-list .group-info {
-    margin-bottom: 5px;
+    margin-bottom: 10px;
 }
 
 #stg .tabs-list .group-info.item .item-title {
@@ -209,14 +225,10 @@ html {
 }
 
 #stg .groups .item .item-action {
-    width: 100px;
-    min-width: 100px;
+    width: 110px;
+    min-width: 110px;
     line-height: 1;
     padding-left: 10px;
-}
-
-#stg .groups .item .item-action > :not(:first-child) {
-    margin-left: 5px;
 }
 
 #stg .icon {

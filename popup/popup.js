@@ -24,7 +24,7 @@
 
     function addEvents() {
 
-        function doAction(action, data) {
+        function doAction(action, data, event) {
             if ('load-group' === action) {
                 let isCurrentGroup = data.groupId === allData.currentGroup.id;
 
@@ -33,6 +33,7 @@
                 }
 
                 background.loadGroup(allData.currentGroup.windowId, getGroupById(data.groupId), data.tabIndex)
+                    .catch(notify)
                     .then(function() {
                         if (!options.closePopupAfterChangeGroup && options.openGroupAfterChange) {
                             renderTabsList(data.groupId);
@@ -155,7 +156,7 @@
             }
         }
 
-        $on('click', '[data-action]', data => doAction(data.action, data));
+        $on('click', '[data-action]', (data, event) => doAction(data.action, data, event));
 
         $on('input', '#searchTab', function() {
             renderSearchTabsList();
@@ -169,6 +170,14 @@
             browser.runtime.openOptionsPage();
         });
 
+        $on('mouseup', '[data-is-tab]', function(data, event) {
+            if (1 === event.button) { // if miggle button click on tab
+                console.log('middle click');
+                event.preventDefault();
+                return doAction('remove-tab', data);
+            }
+        });
+
         $on('contextmenu', '[contextmenu="group-menu"]', function({groupId}) {
             groupIdInContext = groupId;
         });
@@ -180,18 +189,21 @@
         // setTabEventsListener
         let loadDataTimer = null,
             listener = function(request, sender, sendResponse) {
-            if (request.storageUpdated) {
-                clearTimeout(loadDataTimer);
-                loadDataTimer = setTimeout(loadData, 100);
-            } else if (undefined !== request.loadingGroupPosition) {
-                if (request.loadingGroupPosition) {
-                    $('#loading').classList.remove('is-hidden');
-                    $('#loading').firstElementChild.style.width = request.loadingGroupPosition + 'vw';
-                } else {
-                    $('#loading').classList.add('is-hidden');
+                if (request.storageUpdated) {
+                    loadData();
+                    // clearTimeout(loadDataTimer);
+                    // loadDataTimer = setTimeout(loadData, 100);
+                } else if (undefined !== request.loadingGroupPosition) {
+                    if (request.loadingGroupPosition) {
+                        $('#loading').firstElementChild.style.width = request.loadingGroupPosition + 'vw';
+                        $('#loading').classList.remove('is-hidden');
+                    } else {
+                        $('#loading').classList.add('is-hidden');
+                    }
                 }
-            }
-        };
+
+                sendResponse();
+            };
 
         browser.runtime.onMessage.addListener(listener);
         window.addEventListener('unload', () => browser.runtime.onMessage.removeListener(listener));
@@ -226,6 +238,7 @@
     }
 
     function loadData() {
+        console.log('loadData called');
         return Promise.all([
                 background.getData(undefined, false),
                 browser.contextualIdentities.query({})
@@ -238,7 +251,7 @@
                     containers,
                 };
 
-                console.log('allData', allData);
+                // console.log('allData.groups', JSON.stringify(allData.groups, null, '    '));
             })
             .then(selectRender);
     }
@@ -274,7 +287,7 @@
             title: safeHtml(unSafeHtml(tab.title || tab.url)),
             url: tab.url,
             containerColorCode: containerColorCode,
-            favIconUrl: tab.favIconUrl || '/icons/tab.svg',
+            favIconUrl: tab.favIconUrl || 'chrome://browser/skin/urlbar-tab.svg',
         };
     }
 
@@ -322,9 +335,6 @@
                         iconColor: group.iconColor,
                     }),
                 };
-
-                delete group.classList; // TMP
-                delete group.colorCircleHtml; // TMP
 
                 return render('group-tmpl', Object.assign({}, group, customData));
             })

@@ -158,7 +158,7 @@ let $ = document.querySelector.bind(document),
                                 elementData[key] = isFinite(element.dataset[key]) ? parseInt(element.dataset[key], 10) : element.dataset[key];
                             });
 
-                        data.func.call(element, elementData);
+                        data.func.call(element, elementData, event);
                         translatePage();
                         return true;
                     }

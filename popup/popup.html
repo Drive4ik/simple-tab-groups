@@ -17,13 +17,16 @@
         <div id="result" class="is-full-width"></div>
 
         <div id="settings" class="settings is-flex no-text-select">
-            <img class="icon" src="/icons/settings.svg" alt="" />
+            <img class="icon" src="chrome://browser/skin/settings.svg" alt="" />
             <span data-i18n="settingsTitle"></span>
         </div>
 
         <div id="editGroupPopup" class="is-column">
             <div class="item" data-action="close-edit-group-popup">
-                <span class="item-icon">&#10094;</span>
+                <!-- <span class="item-icon">&#10094;</span> -->
+                <span class="item-icon">
+                    <img class="size-16" src="chrome://browser/skin/arrow-left.svg" alt="" />
+                </span>
                 <span class="item-title" data-i18n="goBackButtonTitle"></span>
             </div>
 
@@ -53,7 +56,7 @@
                 <div class="field">
                     <label class="label">
                         <span data-i18n="regexpForTabsTitle"></span>
-                        <span class="question" data-i18n="regexpForTabsHelp:title">?</span>
+                        <img class="size-18 cursor-help" src="chrome://global/skin/icons/help.svg" data-i18n="regexpForTabsHelp:title" alt="">
                     </label>
                     <div class="control">
                         <textarea id="groupEditCatchTabRules" class="textarea" data-i18n="regexpForTabsPlaceholder:placeholder"></textarea>
@@ -103,7 +106,10 @@
     <script id="tabs-list-wrapper-tmpl" type="text/template">
         <div class="tabs-list">
             <div class="item" data-action="show-groups-list">
-                <span class="item-icon">&#10094;</span>
+                <!-- <span class="item-icon">&#10094;</span> -->
+                <span class="item-icon">
+                    <img class="size-16" src="chrome://browser/skin/arrow-left.svg" alt="" />
+                </span>
                 <span class="item-title" data-i18n="goBackToGroupsButtonTitle"></span>
             </div>
 
@@ -115,8 +121,8 @@
                 </div>
                 <div class="item-title">{{group.title}}</div>
                 <div class="item-action">
-                    <img data-action="open-settings-group-popup" data-group-id="{{group.id}}" src="/icons/settings.svg" class="size-16 cursor-pointer icon" data-i18n="groupSettings:title" />
-                    <img data-action="show-delete-group-popup" data-group-id="{{group.id}}" src="/icons/clear.svg" class="size-16 cursor-pointer icon" data-i18n="removeGroup:title" />
+                    <img data-action="open-settings-group-popup" data-group-id="{{group.id}}" src="chrome://browser/skin/settings.svg" class="size-16 cursor-pointer icon" data-i18n="groupSettings:title" alt="" />
+                    <img data-action="show-delete-group-popup" data-group-id="{{group.id}}" src="http://design.firefox.com/icons/icons/new/delete-16.svg" class="size-16 cursor-pointer icon" data-i18n="removeGroup:title" alt="" />
                 </div>
             </div>
 
@@ -127,7 +133,7 @@
             <div class="create-new-tab">
                 <div class="item" data-action="add-tab" data-group-id="{{group.id}}" data-cookie-store-id="{{cookieStoreId}}" contextmenu="create-tab-with-container-menu">
                     <div class="item-icon">
-                        <img class="icon" src="/icons/tab-new.svg" alt="">
+                        <img class="size-16" src="chrome://browser/skin/new-tab.svg" alt="">
                     </div>
                     <div class="item-title" data-i18n="createNewTab"></div>
                 </div>
@@ -143,16 +149,16 @@
 
     <script id="tab-tmpl" type="text/template">
         <li>
-            <div contextmenu="move-tab-to-group-menu" class="item {{classList}}" title="{{urlTitle}}" data-action="load-group" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}">
+            <div contextmenu="move-tab-to-group-menu" class="item {{classList}}" title="{{urlTitle}}" data-is-tab="1" data-action="load-group" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}">
                 <div class="item-icon">
                     <img src="{{favIconUrl}}" class="size-16" alt="" />
                 </div>
                 <div class="item-title">
                     <span class="bordered" style="{{containerColorCode}}">{{title}}</span>
                 </div>
-                <div class="item-action">
+                <div class="item-action flex-on-hover">
                     <span class="icon cursor-pointer no-text-select" data-action="remove-tab" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}" data-i18n="removeTab:title">
-                        <img src="/icons/delete-tab.svg" class="size-16" alt="" />
+                        <img src="chrome://browser/skin/stop.svg" class="size-16" alt="" />
                     </span>
                 </div>
             </div>
@@ -187,7 +193,9 @@
             </div>
             <div class="item-title">{{title}}</div>
             <div class="item-action hover no-text-select" data-action="show-group" data-group-id="{{id}}">
-                <span>&#10095;</span>
+                <!-- <span>&#10095;</span> -->
+                <!-- <img class="size-16" src="chrome://browser/skin/chevron.svg" alt=""/> -->
+                <img class="size-16 rotate-180" src="chrome://browser/skin/arrow-left.svg" alt="" />
                 <span data-i18n="groupTabsCount::{{tabs.length}}"></span>
             </div>
         </div>
@@ -196,11 +204,11 @@
     <!-- Context menus -->
 
     <menu id="group-menu" type="context">
-        <menuitem data-action="context-open-group-in-new-window" icon="/icons/window-new.svg" data-i18n="openGroupInNewWindow:label"></menuitem>
-        <menuitem data-action="context-move-group-up" icon="/icons/arrow-up.svg" data-i18n="moveGroupUp:label"></menuitem>
-        <menuitem data-action="context-move-group-down" icon="/icons/arrow-down.svg" data-i18n="moveGroupDown:label"></menuitem>
-        <menuitem data-action="context-open-settings-group-popup" icon="/icons/settings.svg" data-i18n="groupSettings:label"></menuitem>
-        <menuitem data-action="context-show-delete-group-popup" icon="/icons/clear.svg" data-i18n="removeGroup:label"></menuitem>
+        <menuitem data-action="context-open-group-in-new-window" icon="chrome://browser/skin/new-window.svg" data-i18n="openGroupInNewWindow:label"></menuitem>
+        <menuitem data-action="context-move-group-up" icon="chrome://browser/skin/open.svg" data-i18n="moveGroupUp:label"></menuitem>
+        <menuitem data-action="context-move-group-down" icon="chrome://browser/skin/save.svg" data-i18n="moveGroupDown:label"></menuitem>
+        <menuitem data-action="context-open-settings-group-popup" icon="chrome://browser/skin/settings.svg" data-i18n="groupSettings:label"></menuitem>
+        <menuitem data-action="context-show-delete-group-popup" icon="http://design.firefox.com/icons/icons/new/delete-16.svg" data-i18n="removeGroup:label"></menuitem>
     </menu>
 
     <menu id="move-tab-to-group-menu" type="context"></menu>
@@ -208,7 +216,7 @@
         <menuitem data-i18n="moveTabToGroupDisabledTitle:label" disabled></menuitem>
         {{groupsMenuItems}}
         <hr>
-        <menuitem data-i18n="createNewGroup:label" data-action="move-tab-to-new-group" icon="/icons/group-new.svg"></menuitem>
+        <menuitem data-i18n="createNewGroup:label" data-action="move-tab-to-new-group" icon="http://design.firefox.com/icons/icons/branding/glyph.svg"></menuitem>
     </script>
     <script id="move-tab-to-group-menu-item-tmpl" type="text/template">
         <menuitem data-action="move-tab-to-group" data-group-id="{{groupId}}" icon="{{icon}}" label="{{title}}" {{disabled}}></menuitem>
