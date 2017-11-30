@@ -1,1 +1,7 @@
-<?xml version="1.0" ?><svg height="18px" version="1.1" viewBox="0 0 18 18" width="18px" xmlns="http://www.w3.org/2000/svg" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns" xmlns:xlink="http://www.w3.org/1999/xlink"><title/><desc/><defs/><g fill="none" fill-rule="evenodd" id="Page-1" stroke="none" stroke-width="1"><g fill="#000000" id="Core" transform="translate(-87.000000, -465.000000)"><g id="tab" transform="translate(87.000000, 465.000000)"><path d="M16,0 L2,0 C0.9,0 0,0.9 0,2 L0,16 C0,17.1 0.9,18 2,18 L16,18 C17.1,18 18,17.1 18,16 L18,2 C18,0.9 17.1,0 16,0 L16,0 Z M16,16 L2,16 L2,2 L9,2 L9,6 L16,6 L16,16 L16,16 Z" id="Shape"/></g></g></g></svg>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <path fill="context-fill" d="M15.5 12H13V9.5a.5.5 0 0 0-1 0V12H9.5a.5.5 0 0 0 0 1H12v2.5a.5.5 0 0 0 1 0V13h2.5a.5.5 0 0 0 0-1z"></path>
+  <path fill="context-fill" d="M16 4a3 3 0 0 0-3-3H3a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h4.03v-.006a.994.994 0 0 0 0-1.987V13H3a1 1 0 0 1-1-1V6h12v1.952h.01c0 .017-.01.031-.01.048a1 1 0 0 0 2 0c0-.017-.009-.031-.01-.048H16zM2 5V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1z"></path>
+</svg>

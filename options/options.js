@@ -42,7 +42,7 @@
 
                             newGroups[oldGroup.id] = background.createGroup(result.lastCreatedGroupPosition);
                             newGroups[oldGroup.id].title = oldGroup.title || browser.i18n.getMessage('newGroupTitle', newGroups[oldGroup.id].id);
-                            newGroups[oldGroup.id].moveNewTabsToThisGroupByRegExp = (oldGroup.catchRules || '');
+                            newGroups[oldGroup.id].catchTabRules = (oldGroup.catchRules || '');
                             newGroups[oldGroup.id].slot = oldGroup.slot;
                         }
                     });

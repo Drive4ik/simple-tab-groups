@@ -26,13 +26,13 @@
 
         function doAction(action, data) {
             if ('load-group' === action) {
-                let isCurrentGroup = data.groupId === allData.currentGroupId;
+                let isCurrentGroup = data.groupId === allData.currentGroup.id;
 
                 if (isCurrentGroup && -1 === data.tabIndex) {
                     return renderTabsList(data.groupId);
                 }
 
-                background.loadGroup(undefined, getGroupById(data.groupId), isCurrentGroup, data.tabIndex)
+                background.loadGroup(allData.currentGroup.windowId, getGroupById(data.groupId), data.tabIndex)
                     .then(function() {
                         if (!options.closePopupAfterChangeGroup && options.openGroupAfterChange) {
                             renderTabsList(data.groupId);
@@ -57,7 +57,7 @@
                 $('#groupEditTitle').value = unSafeHtml(group.title);
                 $('#groupEditIconColorCircle').style.backgroundColor = group.iconColor;
                 $('#groupEditIconColor').value = group.iconColor;
-                $('#groupEditMoveNewTabsToThisGroupByRegExp').value = group.moveNewTabsToThisGroupByRegExp;
+                $('#groupEditCatchTabRules').value = group.catchTabRules;
 
                 $('html').classList.add('no-scroll');
                 $('#editGroupPopup').classList.add('is-flex');
@@ -73,9 +73,9 @@
 
                 group.iconColor = $('#groupEditIconColorCircle').style.backgroundColor; // safed color
 
-                group.moveNewTabsToThisGroupByRegExp = $('#groupEditMoveNewTabsToThisGroupByRegExp').value.trim();
+                group.catchTabRules = $('#groupEditCatchTabRules').value.trim();
 
-                group.moveNewTabsToThisGroupByRegExp
+                group.catchTabRules
                     .split(/\s*\n\s*/)
                     .filter(Boolean)
                     .forEach(function(regExpStr) {
@@ -88,8 +88,8 @@
 
                 background.saveGroup(group)
                     .then(function() {
-                        if (groupId === allData.currentGroupId) {
-                            background.updateBrowserActionIcon();
+                        if (groupId === allData.currentGroup.id) {
+                            background.updateBrowserActionData();
                         }
                     })
                     .then(background.removeMoveTabMenus)
@@ -150,11 +150,7 @@
                         browser.windows.create({
                                 state: 'maximized',
                             })
-                            // .then(win => background.loadGroup(win.id, group));
-                            .then(function(win) {
-                                console.log('create new windowId %s, groupId %s', win.id, group.id);
-                                background.loadGroup(win.id, group);
-                            });
+                            .then(win => background.loadGroup(win.id, group));
                     });
             }
         }
@@ -237,10 +233,12 @@
             .then(function([result, containers]) {
                 allData = {
                     groups: result.groups,
-                    currentGroupId: result.currentGroup.id,
+                    currentGroup: result.currentGroup,
                     activeTabIndex: result.tabs.findIndex(tab => tab.active),
                     containers,
                 };
+
+                console.log('allData', allData);
             })
             .then(selectRender);
     }
@@ -251,7 +249,7 @@
         } else if (state.view === VIEW_GROUPS) {
             renderGroupsList();
         } else if (state.view === VIEW_GROUP_TABS) {
-            renderTabsList(state.groupId || allData.currentGroupId);
+            renderTabsList(state.groupId || allData.currentGroup.id);
         }
     }
 
@@ -270,7 +268,7 @@
 
         return {
             urlTitle: options.showUrlTooltipOnTabHover ? tab.url : '',
-            classList: (groupId === allData.currentGroupId && tabIndex === allData.activeTabIndex) ? 'is-active' : '',
+            classList: (groupId === allData.currentGroup.id && tabIndex === allData.activeTabIndex) ? 'is-active' : '',
             tabIndex: tabIndex,
             groupId: groupId,
             title: safeHtml(unSafeHtml(tab.title || tab.url)),
@@ -318,7 +316,7 @@
 
         let groupsHtml = allData.groups.map(function(group) {
                 let customData = {
-                    classList: group.id === allData.currentGroupId ? 'is-active' : '',
+                    classList: group.id === allData.currentGroup.id ? 'is-active' : '',
                     colorCircleHtml: render('color-circle-tmpl', {
                         title: '',
                         iconColor: group.iconColor,

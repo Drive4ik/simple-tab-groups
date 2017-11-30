@@ -4,17 +4,15 @@ const DEFAULT_COOKIE_STORE_ID = 'firefox-default',
     CONTEXT_MENU_PREFIX_GROUP = 'stg-move-group-id-',
     defaultOptions = {
         groups: [],
-        // windowsGroup: {}, // windowId: groupId
         lastCreatedGroupPosition: 0,
-        version: 1,
+        version: '1.0',
 
-        options: {
-            closePopupAfterChangeGroup: true,
-            openGroupAfterChange: true,
-            showGroupCircleInSearchedTab: true,
-            showUrlTooltipOnTabHover: false,
-            showNotificationAfterMoveTab: true,
-        },
+        // options
+        closePopupAfterChangeGroup: true,
+        openGroupAfterChange: true,
+        showGroupCircleInSearchedTab: true,
+        showUrlTooltipOnTabHover: false,
+        showNotificationAfterMoveTab: true,
     };
 
 let $ = document.querySelector.bind(document),
@@ -43,6 +41,9 @@ let $ = document.querySelector.bind(document),
 
             return match;
         });
+    },
+    randomColor = function() {
+        return 'hsla(' + (Math.random() * 360).toFixed(0) + ', 100%, 50%, 1)';
     },
     tagsToReplace = {
         '<': '&lt;',
@@ -189,7 +190,7 @@ let $ = document.querySelector.bind(document),
             return browser.storage.local.get(keys)
                 .then(function(result) {
                     if (null === keys) {
-                        Object.assign(result, defaultOptions, result);
+                        result = Object.assign({}, defaultOptions, result);
                     } else if ('string' === type(keys)) {
                         if (undefined === result[keys]) {
                             result[keys] = defaultOptions[keys];
@@ -211,7 +212,7 @@ let $ = document.querySelector.bind(document),
             return browser.storage.local.set(keys)
                 .then(function() {
                     if (sendEventUpdateStorage) {
-                        if ('groups' in keys || 'windowsGroup' in keys) {
+                        if ('groups' in keys) {
                             browser.runtime.sendMessage({
                                 storageUpdated: true,
                             });
