@@ -32,7 +32,7 @@
                     return renderTabsList(data.groupId);
                 }
 
-                background.loadGroup(allData.currentGroup.windowId, getGroupById(data.groupId), data.tabIndex)
+                background.loadGroup(allData.currentWindowId, getGroupById(data.groupId), data.tabIndex)
                     .then(function() {
                         if (!options.closePopupAfterChangeGroup && options.openGroupAfterChange) {
                             renderTabsList(data.groupId);
@@ -144,7 +144,9 @@
 
                 background.isGroupLoadInWindow(group)
                     .then(function() {
-                        notify(browser.i18n.getMessage('errorThisGroupAlreadyLoadedInOtherWindow'));
+                        browser.windows.update(group.windowId, {
+                            focused: true,
+                        });
                     })
                     .catch(function() {
                         browser.windows.create({
@@ -240,12 +242,14 @@
     function loadData() {
         return Promise.all([
                 background.getData(undefined, false),
+                background.getWindow(),
                 browser.contextualIdentities.query({})
             ])
-            .then(function([result, containers]) {
+            .then(function([result, currentWindow, containers]) {
                 allData = {
                     groups: result.groups,
                     currentGroup: result.currentGroup,
+                    currentWindowId: currentWindow.id,
                     activeTabIndex: result.tabs.findIndex(tab => tab.active),
                     containers,
                 };

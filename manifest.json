@@ -38,6 +38,21 @@
         "default_popup": "popup/popup.html"
     },
 
+    "commands": {
+        "prev-group": {
+            "suggested_key": {
+                "default": "MacCtrl+1"
+            },
+            "description": "Load previously group"
+        },
+        "next-group": {
+            "suggested_key": {
+                "default": "MacCtrl+2"
+            },
+            "description": "Load next group"
+        }
+    },
+
     "options_ui": {
         "page": "options/options.html"
     },

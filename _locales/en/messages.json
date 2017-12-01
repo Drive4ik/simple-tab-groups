@@ -122,11 +122,6 @@
         }
     },
 
-    "errorThisGroupAlreadyLoadedInOtherWindow": {
-        "message": "This group already loaded in another window",
-        "description": "This group already loaded in another window"
-    },
-
     "openGroupInNewWindow": {
         "message": "Open group in new window",
         "description": "Open group in new window"

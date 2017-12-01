@@ -272,6 +272,10 @@
     }
 
     function loadGroup(windowId, group, activeTabIndex = -1) {
+        if (!windowId) { // if click on notification after moving tab to window which is now closed :)
+            return Promise.reject();
+        }
+
         if (currentlyLoadingGroups[windowId]) {
             notify(browser.i18n.getMessage('errorAnotherGroupAreLoading'), 5000, 'error-load-group-notification');
             return Promise.reject();
@@ -284,11 +288,20 @@
                             browser.tabs.update(tabs[activeTabIndex].id, {
                                 active: true,
                             });
-                            resolve();
                         } else {
-                            notify(browser.i18n.getMessage('errorThisGroupAlreadyLoadedInOtherWindow'), 5000, 'error-load-group-notification');
-                            reject();
+                            browser.windows.update(group.windowId, {
+                                    focused: true,
+                                })
+                                .then(function() {
+                                    if (-1 !== activeTabIndex) {
+                                        browser.tabs.update(group.tabs[activeTabIndex].id, {
+                                            active: true,
+                                        });
+                                    }
+                                });
                         }
+
+                        resolve();
                     })
                     .catch(function() {
                         // magic
@@ -317,9 +330,9 @@
                                 indexGroup = result.groups.findIndex(gr => gr.id === group.id);
 
                                 result.groups = result.groups.map(function(gr) {
-                                    if (gr.windowId === windowId) {
+                                    if (gr.windowId === windowId) { // unmaunt group
                                         gr.windowId = null;
-                                    } else if (gr.id === group.id) {
+                                    } else if (gr.id === group.id) { // mount group
                                         gr.windowId = windowId;
                                     }
                                     return gr;
@@ -779,6 +792,16 @@
         });
     }
 
+    function onRemovedWindow(windowId) {
+        getGroupByWindowId(windowId)
+            .then(function(group) {
+                if (group) {
+                    group.windowId = null;
+                    saveGroup(group);
+                }
+            });
+    }
+
     function addEvents() {
         browser.tabs.onActivated.addListener(onActivatedTab);
         browser.tabs.onUpdated.addListener(onUpdatedTab);
@@ -790,6 +813,7 @@
         browser.tabs.onDetached.addListener(onDetachedTab);
 
         browser.windows.onFocusChanged.addListener(onFocusChangedWindow);
+        browser.windows.onRemoved.addListener(onRemovedWindow);
     }
 
     function removeEvents() {
@@ -803,6 +827,7 @@
         browser.tabs.onDetached.removeListener(onDetachedTab);
 
         browser.windows.onFocusChanged.removeListener(onFocusChangedWindow);
+        browser.windows.onRemoved.removeListener(onRemovedWindow);
     }
 
     browser.menus.create({
@@ -814,6 +839,35 @@
             16: 'chrome://browser/skin/settings.svg',
             32: 'chrome://browser/skin/settings.svg',
         },
+    });
+
+    function loadGroupPosition(textPosition = 'next') {
+        getData().then(function(result) {
+            if (1 === result.groups.length) {
+                return;
+            }
+
+            let currentGroupIndex = result.groups.findIndex(group => group.id === result.currentGroup.id),
+                nextGroupIndex = null;
+
+            if (-1 === currentGroupIndex) {
+                return;
+            }
+
+            if ('prev' === textPosition) {
+                nextGroupIndex = currentGroupIndex ? (currentGroupIndex - 1) : (result.groups.length - 1);
+            } else if ('next' === textPosition) {
+                nextGroupIndex = currentGroupIndex === result.groups.length - 1 ? 0 : currentGroupIndex + 1;
+            }
+
+            return loadGroup(result.windowId, result.groups[nextGroupIndex]);
+        });
+    }
+
+    browser.commands.onCommand.addListener(function(command) {
+        if ('prev-group' === command || 'next-group' === command) {
+            loadGroupPosition(command.split('-').shift());
+        }
     });
 
     // initialization
@@ -887,6 +941,7 @@
         .then(addEvents);
 
     window.background = {
+        getWindow,
         getData,
         getTabs,
         moveTabToGroup,
