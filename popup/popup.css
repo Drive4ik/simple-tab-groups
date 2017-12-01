@@ -141,11 +141,13 @@ html {
 }
 
 #stg .item.is-active,
+#stg .item.is-hover,
 #stg .item:not(.no-hover):hover {
     border-top-color: #c6c6c6;
     border-bottom-color: #c6c6c6;
 }
 
+#stg .item.is-hover,
 #stg .item:not(.no-hover):not(.is-active):hover {
     background-color: #eceded; /* light */
 }

@@ -143,6 +143,65 @@ let $ = document.querySelector.bind(document),
 
         return !/^(chrome:|javascript:|data:|file:|view-source:|about(?!\:(blank|newtab|home)))/.test(url);
     },
+    getNextIndex = function(currentIndex, count, textPosition = 'next') {
+        if (!count) {
+            return false;
+        }
+
+        if (1 === count) {
+            return 0;
+        }
+
+        if (0 > currentIndex) {
+            return 'next' === textPosition ? 0 : count - 1;
+        } else if (count - 1 < currentIndex) {
+            return 'next' === textPosition ? count - 1 : 0;
+        }
+
+        let nextIndex = null;
+
+        if ('prev' === textPosition) {
+            nextIndex = currentIndex ? (currentIndex - 1) : (count - 1);
+        } else if ('next' === textPosition) {
+            nextIndex = currentIndex === count - 1 ? 0 : currentIndex + 1;
+        }
+
+        return nextIndex;
+    },
+    dispatchEvent = function(eventName, element) {
+        if (!element) {
+            return false
+        }
+
+        element.dispatchEvent(new Event(eventName, {
+            bubbles: true,
+            cancelable: true,
+        }));
+    },
+    dataFromElement = function(element) {
+        let data = {};
+
+        Object.keys(element.dataset)
+            .forEach(function(key) {
+                if (isFinite(element.dataset[key])) {
+                    data[key] = parseInt(element.dataset[key], 10);
+                } else if ('true' === element.dataset[key]) {
+                    data[key] = true;
+                } else if ('false' === element.dataset[key]) {
+                    data[key] = false;
+                } else {
+                    data[key] = element.dataset[key];
+                }
+            });
+
+        return data;
+    },
+    checkVisibleElement = function(element) {
+        let rect = element.getBoundingClientRect(),
+            viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
+
+        return !(rect.bottom < 0 || rect.top - viewHeight >= 0);
+    },
     on = function(eventsStr, query, func) {
         let events = this;
 
@@ -157,14 +216,7 @@ let $ = document.querySelector.bind(document),
 
                         function checkQueryByElement(element, data) {
                             if (element.matches && element.matches(data.query)) {
-                                let elementData = {};
-
-                                Object.keys(element.dataset)
-                                    .forEach(function(key) {
-                                        elementData[key] = isFinite(element.dataset[key]) ? parseInt(element.dataset[key], 10) : element.dataset[key];
-                                    });
-
-                                data.func.call(element, elementData, event);
+                                data.func.call(element, dataFromElement(element), event);
                                 translatePage();
                                 return true;
                             }

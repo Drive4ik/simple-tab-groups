@@ -12,6 +12,12 @@
         });
     }
 
+    function setFocusOnWindow(windowId) {
+        return browser.windows.update(windowId, {
+            focused: true,
+        });
+    }
+
     function getTabs(windowId = browser.windows.WINDOW_ID_CURRENT, mapTabs = true, pinned = false) {
         return browser.tabs.query({
                 windowId,
@@ -289,9 +295,7 @@
                                 active: true,
                             });
                         } else {
-                            browser.windows.update(group.windowId, {
-                                    focused: true,
-                                })
+                            setFocusOnWindow(group.windowId)
                                 .then(function() {
                                     if (-1 !== activeTabIndex) {
                                         browser.tabs.update(group.tabs[activeTabIndex].id, {
@@ -660,9 +664,7 @@
 
                         notify(message).then(function(createdTabId, createdTabIndex, destGroup) {
                             if (createdTabId) {
-                                browser.windows.update(destGroup.windowId, {
-                                        focused: true,
-                                    })
+                                setFocusOnWindow(destGroup.windowId)
                                     .then(function() {
                                         browser.tabs.update(createdTabId, {
                                             active: true,
@@ -676,9 +678,7 @@
                                         })
                                     ])
                                     .then(function([result, lastWin]) {
-                                        browser.windows.update(lastWin.id, {
-                                                focused: true,
-                                            })
+                                        setFocusOnWindow(lastWin.id)
                                             .then(function() {
                                                 let group = result.groups.find(group => group.id === destGroup.id);
                                                 loadGroup(lastWin.id, group, createdTabIndex);
@@ -744,7 +744,7 @@
                     contexts: ['tab'],
                     title: browser.i18n.getMessage('createNewGroup'),
                     icons: {
-                        16: 'http://design.firefox.com/icons/icons/branding/glyph.svg',
+                        16: '/icons/group-new.svg',
                     },
                     onclick: function(info, tab) {
                         if (tab.incognito) {
@@ -848,16 +848,10 @@
             }
 
             let currentGroupIndex = result.groups.findIndex(group => group.id === result.currentGroup.id),
-                nextGroupIndex = null;
+                nextGroupIndex = getNextIndex(currentGroupIndex, result.groups.length, textPosition);
 
-            if (-1 === currentGroupIndex) {
+            if (-1 === currentGroupIndex || false === nextGroupIndex) {
                 return;
-            }
-
-            if ('prev' === textPosition) {
-                nextGroupIndex = currentGroupIndex ? (currentGroupIndex - 1) : (result.groups.length - 1);
-            } else if ('next' === textPosition) {
-                nextGroupIndex = currentGroupIndex === result.groups.length - 1 ? 0 : currentGroupIndex + 1;
             }
 
             return loadGroup(result.windowId, result.groups[nextGroupIndex]);

@@ -14,6 +14,7 @@
         state = {
             view: VIEW_GROUPS,
         },
+        popupIsShow = false,
         $on = on.bind({});
 
     storage.get(['closePopupAfterChangeGroup', 'openGroupAfterChange', 'showGroupCircleInSearchedTab', 'showUrlTooltipOnTabHover', 'showNotificationAfterMoveTab'])
@@ -51,6 +52,7 @@
             } else if ('add-tab' === action) {
                 background.addTab(getGroupById(data.groupId), data.cookieStoreId);
             } else if ('open-settings-group-popup' === action) {
+                popupIsShow = true;
                 let group = getGroupById(data.groupId);
 
                 $('#editGroupPopup').dataset.groupId = data.groupId;
@@ -66,6 +68,8 @@
                     groupId: groupIdInContext,
                 });
             } else if ('submit-edit-group-popup' === action) {
+                popupIsShow = false;
+
                 let groupId = Number($('#editGroupPopup').dataset.groupId),
                     group = getGroupById(groupId);
 
@@ -98,9 +102,11 @@
                 $('html').classList.remove('no-scroll');
                 $('#editGroupPopup').classList.remove('is-flex');
             } else if ('close-edit-group-popup' === action) {
+                popupIsShow = false;
                 $('html').classList.remove('no-scroll');
                 $('#editGroupPopup').classList.remove('is-flex');
             } else if ('show-delete-group-popup' === action) {
+                popupIsShow = true;
                 let group = getGroupById(data.groupId);
 
                 $('#deleteGroupPopup').dataset.groupId = data.groupId;
@@ -111,9 +117,11 @@
                     groupId: groupIdInContext,
                 });
             } else if ('close-delete-group-popup' === action) {
+                popupIsShow = false;
                 $('#deleteGroupPopup').classList.remove('is-active');
 
             } else if ('submit-delete-group-popup' === action) {
+                popupIsShow = false;
                 let groupId = Number($('#deleteGroupPopup').dataset.groupId);
 
                 background.removeGroup(getGroupById(groupId)).then(renderGroupsList);
@@ -189,6 +197,63 @@
             moveTabToGroupTabIndex = tabIndex;
         });
 
+        let selectableElementsSelectors = ['[data-is-tab]', '[data-is-group]'];
+        $on('mouseover', selectableElementsSelectors.join(', '), function() {
+            document.querySelectorAll(selectableElementsSelectors.join(', '))
+                .forEach(element => element.classList.remove('is-hover'));
+        });
+
+        $on('keydown', 'body', function(data, event) {
+            if (popupIsShow) {
+                return;
+            }
+
+            if (KeyEvent.DOM_VK_UP === event.keyCode || KeyEvent.DOM_VK_DOWN === event.keyCode) {
+                let elements = Array.from(document.querySelectorAll(selectableElementsSelectors.join(', '))),
+                    currentIndex = elements.findIndex(el => el.classList.contains('is-hover')),
+                    textPosition = KeyEvent.DOM_VK_UP === event.keyCode ? 'prev' : 'next',
+                    nextIndex = getNextIndex(currentIndex, elements.length, textPosition);
+
+                event.preventDefault();
+
+                if (false === nextIndex) {
+                    return;
+                }
+
+                if (-1 !== currentIndex) {
+                    elements[currentIndex].classList.remove('is-hover');
+                }
+
+                elements[nextIndex].classList.add('is-hover');
+
+                if (!checkVisibleElement(elements[nextIndex])) {
+                    let rect = elements[nextIndex].getBoundingClientRect(),
+                        jumpPos = Math.round(window.innerHeight / 2),
+                        newPos = window.scrollY + rect.top - jumpPos;
+
+                    if (newPos < 0) {
+                        newPos = 0;
+                    }
+
+                    window.scrollTo(0, newPos);
+                }
+            } else if (KeyEvent.DOM_VK_RETURN === event.keyCode) {
+                let element = $('.is-hover' + selectableElementsSelectors.join(', .is-hover'));
+
+                if (element) {
+                    dispatchEvent('click', element);
+                }
+            } else if (KeyEvent.DOM_VK_RIGHT === event.keyCode) {
+                let element = $('.is-hover[data-is-group]');
+
+                if (element) {
+                    renderTabsList(dataFromElement(element).groupId);
+                }
+            } else if (KeyEvent.DOM_VK_LEFT === event.keyCode && state.view !== VIEW_SEARCH_TABS) {
+                renderGroupsList();
+            }
+        });
+
         // setTabEventsListener
         let loadDataTimer = null,
             listener = function(request, sender, sendResponse) {
@@ -239,17 +304,23 @@
         $('#' + id).innerHTML = html;
     }
 
+    function getContainers() {
+        return new Promise(function(resolve) {
+            browser.contextualIdentities.query({})
+                .then(resolve, () => resolve([]));
+        });
+    }
+
     function loadData() {
         return Promise.all([
                 background.getData(undefined, false),
-                background.getWindow(),
-                browser.contextualIdentities.query({})
+                getContainers()
             ])
-            .then(function([result, currentWindow, containers]) {
+            .then(function([result, containers]) {
                 allData = {
                     groups: result.groups,
                     currentGroup: result.currentGroup,
-                    currentWindowId: currentWindow.id,
+                    currentWindowId: result.windowId,
                     activeTabIndex: result.tabs.findIndex(tab => tab.active),
                     containers,
                 };

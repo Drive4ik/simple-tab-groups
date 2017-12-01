@@ -120,7 +120,7 @@
                 <div class="item-title">{{group.title}}</div>
                 <div class="item-action">
                     <img data-action="open-settings-group-popup" data-group-id="{{group.id}}" src="chrome://browser/skin/settings.svg" class="size-16 cursor-pointer icon" data-i18n="groupSettings:title" alt="" />
-                    <img data-action="show-delete-group-popup" data-group-id="{{group.id}}" src="http://design.firefox.com/icons/icons/new/delete-16.svg" class="size-16 cursor-pointer icon" data-i18n="deleteGroup:title" alt="" />
+                    <img data-action="show-delete-group-popup" data-group-id="{{group.id}}" src="/icons/group-delete.svg" class="size-16 cursor-pointer icon" data-i18n="deleteGroup:title" alt="" />
                 </div>
             </div>
 
@@ -147,7 +147,7 @@
 
     <script id="tab-tmpl" type="text/template">
         <li>
-            <div contextmenu="move-tab-to-group-menu" class="item {{classList}}" title="{{urlTitle}}" data-is-tab="1" data-action="load-group" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}">
+            <div contextmenu="move-tab-to-group-menu" class="item {{classList}}" title="{{urlTitle}}" data-is-tab="true" data-action="load-group" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}">
                 <div class="item-icon">
                     <img src="{{favIconUrl}}" class="size-16" alt="" />
                 </div>
@@ -177,7 +177,7 @@
         <div class="create-new-group">
             <div class="item" data-action="add-group">
                 <div class="item-icon">
-                    <img class="icon" src="http://design.firefox.com/icons/icons/branding/glyph.svg" alt="" />
+                    <img class="icon" src="/icons/group-new.svg" alt="" />
                 </div>
                 <div class="item-title" data-i18n="createNewGroup"></div>
             </div>
@@ -185,7 +185,7 @@
     </script>
 
     <script id="group-tmpl" type="text/template">
-        <div contextmenu="group-menu" class="item {{classList}}" data-action="load-group" data-group-id="{{id}}" data-tab-index="-1">
+        <div contextmenu="group-menu" class="item {{classList}}" data-is-group="true" data-action="load-group" data-group-id="{{id}}" data-tab-index="-1">
             <div class="item-icon">
                 {{colorCircleHtml}}
             </div>
@@ -204,7 +204,7 @@
         <menuitem data-action="context-move-group-up" icon="chrome://browser/skin/open.svg" data-i18n="moveGroupUp:label"></menuitem>
         <menuitem data-action="context-move-group-down" icon="chrome://browser/skin/save.svg" data-i18n="moveGroupDown:label"></menuitem>
         <menuitem data-action="context-open-settings-group-popup" icon="chrome://browser/skin/settings.svg" data-i18n="groupSettings:label"></menuitem>
-        <menuitem data-action="context-show-delete-group-popup" icon="http://design.firefox.com/icons/icons/new/delete-16.svg" data-i18n="deleteGroup:label"></menuitem>
+        <menuitem data-action="context-show-delete-group-popup" icon="/icons/group-delete.svg" data-i18n="deleteGroup:label"></menuitem>
     </menu>
 
     <menu id="move-tab-to-group-menu" type="context"></menu>
@@ -212,7 +212,7 @@
         <menuitem data-i18n="moveTabToGroupDisabledTitle:label" disabled></menuitem>
         {{groupsMenuItems}}
         <hr>
-        <menuitem data-i18n="createNewGroup:label" data-action="move-tab-to-new-group" icon="http://design.firefox.com/icons/icons/branding/glyph.svg"></menuitem>
+        <menuitem data-i18n="createNewGroup:label" data-action="move-tab-to-new-group" icon="/icons/group-new.svg"></menuitem>
     </script>
     <script id="move-tab-to-group-menu-item-tmpl" type="text/template">
         <menuitem data-action="move-tab-to-group" data-group-id="{{groupId}}" icon="{{icon}}" label="{{title}}" {{disabled}}></menuitem>
