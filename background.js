@@ -4,7 +4,7 @@
     let isTabCurrentlyRemoving = false,
         currentlyLoadingGroups = {}; // windowId: true
 
-// return storage.get(null).then(console.log);
+    // return storage.get(null).then(console.log);
 
     function getWindow(windowId = browser.windows.WINDOW_ID_CURRENT) {
         return browser.windows.get(windowId, {
@@ -651,15 +651,26 @@
                                         focused: true,
                                     })
                                     .then(function() {
-                                        return browser.tabs.update(createdTabId, {
+                                        browser.tabs.update(createdTabId, {
                                             active: true,
                                         });
                                     });
                             } else {
-                                browser.windows.getLastFocused({
-                                        windowTypes: ['normal'],
-                                    })
-                                    .then(win => loadGroup(win.id, destGroup, createdTabIndex));
+                                Promise.all([
+                                        storage.get('groups'),
+                                        browser.windows.getLastFocused({
+                                            windowTypes: ['normal'],
+                                        })
+                                    ])
+                                    .then(function([result, lastWin]) {
+                                        browser.windows.update(lastWin.id, {
+                                                focused: true,
+                                            })
+                                            .then(function() {
+                                                let group = result.groups.find(group => group.id === destGroup.id);
+                                                loadGroup(lastWin.id, group, createdTabIndex);
+                                            });
+                                    });
                             }
                         }.bind(null, createdTabId, createdTabIndex, destGroup));
                     });
