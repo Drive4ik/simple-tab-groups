@@ -209,7 +209,7 @@
             })
             .then(function(win) {
                 if (withTabs && filterTabs) {
-                    win.tabs = win.tabs.filter(tab => isAllowUrl(tab.url));
+                    win.tabs = win.tabs.filter(tab => !tab.pinned && isAllowUrl(tab.url));
                 }
 
                 return win;
