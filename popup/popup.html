@@ -10,16 +10,22 @@
 
 <body>
     <div id="stg" class="is-flex is-column">
-        <div class="search-wrapper control">
+        <header class="search-wrapper control">
             <input id="searchTab" type="text" class="input" autocomplete="off" data-i18n="searchTabPlaceholder:placeholder" />
-        </div>
+        </header>
 
-        <div id="result" class="is-full-width"></div>
+        <main id="result" class="is-full-width"></main>
 
-        <div id="settings" class="settings is-flex no-text-select">
-            <img class="icon" src="chrome://browser/skin/settings.svg" alt="" />
-            <span data-i18n="settingsTitle"></span>
-        </div>
+        <footer class="is-flex no-text-select">
+            <div class="is-flex is-aligin-items-center manage-groups is-full-height is-full-width" data-action="open-manage-page" data-i18n="manageGroupsTitle:title">
+                <img class="icon" src="/icons/icon.svg" alt="" />
+                <span class="h-margin-left-10" data-i18n="manageGroupsTitle"></span>
+            </div>
+            <div class="is-flex is-aligin-items-center is-vertical-separator"></div>
+            <div class="is-flex is-aligin-items-center settings is-full-height" data-action="open-options-page" data-i18n="settingsTitle:title">
+                <img class="icon" src="chrome://browser/skin/settings.svg" alt="" />
+            </div>
+        </footer>
 
         <div id="editGroupPopup" class="is-column">
             <div class="item" data-action="close-edit-group-popup">
@@ -156,7 +162,7 @@
                 </div>
                 <div class="item-action flex-on-hover">
                     <span class="icon cursor-pointer no-text-select" data-action="remove-tab" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}" data-i18n="deleteTab:title">
-                        <img src="chrome://browser/skin/stop.svg" class="size-16" alt="" />
+                        <img class="size-16" src="chrome://browser/skin/stop.svg" alt="" />
                     </span>
                 </div>
             </div>

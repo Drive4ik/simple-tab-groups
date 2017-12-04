@@ -5,7 +5,13 @@
         VIEW_SEARCH_TABS = 'search-tabs',
         VIEW_GROUP_TABS = 'group-tabs';
 
-    let background = browser.extension.getBackgroundPage().background,
+    const BGWIN = browser.extension.getBackgroundPage();
+
+    if (!BGWIN) {
+        return window.close();
+    }
+
+    let background = BGWIN.background,
         templates = {},
         options = null,
         allData = null,
@@ -143,6 +149,15 @@
                 background.addGroup();
             } else if ('show-groups-list' === action) {
                 renderGroupsList();
+            } else if ('open-options-page' === action) {
+                browser.runtime.openOptionsPage();
+            } else if ('open-manage-page' === action) {
+                browser.windows.create({
+                    url: '/manage/manage.html',
+                    type: 'popup',
+                    width: window.screen.availWidth - 110,
+                    height: window.screen.availHeight - 110,
+                });
             } else if ('context-move-group-up' === action) {
                 background.moveGroup(getGroupById(groupIdInContext), 'up');
             } else if ('context-move-group-down' === action) {
@@ -175,9 +190,9 @@
             $('#groupEditIconColorCircle').style.backgroundColor = this.value.trim();
         });
 
-        $on('click', '#settings', function() {
-            browser.runtime.openOptionsPage();
-        });
+        // $on('click', '#settings', function() {
+        //     browser.runtime.openOptionsPage();
+        // });
 
         $on('mousedown mouseup', '[data-is-tab]', function(data, event) {
             if (1 === event.button) {
@@ -435,6 +450,7 @@
             let tabs = group.tabs.map((tab, tabIndex) => prepareTabToView(groupId, tab, tabIndex));
 
             tabsListHtml = render('tabs-list-tmpl', {
+                classList: '',
                 tabsHtml: getPreparedTabsHtml(tabs),
             });
         }

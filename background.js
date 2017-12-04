@@ -582,10 +582,10 @@
         });
     }
 
+    let lastFocusedWinId = null;
     function onFocusChangedWindow(windowId) {
         if (browser.windows.WINDOW_ID_NONE === windowId) {
-            resetBrowserActionIcon();
-            return removeMoveTabMenus();
+            return;
         }
 
         browser.windows.getLastFocused({
@@ -596,11 +596,13 @@
                     browser.browserAction.disable();
                     resetBrowserActionIcon();
                     removeMoveTabMenus();
-                } else {
+                } else if (!lastFocusedWinId || lastFocusedWinId !== win.id) {
                     browser.browserAction.enable();
                     updateBrowserActionData();
                     removeMoveTabMenus().then(createMoveTabMenus);
                 }
+
+                lastFocusedWinId = win.id;
             });
     }
 

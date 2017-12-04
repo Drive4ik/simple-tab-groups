@@ -1,0 +1,109 @@
+:root {
+    /* --color-light-gray: #eceded; */
+}
+
+html {
+    font-family: Arial;
+    font-size: 14px;
+}
+
+#manage {
+    height: 100vh;
+    width: 100vw;
+}
+
+/* HEPLERS */
+.is-hidden {
+    display: none !important;
+}
+
+.h-margin-top-10 {
+    margin-top: 10px;
+}
+
+.h-margin-bottom-10 {
+    margin-bottom: 10px;
+}
+
+.h-margin-left-10 {
+    margin-left: 10px;
+}
+
+.size-16 {
+    width: 16px;
+    height: 16px;
+}
+
+.no-text-select {
+    -moz-user-select: none;
+    user-select: none;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.cursor-help {
+    cursor: help;
+}
+
+.is-full-height {
+    height: 100%;
+}
+
+.text-italic {
+    font-style: italic;
+}
+
+.rotate-90 {
+    transform: rotate(90deg);
+}
+
+.rotate-180 {
+    transform: rotate(180deg);
+}
+
+.rotate-270 {
+    transform: rotate(270deg);
+}
+
+.group-circle {
+    width: 14px;
+    height: 14px;
+    margin: 0 auto;
+    border-radius: 50%;
+    display: inline-block;
+    vertical-align: text-top;
+}
+
+img {
+    vertical-align: middle;
+}
+
+/* END HELPERS */
+
+
+/* FLEX HELPERS */
+.is-flex {
+    display: flex !important;
+}
+
+.is-flex.is-aligin-items-center {
+    align-items: center;
+}
+
+.is-flex.is-column {
+    flex-direction: column;
+}
+
+.is-flex > .is-full-width {
+    flex-grow: 1;
+}
+
+.is-flex > .is-start {
+    align-self: flex-start;
+}
+
+.is-flex > .is-end {
+    align-self: flex-end;
+}

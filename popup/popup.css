@@ -1,13 +1,20 @@
+:root {
+    --color-light-gray: #eceded;
+    --color-gray: #e3e3e3;
+    --color-dark-gray: #d4d4d4;
+    --color-dark-dark-gray: #bababa;
+}
+
 html {
     overflow-x: hidden;
+    font-family: Arial;
+    font-size: 14px;
 }
 
 #stg {
-    background-color: #fff;
+    background-color: #ffffff;
     width: 425px;
     min-height: 400px;
-    font-family: Arial;
-    font-size: 14px;
 }
 
 #loading {
@@ -43,6 +50,10 @@ html {
     margin-bottom: 10px;
 }
 
+#stg .h-margin-left-10 {
+    margin-left: 10px;
+}
+
 #stg .size-16 {
     width: 16px;
     height: 16px;
@@ -69,6 +80,10 @@ html {
 
 #stg .cursor-help {
     cursor: help;
+}
+
+#stg .is-full-height {
+    height: 100%;
 }
 
 #stg .circle {
@@ -113,7 +128,7 @@ html {
 }
 
 #stg .search-wrapper {
-    padding: 10px 25px 0 10px;
+    padding: 10px 10px 0 10px;
 }
 
 #searchTab {
@@ -124,7 +139,7 @@ html {
 #stg hr {
     margin: 10px 0;
     color: transparent;
-    border-top: 1px solid #e3e3e3;
+    border-top: 1px solid var(--color-gray);
 }
 
 #stg .item {
@@ -135,33 +150,32 @@ html {
     cursor: default;
     height: 28px;
     padding-left: 10px;
-    padding-right: 15px;
     border-top: 1px solid transparent;
     border-bottom: 1px solid transparent;
+}
+
+#stg .item > :last-child {
+    padding-right: 10px;
 }
 
 #stg .item.is-active,
 #stg .item.is-hover,
 #stg .item:not(.no-hover):hover {
-    border-top-color: #c6c6c6;
-    border-bottom-color: #c6c6c6;
+    border-top-color: var(--color-dark-dark-gray);
+    border-bottom-color: var(--color-dark-dark-gray);
 }
 
 #stg .item.is-hover,
 #stg .item:not(.no-hover):not(.is-active):hover {
-    background-color: #eceded; /* light */
+    background-color: var(--color-light-gray);
 }
 
 #stg .item.is-active {
-    background-color: #e3e3e3; /* dark */
+    background-color: var(--color-gray);
 }
 
 #stg .item .hover:hover {
-    background-color: #d4d4d4; /* dark-dark */
-}
-
-#stg .tabs-list > .item:first-child {
-    margin-top: 10px;
+    background-color: var(--color-dark-gray);
 }
 
 #stg .item .item-icon {
@@ -187,16 +201,14 @@ html {
     align-items: center;
     align-self: stretch;
     padding-left: 5px;
-    padding-right: 25px;
     white-space: nowrap;
-    margin-right: -15px;
 }
 
 #stg .item .item-action > :not(:first-child) {
     margin-left: 5px;
 }
 
-#stg .item .item-title .bordered {
+#stg .item .item-title .bordered[style*="border-bottom"] {
     display: inline-block;
     border-bottom-right-radius: 5px;
     border-bottom-left-radius: 5px;
@@ -214,6 +226,10 @@ html {
     display: flex;
 }
 
+#stg .tabs-list > .item:first-child {
+    margin-top: 10px;
+}
+
 #stg .tabs-list .group-info {
     margin-bottom: 10px;
 }
@@ -222,15 +238,10 @@ html {
     text-align: center;
 }
 
-#stg .tabs-list .group-info.item .item-action {
-    min-width: 67px;
-}
-
 #stg .groups .item .item-action {
-    width: 110px;
-    min-width: 110px;
+    width: 100px;
+    min-width: 100px;
     line-height: 1;
-    padding-left: 10px;
 }
 
 #stg .groups .tabs-text {
@@ -248,21 +259,28 @@ html {
     line-height: 1;
 }
 
-#stg .settings {
+#stg .is-vertical-separator {
+    background-color: var(--color-dark-gray);
+    width: 1px;
+    height: 75%;
+}
+
+#stg footer {
     margin-top: 15px;
-    height: 40px;
+    height: 45px;
     align-items: center;
-    justify-content: center;
-    background-color: #e3e3e3;
+    justify-content: space-between;
+    background-color: var(--color-light-gray);
     cursor: default;
 }
 
-#stg .settings:hover {
-    background-color: #d4d4d4; /* dark-dark */
+#stg footer > :hover {
+    background-color: var(--color-gray); /* dark-dark */
 }
 
-#stg .settings > :not(:first-child) {
-    margin-left: 5px;
+#stg footer > .manage-groups,
+#stg footer > .settings {
+    padding: 0 20px;
 }
 
 #editGroupPopup {
@@ -293,10 +311,13 @@ html {
     margin: 10px 10px 0 10px;
 }
 
-
 /* FLEX HELPERS */
 .is-flex {
     display: flex !important;
+}
+
+.is-flex.is-aligin-items-center {
+    align-items: center;
 }
 
 .is-flex.is-column {
@@ -314,3 +335,14 @@ html {
 .is-flex > .is-end {
     align-self: flex-end;
 }
+
+
+/* media */
+
+@media screen and (min-height: 600px) {
+    #stg {
+        padding-right: 17px;
+    }
+}
+
+

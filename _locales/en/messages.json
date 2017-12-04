@@ -19,6 +19,11 @@
         "description": "Settings context button title"
     },
 
+    "manageGroupsTitle": {
+        "message": "Manage groups",
+        "description": "Manage groups"
+    },
+
     "moveTabToGroupDisabledTitle": {
         "message": "Move tab to group:",
         "description": "Move tab to group title"
