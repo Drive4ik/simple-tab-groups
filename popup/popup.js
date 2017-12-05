@@ -154,9 +154,12 @@
             } else if ('open-manage-page' === action) {
                 browser.windows.create({
                     url: '/manage/manage.html',
+                    titlePreface: browser.i18n.getMessage('extensionName') + ' - ',
                     type: 'popup',
-                    width: window.screen.availWidth - 110,
-                    height: window.screen.availHeight - 110,
+                    left: 0,
+                    top: 0,
+                    width: window.screen.availWidth,
+                    height: window.screen.availHeight,
                 });
             } else if ('context-move-group-up' === action) {
                 background.moveGroup(getGroupById(groupIdInContext), 'up');

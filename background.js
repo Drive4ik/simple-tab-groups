@@ -487,6 +487,10 @@
             return;
         }
 
+        if (tab.pinned && undefined === changeInfo.pinned) { // if update pinned tab, it not supported
+            return;
+        }
+
         if (!tab.pinned && !isEmptyUrl(tab.url) && !currentlyMovingTabs.includes(tabId)) {
             return getData(tab.windowId)
                 .then(function({ groups, currentGroup, tabs }) {
@@ -510,7 +514,7 @@
                 });
         }
 
-        if ('pinned' in changeInfo || /*'url' in changeInfo || */ 'complete' === tab.status) {
+        if (undefined !== changeInfo.pinned || 'complete' === tab.status) {
             saveTabs(tab.windowId);
         }
     }
@@ -923,7 +927,10 @@
                 .then(() => storage.set(result, false))
                 .then(() => [result, win]);
         })
-        .catch(notify)
+        .catch(function(error) {
+            browser.browserAction.disable(); // TODO
+            notify(error);
+        })
         .then(function([result, win]) {
             if (!result.groups.some(group => group.windowId === win.id)) {
                 return addGroup(undefined, win.id)

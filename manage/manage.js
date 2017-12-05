@@ -90,10 +90,13 @@
     }
 
     function prepareTabToView(groupId, tab, tabIndex) {
-        let containerColorCode = '';
+        let container = {
+                hiddenClass: 'is-hidden',
+            };
 
         if (tab.cookieStoreId && tab.cookieStoreId !== DEFAULT_COOKIE_STORE_ID) {
-            containerColorCode = 'border-bottom: 2px solid ' + allData.containers.find(container => container.cookieStoreId === tab.cookieStoreId).colorCode;
+            container = allData.containers.find(container => container.cookieStoreId === tab.cookieStoreId);
+            container.hiddenClass = '';
         }
 
         return {
@@ -103,8 +106,9 @@
             groupId: groupId,
             title: safeHtml(unSafeHtml(tab.title || tab.url)),
             url: tab.url,
-            containerColorCode: containerColorCode,
-            favIconUrl: tab.favIconUrl || 'chrome://browser/skin/urlbar-tab.svg',
+            container: container,
+            favIconClass: tab.favIconUrl ? '' : 'is-hidden',
+            favIconUrl: tab.favIconUrl,
         };
     }
 
