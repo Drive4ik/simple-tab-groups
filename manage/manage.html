@@ -8,6 +8,7 @@
 <head>
     <title data-i18n="manageGroupsTitle"></title>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="/third-party-styles.css">
     <link rel="stylesheet" type="text/css" href="manage.css">
 </head>
@@ -32,34 +33,49 @@
     </div>
 
     <script id="tab-tmpl" type="text/template">
-        <div class="tab {{classList}}" title="{{urlTitle}}" data-is-tab="true" data-action="load-group" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}">
-            <div class="icon {{favIconClass}}" style="border-color: {{container.colorCode}}">
+        <div class="tab {{classList}}" title="{{urlTitle}}" data-is-tab="true" data-action="{{action}}" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}">
+            <div class="icon {{favIconClass}}" style="{{containerColorCodeBorderStyle}}">
                 <img src="{{favIconUrl}}" class="size-16" alt="" />
             </div>
-            <div class="delete-tab-button" style="border-color: {{container.colorCode}}">
+            <div class="delete-tab-button {{deleteButtonClass}}" style="{{containerColorCodeBorderStyle}}">
                 <span class="icon cursor-pointer no-text-select" data-action="remove-tab" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}" data-i18n="deleteTab:title">
                     <img class="size-14" src="chrome://browser/skin/stop.svg" alt="" />
                 </span>
             </div>
-            <div class="container {{container.hiddenClass}}" style="border-color: {{container.colorCode}}">
-                <img class="size-16" src="{{container.iconUrl}}" alt="">
+            <div class="container {{containerClass}}" style="{{containerColorCodeBorderStyle}}">
+                <img class="size-16" src="{{containerIconUrl}}" style="{{containerColorCodeFillStyle}}" alt="">
             </div>
-            <div class="screenshot" style="border-color: {{container.colorCode}}">
-                <img src="/test.jpg" alt="">
+            <div class="screenshot {{thumbnailClass}}" style="{{containerColorCodeBorderStyle}}">
+                <img src="{{thumbnail}}" alt="">
             </div>
             <div class="title bordered text-center text-ellipsis">{{title}}</div>
+        </div>
+    </script>
+
+    <script id="new-tab-tmpl" type="text/template">
+        <div class="tab new" data-i18n="createNewTab:title" data-action="add-tab" data-group-id="{{groupId}}">
+            <div class="screenshot">
+                <img src="chrome://browser/skin/new-tab.svg" alt="">
+            </div>
+            <div class="title text-center text-ellipsis" data-i18n="createNewTab"></div>
         </div>
     </script>
 
     <script id="group-tmpl" type="text/template">
         <div class="group {{classList}}" data-is-group="true">
             <div class="header">
+                <div class="title">
+                    <input type="text" value="{{title}}" placeholder="Please enter group name" />
+                </div>
                 <div class="icon">
                     {{colorCircleHtml}}
                 </div>
-                <div class="title">{{title}}</div>
-                <div class="action no-text-select">
-                    <span class="tabs-text" data-i18n="groupTabsCount::{{tabs.length}}"></span>
+                <div data-i18n="groupTabsCount::{{tabs.length}}"></div>
+                <div class="icon cursor-pointer no-text-select" data-action="open-settings-group-popup" data-group-id="{{id}}" data-i18n="groupSettings:title">
+                    <img class="size-16" src="chrome://browser/skin/settings.svg" alt="" />
+                </div>
+                <div class="icon cursor-pointer no-text-select" data-action="remove-group" data-group-id="{{id}}" data-i18n="deleteGroup:title">
+                    <img class="size-16" src="/icons/group-delete.svg" alt="" />
                 </div>
             </div>
             <div class="body">
@@ -68,8 +84,17 @@
         </div>
     </script>
 
+    <script id="new-group-tmpl" type="text/template">
+        <div class="group new cursor-pointer" data-action="add-group">
+            <div class="body">
+                <img src="/icons/group-new.svg" alt="">
+                <div class="h-margin-top-10" data-i18n="createNewGroup"></div>
+            </div>
+        </div>
+    </script>
+
     <script id="color-circle-tmpl" type="text/template">
-        <span class="group-circle" style="background-color: {{iconColor}};"></span>
+        <div class="group-circle" style="background-color: {{iconColor}};"></div>
     </script>
 
     <script type="text/javascript" src="/utils.js"></script>

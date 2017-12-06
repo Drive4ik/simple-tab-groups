@@ -33,10 +33,13 @@ let $ = document.querySelector.bind(document),
         return str.replace(/{{(.+?)}}/g, function(match, key) {
             let val = key
                 .split('.')
-                .reduce((accum, key) => accum[key], args);
+                .reduce((accum, key) => (accum && accum[key]), args);
 
             if (val || val === '' || val === 0) {
                 return val;
+            } else if (undefined === val) {
+                return '';
+                // return key;
             }
 
             return match;

@@ -8,10 +8,11 @@
         $on = on.bind({});
 
     storage.get(['closePopupAfterChangeGroup', 'openGroupAfterChange', 'showGroupCircleInSearchedTab', 'showUrlTooltipOnTabHover', 'showNotificationAfterMoveTab'])
-        .then(result => options = result);
+        .then(result => options = result)
+        .then(loadData);
 
     addEvents();
-    loadData();
+    // loadData();
 
     function addEvents() {
 
@@ -90,25 +91,41 @@
     }
 
     function prepareTabToView(groupId, tab, tabIndex) {
-        let container = {
-                hiddenClass: 'is-hidden',
-            };
+        let container = {},
+            urlTitle = '';
 
         if (tab.cookieStoreId && tab.cookieStoreId !== DEFAULT_COOKIE_STORE_ID) {
             container = allData.containers.find(container => container.cookieStoreId === tab.cookieStoreId);
-            container.hiddenClass = '';
+        }
+
+        if (options.showUrlTooltipOnTabHover) {
+            if (tab.title) {
+                urlTitle = safeHtml(unSafeHtml(tab.title)) + '\n' + tab.url;
+            } else {
+                urlTitle = tab.url;
+            }
         }
 
         return {
-            urlTitle: options.showUrlTooltipOnTabHover ? tab.url : '',
+            urlTitle: urlTitle,
             classList: (groupId === allData.currentGroup.id && tabIndex === allData.activeTabIndex) ? 'is-active' : '',
             tabIndex: tabIndex,
             groupId: groupId,
             title: safeHtml(unSafeHtml(tab.title || tab.url)),
             url: tab.url,
-            container: container,
+
             favIconClass: tab.favIconUrl ? '' : 'is-hidden',
             favIconUrl: tab.favIconUrl,
+
+            containerClass: container.cookieStoreId ? '' : 'is-hidden',
+            containerIconUrl: container.iconUrl,
+            containerColorCodeFillStyle: container.cookieStoreId ? `fill: ${container.colorCode};` : '',
+            containerColorCodeBorderStyle: container.cookieStoreId ? `border-color: ${container.colorCode};` : '',
+
+            thumbnailClass: '',
+            thumbnail: tab.thumbnail || '/test.jpg',
+
+            action: 'load-group',
         };
     }
 
@@ -117,6 +134,9 @@
             .map(function(tab, tabIndex) {
                 return render('tab-tmpl', prepareTabToView(group.id, tab, tabIndex));
             })
+            .concat([render('new-tab-tmpl', {
+                groupId: group.id,
+            })])
             .join('');
     }
 
@@ -130,11 +150,8 @@
 
                 return render('group-tmpl', Object.assign({}, group, customData));
             })
+            .concat([render('new-group-tmpl')])
             .join('');
-
-        // let showGroupsHtml = render('groups-list-tmpl', {
-        //     groupsHtml,
-        // });
 
         showResultHtml(groupsHtml);
     }
