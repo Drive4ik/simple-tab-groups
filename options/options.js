@@ -55,29 +55,31 @@
                     });
 
                     win.tabs.forEach(function(oldTab) {
-                        let oldGroupId = null;
+                        let extData = {};
+
+                        if (oldTab.pinned && oldTab.entries[0] && oldTab.entries[0].url && isAllowUrl(oldTab.entries[0].url)) {
+                            return browser.tabs.create({
+                                url: oldTab.entries[0].url,
+                                pinned: true,
+                            });
+                        }
 
                         try {
-                            let extData = JSON.parse(oldTab.extData['tabview-tab']);
+                            extData = JSON.parse(oldTab.extData['tabview-tab'] || '{}');
                             if (!extData || !extData.groupID) {
-                                return notify('Cannot parse tab extData: ' + oldTab);
+                                return;
                             }
-                            oldGroupId = extData.groupID;
                         } catch (e) {
                             return notify('Cannot parse groups: ' + e);
                         }
 
-
-                        if (!newGroups[oldGroupId]) {
-                            return notify('not found group: ' + oldGroupId);
-                        }
-
                         oldTab.entries.forEach(function(t) {
-                            if (isAllowUrl(t.url)) {
-                                newGroups[oldGroupId].tabs.push(BG.mapTab({
+                            if (isAllowUrl(t.url) && newGroups[extData.groupID]) {
+                                newGroups[extData.groupID].tabs.push(BG.mapTab({
                                     title: (t.title || t.url),
                                     url: t.url,
                                     favIconUrl: oldTab.image || '',
+                                    active: Boolean(extData.active),
                                 }));
                             }
                         });
