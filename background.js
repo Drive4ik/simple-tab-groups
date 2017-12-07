@@ -429,7 +429,6 @@
     }
 
     function saveTabs(windowId = browser.windows.WINDOW_ID_CURRENT, excludeTabIds = [], sendEventUpdateStorage) {
-        console.log('saveTabs');
         return getData(windowId, false)
             .then(function(result) {
                 if (!result.currentGroup.id) {
@@ -466,14 +465,13 @@
     }
 
     function onActivatedTab({ tabId, windowId }) {
-        removeTabEventPromise
-            .then(() => browser.tabs.get(tabId))
-            .then(function({ incognito }) {
+        Promise.all([removeTabEventPromise, browser.tabs.get(tabId)])
+            .then(function([removedTabId, { incognito }]) {
                 if (incognito) {
                     return;
                 }
-console.log('onActivatedTab');
-                saveTabs(windowId);
+
+                saveTabs(windowId, [removedTabId]);
             });
     }
 
@@ -533,10 +531,10 @@ console.log('onActivatedTab');
                 if (incognito) {
                     return;
                 }
-console.log('onRemovedTab');
 
                 return saveTabs(windowId, [removedTabId]);
-            });
+            })
+            .then(() => removedTabId);
     }
 
     function onMovedTab(tabId, { windowId }) {
