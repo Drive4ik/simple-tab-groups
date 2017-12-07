@@ -13,6 +13,10 @@ const DEFAULT_COOKIE_STORE_ID = 'firefox-default',
         showGroupCircleInSearchedTab: true,
         showUrlTooltipOnTabHover: false,
         showNotificationAfterMoveTab: true,
+        createNewGroupAfterAttachTabToNewWindow: true,
+
+        enableKeyboardShortcutLoadNextPrevGroup: true,
+        enableKeyboardShortcutLoadByIndexGroup: true,
     };
 
 let $ = document.querySelector.bind(document),

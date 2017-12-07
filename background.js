@@ -1,8 +1,7 @@
 (function() {
     'use strict';
 
-    let isTabCurrentlyRemoving = false,
-        currentlyLoadingGroups = {}; // windowId: true
+    let currentlyLoadingGroups = {}; // windowId: true
 
     // return storage.get(null).then(console.log);
 
@@ -291,9 +290,11 @@
                 isGroupLoadInWindow(group, true) // return window with tabs
                     .then(function({ tabs }) {
                         if (group.windowId === windowId) {
-                            browser.tabs.update(tabs[activeTabIndex].id, {
-                                active: true,
-                            });
+                            if (tabs[activeTabIndex]) {
+                                browser.tabs.update(tabs[activeTabIndex].id, {
+                                    active: true,
+                                });
+                            }
                         } else {
                             setFocusOnWindow(group.windowId)
                                 .then(function() {
@@ -463,16 +464,14 @@
             });
     }
 
-    function onActivatedTab({ tabId }) {
-        browser.tabs.get(tabId)
-            .then(function({ incognito }) {
+    function onActivatedTab({ tabId, windowId }) {
+        Promise.all([removeTabEventPromise, browser.tabs.get(tabId)])
+            .then(function([removedTabId, { incognito }]) {
                 if (incognito) {
                     return;
                 }
 
-                if (!isTabCurrentlyRemoving) {
-                    saveTabs();
-                }
+                saveTabs(windowId, [removedTabId]);
             });
     }
 
@@ -524,22 +523,22 @@
             .then(({ groups }) => groups.find(group => group.windowId === windowId));
     }
 
+    let removeTabEventPromise = Promise.resolve();
+
     function onRemovedTab(removedTabId, { isWindowClosing, windowId }) {
         if (isWindowClosing) {
             return;
         }
 
-        browser.windows.get(windowId)
+        removeTabEventPromise = browser.windows.get(windowId)
             .then(function({ incognito }) {
                 if (incognito) {
                     return;
                 }
 
-                isTabCurrentlyRemoving = true;
-
-                saveTabs(windowId, [removedTabId])
-                    .then(() => isTabCurrentlyRemoving = false);
-            });
+                return saveTabs(windowId, [removedTabId]);
+            })
+            .then(() => removedTabId);
     }
 
     function onMovedTab(tabId, { windowId }) {
@@ -553,37 +552,43 @@
             });
     }
 
-    let detachEventPromise = null;
+    let detachTabEventPromise = Promise.resolve(),
+        attachTabEventPromise = Promise.resolve();
 
     function onAttachedTab(tabId, { newWindowId }) {
-        detachEventPromise.then(function() {
-            getGroupByWindowId(newWindowId)
-                .then(function(group) {
-                    if (group) {
-                        saveTabs(newWindowId, [], false);
-                    } else {
-                        Promise.all([
+        attachTabEventPromise = Promise.all([
+                detachTabEventPromise,
+                storage.get('createNewGroupAfterAttachTabToNewWindow')
+            ])
+            .then(([, options]) => getGroupByWindowId(newWindowId).then(group => [group, options]))
+            .then(function([group, options]) {
+                if (group) {
+                    return saveTabs(newWindowId, [], false);
+                } else {
+                    if (options.createNewGroupAfterAttachTabToNewWindow) {
+                        return Promise.all([
                                 addGroup(undefined, newWindowId),
                                 browser.tabs.get(tabId)
                             ])
                             .then(function([newGroup, tab]) {
                                 newGroup.tabs.push(mapTab(tab));
                                 return saveGroup(newGroup);
-                            });
+                            })
+                            .then(updateBrowserActionData);
                     }
-                });
-        });
+                }
+            });
     }
 
     function onDetachedTab(tabId, { oldWindowId }) {
-        detachEventPromise = new Promise(function(resolve) {
-            getGroupByWindowId(oldWindowId)
-                .then(function(group) {
+        detachTabEventPromise = attachTabEventPromise
+            .then(() => getGroupByWindowId(oldWindowId))
+            .then(function(group) {
+                if (group) {
                     group.tabs = group.tabs.filter(tab => tab.id !== tabId);
-                    return saveGroup(group);
-                })
-                .then(resolve);
-        });
+                    return saveGroup(group, false);
+                }
+            });
     }
 
     let lastFocusedWinId = null;
@@ -799,11 +804,12 @@
     }
 
     function onRemovedWindow(windowId) {
-        getGroupByWindowId(windowId)
+        Promise.all([attachTabEventPromise, detachTabEventPromise])
+            .then(() => getGroupByWindowId(windowId))
             .then(function(group) {
                 if (group) {
                     group.windowId = null;
-                    saveGroup(group);
+                    return saveGroup(group);
                 }
             });
     }
@@ -836,17 +842,6 @@
         browser.windows.onRemoved.removeListener(onRemovedWindow);
     }
 
-    browser.menus.create({
-        id: 'openSettings',
-        title: browser.i18n.getMessage('openSettings'),
-        onclick: () => browser.runtime.openOptionsPage(),
-        contexts: ['browser_action'],
-        icons: {
-            16: 'chrome://browser/skin/settings.svg',
-            32: 'chrome://browser/skin/settings.svg',
-        },
-    });
-
     function loadGroupPosition(textPosition = 'next') {
         getData().then(function(result) {
             if (1 === result.groups.length) {
@@ -864,11 +859,81 @@
         });
     }
 
-    browser.commands.onCommand.addListener(function(command) {
-        if ('prev-group' === command || 'next-group' === command) {
-            loadGroupPosition(command.split('-').shift());
-        }
+    function loadGroupByIndex(groupIndex) {
+        getData().then(function(result) {
+            if (result.groups[groupIndex]) {
+                return loadGroup(result.windowId, result.groups[groupIndex]);
+            }
+        });
+    }
+
+    browser.menus.create({
+        id: 'openSettings',
+        title: browser.i18n.getMessage('openSettings'),
+        onclick: () => browser.runtime.openOptionsPage(),
+        contexts: ['browser_action'],
+        icons: {
+            16: 'chrome://browser/skin/settings.svg',
+            32: 'chrome://browser/skin/settings.svg',
+        },
     });
+
+    function initBrowserCommands() {
+        browser.commands.onCommand.removeListener(browserCommandsLoadNextPrevGroupHandler);
+        browser.commands.onCommand.removeListener(browserCommandsLoadByIndexGroupHandler);
+
+        storage.get(['enableKeyboardShortcutLoadNextPrevGroup', 'enableKeyboardShortcutLoadByIndexGroup'])
+            .then(function(options) {
+                if (options.enableKeyboardShortcutLoadNextPrevGroup) {
+                    browser.commands.onCommand.addListener(browserCommandsLoadNextPrevGroupHandler);
+                }
+
+                if (options.enableKeyboardShortcutLoadByIndexGroup) {
+                    browser.commands.onCommand.addListener(browserCommandsLoadByIndexGroupHandler);
+                }
+            });
+    }
+
+    function browserCommandsLoadNextPrevGroupHandler(command) {
+        if ('group-prev' === command || 'group-next' === command) {
+            loadGroupPosition(command.split('-').pop());
+        }
+    }
+
+    function browserCommandsLoadByIndexGroupHandler(command) {
+        if (command.startsWith('index-group')) {
+            loadGroupByIndex(command.split('-').pop() - 1);
+        }
+    }
+
+    window.background = {
+        inited: false,
+
+        initBrowserCommands,
+
+        getWindow,
+        getData,
+        getTabs,
+        moveTabToGroup,
+
+        removeMoveTabMenus,
+        createMoveTabMenus,
+        updateBrowserActionData,
+        isGroupLoadInWindow,
+
+        loadGroup,
+
+        mapTab,
+
+        addTab,
+        removeTab,
+
+        createGroup,
+        moveGroup,
+        addGroup,
+        saveGroup,
+        removeGroup,
+    };
 
     // initialization
     Promise.all([
@@ -932,6 +997,8 @@
             notify(error);
         })
         .then(function([result, win]) {
+            window.background.inited = true;
+
             if (!result.groups.some(group => group.windowId === win.id)) {
                 return addGroup(undefined, win.id)
                     .then(() => saveTabs(win.id));
@@ -941,31 +1008,7 @@
         })
         .then(updateBrowserActionData)
         .then(createMoveTabMenus)
+        .then(initBrowserCommands)
         .then(addEvents);
-
-    window.background = {
-        getWindow,
-        getData,
-        getTabs,
-        moveTabToGroup,
-
-        removeMoveTabMenus,
-        createMoveTabMenus,
-        updateBrowserActionData,
-        isGroupLoadInWindow,
-
-        loadGroup,
-
-        mapTab,
-
-        addTab,
-        removeTab,
-
-        createGroup,
-        moveGroup,
-        addGroup,
-        saveGroup,
-        removeGroup,
-    };
 
 })()

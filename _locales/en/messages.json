@@ -90,6 +90,21 @@
         "description": "Show notification after move tab to other group"
     },
 
+    "createNewGroupAfterAttachTabToNewWindow": {
+        "message": "Create new group after attach tab to new window",
+        "description": "Create new group after attach tab to new window"
+    },
+
+    "enableKeyboardShortcutLoadNextPrevGroup": {
+        "message": "Enable keyboard shortcut \"Load next/prev group\" by <code>Ctrl+Shift+<</code> and <code>Ctrl+Shift+></code>",
+        "description": "Enable keyboard shortcut load next prev group"
+    },
+
+    "enableKeyboardShortcutLoadByIndexGroup": {
+        "message": "Enable keyboard shortcut \"Load group by index\" <code>Ctrl+Shift+[1-9]</code>",
+        "description": "Enable keyboard shortcut load group by index"
+    },
+
     "openGroupAfterChange": {
         "message": "Open group after change to it (if popup dont't closed)",
         "description": "Open group after change to it (if popup dont't closed)"
@@ -217,6 +232,11 @@
     "groupColor": {
         "message": "Icon color",
         "description": "Group color"
+    },
+
+    "setRandomColor": {
+        "message": "Set random color",
+        "description": "Set random color"
     },
 
     "regexpForTabsTitle": {
