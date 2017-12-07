@@ -229,6 +229,11 @@
         "description": "Group color"
     },
 
+    "setRandomColor": {
+        "message": "Set random color",
+        "description": "Set random color"
+    },
+
     "regexpForTabsTitle": {
         "message": "Regular expressions for catch tabs",
         "description": "Regular expressions for catch tabs"

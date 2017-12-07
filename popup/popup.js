@@ -108,6 +108,9 @@
 
                 $('html').classList.remove('no-scroll');
                 $('#editGroupPopup').classList.remove('is-flex');
+            } else if ('set-random-group-color' === action) {
+                $('#groupEditIconColor').value = randomColor();
+                dispatchEvent('input', $('#groupEditIconColor'));
             } else if ('close-edit-group-popup' === action) {
                 popupIsShow = false;
                 $('html').classList.remove('no-scroll');
@@ -308,8 +311,8 @@
         }
     }
 
-    function setHtml(id, html) {
-        $('#' + id).innerHTML = html;
+    function setHtml(id, html, attr = 'innerHTML') {
+        $('#' + id)[attr] = html;
     }
 
     function getContainers() {
