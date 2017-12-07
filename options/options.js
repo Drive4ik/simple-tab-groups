@@ -1,6 +1,14 @@
 (function() {
     'use strict';
 
+    const BG = (function(bgWin) {
+        return bgWin && bgWin.background.inited ? bgWin.background : false;
+    })(browser.extension.getBackgroundPage());
+
+    if (!BG) {
+        return $('#simple-tab-groups-options').classList.add('is-hidden');
+    }
+
     let $on = on.bind({}),
         allCheckBoxes = Object.keys(defaultOptions).filter(key => 'boolean' === type(defaultOptions[key]));
 
@@ -11,7 +19,7 @@
             options[key] = $('#' + key).checked;
         });
 
-        return storage.set(options);
+        return storage.set(options).then(BG.initBrowserCommands);
     }
 
     $on('change', '#' + allCheckBoxes.join(', #'), saveOptions);
@@ -22,8 +30,7 @@
                 importFromFile()
             ])
             .then(function([result, oldOptions]) {
-                let background = browser.extension.getBackgroundPage().background,
-                    newGroups = {};
+                let newGroups = {};
 
                 oldOptions.windows.forEach(function(win) {
                     let oldGroups = {};
@@ -40,7 +47,7 @@
                         if (!newGroups[oldGroup.id]) {
                             result.lastCreatedGroupPosition++;
 
-                            newGroups[oldGroup.id] = background.createGroup(result.lastCreatedGroupPosition);
+                            newGroups[oldGroup.id] = BG.createGroup(result.lastCreatedGroupPosition);
                             newGroups[oldGroup.id].title = oldGroup.title || browser.i18n.getMessage('newGroupTitle', newGroups[oldGroup.id].id);
                             newGroups[oldGroup.id].catchTabRules = (oldGroup.catchRules || '');
                             newGroups[oldGroup.id].slot = oldGroup.slot;
@@ -67,7 +74,7 @@
 
                         oldTab.entries.forEach(function(t) {
                             if (isAllowUrl(t.url)) {
-                                newGroups[oldGroupId].tabs.push(background.mapTab({
+                                newGroups[oldGroupId].tabs.push(BG.mapTab({
                                     title: (t.title || t.url),
                                     url: t.url,
                                     favIconUrl: oldTab.image || '',

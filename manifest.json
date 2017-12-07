@@ -4,13 +4,13 @@
     "applications": {
         "gecko": {
             "id": "simple-tab-groups@drive4ik",
-            "strict_min_version": "57.0"
+            "strict_min_version": "56.0"
         }
     },
 
     "name": "__MSG_extensionName__",
     "description": "__MSG_extensionDescription__",
-    "version": "1.8.2.1",
+    "version": "1.8.3",
     "author": "__MSG_authorName__",
     "homepage_url": "https://github.com/drive4ik/simple-tab-groups",
     "developer": {
@@ -39,17 +39,79 @@
     },
 
     "commands": {
-        "prev-group": {
+        "_execute_browser_action": {
             "suggested_key": {
-                "default": "MacCtrl+1"
+                "default": "F8"
+            },
+            "description": "Open popup"
+        },
+
+        "group-prev": {
+            "suggested_key": {
+                "default": "MacCtrl+Shift+Comma"
             },
             "description": "Load previously group"
         },
-        "next-group": {
+        "group-next": {
             "suggested_key": {
-                "default": "MacCtrl+2"
+                "default": "MacCtrl+Shift+Period"
             },
             "description": "Load next group"
+        },
+
+        "index-group-1": {
+            "suggested_key": {
+                "default": "MacCtrl+Shift+1"
+            },
+            "description": "Load 1st group"
+        },
+        "index-group-2": {
+            "suggested_key": {
+                "default": "MacCtrl+Shift+2"
+            },
+            "description": "Load 2nd group"
+        },
+        "index-group-3": {
+            "suggested_key": {
+                "default": "MacCtrl+Shift+3"
+            },
+            "description": "Load 3rd group"
+        },
+        "index-group-4": {
+            "suggested_key": {
+                "default": "MacCtrl+Shift+4"
+            },
+            "description": "Load 4th group"
+        },
+        "index-group-5": {
+            "suggested_key": {
+                "default": "MacCtrl+Shift+5"
+            },
+            "description": "Load 5th group"
+        },
+        "index-group-6": {
+            "suggested_key": {
+                "default": "MacCtrl+Shift+6"
+            },
+            "description": "Load 6th group"
+        },
+        "index-group-7": {
+            "suggested_key": {
+                "default": "MacCtrl+Shift+7"
+            },
+            "description": "Load 7th group"
+        },
+        "index-group-8": {
+            "suggested_key": {
+                "default": "MacCtrl+Shift+8"
+            },
+            "description": "Load 8th group"
+        },
+        "index-group-9": {
+            "suggested_key": {
+                "default": "MacCtrl+Shift+9"
+            },
+            "description": "Load 9nd group"
         }
     },
 

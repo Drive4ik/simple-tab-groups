@@ -1,12 +1,19 @@
 (function() {
     'use strict';
 
+    const BG = (function(bgWin) {
+        return bgWin && bgWin.background.inited ? bgWin.background : false;
+    })(browser.extension.getBackgroundPage());
+
+    if (!BG) {
+        return window.close();
+    }
+
     const VIEW_GROUPS = 'groups',
         VIEW_SEARCH_TABS = 'search-tabs',
         VIEW_GROUP_TABS = 'group-tabs';
 
-    let background = browser.extension.getBackgroundPage().background,
-        templates = {},
+    let templates = {},
         options = null,
         allData = null,
         groupIdInContext = -1,
@@ -33,7 +40,7 @@
                     return renderTabsList(data.groupId);
                 }
 
-                background.loadGroup(allData.currentWindowId, getGroupById(data.groupId), data.tabIndex)
+                BG.loadGroup(allData.currentWindowId, getGroupById(data.groupId), data.tabIndex)
                     .then(function() {
                         if (!options.closePopupAfterChangeGroup && options.openGroupAfterChange) {
                             renderTabsList(data.groupId);
@@ -48,9 +55,9 @@
             } else if ('remove-tab' === action) {
                 let group = getGroupById(data.groupId);
 
-                background.removeTab(group.tabs[data.tabIndex], data.tabIndex, group);
+                BG.removeTab(group.tabs[data.tabIndex], data.tabIndex, group);
             } else if ('add-tab' === action) {
-                background.addTab(getGroupById(data.groupId), data.cookieStoreId);
+                BG.addTab(getGroupById(data.groupId), data.cookieStoreId);
             } else if ('open-settings-group-popup' === action) {
                 popupIsShow = true;
                 let group = getGroupById(data.groupId);
@@ -90,14 +97,14 @@
                         }
                     });
 
-                background.saveGroup(group)
+                BG.saveGroup(group)
                     .then(function() {
                         if (groupId === allData.currentGroup.id) {
-                            background.updateBrowserActionData();
+                            BG.updateBrowserActionData();
                         }
                     })
-                    .then(background.removeMoveTabMenus)
-                    .then(background.createMoveTabMenus);
+                    .then(BG.removeMoveTabMenus)
+                    .then(BG.createMoveTabMenus);
 
                 $('html').classList.remove('no-scroll');
                 $('#editGroupPopup').classList.remove('is-flex');
@@ -124,33 +131,33 @@
                 popupIsShow = false;
                 let groupId = Number($('#deleteGroupPopup').dataset.groupId);
 
-                background.removeGroup(getGroupById(groupId)).then(renderGroupsList);
+                BG.removeGroup(getGroupById(groupId)).then(renderGroupsList);
 
                 $('#deleteGroupPopup').classList.remove('is-active');
             } else if ('move-tab-to-group' === action) {
                 let tab = getGroupById(state.groupId).tabs[moveTabToGroupTabIndex];
 
-                background.moveTabToGroup(tab, moveTabToGroupTabIndex, state.groupId, data.groupId);
+                BG.moveTabToGroup(tab, moveTabToGroupTabIndex, state.groupId, data.groupId);
             } else if ('move-tab-to-new-group' === action) {
                 let expandedGroup = getGroupById(state.groupId),
                     tab = expandedGroup.tabs[moveTabToGroupTabIndex];
 
-                background.addGroup()
+                BG.addGroup()
                     .then(function(newGroup) {
-                        background.moveTabToGroup(tab, moveTabToGroupTabIndex, state.groupId, newGroup.id);
+                        BG.moveTabToGroup(tab, moveTabToGroupTabIndex, state.groupId, newGroup.id);
                     });
             } else if ('add-group' === action) {
-                background.addGroup();
+                BG.addGroup();
             } else if ('show-groups-list' === action) {
                 renderGroupsList();
             } else if ('context-move-group-up' === action) {
-                background.moveGroup(getGroupById(groupIdInContext), 'up');
+                BG.moveGroup(getGroupById(groupIdInContext), 'up');
             } else if ('context-move-group-down' === action) {
-                background.moveGroup(getGroupById(groupIdInContext), 'down');
+                BG.moveGroup(getGroupById(groupIdInContext), 'down');
             } else if ('context-open-group-in-new-window' === action) {
                 let group = getGroupById(groupIdInContext);
 
-                background.isGroupLoadInWindow(group)
+                BG.isGroupLoadInWindow(group)
                     .then(function() {
                         browser.windows.update(group.windowId, {
                             focused: true,
@@ -160,7 +167,7 @@
                         browser.windows.create({
                                 state: 'maximized',
                             })
-                            .then(win => background.loadGroup(win.id, group));
+                            .then(win => BG.loadGroup(win.id, group));
                     });
             }
         }
@@ -211,14 +218,15 @@
             if (KeyEvent.DOM_VK_UP === event.keyCode || KeyEvent.DOM_VK_DOWN === event.keyCode) {
                 let elements = Array.from(document.querySelectorAll(selectableElementsSelectors.join(', '))),
                     currentIndex = elements.findIndex(el => el.classList.contains('is-hover')),
+                    currentActiveIndex = elements.findIndex(el => el.classList.contains('is-active')),
                     textPosition = KeyEvent.DOM_VK_UP === event.keyCode ? 'prev' : 'next',
-                    nextIndex = getNextIndex(currentIndex, elements.length, textPosition);
-
-                event.preventDefault();
+                    nextIndex = getNextIndex(-1 !== currentIndex ? currentIndex : currentActiveIndex, elements.length, textPosition);
 
                 if (false === nextIndex) {
                     return;
                 }
+
+                event.preventDefault();
 
                 if (-1 !== currentIndex) {
                     elements[currentIndex].classList.remove('is-hover');
@@ -237,19 +245,19 @@
 
                     window.scrollTo(0, newPos);
                 }
-            } else if (KeyEvent.DOM_VK_RETURN === event.keyCode) {
+            } else if (KeyEvent.DOM_VK_RETURN === event.keyCode) { // enter command
                 let element = $('.is-hover' + selectableElementsSelectors.join(', .is-hover'));
 
                 if (element) {
                     dispatchEvent('click', element);
                 }
-            } else if (KeyEvent.DOM_VK_RIGHT === event.keyCode) {
-                let element = $('.is-hover[data-is-group]');
+            } else if (state.view === VIEW_GROUPS && KeyEvent.DOM_VK_RIGHT === event.keyCode) { // open group
+                let element = $('.is-hover[data-is-group], .is-active[data-is-group]');
 
                 if (element) {
                     renderTabsList(dataFromElement(element).groupId);
                 }
-            } else if (KeyEvent.DOM_VK_LEFT === event.keyCode && state.view !== VIEW_SEARCH_TABS) {
+            } else if (state.view === VIEW_GROUP_TABS && KeyEvent.DOM_VK_LEFT === event.keyCode) { // close group
                 renderGroupsList();
             }
         });
@@ -313,7 +321,7 @@
 
     function loadData() {
         return Promise.all([
-                background.getData(undefined, false),
+                BG.getData(undefined, false),
                 getContainers()
             ])
             .then(function([result, containers]) {

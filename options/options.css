@@ -12,3 +12,7 @@ hr {
     color: transparent;
     border-top: 1px solid #e3e3e3;
 }
+
+.is-hidden {
+    display: none !important;
+}
