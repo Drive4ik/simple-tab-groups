@@ -166,7 +166,6 @@ img {
     box-shadow: 0px 0px 3px 1px rgba(0,0,0,0.5);
     max-height: 600px;
     background-color: #fcfcfc;
-    /* padding: var(--margin); */
 }
 
 #result.grid > .group > .header {
@@ -359,3 +358,14 @@ img {
     -moz-context-properties: fill;
     fill: var(--fill-color);
 }
+
+
+/* Drag & Drop Styles */
+#result > .over[draggable] {
+    outline: 2px dashed rgba(0, 0, 0, 0.5);
+}
+
+#result > .ghost[draggable] {
+    opacity: 0.4;
+}
+

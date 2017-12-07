@@ -25,10 +25,10 @@
         $on = on.bind({});
 
     storage.get(['closePopupAfterChangeGroup', 'openGroupAfterChange', 'showGroupCircleInSearchedTab', 'showUrlTooltipOnTabHover', 'showNotificationAfterMoveTab'])
-        .then(result => options = result);
+        .then(result => options = result)
+        .then(loadData);
 
     addEvents();
-    loadData();
 
     function addEvents() {
 

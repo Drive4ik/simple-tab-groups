@@ -220,10 +220,11 @@ let $ = document.querySelector.bind(document),
                 if (!events[eventStr]) {
                     events[eventStr] = [];
                     document.body.addEventListener(eventStr, function(event) {
+                        let result = undefined;
 
                         function checkQueryByElement(element, data) {
                             if (element.matches && element.matches(data.query)) {
-                                data.func.call(element, dataFromElement(element), event);
+                                result = data.func.call(element, dataFromElement(element), event);
                                 translatePage();
                                 return true;
                             }
@@ -243,6 +244,8 @@ let $ = document.querySelector.bind(document),
                                 el = el.parentNode;
                             }
                         }
+
+                        return result;
                     }, false);
                 }
 

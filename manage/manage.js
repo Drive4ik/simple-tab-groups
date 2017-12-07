@@ -5,6 +5,8 @@
         templates = {},
         options = null,
         allData = null,
+        allGroupsNodes = null,
+        allTabsNodes = null,
         $on = on.bind({});
 
     storage.get(['closePopupAfterChangeGroup', 'openGroupAfterChange', 'showGroupCircleInSearchedTab', 'showUrlTooltipOnTabHover', 'showNotificationAfterMoveTab'])
@@ -12,7 +14,6 @@
         .then(loadData);
 
     addEvents();
-    // loadData();
 
     function addEvents() {
 
@@ -37,6 +38,116 @@
         browser.runtime.onMessage.addListener(listener);
         window.addEventListener('unload', () => browser.runtime.onMessage.removeListener(listener));
     }
+
+    function addDragAndDropEvents() {
+        // groups
+        let groupsSelector = '[data-is-group]';
+
+        allGroupsNodes = Array.from(document.querySelectorAll(groupsSelector));
+
+        allGroupsNodes.forEach(function(group) {
+            group.addEventListener('dragstart', groupHandleDragStart, false);
+            group.addEventListener('dragenter', groupHandleDragEnter, false);
+            group.addEventListener('dragover', groupHandleDragOver, false);
+            group.addEventListener('dragleave', groupHandleDragLeave, false);
+            group.addEventListener('drop', groupHandleDrop, false);
+            group.addEventListener('dragend', groupHandleDragEnd, false);
+        });
+
+
+    /*
+        $on('dragstart', groupSelector, function(data, event) {
+            this.classList.add('ghost');
+        });
+
+        $on('dragenter', groupSelector, function(data, event) {
+            this.classList.add('over');
+        });
+
+        $on('dragover', groupSelector, function(data, event) {
+            // if (event.preventDefault) {
+            //     event.preventDefault(); // Necessary. Allows us to drop.
+            // }
+
+            event.dataTransfer.dropEffect = 'move'; // See the section on the DataTransfer object.
+
+            return false;
+        });
+
+        $on('dragleave', groupSelector, function(data, event) {
+            this.classList.remove('over');
+        });
+
+        $on('drop', groupSelector, function(data, event) {
+            // event.stopPropagation(); // stops the browser from redirecting.
+        });
+
+        $on('dragend', groupSelector, function(data, event) {
+            this.classList.remove('over');
+        });*/
+
+
+    }
+
+    function groupHandleDragStart(e) {
+        console.log('groupHandleDragStart');
+        this.classList.add('ghost'); // this / e.target is the source node.
+    }
+
+    function groupHandleDragEnter(e) {
+        console.log('groupHandleDragEnter');
+        // this / e.target is the current hover target.
+        this.classList.add('over');
+    }
+
+    function groupHandleDragOver(e) {
+        console.log('groupHandleDragOver');
+        e.preventDefault(); // Necessary. Allows us to drop.
+        e.dataTransfer.dropEffect = 'move'; // See the section on the DataTransfer object.
+        return false;
+    }
+
+    function groupHandleDragLeave(e) {
+        console.log('groupHandleDragLeave');
+        this.classList.remove('over'); // this / e.target is previous target element.
+    }
+
+    function groupHandleDrop(e) {
+        console.log('groupHandleDrop');
+        // this / e.target is current target element.
+        e.stopPropagation(); // stops the browser from redirecting.
+        // See the section on the DataTransfer object.
+        return false;
+    }
+
+    function groupHandleDragEnd(e) {
+        console.log('groupHandleDragEnd');
+        // this/e.target is the source node.
+        allGroupsNodes.forEach(function(group) {
+            group.classList.remove('over');
+        });
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     function getGroupById(groupId) {
         return allData.groups.find(group => group.id === groupId);
@@ -87,7 +198,8 @@
                     containers,
                 };
             })
-            .then(renderGroupsCards);
+            .then(renderGroupsCards)
+            .then(addDragAndDropEvents);
     }
 
     function prepareTabToView(groupId, tab, tabIndex) {
@@ -124,8 +236,6 @@
 
             thumbnailClass: '',
             thumbnail: tab.thumbnail || '/test.jpg',
-
-            action: 'load-group',
         };
     }
 
