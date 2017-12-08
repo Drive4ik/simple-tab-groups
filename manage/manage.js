@@ -25,6 +25,18 @@
             }
         }
 
+        // $on('mousedown', 'input[type="text"]', function(data, event) {
+        //     // event.preventDefault();
+        //     event.stopPropagation();
+        //     // this.focus();
+        // });
+
+        // $on('dragstart', 'input[type="text"]', function(data, event) {
+        //     event.preventDefault();
+        //     event.stopPropagation();
+        //     this.focus();
+        // });
+
         // setTabEventsListener
         let loadDataTimer = null,
             listener = function(request, sender, sendResponse) {
@@ -39,11 +51,13 @@
         window.addEventListener('unload', () => browser.runtime.onMessage.removeListener(listener));
     }
 
+
+
     function addDragAndDropEvents() {
         // groups
-        let groupsSelector = '[data-is-group]';
+        let groupSelector = '[data-is-group]';
 
-        allGroupsNodes = Array.from(document.querySelectorAll(groupsSelector));
+        allGroupsNodes = Array.from(document.querySelectorAll(groupSelector));
 
         allGroupsNodes.forEach(function(group) {
             group.addEventListener('dragstart', groupHandleDragStart, false);
@@ -54,77 +68,211 @@
             group.addEventListener('dragend', groupHandleDragEnd, false);
         });
 
+        // tabs
+        let tabSelector = '[data-is-tab]';
 
-    /*
-        $on('dragstart', groupSelector, function(data, event) {
-            this.classList.add('ghost');
+        allTabsNodes = Array.from(document.querySelectorAll(tabSelector));
+
+        allTabsNodes.forEach(function(tab) {
+            tab.addEventListener('dragstart', tabHandleDragStart, false);
+            tab.addEventListener('dragenter', tabHandleDragEnter, false);
+            tab.addEventListener('dragover', tabHandleDragOver, false);
+            tab.addEventListener('dragleave', tabHandleDragLeave, false);
+            tab.addEventListener('drop', tabHandleDrop, false);
+            tab.addEventListener('dragend', tabHandleDragEnd, false);
         });
-
-        $on('dragenter', groupSelector, function(data, event) {
-            this.classList.add('over');
-        });
-
-        $on('dragover', groupSelector, function(data, event) {
-            // if (event.preventDefault) {
-            //     event.preventDefault(); // Necessary. Allows us to drop.
-            // }
-
-            event.dataTransfer.dropEffect = 'move'; // See the section on the DataTransfer object.
-
-            return false;
-        });
-
-        $on('dragleave', groupSelector, function(data, event) {
-            this.classList.remove('over');
-        });
-
-        $on('drop', groupSelector, function(data, event) {
-            // event.stopPropagation(); // stops the browser from redirecting.
-        });
-
-        $on('dragend', groupSelector, function(data, event) {
-            this.classList.remove('over');
-        });*/
-
-
     }
 
+
+    // GROUPS
+    let dragGroupNode = null,
+        dragTabNode = null,
+        prevOverElement = null;
+
     function groupHandleDragStart(e) {
-        console.log('groupHandleDragStart');
-        this.classList.add('ghost'); // this / e.target is the source node.
+        console.log('groupHandleDragStart', this, e.target);
+
+        this.classList.add('moving');
+
+        dragGroupNode = this;
+
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', this.innerHTML);
     }
 
     function groupHandleDragEnter(e) {
-        console.log('groupHandleDragEnter');
-        // this / e.target is the current hover target.
-        this.classList.add('over');
-    }
+        console.log('groupHandleDragEnter', this, e);
+        if (!dragGroupNode) {
+            return;
+        }
+        let groupNode = getGroupNodeFromChild(this);
 
-    function groupHandleDragOver(e) {
-        console.log('groupHandleDragOver');
-        e.preventDefault(); // Necessary. Allows us to drop.
-        e.dataTransfer.dropEffect = 'move'; // See the section on the DataTransfer object.
-        return false;
+        // remove over class from rev over element;
+        if (prevOverElement) {
+            let prevGroupNode = getGroupNodeFromChild(prevOverElement);
+            if (prevGroupNode && prevGroupNode !== groupNode) {
+                prevGroupNode.classList.remove('over');
+            }
+        }
+
+        if (groupNode) {
+            groupNode.classList.add('over');
+        }
     }
 
     function groupHandleDragLeave(e) {
-        console.log('groupHandleDragLeave');
-        this.classList.remove('over'); // this / e.target is previous target element.
+        if (!dragGroupNode) {
+            return;
+        }
+console.log('groupHandleDragLeave', this, e);
+        prevOverElement = e.target;
+
+        // if (e.target.matches && e.target.matches('[data-is-group]')) {
+        //     this.classList.remove('over');
+        // }
+    }
+
+    function groupHandleDragOver(e) {
+        if (!dragGroupNode) {
+            return;
+        }
+// console.log('groupHandleDragOver', this, e);
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        return false;
     }
 
     function groupHandleDrop(e) {
-        console.log('groupHandleDrop');
-        // this / e.target is current target element.
+console.log('groupHandleDrop', this, e);
+        if (!dragGroupNode) {
+            return;
+        }
+
         e.stopPropagation(); // stops the browser from redirecting.
-        // See the section on the DataTransfer object.
+
+        if (dragGroupNode != this) {
+            console.log('groupHandleDrop', e);
+            dragGroupNode.innerHTML = this.innerHTML;
+            this.innerHTML = e.dataTransfer.getData('text/html');
+
+            // TODO move group dataTransfer
+        }
+
         return false;
     }
 
     function groupHandleDragEnd(e) {
-        console.log('groupHandleDragEnd');
-        // this/e.target is the source node.
+console.log('groupHandleDragEnd', this, e);
+        if (!dragGroupNode) {
+            return;
+        }
+
+        // console.log('groupHandleDragEnd', e);
+        prevOverElement = dragGroupNode = null;
+
         allGroupsNodes.forEach(function(group) {
-            group.classList.remove('over');
+            group.classList.remove('over', 'moving');
+        });
+    }
+
+
+
+
+
+    // TABS
+    // let dragSrcEl = null,
+    //     prevOverElement = null;
+
+    function tabHandleDragStart(e) {
+        console.log('tabHandleDragStart', this, e.target);
+
+        e.stopPropagation();
+
+        this.classList.add('moving');
+
+        dragTabNode = this;
+
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', this.innerHTML);
+    }
+
+    function tabHandleDragEnter(e) {
+        if (!dragTabNode) {
+            return;
+        }
+
+        console.log('dragEnter e.target:', e.target);
+        console.log('dragEnter this:', this);
+        console.log('dragEnter this === e.target:', this === e.target);
+
+        let tabNode = getTabNodeFromChild(this);
+
+        // remove over class from rev over element;
+        if (prevOverElement) {
+            let prevTabNode = getTabNodeFromChild(prevOverElement);
+            console.log('prevTabNode', prevTabNode);
+            if (prevTabNode && prevTabNode !== tabNode) {
+                prevTabNode.classList.remove('over');
+            }
+        }
+
+        if (tabNode) {
+            tabNode.classList.add('over');
+        }
+    }
+
+    function tabHandleDragLeave(e) {
+        if (!dragTabNode) {
+            return;
+        }
+
+        prevOverElement = e.target;
+
+        console.log('tabHandleDragLeave prevOverElement', prevOverElement);
+
+        // if (e.target.matches && e.target.matches('[data-is-tab]')) {
+        //     this.classList.remove('over');
+        // }
+    }
+
+    function tabHandleDragOver(e) {
+        if (!dragTabNode) {
+            return;
+        }
+
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        return false;
+    }
+
+    function tabHandleDrop(e) {
+        if (!dragTabNode) {
+            return;
+        }
+
+        e.stopPropagation(); // stops the browser from redirecting.
+
+        if (dragTabNode != this) {
+            console.log('tabHandleDrop', e);
+            dragTabNode.innerHTML = this.innerHTML;
+            this.innerHTML = e.dataTransfer.getData('text/html');
+
+            // TODO move tab dataTransfer
+        }
+
+        return false;
+    }
+
+    function tabHandleDragEnd(e) {
+        if (!dragTabNode) {
+            return;
+        }
+
+        // console.log('groupHandleDragEnd', e);
+        prevOverElement = dragTabNode = null;
+
+        allTabsNodes.forEach(function(tab) {
+            tab.classList.remove('over', 'moving');
         });
     }
 
@@ -135,6 +283,44 @@
 
 
 
+
+
+
+
+
+
+
+
+
+    function getGroupNodeFromChild(child) {
+        if (child.nodeName !== '#text' && child.matches('[data-is-group]')) {
+            return child;
+        }
+
+        while (child.parentNode) {
+            if (child.parentNode.matches('[data-is-group]')) {
+                return child.parentNode;
+            }
+
+            child = child.parentNode;
+        }
+    }
+
+
+
+    function getTabNodeFromChild(child) {
+        if (child.nodeName !== '#text' && child.matches('[data-is-tab]')) {
+            return child;
+        }
+
+        while (child.parentNode) {
+            if (child.parentNode.matches && child.parentNode.matches('[data-is-tab]')) {
+                return child.parentNode;
+            }
+
+            child = child.parentNode;
+        }
+    }
 
 
 
@@ -185,6 +371,7 @@
     }
 
     function loadData() {
+        console.log('loadData');
         return Promise.all([
                 background.getData(undefined, false),
                 getContainers()
