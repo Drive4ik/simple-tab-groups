@@ -5,7 +5,7 @@
     },
 
     "extensionDescription": {
-        "message": "Create, modify and quick change tab groups. \nInspired by the \"Tab Groups\" app :)",
+        "message": "Create, modify and quickly change tab groups. \nInspired by the old add-on \"Tab Groups\" :)",
         "description": "Description of the extension."
     },
 
@@ -81,48 +81,48 @@
     },
 
     "closePopupAfterChangeGroup": {
-        "message": "Close popup after change group",
-        "description": "Close popup after change group"
+        "message": "Close popup after changing group",
+        "description": "Close popup after changing group"
     },
 
     "showNotificationAfterMoveTab": {
-        "message": "Show notification after move tab to other group",
-        "description": "Show notification after move tab to other group"
+        "message": "Show notification when tab is moved to another group",
+        "description": "Show notification when tab is moved to another group"
     },
 
     "createNewGroupAfterAttachTabToNewWindow": {
-        "message": "Create new group after attach tab to new window",
-        "description": "Create new group after attach tab to new window"
+        "message": "Create new group if tab is moved to new window",
+        "description": "Create new group if tab is moved to new window"
     },
 
     "enableKeyboardShortcutLoadNextPrevGroup": {
-        "message": "Enable keyboard shortcut \"Load next/prev group\" by <code>Ctrl+Shift+<</code> and <code>Ctrl+Shift+></code>",
-        "description": "Enable keyboard shortcut load next prev group"
+        "message": "Enable keyboard shortcuts for next and previous group. i.e. <code>Ctrl+Shift+></code> and <code>Ctrl+Shift+<</code>",
+        "description": "Enable keyboard shortcuts for next and previous group. i.e. Ctrl+Shift+> and Ctrl+Shift+<"
     },
 
     "enableKeyboardShortcutLoadByIndexGroup": {
-        "message": "Enable keyboard shortcut \"Load group by index\" <code>Ctrl+Shift+[1-9]</code>",
-        "description": "Enable keyboard shortcut load group by index"
+        "message": "Enable keyboard shortcuts for switch to tab. i.e. <code>Ctrl+Shift+[1-9]</code>",
+        "description": "Enable keyboard shortcuts for switch to tab. i.e. Ctrl+Shift+[1-9]"
     },
 
     "openGroupAfterChange": {
-        "message": "Open group after change to it (if popup dont't closed)",
-        "description": "Open group after change to it (if popup dont't closed)"
+        "message": "Open group after changing to it (if the popup isn't closed)",
+        "description": "Open group after changing to it (if the popup isn't closed)"
     },
 
     "showGroupCircleInSearchedTab": {
-        "message": "Show group circle in searched tab",
-        "description": "Show group circle in searched tab"
+        "message": "Show colored group circle in search tab",
+        "description": "Show colored group circle in search tab"
     },
 
     "showUrlTooltipOnTabHover": {
-        "message": "Show url tooltip when hover on tab",
-        "description": "Show url tooltip when hover on tab"
+        "message": "Show url tooltip when hovering over tab",
+        "description": "Show url tooltip when hovering over tab"
     },
 
     "newGroupTitle": {
         "message": "Group $id$",
-        "description": "Close popup after change group",
+        "description": "group id",
         "placeholders": {
             "id" : {
                 "content" : "$1",
