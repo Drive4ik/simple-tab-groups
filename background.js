@@ -932,14 +932,15 @@
     // initialization
     Promise.all([
             storage.get(null),
-            getWindow()
+            getWindow(),
+            getTabs(undefined, false)
         ])
-        .then(function([result, win]) { // migration
+        .then(function([result, win, tabs]) { // migration
             let manifestVerion = browser.runtime.getManifest().version,
                 keysToRemoveFromStorage = [];
 
             if (result.version === manifestVerion) {
-                return [result, win];
+                return [result, win, tabs];
             }
 
             let compareVersion = result.version.localeCompare(manifestVerion);
@@ -984,13 +985,20 @@
                     }
                 })
                 .then(() => storage.set(result, false))
-                .then(() => [result, win]);
+                .then(() => [result, win, tabs]);
         })
         .catch(notify)
-        .then(function([result, win]) {
+        .then(function([result, win, tabs]) {
             window.background.inited = true;
 
-            if (!result.groups.some(group => group.windowId === win.id)) {
+            if (!result.groups.some(group => group.windowId === win.id)) { // if not found group for current window
+                let lastActiveGroup = result.groups.find(group => group.windowId !== null);
+
+                if (lastActiveGroup && lastActiveGroup.tabs.length === tabs.length) { // if found last active group and tabs length is equal, maybe need compare urls?
+                    lastActiveGroup.windowId = win.id;
+                    return saveGroup(lastActiveGroup);
+                }
+
                 return addGroup(undefined, win.id)
                     .then(() => saveTabs(win.id));
             }

@@ -9,11 +9,6 @@
         "description": "Description of the extension."
     },
 
-    "authorName": {
-        "message": "Vitaliy Bavykin",
-        "description": "Author name"
-    },
-
     "openSettings": {
         "message": "Settings",
         "description": "Settings context button title"
