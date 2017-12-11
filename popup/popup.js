@@ -267,7 +267,11 @@
                     dispatchEvent('click', element);
                 }
             } else if (state.view === VIEW_GROUPS && KeyEvent.DOM_VK_RIGHT === event.keyCode) { // open group
-                let element = $('.is-hover[data-is-group], .is-active[data-is-group]');
+                let element = $('.is-hover[data-is-group]');
+
+                if (!element) {
+                    element = $('.is-active[data-is-group]');
+                }
 
                 if (element) {
                     renderTabsList(dataFromElement(element).groupId);

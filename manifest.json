@@ -10,11 +10,11 @@
 
     "name": "__MSG_extensionName__",
     "description": "__MSG_extensionDescription__",
-    "version": "1.8.3.2",
-    "author": "__MSG_authorName__",
+    "version": "1.8.4",
+    "author": "Vitaliy Bavykin",
     "homepage_url": "https://github.com/drive4ik/simple-tab-groups",
     "developer": {
-        "name": "__MSG_authorName__",
+        "name": "Vitaliy Bavykin",
         "url": "https://github.com/drive4ik"
     },
 
