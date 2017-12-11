@@ -57,123 +57,145 @@
         // groups
         let groupSelector = '[data-is-group]';
 
-        allGroupsNodes = Array.from(document.querySelectorAll(groupSelector));
-
-        allGroupsNodes.forEach(function(group) {
-            group.addEventListener('dragstart', groupHandleDragStart, false);
-            group.addEventListener('dragenter', groupHandleDragEnter, false);
-            group.addEventListener('dragover', groupHandleDragOver, false);
-            group.addEventListener('dragleave', groupHandleDragLeave, false);
-            group.addEventListener('drop', groupHandleDrop, false);
-            group.addEventListener('dragend', groupHandleDragEnd, false);
+        DragAndDrop.create({
+            selector: '[data-is-group]',
+            group: 'groups',
+            draggableElements: '.body, [data-is-group], .group-circle, .tabs-count',
+            onDrop() {},
         });
+
+        DragAndDrop.create({
+            selector: '[data-is-tab]',
+            group: 'tabs',
+            draggableElements: '[data-is-tab], .icon, .screenshot, .delete-tab-button, .container, .title',
+            onDrop() {},
+        });
+
+        // allGroupsNodes = Array.from(document.querySelectorAll(groupSelector));
+
+        // allGroupsNodes.forEach(function(group) {
+        //     group.addEventListener('dragstart', groupHandleDragStart, false);
+        //     group.addEventListener('dragenter', groupHandleDragEnter, false);
+        //     group.addEventListener('dragover', groupHandleDragOver, false);
+        //     group.addEventListener('dragleave', groupHandleDragLeave, false);
+        //     group.addEventListener('drop', groupHandleDrop, false);
+        //     group.addEventListener('dragend', groupHandleDragEnd, false);
+        // });
 
         // tabs
-        let tabSelector = '[data-is-tab]';
+        // let tabSelector = '[data-is-tab]';
 
-        allTabsNodes = Array.from(document.querySelectorAll(tabSelector));
+        // allTabsNodes = Array.from(document.querySelectorAll(tabSelector));
 
-        allTabsNodes.forEach(function(tab) {
-            tab.addEventListener('dragstart', tabHandleDragStart, false);
-            tab.addEventListener('dragenter', tabHandleDragEnter, false);
-            tab.addEventListener('dragover', tabHandleDragOver, false);
-            tab.addEventListener('dragleave', tabHandleDragLeave, false);
-            tab.addEventListener('drop', tabHandleDrop, false);
-            tab.addEventListener('dragend', tabHandleDragEnd, false);
-        });
+        // allTabsNodes.forEach(function(tab) {
+        //     tab.addEventListener('dragstart', tabHandleDragStart, false);
+        //     tab.addEventListener('dragenter', tabHandleDragEnter, false);
+        //     tab.addEventListener('dragover', tabHandleDragOver, false);
+        //     tab.addEventListener('dragleave', tabHandleDragLeave, false);
+        //     tab.addEventListener('drop', tabHandleDrop, false);
+        //     tab.addEventListener('dragend', tabHandleDragEnd, false);
+        // });
+
+        // $on('mousedown mouseup', groupSelector, function(data, event) {
+        //     this.draggable = event.type === 'mousedown';
+        // });
+
     }
 
 
     // GROUPS
-    let dragGroupNode = null,
-        dragTabNode = null,
-        prevOverElement = null;
+//     let dragGroupNode = null,
+//         dragTabNode = null,
+//         prevOverElement = null;
 
-    function groupHandleDragStart(e) {
-        console.log('groupHandleDragStart', this, e.target);
+//     function groupHandleDragStart(e) {
+//         console.log('groupHandleDragStart', this, e.target);
 
-        this.classList.add('moving');
+//         this.classList.add('moving');
 
-        dragGroupNode = this;
+//         dragGroupNode = this;
 
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/html', this.innerHTML);
-    }
+//         e.dataTransfer.effectAllowed = 'move';
+//         e.dataTransfer.setData('text/html', this.innerHTML);
+//     }
 
-    function groupHandleDragEnter(e) {
-        console.log('groupHandleDragEnter', this, e);
-        if (!dragGroupNode) {
-            return;
-        }
-        let groupNode = getGroupNodeFromChild(this);
+//     function groupHandleDragEnter(e) {
+//         console.log('groupHandleDragEnter', this, e);
+//         if (!dragGroupNode) {
+//             return;
+//         }
+//         let groupNode = getGroupNodeFromChild(this);
 
-        // remove over class from rev over element;
-        if (prevOverElement) {
-            let prevGroupNode = getGroupNodeFromChild(prevOverElement);
-            if (prevGroupNode && prevGroupNode !== groupNode) {
-                prevGroupNode.classList.remove('over');
-            }
-        }
+//         // remove over class from rev over element;
+//         if (prevOverElement) {
+//             let prevGroupNode = getGroupNodeFromChild(prevOverElement);
+//             if (prevGroupNode && prevGroupNode !== groupNode) {
+//                 prevGroupNode.classList.remove('over');
+//             }
+//         }
 
-        if (groupNode) {
-            groupNode.classList.add('over');
-        }
-    }
+//         if (groupNode) {
+//             groupNode.classList.add('over');
+//         }
+//     }
 
-    function groupHandleDragLeave(e) {
-        if (!dragGroupNode) {
-            return;
-        }
-console.log('groupHandleDragLeave', this, e);
-        prevOverElement = e.target;
+//     function groupHandleDragLeave(e) {
+//         if (!dragGroupNode) {
+//             return;
+//         }
+// console.log('groupHandleDragLeave', this, e);
+//         prevOverElement = e.target;
 
-        // if (e.target.matches && e.target.matches('[data-is-group]')) {
-        //     this.classList.remove('over');
-        // }
-    }
+//         let groupNode = getGroupNodeFromChild(e.target);
 
-    function groupHandleDragOver(e) {
-        if (!dragGroupNode) {
-            return;
-        }
-// console.log('groupHandleDragOver', this, e);
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        return false;
-    }
+//         if (groupNode) {
+//             groupNode.classList.remove('over');
+//         }
+//     }
 
-    function groupHandleDrop(e) {
-console.log('groupHandleDrop', this, e);
-        if (!dragGroupNode) {
-            return;
-        }
+//     function groupHandleDragOver(e) {
+//         if (!dragGroupNode) {
+//             return;
+//         }
+// // console.log('groupHandleDragOver', this, e);
+//         e.preventDefault();
+//         e.dataTransfer.dropEffect = 'move';
+//         return false;
+//     }
 
-        e.stopPropagation(); // stops the browser from redirecting.
+//     function groupHandleDrop(e) {
+// console.log('groupHandleDrop', this, e);
+//         if (!dragGroupNode) {
+//             return;
+//         }
 
-        if (dragGroupNode != this) {
-            console.log('groupHandleDrop', e);
-            dragGroupNode.innerHTML = this.innerHTML;
-            this.innerHTML = e.dataTransfer.getData('text/html');
+//         e.stopPropagation(); // stops the browser from redirecting.
 
-            // TODO move group dataTransfer
-        }
+//         if (dragGroupNode != this) {
+//             console.log('groupHandleDrop', e);
+//             dragGroupNode.innerHTML = this.innerHTML;
+//             this.innerHTML = e.dataTransfer.getData('text/html');
 
-        return false;
-    }
+//             // TODO move group dataTransfer
+//         }
 
-    function groupHandleDragEnd(e) {
-console.log('groupHandleDragEnd', this, e);
-        if (!dragGroupNode) {
-            return;
-        }
+//         return false;
+//     }
 
-        // console.log('groupHandleDragEnd', e);
-        prevOverElement = dragGroupNode = null;
+//     function groupHandleDragEnd(e) {
+// console.log('groupHandleDragEnd', this, e);
+//         if (!dragGroupNode) {
+//             return;
+//         }
 
-        allGroupsNodes.forEach(function(group) {
-            group.classList.remove('over', 'moving');
-        });
-    }
+//         // console.log('groupHandleDragEnd', e);
+//         prevOverElement = dragGroupNode = null;
+
+//         allGroupsNodes.forEach(function(group) {
+//             group.draggable = false;
+//             group.classList.remove('over', 'moving');
+//         });
+//     }
 
 
 
@@ -183,100 +205,98 @@ console.log('groupHandleDragEnd', this, e);
     // let dragSrcEl = null,
     //     prevOverElement = null;
 
-    function tabHandleDragStart(e) {
-        console.log('tabHandleDragStart', this, e.target);
+    // function tabHandleDragStart(e) {
+    //     console.log('tabHandleDragStart', this, e.target);
 
-        e.stopPropagation();
+    //     e.stopPropagation();
 
-        this.classList.add('moving');
+    //     this.classList.add('moving');
 
-        dragTabNode = this;
+    //     dragTabNode = this;
 
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/html', this.innerHTML);
-    }
+    //     e.dataTransfer.effectAllowed = 'move';
+    //     e.dataTransfer.setData('text/html', this.innerHTML);
+    // }
 
-    function tabHandleDragEnter(e) {
-        if (!dragTabNode) {
-            return;
-        }
+    // function tabHandleDragEnter(e) {
+    //     if (!dragTabNode) {
+    //         return;
+    //     }
 
-        console.log('dragEnter e.target:', e.target);
-        console.log('dragEnter this:', this);
-        console.log('dragEnter this === e.target:', this === e.target);
+    //     console.log('dragEnter e.target:', e.target);
+    //     console.log('dragEnter this:', this);
+    //     console.log('dragEnter this === e.target:', this === e.target);
 
-        let tabNode = getTabNodeFromChild(this);
+    //     let tabNode = getTabNodeFromChild(this);
 
-        // remove over class from rev over element;
-        if (prevOverElement) {
-            let prevTabNode = getTabNodeFromChild(prevOverElement);
-            console.log('prevTabNode', prevTabNode);
-            if (prevTabNode && prevTabNode !== tabNode) {
-                prevTabNode.classList.remove('over');
-            }
-        }
+    //     // remove over class from rev over element;
+    //     if (prevOverElement) {
+    //         let prevTabNode = getTabNodeFromChild(prevOverElement);
+    //         console.log('prevTabNode', prevTabNode);
+    //         if (prevTabNode && prevTabNode !== tabNode) {
+    //             prevTabNode.classList.remove('over');
+    //         }
+    //     }
 
-        if (tabNode) {
-            tabNode.classList.add('over');
-        }
-    }
+    //     if (tabNode) {
+    //         tabNode.classList.add('over');
+    //     }
+    // }
 
-    function tabHandleDragLeave(e) {
-        if (!dragTabNode) {
-            return;
-        }
+    // function tabHandleDragLeave(e) {
+    //     if (!dragTabNode) {
+    //         return;
+    //     }
 
-        prevOverElement = e.target;
+    //     prevOverElement = e.target;
 
-        console.log('tabHandleDragLeave prevOverElement', prevOverElement);
+    //     console.log('tabHandleDragLeave prevOverElement', prevOverElement);
 
-        // if (e.target.matches && e.target.matches('[data-is-tab]')) {
-        //     this.classList.remove('over');
-        // }
-    }
+    //     // if (e.target.matches && e.target.matches('[data-is-tab]')) {
+    //     //     this.classList.remove('over');
+    //     // }
+    // }
 
-    function tabHandleDragOver(e) {
-        if (!dragTabNode) {
-            return;
-        }
+    // function tabHandleDragOver(e) {
+    //     if (!dragTabNode) {
+    //         return;
+    //     }
 
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        return false;
-    }
+    //     e.preventDefault();
+    //     e.dataTransfer.dropEffect = 'move';
+    //     return false;
+    // }
 
-    function tabHandleDrop(e) {
-        if (!dragTabNode) {
-            return;
-        }
+    // function tabHandleDrop(e) {
+    //     if (!dragTabNode) {
+    //         return;
+    //     }
 
-        e.stopPropagation(); // stops the browser from redirecting.
+    //     e.stopPropagation(); // stops the browser from redirecting.
 
-        if (dragTabNode != this) {
-            console.log('tabHandleDrop', e);
-            dragTabNode.innerHTML = this.innerHTML;
-            this.innerHTML = e.dataTransfer.getData('text/html');
+    //     if (dragTabNode != this) {
+    //         console.log('tabHandleDrop', e);
+    //         dragTabNode.innerHTML = this.innerHTML;
+    //         this.innerHTML = e.dataTransfer.getData('text/html');
 
-            // TODO move tab dataTransfer
-        }
+    //         // TODO move tab dataTransfer
+    //     }
 
-        return false;
-    }
+    //     return false;
+    // }
 
-    function tabHandleDragEnd(e) {
-        if (!dragTabNode) {
-            return;
-        }
+    // function tabHandleDragEnd(e) {
+    //     if (!dragTabNode) {
+    //         return;
+    //     }
 
-        // console.log('groupHandleDragEnd', e);
-        prevOverElement = dragTabNode = null;
+    //     // console.log('groupHandleDragEnd', e);
+    //     prevOverElement = dragTabNode = null;
 
-        allTabsNodes.forEach(function(tab) {
-            tab.classList.remove('over', 'moving');
-        });
-    }
-
-
+    //     allTabsNodes.forEach(function(tab) {
+    //         tab.classList.remove('over', 'moving');
+    //     });
+    // }
 
 
 
@@ -291,6 +311,8 @@ console.log('groupHandleDragEnd', this, e);
 
 
 
+
+/*
 
     function getGroupNodeFromChild(child) {
         if (child.nodeName !== '#text' && child.matches('[data-is-group]')) {
@@ -323,7 +345,7 @@ console.log('groupHandleDragEnd', this, e);
     }
 
 
-
+*/
 
 
 
