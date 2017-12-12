@@ -95,6 +95,11 @@
         "description": "Enable keyboard shortcuts for switch to tab. i.e. Ctrl+Shift+[1-9]"
     },
 
+    "importSettingsOldTabGroupsAddon": {
+        "message": "匯入傳統套件 \"Tab Groups\" 的設定",
+        "description": "Import settings from old \"Tab Groups\" add-on"
+    },
+
     "openGroupAfterChange": {
         "message": "切換分頁群組後開啟該分頁群組（如果沒有關閉彈出框）",
         "description": "Open group after changing to it (if the popup isn't closed)"
