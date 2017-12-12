@@ -59,16 +59,34 @@
 
         DragAndDrop.create({
             selector: '[data-is-group]',
-            group: 'groups',
+            group: {
+                name: 'groups',
+                put: ['groups', 'tabs'],
+            },
             draggableElements: '.body, [data-is-group], .group-circle, .tabs-count',
+            onStart() {
+                $('#result').classList.add('drag-group');
+            },
             onDrop() {},
+            onEnd() {
+                $('#result').classList.remove('drag-group');
+            },
         });
 
         DragAndDrop.create({
             selector: '[data-is-tab]',
-            group: 'tabs',
+            group: {
+                name: 'tabs',
+                put: ['tabs'],
+            },
             draggableElements: '[data-is-tab], .icon, .screenshot, .delete-tab-button, .container, .title',
+            onStart() {
+                $('#result').classList.add('drag-tab');
+            },
             onDrop() {},
+            onEnd() {
+                $('#result').classList.remove('drag-tab');
+            },
         });
 
         // allGroupsNodes = Array.from(document.querySelectorAll(groupSelector));

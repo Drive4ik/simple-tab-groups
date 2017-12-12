@@ -368,3 +368,12 @@ img {
     transform: scale(0.8);
 }
 
+#result.drag-group .group > * {
+    pointer-events: none;
+}
+
+#result.drag-tab .group > .header,
+#result.drag-tab .tab > *, {
+    pointer-events: none;
+}
+
