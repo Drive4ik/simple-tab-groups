@@ -318,7 +318,7 @@ img {
 
 #result.grid > .group .tab > .screenshot {
     height: calc(100% - 1em - var(--tab-inner-padding));
-    flex-grow: 1;
+    /* flex-grow: 1; */
     overflow: hidden;
     border: 1px solid #C6CED4;
 }
@@ -330,11 +330,14 @@ img {
 }
 
 #result.grid > .group .tab.new > .screenshot {
-    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 #result.grid > .group .tab.new > .screenshot > img {
-    width: 50px;
+    width: 4em;
+    height: auto;
     -moz-context-properties: fill;
     fill: var(--fill-color);
 }
@@ -359,15 +362,15 @@ img {
 
 
 /* Drag & Drop Styles */
-#result .over {
-    outline: 2px dashed rgba(0, 0, 0, 0.5);
+#result .drag-over {
+    outline: 2px dashed rgba(0, 0, 0, 0.5) !important;
 }
 
-#result.grid .moving {
+#result .drag-moving {
     opacity: 0.4;
     transform: scale(0.8);
 }
-
+/*
 #result.drag-group .group > * {
     pointer-events: none;
 }
@@ -377,3 +380,4 @@ img {
     pointer-events: none;
 }
 
+ */

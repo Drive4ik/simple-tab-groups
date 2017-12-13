@@ -456,7 +456,7 @@
     }, false);
 
 
-
+/*
     //keydown event to implement items being dropped into targets
     document.addEventListener('keydown', function(e) {
         //if the element is a drop target container
@@ -484,5 +484,5 @@
         }
 
     }, false);
-
+/**/
 })();
