@@ -5,32 +5,27 @@
     },
 
     "extensionDescription": {
-        "message": "Create, modify and quickly change tab groups. \nInspired by the old add-on \"Tab Groups\" :)",
+        "message": "建立、編輯、及快速切換分頁群組。\n靈感來自傳統套件 \"Tab Groups\" :)",
         "description": "Description of the extension."
     },
 
     "openSettings": {
-        "message": "Settings",
+        "message": "設定",
         "description": "Settings context button title"
     },
 
-    "manageGroupsTitle": {
-        "message": "Manage groups",
-        "description": "Manage groups"
-    },
-
     "moveTabToGroupDisabledTitle": {
-        "message": "Move tab to group:",
+        "message": "將分頁移到分頁群組:",
         "description": "Move tab to group title"
     },
 
     "errorAnotherGroupAreLoading": {
-        "message": "Please wait, another group are loading",
+        "message": "正在載入另一個分頁群組，請稍候",
         "description": "Please wait, another group are loading"
     },
 
     "moveTabToGroupMessage": {
-        "message": "Tab \"$tabtitle$\" was moved to group \"$grouptitle$\".\n\nClick here to show this tab.",
+        "message": "已將分頁 \"$tabtitle$\" 移到分頁群組 \"$grouptitle$\"。\n\n點我顯示此分頁。",
         "description": "Tab moved popup title",
         "placeholders": {
             "grouptitle" : {
@@ -45,27 +40,27 @@
     },
 
     "save": {
-        "message": "Save",
+        "message": "儲存",
         "description": "Save"
     },
 
     "delete": {
-        "message": "Delete",
+        "message": "刪除",
         "description": "Delete"
     },
 
     "cancel": {
-        "message": "Cancel",
+        "message": "取消",
         "description": "Cancel"
     },
 
     "searchTabPlaceholder": {
-        "message": "Search a tab...",
+        "message": "搜尋分頁...",
         "description": "Search a tab placeholder"
     },
 
     "invalidRegExpRuleTitle": {
-        "message": "Rule '$regexp$' is not valid and it will be skipped.",
+        "message": "正規表述式 '$regexp$' 語法有誤，將忽略之。",
         "description": "Search a tab placeholder",
         "placeholders": {
             "regexp" : {
@@ -76,52 +71,52 @@
     },
 
     "closePopupAfterChangeGroup": {
-        "message": "Close popup after changing group",
+        "message": "切換分頁群組後關閉彈出框",
         "description": "Close popup after changing group"
     },
 
     "showNotificationAfterMoveTab": {
-        "message": "Show notification when tab is moved to another group",
+        "message": "分頁移到其他分頁群組時顯示通知",
         "description": "Show notification when tab is moved to another group"
     },
 
     "createNewGroupAfterAttachTabToNewWindow": {
-        "message": "Create new group if tab is moved to new window",
+        "message": "分頁移到其他視窗時建立新分頁群組",
         "description": "Create new group if tab is moved to new window"
     },
 
     "enableKeyboardShortcutLoadNextPrevGroup": {
-        "message": "Enable keyboard shortcuts for next and previous group. i.e. <code>Ctrl+Shift+></code> and <code>Ctrl+Shift+<</code>",
+        "message": "啟用切換至下一個及上一個分頁的快捷鍵 <code>Ctrl+Shift+></code> 和 <code>Ctrl+Shift+<</code>",
         "description": "Enable keyboard shortcuts for next and previous group. i.e. Ctrl+Shift+> and Ctrl+Shift+<"
     },
 
     "enableKeyboardShortcutLoadByIndexGroup": {
-        "message": "Enable keyboard shortcuts for switch to tab. i.e. <code>Ctrl+Shift+[1-9]</code>",
+        "message": "啟用切換分頁的快捷鍵 <code>Ctrl+Shift+[1-9]</code>",
         "description": "Enable keyboard shortcuts for switch to tab. i.e. Ctrl+Shift+[1-9]"
     },
 
     "importSettingsOldTabGroupsAddon": {
-        "message": "Import settings from old \"Tab Groups\" add-on",
+        "message": "匯入傳統套件 \"Tab Groups\" 的設定",
         "description": "Import settings from old \"Tab Groups\" add-on"
     },
 
     "openGroupAfterChange": {
-        "message": "Open group after changing to it (if the popup isn't closed)",
+        "message": "切換分頁群組後開啟該分頁群組（如果沒有關閉彈出框）",
         "description": "Open group after changing to it (if the popup isn't closed)"
     },
 
     "showGroupCircleInSearchedTab": {
-        "message": "Show colored group circle in search tab",
+        "message": "在搜尋分頁結果顯示上色圓圈",
         "description": "Show colored group circle in search tab"
     },
 
     "showUrlTooltipOnTabHover": {
-        "message": "Show url tooltip when hovering over tab",
+        "message": "滑鼠移過彈出框中的分頁時懸浮顯示 URL",
         "description": "Show url tooltip when hovering over tab"
     },
 
     "newGroupTitle": {
-        "message": "Group $id$",
+        "message": "群組 $id$",
         "description": "group id",
         "placeholders": {
             "id" : {
@@ -132,7 +127,7 @@
     },
 
     "searchTabNotFoundTitle": {
-        "message": "Search for tabs for \"$search$\" not found",
+        "message": "找不到與 \"$search$\" 相關的分頁",
         "description": "Search for tabs not found",
         "placeholders": {
             "search" : {
@@ -143,42 +138,42 @@
     },
 
     "openGroupInNewWindow": {
-        "message": "Open group in new window",
+        "message": "在新視窗開啟分頁群組",
         "description": "Open group in new window"
     },
 
     "moveGroupUp": {
-        "message": "Move group up",
+        "message": "將分頁群組上移",
         "description": "Move group up"
     },
 
     "moveGroupDown": {
-        "message": "Move group down",
+        "message": "將分頁群組下移",
         "description": "Move group down"
     },
 
     "settingsTitle": {
-        "message": "Settings",
+        "message": "設定",
         "description": "Settings"
     },
 
     "groupSettings": {
-        "message": "Group settings",
+        "message": "分頁群組設定",
         "description": "Group settings"
     },
 
     "deleteGroup": {
-        "message": "Delete group",
+        "message": "刪除分頁群組",
         "description": "Delete group"
     },
 
     "deleteGroupPopupTitle": {
-        "message": "Delete group?",
+        "message": "確認刪除分頁群組？",
         "description": "Delete group?"
     },
 
     "deleteGroupPopupBody": {
-        "message": "Do you want to delete group \"$name$\"?",
+        "message": "是否確定要刪除分頁群組 \"$name$\"？",
         "description": "Delete group?",
         "placeholders": {
             "name": {
@@ -189,7 +184,7 @@
     },
 
     "groupTabsCount": {
-        "message": "$count$ tabs",
+        "message": "$count$ 個分頁",
         "description": "Group tabs count",
         "placeholders": {
             "count": {
@@ -200,57 +195,57 @@
     },
 
     "deleteTab": {
-        "message": "Delete tab",
+        "message": "刪除分頁",
         "description": "Delete tab"
     },
 
     "createNewTab": {
-        "message": "Open new tab",
+        "message": "開啟新分頁",
         "description": "Open new tab"
     },
 
     "createNewGroup": {
-        "message": "Create new group",
+        "message": "建立新分頁群組",
         "description": "Create new group"
     },
 
     "goBackButtonTitle": {
-        "message": "Go back",
+        "message": "回到分頁",
         "description": "Go back"
     },
 
     "goBackToGroupsButtonTitle": {
-        "message": "Go back to groups",
+        "message": "回到分頁群組",
         "description": "Go back to groups"
     },
 
     "title": {
-        "message": "Title",
+        "message": "標題",
         "description": "Title"
     },
 
     "groupColor": {
-        "message": "Icon color",
+        "message": "圖標顏色",
         "description": "Group color"
     },
 
     "setRandomColor": {
-        "message": "Set random color",
+        "message": "設定隨機顏色",
         "description": "Set random color"
     },
 
     "regexpForTabsTitle": {
-        "message": "Regular expressions for catch tabs",
+        "message": "捕捉分頁的正規表述式",
         "description": "Regular expressions for catch tabs"
     },
 
     "regexpForTabsPlaceholder": {
-        "message": "Regular expressions",
+        "message": "一或多條正規表述式",
         "description": "Regular expressions"
     },
 
     "regexpForTabsHelp": {
-        "message": "Insert regular expressions for web addresses here. Matching tabs will be moved automatically to this group.\nUse one line per rule, there can be as many as you want.\nExamples:\ngithub\\.com/drive4ik/simple-tab-groups - catch all pages in the add-on's repository\nbugzilla\\.mozilla\\.org - catch Firefox bug reports\n(facebook|twitter|youtube)\\.com - catch all your social pages",
+        "message": "在這裡輸入正規表述式，網址與之相符的分頁會被自動移到此分頁群組。\n每行一條規則，可設定多條規則。\n例如：\ngithub\\.com/drive4ik/simple-tab-groups - 捕捉此套件版本庫的所有頁面\nbugzilla\\.mozilla\\.org - 捕捉 Firefox 錯誤回報的頁面\n(facebook|twitter|youtube)\\.com - 捕捉社群網站頁面",
         "description": "Regular exceptions helper"
     }
 
