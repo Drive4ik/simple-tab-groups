@@ -32,15 +32,30 @@
         </footer> -->
     </div>
 
+    <div id="deleteGroupPopup" class="modal">
+        <div class="modal-background" data-action="close-delete-group-popup"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title" data-i18n="deleteGroupPopupTitle"></p>
+                <button class="delete" aria-label="close" data-action="close-delete-group-popup"></button>
+            </header>
+            <section class="modal-card-body">
+                <span id="groupDeleteQuestion"></span>
+            </section>
+            <footer class="modal-card-foot">
+                <button data-action="submit-delete-group-popup" class="button is-small is-danger" data-i18n="delete"></button>
+                <button data-action="close-delete-group-popup" class="button is-small" data-i18n="cancel"></button>
+            </footer>
+        </div>
+    </div>
+
     <script id="tab-tmpl" type="text/template">
-        <div class="tab {{classList}}" title="{{urlTitle}}" data-is-tab="true" data-action="load-group" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}" draggable="true" data-draggable-group="tabs">
+        <div class="tab cursor-pointer {{classList}}" title="{{urlTitle}}" data-is-tab="true" data-action="load-group" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}" data-draggable-group="tabs">
             <div class="icon {{favIconClass}}" style="{{containerColorCodeBorderStyle}}">
-                <img src="{{favIconUrl}}" class="size-16" alt="" />
+                <img class="size-16" src="{{favIconUrl}}" alt="" />
             </div>
-            <div class="delete-tab-button {{deleteButtonClass}}" style="{{containerColorCodeBorderStyle}}">
-                <span class="icon cursor-pointer no-text-select" data-action="remove-tab" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}" data-i18n="deleteTab:title">
-                    <img class="size-14" src="chrome://browser/skin/stop.svg" alt="" />
-                </span>
+            <div class="delete-tab-button {{deleteButtonClass}}" data-action="remove-tab" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}" data-i18n="deleteTab:title" style="{{containerColorCodeBorderStyle}}">
+                <img class="size-14" src="chrome://browser/skin/stop.svg" alt="" />
             </div>
             <div class="container {{containerClass}}" style="{{containerColorCodeBorderStyle}}">
                 <img class="size-16" src="{{containerIconUrl}}" style="{{containerColorCodeFillStyle}}" alt="">
@@ -48,12 +63,12 @@
             <div class="screenshot {{thumbnailClass}}" style="{{containerColorCodeBorderStyle}}">
                 <img src="{{thumbnail}}" alt="">
             </div>
-            <div class="title bordered text-center text-ellipsis">{{title}}</div>
+            <div class="title text-center text-ellipsis">{{title}}</div>
         </div>
     </script>
 
     <script id="new-tab-tmpl" type="text/template">
-        <div class="tab new" data-i18n="createNewTab:title" data-action="add-tab" data-group-id="{{groupId}}">
+        <div class="tab new cursor-pointer" data-i18n="createNewTab:title" data-action="add-tab" data-group-id="{{groupId}}" contextmenu="create-tab-with-container-menu">
             <div class="screenshot">
                 <img src="chrome://browser/skin/new-tab.svg" alt="">
             </div>
@@ -62,7 +77,7 @@
     </script>
 
     <script id="group-tmpl" type="text/template">
-        <div class="group {{classList}}" data-is-group="true" data-group-id="{{id}}" draggable="true" data-draggable-group="groups">
+        <div class="group {{classList}}" data-is-group="true" data-group-id="{{id}}" data-draggable-group="groups">
             <div class="header">
                 <div class="title">
                     <input type="text" value="{{title}}" maxlength="120" placeholder="Please enter group name" />
@@ -74,7 +89,7 @@
                 <div class="icon cursor-pointer no-text-select" data-action="open-settings-group-popup" data-group-id="{{id}}" data-i18n="groupSettings:title">
                     <img class="size-16" src="chrome://browser/skin/settings.svg" alt="" />
                 </div>
-                <div class="icon cursor-pointer no-text-select" data-action="remove-group" data-group-id="{{id}}" data-i18n="deleteGroup:title">
+                <div class="icon cursor-pointer no-text-select" data-action="show-delete-group-popup" data-group-id="{{id}}" data-i18n="deleteGroup:title">
                     <img class="size-16" src="/icons/group-delete.svg" alt="" />
                 </div>
             </div>
@@ -95,6 +110,11 @@
 
     <script id="color-circle-tmpl" type="text/template">
         <div class="group-circle" style="background-color: {{iconColor}};"></div>
+    </script>
+
+    <menu id="create-tab-with-container-menu" type="context"></menu>
+    <script id="create-tab-with-container-item-tmpl" type="text/template">
+        <menuitem data-action="context-add-tab" data-cookie-store-id="{{cookieStoreId}}" icon="{{icon}}" label="{{title}}"></menuitem>
     </script>
 
     <script type="text/javascript" src="/utils.js"></script>

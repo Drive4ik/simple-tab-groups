@@ -187,7 +187,7 @@
             }
         }
 
-        $on('click', '[data-action]', (data, event) => doAction(data.action, data, event));
+        $on('click', '[data-action]', (event, data) => doAction(data.action, data, event));
 
         $on('input', '#searchTab', function() {
             renderSearchTabsList();
@@ -201,7 +201,7 @@
         //     browser.runtime.openOptionsPage();
         // });
 
-        $on('mousedown mouseup', '[data-is-tab]', function(data, event) {
+        $on('mousedown mouseup', '[data-is-tab]', function(event, data) {
             if (1 === event.button) {
                 if ('mousedown' === event.type) {
                     event.preventDefault();
@@ -211,27 +211,26 @@
             }
         });
 
-        $on('contextmenu', '[contextmenu="group-menu"]', function({groupId}) {
+        $on('contextmenu', '[contextmenu="group-menu"]', function(event, {groupId}) {
             groupIdInContext = groupId;
         });
 
-        $on('contextmenu', '[contextmenu="move-tab-to-group-menu"]', function({tabIndex}) {
+        $on('contextmenu', '[contextmenu="move-tab-to-group-menu"]', function(event, {tabIndex}) {
             moveTabToGroupTabIndex = tabIndex;
         });
 
         let selectableElementsSelectors = ['[data-is-tab]', '[data-is-group]'];
         $on('mouseover', selectableElementsSelectors.join(', '), function() {
-            document.querySelectorAll(selectableElementsSelectors.join(', '))
-                .forEach(element => element.classList.remove('is-hover'));
+            $$(selectableElementsSelectors.join(', ')).forEach(element => element.classList.remove('is-hover'));
         });
 
-        $on('keydown', 'body', function(data, event) {
+        $on('keydown', 'body', function(event) {
             if (popupIsShow) {
                 return;
             }
 
             if (KeyEvent.DOM_VK_UP === event.keyCode || KeyEvent.DOM_VK_DOWN === event.keyCode) {
-                let elements = Array.from(document.querySelectorAll(selectableElementsSelectors.join(', '))),
+                let elements = $$(selectableElementsSelectors.join(', ')),
                     currentIndex = elements.findIndex(el => el.classList.contains('is-hover')),
                     currentActiveIndex = elements.findIndex(el => el.classList.contains('is-active')),
                     textPosition = KeyEvent.DOM_VK_UP === event.keyCode ? 'prev' : 'next',

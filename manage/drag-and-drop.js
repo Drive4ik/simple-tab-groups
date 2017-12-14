@@ -5,9 +5,7 @@ let DragAndDrop = new function() {
 
     let allOptions = [],
         draggedNode = null,
-        $on = on.bind({}),
-        _addClass = null,
-        _removeClass = null;
+        $on = on.bind({});
 
     const defaultOptions = {
         selector: 'div',
@@ -16,11 +14,7 @@ let DragAndDrop = new function() {
         classNameOverElement: 'drag-over',
     };
 
-    // function getEls(options) {
-    //     return document.querySelectorAll(options.selector);
-    // }
-
-    function _prepareGroup(rawGroup) {
+    function _getPreparedGroup(rawGroup) {
         let group = {
             name: Date.now(),
             put: [],
@@ -35,21 +29,27 @@ let DragAndDrop = new function() {
         return group;
     }
 
-    this.create = function(options) {
-        let preparedOptions = Object.assign({}, defaultOptions, options);
+    this.create = function(rawOptions) {
+        let options = Object.assign({}, defaultOptions, rawOptions),
+            extendNode = {options};
 
-        preparedOptions.group = _prepareGroup(preparedOptions.group);
+        options.group = _getPreparedGroup(options.group);
 
-        // console.log('options', options);
-        // console.log('preparedOptions', preparedOptions);
-        allOptions.push(preparedOptions);
+        allOptions.push(options);
 
-        // $on('mousedown mouseup', options.selector, );
+        $on('dragstart', options.selector, dragStart, extendNode, false);
+        $on('dragenter', options.selector, dragEnter, extendNode, false);
+        $on('dragover', options.selector, dragOver, extendNode, false);
+        $on('dragleave', options.selector, dragLeave, extendNode, false);
+        $on('drop', options.selector, drop, extendNode, false);
+        $on('dragend', options.selector, dragEnd, extendNode, false);
 
-        // let elements = Array.from(document.querySelectorAll(options.selector));
+        $on('mousedown mouseup', options.selector, onMouseDownUp, extendNode, false);
 
-        document.querySelectorAll(preparedOptions.selector).forEach(function(element) {
-            element.options = preparedOptions;
+
+/*
+        $$(options.selector).forEach(function(element) {
+            element.options = options;
             element.addEventListener('dragstart', dragStart, false);
             element.addEventListener('dragenter', dragEnter, false);
             element.addEventListener('dragover', dragOver, false);
@@ -57,40 +57,28 @@ let DragAndDrop = new function() {
             element.addEventListener('drop', drop, false);
             element.addEventListener('dragend', dragEnd, false);
 
-            element.addEventListener('mousedown', onMouseDown, false);
-            // element.addEventListener('mouseup', onMouseDownUp, false);
-        });
+            element.addEventListener('mousedown', onMouseDownUp, false);
+            element.addEventListener('mouseup', onMouseDownUp, false);
+        });*/
     };
 
-    function onMouseDown(event) {
-        // let options = this.dnd;
-        // console.log('onMouseDownUp', options, event);
+    function onMouseDownUp(event) {
         if (1 !== event.which) {
             return;
         }
 
-        if (!event.target.matches || !event.target.matches(this.options.draggableElements)) {
-            console.log('stop mouse down');
-            // event.stopPropagation();
-            return event.preventDefault();
+        if (event.target.matches && event.target.matches(this.options.draggableElements)) {
+            if ('mousedown' === event.type) {
+                this.draggable = true;
+            } else if ('mouseup' === event.type) {
+                this.removeAttribute('draggable');
+            }
         }
-
-        // event.preventDefault();
-        event.stopPropagation();
-
-        // if (event.type === 'mousedown') {
-        //     this.draggable = true;
-        // } else if (event.type === 'mouseup') {
-        //     this.removeAttribute('draggable');
-        // }
     }
 
     let prevOverElement = null;
 
     function dragStart(event) {
-        // let options = this.dnd;
-        // console.log(options.group.name + ' - dragStart', this);
-
         this.classList.add(this.options.classNameDraggedElement);
 
         event.stopPropagation();
@@ -139,20 +127,18 @@ let DragAndDrop = new function() {
     }
 
     function drop(event) {
-        // let options = this.dnd;
-
         if (this.options.group.name !== draggedNode.options.group.name && !this.options.group.put.includes(draggedNode.options.group.name)) {
             return;
         }
 
-        event.stopPropagation(); // stops the browser from redirecting.
+        event.stopPropagation();
 
         if (draggedNode != this) {
-            console.log(this.options.group.name + ' - drop', event);
+            // console.log(this.options.group.name + ' - drop', event);
             // draggedNode.innerHTML = this.innerHTML;
             // this.innerHTML = event.dataTransfer.getData('text/html');
 
-            draggedNode.options.onDrop && draggedNode.options.onDrop(event, draggedNode, this);
+            draggedNode.options.onDrop && draggedNode.options.onDrop(event, draggedNode, this, dataFromElement(draggedNode), dataFromElement(this));
         }
 
         return false;
@@ -169,18 +155,19 @@ let DragAndDrop = new function() {
 
         setPointerEvents(this.options, false);
 
+        this.removeAttribute('draggable');
+
         draggedNode.options.onEnd && draggedNode.options.onEnd(event);
 
         draggedNode = null;
     }
 
     function setPointerEvents(options, setEvents = true) {
-        document.querySelectorAll(options.selector)
-            .forEach(node => Array.from(node.children).forEach(child => child.style.pointerEvents = (setEvents ? 'none' : '')));
+        $$(options.selector).forEach(node => Array.from(node.children).forEach(child => child.style.pointerEvents = (setEvents ? 'none' : '')));
 
         allOptions.forEach(function(opt) {
             if (opt.group.name !== options.group.name && opt.group.put.includes(options.group.name)) {
-                document.querySelectorAll(opt.selector).forEach(function(node) {
+                $$(opt.selector).forEach(function(node) {
                     Array.from(node.children).forEach(child => child.style.pointerEvents = (setEvents ? 'none' : ''));
 
                     node.querySelectorAll(`[data-draggable-group="${options.group.name}"]`).forEach(n => n.style.pointerEvents = (setEvents ? 'all' : ''));
@@ -200,7 +187,7 @@ let DragAndDrop = new function() {
             classList.push(secondOptions.classNameOverElement);
         }
 
-        document.querySelectorAll('.' + classList.join(', .')).forEach(element => element.classList.remove.apply(element.classList, classList));
+        $$('.' + classList.join(', .')).forEach(element => element.classList.remove.apply(element.classList, classList));
     }
 
 

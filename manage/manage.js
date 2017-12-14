@@ -1,12 +1,18 @@
 (function() {
     'use strict';
 
-    let background = browser.extension.getBackgroundPage().background,
-        templates = {},
+    const BG = (function(bgWin) {
+        return bgWin && bgWin.background.inited ? bgWin.background : false;
+    })(browser.extension.getBackgroundPage());
+
+    if (!BG) {
+        return window.close();
+    }
+
+    let templates = {},
         options = null,
         allData = null,
-        allGroupsNodes = null,
-        allTabsNodes = null,
+        createGroupIdContext = 0,
         $on = on.bind({});
 
     storage.get(['closePopupAfterChangeGroup', 'openGroupAfterChange', 'showGroupCircleInSearchedTab', 'showUrlTooltipOnTabHover', 'showNotificationAfterMoveTab'])
@@ -15,15 +21,93 @@
 
     addEvents();
 
+    fetch('/options/options.html')
+        .then(a => a.text())
+        .then(console.log);
+
     function addEvents() {
 
-        $on('click', '[data-action]', (data, event) => doAction(data.action, data, event));
+        $on('click', '[data-action]', (event, data) => doAction(data.action, data, event));
 
         function doAction(action, data, event) {
             if ('load-group' === action) {
-                //
+                BG.loadGroup(allData.currentWindowId, getGroupById(data.groupId), data.tabIndex);
+            } else if ('add-tab' === action) {
+                BG.addTab(getGroupById(data.groupId), data.cookieStoreId);
+            } else if ('context-add-tab' === action) {
+                BG.addTab(getGroupById(createGroupIdContext), data.cookieStoreId);
+            } else if ('remove-tab' === action) {
+                let group = getGroupById(data.groupId);
+
+                BG.removeTab(group.tabs[data.tabIndex], data.tabIndex, group);
+            } else if ('show-delete-group-popup' === action) {
+                let group = getGroupById(data.groupId);
+
+                $('#deleteGroupPopup').dataset.groupId = data.groupId;
+                $('#groupDeleteQuestion').innerText = browser.i18n.getMessage('deleteGroupPopupBody', unSafeHtml(group.title));
+                $('#deleteGroupPopup').classList.add('is-active');
+            } else if ('close-delete-group-popup' === action) {
+                $('#deleteGroupPopup').classList.remove('is-active');
+
+            } else if ('submit-delete-group-popup' === action) {
+                let groupId = Number($('#deleteGroupPopup').dataset.groupId);
+
+                BG.removeGroup(getGroupById(groupId)).then(renderGroupsList);
+
+                $('#deleteGroupPopup').classList.remove('is-active');
+            } else if ('open-settings-group-popup' === action) {
+                let group = getGroupById(data.groupId);
+
+                $('#editGroupPopup').dataset.groupId = data.groupId;
+                $('#groupEditTitle').value = unSafeHtml(group.title);
+                $('#groupEditIconColorCircle').style.backgroundColor = group.iconColor;
+                $('#groupEditIconColor').value = group.iconColor;
+                $('#groupEditCatchTabRules').value = group.catchTabRules;
+
+                // $('html').classList.add('no-scroll');
+                $('#editGroupPopup').classList.add('is-flex');
+            } else if ('submit-edit-group-popup' === action) {
+                let groupId = Number($('#editGroupPopup').dataset.groupId),
+                    group = getGroupById(groupId);
+
+                group.title = safeHtml($('#groupEditTitle').value.trim());
+
+                group.iconColor = $('#groupEditIconColorCircle').style.backgroundColor; // safed color
+
+                group.catchTabRules = $('#groupEditCatchTabRules').value.trim();
+
+                group.catchTabRules
+                    .split(/\s*\n\s*/)
+                    .filter(Boolean)
+                    .forEach(function(regExpStr) {
+                        try {
+                            new RegExp(regExpStr);
+                        } catch (e) {
+                            notify(browser.i18n.getMessage('invalidRegExpRuleTitle', regExpStr));
+                        }
+                    });
+
+                BG.saveGroup(group)
+                    .then(function() {
+                        if (groupId === allData.currentGroup.id) {
+                            BG.updateBrowserActionData();
+                        }
+                    })
+                    .then(BG.removeMoveTabMenus)
+                    .then(BG.createMoveTabMenus);
+
+                // $('html').classList.remove('no-scroll');
+                $('#editGroupPopup').classList.remove('is-flex');
             }
         }
+
+        addDragAndDropEvents();
+
+
+        $on('contextmenu', '[contextmenu="create-tab-with-container-menu"]', function(event, {groupId}) {
+            createGroupIdContext = groupId;
+        });
+
 
         // setTabEventsListener
         let loadDataTimer = null,
@@ -39,6 +123,10 @@
         window.addEventListener('unload', () => browser.runtime.onMessage.removeListener(listener));
     }
 
+    function getGroupById(groupId) {
+        return allData.groups.find(group => group.id === groupId);
+    }
+
     function addDragAndDropEvents() {
         // groups
         let groupSelector = '[data-is-group]';
@@ -49,13 +137,13 @@
                 name: 'groups',
                 put: ['tabs'],
             },
-            draggableElements: '.body, [data-is-group], .group-circle, .tabs-count',
+            draggableElements: '.body, [data-is-group], .icon, .tabs-count',
             onStart() {
                 // $('#result').classList.add('drag-group');
             },
-            onDrop(event, from, to) {
-                console.log('group - from', from);
-                console.log('group - to', to);
+            onDrop(event, from, to, dataFrom, dataTo) {
+                console.log('group - from', dataFrom);
+                console.log('group - to', dataTo);
             },
             onEnd() {
                 // $('#result').classList.remove('drag-group');
@@ -69,9 +157,9 @@
             onStart() {
                 // $('#result').classList.add('drag-tab');
             },
-            onDrop(event, from, to) {
-                console.log('tab - from', from);
-                console.log('tab - to', to);
+            onDrop(event, from, to, dataFrom, dataTo) {
+                console.log('tab - from', dataFrom);
+                console.log('tab - to', dataTo);
             },
             onEnd() {
                 // $('#result').classList.remove('drag-tab');
@@ -118,7 +206,7 @@
     function loadData() {
         console.log('loadData');
         return Promise.all([
-                background.getData(undefined, false),
+                BG.getData(undefined, false),
                 getContainers()
             ])
             .then(function([result, containers]) {
@@ -131,7 +219,7 @@
                 };
             })
             .then(renderGroupsCards)
-            .then(addDragAndDropEvents);
+            // .then(addDragAndDropEvents);
     }
 
     function prepareTabToView(groupId, tab, tabIndex) {
@@ -196,7 +284,21 @@
             .concat([render('new-group-tmpl')])
             .join('');
 
-        showResultHtml(groupsHtml);
+        showResultHtml(groupsHtml, false);
+
+        let containersHtml = allData.containers
+            .map(function(container) {
+                return render('create-tab-with-container-item-tmpl', {
+                    cookieStoreId: container.cookieStoreId,
+                    icon: container.iconUrl,
+                    title: container.name,
+                });
+            })
+            .join('');
+
+        setHtml('create-tab-with-container-menu', containersHtml);
+
+        translatePage();
     }
 
 })();

@@ -20,6 +20,7 @@ const DEFAULT_COOKIE_STORE_ID = 'firefox-default',
     };
 
 let $ = document.querySelector.bind(document),
+    $$ = selector => Array.from(document.querySelectorAll(selector)),
     type = function(obj) {
         return Object.prototype.toString.call(obj).replace(/(^\[.+\ |\]$)/g, '').toLowerCase();
     },
@@ -129,7 +130,7 @@ let $ = document.querySelector.bind(document),
         });
     },
     translatePage = function() {
-        Array.from(document.querySelectorAll('[data-i18n]')).forEach(function(node) {
+        $$('[data-i18n]').forEach(function(node) {
             node.dataset.i18n
                 .trim()
                 .split(/\s*\|\s*/)
@@ -209,7 +210,7 @@ let $ = document.querySelector.bind(document),
 
         return !(rect.bottom < 0 || rect.top - viewHeight >= 0);
     },
-    on = function(eventsStr, query, func) {
+    on = function(eventsStr, query, func, extendNode = null, translatePage = true) {
         let events = this;
 
         eventsStr
@@ -224,8 +225,9 @@ let $ = document.querySelector.bind(document),
 
                         function checkQueryByElement(element, data) {
                             if (element.matches && element.matches(data.query)) {
-                                result = data.func.call(element, dataFromElement(element), event);
-                                translatePage();
+                                Object.assign(element, data.extendNode);
+                                result = data.func.call(element, event, dataFromElement(element));
+                                data.translatePage && translatePage();
                                 return true;
                             }
                         }
@@ -252,6 +254,7 @@ let $ = document.querySelector.bind(document),
                 events[eventStr].push({
                     query,
                     func,
+                    extendNode,
                 });
             });
     },
