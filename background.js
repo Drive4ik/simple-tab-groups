@@ -116,14 +116,14 @@
     }
 
     // groups : Object or array of Object
-    function saveGroup(groups, sendEventUpdateStorage) {
+    function saveGroup(groups) {
         return storage.get('groups')
             .then(function(result) {
                 groups = Array.isArray(groups) ? groups : [groups];
 
                 return storage.set({
                     groups: result.groups.map(group => groups.find(({ id }) => id === group.id) || group),
-                }, sendEventUpdateStorage);
+                });
             });
     }
 
@@ -428,7 +428,7 @@
             });
     }
 
-    function saveTabs(windowId = browser.windows.WINDOW_ID_CURRENT, excludeTabIds = [], sendEventUpdateStorage) {
+    function saveTabs(windowId = browser.windows.WINDOW_ID_CURRENT, excludeTabIds = []) {
         return getData(windowId, false)
             .then(function(result) {
                 if (!result.currentGroup.id) {
@@ -445,7 +445,7 @@
                         return mapTab(tab);
                     });
 
-                return saveGroup(result.currentGroup, sendEventUpdateStorage);
+                return saveGroup(result.currentGroup);
             });
     }
 

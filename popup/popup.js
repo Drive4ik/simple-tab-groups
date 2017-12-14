@@ -21,16 +21,19 @@
         state = {
             view: VIEW_GROUPS,
         },
-        popupIsShow = false,
         $on = on.bind({});
 
-    storage.get(['closePopupAfterChangeGroup', 'openGroupAfterChange', 'showGroupCircleInSearchedTab', 'showUrlTooltipOnTabHover', 'showNotificationAfterMoveTab'])
-        .then(result => options = result)
-        .then(loadData);
+    loadOptions()
+        .then(loadData)
+        .then(addEvents);
 
-    addEvents();
+    function loadOptions() {
+        return storage.get(onlyOptionsKeys).then(result => options = result);
+    }
 
     function addEvents() {
+
+        $on('click', '[data-action]', (event, data) => doAction(data.action, data, event));
 
         function doAction(action, data, event) {
             if ('load-group' === action) {
@@ -59,84 +62,21 @@
             } else if ('add-tab' === action) {
                 BG.addTab(getGroupById(data.groupId), data.cookieStoreId);
             } else if ('open-settings-group-popup' === action) {
-                popupIsShow = true;
-                let group = getGroupById(data.groupId);
-
-                $('#editGroupPopup').dataset.groupId = data.groupId;
-                $('#groupEditTitle').value = unSafeHtml(group.title);
-                $('#groupEditIconColorCircle').style.backgroundColor = group.iconColor;
-                $('#groupEditIconColor').value = group.iconColor;
-                $('#groupEditCatchTabRules').value = group.catchTabRules;
-
-                $('html').classList.add('no-scroll');
-                $('#editGroupPopup').classList.add('is-flex');
+                Popups.showEditGroup(getGroupById(data.groupId), 1);
             } else if ('context-open-settings-group-popup' === action) {
-                doAction('open-settings-group-popup', {
-                    groupId: groupIdInContext,
-                });
-            } else if ('submit-edit-group-popup' === action) {
-                popupIsShow = false;
-
-                let groupId = Number($('#editGroupPopup').dataset.groupId),
-                    group = getGroupById(groupId);
-
-                group.title = safeHtml($('#groupEditTitle').value.trim());
-
-                group.iconColor = $('#groupEditIconColorCircle').style.backgroundColor; // safed color
-
-                group.catchTabRules = $('#groupEditCatchTabRules').value.trim();
-
-                group.catchTabRules
-                    .split(/\s*\n\s*/)
-                    .filter(Boolean)
-                    .forEach(function(regExpStr) {
-                        try {
-                            new RegExp(regExpStr);
-                        } catch (e) {
-                            notify(browser.i18n.getMessage('invalidRegExpRuleTitle', regExpStr));
-                        }
-                    });
-
-                BG.saveGroup(group)
-                    .then(function() {
-                        if (groupId === allData.currentGroup.id) {
-                            BG.updateBrowserActionData();
-                        }
-                    })
-                    .then(BG.removeMoveTabMenus)
-                    .then(BG.createMoveTabMenus);
-
-                $('html').classList.remove('no-scroll');
-                $('#editGroupPopup').classList.remove('is-flex');
-            } else if ('set-random-group-color' === action) {
-                $('#groupEditIconColor').value = randomColor();
-                dispatchEvent('input', $('#groupEditIconColor'));
-            } else if ('close-edit-group-popup' === action) {
-                popupIsShow = false;
-                $('html').classList.remove('no-scroll');
-                $('#editGroupPopup').classList.remove('is-flex');
+                Popups.showEditGroup(getGroupById(groupIdInContext), 1);
             } else if ('show-delete-group-popup' === action) {
-                popupIsShow = true;
                 let group = getGroupById(data.groupId);
 
-                $('#deleteGroupPopup').dataset.groupId = data.groupId;
-                $('#groupDeleteQuestion').innerText = browser.i18n.getMessage('deleteGroupPopupBody', unSafeHtml(group.title));
-                $('#deleteGroupPopup').classList.add('is-active');
+                if (options.showConfirmDialogBeforeGroupDelete) {
+                    Popups.showDeleteGroup(group);
+                } else {
+                    BG.removeGroup(group);
+                }
             } else if ('context-show-delete-group-popup' === action) {
                 doAction('show-delete-group-popup', {
                     groupId: groupIdInContext,
                 });
-            } else if ('close-delete-group-popup' === action) {
-                popupIsShow = false;
-                $('#deleteGroupPopup').classList.remove('is-active');
-
-            } else if ('submit-delete-group-popup' === action) {
-                popupIsShow = false;
-                let groupId = Number($('#deleteGroupPopup').dataset.groupId);
-
-                BG.removeGroup(getGroupById(groupId)).then(renderGroupsList);
-
-                $('#deleteGroupPopup').classList.remove('is-active');
             } else if ('move-tab-to-group' === action) {
                 let tab = getGroupById(state.groupId).tabs[moveTabToGroupTabIndex];
 
@@ -156,15 +96,21 @@
             } else if ('open-options-page' === action) {
                 browser.runtime.openOptionsPage();
             } else if ('open-manage-page' === action) {
-                browser.windows.create({
-                    url: '/manage/manage.html',
-                    titlePreface: browser.i18n.getMessage('extensionName') + ' - ',
-                    type: 'popup',
-                    left: 0,
-                    top: 0,
-                    width: window.screen.availWidth,
-                    height: window.screen.availHeight,
-                });
+                if (options.openManageGroupsInTab) {
+                    window.open(browser.extension.getURL('/manage/manage.html'));
+                } else {
+                    browser.windows.create({
+                        url: '/manage/manage.html',
+                        titlePreface: browser.i18n.getMessage('extensionName') + ' - ',
+                        type: 'popup',
+                        left: 0,
+                        top: 0,
+                        width: window.screen.availWidth,
+                        height: window.screen.availHeight,
+                    });
+                }
+
+                // window.close(); // be or not to be ?? :)
             } else if ('context-move-group-up' === action) {
                 BG.moveGroup(getGroupById(groupIdInContext), 'up');
             } else if ('context-move-group-down' === action) {
@@ -187,22 +133,10 @@
             }
         }
 
-        $on('click', '[data-action]', (event, data) => doAction(data.action, data, event));
-
-        $on('input', '#searchTab', function() {
-            renderSearchTabsList();
-        });
-
-        $on('input', '#groupEditIconColor', function() {
-            $('#groupEditIconColorCircle').style.backgroundColor = this.value.trim();
-        });
-
-        // $on('click', '#settings', function() {
-        //     browser.runtime.openOptionsPage();
-        // });
+        $on('input', '#searchTab', renderSearchTabsList);
 
         $on('mousedown mouseup', '[data-is-tab]', function(event, data) {
-            if (1 === event.button) {
+            if (1 === event.button) { // delete tab by middle mouse click
                 if ('mousedown' === event.type) {
                     event.preventDefault();
                 } else if ('mouseup' === event.type) {
@@ -225,7 +159,7 @@
         });
 
         $on('keydown', 'body', function(event) {
-            if (popupIsShow) {
+            if (Popups.show) {
                 return;
             }
 
@@ -283,10 +217,12 @@
         // setTabEventsListener
         let loadDataTimer = null,
             listener = function(request, sender, sendResponse) {
-                if (request.storageUpdated) {
+                if (request.groupsUpdated) {
                     clearTimeout(loadDataTimer);
                     loadDataTimer = setTimeout(loadData, 100);
-                } else if (undefined !== request.loadingGroupPosition) {
+                }
+
+                if (request.loadingGroupPosition) {
                     if (request.loadingGroupPosition) {
                         $('#loading').firstElementChild.style.width = request.loadingGroupPosition + 'vw';
                         $('#loading').classList.remove('is-hidden');
@@ -295,7 +231,11 @@
                     }
                 }
 
-                sendResponse();
+                if (request.optionsUpdated) {
+                    loadOptions();
+                }
+
+                sendResponse(':)');
             };
 
         browser.runtime.onMessage.addListener(listener);
@@ -338,6 +278,8 @@
     }
 
     function loadData() {
+        // console.log('loadData popup');
+
         return Promise.all([
                 BG.getData(undefined, false),
                 getContainers()

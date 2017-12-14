@@ -81,8 +81,8 @@ th {
     padding: 0;
     text-align: left;
 }
-/*! minireset.css END */
 
+/*! minireset.css END */
 .modal {
     bottom: 0;
     left: 0;
@@ -406,16 +406,16 @@ th {
 }
 
 .button.is-small {
-  border-radius: 2px;
-  font-size: 0.75rem;
+    border-radius: 2px;
+    font-size: 0.75rem;
 }
 
 .button.is-medium {
-  font-size: 1.25rem;
+    font-size: 1.25rem;
 }
 
 .button.is-large {
-  font-size: 1.5rem;
+    font-size: 1.5rem;
 }
 
 .button:hover {
@@ -429,10 +429,34 @@ th {
     color: #fff;
 }
 
-.button.is-success:hover {
+.button.is-success:hover, .button.is-success.is-hovered {
     background-color: #22c65b;
     border-color: transparent;
     color: #fff;
+}
+
+.button.is-success[disabled] {
+    background-color: #23d160;
+    border-color: transparent;
+    box-shadow: none;
+}
+
+.button.is-primary {
+    background-color: #00d1b2;
+    border-color: transparent;
+    color: #fff;
+}
+
+.button.is-primary:hover, .button.is-primary.is-hovered {
+    background-color: #00c4a7;
+    border-color: transparent;
+    color: #fff;
+}
+
+.button.is-primary[disabled] {
+    background-color: #00d1b2;
+    border-color: transparent;
+    box-shadow: none;
 }
 
 .button.is-danger {
@@ -441,8 +465,60 @@ th {
     color: #fff;
 }
 
-.button.is-danger:hover {
+.button.is-danger:hover, .button.is-danger.is-hovered {
     background-color: #ff2b56;
     border-color: transparent;
     color: #fff;
+}
+
+.button.is-danger[disabled] {
+    background-color: #ff3860;
+    border-color: transparent;
+    box-shadow: none;
+}
+
+.button[disabled] {
+    background-color: white;
+    border-color: #dbdbdb;
+    box-shadow: none;
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+
+
+.buttons.has-addons .button:not(:first-child) {
+    border-bottom-left-radius: 0;
+    border-top-left-radius: 0;
+}
+
+.buttons.has-addons .button:not(:last-child) {
+    border-bottom-right-radius: 0;
+    border-top-right-radius: 0;
+    margin-right: -1px;
+}
+
+.buttons.has-addons .button:last-child {
+    margin-right: 0;
+}
+
+.buttons.has-addons .button:hover,
+.buttons.has-addons .button.is-hovered {
+    z-index: 2;
+}
+
+.buttons.has-addons .button:focus,
+.buttons.has-addons .button.is-focused,
+.buttons.has-addons .button:active,
+.buttons.has-addons .button.is-active,
+.buttons.has-addons .button.is-selected {
+    z-index: 3;
+}
+
+.buttons.has-addons .button:focus:hover,
+.buttons.has-addons .button.is-focused:hover,
+.buttons.has-addons .button:active:hover,
+.buttons.has-addons .button.is-active:hover,
+.buttons.has-addons .button.is-selected:hover {
+    z-index: 4;
 }

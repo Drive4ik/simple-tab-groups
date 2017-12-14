@@ -14,22 +14,25 @@ const DEFAULT_COOKIE_STORE_ID = 'firefox-default',
         showUrlTooltipOnTabHover: false,
         showNotificationAfterMoveTab: true,
         createNewGroupAfterAttachTabToNewWindow: true,
+        openManageGroupsInTab: true,
+        showConfirmDialogBeforeGroupDelete: true,
 
         enableKeyboardShortcutLoadNextPrevGroup: true,
         enableKeyboardShortcutLoadByIndexGroup: true,
-    };
+    },
+    onlyOptionsKeys = (function() {
+        return Object.keys(defaultOptions).filter(key => 'boolean' === typeof defaultOptions[key]);
+    })();
 
 let $ = document.querySelector.bind(document),
     $$ = selector => Array.from(document.querySelectorAll(selector)),
     type = function(obj) {
         return Object.prototype.toString.call(obj).replace(/(^\[.+\ |\]$)/g, '').toLowerCase();
     },
-    format = function(str) {
+    format = function(str, ...args) {
         if (!str) {
             return '';
         }
-
-        let args = [].slice.call(arguments, 1);
 
         if (1 === args.length && 'object' === type(args[0])) {
             args = args[0];
@@ -281,16 +284,20 @@ let $ = document.querySelector.bind(document),
         },
         clear: browser.storage.local.clear,
         remove: browser.storage.local.remove,
-        set(keys, sendEventUpdateStorage = true) {
+        set(keys) {
             return browser.storage.local.set(keys)
                 .then(function() {
-                    if (sendEventUpdateStorage) {
-                        if ('groups' in keys) {
-                            browser.runtime.sendMessage({
-                                storageUpdated: true,
-                            });
-                        }
+                    let eventObj = {};
+
+                    if ('groups' in keys) {
+                        eventObj.groupsUpdated = true;
                     }
+
+                    if (onlyOptionsKeys.some(key => key in keys)) {
+                        eventObj.optionsUpdated = true;
+                    }
+
+                    browser.runtime.sendMessage(eventObj);
 
                     return keys;
                 });

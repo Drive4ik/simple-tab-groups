@@ -14,9 +14,25 @@ html {
     /* width: 100vw; */
 }
 
+#manage > header {
+    padding: 10px 10px 0 10px;
+}
+
+#manage > header > :not(:first-child) {
+    margin-left: 20px;
+}
+
+#manage > header .title {
+    font-size: 20px;
+}
+
 /* HEPLERS */
 .is-hidden {
     display: none !important;
+}
+
+.no-scroll {
+    overflow: hidden;
 }
 
 .text-center {
@@ -377,16 +393,18 @@ img {
 
 #result .drag-moving {
     opacity: 0.4;
-    transform: scale(0.8);
-}
-/*
-#result.drag-group .group > * {
-    pointer-events: none;
-}
-
-#result.drag-tab .group > .header,
-#result.drag-tab .tab > *, {
-    pointer-events: none;
+    animation-name: in-out;
+    animation-duration: 0.5s;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
 }
 
- */
+@keyframes in-out {
+    from {
+        transform: scale(0.95);
+    }
+    to {
+        transform: scale(0.8);
+    }
+}
+

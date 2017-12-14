@@ -16,12 +16,11 @@
 <body>
     <div id="manage" class="is-flex is-column">
         <header class="is-flex is-aligin-items-center">
-            <span>Simple Tab Groups</span>
+            <span class="title">Simple Tab Groups</span>
             <span>
-                <label>
-                    <input type="radio" checked />
-                    Mode 1
-                </label>
+                <div class="buttons has-addons">
+                    <span class="button is-primary" data-i18n="manageGroupViewGrid"></span><span class="button" disabled data-i18n="manageGroupViewFreeArrange"></span>
+                </div>
             </span>
         </header>
 
@@ -30,23 +29,6 @@
         <!-- <footer class="is-flex no-text-select">
             footer
         </footer> -->
-    </div>
-
-    <div id="deleteGroupPopup" class="modal">
-        <div class="modal-background" data-action="close-delete-group-popup"></div>
-        <div class="modal-card">
-            <header class="modal-card-head">
-                <p class="modal-card-title" data-i18n="deleteGroupPopupTitle"></p>
-                <button class="delete" aria-label="close" data-action="close-delete-group-popup"></button>
-            </header>
-            <section class="modal-card-body">
-                <span id="groupDeleteQuestion"></span>
-            </section>
-            <footer class="modal-card-foot">
-                <button data-action="submit-delete-group-popup" class="button is-small is-danger" data-i18n="delete"></button>
-                <button data-action="close-delete-group-popup" class="button is-small" data-i18n="cancel"></button>
-            </footer>
-        </div>
     </div>
 
     <script id="tab-tmpl" type="text/template">
@@ -80,7 +62,7 @@
         <div class="group {{classList}}" data-is-group="true" data-group-id="{{id}}" data-draggable-group="groups">
             <div class="header">
                 <div class="title">
-                    <input type="text" value="{{title}}" maxlength="120" placeholder="Please enter group name" />
+                    <input type="text" value="{{title}}" data-group-id="{{id}}" maxlength="120" placeholder="Please enter group name" />
                 </div>
                 <div class="icon">
                     {{colorCircleHtml}}
@@ -118,6 +100,7 @@
     </script>
 
     <script type="text/javascript" src="/utils.js"></script>
+    <script type="text/javascript" src="/popups/popups.js"></script>
     <script type="text/javascript" src="drag-and-drop.js"></script>
     <script type="text/javascript" src="manage.js"></script>
 </body>

@@ -1,0 +1,55 @@
+
+<div id="editGroupPopup" class="is-flex is-column popup">
+    <div class="item" data-action="close-popup">
+        <span class="item-icon">
+            <img class="size-16" src="chrome://browser/skin/arrow-left.svg" alt="" />
+        </span>
+        <span class="item-title" data-i18n="goBackButtonTitle"></span>
+    </div>
+
+    <hr>
+
+    <div class="body is-full-width">
+        <h3 data-i18n="groupSettings"></h3>
+
+        {{mainHtml}}
+    </div>
+
+    <div class="field is-grouped action-buttons">
+        <div class="control">
+            <button data-action="submit-edit-group-popup" class="button is-small is-success" data-i18n="save"></button>
+        </div>
+        <div class="control">
+            <button data-action="close-popup" class="button is-small" data-i18n="cancel"></button>
+        </div>
+    </div>
+</div>
+
+<style type="text/css">
+
+#editGroupPopup {
+    position: fixed;
+    padding: 10px 0;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #ffffff;
+    z-index: 5;
+}
+
+#editGroupPopup h3 {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+#editGroupPopup .body {
+    padding: 0 10px;
+    overflow-y: auto;
+}
+
+#editGroupPopup .action-buttons {
+    margin: 10px 10px 0 10px;
+}
+
+</style>

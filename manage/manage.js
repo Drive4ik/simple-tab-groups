@@ -15,15 +15,13 @@
         createGroupIdContext = 0,
         $on = on.bind({});
 
-    storage.get(['closePopupAfterChangeGroup', 'openGroupAfterChange', 'showGroupCircleInSearchedTab', 'showUrlTooltipOnTabHover', 'showNotificationAfterMoveTab'])
-        .then(result => options = result)
-        .then(loadData);
+    loadOptions()
+        .then(loadData)
+        .then(addEvents);
 
-    addEvents();
-
-    fetch('/options/options.html')
-        .then(a => a.text())
-        .then(console.log);
+    function loadOptions() {
+        return storage.get(onlyOptionsKeys).then(result => options = result);
+    }
 
     function addEvents() {
 
@@ -38,83 +36,54 @@
                 BG.addTab(getGroupById(createGroupIdContext), data.cookieStoreId);
             } else if ('remove-tab' === action) {
                 let group = getGroupById(data.groupId);
-
                 BG.removeTab(group.tabs[data.tabIndex], data.tabIndex, group);
             } else if ('show-delete-group-popup' === action) {
                 let group = getGroupById(data.groupId);
 
-                $('#deleteGroupPopup').dataset.groupId = data.groupId;
-                $('#groupDeleteQuestion').innerText = browser.i18n.getMessage('deleteGroupPopupBody', unSafeHtml(group.title));
-                $('#deleteGroupPopup').classList.add('is-active');
-            } else if ('close-delete-group-popup' === action) {
-                $('#deleteGroupPopup').classList.remove('is-active');
-
-            } else if ('submit-delete-group-popup' === action) {
-                let groupId = Number($('#deleteGroupPopup').dataset.groupId);
-
-                BG.removeGroup(getGroupById(groupId)).then(renderGroupsList);
-
-                $('#deleteGroupPopup').classList.remove('is-active');
+                if (options.showConfirmDialogBeforeGroupDelete) {
+                    Popups.showDeleteGroup(group);
+                } else {
+                    BG.removeGroup(group);
+                }
             } else if ('open-settings-group-popup' === action) {
-                let group = getGroupById(data.groupId);
-
-                $('#editGroupPopup').dataset.groupId = data.groupId;
-                $('#groupEditTitle').value = unSafeHtml(group.title);
-                $('#groupEditIconColorCircle').style.backgroundColor = group.iconColor;
-                $('#groupEditIconColor').value = group.iconColor;
-                $('#groupEditCatchTabRules').value = group.catchTabRules;
-
-                // $('html').classList.add('no-scroll');
-                $('#editGroupPopup').classList.add('is-flex');
-            } else if ('submit-edit-group-popup' === action) {
-                let groupId = Number($('#editGroupPopup').dataset.groupId),
-                    group = getGroupById(groupId);
-
-                group.title = safeHtml($('#groupEditTitle').value.trim());
-
-                group.iconColor = $('#groupEditIconColorCircle').style.backgroundColor; // safed color
-
-                group.catchTabRules = $('#groupEditCatchTabRules').value.trim();
-
-                group.catchTabRules
-                    .split(/\s*\n\s*/)
-                    .filter(Boolean)
-                    .forEach(function(regExpStr) {
-                        try {
-                            new RegExp(regExpStr);
-                        } catch (e) {
-                            notify(browser.i18n.getMessage('invalidRegExpRuleTitle', regExpStr));
-                        }
-                    });
-
-                BG.saveGroup(group)
-                    .then(function() {
-                        if (groupId === allData.currentGroup.id) {
-                            BG.updateBrowserActionData();
-                        }
-                    })
-                    .then(BG.removeMoveTabMenus)
-                    .then(BG.createMoveTabMenus);
-
-                // $('html').classList.remove('no-scroll');
-                $('#editGroupPopup').classList.remove('is-flex');
+                Popups.showEditGroup(getGroupById(data.groupId), 2);
+            } else if ('add-group' === action) {
+                BG.addGroup();
             }
         }
-
-        addDragAndDropEvents();
-
 
         $on('contextmenu', '[contextmenu="create-tab-with-container-menu"]', function(event, {groupId}) {
             createGroupIdContext = groupId;
         });
 
+        $on('change', '.group > .header input', function(event, data) {
+            let group = getGroupById(data.groupId);
+
+            group.title = safeHtml(event.target.value.trim());
+
+            BG.saveGroup(group)
+                .then(() => BG.getData(undefined, false))
+                .then(function(result) {
+                    if (group.id === result.currentGroup.id) {
+                        BG.updateBrowserActionData();
+                    }
+                })
+                .then(BG.removeMoveTabMenus)
+                .then(BG.createMoveTabMenus);
+        });
+
+        addDragAndDropEvents();
 
         // setTabEventsListener
         let loadDataTimer = null,
             listener = function(request, sender, sendResponse) {
-                if (request.storageUpdated) {
+                if (request.groupsUpdated) {
                     clearTimeout(loadDataTimer);
                     loadDataTimer = setTimeout(loadData, 100);
+                }
+
+                if (request.optionsUpdated) {
+                    loadOptions();
                 }
                 sendResponse(':)');
             };
@@ -192,8 +161,8 @@
         }
     }
 
-    function setHtml(id, html) {
-        $('#' + id).innerHTML = html;
+    function setHtml(id, html, attr = 'innerHTML') {
+        $('#' + id)[attr] = html;
     }
 
     function getContainers() {
@@ -204,7 +173,8 @@
     }
 
     function loadData() {
-        console.log('loadData');
+        // console.log('loadData manage');
+
         return Promise.all([
                 BG.getData(undefined, false),
                 getContainers()
@@ -218,8 +188,7 @@
                     containers,
                 };
             })
-            .then(renderGroupsCards)
-            // .then(addDragAndDropEvents);
+            .then(renderGroupsCards);
     }
 
     function prepareTabToView(groupId, tab, tabIndex) {

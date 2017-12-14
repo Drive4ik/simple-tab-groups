@@ -27,76 +27,7 @@
             </div>
         </footer>
 
-        <div id="editGroupPopup" class="is-column">
-            <div class="item" data-action="close-edit-group-popup">
-                <span class="item-icon">
-                    <img class="size-16" src="chrome://browser/skin/arrow-left.svg" alt="" />
-                </span>
-                <span class="item-title" data-i18n="goBackButtonTitle"></span>
-            </div>
-
-            <hr>
-
-            <div class="body is-full-width">
-                <h3 data-i18n="groupSettings"></h3>
-
-                <div class="field">
-                    <label class="label" data-i18n="title"></label>
-                    <div class="control">
-                        <input id="groupEditTitle" type="text" class="input" maxlength="120" data-i18n="title:placeholder" />
-                    </div>
-                </div>
-                <div class="field">
-                    <div class="is-flex">
-                        <label class="label" data-i18n="groupColor"></label>
-                        <div class="is-full-width">
-                            <span class="simple-circle" id="groupEditIconColorCircle"></span>
-                        </div>
-                        <a href="#" data-action="set-random-group-color" data-i18n="setRandomColor"></a>
-                    </div>
-                    <div class="control">
-                        <input id="groupEditIconColor" type="text" class="input" maxlength="40" placeholder="blue, #0f0, rgb(0, 255, 0)..." />
-                    </div>
-                </div>
-                <div class="field">
-                    <label class="label">
-                        <span data-i18n="regexpForTabsTitle"></span>
-                        <img class="size-18 cursor-help" src="chrome://global/skin/icons/help.svg" data-i18n="regexpForTabsHelp:title" alt="">
-                    </label>
-                    <div class="control">
-                        <textarea id="groupEditCatchTabRules" class="textarea" data-i18n="regexpForTabsPlaceholder:placeholder"></textarea>
-                    </div>
-                </div>
-            </div>
-
-            <div class="field is-grouped action-buttons">
-                <div class="control">
-                    <button data-action="submit-edit-group-popup" class="button is-small is-success" data-i18n="save"></button>
-                </div>
-                <div class="control">
-                    <button data-action="close-edit-group-popup" class="button is-small" data-i18n="cancel"></button>
-                </div>
-            </div>
-        </div>
-
-        <div id="deleteGroupPopup" class="modal">
-            <div class="modal-background" data-action="close-delete-group-popup"></div>
-            <div class="modal-card">
-                <header class="modal-card-head">
-                    <p class="modal-card-title" data-i18n="deleteGroupPopupTitle"></p>
-                    <button class="delete" aria-label="close" data-action="close-delete-group-popup"></button>
-                </header>
-                <section class="modal-card-body">
-                    <span id="groupDeleteQuestion"></span>
-                </section>
-                <footer class="modal-card-foot">
-                    <button data-action="submit-delete-group-popup" class="button is-small is-danger" data-i18n="delete"></button>
-                    <button data-action="close-delete-group-popup" class="button is-small" data-i18n="cancel"></button>
-                </footer>
-            </div>
-        </div>
-
-        <div id="loading" class="is-hidden is-flex">
+        <div id="loading" class="is-hidden">
             <div></div>
         </div>
     </div>
@@ -230,6 +161,7 @@
     </script>
 
     <script type="text/javascript" src="/utils.js"></script>
+    <script type="text/javascript" src="/popups/popups.js"></script>
     <script type="text/javascript" src="popup.js"></script>
 </body>
 

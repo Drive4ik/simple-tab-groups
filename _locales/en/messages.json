@@ -75,6 +75,16 @@
         }
     },
 
+    "manageGroupViewGrid": {
+        "message": "Grid display",
+        "description": "Grid display"
+    },
+
+    "manageGroupViewFreeArrange": {
+        "message": "Free arrange (in future versions)",
+        "description": "Free arrange"
+    },
+
     "closePopupAfterChangeGroup": {
         "message": "Close popup after changing group",
         "description": "Close popup after changing group"
@@ -88,6 +98,16 @@
     "createNewGroupAfterAttachTabToNewWindow": {
         "message": "Create new group if tab is moved to new window",
         "description": "Create new group if tab is moved to new window"
+    },
+
+    "openManageGroupsInTab": {
+        "message": "Open manage groups in new tab",
+        "description": "Open manage groups in new tab"
+    },
+
+    "showConfirmDialogBeforeGroupDelete": {
+        "message": "Show confirm dialog before group delete",
+        "description": "Show confirm dialog before group delete"
     },
 
     "enableKeyboardShortcutLoadNextPrevGroup": {
@@ -178,7 +198,7 @@
     },
 
     "deleteGroupPopupBody": {
-        "message": "Do you want to delete group \"$name$\"?",
+        "message": "Do you want to delete group \"$name$\" ?<br>Be careful! This action can not be undone!",
         "description": "Delete group?",
         "placeholders": {
             "name": {

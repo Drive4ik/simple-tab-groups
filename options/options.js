@@ -9,20 +9,19 @@
         return $('#simple-tab-groups-options').classList.add('is-hidden');
     }
 
-    let $on = on.bind({}),
-        allCheckBoxes = Object.keys(defaultOptions).filter(key => 'boolean' === type(defaultOptions[key]));
+    let $on = on.bind({});
 
     function saveOptions() {
         let options = {};
 
-        allCheckBoxes.forEach(function(key) {
+        onlyOptionsKeys.forEach(function(key) {
             options[key] = $('#' + key).checked;
         });
 
         return storage.set(options).then(BG.initBrowserCommands);
     }
 
-    $on('change', '#' + allCheckBoxes.join(', #'), saveOptions);
+    $on('change', '#' + onlyOptionsKeys.join(', #'), saveOptions);
 
     $on('click', '#importSettingsOldTabGroupsAddon', function() {
         Promise.all([
@@ -107,7 +106,7 @@
 
     storage.get(defaultOptions)
         .then(function(options) {
-            allCheckBoxes.forEach(function(key) {
+            onlyOptionsKeys.forEach(function(key) {
                 $('#' + key).checked = options[key];
             });
         })
