@@ -59,7 +59,7 @@
     </script>
 
     <script id="group-tmpl" type="text/template">
-        <div class="group {{classList}}" data-is-group="true" data-group-id="{{id}}" data-draggable-group="groups">
+        <div class="group {{classList}}" contextmenu="group-menu" data-is-group="true" data-group-id="{{id}}" data-draggable-group="groups">
             <div class="header">
                 <div class="title">
                     <input type="text" value="{{title}}" data-group-id="{{id}}" maxlength="120" placeholder="Please enter group name" />
@@ -98,6 +98,16 @@
     <script id="create-tab-with-container-item-tmpl" type="text/template">
         <menuitem data-action="context-add-tab" data-cookie-store-id="{{cookieStoreId}}" icon="{{icon}}" label="{{title}}"></menuitem>
     </script>
+
+    <menu id="group-menu" type="context">
+        <menuitem data-action="context-open-group-in-new-window" icon="chrome://browser/skin/new-window.svg" data-i18n="openGroupInNewWindow:label"></menuitem>
+    </menu>
+
+<!--
+    <menu id="create-tab-with-container-menu" type="context"></menu>
+    <script id="create-tab-with-container-item-tmpl" type="text/template">
+        <menuitem data-action="context-add-tab" data-cookie-store-id="{{cookieStoreId}}" icon="{{icon}}" label="{{title}}"></menuitem>
+    </script> -->
 
     <script type="text/javascript" src="/utils.js"></script>
     <script type="text/javascript" src="/popups/popups.js"></script>

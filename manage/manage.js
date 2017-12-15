@@ -12,7 +12,7 @@
     let templates = {},
         options = null,
         allData = null,
-        createGroupIdContext = 0,
+        groupIdContext = 0,
         $on = on.bind({});
 
     loadOptions()
@@ -29,11 +29,38 @@
 
         function doAction(action, data, event) {
             if ('load-group' === action) {
-                BG.loadGroup(allData.currentWindowId, getGroupById(data.groupId), data.tabIndex);
+                Promise.all([
+                        // browser.windows.getLastFocused({ // not working :(
+                        //     windowTypes: ['normal']
+                        // }),
+                        BG.getLastFocusedNormalWindow(), // fix bug with browser.windows.getLastFocused({windowTypes: ['normal']}), maybe find exists bug??
+                        browser.windows.getCurrent()
+                    ])
+                    .then(function([lastFocusedNormalWindow, currentWindow]) {
+                        BG.loadGroup(lastFocusedNormalWindow.id, getGroupById(data.groupId), data.tabIndex);
+
+                        if ('popup' === currentWindow.type) {
+                            browser.windows.remove(currentWindow.id);
+                        }
+                    });
             } else if ('add-tab' === action) {
                 BG.addTab(getGroupById(data.groupId), data.cookieStoreId);
             } else if ('context-add-tab' === action) {
-                BG.addTab(getGroupById(createGroupIdContext), data.cookieStoreId);
+                BG.addTab(getGroupById(groupIdContext), data.cookieStoreId);
+            } else if ('context-open-group-in-new-window' === action) {
+                let group = getGroupById(groupIdContext);
+
+                BG.getWindowByGroup(group)
+                    .then(function(win) {
+                        if (win) {
+                            BG.setFocusOnWindow(group.windowId);
+                        } else {
+                            browser.windows.create({
+                                    state: 'maximized',
+                                })
+                                .then(win => BG.loadGroup(win.id, group));
+                        }
+                    });
             } else if ('remove-tab' === action) {
                 let group = getGroupById(data.groupId);
                 BG.removeTab(group.tabs[data.tabIndex], data.tabIndex, group);
@@ -52,8 +79,8 @@
             }
         }
 
-        $on('contextmenu', '[contextmenu="create-tab-with-container-menu"]', function(event, {groupId}) {
-            createGroupIdContext = groupId;
+        $on('contextmenu', '[contextmenu="create-tab-with-container-menu"], [contextmenu="group-menu"]', function(event, {groupId}) {
+            groupIdContext = groupId;
         });
 
         $on('change', '.group > .header input', function(event, data) {
@@ -173,7 +200,6 @@
                     groups: result.groups,
                     currentGroup: result.currentGroup,
                     currentWindowId: result.windowId,
-                    activeTabIndex: result.tabs.findIndex(tab => tab.active),
                     containers,
                 };
             })
@@ -199,7 +225,7 @@
 
         return {
             urlTitle: urlTitle,
-            classList: (groupId === allData.currentGroup.id && tabIndex === allData.activeTabIndex) ? 'is-active' : '',
+            classList: tab.active ? 'is-active' : '',
             tabIndex: tabIndex,
             groupId: groupId,
             title: safeHtml(unSafeHtml(tab.title || tab.url)),

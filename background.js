@@ -283,25 +283,24 @@
             return Promise.resolve();
         }
 
-        return getWindowByGroup(group, true) // return window with tabs
-            .then(function(win) {
+        return Promise.all([
+                getWindowByGroup(group, true), // return window with tabs
+                browser.windows.get(windowId) // if window not exists - notify me
+            ])
+            .then(function([win]) {
                 if (win) {
-                    if (group.windowId === windowId) {
-                        if (win.tabs[activeTabIndex]) {
-                            return browser.tabs.update(win.tabs[activeTabIndex].id, {
-                                active: true,
-                            });
-                        }
-                    } else {
-                        return setFocusOnWindow(group.windowId)
-                            .then(function() {
-                                if (-1 !== activeTabIndex) {
-                                    return browser.tabs.update(group.tabs[activeTabIndex].id, {
-                                        active: true,
-                                    });
-                                }
+                    let promise = Promise.resolve();
+
+                    if (-1 !== activeTabIndex) {
+                        promise = getTabs(group.windowId, false)
+                            .then(function(tabs) {
+                                return browser.tabs.update(tabs[activeTabIndex].id, {
+                                    active: true,
+                                });
                             });
                     }
+
+                    return promise.then(() => setFocusOnWindow(group.windowId));
                 } else {
                     // magic
 
@@ -416,6 +415,7 @@
             })
             .catch(function(e) {
                 delete currentlyLoadingGroups[windowId];
+                notify(e);
                 throw e;
             });
 
@@ -584,7 +584,9 @@
             });
     }
 
-    let lastFocusedWinId = null;
+    let lastFocusedWinId = null,
+        lastFocusedNormalWindow = null; // fix bug with browser.windows.getLastFocused({windowTypes: ['normal']}), maybe find exists bug??
+
     function onFocusChangedWindow(windowId) {
         if (browser.windows.WINDOW_ID_NONE === windowId) {
             return;
@@ -602,6 +604,10 @@
                     browser.browserAction.enable();
                     updateBrowserActionData();
                     removeMoveTabMenus().then(createMoveTabMenus);
+                }
+
+                if ('normal' === win.type && !win.incognito) {
+                    lastFocusedNormalWindow = win;
                 }
 
                 lastFocusedWinId = win.id;
@@ -685,7 +691,7 @@
                                     });
                             } else {
                                 if (-1 === newTabIndex) {
-                                    createdTabIndex = newGroup.tabs.push(mappedTab) - 1;
+                                    createdTabIndex = newGroup.tabs.push(tab) - 1;
                                 } else {
                                     newGroup.tabs.splice(newTabIndex, 0, tab);
                                     createdTabIndex = newTabIndex;
@@ -709,7 +715,7 @@
                             return;
                         }
 
-                        let title = mappedTab.title.length > 50 ? (mappedTab.title.slice(0, 50) + '...') : mappedTab.title,
+                        let title = tab.title.length > 50 ? (tab.title.slice(0, 50) + '...') : tab.title,
                             message = browser.i18n.getMessage('moveTabToGroupMessage', [newGroup.title, title]);
 
                         notify(message).then(function(createdTabId, createdTabIndex, newGroup) {
@@ -959,6 +965,8 @@
         createMoveTabMenus,
         updateBrowserActionData,
         getWindowByGroup,
+        setFocusOnWindow,
+        getLastFocusedNormalWindow: () => lastFocusedNormalWindow,
 
         loadGroup,
 

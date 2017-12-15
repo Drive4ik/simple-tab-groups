@@ -88,13 +88,31 @@
             } else if ('open-options-page' === action) {
                 browser.runtime.openOptionsPage();
             } else if ('open-manage-page' === action) {
+                let newWinUrl = browser.extension.getURL('/manage/manage.html');
+
                 if (options.openManageGroupsInTab) {
-                    window.open(browser.extension.getURL('/manage/manage.html'));
+                    browser.tabs.query({
+                            windowId: allData.currentWindowId,
+                            url: newWinUrl,
+                        })
+                        .then(function(tabs) {
+                            if (tabs.length) {
+                                browser.tabs.update(tabs[0].id, {
+                                    active: true,
+                                });
+                            } else {
+                                browser.tabs.create({
+                                    active: true,
+                                    url: newWinUrl,
+                                });
+                            }
+                        });
                 } else {
                     browser.windows.create({
-                        url: '/manage/manage.html',
+                        url: newWinUrl,
                         titlePreface: browser.i18n.getMessage('extensionName') + ' - ',
                         type: 'popup',
+                        allowScriptsToClose: true,
                         left: 0,
                         top: 0,
                         width: window.screen.availWidth,
@@ -113,9 +131,7 @@
                 BG.getWindowByGroup(group)
                     .then(function(win) {
                         if (win) {
-                            browser.windows.update(group.windowId, {
-                                focused: true,
-                            });
+                            BG.setFocusOnWindow(group.windowId);
                         } else {
                             browser.windows.create({
                                     state: 'maximized',
@@ -215,7 +231,7 @@
                     loadDataTimer = setTimeout(loadData, 100);
                 }
 
-                if (request.loadingGroupPosition) {
+                if (undefined !== request.loadingGroupPosition) {
                     if (request.loadingGroupPosition) {
                         $('#loading').firstElementChild.style.width = request.loadingGroupPosition + 'vw';
                         $('#loading').classList.remove('is-hidden');

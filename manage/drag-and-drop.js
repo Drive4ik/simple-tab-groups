@@ -45,21 +45,6 @@ let DragAndDrop = new function() {
         $on('dragend', options.selector, dragEnd, extendNode, false);
 
         $on('mousedown mouseup', options.selector, onMouseDownUp, extendNode, false);
-
-
-/*
-        $$(options.selector).forEach(function(element) {
-            element.options = options;
-            element.addEventListener('dragstart', dragStart, false);
-            element.addEventListener('dragenter', dragEnter, false);
-            element.addEventListener('dragover', dragOver, false);
-            element.addEventListener('dragleave', dragLeave, false);
-            element.addEventListener('drop', drop, false);
-            element.addEventListener('dragend', dragEnd, false);
-
-            element.addEventListener('mousedown', onMouseDownUp, false);
-            element.addEventListener('mouseup', onMouseDownUp, false);
-        });*/
     };
 
     function onMouseDownUp(event) {
@@ -90,7 +75,6 @@ let DragAndDrop = new function() {
 
         event.dataTransfer.effectAllowed = 'move';
         event.dataTransfer.setData('text/html', this.innerHTML);
-        // event.dataTransfer.setData('text', '');
 
         draggedNode.options.onStart && draggedNode.options.onStart(event);
     }
@@ -189,9 +173,5 @@ let DragAndDrop = new function() {
 
         $$('.' + classList.join(', .')).forEach(element => element.classList.remove.apply(element.classList, classList));
     }
-
-
-
-
 
 };
