@@ -227,9 +227,17 @@ th {
     background-color: whitesmoke;
     display: flex;
     flex-shrink: 0;
-    justify-content: flex-start;
+    /* justify-content: flex-start; */
     padding: 10px;
     position: relative;
+}
+
+.modal-card-head {
+    justify-content: flex-start;
+}
+
+.modal-card-foot {
+    justify-content: flex-end;
 }
 
 .modal-card-head {

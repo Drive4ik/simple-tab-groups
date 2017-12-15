@@ -107,15 +107,11 @@
                 put: ['tabs'],
             },
             draggableElements: '.body, [data-is-group], .icon, .tabs-count',
-            onStart() {
-                // $('#result').classList.add('drag-group');
-            },
             onDrop(event, from, to, dataFrom, dataTo) {
-                console.log('group - from', dataFrom);
-                console.log('group - to', dataTo);
-            },
-            onEnd() {
-                // $('#result').classList.remove('drag-group');
+                let group = getGroupById(dataFrom.groupId),
+                    newPosition = Array.from(to.parentNode.children).findIndex(node => node === to);
+
+                BG.moveGroup(group, newPosition);
             },
         });
 
@@ -123,18 +119,11 @@
             selector: '[data-is-tab]',
             group: 'tabs',
             draggableElements: '[data-is-tab], .icon, .screenshot, .delete-tab-button, .container, .title',
-            onStart() {
-                // $('#result').classList.add('drag-tab');
-            },
             onDrop(event, from, to, dataFrom, dataTo) {
-                console.log('tab - from', dataFrom);
-                console.log('tab - to', dataTo);
-            },
-            onEnd() {
-                // $('#result').classList.remove('drag-tab');
+                let newTabIndex = dataTo.isGroup ? -1 : dataTo.tabIndex;
+                BG.moveTabToGroup(dataFrom.tabIndex, newTabIndex, dataFrom.groupId, dataTo.groupId, false);
             },
         });
-
     }
 
     function getGroupById(groupId) {
