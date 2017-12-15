@@ -120,7 +120,7 @@
             group: 'tabs',
             draggableElements: '[data-is-tab], .icon, .screenshot, .delete-tab-button, .container, .title',
             onDrop(event, from, to, dataFrom, dataTo) {
-                let newTabIndex = dataTo.isGroup ? -1 : dataTo.tabIndex;
+                let newTabIndex = dataTo.isGroup ? undefined : dataTo.tabIndex;
                 BG.moveTabToGroup(dataFrom.tabIndex, newTabIndex, dataFrom.groupId, dataTo.groupId, false);
             },
         });

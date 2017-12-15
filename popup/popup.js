@@ -78,17 +78,9 @@
                     groupId: groupIdInContext,
                 });
             } else if ('move-tab-to-group' === action) {
-                let tab = getGroupById(state.groupId).tabs[moveTabToGroupTabIndex];
-
-                BG.moveTabToGroup(tab, moveTabToGroupTabIndex, state.groupId, data.groupId);
+                BG.moveTabToGroup(moveTabToGroupTabIndex, undefined, state.groupId, data.groupId);
             } else if ('move-tab-to-new-group' === action) {
-                let expandedGroup = getGroupById(state.groupId),
-                    tab = expandedGroup.tabs[moveTabToGroupTabIndex];
-
-                BG.addGroup()
-                    .then(function(newGroup) {
-                        BG.moveTabToGroup(tab, moveTabToGroupTabIndex, state.groupId, newGroup.id);
-                    });
+                BG.addGroup().then(newGroup => BG.moveTabToGroup(moveTabToGroupTabIndex, undefined, state.groupId, newGroup.id));
             } else if ('add-group' === action) {
                 BG.addGroup();
             } else if ('show-groups-list' === action) {
@@ -118,17 +110,18 @@
             } else if ('context-open-group-in-new-window' === action) {
                 let group = getGroupById(groupIdInContext);
 
-                BG.isGroupLoadInWindow(group)
-                    .then(function() {
-                        browser.windows.update(group.windowId, {
-                            focused: true,
-                        });
-                    })
-                    .catch(function() {
-                        browser.windows.create({
-                                state: 'maximized',
-                            })
-                            .then(win => BG.loadGroup(win.id, group));
+                BG.getWindowByGroup(group)
+                    .then(function(win) {
+                        if (win) {
+                            browser.windows.update(group.windowId, {
+                                focused: true,
+                            });
+                        } else {
+                            browser.windows.create({
+                                    state: 'maximized',
+                                })
+                                .then(win => BG.loadGroup(win.id, group));
+                        }
                     });
             }
         }

@@ -46,6 +46,8 @@ let Popups = {
 
         $('html').classList.add('no-scroll');
 
+        translatePage();
+
         return div;
     }
 
@@ -123,8 +125,7 @@ let Popups = {
                     mainHtml: parsedMainHtml,
                 });
             })
-            .then(showPopup)
-            .then(translatePage);
+            .then(showPopup);
     };
 
     Popups.showDeleteGroup = function(group) {
@@ -137,8 +138,7 @@ let Popups = {
                     questionText: browser.i18n.getMessage('deleteGroupPopupBody', unSafeHtml(group.title)),
                 });
             })
-            .then(showPopup)
-            .then(translatePage);
+            .then(showPopup);
     };
 
 })();
