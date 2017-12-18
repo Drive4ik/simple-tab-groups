@@ -2,7 +2,7 @@
     'use strict';
 
     const BG = (function(bgWin) {
-        return bgWin && bgWin.background.inited ? bgWin.background : false;
+        return bgWin && bgWin.background && bgWin.background.inited ? bgWin.background : false;
     })(browser.extension.getBackgroundPage());
 
     if (!BG) {
@@ -104,7 +104,7 @@
             });
     });
 
-    storage.get(defaultOptions)
+    storage.get(DEFAULT_OPTIONS)
         .then(function(options) {
             onlyOptionsKeys.forEach(function(key) {
                 $('#' + key).checked = options[key];

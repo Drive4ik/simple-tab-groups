@@ -2,7 +2,7 @@
     'use strict';
 
     const BG = (function(bgWin) {
-        return bgWin && bgWin.background.inited ? bgWin.background : false;
+        return bgWin && bgWin.background && bgWin.background.inited ? bgWin.background : false;
     })(browser.extension.getBackgroundPage());
 
     if (!BG) {
@@ -112,6 +112,7 @@
                 if (request.optionsUpdated) {
                     loadOptions();
                 }
+
                 sendResponse(':)');
             };
 
@@ -169,23 +170,12 @@
         return format(tmplHtml, data);
     }
 
-    function showResultHtml(html, doTranslatePage = true) {
-        setHtml('result', html);
+    function setHtml(id, html, doTranslatePage = true, attr = 'innerHTML') {
+        $('#' + id)[attr] = html;
 
         if (doTranslatePage) {
             translatePage();
         }
-    }
-
-    function setHtml(id, html, attr = 'innerHTML') {
-        $('#' + id)[attr] = html;
-    }
-
-    function getContainers() {
-        return new Promise(function(resolve) {
-            browser.contextualIdentities.query({})
-                .then(resolve, () => resolve([]));
-        });
     }
 
     function loadData() {
@@ -193,7 +183,7 @@
 
         return Promise.all([
                 BG.getData(undefined, false),
-                getContainers()
+                loadContainers()
             ])
             .then(function([result, containers]) {
                 allData = {
@@ -217,7 +207,7 @@
         if (options.showUrlTooltipOnTabHover) {
             if (tab.title) {
                 urlTitle = '';
-                // urlTitle = safeHtml(unSafeHtml(tab.title)) + '\n' + tab.url; // TMP
+                // urlTitle = safeHtml(unSafeHtml(tab.title)) + '\n' + tab.url; // TMP TODO uncomment
             } else {
                 urlTitle = tab.url;
             }
@@ -235,7 +225,7 @@
             favIconUrl: tab.favIconUrl,
 
             containerClass: container.cookieStoreId ? '' : 'is-hidden',
-            containerIconUrl: container.iconUrl,
+            containerIconUrl: container.cookieStoreId ? container.iconUrl : '',
             containerColorCodeFillStyle: container.cookieStoreId ? `fill: ${container.colorCode};` : '',
             containerColorCodeBorderStyle: container.cookieStoreId ? `border-color: ${container.colorCode};` : '',
 
@@ -251,6 +241,7 @@
             })
             .concat([render('new-tab-tmpl', {
                 groupId: group.id,
+                newTabContextMenu: allData.containers.length ? 'contextmenu="create-tab-with-container-menu"' : '',
             })])
             .join('');
     }
@@ -268,7 +259,7 @@
             .concat([render('new-group-tmpl')])
             .join('');
 
-        showResultHtml(groupsHtml, false);
+        setHtml('result', groupsHtml, false);
 
         let containersHtml = allData.containers
             .map(function(container) {
@@ -281,8 +272,6 @@
             .join('');
 
         setHtml('create-tab-with-container-menu', containersHtml);
-
-        translatePage();
     }
 
 })();

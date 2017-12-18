@@ -6,7 +6,7 @@ let Popups = {
     'use strict';
 
     const BG = (function(bgWin) {
-        return bgWin && bgWin.background.inited ? bgWin.background : false;
+        return bgWin && bgWin.background && bgWin.background.inited ? bgWin.background : false;
     })(browser.extension.getBackgroundPage());
 
     if (!BG) {

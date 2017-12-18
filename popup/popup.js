@@ -2,7 +2,7 @@
     'use strict';
 
     const BG = (function(bgWin) {
-        return bgWin && bgWin.background.inited ? bgWin.background : false;
+        return bgWin && bgWin.background && bgWin.background.inited ? bgWin.background : false;
     })(browser.extension.getBackgroundPage());
 
     if (!BG) {
@@ -88,36 +88,51 @@
             } else if ('open-options-page' === action) {
                 browser.runtime.openOptionsPage();
             } else if ('open-manage-page' === action) {
-                let newWinUrl = browser.extension.getURL('/manage/manage.html');
+                let manageUrl = browser.extension.getURL('/manage/manage.html');
 
                 if (options.openManageGroupsInTab) {
                     browser.tabs.query({
                             windowId: allData.currentWindowId,
-                            url: newWinUrl,
+                            url: manageUrl,
                         })
                         .then(function(tabs) {
-                            if (tabs.length) {
+                            if (tabs.length) { // if manage tab is found
                                 browser.tabs.update(tabs[0].id, {
                                     active: true,
                                 });
                             } else {
                                 browser.tabs.create({
                                     active: true,
-                                    url: newWinUrl,
+                                    url: manageUrl,
                                 });
                             }
                         });
                 } else {
-                    browser.windows.create({
-                        url: newWinUrl,
-                        titlePreface: browser.i18n.getMessage('extensionName') + ' - ',
-                        type: 'popup',
-                        allowScriptsToClose: true,
-                        left: 0,
-                        top: 0,
-                        width: window.screen.availWidth,
-                        height: window.screen.availHeight,
-                    });
+                    browser.windows.getAll({
+                            populate: true,
+                            windowTypes: ['popup'],
+                        })
+                        .then(function(allWindows) {
+                            return allWindows.some(function(win) {
+                                if ('popup' === win.type && 1 === win.tabs.length && manageUrl === win.tabs[0].url) { // if manage popup is now open
+                                    return BG.setFocusOnWindow(win.id);
+                                }
+                            });
+                        })
+                        .then(function(isFoundWindow) {
+                            if (isFoundWindow) {
+                                return;
+                            }
+
+                            browser.windows.create({
+                                url: manageUrl,
+                                type: 'popup',
+                                left: 0,
+                                top: 0,
+                                width: window.screen.availWidth,
+                                height: window.screen.availHeight,
+                            });
+                        });
                 }
 
                 // window.close(); // be or not to be ?? :)
@@ -267,23 +282,12 @@
         return format(tmplHtml, data);
     }
 
-    function showResultHtml(html, doTranslatePage = true) {
-        setHtml('result', html);
+    function setHtml(id, html, doTranslatePage = true, attr = 'innerHTML') {
+        $('#' + id)[attr] = html;
 
         if (doTranslatePage) {
             translatePage();
         }
-    }
-
-    function setHtml(id, html, attr = 'innerHTML') {
-        $('#' + id)[attr] = html;
-    }
-
-    function getContainers() {
-        return new Promise(function(resolve) {
-            browser.contextualIdentities.query({})
-                .then(resolve, () => resolve([]));
-        });
     }
 
     function loadData() {
@@ -291,7 +295,7 @@
 
         return Promise.all([
                 BG.getData(undefined, false),
-                getContainers()
+                loadContainers()
             ])
             .then(function([result, containers]) {
                 allData = {
@@ -370,7 +374,7 @@
             tabsHtml: getPreparedTabsHtml(tabsToView) || render('search-not-found-tmpl', state),
         });
 
-        showResultHtml(searchHtml);
+        setHtml('result', searchHtml);
     }
 
     function renderGroupsList() {
@@ -393,7 +397,7 @@
             groupsHtml,
         });
 
-        showResultHtml(showGroupsHtml);
+        setHtml('result', showGroupsHtml);
     }
 
     function renderTabsList(groupId) {
@@ -424,10 +428,11 @@
             }),
             group,
             tabsListHtml,
+            newTabContextMenu: allData.containers.length ? 'contextmenu="create-tab-with-container-menu"' : '',
             cookieStoreId: DEFAULT_COOKIE_STORE_ID,
         });
 
-        showResultHtml(tabsListWrapperHtml, false);
+        setHtml('result', tabsListWrapperHtml, false);
 
         let groupsMenuItems = allData.groups
             .map(function(gr) {
@@ -442,8 +447,7 @@
 
         setHtml('move-tab-to-group-menu', render('move-tab-to-group-menu-tmpl', {
             groupsMenuItems,
-        }));
-
+        }), false);
 
         let containersHtml = allData.containers
             .map(function(container) {
@@ -457,8 +461,6 @@
             .join('');
 
         setHtml('create-tab-with-container-menu', containersHtml);
-
-        translatePage();
     }
 
 })();

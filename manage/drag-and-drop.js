@@ -7,7 +7,7 @@ let DragAndDrop = new function() {
         draggedNode = null,
         $on = on.bind({});
 
-    const defaultOptions = {
+    const defOptions = {
         selector: 'div',
         group: null,
         classNameDraggedElement: 'drag-moving',
@@ -30,7 +30,7 @@ let DragAndDrop = new function() {
     }
 
     this.create = function(rawOptions) {
-        let options = Object.assign({}, defaultOptions, rawOptions),
+        let options = Object.assign({}, defOptions, rawOptions),
             extendNode = {options};
 
         options.group = _getPreparedGroup(options.group);
@@ -117,7 +117,7 @@ let DragAndDrop = new function() {
 
         event.stopPropagation();
 
-        if (draggedNode != this) {
+        if (draggedNode !== this) {
             // console.log(this.options.group.name + ' - drop', event);
             // draggedNode.innerHTML = this.innerHTML;
             // this.innerHTML = event.dataTransfer.getData('text/html');

@@ -24,6 +24,7 @@
 
     "permissions": [
         "tabs",
+        "<all_urls>",
         "notifications",
         "menus",
         "contextualIdentities",

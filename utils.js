@@ -2,7 +2,7 @@
 
 const DEFAULT_COOKIE_STORE_ID = 'firefox-default',
     CONTEXT_MENU_PREFIX_GROUP = 'stg-move-group-id-',
-    defaultOptions = {
+    DEFAULT_OPTIONS = {
         groups: [],
         lastCreatedGroupPosition: 0,
         version: '1.0',
@@ -21,7 +21,7 @@ const DEFAULT_COOKIE_STORE_ID = 'firefox-default',
         enableKeyboardShortcutLoadByIndexGroup: true,
     },
     onlyOptionsKeys = (function() {
-        return Object.keys(defaultOptions).filter(key => 'boolean' === typeof defaultOptions[key]);
+        return Object.keys(DEFAULT_OPTIONS).filter(key => 'boolean' === typeof DEFAULT_OPTIONS[key]);
     })();
 
 let $ = document.querySelector.bind(document),
@@ -213,6 +213,22 @@ let $ = document.querySelector.bind(document),
 
         return !(rect.bottom < 0 || rect.top - viewHeight >= 0);
     },
+    loadContainers = function() {
+        return new Promise(function(resolve) {
+                browser.contextualIdentities.query({})
+                    .then(containers => resolve(containers || []))
+                    .catch(() => resolve([]));
+            })
+            .then(function(containers) {
+                return containers.map(function(container) {
+                    if (!container.iconUrl) {
+                        container.iconUrl = `chrome://browser/content/usercontext-${container.icon}.svg`;
+                    }
+
+                    return container;
+                });
+            });
+    },
     on = function(eventsStr, query, func, extendNode = null, translatePage = true) {
         let events = this;
 
@@ -266,15 +282,15 @@ let $ = document.querySelector.bind(document),
             return browser.storage.local.get(keys)
                 .then(function(result) {
                     if (null === keys) {
-                        result = Object.assign({}, defaultOptions, result);
+                        result = Object.assign({}, DEFAULT_OPTIONS, result);
                     } else if ('string' === type(keys)) {
                         if (undefined === result[keys]) {
-                            result[keys] = defaultOptions[keys];
+                            result[keys] = DEFAULT_OPTIONS[keys];
                         }
                     } else if (Array.isArray(keys)) {
                         keys.forEach(function(key) {
                             if (undefined === result[key]) {
-                                result[key] = defaultOptions[key];
+                                result[key] = DEFAULT_OPTIONS[key];
                             }
                         });
                     }
@@ -287,17 +303,20 @@ let $ = document.querySelector.bind(document),
         set(keys) {
             return browser.storage.local.set(keys)
                 .then(function() {
-                    let eventObj = {};
+                    let eventObj = {},
+                        doCallEvent = false;
 
                     if ('groups' in keys) {
-                        eventObj.groupsUpdated = true;
+                        doCallEvent = eventObj.groupsUpdated = true;
                     }
 
                     if (onlyOptionsKeys.some(key => key in keys)) {
-                        eventObj.optionsUpdated = true;
+                        doCallEvent = eventObj.optionsUpdated = true;
                     }
 
-                    browser.runtime.sendMessage(eventObj);
+                    if (doCallEvent) {
+                        browser.runtime.sendMessage(eventObj);
+                    }
 
                     return keys;
                 });
