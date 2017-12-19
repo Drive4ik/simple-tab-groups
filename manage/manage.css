@@ -242,20 +242,17 @@ img {
     position: relative;
     font-size: 12px;
     padding: var(--tab-inner-padding);
-
-    transition: transform 0.3s;
 }
 
 #result.grid > .group .tab:not(.is-active):hover {
     background-color: #e4e4e4;
     outline: 1px solid #cfcfcf;
-    /*! outline-offset: 3px; */
 }
 
-#result.grid > .group .tab:hover > .icon,
+#result.grid > .group .tab.has-thumbnail:hover > .icon,
 #result.grid > .group .tab:hover > .delete-tab-button,
 #result.grid > .group .tab:hover > .container,
-#result.grid > .group .tab.is-active > .icon,
+#result.grid > .group .tab.has-thumbnail.is-active > .icon,
 #result.grid > .group .tab.is-active > .delete-tab-button,
 #result.grid > .group .tab.is-active > .container {
     background-color: #e4e4e4;
@@ -266,14 +263,22 @@ img {
     outline: 1px solid #0093e0;
 }
 
-#result.grid > .group .tab > .icon {
+#result.grid > .group .tab:not(.has-thumbnail) > .icon {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: calc((calc(100% - 1em - var(--tab-inner-padding)) / 2) - 8px);
+    left: calc((100% / 2) - 8px);
+    pointer-events: none;
+}
+
+#result.grid > .group .tab.has-thumbnail > .icon {
     position: absolute;
     top: var(--tab-inner-padding);
     left: var(--tab-inner-padding);
     border-bottom-right-radius: 75%;
     width: 25px;
     height: 25px;
-    /*! line-height: 0; */
     display: flex;
     align-items: start;
     justify-content: left;

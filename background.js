@@ -51,6 +51,7 @@
             active: tab.active,
             favIconUrl: tab.favIconUrl,
             cookieStoreId: tab.cookieStoreId,
+            thumbnail: tab.thumbnail || null,
         };
     }
 
@@ -485,34 +486,41 @@
                 }.bind(null, _resizeCanvas, _resizeCanvasCtx));
         });
     }
+/*
+    let waitCompleteLoadingTab = {}; // tabId: promise
 
     function updateTabThumbnail(windowId, tabId) {
         Promise.all([
                 getGroupByWindowId(windowId),
-                browser.tabs.get(tabId)
+                getTabs(windowId, false)
             ])
-            .then(function([group, rawTab]) {
-                let tabIndex = group.tabs.findIndex(tab => tab.id === tabId);
-console.log('tabIndex', tabIndex);
-                if (-1 !== tabIndex && rawTab.url !== group.tabs[tabIndex].url && group.tabs[tabIndex].status === 'complete') {
-                    return getVisibleTabThumbnail(windowId)
-                        .then(function(thumbnail) {
-                            group.tabs[tabIndex].thumbnail = thumbnail;
-                            return saveGroup(group);
+            .then(function([group, tabs]) {
+                let tabIndex = tabs.findIndex(tab => tab.id === tabId);
+
+                if (-1 !== tabIndex) {
+                    if (tabs[tabIndex].status === 'complete') {
+                        getVisibleTabThumbnail(windowId)
+                            .then(function(thumbnail) {
+                                group.tabs[tabIndex].thumbnail = thumbnail;
+                                return saveGroup(group);
+                            });
+                    } else {
+                        // waitCompleteLoadingTab[tabId] =
+                        new Promise(function(resolve) {
+                            waitCompleteLoadingTab[tabId] = resolve;
+                        })
+                        .then(function() {
+                            getVisibleTabThumbnail(windowId)
+                                .then(function(thumbnail) {
+                                    group.tabs[tabIndex].thumbnail = thumbnail;
+                                    return saveGroup(group);
+                                });
                         });
+                    }
                 }
             });
-
-
-        // getVisibleTabThumbnail(windowId)
-        //     .then(function(url) {
-        //         browser.runtime.sendMessage({
-        //             testUrl: url,
-        //         });
-        //     });
-
     }
-
+*/
     function onActivatedTab({ tabId, windowId }) {
         Promise.all([removeTabEventPromise, browser.tabs.get(tabId)])
             .then(function([removedTabId, { incognito }]) {
@@ -521,8 +529,8 @@ console.log('tabIndex', tabIndex);
                 }
 
                 return saveTabs(windowId, [removedTabId]);
-            })
-            .then(() => updateTabThumbnail(windowId, tabId));
+            });
+            // .then(() => updateTabThumbnail(windowId, tabId));
     }
 
     let currentlyMovingTabs = []; // tabIds

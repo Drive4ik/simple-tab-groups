@@ -230,7 +230,7 @@
             containerColorCodeBorderStyle: container.cookieStoreId ? `border-color: ${container.colorCode};` : '',
 
             thumbnailClass: '',
-            thumbnail: tab.thumbnail || '/test.jpg',
+            thumbnail: tab.thumbnail || '',
         };
     }
 
@@ -260,6 +260,8 @@
             .join('');
 
         setHtml('result', groupsHtml, false);
+
+        // $$('.tab > .screenshot > img').forEach(img => img.onload = () => img.parentNode.parentNode.classList.add('has-thumbnail')); // TODO
 
         let containersHtml = allData.containers
             .map(function(container) {
