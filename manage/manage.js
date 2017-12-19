@@ -206,8 +206,7 @@
 
         if (options.showUrlTooltipOnTabHover) {
             if (tab.title) {
-                urlTitle = '';
-                // urlTitle = safeHtml(unSafeHtml(tab.title)) + '\n' + tab.url; // TMP TODO uncomment
+                urlTitle = safeHtml(unSafeHtml(tab.title)) + '\n' + tab.url;
             } else {
                 urlTitle = tab.url;
             }
