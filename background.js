@@ -457,7 +457,7 @@
                 } catch (e) {};
             });
     }
-
+/*
     function getVisibleTabThumbnail(windowId) {
         return new Promise(function(resolve) {
             let _resizeCanvas = document.createElement('canvas');
@@ -486,7 +486,7 @@
                 }.bind(null, _resizeCanvas, _resizeCanvasCtx));
         });
     }
-/*
+
     let waitCompleteLoadingTab = {}; // tabId: promise
 
     function updateTabThumbnail(windowId, tabId) {
