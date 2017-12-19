@@ -2,7 +2,7 @@
 
 const DEFAULT_COOKIE_STORE_ID = 'firefox-default',
     CONTEXT_MENU_PREFIX_GROUP = 'stg-move-group-id-',
-    defaultOptions = {
+    DEFAULT_OPTIONS = {
         groups: [],
         lastCreatedGroupPosition: 0,
         version: '1.0',
@@ -14,21 +14,25 @@ const DEFAULT_COOKIE_STORE_ID = 'firefox-default',
         showUrlTooltipOnTabHover: false,
         showNotificationAfterMoveTab: true,
         createNewGroupAfterAttachTabToNewWindow: true,
+        openManageGroupsInTab: true,
+        showConfirmDialogBeforeGroupDelete: true,
 
         enableKeyboardShortcutLoadNextPrevGroup: true,
         enableKeyboardShortcutLoadByIndexGroup: true,
-    };
+    },
+    onlyOptionsKeys = (function() {
+        return Object.keys(DEFAULT_OPTIONS).filter(key => 'boolean' === typeof DEFAULT_OPTIONS[key]);
+    })();
 
 let $ = document.querySelector.bind(document),
+    $$ = selector => Array.from(document.querySelectorAll(selector)),
     type = function(obj) {
         return Object.prototype.toString.call(obj).replace(/(^\[.+\ |\]$)/g, '').toLowerCase();
     },
-    format = function(str) {
+    format = function(str, ...args) {
         if (!str) {
             return '';
         }
-
-        let args = [].slice.call(arguments, 1);
 
         if (1 === args.length && 'object' === type(args[0])) {
             args = args[0];
@@ -37,10 +41,13 @@ let $ = document.querySelector.bind(document),
         return str.replace(/{{(.+?)}}/g, function(match, key) {
             let val = key
                 .split('.')
-                .reduce((accum, key) => accum[key], args);
+                .reduce((accum, key) => (accum && accum[key]), args);
 
             if (val || val === '' || val === 0) {
                 return val;
+            } else if (undefined === val) {
+                return '';
+                // return key;
             }
 
             return match;
@@ -126,7 +133,7 @@ let $ = document.querySelector.bind(document),
         });
     },
     translatePage = function() {
-        Array.from(document.querySelectorAll('[data-i18n]')).forEach(function(node) {
+        $$('[data-i18n]').forEach(function(node) {
             node.dataset.i18n
                 .trim()
                 .split(/\s*\|\s*/)
@@ -206,7 +213,23 @@ let $ = document.querySelector.bind(document),
 
         return !(rect.bottom < 0 || rect.top - viewHeight >= 0);
     },
-    on = function(eventsStr, query, func) {
+    loadContainers = function() {
+        return new Promise(function(resolve) {
+                browser.contextualIdentities.query({})
+                    .then(containers => resolve(containers || []))
+                    .catch(() => resolve([]));
+            })
+            .then(function(containers) {
+                return containers.map(function(container) {
+                    if (!container.iconUrl) {
+                        container.iconUrl = `chrome://browser/content/usercontext-${container.icon}.svg`;
+                    }
+
+                    return container;
+                });
+            });
+    },
+    on = function(eventsStr, query, func, extendNode = null, translatePage = true) {
         let events = this;
 
         eventsStr
@@ -217,11 +240,13 @@ let $ = document.querySelector.bind(document),
                 if (!events[eventStr]) {
                     events[eventStr] = [];
                     document.body.addEventListener(eventStr, function(event) {
+                        let result = undefined;
 
                         function checkQueryByElement(element, data) {
                             if (element.matches && element.matches(data.query)) {
-                                data.func.call(element, dataFromElement(element), event);
-                                translatePage();
+                                Object.assign(element, data.extendNode);
+                                result = data.func.call(element, event, dataFromElement(element));
+                                data.translatePage && translatePage();
                                 return true;
                             }
                         }
@@ -240,12 +265,15 @@ let $ = document.querySelector.bind(document),
                                 el = el.parentNode;
                             }
                         }
+
+                        return result;
                     }, false);
                 }
 
                 events[eventStr].push({
                     query,
                     func,
+                    extendNode,
                 });
             });
     },
@@ -254,15 +282,15 @@ let $ = document.querySelector.bind(document),
             return browser.storage.local.get(keys)
                 .then(function(result) {
                     if (null === keys) {
-                        result = Object.assign({}, defaultOptions, result);
+                        result = Object.assign({}, DEFAULT_OPTIONS, result);
                     } else if ('string' === type(keys)) {
                         if (undefined === result[keys]) {
-                            result[keys] = defaultOptions[keys];
+                            result[keys] = DEFAULT_OPTIONS[keys];
                         }
                     } else if (Array.isArray(keys)) {
                         keys.forEach(function(key) {
                             if (undefined === result[key]) {
-                                result[key] = defaultOptions[key];
+                                result[key] = DEFAULT_OPTIONS[key];
                             }
                         });
                     }
@@ -272,15 +300,22 @@ let $ = document.querySelector.bind(document),
         },
         clear: browser.storage.local.clear,
         remove: browser.storage.local.remove,
-        set(keys, sendEventUpdateStorage = true) {
+        set(keys) {
             return browser.storage.local.set(keys)
                 .then(function() {
-                    if (sendEventUpdateStorage) {
-                        if ('groups' in keys) {
-                            browser.runtime.sendMessage({
-                                storageUpdated: true,
-                            });
-                        }
+                    let eventObj = {},
+                        doCallEvent = false;
+
+                    if ('groups' in keys) {
+                        doCallEvent = eventObj.groupsUpdated = true;
+                    }
+
+                    if (onlyOptionsKeys.some(key => key in keys)) {
+                        doCallEvent = eventObj.optionsUpdated = true;
+                    }
+
+                    if (doCallEvent) {
+                        browser.runtime.sendMessage(eventObj);
                     }
 
                     return keys;

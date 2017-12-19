@@ -2,7 +2,7 @@
     'use strict';
 
     const BG = (function(bgWin) {
-        return bgWin && bgWin.background.inited ? bgWin.background : false;
+        return bgWin && bgWin.background && bgWin.background.inited ? bgWin.background : false;
     })(browser.extension.getBackgroundPage());
 
     if (!BG) {
@@ -21,16 +21,19 @@
         state = {
             view: VIEW_GROUPS,
         },
-        popupIsShow = false,
         $on = on.bind({});
 
-    storage.get(['closePopupAfterChangeGroup', 'openGroupAfterChange', 'showGroupCircleInSearchedTab', 'showUrlTooltipOnTabHover', 'showNotificationAfterMoveTab'])
-        .then(result => options = result);
+    loadOptions()
+        .then(loadData)
+        .then(addEvents);
 
-    addEvents();
-    loadData();
+    function loadOptions() {
+        return storage.get(onlyOptionsKeys).then(result => options = result);
+    }
 
     function addEvents() {
+
+        $on('click', '[data-action]', (event, data) => doAction(data.action, data, event));
 
         function doAction(action, data, event) {
             if ('load-group' === action) {
@@ -59,100 +62,80 @@
             } else if ('add-tab' === action) {
                 BG.addTab(getGroupById(data.groupId), data.cookieStoreId);
             } else if ('open-settings-group-popup' === action) {
-                popupIsShow = true;
-                let group = getGroupById(data.groupId);
-
-                $('#editGroupPopup').dataset.groupId = data.groupId;
-                $('#groupEditTitle').value = unSafeHtml(group.title);
-                $('#groupEditIconColorCircle').style.backgroundColor = group.iconColor;
-                $('#groupEditIconColor').value = group.iconColor;
-                $('#groupEditCatchTabRules').value = group.catchTabRules;
-
-                $('html').classList.add('no-scroll');
-                $('#editGroupPopup').classList.add('is-flex');
+                Popups.showEditGroup(getGroupById(data.groupId), 1);
             } else if ('context-open-settings-group-popup' === action) {
-                doAction('open-settings-group-popup', {
-                    groupId: groupIdInContext,
-                });
-            } else if ('submit-edit-group-popup' === action) {
-                popupIsShow = false;
-
-                let groupId = Number($('#editGroupPopup').dataset.groupId),
-                    group = getGroupById(groupId);
-
-                group.title = safeHtml($('#groupEditTitle').value.trim());
-
-                group.iconColor = $('#groupEditIconColorCircle').style.backgroundColor; // safed color
-
-                group.catchTabRules = $('#groupEditCatchTabRules').value.trim();
-
-                group.catchTabRules
-                    .split(/\s*\n\s*/)
-                    .filter(Boolean)
-                    .forEach(function(regExpStr) {
-                        try {
-                            new RegExp(regExpStr);
-                        } catch (e) {
-                            notify(browser.i18n.getMessage('invalidRegExpRuleTitle', regExpStr));
-                        }
-                    });
-
-                BG.saveGroup(group)
-                    .then(function() {
-                        if (groupId === allData.currentGroup.id) {
-                            BG.updateBrowserActionData();
-                        }
-                    })
-                    .then(BG.removeMoveTabMenus)
-                    .then(BG.createMoveTabMenus);
-
-                $('html').classList.remove('no-scroll');
-                $('#editGroupPopup').classList.remove('is-flex');
-            } else if ('set-random-group-color' === action) {
-                $('#groupEditIconColor').value = randomColor();
-                dispatchEvent('input', $('#groupEditIconColor'));
-            } else if ('close-edit-group-popup' === action) {
-                popupIsShow = false;
-                $('html').classList.remove('no-scroll');
-                $('#editGroupPopup').classList.remove('is-flex');
+                Popups.showEditGroup(getGroupById(groupIdInContext), 1);
             } else if ('show-delete-group-popup' === action) {
-                popupIsShow = true;
                 let group = getGroupById(data.groupId);
 
-                $('#deleteGroupPopup').dataset.groupId = data.groupId;
-                $('#groupDeleteQuestion').innerText = browser.i18n.getMessage('deleteGroupPopupBody', unSafeHtml(group.title));
-                $('#deleteGroupPopup').classList.add('is-active');
+                if (options.showConfirmDialogBeforeGroupDelete) {
+                    Popups.showDeleteGroup(group);
+                } else {
+                    BG.removeGroup(group);
+                }
             } else if ('context-show-delete-group-popup' === action) {
                 doAction('show-delete-group-popup', {
                     groupId: groupIdInContext,
                 });
-            } else if ('close-delete-group-popup' === action) {
-                popupIsShow = false;
-                $('#deleteGroupPopup').classList.remove('is-active');
-
-            } else if ('submit-delete-group-popup' === action) {
-                popupIsShow = false;
-                let groupId = Number($('#deleteGroupPopup').dataset.groupId);
-
-                BG.removeGroup(getGroupById(groupId)).then(renderGroupsList);
-
-                $('#deleteGroupPopup').classList.remove('is-active');
             } else if ('move-tab-to-group' === action) {
-                let tab = getGroupById(state.groupId).tabs[moveTabToGroupTabIndex];
-
-                BG.moveTabToGroup(tab, moveTabToGroupTabIndex, state.groupId, data.groupId);
+                BG.moveTabToGroup(moveTabToGroupTabIndex, undefined, state.groupId, data.groupId);
             } else if ('move-tab-to-new-group' === action) {
-                let expandedGroup = getGroupById(state.groupId),
-                    tab = expandedGroup.tabs[moveTabToGroupTabIndex];
-
-                BG.addGroup()
-                    .then(function(newGroup) {
-                        BG.moveTabToGroup(tab, moveTabToGroupTabIndex, state.groupId, newGroup.id);
-                    });
+                BG.addGroup().then(newGroup => BG.moveTabToGroup(moveTabToGroupTabIndex, undefined, state.groupId, newGroup.id));
             } else if ('add-group' === action) {
                 BG.addGroup();
             } else if ('show-groups-list' === action) {
                 renderGroupsList();
+            } else if ('open-options-page' === action) {
+                browser.runtime.openOptionsPage();
+            } else if ('open-manage-page' === action) {
+                let manageUrl = browser.extension.getURL('/manage/manage.html');
+
+                if (options.openManageGroupsInTab) {
+                    browser.tabs.query({
+                            windowId: allData.currentWindowId,
+                            url: manageUrl,
+                        })
+                        .then(function(tabs) {
+                            if (tabs.length) { // if manage tab is found
+                                browser.tabs.update(tabs[0].id, {
+                                    active: true,
+                                });
+                            } else {
+                                browser.tabs.create({
+                                    active: true,
+                                    url: manageUrl,
+                                });
+                            }
+                        });
+                } else {
+                    browser.windows.getAll({
+                            populate: true,
+                            windowTypes: ['popup'],
+                        })
+                        .then(function(allWindows) {
+                            return allWindows.some(function(win) {
+                                if ('popup' === win.type && 1 === win.tabs.length && manageUrl === win.tabs[0].url) { // if manage popup is now open
+                                    return BG.setFocusOnWindow(win.id);
+                                }
+                            });
+                        })
+                        .then(function(isFoundWindow) {
+                            if (isFoundWindow) {
+                                return;
+                            }
+
+                            browser.windows.create({
+                                url: manageUrl,
+                                type: 'popup',
+                                left: 0,
+                                top: 0,
+                                width: window.screen.availWidth,
+                                height: window.screen.availHeight,
+                            });
+                        });
+                }
+
+                // window.close(); // be or not to be ?? :)
             } else if ('context-move-group-up' === action) {
                 BG.moveGroup(getGroupById(groupIdInContext), 'up');
             } else if ('context-move-group-down' === action) {
@@ -160,37 +143,24 @@
             } else if ('context-open-group-in-new-window' === action) {
                 let group = getGroupById(groupIdInContext);
 
-                BG.isGroupLoadInWindow(group)
-                    .then(function() {
-                        browser.windows.update(group.windowId, {
-                            focused: true,
-                        });
-                    })
-                    .catch(function() {
-                        browser.windows.create({
-                                state: 'maximized',
-                            })
-                            .then(win => BG.loadGroup(win.id, group));
+                BG.getWindowByGroup(group)
+                    .then(function(win) {
+                        if (win) {
+                            BG.setFocusOnWindow(group.windowId);
+                        } else {
+                            browser.windows.create({
+                                    state: 'maximized',
+                                })
+                                .then(win => BG.loadGroup(win.id, group));
+                        }
                     });
             }
         }
 
-        $on('click', '[data-action]', (data, event) => doAction(data.action, data, event));
+        $on('input', '#searchTab', renderSearchTabsList);
 
-        $on('input', '#searchTab', function() {
-            renderSearchTabsList();
-        });
-
-        $on('input', '#groupEditIconColor', function() {
-            $('#groupEditIconColorCircle').style.backgroundColor = this.value.trim();
-        });
-
-        $on('click', '#settings', function() {
-            browser.runtime.openOptionsPage();
-        });
-
-        $on('mousedown mouseup', '[data-is-tab]', function(data, event) {
-            if (1 === event.button) {
+        $on('mousedown mouseup', '[data-is-tab]', function(event, data) {
+            if (1 === event.button) { // delete tab by middle mouse click
                 if ('mousedown' === event.type) {
                     event.preventDefault();
                 } else if ('mouseup' === event.type) {
@@ -199,27 +169,26 @@
             }
         });
 
-        $on('contextmenu', '[contextmenu="group-menu"]', function({groupId}) {
+        $on('contextmenu', '[contextmenu="group-menu"]', function(event, {groupId}) {
             groupIdInContext = groupId;
         });
 
-        $on('contextmenu', '[contextmenu="move-tab-to-group-menu"]', function({tabIndex}) {
+        $on('contextmenu', '[contextmenu="move-tab-to-group-menu"]', function(event, {tabIndex}) {
             moveTabToGroupTabIndex = tabIndex;
         });
 
         let selectableElementsSelectors = ['[data-is-tab]', '[data-is-group]'];
         $on('mouseover', selectableElementsSelectors.join(', '), function() {
-            document.querySelectorAll(selectableElementsSelectors.join(', '))
-                .forEach(element => element.classList.remove('is-hover'));
+            $$(selectableElementsSelectors.join(', ')).forEach(element => element.classList.remove('is-hover'));
         });
 
-        $on('keydown', 'body', function(data, event) {
-            if (popupIsShow) {
+        $on('keydown', 'body', function(event) {
+            if (Popups.show) {
                 return;
             }
 
             if (KeyEvent.DOM_VK_UP === event.keyCode || KeyEvent.DOM_VK_DOWN === event.keyCode) {
-                let elements = Array.from(document.querySelectorAll(selectableElementsSelectors.join(', '))),
+                let elements = $$(selectableElementsSelectors.join(', ')),
                     currentIndex = elements.findIndex(el => el.classList.contains('is-hover')),
                     currentActiveIndex = elements.findIndex(el => el.classList.contains('is-active')),
                     textPosition = KeyEvent.DOM_VK_UP === event.keyCode ? 'prev' : 'next',
@@ -272,10 +241,12 @@
         // setTabEventsListener
         let loadDataTimer = null,
             listener = function(request, sender, sendResponse) {
-                if (request.storageUpdated) {
+                if (request.groupsUpdated) {
                     clearTimeout(loadDataTimer);
                     loadDataTimer = setTimeout(loadData, 100);
-                } else if (undefined !== request.loadingGroupPosition) {
+                }
+
+                if (undefined !== request.loadingGroupPosition) {
                     if (request.loadingGroupPosition) {
                         $('#loading').firstElementChild.style.width = request.loadingGroupPosition + 'vw';
                         $('#loading').classList.remove('is-hidden');
@@ -284,7 +255,11 @@
                     }
                 }
 
-                sendResponse();
+                if (request.optionsUpdated) {
+                    loadOptions();
+                }
+
+                sendResponse(':)');
             };
 
         browser.runtime.onMessage.addListener(listener);
@@ -307,29 +282,20 @@
         return format(tmplHtml, data);
     }
 
-    function showResultHtml(html, doTranslatePage = true) {
-        setHtml('result', html);
+    function setHtml(id, html, doTranslatePage = true, attr = 'innerHTML') {
+        $('#' + id)[attr] = html;
 
         if (doTranslatePage) {
             translatePage();
         }
     }
 
-    function setHtml(id, html, attr = 'innerHTML') {
-        $('#' + id)[attr] = html;
-    }
-
-    function getContainers() {
-        return new Promise(function(resolve) {
-            browser.contextualIdentities.query({})
-                .then(resolve, () => resolve([]));
-        });
-    }
-
     function loadData() {
+        // console.log('loadData popup');
+
         return Promise.all([
                 BG.getData(undefined, false),
-                getContainers()
+                loadContainers()
             ])
             .then(function([result, containers]) {
                 allData = {
@@ -408,7 +374,7 @@
             tabsHtml: getPreparedTabsHtml(tabsToView) || render('search-not-found-tmpl', state),
         });
 
-        showResultHtml(searchHtml);
+        setHtml('result', searchHtml);
     }
 
     function renderGroupsList() {
@@ -431,7 +397,7 @@
             groupsHtml,
         });
 
-        showResultHtml(showGroupsHtml);
+        setHtml('result', showGroupsHtml);
     }
 
     function renderTabsList(groupId) {
@@ -450,6 +416,7 @@
             let tabs = group.tabs.map((tab, tabIndex) => prepareTabToView(groupId, tab, tabIndex));
 
             tabsListHtml = render('tabs-list-tmpl', {
+                classList: '',
                 tabsHtml: getPreparedTabsHtml(tabs),
             });
         }
@@ -461,10 +428,11 @@
             }),
             group,
             tabsListHtml,
+            newTabContextMenu: allData.containers.length ? 'contextmenu="create-tab-with-container-menu"' : '',
             cookieStoreId: DEFAULT_COOKIE_STORE_ID,
         });
 
-        showResultHtml(tabsListWrapperHtml, false);
+        setHtml('result', tabsListWrapperHtml, false);
 
         let groupsMenuItems = allData.groups
             .map(function(gr) {
@@ -479,8 +447,7 @@
 
         setHtml('move-tab-to-group-menu', render('move-tab-to-group-menu-tmpl', {
             groupsMenuItems,
-        }));
-
+        }), false);
 
         let containersHtml = allData.containers
             .map(function(container) {
@@ -494,8 +461,6 @@
             .join('');
 
         setHtml('create-tab-with-container-menu', containersHtml);
-
-        translatePage();
     }
 
 })();

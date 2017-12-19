@@ -1,0 +1,41 @@
+
+<div class="field">
+    <label class="label" data-i18n="title"></label>
+    <div class="control">
+        <input id="groupTitle" value="{{groupTitle}}" type="text" class="input" maxlength="120" data-i18n="title:placeholder" />
+    </div>
+</div>
+<div class="field">
+    <div class="is-flex">
+        <label class="label" data-i18n="groupColor"></label>
+        <div class="is-full-width">
+            <span id="groupIconColorCircle" style="background-color: {{groupIconColor}}"></span>
+        </div>
+        <a href="#" data-action="set-random-group-color" data-i18n="setRandomColor"></a>
+    </div>
+    <div class="control">
+        <input id="groupIconColor" value="{{groupIconColor}}" type="text" class="input" maxlength="40" placeholder="blue, #0f0, rgb(0, 255, 0), rgba(0, 255, 0, 0.7)..." />
+    </div>
+</div>
+<div class="field">
+    <label class="label">
+        <span data-i18n="regexpForTabsTitle"></span>
+        <img class="size-18 cursor-help" src="chrome://global/skin/icons/help.svg" data-i18n="regexpForTabsHelp:title" alt="">
+    </label>
+    <div class="control">
+        <textarea id="groupCatchTabRules" class="textarea" data-i18n="regexpForTabsPlaceholder:placeholder">{{groupCatchTabRules}}</textarea>
+    </div>
+</div>
+
+<style type="text/css">
+
+#groupIconColorCircle {
+    width: 14px;
+    height: 14px;
+    display: inline-block;
+    border-radius: 50%;
+    margin-left: 5px;
+    vertical-align: middle;
+}
+
+</style>
