@@ -15,7 +15,9 @@
 
     let templates = {},
         options = null,
-        allData = null,
+        _groups = BG.getGroups(),
+        containers = [],
+        currentWindowId = null,
         groupIdInContext = -1,
         moveTabToGroupTabIndex = -1,
         state = {
@@ -23,8 +25,16 @@
         },
         $on = on.bind({});
 
-    loadOptions()
-        .then(loadData)
+    Promise.all([
+            BG.getWindow(),
+            loadContainers(),
+            loadOptions()
+        ])
+        .then(function([win, allContainers]) {
+            currentWindowId = win.id;
+            containers = allContainers;
+        })
+        .then(selectRender)
         .then(addEvents);
 
     function loadOptions() {
@@ -37,28 +47,37 @@
 
         function doAction(action, data, event) {
             if ('load-group' === action) {
-                let isCurrentGroup = data.groupId === allData.currentGroup.id;
-
-                if (isCurrentGroup && -1 === data.tabIndex) { // open group
-                    return renderTabsList(data.groupId);
-                }
-
-                BG.loadGroup(allData.currentWindowId, getGroupById(data.groupId), data.tabIndex)
-                    .then(function() {
-                        if (!options.closePopupAfterChangeGroup && options.openGroupAfterChange) {
-                            renderTabsList(data.groupId);
+                BG.getGroupByWindowId(currentWindowId)
+                    .then(function(currentGroup) {
+                        if (!currentGroup) {
+                            return;
                         }
 
-                        if (options.closePopupAfterChangeGroup && !isCurrentGroup) {
-                            window.close();
+                        let isCurrentGroup = data.groupId === currentGroup.id;
+
+                        if (isCurrentGroup && -1 === data.tabIndex) { // open group
+                            return renderTabsList(data.groupId);
                         }
+
+                        BG.loadGroup(currentWindowId, getGroupIndex(data.groupId), data.tabIndex)
+                            .then(function() {
+                                if (!options.closePopupAfterChangeGroup && options.openGroupAfterChange) {
+                                    renderTabsList(data.groupId);
+                                }
+
+                                if (options.closePopupAfterChangeGroup && !isCurrentGroup) {
+                                    window.close();
+                                }
+                            });
                     });
+
+
             } else if ('show-group' === action) {
                 renderTabsList(data.groupId);
             } else if ('remove-tab' === action) {
                 let group = getGroupById(data.groupId);
 
-                BG.removeTab(group.tabs[data.tabIndex], data.tabIndex, group);
+                BG.removeTab(data.tabIndex, group);
             } else if ('add-tab' === action) {
                 BG.addTab(getGroupById(data.groupId), data.cookieStoreId);
             } else if ('open-settings-group-popup' === action) {
@@ -80,7 +99,7 @@
             } else if ('move-tab-to-group' === action) {
                 BG.moveTabToGroup(moveTabToGroupTabIndex, undefined, state.groupId, data.groupId);
             } else if ('move-tab-to-new-group' === action) {
-                BG.addGroup().then(newGroup => BG.moveTabToGroup(moveTabToGroupTabIndex, undefined, state.groupId, newGroup.id));
+                BG.addGroup(undefined, undefined, false).then(newGroup => BG.moveTabToGroup(moveTabToGroupTabIndex, undefined, state.groupId, newGroup.id));
             } else if ('add-group' === action) {
                 BG.addGroup();
             } else if ('show-groups-list' === action) {
@@ -92,7 +111,7 @@
 
                 if (options.openManageGroupsInTab) {
                     browser.tabs.query({
-                            windowId: allData.currentWindowId,
+                            windowId: currentWindowId,
                             url: manageUrl,
                         })
                         .then(function(tabs) {
@@ -137,9 +156,9 @@
 
                 // window.close(); // be or not to be ?? :)
             } else if ('context-move-group-up' === action) {
-                BG.moveGroup(getGroupById(groupIdInContext), 'up');
+                BG.moveGroup(groupIdInContext, 'up');
             } else if ('context-move-group-down' === action) {
-                BG.moveGroup(getGroupById(groupIdInContext), 'down');
+                BG.moveGroup(groupIdInContext, 'down');
             } else if ('context-open-group-in-new-window' === action) {
                 let group = getGroupById(groupIdInContext);
 
@@ -151,7 +170,7 @@
                             browser.windows.create({
                                     state: 'maximized',
                                 })
-                                .then(win => BG.loadGroup(win.id, group));
+                                .then(win => BG.loadGroup(win.id, getGroupIndex(group.id)));
                         }
                     });
             }
@@ -242,8 +261,11 @@
         let loadDataTimer = null,
             listener = function(request, sender, sendResponse) {
                 if (request.groupsUpdated) {
-                    clearTimeout(loadDataTimer);
-                    loadDataTimer = setTimeout(loadData, 100);
+                    _groups = BG.getGroups();
+                    selectRender();
+
+                    // clearTimeout(loadDataTimer);
+                    // loadDataTimer = setTimeout(loadData, 100);
                 }
 
                 if (undefined !== request.loadingGroupPosition) {
@@ -266,8 +288,22 @@
         window.addEventListener('unload', () => browser.runtime.onMessage.removeListener(listener));
     }
 
+    function getCurrentGroup() {
+        return _groups.find(group => group.windowId === currentWindowId) || {};
+    }
+
+    function getActiveIndex() {
+        let group = getCurrentGroup();
+
+        return group ? group.tabs.findIndex(tab => tab.active) : -1;
+    }
+
     function getGroupById(groupId) {
-        return allData.groups.find(group => group.id === groupId);
+        return _groups.find(group => group.id === groupId);
+    }
+
+    function getGroupIndex(groupId) {
+        return _groups.findIndex(group => group.id === groupId);
     }
 
     function render(templateId, data) {
@@ -290,32 +326,13 @@
         }
     }
 
-    function loadData() {
-        // console.log('loadData popup');
-
-        return Promise.all([
-                BG.getData(undefined, false),
-                loadContainers()
-            ])
-            .then(function([result, containers]) {
-                allData = {
-                    groups: result.groups,
-                    currentGroup: result.currentGroup,
-                    currentWindowId: result.windowId,
-                    activeTabIndex: result.tabs.findIndex(tab => tab.active),
-                    containers,
-                };
-            })
-            .then(selectRender);
-    }
-
     function selectRender() {
         if (state.view === VIEW_SEARCH_TABS) {
             renderSearchTabsList();
         } else if (state.view === VIEW_GROUPS) {
             renderGroupsList();
         } else if (state.view === VIEW_GROUP_TABS) {
-            renderTabsList(state.groupId || allData.currentGroup.id);
+            renderTabsList(state.groupId || getCurrentGroup().id);
         }
     }
 
@@ -329,12 +346,12 @@
         let containerColorCode = '';
 
         if (tab.cookieStoreId && tab.cookieStoreId !== DEFAULT_COOKIE_STORE_ID) {
-            containerColorCode = 'border-bottom: 2px solid ' + allData.containers.find(container => container.cookieStoreId === tab.cookieStoreId).colorCode;
+            containerColorCode = 'border-bottom: 2px solid ' + containers.find(container => container.cookieStoreId === tab.cookieStoreId).colorCode;
         }
 
         return {
             urlTitle: options.showUrlTooltipOnTabHover ? tab.url : '',
-            classList: (groupId === allData.currentGroup.id && tabIndex === allData.activeTabIndex) ? 'is-active' : '',
+            classList: (groupId === getCurrentGroup().id && tabIndex === getActiveIndex()) ? 'is-active' : '',
             tabIndex: tabIndex,
             groupId: groupId,
             title: safeHtml(unSafeHtml(tab.title || tab.url)),
@@ -355,7 +372,7 @@
         let tabsToView = [],
             searchHtml = null;
 
-        allData.groups.forEach(function(group) {
+        _groups.forEach(function(group) {
             group.tabs.forEach(function(tab, tabIndex) {
                 if ((tab.title || '').toLowerCase().indexOf(state.searchStr) !== -1 || (tab.url || '').toLowerCase().indexOf(state.searchStr) !== -1) {
                     let preparedTab = prepareTabToView(group.id, tab, tabIndex);
@@ -380,9 +397,9 @@
     function renderGroupsList() {
         state.view = VIEW_GROUPS;
 
-        let groupsHtml = allData.groups.map(function(group) {
+        let groupsHtml = _groups.map(function(group) {
                 let customData = {
-                    classList: group.id === allData.currentGroup.id ? 'is-active' : '',
+                    classList: group.id === getCurrentGroup().id ? 'is-active' : '',
                     colorCircleHtml: render('color-circle-tmpl', {
                         title: '',
                         iconColor: group.iconColor,
@@ -428,13 +445,13 @@
             }),
             group,
             tabsListHtml,
-            newTabContextMenu: allData.containers.length ? 'contextmenu="create-tab-with-container-menu"' : '',
+            newTabContextMenu: containers.length ? 'contextmenu="create-tab-with-container-menu"' : '',
             cookieStoreId: DEFAULT_COOKIE_STORE_ID,
         });
 
         setHtml('result', tabsListWrapperHtml, false);
 
-        let groupsMenuItems = allData.groups
+        let groupsMenuItems = _groups
             .map(function(gr) {
                 return render('move-tab-to-group-menu-item-tmpl', {
                     title: gr.title,
@@ -449,7 +466,7 @@
             groupsMenuItems,
         }), false);
 
-        let containersHtml = allData.containers
+        let containersHtml = containers
             .map(function(container) {
                 return render('create-tab-with-container-item-tmpl', {
                     cookieStoreId: container.cookieStoreId,

@@ -85,14 +85,13 @@ let Popups = {
                 });
 
             BG.saveGroup(group)
-                .then(() => BG.getData(undefined, false))
-                .then(function(result) {
-                    if (group.id === result.currentGroup.id) {
-                        BG.updateBrowserActionData();
-                    }
-                })
-                .then(BG.removeMoveTabMenus)
-                .then(BG.createMoveTabMenus)
+                // .then(() => BG.getData(undefined, false)) // TODO find current group
+                // .then(function(result) {
+                //     if (group.id === result.currentGroup.id) {
+                //         BG.updateBrowserActionData();
+                //     }
+                // })
+                .then(BG.updateMoveTabMenus)
                 .then(hidePopup);
         } else if ('set-random-group-color' === action) {
             event.preventDefault();

@@ -8,7 +8,7 @@
         }
     },
 
-    "name": "__MSG_extensionName__",
+    "name": "Simple Tab Groups",
     "description": "__MSG_extensionDescription__",
     "version": "1.9.0.1",
     "author": "Vitaliy Bavykin",
@@ -19,7 +19,7 @@
     },
 
     "icons": {
-        "96": "icons/icon.svg"
+        "96": "/icons/icon.svg"
     },
 
     "permissions": [
@@ -32,8 +32,8 @@
     ],
 
     "browser_action": {
-        "default_icon": "icons/icon.svg",
-        "default_title": "__MSG_extensionName__",
+        "default_icon": "/icons/icon.svg",
+        "default_title": "Simple Tab Groups",
         "default_popup": "popup/popup.html"
     },
 

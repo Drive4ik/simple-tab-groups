@@ -1,6 +1,7 @@
 'use strict';
 
-const DEFAULT_COOKIE_STORE_ID = 'firefox-default',
+const EXTENSION_NAME = 'Simple Tab Groups',
+    DEFAULT_COOKIE_STORE_ID = 'firefox-default',
     CONTEXT_MENU_PREFIX_GROUP = 'stg-move-group-id-',
     DEFAULT_OPTIONS = {
         groups: [],
@@ -111,7 +112,7 @@ let $ = document.querySelector.bind(document),
         browser.notifications.create(id, {
             type: 'basic',
             iconUrl: '/icons/icon.svg',
-            title: browser.i18n.getMessage('extensionName'),
+            title: EXTENSION_NAME,
             message: String(message),
         });
 
@@ -306,10 +307,6 @@ let $ = document.querySelector.bind(document),
                     let eventObj = {},
                         doCallEvent = false;
 
-                    if ('groups' in keys) {
-                        doCallEvent = eventObj.groupsUpdated = true;
-                    }
-
                     if (onlyOptionsKeys.some(key => key in keys)) {
                         doCallEvent = eventObj.optionsUpdated = true;
                     }
@@ -317,8 +314,6 @@ let $ = document.querySelector.bind(document),
                     if (doCallEvent) {
                         browser.runtime.sendMessage(eventObj);
                     }
-
-                    return keys;
                 });
         },
     },
@@ -333,7 +328,7 @@ let $ = document.querySelector.bind(document),
     },
     getBrowserActionSvgPath = function(color) {
         if (!color) {
-            return '/icons/icon.svg';
+            return browser.runtime.getManifest().browser_action.default_icon;
         }
 
         let svg = `

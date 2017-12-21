@@ -6,7 +6,8 @@
     })(browser.extension.getBackgroundPage());
 
     if (!BG) {
-        return $('#simple-tab-groups-options').classList.add('is-hidden');
+        let key = 'innerHTML';
+        return $('#simple-tab-groups-options')[key] = 'Please, update addon to latest version';
     }
 
     let $on = on.bind({});

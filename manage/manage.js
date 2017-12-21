@@ -11,12 +11,22 @@
 
     let templates = {},
         options = null,
-        allData = null,
+        _groups = BG.getGroups(),
+        containers = [],
+        currentWindowId = null,
         groupIdContext = 0,
         $on = on.bind({});
 
-    loadOptions()
-        .then(loadData)
+    Promise.all([
+            BG.getWindow(),
+            loadContainers(),
+            loadOptions()
+        ])
+        .then(function([win, allContainers]) {
+            currentWindowId = win.id;
+            containers = allContainers;
+        })
+        .then(renderGroupsCards)
         .then(addEvents);
 
     function loadOptions() {
@@ -37,7 +47,7 @@
                         browser.windows.getCurrent()
                     ])
                     .then(function([lastFocusedNormalWindow, currentWindow]) {
-                        BG.loadGroup(lastFocusedNormalWindow.id, getGroupById(data.groupId), data.tabIndex);
+                        BG.loadGroup(lastFocusedNormalWindow.id, getGroupIndex(data.groupId), data.tabIndex);
 
                         if ('popup' === currentWindow.type) {
                             browser.windows.remove(currentWindow.id);
@@ -58,12 +68,12 @@
                             browser.windows.create({
                                     state: 'maximized',
                                 })
-                                .then(win => BG.loadGroup(win.id, group));
+                                .then(win => BG.loadGroup(win.id, getGroupIndex(group.id)));
                         }
                     });
             } else if ('remove-tab' === action) {
                 let group = getGroupById(data.groupId);
-                BG.removeTab(group.tabs[data.tabIndex], data.tabIndex, group);
+                BG.removeTab(data.tabIndex, group);
             } else if ('show-delete-group-popup' === action) {
                 let group = getGroupById(data.groupId);
 
@@ -89,14 +99,13 @@
             group.title = safeHtml(event.target.value.trim());
 
             BG.saveGroup(group)
-                .then(() => BG.getData(undefined, false))
-                .then(function(result) {
-                    if (group.id === result.currentGroup.id) {
+                .then(() => BG.getGroupByWindowId(currentWindowId))
+                .then(function(currentGroup) {
+                    if (currentGroup && currentGroup.id === group.id) {
                         BG.updateBrowserActionData();
                     }
                 })
-                .then(BG.removeMoveTabMenus)
-                .then(BG.createMoveTabMenus);
+                .then(BG.updateMoveTabMenus);
         });
 
         addDragAndDropEvents();
@@ -105,8 +114,11 @@
         let loadDataTimer = null,
             listener = function(request, sender, sendResponse) {
                 if (request.groupsUpdated) {
-                    clearTimeout(loadDataTimer);
-                    loadDataTimer = setTimeout(loadData, 100);
+                    _groups = BG.getGroups();
+                    renderGroupsCards();
+
+                    // clearTimeout(loadDataTimer);
+                    // loadDataTimer = setTimeout(() => _groups = BG.getGroups(), 100);
                 }
 
                 if (request.optionsUpdated) {
@@ -121,7 +133,11 @@
     }
 
     function getGroupById(groupId) {
-        return allData.groups.find(group => group.id === groupId);
+        return _groups.find(group => group.id === groupId);
+    }
+
+    function getGroupIndex(groupId) {
+        return _groups.findIndex(group => group.id === groupId);
     }
 
     function addDragAndDropEvents() {
@@ -136,10 +152,8 @@
             },
             draggableElements: '.body, [data-is-group], .icon, .tabs-count',
             onDrop(event, from, to, dataFrom, dataTo) {
-                let group = getGroupById(dataFrom.groupId),
-                    newPosition = Array.from(to.parentNode.children).findIndex(node => node === to);
-
-                BG.moveGroup(group, newPosition);
+                let newPosition = Array.from(to.parentNode.children).findIndex(node => node === to);
+                BG.moveGroup(dataFrom.groupId, newPosition);
             },
         });
 
@@ -152,10 +166,6 @@
                 BG.moveTabToGroup(dataFrom.tabIndex, newTabIndex, dataFrom.groupId, dataTo.groupId, false);
             },
         });
-    }
-
-    function getGroupById(groupId) {
-        return allData.groups.find(group => group.id === groupId);
     }
 
     function render(templateId, data) {
@@ -178,30 +188,12 @@
         }
     }
 
-    function loadData() {
-        // console.log('loadData manage');
-
-        return Promise.all([
-                BG.getData(undefined, false),
-                loadContainers()
-            ])
-            .then(function([result, containers]) {
-                allData = {
-                    groups: result.groups,
-                    currentGroup: result.currentGroup,
-                    currentWindowId: result.windowId,
-                    containers,
-                };
-            })
-            .then(renderGroupsCards);
-    }
-
     function prepareTabToView(groupId, tab, tabIndex) {
         let container = {},
             urlTitle = '';
 
         if (tab.cookieStoreId && tab.cookieStoreId !== DEFAULT_COOKIE_STORE_ID) {
-            container = allData.containers.find(container => container.cookieStoreId === tab.cookieStoreId);
+            container = containers.find(container => container.cookieStoreId === tab.cookieStoreId);
         }
 
         if (options.showUrlTooltipOnTabHover) {
@@ -240,13 +232,13 @@
             })
             .concat([render('new-tab-tmpl', {
                 groupId: group.id,
-                newTabContextMenu: allData.containers.length ? 'contextmenu="create-tab-with-container-menu"' : '',
+                newTabContextMenu: containers.length ? 'contextmenu="create-tab-with-container-menu"' : '',
             })])
             .join('');
     }
 
     function renderGroupsCards() {
-        let groupsHtml = allData.groups.map(function(group) {
+        let groupsHtml = _groups.map(function(group) {
                 let customData = {
                     classList: '',
                     colorCircleHtml: render('color-circle-tmpl', group),
@@ -262,7 +254,7 @@
 
         // $$('.tab > .screenshot > img').forEach(img => img.onload = () => img.parentNode.parentNode.classList.add('has-thumbnail')); // TODO
 
-        let containersHtml = allData.containers
+        let containersHtml = containers
             .map(function(container) {
                 return render('create-tab-with-container-item-tmpl', {
                     cookieStoreId: container.cookieStoreId,
