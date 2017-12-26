@@ -99,8 +99,9 @@
             group.title = safeHtml(event.target.value.trim());
 
             BG.saveGroup(group)
-                .then(() => BG.getGroupByWindowId(currentWindowId))
-                .then(function(currentGroup) {
+                .then(function() {
+                    let currentGroup = _groups.find(gr => gr.windowId === currentWindowId);
+
                     if (currentGroup && currentGroup.id === group.id) {
                         BG.updateBrowserActionData();
                     }
@@ -114,11 +115,14 @@
         let loadDataTimer = null,
             listener = function(request, sender, sendResponse) {
                 if (request.groupsUpdated) {
-                    _groups = BG.getGroups();
-                    renderGroupsCards();
+                    // _groups = BG.getGroups();
+                    // renderGroupsCards();
 
-                    // clearTimeout(loadDataTimer);
-                    // loadDataTimer = setTimeout(() => _groups = BG.getGroups(), 100);
+                    clearTimeout(loadDataTimer);
+                    loadDataTimer = setTimeout(function() {
+                        _groups = BG.getGroups();
+                        renderGroupsCards();
+                    }, 300);
                 }
 
                 if (request.optionsUpdated) {

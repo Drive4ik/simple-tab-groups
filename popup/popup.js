@@ -47,31 +47,28 @@
 
         function doAction(action, data, event) {
             if ('load-group' === action) {
-                BG.getGroupByWindowId(currentWindowId)
-                    .then(function(currentGroup) {
-                        if (!currentGroup) {
-                            return;
+                let currentGroup = _groups.find(group => group.windowId === currentWindowId);
+
+                if (!currentGroup) {
+                    return;
+                }
+
+                let isCurrentGroup = data.groupId === currentGroup.id;
+
+                if (isCurrentGroup && -1 === data.tabIndex) { // open group
+                    return renderTabsList(data.groupId);
+                }
+
+                BG.loadGroup(currentWindowId, getGroupIndex(data.groupId), data.tabIndex)
+                    .then(function() {
+                        if (!options.closePopupAfterChangeGroup && options.openGroupAfterChange) {
+                            renderTabsList(data.groupId);
                         }
 
-                        let isCurrentGroup = data.groupId === currentGroup.id;
-
-                        if (isCurrentGroup && -1 === data.tabIndex) { // open group
-                            return renderTabsList(data.groupId);
+                        if (options.closePopupAfterChangeGroup && !isCurrentGroup) {
+                            window.close();
                         }
-
-                        BG.loadGroup(currentWindowId, getGroupIndex(data.groupId), data.tabIndex)
-                            .then(function() {
-                                if (!options.closePopupAfterChangeGroup && options.openGroupAfterChange) {
-                                    renderTabsList(data.groupId);
-                                }
-
-                                if (options.closePopupAfterChangeGroup && !isCurrentGroup) {
-                                    window.close();
-                                }
-                            });
                     });
-
-
             } else if ('show-group' === action) {
                 renderTabsList(data.groupId);
             } else if ('remove-tab' === action) {
@@ -261,11 +258,14 @@
         let loadDataTimer = null,
             listener = function(request, sender, sendResponse) {
                 if (request.groupsUpdated) {
-                    _groups = BG.getGroups();
-                    selectRender();
+                    // _groups = BG.getGroups();
+                    // selectRender();
 
-                    // clearTimeout(loadDataTimer);
-                    // loadDataTimer = setTimeout(loadData, 100);
+                    clearTimeout(loadDataTimer);
+                    loadDataTimer = setTimeout(function() {
+                        _groups = BG.getGroups();
+                        selectRender();
+                    }, 300);
                 }
 
                 if (undefined !== request.loadingGroupPosition) {
