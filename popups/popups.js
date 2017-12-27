@@ -84,15 +84,16 @@ let Popups = {
                     }
                 });
 
-            BG.saveGroup(group)
-                // .then(() => BG.getData(undefined, false)) // TODO find current group
-                // .then(function(result) {
-                //     if (group.id === result.currentGroup.id) {
-                //         BG.updateBrowserActionData();
-                //     }
-                // })
-                .then(BG.updateMoveTabMenus)
-                .then(hidePopup);
+            BG.saveGroup(group, true);
+
+            BG.getWindow()
+                .then(function(win) {
+                    if (group.windowId === win.id) {
+                        BG.updateBrowserActionData(win.id);
+                    }
+
+                    hidePopup();
+                });
         } else if ('set-random-group-color' === action) {
             event.preventDefault();
             $('#groupIconColor').value = randomColor();

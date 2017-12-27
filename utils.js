@@ -1,6 +1,7 @@
 'use strict';
 
 const EXTENSION_NAME = 'Simple Tab Groups',
+    MANIFEST = browser.runtime.getManifest(),
     DEFAULT_COOKIE_STORE_ID = 'firefox-default',
     CONTEXT_MENU_PREFIX_GROUP = 'stg-move-group-id-',
     DEFAULT_OPTIONS = {
@@ -328,7 +329,7 @@ let $ = document.querySelector.bind(document),
     },
     getBrowserActionSvgPath = function(color) {
         if (!color) {
-            return browser.runtime.getManifest().browser_action.default_icon;
+            return MANIFEST.browser_action.default_icon;
         }
 
         let svg = `

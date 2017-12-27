@@ -98,15 +98,13 @@
 
             group.title = safeHtml(event.target.value.trim());
 
-            BG.saveGroup(group)
-                .then(function() {
-                    let currentGroup = _groups.find(gr => gr.windowId === currentWindowId);
+            BG.saveGroup(group, true);
 
-                    if (currentGroup && currentGroup.id === group.id) {
-                        BG.updateBrowserActionData();
-                    }
-                })
-                .then(BG.updateMoveTabMenus);
+            let currentGroup = _groups.find(gr => gr.windowId === currentWindowId);
+
+            if (currentGroup && currentGroup.id === group.id) {
+                BG.updateBrowserActionData(currentWindowId);
+            }
         });
 
         addDragAndDropEvents();
