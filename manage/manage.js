@@ -63,7 +63,7 @@
                 BG.getWindowByGroup(group)
                     .then(function(win) {
                         if (win) {
-                            BG.setFocusOnWindow(group.windowId);
+                            BG.setFocusOnWindow(win.id);
                         } else {
                             browser.windows.create({
                                     state: 'maximized',
@@ -110,25 +110,18 @@
         addDragAndDropEvents();
 
         // setTabEventsListener
-        let loadDataTimer = null,
-            listener = function(request, sender, sendResponse) {
-                if (request.groupsUpdated) {
-                    // _groups = BG.getGroups();
-                    // renderGroupsCards();
+        let listener = function(request, sender, sendResponse) {
+            if (request.groupsUpdated) {
+                _groups = BG.getGroups();
+                renderGroupsCards();
+            }
 
-                    clearTimeout(loadDataTimer);
-                    loadDataTimer = setTimeout(function() {
-                        _groups = BG.getGroups();
-                        renderGroupsCards();
-                    }, 300);
-                }
+            if (request.optionsUpdated) {
+                loadOptions();
+            }
 
-                if (request.optionsUpdated) {
-                    loadOptions();
-                }
-
-                sendResponse(':)');
-            };
+            sendResponse(':)');
+        };
 
         browser.runtime.onMessage.addListener(listener);
         window.addEventListener('unload', () => browser.runtime.onMessage.removeListener(listener));
@@ -190,9 +183,10 @@
         }
     }
 
-    function prepareTabToView(groupId, tab, tabIndex) {
+    function prepareTabToView(group, tab, tabIndex) {
         let container = {},
-            urlTitle = '';
+            urlTitle = '',
+            classList = [];
 
         if (tab.cookieStoreId && tab.cookieStoreId !== DEFAULT_COOKIE_STORE_ID) {
             container = containers.find(container => container.cookieStoreId === tab.cookieStoreId);
@@ -206,11 +200,23 @@
             }
         }
 
+        if (tab.active) {
+            classList.push('is-active');
+
+            if (group.windowId) {
+                classList.push('is-current');
+            }
+        }
+
+        if (tab.thumbnail) {
+            classList.push('has-thumbnail');
+        }
+
         return {
             urlTitle: urlTitle,
-            classList: tab.active ? 'is-active' : '',
+            classList: classList.join(' '),
             tabIndex: tabIndex,
-            groupId: groupId,
+            groupId: group.id,
             title: safeHtml(unSafeHtml(tab.title || tab.url)),
             url: tab.url,
 
@@ -222,7 +228,6 @@
             containerColorCodeFillStyle: container.cookieStoreId ? `fill: ${container.colorCode};` : '',
             containerColorCodeBorderStyle: container.cookieStoreId ? `border-color: ${container.colorCode};` : '',
 
-            thumbnailClass: '',
             thumbnail: tab.thumbnail || '',
         };
     }
@@ -230,7 +235,7 @@
     function getTabsHtml(group) {
         return group.tabs
             .map(function(tab, tabIndex) {
-                return render('tab-tmpl', prepareTabToView(group.id, tab, tabIndex));
+                return render('tab-tmpl', prepareTabToView(group, tab, tabIndex));
             })
             .concat([render('new-tab-tmpl', {
                 groupId: group.id,
@@ -253,8 +258,6 @@
             .join('');
 
         setHtml('result', groupsHtml, false);
-
-        // $$('.tab > .screenshot > img').forEach(img => img.onload = () => img.parentNode.parentNode.classList.add('has-thumbnail')); // TODO
 
         let containersHtml = containers
             .map(function(container) {

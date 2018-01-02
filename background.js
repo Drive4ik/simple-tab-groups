@@ -185,23 +185,17 @@
         return saveGroupsToStorage(true);
     }
 
-    function getWindowByGroup(group, withTabs = false, filterTabs = true) {
+    function getWindowByGroup(group) {
         if (!group.windowId) {
             return Promise.resolve();
         }
 
         return new Promise(function(resolve) {
             browser.windows.get(group.windowId, {
-                    populate: withTabs,
+                    populate: false,
                     windowTypes: ['normal'],
                 })
-                .then(function(win) {
-                    if (withTabs && filterTabs) {
-                        win.tabs = win.tabs.filter(tab => !tab.pinned && isAllowUrl(tab.url));
-                    }
-
-                    resolve(win);
-                })
+                .then(win => resolve(win))
                 .catch(() => resolve());
         });
     }
@@ -281,7 +275,7 @@
 
         currentlyLoadingGroups[windowId] = true;
 
-        return getWindowByGroup(_groups[groupIndex], true)
+        return getWindowByGroup(_groups[groupIndex])
             .then(function(win) {
                 if (win) {
                     if (-1 === activeTabIndex) {
@@ -375,6 +369,12 @@
                                 }));
                             }
                         })
+                        // .then(function(tabs) { // TODO - add discard tabs (bugs found)
+                        //     if (browser.tabs.discard && tabs) {
+                        //         let discardedTabs = tabs.filter(tab => !tab.active).map(tab => tab.id);
+                        //         return browser.tabs.discard(discardedTabs);
+                        //     }
+                        // })
                         .then(function() {
                             if (tempEmptyTabId) {
                                 return browser.tabs.remove(tempEmptyTabId);
@@ -455,17 +455,7 @@
         });
     }
 
-    function _updateTabThumbnail(windowId, group, tabIndex) {
-        getVisibleTabThumbnail(windowId)
-            .then(function(thumbnail) {
-                group.tabs[tabIndex].thumbnail = thumbnail;
-                saveGroupsToStorage();
-            });
-    }
-
-    let waitCompleteLoadingTab = {}; // tabId: promise
-
-    function updateTabThumbnail(windowId, tabId) {
+    function updateTabThumbnail(windowId) {
         let group = _groups.find(group => group.windowId === windowId);
 
         if (!group) {
@@ -474,24 +464,26 @@
 
         getTabs(windowId)
             .then(function(tabs) {
-                let tabIndex = tabs.findIndex(tab => tab.id === tabId);
+                let tabIndex = tabs.findIndex(tab => tab.active);
 
                 if (-1 === tabIndex) {
                     return;
                 }
 
-                if (group.tabs[tabIndex].thumbnail && group.tabs[tabIndex].url === tabs[tabIndex].url) {
+                // if (group.tabs[tabIndex].thumbnail && group.tabs[tabIndex].url === tabs[tabIndex].url) {
+                //     return;
+                // }
+
+                if (group.tabs[tabIndex].thumbnail && ((prevTabs[tabIndex] && prevTabs[tabIndex].url) === tabs[tabIndex].url)) {
                     return;
                 }
 
                 if (tabs[tabIndex].status === 'complete') {
-                    _updateTabThumbnail(windowId, group, tabIndex);
-                } else {
-                    // waitCompleteLoadingTab[tabId] =
-                    new Promise(function(resolve) {
-                            waitCompleteLoadingTab[tabId] = resolve;
-                        })
-                        .then(_updateTabThumbnail.bind(null, windowId, group, tabIndex));
+                    getVisibleTabThumbnail(windowId)
+                        .then(function(thumbnail) {
+                            group.tabs[tabIndex].thumbnail = thumbnail;
+                            saveGroupsToStorage();
+                        });
                 }
             });
     }
@@ -515,13 +507,10 @@
                     return tab;
                 });
 
+                updateTabThumbnail(windowId);
+
                 saveTemporaryTabs(windowId, tabs);
-
                 saveGroupsToStorage();
-
-                // if (options) {
-                //     updateTabThumbnail(windowId, tabId);
-                // }
             });
     }
 
@@ -534,11 +523,19 @@
             return;
         }
 
-        _groups[groupIndex].tabs.push(mapTab(tab));
+        getTabs(tab.windowId)
+            .then(function(tabs) {
+                let newTabIndex = tabs.findIndex(t => t.id === tab.id);
 
-        saveTemporaryTabs(tab.windowId); // save locale tabs
+                if (-1 === newTabIndex) {
+                    return;
+                }
 
-        saveGroupsToStorage();
+                _groups[groupIndex].tabs.splice(newTabIndex, 0, mapTab(tab));
+
+                saveTemporaryTabs(tab.windowId, tabs); // save locale tabs
+                saveGroupsToStorage();
+            });
     }
 
     let currentlyMovingTabs = []; // tabIds // expample: open tab from bookmark and move it to other group: many calls method onUpdatedTab
@@ -546,7 +543,16 @@
     function onUpdatedTab(tabId, changeInfo, tab) {
         let windowId = tab.windowId,
             groupIndex = _groups.findIndex(group => group.windowId === windowId),
-            prevTabIndex = getTemporaryTabs(windowId).findIndex(t => t.id === tabId); // find prev tab in this place
+            prevTabs = getTemporaryTabs(windowId),
+            prevTabIndex = prevTabs.findIndex(t => t.id === tabId); // find prev tab in this place
+
+        if (-1 === groupIndex ||
+            currentlyLoadingGroups[windowId] ||
+            'isArticle' in changeInfo || // not supported reader mode now
+            'discarded' in changeInfo || // not supported discard tabs now
+            (tab.pinned && undefined === changeInfo.pinned)) { // pinned tabs are not supported
+            return;
+        }
 
         console.log('onUpdatedTab', JSON.stringify(changeInfo), JSON.stringify({
             status: tab.status,
@@ -554,33 +560,26 @@
             title: tab.title,
         }));
 
-        if (-1 === groupIndex ||
-            currentlyLoadingGroups[windowId] ||
-            'isArticle' in changeInfo || // not supported reader mode now
-            (tab.pinned && undefined === changeInfo.pinned)) { // pinned tabs are not supported
+        if ('pinned' in changeInfo) {
+            if (isAllowUrl(tab.url)) {
+                if (changeInfo.pinned) {
+                    if (-1 !== prevTabIndex) {
+                        _groups[groupIndex].tabs.splice(prevTabIndex, 1);
+                    }
+                } else {
+                    _groups[groupIndex].tabs.unshift(mapTab(tab));
+                }
+
+                saveGroupsToStorage();
+                saveTemporaryTabs(windowId);
+            }
+
             return;
         }
 
-        // if ('pinned' in changeInfo) { // TODO: detect loading and is allow url
-        //     if (changeInfo.pinned) {
-        //         _groups[groupIndex].tabs.splice(prevTabIndex, 1);
-        //     } else {
-        //         _groups[groupIndex].tabs.unshift(mapTab(tab));
-        //     }
-
-        //     saveGroupsToStorage();
-
-        //     saveTemporaryTabs(windowId);
-        //     return;
-        // }
-
-        if ('loading' === changeInfo.status) {
-            if (!changeInfo.url) {
-                return;
-            }
-
-            if (!tab.pinned && isAllowUrl(tab.url) && !currentlyMovingTabs.includes(tabId)) {
-                let destGroup = _groups.find(group => isCatchedUrl(tab.url, group));
+        if ('loading' === changeInfo.status && changeInfo.url) {
+            if (isAllowUrl(changeInfo.url) && !isEmptyUrl(changeInfo.url) && !currentlyMovingTabs.includes(tabId)) {
+                let destGroup = _groups.find(group => isCatchedUrl(changeInfo.url, group));
 
                 if (destGroup && destGroup.id !== _groups[groupIndex].id) {
                     currentlyMovingTabs.push(tabId);
@@ -588,37 +587,39 @@
                     return getTabs(windowId)
                         .then(function(tabs) {
                             let tabIndex = tabs.findIndex(tab => tab.id === tabId);
+                            _groups[groupIndex].tabs[tabIndex] = mapTab(tab);
                             return moveTabToGroup(tabIndex, undefined, _groups[groupIndex].id, destGroup.id);
                         })
                         .then(() => currentlyMovingTabs.splice(currentlyMovingTabs.indexOf(tabId), 1))
                 }
             }
 
+            saveGroupsToStorage();
         } else if ('complete' === changeInfo.status) {
-            if (waitCompleteLoadingTab[tabId]) {
-                waitCompleteLoadingTab[tabId]();
-                delete waitCompleteLoadingTab[tabId];
-            }
+            updateTabThumbnail(windowId);
 
             if (isAllowUrl(tab.url)) { // if loading allowed tab
                 if (-1 === prevTabIndex) { // if prev tab are not found (it's not allowed)
                     getTabs(windowId)
                         .then(function(tabs) {
                             let tabIndex = tabs.findIndex(tab => tab.id === tabId); // find new tab index
-                            _groups[groupIndex].tabs.splice(tabIndex, 0, mapTab(tabs[tabIndex])); // add new tab to position if prev tab are not allowed
-                            saveTemporaryTabs(windowId, tabs);
+
+                            if (-1 === tabIndex) {
+                                return;
+                            }
+
+                            _groups[groupIndex].tabs.splice(tabIndex, 0, mapTab(tab)); // add new tab to position if prev tab are not allowed
+
                             saveGroupsToStorage();
                         });
                 } else {
-                    if (_groups[groupIndex].tabs[prevTabIndex].url !== getTemporaryTabs(windowId)[prevTabIndex].url) {
-                        _groups[groupIndex].tabs[prevTabIndex].thumbnail = null;
-                    }
-
                     _groups[groupIndex].tabs[prevTabIndex].url = normalizeUrl(tab.url);
                     _groups[groupIndex].tabs[prevTabIndex].favIconUrl = tab.favIconUrl;
                     _groups[groupIndex].tabs[prevTabIndex].title = tab.title;
                     _groups[groupIndex].tabs[prevTabIndex].active = tab.active;
                     _groups[groupIndex].tabs[prevTabIndex].cookieStoreId = tab.cookieStoreId;
+
+                    saveGroupsToStorage();
                 }
             } else { // if loading tab are NOT supported
                 if (-1 === prevTabIndex) { // if prev tab are not found (it's not allowed)
@@ -628,286 +629,26 @@
                     saveGroupsToStorage();
                 }
 
-                saveTemporaryTabs(windowId);
             }
-        }
+        } else if ('complete' === tab.status) { // id tab complete loading (need for changed title or favIconUrl etc.)
+            if (isAllowUrl(tab.url) && -1 !== prevTabIndex) { // if loading allowed tab
+                let tabChanged = false;
 
-
-        // } else if ('complete' === changeInfo.status) {
-        //     if (waitCompleteLoadingTab[tabId]) {
-        //         waitCompleteLoadingTab[tabId]();
-        //         delete waitCompleteLoadingTab[tabId];
-        //     }
-
-        //     // if (_groups[groupIndex].tabs[prevTabIndex].url !== getTemporaryTabs(windowId)[prevTabIndex].url) {
-        //     //     _groups[groupIndex].tabs[prevTabIndex].thumbnail = null;
-        //     // }
-
-        //     // _groups[groupIndex].tabs[prevTabIndex].url = normalizeUrl(tab.url);
-        //     // _groups[groupIndex].tabs[prevTabIndex].favIconUrl = tab.favIconUrl;
-        //     // _groups[groupIndex].tabs[prevTabIndex].title = tab.title;
-        //     // _groups[groupIndex].tabs[prevTabIndex].active = tab.active;
-        //     // _groups[groupIndex].tabs[prevTabIndex].cookieStoreId = tab.cookieStoreId;
-        // }
-
-        // if ('loading' === changeInfo.status) {
-        //     if (!changeInfo.url) {
-        //         return;
-        //     }
-
-        //     if (isAllowUrl(changeInfo.url)) { // if loading allowed tab
-        //         if (-1 === prevTabIndex) { // if prev tab are not found (it's not allowed)
-        //             getTabs(windowId)
-        //                 .then(function(tabs) {
-        //                     let tabIndex = tabs.findIndex(tab => tab.id === tabId); // find new tab index
-        //                     _groups[groupIndex].tabs.splice(tabIndex, 0, mapTab(tabs[tabIndex])); // add new tab to position if prev tab are not allowed
-        //                     saveTemporaryTabs(windowId, tabs);
-        //                     saveGroupsToStorage();
-        //                 });
-        //         } else {
-        //             if (_groups[groupIndex].tabs[prevTabIndex].url !== getTemporaryTabs(windowId)[prevTabIndex].url) {
-        //                 _groups[groupIndex].tabs[prevTabIndex].thumbnail = null;
-        //             }
-
-        //             _groups[groupIndex].tabs[prevTabIndex].url = normalizeUrl(tab.url);
-        //             _groups[groupIndex].tabs[prevTabIndex].favIconUrl = tab.favIconUrl;
-        //             _groups[groupIndex].tabs[prevTabIndex].title = tab.title;
-        //             _groups[groupIndex].tabs[prevTabIndex].active = tab.active;
-        //             _groups[groupIndex].tabs[prevTabIndex].cookieStoreId = tab.cookieStoreId;
-        //         }
-        //     } else { // if loading tab are NOT supported
-        //         if (-1 === prevTabIndex) { // if prev tab are not found (it's not allowed)
-        //             // do nothing
-        //         } else {
-        //             _groups[groupIndex].tabs.splice(prevTabIndex, 1); // if found prev tab index - remove this tab (loading not allow url instead of allow)
-        //             saveGroupsToStorage();
-        //         }
-
-        //         saveTemporaryTabs(windowId);
-        //     }
-
-
-        // } else if ('complete' === changeInfo.status) {
-        //     if (waitCompleteLoadingTab[tabId]) {
-        //         waitCompleteLoadingTab[tabId]();
-        //         delete waitCompleteLoadingTab[tabId];
-        //     }
-
-        //     // if (_groups[groupIndex].tabs[prevTabIndex].url !== getTemporaryTabs(windowId)[prevTabIndex].url) {
-        //     //     _groups[groupIndex].tabs[prevTabIndex].thumbnail = null;
-        //     // }
-
-        //     // _groups[groupIndex].tabs[prevTabIndex].url = normalizeUrl(tab.url);
-        //     // _groups[groupIndex].tabs[prevTabIndex].favIconUrl = tab.favIconUrl;
-        //     // _groups[groupIndex].tabs[prevTabIndex].title = tab.title;
-        //     // _groups[groupIndex].tabs[prevTabIndex].active = tab.active;
-        //     // _groups[groupIndex].tabs[prevTabIndex].cookieStoreId = tab.cookieStoreId;
-        // }
-
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    function onUpdatedTab_222222222222(tabId, changeInfo, tab) {
-        let windowId = tab.windowId,
-            groupIndex = _groups.findIndex(group => group.windowId === windowId);
-
-        if (-1 === groupIndex ||
-            currentlyLoadingGroups[windowId] ||
-            'isArticle' in changeInfo ||
-            (tab.pinned && undefined === changeInfo.pinned)) { // pinned tabs are not supported
-            return;
-        }
-
-        if ('loading' === tab.status) { // LOADING
-            if (isEmptyUrl(tab.url)) {
-                return;
-            }
-
-            if (isAllowUrl(tab.url)) {
-                if (!tab.pinned && !currentlyMovingTabs.includes(tabId)) {
-                    return getTabs(windowId)
-                        .then(function(tabs) {
-                            if (currentlyMovingTabs.includes(tabId)) {
-                                return;
-                            }
-
-                            let group = _groups.find(group => group.windowId === windowId);
-
-                            if (!group) {
-                                return;
-                            }
-
-                            let destGroup = _groups.find(isCatchedUrl.bind(null, tab.url));
-
-                            if (destGroup && destGroup.id !== group.id) {
-                                currentlyMovingTabs.push(tabId);
-
-                                let tabIndex = tabs.findIndex(tab => tab.id === tabId);
-                                return moveTabToGroup(tabIndex, undefined, group.id, destGroup.id)
-                                    .then(() => currentlyMovingTabs.splice(currentlyMovingTabs.indexOf(tabId), 1));
-                            }
-                        });
-                }
-            } else { // if url not allow
-                //
-            }
-
-
-
-
-
-        } else if ('complete' === tab.status) { // COMPLETE
-            if (waitCompleteLoadingTab[tabId]) {
-                waitCompleteLoadingTab[tabId]();
-                delete waitCompleteLoadingTab[tabId];
-            }
-
-            if (isAllowUrl(tab.url)) {
-                if ('pinned' in changeInfo) {
-                    if (changeInfo.pinned) {
-                        let tabIndex = getTemporaryTabs(windowId).findIndex(tab => tab.id === tabId);
-                        _groups[groupIndex].tabs.splice(tabIndex, 1);
-                    } else {
-                        _groups[groupIndex].tabs.unshift(mapTab(tab));
+                Object.keys(changeInfo).forEach(function(key) {
+                    if (key in _groups[groupIndex].tabs[prevTabIndex]) {
+                        _groups[groupIndex].tabs[prevTabIndex][key] = changeInfo[key];
+                        tabChanged = true;
                     }
+                });
 
+                if (tabChanged) {
                     saveGroupsToStorage();
-
-                    saveTemporaryTabs(windowId);
-                    return;
                 }
-
-                saveTab(tab);
-            } else {
-                //
             }
-
         }
 
-
-
-
-
-
-        if (tab.incognito || !isAllowUrl(tab.url)) {
-            return;
-        }
-
-        if ('complete' === tab.status && waitCompleteLoadingTab[tabId]) {
-            waitCompleteLoadingTab[tabId]();
-            delete waitCompleteLoadingTab[tabId];
-        }
-
-        if ('loading' === tab.status) {
-            if (!tab.pinned && !isEmptyUrl(tab.url) && !currentlyMovingTabs.includes(tabId)) {
-                return getTabs(windowId)
-                    .then(function(tabs) {
-                        let group = _groups.find(group => group.windowId === windowId);
-
-                        if (!group || currentlyMovingTabs.includes(tabId)) {
-                            return;
-                        }
-
-                        let destGroup = _groups.find(isCatchedUrl.bind(null, tab.url));
-
-                        if (destGroup && destGroup.id !== group.id) {
-                            currentlyMovingTabs.push(tabId);
-
-                            let tabIndex = tabs.findIndex(tab => tab.id === tabId);
-                            return moveTabToGroup(tabIndex, undefined, group.id, destGroup.id)
-                                .then(() => currentlyMovingTabs.splice(currentlyMovingTabs.indexOf(tabId), 1));
-                        }
-                    });
-            }
-        } else if ('complete' === tab.status) {
-            saveTab(tab);
-        }
+        saveTemporaryTabs(windowId);
     }
-
-    // function onUpdatedTab(tabId, changeInfo, tab) {
-    //     // console.log('onUpdatedTab', arguments);
-
-    //     let windowId = tab.windowId;
-
-    //     if (currentlyLoadingGroups[windowId]) {
-    //         return;
-    //     }
-
-    //     if (tab.status === 'loading' && isEmptyUrl(tab.url)) {
-    //         return;
-    //     }
-
-    //     if (tab.incognito || !isAllowUrl(tab.url)) {
-    //         return;
-    //     }
-
-    //     if (tab.pinned && undefined === changeInfo.pinned) { // pinned tabs are not supported
-    //         return;
-    //     }
-
-    //     if ('pinned' in changeInfo) {
-    //         let groupIndex = _groups.findIndex(group => group.windowId === windowId);
-
-    //         if (-1 === groupIndex) {
-    //             return;
-    //         }
-
-    //         if (changeInfo.pinned) {
-    //             let tabIndex = getTemporaryTabs(windowId).findIndex(tab => tab.id === tabId);
-    //             _groups[groupIndex].tabs.splice(tabIndex, 1);
-    //         } else {
-    //             _groups[groupIndex].tabs.unshift(mapTab(tab));
-    //         }
-
-    //         saveGroupsToStorage();
-
-    //         saveTemporaryTabs(windowId);
-    //         return;
-    //     }
-
-    //     if ('complete' === tab.status && waitCompleteLoadingTab[tabId]) {
-    //         waitCompleteLoadingTab[tabId]();
-    //         delete waitCompleteLoadingTab[tabId];
-    //     }
-
-    //     if ('loading' === tab.status) {
-    //         if (!tab.pinned && !isEmptyUrl(tab.url) && !currentlyMovingTabs.includes(tabId)) {
-    //             return getTabs(windowId)
-    //                 .then(function(tabs) {
-    //                     let group = _groups.find(group => group.windowId === windowId);
-
-    //                     if (!group || currentlyMovingTabs.includes(tabId)) {
-    //                         return;
-    //                     }
-
-    //                     let destGroup = _groups.find(isCatchedUrl.bind(null, tab.url));
-
-    //                     if (destGroup && destGroup.id !== group.id) {
-    //                         currentlyMovingTabs.push(tabId);
-
-    //                         let tabIndex = tabs.findIndex(tab => tab.id === tabId);
-    //                         return moveTabToGroup(tabIndex, undefined, group.id, destGroup.id)
-    //                             .then(() => currentlyMovingTabs.splice(currentlyMovingTabs.indexOf(tabId), 1));
-    //                     }
-    //                 });
-    //         }
-    //     } else if ('complete' === tab.status) {
-    //         saveTab(tab);
-    //     }
-    // }
 
     function saveTab(tab) {
         if (currentlyLoadingGroups[tab.windowId]) {
@@ -1481,8 +1222,6 @@
 
         getWindow,
         getWindowByGroup,
-        // getGroupByWindowId,
-        // getGroupIndexByWindowId,
 
         getTabs,
         moveTabToGroup,

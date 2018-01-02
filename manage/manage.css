@@ -2,6 +2,7 @@
     --margin: 5px;
     --tab-inner-padding: 3px;
     --fill-color: #818181;
+    --active-tab-bg-color: #e4e4e4;
 }
 
 html {
@@ -238,29 +239,31 @@ img {
 
 /* TAB */
 #result.grid > .group .tab {
-    /*! border: 5px solid transparent; */
     position: relative;
     font-size: 12px;
     padding: var(--tab-inner-padding);
 }
 
-#result.grid > .group .tab:not(.is-active):hover {
-    background-color: #e4e4e4;
-    outline: 1px solid #cfcfcf;
-}
-
 #result.grid > .group .tab.has-thumbnail:hover > .icon,
 #result.grid > .group .tab:hover > .delete-tab-button,
 #result.grid > .group .tab:hover > .container,
-#result.grid > .group .tab.has-thumbnail.is-active > .icon,
-#result.grid > .group .tab.is-active > .delete-tab-button,
-#result.grid > .group .tab.is-active > .container {
-    background-color: #e4e4e4;
+#result.grid > .group .tab.has-thumbnail.is-current > .icon,
+#result.grid > .group .tab.is-current > .delete-tab-button,
+#result.grid > .group .tab.is-current > .container {
+    background-color: var(--active-tab-bg-color);
 }
 
 #result.grid > .group .tab.is-active {
-    background-color: #e4e4e4;
     outline: 1px solid #0093e0;
+}
+
+#result.grid > .group .tab:not(.is-active):hover {
+    outline: 1px solid #cfcfcf;
+}
+
+#result.grid > .group .tab.is-current,
+#result.grid > .group .tab:not(.is-current):hover {
+    background-color: var(--active-tab-bg-color);
 }
 
 #result.grid > .group .tab:not(.has-thumbnail) > .icon {
@@ -347,6 +350,10 @@ img {
 #result.grid > .group .tab > .screenshot > img {
     width: 100%;
     height: 100%;
+}
+
+#result.grid > .group .tab > .screenshot > img[src=""] {
+    display: none;
 }
 
 #result.grid > .group .tab > .icon > *,

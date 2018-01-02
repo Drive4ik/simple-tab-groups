@@ -28,6 +28,7 @@
         "menus",
         "contextualIdentities",
         "cookies",
+        "<all_urls>",
         "storage"
     ],
 
