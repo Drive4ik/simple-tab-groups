@@ -33,6 +33,7 @@
     ],
 
     "browser_action": {
+        "default_area": "tabstrip",
         "default_icon": "/icons/icon.svg",
         "default_title": "Simple Tab Groups",
         "default_popup": "popup/popup.html"

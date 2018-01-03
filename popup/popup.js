@@ -265,7 +265,7 @@
                     loadDataTimer = setTimeout(function() {
                         _groups = BG.getGroups();
                         selectRender();
-                    }, 300);
+                    }, 100);
                 }
 
                 if (undefined !== request.loadingGroupPosition) {

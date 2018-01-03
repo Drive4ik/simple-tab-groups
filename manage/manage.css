@@ -247,7 +247,9 @@ img {
 #result.grid > .group .tab.has-thumbnail:hover > .icon,
 #result.grid > .group .tab:hover > .delete-tab-button,
 #result.grid > .group .tab:hover > .container,
-#result.grid > .group .tab.has-thumbnail.is-current > .icon,
+#result.grid > .group .tab.is-current,
+#result.grid > .group .tab:not(.is-current):hover,
+#result.grid > .group .tab.is-current.has-thumbnail > .icon,
 #result.grid > .group .tab.is-current > .delete-tab-button,
 #result.grid > .group .tab.is-current > .container {
     background-color: var(--active-tab-bg-color);
@@ -259,11 +261,6 @@ img {
 
 #result.grid > .group .tab:not(.is-active):hover {
     outline: 1px solid #cfcfcf;
-}
-
-#result.grid > .group .tab.is-current,
-#result.grid > .group .tab:not(.is-current):hover {
-    background-color: var(--active-tab-bg-color);
 }
 
 #result.grid > .group .tab:not(.has-thumbnail) > .icon {

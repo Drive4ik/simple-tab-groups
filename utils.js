@@ -129,12 +129,12 @@ let $ = document.querySelector.bind(document),
                     }
                 }.bind(null, id);
 
-            setTimeout(() => called ? null : reject, 30000, id);
+            setTimeout(() => !called && reject(), 30000, id);
 
             browser.notifications.onClicked.addListener(listener);
         });
     },
-    translatePage = function() {
+    translatePage = function() { // TODO: move to another file
         $$('[data-i18n]').forEach(function(node) {
             node.dataset.i18n
                 .trim()
@@ -148,6 +148,8 @@ let $ = document.querySelector.bind(document),
 
             delete node.dataset.i18n;
         });
+
+        document.querySelector('html').setAttribute('lang', browser.i18n.getUILanguage().substring(0, 2));
     },
     isAllowUrl = function(url) {
         if (!url) {
@@ -279,7 +281,7 @@ let $ = document.querySelector.bind(document),
                 });
             });
     },
-    storage = {
+    storage = { // TODO: move to another file
         get(keys) {
             return browser.storage.local.get(keys)
                 .then(function(result) {
