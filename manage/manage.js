@@ -89,7 +89,7 @@
             }
         }
 
-        $on('contextmenu', '[contextmenu="create-tab-with-container-menu"], [contextmenu="group-menu"]', function(event, {groupId}) {
+        $on('contextmenu', '[contextmenu="create-tab-with-container-menu"], [contextmenu="group-menu"]', function(event, { groupId }) {
             groupIdContext = groupId;
         });
 
@@ -107,21 +107,31 @@
             }
         });
 
+        $on('input', '#filterTabs', renderGroupsCards);
+
         addDragAndDropEvents();
 
         // setTabEventsListener
-        let listener = function(request, sender, sendResponse) {
-            if (request.groupsUpdated) {
-                _groups = BG.getGroups();
-                renderGroupsCards();
-            }
+        let updateDataTimer = null,
+            listener = function(request, sender, sendResponse) {
+                if (request.groupsUpdated) {
+                    clearTimeout(updateDataTimer);
+                    updateDataTimer = setTimeout(function() {
+                        _groups = BG.getGroups();
+                        renderGroupsCards();
+                        console.log('load data');
+                    }, 100);
+                    // _groups = BG.getGroups();
+                    // renderGroupsCards();
+                    // console.log('load data');
+                }
 
-            if (request.optionsUpdated) {
-                loadOptions();
-            }
+                if (request.optionsUpdated) {
+                    loadOptions();
+                }
 
-            sendResponse(':)');
-        };
+                sendResponse(':)');
+            };
 
         browser.runtime.onMessage.addListener(listener);
         window.addEventListener('unload', () => browser.runtime.onMessage.removeListener(listener));
@@ -183,7 +193,7 @@
         }
     }
 
-    function prepareTabToView(group, tab, tabIndex) {
+    function prepareTabToView(group, tab, tabIndex, showTab) {
         let container = {},
             urlTitle = '',
             classList = [];
@@ -212,6 +222,10 @@
             classList.push('has-thumbnail');
         }
 
+        if (!showTab) {
+            classList.push('is-hidden');
+        }
+
         return {
             urlTitle: urlTitle,
             classList: classList.join(' '),
@@ -233,11 +247,29 @@
     }
 
     function getTabsHtml(group) {
+        let filter = $('#filterTabs').value
+                .trim()
+                .split(/\s*\*\s*/)
+                .filter(Boolean)
+                .map(s => s.toLowerCase());
+
         return group.tabs
             .map(function(tab, tabIndex) {
-                return render('tab-tmpl', prepareTabToView(group, tab, tabIndex));
+                let showTab = false;
+
+                if (filter.length) {
+                    for (let i = 0; i < filter.length; i++) {
+                        if (-1 !== (tab.title || '').toLowerCase().indexOf(filter[i]) || -1 !== tab.url.toLowerCase().indexOf(filter[i])) {
+                            showTab = true;
+                        }
+                    }
+                } else {
+                    showTab = true;
+                }
+
+                return render('tab-tmpl', prepareTabToView(group, tab, tabIndex, showTab));
             })
-            .concat([render('new-tab-tmpl', {
+            .concat(/*filter.length ? [] : */[render('new-tab-tmpl', {
                 groupId: group.id,
                 newTabContextMenu: containers.length ? 'contextmenu="create-tab-with-container-menu"' : '',
             })])

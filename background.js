@@ -124,7 +124,7 @@
 
     // groups : Object or array of Object
     function saveGroup(group, updateMenuItems) {
-        if (!group || !group.length) {
+        if (!group || (Array.isArray(group) && !group.length)) {
             return;
         }
 
@@ -534,6 +534,10 @@
             return;
         }
 
+        if (_groups[groupIndex].tabs.some(t => t.id === tab.id)) { // reject tabs if its created in update tab func (bug FF? call update tab event before create tab)
+            return;
+        }
+
         let tabs = await getTabs(tab.windowId),
             newTabIndex = tabs.findIndex(t => t.id === tab.id);
 
@@ -562,10 +566,6 @@
             'discarded' in changeInfo || // not supported discard tabs now
             (tab.pinned && undefined === changeInfo.pinned)) { // pinned tabs are not supported
             return;
-        }
-
-        if (Object.keys(changeInfo).length === 1 && changeInfo.favIconUrl && tab.status === 'complete' && tab.url === 'about:newtab') {
-            return; // bug FF: call update tab event before create tab event :(
         }
 
         let savedTabIndex = _groups[groupIndex].tabs.findIndex(t => t.id === tabId);
@@ -615,7 +615,6 @@
             }
         } else if ('complete' === tab.status) {
             if (isAllowUrl(tab.url)) { // if loading allowed tab
-
                 if (-1 === savedTabIndex) { // if update NOT allowed tab -> to allowed tab
                     currentlyAddingTabs.push(tabId);
 
@@ -654,7 +653,7 @@
     }
 
     function onRemovedTab(tabId, { isWindowClosing, windowId }) {
-        console.log('onRemovedTab', arguments);
+        // console.log('onRemovedTab', arguments);
 
         if (isWindowClosing) {
             return;
@@ -1079,6 +1078,10 @@
             group.windowId = null;
             saveGroupsToStorage();
         }
+
+        if (lastFocusedNormalWindow.id === windowId) {
+            getWindow().then(win => lastFocusedNormalWindow = win);
+        }
     }
 
     function addEvents() {
@@ -1168,6 +1171,28 @@
         }
     }
 
+    function sortGroups(vector = 'asc') {
+        if (!vector) {
+            return;
+        }
+
+        let options = {
+            numeric: true,
+        };
+
+        _groups = _groups.sort(function(a, b) {
+            if ('asc' === vector) {
+                return a.title.localeCompare(b.title, [], options);
+            } else if ('desc' === vector) {
+                return b.title.localeCompare(a.title, [], options);
+            } else {
+                return 0;
+            }
+        });
+
+        saveGroupsToStorage();
+    }
+
     browser.menus.create({
         id: 'openSettings',
         title: browser.i18n.getMessage('openSettings'),
@@ -1200,6 +1225,7 @@
         setFocusOnWindow,
         getLastFocusedNormalWindow: () => lastFocusedNormalWindow,
 
+        sortGroups,
         loadGroup,
 
         mapTab,
@@ -1267,19 +1293,9 @@
                 await storage.remove(keysToRemoveFromStorage);
             }
 
-            await storage.set(result, false);
+            await storage.set(result);
 
             return [result, windows];
-
-            // return new Promise(function(resolve) {
-            //         if (keysToRemoveFromStorage.length) {
-            //             storage.remove(keysToRemoveFromStorage).then(resolve);
-            //         } else {
-            //             resolve();
-            //         }
-            //     })
-            //     .then(() => storage.set(result, false))
-            //     .then(() => [result, windows]);
         })
         .then(function([result, windows]) {
             getWindow().then(win => lastFocusedNormalWindow = win);

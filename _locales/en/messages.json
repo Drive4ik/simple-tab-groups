@@ -59,6 +59,11 @@
         "description": "Search a tab placeholder"
     },
 
+    "filterTabsPlaceholder": {
+        "message": "Filter tabs (multiple filter with *)",
+        "description": "Filter tabs (multiple filter with *)"
+    },
+
     "invalidRegExpRuleTitle": {
         "message": "Rule '$regexp$' is not valid and it will be skipped.",
         "description": "Search a tab placeholder",
@@ -170,6 +175,16 @@
     "moveGroupDown": {
         "message": "Move group down",
         "description": "Move group down"
+    },
+
+    "sortGroupAZ": {
+        "message": "Sort groups [A-Z]",
+        "description": "Sort groups [A-Z]"
+    },
+
+    "sortGroupZA": {
+        "message": "Sort groups [Z-A]",
+        "description": "Sort groups [Z-A]"
     },
 
     "settingsTitle": {

@@ -12,7 +12,7 @@
 <body>
     <div id="stg" class="is-flex is-column">
         <header class="search-wrapper control">
-            <input id="searchTab" type="text" class="input" autocomplete="off" data-i18n="searchTabPlaceholder:placeholder" />
+            <input id="searchTab" type="text" class="input is-small no-shadow" autocomplete="off" data-i18n="searchTabPlaceholder:placeholder" />
         </header>
 
         <main id="result" class="is-full-width"></main>
@@ -139,8 +139,10 @@
 
     <menu id="group-menu" type="context">
         <menuitem data-action="context-open-group-in-new-window" icon="chrome://browser/skin/new-window.svg" data-i18n="openGroupInNewWindow:label"></menuitem>
-        <menuitem data-action="context-move-group-up" icon="/icons/arrow-up.svg" data-i18n="moveGroupUp:label"></menuitem>
-        <menuitem data-action="context-move-group-down" icon="/icons/arrow-down.svg" data-i18n="moveGroupDown:label"></menuitem>
+        <menuitem data-action="context-move-group" data-position="up" icon="/icons/arrow-up.svg" data-i18n="moveGroupUp:label"></menuitem>
+        <menuitem data-action="context-move-group" data-position="down" icon="/icons/arrow-down.svg" data-i18n="moveGroupDown:label"></menuitem>
+        <menuitem data-action="context-sort-groups" data-vector="asc" icon="/icons/sort-alpha-asc.svg" data-i18n="sortGroupAZ:label"></menuitem>
+        <menuitem data-action="context-sort-groups" data-vector="desc" icon="/icons/sort-alpha-desc.svg" data-i18n="sortGroupZA:label"></menuitem>
         <menuitem data-action="context-open-settings-group-popup" icon="chrome://browser/skin/settings.svg" data-i18n="groupSettings:label"></menuitem>
         <menuitem data-action="context-show-delete-group-popup" icon="/icons/group-delete.svg" data-i18n="deleteGroup:label"></menuitem>
     </menu>

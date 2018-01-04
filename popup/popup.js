@@ -152,10 +152,10 @@
                 }
 
                 // window.close(); // be or not to be ?? :)
-            } else if ('context-move-group-up' === action) {
-                BG.moveGroup(groupIdInContext, 'up');
-            } else if ('context-move-group-down' === action) {
-                BG.moveGroup(groupIdInContext, 'down');
+            } else if ('context-move-group' === action) {
+                BG.moveGroup(groupIdInContext, data.position);
+            } else if ('context-sort-groups' === action) {
+                BG.sortGroups(data.vector);
             } else if ('context-open-group-in-new-window' === action) {
                 let group = getGroupById(groupIdInContext);
 
