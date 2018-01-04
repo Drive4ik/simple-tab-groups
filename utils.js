@@ -217,21 +217,23 @@ let $ = document.querySelector.bind(document),
 
         return !(rect.bottom < 0 || rect.top - viewHeight >= 0);
     },
-    loadContainers = function() {
-        return new Promise(function(resolve) {
-                browser.contextualIdentities.query({})
-                    .then(containers => resolve(containers || []))
-                    .catch(() => resolve([]));
-            })
-            .then(function(containers) {
-                return containers.map(function(container) {
-                    if (!container.iconUrl) {
-                        container.iconUrl = `chrome://browser/content/usercontext-${container.icon}.svg`;
-                    }
+    loadContainers = async function() {
+        let containers = [];
 
-                    return container;
-                });
-            });
+        try {
+            containers = await browser.contextualIdentities.query({});
+            if (!containers) {
+                containers = [];
+            }
+        } catch (e) {}
+
+        return containers.map(function(container) {
+            if (!container.iconUrl) {
+                container.iconUrl = `chrome://browser/content/usercontext-${container.icon}.svg`;
+            }
+
+            return container;
+        });
     },
     on = function(eventsStr, query, func, extendNode = null, translatePage = true) {
         let events = this;
