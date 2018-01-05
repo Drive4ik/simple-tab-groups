@@ -18,8 +18,7 @@ function importFromFile() {
             if (fileInput.value !== fileInput.initialValue) {
                 let file = fileInput.files[0];
                 if (file.size > 100e6) {
-                    console.warn("100MB backup? I don't believe you.");
-                    return reject();
+                    return reject('100MB backup? I don\'t believe you');
                 }
 
                 let fReader = new FileReader();

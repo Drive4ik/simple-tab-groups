@@ -1225,7 +1225,65 @@
         addGroup,
         saveGroup,
         removeGroup,
+
+        reloadGroups: async function() {
+            let data = await storage.get('groups');
+            _groups = data.groups;
+        },
+        runMigrateForData,
     };
+
+    async function runMigrateForData(data, result = {}) {
+        if (data.version === MANIFEST.version) {
+            return data;
+        }
+
+        let compareVersion = data.version.localeCompare(MANIFEST.version);
+
+        if (1 === compareVersion) {
+            result.errorMessage = 'Please, update addon to latest version';
+            return false;
+        }
+
+        // start migration
+        let keysToRemoveFromStorage = [];
+
+        if (0 >= data.version.localeCompare('1.8.1')) {
+            result.dataChanged = true;
+
+            data.groups = data.groups.map(function(group) {
+                group.windowId = data.windowsGroup[win.id] === group.id ? win.id : null;
+
+                group.catchTabRules = group.moveNewTabsToThisGroupByRegExp || '';
+                delete group.moveNewTabsToThisGroupByRegExp;
+
+                delete group.classList;
+                delete group.colorCircleHtml;
+
+                if (group.iconColor === undefined || group.iconColor === 'undefined') { // fix missed group icons :)
+                    group.iconColor = randomColor();
+                }
+
+                return group;
+            });
+
+            delete data.windowsGroup;
+            keysToRemoveFromStorage.push('windowsGroup');
+        }
+
+        if (0 >= data.version.localeCompare('1.8.2')) {
+            // some code;
+        }
+
+        data.version = MANIFEST.version;
+
+        if (keysToRemoveFromStorage.length) {
+            await storage.remove(keysToRemoveFromStorage);
+        }
+        // end migration
+
+        return data;
+    }
 
     // initialization
     Promise.all([
@@ -1235,56 +1293,22 @@
                 windowTypes: ['normal'],
             })
         ])
-        .then(async function([result, windows]) { // migration
-            let keysToRemoveFromStorage = [];
+        .then(async function([data, windows]) {
+            let resultMigration = {};
 
-            if (result.version === MANIFEST.version) {
-                return [result, windows];
+            data = await runMigrateForData(data, resultMigration); // migration data
+
+            if (resultMigration.errorMessage) {
+                throw resultMigration.errorMessage;
             }
 
-            let compareVersion = result.version.localeCompare(MANIFEST.version);
-
-            if (1 === compareVersion) {
-                throw 'Please, update addon to latest version';
+            if (resultMigration.dataChanged) {
+                await storage.set(data);
             }
 
-            // start migration
-            if (0 >= result.version.localeCompare('1.8.1')) {
-                result.groups = result.groups.map(function(group) {
-                    group.windowId = result.windowsGroup[win.id] === group.id ? win.id : null;
-
-                    group.catchTabRules = group.moveNewTabsToThisGroupByRegExp || '';
-                    delete group.moveNewTabsToThisGroupByRegExp;
-
-                    delete group.classList;
-                    delete group.colorCircleHtml;
-
-                    if (group.iconColor === undefined || group.iconColor === 'undefined') { // fix missed group icons :)
-                        group.iconColor = randomColor();
-                    }
-
-                    return group;
-                });
-
-                delete result.windowsGroup;
-                keysToRemoveFromStorage.push('windowsGroup');
-            }
-
-            if (0 >= result.version.localeCompare('1.8.2')) {
-                // some code;
-            }
-
-            result.version = MANIFEST.version;
-
-            if (keysToRemoveFromStorage.length) {
-                await storage.remove(keysToRemoveFromStorage);
-            }
-
-            await storage.set(result);
-
-            return [result, windows];
+            return [data, windows];
         })
-        .then(function([result, windows]) {
+        .then(function([data, windows]) {
             getWindow().then(win => lastFocusedNormalWindow = win);
 
             let newGroupCreated = false;
@@ -1298,35 +1322,34 @@
 
                 saveTemporaryTabs(win.id, tabs);
 
-                if (!result.groups.some(group => group.windowId === win.id)) { // if not found group for current window
-                    let lastActiveGroupIndex = result.groups.findIndex(group => group.windowId !== null);
+                if (!data.groups.some(group => group.windowId === win.id)) { // if not found group for current window
+                    let lastActiveGroupIndex = data.groups.findIndex(group => group.windowId !== null);
 
                     // if found last active group and tabs in last active group are equal
                     if (-1 !== lastActiveGroupIndex &&
-                        result.groups[lastActiveGroupIndex].tabs.length === tabs.length &&
-                        result.groups[lastActiveGroupIndex].tabs.every((tab, index) => tab.url === tabs[index].url)
+                        data.groups[lastActiveGroupIndex].tabs.length === tabs.length &&
+                        data.groups[lastActiveGroupIndex].tabs.every((tab, index) => tab.url === tabs[index].url)
                     ) {
-                        result.groups[lastActiveGroupIndex].windowId = win.id;
+                        data.groups[lastActiveGroupIndex].windowId = win.id;
                     } else { // add new group
                         if (!newGroupCreated) {
-                            result.lastCreatedGroupPosition++;
+                            data.lastCreatedGroupPosition++;
 
                             newGroupCreated = true;
 
-                            result.groups.push(createGroup(result.lastCreatedGroupPosition, win.id));
+                            data.groups.push(createGroup(data.lastCreatedGroupPosition, win.id));
                             // notify('Group not found for this window or tabs not equal', 3000);
-
                         }
                     }
                 }
 
 
-                let groupIndex = result.groups.findIndex(group => group.windowId === win.id);
+                let groupIndex = data.groups.findIndex(group => group.windowId === win.id);
 
                 if (-1 !== groupIndex) {
-                    result.groups[groupIndex].tabs = tabs.map(function(tab) {
+                    data.groups[groupIndex].tabs = tabs.map(function(tab) {
                         let mappedTab = mapTab(tab),
-                            tabInGroup = result.groups[groupIndex].tabs.find(t => t.url === tab.url && t.thumbnail);
+                            tabInGroup = data.groups[groupIndex].tabs.find(t => t.url === tab.url && t.thumbnail);
 
                         if (tabInGroup) {
                             mappedTab.thumbnail = tabInGroup.thumbnail;
@@ -1337,13 +1360,13 @@
                 }
             });
 
-            _groups = result.groups;
+            _groups = data.groups;
 
             window.background.inited = true;
 
             return storage.set({
-                lastCreatedGroupPosition: result.lastCreatedGroupPosition,
-                groups: result.groups,
+                lastCreatedGroupPosition: data.lastCreatedGroupPosition,
+                groups: data.groups,
             });
         })
         .then(() => updateBrowserActionData())

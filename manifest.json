@@ -39,6 +39,18 @@
         "default_popup": "popup/popup.html"
     },
 
+    "options_ui": {
+        "page": "options/options.html"
+    },
+
+    "background": {
+        "scripts": ["utils.js", "background.js"]
+    },
+
+    "content_security_policy": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data:; script-src 'self'",
+
+    "default_locale": "en",
+
     "commands": {
         "_execute_browser_action": {
             "suggested_key": {
@@ -114,18 +126,6 @@
             },
             "description": "Load 9nd group"
         }
-    },
-
-    "options_ui": {
-        "page": "options/options.html"
-    },
-
-    "background": {
-        "scripts": ["utils.js", "background.js"]
-    },
-
-    "content_security_policy": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data:; script-src 'self'",
-
-    "default_locale": "en"
+    }
 
 }

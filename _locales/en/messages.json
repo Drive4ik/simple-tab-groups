@@ -39,6 +39,11 @@
         }
     },
 
+    "ok": {
+        "message": "OK",
+        "description": "OK button"
+    },
+
     "save": {
         "message": "Save",
         "description": "Save"
@@ -123,6 +128,21 @@
     "importSettingsOldTabGroupsAddon": {
         "message": "Import settings from old \"Tab Groups\" add-on",
         "description": "Import settings from old \"Tab Groups\" add-on"
+    },
+
+    "importAddonSettingsWarning": {
+        "message": "Warning!\nImport Simple Tab Groups settings will ERASE all existing settings and groups!",
+        "description": "Warning!\nImport Simple Tab Groups settings will ERASE all existing settings and groups!"
+    },
+
+    "importAddonSettings": {
+        "message": "Create Backup Simple Tab Groups",
+        "description": "Create Backup Simple Tab Groups"
+    },
+
+    "exportAddonSettings": {
+        "message": "Restore backup Simple Tab Groups",
+        "description": "Restore backup Simple Tab Groups"
     },
 
     "openGroupAfterChange": {
