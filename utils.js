@@ -158,6 +158,9 @@ let $ = document.querySelector.bind(document),
 
         return !/^(chrome:|javascript:|data:|file:|view-source:|about(?!\:(blank|newtab|home)))/.test(url);
     },
+    isAllowUrlInTab = function(tab) {
+        return isAllowUrl(tab.url);
+    },
     getNextIndex = function(currentIndex, count, textPosition = 'next') {
         if (!count) {
             return false;

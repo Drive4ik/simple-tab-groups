@@ -405,8 +405,6 @@ th {
     font-size: 1.5rem;
 }
 
-
-
 .control .textarea {
     resize: vertical;
     height: 100px;
@@ -433,6 +431,95 @@ th {
 
 .field.is-grouped.is-grouped-right {
     justify-content: flex-end;
+}
+
+.field:not(:last-child) {
+    margin-bottom: 0.75rem;
+}
+
+.field.has-addons {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.field.has-addons .control:not(:last-child) {
+    margin-right: -1px;
+}
+
+.field.has-addons .control:first-child .button,
+.field.has-addons .control:first-child .input,
+.field.has-addons .control:first-child .select select {
+    border-bottom-left-radius: 3px;
+    border-top-left-radius: 3px;
+}
+
+.field.has-addons .control:last-child .button,
+.field.has-addons .control:last-child .input,
+.field.has-addons .control:last-child .select select {
+    border-bottom-right-radius: 3px;
+    border-top-right-radius: 3px;
+}
+
+.field.has-addons .control .button,
+.field.has-addons .control .input,
+.field.has-addons .control .select select {
+    border-radius: 0;
+}
+
+.field.has-addons .control .button:hover,
+.field.has-addons .control .button.is-hovered,
+.field.has-addons .control .input:hover,
+.field.has-addons .control .input.is-hovered,
+.field.has-addons .control .select select:hover,
+.field.has-addons .control .select select.is-hovered {
+    z-index: 2;
+}
+
+.field.has-addons .control .button:focus,
+.field.has-addons .control .button.is-focused,
+.field.has-addons .control .button:active,
+.field.has-addons .control .button.is-active,
+.field.has-addons .control .input:focus,
+.field.has-addons .control .input.is-focused,
+.field.has-addons .control .input:active,
+.field.has-addons .control .input.is-active,
+.field.has-addons .control .select select:focus,
+.field.has-addons .control .select select.is-focused,
+.field.has-addons .control .select select:active,
+.field.has-addons .control .select select.is-active {
+    z-index: 3;
+}
+
+.field.has-addons .control .button:focus:hover,
+.field.has-addons .control .button.is-focused:hover,
+.field.has-addons .control .button:active:hover,
+.field.has-addons .control .button.is-active:hover,
+.field.has-addons .control .input:focus:hover,
+.field.has-addons .control .input.is-focused:hover,
+.field.has-addons .control .input:active:hover,
+.field.has-addons .control .input.is-active:hover,
+.field.has-addons .control .select select:focus:hover,
+.field.has-addons .control .select select.is-focused:hover,
+.field.has-addons .control .select select:active:hover,
+.field.has-addons .control .select select.is-active:hover {
+    z-index: 4;
+}
+
+.field.has-addons .control.is-expanded {
+    flex-grow: 1;
+}
+
+.field.has-addons.has-addons-centered {
+    justify-content: center;
+}
+
+.field.has-addons.has-addons-right {
+    justify-content: flex-end;
+}
+
+.field.has-addons.has-addons-fullwidth .control {
+    flex-grow: 1;
+    flex-shrink: 0;
 }
 
 .delete {
@@ -537,6 +624,25 @@ th {
     color: #363636;
 }
 
+.button.is-info {
+    background-color: #209cee;
+    border-color: transparent;
+    color: #fff;
+}
+
+.button.is-info:hover,
+.button.is-info.is-hovered {
+    background-color: #1496ed;
+    border-color: transparent;
+    color: #fff;
+}
+
+.button.is-info[disabled] {
+    background-color: #209cee;
+    border-color: transparent;
+    box-shadow: none;
+}
+
 .button.is-success {
     background-color: #23d160;
     border-color: transparent;
@@ -571,6 +677,25 @@ th {
 
 .button.is-primary[disabled] {
     background-color: #00d1b2;
+    border-color: transparent;
+    box-shadow: none;
+}
+
+.button.is-warning {
+    background-color: #ffdd57;
+    border-color: transparent;
+    color: rgba(0, 0, 0, 0.7);
+}
+
+.button.is-warning:hover,
+.button.is-warning.is-hovered {
+    background-color: #ffdb4a;
+    border-color: transparent;
+    color: rgba(0, 0, 0, 0.7);
+}
+
+.button.is-warning[disabled] {
+    background-color: #ffdd57;
     border-color: transparent;
     box-shadow: none;
 }

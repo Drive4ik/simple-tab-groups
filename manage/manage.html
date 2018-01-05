@@ -22,12 +22,19 @@
             </span>
             <span class="is-full-width">
                 <div class="buttons has-addons">
-                    <span class="button is-primary" data-i18n="manageGroupViewGrid"></span><span class="button" disabled data-i18n="manageGroupViewFreeArrange"></span>
+                    <span class="button is-small is-primary" data-i18n="manageGroupViewGrid"></span><span class="button is-small" disabled data-i18n="manageGroupViewFreeArrange"></span>
                 </div>
             </span>
             <span>
-                <div class="control">
-                    <input id="filterTabs" value="" type="text" class="input" data-i18n="filterTabsPlaceholder:placeholder" autocomplete="on" />
+                <div id="filterWrapper" class="field">
+                    <div class="control is-expanded">
+                        <input id="filterTabs" type="text" class="input is-small" data-i18n="filterTabsPlaceholder:placeholder" autocomplete="on" />
+                    </div>
+                    <div id="clearFilterTabsButton" class="control is-hidden">
+                        <label class="button is-small">
+                            <img class="size-14" src="chrome://browser/skin/stop.svg" alt="" />
+                        </label>
+                    </div>
                 </div>
             </span>
         </header>

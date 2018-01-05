@@ -15,7 +15,22 @@
         containers = [],
         currentWindowId = null,
         groupIdContext = 0,
+        $filterTabs = $('#filterTabs'),
         $on = on.bind({});
+
+    $filterTabs.focus();
+
+    function changeFilterTabsHandler() {
+        if ($filterTabs.value.trim().length) {
+            $('#clearFilterTabsButton').classList.remove('is-hidden');
+            $('#filterWrapper').classList.add('has-addons');
+        } else {
+            $('#clearFilterTabsButton').classList.add('is-hidden');
+            $('#filterWrapper').classList.remove('has-addons');
+        }
+    }
+
+    changeFilterTabsHandler();
 
     Promise.all([
             BG.getWindow(),
@@ -29,8 +44,8 @@
         .then(renderGroupsCards)
         .then(addEvents);
 
-    function loadOptions() {
-        return storage.get(onlyOptionsKeys).then(result => options = result);
+    async function loadOptions() {
+        options = await storage.get(onlyOptionsKeys);
     }
 
     function addEvents() {
@@ -107,7 +122,16 @@
             }
         });
 
-        $on('input', '#filterTabs', renderGroupsCards);
+        $on('click', '#clearFilterTabsButton .button', function() {
+            $filterTabs.value = '';
+            dispatchEvent('input', $filterTabs);
+            $filterTabs.focus();
+        });
+
+        $on('input', '#filterTabs', function() {
+            changeFilterTabsHandler();
+            renderGroupsCards();
+        });
 
         addDragAndDropEvents();
 
@@ -119,11 +143,7 @@
                     updateDataTimer = setTimeout(function() {
                         _groups = BG.getGroups();
                         renderGroupsCards();
-                        console.log('load data');
                     }, 100);
-                    // _groups = BG.getGroups();
-                    // renderGroupsCards();
-                    // console.log('load data');
                 }
 
                 if (request.optionsUpdated) {
@@ -246,20 +266,14 @@
         };
     }
 
-    function getTabsHtml(group) {
-        let filter = $('#filterTabs').value
-                .trim()
-                .split(/\s*\*\s*/)
-                .filter(Boolean)
-                .map(s => s.toLowerCase());
-
+    function getTabsHtml(group, filters) {
         return group.tabs
             .map(function(tab, tabIndex) {
                 let showTab = false;
 
-                if (filter.length) {
-                    for (let i = 0; i < filter.length; i++) {
-                        if (-1 !== (tab.title || '').toLowerCase().indexOf(filter[i]) || -1 !== tab.url.toLowerCase().indexOf(filter[i])) {
+                if (filters.length) {
+                    for (let i = 0; i < filters.length; i++) {
+                        if (-1 !== (tab.title || '').toLowerCase().indexOf(filters[i]) || -1 !== tab.url.toLowerCase().indexOf(filters[i])) {
                             showTab = true;
                         }
                     }
@@ -269,7 +283,7 @@
 
                 return render('tab-tmpl', prepareTabToView(group, tab, tabIndex, showTab));
             })
-            .concat(/*filter.length ? [] : */[render('new-tab-tmpl', {
+            .concat(filters.length ? [] : [render('new-tab-tmpl', {
                 groupId: group.id,
                 newTabContextMenu: containers.length ? 'contextmenu="create-tab-with-container-menu"' : '',
             })])
@@ -277,11 +291,17 @@
     }
 
     function renderGroupsCards() {
+        let filters = $filterTabs.value
+                .trim()
+                .split(/\s*\*\s*/)
+                .filter(Boolean)
+                .map(s => s.toLowerCase());
+
         let groupsHtml = _groups.map(function(group) {
                 let customData = {
                     classList: '',
                     colorCircleHtml: render('color-circle-tmpl', group),
-                    tabsHtml: getTabsHtml(group),
+                    tabsHtml: getTabsHtml(group, filters),
                 };
 
                 return render('group-tmpl', Object.assign({}, group, customData));
