@@ -131,18 +131,18 @@
     },
 
     "importAddonSettingsWarning": {
-        "message": "Warning!\nImport Simple Tab Groups settings will ERASE all existing settings and groups!",
-        "description": "Warning!\nImport Simple Tab Groups settings will ERASE all existing settings and groups!"
+        "message": "Warning!\nImport \"Simple Tab Groups\" add-on settings will ERASE all existing settings and groups!",
+        "description": "Warning!\nImport \"Simple Tab Groups\" add-on settings will ERASE all existing settings and groups!"
     },
 
     "importAddonSettings": {
-        "message": "Create Backup Simple Tab Groups",
-        "description": "Create Backup Simple Tab Groups"
+        "message": "Restore backup \"Simple Tab Groups\" add-on",
+        "description": "Restore backup \"Simple Tab Groups\" add-on"
     },
 
     "exportAddonSettings": {
-        "message": "Restore backup Simple Tab Groups",
-        "description": "Restore backup Simple Tab Groups"
+        "message": "Create backup \"Simple Tab Groups\" add-on",
+        "description": "Create backup \"Simple Tab Groups\" add-on"
     },
 
     "openGroupAfterChange": {

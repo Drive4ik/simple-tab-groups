@@ -12,14 +12,62 @@
 
     let $on = on.bind({});
 
-    $on('change', '#' + onlyOptionsKeys.join(', #'), function() {
+    $on('change', '#' + onlyOptionsKeys.join(', #'), async function() {
         let options = {};
 
         onlyOptionsKeys.forEach(function(key) {
             options[key] = $('#' + key).checked;
         });
 
-        storage.set(options).then(BG.initBrowserCommands);
+        await storage.set(options);
+        BG.initBrowserCommands();
+    });
+
+    $on('click', '#importAddonSettings', async function() {
+        if (!confirm(browser.i18n.getMessage('importAddonSettingsWarning'))) {
+            return;
+        }
+
+        try {
+            let data = await importFromFile();
+
+            if ('object' !== type(data) || !Array.isArray(data.groups)) {
+                throw 'This is wrong backup!';
+            }
+
+            let resultMigration = {};
+            data = await BG.runMigrateForData(data, resultMigration);
+
+            if (resultMigration.errorMessage) {
+                throw resultMigration.errorMessage;
+            }
+
+            let groupIndex = data.groups.findIndex(group => group.windowId !== null);
+
+            if (-1 !== groupIndex) {
+                data.groups[groupIndex].windowId = null;
+            }
+
+            await storage.set(data);
+            await BG.reloadGroups();
+
+            if (-1 !== groupIndex) {
+                let win = await BG.getWindow();
+                await BG.loadGroup(win.id, groupIndex);
+            }
+
+            notify('Groups and settings are successfully imported!');
+        } catch (e) {
+            if (e) {
+                notify(e);
+            }
+        }
+    });
+
+    $on('click', '#exportAddonSettings', async function() {
+        let options = await storage.get(null);
+
+        exportToFile(options);
     });
 
     $on('click', '#importSettingsOldTabGroupsAddon', async function() {
@@ -105,27 +153,6 @@
         } else {
             notify('Nothig imported');
         }
-    });
-
-    $on('click', '#importAddonSettings', async function() {
-        if (confirm(browser.i18n.getMessage('importAddonSettingsWarning'))) {
-            try {
-                let data = await importFromFile();
-                await storage.set(data);
-                BG.reloadGroups();
-                notify('Groups and settings are successfully imported!');
-            } catch (e) {
-                if (e) {
-                    notify(e);
-                }
-            }
-        }
-    });
-
-    $on('click', '#exportAddonSettings', async function() {
-        let options = await storage.get(null);
-
-        exportToFile(options);
     });
 
     storage.get(onlyOptionsKeys)

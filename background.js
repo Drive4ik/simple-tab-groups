@@ -103,9 +103,9 @@
     }
 
     async function addGroup(windowId = null, resetGroups = false, returnNewGroupIndex = true) {
-        let { lastCreatedGroupPosition } = await storage.get('lastCreatedGroupPosition');
+        let options = await storage.get('lastCreatedGroupPosition');
 
-        lastCreatedGroupPosition++;
+        options.lastCreatedGroupPosition++;
 
         if (resetGroups) {
             _groups = [];
@@ -113,11 +113,9 @@
 
         let newGroupIndex = _groups.length;
 
-        _groups.push(createGroup(lastCreatedGroupPosition, windowId));
+        _groups.push(createGroup(options.lastCreatedGroupPosition, windowId));
 
-        storage.set({
-            lastCreatedGroupPosition,
-        });
+        storage.set(options);
 
         saveGroupsToStorage(true);
 
@@ -206,7 +204,7 @@
             await browser.tabs.create({ // after this - will trigger events on create tab and add tab in group
                 active: false,
                 cookieStoreId,
-                windowId: group.windowId,
+                windowId: win.id,
             });
         } else {
             let group = _groups.find(gr => gr.id === group.id);
@@ -251,7 +249,7 @@
         let win = await getWindowByGroup(group);
 
         if (win) {
-            return removeCurrentTabByIndex(group.windowId, tabIndex);
+            return removeCurrentTabByIndex(win.id, tabIndex);
         } else {
             let group = _groups.find(gr => gr.id === group.id);
 
@@ -1159,7 +1157,7 @@
     }
 
     function sortGroups(vector = 'asc') {
-        if (!vector) {
+        if (!['asc', 'desc'].includes(vector)) {
             return;
         }
 
@@ -1172,8 +1170,6 @@
                 return a.title.localeCompare(b.title, [], options);
             } else if ('desc' === vector) {
                 return b.title.localeCompare(a.title, [], options);
-            } else {
-                return 0;
             }
         });
 
@@ -1311,7 +1307,8 @@
         .then(function([data, windows]) {
             getWindow().then(win => lastFocusedNormalWindow = win);
 
-            let newGroupCreated = false;
+            let newGroupCreated = false,
+                winIds = windows.map(win => win.id);
 
             windows.forEach(function(win) {
                 if ('normal' !== win.type) {
@@ -1360,13 +1357,19 @@
                 }
             });
 
-            _groups = data.groups;
+            _groups = data.groups.map(function(group) { // clear unused window ids
+                if (group.windowId && !winIds.includes(group.windowId)) {
+                    group.windowId = null;
+                }
+
+                return group;
+            });
 
             window.background.inited = true;
 
             return storage.set({
                 lastCreatedGroupPosition: data.lastCreatedGroupPosition,
-                groups: data.groups,
+                groups: _groups,
             });
         })
         .then(() => updateBrowserActionData())

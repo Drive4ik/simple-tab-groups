@@ -18,14 +18,15 @@ function importFromFile() {
             if (fileInput.value !== fileInput.initialValue) {
                 let file = fileInput.files[0];
                 if (file.size > 100e6) {
-                    return reject('100MB backup? I don\'t believe you');
+                    reject('100MB backup? I don\'t believe you');
+                    return;
                 }
 
                 let fReader = new FileReader();
                 fReader.addEventListener('loadend', function(event) {
                     fileInput.remove();
                     try {
-                        resolve(JSON.parse(event.target.result));
+                        resolve(JSON.parse(event.target.result)); // resolve: parsed Object
                     } catch (e) {
                         reject(e);
                     }
@@ -39,7 +40,7 @@ function importFromFile() {
 }
 
 function exportToFile(data) { // data : Object
-    let text = JSON.stringify(data, null, '  '),
+    let text = JSON.stringify(data, null, '    '),
         a = document.createElement('a');
 
     a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(text);
@@ -54,5 +55,5 @@ function generateFileName() {
         mm = ('0' + (today.getMonth() + 1)).substr(-2),
         yyyy = today.getFullYear();
 
-    return `simple-tab-groups-${yyyy}-${mm}-${dd}${BACKUP_FILE_EXT}`;
+    return `simple-tab-groups-backup-${yyyy}-${mm}-${dd}${BACKUP_FILE_EXT}`;
 }
