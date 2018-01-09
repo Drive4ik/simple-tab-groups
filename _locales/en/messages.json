@@ -106,8 +106,8 @@
     },
 
     "openManageGroupsInTab": {
-        "message": "Open manage groups in new tab",
-        "description": "Open manage groups in new tab"
+        "message": "Open \"Manage Groups\" in new tab",
+        "description": "Open \"Manage Groups\" in new tab"
     },
 
     "showConfirmDialogBeforeGroupDelete": {
@@ -187,22 +187,12 @@
         "description": "Open group in new window"
     },
 
-    "moveGroupUp": {
-        "message": "Move group up",
-        "description": "Move group up"
-    },
-
-    "moveGroupDown": {
-        "message": "Move group down",
-        "description": "Move group down"
-    },
-
-    "sortGroupAZ": {
+    "sortGroupsAZ": {
         "message": "Sort groups [A-Z]",
         "description": "Sort groups [A-Z]"
     },
 
-    "sortGroupZA": {
+    "sortGroupsZA": {
         "message": "Sort groups [Z-A]",
         "description": "Sort groups [Z-A]"
     },

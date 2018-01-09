@@ -220,14 +220,14 @@
             isHasAnotherTabs = await hasAnotherTabs(windowId),
             tabId = null;
 
-        if (!tabs[tabIndex]) { // TMP if bug found
-            let group = _groups.find(gr => gr.windowId === windowId);
-            if (group && group.tabs[tabIndex]) {
-                group.tabs.splice(tabIndex, 1);
-                saveGroupsToStorage();
-            }
-            return;
-        }
+        // if (!tabs[tabIndex]) { // TMP if bug found
+        //     let group = _groups.find(gr => gr.windowId === windowId);
+        //     if (group && group.tabs[tabIndex]) {
+        //         group.tabs.splice(tabIndex, 1);
+        //         saveGroupsToStorage();
+        //     }
+        //     return;
+        // }
 
         tabId = tabs[tabIndex].id;
 
@@ -279,10 +279,6 @@
                 setFocusOnWindow(win.id);
             } else {
                 let tabs = await getTabs(win.id);
-
-                if (!tabs[activeTabIndex]) { // TMP
-                    return notify('activeTabIndex not found: %s, tabs length: %s', activeTabIndex, tabs.length);
-                }
 
                 await browser.tabs.update(tabs[activeTabIndex].id, {
                     active: true,

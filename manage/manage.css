@@ -58,6 +58,11 @@ html {
     margin-left: 10px;
 }
 
+.size-12 {
+    width: 12px;
+    height: 12px;
+}
+
 .size-14 {
     width: 14px;
     height: 14px;
