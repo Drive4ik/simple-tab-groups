@@ -166,9 +166,6 @@
     }
 
     function addDragAndDropEvents() {
-        // groups
-        let groupSelector = '[data-is-group]';
-
         DragAndDrop.create({
             selector: '[data-is-group]',
             group: {

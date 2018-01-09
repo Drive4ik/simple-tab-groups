@@ -61,6 +61,16 @@ hr {
     margin-left: 10px;
 }
 
+.size-12 {
+    width: 12px;
+    height: 12px;
+}
+
+.size-14 {
+    width: 14px;
+    height: 14px;
+}
+
 .size-16 {
     width: 16px;
     height: 16px;
@@ -91,6 +101,10 @@ hr {
 
 .is-full-height {
     height: 100%;
+}
+
+.no-events {
+    pointer-events: none;
 }
 
 .circle {
@@ -125,11 +139,11 @@ img {
     vertical-align: middle;
 }
 
-.search-wrapper {
+#searchWrapper {
     padding: 10px 10px 0 10px;
 }
 
-#searchTab {
+#searchTabs {
     background: url('chrome://browser/skin/search-glass.svg') no-repeat 4px center;
     padding-left: calc(16px + (2 * 4px));
 }
@@ -299,6 +313,17 @@ img {
 
 .is-flex > .is-end {
     align-self: flex-end;
+}
+
+
+/* Drag & Drop Styles */
+#stg .drag-over {
+    outline: 2px dashed rgba(0, 0, 0, 0.5) !important;
+    outline-offset: -3px;
+}
+
+#stg .drag-moving {
+    opacity: 0.4;
 }
 
 

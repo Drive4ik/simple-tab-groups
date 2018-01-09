@@ -173,8 +173,6 @@
             }
         }
 
-        $on('input', '#searchTab', renderSearchTabsList);
-
         $on('mousedown mouseup', '[data-is-tab]', function(event, data) {
             if (1 === event.button) { // delete tab by middle mouse click
                 if ('mousedown' === event.type) {
@@ -254,6 +252,27 @@
             }
         });
 
+        $on('click', '#clearSearchTabsButton .button', function() {
+            let searchTabs = $('#searchTabs');
+            searchTabs.value = '';
+            dispatchEvent('input', searchTabs);
+            searchTabs.focus();
+        });
+
+        $on('input', '#searchTabs', function() {
+            if ($('#searchTabs').value.trim().length) {
+                $('#clearSearchTabsButton').classList.remove('is-hidden');
+                $('#searchWrapper').classList.add('has-addons');
+            } else {
+                $('#clearSearchTabsButton').classList.add('is-hidden');
+                $('#searchWrapper').classList.remove('has-addons');
+            }
+
+            renderSearchTabsList();
+        });
+
+        addDragAndDropEvents();
+
         // setTabEventsListener
         let loadDataTimer = null,
             listener = function(request, sender, sendResponse) {
@@ -286,6 +305,31 @@
 
         browser.runtime.onMessage.addListener(listener);
         window.addEventListener('unload', () => browser.runtime.onMessage.removeListener(listener));
+    }
+
+    function addDragAndDropEvents() {
+        DragAndDrop.create({
+            selector: '[data-is-group]',
+            group: {
+                name: 'groups',
+                put: ['tabs'],
+            },
+            draggableElements: '.item, .item-title, .item-icon, .item-icon > .circle',
+            onDrop(event, from, to, dataFrom, dataTo) {
+                let newPosition = Array.from(to.parentNode.children).findIndex(node => node === to);
+                BG.moveGroup(dataFrom.groupId, newPosition);
+            },
+        });
+
+        DragAndDrop.create({
+            selector: '[data-is-tab]:not(.is-searching)',
+            group: 'tabs',
+            draggableElements: '.item, .item-title, .item-title > .bordered, .item-icon',
+            onDrop(event, from, to, dataFrom, dataTo) {
+                let newTabIndex = dataTo.isGroup ? undefined : dataTo.tabIndex;
+                BG.moveTabToGroup(dataFrom.tabIndex, newTabIndex, dataFrom.groupId, dataTo.groupId, false);
+            },
+        });
     }
 
     function getCurrentGroup() {
@@ -342,16 +386,25 @@
             .join('');
     }
 
-    function prepareTabToView(groupId, tab, tabIndex) {
-        let containerColorCode = '';
+    function prepareTabToView(groupId, tab, tabIndex, isSearching = false) {
+        let containerColorCode = '',
+            classList = [];
 
         if (tab.cookieStoreId && tab.cookieStoreId !== DEFAULT_COOKIE_STORE_ID) {
             containerColorCode = 'border-bottom: 2px solid ' + containers.find(container => container.cookieStoreId === tab.cookieStoreId).colorCode;
         }
 
+        if (groupId === getCurrentGroup().id && tabIndex === getActiveIndex()) {
+            classList.push('is-active');
+        }
+
+        if (isSearching) {
+            classList.push('is-searching');
+        }
+
         return {
             urlTitle: options.showUrlTooltipOnTabHover ? tab.url : '',
-            classList: (groupId === getCurrentGroup().id && tabIndex === getActiveIndex()) ? 'is-active' : '',
+            classList: classList.join(' '),
             tabIndex: tabIndex,
             groupId: groupId,
             title: safeHtml(unSafeHtml(tab.title || tab.url)),
@@ -363,7 +416,7 @@
 
     function renderSearchTabsList() {
         state.view = VIEW_SEARCH_TABS;
-        state.searchStr = safeHtml($('#searchTab').value.trim().toLowerCase());
+        state.searchStr = safeHtml($('#searchTabs').value.trim().toLowerCase());
 
         if (!state.searchStr.length) {
             return renderGroupsList();
@@ -375,7 +428,7 @@
         _groups.forEach(function(group) {
             group.tabs.forEach(function(tab, tabIndex) {
                 if ((tab.title || '').toLowerCase().indexOf(state.searchStr) !== -1 || (tab.url || '').toLowerCase().indexOf(state.searchStr) !== -1) {
-                    let preparedTab = prepareTabToView(group.id, tab, tabIndex);
+                    let preparedTab = prepareTabToView(group.id, tab, tabIndex, true);
 
                     if (options.showGroupCircleInSearchedTab) {
                         preparedTab.title = render('color-circle-tmpl', group) + preparedTab.title;

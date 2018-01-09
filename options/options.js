@@ -32,14 +32,14 @@
             let data = await importFromFile();
 
             if ('object' !== type(data) || !Array.isArray(data.groups)) {
-                throw 'This is wrong backup!';
+                throw Error('This is wrong backup!');
             }
 
             let resultMigration = {};
             data = await BG.runMigrateForData(data, resultMigration);
 
             if (resultMigration.errorMessage) {
-                throw resultMigration.errorMessage;
+                throw Error(resultMigration.errorMessage);
             }
 
             let groupIndex = data.groups.findIndex(group => group.windowId !== null);

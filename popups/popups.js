@@ -19,17 +19,15 @@ let Popups = {
         lastData = null,
         $on = on.bind({});
 
-    function loadTemplate(name) {
+    async function loadTemplate(name) {
         if (templates[name]) {
-            return Promise.resolve(templates[name]);
+            return templates[name];
         }
 
-        return fetch(`/popups/${name}.html`)
-            .then(blob => blob.text())
-            .then(function(text) {
-                templates[name] = text;
-                return text;
-            });
+        let blob = await fetch(`/popups/${name}.html`)
+        templates[name] = await blob.text();
+
+        return templates[name];
     }
 
     function showPopup(parsedTemplate, key = 'innerHTML') {
