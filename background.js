@@ -348,7 +348,8 @@
                 });
 
                 if (group.tabs.length) {
-                    let options = await storage.get(['enableFastGroupSwitching', 'enableFavIconsForNotLoadedTabs']);
+                    let options = await storage.get(['enableFastGroupSwitching', 'enableFavIconsForNotLoadedTabs']),
+                        containers = await loadContainers();
 
                     await Promise.all(group.tabs.map(function(tab, tabIndex) {
                             tab.active = -1 === activeTabIndex ? Boolean(tab.active) : tabIndex === activeTabIndex;
@@ -363,7 +364,7 @@
                                 active: tab.active,
                                 url: url,
                                 windowId: windowId,
-                                cookieStoreId: tab.cookieStoreId || DEFAULT_COOKIE_STORE_ID,
+                                cookieStoreId: normalizeCookieStoreId(tab.cookieStoreId, containers),
                             });
                         }))
                         .then(newTabs => newTabs.forEach((tab, tabIndex) => group.tabs[tabIndex].id = tab.id)); // update tabs id
@@ -491,7 +492,10 @@
         }
 
         try {
-            await browser.tabs.get(tabId);
+            let tab = await browser.tabs.get(tabId);
+            if (tab.incognito) {
+                return;
+            }
         } catch (e) {
             return;
         }
@@ -511,7 +515,7 @@
     async function onCreatedTab(tab) {
         // console.log('onCreatedTab', tab);
 
-        if (currentlyAddingTabs.includes(tab.id)) {
+        if (currentlyAddingTabs.includes(tab.id) || tab.incognito) {
             return;
         }
 
@@ -546,6 +550,7 @@
             group = _groups.find(gr => gr.windowId === windowId);
 
         if (!group ||
+            tab.incognito ||
             currentlyLoadingGroups[windowId] ||
             currentlyMovingTabs.includes(tabId) || // reject processing tabs
             currentlyAddingTabs.includes(tabId) || // reject processing tabs
@@ -639,10 +644,16 @@
         }
     }
 
-    function onRemovedTab(tabId, { isWindowClosing, windowId }) {
+    async function onRemovedTab(tabId, { isWindowClosing, windowId }) {
         // console.log('onRemovedTab', arguments);
 
         if (isWindowClosing) {
+            return;
+        }
+
+        let win = await getWindow(windowId);
+
+        if (win.incognito) {
             return;
         }
 
@@ -850,13 +861,14 @@
                                         .then(resolve);
                                 }
                             })
-                            .then(function(newBrowserTabIndex) {
-                                let createTabObj = {
-                                    active: false,
-                                    url: tab.url,
-                                    windowId: newGroup.windowId,
-                                    cookieStoreId: tab.cookieStoreId || DEFAULT_COOKIE_STORE_ID,
-                                };
+                            .then(async function(newBrowserTabIndex) {
+                                let containers = await loadContainers(),
+                                    createTabObj = {
+                                        active: false,
+                                        url: tab.url,
+                                        windowId: newGroup.windowId,
+                                        cookieStoreId: normalizeCookieStoreId(tab.cookieStoreId, containers),
+                                    };
 
                                 if (-1 !== newBrowserTabIndex) {
                                     createTabObj.index = newBrowserTabIndex;
@@ -1056,10 +1068,10 @@
     function addEvents() {
         browser.tabs.onCreated.addListener(onCreatedTab);
         browser.tabs.onActivated.addListener(onActivatedTab);
+        browser.tabs.onMoved.addListener(onMovedTab);
         browser.tabs.onUpdated.addListener(onUpdatedTab);
         browser.tabs.onRemoved.addListener(onRemovedTab);
 
-        browser.tabs.onMoved.addListener(onMovedTab);
 
         browser.tabs.onAttached.addListener(onAttachedTab);
         browser.tabs.onDetached.addListener(onDetachedTab);
@@ -1071,10 +1083,10 @@
     function removeEvents() {
         browser.tabs.onCreated.removeListener(onCreatedTab);
         browser.tabs.onActivated.removeListener(onActivatedTab);
+        browser.tabs.onMoved.removeListener(onMovedTab);
         browser.tabs.onUpdated.removeListener(onUpdatedTab);
         browser.tabs.onRemoved.removeListener(onRemovedTab);
 
-        browser.tabs.onMoved.removeListener(onMovedTab);
 
         browser.tabs.onAttached.removeListener(onAttachedTab);
         browser.tabs.onDetached.removeListener(onDetachedTab);

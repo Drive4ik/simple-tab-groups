@@ -10,7 +10,7 @@ if (window.location.search.length) {
         document.getElementById('favIconUrl').href = favIconUrl;
     }
 
-    window.onfocus = () => window.location.href = url;
+    window.onfocus = window.onmousemove = () => window.location.href = url;
 } else {
-    setInterval(() => window.location.href = 'about:blank', 100);
+    window.location.href = 'about:blank';
 }

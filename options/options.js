@@ -15,9 +15,9 @@
     $on('change', '#' + onlyOptionsKeys.join(', #'), async function() {
         let options = {};
 
-        onlyOptionsKeys.forEach(function(key) {
-            options[key] = $('#' + key).checked;
-        });
+        options[this.id] = this.checked;
+
+        reloadCheckers();
 
         await storage.set(options);
         BG.initBrowserCommands();
@@ -157,6 +157,12 @@
                 $('#' + key).checked = options[key];
             });
         })
+        .then(reloadCheckers)
         .then(translatePage);
+
+    function reloadCheckers() {
+        $('#enableFavIconsForNotLoadedTabs').disabled = !$('#enableFastGroupSwitching').checked;
+        $('#openGroupAfterChange').disabled = $('#closePopupAfterChangeGroup').checked;
+    }
 
 })();
