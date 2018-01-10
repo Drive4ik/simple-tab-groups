@@ -610,7 +610,7 @@
 
                     group.tabs[savedTabIndex].id = tab.id;
                     group.tabs[savedTabIndex].title = tab.title;
-                    group.tabs[savedTabIndex].url = tab.url;
+                    group.tabs[savedTabIndex].url = normalizeUrl(tab.url);
                     group.tabs[savedTabIndex].active = tab.active;
                     group.tabs[savedTabIndex].favIconUrl = tab.favIconUrl;
                     group.tabs[savedTabIndex].cookieStoreId = tab.cookieStoreId;
