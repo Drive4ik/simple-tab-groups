@@ -24,10 +24,6 @@
     });
 
     $on('click', '#importAddonSettings', async function() {
-        if (!confirm(browser.i18n.getMessage('importAddonSettingsWarning'))) {
-            return;
-        }
-
         try {
             let data = await importFromFile();
 
@@ -70,7 +66,7 @@
         exportToFile(options);
     });
 
-    $on('click', '#importSettingsOldTabGroupsAddon', async function() {
+    $on('click', '#importSettingsOldTabGroupsAddonButton', async function() {
         let oldOptions = null;
 
         try {

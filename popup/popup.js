@@ -47,13 +47,8 @@
 
         function doAction(action, data, event) {
             if ('load-group' === action) {
-                let currentGroup = _groups.find(group => group.windowId === currentWindowId);
-
-                if (!currentGroup) {
-                    return;
-                }
-
-                let isCurrentGroup = data.groupId === currentGroup.id;
+                let currentGroup = _groups.find(group => group.windowId === currentWindowId),
+                    isCurrentGroup = currentGroup ? data.groupId === currentGroup.id : false;
 
                 if (isCurrentGroup && -1 === data.tabIndex) { // open group
                     return renderTabsList(data.groupId);

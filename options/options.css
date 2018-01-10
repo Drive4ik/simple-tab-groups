@@ -1,6 +1,10 @@
 body {
-    background-color: #fbfbfb;
+    background-color: #f9f9fa;
     padding: 0 4px;
+}
+
+.text-bold {
+    font-weight: bold;
 }
 
 .h-margin-left-5 {
@@ -9,6 +13,18 @@ body {
 
 .h-margin-left-10 {
     margin-left: 10px;
+}
+
+.h-margin-bottom-5 {
+    margin-bottom: 5px;
+}
+
+.h-margin-bottom-10 {
+    margin-bottom: 10px;
+}
+
+.h-margin-bottom-20 {
+    margin-bottom: 20px;
 }
 
 hr {
@@ -29,4 +45,29 @@ hr {
 .size-16 {
     width: 16px;
     height: 16px;
+}
+
+/* FLEX HELPERS */
+.is-flex {
+    display: flex !important;
+}
+
+.is-flex.is-aligin-items-center {
+    align-items: center;
+}
+
+.is-flex.is-column {
+    flex-direction: column;
+}
+
+.is-flex > .is-full-width {
+    flex-grow: 1;
+}
+
+.is-flex > .is-start {
+    align-self: flex-start;
+}
+
+.is-flex > .is-end {
+    align-self: flex-end;
 }

@@ -39,6 +39,11 @@
         }
     },
 
+    "warning": {
+        "message": "Warning!",
+        "description": "Warning!"
+    },
+
     "ok": {
         "message": "OK",
         "description": "OK button"
@@ -125,24 +130,54 @@
         "description": "Enable keyboard shortcuts for switch to tab. i.e. Ctrl+Shift+[1-9]"
     },
 
-    "importSettingsOldTabGroupsAddon": {
-        "message": "Import settings from old \"Tab Groups\" add-on",
-        "description": "Import settings from old \"Tab Groups\" add-on"
+    "exportAddonSettingsTitle": {
+        "message": "Backup your Simple Tab Groups",
+        "description": "Backup your Simple Tab Groups"
+    },
+
+    "exportAddonSettingsDescription": {
+        "message": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary.",
+        "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
+    },
+
+    "exportAddonSettingsButton": {
+        "message": "Create backup",
+        "description": "Create backup"
+    },
+
+    "importAddonSettingsTitle": {
+        "message": "Restore Simple Tab Groups",
+        "description": "Restore Simple Tab Groups"
+    },
+
+    "importAddonSettingsDescription": {
+        "message": "Load a backup file containing the tab groups you want to restore.",
+        "description": "Load a backup file containing the tab groups you want to restore."
     },
 
     "importAddonSettingsWarning": {
-        "message": "Warning!\nImport \"Simple Tab Groups\" add-on settings will ERASE all existing settings and groups!",
-        "description": "Warning!\nImport \"Simple Tab Groups\" add-on settings will ERASE all existing settings and groups!"
+        "message": "Restore add-on settings will ERASE all existing settings and groups!",
+        "description": "Restore add-on settings will ERASE all existing settings and groups!"
     },
 
-    "importAddonSettings": {
-        "message": "Restore backup \"Simple Tab Groups\" add-on",
-        "description": "Restore backup \"Simple Tab Groups\" add-on"
+    "importAddonSettingsButton": {
+        "message": "Restore backup",
+        "description": "Restore backup"
     },
 
-    "exportAddonSettings": {
-        "message": "Create backup \"Simple Tab Groups\" add-on",
-        "description": "Create backup \"Simple Tab Groups\" add-on"
+    "importSettingsOldTabGroupsAddonTitle": {
+        "message": "Restore Quicksaver's \"Tab Groups\"",
+        "description": "Restore Quicksaver's \"Tab Groups\""
+    },
+
+    "importSettingsOldTabGroupsAddonDescription": {
+        "message": "Load a backup file old \"Tab Groups\" addon.",
+        "description": "Load a backup file old \"Tab Groups\" addon."
+    },
+
+    "importSettingsOldTabGroupsAddonButton": {
+        "message": "Import settings from Quicksaver's \"Tab Groups\" add-on",
+        "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
     },
 
     "openGroupAfterChange": {

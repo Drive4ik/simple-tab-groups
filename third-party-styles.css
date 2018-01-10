@@ -762,3 +762,49 @@ th {
 .buttons.has-addons .button.is-selected:hover {
     z-index: 4;
 }
+
+.help {
+    display: block;
+    /* font-size: 0.75rem; */
+    margin-top: 0.25rem;
+}
+
+.help.is-white {
+    color: white;
+}
+
+.help.is-black {
+    color: #0a0a0a;
+}
+
+.help.is-light {
+    color: whitesmoke;
+}
+
+.help.is-dark {
+    color: #363636;
+}
+
+.help.is-primary {
+    color: #00d1b2;
+}
+
+.help.is-link {
+    color: #3273dc;
+}
+
+.help.is-info {
+    color: #209cee;
+}
+
+.help.is-success {
+    color: #23d160;
+}
+
+.help.is-warning {
+    color: #ffdd57;
+}
+
+.help.is-danger {
+    color: #ff3860;
+}

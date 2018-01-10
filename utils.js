@@ -156,9 +156,13 @@ let $ = document.querySelector.bind(document),
             return false;
         }
 
-        return !/^(chrome:|javascript:|data:|file:|view-source:|about(?!\:(blank|newtab|home)))/.test(url);
+        return /^((https?|ftp|moz-extension):|about:(blank|newtab|home))/.test(url);
     },
     isAllowUrlInTab = function(tab) {
+        if (tab.pinned) {
+            return false;
+        }
+
         return isAllowUrl(tab.url);
     },
     getNextIndex = function(currentIndex, count, textPosition = 'next') {
