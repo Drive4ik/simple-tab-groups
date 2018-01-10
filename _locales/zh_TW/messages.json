@@ -96,8 +96,8 @@
     },
 
     "openGroupAfterChange": {
-        "message": "切換分頁群組後開啟該分頁群組（如果沒有關閉彈出框）",
-        "description": "Open group after changing to it (if the popup isn't closed)"
+        "message": "切換分頁群組後開啟該分頁群組",
+        "description": "Open group after changing to it"
     },
 
     "showGroupCircleInSearchedTab": {

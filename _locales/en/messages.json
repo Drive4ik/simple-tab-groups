@@ -181,8 +181,8 @@
     },
 
     "openGroupAfterChange": {
-        "message": "Open group after changing to it (if the popup isn't closed)",
-        "description": "Open group after changing to it (if the popup isn't closed)"
+        "message": "Open group after changing to it",
+        "description": "Open group after changing to it"
     },
 
     "showGroupCircleInSearchedTab": {
@@ -193,6 +193,16 @@
     "showUrlTooltipOnTabHover": {
         "message": "Show url tooltip when hovering over tab",
         "description": "Show url tooltip when hovering over tab"
+    },
+
+    "enableFastGroupSwitching": {
+        "message": "Enable fast group switching (without loading all tabs, only active)",
+        "description": "Enable fast group switching (without loading all tabs, only active)"
+    },
+
+    "enableFavIconsForNotLoadedTabs": {
+        "message": "Enable fav-icons for not loaded tabs (disable this checkbox if more speed is needed)",
+        "description": "Enable fav-icons for not loaded tabs (disable this checkbox if more speed is needed)"
     },
 
     "newGroupTitle": {
