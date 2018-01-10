@@ -55,7 +55,7 @@
 
             return tabs.filter(isAllowUrlInTab);
         } catch (e) {
-            console.error(e);
+            // console.error(e);
             return [];
         }
     }
@@ -474,7 +474,7 @@
 
 
     async function onActivatedTab({ tabId, windowId }) {
-        console.log('onActivatedTab', { tabId, windowId });
+        // console.log('onActivatedTab', { tabId, windowId });
 
         let group = _groups.find(gr => gr.windowId === windowId);
 
@@ -501,7 +501,7 @@
     }
 
     async function onCreatedTab(tab) {
-        console.log('onCreatedTab', tab);
+        // console.log('onCreatedTab', tab);
 
         if (currentlyAddingTabs.includes(tab.id)) {
             return;
