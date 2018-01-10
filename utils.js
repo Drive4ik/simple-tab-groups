@@ -1,6 +1,8 @@
 'use strict';
 
-const DEFAULT_COOKIE_STORE_ID = 'firefox-default',
+const EXTENSION_NAME = 'Simple Tab Groups',
+    MANIFEST = browser.runtime.getManifest(),
+    DEFAULT_COOKIE_STORE_ID = 'firefox-default',
     CONTEXT_MENU_PREFIX_GROUP = 'stg-move-group-id-',
     DEFAULT_OPTIONS = {
         groups: [],
@@ -111,7 +113,7 @@ let $ = document.querySelector.bind(document),
         browser.notifications.create(id, {
             type: 'basic',
             iconUrl: '/icons/icon.svg',
-            title: browser.i18n.getMessage('extensionName'),
+            title: EXTENSION_NAME,
             message: String(message),
         });
 
@@ -127,12 +129,12 @@ let $ = document.querySelector.bind(document),
                     }
                 }.bind(null, id);
 
-            setTimeout(() => called ? null : reject, 30000, id);
+            setTimeout(() => !called && reject(), 30000, id);
 
             browser.notifications.onClicked.addListener(listener);
         });
     },
-    translatePage = function() {
+    translatePage = function() { // TODO: move to another file
         $$('[data-i18n]').forEach(function(node) {
             node.dataset.i18n
                 .trim()
@@ -146,13 +148,22 @@ let $ = document.querySelector.bind(document),
 
             delete node.dataset.i18n;
         });
+
+        document.querySelector('html').setAttribute('lang', browser.i18n.getUILanguage().substring(0, 2));
     },
     isAllowUrl = function(url) {
         if (!url) {
             return false;
         }
 
-        return !/^(chrome:|javascript:|data:|file:|view-source:|about(?!\:(blank|newtab|home)))/.test(url);
+        return /^((https?|ftp|moz-extension):|about:(blank|newtab|home))/.test(url);
+    },
+    isAllowUrlInTab = function(tab) {
+        if (tab.pinned) {
+            return false;
+        }
+
+        return isAllowUrl(tab.url);
     },
     getNextIndex = function(currentIndex, count, textPosition = 'next') {
         if (!count) {
@@ -213,21 +224,23 @@ let $ = document.querySelector.bind(document),
 
         return !(rect.bottom < 0 || rect.top - viewHeight >= 0);
     },
-    loadContainers = function() {
-        return new Promise(function(resolve) {
-                browser.contextualIdentities.query({})
-                    .then(containers => resolve(containers || []))
-                    .catch(() => resolve([]));
-            })
-            .then(function(containers) {
-                return containers.map(function(container) {
-                    if (!container.iconUrl) {
-                        container.iconUrl = `chrome://browser/content/usercontext-${container.icon}.svg`;
-                    }
+    loadContainers = async function() {
+        let containers = [];
 
-                    return container;
-                });
-            });
+        try {
+            containers = await browser.contextualIdentities.query({});
+            if (!containers) {
+                containers = [];
+            }
+        } catch (e) {}
+
+        return containers.map(function(container) {
+            if (!container.iconUrl) {
+                container.iconUrl = `chrome://browser/content/usercontext-${container.icon}.svg`;
+            }
+
+            return container;
+        });
     },
     on = function(eventsStr, query, func, extendNode = null, translatePage = true) {
         let events = this;
@@ -277,7 +290,7 @@ let $ = document.querySelector.bind(document),
                 });
             });
     },
-    storage = {
+    storage = { // TODO: move to another file
         get(keys) {
             return browser.storage.local.get(keys)
                 .then(function(result) {
@@ -306,10 +319,6 @@ let $ = document.querySelector.bind(document),
                     let eventObj = {},
                         doCallEvent = false;
 
-                    if ('groups' in keys) {
-                        doCallEvent = eventObj.groupsUpdated = true;
-                    }
-
                     if (onlyOptionsKeys.some(key => key in keys)) {
                         doCallEvent = eventObj.optionsUpdated = true;
                     }
@@ -317,8 +326,6 @@ let $ = document.querySelector.bind(document),
                     if (doCallEvent) {
                         browser.runtime.sendMessage(eventObj);
                     }
-
-                    return keys;
                 });
         },
     },
@@ -333,7 +340,7 @@ let $ = document.querySelector.bind(document),
     },
     getBrowserActionSvgPath = function(color) {
         if (!color) {
-            return '/icons/icon.svg';
+            return MANIFEST.browser_action.default_icon;
         }
 
         let svg = `

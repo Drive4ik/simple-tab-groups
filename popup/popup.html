@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title data-i18n="extensionName"></title>
+    <title>Simple Tab Groups</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="/third-party-styles.css">
@@ -11,8 +11,15 @@
 
 <body>
     <div id="stg" class="is-flex is-column">
-        <header class="search-wrapper control">
-            <input id="searchTab" type="text" class="input" autocomplete="off" data-i18n="searchTabPlaceholder:placeholder" />
+        <header id="searchWrapper" class="field">
+            <div class="control is-expanded">
+                <input id="searchTabs" type="text" class="input is-small no-shadow" autocomplete="off" data-i18n="searchTabPlaceholder:placeholder" />
+            </div>
+            <div id="clearSearchTabsButton" class="control is-hidden">
+                <label class="button is-small">
+                    <img class="size-12" src="chrome://browser/skin/stop.svg" alt="" />
+                </label>
+            </div>
         </header>
 
         <main id="result" class="is-full-width"></main>
@@ -85,16 +92,16 @@
 
     <script id="tab-tmpl" type="text/template">
         <li>
-            <div contextmenu="move-tab-to-group-menu" class="item {{classList}}" title="{{urlTitle}}" data-is-tab="true" data-action="load-group" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}">
+            <div contextmenu="move-tab-to-group-menu" class="item no-text-select {{classList}}" title="{{urlTitle}}" data-is-tab="true" data-action="load-group" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}" data-draggable-group="tabs">
                 <div class="item-icon">
-                    <img src="{{favIconUrl}}" class="size-16" alt="" />
+                    <img src="{{favIconUrl}}" class="size-16 no-events" alt="" />
                 </div>
                 <div class="item-title">
                     <span class="bordered" style="{{containerColorCode}}">{{title}}</span>
                 </div>
                 <div class="item-action flex-on-hover">
-                    <span class="icon cursor-pointer no-text-select" data-action="remove-tab" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}" data-i18n="deleteTab:title">
-                        <img class="size-16" src="chrome://browser/skin/stop.svg" alt="" />
+                    <span class="icon cursor-pointer" data-action="remove-tab" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}" data-i18n="deleteTab:title">
+                        <img class="size-16 no-events" src="chrome://browser/skin/stop.svg" alt="" />
                     </span>
                 </div>
             </div>
@@ -123,13 +130,13 @@
     </script>
 
     <script id="group-tmpl" type="text/template">
-        <div contextmenu="group-menu" class="item {{classList}}" data-is-group="true" data-action="load-group" data-group-id="{{id}}" data-tab-index="-1">
+        <div contextmenu="group-menu" class="item {{classList}}" data-is-group="true" data-action="load-group" data-group-id="{{id}}" data-tab-index="-1" data-draggable-group="groups">
             <div class="item-icon">
                 {{colorCircleHtml}}
             </div>
             <div class="item-title">{{title}}</div>
             <div class="item-action hover no-text-select" data-action="show-group" data-group-id="{{id}}">
-                <img class="size-16 rotate-180" src="chrome://browser/skin/arrow-left.svg" alt="" />
+                <img class="size-16 rotate-180 no-events" src="chrome://browser/skin/arrow-left.svg" alt="" />
                 <span class="tabs-text" data-i18n="groupTabsCount::{{tabs.length}}"></span>
             </div>
         </div>
@@ -139,8 +146,8 @@
 
     <menu id="group-menu" type="context">
         <menuitem data-action="context-open-group-in-new-window" icon="chrome://browser/skin/new-window.svg" data-i18n="openGroupInNewWindow:label"></menuitem>
-        <menuitem data-action="context-move-group-up" icon="/icons/arrow-up.svg" data-i18n="moveGroupUp:label"></menuitem>
-        <menuitem data-action="context-move-group-down" icon="/icons/arrow-down.svg" data-i18n="moveGroupDown:label"></menuitem>
+        <menuitem data-action="context-sort-groups" data-vector="asc" icon="/icons/sort-alpha-asc.svg" data-i18n="sortGroupsAZ:label"></menuitem>
+        <menuitem data-action="context-sort-groups" data-vector="desc" icon="/icons/sort-alpha-desc.svg" data-i18n="sortGroupsZA:label"></menuitem>
         <menuitem data-action="context-open-settings-group-popup" icon="chrome://browser/skin/settings.svg" data-i18n="groupSettings:label"></menuitem>
         <menuitem data-action="context-show-delete-group-popup" icon="/icons/group-delete.svg" data-i18n="deleteGroup:label"></menuitem>
     </menu>
@@ -163,6 +170,7 @@
 
     <script type="text/javascript" src="/utils.js"></script>
     <script type="text/javascript" src="/popups/popups.js"></script>
+    <script type="text/javascript" src="/drag-and-drop.js"></script>
     <script type="text/javascript" src="popup.js"></script>
 </body>
 

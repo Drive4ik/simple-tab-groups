@@ -2,6 +2,7 @@
     --margin: 5px;
     --tab-inner-padding: 3px;
     --fill-color: #818181;
+    --active-tab-bg-color: #e4e4e4;
 }
 
 html {
@@ -55,6 +56,11 @@ html {
 
 .h-margin-left-10 {
     margin-left: 10px;
+}
+
+.size-12 {
+    width: 12px;
+    height: 12px;
 }
 
 .size-14 {
@@ -146,6 +152,10 @@ img {
 /* ============================================================================ */
 /* ============================================================================ */
 
+#filterWrapper {
+    width: 300px;
+}
+
 #result > .group {
     /*! border: 2px dashed red; */
 }
@@ -179,7 +189,7 @@ img {
 #result.grid > .group {
     display: flex;
     flex-direction: column;
-    box-shadow: 0px 0px 3px 1px rgba(0,0,0,0.5);
+    border: 1px solid rgba(0, 0, 0, 0.15);
     max-height: 600px;
     background-color: #fcfcfc;
 
@@ -233,34 +243,35 @@ img {
     /* grid-gap: 10px; */
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     grid-auto-rows: 100px;
+
+    min-height: 110px;
     /* flex-grow: 1; */
 }
 
 /* TAB */
 #result.grid > .group .tab {
-    /*! border: 5px solid transparent; */
     position: relative;
     font-size: 12px;
     padding: var(--tab-inner-padding);
 }
 
-#result.grid > .group .tab:not(.is-active):hover {
-    background-color: #e4e4e4;
-    outline: 1px solid #cfcfcf;
-}
-
 #result.grid > .group .tab.has-thumbnail:hover > .icon,
 #result.grid > .group .tab:hover > .delete-tab-button,
 #result.grid > .group .tab:hover > .container,
-#result.grid > .group .tab.has-thumbnail.is-active > .icon,
-#result.grid > .group .tab.is-active > .delete-tab-button,
-#result.grid > .group .tab.is-active > .container {
-    background-color: #e4e4e4;
+#result.grid > .group .tab.is-current,
+#result.grid > .group .tab:not(.is-current):hover,
+#result.grid > .group .tab.is-current.has-thumbnail > .icon,
+#result.grid > .group .tab.is-current > .delete-tab-button,
+#result.grid > .group .tab.is-current > .container {
+    background-color: var(--active-tab-bg-color);
 }
 
 #result.grid > .group .tab.is-active {
-    background-color: #e4e4e4;
     outline: 1px solid #0093e0;
+}
+
+#result.grid > .group .tab:not(.is-active):hover {
+    outline: 1px solid #cfcfcf;
 }
 
 #result.grid > .group .tab:not(.has-thumbnail) > .icon {
@@ -347,6 +358,10 @@ img {
 #result.grid > .group .tab > .screenshot > img {
     width: 100%;
     height: 100%;
+}
+
+#result.grid > .group .tab > .screenshot > img[src=""] {
+    display: none;
 }
 
 #result.grid > .group .tab > .icon > *,

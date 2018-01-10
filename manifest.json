@@ -8,9 +8,9 @@
         }
     },
 
-    "name": "__MSG_extensionName__",
+    "name": "Simple Tab Groups",
     "description": "__MSG_extensionDescription__",
-    "version": "1.9.0.1",
+    "version": "2.0",
     "author": "Vitaliy Bavykin",
     "homepage_url": "https://github.com/drive4ik/simple-tab-groups",
     "developer": {
@@ -19,7 +19,7 @@
     },
 
     "icons": {
-        "96": "icons/icon.svg"
+        "96": "/icons/icon.svg"
     },
 
     "permissions": [
@@ -28,14 +28,28 @@
         "menus",
         "contextualIdentities",
         "cookies",
+        "<all_urls>",
         "storage"
     ],
 
     "browser_action": {
-        "default_icon": "icons/icon.svg",
-        "default_title": "__MSG_extensionName__",
+        "default_area": "tabstrip",
+        "default_icon": "/icons/icon.svg",
+        "default_title": "Simple Tab Groups",
         "default_popup": "popup/popup.html"
     },
+
+    "options_ui": {
+        "page": "options/options.html"
+    },
+
+    "background": {
+        "scripts": ["utils.js", "background.js"]
+    },
+
+    "content_security_policy": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data:; script-src 'self'",
+
+    "default_locale": "en",
 
     "commands": {
         "_execute_browser_action": {
@@ -58,72 +72,60 @@
             "description": "Load next group"
         },
 
-        "index-group-1": {
+        "group-index-1": {
             "suggested_key": {
                 "default": "MacCtrl+Shift+1"
             },
             "description": "Load 1st group"
         },
-        "index-group-2": {
+        "group-index-2": {
             "suggested_key": {
                 "default": "MacCtrl+Shift+2"
             },
             "description": "Load 2nd group"
         },
-        "index-group-3": {
+        "group-index-3": {
             "suggested_key": {
                 "default": "MacCtrl+Shift+3"
             },
             "description": "Load 3rd group"
         },
-        "index-group-4": {
+        "group-index-4": {
             "suggested_key": {
                 "default": "MacCtrl+Shift+4"
             },
             "description": "Load 4th group"
         },
-        "index-group-5": {
+        "group-index-5": {
             "suggested_key": {
                 "default": "MacCtrl+Shift+5"
             },
             "description": "Load 5th group"
         },
-        "index-group-6": {
+        "group-index-6": {
             "suggested_key": {
                 "default": "MacCtrl+Shift+6"
             },
             "description": "Load 6th group"
         },
-        "index-group-7": {
+        "group-index-7": {
             "suggested_key": {
                 "default": "MacCtrl+Shift+7"
             },
             "description": "Load 7th group"
         },
-        "index-group-8": {
+        "group-index-8": {
             "suggested_key": {
                 "default": "MacCtrl+Shift+8"
             },
             "description": "Load 8th group"
         },
-        "index-group-9": {
+        "group-index-9": {
             "suggested_key": {
                 "default": "MacCtrl+Shift+9"
             },
             "description": "Load 9nd group"
         }
-    },
-
-    "options_ui": {
-        "page": "options/options.html"
-    },
-
-    "background": {
-        "scripts": ["utils.js", "background.js"]
-    },
-
-    "content_security_policy": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data:; script-src 'self'",
-
-    "default_locale": "en"
+    }
 
 }

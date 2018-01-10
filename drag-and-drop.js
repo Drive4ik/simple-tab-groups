@@ -80,7 +80,7 @@ let DragAndDrop = new function() {
     }
 
     function dragEnter(event) {
-        if (this.options.group.name !== draggedNode.options.group.name && !this.options.group.put.includes(draggedNode.options.group.name)) {
+        if (!draggedNode || this.options.group.name !== draggedNode.options.group.name && !this.options.group.put.includes(draggedNode.options.group.name)) {
             return;
         }
 
@@ -90,7 +90,7 @@ let DragAndDrop = new function() {
     }
 
     function dragLeave(event) {
-        if (this.options.group.name !== draggedNode.options.group.name && !this.options.group.put.includes(draggedNode.options.group.name)) {
+        if (!draggedNode || this.options.group.name !== draggedNode.options.group.name && !this.options.group.put.includes(draggedNode.options.group.name)) {
             return;
         }
 
@@ -100,7 +100,7 @@ let DragAndDrop = new function() {
     }
 
     function dragOver(event) {
-        if (this.options.group.name !== draggedNode.options.group.name && !this.options.group.put.includes(draggedNode.options.group.name)) {
+        if (!draggedNode || this.options.group.name !== draggedNode.options.group.name && !this.options.group.put.includes(draggedNode.options.group.name)) {
             return;
         }
 
@@ -111,7 +111,7 @@ let DragAndDrop = new function() {
     }
 
     function drop(event) {
-        if (this.options.group.name !== draggedNode.options.group.name && !this.options.group.put.includes(draggedNode.options.group.name)) {
+        if (!draggedNode || this.options.group.name !== draggedNode.options.group.name && !this.options.group.put.includes(draggedNode.options.group.name)) {
             return;
         }
 
@@ -129,7 +129,7 @@ let DragAndDrop = new function() {
     }
 
     function dragEnd(event) {
-        if (this.options.group.name !== draggedNode.options.group.name && !this.options.group.put.includes(draggedNode.options.group.name)) {
+        if (!draggedNode || this.options.group.name !== draggedNode.options.group.name && !this.options.group.put.includes(draggedNode.options.group.name)) {
             return;
         }
 

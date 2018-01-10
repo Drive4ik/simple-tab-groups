@@ -18,11 +18,23 @@
     <div id="manage" class="is-flex is-column">
         <header class="is-flex is-aligin-items-center">
             <span class="title">
-                <span data-i18n="extensionName"></span> - <span data-i18n="manageGroupsTitle"></span> (Beta)
+                Simple Tab Groups - <span data-i18n="manageGroupsTitle"></span>
+            </span>
+            <span class="is-full-width">
+                <div class="buttons has-addons">
+                    <span class="button is-small is-primary" data-i18n="manageGroupViewGrid"></span><span class="button is-small" disabled data-i18n="manageGroupViewFreeArrange"></span>
+                </div>
             </span>
             <span>
-                <div class="buttons has-addons">
-                    <span class="button is-primary" data-i18n="manageGroupViewGrid"></span><span class="button" disabled data-i18n="manageGroupViewFreeArrange"></span>
+                <div id="filterWrapper" class="field">
+                    <div class="control is-expanded">
+                        <input id="filterTabs" type="text" class="input is-small" data-i18n="filterTabsPlaceholder:placeholder" autocomplete="on" />
+                    </div>
+                    <div id="clearFilterTabsButton" class="control is-hidden">
+                        <label class="button is-small">
+                            <img class="size-12" src="chrome://browser/skin/stop.svg" alt="" />
+                        </label>
+                    </div>
                 </div>
             </span>
         </header>
@@ -45,7 +57,7 @@
             <div class="container {{containerClass}}" style="{{containerColorCodeBorderStyle}}">
                 <img class="size-16" src="{{containerIconUrl}}" style="{{containerColorCodeFillStyle}}" alt="">
             </div>
-            <div class="screenshot {{thumbnailClass}}" style="{{containerColorCodeBorderStyle}}">
+            <div class="screenshot" style="{{containerColorCodeBorderStyle}}">
                 <img src="{{thumbnail}}" alt="">
             </div>
             <div class="title text-center text-ellipsis">{{title}}</div>
@@ -114,7 +126,7 @@
 
     <script type="text/javascript" src="/utils.js"></script>
     <script type="text/javascript" src="/popups/popups.js"></script>
-    <script type="text/javascript" src="drag-and-drop.js"></script>
+    <script type="text/javascript" src="/drag-and-drop.js"></script>
     <script type="text/javascript" src="manage.js"></script>
 </body>
 

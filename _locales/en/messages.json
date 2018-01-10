@@ -1,9 +1,4 @@
 {
-    "extensionName": {
-        "message": "Simple Tab Groups",
-        "description": "Name of the extension."
-    },
-
     "extensionDescription": {
         "message": "Create, modify and quickly change tab groups. \nInspired by the old add-on \"Tab Groups\" :)",
         "description": "Description of the extension."
@@ -44,6 +39,16 @@
         }
     },
 
+    "warning": {
+        "message": "Warning!",
+        "description": "Warning!"
+    },
+
+    "ok": {
+        "message": "OK",
+        "description": "OK button"
+    },
+
     "save": {
         "message": "Save",
         "description": "Save"
@@ -62,6 +67,11 @@
     "searchTabPlaceholder": {
         "message": "Search a tab...",
         "description": "Search a tab placeholder"
+    },
+
+    "filterTabsPlaceholder": {
+        "message": "Filter tabs (multiple filter with *)",
+        "description": "Filter tabs (multiple filter with *)"
     },
 
     "invalidRegExpRuleTitle": {
@@ -101,8 +111,8 @@
     },
 
     "openManageGroupsInTab": {
-        "message": "Open manage groups in new tab",
-        "description": "Open manage groups in new tab"
+        "message": "Open \"Manage Groups\" in new tab",
+        "description": "Open \"Manage Groups\" in new tab"
     },
 
     "showConfirmDialogBeforeGroupDelete": {
@@ -120,9 +130,54 @@
         "description": "Enable keyboard shortcuts for switch to tab. i.e. Ctrl+Shift+[1-9]"
     },
 
-    "importSettingsOldTabGroupsAddon": {
-        "message": "Import settings from old \"Tab Groups\" add-on",
-        "description": "Import settings from old \"Tab Groups\" add-on"
+    "exportAddonSettingsTitle": {
+        "message": "Backup your Simple Tab Groups",
+        "description": "Backup your Simple Tab Groups"
+    },
+
+    "exportAddonSettingsDescription": {
+        "message": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary.",
+        "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
+    },
+
+    "exportAddonSettingsButton": {
+        "message": "Create backup",
+        "description": "Create backup"
+    },
+
+    "importAddonSettingsTitle": {
+        "message": "Restore Simple Tab Groups",
+        "description": "Restore Simple Tab Groups"
+    },
+
+    "importAddonSettingsDescription": {
+        "message": "Load a backup file containing the tab groups you want to restore.",
+        "description": "Load a backup file containing the tab groups you want to restore."
+    },
+
+    "importAddonSettingsWarning": {
+        "message": "Restore add-on settings will ERASE all existing settings and groups!",
+        "description": "Restore add-on settings will ERASE all existing settings and groups!"
+    },
+
+    "importAddonSettingsButton": {
+        "message": "Restore backup",
+        "description": "Restore backup"
+    },
+
+    "importSettingsOldTabGroupsAddonTitle": {
+        "message": "Restore Quicksaver's \"Tab Groups\"",
+        "description": "Restore Quicksaver's \"Tab Groups\""
+    },
+
+    "importSettingsOldTabGroupsAddonDescription": {
+        "message": "Load a backup file old \"Tab Groups\" addon.",
+        "description": "Load a backup file old \"Tab Groups\" addon."
+    },
+
+    "importSettingsOldTabGroupsAddonButton": {
+        "message": "Import settings from Quicksaver's \"Tab Groups\" add-on",
+        "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
     },
 
     "openGroupAfterChange": {
@@ -167,14 +222,14 @@
         "description": "Open group in new window"
     },
 
-    "moveGroupUp": {
-        "message": "Move group up",
-        "description": "Move group up"
+    "sortGroupsAZ": {
+        "message": "Sort groups [A-Z]",
+        "description": "Sort groups [A-Z]"
     },
 
-    "moveGroupDown": {
-        "message": "Move group down",
-        "description": "Move group down"
+    "sortGroupsZA": {
+        "message": "Sort groups [Z-A]",
+        "description": "Sort groups [Z-A]"
     },
 
     "settingsTitle": {

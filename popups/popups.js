@@ -19,17 +19,15 @@ let Popups = {
         lastData = null,
         $on = on.bind({});
 
-    function loadTemplate(name) {
+    async function loadTemplate(name) {
         if (templates[name]) {
-            return Promise.resolve(templates[name]);
+            return templates[name];
         }
 
-        return fetch(`/popups/${name}.html`)
-            .then(blob => blob.text())
-            .then(function(text) {
-                templates[name] = text;
-                return text;
-            });
+        let blob = await fetch(`/popups/${name}.html`)
+        templates[name] = await blob.text();
+
+        return templates[name];
     }
 
     function showPopup(parsedTemplate, key = 'innerHTML') {
@@ -65,6 +63,11 @@ let Popups = {
     function doAction(action, data, event) {
         if ('close-popup' === action) {
             hidePopup();
+
+            if (data.afterHidePopupAction) {
+                lastData[data.afterHidePopupAction](data.afterHidePopupData);
+            }
+
         } else if ('submit-delete-group-popup' === action) {
             BG.removeGroup(lastData).then(hidePopup);
         } else if ('submit-edit-group-popup' === action) {
@@ -84,16 +87,16 @@ let Popups = {
                     }
                 });
 
-            BG.saveGroup(group)
-                .then(() => BG.getData(undefined, false))
-                .then(function(result) {
-                    if (group.id === result.currentGroup.id) {
-                        BG.updateBrowserActionData();
+            BG.saveGroup(group, true);
+
+            BG.getWindow()
+                .then(function(win) {
+                    if (group.windowId === win.id) {
+                        BG.updateBrowserActionData(win.id);
                     }
-                })
-                .then(BG.removeMoveTabMenus)
-                .then(BG.createMoveTabMenus)
-                .then(hidePopup);
+
+                    hidePopup();
+                });
         } else if ('set-random-group-color' === action) {
             event.preventDefault();
             $('#groupIconColor').value = randomColor();
@@ -107,38 +110,52 @@ let Popups = {
         $('#groupIconColorCircle').style.backgroundColor = this.value.trim();
     });
 
-    Popups.showEditGroup = function(group, popupDesign = 1) {
+    async function showEditGroup(group, popupDesign = 1) {
         lastData = group;
 
-        return Promise.all([
-                loadTemplate('edit-group-main'),
-                loadTemplate('edit-group-' + popupDesign)
-            ])
-            .then(function([main, template]) {
-                let parsedMainHtml = format(main, {
-                    groupTitle: unSafeHtml(group.title),
-                    groupIconColor: group.iconColor,
-                    groupCatchTabRules: group.catchTabRules,
-                });
+        let mainTemplate = await loadTemplate('edit-group-main'),
+            wrapperTemplate = await loadTemplate('edit-group-' + popupDesign);
 
-                return format(template, {
-                    mainHtml: parsedMainHtml,
-                });
-            })
-            .then(showPopup);
+        let parsedMainTemplate = format(mainTemplate, {
+            groupTitle: unSafeHtml(group.title),
+            groupIconColor: group.iconColor,
+            groupCatchTabRules: group.catchTabRules,
+        });
+
+        return showPopup(format(wrapperTemplate, {
+            mainHtml: parsedMainTemplate,
+        }));
     };
 
-    Popups.showDeleteGroup = function(group) {
+    async function showDeleteGroup(group) {
         lastData = group;
 
-        return loadTemplate('delete-group')
-            .then(function(template) {
-                return format(template, {
-                    groupId: group.id,
-                    questionText: browser.i18n.getMessage('deleteGroupPopupBody', unSafeHtml(group.title)),
-                });
-            })
-            .then(showPopup);
+        let template = await loadTemplate('delete-group');
+
+        return showPopup(format(template, {
+            groupId: group.id,
+            questionText: browser.i18n.getMessage('deleteGroupPopupBody', unSafeHtml(group.title)),
+        }));
     };
+
+    async function confirm(text, header = '') {
+        let confirmTemplate = await loadTemplate('confirm');
+
+        showPopup(format(confirmTemplate, {
+            header,
+            text,
+        }));
+
+        return new Promise(function(resolve, reject) {
+            lastData = {
+                resolve,
+                reject,
+            };
+        });
+    };
+
+    Popups.showEditGroup = showEditGroup;
+    Popups.showDeleteGroup = showDeleteGroup;
+    Popups.confirm = confirm;
 
 })();

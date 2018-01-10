@@ -226,8 +226,7 @@ th {
     align-items: center;
     background-color: whitesmoke;
     display: flex;
-    flex-shrink: 0;
-    /* justify-content: flex-start; */
+    flex-shrink: 0;    /* justify-content: flex-start; */
     padding: 10px;
     position: relative;
 }
@@ -272,7 +271,7 @@ th {
     padding: 10px;
 }
 
-.modal-card-body > .field {
+.modal-card-body>.field {
     background-color: #fff;
 }
 
@@ -291,14 +290,119 @@ th {
     text-align: left;
 }
 
-.control .input,
-.control .textarea {
-    width: 100%;
-    border: 1px solid #c0c0c0;
-    padding: 3px 5px;
+.input,
+.textarea {
+    -moz-appearance: none;
+    align-items: center;
+    border: 1px solid transparent;
     border-radius: 3px;
-    font-family: Arial;
-    font-size: 14px;
+    box-shadow: none;
+    display: inline-flex;
+    font-size: 1rem;
+    height: 2.25em;
+    justify-content: flex-start;
+    line-height: 1.5;
+    padding-bottom: calc(0.375em - 1px);
+    padding-left: calc(0.625em - 1px);
+    padding-right: calc(0.625em - 1px);
+    padding-top: calc(0.375em - 1px);
+    position: relative;
+    vertical-align: top;
+    background-color: white;
+    border-color: #dbdbdb;
+    color: #363636;
+    box-shadow: inset 0 1px 2px rgba(10, 10, 10, 0.1);
+    max-width: 100%;
+    width: 100%;
+}
+
+.input.no-shadow,
+.textarea.no-shadow {
+    box-shadow: none;
+}
+
+.input:focus,
+.input.is-focused,
+.input:active,
+.input.is-active,
+.textarea:focus,
+.textarea.is-focused,
+.textarea:active,
+.textarea.is-active {
+    outline: none;
+}
+
+.input[disabled],
+.textarea[disabled] {
+    cursor: not-allowed;
+}
+
+.input::-moz-placeholder,
+.textarea::-moz-placeholder {
+    color: rgba(54, 54, 54, 0.3);
+}
+
+.input:-moz-placeholder,
+.textarea:-moz-placeholder {
+    color: rgba(54, 54, 54, 0.3);
+}
+
+.input:hover,
+.input.is-hovered,
+.textarea:hover,
+.textarea.is-hovered {
+    border-color: #b5b5b5;
+}
+
+.input:focus,
+.input.is-focused,
+.input:active,
+.input.is-active,
+.textarea:focus,
+.textarea.is-focused,
+.textarea:active,
+.textarea.is-active {
+    border-color: #3273dc;
+    box-shadow: 0 0 0 0.125em rgba(50, 115, 220, 0.25);
+}
+
+.input[disabled],
+.textarea[disabled] {
+    background-color: whitesmoke;
+    border-color: whitesmoke;
+    box-shadow: none;
+    color: #7a7a7a;
+}
+
+.input[disabled]::-moz-placeholder,
+.textarea[disabled]::-moz-placeholder {
+    color: rgba(122, 122, 122, 0.3);
+}
+
+.input[disabled]:-moz-placeholder,
+.textarea[disabled]:-moz-placeholder {
+    color: rgba(122, 122, 122, 0.3);
+}
+
+.input[readonly],
+.textarea[readonly] {
+    box-shadow: none;
+}
+
+.input.is-small,
+.textarea.is-small {
+    border-radius: 2px;
+    font-size: 0.75rem;
+}
+
+.input.is-medium,
+.textarea.is-medium {
+    font-size: 1.25rem;
+}
+
+.input.is-large,
+.textarea.is-large {
+    font-size: 1.5rem;
 }
 
 .control .textarea {
@@ -312,11 +416,11 @@ th {
     justify-content: flex-start;
 }
 
-.field.is-grouped > .control {
+.field.is-grouped>.control {
     flex-shrink: 0;
 }
 
-.field.is-grouped > .control:not(:last-child) {
+.field.is-grouped>.control:not(:last-child) {
     margin-bottom: 0;
     margin-right: 0.75rem;
 }
@@ -327,6 +431,95 @@ th {
 
 .field.is-grouped.is-grouped-right {
     justify-content: flex-end;
+}
+
+.field:not(:last-child) {
+    margin-bottom: 0.75rem;
+}
+
+.field.has-addons {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.field.has-addons .control:not(:last-child) {
+    margin-right: -1px;
+}
+
+.field.has-addons .control:first-child .button,
+.field.has-addons .control:first-child .input,
+.field.has-addons .control:first-child .select select {
+    border-bottom-left-radius: 3px;
+    border-top-left-radius: 3px;
+}
+
+.field.has-addons .control:last-child .button,
+.field.has-addons .control:last-child .input,
+.field.has-addons .control:last-child .select select {
+    border-bottom-right-radius: 3px;
+    border-top-right-radius: 3px;
+}
+
+.field.has-addons .control .button,
+.field.has-addons .control .input,
+.field.has-addons .control .select select {
+    border-radius: 0;
+}
+
+.field.has-addons .control .button:hover,
+.field.has-addons .control .button.is-hovered,
+.field.has-addons .control .input:hover,
+.field.has-addons .control .input.is-hovered,
+.field.has-addons .control .select select:hover,
+.field.has-addons .control .select select.is-hovered {
+    z-index: 2;
+}
+
+.field.has-addons .control .button:focus,
+.field.has-addons .control .button.is-focused,
+.field.has-addons .control .button:active,
+.field.has-addons .control .button.is-active,
+.field.has-addons .control .input:focus,
+.field.has-addons .control .input.is-focused,
+.field.has-addons .control .input:active,
+.field.has-addons .control .input.is-active,
+.field.has-addons .control .select select:focus,
+.field.has-addons .control .select select.is-focused,
+.field.has-addons .control .select select:active,
+.field.has-addons .control .select select.is-active {
+    z-index: 3;
+}
+
+.field.has-addons .control .button:focus:hover,
+.field.has-addons .control .button.is-focused:hover,
+.field.has-addons .control .button:active:hover,
+.field.has-addons .control .button.is-active:hover,
+.field.has-addons .control .input:focus:hover,
+.field.has-addons .control .input.is-focused:hover,
+.field.has-addons .control .input:active:hover,
+.field.has-addons .control .input.is-active:hover,
+.field.has-addons .control .select select:focus:hover,
+.field.has-addons .control .select select.is-focused:hover,
+.field.has-addons .control .select select:active:hover,
+.field.has-addons .control .select select.is-active:hover {
+    z-index: 4;
+}
+
+.field.has-addons .control.is-expanded {
+    flex-grow: 1;
+}
+
+.field.has-addons.has-addons-centered {
+    justify-content: center;
+}
+
+.field.has-addons.has-addons-right {
+    justify-content: flex-end;
+}
+
+.field.has-addons.has-addons-fullwidth .control {
+    flex-grow: 1;
+    flex-shrink: 0;
 }
 
 .delete {
@@ -431,13 +624,33 @@ th {
     color: #363636;
 }
 
+.button.is-info {
+    background-color: #209cee;
+    border-color: transparent;
+    color: #fff;
+}
+
+.button.is-info:hover,
+.button.is-info.is-hovered {
+    background-color: #1496ed;
+    border-color: transparent;
+    color: #fff;
+}
+
+.button.is-info[disabled] {
+    background-color: #209cee;
+    border-color: transparent;
+    box-shadow: none;
+}
+
 .button.is-success {
     background-color: #23d160;
     border-color: transparent;
     color: #fff;
 }
 
-.button.is-success:hover, .button.is-success.is-hovered {
+.button.is-success:hover,
+.button.is-success.is-hovered {
     background-color: #22c65b;
     border-color: transparent;
     color: #fff;
@@ -455,7 +668,8 @@ th {
     color: #fff;
 }
 
-.button.is-primary:hover, .button.is-primary.is-hovered {
+.button.is-primary:hover,
+.button.is-primary.is-hovered {
     background-color: #00c4a7;
     border-color: transparent;
     color: #fff;
@@ -467,13 +681,33 @@ th {
     box-shadow: none;
 }
 
+.button.is-warning {
+    background-color: #ffdd57;
+    border-color: transparent;
+    color: rgba(0, 0, 0, 0.7);
+}
+
+.button.is-warning:hover,
+.button.is-warning.is-hovered {
+    background-color: #ffdb4a;
+    border-color: transparent;
+    color: rgba(0, 0, 0, 0.7);
+}
+
+.button.is-warning[disabled] {
+    background-color: #ffdd57;
+    border-color: transparent;
+    box-shadow: none;
+}
+
 .button.is-danger {
     background-color: #ff3860;
     border-color: transparent;
     color: #fff;
 }
 
-.button.is-danger:hover, .button.is-danger.is-hovered {
+.button.is-danger:hover,
+.button.is-danger.is-hovered {
     background-color: #ff2b56;
     border-color: transparent;
     color: #fff;
@@ -492,8 +726,6 @@ th {
     opacity: 0.5;
     cursor: not-allowed;
 }
-
-
 
 .buttons.has-addons .button:not(:first-child) {
     border-bottom-left-radius: 0;
@@ -529,4 +761,50 @@ th {
 .buttons.has-addons .button.is-active:hover,
 .buttons.has-addons .button.is-selected:hover {
     z-index: 4;
+}
+
+.help {
+    display: block;
+    /* font-size: 0.75rem; */
+    margin-top: 0.25rem;
+}
+
+.help.is-white {
+    color: white;
+}
+
+.help.is-black {
+    color: #0a0a0a;
+}
+
+.help.is-light {
+    color: whitesmoke;
+}
+
+.help.is-dark {
+    color: #363636;
+}
+
+.help.is-primary {
+    color: #00d1b2;
+}
+
+.help.is-link {
+    color: #3273dc;
+}
+
+.help.is-info {
+    color: #209cee;
+}
+
+.help.is-success {
+    color: #23d160;
+}
+
+.help.is-warning {
+    color: #ffdd57;
+}
+
+.help.is-danger {
+    color: #ff3860;
 }

@@ -1,0 +1,17 @@
+
+<div class="modal is-active">
+    <div class="modal-background" data-action="close-popup" data-after-hide-popup-action="reject"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">{{header}}</p>
+            <button class="delete" aria-label="close" data-action="close-popup" data-after-hide-popup-action="reject"></button>
+        </header>
+        <section class="modal-card-body">
+            {{text}}
+        </section>
+        <footer class="modal-card-foot">
+            <button data-action="close-popup" data-after-hide-popup-action="resolve" class="button is-primary" data-i18n="ok"></button>
+            <button data-action="close-popup" data-after-hide-popup-action="reject" class="button" data-i18n="cancel"></button>
+        </footer>
+    </div>
+</div>
