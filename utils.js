@@ -4,6 +4,7 @@ const EXTENSION_NAME = 'Simple Tab Groups',
     MANIFEST = browser.runtime.getManifest(),
     DEFAULT_COOKIE_STORE_ID = 'firefox-default',
     CONTEXT_MENU_PREFIX_GROUP = 'stg-move-group-id-',
+    NEW_TAB_URL = '/stg-newtab/newtab.html',
     DEFAULT_OPTIONS = {
         groups: [],
         lastCreatedGroupPosition: 0,
@@ -11,13 +12,15 @@ const EXTENSION_NAME = 'Simple Tab Groups',
 
         // options
         closePopupAfterChangeGroup: true,
-        openGroupAfterChange: true,
+            openGroupAfterChange: true,
         showGroupCircleInSearchedTab: true,
         showUrlTooltipOnTabHover: false,
         showNotificationAfterMoveTab: true,
         createNewGroupAfterAttachTabToNewWindow: true,
         openManageGroupsInTab: true,
         showConfirmDialogBeforeGroupDelete: true,
+        enableFastGroupSwitching: true,
+            enableFavIconsForNotLoadedTabs: true,
 
         enableKeyboardShortcutLoadNextPrevGroup: true,
         enableKeyboardShortcutLoadByIndexGroup: true,
@@ -164,6 +167,35 @@ let $ = document.querySelector.bind(document),
         }
 
         return isAllowUrl(tab.url);
+    },
+    isExtensionNewTabUrl = function(url) {
+        if (!url) {
+            return false;
+        }
+
+        if (url.startsWith(browser.extension.getURL(NEW_TAB_URL))) {
+            return true;
+        }
+
+        let reg = new RegExp('^moz-extension:\/\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}' + NEW_TAB_URL.replace(/\//g, '\\/').replace(/\./, '\\.'));
+
+        if (reg.test(url)) {
+            return true;
+        }
+
+        return false;
+    },
+    getStgTabNewUrl = function(tab, enableFavIconsForNotLoadedTabs = DEFAULT_OPTIONS.enableFavIconsForNotLoadedTabs) {
+        let params = new URLSearchParams;
+
+        params.set('url', tab.url);
+        params.set('title', tab.title || tab.url);
+
+        if (enableFavIconsForNotLoadedTabs) {
+            params.set('favIconUrl', tab.favIconUrl);
+        }
+
+        return browser.extension.getURL(NEW_TAB_URL) + '?' + params.toString();
     },
     getNextIndex = function(currentIndex, count, textPosition = 'next') {
         if (!count) {

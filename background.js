@@ -348,12 +348,20 @@
                 });
 
                 if (group.tabs.length) {
+                    let options = await storage.get(['enableFastGroupSwitching', 'enableFavIconsForNotLoadedTabs']);
+
                     await Promise.all(group.tabs.map(function(tab, tabIndex) {
                             tab.active = -1 === activeTabIndex ? Boolean(tab.active) : tabIndex === activeTabIndex;
 
+                            let url = tab.url;
+
+                            if (options.enableFastGroupSwitching && !isEmptyUrl(tab.url) && !tab.active) {
+                                url = getStgTabNewUrl(tab, options.enableFavIconsForNotLoadedTabs);
+                            }
+
                             return browser.tabs.create({
                                 active: tab.active,
-                                url: tab.url,
+                                url: url,
                                 windowId: windowId,
                                 cookieStoreId: tab.cookieStoreId || DEFAULT_COOKIE_STORE_ID,
                             });
@@ -543,6 +551,7 @@
             currentlyAddingTabs.includes(tabId) || // reject processing tabs
             'isArticle' in changeInfo || // not supported reader mode now
             'discarded' in changeInfo || // not supported discard tabs now
+            isExtensionNewTabUrl(tab.url) ||
             (tab.pinned && undefined === changeInfo.pinned)) { // pinned tabs are not supported
             return;
         }
@@ -1325,6 +1334,10 @@
 
                         if (tabInGroup) {
                             mappedTab.thumbnail = tabInGroup.thumbnail;
+                        }
+
+                        if (isExtensionNewTabUrl(mappedTab.url)) {
+                            mappedTab.url = new URL(mappedTab.url).searchParams.get('url') || 'about:blank';
                         }
 
                         return mappedTab;

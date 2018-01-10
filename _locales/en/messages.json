@@ -195,6 +195,16 @@
         "description": "Show url tooltip when hovering over tab"
     },
 
+    "enableFastGroupSwitching": {
+        "message": "Enable fast group switching (without loading all tabs, only active)",
+        "description": "Enable fast group switching (without loading all tabs, only active)"
+    },
+
+    "enableFavIconsForNotLoadedTabs": {
+        "message": "Enable fav-icons for not loaded tabs",
+        "description": "Enable fav-icons for not loaded tabs"
+    },
+
     "newGroupTitle": {
         "message": "Group $id$",
         "description": "group id",
