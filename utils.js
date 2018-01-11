@@ -162,8 +162,8 @@ let $ = document.querySelector.bind(document),
 
         return /^((https?|ftp|moz-extension):|about:(blank|newtab|home))/.test(url);
     },
-    isAllowUrlInTab = function(tab) {
-        if (tab.pinned) {
+    isAllowTab = function(tab) {
+        if (tab.pinned || tab.incognito) {
             return false;
         }
 

@@ -69,9 +69,9 @@
                         }
                     });
             } else if ('add-tab' === action) {
-                BG.addTab(getGroupById(data.groupId), data.cookieStoreId);
+                BG.addTab(data.groupId, data.cookieStoreId);
             } else if ('context-add-tab' === action) {
-                BG.addTab(getGroupById(groupIdContext), data.cookieStoreId);
+                BG.addTab(groupIdContext, data.cookieStoreId);
             } else if ('context-open-group-in-new-window' === action) {
                 let group = getGroupById(groupIdContext);
 

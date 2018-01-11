@@ -71,7 +71,7 @@
 
                 BG.removeTab(data.tabIndex, group);
             } else if ('add-tab' === action) {
-                BG.addTab(getGroupById(data.groupId), data.cookieStoreId);
+                BG.addTab(data.groupId, data.cookieStoreId);
             } else if ('open-settings-group-popup' === action) {
                 Popups.showEditGroup(getGroupById(data.groupId), 1);
             } else if ('context-open-settings-group-popup' === action) {
