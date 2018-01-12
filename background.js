@@ -930,7 +930,7 @@
                 title: unSafeHtml(group.title),
                 enabled: group.id !== currentGroup.id,
                 icons: {
-                    16: createGroupSvgColoredIcon(group.iconColor),
+                    16: createGroupSvgIconUrl(group),
                 },
                 contexts: ['tab'],
                 onclick: async function(destGroupId, info, tab) {
@@ -1000,7 +1000,7 @@
         });
 
         browser.browserAction.setIcon({
-            path: getBrowserActionSvgPath(currentGroup.iconColor),
+            path: getBrowserActionSvgPath(currentGroup),
         });
     }
 

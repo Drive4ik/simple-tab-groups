@@ -502,7 +502,7 @@
                 return render('move-tab-to-group-menu-item-tmpl', {
                     title: gr.title,
                     groupId: gr.id,
-                    icon: createGroupSvgColoredIcon(gr.iconColor),
+                    icon: createGroupSvgIconUrl(gr),
                     disabled: gr.id === state.groupId ? 'disabled' : '',
                 });
             })
