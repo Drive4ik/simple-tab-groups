@@ -439,26 +439,23 @@
         });
     }
 
-    async function updateTabThumbnail(windowId, tabId, tabs = null) {
+    async function updateTabThumbnail(windowId, tabId) {
         let group = _groups.find(gr => gr.windowId === windowId);
 
         if (!group) {
             return;
         }
 
-        if (!tabs) {
-            tabs = await getTabs(windowId);
-        }
-
-        let tabIndex = tabs.findIndex(tab => tab.active);
+        let tabs = await getTabs(windowId),
+            tabIndex = tabs.findIndex(tab => tab.active);
 
         if (-1 === tabIndex || tabs[tabIndex].id !== tabId) {
             return;
         }
 
-        // if (!group.tabs[tabIndex]) {
-        //     return console.error('updateTabThumbnail error: tabIndex not found', tabIndex, group.tabs, group);
-        // }
+        if (!group.tabs[tabIndex]) {
+            return console.error('updateTabThumbnail error: tabIndex not found', tabIndex, group);
+        }
 
         if (group.tabs[tabIndex].thumbnail && group.tabs[tabIndex].url === tabs[tabIndex].url) {
             return;
@@ -493,7 +490,6 @@
             return t;
         });
 
-        updateTabThumbnail(windowId, tabId, tabs);
         saveGroupsToStorage();
     }
 /*
@@ -785,6 +781,11 @@
             createdTabId = null,
             createdTabIndex = null;
 
+        if (!tab) {
+            notify('Error: wrong oldTabIndex in moveTabToGroup');
+            return Promise.reject();
+        }
+
         if (oldGroupId === newGroupId) { // if it's same group
             promises.push(getWindowByGroup(newGroup)
                 .then(function(win) {
@@ -798,12 +799,13 @@
                             });
                     } else {
                         if (-1 === newTabIndex) { // push to end of group
-                            newGroup.tabs.push(tab); // if is last tab - work ok :)
-                            newGroup.tabs.splice(oldTabIndex, 1);
-                        } else {
-                            newGroup.tabs.splice(newTabIndex, 0, newGroup.tabs.splice(oldTabIndex, 1)[0]);
+                            newTabIndex = newGroup.tabs.length;
                         }
-                        groupsToSave.push(newGroup);
+
+                        if (newTabIndex !== oldTabIndex) {
+                            newGroup.tabs.splice(newTabIndex, 0, newGroup.tabs.splice(oldTabIndex, 1)[0]);
+                            groupsToSave.push(newGroup);
+                        }
                     }
                 }));
         } else { // if it's different group
@@ -1212,7 +1214,7 @@
         // start migration
         let keysToRemoveFromStorage = [];
 
-        if (0 >= data.version.localeCompare('1.8.1')) {
+        if (0 > data.version.localeCompare('1.8.1')) {
             result.dataChanged = true;
 
             data.groups = data.groups.map(function(group) {
@@ -1236,9 +1238,15 @@
             keysToRemoveFromStorage.push('windowsGroup');
         }
 
-        if (0 >= data.version.localeCompare('1.8.2')) {
-            // some code;
+        if (0 > data.version.localeCompare('2.1.2')) {
+            data.groups = data.groups.map(function(group) {
+                group.tabs = group.tabs.filter(Boolean);
+                return group;
+            });
         }
+
+
+
 
         data.version = MANIFEST.version;
 
