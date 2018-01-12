@@ -145,6 +145,11 @@
         "description": "Create backup"
     },
 
+    "includeTabThumbnailsIntoBackup": {
+        "message": "Include tab thumbnails into backup (make backup file size bigger)",
+        "description": "Include tab thumbnails into backup (make backup file size bigger)"
+    },
+
     "importAddonSettingsTitle": {
         "message": "Restore Simple Tab Groups",
         "description": "Restore Simple Tab Groups"

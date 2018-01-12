@@ -63,9 +63,21 @@
     });
 
     $on('click', '#exportAddonSettings', async function() {
-        let options = await storage.get(null);
+        let data = await storage.get(null),
+            includeTabThumbnailsIntoBackup = $('#includeTabThumbnailsIntoBackup').checked;
 
-        exportToFile(options);
+        if (!includeTabThumbnailsIntoBackup) {
+            data.groups = data.groups.map(function(group) {
+                group.tabs = group.tabs.map(function(tab) {
+                    delete tab.thumbnail;
+                    return tab;
+                });
+
+                return group;
+            });
+        }
+
+        exportToFile(data);
     });
 
     $on('click', '#importSettingsOldTabGroupsAddonButton', async function() {
