@@ -181,22 +181,25 @@
 
     async function addTab(groupId, cookieStoreId) {
         let group = _groups.find(gr => gr.id === groupId),
-            newTab = null;
-
-        if (group.windowId) {
-            newTab = await browser.tabs.create({
-                active: false,
-                cookieStoreId,
-                windowId: group.windowId,
-            });
-
-            newTab = mapTab(newTab);
-        } else {
             newTab = {
                 active: false,
                 url: 'about:blank',
                 cookieStoreId,
             };
+
+        if (group.windowId) {
+            try {
+                newTab = await browser.tabs.create({
+                    active: false,
+                    cookieStoreId,
+                    windowId: group.windowId,
+                });
+            } catch (e) {
+                notify(e);
+                return;
+            }
+
+            newTab = mapTab(newTab);
         }
 
         group.tabs.push(newTab);
@@ -453,11 +456,11 @@
             return;
         }
 
-        if (!group.tabs[tabIndex]) {
-            return console.error('updateTabThumbnail error: tabIndex not found', tabIndex, group);
-        }
+        // if (!group.tabs[tabIndex]) {
+        //     return console.error('updateTabThumbnail error: tabIndex not found', tabIndex, group);
+        // }
 
-        if (group.tabs[tabIndex].thumbnail && group.tabs[tabIndex].url === tabs[tabIndex].url) {
+        if (group.tabs[tabIndex].thumbnail) {
             return;
         }
 
@@ -476,18 +479,18 @@
             return;
         }
 
-        let tab = await browser.tabs.get(tabId);
+        let activeTab = await browser.tabs.get(tabId);
 
-        if (tab.incognito) {
+        if (activeTab.incognito) {
             return;
         }
 
         let tabs = await getTabs(windowId),
-            activeTabIndex = tabs.findIndex(t => t.id === tab.id);
+            activeTabIndex = tabs.findIndex(tab => tab.id === activeTab.id);
 
-        group.tabs = group.tabs.map(function(t, index) {
-            t.active = index === activeTabIndex;
-            return t;
+        group.tabs = group.tabs.map(function(tab, index) {
+            tab.active = index === activeTabIndex;
+            return tab;
         });
 
         saveGroupsToStorage();
@@ -635,12 +638,6 @@
             return;
         }
 
-        let win = await getWindow(windowId);
-
-        if (win.incognito) {
-            return;
-        }
-
         let group = _groups.find(gr => gr.windowId === windowId);
 
         if (!group) {
@@ -704,13 +701,13 @@
             if (options.createNewGroupAfterAttachTabToNewWindow) {
                 let newGroupIndex = await addGroup(newWindowId);
 
-                if (isAllowUrl(tab.url)) {
+                if (isAllowTab(tab)) {
                     _groups[newGroupIndex].tabs.push(mapTab(tab));
                     saveGroupsToStorage();
                 }
             }
         } else {
-            if (isAllowUrl(tab.url)) {
+            if (isAllowTab(tab)) {
                 if (group.tabs.some(t => t.id === newTabId)) { // if tab are added in another func (FF WTF??? call update tab event before attached?)
                     group.tabs[tabIndex] = mapTab(tab);
                 } else {
