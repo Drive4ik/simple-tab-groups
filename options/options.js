@@ -52,6 +52,8 @@
                 await BG.loadGroup(win.id, groupIndex);
             }
 
+            loadOptions();
+
             notify('Groups and settings are successfully imported!');
         } catch (e) {
             if (e) {
@@ -151,18 +153,22 @@
         }
     });
 
-    storage.get(onlyOptionsKeys)
-        .then(function(options) {
-            onlyOptionsKeys.forEach(function(key) {
-                $('#' + key).checked = options[key];
-            });
-        })
-        .then(reloadCheckers)
-        .then(translatePage);
-
     function reloadCheckers() {
         $('#enableFavIconsForNotLoadedTabs').disabled = !$('#enableFastGroupSwitching').checked;
         $('#openGroupAfterChange').disabled = $('#closePopupAfterChangeGroup').checked;
     }
+
+    function loadOptions() {
+        storage.get(onlyOptionsKeys)
+            .then(function(options) {
+                onlyOptionsKeys.forEach(function(key) {
+                    $('#' + key).checked = options[key];
+                });
+            })
+            .then(reloadCheckers)
+            .then(translatePage);
+    }
+
+    loadOptions();
 
 })();
