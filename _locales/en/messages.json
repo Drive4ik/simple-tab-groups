@@ -14,6 +14,11 @@
         "description": "Manage groups"
     },
 
+    "setTabIconAsGroupIcon": {
+        "message": "Set tab icon as group icon",
+        "description": "Set tab icon as group icon"
+    },
+
     "moveTabToGroupDisabledTitle": {
         "message": "Move tab to group:",
         "description": "Move tab to group title"
@@ -319,9 +324,19 @@
         "description": "Title"
     },
 
-    "groupColor": {
-        "message": "Icon color",
-        "description": "Group color"
+    "icon": {
+        "message": "Icon",
+        "description": "Icon"
+    },
+
+    "selectUserGroupIcon": {
+        "message": "Load icon",
+        "description": "Load icon"
+    },
+
+    "selectUserGroupIconWarnText": {
+        "message": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?",
+        "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
 
     "setRandomColor": {

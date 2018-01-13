@@ -219,9 +219,9 @@
         "description": "Title"
     },
 
-    "groupColor": {
-        "message": "圖標顏色",
-        "description": "Group color"
+    "icon": {
+        "message": "圖標",
+        "description": "Icon"
     },
 
     "setRandomColor": {

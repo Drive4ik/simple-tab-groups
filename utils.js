@@ -13,7 +13,7 @@ const EXTENSION_NAME = 'Simple Tab Groups',
 
         // options
         closePopupAfterChangeGroup: true,
-            openGroupAfterChange: true,
+        openGroupAfterChange: true,
         showGroupCircleInSearchedTab: true,
         showUrlTooltipOnTabHover: false,
         showNotificationAfterMoveTab: true,
@@ -21,7 +21,7 @@ const EXTENSION_NAME = 'Simple Tab Groups',
         openManageGroupsInTab: true,
         showConfirmDialogBeforeGroupDelete: true,
         enableFastGroupSwitching: true,
-            enableFavIconsForNotLoadedTabs: true,
+        enableFavIconsForNotLoadedTabs: true,
 
         enableKeyboardShortcutLoadNextPrevGroup: true,
         enableKeyboardShortcutLoadByIndexGroup: true,
@@ -371,21 +371,25 @@ let $ = document.querySelector.bind(document),
                 });
         },
     },
-    createGroupSvgColoredIcon = function(color) {
-        if (!color) {
-            return '';
+    createGroupSvgIconUrl = function(group) {
+        if (group.iconUrl) {
+            return group.iconUrl;
         }
 
-        let svg = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="124px" height="124px" viewBox="0 0 124 124" style="enable-background:new 0 0 124 124;" xml:space="preserve"><g><circle fill="${color}" cx="62" cy="62" r="62"/></g></svg>`;
+        if (group.iconColor) {
+            let colorSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><circle fill="${group.iconColor}" cx="8" cy="8" r="8" /></svg>`;
+            return 'data:image/svg+xml;base64,' + b64EncodeUnicode(colorSvg);
+        }
 
-        return 'data:image/svg+xml;base64,' + b64EncodeUnicode(svg);
+        return '';
     },
-    getBrowserActionSvgPath = function(color) {
-        if (!color) {
-            return MANIFEST.browser_action.default_icon;
+    getBrowserActionSvgPath = function(group) {
+        if (group.iconUrl) {
+            return group.iconUrl;
         }
 
-        let svg = `
+        if (group.iconColor) {
+            let iconSvg = `
                 <svg width="32" height="32" xmlns="http://www.w3.org/2000/svg">
                     <g fill="#606060">
                         <rect height="8" width="8" y="0" x="0" />
@@ -397,13 +401,35 @@ let $ = document.querySelector.bind(document),
                         <rect height="8" width="8" y="24" x="0" />
                         <rect height="8" width="8" y="24" x="12" />
                         <rect height="8" width="8" y="24" x="24" />
-                        <path transform="rotate(-90, 18, 18)" d="m3.87079,31.999319l0,-28.125684l28.126548,28.125684l-28.126548,0z" fill="${color}" />
+                        <path transform="rotate(-90, 18, 18)" d="m3.87079,31.999319l0,-28.125684l28.126548,28.125684l-28.126548,0z" fill="${group.iconColor}" />
                     </g>
                 </svg>
-            `,
-            blobIcon = new Blob([svg], {
-                type: 'image/svg+xml',
-            });
+            `;
+
+            return convertSvgToUrl(iconSvg);
+        }
+
+        return MANIFEST.browser_action.default_icon;
+    },
+    convertSvgToUrl = function(svg) {
+        let blobIcon = new Blob([svg], {
+            type: 'image/svg+xml',
+        });
 
         return URL.createObjectURL(blobIcon);
+    },
+    resizeImage = function(img, height, width, useTransparency = true) { // img: new Image()
+        let canvas = document.createElement('canvas'),
+            canvasCtx = canvas.getContext('2d');
+
+        if (!useTransparency) {
+            canvas.mozOpaque = true;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        canvasCtx.drawImage(img, 0, 0, width, height);
+
+        return canvas.toDataURL();
     };

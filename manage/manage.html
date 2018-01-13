@@ -47,7 +47,7 @@
     </div>
 
     <script id="tab-tmpl" type="text/template">
-        <div class="tab cursor-pointer {{classList}}" title="{{urlTitle}}" data-is-tab="true" data-action="load-group" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}" data-draggable-group="tabs">
+        <div class="tab cursor-pointer {{classList}}" contextmenu="tab-menu" title="{{urlTitle}}" data-is-tab="true" data-action="load-group" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}" data-draggable-group="tabs">
             <div class="icon {{favIconClass}}" style="{{containerColorCodeBorderStyle}}">
                 <img class="size-16" src="{{favIconUrl}}" alt="" />
             </div>
@@ -80,7 +80,7 @@
                     <input type="text" value="{{title}}" data-group-id="{{id}}" maxlength="120" placeholder="Please enter group name" />
                 </div>
                 <div class="icon">
-                    {{colorCircleHtml}}
+                    {{iconHtml}}
                 </div>
                 <div class="tabs-count" data-i18n="groupTabsCount::{{tabs.length}}"></div>
                 <div class="icon cursor-pointer no-text-select" data-action="open-settings-group-popup" data-group-id="{{id}}" data-i18n="groupSettings:title">
@@ -105,8 +105,12 @@
         </div>
     </script>
 
-    <script id="color-circle-tmpl" type="text/template">
+    <script id="icon-color-tmpl" type="text/template">
         <div class="group-circle" style="background-color: {{iconColor}};"></div>
+    </script>
+
+    <script id="icon-img-tmpl" type="text/template">
+        <img src="{{iconUrl}}" class="is-inline-block size-16" alt="" />
     </script>
 
     <menu id="create-tab-with-container-menu" type="context"></menu>
@@ -118,11 +122,10 @@
         <menuitem data-action="context-open-group-in-new-window" icon="chrome://browser/skin/new-window.svg" data-i18n="openGroupInNewWindow:label"></menuitem>
     </menu>
 
-<!--
-    <menu id="create-tab-with-container-menu" type="context"></menu>
-    <script id="create-tab-with-container-item-tmpl" type="text/template">
-        <menuitem data-action="context-add-tab" data-cookie-store-id="{{cookieStoreId}}" icon="{{icon}}" label="{{title}}"></menuitem>
-    </script> -->
+    <menu id="tab-menu" type="context">
+        <menuitem data-action="context-open-group-in-new-window" icon="chrome://browser/skin/new-window.svg" data-i18n="openGroupInNewWindow:label"></menuitem>
+        <menuitem data-action="set-tab-icon-as-group-icon" icon="/icons/image.svg" data-i18n="setTabIconAsGroupIcon:label"></menuitem>
+    </menu>
 
     <script type="text/javascript" src="/utils.js"></script>
     <script type="text/javascript" src="/popups/popups.js"></script>

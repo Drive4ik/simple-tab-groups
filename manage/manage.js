@@ -14,7 +14,7 @@
         _groups = BG.getGroups(),
         containers = [],
         currentWindowId = null,
-        groupIdContext = 0,
+        contextData = null,
         $filterTabs = $('#filterTabs'),
         $on = on.bind({});
 
@@ -71,9 +71,9 @@
             } else if ('add-tab' === action) {
                 BG.addTab(data.groupId, data.cookieStoreId);
             } else if ('context-add-tab' === action) {
-                BG.addTab(groupIdContext, data.cookieStoreId);
+                BG.addTab(contextData.groupId, data.cookieStoreId);
             } else if ('context-open-group-in-new-window' === action) {
-                let group = getGroupById(groupIdContext);
+                let group = getGroupById(contextData.groupId);
 
                 BG.getWindowByGroup(group)
                     .then(function(win) {
@@ -83,9 +83,20 @@
                             browser.windows.create({
                                     state: 'maximized',
                                 })
-                                .then(win => BG.loadGroup(win.id, getGroupIndex(group.id)));
+                                .then(win => BG.loadGroup(win.id, getGroupIndex(group.id), contextData.tabIndex));
                         }
                     });
+            } else if ('set-tab-icon-as-group-icon' === action) {
+                let group = getGroupById(contextData.groupId);
+                group.iconUrl = group.tabs[contextData.tabIndex].favIconUrl || null;
+
+                BG.saveGroup(group);
+
+                renderGroupsCards();
+
+                if (group.windowId === currentWindowId) {
+                    BG.updateBrowserActionData(currentWindowId);
+                }
             } else if ('remove-tab' === action) {
                 let group = getGroupById(data.groupId);
                 BG.removeTab(data.tabIndex, group);
@@ -98,14 +109,16 @@
                     BG.removeGroup(group);
                 }
             } else if ('open-settings-group-popup' === action) {
-                Popups.showEditGroup(getGroupById(data.groupId), 2);
+                Popups.showEditGroup(getGroupById(data.groupId), {
+                    popupDesign: 2,
+                });
             } else if ('add-group' === action) {
                 BG.addGroup();
             }
         }
 
-        $on('contextmenu', '[contextmenu="create-tab-with-container-menu"], [contextmenu="group-menu"]', function(event, { groupId }) {
-            groupIdContext = groupId;
+        $on('contextmenu', '[contextmenu]', function(event, data) {
+            contextData = data;
         });
 
         $on('change', '.group > .header input', function(event, data) {
@@ -287,6 +300,18 @@
             .join('');
     }
 
+    function getGroupIconHtml(group) {
+        if (group.iconUrl) {
+            return render('icon-img-tmpl', group);
+        }
+
+        if (group.iconColor) {
+            return render('icon-color-tmpl', group);
+        }
+
+        return '';
+    }
+
     function renderGroupsCards() {
         let filters = $filterTabs.value
                 .trim()
@@ -297,7 +322,7 @@
         let groupsHtml = _groups.map(function(group) {
                 let customData = {
                     classList: '',
-                    colorCircleHtml: render('color-circle-tmpl', group),
+                    iconHtml: getGroupIconHtml(group),
                     tabsHtml: getTabsHtml(group, filters),
                 };
 
