@@ -384,43 +384,28 @@ let $ = document.querySelector.bind(document),
         return '';
     },
     getBrowserActionSvgPath = function(group) {
-
-        let iconSvg = `
-            <svg width="32" height="32" xmlns="http://www.w3.org/2000/svg">
-                <g fill="#606060">
-                    <rect height="8" width="8" y="0" x="0" />
-                    <rect height="8" width="8" y="0" x="12" />
-                    <rect height="8" width="8" y="12" x="24" />
-                    <rect height="8" width="8" y="12" x="0" />
-                    <rect height="8" width="8" y="12" x="12" />
-                    <rect height="8" width="8" y="0" x="24" />
-                    <rect height="8" width="8" y="24" x="0" />
-                    <rect height="8" width="8" y="24" x="12" />
-                    <rect height="8" width="8" y="24" x="24" />
-                    <path transform="rotate(-90, 18, 18)" d="m3.87079,31.999319l0,-28.125684l28.126548,28.125684l-28.126548,0z" fill="${group.iconColor}" />
-                </g>
-            </svg>
-        `,
-        imgSvg = `<svg version="1.1" width="96" height="96" xmlns="http://www.w3.org/2000/svg">
-            <g>
-                <g fill="#606060">
-                    <rect width="24" height="24" />
-                    <rect x="36" y="0" width="24" height="24" />
-                    <rect x="0" y="36" width="24" height="24" />
-                    <rect x="0" y="72" width="24" height="24" />
-                    <rect x="72" y="0" width="24" height="24" />
-                </g>
-                <image height="60" width="60" y="36" x="36" xlink:href="${group.iconUrl}" />
-            </g>
-        </svg>
-        `;
-
         if (group.iconUrl) {
             return group.iconUrl;
-            // return convertSvgToUrl(imgSvg);
         }
 
         if (group.iconColor) {
+            let iconSvg = `
+                <svg width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+                    <g fill="#606060">
+                        <rect height="8" width="8" y="0" x="0" />
+                        <rect height="8" width="8" y="0" x="12" />
+                        <rect height="8" width="8" y="12" x="24" />
+                        <rect height="8" width="8" y="12" x="0" />
+                        <rect height="8" width="8" y="12" x="12" />
+                        <rect height="8" width="8" y="0" x="24" />
+                        <rect height="8" width="8" y="24" x="0" />
+                        <rect height="8" width="8" y="24" x="12" />
+                        <rect height="8" width="8" y="24" x="24" />
+                        <path transform="rotate(-90, 18, 18)" d="m3.87079,31.999319l0,-28.125684l28.126548,28.125684l-28.126548,0z" fill="${group.iconColor}" />
+                    </g>
+                </svg>
+            `;
+
             return convertSvgToUrl(iconSvg);
         }
 
@@ -432,4 +417,19 @@ let $ = document.querySelector.bind(document),
         });
 
         return URL.createObjectURL(blobIcon);
+    },
+    resizeImage = function(img, height, width, useTransparency = true) { // img: new Image()
+        let canvas = document.createElement('canvas'),
+            canvasCtx = canvas.getContext('2d');
+
+        if (!useTransparency) {
+            canvas.mozOpaque = true;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        canvasCtx.drawImage(img, 0, 0, width, height);
+
+        return canvas.toDataURL();
     };

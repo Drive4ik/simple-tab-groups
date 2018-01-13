@@ -57,8 +57,16 @@ hr {
     margin-bottom: 10px;
 }
 
+.h-margin-left-5 {
+    margin-left: 5px;
+}
+
 .h-margin-left-10 {
     margin-left: 10px;
+}
+
+.h-margin-right-5 {
+    margin-right: 5px;
 }
 
 .size-12 {
@@ -99,6 +107,10 @@ hr {
     cursor: help;
 }
 
+.is-inline-block {
+    display: inline-block;
+}
+
 .is-full-height {
     height: 100%;
 }
@@ -107,7 +119,7 @@ hr {
     pointer-events: none;
 }
 
-.circle {
+.group-circle {
     width: 14px;
     height: 14px;
     margin: 0 auto;

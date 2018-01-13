@@ -18,8 +18,7 @@
         _groups = BG.getGroups(),
         containers = [],
         currentWindowId = null,
-        groupIdInContext = -1,
-        moveTabToGroupTabIndex = -1,
+        contextData = null,
         state = {
             view: VIEW_GROUPS,
         },
@@ -73,9 +72,11 @@
             } else if ('add-tab' === action) {
                 BG.addTab(data.groupId, data.cookieStoreId);
             } else if ('open-settings-group-popup' === action) {
-                Popups.showEditGroup(getGroupById(data.groupId), 1);
+                Popups.showEditGroup(getGroupById(data.groupId), {
+                    popupDesign: 1,
+                });
             } else if ('context-open-settings-group-popup' === action) {
-                Popups.showEditGroup(getGroupById(groupIdInContext), 1);
+                doAction('open-settings-group-popup', contextData);
             } else if ('show-delete-group-popup' === action) {
                 let group = getGroupById(data.groupId);
 
@@ -85,13 +86,22 @@
                     BG.removeGroup(group);
                 }
             } else if ('context-show-delete-group-popup' === action) {
-                doAction('show-delete-group-popup', {
-                    groupId: groupIdInContext,
-                });
+                doAction('show-delete-group-popup', contextData);
             } else if ('move-tab-to-group' === action) {
-                BG.moveTabToGroup(moveTabToGroupTabIndex, undefined, state.groupId, data.groupId);
+                BG.moveTabToGroup(contextData.tabIndex, undefined, state.groupId, data.groupId);
             } else if ('move-tab-to-new-group' === action) {
-                BG.addGroup(undefined, undefined, false).then(newGroup => BG.moveTabToGroup(moveTabToGroupTabIndex, undefined, state.groupId, newGroup.id));
+                BG.addGroup(undefined, undefined, false).then(newGroup => BG.moveTabToGroup(contextData.tabIndex, undefined, state.groupId, newGroup.id));
+            } else if ('set-tab-icon-as-group-icon' === action) {
+                let group = getGroupById(state.groupId);
+                group.iconUrl = group.tabs[contextData.tabIndex].favIconUrl || null;
+
+                BG.saveGroup(group);
+
+                renderTabsList(state.groupId);
+
+                if (group.windowId === currentWindowId) {
+                    BG.updateBrowserActionData(currentWindowId);
+                }
             } else if ('add-group' === action) {
                 BG.addGroup();
             } else if ('show-groups-list' === action) {
@@ -150,7 +160,7 @@
             } else if ('context-sort-groups' === action) {
                 BG.sortGroups(data.vector);
             } else if ('context-open-group-in-new-window' === action) {
-                let group = getGroupById(groupIdInContext);
+                let group = getGroupById(contextData.groupId);
 
                 BG.getWindowByGroup(group)
                     .then(function(win) {
@@ -176,12 +186,8 @@
             }
         });
 
-        $on('contextmenu', '[contextmenu="group-menu"]', function(event, {groupId}) {
-            groupIdInContext = groupId;
-        });
-
-        $on('contextmenu', '[contextmenu="move-tab-to-group-menu"]', function(event, {tabIndex}) {
-            moveTabToGroupTabIndex = tabIndex;
+        $on('contextmenu', '[contextmenu]', function(event, data) {
+            contextData = data;
         });
 
         let selectableElementsSelectors = ['[data-is-tab]', '[data-is-group]'];
@@ -407,6 +413,26 @@
         };
     }
 
+    function getGroupIconHtml(group, idAddGroupTitle) {
+        let title = idAddGroupTitle ? group.title : '';
+
+        if (group.iconUrl) {
+            return render('icon-img-tmpl', {
+                title,
+                iconUrl: group.iconUrl,
+            });
+        }
+
+        if (group.iconColor) {
+            return render('icon-color-tmpl', {
+                title,
+                iconColor: group.iconColor
+            });
+        }
+
+        return '';
+    }
+
     function renderSearchTabsList() {
         state.view = VIEW_SEARCH_TABS;
         state.searchStr = safeHtml($('#searchTabs').value.trim().toLowerCase());
@@ -424,7 +450,7 @@
                     let preparedTab = prepareTabToView(group.id, tab, tabIndex, true);
 
                     if (options.showGroupCircleInSearchedTab) {
-                        preparedTab.title = render('color-circle-tmpl', group) + preparedTab.title;
+                        preparedTab.title = getGroupIconHtml(group, true) + preparedTab.title;
                     }
 
                     tabsToView.push(preparedTab);
@@ -446,10 +472,7 @@
         let groupsHtml = _groups.map(function(group) {
                 let customData = {
                     classList: group.id === getCurrentGroup().id ? 'is-active' : '',
-                    colorCircleHtml: render('color-circle-tmpl', {
-                        title: '',
-                        iconColor: group.iconColor,
-                    }),
+                    colorCircleHtml: getGroupIconHtml(group),
                 };
 
                 return render('group-tmpl', Object.assign({}, group, customData));
@@ -485,10 +508,7 @@
         }
 
         let tabsListWrapperHtml = render('tabs-list-wrapper-tmpl', {
-            colorCircleHtml: render('color-circle-tmpl', {
-                title: '',
-                iconColor: group.iconColor,
-            }),
+            colorCircleHtml: getGroupIconHtml(group),
             group,
             tabsListHtml,
             newTabContextMenu: containers.length ? 'contextmenu="create-tab-with-container-menu"' : '',

@@ -108,8 +108,12 @@
         </li>
     </script>
 
-    <script id="color-circle-tmpl" type="text/template">
-        <span class="circle" style="background-color: {{iconColor}};" title="{{title}}"></span>
+    <script id="icon-color-tmpl" type="text/template">
+        <div class="group-circle" style="background-color: {{iconColor}};" title="{{title}}"></div>
+    </script>
+
+    <script id="icon-img-tmpl" type="text/template">
+        <img src="{{iconUrl}}" class="is-inline-block size-16 h-margin-right-5" title="{{title}}" alt="" />
     </script>
 
 
@@ -154,9 +158,10 @@
 
     <menu id="move-tab-to-group-menu" type="context"></menu>
     <script id="move-tab-to-group-menu-tmpl" type="text/template">
+        <menuitem data-i18n="setTabIconAsGroupIcon:label" data-action="set-tab-icon-as-group-icon" icon="/icons/image.svg"></menuitem>
+        <hr>
         <menuitem data-i18n="moveTabToGroupDisabledTitle:label" disabled></menuitem>
         {{groupsMenuItems}}
-        <hr>
         <menuitem data-i18n="createNewGroup:label" data-action="move-tab-to-new-group" icon="/icons/group-new.svg"></menuitem>
     </script>
     <script id="move-tab-to-group-menu-item-tmpl" type="text/template">

@@ -54,6 +54,10 @@ html {
     margin-bottom: 10px;
 }
 
+.h-margin-left-5 {
+    margin-left: 5px;
+}
+
 .h-margin-left-10 {
     margin-left: 10px;
 }
@@ -104,6 +108,10 @@ html {
 
 .rotate-270 {
     transform: rotate(270deg);
+}
+
+.is-inline-block {
+    display: inline-block;
 }
 
 .group-circle {

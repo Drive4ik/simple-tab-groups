@@ -78,6 +78,7 @@
             id,
             title: browser.i18n.getMessage('newGroupTitle', id),
             iconColor: randomColor(),
+            iconUrl: null,
             tabs: [],
             catchTabRules: '',
             windowId: windowId,
@@ -419,19 +420,7 @@
                     let img = new Image();
 
                     img.onload = function() {
-                        let _resizeCanvas = document.createElement('canvas'); // resize image
-                        _resizeCanvas.mozOpaque = true;
-
-                        let _resizeCanvasCtx = _resizeCanvas.getContext('2d');
-
-                        let height = 192,
-                            width = Math.floor(img.width * 192 / img.height);
-
-                        _resizeCanvas.width = width;
-                        _resizeCanvas.height = height;
-                        _resizeCanvasCtx.drawImage(img, 0, 0, width, height);
-
-                        resolve(_resizeCanvas.toDataURL());
+                        resolve(resizeImage(img, 192, Math.floor(img.width * 192 / img.height), false));
                     };
 
                     img.src = thumbnailBase64;
@@ -918,6 +907,37 @@
         }
 
         moveTabToGroupMenusIds.push(browser.menus.create({
+            id: 'stg-set-tab-icon-as-group-icon',
+            title: browser.i18n.getMessage('setTabIconAsGroupIcon'),
+            icons: {
+                16: '/icons/image.svg',
+            },
+            contexts: ['tab'],
+            onclick: function(info, tab) {
+                if (tab.incognito) {
+                    return;
+                }
+
+                let group = _groups.find(gr => gr.windowId === tab.windowId);
+
+                if (!group) {
+                    return;
+                }
+
+                group.iconUrl = tab.favIconUrl || null;
+
+                updateBrowserActionData(group.windowId);
+                saveGroupsToStorage();
+            }
+        }));
+
+        moveTabToGroupMenusIds.push(browser.menus.create({
+            id: 'stg-move-tab-separator',
+            type: 'separator',
+            contexts: ['tab'],
+        }));
+
+        moveTabToGroupMenusIds.push(browser.menus.create({
             id: 'stg-move-tab-helper',
             title: browser.i18n.getMessage('moveTabToGroupDisabledTitle'),
             enabled: false,
@@ -938,22 +958,21 @@
                         return;
                     }
 
-                    let group = _groups.find(gr => gr.windowId === tab.windowId),
-                        tabs = await getTabs(tab.windowId),
+                    let group = _groups.find(gr => gr.windowId === tab.windowId);
+
+                    if (!group) {
+                        return;
+                    }
+
+                    let tabs = await getTabs(tab.windowId),
                         tabIndex = tabs.findIndex(({ id }) => id === tab.id);
 
-                    if (group && -1 !== tabIndex) {
+                    if (-1 !== tabIndex) {
                         moveTabToGroup(tabIndex, undefined, group.id, destGroupId);
                     }
                 }.bind(null, group.id),
             }));
         });
-
-        moveTabToGroupMenusIds.push(browser.menus.create({
-            id: 'stg-move-tab-separator',
-            type: 'separator',
-            contexts: ['tab'],
-        }));
 
         moveTabToGroupMenusIds.push(browser.menus.create({
             id: 'stg-move-tab-new-group',
@@ -1279,14 +1298,16 @@
             return [data, windows];
         })
         .then(function([data, windows]) {
-            getWindow().then(win => lastFocusedNormalWindow = win);
-
             let newGroupCreated = false,
                 winIds = windows.map(win => win.id);
 
             windows.forEach(function(win) {
                 if ('normal' !== win.type || win.incognito) {
                     return;
+                }
+
+                if (!lastFocusedNormalWindow) {
+                    lastFocusedNormalWindow = win;
                 }
 
                 let tabs = win.tabs.filter(isAllowTab);
