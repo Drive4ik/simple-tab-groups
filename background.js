@@ -352,7 +352,7 @@
 
                             let url = tab.url;
 
-                            if (options.enableFastGroupSwitching && !isEmptyUrl(tab.url) && !tab.active && !(-1 === activeTabIndex && 0 === tabIndex)) {
+                            if (options.enableFastGroupSwitching && !isEmptyUrl(tab.url) && !tab.active) {
                                 url = getStgTabNewUrl(tab, options.enableFavIconsForNotLoadedTabs);
                             }
 
