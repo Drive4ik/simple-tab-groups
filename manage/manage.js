@@ -96,6 +96,7 @@
 
                 if (group.windowId === currentWindowId) {
                     BG.updateBrowserActionData(currentWindowId);
+                    BG.updateMoveTabMenus(currentWindowId);
                 }
             } else if ('remove-tab' === action) {
                 let group = getGroupById(data.groupId);
@@ -126,12 +127,13 @@
 
             group.title = safeHtml(event.target.value.trim());
 
-            BG.saveGroup(group, true);
+            BG.saveGroup(group);
 
             let currentGroup = _groups.find(gr => gr.windowId === currentWindowId);
 
             if (currentGroup && currentGroup.id === group.id) {
                 BG.updateBrowserActionData(currentWindowId);
+                BG.updateMoveTabMenus(currentWindowId);
             }
         });
 

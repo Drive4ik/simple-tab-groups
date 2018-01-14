@@ -6,7 +6,7 @@
 
     // return storage.get(null).then(console.log);
 
-    async function saveGroupsToStorage(updateMenuItems = false) {
+    async function saveGroupsToStorage() {
         browser.runtime.sendMessage({
             groupsUpdated: true,
         });
@@ -14,10 +14,6 @@
         await storage.set({
             groups: _groups,
         });
-
-        if (true === updateMenuItems) {
-            updateMoveTabMenus();
-        }
     }
 
     async function getWindow(windowId = browser.windows.WINDOW_ID_CURRENT) {
@@ -100,20 +96,21 @@
 
         storage.set(options);
 
-        saveGroupsToStorage(true);
+        saveGroupsToStorage();
+        updateMoveTabMenus();
 
         return returnNewGroupIndex ? newGroupIndex : _groups[newGroupIndex];
     }
 
     // groups : Object or array of Object
-    function saveGroup(group, updateMenuItems) {
+    function saveGroup(group) {
         if (!group || (Array.isArray(group) && !group.length)) {
             return;
         }
 
         let groups = Array.isArray(group) ? group : [group];
         _groups = _groups.map(g => groups.find(({ id }) => id === g.id) || g);
-        saveGroupsToStorage(updateMenuItems);
+        saveGroupsToStorage();
     }
 
     async function removeGroup(oldGroup) {
@@ -127,7 +124,9 @@
         }
 
         _groups.splice(oldGroupIndex, 1);
+
         saveGroupsToStorage();
+        updateMoveTabMenus();
 
         let oldGroupWindow = await getWindowByGroup(oldGroup);
 
@@ -171,7 +170,8 @@
             _groups.splice(position, 0, _groups.splice(groupIndex, 1)[0]);
         }
 
-        saveGroupsToStorage(true);
+        saveGroupsToStorage();
+        updateMoveTabMenus();
     }
 
     async function getWindowByGroup(group) {
@@ -314,6 +314,7 @@
 
                 if (oldTabIds.length || !isHasAnotherTabs) { // create empty tab (for quickly change group and not blinking)
                     tempEmptyTabPromise = browser.tabs.create({
+                            url: 'about:blank',
                             active: true,
                             windowId: windowId,
                         })
@@ -351,7 +352,7 @@
 
                             let url = tab.url;
 
-                            if (options.enableFastGroupSwitching && !isEmptyUrl(tab.url) && !tab.active) {
+                            if (options.enableFastGroupSwitching && !isEmptyUrl(tab.url) && !tab.active && !(-1 === activeTabIndex && 0 === tabIndex)) {
                                 url = getStgTabNewUrl(tab, options.enableFavIconsForNotLoadedTabs);
                             }
 
@@ -379,6 +380,8 @@
                 });
 
                 saveGroupsToStorage();
+
+                updateMoveTabMenus(windowId);
 
                 updateBrowserActionData(windowId);
 
@@ -747,7 +750,7 @@
         } else if (!lastFocusedWinId || lastFocusedWinId !== win.id) {
             browser.browserAction.enable();
             updateBrowserActionData(windowId);
-            updateMoveTabMenus();
+            updateMoveTabMenus(windowId);
         }
 
         if ('normal' === win.type && !win.incognito) {
@@ -883,9 +886,9 @@
 
     let moveTabToGroupMenusIds = [];
 
-    async function updateMoveTabMenus() {
+    async function updateMoveTabMenus(windowId) {
         await removeMoveTabMenus();
-        await createMoveTabMenus();
+        await createMoveTabMenus(windowId);
     }
 
     async function removeMoveTabMenus() {
@@ -898,9 +901,13 @@
         moveTabToGroupMenusIds = [];
     }
 
-    async function createMoveTabMenus() {
-        let win = await getWindow(),
-            currentGroup = _groups.find(gr => gr.windowId === win.id);
+    async function createMoveTabMenus(windowId) {
+        if (!windowId) {
+            let win = await getWindow();
+            windowId = win.id;
+        }
+
+        let currentGroup = _groups.find(gr => gr.windowId === windowId);
 
         if (!currentGroup) {
             return;
@@ -927,6 +934,8 @@
                 group.iconUrl = tab.favIconUrl || null;
 
                 updateBrowserActionData(group.windowId);
+                updateMoveTabMenus(group.windowId);
+
                 saveGroupsToStorage();
             }
         }));
@@ -1160,6 +1169,7 @@
         });
 
         saveGroupsToStorage();
+        updateMoveTabMenus();
     }
 
     browser.menus.create({
@@ -1297,7 +1307,7 @@
 
             return [data, windows];
         })
-        .then(function([data, windows]) {
+        .then(async function([data, windows]) {
             let newGroupCreated = false,
                 winIds = windows.map(win => win.id);
 
@@ -1364,15 +1374,16 @@
 
             window.background.inited = true;
 
-            return storage.set({
+            await storage.set({
                 lastCreatedGroupPosition: data.lastCreatedGroupPosition,
                 groups: _groups,
             });
+
+            updateBrowserActionData();
+            createMoveTabMenus();
+            initBrowserCommands();
+            addEvents();
         })
-        .then(() => updateBrowserActionData())
-        .then(createMoveTabMenus)
-        .then(initBrowserCommands)
-        .then(addEvents)
         .catch(notify);
 
 })()

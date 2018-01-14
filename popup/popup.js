@@ -101,6 +101,7 @@
 
                 if (group.windowId === currentWindowId) {
                     BG.updateBrowserActionData(currentWindowId);
+                    BG.updateMoveTabMenus(currentWindowId);
                 }
             } else if ('add-group' === action) {
                 BG.addGroup();

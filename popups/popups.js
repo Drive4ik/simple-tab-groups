@@ -68,7 +68,7 @@ let Popups = {
         if ('close-popup' === action) {
             hidePopup();
 
-            if (data.afterHidePopupAction) {
+            if (data.afterHidePopupAction && lastOptions[data.afterHidePopupAction]) {
                 lastOptions[data.afterHidePopupAction](data.afterHidePopupData);
             }
 
@@ -98,12 +98,13 @@ let Popups = {
                     }
                 });
 
-            BG.saveGroup(group, true);
+            BG.saveGroup(group);
 
             BG.getWindow()
                 .then(function(win) {
                     if (group.windowId === win.id) {
                         BG.updateBrowserActionData(win.id);
+                        BG.updateMoveTabMenus(win.id);
                     }
 
                     hidePopup();
@@ -195,7 +196,7 @@ let Popups = {
         groupIconWrapper.dataset.iconType = 'color';
     });
 
-    async function showEditGroup(group, options) {
+    async function showEditGroup(group, options = {}) {
         lastData = group;
         lastOptions = options;
 
@@ -229,7 +230,7 @@ let Popups = {
         return popupNode;
     };
 
-    async function showDeleteGroup(group, options) {
+    async function showDeleteGroup(group, options = {}) {
         lastData = group;
         lastOptions = options;
 
