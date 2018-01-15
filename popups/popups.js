@@ -73,7 +73,8 @@ let Popups = {
             }
 
         } else if ('submit-delete-group-popup' === action) {
-            BG.removeGroup(lastData).then(hidePopup);
+            hidePopup();
+            BG.removeGroup(lastData.id);
         } else if ('submit-edit-group-popup' === action) {
             let group = lastData,
                 groupIconWrapper = $('#groupIconWrapper');
@@ -230,24 +231,14 @@ let Popups = {
         return popupNode;
     };
 
-    async function showDeleteGroup(group, options = {}) {
-        lastData = group;
-        lastOptions = options;
-
-        let template = await loadTemplate('delete-group');
-
-        return showPopup(format(template, {
-            groupId: group.id,
-            questionText: browser.i18n.getMessage('deleteGroupPopupBody', unSafeHtml(group.title)),
-        }));
-    };
-
-    async function confirm(text, header = '') {
+    async function confirm(text, header = '', resolveButtonTextKey = 'ok', resolveButtonClass = 'is-primary') {
         let confirmTemplate = await loadTemplate('confirm');
 
         showPopup(format(confirmTemplate, {
             header,
             text,
+            resolveButtonTextKey,
+            resolveButtonClass,
         }));
 
         return new Promise(function(resolve, reject) {
@@ -259,7 +250,6 @@ let Popups = {
     };
 
     Popups.showEditGroup = showEditGroup;
-    Popups.showDeleteGroup = showDeleteGroup;
     Popups.confirm = confirm;
 
 })();

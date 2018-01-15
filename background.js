@@ -82,7 +82,7 @@
     }
 
     async function addGroup(windowId = null, resetGroups = false, returnNewGroupIndex = true) {
-        let options = await storage.get('lastCreatedGroupPosition');
+        let options = await storage.get(['lastCreatedGroupPosition', 'openNewWindowWhenCreateNewGroup']);
 
         options.lastCreatedGroupPosition++;
 
@@ -93,6 +93,11 @@
         let newGroupIndex = _groups.length;
 
         _groups.push(createGroup(options.lastCreatedGroupPosition, windowId));
+
+        if (options.openNewWindowWhenCreateNewGroup && !windowId) {
+            let win = await browser.windows.create({});
+            _groups[newGroupIndex].windowId = win.id;
+        }
 
         storage.set(options);
 
@@ -113,22 +118,16 @@
         saveGroupsToStorage();
     }
 
-    async function removeGroup(oldGroup) {
-        let oldGroupIndex = _groups.findIndex(group => oldGroup.id === group.id),
-            getNewGroupIndex = function(oldIndex, newGroupsLength) {
-                return (oldIndex > newGroupsLength - 1) ? (newGroupsLength - 1) : oldIndex;
-            };
+    async function removeGroup(groupId) {
+        let groupIndex = _groups.findIndex(gr => gr.id === groupId),
+            groupWindowId = _groups[groupIndex].windowId;
 
-        if (-1 === oldGroupIndex) {
-            return;
-        }
-
-        _groups.splice(oldGroupIndex, 1);
+        _groups.splice(groupIndex, 1);
 
         saveGroupsToStorage();
         updateMoveTabMenus();
 
-        let oldGroupWindow = await getWindowByGroup(oldGroup);
+        let oldGroupWindow = await getWindow(groupWindowId);
 
         if (!oldGroupWindow) {
             return;
@@ -136,18 +135,41 @@
 
         let currentWindow = await getWindow();
 
-        if (oldGroupWindow.id === currentWindow.id) {
-            let newGroupIndex = null;
+        if (currentWindow.id === groupWindowId) {
+            let newGroupIndex = (groupIndex > _groups.length - 1) ? (_groups.length - 1) : groupIndex;
 
-            if (!_groups.length) { // if remove last group
-                newGroupIndex = await addGroup(currentWindow.id, true) // reset all groups
+            if (-1 === newGroupIndex) {
+                let windows = await browser.windows.getAll({
+                        windowTypes: ['normal'],
+                    }),
+                    otherWindow = windows.find(win => win.type === 'normal' && win.id !== groupWindowId);
+
+                if (otherWindow) {
+                    browser.windows.remove(groupWindowId);
+                    await setFocusOnWindow(otherWindow.id);
+                } else {
+                    let tabs = await getTabs(groupWindowId);
+                    if (tabs.length) {
+                        await browser.tabs.remove(tabs.map(t => t.id));
+                    }
+                }
+
+                updateMoveTabMenus();
+                updateBrowserActionData();
             } else {
-                newGroupIndex = getNewGroupIndex(oldGroupIndex, _groups.length);
-            }
+                let newGroupWindow = await getWindowByGroup(_groups[newGroupIndex]);
 
-            await loadGroup(currentWindow.id, newGroupIndex);
+                if (newGroupWindow) {
+                    browser.windows.remove(groupWindowId);
+                    await setFocusOnWindow(newGroupWindow.id);
+                    updateMoveTabMenus(newGroupWindow.id);
+                    updateBrowserActionData(newGroupWindow.id);
+                } else {
+                    await loadGroup(groupWindowId, newGroupIndex);
+                }
+            }
         } else {
-            await browser.windows.remove(oldGroupWindow.id);
+            await browser.windows.remove(groupWindowId);
         }
     }
 
@@ -203,9 +225,11 @@
             newTab = mapTab(newTab);
         }
 
-        group.tabs.push(newTab);
+        if (!currentlyAddingTabs.includes(newTab.id)) {
+            group.tabs.push(newTab);
 
-        saveGroupsToStorage();
+            saveGroupsToStorage();
+        }
     }
 
     async function removeCurrentTabByIndex(windowId, tabIndex) {
@@ -290,6 +314,17 @@
                 browser.runtime.sendMessage({
                     loadingGroupPosition: 10,
                 });
+
+                let options = await storage.get('individualWindowForEachGroup');
+
+                if (options.individualWindowForEachGroup) {
+                    delete currentlyLoadingGroups[windowId];
+
+                    let win = await browser.windows.create({});
+                    windowId = win.id;
+
+                    currentlyLoadingGroups[windowId] = true;
+                }
 
                 let oldTabIds = [],
                     tempEmptyTabId = null,
@@ -448,9 +483,9 @@
             return;
         }
 
-        // if (!group.tabs[tabIndex]) {
-        //     return console.error('updateTabThumbnail error: tabIndex not found', tabIndex, group);
-        // }
+        if (!group.tabs[tabIndex]) {
+            return console.error('updateTabThumbnail error: tabIndex not found', tabIndex, group);
+        }
 
         if (group.tabs[tabIndex].thumbnail) {
             return;
@@ -487,36 +522,36 @@
 
         saveGroupsToStorage();
     }
-/*
-    async function onCreatedTab(tab) {
-        console.log('onCreatedTab', tab);
+    /*
+        async function onCreatedTab(tab) {
+            console.log('onCreatedTab', tab);
 
-        if (currentlyAddingTabs.includes(tab.id) || tab.incognito) {
-            return;
+            if (currentlyAddingTabs.includes(tab.id) || tab.incognito) {
+                return;
+            }
+
+            let group = _groups.find(gr => gr.windowId === tab.windowId);
+
+            if (!group) {
+                return;
+            }
+
+            if (group.tabs.some(t => t.id === tab.id)) { // reject tabs if its created in update tab func (bug FF? call update tab event before create tab)
+                return;
+            }
+
+            let tabs = await getTabs(tab.windowId),
+                newTabIndex = tabs.findIndex(t => t.id === tab.id);
+
+            if (-1 === newTabIndex) {
+                return;
+            }
+
+            group.tabs.splice(newTabIndex, 0, mapTab(tab));
+
+            saveGroupsToStorage();
         }
-
-        let group = _groups.find(gr => gr.windowId === tab.windowId);
-
-        if (!group) {
-            return;
-        }
-
-        if (group.tabs.some(t => t.id === tab.id)) { // reject tabs if its created in update tab func (bug FF? call update tab event before create tab)
-            return;
-        }
-
-        let tabs = await getTabs(tab.windowId),
-            newTabIndex = tabs.findIndex(t => t.id === tab.id);
-
-        if (-1 === newTabIndex) {
-            return;
-        }
-
-        group.tabs.splice(newTabIndex, 0, mapTab(tab));
-
-        saveGroupsToStorage();
-    }
-*/
+    */
     let currentlyMovingTabs = [], // tabIds // expample: open tab from bookmark and move it to other group: many calls method onUpdatedTab
         currentlyAddingTabs = [];
 
@@ -538,7 +573,7 @@
 
         let savedTabIndex = group.tabs.findIndex(t => t.id === tabId);
 
-        // console.log('onUpdatedTab\n tabId:', tabId, JSON.stringify(changeInfo) + '\n', JSON.stringify({
+        // console.log('onUpdatedTab\n tabId:', tabId, JSON.stringify(changeInfo) + '\n', JSON.stringify({ // TODO comment
         //     status: tab.status,
         //     url: tab.url,
         //     title: tab.title,
@@ -593,7 +628,9 @@
                         return;
                     }
 
-                    group.tabs.splice(tabIndex, 0, mapTab(tab)); // add new tab to position if prev tab are not allowed
+                    // if (!group.tabs.some(t => t.id === tab.id)) {
+                        group.tabs.splice(tabIndex, 0, mapTab(tab)); // add new tab to position if prev tab are not allowed
+                    // }
 
                     currentlyAddingTabs.splice(currentlyAddingTabs.indexOf(tabId), 1);
                 } else {
@@ -760,20 +797,24 @@
         lastFocusedWinId = win.id;
     }
 
-    // function moveTabToGroup(tab, tabIndex, srcGroupId, destGroupId, showNotificationAfterMoveTab = true) {
-    function moveTabToGroup(oldTabIndex, newTabIndex = -1, oldGroupId, newGroupId, showNotificationAfterMoveTab = true) {
-        let oldGroup = _groups.find(({ id }) => id === oldGroupId),
-            newGroup = _groups.find(({ id }) => id === newGroupId),
-            tab = oldGroup.tabs[oldTabIndex],
+    // if oldGroupId === null, move tab from current window without group
+    async function moveTabToGroup(oldTabIndex, newTabIndex = -1, oldGroupId = null, newGroupId, showNotificationAfterMoveTab = true) {
+        let oldGroup = null,
+            tab = null;
+
+        if (oldGroupId) {
+            oldGroup = _groups.find(({ id }) => id === oldGroupId);
+            tab = oldGroup.tabs[oldTabIndex];
+        } else {
+            let tabs = await getTabs();
+            tab = mapTab(tabs[oldTabIndex]);
+        }
+
+        let newGroup = _groups.find(({ id }) => id === newGroupId),
             groupsToSave = [],
             promises = [],
             createdTabId = null,
             createdTabIndex = null;
-
-        if (!tab) {
-            notify('Error: wrong oldTabIndex in moveTabToGroup');
-            return Promise.reject();
-        }
 
         if (oldGroupId === newGroupId) { // if it's same group
             promises.push(getWindowByGroup(newGroup)
@@ -798,16 +839,20 @@
                     }
                 }));
         } else { // if it's different group
-            promises.push(getWindowByGroup(oldGroup)
-                .then(function(win) {
-                    if (win) {
-                        return removeCurrentTabByIndex(oldGroup.windowId, oldTabIndex);
-                    } else {
-                        oldGroup.tabs.splice(oldTabIndex, 1);
-                        groupsToSave.push(oldGroup);
-                    }
-                })
-            );
+            if (oldGroupId) {
+                promises.push(getWindowByGroup(oldGroup)
+                    .then(function(win) {
+                        if (win) {
+                            return removeCurrentTabByIndex(oldGroup.windowId, oldTabIndex);
+                        } else {
+                            oldGroup.tabs.splice(oldTabIndex, 1);
+                            groupsToSave.push(oldGroup);
+                        }
+                    })
+                );
+            } else {
+                promises.push(removeCurrentTabByIndex(undefined, oldTabIndex));
+            }
 
             promises.push(getWindowByGroup(newGroup)
                 .then(function(win) {
@@ -909,13 +954,10 @@
 
         let currentGroup = _groups.find(gr => gr.windowId === windowId);
 
-        if (!currentGroup) {
-            return;
-        }
-
         moveTabToGroupMenusIds.push(browser.menus.create({
             id: 'stg-set-tab-icon-as-group-icon',
             title: browser.i18n.getMessage('setTabIconAsGroupIcon'),
+            enabled: Boolean(currentGroup),
             icons: {
                 16: '/icons/image.svg',
             },
@@ -957,28 +999,28 @@
             moveTabToGroupMenusIds.push(browser.menus.create({
                 id: CONTEXT_MENU_PREFIX_GROUP + group.id,
                 title: unSafeHtml(group.title),
-                enabled: group.id !== currentGroup.id,
+                enabled: currentGroup ? group.id !== currentGroup.id : true,
                 icons: {
                     16: createGroupSvgIconUrl(group),
                 },
                 contexts: ['tab'],
                 onclick: async function(destGroupId, info, tab) {
-                    if (tab.incognito) {
-                        return;
-                    }
-
-                    let group = _groups.find(gr => gr.windowId === tab.windowId);
-
-                    if (!group) {
+                    if (tab.incognito || tab.pinned) {
+                        notify(browser.i18n.getMessage('privateAndPinnedTabsAreNotSupported', 10000));
                         return;
                     }
 
                     let tabs = await getTabs(tab.windowId),
                         tabIndex = tabs.findIndex(({ id }) => id === tab.id);
 
-                    if (-1 !== tabIndex) {
-                        moveTabToGroup(tabIndex, undefined, group.id, destGroupId);
+                    if (-1 === tabIndex) {
+                        notify(browser.i18n.getMessage('thisTabIsNotSupported', 10000));
+                        return;
                     }
+
+                    let oldGroup = _groups.find(gr => gr.windowId === tab.windowId)
+
+                    moveTabToGroup(tabIndex, undefined, (oldGroup && oldGroup.id), destGroupId);
                 }.bind(null, group.id),
             }));
         });
@@ -991,7 +1033,8 @@
                 16: '/icons/group-new.svg',
             },
             onclick: async function(info, tab) {
-                if (tab.incognito) {
+                if (tab.incognito || tab.pinned) {
+                    notify(browser.i18n.getMessage('privateAndPinnedTabsAreNotSupported', 10000));
                     return;
                 }
 
@@ -999,20 +1042,14 @@
                     tabIndex = tabs.findIndex(({ id }) => id === tab.id);
 
                 if (-1 === tabIndex) {
+                    notify(browser.i18n.getMessage('thisTabIsNotSupported', 10000));
                     return;
                 }
 
-                let newGroupIndex = await addGroup();
+                let oldGroup = _groups.find(gr => gr.windowId === tab.windowId),
+                    newGroup = await addGroup(undefined, undefined, false);
 
-                _groups[newGroupIndex].tabs.push(mapTab(tab));
-
-                saveGroupsToStorage();
-
-                let currentGroup = _groups.find(gr => gr.windowId === tab.windowId);
-
-                if (currentGroup && currentGroup.windowId) {
-                    removeCurrentTabByIndex(currentGroup.windowId, tabIndex);
-                }
+                moveTabToGroup(tabIndex, undefined, (oldGroup && oldGroup.id), newGroup.id);
             },
         }));
     }
@@ -1266,9 +1303,25 @@
 
         if (0 > data.version.localeCompare('2.1.2')) {
             data.groups = data.groups.map(function(group) {
+                let tabsLengthBefore = group.tabs.length;
+
                 group.tabs = group.tabs.filter(Boolean);
+
+                if (group.tabs.length !== tabsLengthBefore) {
+                    result.dataChanged = true;
+                }
+
                 return group;
             });
+        }
+
+        if (0 > data.version.localeCompare('2.2')) {
+            if ('showGroupCircleInSearchedTab' in data) {
+                result.dataChanged = true;
+                data.showGroupIconWhenSearchATab = data.showGroupCircleInSearchedTab;
+                delete data.showGroupCircleInSearchedTab;
+                keysToRemoveFromStorage.push('showGroupCircleInSearchedTab');
+            }
         }
 
 
@@ -1332,14 +1385,14 @@
                     ) {
                         data.groups[lastActiveGroupIndex].windowId = win.id;
                     } else { // add new group
-                        if (!newGroupCreated) {
-                            data.lastCreatedGroupPosition++;
+                        // if (!newGroupCreated) { // TODO
+                        //     data.lastCreatedGroupPosition++;
 
-                            newGroupCreated = true;
+                        //     newGroupCreated = true;
 
-                            data.groups.push(createGroup(data.lastCreatedGroupPosition, win.id));
-                            // notify('Group not found for this window or tabs not equal', 3000);
-                        }
+                        //     data.groups.push(createGroup(data.lastCreatedGroupPosition, win.id));
+                        //     // notify('Group not found for this window or tabs not equal', 3000);
+                        // }
                     }
                 }
 

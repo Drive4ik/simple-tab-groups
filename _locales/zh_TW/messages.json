@@ -100,9 +100,9 @@
         "description": "Open group after changing to it"
     },
 
-    "showGroupCircleInSearchedTab": {
+    "showGroupIconWhenSearchATab": {
         "message": "在搜尋分頁結果顯示上色圓圈",
-        "description": "Show colored group circle in search tab"
+        "description": "Show group icon when search a tab"
     },
 
     "showUrlTooltipOnTabHover": {
@@ -162,12 +162,12 @@
         "description": "Delete group"
     },
 
-    "deleteGroupPopupTitle": {
+    "deleteGroupTitle": {
         "message": "確認刪除分頁群組？",
         "description": "Delete group?"
     },
 
-    "deleteGroupPopupBody": {
+    "deleteGroupBody": {
         "message": "是否確定要刪除分頁群組 \"$name$\"？",
         "description": "Delete group?",
         "placeholders": {

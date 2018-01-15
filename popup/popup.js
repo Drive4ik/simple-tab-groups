@@ -42,27 +42,39 @@
 
     function addEvents() {
 
+        $on('click', 'body', (event, data) => console.log(_groups));
         $on('click', '[data-action]', (event, data) => doAction(data.action, data, event));
 
-        function doAction(action, data, event) {
+        async function doAction(action, data, event) {
             if ('load-group' === action) {
                 let currentGroup = _groups.find(group => group.windowId === currentWindowId),
-                    isCurrentGroup = currentGroup ? data.groupId === currentGroup.id : false;
+                    isCurrentGroup = currentGroup ? data.groupId === currentGroup.id : false,
+                    _loadGroup = function() {
+                        BG.loadGroup(currentWindowId, getGroupIndex(data.groupId), data.tabIndex)
+                            .then(function() {
+                                if (!options.closePopupAfterChangeGroup && options.openGroupAfterChange) {
+                                    renderTabsList(data.groupId);
+                                }
+
+                                if (options.closePopupAfterChangeGroup && !isCurrentGroup) {
+                                    window.close();
+                                }
+                            });
+                    };
 
                 if (isCurrentGroup && -1 === data.tabIndex) { // open group
                     return renderTabsList(data.groupId);
                 }
 
-                BG.loadGroup(currentWindowId, getGroupIndex(data.groupId), data.tabIndex)
-                    .then(function() {
-                        if (!options.closePopupAfterChangeGroup && options.openGroupAfterChange) {
-                            renderTabsList(data.groupId);
-                        }
+                if (currentGroup) {
+                    _loadGroup();
+                } else {
+                    let tabs = await BG.getTabs(currentWindowId);
+                    if (tabs.length) {
+                        Popups.confirm(browser.i18n.getMessage('confirmLoadGroupAndDeleteTabs'), browser.i18n.getMessage('warning')).then(_loadGroup);
+                    }
+                }
 
-                        if (options.closePopupAfterChangeGroup && !isCurrentGroup) {
-                            window.close();
-                        }
-                    });
             } else if ('show-group' === action) {
                 renderTabsList(data.groupId);
             } else if ('remove-tab' === action) {
@@ -81,16 +93,30 @@
                 let group = getGroupById(data.groupId);
 
                 if (options.showConfirmDialogBeforeGroupDelete) {
-                    Popups.showDeleteGroup(group);
+                    if (group.windowId === currentWindowId && 1 === _groups.length && group.tabs.length) {
+                        Popups.confirm(browser.i18n.getMessage('confirmDeleteLastGroupAndCloseTabs'), browser.i18n.getMessage('warning'))
+                            .then(() => BG.removeGroup(group.id));
+                    } else {
+                        Popups.confirm(
+                                browser.i18n.getMessage('deleteGroupBody', safeHtml(unSafeHtml(group.title))),
+                                browser.i18n.getMessage('deleteGroupTitle'),
+                                'delete',
+                                'is-danger'
+                            )
+                            .then(() => BG.removeGroup(group.id));
+                    }
                 } else {
-                    BG.removeGroup(group);
+                    BG.removeGroup(group.id);
                 }
+
             } else if ('context-show-delete-group-popup' === action) {
                 doAction('show-delete-group-popup', contextData);
             } else if ('move-tab-to-group' === action) {
                 BG.moveTabToGroup(contextData.tabIndex, undefined, state.groupId, data.groupId);
             } else if ('move-tab-to-new-group' === action) {
-                BG.addGroup(undefined, undefined, false).then(newGroup => BG.moveTabToGroup(contextData.tabIndex, undefined, state.groupId, newGroup.id));
+                let newGroup = await BG.addGroup(undefined, undefined, false);
+
+                BG.moveTabToGroup(contextData.tabIndex, undefined, state.groupId, newGroup.id);
             } else if ('set-tab-icon-as-group-icon' === action) {
                 let group = getGroupById(state.groupId);
                 group.iconUrl = group.tabs[contextData.tabIndex].favIconUrl || null;
@@ -450,7 +476,7 @@
                 if ((tab.title || '').toLowerCase().indexOf(state.searchStr) !== -1 || (tab.url || '').toLowerCase().indexOf(state.searchStr) !== -1) {
                     let preparedTab = prepareTabToView(group.id, tab, tabIndex, true);
 
-                    if (options.showGroupCircleInSearchedTab) {
+                    if (options.showGroupIconWhenSearchATab) {
                         preparedTab.title = getGroupIconHtml(group, true) + preparedTab.title;
                     }
 
