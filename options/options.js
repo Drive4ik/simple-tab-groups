@@ -6,8 +6,7 @@
     })(browser.extension.getBackgroundPage());
 
     if (!BG) {
-        let key = 'innerHTML';
-        return $('#simple-tab-groups-options')[key] = 'Please, update addon to latest version';
+        return $('#simple-tab-groups-options')[INNER_HTML] = 'Please, update addon to latest version';
     }
 
     let $on = on.bind({});

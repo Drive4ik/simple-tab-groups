@@ -1,6 +1,7 @@
 'use strict';
 
 const EXTENSION_NAME = 'Simple Tab Groups',
+    INNER_HTML = 'innerHTML',
     MANIFEST = browser.runtime.getManifest(),
     DEFAULT_COOKIE_STORE_ID = 'firefox-default',
     PRIVATE_COOKIE_STORE_ID = 'firefox-private',

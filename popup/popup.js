@@ -48,6 +48,7 @@
             if ('load-group' === action) {
                 let currentGroup = _groups.find(group => group.windowId === currentWindowId),
                     isCurrentGroup = currentGroup ? data.groupId === currentGroup.id : false,
+                    group = getGroupById(data.groupId),
                     _loadGroup = function() {
                         BG.loadGroup(currentWindowId, getGroupIndex(data.groupId), data.tabIndex)
                             .then(function() {
@@ -68,7 +69,7 @@
                 if (currentGroup) {
                     _loadGroup();
                 } else {
-                    if (options.individualWindowForEachGroup) {
+                    if (options.individualWindowForEachGroup || group.windowId) {
                         _loadGroup();
                     } else {
                         let tabs = await BG.getTabs(currentWindowId);
@@ -196,10 +197,11 @@
                 if (win) {
                     BG.setFocusOnWindow(group.windowId);
                 } else {
-                    browser.windows.create({
-                            state: 'maximized',
-                        })
-                        .then(win => BG.loadGroup(win.id, getGroupIndex(group.id)));
+                    win = await browser.windows.create({
+                        state: 'maximized',
+                    });
+
+                    BG.loadGroup(win.id, getGroupIndex(group.id));
                 }
             }
         }
@@ -389,8 +391,8 @@
         return format(tmplHtml, data);
     }
 
-    function setHtml(id, html, doTranslatePage = true, attr = 'innerHTML') {
-        $('#' + id)[attr] = html;
+    function setHtml(id, html, doTranslatePage = true) {
+        $('#' + id)[INNER_HTML] = html;
 
         if (doTranslatePage) {
             translatePage();

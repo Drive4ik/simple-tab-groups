@@ -34,7 +34,7 @@ let Popups = {
         return templates[name];
     }
 
-    function showPopup(parsedTemplate, key = 'innerHTML') {
+    function showPopup(parsedTemplate) {
         if (Popups.show) {
             throw Error('popup is showing now');
         }
@@ -43,7 +43,7 @@ let Popups = {
 
         let div = document.createElement('div');
         div.id = TEMPORARY_ID;
-        div[key] = parsedTemplate;
+        div[INNER_HTML] = parsedTemplate;
         document.body.appendChild(div);
 
         $('html').classList.add('no-scroll');
@@ -64,7 +64,7 @@ let Popups = {
         $('html').classList.remove('no-scroll');
     }
 
-    function doAction(action, data, event) {
+    async function doAction(action, data, event) {
         if ('close-popup' === action) {
             hidePopup();
 
@@ -100,25 +100,23 @@ let Popups = {
 
             BG.saveGroup(group);
 
-            BG.getWindow()
-                .then(function(win) {
-                    if (group.windowId === win.id) {
-                        BG.updateBrowserActionData(win.id);
-                        BG.updateMoveTabMenus(win.id);
-                    }
+            let win = await BG.getWindow();
 
-                    hidePopup();
-                });
+            if (group.windowId === win.id) {
+                BG.updateBrowserActionData(win.id);
+                BG.updateMoveTabMenus(win.id);
+            }
+
+            hidePopup();
         } else if ('set-random-group-color' === action) {
             event.preventDefault();
 
-            let attr = 'innerHTML',
-                groupIconWrapper = $('#groupIconWrapper'),
+            let groupIconWrapper = $('#groupIconWrapper'),
                 newColor = randomColor();
 
             $('#groupIconColor').value = newColor;
 
-            groupIconWrapper[attr] = format(templates['icon-color-tmpl'], {
+            groupIconWrapper[INNER_HTML] = format(templates['icon-color-tmpl'], {
                 iconColor: newColor,
             });
 
@@ -133,63 +131,58 @@ let Popups = {
                 return;
             }
 
-            new Promise(function(resolve) {
-                    let fileInput = document.createElement('input');
+            let iconUrl = await new Promise(function(resolve) {
+                let fileInput = document.createElement('input');
 
-                    fileInput.type = 'file';
-                    fileInput.accept = '.ico,.png,.jpg,.svg';
-                    fileInput.initialValue = fileInput.value;
-                    fileInput.onchange = function() {
-                        if (fileInput.value !== fileInput.initialValue) {
-                            let file = fileInput.files[0];
-                            if (file.size > 100e6) {
-                                reject();
-                                return;
-                            }
-
-                            let reader = new FileReader();
-                            reader.addEventListener('loadend', function() {
-                                fileInput.remove();
-                                resolve(reader.result);
-                            });
-                            reader.readAsDataURL(file);
-                        } else {
+                fileInput.type = 'file';
+                fileInput.accept = '.ico,.png,.jpg,.svg';
+                fileInput.initialValue = fileInput.value;
+                fileInput.onchange = function() {
+                    if (fileInput.value !== fileInput.initialValue) {
+                        let file = fileInput.files[0];
+                        if (file.size > 100e6) {
                             reject();
-                        }
-                    };
-                    fileInput.click();
-                })
-                .then(function(iconUrl) {
-                    let attr = 'innerHTML',
-                        img = new Image();
-
-                    img.onload = function() {
-                        let resizedIconUrl = iconUrl;
-
-                        if (img.height > 16 || img.width > 16) {
-                            resizedIconUrl = resizeImage(img, 16, 16);
+                            return;
                         }
 
-                        let groupIconWrapper = $('#groupIconWrapper');
-
-                        groupIconWrapper[attr] = format(templates['icon-img-tmpl'], {
-                            iconUrl: resizedIconUrl,
+                        let reader = new FileReader();
+                        reader.addEventListener('loadend', function() {
+                            fileInput.remove();
+                            resolve(reader.result);
                         });
-                        groupIconWrapper.dataset.iconType = 'image';
-                    };
+                        reader.readAsDataURL(file);
+                    } else {
+                        reject();
+                    }
+                };
+                fileInput.click();
+            });
 
-                    img.src = iconUrl;
+            let img = new Image();
+            img.onload = function() {
+                let resizedIconUrl = iconUrl;
+
+                if (img.height > 16 || img.width > 16) {
+                    resizedIconUrl = resizeImage(img, 16, 16);
+                }
+
+                let groupIconWrapper = $('#groupIconWrapper');
+
+                groupIconWrapper[INNER_HTML] = format(templates['icon-img-tmpl'], {
+                    iconUrl: resizedIconUrl,
                 });
+                groupIconWrapper.dataset.iconType = 'image';
+            };
+            img.src = iconUrl;
         }
     }
 
     $on('click', '[data-action]', (event, data) => doAction(data.action, data, event));
 
     $on('input', '#groupIconColor', function() {
-        let attr = 'innerHTML',
-            groupIconWrapper = $('#groupIconWrapper');
+        let groupIconWrapper = $('#groupIconWrapper');
 
-        groupIconWrapper[attr] = format(templates['icon-color-tmpl'], {
+        groupIconWrapper[INNER_HTML] = format(templates['icon-color-tmpl'], {
             iconColor: this.value.trim(),
         });
 

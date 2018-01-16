@@ -63,6 +63,7 @@
                     browser.windows.remove(currentWindow.id);
                 } else if ('normal' === currentWindow.type) {
                     let currentGroup = _groups.find(group => group.windowId === currentWindowId),
+                        group = getGroupById(data.groupId),
                         _loadGroup = function() {
                             BG.loadGroup(lastFocusedNormalWindow.id, getGroupIndex(data.groupId), data.tabIndex);
                         };
@@ -70,11 +71,15 @@
                     if (currentGroup) {
                         _loadGroup();
                     } else {
-                        let tabs = await BG.getTabs(currentWindowId);
-                        if (tabs.length) {
-                            Popups.confirm(browser.i18n.getMessage('confirmLoadGroupAndDeleteTabs'), browser.i18n.getMessage('warning')).then(_loadGroup);
-                        } else {
+                        if (options.individualWindowForEachGroup || group.windowId) {
                             _loadGroup();
+                        } else {
+                            let tabs = await BG.getTabs(currentWindowId);
+                            if (tabs.length) {
+                                Popups.confirm(browser.i18n.getMessage('confirmLoadGroupAndDeleteTabs'), browser.i18n.getMessage('warning')).then(_loadGroup);
+                            } else {
+                                _loadGroup();
+                            }
                         }
                     }
                 }
@@ -89,10 +94,11 @@
                 if (win) {
                     BG.setFocusOnWindow(win.id);
                 } else {
-                    browser.windows.create({
-                            state: 'maximized',
-                        })
-                        .then(win => BG.loadGroup(win.id, getGroupIndex(group.id), contextData.tabIndex));
+                    win = await browser.windows.create({
+                        state: 'maximized',
+                    });
+
+                    BG.loadGroup(win.id, getGroupIndex(group.id), contextData.tabIndex);
                 }
             } else if ('set-tab-icon-as-group-icon' === action) {
                 let group = getGroupById(contextData.groupId);
@@ -236,8 +242,8 @@
         return format(tmplHtml, data);
     }
 
-    function setHtml(id, html, doTranslatePage = true, attr = 'innerHTML') {
-        $('#' + id)[attr] = html;
+    function setHtml(id, html, doTranslatePage = true) {
+        $('#' + id)[INNER_HTML] = html;
 
         if (doTranslatePage) {
             translatePage();

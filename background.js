@@ -97,18 +97,24 @@
             _groups = [];
         }
 
-        let newGroupIndex = _groups.length;
+        let newGroupIndex = _groups.length,
+            win = null;
 
         _groups.push(createGroup(options.lastCreatedGroupPosition, windowId));
 
         if (options.openNewWindowWhenCreateNewGroup && !windowId) {
-            let win = await browser.windows.create({});
+            win = await browser.windows.create({});
             _groups[newGroupIndex].windowId = win.id;
-        } else if (0 === newGroupIndex && bindCurrentStateToThisGroup) {
-            let win = await getWindow(),
-                tabs = await getTabs();
+        }
+
+        if (0 === newGroupIndex && bindCurrentStateToThisGroup) {
+            if (!win) {
+                win = await getWindow();
+            }
 
             _groups[newGroupIndex].windowId = win.id;
+
+            let tabs = await getTabs(win.id);
 
             if (tabs.length) {
                 _groups[newGroupIndex].tabs = tabs.map(mapTab);
@@ -133,6 +139,7 @@
 
         let groups = Array.isArray(group) ? group : [group];
         _groups = _groups.map(g => groups.find(({ id }) => id === g.id) || g);
+
         saveGroupsToStorage();
     }
 
@@ -362,8 +369,6 @@
                     loadingGroupPosition: 20,
                 });
 
-                group.tabs = group.tabs.filter(isAllowTab);
-
                 oldTabIds = tabs.map(tab => tab.id);
 
                 let oldGroup = _groups.find(gr => gr.windowId === windowId);
@@ -390,7 +395,7 @@
                     });
                 }
 
-                await tempEmptyTabPromise
+                await tempEmptyTabPromise;
 
                 browser.runtime.sendMessage({
                     loadingGroupPosition: 50,
@@ -476,22 +481,21 @@
     }
 
     function getVisibleTabThumbnail(windowId) {
-        return new Promise(function(resolve) {
-            browser.tabs.captureVisibleTab(windowId, {
-                    format: 'png',
-                })
-                .then(function(thumbnailBase64) {
-                    let img = new Image();
+        return new Promise(async function(resolve) {
+            try {
+                let thumbnailBase64 = await browser.tabs.captureVisibleTab(windowId, {
+                        format: 'png',
+                    }),
+                    img = new Image();
 
-                    img.onload = function() {
-                        resolve(resizeImage(img, 192, Math.floor(img.width * 192 / img.height), false));
-                    };
+                img.onload = function() {
+                    resolve(resizeImage(img, 192, Math.floor(img.width * 192 / img.height), false));
+                };
 
-                    img.src = thumbnailBase64;
-                })
-                .catch(function() {
-                    resolve(null);
-                });
+                img.src = thumbnailBase64;
+            } catch (e) {
+                resolve(null);
+            }
         });
     }
 
@@ -505,22 +509,18 @@
         let tabs = await getTabs(windowId),
             tabIndex = tabs.findIndex(tab => tab.active);
 
-        if (-1 === tabIndex || tabs[tabIndex].id !== tabId) {
+        if (-1 === tabIndex ||
+            tabs[tabIndex].id !== tabId ||
+            !group.tabs[tabIndex] ||
+            group.tabs[tabIndex].id !== tabId ||
+            group.tabs[tabIndex].thumbnail ||
+            tabs[tabIndex].status !== 'complete') {
             return;
         }
 
-        if (!group.tabs[tabIndex]) {
-            return console.error('updateTabThumbnail error: tabIndex not found', tabIndex, group);
-        }
+        group.tabs[tabIndex].thumbnail = await getVisibleTabThumbnail(windowId);
 
-        if (group.tabs[tabIndex].thumbnail) {
-            return;
-        }
-
-        if (tabs[tabIndex].status === 'complete') {
-            group.tabs[tabIndex].thumbnail = await getVisibleTabThumbnail(windowId);
-            saveGroupsToStorage();
-        }
+        saveGroupsToStorage();
     }
 
     async function onActivatedTab({ tabId, windowId }) {
@@ -532,17 +532,13 @@
             return;
         }
 
-        let activeTab = await browser.tabs.get(tabId);
-
-        if (activeTab.incognito) {
-            return;
-        }
-
-        let tabs = await getTabs(windowId),
-            activeTabIndex = tabs.findIndex(tab => tab.id === activeTab.id);
-
         group.tabs = group.tabs.map(function(tab, index) {
-            tab.active = index === activeTabIndex;
+            tab.active = tab.id === tabId;
+
+            if (tab.active && !tab.thumbnail) {
+                updateTabThumbnail(windowId, tabId);
+            }
+
             return tab;
         });
 
@@ -1413,35 +1409,22 @@
                 await storage.set(data);
             }
 
-            return [data, windows];
-        })
-        .then(async function([data, windows]) {
-            // let newGroupCreated = false;
 
             getWindow().then(win => lastFocusedNormalWindow = win);
 
-            let browserInfo = await browser.runtime.getBrowserInfo(),
-                browserVersion = parseInt(browserInfo.version, 10);
+            function compareWinTabs(tabs, tab, tabIndex) {
+                if (tab.url === tabs[tabIndex].url) {
+                    return true;
+                }
+
+                if (isStgNewTabUrl(tabs[tabIndex].url)) {
+                    return tab.url === revokeStgNewTabUrl(tabs[tabIndex].url);
+                }
+            }
 
             _groups = data.groups.map(function(group) {
                 if (!group.windowId) {
                     return group;
-                }
-
-                function compareWinTabs(tabs, tab, tabIndex) {
-                    if (tab.url === tabs[tabIndex].url) {
-                        return true;
-                    }
-
-                    let url = null;
-
-                    if (isStgNewTabUrl(tabs[tabIndex].url)) {
-                        url = revokeStgNewTabUrl(tabs[tabIndex].url);
-                    }
-
-                    if (tab.url === url) {
-                        return true;
-                    }
                 }
 
                 let winCandidate = windows.find(function(win) {
