@@ -62,8 +62,7 @@
                     BG.loadGroup(lastFocusedNormalWindow.id, getGroupIndex(data.groupId), data.tabIndex);
                     browser.windows.remove(currentWindow.id);
                 } else if ('normal' === currentWindow.type) {
-                    let currentGroup = _groups.find(group => group.windowId === currentWindowId),
-                        group = getGroupById(data.groupId),
+                    let currentGroup = _groups.find(gr => gr.windowId === currentWindowId),
                         _loadGroup = function() {
                             BG.loadGroup(lastFocusedNormalWindow.id, getGroupIndex(data.groupId), data.tabIndex);
                         };
@@ -71,7 +70,7 @@
                     if (currentGroup) {
                         _loadGroup();
                     } else {
-                        if (options.individualWindowForEachGroup || group.windowId) {
+                        if (options.individualWindowForEachGroup || getGroupById(data.groupId).windowId) {
                             _loadGroup();
                         } else {
                             let tabs = await BG.getTabs(currentWindowId);

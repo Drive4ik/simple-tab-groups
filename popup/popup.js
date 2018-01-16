@@ -47,8 +47,7 @@
         async function doAction(action, data, event) {
             if ('load-group' === action) {
                 let currentGroup = _groups.find(group => group.windowId === currentWindowId),
-                    isCurrentGroup = currentGroup ? data.groupId === currentGroup.id : false,
-                    group = getGroupById(data.groupId),
+                    isCurrentGroup = currentGroup ? currentGroup.id === data.groupId : false,
                     _loadGroup = function() {
                         BG.loadGroup(currentWindowId, getGroupIndex(data.groupId), data.tabIndex)
                             .then(function() {
@@ -69,7 +68,7 @@
                 if (currentGroup) {
                     _loadGroup();
                 } else {
-                    if (options.individualWindowForEachGroup || group.windowId) {
+                    if (options.individualWindowForEachGroup || getGroupById(data.groupId).windowId) {
                         _loadGroup();
                     } else {
                         let tabs = await BG.getTabs(currentWindowId);
