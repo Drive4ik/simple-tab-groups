@@ -69,6 +69,26 @@
         "description": "Cancel"
     },
 
+    "privateAndPinnedTabsAreNotSupported": {
+        "message": "Private and pinned tabs are not supported",
+        "description": "Private and pinned tabs are not supported"
+    },
+
+    "thisTabIsNotSupported": {
+        "message": "This tab is not supported",
+        "description": "This tab is not supported"
+    },
+
+    "confirmLoadGroupAndDeleteTabs": {
+        "message": "Load this group will close all current tabs!",
+        "description": "Load this group will close all current tabs!"
+    },
+
+    "confirmDeleteLastGroupAndCloseTabs": {
+        "message": "Deleting this group will close all current tabs!",
+        "description": "Deleting this group will close all current tabs!"
+    },
+
     "searchTabPlaceholder": {
         "message": "Search a tab...",
         "description": "Search a tab placeholder"
@@ -123,6 +143,16 @@
     "showConfirmDialogBeforeGroupDelete": {
         "message": "Show confirm dialog before group delete",
         "description": "Show confirm dialog before group delete"
+    },
+
+    "individualWindowForEachGroup": {
+        "message": "Individual window for each group",
+        "description": "Individual window for each group"
+    },
+
+    "openNewWindowWhenCreateNewGroup": {
+        "message": "Open new window when create new group",
+        "description": "Open new window when create new group"
     },
 
     "enableKeyboardShortcutLoadNextPrevGroup": {
@@ -195,9 +225,9 @@
         "description": "Open group after changing to it"
     },
 
-    "showGroupCircleInSearchedTab": {
-        "message": "Show colored group circle in search tab",
-        "description": "Show colored group circle in search tab"
+    "showGroupIconWhenSearchATab": {
+        "message": "Show group icon when search a tab",
+        "description": "Show group icon when search a tab"
     },
 
     "showUrlTooltipOnTabHover": {
@@ -267,13 +297,13 @@
         "description": "Delete group"
     },
 
-    "deleteGroupPopupTitle": {
+    "deleteGroupTitle": {
         "message": "Delete group?",
         "description": "Delete group?"
     },
 
-    "deleteGroupPopupBody": {
-        "message": "Do you want to delete group \"$name$\" ?<br>Be careful! This action can not be undone!",
+    "deleteGroupBody": {
+        "message": "Do you want to delete group \"$name$\" ?<br>Group removing also close tabs and tied window if it's open now!<br>Be careful! This action can not be undone!",
         "description": "Delete group?",
         "placeholders": {
             "name": {

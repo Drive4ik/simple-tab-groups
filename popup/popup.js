@@ -44,25 +44,42 @@
 
         $on('click', '[data-action]', (event, data) => doAction(data.action, data, event));
 
-        function doAction(action, data, event) {
+        async function doAction(action, data, event) {
             if ('load-group' === action) {
                 let currentGroup = _groups.find(group => group.windowId === currentWindowId),
-                    isCurrentGroup = currentGroup ? data.groupId === currentGroup.id : false;
+                    isCurrentGroup = currentGroup ? currentGroup.id === data.groupId : false,
+                    _loadGroup = function() {
+                        BG.loadGroup(currentWindowId, getGroupIndex(data.groupId), data.tabIndex)
+                            .then(function() {
+                                if (!options.closePopupAfterChangeGroup && options.openGroupAfterChange) {
+                                    renderTabsList(data.groupId);
+                                }
+
+                                if (options.closePopupAfterChangeGroup && !isCurrentGroup) {
+                                    window.close();
+                                }
+                            });
+                    };
 
                 if (isCurrentGroup && -1 === data.tabIndex) { // open group
                     return renderTabsList(data.groupId);
                 }
 
-                BG.loadGroup(currentWindowId, getGroupIndex(data.groupId), data.tabIndex)
-                    .then(function() {
-                        if (!options.closePopupAfterChangeGroup && options.openGroupAfterChange) {
-                            renderTabsList(data.groupId);
+                if (currentGroup) {
+                    _loadGroup();
+                } else {
+                    if (options.individualWindowForEachGroup || getGroupById(data.groupId).windowId) {
+                        _loadGroup();
+                    } else {
+                        let tabs = await BG.getTabs(currentWindowId);
+                        if (tabs.length) {
+                            Popups.confirm(browser.i18n.getMessage('confirmLoadGroupAndDeleteTabs'), browser.i18n.getMessage('warning')).then(_loadGroup);
+                        } else {
+                            _loadGroup();
                         }
+                    }
+                }
 
-                        if (options.closePopupAfterChangeGroup && !isCurrentGroup) {
-                            window.close();
-                        }
-                    });
             } else if ('show-group' === action) {
                 renderTabsList(data.groupId);
             } else if ('remove-tab' === action) {
@@ -81,16 +98,30 @@
                 let group = getGroupById(data.groupId);
 
                 if (options.showConfirmDialogBeforeGroupDelete) {
-                    Popups.showDeleteGroup(group);
+                    if (group.windowId === currentWindowId && 1 === _groups.length && group.tabs.length) {
+                        Popups.confirm(browser.i18n.getMessage('confirmDeleteLastGroupAndCloseTabs'), browser.i18n.getMessage('warning'))
+                            .then(() => BG.removeGroup(group.id));
+                    } else {
+                        Popups.confirm(
+                                browser.i18n.getMessage('deleteGroupBody', safeHtml(unSafeHtml(group.title))),
+                                browser.i18n.getMessage('deleteGroupTitle'),
+                                'delete',
+                                'is-danger'
+                            )
+                            .then(() => BG.removeGroup(group.id));
+                    }
                 } else {
-                    BG.removeGroup(group);
+                    BG.removeGroup(group.id);
                 }
+
             } else if ('context-show-delete-group-popup' === action) {
                 doAction('show-delete-group-popup', contextData);
             } else if ('move-tab-to-group' === action) {
                 BG.moveTabToGroup(contextData.tabIndex, undefined, state.groupId, data.groupId);
             } else if ('move-tab-to-new-group' === action) {
-                BG.addGroup(undefined, undefined, false).then(newGroup => BG.moveTabToGroup(contextData.tabIndex, undefined, state.groupId, newGroup.id));
+                let newGroup = await BG.addGroup(undefined, undefined, false);
+
+                BG.moveTabToGroup(contextData.tabIndex, undefined, state.groupId, newGroup.id);
             } else if ('set-tab-icon-as-group-icon' === action) {
                 let group = getGroupById(state.groupId);
                 group.iconUrl = group.tabs[contextData.tabIndex].favIconUrl || null;
@@ -104,7 +135,7 @@
                     BG.updateMoveTabMenus(currentWindowId);
                 }
             } else if ('add-group' === action) {
-                BG.addGroup();
+                BG.addGroup(undefined, undefined, undefined, true);
             } else if ('show-groups-list' === action) {
                 renderGroupsList();
             } else if ('open-options-page' === action) {
@@ -113,67 +144,64 @@
                 let manageUrl = browser.extension.getURL('/manage/manage.html');
 
                 if (options.openManageGroupsInTab) {
-                    browser.tabs.query({
-                            windowId: currentWindowId,
-                            url: manageUrl,
-                        })
-                        .then(function(tabs) {
-                            if (tabs.length) { // if manage tab is found
-                                browser.tabs.update(tabs[0].id, {
-                                    active: true,
-                                });
-                            } else {
-                                browser.tabs.create({
-                                    active: true,
-                                    url: manageUrl,
-                                });
-                            }
-                        });
-                } else {
-                    browser.windows.getAll({
-                            populate: true,
-                            windowTypes: ['popup'],
-                        })
-                        .then(function(allWindows) {
-                            return allWindows.some(function(win) {
-                                if ('popup' === win.type && 1 === win.tabs.length && manageUrl === win.tabs[0].url) { // if manage popup is now open
-                                    return BG.setFocusOnWindow(win.id);
-                                }
-                            });
-                        })
-                        .then(function(isFoundWindow) {
-                            if (isFoundWindow) {
-                                return;
-                            }
+                    let tabs = await browser.tabs.query({
+                        windowId: currentWindowId,
+                        url: manageUrl,
+                    });
 
-                            browser.windows.create({
-                                url: manageUrl,
-                                type: 'popup',
-                                left: 0,
-                                top: 0,
-                                width: window.screen.availWidth,
-                                height: window.screen.availHeight,
-                            });
+                    if (tabs.length) { // if manage tab is found
+                        browser.tabs.update(tabs[0].id, {
+                            active: true,
                         });
+                    } else {
+                        browser.tabs.create({
+                            active: true,
+                            url: manageUrl,
+                        });
+                    }
+                } else {
+                    let allWindows = await browser.windows.getAll({
+                        populate: true,
+                        windowTypes: ['popup'],
+                    });
+
+                    let isFoundWindow = allWindows.some(function(win) {
+                        if ('popup' === win.type && 1 === win.tabs.length && manageUrl === win.tabs[0].url) { // if manage popup is now open
+                            BG.setFocusOnWindow(win.id);
+                            return true;
+                        }
+                    });
+
+                    if (isFoundWindow) {
+                        return;
+                    }
+
+                    browser.windows.create({
+                        url: manageUrl,
+                        type: 'popup',
+                        left: 0,
+                        top: 0,
+                        width: window.screen.availWidth,
+                        height: window.screen.availHeight,
+                    });
                 }
 
                 // window.close(); // be or not to be ?? :)
             } else if ('context-sort-groups' === action) {
                 BG.sortGroups(data.vector);
             } else if ('context-open-group-in-new-window' === action) {
-                let group = getGroupById(contextData.groupId);
+                let group = getGroupById(contextData.groupId),
+                    win = await BG.getWindowByGroup(group);
 
-                BG.getWindowByGroup(group)
-                    .then(function(win) {
-                        if (win) {
-                            BG.setFocusOnWindow(group.windowId);
-                        } else {
-                            browser.windows.create({
-                                    state: 'maximized',
-                                })
-                                .then(win => BG.loadGroup(win.id, getGroupIndex(group.id)));
-                        }
+                if (win) {
+                    BG.setFocusOnWindow(group.windowId);
+                } else {
+                    win = await browser.windows.create({
+                        state: 'maximized',
                     });
+
+                    BG.loadGroup(win.id, getGroupIndex(group.id));
+                }
             }
         }
 
@@ -362,8 +390,8 @@
         return format(tmplHtml, data);
     }
 
-    function setHtml(id, html, doTranslatePage = true, attr = 'innerHTML') {
-        $('#' + id)[attr] = html;
+    function setHtml(id, html, doTranslatePage = true) {
+        $('#' + id)[INNER_HTML] = html;
 
         if (doTranslatePage) {
             translatePage();
@@ -450,7 +478,7 @@
                 if ((tab.title || '').toLowerCase().indexOf(state.searchStr) !== -1 || (tab.url || '').toLowerCase().indexOf(state.searchStr) !== -1) {
                     let preparedTab = prepareTabToView(group.id, tab, tabIndex, true);
 
-                    if (options.showGroupCircleInSearchedTab) {
+                    if (options.showGroupIconWhenSearchATab) {
                         preparedTab.title = getGroupIconHtml(group, true) + preparedTab.title;
                     }
 

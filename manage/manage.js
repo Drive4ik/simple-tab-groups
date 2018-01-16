@@ -13,6 +13,7 @@
         options = null,
         _groups = BG.getGroups(),
         containers = [],
+        currentWindow = null,
         currentWindowId = null,
         contextData = null,
         $filterTabs = $('#filterTabs'),
@@ -38,6 +39,7 @@
             loadOptions()
         ])
         .then(function([win, allContainers]) {
+            currentWindow = win;
             currentWindowId = win.id;
             containers = allContainers;
         })
@@ -52,40 +54,51 @@
 
         $on('click', '[data-action]', (event, data) => doAction(data.action, data, event));
 
-        function doAction(action, data, event) {
+        async function doAction(action, data, event) {
             if ('load-group' === action) {
-                Promise.all([
-                        // browser.windows.getLastFocused({ // not working :(
-                        //     windowTypes: ['normal']
-                        // }),
-                        BG.getLastFocusedNormalWindow(), // fix bug with browser.windows.getLastFocused({windowTypes: ['normal']}), maybe find exists bug??
-                        browser.windows.getCurrent()
-                    ])
-                    .then(function([lastFocusedNormalWindow, currentWindow]) {
-                        BG.loadGroup(lastFocusedNormalWindow.id, getGroupIndex(data.groupId), data.tabIndex);
+                let lastFocusedNormalWindow = BG.getLastFocusedNormalWindow(); // fix bug with browser.windows.getLastFocused({windowTypes: ['normal']}), maybe find exists bug??
 
-                        if ('popup' === currentWindow.type) {
-                            browser.windows.remove(currentWindow.id);
+                if ('popup' === currentWindow.type) {
+                    BG.loadGroup(lastFocusedNormalWindow.id, getGroupIndex(data.groupId), data.tabIndex);
+                    browser.windows.remove(currentWindow.id);
+                } else if ('normal' === currentWindow.type) {
+                    let currentGroup = _groups.find(gr => gr.windowId === currentWindowId),
+                        _loadGroup = function() {
+                            BG.loadGroup(lastFocusedNormalWindow.id, getGroupIndex(data.groupId), data.tabIndex);
+                        };
+
+                    if (currentGroup) {
+                        _loadGroup();
+                    } else {
+                        if (options.individualWindowForEachGroup || getGroupById(data.groupId).windowId) {
+                            _loadGroup();
+                        } else {
+                            let tabs = await BG.getTabs(currentWindowId);
+                            if (tabs.length) {
+                                Popups.confirm(browser.i18n.getMessage('confirmLoadGroupAndDeleteTabs'), browser.i18n.getMessage('warning')).then(_loadGroup);
+                            } else {
+                                _loadGroup();
+                            }
                         }
-                    });
+                    }
+                }
             } else if ('add-tab' === action) {
                 BG.addTab(data.groupId, data.cookieStoreId);
             } else if ('context-add-tab' === action) {
                 BG.addTab(contextData.groupId, data.cookieStoreId);
             } else if ('context-open-group-in-new-window' === action) {
-                let group = getGroupById(contextData.groupId);
+                let group = getGroupById(contextData.groupId),
+                    win = await BG.getWindowByGroup(group);
 
-                BG.getWindowByGroup(group)
-                    .then(function(win) {
-                        if (win) {
-                            BG.setFocusOnWindow(win.id);
-                        } else {
-                            browser.windows.create({
-                                    state: 'maximized',
-                                })
-                                .then(win => BG.loadGroup(win.id, getGroupIndex(group.id), contextData.tabIndex));
-                        }
+                if (win) {
+                    BG.setFocusOnWindow(win.id);
+                } else {
+                    win = await browser.windows.create({
+                        state: 'maximized',
                     });
+
+                    BG.loadGroup(win.id, getGroupIndex(group.id), contextData.tabIndex);
+                }
             } else if ('set-tab-icon-as-group-icon' === action) {
                 let group = getGroupById(contextData.groupId);
                 group.iconUrl = group.tabs[contextData.tabIndex].favIconUrl || null;
@@ -105,16 +118,27 @@
                 let group = getGroupById(data.groupId);
 
                 if (options.showConfirmDialogBeforeGroupDelete) {
-                    Popups.showDeleteGroup(group);
+                    if (group.windowId === currentWindowId && 1 === _groups.length && group.tabs.length) {
+                        Popups.confirm(browser.i18n.getMessage('confirmDeleteLastGroupAndCloseTabs'), browser.i18n.getMessage('warning'))
+                            .then(() => BG.removeGroup(group.id));
+                    } else {
+                        Popups.confirm(
+                                browser.i18n.getMessage('deleteGroupBody', safeHtml(unSafeHtml(group.title))),
+                                browser.i18n.getMessage('deleteGroupTitle'),
+                                'delete',
+                                'is-danger'
+                            )
+                            .then(() => BG.removeGroup(group.id));
+                    }
                 } else {
-                    BG.removeGroup(group);
+                    BG.removeGroup(group.id);
                 }
             } else if ('open-settings-group-popup' === action) {
                 Popups.showEditGroup(getGroupById(data.groupId), {
                     popupDesign: 2,
                 });
             } else if ('add-group' === action) {
-                BG.addGroup();
+                BG.addGroup(undefined, undefined, undefined, true);
             }
         }
 
@@ -217,8 +241,8 @@
         return format(tmplHtml, data);
     }
 
-    function setHtml(id, html, doTranslatePage = true, attr = 'innerHTML') {
-        $('#' + id)[attr] = html;
+    function setHtml(id, html, doTranslatePage = true) {
+        $('#' + id)[INNER_HTML] = html;
 
         if (doTranslatePage) {
             translatePage();
