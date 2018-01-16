@@ -275,7 +275,7 @@ img {
     text-align: center;
     width: 16px;
     height: 16px;
-    line-height: 1;
+    line-height: 0;
 }
 
 .is-vertical-separator {

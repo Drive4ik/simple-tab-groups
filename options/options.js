@@ -17,10 +17,17 @@
 
         options[this.id] = this.checked;
 
-        reloadCheckers();
+        checkEnabledCheckboxes();
 
         await storage.set(options);
-        BG.initBrowserCommands();
+
+        if ('enableFastGroupSwitching' === this.id && !this.checked) {
+            BG.updateNewTabUrls();
+        }
+
+        if (['enableKeyboardShortcutLoadNextPrevGroup', 'enableKeyboardShortcutLoadByIndexGroup'].includes(this.id)) {
+            BG.initBrowserCommands();
+        }
     });
 
     $on('click', '#importAddonSettings', async function() {
@@ -165,7 +172,7 @@
         }
     });
 
-    function reloadCheckers() {
+    function checkEnabledCheckboxes() {
         $('#enableFavIconsForNotLoadedTabs').disabled = !$('#enableFastGroupSwitching').checked;
         $('#openGroupAfterChange').disabled = $('#closePopupAfterChangeGroup').checked;
     }
@@ -177,7 +184,7 @@
                     $('#' + key).checked = options[key];
                 });
             })
-            .then(reloadCheckers)
+            .then(checkEnabledCheckboxes)
             .then(translatePage);
     }
 

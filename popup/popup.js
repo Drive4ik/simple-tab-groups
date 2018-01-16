@@ -42,7 +42,6 @@
 
     function addEvents() {
 
-        $on('click', 'body', (event, data) => console.log(_groups));
         $on('click', '[data-action]', (event, data) => doAction(data.action, data, event));
 
         async function doAction(action, data, event) {
@@ -69,9 +68,15 @@
                 if (currentGroup) {
                     _loadGroup();
                 } else {
-                    let tabs = await BG.getTabs(currentWindowId);
-                    if (tabs.length) {
-                        Popups.confirm(browser.i18n.getMessage('confirmLoadGroupAndDeleteTabs'), browser.i18n.getMessage('warning')).then(_loadGroup);
+                    if (options.individualWindowForEachGroup) {
+                        _loadGroup();
+                    } else {
+                        let tabs = await BG.getTabs(currentWindowId);
+                        if (tabs.length) {
+                            Popups.confirm(browser.i18n.getMessage('confirmLoadGroupAndDeleteTabs'), browser.i18n.getMessage('warning')).then(_loadGroup);
+                        } else {
+                            _loadGroup();
+                        }
                     }
                 }
 
@@ -130,7 +135,7 @@
                     BG.updateMoveTabMenus(currentWindowId);
                 }
             } else if ('add-group' === action) {
-                BG.addGroup();
+                BG.addGroup(undefined, undefined, undefined, true);
             } else if ('show-groups-list' === action) {
                 renderGroupsList();
             } else if ('open-options-page' === action) {
@@ -139,67 +144,63 @@
                 let manageUrl = browser.extension.getURL('/manage/manage.html');
 
                 if (options.openManageGroupsInTab) {
-                    browser.tabs.query({
-                            windowId: currentWindowId,
-                            url: manageUrl,
-                        })
-                        .then(function(tabs) {
-                            if (tabs.length) { // if manage tab is found
-                                browser.tabs.update(tabs[0].id, {
-                                    active: true,
-                                });
-                            } else {
-                                browser.tabs.create({
-                                    active: true,
-                                    url: manageUrl,
-                                });
-                            }
-                        });
-                } else {
-                    browser.windows.getAll({
-                            populate: true,
-                            windowTypes: ['popup'],
-                        })
-                        .then(function(allWindows) {
-                            return allWindows.some(function(win) {
-                                if ('popup' === win.type && 1 === win.tabs.length && manageUrl === win.tabs[0].url) { // if manage popup is now open
-                                    return BG.setFocusOnWindow(win.id);
-                                }
-                            });
-                        })
-                        .then(function(isFoundWindow) {
-                            if (isFoundWindow) {
-                                return;
-                            }
+                    let tabs = await browser.tabs.query({
+                        windowId: currentWindowId,
+                        url: manageUrl,
+                    });
 
-                            browser.windows.create({
-                                url: manageUrl,
-                                type: 'popup',
-                                left: 0,
-                                top: 0,
-                                width: window.screen.availWidth,
-                                height: window.screen.availHeight,
-                            });
+                    if (tabs.length) { // if manage tab is found
+                        browser.tabs.update(tabs[0].id, {
+                            active: true,
                         });
+                    } else {
+                        browser.tabs.create({
+                            active: true,
+                            url: manageUrl,
+                        });
+                    }
+                } else {
+                    let allWindows = await browser.windows.getAll({
+                        populate: true,
+                        windowTypes: ['popup'],
+                    });
+
+                    let isFoundWindow = allWindows.some(function(win) {
+                        if ('popup' === win.type && 1 === win.tabs.length && manageUrl === win.tabs[0].url) { // if manage popup is now open
+                            BG.setFocusOnWindow(win.id);
+                            return true;
+                        }
+                    });
+
+                    if (isFoundWindow) {
+                        return;
+                    }
+
+                    browser.windows.create({
+                        url: manageUrl,
+                        type: 'popup',
+                        left: 0,
+                        top: 0,
+                        width: window.screen.availWidth,
+                        height: window.screen.availHeight,
+                    });
                 }
 
                 // window.close(); // be or not to be ?? :)
             } else if ('context-sort-groups' === action) {
                 BG.sortGroups(data.vector);
             } else if ('context-open-group-in-new-window' === action) {
-                let group = getGroupById(contextData.groupId);
+                let group = getGroupById(contextData.groupId),
+                    win = await BG.getWindowByGroup(group);
 
-                BG.getWindowByGroup(group)
-                    .then(function(win) {
-                        if (win) {
-                            BG.setFocusOnWindow(group.windowId);
-                        } else {
-                            browser.windows.create({
-                                    state: 'maximized',
-                                })
-                                .then(win => BG.loadGroup(win.id, getGroupIndex(group.id)));
-                        }
-                    });
+                if (win) {
+                    BG.setFocusOnWindow(group.windowId);
+                } else {
+                    browser.windows.create({
+                            state: 'maximized',
+                        })
+                        .then(win => BG.loadGroup(win.id, getGroupIndex(group.id)));
+                }
             }
         }
 

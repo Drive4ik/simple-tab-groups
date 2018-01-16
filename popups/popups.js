@@ -71,7 +71,6 @@ let Popups = {
             if (data.afterHidePopupAction && lastOptions[data.afterHidePopupAction]) {
                 lastOptions[data.afterHidePopupAction](data.afterHidePopupData);
             }
-
         } else if ('submit-delete-group-popup' === action) {
             hidePopup();
             BG.removeGroup(lastData.id);

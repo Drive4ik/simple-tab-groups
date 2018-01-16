@@ -73,6 +73,8 @@
                         let tabs = await BG.getTabs(currentWindowId);
                         if (tabs.length) {
                             Popups.confirm(browser.i18n.getMessage('confirmLoadGroupAndDeleteTabs'), browser.i18n.getMessage('warning')).then(_loadGroup);
+                        } else {
+                            _loadGroup();
                         }
                     }
                 }
@@ -81,19 +83,17 @@
             } else if ('context-add-tab' === action) {
                 BG.addTab(contextData.groupId, data.cookieStoreId);
             } else if ('context-open-group-in-new-window' === action) {
-                let group = getGroupById(contextData.groupId);
+                let group = getGroupById(contextData.groupId),
+                    win = await BG.getWindowByGroup(group);
 
-                BG.getWindowByGroup(group)
-                    .then(function(win) {
-                        if (win) {
-                            BG.setFocusOnWindow(win.id);
-                        } else {
-                            browser.windows.create({
-                                    state: 'maximized',
-                                })
-                                .then(win => BG.loadGroup(win.id, getGroupIndex(group.id), contextData.tabIndex));
-                        }
-                    });
+                if (win) {
+                    BG.setFocusOnWindow(win.id);
+                } else {
+                    browser.windows.create({
+                            state: 'maximized',
+                        })
+                        .then(win => BG.loadGroup(win.id, getGroupIndex(group.id), contextData.tabIndex));
+                }
             } else if ('set-tab-icon-as-group-icon' === action) {
                 let group = getGroupById(contextData.groupId);
                 group.iconUrl = group.tabs[contextData.tabIndex].favIconUrl || null;
@@ -133,7 +133,7 @@
                     popupDesign: 2,
                 });
             } else if ('add-group' === action) {
-                BG.addGroup();
+                BG.addGroup(undefined, undefined, undefined, true);
             }
         }
 

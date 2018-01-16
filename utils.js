@@ -18,7 +18,7 @@ const EXTENSION_NAME = 'Simple Tab Groups',
         openGroupAfterChange: true,
         // showGroupCircleInSearchedTab: true,
         showGroupIconWhenSearchATab: true,
-        showUrlTooltipOnTabHover: false,
+        showUrlTooltipOnTabHover: true,
         showNotificationAfterMoveTab: true,
         createNewGroupAfterAttachTabToNewWindow: true,
         openManageGroupsInTab: true,
@@ -172,8 +172,8 @@ let $ = document.querySelector.bind(document),
 
         return isAllowUrl(tab.url);
     },
-    isExtensionNewTabUrl = function(url) {
-        if (!url) {
+    isStgNewTabUrl = function(url, extendResult = {}) {
+        if (!url || !url.startsWith('moz-extension')) {
             return false;
         }
 
@@ -185,12 +185,13 @@ let $ = document.querySelector.bind(document),
             reg = new RegExp('^moz-extension:\/\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}' + pregNewTabUrl);
 
         if (reg.test(url)) {
+            extendResult.isOldUrl = true;
             return true;
         }
 
         return false;
     },
-    getStgTabNewUrl = function(tab, enableFavIconsForNotLoadedTabs = DEFAULT_OPTIONS.enableFavIconsForNotLoadedTabs) {
+    createStgTabNewUrl = function(tab, enableFavIconsForNotLoadedTabs = DEFAULT_OPTIONS.enableFavIconsForNotLoadedTabs) {
         let params = new URLSearchParams;
 
         params.set('url', tab.url);
@@ -201,6 +202,9 @@ let $ = document.querySelector.bind(document),
         }
 
         return browser.extension.getURL(NEW_TAB_URL) + '?' + params.toString();
+    },
+    revokeStgNewTabUrl = function(url) {
+        return new URL(url).searchParams.get('url');
     },
     getNextIndex = function(currentIndex, count, textPosition = 'next') {
         if (!count) {
