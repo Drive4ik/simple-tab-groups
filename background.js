@@ -544,36 +544,32 @@
 
         saveGroupsToStorage();
     }
-    /*
-        async function onCreatedTab(tab) {
-            console.log('onCreatedTab', tab);
 
-            if (currentlyAddingTabs.includes(tab.id) || tab.incognito) {
-                return;
-            }
+    async function onCreatedTab(tab) {
+        // console.log('onCreatedTab', tab);
 
-            let group = _groups.find(gr => gr.windowId === tab.windowId);
-
-            if (!group) {
-                return;
-            }
-
-            if (group.tabs.some(t => t.id === tab.id)) { // reject tabs if its created in update tab func (bug FF? call update tab event before create tab)
-                return;
-            }
-
-            let tabs = await getTabs(tab.windowId),
-                newTabIndex = tabs.findIndex(t => t.id === tab.id);
-
-            if (-1 === newTabIndex) {
-                return;
-            }
-
-            group.tabs.splice(newTabIndex, 0, mapTab(tab));
-
-            saveGroupsToStorage();
+        if (currentlyAddingTabs.includes(tab.id) || tab.incognito) {
+            return;
         }
-    */
+
+        let group = _groups.find(gr => gr.windowId === tab.windowId);
+
+        if (!group) {
+            return;
+        }
+
+        let tabs = await getTabs(tab.windowId),
+            newTabIndex = tabs.findIndex(t => t.id === tab.id);
+
+        if (-1 === newTabIndex || currentlyAddingTabs.includes(tab.id) || group.tabs.some(t => t.id === tab.id)) {
+            return;
+        }
+
+        group.tabs.splice(newTabIndex, 0, mapTab(tab));
+
+        saveGroupsToStorage();
+    }
+
     let currentlyMovingTabs = [], // tabIds // expample: open tab from bookmark and move it to other group: many calls method onUpdatedTab
         currentlyAddingTabs = [];
 
@@ -1121,7 +1117,7 @@
     }
 
     function addEvents() {
-        // browser.tabs.onCreated.addListener(onCreatedTab);
+        browser.tabs.onCreated.addListener(onCreatedTab);
         browser.tabs.onActivated.addListener(onActivatedTab);
         browser.tabs.onMoved.addListener(onMovedTab);
         browser.tabs.onUpdated.addListener(onUpdatedTab);
@@ -1136,7 +1132,7 @@
     }
 
     function removeEvents() {
-        // browser.tabs.onCreated.removeListener(onCreatedTab);
+        browser.tabs.onCreated.removeListener(onCreatedTab);
         browser.tabs.onActivated.removeListener(onActivatedTab);
         browser.tabs.onMoved.removeListener(onMovedTab);
         browser.tabs.onUpdated.removeListener(onUpdatedTab);
