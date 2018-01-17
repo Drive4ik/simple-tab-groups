@@ -1,4 +1,5 @@
 :root {
+    --indent: 10px;
     --color-light-gray: #eceded;
     --color-gray: #e3e3e3;
     --color-dark-gray: #d4d4d4;
@@ -9,18 +10,39 @@ html {
     overflow-x: hidden;
     font-family: Arial;
     font-size: 14px;
+    min-width: 348px;
+    max-width: 425px;
 }
 
-hr {
-    margin: 10px 0;
-    color: transparent;
-    border-top: 1px solid var(--color-gray);
+.hr { /* fix FF UI bugs on margin then scrolling */
+    height: calc((var(--indent) * 2) + 1px);
+    position: relative;
+}
+
+.hr::after {
+    content: "";
+    position: absolute;
+    height: 1px;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    background-color: var(--color-gray);
+}
+
+.hr,
+.spacer,
+#stg,
+#searchWrapper,
+#result {
+    background-color: #ffffff;
 }
 
 #stg {
-    background-color: #ffffff;
-    width: 425px;
+    min-width: 348px;
+    max-width: 425px;
     min-height: 400px;
+    max-height: 600px;
+    overflow-y: auto;
 }
 
 #loading {
@@ -144,6 +166,10 @@ hr {
     transform: rotate(270deg);
 }
 
+.spacer { /* fix FF UI bugs on margin then scrolling */
+    min-height: var(--indent);
+}
+
 /* END HELPERS */
 
 
@@ -152,7 +178,7 @@ img {
 }
 
 #searchWrapper {
-    padding: 10px 10px 0 10px;
+    padding: var(--indent);
 }
 
 #searchTabs {
@@ -168,13 +194,13 @@ img {
     cursor: default;
     height: 28px;
     min-height: 28px;
-    padding-left: 10px;
+    padding-left: var(--indent);
     border-top: 1px solid transparent;
     border-bottom: 1px solid transparent;
 }
 
 .item > :last-child {
-    padding-right: 10px;
+    padding-right: var(--indent);
 }
 
 .item.is-active,
@@ -245,12 +271,8 @@ img {
     display: flex;
 }
 
-.tabs-list > .item:first-child {
+.tabs-list > .tabs > li:first-child {
     margin-top: 10px;
-}
-
-.tabs-list .group-info {
-    margin-bottom: 10px;
 }
 
 .tabs-list .group-info.item .item-title {
@@ -285,8 +307,8 @@ img {
 }
 
 #stg footer {
-    margin-top: 15px;
     height: 45px;
+    min-height: 45px;
     align-items: center;
     justify-content: space-between;
     background-color: var(--color-light-gray);
@@ -340,11 +362,11 @@ img {
 
 
 /* media */
-
+/*
 @media screen and (min-height: 600px) {
     #stg {
         padding-right: 17px;
     }
 }
-
+ */
 

@@ -95,12 +95,13 @@
             } else if ('context-open-settings-group-popup' === action) {
                 doAction('open-settings-group-popup', contextData);
             } else if ('show-delete-group-popup' === action) {
-                let group = getGroupById(data.groupId);
+                let group = getGroupById(data.groupId),
+                    _removeGroup = () => BG.removeGroup(group.id).then(renderGroupsList);
 
                 if (options.showConfirmDialogBeforeGroupDelete) {
                     if (group.windowId === currentWindowId && 1 === _groups.length && group.tabs.length) {
                         Popups.confirm(browser.i18n.getMessage('confirmDeleteLastGroupAndCloseTabs'), browser.i18n.getMessage('warning'))
-                            .then(() => BG.removeGroup(group.id));
+                            .then(_removeGroup);
                     } else {
                         Popups.confirm(
                                 browser.i18n.getMessage('deleteGroupBody', safeHtml(unSafeHtml(group.title))),
@@ -108,10 +109,10 @@
                                 'delete',
                                 'is-danger'
                             )
-                            .then(() => BG.removeGroup(group.id));
+                            .then(_removeGroup);
                     }
                 } else {
-                    BG.removeGroup(group.id);
+                    _removeGroup();
                 }
 
             } else if ('context-show-delete-group-popup' === action) {

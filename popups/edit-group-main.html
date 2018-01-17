@@ -1,8 +1,21 @@
 
+<style type="text/css">
+
+#groupIconColorCircle {
+    width: 14px;
+    height: 14px;
+    display: inline-block;
+    border-radius: 50%;
+    margin-left: 5px;
+    vertical-align: middle;
+}
+
+</style>
+
 <div class="field">
     <label class="label" data-i18n="title"></label>
     <div class="control">
-        <input id="groupTitle" value="{{groupTitle}}" type="text" class="input" maxlength="120" data-i18n="title:placeholder" />
+        <input id="groupTitle" value="{{groupTitle}}" data-auto-focus type="text" class="input" maxlength="120" data-i18n="title:placeholder" />
     </div>
 </div>
 <div class="field">
@@ -27,16 +40,3 @@
         <textarea id="groupCatchTabRules" class="textarea" data-i18n="regexpForTabsPlaceholder:placeholder">{{groupCatchTabRules}}</textarea>
     </div>
 </div>
-
-<style type="text/css">
-
-#groupIconColorCircle {
-    width: 14px;
-    height: 14px;
-    display: inline-block;
-    border-radius: 50%;
-    margin-left: 5px;
-    vertical-align: middle;
-}
-
-</style>

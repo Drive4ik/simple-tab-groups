@@ -11,18 +11,22 @@
 
 <body>
     <div id="stg" class="is-flex is-column">
-        <header id="searchWrapper" class="field">
-            <div class="control is-expanded">
-                <input id="searchTabs" type="text" class="input is-small no-shadow" autocomplete="off" data-i18n="searchTabPlaceholder:placeholder" />
-            </div>
-            <div id="clearSearchTabsButton" class="control is-hidden">
-                <label class="button is-small">
-                    <img class="size-12" src="chrome://browser/skin/stop.svg" alt="" />
-                </label>
+        <header id="searchWrapper">
+            <div class="field">
+                <div class="control is-expanded">
+                    <input id="searchTabs" type="text" class="input is-small no-shadow" autocomplete="off" data-i18n="searchTabPlaceholder:placeholder" />
+                </div>
+                <div id="clearSearchTabsButton" class="control is-hidden">
+                    <label class="button is-small">
+                        <img class="size-12" src="chrome://browser/skin/stop.svg" alt="" />
+                    </label>
+                </div>
             </div>
         </header>
 
         <main id="result" class="is-full-width"></main>
+
+        <div class="spacer"></div>
 
         <footer class="is-flex no-text-select">
             <div class="is-flex is-aligin-items-center manage-groups is-full-height is-full-width" data-action="open-manage-page" data-i18n="manageGroupsTitle:title">
@@ -56,7 +60,7 @@
                 <span class="item-title" data-i18n="goBackToGroupsButtonTitle"></span>
             </div>
 
-            <hr>
+            <div class="hr"></div>
 
             <div class="group-info item no-hover">
                 <div class="item-icon">
@@ -71,7 +75,7 @@
 
             {{tabsListHtml}}
 
-            <hr>
+            <div class="hr"></div>
 
             <div class="create-new-tab">
                 <div class="item" data-action="add-tab" data-group-id="{{group.id}}" data-cookie-store-id="{{cookieStoreId}}" {{newTabContextMenu}}>
@@ -119,10 +123,10 @@
 
     <!-- groups list -->
     <script id="groups-list-tmpl" type="text/template">
-        <div class="groups h-margin-top-10">
+        <div class="groups">
             {{groupsHtml}}
         </div>
-        <hr>
+        <div class="hr"></div>
         <div class="create-new-group">
             <div class="item" data-action="add-group">
                 <div class="item-icon">
@@ -159,7 +163,7 @@
     <menu id="move-tab-to-group-menu" type="context"></menu>
     <script id="move-tab-to-group-menu-tmpl" type="text/template">
         <menuitem data-i18n="setTabIconAsGroupIcon:label" data-action="set-tab-icon-as-group-icon" icon="/icons/image.svg"></menuitem>
-        <hr>
+        <div class="hr"></div>
         <menuitem data-i18n="moveTabToGroupDisabledTitle:label" disabled></menuitem>
         {{groupsMenuItems}}
         <menuitem data-i18n="createNewGroup:label" data-action="move-tab-to-new-group" icon="/icons/group-new.svg"></menuitem>

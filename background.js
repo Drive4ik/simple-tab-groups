@@ -1326,7 +1326,11 @@
         }
 
         // start migration
-        let keysToRemoveFromStorage = [];
+        let keysToRemoveFromStorage = [],
+            removeKey = function(key) {
+                delete data[key];
+                keysToRemoveFromStorage.push(key);
+            };
 
         if (0 > data.version.localeCompare('1.8.1')) {
             result.dataChanged = true;
@@ -1348,8 +1352,7 @@
                 return group;
             });
 
-            delete data.windowsGroup;
-            keysToRemoveFromStorage.push('windowsGroup');
+            removeKey('windowsGroup');
         }
 
         if (0 > data.version.localeCompare('2.1.2')) {
@@ -1370,8 +1373,7 @@
             if ('showGroupCircleInSearchedTab' in data) {
                 result.dataChanged = true;
                 data.showGroupIconWhenSearchATab = data.showGroupCircleInSearchedTab;
-                delete data.showGroupCircleInSearchedTab;
-                keysToRemoveFromStorage.push('showGroupCircleInSearchedTab');
+                removeKey('showGroupCircleInSearchedTab');
             }
         }
 

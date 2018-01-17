@@ -50,6 +50,9 @@ let Popups = {
 
         translatePage();
 
+        let autoFocusEl = $('#' + TEMPORARY_ID).querySelector('[data-auto-focus]');
+        autoFocusEl && autoFocusEl.focus();
+
         return div;
     }
 

@@ -1,5 +1,34 @@
+<style type="text/css">
 
-<div id="editGroupPopup" class="is-flex is-column popup">
+#editGroupPopup {
+    position: fixed;
+    padding: var(--indent) 0;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #ffffff;
+    z-index: 5;
+}
+
+#editGroupPopup h3 {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+#editGroupPopup .body {
+    padding: 0 var(--indent);
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+#editGroupPopup .action-buttons {
+    margin: var(--indent);
+}
+
+</style>
+
+<div id="editGroupPopup">
     <div class="item" data-action="close-popup">
         <span class="item-icon">
             <img class="size-16" src="chrome://browser/skin/arrow-left.svg" alt="" />
@@ -7,7 +36,7 @@
         <span class="item-title" data-i18n="goBackButtonTitle"></span>
     </div>
 
-    <hr>
+    <div class="hr"></div>
 
     <div class="body is-full-width">
         <h3 data-i18n="groupSettings"></h3>
@@ -24,32 +53,3 @@
         </div>
     </div>
 </div>
-
-<style type="text/css">
-
-#editGroupPopup {
-    position: fixed;
-    padding: 10px 0;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: #ffffff;
-    z-index: 5;
-}
-
-#editGroupPopup h3 {
-    font-size: 1.2rem;
-    font-weight: bold;
-}
-
-#editGroupPopup .body {
-    padding: 0 10px;
-    overflow-y: auto;
-}
-
-#editGroupPopup .action-buttons {
-    margin: 10px 10px 0 10px;
-}
-
-</style>
