@@ -26,12 +26,15 @@ const EXTENSION_NAME = 'Simple Tab Groups',
         individualWindowForEachGroup: false,
         openNewWindowWhenCreateNewGroup: false,
 
+        hotkeys: [],
+
         enableKeyboardShortcutLoadNextPrevGroup: true,
         enableKeyboardShortcutLoadByIndexGroup: true,
     },
-    onlyOptionsKeys = (function() {
+    onlyBoolOptionsKeys = (function() {
         return Object.keys(DEFAULT_OPTIONS).filter(key => 'boolean' === typeof DEFAULT_OPTIONS[key]);
-    })();
+    })(),
+    allOptionsKeys = onlyBoolOptionsKeys.concat(['hotkeys']);
 
 let $ = document.querySelector.bind(document),
     $$ = selector => Array.from(document.querySelectorAll(selector)),
@@ -340,17 +343,17 @@ let $ = document.querySelector.bind(document),
             });
     },
     storage = { // TODO: move to another file
-        get(keys) {
-            return browser.storage.local.get(keys)
+        get(data) {
+            return browser.storage.local.get(data)
                 .then(function(result) {
-                    if (null === keys) {
+                    if (null === data) {
                         result = Object.assign({}, DEFAULT_OPTIONS, result);
-                    } else if ('string' === type(keys)) {
-                        if (undefined === result[keys]) {
-                            result[keys] = DEFAULT_OPTIONS[keys];
+                    } else if ('string' === type(data)) {
+                        if (undefined === result[data]) {
+                            result[data] = DEFAULT_OPTIONS[data];
                         }
                     } else if (Array.isArray(keys)) {
-                        keys.forEach(function(key) {
+                        data.forEach(function(key) {
                             if (undefined === result[key]) {
                                 result[key] = DEFAULT_OPTIONS[key];
                             }
@@ -362,14 +365,16 @@ let $ = document.querySelector.bind(document),
         },
         clear: browser.storage.local.clear,
         remove: browser.storage.local.remove,
-        set(keys) {
-            return browser.storage.local.set(keys)
+        set(data) {
+            return browser.storage.local.set(data)
                 .then(function() {
                     let eventObj = {},
-                        doCallEvent = false;
+                        doCallEvent = false,
+                        optionsKeys = Object.keys(data).filter(key => allOptionsKeys.includes(key));
 
-                    if (onlyOptionsKeys.some(key => key in keys)) {
-                        doCallEvent = eventObj.optionsUpdated = true;
+                    if (optionsKeys.length) {
+                        eventObj.optionsUpdated = optionsKeys;
+                        doCallEvent = true;
                     }
 
                     if (doCallEvent) {

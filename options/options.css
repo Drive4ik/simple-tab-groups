@@ -41,6 +41,10 @@ hr {
     border-top: 1px solid #e3e3e3;
 }
 
+.cursor-pointer {
+    cursor: pointer;
+}
+
 .is-hidden {
     display: none !important;
 }
@@ -79,3 +83,56 @@ hr {
 .is-flex > .is-end {
     align-self: flex-end;
 }
+
+
+label {
+    display: inline-block;
+}
+
+label:not(:last-child) {
+    margin-bottom: 5px;
+}
+
+.hotkeys {
+    margin-bottom: 10px;
+}
+
+
+.hotkey {
+    display: flex;
+    align-items: center;
+}
+
+.hotkey:not(:last-child) {
+    margin-bottom: 10px;
+}
+
+.hotkey > :not(:last-child) {
+    margin-right: 5px;
+}
+
+.hotkey > .control {
+    width: 200px;
+}
+
+.hotkey > .delete-button {
+    line-height: 0;
+}
+
+.hotkey > .notification {
+    margin: 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

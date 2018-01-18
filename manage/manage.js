@@ -47,7 +47,7 @@
         .then(addEvents);
 
     async function loadOptions() {
-        options = await storage.get(onlyOptionsKeys);
+        options = await storage.get(onlyBoolOptionsKeys);
     }
 
     function addEvents() {
@@ -230,15 +230,11 @@
     }
 
     function render(templateId, data) {
-        let tmplHtml = null;
-
-        if (templates[templateId]) {
-            tmplHtml = templates[templateId];
-        } else {
-            tmplHtml = templates[templateId] = $('#' + templateId).innerHTML;
+        if (!templates[templateId]) {
+            templates[templateId] = $('#' + templateId).innerHTML;
         }
 
-        return format(tmplHtml, data);
+        return format(templates[templateId], data);
     }
 
     function setHtml(id, html, doTranslatePage = true) {

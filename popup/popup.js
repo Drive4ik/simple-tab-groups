@@ -37,7 +37,7 @@
         .then(addEvents);
 
     function loadOptions() {
-        return storage.get(onlyOptionsKeys).then(result => options = result);
+        return storage.get(onlyBoolOptionsKeys).then(result => options = result);
     }
 
     function addEvents() {
@@ -380,15 +380,11 @@
     }
 
     function render(templateId, data) {
-        let tmplHtml = null;
-
-        if (templates[templateId]) {
-            tmplHtml = templates[templateId];
-        } else {
-            tmplHtml = templates[templateId] = $('#' + templateId).innerHTML;
+        if (!templates[templateId]) {
+            templates[templateId] = $('#' + templateId).innerHTML;
         }
 
-        return format(tmplHtml, data);
+        return format(templates[templateId], data);
     }
 
     function setHtml(id, html, doTranslatePage = true) {

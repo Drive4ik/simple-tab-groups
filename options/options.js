@@ -9,9 +9,18 @@
         return $('#simple-tab-groups-options')[INNER_HTML] = 'Please, update addon to latest version';
     }
 
-    let $on = on.bind({});
+    let templates = {},
+        $on = on.bind({});
 
-    $on('change', '#' + onlyOptionsKeys.join(', #'), async function() {
+    function render(templateId, data) {
+        if (!templates[templateId]) {
+            templates[templateId] = $('#' + templateId).innerHTML;
+        }
+
+        return format(templates[templateId], data);
+    }
+
+    $on('change', '#' + onlyBoolOptionsKeys.join(', #'), async function() {
         let options = {};
 
         options[this.id] = this.checked;
@@ -176,12 +185,57 @@
         $('#openGroupAfterChange').disabled = $('#closePopupAfterChangeGroup').checked;
     }
 
+    function renderHotKeys(hotkeys) {
+        let hotkeysHtml = null,
+            groups = BG.getGroups();
+
+        hotkeysHtml = hotkeys.map(function(hotkey, index) {
+            let hotkeyData = {
+                index: index,
+                hotkeyValue: transformHotkeyToText(hotkey),
+                action: {},
+                description: getDescriptionForHotkey(hotkey),
+            };
+
+
+
+            return render('hotkey-tmpl', hotkeyData);
+        });
+    }
+
+    function transformHotkeyToText(hotkey) {
+        let result = [],
+            key = hotkey.key === ' ' ? 'Space' : hotkey.key.toUpperCase();
+
+        if (hotkey.ctrlKey) {
+            result.push('Control');
+        }
+
+        if (hotkey.shiftKey) {
+            result.push('Shift');
+        }
+
+        if (hotkey.altKey) {
+            result.push('Alt');
+        }
+
+        result.push(key);
+
+        return result.join(' + ');
+    }
+
+    function getDescriptionForHotkey(hotkey) {
+        return 'description';
+    }
+
     function loadOptions() {
-        storage.get(onlyOptionsKeys)
+        storage.get(allOptionsKeys)
             .then(function(options) {
-                onlyOptionsKeys.forEach(function(key) {
+                onlyBoolOptionsKeys.forEach(function(key) {
                     $('#' + key).checked = options[key];
                 });
+
+                renderHotKeys(options.hotkeys);
             })
             .then(checkEnabledCheckboxes)
             .then(translatePage);
