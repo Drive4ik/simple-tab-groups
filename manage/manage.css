@@ -6,7 +6,7 @@
 }
 
 html {
-    font-family: Arial;
+    font-family: Segoe UI, Arial;
     font-size: 14px;
 }
 
@@ -349,7 +349,7 @@ img {
 }
 
 #result.grid > .group .tab > .title {
-    line-height: 1em;
+    line-height: 1.3em;
     position: absolute;
     left: var(--tab-inner-padding);
     right: var(--tab-inner-padding);

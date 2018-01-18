@@ -4,13 +4,18 @@ if (window.location.search.length) {
         title = params.get('title') || 'New tab',
         favIconUrl = params.get('favIconUrl');
 
-    document.getElementById('title').innerText = title || url;
+    document.title = title || url;
 
     if (favIconUrl) {
         document.getElementById('favIconUrl').href = favIconUrl;
     }
 
     window.onfocus = window.onmousemove = () => window.location.href = url;
+
+    if (!document.hidden) {
+        window.onfocus();
+    }
 } else {
     window.location.href = 'about:blank';
 }
+
