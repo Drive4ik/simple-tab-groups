@@ -80,16 +80,6 @@
         "description": "Create new group if tab is moved to new window"
     },
 
-    "enableKeyboardShortcutLoadNextPrevGroup": {
-        "message": "啟用切換至下一個及上一個分頁的快捷鍵 <code>Ctrl+Shift+></code> 和 <code>Ctrl+Shift+<</code>",
-        "description": "Enable keyboard shortcuts for next and previous group. i.e. Ctrl+Shift+> and Ctrl+Shift+<"
-    },
-
-    "enableKeyboardShortcutLoadByIndexGroup": {
-        "message": "啟用切換分頁的快捷鍵 <code>Ctrl+Shift+[1-9]</code>",
-        "description": "Enable keyboard shortcuts for switch to tab. i.e. Ctrl+Shift+[1-9]"
-    },
-
     "importSettingsOldTabGroupsAddon": {
         "message": "匯入傳統套件 \"Tab Groups\" 的設定",
         "description": "Import settings from old \"Tab Groups\" add-on"

@@ -1167,42 +1167,6 @@
         loadGroup(_groups[groupIndex].windowId, nextGroupIndex);
     }
 
-    async function loadGroupByIndex(groupIndex) {
-        if (!_groups[groupIndex]) {
-            return;
-        }
-
-        let win = await getWindow();
-        loadGroup(win.id, groupIndex);
-    }
-
-    async function initBrowserCommands() {
-        browser.commands.onCommand.removeListener(browserCommandsLoadNextPrevGroupHandler);
-        browser.commands.onCommand.removeListener(browserCommandsLoadByIndexGroupHandler);
-
-        let options = await storage.get(['enableKeyboardShortcutLoadNextPrevGroup', 'enableKeyboardShortcutLoadByIndexGroup'])
-
-        if (options.enableKeyboardShortcutLoadNextPrevGroup) {
-            browser.commands.onCommand.addListener(browserCommandsLoadNextPrevGroupHandler);
-        }
-
-        if (options.enableKeyboardShortcutLoadByIndexGroup) {
-            browser.commands.onCommand.addListener(browserCommandsLoadByIndexGroupHandler);
-        }
-    }
-
-    function browserCommandsLoadNextPrevGroupHandler(command) {
-        if ('group-prev' === command || 'group-next' === command) {
-            loadGroupPosition(command.split('-').pop());
-        }
-    }
-
-    function browserCommandsLoadByIndexGroupHandler(command) {
-        if (command.startsWith('group-index')) {
-            loadGroupByIndex(command.split('-').pop() - 1);
-        }
-    }
-
     function sortGroups(vector = 'asc') {
         if (!['asc', 'desc'].includes(vector)) {
             return;
@@ -1255,6 +1219,60 @@
         });
     }
 
+    async function openManageGroups(windowScreen) {
+        let manageUrl = browser.extension.getURL('/manage/manage.html'),
+            options = await storage.get('openManageGroupsInTab'),
+            currentWindow = await getWindow();
+
+        if (options.openManageGroupsInTab) {
+            let tabs = await browser.tabs.query({
+                windowId: currentWindow.id,
+                url: manageUrl,
+            });
+
+            if (tabs.length) { // if manage tab is found
+                browser.tabs.update(tabs[0].id, {
+                    active: true,
+                });
+            } else {
+                browser.tabs.create({
+                    active: true,
+                    url: manageUrl,
+                });
+            }
+        } else {
+            let allWindows = await browser.windows.getAll({
+                populate: true,
+                windowTypes: ['popup'],
+            });
+
+            let isFoundWindow = allWindows.some(function(win) {
+                if ('popup' === win.type && 1 === win.tabs.length && manageUrl === win.tabs[0].url) { // if manage popup is now open
+                    BG.setFocusOnWindow(win.id);
+                    return true;
+                }
+            });
+
+            if (isFoundWindow) {
+                return;
+            }
+
+            let createData = {
+                url: manageUrl,
+                type: 'popup',
+            };
+
+            if (windowScreen) {
+                createData.left = 0;
+                createData.top = 0;
+                createData.width = windowScreen.availWidth;
+                createData.height = windowScreen.availHeight;
+            }
+
+            browser.windows.create(createData);
+        }
+    }
+
     browser.menus.create({
         id: 'openSettings',
         title: browser.i18n.getMessage('openSettings'),
@@ -1267,40 +1285,48 @@
     });
 
     browser.runtime.onMessage.addListener(async function(request, sender, sendResponse) {
-console.log('request.runAction', request);
+        if (request.optionsUpdated && request.optionsUpdated.includes('hotkeys')) {
+            let customRequest = {
+                updateHotkeys: true,
+            };
+
+            browser.tabs.query({}).then(tabs => tabs.forEach(tab => !tab.incognito && browser.tabs.sendMessage(tab.id, customRequest)));
+        }
+
         if (request.runAction) {
             let currentWindow = await getWindow(),
                 currentGroup = _groups.find(gr => gr.windowId === currentWindow.id);
 
             if ('load-next-group' === request.runAction.id) {
-                if (!currentGroup) {
-                    return;
+                if (currentGroup) {
+                    loadGroupPosition('next');
                 }
-
-                loadGroupPosition('next');
             } else if ('load-prev-group' === request.runAction.id) {
-                if (!currentGroup) {
-                    return;
+                if (currentGroup) {
+                    loadGroupPosition('prev');
                 }
-
-                loadGroupPosition('prev');
+            } else if ('load-first-group' === request.runAction.id) {
+                if (_groups[0]) {
+                    loadGroup(currentWindow.id, 0);
+                }
+            } else if ('load-last-group' === request.runAction.id) {
+                if (_groups[_groups.length - 1]) {
+                    loadGroup(currentWindow.id, _groups.length - 1);
+                }
             } else if ('load-custom-group' === request.runAction.id) {
-                let groupIndex = _groups.findIndex(gr => gr.id === request.runAction.groupId)
-                if (-1 === groupIndex) {
-                    return;
-                }
+                let groupIndex = _groups.findIndex(gr => gr.id === request.runAction.groupId);
 
-                loadGroup(currentWindow.id, groupIndex);
+                if (-1 !== groupIndex) {
+                    loadGroup(currentWindow.id, groupIndex);
+                }
             } else if ('add-new-group' === request.runAction.id) {
                 addGroup();
             } else if ('delete-current-group' === request.runAction.id) {
-                if (!currentGroup) {
-                    return;
+                if (currentGroup) {
+                    removeGroup(currentGroup.id);
                 }
-
-                removeGroup(currentGroup.id);
             } else if ('open-manage-groups' === request.runAction.id) {
-                // openManageGroups();
+                openManageGroups();
             }
         }
     });
@@ -1308,7 +1334,7 @@ console.log('request.runAction', request);
     window.background = {
         inited: false,
 
-        initBrowserCommands,
+        openManageGroups,
 
         getGroups: () => _groups,
 
@@ -1510,7 +1536,6 @@ console.log('request.runAction', request);
             updateNewTabUrls();
             updateBrowserActionData();
             createMoveTabMenus();
-            initBrowserCommands();
             addEvents();
         })
         .catch(notify);

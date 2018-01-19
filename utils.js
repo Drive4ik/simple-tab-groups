@@ -26,15 +26,28 @@ const EXTENSION_NAME = 'Simple Tab Groups',
         individualWindowForEachGroup: false,
         openNewWindowWhenCreateNewGroup: false,
 
-        hotkeys: [{
-            ctrlKey: true,
-            shiftKey: true,
-            key: 'e',
-            action: {},
-        }],
-
-        enableKeyboardShortcutLoadNextPrevGroup: true,
-        enableKeyboardShortcutLoadByIndexGroup: true,
+        hotkeys: [
+            {
+                ctrlKey: true,
+                shiftKey: false,
+                altKey: false,
+                key: '`',
+                keyCode: 192,
+                action: {
+                    id: 'load-next-group',
+                },
+            },
+            {
+                ctrlKey: true,
+                shiftKey: true,
+                altKey: false,
+                key: '~',
+                keyCode: 192,
+                action: {
+                    id: 'load-prev-group',
+                },
+            },
+        ],
     },
     onlyBoolOptionsKeys = (function() {
         return Object.keys(DEFAULT_OPTIONS).filter(key => 'boolean' === typeof DEFAULT_OPTIONS[key]);
@@ -383,22 +396,21 @@ let $ = document.querySelector.bind(document),
         },
         clear: browser.storage.local.clear,
         remove: browser.storage.local.remove,
-        set(data) {
-            return browser.storage.local.set(data)
-                .then(function() {
-                    let eventObj = {},
-                        doCallEvent = false,
-                        optionsKeys = Object.keys(data).filter(key => allOptionsKeys.includes(key));
+        async set(data) {
+            await browser.storage.local.set(data);
 
-                    if (optionsKeys.length) {
-                        eventObj.optionsUpdated = optionsKeys;
-                        doCallEvent = true;
-                    }
+            let eventObj = {},
+                doCallEvent = false,
+                optionsKeys = Object.keys(data).filter(key => allOptionsKeys.includes(key));
 
-                    if (doCallEvent) {
-                        browser.runtime.sendMessage(eventObj);
-                    }
-                });
+            if (optionsKeys.length) {
+                eventObj.optionsUpdated = optionsKeys;
+                doCallEvent = true;
+            }
+
+            if (doCallEvent) {
+                browser.runtime.sendMessage(eventObj);
+            }
         },
     },
     createGroupSvgIconUrl = function(group) {

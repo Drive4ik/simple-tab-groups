@@ -163,10 +163,11 @@
     <menu id="move-tab-to-group-menu" type="context"></menu>
     <script id="move-tab-to-group-menu-tmpl" type="text/template">
         <menuitem data-i18n="setTabIconAsGroupIcon:label" data-action="set-tab-icon-as-group-icon" icon="/icons/image.svg"></menuitem>
-        <div class="hr"></div>
-        <menuitem data-i18n="moveTabToGroupDisabledTitle:label" disabled></menuitem>
-        {{groupsMenuItems}}
-        <menuitem data-i18n="createNewGroup:label" data-action="move-tab-to-new-group" icon="/icons/group-new.svg"></menuitem>
+        <hr>
+        <menu data-i18n="moveTabToGroupDisabledTitle:label">
+            {{groupsMenuItems}}
+            <menuitem data-i18n="createNewGroup:label" data-action="move-tab-to-new-group" icon="/icons/group-new.svg"></menuitem>
+        </menu>
     </script>
     <script id="move-tab-to-group-menu-item-tmpl" type="text/template">
         <menuitem data-action="move-tab-to-group" data-group-id="{{groupId}}" icon="{{icon}}" label="{{title}}" {{disabled}}></menuitem>
@@ -180,6 +181,7 @@
     <script type="text/javascript" src="/utils.js"></script>
     <script type="text/javascript" src="/popups/popups.js"></script>
     <script type="text/javascript" src="/drag-and-drop.js"></script>
+    <script type="text/javascript" src="/js/hotkeys.js"></script>
     <script type="text/javascript" src="popup.js"></script>
 </body>
 

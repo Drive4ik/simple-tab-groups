@@ -33,10 +33,6 @@
         if ('enableFastGroupSwitching' === this.id && !this.checked) {
             BG.updateNewTabUrls();
         }
-
-        if (['enableKeyboardShortcutLoadNextPrevGroup', 'enableKeyboardShortcutLoadByIndexGroup'].includes(this.id)) {
-            BG.initBrowserCommands();
-        }
     });
 
     $on('click', '#importAddonSettings', async function() {
@@ -187,36 +183,49 @@
     }
 
     function saveHotkeys() {
+        let filteredHotkeys = options.hotkeys.filter(function(hotkey) {
+            let ok = (hotkey.keyCode || hotkey.key) && hotkey.action.id && (hotkey.ctrlKey || hotkey.shiftKey || hotkey.altKey);
+
+            if (ok && 'load-custom-group' === hotkey.action.id && !hotkey.action.groupId) {
+                ok = false;
+            }
+
+            return ok;
+        });
+
         storage.set({
-            hotkeys: options.hotkeys.filter(h => h.key !== '' && h.action.id && (h.ctrlKey || h.shiftKey || h.altKey)),
+            hotkeys: filteredHotkeys,
         });
     }
 
-    $on('keypress', '[data-hotkey-input]', function(e) {
-        let [hotkeyNode, hotkeyIndex] = getHotkeyNode(e);
+    $on('keydown', '[data-hotkey-input]', function(e) {
+        let [hotkeyNode, hotkeyIndex] = getHotkeyNode(e),
+            hotkey = options.hotkeys[hotkeyIndex];
 
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
 
-        if ((e.ctrlKey || e.shiftKey || e.altKey) && e.key &&
+        if ((e.ctrlKey || e.shiftKey || e.altKey) && ![16, 17, 18].includes(e.keyCode) &&
             !(
-                options.hotkeys[hotkeyIndex].ctrlKey === e.ctrlKey &&
-                options.hotkeys[hotkeyIndex].shiftKey === e.shiftKey &&
-                options.hotkeys[hotkeyIndex].altKey === e.altKey &&
-                options.hotkeys[hotkeyIndex].charCode === e.charCode
+                hotkey.ctrlKey === e.ctrlKey &&
+                hotkey.shiftKey === e.shiftKey &&
+                hotkey.altKey === e.altKey &&
+                (
+                    (hotkey.keyCode && hotkey.keyCode === e.keyCode) ||
+                    (!e.keyCode && !hotkey.keyCode && hotkey.key.toLowerCase() === e.key.toLowerCase())
+                )
             )
         ) {
-
-            Object.assign(options.hotkeys[hotkeyIndex], {
+            Object.assign(hotkey, {
                 ctrlKey: e.ctrlKey,
                 shiftKey: e.shiftKey,
                 altKey: e.altKey,
                 key: e.key,
-                charCode: e.charCode,
+                keyCode: e.keyCode,
             });
 
-            e.target.value = transformHotkeyToText(options.hotkeys[hotkeyIndex]);
+            e.target.value = transformHotkeyToText(hotkey);
 
             saveHotkeys();
         }
@@ -251,9 +260,7 @@
     });
 
     $on('click', '#addHotKey', function() {
-        let hotkey = {
-            action: {},
-        };
+        let hotkey = createHotkey();
 
         options.hotkeys.push(hotkey);
 
@@ -279,16 +286,19 @@
 
     function getHotkeyNode(e) {
         let hotkeyNode = e.target.closest('[data-hotkey]'),
-            hotkeyIndex = Array.from(hotkeyNode.parentNode.childNodes).indexOf(hotkeyNode);
+            hotkeyIndex = Array.from(hotkeyNode.parentNode.children).indexOf(hotkeyNode);
 
         return [hotkeyNode, hotkeyIndex];
     }
 
-    function createHotkeyHtml(hotkey = {}, groups) {
-        if (!hotkey.action) {
-            hotkey.action = {};
-        }
+    function createHotkey() {
+        return {
+            key: '',
+            action: {},
+        };
+    }
 
+    function createHotkeyHtml(hotkey = {}, groups) {
         let hotkeyData = {
             hotkeyValue: transformHotkeyToText(hotkey),
             hotkeyActionsHtml: createHotkeyActionsHtml(hotkey),
@@ -302,7 +312,7 @@
 
     function createHotkeyActionsHtml(hotkey) {
         let findSelectedAction = false,
-            hotkeyActionsHtml = ['load-next-group', 'load-prev-group', 'load-custom-group', 'add-new-group', 'delete-current-group', 'open-manage-groups']
+            hotkeyActionsHtml = ['load-next-group', 'load-prev-group', 'load-first-group', 'load-last-group', 'load-custom-group', 'add-new-group', 'delete-current-group', 'open-manage-groups']
             .map(function(actionId) {
                 let selected = actionId === hotkey.action.id ? 'selected' : '';
 
@@ -356,7 +366,7 @@
 
     function transformHotkeyToText(hotkey) {
         let result = [],
-            key = hotkey.key === ' ' ? 'Space' : (hotkey.key || '').toUpperCase();
+            key = hotkey.key === ' ' ? 'Space' : hotkey.key;
 
         if (hotkey.ctrlKey) {
             result.push('Control');
@@ -370,14 +380,18 @@
             result.push('Alt');
         }
 
-        result.push(key);
+        result.push(1 === key.length ? key.toUpperCase() : key);
 
         return result.join(' + ');
     }
 
     function getDescriptionForHotkey(hotkey) {
+        if ('delete-current-group' === hotkey.action.id) {
+            return browser.i18n.getMessage('hotkeyActionDescriptionDeleteCurrentGroup');
+        }
+
         return '';
-        // return browser.i18n.getMessage('hotkeyActionDescription' + capitalize(toCamelCase(hotkey.action.id || '')));
+        // return browser.i18n.getMessage('hotkeyActionDescription' + capitalize(toCamelCase(hotkey.action.id)));
     }
 
     function loadOptions() {
@@ -388,7 +402,7 @@
                 onlyBoolOptionsKeys.forEach(function(key) {
                     $('#' + key).checked = options[key];
                 });
-console.log('options.hotkeys', options.hotkeys);
+
                 renderHotkeys();
             })
             .then(checkEnabledCheckboxes)

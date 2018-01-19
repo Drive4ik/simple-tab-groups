@@ -84,42 +84,24 @@
             </label>
         </div>
 
-
-
-        <!-- TODO remove this -->
-        <div class="field">
-            <label class="checkbox">
-                <input id="enableKeyboardShortcutLoadNextPrevGroup" type="checkbox" />
-                <span data-i18n="enableKeyboardShortcutLoadNextPrevGroup:innerHTML"></span>
-            </label>
-        </div>
-        <div class="field">
-            <label class="checkbox">
-                <input id="enableKeyboardShortcutLoadByIndexGroup" type="checkbox" />
-                <span data-i18n="enableKeyboardShortcutLoadByIndexGroup:innerHTML"></span>
-            </label>
-        </div>
-
-
         <hr>
 
         <div>
-            <label class="text-bold">Hotkeys</label>
-            <div class="h-margin-bottom-10">Hotkeys description</div>
+            <label class="text-bold" data-i18n="hotkeysTitle"></label>
+            <div class="h-margin-bottom-10" data-i18n="hotkeysDescription:innerHTML"></div>
             <div id="hotkeys" class="hotkeys"></div>
             <div>
                 <div class="control">
                     <button id="addHotKey" class="button">
                         <img class="size-14" src="/icons/new.svg" alt="" />
-                        <span class="h-margin-left-5" data-i18na="addHotKeyButton">Add hotkey</span>
+                        <span class="h-margin-left-5" data-i18n="addHotKeyButton"></span>
                     </button>
                 </div>
             </div>
         </div>
 
-
-
         <hr>
+
         <div>
             <div class="h-margin-bottom-20">
                 <div class="text-bold h-margin-bottom-5" data-i18n="exportAddonSettingsTitle"></div>
@@ -166,14 +148,14 @@
     <script id="hotkey-tmpl" type="text/template">
         <div class="hotkey" data-hotkey>
             <div class="control">
-                <input type="text" data-hotkey-input value="{{hotkeyValue}}" autocomplete="off" class="input is-small" data-i18n-aaa="hotkeyPlaceholder:placeholder" />
+                <input type="text" data-hotkey-input value="{{hotkeyValue}}" autocomplete="off" class="input is-small" data-i18n="hotkeyPlaceholder:placeholder" />
             </div>
             <div class="action">
                 <select data-hotkey-action>{{hotkeyActionsHtml}}</select>
                 <select data-hotkey-custom-group class="{{groupsSelectClass}}">{{groupsOptionsHtml}}</select>
             </div>
             <div class="delete-button">
-                <img data-hotkey-delete-hotkey class="size-16 cursor-pointer" title="Delete hotkey" src="/icons/delete.svg" />
+                <img data-hotkey-delete-hotkey class="size-16 cursor-pointer" data-i18n="deleteHotKeyButton:title" src="/icons/delete.svg" />
             </div>
             <label data-hotkey-action-description class="notification help is-danger">{{description}}</label>
         </div>

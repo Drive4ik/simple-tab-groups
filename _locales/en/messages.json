@@ -155,16 +155,6 @@
         "description": "Open new window when create new group"
     },
 
-    "enableKeyboardShortcutLoadNextPrevGroup": {
-        "message": "Enable keyboard shortcuts for next and previous group. i.e. <code>Ctrl+Shift+></code> and <code>Ctrl+Shift+<</code>",
-        "description": "Enable keyboard shortcuts for next and previous group. i.e. Ctrl+Shift+> and Ctrl+Shift+<"
-    },
-
-    "enableKeyboardShortcutLoadByIndexGroup": {
-        "message": "Enable keyboard shortcuts for switch to tab. i.e. <code>Ctrl+Shift+[1-9]</code>",
-        "description": "Enable keyboard shortcuts for switch to tab. i.e. Ctrl+Shift+[1-9]"
-    },
-
     "exportAddonSettingsTitle": {
         "message": "Backup your Simple Tab Groups",
         "description": "Backup your Simple Tab Groups"
@@ -389,6 +379,31 @@
         "description": "Regular exceptions helper"
     },
 
+    "hotkeysTitle": {
+        "message": "Hotkeys",
+        "description": "Hotkeys"
+    },
+
+    "hotkeysDescription": {
+        "message": "Hotkeys description",
+        "description": "Hotkeys description"
+    },
+
+    "addHotKeyButton": {
+        "message": "Add hotkey",
+        "description": "Add hotkey"
+    },
+
+    "deleteHotKeyButton": {
+        "message": "Delete hotkey",
+        "description": "Delete hotkey"
+    },
+
+    "hotkeyPlaceholder": {
+        "message": "Press keys here",
+        "description": "Press keys here"
+    },
+
     "selectAction": {
         "message": "Select action",
         "description": "Select action"
@@ -407,6 +422,16 @@
     "hotkeyActionTitleLoadPrevGroup": {
         "message": "Load previous group",
         "description": "Load previous group"
+    },
+
+    "hotkeyActionTitleLoadFirstGroup": {
+        "message": "Load first group",
+        "description": "Load first group"
+    },
+
+    "hotkeyActionTitleLoadLastGroup": {
+        "message": "Load last group",
+        "description": "Load last group"
     },
 
     "hotkeyActionTitleLoadCustomGroup": {
