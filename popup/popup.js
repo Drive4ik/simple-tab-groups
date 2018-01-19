@@ -152,7 +152,7 @@
                 if (win) {
                     BG.setFocusOnWindow(group.windowId);
                 } else {
-                    win = await browser.windows.create({
+                    win = await BG.createWindow({
                         state: 'maximized',
                     });
 

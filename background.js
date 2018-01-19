@@ -22,6 +22,18 @@
         } catch (e) {}
     }
 
+    async function createWindow(createData = {}) {
+        let win = await browser.windows.create(createData);
+
+        if ('normal' === win.type) {
+            lastFocusedNormalWindow = win;
+        }
+
+        lastFocusedWinId = win.id;
+
+        return win;
+    }
+
     function setFocusOnWindow(windowId) {
         return browser.windows.update(windowId, {
             focused: true,
@@ -103,7 +115,7 @@
         _groups.push(createGroup(options.lastCreatedGroupPosition, windowId));
 
         if (options.openNewWindowWhenCreateNewGroup && !windowId) {
-            win = await browser.windows.create({});
+            win = await createWindow();
             _groups[newGroupIndex].windowId = win.id;
         }
 
@@ -150,60 +162,64 @@
         _groups.splice(groupIndex, 1);
 
         saveGroupsToStorage();
-        updateMoveTabMenus();
 
         let oldGroupWindow = await getWindow(groupWindowId);
 
         if (!oldGroupWindow) {
+            updateMoveTabMenus();
             return;
         }
 
         let currentWindow = await getWindow();
 
-        if (currentWindow.id === groupWindowId) {
-            let newGroupIndex = (groupIndex > _groups.length - 1) ? (_groups.length - 1) : groupIndex;
+        if (currentWindow.id !== groupWindowId) {
+            updateMoveTabMenus();
+            return await browser.windows.remove(groupWindowId);
+        }
 
-            if (-1 === newGroupIndex) {
-                let windows = await browser.windows.getAll({
-                        windowTypes: ['normal'],
-                    }),
-                    otherWindow = windows.find(win => win.type === 'normal' && win.id !== groupWindowId);
+        // currentWindow === groupWindow
+        let newGroupIndex = (groupIndex > _groups.length - 1) ? (_groups.length - 1) : groupIndex,
+            windows = await browser.windows.getAll({
+                windowTypes: ['normal'],
+            }),
+            otherWindow = windows.find(win => win.type === 'normal' && win.id !== currentWindow.id);
 
-                if (otherWindow) {
-                    browser.windows.remove(groupWindowId);
-                    await setFocusOnWindow(otherWindow.id);
-                } else {
-                    let tabs = await getTabs(groupWindowId);
+        if (-1 === newGroupIndex) {
+            if (otherWindow) {
+                await browser.windows.remove(currentWindow.id);
+                await setFocusOnWindow(otherWindow.id);
+            } else {
+                let tabs = await getTabs(currentWindow.id);
 
-                    if (tabs.length) {
-                        let isHasAnotherTabs = await hasAnotherTabs(groupWindowId);
+                if (tabs.length) {
+                    let isHasAnotherTabs = await hasAnotherTabs(currentWindow.id);
 
-                        if (!isHasAnotherTabs) {
-                            await browser.tabs.create({
-                                active: true,
-                            });
-                        }
-
-                        await browser.tabs.remove(tabs.map(t => t.id));
+                    if (!isHasAnotherTabs) {
+                        await browser.tabs.create({
+                            active: true,
+                        });
                     }
+
+                    await browser.tabs.remove(tabs.map(t => t.id));
                 }
 
                 updateMoveTabMenus();
                 updateBrowserActionData();
-            } else {
-                let newGroupWindow = await getWindowByGroup(_groups[newGroupIndex]);
-
-                if (newGroupWindow) {
-                    browser.windows.remove(groupWindowId);
-                    await setFocusOnWindow(newGroupWindow.id);
-                    updateMoveTabMenus(newGroupWindow.id);
-                    updateBrowserActionData(newGroupWindow.id);
-                } else {
-                    await loadGroup(groupWindowId, newGroupIndex);
-                }
             }
         } else {
-            await browser.windows.remove(groupWindowId);
+            let newGroupWindow = await getWindowByGroup(_groups[newGroupIndex]);
+
+            if (newGroupWindow) {
+                await browser.windows.remove(currentWindow.id);
+                await setFocusOnWindow(newGroupWindow.id);
+            } else {
+                if (otherWindow) {
+                    await browser.windows.remove(currentWindow.id);
+                    await setFocusOnWindow(otherWindow.id);
+                } else {
+                    await loadGroup(currentWindow.id, newGroupIndex, undefined, true);
+                }
+            }
         }
     }
 
@@ -307,7 +323,7 @@
         }
     }
 
-    async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
+    async function loadGroup(windowId, groupIndex, activeTabIndex = -1, anywayLoadInThisWindowId = false) {
         if (!windowId) { // if click on notification after moving tab to window which is now closed :)
             throw Error('loadGroup: wrong windowId');
         }
@@ -350,10 +366,10 @@
 
                 let options = await storage.get('individualWindowForEachGroup');
 
-                if (options.individualWindowForEachGroup) {
+                if (options.individualWindowForEachGroup && !anywayLoadInThisWindowId) {
                     delete currentlyLoadingGroups[windowId];
 
-                    let win = await browser.windows.create({});
+                    let win = await createWindow();
                     windowId = win.id;
 
                     currentlyLoadingGroups[windowId] = true;
@@ -787,19 +803,19 @@
         lastFocusedNormalWindow = null; // fix bug with browser.windows.getLastFocused({windowTypes: ['normal']}), maybe find exists bug??
 
     async function onFocusChangedWindow(windowId) {
+        console.log('onFocusChangedWindow', windowId);
+
         if (browser.windows.WINDOW_ID_NONE === windowId) {
             return;
         }
 
-        let win = await browser.windows.getLastFocused({
-            windowTypes: ['normal'],
-        });
+        let win = await getWindow(windowId);
 
         if (win.incognito) {
             browser.browserAction.disable();
             resetBrowserActionData();
             removeMoveTabMenus();
-        } else if (!lastFocusedWinId || lastFocusedWinId !== win.id) {
+        } else if (!lastFocusedWinId || lastFocusedWinId !== windowId) {
             browser.browserAction.enable();
             updateBrowserActionData(windowId);
             updateMoveTabMenus(windowId);
@@ -809,7 +825,7 @@
             lastFocusedNormalWindow = win;
         }
 
-        lastFocusedWinId = win.id;
+        lastFocusedWinId = windowId;
     }
 
     // if oldGroupId === null, move tab from current window without group
@@ -1123,7 +1139,6 @@
         browser.tabs.onUpdated.addListener(onUpdatedTab);
         browser.tabs.onRemoved.addListener(onRemovedTab);
 
-
         browser.tabs.onAttached.addListener(onAttachedTab);
         browser.tabs.onDetached.addListener(onDetachedTab);
 
@@ -1137,7 +1152,6 @@
         browser.tabs.onMoved.removeListener(onMovedTab);
         browser.tabs.onUpdated.removeListener(onUpdatedTab);
         browser.tabs.onRemoved.removeListener(onRemovedTab);
-
 
         browser.tabs.onAttached.removeListener(onAttachedTab);
         browser.tabs.onDetached.removeListener(onDetachedTab);
@@ -1269,7 +1283,7 @@
                 createData.height = windowScreen.availHeight;
             }
 
-            browser.windows.create(createData);
+            createWindow(createData);
         }
     }
 
@@ -1338,6 +1352,7 @@
 
         getGroups: () => _groups,
 
+        createWindow,
         getWindow,
         getWindowByGroup,
 
