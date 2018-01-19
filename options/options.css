@@ -123,6 +123,10 @@ label:not(:last-child) {
     margin: 0;
 }
 
+.hotkey [data-hotkey-custom-group] {
+    max-width: 500px;
+}
+
 
 
 

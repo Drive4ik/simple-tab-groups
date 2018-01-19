@@ -10,6 +10,7 @@
     }
 
     let templates = {},
+        options = null,
         $on = on.bind({});
 
     function render(templateId, data) {
@@ -185,27 +186,177 @@
         $('#openGroupAfterChange').disabled = $('#closePopupAfterChangeGroup').checked;
     }
 
-    function renderHotKeys(hotkeys) {
-        let hotkeysHtml = null,
-            groups = BG.getGroups();
-
-        hotkeysHtml = hotkeys.map(function(hotkey, index) {
-            let hotkeyData = {
-                index: index,
-                hotkeyValue: transformHotkeyToText(hotkey),
-                action: {},
-                description: getDescriptionForHotkey(hotkey),
-            };
-
-
-
-            return render('hotkey-tmpl', hotkeyData);
+    function saveHotkeys() {
+        storage.set({
+            hotkeys: options.hotkeys.filter(h => h.key !== '' && h.action.id && (h.ctrlKey || h.shiftKey || h.altKey)),
         });
+    }
+
+    $on('keypress', '[data-hotkey-input]', function(e) {
+        let [hotkeyNode, hotkeyIndex] = getHotkeyNode(e);
+
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+
+        if ((e.ctrlKey || e.shiftKey || e.altKey) && e.key &&
+            !(
+                options.hotkeys[hotkeyIndex].ctrlKey === e.ctrlKey &&
+                options.hotkeys[hotkeyIndex].shiftKey === e.shiftKey &&
+                options.hotkeys[hotkeyIndex].altKey === e.altKey &&
+                options.hotkeys[hotkeyIndex].charCode === e.charCode
+            )
+        ) {
+
+            Object.assign(options.hotkeys[hotkeyIndex], {
+                ctrlKey: e.ctrlKey,
+                shiftKey: e.shiftKey,
+                altKey: e.altKey,
+                key: e.key,
+                charCode: e.charCode,
+            });
+
+            e.target.value = transformHotkeyToText(options.hotkeys[hotkeyIndex]);
+
+            saveHotkeys();
+        }
+    });
+
+    $on('change', '[data-hotkey-action]', function(e) {
+        let [hotkeyNode, hotkeyIndex] = getHotkeyNode(e),
+            customGroupNode = hotkeyNode.querySelector('[data-hotkey-custom-group]'),
+            descriptionNode = hotkeyNode.querySelector('[data-hotkey-action-description]');
+
+        options.hotkeys[hotkeyIndex].action.id = e.target.value;
+
+        if ('load-custom-group' === options.hotkeys[hotkeyIndex].action.id) {
+            customGroupNode.classList.remove('is-hidden');
+            options.hotkeys[hotkeyIndex].action.groupId = parseInt(customGroupNode.value, 10);
+        } else {
+            delete options.hotkeys[hotkeyIndex].action.groupId;
+            customGroupNode.classList.add('is-hidden');
+        }
+
+        descriptionNode[INNER_HTML] = getDescriptionForHotkey(options.hotkeys[hotkeyIndex]);
+
+        saveHotkeys();
+    });
+
+    $on('change', '[data-hotkey-custom-group]', function(e) {
+        let [hotkeyNode, hotkeyIndex] = getHotkeyNode(e);
+
+        options.hotkeys[hotkeyIndex].action.groupId = parseInt(e.target.value, 10);
+
+        saveHotkeys();
+    });
+
+    $on('click', '#addHotKey', function() {
+        let hotkey = {
+            action: {},
+        };
+
+        options.hotkeys.push(hotkey);
+
+        $('#hotkeys').appendChild(parseHtml(createHotkeyHtml(hotkey, BG.getGroups())));
+
+        saveHotkeys();
+    });
+
+    $on('click', '[data-hotkey-delete-hotkey]', function(e) {
+        let [hotkeyNode, hotkeyIndex] = getHotkeyNode(e);
+
+        options.hotkeys.splice(hotkeyIndex, 1);
+        hotkeyNode.remove();
+
+        saveHotkeys();
+    });
+
+    function renderHotkeys() {
+        let groups = BG.getGroups();
+
+        $('#hotkeys')[INNER_HTML] = options.hotkeys.map(hotkey => createHotkeyHtml(hotkey, groups)).join('');
+    }
+
+    function getHotkeyNode(e) {
+        let hotkeyNode = e.target.closest('[data-hotkey]'),
+            hotkeyIndex = Array.from(hotkeyNode.parentNode.childNodes).indexOf(hotkeyNode);
+
+        return [hotkeyNode, hotkeyIndex];
+    }
+
+    function createHotkeyHtml(hotkey = {}, groups) {
+        if (!hotkey.action) {
+            hotkey.action = {};
+        }
+
+        let hotkeyData = {
+            hotkeyValue: transformHotkeyToText(hotkey),
+            hotkeyActionsHtml: createHotkeyActionsHtml(hotkey),
+            groupsSelectClass: 'load-custom-group' === hotkey.action.id ? '' : 'is-hidden',
+            groupsOptionsHtml: createGroupsOptionsHtml(groups, hotkey),
+            description: getDescriptionForHotkey(hotkey),
+        };
+
+        return render('hotkey-tmpl', hotkeyData);
+    }
+
+    function createHotkeyActionsHtml(hotkey) {
+        let findSelectedAction = false,
+            hotkeyActionsHtml = ['load-next-group', 'load-prev-group', 'load-custom-group', 'add-new-group', 'delete-current-group', 'open-manage-groups']
+            .map(function(actionId) {
+                let selected = actionId === hotkey.action.id ? 'selected' : '';
+
+                if (selected) {
+                    findSelectedAction = true;
+                }
+
+                return render('option-tmpl', {
+                    title: browser.i18n.getMessage('hotkeyActionTitle' + capitalize(toCamelCase(actionId))),
+                    value: actionId,
+                    selected: selected,
+                });
+            });
+
+        if (!findSelectedAction) {
+            hotkeyActionsHtml.unshift(render('option-tmpl', {
+                title: browser.i18n.getMessage('selectAction'),
+                selected: 'selected disabled',
+            }));
+        }
+
+        return hotkeyActionsHtml.join('');
+    }
+
+    function createGroupsOptionsHtml(groups, hotkey) {
+        let findSelectedGroup = false,
+            groupsHtmlArray = groups
+            .map(function(group) {
+                let selected = 'load-custom-group' === hotkey.action.id && group.id === hotkey.action.groupId ? 'selected' : '';
+
+                if (selected) {
+                    findSelectedGroup = true;
+                }
+
+                return render('option-tmpl', {
+                    title: group.title, // TODO safeHtml/unSafeHtml
+                    value: group.id,
+                    selected: selected,
+                });
+            });
+
+        if (!findSelectedGroup) {
+            groupsHtmlArray.unshift(render('option-tmpl', {
+                title: browser.i18n.getMessage('selectGroup'),
+                selected: 'selected disabled',
+            }));
+        }
+
+        return groupsHtmlArray.join('');
     }
 
     function transformHotkeyToText(hotkey) {
         let result = [],
-            key = hotkey.key === ' ' ? 'Space' : hotkey.key.toUpperCase();
+            key = hotkey.key === ' ' ? 'Space' : (hotkey.key || '').toUpperCase();
 
         if (hotkey.ctrlKey) {
             result.push('Control');
@@ -225,17 +376,20 @@
     }
 
     function getDescriptionForHotkey(hotkey) {
-        return 'description';
+        return '';
+        // return browser.i18n.getMessage('hotkeyActionDescription' + capitalize(toCamelCase(hotkey.action.id || '')));
     }
 
     function loadOptions() {
         storage.get(allOptionsKeys)
-            .then(function(options) {
+            .then(function(opt) {
+                options = opt;
+
                 onlyBoolOptionsKeys.forEach(function(key) {
                     $('#' + key).checked = options[key];
                 });
-
-                renderHotKeys(options.hotkeys);
+console.log('options.hotkeys', options.hotkeys);
+                renderHotkeys();
             })
             .then(checkEnabledCheckboxes)
             .then(translatePage);

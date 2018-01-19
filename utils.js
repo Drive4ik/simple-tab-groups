@@ -26,7 +26,12 @@ const EXTENSION_NAME = 'Simple Tab Groups',
         individualWindowForEachGroup: false,
         openNewWindowWhenCreateNewGroup: false,
 
-        hotkeys: [],
+        hotkeys: [{
+            ctrlKey: true,
+            shiftKey: true,
+            key: 'e',
+            action: {},
+        }],
 
         enableKeyboardShortcutLoadNextPrevGroup: true,
         enableKeyboardShortcutLoadByIndexGroup: true,
@@ -262,6 +267,19 @@ let $ = document.querySelector.bind(document),
 
         return data;
     },
+    parseHtml = function(html) {
+        let template = document.createElement('template');
+        template.innerHTML = html;
+        return template.content.firstElementChild;
+    },
+    toCamelCase = function(str) {
+        return str.replace(/^([A-Z])|[\s_-](\w)/g, function(match, p1, p2) {
+            return p2 ? p2.toUpperCase() : p1.toLowerCase();
+        });
+    },
+    capitalize = function(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    },
     checkVisibleElement = function(element) {
         let rect = element.getBoundingClientRect(),
             viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
@@ -352,7 +370,7 @@ let $ = document.querySelector.bind(document),
                         if (undefined === result[data]) {
                             result[data] = DEFAULT_OPTIONS[data];
                         }
-                    } else if (Array.isArray(keys)) {
+                    } else if (Array.isArray(data)) {
                         data.forEach(function(key) {
                             if (undefined === result[key]) {
                                 result[key] = DEFAULT_OPTIONS[key];

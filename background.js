@@ -1266,6 +1266,45 @@
         },
     });
 
+    browser.runtime.onMessage.addListener(async function(request, sender, sendResponse) {
+console.log('request.runAction', request);
+        if (request.runAction) {
+            let currentWindow = await getWindow(),
+                currentGroup = _groups.find(gr => gr.windowId === currentWindow.id);
+
+            if ('load-next-group' === request.runAction.id) {
+                if (!currentGroup) {
+                    return;
+                }
+
+                loadGroupPosition('next');
+            } else if ('load-prev-group' === request.runAction.id) {
+                if (!currentGroup) {
+                    return;
+                }
+
+                loadGroupPosition('prev');
+            } else if ('load-custom-group' === request.runAction.id) {
+                let groupIndex = _groups.findIndex(gr => gr.id === request.runAction.groupId)
+                if (-1 === groupIndex) {
+                    return;
+                }
+
+                loadGroup(currentWindow.id, groupIndex);
+            } else if ('add-new-group' === request.runAction.id) {
+                addGroup();
+            } else if ('delete-current-group' === request.runAction.id) {
+                if (!currentGroup) {
+                    return;
+                }
+
+                removeGroup(currentGroup.id);
+            } else if ('open-manage-groups' === request.runAction.id) {
+                // openManageGroups();
+            }
+        }
+    });
+
     window.background = {
         inited: false,
 

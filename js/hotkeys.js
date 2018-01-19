@@ -1,6 +1,6 @@
 (function() {
     'use strict';
-
+console.log('=====================================');
     let hotkeys = [],
         foundHotKey = false;
 
@@ -20,9 +20,9 @@
     function init() {
         removeWindowEvents();
 
-        // if (hotkeys.length) {
+        if (hotkeys.length) {
             addWindowEvents();
-        // }
+        }
     }
 
     function addWindowEvents() {
@@ -48,7 +48,7 @@
             if (hotkey.ctrlKey == e.ctrlKey &&
                 hotkey.shiftKey == e.shiftKey &&
                 hotkey.altKey == e.altKey &&
-                hotkey.keyCode == e.keyCode
+                hotkey.charCode == e.charCode
             ) {
                 foundHotKey = true;
 

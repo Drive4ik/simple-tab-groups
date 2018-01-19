@@ -164,23 +164,16 @@
 
 
     <script id="hotkey-tmpl" type="text/template">
-        <div class="hotkey" data-hotkey-index="{{index}}">
+        <div class="hotkey" data-hotkey>
             <div class="control">
                 <input type="text" data-hotkey-input value="{{hotkeyValue}}" autocomplete="off" class="input is-small" data-i18n-aaa="hotkeyPlaceholder:placeholder" />
             </div>
             <div class="action">
-                <select data-action>
-                    <option disabled {{action.noAction}}>Select action</option>
-                    <option {{action.loadNextGroup}} value="load-next-group">Load next group</option>
-                    <option {{action.loadPrevGroup}} value="load-prev-group">Load prev group</option>
-                    <option {{action.loadCustomGroup}} value="load-custom-group">Load custom group</option>
-                    <option {{action.addNewGroup}} value="add-new-group">Add new group</option>
-                    <option {{action.deleteCurrentGroup}} value="delete-current-group">Delete current group</option>
-                </select>
-                <select data-custom-group style="is-hidden">{{groupsOptionsHtml}}</select>
+                <select data-hotkey-action>{{hotkeyActionsHtml}}</select>
+                <select data-hotkey-custom-group class="{{groupsSelectClass}}">{{groupsOptionsHtml}}</select>
             </div>
             <div class="delete-button">
-                <img data-delete-hotkey="{{index}}" class="size-16 cursor-pointer" title="Delete hotkey" src="/icons/delete.svg" />
+                <img data-hotkey-delete-hotkey class="size-16 cursor-pointer" title="Delete hotkey" src="/icons/delete.svg" />
             </div>
             <label data-hotkey-action-description class="notification help is-danger">{{description}}</label>
         </div>

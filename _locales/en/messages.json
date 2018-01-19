@@ -387,6 +387,52 @@
     "regexpForTabsHelp": {
         "message": "Insert regular expressions for web addresses here. Matching tabs will be moved automatically to this group.\nUse one line per rule, there can be as many as you want.\nExamples:\ngithub\\.com/drive4ik/simple-tab-groups - catch all pages in the add-on's repository\nbugzilla\\.mozilla\\.org - catch Firefox bug reports\n(facebook|twitter|youtube)\\.com - catch all your social pages",
         "description": "Regular exceptions helper"
+    },
+
+    "selectAction": {
+        "message": "Select action",
+        "description": "Select action"
+    },
+
+    "selectGroup": {
+        "message": "Select group",
+        "description": "Select group"
+    },
+
+    "hotkeyActionTitleLoadNextGroup": {
+        "message": "Load next group",
+        "description": "Load next group"
+    },
+
+    "hotkeyActionTitleLoadPrevGroup": {
+        "message": "Load previous group",
+        "description": "Load previous group"
+    },
+
+    "hotkeyActionTitleLoadCustomGroup": {
+        "message": "Load custom group",
+        "description": "Load custom group"
+    },
+
+    "hotkeyActionTitleAddNewGroup": {
+        "message": "Add new group",
+        "description": "Add new group"
+    },
+
+    "hotkeyActionTitleDeleteCurrentGroup": {
+        "message": "Delete current group",
+        "description": "Delete current group"
+    },
+
+    "hotkeyActionDescriptionDeleteCurrentGroup": {
+        "message": "Be careful! This action can not be undone!",
+        "description": "Be careful! This action can not be undone!"
+    },
+
+    "hotkeyActionTitleOpenManageGroups": {
+        "message": "Open manage groups",
+        "description": "Open manage groups"
     }
+
 
 }
