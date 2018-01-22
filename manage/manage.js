@@ -177,6 +177,10 @@
         // setTabEventsListener
         let updateDataTimer = null,
             listener = function(request, sender, sendResponse) {
+                if (!isAllowSender(sender)) {
+                    return;
+                }
+
                 if (request.groupsUpdated) {
                     clearTimeout(updateDataTimer);
                     updateDataTimer = setTimeout(function() {
@@ -188,8 +192,6 @@
                 if (request.optionsUpdated) {
                     loadOptions();
                 }
-
-                sendResponse(':)');
             };
 
         browser.runtime.onMessage.addListener(listener);

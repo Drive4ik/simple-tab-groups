@@ -1288,6 +1288,12 @@
     });
 
     browser.runtime.onMessage.addListener(async function(request, sender, sendResponse) {
+        if (!isAllowSender(sender)) {
+            return {
+                unsubscribe: true,
+            };
+        }
+
         if (request.optionsUpdated && request.optionsUpdated.includes('hotkeys')) {
             let customRequest = {
                 updateHotkeys: true,

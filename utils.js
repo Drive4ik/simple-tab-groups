@@ -176,6 +176,17 @@ let $ = document.querySelector.bind(document),
 
         document.querySelector('html').setAttribute('lang', browser.i18n.getUILanguage().substring(0, 2));
     },
+    isAllowSender = function(sender) {
+        if (MANIFEST.applications.gecko.id !== sender.id) {
+            return false;
+        }
+
+        if (sender.tab && sender.tab.incognito) {
+            return false;
+        }
+
+        return true;
+    },
     isEmptyUrl = function(url) {
         return ['about:blank', 'about:newtab', 'about:home'].includes(url);
     },

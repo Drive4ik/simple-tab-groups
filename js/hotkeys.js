@@ -3,48 +3,41 @@
 
     let hotkeys = [],
         foundHotKey = false,
-        currentTab = null;
+        changeHotkeysListener = function(request, sender, sendResponse) {
+            if (!isAllowSender(sender)) {
+                return;
+            }
 
-//     try {
-//         currentTab = await browser.tabs.getCurrent();
-//     } catch (e) {
-//         console.warn(e);
-//         return;
-//     }
+            if (request.updateHotkeys) {
+                reloadHotKeys().then(init);
+            }
+        };
 
-
-console.log('hotkeys load tab', currentTab);
-//     if (!currentTab) {
-//         throw new Error('[STG] currentTab not found');
-//     }
-
-//     if (!currentTab || currentTab.incognito) {
-//         return;
-//     }
+    browser.runtime.onMessage.addListener(changeHotkeysListener);
 
     async function reloadHotKeys() {
         let options = await storage.get('hotkeys');
         hotkeys = options.hotkeys;
     }
 
-    browser.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-        if (request.updateHotkeys) {
-            console.log('hotkeys reload');
-            reloadHotKeys().then(init);
-        }
-    });
-
     reloadHotKeys().then(init);
 
     function init() {
-        window.removeEventListener('keydown', checkKey, false);
-        window.removeEventListener('keyup', resetFoundHotKey, false);
+        resetWindowEvents();
 
         if (hotkeys.length) {
-            console.log('hotkeys init');
-            window.addEventListener('keydown', checkKey, false);
-            window.addEventListener('keyup', resetFoundHotKey, false);
+            addWindowEvents();
         }
+    }
+
+    function resetWindowEvents() {
+        window.removeEventListener('keydown', checkKey, false);
+        window.removeEventListener('keyup', resetFoundHotKey, false);
+    }
+
+    function addWindowEvents() {
+        window.addEventListener('keydown', checkKey, false);
+        window.addEventListener('keyup', resetFoundHotKey, false);
     }
 
     function resetFoundHotKey() {
@@ -72,8 +65,14 @@ console.log('hotkeys load tab', currentTab);
                 e.stopImmediatePropagation();
 
                 browser.runtime.sendMessage({
-                    runAction: hotkey.action,
-                });
+                        runAction: hotkey.action,
+                    })
+                    .then(function(response) {
+                        if (response && response.unsubscribe) {
+                            resetWindowEvents();
+                            browser.runtime.onMessage.removeListener(changeHotkeysListener);
+                        }
+                    });
 
                 return true;
             }

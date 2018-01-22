@@ -260,6 +260,10 @@
         // setTabEventsListener
         let loadDataTimer = null,
             listener = function(request, sender, sendResponse) {
+                if (!isAllowSender(sender)) {
+                    return;
+                }
+
                 if (request.groupsUpdated) {
                     // _groups = BG.getGroups();
                     // selectRender();
@@ -283,8 +287,6 @@
                 if (request.optionsUpdated) {
                     loadOptions();
                 }
-
-                sendResponse(':)');
             };
 
         browser.runtime.onMessage.addListener(listener);
