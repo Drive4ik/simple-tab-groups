@@ -83,22 +83,28 @@
                 <span data-i18n="openNewWindowWhenCreateNewGroup"></span>
             </label>
         </div>
-        <div class="field">
-            <label class="checkbox">
-                <input id="enableKeyboardShortcutLoadNextPrevGroup" type="checkbox" />
-                <span data-i18n="enableKeyboardShortcutLoadNextPrevGroup:innerHTML"></span>
-            </label>
-        </div>
-        <div class="field">
-            <label class="checkbox">
-                <input id="enableKeyboardShortcutLoadByIndexGroup" type="checkbox" />
-                <span data-i18n="enableKeyboardShortcutLoadByIndexGroup:innerHTML"></span>
-            </label>
-        </div>
+
         <hr>
+
+        <div>
+            <label class="has-text-weight-bold" data-i18n="hotkeysTitle"></label>
+            <div class="h-margin-bottom-10" data-i18n="hotkeysDescription:innerHTML"></div>
+            <div id="hotkeys" class="hotkeys"></div>
+            <div>
+                <div class="control">
+                    <button id="addHotKey" class="button">
+                        <img class="size-14" src="/icons/new.svg" alt="" />
+                        <span class="h-margin-left-5" data-i18n="addHotKeyButton"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
         <div>
             <div class="h-margin-bottom-20">
-                <div class="text-bold h-margin-bottom-5" data-i18n="exportAddonSettingsTitle"></div>
+                <div class="has-text-weight-bold h-margin-bottom-5" data-i18n="exportAddonSettingsTitle"></div>
                 <div class="h-margin-bottom-5" data-i18n="exportAddonSettingsDescription:innerHTML"></div>
                 <div class="field">
                     <label class="checkbox">
@@ -114,9 +120,9 @@
                 </div>
             </div>
             <div>
-                <div class="text-bold h-margin-bottom-5" data-i18n="importAddonSettingsTitle"></div>
+                <div class="has-text-weight-bold h-margin-bottom-5" data-i18n="importAddonSettingsTitle"></div>
                 <div class="h-margin-bottom-5" data-i18n="importAddonSettingsDescription:innerHTML"></div>
-                <div class="help is-danger text-bold h-margin-bottom-5">
+                <div class="has-text-danger has-text-weight-bold h-margin-bottom-5">
                     <span data-i18n="warning"></span>
                     <span data-i18n="importAddonSettingsWarning"></span>
                 </div>
@@ -130,13 +136,41 @@
         </div>
         <hr>
         <div>
-            <div class="text-bold h-margin-bottom-5" data-i18n="importSettingsOldTabGroupsAddonTitle"></div>
+            <div class="has-text-weight-bold h-margin-bottom-5" data-i18n="importSettingsOldTabGroupsAddonTitle"></div>
             <div class="h-margin-bottom-5" data-i18n="importSettingsOldTabGroupsAddonDescription:innerHTML"></div>
             <div class="control">
                 <button id="importSettingsOldTabGroupsAddonButton" class="button" data-i18n="importSettingsOldTabGroupsAddonButton"></button>
             </div>
         </div>
+        <hr>
+        <div class="is-hidden_">
+            <div class="control">
+                <button id="saveErrorLogsIntoFile" class="button is-warning is-small" data-i18n="saveErrorLogsIntoFile"></button>
+            </div>
+        </div>
     </div>
+
+
+    <script id="hotkey-tmpl" type="text/template">
+        <div class="hotkey" data-hotkey>
+            <div class="control">
+                <input type="text" data-hotkey-input value="{{hotkeyValue}}" autocomplete="off" class="input is-small" data-i18n="hotkeyPlaceholder:placeholder" />
+            </div>
+            <div class="action">
+                <select data-hotkey-action>{{hotkeyActionsHtml}}</select>
+                <select data-hotkey-custom-group class="{{groupsSelectClass}}">{{groupsOptionsHtml}}</select>
+            </div>
+            <div class="delete-button">
+                <img data-hotkey-delete-hotkey class="size-16 cursor-pointer" data-i18n="deleteHotKeyButton:title" src="/icons/delete.svg" />
+            </div>
+            <label data-hotkey-action-description class="notification has-text-danger">{{description}}</label>
+        </div>
+    </script>
+
+    <script id="option-tmpl" type="text/template">
+        <option value="{{value}}" {{selected}}>{{title}}</option>
+    </script>
+
 
     <script type="text/javascript" src="/utils.js"></script>
     <script type="text/javascript" src="fileImportExport.js"></script>

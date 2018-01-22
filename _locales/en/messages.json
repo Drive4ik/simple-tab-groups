@@ -20,7 +20,7 @@
     },
 
     "moveTabToGroupDisabledTitle": {
-        "message": "Move tab to group:",
+        "message": "Move tab to group",
         "description": "Move tab to group title"
     },
 
@@ -47,6 +47,11 @@
     "warning": {
         "message": "Warning!",
         "description": "Warning!"
+    },
+
+    "success": {
+        "message": "Success!",
+        "description": "Success!"
     },
 
     "ok": {
@@ -153,16 +158,6 @@
     "openNewWindowWhenCreateNewGroup": {
         "message": "Open new window when create new group",
         "description": "Open new window when create new group"
-    },
-
-    "enableKeyboardShortcutLoadNextPrevGroup": {
-        "message": "Enable keyboard shortcuts for next and previous group. i.e. <code>Ctrl+Shift+></code> and <code>Ctrl+Shift+<</code>",
-        "description": "Enable keyboard shortcuts for next and previous group. i.e. Ctrl+Shift+> and Ctrl+Shift+<"
-    },
-
-    "enableKeyboardShortcutLoadByIndexGroup": {
-        "message": "Enable keyboard shortcuts for switch to tab. i.e. <code>Ctrl+Shift+[1-9]</code>",
-        "description": "Enable keyboard shortcuts for switch to tab. i.e. Ctrl+Shift+[1-9]"
     },
 
     "exportAddonSettingsTitle": {
@@ -387,6 +382,97 @@
     "regexpForTabsHelp": {
         "message": "Insert regular expressions for web addresses here. Matching tabs will be moved automatically to this group.\nUse one line per rule, there can be as many as you want.\nExamples:\ngithub\\.com/drive4ik/simple-tab-groups - catch all pages in the add-on's repository\nbugzilla\\.mozilla\\.org - catch Firefox bug reports\n(facebook|twitter|youtube)\\.com - catch all your social pages",
         "description": "Regular exceptions helper"
+    },
+
+    "hotkeysTitle": {
+        "message": "Hotkeys",
+        "description": "Hotkeys"
+    },
+
+    "hotkeysDescription": {
+        "message": "Here you can add hot keys.<br>Restrictions:<br>1. These hotkeys will only work on web pages (http:, https:). On the browser pages (about:) - it's doesn't work, the WebExtensions API does not allow this.<br>2. Some hotkeys will not work in different keyboard layouts. For example, the shortcut created in English layout Ctrl + ~ will not work on the Russian layout, because in Russian layout this key has another code. To fix this, just create another hotkey on the Russian layout: Ctrl + Ё",
+        "description": "Hotkeys description"
+    },
+
+    "addHotKeyButton": {
+        "message": "Add hotkey",
+        "description": "Add hotkey"
+    },
+
+    "deleteHotKeyButton": {
+        "message": "Delete hotkey",
+        "description": "Delete hotkey"
+    },
+
+    "hotkeyPlaceholder": {
+        "message": "Press keys here",
+        "description": "Press keys here"
+    },
+
+    "selectAction": {
+        "message": "Select action",
+        "description": "Select action"
+    },
+
+    "selectGroup": {
+        "message": "Select group",
+        "description": "Select group"
+    },
+
+    "hotkeyActionTitleLoadNextGroup": {
+        "message": "Load next group",
+        "description": "Load next group"
+    },
+
+    "hotkeyActionTitleLoadPrevGroup": {
+        "message": "Load previous group",
+        "description": "Load previous group"
+    },
+
+    "hotkeyActionTitleLoadFirstGroup": {
+        "message": "Load first group",
+        "description": "Load first group"
+    },
+
+    "hotkeyActionTitleLoadLastGroup": {
+        "message": "Load last group",
+        "description": "Load last group"
+    },
+
+    "hotkeyActionTitleLoadCustomGroup": {
+        "message": "Load custom group",
+        "description": "Load custom group"
+    },
+
+    "hotkeyActionTitleAddNewGroup": {
+        "message": "Add new group",
+        "description": "Add new group"
+    },
+
+    "hotkeyActionTitleDeleteCurrentGroup": {
+        "message": "Delete current group",
+        "description": "Delete current group"
+    },
+
+    "hotkeyActionDescriptionDeleteCurrentGroup": {
+        "message": "Be careful! This action can not be undone!",
+        "description": "Be careful! This action can not be undone!"
+    },
+
+    "hotkeyActionTitleOpenManageGroups": {
+        "message": "Open manage groups",
+        "description": "Open manage groups"
+    },
+
+    "whatsWrongMessage": {
+        "message": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)",
+        "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
+    },
+
+    "saveErrorLogsIntoFile": {
+        "message": "Save last error logs into JSON file",
+        "description": "Save last error logs into JSON file"
     }
+
 
 }

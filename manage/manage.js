@@ -47,7 +47,7 @@
         .then(addEvents);
 
     async function loadOptions() {
-        options = await storage.get(onlyOptionsKeys);
+        options = await storage.get(onlyBoolOptionsKeys);
     }
 
     function addEvents() {
@@ -93,7 +93,7 @@
                 if (win) {
                     BG.setFocusOnWindow(win.id);
                 } else {
-                    win = await browser.windows.create({
+                    win = await BG.createWindow({
                         state: 'maximized',
                     });
 
@@ -177,6 +177,10 @@
         // setTabEventsListener
         let updateDataTimer = null,
             listener = function(request, sender, sendResponse) {
+                if (!isAllowSender(sender)) {
+                    return;
+                }
+
                 if (request.groupsUpdated) {
                     clearTimeout(updateDataTimer);
                     updateDataTimer = setTimeout(function() {
@@ -188,8 +192,6 @@
                 if (request.optionsUpdated) {
                     loadOptions();
                 }
-
-                sendResponse(':)');
             };
 
         browser.runtime.onMessage.addListener(listener);
@@ -230,15 +232,11 @@
     }
 
     function render(templateId, data) {
-        let tmplHtml = null;
-
-        if (templates[templateId]) {
-            tmplHtml = templates[templateId];
-        } else {
-            tmplHtml = templates[templateId] = $('#' + templateId).innerHTML;
+        if (!templates[templateId]) {
+            templates[templateId] = $('#' + templateId).innerHTML;
         }
 
-        return format(tmplHtml, data);
+        return format(templates[templateId], data);
     }
 
     function setHtml(id, html, doTranslatePage = true) {

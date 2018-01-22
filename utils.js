@@ -26,12 +26,33 @@ const EXTENSION_NAME = 'Simple Tab Groups',
         individualWindowForEachGroup: false,
         openNewWindowWhenCreateNewGroup: false,
 
-        enableKeyboardShortcutLoadNextPrevGroup: true,
-        enableKeyboardShortcutLoadByIndexGroup: true,
+        hotkeys: [
+            {
+                ctrlKey: true,
+                shiftKey: false,
+                altKey: false,
+                key: '`',
+                keyCode: 192,
+                action: {
+                    id: 'load-next-group',
+                },
+            },
+            {
+                ctrlKey: true,
+                shiftKey: true,
+                altKey: false,
+                key: '~',
+                keyCode: 192,
+                action: {
+                    id: 'load-prev-group',
+                },
+            },
+        ],
     },
-    onlyOptionsKeys = (function() {
+    onlyBoolOptionsKeys = (function() {
         return Object.keys(DEFAULT_OPTIONS).filter(key => 'boolean' === typeof DEFAULT_OPTIONS[key]);
-    })();
+    })(),
+    allOptionsKeys = onlyBoolOptionsKeys.concat(['hotkeys']);
 
 let $ = document.querySelector.bind(document),
     $$ = selector => Array.from(document.querySelectorAll(selector)),
@@ -155,6 +176,17 @@ let $ = document.querySelector.bind(document),
 
         document.querySelector('html').setAttribute('lang', browser.i18n.getUILanguage().substring(0, 2));
     },
+    isAllowSender = function(sender) {
+        if (MANIFEST.applications.gecko.id !== sender.id) {
+            return false;
+        }
+
+        if (sender.tab && sender.tab.incognito) {
+            return false;
+        }
+
+        return true;
+    },
     isEmptyUrl = function(url) {
         return ['about:blank', 'about:newtab', 'about:home'].includes(url);
     },
@@ -259,6 +291,19 @@ let $ = document.querySelector.bind(document),
 
         return data;
     },
+    parseHtml = function(html) {
+        let template = document.createElement('template');
+        template.innerHTML = html;
+        return template.content.firstElementChild;
+    },
+    toCamelCase = function(str) {
+        return str.replace(/^([A-Z])|[\s_-](\w)/g, function(match, p1, p2) {
+            return p2 ? p2.toUpperCase() : p1.toLowerCase();
+        });
+    },
+    capitalize = function(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    },
     checkVisibleElement = function(element) {
         let rect = element.getBoundingClientRect(),
             viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
@@ -340,17 +385,17 @@ let $ = document.querySelector.bind(document),
             });
     },
     storage = { // TODO: move to another file
-        get(keys) {
-            return browser.storage.local.get(keys)
+        get(data) {
+            return browser.storage.local.get(data)
                 .then(function(result) {
-                    if (null === keys) {
+                    if (null === data) {
                         result = Object.assign({}, DEFAULT_OPTIONS, result);
-                    } else if ('string' === type(keys)) {
-                        if (undefined === result[keys]) {
-                            result[keys] = DEFAULT_OPTIONS[keys];
+                    } else if ('string' === type(data)) {
+                        if (undefined === result[data]) {
+                            result[data] = DEFAULT_OPTIONS[data];
                         }
-                    } else if (Array.isArray(keys)) {
-                        keys.forEach(function(key) {
+                    } else if (Array.isArray(data)) {
+                        data.forEach(function(key) {
                             if (undefined === result[key]) {
                                 result[key] = DEFAULT_OPTIONS[key];
                             }
@@ -362,20 +407,21 @@ let $ = document.querySelector.bind(document),
         },
         clear: browser.storage.local.clear,
         remove: browser.storage.local.remove,
-        set(keys) {
-            return browser.storage.local.set(keys)
-                .then(function() {
-                    let eventObj = {},
-                        doCallEvent = false;
+        async set(data) {
+            await browser.storage.local.set(data);
 
-                    if (onlyOptionsKeys.some(key => key in keys)) {
-                        doCallEvent = eventObj.optionsUpdated = true;
-                    }
+            let eventObj = {},
+                doCallEvent = false,
+                optionsKeys = Object.keys(data).filter(key => allOptionsKeys.includes(key));
 
-                    if (doCallEvent) {
-                        browser.runtime.sendMessage(eventObj);
-                    }
-                });
+            if (optionsKeys.length) {
+                eventObj.optionsUpdated = optionsKeys;
+                doCallEvent = true;
+            }
+
+            if (doCallEvent) {
+                browser.runtime.sendMessage(eventObj);
+            }
         },
     },
     createGroupSvgIconUrl = function(group) {

@@ -39,12 +39,12 @@ function importFromFile() {
     });
 }
 
-function exportToFile(data) { // data : Object
+function exportToFile(data, fileName = generateFileName()) { // data : Object
     let text = JSON.stringify(data, null, '    '),
         a = document.createElement('a');
 
     a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(text);
-    a.setAttribute('download', generateFileName());
+    a.setAttribute('download', fileName);
     a.setAttribute('type', 'application/json');
     a.dispatchEvent(new MouseEvent('click'));
 }

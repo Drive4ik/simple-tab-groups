@@ -10,7 +10,7 @@
     },
 
     "moveTabToGroupDisabledTitle": {
-        "message": "將分頁移到分頁群組:",
+        "message": "將分頁移到分頁群組",
         "description": "Move tab to group title"
     },
 
@@ -78,16 +78,6 @@
     "createNewGroupAfterAttachTabToNewWindow": {
         "message": "分頁移到其他視窗時建立新分頁群組",
         "description": "Create new group if tab is moved to new window"
-    },
-
-    "enableKeyboardShortcutLoadNextPrevGroup": {
-        "message": "啟用切換至下一個及上一個分頁的快捷鍵 <code>Ctrl+Shift+></code> 和 <code>Ctrl+Shift+<</code>",
-        "description": "Enable keyboard shortcuts for next and previous group. i.e. Ctrl+Shift+> and Ctrl+Shift+<"
-    },
-
-    "enableKeyboardShortcutLoadByIndexGroup": {
-        "message": "啟用切換分頁的快捷鍵 <code>Ctrl+Shift+[1-9]</code>",
-        "description": "Enable keyboard shortcuts for switch to tab. i.e. Ctrl+Shift+[1-9]"
     },
 
     "importSettingsOldTabGroupsAddon": {

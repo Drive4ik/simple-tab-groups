@@ -37,7 +37,7 @@
         .then(addEvents);
 
     function loadOptions() {
-        return storage.get(onlyOptionsKeys).then(result => options = result);
+        return storage.get(onlyBoolOptionsKeys).then(result => options = result);
     }
 
     function addEvents() {
@@ -142,52 +142,7 @@
             } else if ('open-options-page' === action) {
                 browser.runtime.openOptionsPage();
             } else if ('open-manage-page' === action) {
-                let manageUrl = browser.extension.getURL('/manage/manage.html');
-
-                if (options.openManageGroupsInTab) {
-                    let tabs = await browser.tabs.query({
-                        windowId: currentWindowId,
-                        url: manageUrl,
-                    });
-
-                    if (tabs.length) { // if manage tab is found
-                        browser.tabs.update(tabs[0].id, {
-                            active: true,
-                        });
-                    } else {
-                        browser.tabs.create({
-                            active: true,
-                            url: manageUrl,
-                        });
-                    }
-                } else {
-                    let allWindows = await browser.windows.getAll({
-                        populate: true,
-                        windowTypes: ['popup'],
-                    });
-
-                    let isFoundWindow = allWindows.some(function(win) {
-                        if ('popup' === win.type && 1 === win.tabs.length && manageUrl === win.tabs[0].url) { // if manage popup is now open
-                            BG.setFocusOnWindow(win.id);
-                            return true;
-                        }
-                    });
-
-                    if (isFoundWindow) {
-                        return;
-                    }
-
-                    browser.windows.create({
-                        url: manageUrl,
-                        type: 'popup',
-                        left: 0,
-                        top: 0,
-                        width: window.screen.availWidth,
-                        height: window.screen.availHeight,
-                    });
-                }
-
-                // window.close(); // be or not to be ?? :)
+                BG.openManageGroups(window.screen);
             } else if ('context-sort-groups' === action) {
                 BG.sortGroups(data.vector);
             } else if ('context-open-group-in-new-window' === action) {
@@ -197,7 +152,7 @@
                 if (win) {
                     BG.setFocusOnWindow(group.windowId);
                 } else {
-                    win = await browser.windows.create({
+                    win = await BG.createWindow({
                         state: 'maximized',
                     });
 
@@ -291,10 +246,10 @@
         $on('input', '#searchTabs', function() {
             if ($('#searchTabs').value.trim().length) {
                 $('#clearSearchTabsButton').classList.remove('is-hidden');
-                $('#searchWrapper').classList.add('has-addons');
+                $('#searchWrapper > .field').classList.add('has-addons');
             } else {
                 $('#clearSearchTabsButton').classList.add('is-hidden');
-                $('#searchWrapper').classList.remove('has-addons');
+                $('#searchWrapper > .field').classList.remove('has-addons');
             }
 
             renderSearchTabsList();
@@ -305,6 +260,10 @@
         // setTabEventsListener
         let loadDataTimer = null,
             listener = function(request, sender, sendResponse) {
+                if (!isAllowSender(sender)) {
+                    return;
+                }
+
                 if (request.groupsUpdated) {
                     // _groups = BG.getGroups();
                     // selectRender();
@@ -328,8 +287,6 @@
                 if (request.optionsUpdated) {
                     loadOptions();
                 }
-
-                sendResponse(':)');
             };
 
         browser.runtime.onMessage.addListener(listener);
@@ -380,15 +337,11 @@
     }
 
     function render(templateId, data) {
-        let tmplHtml = null;
-
-        if (templates[templateId]) {
-            tmplHtml = templates[templateId];
-        } else {
-            tmplHtml = templates[templateId] = $('#' + templateId).innerHTML;
+        if (!templates[templateId]) {
+            templates[templateId] = $('#' + templateId).innerHTML;
         }
 
-        return format(tmplHtml, data);
+        return format(templates[templateId], data);
     }
 
     function setHtml(id, html, doTranslatePage = true) {
