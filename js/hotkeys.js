@@ -3,11 +3,24 @@
 
     let hotkeys = [],
         foundHotKey = false,
-        currentTab = await browser.tabs.getCurrent();
+        currentTab = null;
 
-    if (currentTab.incognito) {
-        return;
-    }
+//     try {
+//         currentTab = await browser.tabs.getCurrent();
+//     } catch (e) {
+//         console.warn(e);
+//         return;
+//     }
+
+
+console.log('hotkeys load tab', currentTab);
+//     if (!currentTab) {
+//         throw new Error('[STG] currentTab not found');
+//     }
+
+//     if (!currentTab || currentTab.incognito) {
+//         return;
+//     }
 
     async function reloadHotKeys() {
         let options = await storage.get('hotkeys');
@@ -16,6 +29,7 @@
 
     browser.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         if (request.updateHotkeys) {
+            console.log('hotkeys reload');
             reloadHotKeys().then(init);
         }
     });
@@ -27,6 +41,7 @@
         window.removeEventListener('keyup', resetFoundHotKey, false);
 
         if (hotkeys.length) {
+            console.log('hotkeys init');
             window.addEventListener('keydown', checkKey, false);
             window.addEventListener('keyup', resetFoundHotKey, false);
         }

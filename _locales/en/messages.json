@@ -20,7 +20,7 @@
     },
 
     "moveTabToGroupDisabledTitle": {
-        "message": "Move tab to group:",
+        "message": "Move tab to group",
         "description": "Move tab to group title"
     },
 
@@ -385,7 +385,7 @@
     },
 
     "hotkeysDescription": {
-        "message": "Hotkeys description",
+        "message": "Here you can add hot keys.<br>Restrictions:<br>1. These hotkeys will only work on web pages (http:, https:). On the browser pages (about:) - it's doesn't work, the WebExtensions API does not allow this.<br>2. Some hotkeys will not work in different keyboard layouts. For example, the shortcut created in English layout Ctrl + ~ will not work on the Russian layout, because in Russian layout this key has another code. To fix this, just create another hotkey on the Russian layout: Ctrl + Ё",
         "description": "Hotkeys description"
     },
 

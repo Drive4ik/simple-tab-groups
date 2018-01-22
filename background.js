@@ -803,8 +803,6 @@
         lastFocusedNormalWindow = null; // fix bug with browser.windows.getLastFocused({windowTypes: ['normal']}), maybe find exists bug??
 
     async function onFocusChangedWindow(windowId) {
-        console.log('onFocusChangedWindow', windowId);
-
         if (browser.windows.WINDOW_ID_NONE === windowId) {
             return;
         }
@@ -831,133 +829,124 @@
     // if oldGroupId === null, move tab from current window without group
     async function moveTabToGroup(oldTabIndex, newTabIndex = -1, oldGroupId = null, newGroupId, showNotificationAfterMoveTab = true) {
         let oldGroup = null,
-            tab = null;
+            newGroup = _groups.find(gr => gr.id === newGroupId),
+            tab = null,
+            callSaveGroups = false,
+            createdTabId = null,
+            createdTabIndex = null;
 
         if (oldGroupId) {
-            oldGroup = _groups.find(({ id }) => id === oldGroupId);
+            oldGroup = _groups.find(gr => gr.id === oldGroupId);
             tab = oldGroup.tabs[oldTabIndex];
         } else {
             let tabs = await getTabs();
             tab = mapTab(tabs[oldTabIndex]);
         }
 
-        let newGroup = _groups.find(({ id }) => id === newGroupId),
-            groupsToSave = [],
-            promises = [],
-            createdTabId = null,
-            createdTabIndex = null;
-
-        if (oldGroupId === newGroupId) { // if it's same group
-            promises.push(getWindowByGroup(newGroup)
-                .then(function(win) {
-                    if (win) {
-                        return getTabs(newGroup.windowId)
-                            .then(function(tabs) {
-                                return browser.tabs.move(tabs[oldTabIndex].id, {
-                                    windowId: newGroup.windowId,
-                                    index: -1 === newTabIndex ? -1 : tabs[newTabIndex].index,
-                                });
-                            });
-                    } else {
-                        if (-1 === newTabIndex) { // push to end of group
-                            newTabIndex = newGroup.tabs.length;
-                        }
-
-                        if (newTabIndex !== oldTabIndex) {
-                            newGroup.tabs.splice(newTabIndex, 0, newGroup.tabs.splice(oldTabIndex, 1)[0]);
-                            groupsToSave.push(newGroup);
-                        }
-                    }
-                }));
-        } else { // if it's different group
-            if (oldGroupId) {
-                promises.push(getWindowByGroup(oldGroup)
-                    .then(function(win) {
-                        if (win) {
-                            return removeCurrentTabByIndex(oldGroup.windowId, oldTabIndex);
-                        } else {
-                            oldGroup.tabs.splice(oldTabIndex, 1);
-                            groupsToSave.push(oldGroup);
-                        }
-                    })
-                );
-            } else {
-                promises.push(removeCurrentTabByIndex(undefined, oldTabIndex));
-            }
-
-            promises.push(getWindowByGroup(newGroup)
-                .then(function(win) {
-                    if (win) {
-                        return new Promise(function(resolve) {
-                                if (-1 === newTabIndex) {
-                                    resolve(-1);
-                                } else {
-                                    browser.tabs.query({
-                                            windowId: newGroup.windowId,
-                                            pinned: false,
-                                        })
-                                        .then(tabs => tabs[newTabIndex].index)
-                                        .then(resolve);
-                                }
-                            })
-                            .then(async function(newBrowserTabIndex) {
-                                let containers = await loadContainers(),
-                                    createTabObj = {
-                                        active: false,
-                                        url: tab.url,
-                                        windowId: newGroup.windowId,
-                                        cookieStoreId: normalizeCookieStoreId(tab.cookieStoreId, containers),
-                                    };
-
-                                if (-1 !== newBrowserTabIndex) {
-                                    createTabObj.index = newBrowserTabIndex;
-                                }
-
-                                return browser.tabs.create(createTabObj)
-                                    .then(({ id }) => createdTabId = id);
-                            });
-                    } else {
-                        if (-1 === newTabIndex) {
-                            createdTabIndex = newGroup.tabs.push(tab) - 1;
-                        } else {
-                            newGroup.tabs.splice(newTabIndex, 0, tab);
-                            createdTabIndex = newTabIndex;
-                        }
-
-                        groupsToSave.push(newGroup);
-                    }
-                })
-            );
+        if (!tab) {
+            return notify('TAB NOT fffound');
         }
 
-        return Promise.all(promises)
-            .then(() => saveGroup(groupsToSave))
-            .then(() => storage.get('showNotificationAfterMoveTab'))
-            .then(function(options) { // show notification
-                if (!options.showNotificationAfterMoveTab || !showNotificationAfterMoveTab) {
-                    return;
+        if (oldGroupId === newGroupId) { // if it's same group
+            let win = await getWindowByGroup(newGroup);
+
+            if (win) {
+                let tabs = await getTabs(newGroup.windowId);
+
+                await browser.tabs.move(tabs[oldTabIndex].id, {
+                    index: -1 === newTabIndex ? -1 : tabs[newTabIndex].index,
+                });
+            } else {
+                if (-1 === newTabIndex) { // push to end of group
+                    newTabIndex = newGroup.tabs.length;
                 }
 
-                let title = tab.title.length > 50 ? (tab.title.slice(0, 50) + '...') : tab.title,
-                    message = browser.i18n.getMessage('moveTabToGroupMessage', [newGroup.title, title]);
+                if (newTabIndex !== oldTabIndex) {
+                    newGroup.tabs.splice(newTabIndex, 0, newGroup.tabs.splice(oldTabIndex, 1)[0]);
+                    callSaveGroups = true;
+                }
+            }
+        } else { // if it's different group
+            if (oldGroupId) { // remove tab
+                let win = await getWindowByGroup(oldGroup);
 
-                notify(message).then(function(createdTabId, createdTabIndex, newGroup) {
-                    if (createdTabId) {
-                        setFocusOnWindow(newGroup.windowId)
-                            .then(function() {
-                                browser.tabs.update(createdTabId, {
-                                    active: true,
-                                });
-                            });
-                    } else {
-                        setFocusOnWindow(lastFocusedNormalWindow.id)
-                            .then(function() {
-                                let groupIndex = _groups.findIndex(group => group.id === newGroup.id);
-                                loadGroup(lastFocusedNormalWindow.id, groupIndex, createdTabIndex);
-                            });
+                if (win) {
+                    await removeCurrentTabByIndex(oldGroup.windowId, oldTabIndex);
+                } else {
+                    oldGroup.tabs.splice(oldTabIndex, 1);
+                    callSaveGroups = true;
+                }
+            } else {
+                await removeCurrentTabByIndex(undefined, oldTabIndex);
+            }
+
+            // add tab
+            let win = await getWindowByGroup(newGroup);
+            if (win) {
+                let containers = await loadContainers(),
+                    newTabObj = {
+                        active: false,
+                        url: tab.url,
+                        windowId: newGroup.windowId,
+                        cookieStoreId: normalizeCookieStoreId(tab.cookieStoreId, containers),
+                    };
+
+                if (-1 !== newTabIndex) {
+                    let tabs = await browser.tabs.query({
+                        windowId: newGroup.windowId,
+                        pinned: false,
+                    });
+
+                    if (tabs[newTabIndex]) {
+                        newTabObj.index = tabs[newTabIndex].index;
                     }
-                }.bind(null, createdTabId, createdTabIndex, newGroup));
-            });
+                }
+
+                let newTab = await browser.tabs.create(newTabObj);
+
+                createdTabId = newTab.id;
+
+            } else {
+                if (-1 === newTabIndex) {
+                    createdTabIndex = newGroup.tabs.push(tab) - 1;
+                } else {
+                    newGroup.tabs.splice(newTabIndex, 0, tab);
+                    createdTabIndex = newTabIndex;
+                }
+
+                callSaveGroups = true;
+            }
+        }
+
+        if (callSaveGroups) {
+            saveGroupsToStorage();
+        }
+
+
+        if (!showNotificationAfterMoveTab) {
+            return;
+        }
+
+        let options = await storage.get('showNotificationAfterMoveTab');
+        if (!options.showNotificationAfterMoveTab) {
+            return;
+        }
+
+        let title = tab.title.length > 50 ? (tab.title.slice(0, 50) + '...') : tab.title,
+            message = browser.i18n.getMessage('moveTabToGroupMessage', [newGroup.title, title]);
+
+        notify(message).then(async function(createdTabId, createdTabIndex, newGroup) {
+            await setFocusOnWindow(createdTabId ? newGroup.windowId : lastFocusedNormalWindow.id);
+
+            if (createdTabId) {
+                browser.tabs.update(createdTabId, {
+                    active: true,
+                });
+            } else {
+                let groupIndex = _groups.findIndex(group => group.id === newGroup.id);
+                loadGroup(lastFocusedNormalWindow.id, groupIndex, createdTabIndex);
+            }
+        }.bind(null, createdTabId, createdTabIndex, newGroup));
     }
 
     let moveTabToGroupMenusIds = [];
@@ -1021,7 +1010,7 @@
 
         moveTabToGroupMenusIds.push(browser.menus.create({
             id: 'stg-move-tab-helper',
-            title: browser.i18n.getMessage('moveTabToGroupDisabledTitle'),
+            title: browser.i18n.getMessage('moveTabToGroupDisabledTitle') + ':',
             enabled: false,
             contexts: ['tab'],
         }));
@@ -1431,8 +1420,18 @@
             removeKey('windowsGroup');
         }
 
-        if (0 > data.version.localeCompare('2.1.2')) {
-            data.groups = data.groups.map(function(group) {
+        if (0 > data.version.localeCompare('2.2')) {
+            if ('showGroupCircleInSearchedTab' in data) {
+                result.dataChanged = true;
+                data.showGroupIconWhenSearchATab = data.showGroupCircleInSearchedTab;
+                removeKey('showGroupCircleInSearchedTab');
+            }
+        }
+
+        if (0 > data.version.localeCompare('2.3')) {
+            result.dataChanged = true;
+
+            data.groups = data.groups.map(function(group) { // final fix nulls ...
                 let tabsLengthBefore = group.tabs.length;
 
                 group.tabs = group.tabs.filter(Boolean);
@@ -1443,14 +1442,9 @@
 
                 return group;
             });
-        }
 
-        if (0 > data.version.localeCompare('2.2')) {
-            if ('showGroupCircleInSearchedTab' in data) {
-                result.dataChanged = true;
-                data.showGroupIconWhenSearchATab = data.showGroupCircleInSearchedTab;
-                removeKey('showGroupCircleInSearchedTab');
-            }
+            removeKey('enableKeyboardShortcutLoadNextPrevGroup');
+            removeKey('enableKeyboardShortcutLoadByIndexGroup');
         }
 
 

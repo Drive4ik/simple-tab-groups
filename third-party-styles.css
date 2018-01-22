@@ -763,48 +763,134 @@ th {
     z-index: 4;
 }
 
-.help {
-    display: block;
-    /* font-size: 0.75rem; */
-    margin-top: 0.25rem;
+.has-text-white {
+  color: white !important;
 }
 
-.help.is-white {
-    color: white;
+a.has-text-white:hover, a.has-text-white:focus {
+  color: #e6e6e6 !important;
 }
 
-.help.is-black {
-    color: #0a0a0a;
+.has-text-black {
+  color: #0a0a0a !important;
 }
 
-.help.is-light {
-    color: whitesmoke;
+a.has-text-black:hover, a.has-text-black:focus {
+  color: black !important;
 }
 
-.help.is-dark {
-    color: #363636;
+.has-text-light {
+  color: whitesmoke !important;
 }
 
-.help.is-primary {
-    color: #00d1b2;
+a.has-text-light:hover, a.has-text-light:focus {
+  color: #dbdbdb !important;
 }
 
-.help.is-link {
-    color: #3273dc;
+.has-text-dark {
+  color: #363636 !important;
 }
 
-.help.is-info {
-    color: #209cee;
+a.has-text-dark:hover, a.has-text-dark:focus {
+  color: #1c1c1c !important;
 }
 
-.help.is-success {
-    color: #23d160;
+.has-text-primary {
+  color: #00d1b2 !important;
 }
 
-.help.is-warning {
-    color: #ffdd57;
+a.has-text-primary:hover, a.has-text-primary:focus {
+  color: #009e86 !important;
 }
 
-.help.is-danger {
-    color: #ff3860;
+.has-text-link {
+  color: #3273dc !important;
+}
+
+a.has-text-link:hover, a.has-text-link:focus {
+  color: #205bbc !important;
+}
+
+.has-text-info {
+  color: #209cee !important;
+}
+
+a.has-text-info:hover, a.has-text-info:focus {
+  color: #0f81cc !important;
+}
+
+.has-text-success {
+  color: #23d160 !important;
+}
+
+a.has-text-success:hover, a.has-text-success:focus {
+  color: #1ca64c !important;
+}
+
+.has-text-warning {
+  color: #ffdd57 !important;
+}
+
+a.has-text-warning:hover, a.has-text-warning:focus {
+  color: #ffd324 !important;
+}
+
+.has-text-danger {
+  color: #ff3860 !important;
+}
+
+a.has-text-danger:hover, a.has-text-danger:focus {
+  color: #ff0537 !important;
+}
+
+.has-text-black-bis {
+  color: #121212 !important;
+}
+
+.has-text-black-ter {
+  color: #242424 !important;
+}
+
+.has-text-grey-darker {
+  color: #363636 !important;
+}
+
+.has-text-grey-dark {
+  color: #4a4a4a !important;
+}
+
+.has-text-grey {
+  color: #7a7a7a !important;
+}
+
+.has-text-grey-light {
+  color: #b5b5b5 !important;
+}
+
+.has-text-grey-lighter {
+  color: #dbdbdb !important;
+}
+
+.has-text-white-ter {
+  color: whitesmoke !important;
+}
+
+.has-text-white-bis {
+  color: #fafafa !important;
+}
+
+.has-text-weight-light {
+  font-weight: 300 !important;
+}
+
+.has-text-weight-normal {
+  font-weight: 400 !important;
+}
+
+.has-text-weight-semibold {
+  font-weight: 600 !important;
+}
+
+.has-text-weight-bold {
+  font-weight: 700 !important;
 }
