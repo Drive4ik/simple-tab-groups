@@ -49,6 +49,11 @@
         "description": "Warning!"
     },
 
+    "success": {
+        "message": "Success!",
+        "description": "Success!"
+    },
+
     "ok": {
         "message": "OK",
         "description": "OK button"
@@ -457,6 +462,16 @@
     "hotkeyActionTitleOpenManageGroups": {
         "message": "Open manage groups",
         "description": "Open manage groups"
+    },
+
+    "whatsWrongMessage": {
+        "message": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)",
+        "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
+    },
+
+    "saveErrorLogsIntoFile": {
+        "message": "Save last error logs into JSON file",
+        "description": "Save last error logs into JSON file"
     }
 
 

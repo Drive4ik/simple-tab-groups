@@ -246,10 +246,10 @@
         $on('input', '#searchTabs', function() {
             if ($('#searchTabs').value.trim().length) {
                 $('#clearSearchTabsButton').classList.remove('is-hidden');
-                $('#searchWrapper').classList.add('has-addons');
+                $('#searchWrapper > .field').classList.add('has-addons');
             } else {
                 $('#clearSearchTabsButton').classList.add('is-hidden');
-                $('#searchWrapper').classList.remove('has-addons');
+                $('#searchWrapper > .field').classList.remove('has-addons');
             }
 
             renderSearchTabsList();

@@ -35,6 +35,17 @@
         }
     });
 
+    $on('click', '#saveErrorLogsIntoFile', function() {
+        let logs = BG.getLogs(),
+            logsStr = null;
+
+        if (!logs.length) {
+            return notify('No logs found');
+        }
+
+        exportToFile(logs, 'STG-error-logs.json');
+    })
+
     $on('click', '#importAddonSettings', async function() {
         try {
             let data = await importFromFile();
@@ -186,7 +197,7 @@
         let filteredHotkeys = options.hotkeys.filter(function(hotkey) {
             let ok = (hotkey.keyCode || hotkey.key) && hotkey.action.id && (hotkey.ctrlKey || hotkey.shiftKey || hotkey.altKey);
 
-            if (ok && 'load-custom-group' === hotkey.action.id && !hotkey.action.groupId) {
+            if (ok && 'load-custom-group' === hotkey.action.id && !BG.getGroups().some(gr => gr.id === hotkey.action.groupId)) {
                 ok = false;
             }
 

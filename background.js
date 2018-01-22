@@ -1,10 +1,28 @@
 (function() {
     'use strict';
 
-    let _groups = [],
+    let errorLogs = [],
+        _groups = [],
         currentlyLoadingGroups = {}; // windowId: true
 
     // return storage.get(null).then(console.log);
+
+    let log = function(message = 'log', data = null) {
+        try {
+            throw Error(message);
+        } catch (e) {
+            let prefix = browser.extension.getURL('');
+
+            errorLogs.push({
+                message: message,
+                data: data,
+                fromLine: e.stack.split('@').map(l => l.split(prefix).join('')),
+            });
+
+            notify(browser.i18n.getMessage('whatsWrongMessage'))
+                .then(() => browser.runtime.openOptionsPage());
+        }
+    };
 
     async function saveGroupsToStorage() {
         browser.runtime.sendMessage({
@@ -638,7 +656,7 @@
 
                     if (-1 === savedTabIndex) {
                         let tabs = await getTabs(windowId);
-                        savedTabIndex = tabs.findIndex(tab => tab.id === tabId);
+                        savedTabIndex = tabs.findIndex(t => t.id === tabId);
                         group.tabs.splice(savedTabIndex, 0, mapTab(tab));
                     } else {
                         group.tabs[savedTabIndex] = mapTab(tab);
@@ -729,7 +747,7 @@
             newTabIndex = tabs.findIndex(t => t.index === toIndex),
             oldSavedTabIndex = group.tabs.findIndex(tab => tab.id === tabId);
 
-        if (oldTabIndex === newTabIndex || -1 === oldTabIndex || -1 === newTabIndex || -1 === oldSavedTabIndex) {
+        if (-1 === oldTabIndex || -1 === newTabIndex || -1 === oldSavedTabIndex) {
             return;
         }
 
@@ -833,28 +851,29 @@
             tab = null,
             callSaveGroups = false,
             createdTabId = null,
-            createdTabIndex = null;
+            createdTabIndex = null,
+            tmpTabs = [];
 
         if (oldGroupId) {
             oldGroup = _groups.find(gr => gr.id === oldGroupId);
             tab = oldGroup.tabs[oldTabIndex];
         } else {
-            let tabs = await getTabs();
-            tab = mapTab(tabs[oldTabIndex]);
+            tmpTabs = await getTabs();
+            tab = mapTab(tmpTabs[oldTabIndex]);
         }
 
-        if (!tab) {
-            return notify('TAB NOT fffound');
+        if (!tab) { // tmp
+            return log('error moveTabToGroup: tab not found', [oldTabIndex, newTabIndex, oldGroupId, newGroupId, showNotificationAfterMoveTab, (oldGroup && oldGroup.tabs.length), tmpTabs.length]);
         }
 
         if (oldGroupId === newGroupId) { // if it's same group
             let win = await getWindowByGroup(newGroup);
 
             if (win) {
-                let tabs = await getTabs(newGroup.windowId);
+                tmpTabs = await getTabs(newGroup.windowId);
 
-                await browser.tabs.move(tabs[oldTabIndex].id, {
-                    index: -1 === newTabIndex ? -1 : tabs[newTabIndex].index,
+                await browser.tabs.move(tmpTabs[oldTabIndex].id, {
+                    index: -1 === newTabIndex ? -1 : tmpTabs[newTabIndex].index,
                 });
             } else {
                 if (-1 === newTabIndex) { // push to end of group
@@ -892,13 +911,13 @@
                     };
 
                 if (-1 !== newTabIndex) {
-                    let tabs = await browser.tabs.query({
+                    tmpTabs = await browser.tabs.query({
                         windowId: newGroup.windowId,
                         pinned: false,
                     });
 
-                    if (tabs[newTabIndex]) {
-                        newTabObj.index = tabs[newTabIndex].index;
+                    if (tmpTabs[newTabIndex]) {
+                        newTabObj.index = tmpTabs[newTabIndex].index;
                     }
                 }
 
@@ -1342,6 +1361,9 @@
 
     window.background = {
         inited: false,
+
+        log,
+        getLogs: () => errorLogs,
 
         openManageGroups,
 
