@@ -293,7 +293,7 @@ let $ = document.querySelector.bind(document),
     },
     parseHtml = function(html) {
         let template = document.createElement('template');
-        template.innerHTML = html;
+        template[INNER_HTML] = html;
         return template.content.firstElementChild;
     },
     toCamelCase = function(str) {
