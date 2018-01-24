@@ -19,7 +19,7 @@
         },
 
         async mounted() {
-            let defaultLocaleBlob = await fetch(urlPrefix + '_locales/${manifest.default_locale}/messages.json');
+            let defaultLocaleBlob = await fetch(urlPrefix + `_locales/${manifest.default_locale}/messages.json`);
 
             this.defaultLocale = await defaultLocaleBlob.json();
         },
