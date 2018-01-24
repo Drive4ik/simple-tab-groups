@@ -1519,15 +1519,12 @@
 
             getWindow().then(win => lastFocusedNormalWindow = win);
 
-            function compareWinTabs(tabs, tab, tabIndex) {
-                if (tab.url === tabs[tabIndex].url) {
-                    return true;
-                }
-
-                if (isStgNewTabUrl(tabs[tabIndex].url)) {
-                    return tab.url === revokeStgNewTabUrl(tabs[tabIndex].url);
-                }
-            }
+            windows = windows
+                .filter(win => 'normal' === win.type && !win.incognito)
+                .map(function(win) {
+                    win.tabs = win.tabs.filter(isAllowTab).map(mapTab);
+                    return win;
+                });
 
             _groups = data.groups.map(function(group) {
                 if (!group.windowId) {
@@ -1535,25 +1532,21 @@
                 }
 
                 let winCandidate = windows.find(function(win) {
-                    if ('normal' !== win.type || win.incognito) {
-                        return false;
-                    }
-
                     if (group.windowId === win.id) {
                         return true;
                     }
 
-                    let tabs = win.tabs.filter(isAllowTab);
-                    if (group.tabs.length && group.tabs.length === tabs.length && group.tabs.every(compareWinTabs.bind(null, tabs))) {
-                        return true;
+                    if (!group.tabs.length || group.tabs.length !== win.tabs.length) {
+                        return false;
                     }
+
+                    return group.tabs.every((tab, tabIndex) => tab.url === win.tabs[tabIndex].url);
                 });
 
                 if (winCandidate) {
                     group.windowId = winCandidate.id;
                     group.tabs = winCandidate.tabs
-                        .filter(isAllowTab)
-                        .map(function(tab, index) {
+                        .map(function(tab) { // need if window id is equal but tabs are not equal
                             let mappedTab = mapTab(tab),
                                 tabInGroup = group.tabs.find(t => t.url === mappedTab.url && t.thumbnail);
 
