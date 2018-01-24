@@ -334,6 +334,11 @@
         "description": "Create new group"
     },
 
+    "createNewGroupWithCurrentTabs": {
+        "message": "... with current tabs",
+        "description": "Create new group with current tabs"
+    },
+
     "goBackButtonTitle": {
         "message": "Go back",
         "description": "Go back"

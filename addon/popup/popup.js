@@ -136,6 +136,8 @@
                     BG.updateMoveTabMenus(currentWindowId);
                 }
             } else if ('add-group' === action) {
+                BG.addGroup();
+            } else if ('context-add-group-with-current-tabs' === action) {
                 BG.addGroup(undefined, undefined, undefined, true);
             } else if ('show-groups-list' === action) {
                 renderGroupsList();

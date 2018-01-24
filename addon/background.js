@@ -114,11 +114,11 @@
             iconUrl: null,
             tabs: [],
             catchTabRules: '',
-            windowId: windowId,
+            windowId: windowId || null,
         };
     }
 
-    async function addGroup(windowId = null, resetGroups = false, returnNewGroupIndex = true, bindCurrentStateToThisGroup = false) {
+    async function addGroup(windowId, resetGroups = false, returnNewGroupIndex = true, saveCurrentTabsToThisGroup = false) {
         let options = await storage.get(['lastCreatedGroupPosition', 'openNewWindowWhenCreateNewGroup']);
 
         options.lastCreatedGroupPosition++;
@@ -137,20 +137,27 @@
             _groups[newGroupIndex].windowId = win.id;
         }
 
-        if (0 === newGroupIndex && bindCurrentStateToThisGroup) {
+        if (0 === newGroupIndex || saveCurrentTabsToThisGroup) {
             if (!win) {
                 win = await getWindow();
+
+                windowId = win.id;
+
+                let oldGroup = _groups.find(gr => gr.windowId === windowId);
+                if (oldGroup) {
+                    oldGroup.windowId = null;
+                }
+
+                _groups[newGroupIndex].windowId = windowId;
             }
 
-            _groups[newGroupIndex].windowId = win.id;
-
-            let tabs = await getTabs(win.id);
+            let tabs = await getTabs(windowId);
 
             if (tabs.length) {
                 _groups[newGroupIndex].tabs = tabs.map(mapTab);
             }
 
-            updateBrowserActionData();
+            updateBrowserActionData(windowId);
         }
 
         storage.set(options);

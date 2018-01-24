@@ -138,7 +138,7 @@
                     popupDesign: 2,
                 });
             } else if ('add-group' === action) {
-                BG.addGroup(undefined, undefined, undefined, true);
+                BG.addGroup();
             }
         }
 

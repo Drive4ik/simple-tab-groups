@@ -128,9 +128,9 @@
         </div>
         <div class="hr"></div>
         <div class="create-new-group">
-            <div class="item" data-action="add-group">
+            <div class="item" data-action="add-group" contextmenu="new-group-menu">
                 <div class="item-icon">
-                    <img class="icon" src="/icons/group-new.svg" alt="" />
+                    <img class="size-16 icon" src="/icons/group-new.svg" alt="" />
                 </div>
                 <div class="item-title" data-i18n="createNewGroup"></div>
             </div>
@@ -151,6 +151,10 @@
     </script>
 
     <!-- Context menus -->
+
+    <menu id="new-group-menu" type="context">
+        <menuitem data-action="context-add-group-with-current-tabs" icon="/icons/group-new.svg" data-i18n="createNewGroupWithCurrentTabs:label"></menuitem>
+    </menu>
 
     <menu id="group-menu" type="context">
         <menuitem data-action="context-open-group-in-new-window" icon="chrome://browser/skin/new-window.svg" data-i18n="openGroupInNewWindow:label"></menuitem>
