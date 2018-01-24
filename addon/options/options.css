@@ -11,6 +11,10 @@ body {
     padding: 0 4px;
 }
 
+#simple-tab-groups-options > div {
+    max-width: 99%;
+}
+
 .h-margin-left-5 {
     margin-left: 5px;
 }

@@ -106,7 +106,7 @@
 
     "invalidRegExpRuleTitle": {
         "message": "Rule '$regexp$' is not valid and it will be skipped.",
-        "description": "Search a tab placeholder",
+        "description": "Invalid rule description",
         "placeholders": {
             "regexp" : {
                 "content" : "$1",
@@ -395,7 +395,7 @@
     },
 
     "hotkeysDescription": {
-        "message": "Here you can add hot keys.<br>Restrictions:<br>1. These hotkeys will only work on web pages (http:, https:). On the browser pages (about:) - it's doesn't work, the WebExtensions API does not allow this.<br>2. Some hotkeys will not work in different keyboard layouts. For example, the shortcut created in English layout Ctrl + ~ will not work on the Russian layout, because in Russian layout this key has another code. To fix this, just create another hotkey on the Russian layout: Ctrl + Ё",
+        "message": "Here you can add hot keys.<br>Restrictions:<br>1. These hotkeys will only work on web pages (http:, https:). On the browser pages (about:) - it's doesn't work, the WebExtensions API does not allow this.<br>2. Some hotkeys will not work in different keyboard layouts. For example, the shortcut created in English layout <code>Ctrl + ~</code> will not work on the Russian layout, because in Russian layout this key has another code. To fix this, just create another hotkey on the Russian layout: <code>Ctrl + Ё</code>",
         "description": "Hotkeys description"
     },
 

@@ -56,7 +56,7 @@
 
     "invalidRegExpRuleTitle": {
         "message": "正規表述式 '$regexp$' 語法有誤，將忽略之。",
-        "description": "Search a tab placeholder",
+        "description": "Invalid rule description",
         "placeholders": {
             "regexp" : {
                 "content" : "$1",
