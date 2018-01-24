@@ -80,12 +80,12 @@
                     <tbody>
                         <tr v-for="(val, key) in defaultLocale">
                             <td class="text-break-all" v-html="key"></td>
-                            <td v-html="val.message"></td>
+                            <td v-text="val.message.replace(/\n/g, '\&#92n')"></td>
                             <td>
                                 <div class="columns">
                                     <div class="column">
                                         <div class="control">
-                                            <textarea class="textarea" v-model.trim="locale[key]" :placeholder="val.message"></textarea>
+                                            <textarea class="textarea" v-model.trim="locale[key]" :placeholder="val.description"></textarea>
                                         </div>
                                     </div>
                                     <div class="column" v-if="val.placeholders">

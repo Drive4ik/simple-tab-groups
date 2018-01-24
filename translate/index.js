@@ -1,6 +1,10 @@
 (async function() {
     'use strict';
 
+    window.onbeforeunload = function() {
+        return 'You really want to close?';
+    };
+
     const LOCALE_FILE_EXT = '.json',
         urlPrefix = 'https://raw.githubusercontent.com/Drive4ik/simple-tab-groups/master/addon/';
 
