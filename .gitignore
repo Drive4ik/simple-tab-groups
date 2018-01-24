@@ -1,4 +1,4 @@
 # gitignore file
 
 /*.sublime-*
-/*.zip
+*.zip
