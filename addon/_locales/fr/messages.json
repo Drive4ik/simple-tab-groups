@@ -1,0 +1,332 @@
+{
+    "extensionDescription": {
+        "message": "Créer, modifier et changer rapidement de groupe d'onglets",
+        "description": "Description of the extension."
+    },
+    "openSettings": {
+        "message": "Réglages",
+        "description": "Settings context button title"
+    },
+    "manageGroupsTitle": {
+        "message": "Gérer les groupes",
+        "description": "Manage groups"
+    },
+    "setTabIconAsGroupIcon": {
+        "message": "Définir l’icône de l'onglet en tant qu'icône de groupe",
+        "description": "Set tab icon as group icon"
+    },
+    "moveTabToGroupMessage": {
+        "message": "onglet \"$tabtitle$\" a été déplacé vers le groupe \"grouptitle\"",
+        "description": "Tab moved popup title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            },
+            "tabtitle": {
+                "content": "$2",
+                "example": "tab title"
+            }
+        }
+    },
+    "warning": {
+        "message": "Attention!",
+        "description": "Warning!"
+    },
+    "success": {
+        "message": "Succès!",
+        "description": "Success!"
+    },
+    "ok": {
+        "message": "OK",
+        "description": "OK button"
+    },
+    "save": {
+        "message": "Sauver",
+        "description": "Save"
+    },
+    "delete": {
+        "message": "Supprimer",
+        "description": "Delete"
+    },
+    "cancel": {
+        "message": "Annuler",
+        "description": "Cancel"
+    },
+    "thisTabIsNotSupported": {
+        "message": "Cet onglet n'est pas supporté",
+        "description": "This tab is not supported"
+    },
+    "errorAnotherGroupAreLoading": {
+        "message": "Attendez svp, d'autre groupes sont en chargement",
+        "description": "Please wait, another group are loading"
+    },
+    "searchTabPlaceholder": {
+        "message": "Chercher un onglet...",
+        "description": "Search a tab placeholder"
+    },
+    "hotkeysTitle": {
+        "message": "Raccourcis",
+        "description": "Hotkeys"
+    },
+    "addHotKeyButton": {
+        "message": "Ajouter un raccourci",
+        "description": "Add hotkey"
+    },
+    "deleteHotKeyButton": {
+        "message": "Supprimer le raccourci",
+        "description": "Delete hotkey"
+    },
+    "hotkeyPlaceholder": {
+        "message": "Appuyez sur des touches",
+        "description": "Press keys here"
+    },
+    "selectGroup": {
+        "message": "Sélectionner le groupe",
+        "description": "Select group"
+    },
+    "hotkeyActionTitleLoadNextGroup": {
+        "message": "Charger le prochain groupe",
+        "description": "Load next group"
+    },
+    "hotkeyActionTitleLoadPrevGroup": {
+        "message": "Charger le groupe précédent",
+        "description": "Load previous group"
+    },
+    "hotkeyActionTitleLoadFirstGroup": {
+        "message": "Charger le premier groupe",
+        "description": "Load first group"
+    },
+    "hotkeyActionTitleLoadLastGroup": {
+        "message": "Charger le dernier groupe",
+        "description": "Load last group"
+    },
+    "hotkeyActionTitleLoadCustomGroup": {
+        "message": "Charger un groupe personnalisé",
+        "description": "Load custom group"
+    },
+    "hotkeyActionTitleAddNewGroup": {
+        "message": "Ajouter un nouveau groupe",
+        "description": "Add new group"
+    },
+    "hotkeyActionTitleDeleteCurrentGroup": {
+        "message": "Supprimer le groupe courant",
+        "description": "Delete current group"
+    },
+    "hotkeyActionDescriptionDeleteCurrentGroup": {
+        "message": "Attention! Cette action ne peux pas être annulée!",
+        "description": "Be careful! This action can not be undone!"
+    },
+    "saveErrorLogsIntoFile": {
+        "message": "Enregistrer le dernier log d'erreurs dans un fichier JSON",
+        "description": "Save last error logs into JSON file"
+    },
+    "regexpForTabsPlaceholder": {
+        "message": "Expressions régulières",
+        "description": "Regular expressions"
+    },
+    "setRandomColor": {
+        "message": "Définir une couleur aléatoire",
+        "description": "Set random color"
+    },
+    "selectUserGroupIcon": {
+        "message": "Charger icône",
+        "description": "Load icon"
+    },
+    "icon": {
+        "message": "Icône",
+        "description": "Icon"
+    },
+    "title": {
+        "message": "Titre",
+        "description": "Title"
+    },
+    "goBackButtonTitle": {
+        "message": "Retour",
+        "description": "Go back"
+    },
+    "goBackToGroupsButtonTitle": {
+        "message": "Retour aux groupes",
+        "description": "Go back to groups"
+    },
+    "createNewGroupWithCurrentTabs": {
+        "message": "... avec les onglets courants",
+        "description": "Create new group with current tabs"
+    },
+    "createNewGroup": {
+        "message": "Créer un nouveau groupe",
+        "description": "Create new group"
+    },
+    "createNewTab": {
+        "message": "Ouvrir un nouvel onglet",
+        "description": "Open new tab"
+    },
+    "deleteTab": {
+        "message": "Supprimer l'onglet",
+        "description": "Delete tab"
+    },
+    "groupTabsCount": {
+        "message": "$count$ onglets",
+        "description": "Group tabs count",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "deleteGroupTitle": {
+        "message": "Supprimer le groupe?",
+        "description": "Delete group?"
+    },
+    "deleteGroup": {
+        "message": "Supprimer le groupe",
+        "description": "Delete group"
+    },
+    "groupSettings": {
+        "message": "Préférences de groupe",
+        "description": "Group settings"
+    },
+    "settingsTitle": {
+        "message": "Préférences",
+        "description": "Settings"
+    },
+    "sortGroupsZA": {
+        "message": "Trier les groupes [Z-A]",
+        "description": "Sort groups [Z-A]"
+    },
+    "sortGroupsAZ": {
+        "message": "Trier les groupes [A-Z]",
+        "description": "Sort groups [A-Z]"
+    },
+    "newGroupTitle": {
+        "message": "Groupe $id$",
+        "description": "group id",
+        "placeholders": {
+            "id": {
+                "content": "$1",
+                "example": "1"
+            }
+        }
+    },
+    "manageGroupViewGrid": {
+        "message": "Vue en grille",
+        "description": "Grid display"
+    },
+    "manageGroupViewFreeArrange": {
+        "message": "Arrangement automatique (dans une future version)",
+        "description": "Free arrange"
+    },
+    "closePopupAfterChangeGroup": {
+        "message": "Fermer les popup après avoir changé de groupe",
+        "description": "Close popup after changing group"
+    },
+    "hotkeyActionTitleOpenManageGroups": {
+        "message": "Ouvrir \"Gestion des onglets\"",
+        "description": "Open manage groups"
+    },
+    "deleteGroupBody": {
+        "message": "Souhaitez-vous supprimer \"$name$\" ?<br>Supprimer un groupe ferme également les onglets et ferme la fenêtre!<br>Attention! Cette action ne peut pas être annulée!",
+        "description": "Delete group?",
+        "placeholders": {
+            "name": {
+                "content": "$1",
+                "example": "Group #4"
+            }
+        }
+    },
+    "openGroupInNewWindow": {
+        "message": "Ouvrir le groupe dans une nouvelle fenêtre",
+        "description": "Open group in new window"
+    },
+    "individualWindowForEachGroup": {
+        "message": "Fenêtre individuelle pour chaque groupe",
+        "description": "Individual window for each group"
+    },
+    "showConfirmDialogBeforeGroupDelete": {
+        "message": "Affiche une confirmation avant de supprimer le groupe",
+        "description": "Show confirm dialog before group delete"
+    },
+    "showNotificationAfterMoveTab": {
+        "message": "Afficher une notification quand l'onglet est transféré dans un autre groupe",
+        "description": "Show notification when tab is moved to another group"
+    },
+    "confirmLoadGroupAndDeleteTabs": {
+        "message": "Charger ce groupe va fermer tous les onglet courants!",
+        "description": "Load this group will close all current tabs!"
+    },
+    "privateAndPinnedTabsAreNotSupported": {
+        "message": "Les onglets privés et verrouillés ne sont pas supportés",
+        "description": "Private and pinned tabs are not supported"
+    },
+    "moveTabToGroupDisabledTitle": {
+        "message": "Transférer l'onglet dans un groupe",
+        "description": "Move tab to group title"
+    },
+    "confirmDeleteLastGroupAndCloseTabs": {
+        "message": "Supprimer ce groupe fermera tous les onglets courants!",
+        "description": "Deleting this group will close all current tabs!"
+    },
+    "importAddonSettingsButton": {
+        "message": "Restaurer une sauvegarde",
+        "description": "Restore backup"
+    },
+    "importAddonSettingsDescription": {
+        "message": "Charger un fichier de sauvegarde contenant les groupes d'onglets que vous souhaitez restaurer.",
+        "description": "Load a backup file containing the tab groups you want to restore."
+    },
+    "exportAddonSettingsButton": {
+        "message": "Créer une sauvegarde",
+        "description": "Create backup"
+    },
+    "openNewWindowWhenCreateNewGroup": {
+        "message": "Ouvrir une nouvelle fenêtre lors de la création d'un nouveau groupe",
+        "description": "Open new window when create new group"
+    },
+    "createNewGroupAfterAttachTabToNewWindow": {
+        "message": "Créer un nouveau groupe si l'onglet est transférer dans une nouvelle fenêtre",
+        "description": "Create new group if tab is moved to new window"
+    },
+    "openManageGroupsInTab": {
+        "message": "Ouvrir \"Gestion des groupes\" dans un nouvel onglet",
+        "description": "Open \"Manage Groups\" in new tab"
+    },
+    "invalidRegExpRuleTitle": {
+        "message": "La règle '$regexp$' n'est pas valide et sera sautée.",
+        "description": "Invalid rule description",
+        "placeholders": {
+            "regexp": {
+                "content": "$1",
+                "example": "googlecom"
+            }
+        }
+    },
+    "filterTabsPlaceholder": {
+        "message": "Filtrer les onglets (filtre multiple avec *)",
+        "description": "Filter tabs (multiple filter with *)"
+    },
+    "importAddonSettingsTitle": {
+        "message": "Restaurer Simple Tab Groups",
+        "description": "Restore Simple Tab Groups"
+    },
+    "importAddonSettingsWarning": {
+        "message": "Restaurer les préférences d'add-on vont SUPPRIMER toutes les préférences et groupes!",
+        "description": "Restore add-on settings will ERASE all existing settings and groups!"
+    },
+    "showGroupIconWhenSearchATab": {
+        "message": "Afficher l'icône de groupe lors de la recherche d'un onglet",
+        "description": "Show group icon when search a tab"
+    },
+    "whatsWrongMessage": {
+        "message": "Un problème... ?\\nPrenez contact avec le développeur par email avec le dernier log d'erreur (le bouton existe en bas des préférences)",
+        "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
+    },
+    "selectAction": {
+        "message": "Sélectionner l'action",
+        "description": "Select action"
+    },
+    "openGroupAfterChange": {
+        "message": "Ouvrir le groupe après avoir changer pour celui-ci",
+        "description": "Open group after changing to it"
+    }
+}
