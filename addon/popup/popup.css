@@ -147,7 +147,7 @@ html {
     margin: 0 auto;
     border-radius: 50%;
     display: inline-block;
-    vertical-align: text-top;
+    vertical-align: -3px;
 }
 
 .text-italic {
