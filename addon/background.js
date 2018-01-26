@@ -1107,7 +1107,7 @@
         }
 
         browser.browserAction.setTitle({
-            title: currentGroup.title + ' - ' + EXTENSION_NAME,
+            title: currentGroup.title + ' - ' + browser.i18n.getMessage('extensionName'),
         });
 
         browser.browserAction.setIcon({
@@ -1499,7 +1499,6 @@
     Promise.all([
             storage.get(null),
             browser.windows.getAll({
-                populate: true,
                 windowTypes: ['normal'],
             })
         ])
@@ -1519,12 +1518,12 @@
 
             getWindow().then(win => lastFocusedNormalWindow = win);
 
-            windows = windows
-                .filter(win => 'normal' === win.type && !win.incognito)
-                .map(function(win) {
-                    win.tabs = win.tabs.filter(isAllowTab).map(mapTab);
-                    return win;
-                });
+            windows = windows.filter(win => 'normal' === win.type && !win.incognito);
+
+            let winTabs = {};
+            await Promise.all(windows.map(function(win) {
+                return getTabs(win.id).then(tabs => winTabs[win.id] = tabs.map(mapTab)); // map need for normalize url
+            }));
 
             _groups = data.groups.map(function(group) {
                 if (!group.windowId) {
@@ -1536,16 +1535,32 @@
                         return true;
                     }
 
-                    if (!group.tabs.length || group.tabs.length !== win.tabs.length) {
+                    if (0 === group.tabs.length) {
                         return false;
                     }
 
-                    return group.tabs.every((tab, tabIndex) => tab.url === win.tabs[tabIndex].url);
+                    // let equalTabsLength = group.tabs.filter((tab, tabIndex) => tab.url === winTabs[win.id][tabIndex].url);
+                    // let equalTabsLength = group.tabs.filter(function(tab, tabIndex) {
+                    //     console.log(tab.url);
+                    //     console.log(winTabs[win.id][tabIndex].url);
+                    //     return tab.url === winTabs[win.id][tabIndex].url;
+                    // });
+                    let equalTabs = group.tabs.filter(tab => winTabs[win.id].some(t => t.url === tab.url));
+
+                    if (equalTabs.length === group.tabs.length) {
+                        return true;
+                    }
+
+                    if ((equalTabs.length + 1) === group.tabs.length) {
+                        return true;
+                    }
+
+                    // let equalTabsLength = group.tabs.filter((tab, tabIndex) => tab.url === winTabs[win.id][tabIndex].url);
                 });
 
                 if (winCandidate) {
                     group.windowId = winCandidate.id;
-                    group.tabs = winCandidate.tabs
+                    group.tabs = winTabs[winCandidate.id]
                         .map(function(tab) { // need if window id is equal but tabs are not equal
                             let mappedTab = mapTab(tab),
                                 tabInGroup = group.tabs.find(t => t.url === mappedTab.url && t.thumbnail);
