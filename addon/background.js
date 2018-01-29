@@ -1539,23 +1539,17 @@
                         return false;
                     }
 
-                    // let equalTabsLength = group.tabs.filter((tab, tabIndex) => tab.url === winTabs[win.id][tabIndex].url);
-                    // let equalTabsLength = group.tabs.filter(function(tab, tabIndex) {
-                    //     console.log(tab.url);
-                    //     console.log(winTabs[win.id][tabIndex].url);
-                    //     return tab.url === winTabs[win.id][tabIndex].url;
-                    // });
                     let equalTabs = group.tabs.filter(tab => winTabs[win.id].some(t => t.url === tab.url));
 
                     if (equalTabs.length === group.tabs.length) {
                         return true;
                     }
 
-                    if ((equalTabs.length + 1) === group.tabs.length) {
+                    if (equalTabs.length && (equalTabs.length + 1) === group.tabs.length) {
                         return true;
                     }
 
-                    // let equalTabsLength = group.tabs.filter((tab, tabIndex) => tab.url === winTabs[win.id][tabIndex].url);
+                    return false;
                 });
 
                 if (winCandidate) {
