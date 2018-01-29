@@ -156,16 +156,16 @@
                     return notify('Cannot parse groups: ' + e);
                 }
 
-                oldTab.entries.forEach(function(t) {
-                    if (isAllowUrl(t.url) && newGroups[extData.groupID]) {
-                        newGroups[extData.groupID].tabs.push(BG.mapTab({
-                            title: (t.title || t.url),
-                            url: t.url,
-                            favIconUrl: oldTab.image || '',
-                            active: Boolean(extData.active),
-                        }));
-                    }
-                });
+                let tab = oldTab.entries.pop();
+
+                if (isAllowUrl(tab.url) && newGroups[extData.groupID]) {
+                    newGroups[extData.groupID].tabs.push(BG.mapTab({
+                        title: (tab.title || tab.url),
+                        url: tab.url,
+                        favIconUrl: oldTab.image || '',
+                        active: Boolean(extData.active),
+                    }));
+                }
             });
         });
 

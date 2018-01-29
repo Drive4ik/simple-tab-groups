@@ -257,6 +257,8 @@
             renderSearchTabsList();
         });
 
+        $('#searchTabs').focus();
+
         addDragAndDropEvents();
 
         // setTabEventsListener

@@ -1,4 +1,9 @@
 {
+    "extensionName": {
+        "message": "Simple Tab Groups",
+        "description": "Name of the extension."
+    },
+
     "extensionDescription": {
         "message": "Create, modify and quickly change tab groups. \nInspired by the old add-on \"Tab Groups\" :)",
         "description": "Description of the extension."

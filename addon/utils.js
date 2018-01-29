@@ -1,7 +1,6 @@
 'use strict';
 
-const EXTENSION_NAME = 'Simple Tab Groups',
-    INNER_HTML = 'innerHTML',
+const INNER_HTML = 'innerHTML',
     MANIFEST = browser.runtime.getManifest(),
     DEFAULT_COOKIE_STORE_ID = 'firefox-default',
     PRIVATE_COOKIE_STORE_ID = 'firefox-private',
@@ -126,7 +125,7 @@ let $ = document.querySelector.bind(document),
             return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
         }).join(''));
     },
-    notify = function(message, timer, id) {
+    notify = function(message, timer = 30000, id) {
         if (id) {
             browser.notifications.clear(id);
         } else {
@@ -138,7 +137,7 @@ let $ = document.querySelector.bind(document),
         browser.notifications.create(id, {
             type: 'basic',
             iconUrl: '/icons/icon.svg',
-            title: EXTENSION_NAME,
+            title: browser.i18n.getMessage('extensionName'),
             message: String(message),
         });
 

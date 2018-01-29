@@ -3,12 +3,12 @@
 
     "applications": {
         "gecko": {
-            "id": "simple-tab-groups@drive4ik",
+            "id": "test-simple-tab-groups@drive4ik",
             "strict_min_version": "56.0"
         }
     },
 
-    "name": "Simple Tab Groups",
+    "name": "__MSG_extensionName__",
     "description": "__MSG_extensionDescription__",
     "version": "2.3.1",
     "author": "Vitaliy Bavykin",
@@ -35,7 +35,7 @@
     "browser_action": {
         "default_area": "tabstrip",
         "default_icon": "/icons/icon.svg",
-        "default_title": "Simple Tab Groups",
+        "default_title": "__MSG_extensionName__",
         "default_popup": "popup/popup.html"
     },
 

@@ -8,7 +8,7 @@
     const LOCALE_FILE_EXT = '.json',
         urlPrefix = 'https://raw.githubusercontent.com/Drive4ik/simple-tab-groups/master/addon/';
 
-    let notAllowedKeys = ['locale', 'version', 'polyglot'],
+    let notAllowedKeys = ['locale', 'version', 'polyglot', 'extensionName'],
         manifestBlob = await fetch(urlPrefix + 'manifest.json'),
         manifest = await manifestBlob.json();
 
