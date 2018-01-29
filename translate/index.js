@@ -73,8 +73,10 @@
                         return;
                     }
 
+                    let message = this.locale[key].replace(/\\n/g, '\n');
+
                     localeToSave[key] = {
-                        message: this.locale[key],
+                        message: message,
                         description: this.defaultLocale[key].description,
                     };
 
