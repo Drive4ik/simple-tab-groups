@@ -3,7 +3,7 @@
 
     "applications": {
         "gecko": {
-            "id": "test-simple-tab-groups@drive4ik",
+            "id": "simple-tab-groups@drive4ik",
             "strict_min_version": "56.0"
         }
     },
