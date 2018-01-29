@@ -1530,9 +1530,9 @@
                 }
 
                 let winCandidate = windows.find(function(win) {
-                    if (group.windowId === win.id) {
-                        return true;
-                    }
+                    // if (group.windowId === win.id) {
+                    //     return true;
+                    // }
 
                     if (0 === group.tabs.length) {
                         return false;
