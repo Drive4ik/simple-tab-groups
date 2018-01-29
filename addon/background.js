@@ -134,12 +134,12 @@
 
         if (options.openNewWindowWhenCreateNewGroup && !windowId) {
             win = await createWindow();
-            _groups[newGroupIndex].windowId = win.id;
+            _groups[newGroupIndex].windowId = windowId = win.id;
         }
 
         if (0 === newGroupIndex || saveCurrentTabsToThisGroup) {
             if (!win) {
-                win = await getWindow();
+                win = await getWindow(windowId);
 
                 windowId = win.id;
 
@@ -156,14 +156,13 @@
             if (tabs.length) {
                 _groups[newGroupIndex].tabs = tabs.map(mapTab);
             }
-
-            updateBrowserActionData(windowId);
         }
 
         storage.set(options);
 
+        updateBrowserActionData(windowId);
+        updateMoveTabMenus(windowId);
         saveGroupsToStorage();
-        updateMoveTabMenus();
 
         return returnNewGroupIndex ? newGroupIndex : _groups[newGroupIndex];
     }
