@@ -1524,28 +1524,34 @@
                 return getTabs(win.id).then(tabs => winTabs[win.id] = tabs.map(mapTab)); // map need for normalize url
             }));
 
+            let syncedWinIds = [];
+
             _groups = data.groups.map(function(group) {
                 if (!group.windowId) {
                     return group;
                 }
 
-                let winCandidate = windows.find(function(win) {
-                    if (0 === group.tabs.length) {
+                let winCandidate = windows
+                    .filter(win => !syncedWinIds.includes(win.id))
+                    .find(function(win) {
+                        if (0 === group.tabs.length) {
+                            return false;
+                        }
+
+                        let equalTabs = group.tabs.filter(tab => winTabs[win.id].some(t => t.url === tab.url));
+
+                        if (equalTabs.length === group.tabs.length) {
+                            syncedWinIds.push(win.id);
+                            return true;
+                        }
+
+                        if (equalTabs.length && (equalTabs.length + 1) === group.tabs.length) {
+                            syncedWinIds.push(win.id);
+                            return true;
+                        }
+
                         return false;
-                    }
-
-                    let equalTabs = group.tabs.filter(tab => winTabs[win.id].some(t => t.url === tab.url));
-
-                    if (equalTabs.length === group.tabs.length) {
-                        return true;
-                    }
-
-                    if (equalTabs.length && (equalTabs.length + 1) === group.tabs.length) {
-                        return true;
-                    }
-
-                    return false;
-                });
+                    });
 
                 if (winCandidate) {
                     group.windowId = winCandidate.id;
