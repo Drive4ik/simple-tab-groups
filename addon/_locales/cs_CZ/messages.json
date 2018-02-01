@@ -1,6 +1,6 @@
 {
     "extensionDescription": {
-        "message": "Vytvářej, upravuj a jednoduše pozměňuj skupiny panelů. \nInspirováno starým doplňkem \"Tab Groups\" :)",
+        "message": "Vytvářej, upravuj a jednoduše přepínej skupiny panelů. \nInspirováno starým doplňkem \"Tab Groups\" :)",
         "description": "Description of the extension."
     },
     "openSettings": {
@@ -70,7 +70,7 @@
         "description": "Load this group will close all current tabs!"
     },
     "confirmDeleteLastGroupAndCloseTabs": {
-        "message": "Smazání této skupiny zavře všechny aktuální panely!",
+        "message": "Smazáním této skupiny zavřete všechny aktuální panely!",
         "description": "Deleting this group will close all current tabs!"
     },
     "searchTabPlaceholder": {
@@ -88,7 +88,7 @@
         }
     },
     "manageGroupViewGrid": {
-        "message": "Mřížové uspořádání",
+        "message": "Mřížkové uspořádání",
         "description": "Grid display"
     },
     "manageGroupViewFreeArrange": {
@@ -100,15 +100,15 @@
         "description": "Close popup after changing group"
     },
     "showNotificationAfterMoveTab": {
-        "message": "Ukázat upozornění, když je panel přesunut do jiné skupiny",
+        "message": "Upozornit, pokud je panel přesunut do jiné skupiny",
         "description": "Show notification when tab is moved to another group"
     },
     "createNewGroupAfterAttachTabToNewWindow": {
-        "message": "Vytvořit novou skupinu, když je panel přesunut do nového okna",
+        "message": "Vytvořit novou skupinu, pokud je panel přesunut do nového okna",
         "description": "Create new group if tab is moved to new window"
     },
     "openManageGroupsInTab": {
-        "message": "Otevřít \"Správu skupin\" v novém okně",
+        "message": "Otevřít \"Správu skupin\" v novém panelu",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
@@ -232,7 +232,7 @@
         "description": "Delete group?"
     },
     "deleteGroupBody": {
-        "message": "Chcete smazat skupinu \"$name$\"?<br>Odstranění skupiny také zavře panely a přiřazená okna, pokud jsou teď otevřena!<br> Buďte opatrní, tato akce je nevratná!",
+        "message": "Chcete smazat skupinu \"$name$\"?<br>Odstraněním skupiny také zavřete panely a přiřazená okna, pokud jsou otevřena!<br> Buďte opatrní, tato akce je nevratná!",
         "description": "Delete group?",
         "placeholders": {
             "name": {
@@ -256,7 +256,7 @@
         "description": "Delete tab"
     },
     "createNewTab": {
-        "message": "Otevřít v novém okně",
+        "message": "Otevřít nový panel",
         "description": "Open new tab"
     },
     "createNewGroup": {
@@ -272,7 +272,7 @@
         "description": "Go back"
     },
     "goBackToGroupsButtonTitle": {
-        "message": "Zpět do skupin",
+        "message": "Zpět na seznam skupin",
         "description": "Go back to groups"
     },
     "title": {
@@ -320,7 +320,7 @@
         "description": "Add hotkey"
     },
     "deleteHotKeyButton": {
-        "message": "Vymazat zkratku",
+        "message": "Odstranit zkratku",
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
