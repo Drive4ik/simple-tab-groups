@@ -8,13 +8,14 @@
     const LOCALE_FILE_EXT = '.json',
         urlPrefix = 'https://raw.githubusercontent.com/Drive4ik/simple-tab-groups/master/addon/';
 
-    let notAllowedKeys = ['locale', 'version', 'polyglot', 'extensionName'],
-        manifestBlob = await fetch(urlPrefix + 'manifest.json'),
+    let manifestBlob = await fetch(urlPrefix + 'manifest.json'),
         manifest = await manifestBlob.json();
 
     let tr = new Vue({
         el: '#content',
         data: {
+            notAllowedKeys: ['locale', 'version', 'polyglot', 'extensionName'],
+
             manifest: manifest,
 
             defaultLocale: {},
@@ -37,7 +38,7 @@
                 };
 
                 Object.keys(locale).forEach(function(key) {
-                    if (notAllowedKeys.includes(key)) {
+                    if (this.notAllowedKeys.includes(key)) {
                         return;
                     }
 
@@ -65,7 +66,7 @@
                     fileName = 'simple-tab-groups-translation-' + this.locale.locale + LOCALE_FILE_EXT;
 
                 Object.keys(this.locale).forEach(function(key) {
-                    if (notAllowedKeys.includes(key)) {
+                    if (this.notAllowedKeys.includes(key)) {
                         return;
                     }
 
