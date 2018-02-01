@@ -1531,43 +1531,40 @@
                     return group;
                 }
 
-                let winCandidate = windows
-                    .filter(win => !syncedWinIds.includes(win.id))
-                    .find(function(win) {
-                        if (0 === group.tabs.length) {
-                            return false;
-                        }
+                group.windowId = null;
 
-                        let equalTabs = group.tabs.filter(tab => winTabs[win.id].some(t => t.url === tab.url));
-
-                        if (equalTabs.length === group.tabs.length) {
-                            syncedWinIds.push(win.id);
-                            return true;
-                        }
-
-                        if (equalTabs.length && (equalTabs.length + 1) === group.tabs.length) {
-                            syncedWinIds.push(win.id);
-                            return true;
-                        }
-
-                        return false;
-                    });
-
-                if (winCandidate) {
-                    group.windowId = winCandidate.id;
-                    group.tabs = winTabs[winCandidate.id]
-                        .map(function(tab) { // need if window id is equal but tabs are not equal
-                            let mappedTab = mapTab(tab),
-                                tabInGroup = group.tabs.find(t => t.url === mappedTab.url && t.thumbnail);
-
-                            if (tabInGroup) {
-                                mappedTab.thumbnail = tabInGroup.thumbnail;
+                if (group.tabs.length) {
+                    let winCandidate = windows
+                        .filter(win => !syncedWinIds.includes(win.id))
+                        .find(function(win) {
+                            if (winTabs[win.id].length < group.tabs.length) {
+                                return false;
                             }
 
-                            return mappedTab;
+                            let equalGroupTabs = group.tabs.filter(tab => winTabs[win.id].some(t => t.url === tab.url));
+
+                            if (equalGroupTabs.length === group.tabs.length && winTabs[win.id].length >= group.tabs.length) {
+                                syncedWinIds.push(win.id);
+                                return true;
+                            }
+
+                            return false;
                         });
-                } else {
-                    group.windowId = null;
+
+                    if (winCandidate) {
+                        group.windowId = winCandidate.id;
+                        group.tabs = winTabs[winCandidate.id]
+                            .map(function(tab) { // need if window id is equal but tabs are not equal
+                                let mappedTab = mapTab(tab),
+                                    tabInGroup = group.tabs.find(t => t.url === mappedTab.url && t.thumbnail);
+
+                                if (tabInGroup) {
+                                    mappedTab.thumbnail = tabInGroup.thumbnail;
+                                }
+
+                                return mappedTab;
+                            });
+                    }
                 }
 
                 return group;
