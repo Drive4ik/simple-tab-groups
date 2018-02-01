@@ -1,10 +1,10 @@
 {
     "extensionDescription": {
-        "message": "Créer, modifier et changer rapidement de groupe d'onglets",
+        "message": "Créer, modifier et changer rapidement de groupe d'onglets. \nInspiré par l'ancien add-on \"Tab Groups\" :)",
         "description": "Description of the extension."
     },
     "openSettings": {
-        "message": "Réglages",
+        "message": "Préférences",
         "description": "Settings context button title"
     },
     "manageGroupsTitle": {
@@ -16,7 +16,7 @@
         "description": "Set tab icon as group icon"
     },
     "moveTabToGroupMessage": {
-        "message": "onglet \"$tabtitle$\" a été déplacé vers le groupe \"grouptitle\"",
+        "message": "L'onglet \"$tabtitle$\" a été déplacé vers le groupe \"$grouptitle$\".\n\nCliquez ici pour voir cet onglet.",
         "description": "Tab moved popup title",
         "placeholders": {
             "grouptitle": {
@@ -78,7 +78,7 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Appuyez sur des touches",
+        "message": "Appuyez sur des touches ici",
         "description": "Press keys here"
     },
     "selectGroup": {
@@ -86,7 +86,7 @@
         "description": "Select group"
     },
     "hotkeyActionTitleLoadNextGroup": {
-        "message": "Charger le prochain groupe",
+        "message": "Charger le groupe suivant",
         "description": "Load next group"
     },
     "hotkeyActionTitleLoadPrevGroup": {
@@ -218,11 +218,11 @@
         "description": "Free arrange"
     },
     "closePopupAfterChangeGroup": {
-        "message": "Fermer les popup après avoir changé de groupe",
+        "message": "Fermer le popup après avoir changé de groupe",
         "description": "Close popup after changing group"
     },
     "hotkeyActionTitleOpenManageGroups": {
-        "message": "Ouvrir \"Gestion des onglets\"",
+        "message": "Ouvrir \"Gérer les groupes\"",
         "description": "Open manage groups"
     },
     "deleteGroupBody": {
@@ -244,7 +244,7 @@
         "description": "Individual window for each group"
     },
     "showConfirmDialogBeforeGroupDelete": {
-        "message": "Affiche une confirmation avant de supprimer le groupe",
+        "message": "Afficher une confirmation avant de supprimer le groupe",
         "description": "Show confirm dialog before group delete"
     },
     "showNotificationAfterMoveTab": {
@@ -284,15 +284,15 @@
         "description": "Open new window when create new group"
     },
     "createNewGroupAfterAttachTabToNewWindow": {
-        "message": "Créer un nouveau groupe si l'onglet est transférer dans une nouvelle fenêtre",
+        "message": "Créer un nouveau groupe si l'onglet est transféré dans une nouvelle fenêtre",
         "description": "Create new group if tab is moved to new window"
     },
     "openManageGroupsInTab": {
-        "message": "Ouvrir \"Gestion des groupes\" dans un nouvel onglet",
+        "message": "Ouvrir \"Gérer les groupes\" dans un nouvel onglet",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "invalidRegExpRuleTitle": {
-        "message": "La règle '$regexp$' n'est pas valide et sera sautée.",
+        "message": "La règle '$regexp$' n'est pas valide et sera ignorée.",
         "description": "Invalid rule description",
         "placeholders": {
             "regexp": {
@@ -306,11 +306,11 @@
         "description": "Filter tabs (multiple filter with *)"
     },
     "importAddonSettingsTitle": {
-        "message": "Restaurer Simple Tab Groups",
+        "message": "Restaurer des groupes Simple Tab Groups",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsWarning": {
-        "message": "Restaurer les préférences d'add-on vont SUPPRIMER toutes les préférences et groupes!",
+        "message": "Restaurer les préférences d'add-on vont SUPPRIMER toutes les préférences et groupes existants!",
         "description": "Restore add-on settings will ERASE all existing settings and groups!"
     },
     "showGroupIconWhenSearchATab": {
@@ -318,7 +318,7 @@
         "description": "Show group icon when search a tab"
     },
     "whatsWrongMessage": {
-        "message": "Un problème... ?\\nPrenez contact avec le développeur par email avec le dernier log d'erreur (le bouton existe en bas des préférences)",
+        "message": "Un problème... ?\nPrenez contact avec le développeur par email avec le dernier log d'erreur (le bouton existe en bas des préférences)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
     },
     "selectAction": {
@@ -326,7 +326,69 @@
         "description": "Select action"
     },
     "openGroupAfterChange": {
-        "message": "Ouvrir le groupe après avoir changer pour celui-ci",
+        "message": "Ouvrir le groupe après avoir changé pour celui-ci",
         "description": "Open group after changing to it"
+    },
+    "exportAddonSettingsTitle": {
+        "message": "Sauvegarder vos groupes Simple Tab Groups",
+        "description": "Backup your Simple Tab Groups"
+    },
+    "exportAddonSettingsDescription": {
+        "message": "Exporte vos groupes d'onglets dans un fichier de sauvegarde que vous pourrez restaurer plus tard si nécessaire.",
+        "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
+    },
+    "includeTabThumbnailsIntoBackup": {
+        "message": "Inclure les icônes d'onglet dans la sauvegarde (le fichier de sauvegarde sera plus volumineux)",
+        "description": "Include tab thumbnails into backup (make backup file size bigger)"
+    },
+    "importSettingsOldTabGroupsAddonTitle": {
+        "message": "Restaurer des groupes d'onglets de \"Tab Groups\" de Quicksaver",
+        "description": "Restore Quicksaver's \"Tab Groups\""
+    },
+    "importSettingsOldTabGroupsAddonDescription": {
+        "message": "Charge un fichier de sauvegarde de l'ancien addon \"Tab Groups\".",
+        "description": "Load a backup file old \"Tab Groups\" addon."
+    },
+    "importSettingsOldTabGroupsAddonButton": {
+        "message": "Importe les préférences de l'addon \"Tab Groups\" de Quicksaver",
+        "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
+    },
+    "showUrlTooltipOnTabHover": {
+        "message": "Montrer l'url d'un onglet survolé dans une infobulle",
+        "description": "Show url tooltip when hovering over tab"
+    },
+    "enableFastGroupSwitching": {
+        "message": "Activer le changement rapide de groupe (sans charger tous les onglets, uniquement l'actif)",
+        "description": "Enable fast group switching (without loading all tabs, only active)"
+    },
+    "enableFavIconsForNotLoadedTabs": {
+        "message": "Activer les fav-icons pour les onglets non-chargés (décochez cette case si vous souhaitez de meilleures performances)",
+        "description": "Enable fav-icons for not loaded tabs (disable this checkbox if more speed is needed)"
+    },
+    "searchTabNotFoundTitle": {
+        "message": "La recherche d'onglets \"$search$\" n'a pas de résutat",
+        "description": "Search for tabs not found",
+        "placeholders": {
+            "search": {
+                "content": "$1",
+                "example": "mail"
+            }
+        }
+    },
+    "selectUserGroupIconWarnText": {
+        "message": "Désolé, vous ne pouvez pas charger d'icône personnalisé dans ce popup, mais vous pouvez charger un icône de groupe dans \"Gérer les groupes\".\nOuvrir \"Gérer les groupes\"?",
+        "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
+    },
+    "regexpForTabsTitle": {
+        "message": "Expressions régulières pour les onglets trouvés",
+        "description": "Regular expressions for catch tabs"
+    },
+    "regexpForTabsHelp": {
+        "message": "Insérez ici des expressions régulières pour des adresses web. Les onglets correspondants seront automatiquement transférés dans ce groupe.\nN'utilisez qu'une ligne par règle, avec autant de règles que vous souhaitez.\nExemples:\ngithub\\.com/drive4ik/simple-tab-groups - récupère toutes les pages dans le répertoire de l'addon\nbugzilla\\.mozilla\\.org - récupère les rapports de bug firefox\n(facebook|twitter|youtube)\\.com - récupère toutes vos pages sociales",
+        "description": "Regular exceptions helper"
+    },
+    "hotkeysDescription": {
+        "message": "Ici vous pouvez ajouter des raccourcis.<br>Restrictions:<br>1. Ces raccourcis ne fonctionneront que sur des pages webs (http:, https:). Sur des pages du navigateur (about:) - cela ne fonctionne pas, l'API WebExtensions ne l'autorise pas.<br>2. Certains raccourcis ne fonctionneront pas sur différentes dispositions de clavier. Par exemple, le raccourci créé dans la disposition US <code>Ctrl + ~</code> ne fonctionnera pas sur la disposition RU à cause du fait que la disposition russe a un autre code pour cette touche. Pour contourner ce problème, créez simplement un autre raccourci avec la disposition russe: <code>Ctrl + Ё</code>",
+        "description": "Hotkeys description"
     }
 }
