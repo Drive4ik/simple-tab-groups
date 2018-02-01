@@ -1312,7 +1312,7 @@
         },
     });
 
-    browser.runtime.onMessage.addListener(async function(request, sender, sendResponse) {
+    browser.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         if (!isAllowSender(sender)) {
             return {
                 unsubscribe: true,
@@ -1328,42 +1328,145 @@
         }
 
         if (request.runAction) {
-            let currentWindow = await getWindow(),
-                currentGroup = _groups.find(gr => gr.windowId === currentWindow.id);
-
-            if ('load-next-group' === request.runAction.id) {
-                if (currentGroup) {
-                    loadGroupPosition('next');
-                }
-            } else if ('load-prev-group' === request.runAction.id) {
-                if (currentGroup) {
-                    loadGroupPosition('prev');
-                }
-            } else if ('load-first-group' === request.runAction.id) {
-                if (_groups[0]) {
-                    loadGroup(currentWindow.id, 0);
-                }
-            } else if ('load-last-group' === request.runAction.id) {
-                if (_groups[_groups.length - 1]) {
-                    loadGroup(currentWindow.id, _groups.length - 1);
-                }
-            } else if ('load-custom-group' === request.runAction.id) {
-                let groupIndex = _groups.findIndex(gr => gr.id === request.runAction.groupId);
-
-                if (-1 !== groupIndex) {
-                    loadGroup(currentWindow.id, groupIndex);
-                }
-            } else if ('add-new-group' === request.runAction.id) {
-                addGroup();
-            } else if ('delete-current-group' === request.runAction.id) {
-                if (currentGroup) {
-                    removeGroup(currentGroup.id);
-                }
-            } else if ('open-manage-groups' === request.runAction.id) {
-                openManageGroups();
-            }
+            runAction(request.runAction);
         }
     });
+
+    // let allowedRequests = {
+    //     allowedRequests: [{
+    //             request: {
+    //                 areYouHere: true,
+    //             },
+    //             responce: {
+    //                 ok: true,
+    //             },
+    //         },
+    //         {
+    //             request: {
+    //                 getGroupsList: true,
+    //             },
+    //             responce: {
+    //                 ok: true,
+    //                 groupsList: [{
+    //                     id: 4,
+    //                     title: 'Group title',
+    //                 }],
+    //             },
+    //         },
+    //         {
+    //             request: {
+    //                 runAction: {
+    //                     id: 'load-next-group',
+    //                     groupId: 4,
+    //                     allowedActionIds: [
+    //                         'load-next-group',
+    //                         'load-prev-group',
+    //                         'load-first-group',
+    //                         'load-last-group',
+    //                         'load-custom-group',
+    //                         'add-new-group',
+    //                         'delete-current-group',
+    //                         'open-manage-groups',
+    //                     ],
+    //                 },
+    //             },
+    //             responce: {
+    //                 ok: true,
+    //                 error: 'if not ok: error message will be here',
+    //             },
+    //         },
+    //     ],
+    // };
+
+    browser.runtime.onMessageExternal.addListener(function(request, sender, sendResponse) {
+        let extensionRules = {};
+
+        if (!isAllowExternalRequestAndSender(request, sender, extensionRules)) {
+            return sendResponse({
+                ok: false,
+                error: '[STG] Your extension/action does not in white list. If you want to add your extension/action to white list - please contact with me.',
+                yourExtentionRules: extensionRules,
+            });
+        }
+
+        if (request.areYouHere) {
+            sendResponse({
+                ok: true,
+            });
+        } else if (request.getGroupsList) {
+            let groupsList = _groups.map(function(group) {
+                return {
+                    id: group.id,
+                    title: group.title,
+                };
+            });
+
+            sendResponse({
+                ok: true,
+                groupsList,
+            });
+        } else if (request.runAction) {
+            sendResponse(runAction(request.runAction));
+        }
+    });
+
+    async function runAction(action) {
+        let result = {
+            ok: false,
+        };
+
+        if (!action || !action.id) {
+            result.error = '[STG] Action id is empty';
+            return result;
+        }
+
+        let currentWindow = await getWindow(),
+            currentGroup = _groups.find(gr => gr.windowId === currentWindow.id);
+
+        if ('load-next-group' === action.id) {
+            if (currentGroup) {
+                loadGroupPosition('next');
+                result.ok = true;
+            }
+        } else if ('load-prev-group' === action.id) {
+            if (currentGroup) {
+                loadGroupPosition('prev');
+                result.ok = true;
+            }
+        } else if ('load-first-group' === action.id) {
+            if (_groups[0]) {
+                loadGroup(currentWindow.id, 0);
+                result.ok = true;
+            }
+        } else if ('load-last-group' === action.id) {
+            if (_groups[_groups.length - 1]) {
+                loadGroup(currentWindow.id, _groups.length - 1);
+                result.ok = true;
+            }
+        } else if ('load-custom-group' === action.id) {
+            let groupIndex = _groups.findIndex(gr => gr.id === action.groupId);
+
+            if (-1 === groupIndex) {
+                result.error = '[STG] group id not found';
+            } else {
+                loadGroup(currentWindow.id, groupIndex);
+                result.ok = true;
+            }
+        } else if ('add-new-group' === action.id) {
+            addGroup();
+            result.ok = true;
+        } else if ('delete-current-group' === action.id) {
+            if (currentGroup) {
+                removeGroup(currentGroup.id);
+                result.ok = true;
+            }
+        } else if ('open-manage-groups' === action.id) {
+            openManageGroups();
+            result.ok = true;
+        }
+
+        return result;
+    }
 
     window.background = {
         inited: false,

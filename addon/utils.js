@@ -176,12 +176,46 @@ let $ = document.querySelector.bind(document),
         document.querySelector('html').setAttribute('lang', browser.i18n.getUILanguage().substring(0, 2));
     },
     isAllowSender = function(sender) {
-        if (MANIFEST.applications.gecko.id !== sender.id) {
+        if (sender.tab && sender.tab.incognito) {
             return false;
         }
 
-        if (sender.tab && sender.tab.incognito) {
+        return true;
+    },
+    isAllowExternalRequestAndSender = function(request, sender, extensionRules = {}) {
+        const whiteList = [
+            'stg-plugin-new-group@drive4ik': {
+                allowedRequests: [
+                    'areYouHere',
+                    'runAction',
+                ],
+                allowedActionIds: [
+                    'add-new-group',
+                    'load-last-group',
+                ],
+            },
+        ];
+
+        let extension = whiteList[sender.id];
+
+        if (!extension) {
             return false;
+        }
+
+        Object.assign(extensionRules, extension);
+
+        if (!request || 'object' !== type(request)) {
+            return false;
+        }
+
+        let requestKeys = Object.keys(request);
+
+        if (!requestKeys.length || !requestKeys.every(key => extension.allowedRequests.includes(key))) {
+            return false;
+        }
+
+        if (request.runAction) {
+            return extension.allowedActionIds.includes(request.runAction.id);
         }
 
         return true;
