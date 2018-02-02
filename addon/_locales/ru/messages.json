@@ -244,7 +244,7 @@
         "description": "Delete group?"
     },
     "deleteGroupBody": {
-        "message": "Вы хотите удалить группу $name$?<br>Удаление группы приведет к закрытию всех вкладок и окна этой группы<br>Это действие не может быть отменено!",
+        "message": "Вы хотите удалить группу $name$?<br>Удаление группы приведет к закрытию всех вкладок и окна этой группы!",
         "description": "Delete group?",
         "placeholders": {
             "name": {
@@ -375,10 +375,6 @@
         "message": "Удалить текущую группу",
         "description": "Delete current group"
     },
-    "hotkeyActionDescriptionDeleteCurrentGroup": {
-        "message": "Внимание! Это действие не может быть отменено!",
-        "description": "Be careful! This action can not be undone!"
-    },
     "hotkeyActionTitleOpenManageGroups": {
         "message": "Открыть \"Управление группами\"",
         "description": "Open manage groups"
@@ -398,5 +394,15 @@
     "noOneGroupWasNotSynchronized": {
         "message": "Ни одна группа не была синхронизирована!\n\nПожалуйста, выберите группу для синхронизации вкладок",
         "description": "No one group was not synchronized!\n\nPlease, select group to sync tabs"
+    },
+    "undoRemoveGroupItemTitle": {
+        "message": "Отменить удаление группы \"$grouptitle$\"",
+        "description": "Undo remove group menu title",
+        "placeholders": {
+            "grouptitle" : {
+                "content" : "$1",
+                "example" : "Group 2"
+            }
+        }
     }
 }

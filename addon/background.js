@@ -179,9 +179,31 @@
         saveGroupsToStorage();
     }
 
+    function addUndoRemoveGroupItem(group) {
+        browser.menus.create({
+            id: CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id,
+            title: browser.i18n.getMessage('undoRemoveGroupItemTitle', unSafeHtml(group.title)),
+            contexts: ['browser_action'],
+            icons: {
+                16: createGroupSvgIconUrl(group),
+            },
+            onclick: function(info) {
+                browser.menus.remove(info.menuItemId);
+
+                group.windowId = null;
+                _groups.push(group);
+
+                updateMoveTabMenus();
+                saveGroupsToStorage();
+            },
+        });
+    }
+
     async function removeGroup(groupId) {
         let groupIndex = _groups.findIndex(gr => gr.id === groupId),
             groupWindowId = _groups[groupIndex].windowId;
+
+        addUndoRemoveGroupItem(_groups[groupIndex]);
 
         _groups.splice(groupIndex, 1);
 
@@ -1308,7 +1330,6 @@
         contexts: ['browser_action'],
         icons: {
             16: 'chrome://browser/skin/settings.svg',
-            32: 'chrome://browser/skin/settings.svg',
         },
     });
 

@@ -344,7 +344,7 @@
         "description": "Sort groups [Z-A]"
     },
     "deleteGroupBody": {
-        "message": "Willst du die Gruppe \"$name$\" löschen?<br>Entfernen der Gruppe schließt alle Tabs und das verbundene Fenster, wenn es jetzt geöffnet ist!<br>Sei vorsichtig! Diese Aktion kann nicht rückgängig gemacht werden!",
+        "message": "Willst du die Gruppe \"$name$\" löschen?<br>Entfernen der Gruppe schließt alle Tabs und das verbundene Fenster, wenn es jetzt geöffnet ist!",
         "description": "Delete group?",
         "placeholders": {
             "name": {
@@ -362,10 +362,6 @@
                 "example": "4"
             }
         }
-    },
-    "hotkeyActionDescriptionDeleteCurrentGroup": {
-        "message": "Sei vorsichtig! Diese Aktion kann nicht rückgängig gemacht werden!",
-        "description": "Be careful! This action can not be undone!"
     },
     "saveErrorLogsIntoFile": {
         "message": "Sichere die letzten Error-Logs in einer JSON-Datei",

@@ -5,6 +5,7 @@ const INNER_HTML = 'innerHTML',
     DEFAULT_COOKIE_STORE_ID = 'firefox-default',
     PRIVATE_COOKIE_STORE_ID = 'firefox-private',
     CONTEXT_MENU_PREFIX_GROUP = 'stg-move-group-id-',
+    CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP = 'stg-undo-remove-group-id-',
     NEW_TAB_URL = '/stg-newtab/newtab.html',
     DEFAULT_OPTIONS = {
         groups: [],

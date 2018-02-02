@@ -397,10 +397,6 @@
     }
 
     function getDescriptionForHotkey(hotkey) {
-        if ('delete-current-group' === hotkey.action.id) {
-            return browser.i18n.getMessage('hotkeyActionDescriptionDeleteCurrentGroup');
-        }
-
         return '';
         // return browser.i18n.getMessage('hotkeyActionDescription' + capitalize(toCamelCase(hotkey.action.id)));
     }

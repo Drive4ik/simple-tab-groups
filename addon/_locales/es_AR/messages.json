@@ -244,7 +244,7 @@
         "description": "Delete group?"
     },
     "deleteGroupBody": {
-        "message": "¿Quiere borrar el grupo \"$name$\"?<br>Borrar el grupo también cierra las pestañas y la ventana enlazada si la ventana esta activa ahora!<br>Tenga cuidado! Esta acción no puede deshacerse!",
+        "message": "¿Quiere borrar el grupo \"$name$\"?<br>Borrar el grupo también cierra las pestañas y la ventana enlazada si la ventana esta activa ahora!",
         "description": "Delete group?",
         "placeholders": {
             "name": {
@@ -322,10 +322,6 @@
     "hotkeyActionTitleOpenManageGroups": {
         "message": "Abrir administrador de grupos",
         "description": "Open manage groups"
-    },
-    "hotkeyActionDescriptionDeleteCurrentGroup": {
-        "message": "Tenga Cuidado! Esta acción no puede deshacerse!",
-        "description": "Be careful! This action can not be undone!"
     },
     "hotkeyActionTitleDeleteCurrentGroup": {
         "message": "Borrar grupo actual",

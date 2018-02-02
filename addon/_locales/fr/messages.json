@@ -113,10 +113,6 @@
         "message": "Supprimer le groupe courant",
         "description": "Delete current group"
     },
-    "hotkeyActionDescriptionDeleteCurrentGroup": {
-        "message": "Attention! Cette action ne peux pas être annulée!",
-        "description": "Be careful! This action can not be undone!"
-    },
     "saveErrorLogsIntoFile": {
         "message": "Enregistrer le dernier log d'erreurs dans un fichier JSON",
         "description": "Save last error logs into JSON file"
@@ -226,7 +222,7 @@
         "description": "Open manage groups"
     },
     "deleteGroupBody": {
-        "message": "Souhaitez-vous supprimer \"$name$\" ?<br>Supprimer un groupe ferme également les onglets et ferme la fenêtre!<br>Attention! Cette action ne peut pas être annulée!",
+        "message": "Souhaitez-vous supprimer \"$name$\" ?<br>Supprimer un groupe ferme également les onglets et ferme la fenêtre!",
         "description": "Delete group?",
         "placeholders": {
             "name": {
