@@ -24,6 +24,7 @@ const INNER_HTML = 'innerHTML',
         showConfirmDialogBeforeGroupDelete: true,
         individualWindowForEachGroup: false,
         openNewWindowWhenCreateNewGroup: false,
+        showNotificationIfGroupsNotSyncedAtStartup: true,
 
         hotkeys: [
             {

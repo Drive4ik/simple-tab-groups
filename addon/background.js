@@ -1515,7 +1515,10 @@
             }
 
 
-            getWindow().then(win => lastFocusedNormalWindow = win);
+            getWindow().then(function(win) {
+                lastFocusedNormalWindow = win;
+                lastFocusedWinId = win.id;
+            });
 
             windows = windows.filter(win => 'normal' === win.type && !win.incognito);
 
@@ -1524,7 +1527,8 @@
                 return getTabs(win.id).then(tabs => winTabs[win.id] = tabs.map(mapTab)); // map need for normalize url
             }));
 
-            let syncedWinIds = [];
+            let syncedWinIds = [],
+                groupHasBeenSync = true;
 
             _groups = data.groups.map(function(group) {
                 if (!group.windowId) {
@@ -1567,8 +1571,16 @@
                     }
                 }
 
+                if (!group.windowId) {
+                    groupHasBeenSync = false;
+                }
+
                 return group;
             });
+
+            if (data.showNotificationIfGroupsNotSyncedAtStartup && !groupHasBeenSync && 0 === _groups.filter(gr => gr.windowId).length) {
+                notify(browser.i18n.getMessage('noOneGroupWasNotSynchronized'));
+            }
 
             window.background.inited = true;
 

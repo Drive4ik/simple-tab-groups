@@ -482,7 +482,16 @@
     "saveErrorLogsIntoFile": {
         "message": "Save last error logs into JSON file",
         "description": "Save last error logs into JSON file"
-    }
+    },
 
+    "showNotificationIfGroupsNotSyncedAtStartup": {
+        "message": "Show notification if no one last opened groups not synced at startup",
+        "description": "Show notification if no one last opened groups not synced at startup"
+    },
+
+    "noOneGroupWasNotSynchronized": {
+        "message": "No one group was not synchronized!\n\nPlease, select group to sync tabs",
+        "description": "No one group was not synchronized!\n\nPlease, select group to sync tabs"
+    }
 
 }

@@ -390,5 +390,13 @@
     "saveErrorLogsIntoFile": {
         "message": "Сохранить последние ошибки в JSON файл",
         "description": "Save last error logs into JSON file"
+    },
+    "showNotificationIfGroupsNotSyncedAtStartup": {
+        "message": "Показывать уведомление если ни одна из последних групп не была синхронизирована при запуске браузера",
+        "description": "Show notification if no one last opened groups not synced at startup"
+    },
+    "noOneGroupWasNotSynchronized": {
+        "message": "Ни одна группа не была синхронизирована!\n\nПожалуйста, выберите группу для синхронизации вкладок",
+        "description": "No one group was not synchronized!\n\nPlease, select group to sync tabs"
     }
 }
