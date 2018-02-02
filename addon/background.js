@@ -135,6 +135,8 @@
         if (options.openNewWindowWhenCreateNewGroup && !windowId) {
             win = await createWindow();
             _groups[newGroupIndex].windowId = windowId = win.id;
+
+            updateBrowserActionData(windowId);
         }
 
         if (0 === newGroupIndex || saveCurrentTabsToThisGroup) {
@@ -156,11 +158,12 @@
             if (tabs.length) {
                 _groups[newGroupIndex].tabs = tabs.map(mapTab);
             }
+
+            updateBrowserActionData(windowId);
         }
 
         storage.set(options);
 
-        updateBrowserActionData(windowId);
         updateMoveTabMenus(windowId);
         saveGroupsToStorage();
 
@@ -1353,53 +1356,6 @@
         }
     });
 
-
-    // let allowedRequests = {
-    //     allowedRequests: [{
-    //             request: {
-    //                 areYouHere: true,
-    //             },
-    //             responce: {
-    //                 ok: true,
-    //             },
-    //         },
-    //         {
-    //             request: {
-    //                 getGroupsList: true,
-    //             },
-    //             responce: {
-    //                 ok: true,
-    //                 groupsList: [{
-    //                     id: 4,
-    //                     title: 'Group title',
-    //                 }],
-    //             },
-    //         },
-    //         {
-    //             request: {
-    //                 runAction: {
-    //                     id: 'load-next-group',
-    //                     groupId: 4,
-    //                     allowedActionIds: [
-    //                         'load-next-group',
-    //                         'load-prev-group',
-    //                         'load-first-group',
-    //                         'load-last-group',
-    //                         'load-custom-group',
-    //                         'add-new-group',
-    //                         'delete-current-group',
-    //                         'open-manage-groups',
-    //                     ],
-    //                 },
-    //             },
-    //             responce: {
-    //                 ok: true,
-    //                 error: 'if not ok: error message will be here',
-    //             },
-    //         },
-    //     ],
-    // };
-
     browser.runtime.onMessageExternal.addListener(function(request, sender, sendResponse) {
         let extensionRules = {};
 
@@ -1447,22 +1403,22 @@
 
         if ('load-next-group' === action.id) {
             if (currentGroup) {
-                loadGroupPosition('next');
+                await loadGroupPosition('next');
                 result.ok = true;
             }
         } else if ('load-prev-group' === action.id) {
             if (currentGroup) {
-                loadGroupPosition('prev');
+                await loadGroupPosition('prev');
                 result.ok = true;
             }
         } else if ('load-first-group' === action.id) {
             if (_groups[0]) {
-                loadGroup(currentWindow.id, 0);
+                await loadGroup(currentWindow.id, 0);
                 result.ok = true;
             }
         } else if ('load-last-group' === action.id) {
             if (_groups[_groups.length - 1]) {
-                loadGroup(currentWindow.id, _groups.length - 1);
+                await loadGroup(currentWindow.id, _groups.length - 1);
                 result.ok = true;
             }
         } else if ('load-custom-group' === action.id) {
@@ -1471,19 +1427,19 @@
             if (-1 === groupIndex) {
                 result.error = '[STG] group id not found';
             } else {
-                loadGroup(currentWindow.id, groupIndex);
+                await loadGroup(currentWindow.id, groupIndex);
                 result.ok = true;
             }
         } else if ('add-new-group' === action.id) {
-            addGroup();
+            await addGroup();
             result.ok = true;
         } else if ('delete-current-group' === action.id) {
             if (currentGroup) {
-                removeGroup(currentGroup.id);
+                await removeGroup(currentGroup.id);
                 result.ok = true;
             }
         } else if ('open-manage-groups' === action.id) {
-            openManageGroups();
+            await openManageGroups();
             result.ok = true;
         }
 

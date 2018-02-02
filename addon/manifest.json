@@ -11,12 +11,8 @@
     "name": "__MSG_extensionName__",
     "description": "__MSG_extensionDescription__",
     "version": "2.3.7",
-    "author": "Vitaliy Bavykin",
+    "author": "Drive4ik",
     "homepage_url": "https://github.com/drive4ik/simple-tab-groups",
-    "developer": {
-        "name": "Vitaliy Bavykin",
-        "url": "https://github.com/drive4ik"
-    },
 
     "icons": {
         "96": "/icons/icon.svg"

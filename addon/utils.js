@@ -185,7 +185,17 @@ let $ = document.querySelector.bind(document),
         return true;
     },
     isAllowExternalRequestAndSender = function(request, sender, extensionRules = {}) {
-        const whiteList = [
+        // all allowed action ids
+        // 'load-next-group',
+        // 'load-prev-group',
+        // 'load-first-group',
+        // 'load-last-group',
+        // 'load-custom-group',
+        // 'add-new-group',
+        // 'delete-current-group',
+        // 'open-manage-groups',
+
+        const whiteList = {
             'stg-plugin-new-group@drive4ik': {
                 allowedRequests: [
                     'areYouHere',
@@ -196,7 +206,7 @@ let $ = document.querySelector.bind(document),
                     'load-last-group',
                 ],
             },
-        ];
+        };
 
         let extension = whiteList[sender.id];
 

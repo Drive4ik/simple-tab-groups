@@ -1,0 +1,40 @@
+{
+    "manifest_version": 2,
+
+    "applications": {
+        "gecko": {
+            "id": "stg-plugin-new-group@drive4ik",
+            "strict_min_version": "56.0"
+        }
+    },
+
+    "name": "__MSG_extensionName__",
+    "description": "__MSG_extensionDescription__",
+    "version": "1.0",
+    "author": "Drive4ik",
+    "homepage_url": "https://github.com/drive4ik/simple-tab-groups/plugins/stg-plugin-new-group",
+
+    "icons": {
+        "96": "/icons/icon.svg"
+    },
+
+    "browser_action": {
+        "default_area": "tabstrip",
+        "default_icon": "/icons/icon.svg",
+        "default_title": "__MSG_createNewGroupTitle__"
+    },
+
+    "permissions": [
+        "tabs",
+        "notifications",
+        "menus",
+        "storage"
+    ],
+
+    "background": {
+        "scripts": ["background.js"]
+    },
+
+    "default_locale": "en"
+
+}
