@@ -125,7 +125,7 @@ let $ = document.querySelector.bind(document),
             return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
         }).join(''));
     },
-    notify = function(message, timer = 30000, id) {
+    notify = function(message, timer = 20000, id) {
         if (id) {
             browser.notifications.clear(id);
         } else {
