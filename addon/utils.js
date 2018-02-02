@@ -5,6 +5,7 @@ const INNER_HTML = 'innerHTML',
     DEFAULT_COOKIE_STORE_ID = 'firefox-default',
     PRIVATE_COOKIE_STORE_ID = 'firefox-private',
     CONTEXT_MENU_PREFIX_GROUP = 'stg-move-group-id-',
+    CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP = 'stg-undo-remove-group-id-',
     NEW_TAB_URL = '/stg-newtab/newtab.html',
     DEFAULT_OPTIONS = {
         groups: [],
@@ -24,6 +25,7 @@ const INNER_HTML = 'innerHTML',
         showConfirmDialogBeforeGroupDelete: true,
         individualWindowForEachGroup: false,
         openNewWindowWhenCreateNewGroup: false,
+        showNotificationIfGroupsNotSyncedAtStartup: true,
 
         hotkeys: [
             {
@@ -125,7 +127,7 @@ let $ = document.querySelector.bind(document),
             return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
         }).join(''));
     },
-    notify = function(message, timer = 30000, id) {
+    notify = function(message, timer = 20000, id) {
         if (id) {
             browser.notifications.clear(id);
         } else {

@@ -244,7 +244,7 @@
         "description": "Delete group?"
     },
     "deleteGroupBody": {
-        "message": "Вы хотите удалить группу $name$?<br>Удаление группы приведет к закрытию всех вкладок и окна этой группы<br>Это действие не может быть отменено!",
+        "message": "Вы хотите удалить группу $name$?<br>Удаление группы приведет к закрытию всех вкладок и окна этой группы!",
         "description": "Delete group?",
         "placeholders": {
             "name": {
@@ -296,11 +296,11 @@
         "description": "Icon"
     },
     "selectUserGroupIcon": {
-        "message": "Загрузить значек",
+        "message": "Загрузить значок",
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Простите, Вы не можете загрузить значек в этом окне, но Вы можете сделать это в \"Управление группами\". Открыть \"Управление группами\"?",
+        "message": "Простите, Вы не можете загрузить значок в этом окне, но Вы можете сделать это в \"Управление группами\". Открыть \"Управление группами\"?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -375,10 +375,6 @@
         "message": "Удалить текущую группу",
         "description": "Delete current group"
     },
-    "hotkeyActionDescriptionDeleteCurrentGroup": {
-        "message": "Внимание! Это действие не может быть отменено!",
-        "description": "Be careful! This action can not be undone!"
-    },
     "hotkeyActionTitleOpenManageGroups": {
         "message": "Открыть \"Управление группами\"",
         "description": "Open manage groups"
@@ -390,5 +386,23 @@
     "saveErrorLogsIntoFile": {
         "message": "Сохранить последние ошибки в JSON файл",
         "description": "Save last error logs into JSON file"
+    },
+    "showNotificationIfGroupsNotSyncedAtStartup": {
+        "message": "Показывать уведомление если ни одна из последних групп не была синхронизирована при запуске браузера",
+        "description": "Show notification if no one last opened groups not synced at startup"
+    },
+    "noOneGroupWasNotSynchronized": {
+        "message": "Ни одна группа не была синхронизирована!\n\nПожалуйста, выберите группу для синхронизации вкладок",
+        "description": "No one group was not synchronized!\n\nPlease, select group to sync tabs"
+    },
+    "undoRemoveGroupItemTitle": {
+        "message": "Отменить удаление группы \"$grouptitle$\"",
+        "description": "Undo remove group menu title",
+        "placeholders": {
+            "grouptitle" : {
+                "content" : "$1",
+                "example" : "Group 2"
+            }
+        }
     }
 }
