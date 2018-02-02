@@ -296,11 +296,11 @@
         "description": "Icon"
     },
     "selectUserGroupIcon": {
-        "message": "Загрузить значек",
+        "message": "Загрузить значок",
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Простите, Вы не можете загрузить значек в этом окне, но Вы можете сделать это в \"Управление группами\". Открыть \"Управление группами\"?",
+        "message": "Простите, Вы не можете загрузить значок в этом окне, но Вы можете сделать это в \"Управление группами\". Открыть \"Управление группами\"?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
