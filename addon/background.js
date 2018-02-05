@@ -1375,7 +1375,7 @@
             let groupsList = _groups.map(function(group) {
                 return {
                     id: group.id,
-                    title: group.title,
+                    title: unSafeHtml(group.title),
                 };
             });
 
@@ -1383,6 +1383,22 @@
                 ok: true,
                 groupsList,
             });
+        } else if (request.getGroupExpandedData) {
+            let group = _groups.find(gr => gr.id === request.getGroupExpandedData.groupId);
+
+            if (group) {
+                sendResponse({
+                    ok: true,
+                    group: {
+                        title: unSafeHtml(group.title),
+                        iconUrl: createGroupSvgIconUrl(group),
+                    },
+                });
+            } else {
+                sendResponse({
+                    ok: false,
+                });
+            }
         } else if (request.runAction) {
             sendResponse(runAction(request.runAction));
         }
@@ -1680,6 +1696,12 @@
             updateBrowserActionData();
             createMoveTabMenus();
             addEvents();
+
+            setTimeout(function() {
+                browser.runtime.sendMessage('stg-plugin-load-custom-group@drive4ik', { // TODO tmp
+                    IAmBack: true,
+                });
+            }, 100);
         })
         .catch(notify);
 

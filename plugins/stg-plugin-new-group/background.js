@@ -53,7 +53,7 @@
         areYouHere: true,
     }, function(responce) {
         if (!responce || !responce.ok) {
-            browser.notifications.create('needInstallSTGExtension', {
+            browser.notifications.create({
                 type: 'basic',
                 iconUrl: '/icons/icon.svg',
                 title: browser.i18n.getMessage('extensionName'),

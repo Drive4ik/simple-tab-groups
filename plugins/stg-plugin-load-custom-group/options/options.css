@@ -1,0 +1,12 @@
+html {
+    font-family: Segoe UI, Arial;
+}
+
+* {
+    font-size: 15px;
+}
+
+body {
+    background-color: #f9f9fa;
+    padding: 0 4px;
+}

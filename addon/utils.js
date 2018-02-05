@@ -7,6 +7,29 @@ const INNER_HTML = 'innerHTML',
     CONTEXT_MENU_PREFIX_GROUP = 'stg-move-group-id-',
     CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP = 'stg-undo-remove-group-id-',
     NEW_TAB_URL = '/stg-newtab/newtab.html',
+    EXTENSIONS_WHITE_LIST = {
+        'stg-plugin-new-group@drive4ik': {
+            allowedRequests: [
+                'areYouHere',
+                'runAction',
+            ],
+            allowedActionIds: [
+                'add-new-group',
+                'load-last-group',
+            ],
+        },
+        'stg-plugin-load-custom-group@drive4ik': {
+            allowedRequests: [
+                'areYouHere',
+                'runAction',
+                'getGroupsList',
+                'getGroupExpandedData',
+            ],
+            allowedActionIds: [
+                'load-custom-group',
+            ],
+        },
+    },
     DEFAULT_OPTIONS = {
         groups: [],
         lastCreatedGroupPosition: 0,
@@ -143,7 +166,7 @@ let $ = document.querySelector.bind(document),
             message: String(message),
         });
 
-        timer && setTimeout(browser.notifications.clear, timer, id);
+        setTimeout(browser.notifications.clear, timer, id);
 
         return new Promise(function(resolve, reject) {
             let called = false,
@@ -155,7 +178,7 @@ let $ = document.querySelector.bind(document),
                     }
                 }.bind(null, id);
 
-            setTimeout(() => !called && reject(), 30000, id);
+            setTimeout(() => !called && reject(), timer, id);
 
             browser.notifications.onClicked.addListener(listener);
         });
@@ -195,20 +218,7 @@ let $ = document.querySelector.bind(document),
         // 'delete-current-group',
         // 'open-manage-groups',
 
-        const whiteList = {
-            'stg-plugin-new-group@drive4ik': {
-                allowedRequests: [
-                    'areYouHere',
-                    'runAction',
-                ],
-                allowedActionIds: [
-                    'add-new-group',
-                    'load-last-group',
-                ],
-            },
-        };
-
-        let extension = whiteList[sender.id];
+        let extension = EXTENSIONS_WHITE_LIST[sender.id];
 
         if (!extension) {
             return false;

@@ -2,80 +2,154 @@
     'use strict';
 
     const STG_ID = 'simple-tab-groups@drive4ik',
-        STG_HOME_PAGE = 'https://addons.mozilla.org/firefox/addon/simple-tab-groups/';
+        STG_HOME_PAGE = 'https://addons.mozilla.org/firefox/addon/simple-tab-groups/',
+        MANIFEST = browser.runtime.getManifest();
 
-    // let options = {};
-
-    // async function loadOptions() {
-    //     options = await browser.storage.local.get(null);
-    // }
-
-    // await loadOptions();
-
-    // browser.runtime.onMessageExternal.addListener(function(request, sender, sendResponse) {});
-
-    browser.runtime.onMessage.addListener(async function(request) {
-        if (request.updateButton) {
-            let options = await browser.storage.local.get(null);
-        }
-    });
-
-    async function updateGroup(groupsList) {
-
+    function sendExternalMessage(data) {
+        return new Promise(function(resolve, reject) {
+            browser.runtime.sendMessage(STG_ID, data, function(responce) {
+                if (responce && responce.ok) {
+                    resolve(responce);
+                } else {
+                    reject(responce);
+                }
+            });
+        });
     }
 
-    function openSTGHomePage() {
+    function notify(message, timer = 20000) {
+        let id = String(Date.now());
+
+        // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/notifications/NotificationOptions
+        // Only 'type', 'iconUrl', 'title', and 'message' are supported.
+        browser.notifications.create(id, {
+            type: 'basic',
+            iconUrl: '/icons/icon.svg',
+            title: browser.i18n.getMessage('extensionName'),
+            message: String(message),
+        });
+
+        setTimeout(browser.notifications.clear, timer, id);
+
+        return new Promise(function(resolve, reject) {
+            let called = false,
+                listener = function(id, notificationId) {
+                    if (id === notificationId) {
+                        browser.notifications.onClicked.removeListener(listener);
+                        called = true;
+                        resolve(id);
+                    }
+                }.bind(null, id);
+
+            setTimeout(() => !called && reject(), timer, id);
+
+            browser.notifications.onClicked.addListener(listener);
+        });
+    }
+
+    async function showInstallSTGNotification() {
+        await notify(browser.i18n.getMessage('needInstallSTGExtension'));
         browser.tabs.create({
             url: STG_HOME_PAGE,
         });
-    };
+    }
 
-    browser.notifications.onClicked.addListener(openSTGHomePage);
+    async function showSelectGroupNotification() {
+        await notify(browser.i18n.getMessage('needSelectGroup'));
+        browser.runtime.openOptionsPage();
+    }
 
-    browser.browserAction.onClicked.addListener(async function() {
-        browser.runtime.sendMessage(STG_ID, {
-            runAction: {
-                id: 'add-new-group',
-            },
-        }, function(responce) {
-            if (responce && responce.ok) {
-                // if (options.loadLastGroup) { // TODO
-                //     browser.runtime.sendMessage(STG_ID, {
-                //         runAction: {
-                //             id: 'load-last-group',
-                //         },
-                //     });
-                // }
-            } else {
-                browser.runtime.openOptionsPage();
+    browser.runtime.onMessageExternal.addListener(async function(request, sender, sendResponse) {
+        if (sender.id !== STG_ID) {
+            return;
+        }
+
+        let { groupId } = await browser.storage.local.get('groupId');
+
+        if (request.groupUpdated) {
+            if (groupId && request.groupId === groupId) {
+                updateBrowserAction(groupId);
             }
-        });
-    });
-
-    // browser.menus.create({
-    //     id: 'create-new-group-and-load-it',
-    //     title: browser.i18n.getMessage('createNewGroupAndLoadItTitle'),
-    //     type: 'checkbox',
-    //     contexts: ['browser_action'],
-    //     checked: options.loadLastGroup,
-    //     onclick: function(info) {
-    //         browser.storage.local.set({
-    //             loadLastGroup: options.loadLastGroup = info.checked,
-    //         });
-    //     },
-    // });
-
-    browser.runtime.sendMessage(STG_ID, {
-        areYouHere: true,
-    }, function(responce) {
-        if (!responce || !responce.ok) {
-            browser.notifications.create('needInstallSTGExtension', {
-                type: 'basic',
-                iconUrl: '/icons/icon.svg',
-                title: browser.i18n.getMessage('extensionName'),
-                message: browser.i18n.getMessage('needInstallSTGExtension'),
-            });
+        } else if (request.IAmBack) {
+            updateBrowserAction(groupId);
         }
     });
+
+    async function updateBrowserAction(groupId) {
+        try {
+            if (groupId) {
+                let responce = await sendExternalMessage({
+                    getGroupExpandedData: {
+                        groupId: groupId,
+                    },
+                });
+
+                setBrowserAction(responce.group.title, responce.group.iconUrl);
+                browser.storage.local.set({
+                    groupId: groupId,
+                });
+            } else {
+                throw new Error('No group id');
+            }
+        } catch (e) {
+            setBrowserAction();
+            browser.storage.local.remove('groupId');
+            showSelectGroupNotification();
+            throw e;
+        }
+    }
+
+    function setBrowserAction(title, iconUrl) {
+        if (!title && !iconUrl) {
+            title = MANIFEST.browser_action.default_title;
+            iconUrl = MANIFEST.browser_action.default_icon;
+        }
+
+        browser.browserAction.setTitle({
+            title: title,
+        });
+
+        browser.browserAction.setIcon({
+            path: iconUrl,
+        });
+    }
+
+    browser.browserAction.onClicked.addListener(async function() {
+        let { groupId } = await browser.storage.local.get('groupId');
+
+        try {
+            await sendExternalMessage({
+                areYouHere: true,
+            });
+
+            if (!groupId) {
+                return browser.runtime.openOptionsPage();
+            }
+
+            try {
+                await sendExternalMessage({
+                    runAction: {
+                        id: 'load-custom-group',
+                        groupId: groupId,
+                    },
+                });
+            } catch (e) {
+                browser.runtime.openOptionsPage();
+            }
+        } catch (e) {
+            showInstallSTGNotification();
+        }
+    });
+
+    sendExternalMessage({
+            areYouHere: true,
+        })
+        .then(async function() {
+            let { groupId } = await browser.storage.local.get('groupId');
+            await updateBrowserAction(groupId);
+        }, showInstallSTGNotification);
+
+    window.sendExternalMessage = sendExternalMessage;
+    window.updateBrowserAction = updateBrowserAction;
 
 })()

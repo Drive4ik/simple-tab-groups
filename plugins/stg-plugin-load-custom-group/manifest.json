@@ -35,6 +35,10 @@
         "scripts": ["background.js"]
     },
 
+    "options_ui": {
+        "page": "options/options.html"
+    },
+
     "default_locale": "en"
 
 }
