@@ -253,7 +253,7 @@
             classList = [];
 
         if (tab.cookieStoreId && tab.cookieStoreId !== DEFAULT_COOKIE_STORE_ID) {
-            container = containers.find(container => container.cookieStoreId === tab.cookieStoreId);
+            container = containers.find(container => container.cookieStoreId === tab.cookieStoreId) || container;
         }
 
         if (options.showUrlTooltipOnTabHover) {
