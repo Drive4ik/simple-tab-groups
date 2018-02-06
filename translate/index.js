@@ -5,18 +5,35 @@
         return 'You really want to close?';
     };
 
-    const LOCALE_FILE_EXT = '.json',
-        urlPrefix = 'https://raw.githubusercontent.com/Drive4ik/simple-tab-groups/master/addon/';
+    const BRANCH = 'master',
+        LOCALE_FILE_EXT = '.json',
+        urlPrefix = `https://raw.githubusercontent.com/Drive4ik/simple-tab-groups/${BRANCH}/`,
+        htmlApiPrefix = `https://github.com/Drive4ik/simple-tab-groups/tree/${BRANCH}/`,
+        pluginsApiUrl = `https://api.github.com/repos/Drive4ik/simple-tab-groups/contents/plugins?ref=${BRANCH}`;
 
-    let manifestBlob = await fetch(urlPrefix + 'manifest.json'),
-        manifest = await manifestBlob.json();
+    async function load(url) {
+        let blob = await fetch(url);
+        return await blob.json();
+    }
 
-    let tr = new Vue({
+    let plugins = await load(pluginsApiUrl);
+
+    new Vue({
         el: '#content',
         data: {
-            notAllowedKeys: ['locale', 'version', 'polyglot', 'extensionName'],
+            loading: true,
 
-            manifest: manifest,
+            notAllowedKeys: ['component', 'locale', 'version', 'polyglot', 'extensionName'],
+
+            manifest: {},
+
+            components: [
+                {
+                    name: 'simple-tab-groups-addon',
+                    path: 'addon',
+                }
+            ].concat(plugins.filter(p => 'dir' === p.type)),
+            selectedComponentName: null,
 
             defaultLocale: {},
 
@@ -24,48 +41,92 @@
         },
 
         async mounted() {
-            let defaultLocaleBlob = await fetch(urlPrefix + `_locales/${manifest.default_locale}/messages.json`);
+            this.selectedComponentName = this.components[0].name;
+        },
 
-            this.defaultLocale = await defaultLocaleBlob.json();
+        computed: {
+            emailHref() {
+                let component = this.selectedComponentName || 'unknown component',
+                    polyglot = this.locale.polyglot || 'unknown polyglot',
+                    locale = this.locale.locale || 'unknown locale';
+
+                return `mailto:drive4ik@gmail.com?subject=[${component}-translation] ${locale} from ${polyglot}`;
+            },
+            localesFolder() {
+                return htmlApiPrefix + this.selectedComponentPath + '/_locales';
+            },
+            selectedComponentPath() {
+                let component = this.components.find(c => c.name === this.selectedComponentName);
+                return component ? component.path : null;
+            },
+        },
+
+        watch: {
+            selectedComponentName: function(selectedComponentName) {
+                if (selectedComponentName) {
+                    this.loadLocaleFromSelectedComponent();
+                }
+            },
         },
 
         methods: {
-            loadLocaleFile(locale) {
+            async loadLocaleFromSelectedComponent() {
+                this.loading = true;
+
+                this.manifest = await load(urlPrefix + this.selectedComponentPath + '/manifest.json');
+                this.defaultLocale = await load(urlPrefix + this.selectedComponentPath + '/_locales/' + this.manifest.default_locale + '/messages.json');
+
+                this.$emit('locale-loaded');
+
+                this.loading = false;
+            },
+            setLocale(locale) {
                 this.locale = {
                     locale: locale.locale,
                     version: locale.version,
                     polyglot: locale.polyglot,
                 };
 
-                Object.keys(locale).forEach(function(key) {
+                Object.keys(this.defaultLocale).forEach(function(key) {
                     if (this.notAllowedKeys.includes(key)) {
                         return;
                     }
 
-                    if (!this.defaultLocale[key]) {
-                        return;
+                    if (locale[key]) {
+                        this.locale[key] = locale[key].message;
                     }
-
-                    this.locale[key] = locale[key].message;
                 }, this);
             },
             async clickLoadLocaleFileButton() {
                 let locale = await this.importFromFile();
-                this.loadLocaleFile(locale);
+
+                if (locale.component) {
+                    if (this.selectedComponentName === locale.component) {
+                        this.setLocale(locale);
+                    } else {
+                        this.$once('locale-loaded', () => this.setLocale(locale));
+                        this.selectedComponentName = locale.component;
+                    }
+                } else {
+                    this.selectedComponentName = null;
+                    this.$once('locale-loaded', () => this.setLocale(locale));
+                    alert('Please, select component of this file');
+                }
             },
             clickSaveLocaleFileButton() {
                 if (!this.locale.locale) {
-                    return alert('No locale selected');
+                    return alert('Please, enter locale code');
                 }
 
                 let localeToSave = {
+                        component: this.selectedComponentName,
                         locale: this.locale.locale,
                         version: this.manifest.version,
                         polyglot: this.locale.polyglot,
                     },
-                    fileName = 'simple-tab-groups-translation-' + this.locale.locale + LOCALE_FILE_EXT;
+                    fileName = this.selectedComponentName + '-translation-' + this.locale.locale + LOCALE_FILE_EXT;
 
-                Object.keys(this.locale).forEach(function(key) {
+                Object.keys(this.defaultLocale).forEach(function(key) {
                     if (this.notAllowedKeys.includes(key)) {
                         return;
                     }

@@ -9,9 +9,9 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.13/vue.js"></script>
     <script type="text/javascript" src="./index.js"></script>
     <style type="text/css">
-        .text-break-all {
-            word-break: break-all;
-        }
+    .text-break-all {
+        word-break: break-all;
+    }
     </style>
 </head>
 
@@ -21,6 +21,18 @@
             <h4 class="title is-4">Simple Tab Groups - translation utility</h4>
             <div class="columns">
                 <div class="column">
+                    <p>Component:</p>
+                    <div class="control">
+                        <div :class="['select is-medium', {'is-danger': !selectedComponentName, 'is-loading': loading}]">
+                            <select v-model="selectedComponentName">
+                                <option v-for="ex in components" :value="ex.name" v-html="ex.name"></option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="columns">
+                <div class="column">
                     <button type="button" class="button is-primary is-large" @click="clickLoadLocaleFileButton">
                         <span class="icon is-medium">
                             <i class="fa fa-upload" aria-hidden="true"></i>
@@ -28,7 +40,7 @@
                         <span>Load translation file</span>
                     </button>
                     <br>
-                    <span class="has-text-success">You can load exist translation file messages.json from <a href="https://github.com/Drive4ik/simple-tab-groups/tree/master/addon/_locales" target="_blank">_locales</a> folder</span>
+                    <span class="has-text-success">You can load exist translation file messages.json from <a :href="localesFolder" target="_blank">_locales</a> folder</span>
                 </div>
                 <div class="column has-text-right">
                     <button type="button" class="button is-info is-large" @click="clickSaveLocaleFileButton">
@@ -38,7 +50,7 @@
                         <span>Save translation file</span>
                     </button>
                     <br>
-                    <span>Please send this file to <a :href="'mailto:drive4ik@gmail.com?subject=[STG-translation] from ' + (locale.polyglot || 'unknown') + ' - ' + locale.locale" target="_blank">email</a></span>
+                    <span>Please send this file to <a :href="emailHref" target="_blank">email</a></span>
                 </div>
             </div>
             <div class="columns">
@@ -47,7 +59,7 @@
                     Loaded translation version: <span v-html="locale.version || 'Unknown version'"></span>
                 </div>
             </div>
-            <div class="columns">
+            <div class="columns" v-if="selectedComponentName">
                 <div class="column">
                     <div class="field">
                         <label class="label" for="locale">
@@ -70,8 +82,7 @@
                 </div>
             </div>
         </header>
-
-        <div class="columns">
+        <div class="columns" v-if="selectedComponentName">
             <div class="column">
                 <table class="table is-bordered is-narrow is-hoverable is-fullwidth">
                     <thead>
@@ -80,7 +91,7 @@
                         <th>Translated value</th>
                     </thead>
                     <tbody>
-                        <tr v-for="(val, key) in defaultLocale" v-if="!notAllowedKeys.includes(key)">
+                        <tr v-for="(val, key) in defaultLocale" v-if="!notAllowedKeys.includes(key)" :key="selectedComponentName + key">
                             <td class="text-break-all" v-html="key"></td>
                             <td v-text="val.message.replace(/\n/g, '\&#92n')"></td>
                             <td>
@@ -104,7 +115,6 @@
             </div>
         </div>
     </main>
-    <footer></footer>
 </body>
 
 </html>
