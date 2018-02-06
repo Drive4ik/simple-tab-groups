@@ -33,7 +33,7 @@ const INNER_HTML = 'innerHTML',
         version: '1.0',
 
         // options
-        enableFastGroupSwitching: true,
+        enableFastGroupSwitching: false,
         enableFavIconsForNotLoadedTabs: true,
         closePopupAfterChangeGroup: true,
         openGroupAfterChange: true,
