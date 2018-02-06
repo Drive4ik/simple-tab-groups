@@ -12,7 +12,7 @@
     "description": "__MSG_extensionDescription__",
     "version": "1.0",
     "author": "Drive4ik",
-    "homepage_url": "https://github.com/drive4ik/simple-tab-groups/plugins/stg-plugin-new-group",
+    "homepage_url": "https://github.com/drive4ik/simple-tab-groups",
 
     "icons": {
         "96": "/icons/icon.svg"

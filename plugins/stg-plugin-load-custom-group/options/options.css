@@ -8,5 +8,16 @@ html {
 
 body {
     background-color: #f9f9fa;
-    padding: 0 4px;
+    padding: 0 6px;
+}
+
+#groups-select {
+    margin-left: 5px;
+    min-width: 200px;
+}
+
+#notificationInstallSTG {
+    display: block;
+    font-size: 18px;
+    margin-bottom: 20px;
 }

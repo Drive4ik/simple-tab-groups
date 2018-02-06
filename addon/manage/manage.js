@@ -123,7 +123,7 @@
                             .then(() => BG.removeGroup(group.id));
                     } else {
                         Popups.confirm(
-                                browser.i18n.getMessage('deleteGroupBody', safeHtml(unSafeHtml(group.title))),
+                                browser.i18n.getMessage('deleteGroupBody', group.title),
                                 browser.i18n.getMessage('deleteGroupTitle'),
                                 'delete',
                                 'is-danger'
@@ -149,7 +149,7 @@
         $on('change', '.group > .header input', function(event, data) {
             let group = getGroupById(data.groupId);
 
-            group.title = safeHtml(event.target.value.trim());
+            group.title = createGroupTitle(event.target.value, group.id);
 
             BG.saveGroup(group);
 

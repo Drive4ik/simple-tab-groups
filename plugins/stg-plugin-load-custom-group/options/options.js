@@ -1,27 +1,64 @@
+(async function() {
+    'use strict';
 
-let $ = document.querySelector.bind(document),
-    bg = browser.extension.getBackgroundPage(),
-    groupsSelect = $('#groups-select');
+    let $ = document.querySelector.bind(document),
+        bg = browser.extension.getBackgroundPage(),
+        groupsSelect = $('#groups-select'),
+        selectGroupHeader = $('#select-group-header');
 
-$('#select-group-header').innerText = browser.i18n.getMessage('needSelectGroup');
+    selectGroupHeader.innerText = browser.i18n.getMessage('needSelectGroup');
 
-groupsSelect.addEventListener('change', async function() {
-    let groupId = parseInt(this.value, 10);
+    try {
+        await init();
+    } catch (e) {
+        let a = document.createElement('a');
+        a.innerText = browser.i18n.getMessage('needInstallSTGExtension').replace(/\n+/, '\n');
+        a.id = 'notificationInstallSTG';
+        a.href = bg.STG_HOME_PAGE;
+        a.target = '_blank';
+        selectGroupHeader.parentNode.insertBefore(a, selectGroupHeader);
+        return;
+    }
 
-    await browser.storage.local.set({
-        groupId: groupId,
+    groupsSelect.addEventListener('change', async function() {
+        let groupId = parseInt(groupsSelect.value, 10);
+
+        if (groupsSelect.children[0].dataset.isEmpty) {
+            groupsSelect.children[0].remove();
+        }
+
+        await browser.storage.local.set({
+            groupId: groupId,
+        });
+
+        bg.updateBrowserAction(groupId);
     });
 
-    bg.updateBrowserAction(groupId);
-});
+    browser.runtime.onMessageExternal.addListener(function(request, sender, sendResponse) {
+        if (sender.id !== bg.STG_ID) {
+            return;
+        }
 
-Promise.all([
-        browser.storage.local.get('groupId'),
-        bg.sendExternalMessage({
-            getGroupsList: true,
-        })
-    ])
-    .then(function([{ groupId }, { groupsList }]) {
+        if (request.groupUpdated || request.groupDeleted || request.groupAdded) {
+            init();
+        }
+    });
+
+    async function init() {
+        let { groupId } = await browser.storage.local.get('groupId'),
+            { groupsList } = await bg.sendExternalMessage({
+                getGroupsList: true,
+            });
+
+        while (groupsSelect.firstElementChild) {
+            groupsSelect.firstElementChild.remove();
+        }
+
+        let notificationInstallSTG = $('#notificationInstallSTG');
+        if (notificationInstallSTG) {
+            notificationInstallSTG.remove();
+        }
+
         let foundSelected = false;
 
         groupsList.forEach(function(group) {
@@ -42,8 +79,9 @@ Promise.all([
             let emptyOption = document.createElement('option');
             emptyOption.innerText = browser.i18n.getMessage('needSelectGroup');
             emptyOption.selected = true;
-            emptyOption.disabled = true;
+            emptyOption.dataset.isEmpty = true;
             groupsSelect.prepend(emptyOption);
         }
-    });
+    }
 
+})()

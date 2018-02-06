@@ -12,7 +12,7 @@
     "description": "__MSG_extensionDescription__",
     "version": "1.0",
     "author": "Drive4ik",
-    "homepage_url": "https://github.com/drive4ik/simple-tab-groups/plugins/stg-plugin-load-custom-group",
+    "homepage_url": "https://github.com/drive4ik/simple-tab-groups",
 
     "icons": {
         "96": "/icons/icon.svg"
@@ -21,7 +21,7 @@
     "browser_action": {
         "default_area": "tabstrip",
         "default_icon": "/icons/icon.svg",
-        "default_title": "Group title will be here"
+        "default_title": "__MSG_defaultBrowserActionTitle__"
     },
 
     "permissions": [

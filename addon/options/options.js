@@ -131,7 +131,7 @@
                     data.lastCreatedGroupPosition++;
 
                     newGroups[oldGroup.id] = BG.createGroup(data.lastCreatedGroupPosition);
-                    newGroups[oldGroup.id].title = oldGroup.title || browser.i18n.getMessage('newGroupTitle', newGroups[oldGroup.id].id);
+                    newGroups[oldGroup.id].title = createGroupTitle(oldGroup.title, oldGroup.id);
                     newGroups[oldGroup.id].catchTabRules = (oldGroup.catchRules || '');
                     newGroups[oldGroup.id].slot = oldGroup.slot;
                 }
@@ -359,7 +359,7 @@
                 }
 
                 return render('option-tmpl', {
-                    title: group.title, // TODO safeHtml/unSafeHtml
+                    title: group.title,
                     value: group.id,
                     selected: selected,
                 });

@@ -66,9 +66,17 @@
 
         let { groupId } = await browser.storage.local.get('groupId');
 
+        if (!groupId) {
+            return;
+        }
+
         if (request.groupUpdated) {
-            if (groupId && request.groupId === groupId) {
+            if (request.groupId === groupId) {
                 updateBrowserAction(groupId);
+            }
+        } else if (request.groupDeleted) {
+            if (request.groupId === groupId) {
+                resetBrowserAction();
             }
         } else if (request.IAmBack) {
             updateBrowserAction(groupId);
@@ -77,36 +85,30 @@
 
     async function updateBrowserAction(groupId) {
         try {
-            if (groupId) {
-                let responce = await sendExternalMessage({
-                    getGroupExpandedData: {
-                        groupId: groupId,
-                    },
-                });
+            let responce = await sendExternalMessage({
+                    getGroupsList: true,
+                }),
+                group = responce.groupsList.find(gr => gr.id === groupId);
 
-                setBrowserAction(responce.group.title, responce.group.iconUrl);
-                browser.storage.local.set({
-                    groupId: groupId,
-                });
+            if (group) {
+                setBrowserAction(group.title, group.iconUrl);
             } else {
-                throw new Error('No group id');
+                resetBrowserAction();
             }
         } catch (e) {
-            setBrowserAction();
-            browser.storage.local.remove('groupId');
-            showSelectGroupNotification();
-            throw e;
+            resetBrowserAction();
         }
     }
 
-    function setBrowserAction(title, iconUrl) {
-        if (!title && !iconUrl) {
-            title = MANIFEST.browser_action.default_title;
-            iconUrl = MANIFEST.browser_action.default_icon;
-        }
+    function resetBrowserAction() {
+        setBrowserAction();
+        browser.storage.local.remove('groupId');
+        showSelectGroupNotification();
+    }
 
+    function setBrowserAction(title = MANIFEST.browser_action.default_title, iconUrl = MANIFEST.browser_action.default_icon) {
         browser.browserAction.setTitle({
-            title: title,
+            title: title ? title + ' - [STG plugin]' : MANIFEST.browser_action.default_title,
         });
 
         browser.browserAction.setIcon({
@@ -141,14 +143,30 @@
         }
     });
 
+    browser.menus.create({
+        id: 'openSettings',
+        title: browser.i18n.getMessage('openSettings'),
+        onclick: () => browser.runtime.openOptionsPage(),
+        contexts: ['browser_action'],
+        icons: {
+            16: 'chrome://browser/skin/settings.svg',
+        },
+    });
+
     sendExternalMessage({
             areYouHere: true,
         })
         .then(async function() {
             let { groupId } = await browser.storage.local.get('groupId');
-            await updateBrowserAction(groupId);
+
+            if (groupId) {
+                updateBrowserAction(groupId);
+            }
+
         }, showInstallSTGNotification);
 
+    window.STG_ID = STG_ID;
+    window.STG_HOME_PAGE = STG_HOME_PAGE;
     window.sendExternalMessage = sendExternalMessage;
     window.updateBrowserAction = updateBrowserAction;
 

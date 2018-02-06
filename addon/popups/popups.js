@@ -88,7 +88,8 @@ let Popups = {
                 group.iconUrl = null;
             }
 
-            group.title = safeHtml($('#groupTitle').value.trim());
+            group.title = createGroupTitle($('#groupTitle').value, group.id);
+
             group.catchTabRules = $('#groupCatchTabRules').value.trim();
             group.catchTabRules
                 .split(/\s*\n\s*/)

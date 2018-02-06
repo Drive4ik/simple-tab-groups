@@ -104,7 +104,7 @@
                             .then(_removeGroup);
                     } else {
                         Popups.confirm(
-                                browser.i18n.getMessage('deleteGroupBody', safeHtml(unSafeHtml(group.title))),
+                                browser.i18n.getMessage('deleteGroupBody', group.title),
                                 browser.i18n.getMessage('deleteGroupTitle'),
                                 'delete',
                                 'is-danger'

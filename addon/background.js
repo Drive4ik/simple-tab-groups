@@ -164,6 +164,11 @@
 
         storage.set(options);
 
+        sendExternalMessage({
+            groupAdded: true,
+            groupId: _groups[newGroupIndex].id,
+        });
+
         updateMoveTabMenus(windowId);
         saveGroupsToStorage();
 
@@ -171,15 +176,28 @@
     }
 
     // groups : Object or array of Object
-    function saveGroup(group) {
-        if (!group || (Array.isArray(group) && !group.length)) {
+    async function saveGroup(group) {
+        if (!group) {
             return;
         }
 
-        let groups = Array.isArray(group) ? group : [group];
-        _groups = _groups.map(g => groups.find(({ id }) => id === g.id) || g);
+        _groups = _groups.map(gr => gr.id === group.id ? group : gr);
 
         saveGroupsToStorage();
+
+        sendExternalMessage({
+            groupUpdated: true,
+            groupId: group.id,
+        });
+    }
+
+    function sendExternalMessage(data, allowedRequestKeys = ['getGroupsList']) {
+        Object.keys(EXTENSIONS_WHITE_LIST)
+            .forEach(function(exId) {
+                if (allowedRequestKeys.some(key => EXTENSIONS_WHITE_LIST[exId].allowedRequests.includes(key))) {
+                    browser.runtime.sendMessage(exId, data);
+                }
+            });
     }
 
     function addUndoRemoveGroupItem(group) {
@@ -211,6 +229,11 @@
         _groups.splice(groupIndex, 1);
 
         saveGroupsToStorage();
+
+        sendExternalMessage({
+            groupDeleted: true,
+            groupId: groupId,
+        });
 
         let oldGroupWindow = await getWindow(groupWindowId);
 
@@ -1131,7 +1154,7 @@
         }
 
         browser.browserAction.setTitle({
-            title: currentGroup.title + ' - ' + browser.i18n.getMessage('extensionName'),
+            title: unSafeHtml(currentGroup.title) + ' - ' + browser.i18n.getMessage('extensionName'),
         });
 
         browser.browserAction.setIcon({
@@ -1372,33 +1395,16 @@
                 ok: true,
             });
         } else if (request.getGroupsList) {
-            let groupsList = _groups.map(function(group) {
-                return {
-                    id: group.id,
-                    title: unSafeHtml(group.title),
-                };
-            });
-
             sendResponse({
                 ok: true,
-                groupsList,
-            });
-        } else if (request.getGroupExpandedData) {
-            let group = _groups.find(gr => gr.id === request.getGroupExpandedData.groupId);
-
-            if (group) {
-                sendResponse({
-                    ok: true,
-                    group: {
+                groupsList: _groups.map(function(group) {
+                    return {
+                        id: group.id,
                         title: unSafeHtml(group.title),
                         iconUrl: createGroupSvgIconUrl(group),
-                    },
-                });
-            } else {
-                sendResponse({
-                    ok: false,
-                });
-            }
+                    };
+                }),
+            });
         } else if (request.runAction) {
             sendResponse(runAction(request.runAction));
         }
@@ -1697,11 +1703,12 @@
             createMoveTabMenus();
             addEvents();
 
-            setTimeout(function() {
-                browser.runtime.sendMessage('stg-plugin-load-custom-group@drive4ik', { // TODO tmp
-                    IAmBack: true,
+            Object.keys(EXTENSIONS_WHITE_LIST)
+                .forEach(function(exId) {
+                    browser.runtime.sendMessage(exId, {
+                        IAmBack: true,
+                    });
                 });
-            }, 100);
         })
         .catch(notify);
 

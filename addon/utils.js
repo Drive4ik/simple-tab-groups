@@ -10,7 +10,6 @@ const INNER_HTML = 'innerHTML',
     EXTENSIONS_WHITE_LIST = {
         'stg-plugin-new-group@drive4ik': {
             allowedRequests: [
-                'areYouHere',
                 'runAction',
             ],
             allowedActionIds: [
@@ -20,10 +19,8 @@ const INNER_HTML = 'innerHTML',
         },
         'stg-plugin-load-custom-group@drive4ik': {
             allowedRequests: [
-                'areYouHere',
                 'runAction',
                 'getGroupsList',
-                'getGroupExpandedData',
             ],
             allowedActionIds: [
                 'load-custom-group',
@@ -230,9 +227,10 @@ let $ = document.querySelector.bind(document),
             return false;
         }
 
-        let requestKeys = Object.keys(request);
+        let requestKeys = Object.keys(request),
+            allowedRequestKeys = extension.allowedRequests.concat(['areYouHere']);
 
-        if (!requestKeys.length || !requestKeys.every(key => extension.allowedRequests.includes(key))) {
+        if (!requestKeys.length || !requestKeys.every(key => allowedRequestKeys.includes(key))) {
             return false;
         }
 
@@ -358,6 +356,15 @@ let $ = document.querySelector.bind(document),
     },
     capitalize = function(str) {
         return str.charAt(0).toUpperCase() + str.slice(1);
+    },
+    createGroupTitle = function(title, groupId) {
+        title = (title || '').trim();
+
+        if (!title) {
+            title = browser.i18n.getMessage('newGroupTitle', groupId);
+        }
+
+        return safeHtml(title);
     },
     checkVisibleElement = function(element) {
         let rect = element.getBoundingClientRect(),
@@ -489,7 +496,7 @@ let $ = document.querySelector.bind(document),
             return 'data:image/svg+xml;base64,' + b64EncodeUnicode(colorSvg);
         }
 
-        return '';
+        return null;
     },
     getBrowserActionSvgPath = function(group) {
         if (group.iconUrl) {
