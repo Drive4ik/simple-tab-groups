@@ -18,6 +18,11 @@ let Popups = {
     let templates = {
             'icon-color-tmpl': '<span id="groupIconColorCircle" style="background-color: {{iconColor}}"></span>',
             'icon-img-tmpl': '<img id="groupIconImg" src="{{iconUrl}}" class="is-inline-block size-16 h-margin-left-5" alt="" />',
+            'catch-container-tmpl': `
+                <div class="container-wrapper">
+                    <input type="checkbox" id="{{cookieStoreId}}" data-container {{checked}} />
+                    <label for="{{cookieStoreId}}" class="h-margin-left-5"><img src="{{iconUrl}}" class="size-16" style="fill: {{colorCode}};" /> {{name}}</label>
+                </div>`,
         },
         lastData = null,
         lastOptions = null,
@@ -101,6 +106,10 @@ let Popups = {
                         notify(browser.i18n.getMessage('invalidRegExpRuleTitle', regExpStr));
                     }
                 });
+
+            group.catchTabContainers = $$('[data-container]')
+                .filter(n => n.checked)
+                .map(n => n.id);
 
             BG.saveGroup(group);
 
@@ -207,11 +216,21 @@ let Popups = {
             iconHtml = format(templates['icon-color-tmpl'], group);
         }
 
+        let containers = await loadContainers(),
+            containersHtml = containers
+            .map(function(container) {
+                container.checked = group.catchTabContainers.includes(container.cookieStoreId) ? 'checked' : '';
+                return format(templates['catch-container-tmpl'], container);
+            })
+            .join('');
+
         let parsedMainTemplate = format(mainTemplate, {
             groupTitle: unSafeHtml(group.title),
             groupIconColor: group.iconColor,
             iconHtml: iconHtml,
             groupCatchTabRules: group.catchTabRules,
+            containersClass: containers.length ? '' : 'is-hidden',
+            containersHtml: containersHtml,
         });
 
         let popupNode = showPopup(format(wrapperTemplate, {

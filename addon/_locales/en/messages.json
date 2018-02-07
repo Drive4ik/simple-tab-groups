@@ -379,6 +379,11 @@
         "description": "Set random color"
     },
 
+    "catchTabContainers": {
+        "message": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)",
+        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
+    },
+
     "regexpForTabsTitle": {
         "message": "Regular expressions for catch tabs",
         "description": "Regular expressions for catch tabs"

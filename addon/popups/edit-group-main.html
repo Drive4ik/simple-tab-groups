@@ -10,6 +10,15 @@
     vertical-align: middle;
 }
 
+.container-wrapper {
+    display: flex;
+    align-items: center;
+}
+
+.container-wrapper img {
+    -moz-context-properties: fill;
+}
+
 </style>
 
 <div class="field">
@@ -29,6 +38,14 @@
     </div>
     <div class="control">
         <input id="groupIconColor" value="{{groupIconColor}}" type="text" class="input" maxlength="40" placeholder="blue, #0f0, rgb(0, 255, 0), rgba(0, 255, 0, 0.7)..." />
+    </div>
+</div>
+<div class="field {{containersClass}}">
+    <label class="label">
+        <span data-i18n="catchTabContainers"></span>
+    </label>
+    <div class="control">
+        {{containersHtml}}
     </div>
 </div>
 <div class="field">

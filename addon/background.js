@@ -114,6 +114,7 @@
             iconUrl: null,
             tabs: [],
             catchTabRules: '',
+            catchTabContainers: [],
             windowId: windowId || null,
         };
     }
@@ -703,7 +704,7 @@
 
         if ('loading' === changeInfo.status && changeInfo.url) {
             if (isAllowUrl(changeInfo.url) && !isEmptyUrl(changeInfo.url)) {
-                let destGroup = _groups.find(gr => isCatchedUrl(changeInfo.url, gr));
+                let destGroup = _groups.find(gr => gr.catchTabContainers.includes(tab.cookieStoreId)) || _groups.find(gr => isCatchedUrl(changeInfo.url, gr));
 
                 if (destGroup && destGroup.id !== group.id) {
                     currentlyMovingTabs.push(tabId);
@@ -1584,6 +1585,17 @@
             removeKey('enableKeyboardShortcutLoadByIndexGroup');
         }
 
+        if (0 > data.version.localeCompare('2.4')) {
+            result.dataChanged = true;
+
+            data.groups = data.groups.map(function(group) {
+                if (!group.catchTabContainers) {
+                    group.catchTabContainers = [];
+                }
+
+                return group;
+            });
+        }
 
 
 

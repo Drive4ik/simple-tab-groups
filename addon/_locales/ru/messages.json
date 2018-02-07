@@ -307,6 +307,10 @@
         "message": "Случайный цвет",
         "description": "Set random color"
     },
+    "catchTabContainers": {
+        "message": "Захватывать и перемещать вкладки с контейнерами в эту группу (только для веб адресов, пустые вкладки не поддерживаются)",
+        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
+    },
     "regexpForTabsTitle": {
         "message": "Регулярные выражения для захвата вкладок",
         "description": "Regular expressions for catch tabs"
