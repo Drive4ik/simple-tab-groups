@@ -84,19 +84,20 @@ let Popups = {
             BG.removeGroup(lastData.id);
         } else if ('submit-edit-group-popup' === action) {
             let group = lastData,
+                updateData = {},
                 groupIconWrapper = $('#groupIconWrapper');
 
             if ('image' === groupIconWrapper.dataset.iconType) {
-                group.iconUrl = $('#groupIconImg').src;
+                updateData.iconUrl = $('#groupIconImg').src;
             } else if ('color' === groupIconWrapper.dataset.iconType) {
-                group.iconColor = $('#groupIconColorCircle').style.backgroundColor; // safed color
-                group.iconUrl = null;
+                updateData.iconColor = $('#groupIconColorCircle').style.backgroundColor; // safed color
+                updateData.iconUrl = null;
             }
 
-            group.title = createGroupTitle($('#groupTitle').value, group.id);
+            updateData.title = createGroupTitle($('#groupTitle').value, group.id);
 
-            group.catchTabRules = $('#groupCatchTabRules').value.trim();
-            group.catchTabRules
+            updateData.catchTabRules = $('#groupCatchTabRules').value.trim();
+            updateData.catchTabRules
                 .split(/\s*\n\s*/)
                 .filter(Boolean)
                 .forEach(function(regExpStr) {
@@ -107,11 +108,11 @@ let Popups = {
                     }
                 });
 
-            group.catchTabContainers = $$('[data-container]')
+            updateData.catchTabContainers = $$('[data-container]')
                 .filter(n => n.checked)
                 .map(n => n.id);
 
-            BG.saveGroup(group);
+            BG.updateGroup(group.id, updateData);
 
             let win = await BG.getWindow();
 

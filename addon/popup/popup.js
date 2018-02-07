@@ -125,9 +125,10 @@
                 BG.moveTabToGroup(contextData.tabIndex, undefined, state.groupId, newGroup.id);
             } else if ('set-tab-icon-as-group-icon' === action) {
                 let group = getGroupById(state.groupId);
-                group.iconUrl = group.tabs[contextData.tabIndex].favIconUrl || null;
 
-                BG.saveGroup(group);
+                BG.updateGroup(state.groupId, {
+                    iconUrl: group.tabs[contextData.tabIndex].favIconUrl || null,
+                });
 
                 renderTabsList(state.groupId);
 

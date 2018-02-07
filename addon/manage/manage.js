@@ -101,9 +101,10 @@
                 }
             } else if ('set-tab-icon-as-group-icon' === action) {
                 let group = getGroupById(contextData.groupId);
-                group.iconUrl = group.tabs[contextData.tabIndex].favIconUrl || null;
 
-                BG.saveGroup(group);
+                BG.updateGroup(contextData.groupId, {
+                    iconUrl: group.tabs[contextData.tabIndex].favIconUrl || null,
+                });
 
                 renderGroupsCards();
 
@@ -149,9 +150,9 @@
         $on('change', '.group > .header input', function(event, data) {
             let group = getGroupById(data.groupId);
 
-            group.title = createGroupTitle(event.target.value, group.id);
-
-            BG.saveGroup(group);
+            BG.updateGroup(data.groupId, {
+                title: createGroupTitle(event.target.value, group.id),
+            });
 
             let currentGroup = _groups.find(gr => gr.windowId === currentWindowId);
 

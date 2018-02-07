@@ -176,19 +176,20 @@
         return returnNewGroupIndex ? newGroupIndex : _groups[newGroupIndex];
     }
 
-    // groups : Object or array of Object
-    async function saveGroup(group) {
-        if (!group) {
+    async function updateGroup(groupId, updateData) {
+        let groupIndex = _groups.findIndex(gr => gr.id === groupId);
+
+        if (-1 === groupIndex) {
             return;
         }
 
-        _groups = _groups.map(gr => gr.id === group.id ? group : gr);
+        Object.assign(_groups[groupIndex], JSON.parse(JSON.stringify(updateData))); // JSON need for fix bug: dead object after close tab which create object
 
         saveGroupsToStorage();
 
         sendExternalMessage({
             groupUpdated: true,
-            groupId: group.id,
+            groupId: groupId,
         });
     }
 
@@ -1506,7 +1507,7 @@
         createGroup,
         moveGroup,
         addGroup,
-        saveGroup,
+        updateGroup,
         removeGroup,
 
         reloadGroups: async function() {
