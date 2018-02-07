@@ -3,7 +3,7 @@
 
     "applications": {
         "gecko": {
-            "id": "stg-plugin-new-group@drive4ik",
+            "id": "stg-plugin-create-new-group@drive4ik",
             "strict_min_version": "56.0"
         }
     },

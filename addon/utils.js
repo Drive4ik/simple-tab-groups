@@ -8,7 +8,7 @@ const INNER_HTML = 'innerHTML',
     CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP = 'stg-undo-remove-group-id-',
     NEW_TAB_URL = '/stg-newtab/newtab.html',
     EXTENSIONS_WHITE_LIST = {
-        'stg-plugin-new-group@drive4ik': {
+        'stg-plugin-create-new-group@drive4ik': {
             allowedRequests: [
                 'runAction',
             ],
