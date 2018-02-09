@@ -1149,10 +1149,9 @@
         }));
     }
 
-    function setBrowserActionData(currentGroup) {
+    async function setBrowserActionData(currentGroup) {
         if (!currentGroup) {
-            resetBrowserActionData();
-            return;
+            return resetBrowserActionData();
         }
 
         browser.browserAction.setTitle({
@@ -1160,17 +1159,17 @@
         });
 
         browser.browserAction.setIcon({
-            path: getBrowserActionSvgPath(currentGroup),
+            path: await getBrowserActionSvgPath(currentGroup),
         });
     }
 
-    function resetBrowserActionData() {
+    async function resetBrowserActionData() {
         browser.browserAction.setTitle({
             title: MANIFEST.browser_action.default_title,
         });
 
         browser.browserAction.setIcon({
-            path: MANIFEST.browser_action.default_icon,
+            path: await getBrowserActionSvgPath(),
         });
     }
 

@@ -1,13 +1,14 @@
-<svg width="96" height="96" xmlns="http://www.w3.org/2000/svg">
+<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg">
     <g fill="#606060">
-        <rect height="24" width="24" y="0" x="0" />
-        <rect height="24" width="24" y="0" x="36" />
-        <rect height="24" width="24" y="36" x="0" />
-        <rect height="24" width="24" y="36" x="36" />
-        <rect height="24" width="24" y="72" x="0" />
-        <rect height="24" width="24" y="72" x="36" />
-        <rect height="24" width="24" y="0" x="72" />
-        <rect height="24" width="24" y="36" x="72" />
-        <rect height="24" width="24" y="72" x="72" />
+        <rect height="8" width="8" y="0" x="0" />
+        <rect height="8" width="8" y="0" x="12" />
+        <rect height="8" width="8" y="12" x="24" />
+        <rect height="8" width="8" y="12" x="0" />
+        <rect height="8" width="8" y="12" x="12" />
+        <rect height="8" width="8" y="0" x="24" />
+        <rect height="8" width="8" y="24" x="0" />
+        <rect height="8" width="8" y="24" x="12" />
+        <rect height="8" width="8" y="24" x="24" />
+        <path transform="rotate(-90, 18, 18)" d="m3.87079,31.999319l0,-28.125684l28.126548,28.125684l-28.126548,0z" fill="transparent" />
     </g>
 </svg>

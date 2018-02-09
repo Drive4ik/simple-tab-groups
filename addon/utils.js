@@ -30,6 +30,7 @@ const INNER_HTML = 'innerHTML',
     DEFAULT_OPTIONS = {
         groups: [],
         lastCreatedGroupPosition: 0,
+        browserActionIconColor: '#606060',
         version: '1.0',
 
         // options
@@ -73,7 +74,7 @@ const INNER_HTML = 'innerHTML',
     onlyBoolOptionsKeys = (function() {
         return Object.keys(DEFAULT_OPTIONS).filter(key => 'boolean' === typeof DEFAULT_OPTIONS[key]);
     })(),
-    allOptionsKeys = onlyBoolOptionsKeys.concat(['hotkeys']);
+    allOptionsKeys = onlyBoolOptionsKeys.concat(['hotkeys', 'browserActionIconColor']);
 
 let $ = document.querySelector.bind(document),
     $$ = selector => Array.from(document.querySelectorAll(selector)),
@@ -496,35 +497,26 @@ let $ = document.querySelector.bind(document),
             return 'data:image/svg+xml;base64,' + b64EncodeUnicode(colorSvg);
         }
 
-        return null;
+        return '';
     },
-    getBrowserActionSvgPath = function(group) {
-        if (group.iconUrl) {
+    getBrowserActionSvgPath = async function(group) {
+        if (group && group.iconUrl) {
             return group.iconUrl;
         }
 
-        if (group.iconColor) {
-            let iconSvg = `
-                <svg width="32" height="32" xmlns="http://www.w3.org/2000/svg">
-                    <g fill="#606060">
-                        <rect height="8" width="8" y="0" x="0" />
-                        <rect height="8" width="8" y="0" x="12" />
-                        <rect height="8" width="8" y="12" x="24" />
-                        <rect height="8" width="8" y="12" x="0" />
-                        <rect height="8" width="8" y="12" x="12" />
-                        <rect height="8" width="8" y="0" x="24" />
-                        <rect height="8" width="8" y="24" x="0" />
-                        <rect height="8" width="8" y="24" x="12" />
-                        <rect height="8" width="8" y="24" x="24" />
-                        <path transform="rotate(-90, 18, 18)" d="m3.87079,31.999319l0,-28.125684l28.126548,28.125684l-28.126548,0z" fill="${group.iconColor}" />
-                    </g>
-                </svg>
-            `;
+        let iconSvgBlob = await fetch(MANIFEST.browser_action.default_icon),
+            iconSvg = await iconSvgBlob.text(),
+            options = await storage.get('browserActionIconColor');
 
-            return convertSvgToUrl(iconSvg);
+        if (DEFAULT_OPTIONS.browserActionIconColor !== options.browserActionIconColor) {
+            iconSvg = iconSvg.replace(DEFAULT_OPTIONS.browserActionIconColor, options.browserActionIconColor);
         }
 
-        return MANIFEST.browser_action.default_icon;
+        if (group && group.iconColor) {
+            iconSvg = iconSvg.replace('transparent', group.iconColor);
+        }
+
+        return convertSvgToUrl(iconSvg);
     },
     convertSvgToUrl = function(svg) {
         let blobIcon = new Blob([svg], {

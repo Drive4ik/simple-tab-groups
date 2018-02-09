@@ -224,7 +224,7 @@
         DragAndDrop.create({
             selector: '[data-is-tab]',
             group: 'tabs',
-            draggableElements: '[data-is-tab], .icon, .screenshot, .delete-tab-button, .container, .title',
+            draggableElements: '[data-is-tab], .icon, .screenshot, .delete-tab-button, .container, .tab-title',
             onDrop(event, from, to, dataFrom, dataTo) {
                 let newTabIndex = dataTo.isGroup ? undefined : dataTo.tabIndex;
                 BG.moveTabToGroup(dataFrom.tabIndex, newTabIndex, dataFrom.groupId, dataTo.groupId, false);

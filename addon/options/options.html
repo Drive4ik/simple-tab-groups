@@ -5,7 +5,8 @@
     <title></title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" href="/third-party-styles.css">
+    <link rel="stylesheet" type="text/css" href="/css/bulma.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
     <link rel="stylesheet" type="text/css" href="options.css">
 </head>
 
@@ -89,6 +90,15 @@
                 <span data-i18n="showNotificationIfGroupsNotSyncedAtStartup"></span>
             </label>
         </div>
+        <div class="field browser-action-color-wrapper">
+            <label class="label" data-i18n="enterBrowserActionIconColor"></label>
+            <div class="control is-inline-block">
+                <input id="browserActionIconColorText" class="input" type="text" placeholder="#ffffff" />
+            </div>
+            <div class="control is-inline-block">
+                <input id="browserActionIconColorButton" class="input" type="color" />
+            </div>
+        </div>
 
         <hr>
 
@@ -98,7 +108,7 @@
             <div id="hotkeys" class="hotkeys"></div>
             <div>
                 <div class="control">
-                    <button id="addHotKey" class="button">
+                    <button id="addHotKey" class="button h-margin-top-10">
                         <img class="size-14" src="/icons/new.svg" alt="" />
                         <span class="h-margin-left-5" data-i18n="addHotKeyButton"></span>
                     </button>
@@ -158,7 +168,7 @@
 
 
     <script id="hotkey-tmpl" type="text/template">
-        <div class="hotkey" data-hotkey>
+        <div class="hotkey is-flex is-aligin-items-center" data-hotkey>
             <div class="control">
                 <input type="text" data-hotkey-input value="{{hotkeyValue}}" autocomplete="off" class="input is-small" data-i18n="hotkeyPlaceholder:placeholder" />
             </div>

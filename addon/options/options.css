@@ -1,7 +1,3 @@
-html {
-    font-family: Segoe UI, Arial;
-}
-
 * {
     font-size: 15px;
 }
@@ -15,96 +11,10 @@ body {
     max-width: 99%;
 }
 
-.h-margin-left-5 {
-    margin-left: 5px;
-}
-
-.h-margin-left-10 {
-    margin-left: 10px;
-}
-
-.h-margin-bottom-5 {
-    margin-bottom: 5px;
-}
-
-.h-margin-bottom-10 {
-    margin-bottom: 10px;
-}
-
-.h-margin-bottom-20 {
-    margin-bottom: 20px;
-}
-
 hr {
     margin: 10px -4px;
     color: transparent;
     border-top: 1px solid #e3e3e3;
-}
-
-.cursor-pointer {
-    cursor: pointer;
-}
-
-.is-hidden {
-    display: none !important;
-}
-
-.size-14 {
-    width: 14px;
-    height: 14px;
-}
-
-.size-16 {
-    width: 16px;
-    height: 16px;
-}
-
-/* FLEX HELPERS */
-.is-flex {
-    display: flex !important;
-}
-
-.is-flex.is-aligin-items-center {
-    align-items: center;
-}
-
-.is-flex.is-column {
-    flex-direction: column;
-}
-
-.is-flex > .is-full-width {
-    flex-grow: 1;
-}
-
-.is-flex > .is-start {
-    align-self: flex-start;
-}
-
-.is-flex > .is-end {
-    align-self: flex-end;
-}
-
-
-label {
-    display: inline-block;
-}
-
-label:not(:last-child) {
-    margin-bottom: 5px;
-}
-
-.hotkeys {
-    margin-bottom: 10px;
-}
-
-
-.hotkey {
-    display: flex;
-    align-items: center;
-}
-
-.hotkey:not(:last-child) {
-    margin-bottom: 10px;
 }
 
 .hotkey > :not(:last-child) {
@@ -127,16 +37,6 @@ label:not(:last-child) {
     max-width: 500px;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+.browser-action-color-wrapper > .control:last-child {
+    min-width: 44px;
+}

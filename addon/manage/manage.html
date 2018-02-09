@@ -10,14 +10,15 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" href="/icons/icon.svg">
-    <link rel="stylesheet" type="text/css" href="/third-party-styles.css">
+    <link rel="stylesheet" type="text/css" href="/css/bulma.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
     <link rel="stylesheet" type="text/css" href="manage.css">
 </head>
 
 <body>
     <div id="manage" class="is-flex is-column">
         <header class="is-flex is-aligin-items-center">
-            <span class="title">
+            <span class="page-title">
                 <span data-i18n="extensionName"></span> - <span data-i18n="manageGroupsTitle"></span>
             </span>
             <span class="is-full-width">
@@ -41,14 +42,14 @@
 
         <main id="result" class="grid"></main>
 
-        <!-- <footer class="is-flex no-text-select">
+        <!-- <footer class="is-flex is-unselectable">
             footer
         </footer> -->
     </div>
 
     <script id="tab-tmpl" type="text/template">
         <div class="tab cursor-pointer {{classList}}" contextmenu="tab-menu" title="{{urlTitle}}" data-is-tab="true" data-action="load-group" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}" data-draggable-group="tabs">
-            <div class="icon {{favIconClass}}" style="{{containerColorCodeBorderStyle}}">
+            <div class="tab-icon {{favIconClass}}" style="{{containerColorCodeBorderStyle}}">
                 <img class="size-16" src="{{favIconUrl}}" alt="" />
             </div>
             <div class="delete-tab-button {{deleteButtonClass}}" data-action="remove-tab" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}" data-i18n="deleteTab:title" style="{{containerColorCodeBorderStyle}}">
@@ -60,7 +61,7 @@
             <div class="screenshot" style="{{containerColorCodeBorderStyle}}">
                 <img src="{{thumbnail}}" alt="">
             </div>
-            <div class="title text-center text-ellipsis">{{title}}</div>
+            <div class="tab-title has-text-centered text-ellipsis">{{title}}</div>
         </div>
     </script>
 
@@ -69,24 +70,24 @@
             <div class="screenshot">
                 <img src="chrome://browser/skin/new-tab.svg" alt="">
             </div>
-            <div class="title text-center text-ellipsis" data-i18n="createNewTab"></div>
+            <div class="tab-title has-text-centered text-ellipsis" data-i18n="createNewTab"></div>
         </div>
     </script>
 
     <script id="group-tmpl" type="text/template">
         <div class="group {{classList}}" contextmenu="group-menu" data-is-group="true" data-group-id="{{id}}" data-draggable-group="groups">
             <div class="header">
-                <div class="title">
+                <div class="group-title">
                     <input type="text" value="{{title}}" data-group-id="{{id}}" maxlength="120" placeholder="Please enter group name" />
                 </div>
-                <div class="icon">
+                <div class="group-icon">
                     {{iconHtml}}
                 </div>
                 <div class="tabs-count" data-i18n="groupTabsCount::{{tabs.length}}"></div>
-                <div class="icon cursor-pointer no-text-select" data-action="open-settings-group-popup" data-group-id="{{id}}" data-i18n="groupSettings:title">
+                <div class="group-icon cursor-pointer is-unselectable" data-action="open-settings-group-popup" data-group-id="{{id}}" data-i18n="groupSettings:title">
                     <img class="size-16" src="chrome://browser/skin/settings.svg" alt="" />
                 </div>
-                <div class="icon cursor-pointer no-text-select" data-action="show-delete-group-popup" data-group-id="{{id}}" data-i18n="deleteGroup:title">
+                <div class="group-icon cursor-pointer is-unselectable" data-action="show-delete-group-popup" data-group-id="{{id}}" data-i18n="deleteGroup:title">
                     <img class="size-16" src="/icons/group-delete.svg" alt="" />
                 </div>
             </div>

@@ -503,6 +503,11 @@
                 "example" : "Group 2"
             }
         }
+    },
+
+    "enterBrowserActionIconColor": {
+        "message": "Enter browser action icon color",
+        "description": "Enter browser action icon color"
     }
 
 }

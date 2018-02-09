@@ -1,0 +1,130 @@
+
+html {
+    font-family: Segoe UI, Arial;
+    overflow-y: auto;
+}
+
+
+img {
+    vertical-align: middle;
+}
+
+/* BULMA */
+.modal-card-head,
+.modal-card-body,
+.modal-card-foot {
+    padding: 10px;
+}
+
+.modal-background {
+    background-color: rgba(10, 10, 10, 0.6);
+}
+
+/* END BULMA */
+
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.cursor-help {
+    cursor: help;
+}
+
+.no-events {
+    pointer-events: none;
+}
+
+.is-full-height {
+    height: 100%;
+}
+
+
+/* HEPLERS */
+.h-margin-top-10 {
+    margin-top: 10px;
+}
+
+.h-margin-bottom-5 {
+    margin-bottom: 5px;
+}
+
+.h-margin-bottom-10 {
+    margin-bottom: 10px;
+}
+
+.h-margin-bottom-20 {
+    margin-bottom: 20px;
+}
+
+.h-margin-left-5 {
+    margin-left: 5px;
+}
+
+.h-margin-left-10 {
+    margin-left: 10px;
+}
+
+.h-margin-right-5 {
+    margin-right: 5px;
+}
+
+
+
+.size-12 {
+    width: 12px;
+    height: 12px;
+}
+
+.size-14 {
+    width: 14px;
+    height: 14px;
+}
+
+.size-16 {
+    width: 16px;
+    height: 16px;
+}
+
+.size-18 {
+    width: 18px;
+    height: 18px;
+}
+
+.size-20 {
+    width: 20px;
+    height: 20px;
+}
+
+
+.rotate-180 {
+    transform: rotate(180deg);
+}
+
+.text-ellipsis {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+/* FLEX HELPERS */
+.is-flex.is-aligin-items-center {
+    align-items: center;
+}
+
+.is-flex.is-column {
+    flex-direction: column;
+}
+
+.is-flex > .is-full-width {
+    flex-grow: 1;
+}
+
+.is-flex > .is-start {
+    align-self: flex-start;
+}
+
+.is-flex > .is-end {
+    align-self: flex-end;
+}

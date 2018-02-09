@@ -51,7 +51,7 @@ let Popups = {
         div[INNER_HTML] = parsedTemplate;
         document.body.appendChild(div);
 
-        $('html').classList.add('no-scroll');
+        $('html').classList.add('is-clipped');
 
         translatePage();
 
@@ -69,7 +69,7 @@ let Popups = {
         Popups.show = false;
 
         $('#' + TEMPORARY_ID).remove();
-        $('html').classList.remove('no-scroll');
+        $('html').classList.remove('is-clipped');
     }
 
     async function doAction(action, data, event) {

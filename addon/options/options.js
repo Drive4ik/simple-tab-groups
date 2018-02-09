@@ -401,6 +401,28 @@
         // return browser.i18n.getMessage('hotkeyActionDescription' + capitalize(toCamelCase(hotkey.action.id)));
     }
 
+
+    $on('change', '#browserActionIconColorText', function(event) {
+        let browserActionIconColorButtonNode = $('#browserActionIconColorButton');
+
+        browserActionIconColorButtonNode.value = this.value;
+        dispatchEvent('change', browserActionIconColorButtonNode);
+    });
+
+    $on('change', '#browserActionIconColorButton', function(event) {
+        $('#browserActionIconColorText').value = this.value;
+
+        storage.set({
+            browserActionIconColor: this.value,
+        });
+
+        if (this.dontLiveChangeBrowserAction) {
+            delete this.dontLiveChangeBrowserAction;
+        } else {
+            BG.updateBrowserActionData();
+        }
+    });
+
     function loadOptions() {
         storage.get(allOptionsKeys)
             .then(function(opt) {
@@ -411,6 +433,11 @@
                 });
 
                 renderHotkeys();
+
+                // set browser action color
+                $('#browserActionIconColorButton').dontLiveChangeBrowserAction = true;
+                $('#browserActionIconColorText').value = options.browserActionIconColor;
+                dispatchEvent('change', $('#browserActionIconColorText'));
             })
             .then(checkEnabledCheckboxes)
             .then(translatePage);
