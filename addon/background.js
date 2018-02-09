@@ -7,7 +7,7 @@
 
     // return storage.get(null).then(console.log);
 
-    let log = function(message = 'log', data = null) {
+    let log = function(message = 'log', data = null, showNotification = true) {
         try {
             throw Error(message);
         } catch (e) {
@@ -19,8 +19,10 @@
                 fromLine: e.stack.split('@').map(l => l.split(prefix).join('')),
             });
 
-            notify(browser.i18n.getMessage('whatsWrongMessage'))
-                .then(() => browser.runtime.openOptionsPage());
+            if (showNotification) {
+                notify(browser.i18n.getMessage('whatsWrongMessage'))
+                    .then(() => browser.runtime.openOptionsPage());
+            }
         }
     };
 
@@ -674,7 +676,6 @@
             currentlyAddingTabs.includes(tabId) || // reject processing tabs
             'isArticle' in changeInfo || // not supported reader mode now
             'discarded' in changeInfo || // not supported discard tabs now
-            isStgNewTabUrl(tab.url) ||
             (tab.pinned && undefined === changeInfo.pinned)) { // pinned tabs are not supported
             return;
         }
@@ -686,6 +687,10 @@
         //     url: tab.url,
         //     title: tab.title,
         // }));
+
+        if (isStgNewTabUrl(tab.url)) {
+            tab.url = revokeStgNewTabUrl(tab.url);
+        }
 
         if ('pinned' in changeInfo) {
             if (isAllowUrl(tab.url)) {
