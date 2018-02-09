@@ -408,5 +408,9 @@
                 "example" : "Group 2"
             }
         }
+    },
+    "enterBrowserActionIconColor": {
+        "message": "Здесь можно изменить цвет значка аддона",
+        "description": "Enter browser action icon color"
     }
 }
