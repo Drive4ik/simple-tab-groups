@@ -493,8 +493,7 @@ let $ = document.querySelector.bind(document),
         }
 
         if (group.iconColor) {
-            let colorSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><circle fill="${group.iconColor}" cx="8" cy="8" r="8" /></svg>`;
-            return 'data:image/svg+xml;base64,' + b64EncodeUnicode(colorSvg);
+            return convertSvgToUrl(`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><circle fill="${group.iconColor}" cx="8" cy="8" r="8" /></svg>`);
         }
 
         return '';
@@ -519,12 +518,15 @@ let $ = document.querySelector.bind(document),
         return convertSvgToUrl(iconSvg);
     },
     convertSvgToUrl = function(svg) {
-        let blobIcon = new Blob([svg], {
-            type: 'image/svg+xml',
-        });
-
-        return URL.createObjectURL(blobIcon);
+        return 'data:image/svg+xml;base64,' + b64EncodeUnicode(svg);
     },
+    // convertSvgToBlobUrl = function(svg) {
+    //     let blobIcon = new Blob([svg], {
+    //         type: 'image/svg+xml',
+    //     });
+
+    //     return URL.createObjectURL(blobIcon);
+    // },
     resizeImage = function(img, height, width, useTransparency = true) { // img: new Image()
         let canvas = document.createElement('canvas'),
             canvasCtx = canvas.getContext('2d');
