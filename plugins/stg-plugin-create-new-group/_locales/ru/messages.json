@@ -14,5 +14,9 @@
     "createNewGroupAndLoadItTitle": {
         "message": "... и загрузить её",
         "description": "Create new group and load it"
+    },
+    "enterBrowserActionIconColor": {
+        "message": "Здесь можно изменить цвет значка аддона",
+        "description": "Enter browser action icon color"
     }
 }
