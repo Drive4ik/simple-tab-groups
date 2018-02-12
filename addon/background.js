@@ -27,6 +27,7 @@
     };
 
     async function saveGroupsToStorage() {
+        _groups.map(group => console.log(group));
         browser.runtime.sendMessage({
             groupsUpdated: true,
         });
@@ -79,6 +80,7 @@
             windowId,
         });
 
+        console.table(tabs.filter(tab => tab.pinned || !isAllowUrl(tab.url)));
         return tabs.some(tab => tab.pinned || !isAllowUrl(tab.url));
     }
 
@@ -472,19 +474,30 @@
 
                 if (oldTabIds.length || !isHasAnotherTabs) { // create empty tab (for quickly change group and not blinking)
                     tempEmptyTabPromise = browser.tabs.create({
-                            url: 'about:blank',
-                            active: true,
-                            windowId: windowId,
-                        })
+                        url: 'about:blank',
+                        active: true,
+                        windowId: windowId,
+                    })
                         .then(tab => tempEmptyTabId = tab.id);
                 }
 
-                if (!group.tabs.length && !isHasAnotherTabs) {
-                    group.tabs.push({
-                        active: true,
+                if (!group.tabs.length) {// if the destination tab group has no tab
+                    await browser.tabs.create({
                         url: 'about:blank',
-                        cookieStoreId: DEFAULT_COOKIE_STORE_ID,
-                    });
+                        active: true,
+                        windowId: windowId,
+                    })
+                        .then(tab => {
+                            group.tabs.push({
+                                active: true,
+                                url: 'about:blank',
+                                cookieStoreId: DEFAULT_COOKIE_STORE_ID,
+                                id: tab.id,
+                            });
+                        });
+                } else {
+                    await browser.tabs.update(group.tabs.filter(tab => tab.active === true)[0].id, {active: true});
+                    console.log("Switching to "+group.tabs.filter(tab => tab.active === true)[0].id);
                 }
 
                 await tempEmptyTabPromise;
@@ -494,7 +507,9 @@
                 });
 
                 if (oldTabIds.length) {
-                    await browser.tabs.remove(oldTabIds);
+                    await browser.tabs.hide(oldTabIds)
+                        .then(rv => console.log(rv))
+                        .catch(error => console.log(error));
                 }
 
                 browser.runtime.sendMessage({
@@ -514,13 +529,16 @@
                                 url = createStgTabNewUrl(tab, options.enableFavIconsForNotLoadedTabs);
                             }
 
+                        return browser.tabs.show(tab.id);
+                        /*
                             return browser.tabs.create({
                                 active: tab.active,
                                 url: url,
                                 windowId: windowId,
                                 cookieStoreId: normalizeCookieStoreId(tab.cookieStoreId, containers),
                             });
-                        }))
+                            */
+                    }))
                         .then(newTabs => newTabs.forEach((tab, tabIndex) => group.tabs[tabIndex].id = tab.id)); // update tabs id
                 }
 
@@ -616,7 +634,7 @@
     }
 
     async function onActivatedTab({ tabId, windowId }) {
-        // console.log('onActivatedTab', { tabId, windowId });
+        console.log('onActivatedTab', { tabId, windowId });
 
         let group = _groups.find(gr => gr.windowId === windowId);
 
@@ -638,7 +656,7 @@
     }
 
     async function onCreatedTab(tab) {
-        // console.log('onCreatedTab', tab);
+        console.log('onCreatedTab', tab);
 
         if (currentlyAddingTabs.includes(tab.id) || tab.incognito) {
             return;
@@ -771,7 +789,7 @@
     }
 
     async function onRemovedTab(tabId, { isWindowClosing, windowId }) {
-        // console.log('onRemovedTab', arguments);
+        console.log('onRemovedTab', arguments);
 
         if (isWindowClosing) {
             return;
