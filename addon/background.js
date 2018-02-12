@@ -1708,6 +1708,7 @@
 
                             if (tab.active && 'about:blank' === tab.url && 'loading' === tab.status && group.tabs[tabIndex]) {
                                 mappedTab = group.tabs[tabIndex];
+                                mappedTab.id = tab.id;
                             } else {
                                 mappedTab = mapTab(tab);
 
