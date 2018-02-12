@@ -1618,6 +1618,7 @@
     Promise.all([
             storage.get(null),
             browser.windows.getAll({
+                populate: true,
                 windowTypes: ['normal'],
             })
         ])
@@ -1643,9 +1644,14 @@
             windows = windows.filter(win => 'normal' === win.type && !win.incognito);
 
             let winTabs = {};
-            await Promise.all(windows.map(function(win) {
-                return getTabs(win.id).then(tabs => winTabs[win.id] = tabs.map(mapTab)); // map need for normalize url
-            }));
+            windows.forEach(function(win) {
+                winTabs[win.id] = win.tabs
+                    .filter(isAllowTab)
+                    .map(function(tab) {
+                        tab.url = normalizeUrl(tab.url);
+                        return tab;
+                    });
+            });
 
             let syncedWinIds = [],
                 groupHasBeenSync = true;
@@ -1670,7 +1676,21 @@
                             return false;
                         }
 
-                        let equalGroupTabs = group.tabs.filter(tab => winTabs[win.id].some(t => t.url === tab.url));
+                        let equalGroupTabs = group.tabs.filter(function(tab, tabIndex) {
+                            let findTab = winTabs[win.id].some(t => t.url === tab.url);
+
+                            if (
+                                !findTab &&
+                                winTabs[win.id][tabIndex].active &&
+                                'about:blank' === winTabs[win.id][tabIndex].url &&
+                                'loading' === winTabs[win.id][tabIndex].status
+                            ) {
+                                return true;
+                            }
+
+                            return findTab;
+                        });
+
 
                         if (equalGroupTabs.length === group.tabs.length && winTabs[win.id].length >= group.tabs.length) {
                             syncedWinIds.push(win.id);
@@ -1683,12 +1703,18 @@
                 if (winCandidate) {
                     group.windowId = winCandidate.id;
                     group.tabs = winTabs[winCandidate.id]
-                        .map(function(tab) { // need if window id is equal but tabs are not equal
-                            let mappedTab = mapTab(tab),
-                                tabInGroup = group.tabs.find(t => t.url === mappedTab.url && t.thumbnail);
+                        .map(function(tab, tabIndex) { // need if window id is equal but tabs are not equal
+                            let mappedTab = null;
 
-                            if (tabInGroup) {
-                                mappedTab.thumbnail = tabInGroup.thumbnail;
+                            if (tab.active && 'about:blank' === tab.url && 'loading' === tab.status && group.tabs[tabIndex]) {
+                                mappedTab = group.tabs[tabIndex];
+                            } else {
+                                mappedTab = mapTab(tab);
+
+                                let tabInGroup = group.tabs.find(t => t.url === mappedTab.url && t.thumbnail);
+                                if (tabInGroup) {
+                                    mappedTab.thumbnail = tabInGroup.thumbnail;
+                                }
                             }
 
                             return mappedTab;
@@ -1716,8 +1742,10 @@
             });
 
             updateNewTabUrls();
+
             updateBrowserActionData();
             createMoveTabMenus();
+
             addEvents();
 
             Object.keys(EXTENSIONS_WHITE_LIST)
