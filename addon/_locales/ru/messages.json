@@ -412,5 +412,13 @@
     "enterBrowserActionIconColor": {
         "message": "Здесь можно изменить цвет значка аддона",
         "description": "Enter browser action icon color"
+    },
+    "isStickyGroupTitle": {
+        "message": "Липкая группа",
+        "description": "Sticky group"
+    },
+    "isStickyGroupHelp": {
+        "message": "Вкладки в этой группе никогда не будут автоматически перемещены в другие группы",
+        "description": "Tabs from this group will never be automatically moved to another group"
     }
 }

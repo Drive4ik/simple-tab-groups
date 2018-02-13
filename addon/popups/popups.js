@@ -112,6 +112,8 @@ let Popups = {
                 .filter(n => n.checked)
                 .map(n => n.id);
 
+            updateData.isSticky = $('#isStickyGroup').checked;
+
             BG.updateGroup(group.id, updateData);
 
             let win = await BG.getWindow();
@@ -232,6 +234,7 @@ let Popups = {
             groupCatchTabRules: group.catchTabRules,
             containersClass: containers.length ? '' : 'is-hidden',
             containersHtml: containersHtml,
+            isStickyChecked: group.isSticky ? 'checked' : '',
         });
 
         let popupNode = showPopup(format(wrapperTemplate, {

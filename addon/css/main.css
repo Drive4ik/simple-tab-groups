@@ -10,6 +10,10 @@ img {
 }
 
 /* BULMA */
+.modal-card-title {
+    font-size: 1.2rem;
+}
+
 .modal-card-head,
 .modal-card-body,
 .modal-card-foot {

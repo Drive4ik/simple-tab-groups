@@ -508,6 +508,16 @@
     "enterBrowserActionIconColor": {
         "message": "Enter browser action icon color",
         "description": "Enter browser action icon color"
+    },
+
+    "isStickyGroupTitle": {
+        "message": "Sticky group",
+        "description": "Sticky group"
+    },
+
+    "isStickyGroupHelp": {
+        "message": "Tabs from this group will never be automatically moved to another group",
+        "description": "Tabs from this group will never be automatically moved to another group"
     }
 
 }
