@@ -8,9 +8,7 @@
 
     browserActionLabel.innerText = browser.i18n.getMessage('enterBrowserActionIconColor');
 
-    let options = await browser.storage.local.get({
-        browserActionIconColor: BG.DEFAULT_ICON_COLOR,
-    });
+    let options = await BG.loadOptions();
 
     browserActionText.value = options.browserActionIconColor;
     browserActionButton.value = options.browserActionIconColor;

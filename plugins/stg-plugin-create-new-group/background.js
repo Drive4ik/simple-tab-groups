@@ -3,9 +3,14 @@
 
     const STG_ID = 'simple-tab-groups@drive4ik',
         STG_HOME_PAGE = 'https://addons.mozilla.org/firefox/addon/simple-tab-groups/',
-        DEFAULT_ICON_COLOR = '#a8a8a8';
+        DEFAULT_ICON_COLOR = '#606060';
 
     let options = await loadOptions();
+
+    updateBrowserIcon(options.browserActionIconColor);
+
+    window.loadOptions = loadOptions;
+    window.updateBrowserIcon = updateBrowserIcon;
 
     function loadOptions() {
         return browser.storage.local.get({
@@ -15,20 +20,13 @@
     }
 
     async function updateBrowserIcon(browserActionIconColor) {
-        if (browserActionIconColor !== DEFAULT_ICON_COLOR) {
-            let iconBlob = await fetch(browser.runtime.getManifest().browser_action.default_icon),
-                iconSvg = await iconBlob.text();
+        let iconBlob = await fetch(browser.runtime.getManifest().browser_action.default_icon),
+            iconSvg = await iconBlob.text();
 
-            browser.browserAction.setIcon({
-                path: convertSvgToUrl(iconSvg.replace(DEFAULT_ICON_COLOR, browserActionIconColor)),
-            });
-        }
+        browser.browserAction.setIcon({
+            path: convertSvgToUrl(iconSvg.replace(DEFAULT_ICON_COLOR, browserActionIconColor)),
+        });
     }
-
-    updateBrowserIcon(options.browserActionIconColor);
-
-    window.DEFAULT_ICON_COLOR = DEFAULT_ICON_COLOR;
-    window.updateBrowserIcon = updateBrowserIcon;
 
     function convertSvgToUrl(svg) {
         return 'data:image/svg+xml;base64,' + b64EncodeUnicode(svg);
