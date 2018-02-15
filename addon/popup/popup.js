@@ -145,7 +145,8 @@
             } else if ('open-options-page' === action) {
                 browser.runtime.openOptionsPage();
             } else if ('open-manage-page' === action) {
-                BG.openManageGroups(window.screen);
+                await BG.openManageGroups(window.screen);
+				window.close();
             } else if ('context-sort-groups' === action) {
                 BG.sortGroups(data.vector);
             } else if ('context-open-group-in-new-window' === action) {
