@@ -382,6 +382,7 @@
             });
         }
 
+        console.log("removeCurrentTabByIndex: "+tabId);
         await browser.tabs.remove(tabId);
     }
 
@@ -500,14 +501,20 @@
                         });
                     console.log(original_active_tab);
                 } else {
+                    // Workaround: when leaving each group, exactly one tab in the group should stay active, but if it somehow isn't, switch to the first tab in the group
                     if ( group.tabs.filter(tab => tab.active === true).length === 0 ) {
-                        console.log(group);
+                        await browser.tabs.update(
+                            group.tabs[0].id,
+                            {active: true}
+                        );
+                    } else {
+                        dest_tab = group.tabs.filter(tab => tab.active === true)[0],
+                        await browser.tabs.update(
+                            dest_tab.id,
+                            {active: true}
+                        );
+                        console.log("Switching to "+dest_tab.title);
                     }
-                    await browser.tabs.update(
-                        group.tabs.filter(tab => tab.active === true)[0].id,
-                        {active: true}
-                    );
-                    console.log("Switching to "+group.tabs.filter(tab => tab.active === true)[0].title);
                 }
 
                 await tempEmptyTabPromise;
