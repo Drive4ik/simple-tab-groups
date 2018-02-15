@@ -538,8 +538,16 @@
                                 cookieStoreId: normalizeCookieStoreId(tab.cookieStoreId, containers),
                             });
                             */
-                    }))
-                        .then(newTabs => newTabs.forEach((tab, tabIndex) => group.tabs[tabIndex].id = tab.id)); // update tabs id
+                    }));
+                    /* tabs.show will be fulfilled with no arguments, and tab.id won't change. keep the code in place for TODO optional original behavior
+                        .then(newTabs => {
+                            console.log(newTabs);
+                            newTabs.forEach((tab, tabIndex) => {
+                                console.log(tab);
+                                group.tabs[tabIndex].id = tab.id;
+                            });
+                        }); // update tabs id
+                        */
                 }
 
                 // if (browser.tabs.discard && tabs) { // TODO - add discard tabs (bugs found)
@@ -571,6 +579,7 @@
         } catch (e) {
             delete currentlyLoadingGroups[windowId];
             notify(e);
+            console.log(e);
             throw Error(String(e));
         }
     }
