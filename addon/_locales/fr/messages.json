@@ -386,5 +386,31 @@
     "hotkeysDescription": {
         "message": "Ici vous pouvez ajouter des raccourcis.<br>Restrictions:<br>1. Ces raccourcis ne fonctionneront que sur des pages webs (http:, https:). Sur des pages du navigateur (about:) - cela ne fonctionne pas, l'API WebExtensions ne l'autorise pas.<br>2. Certains raccourcis ne fonctionneront pas sur différentes dispositions de clavier. Par exemple, le raccourci créé dans la disposition US <code>Ctrl + ~</code> ne fonctionnera pas sur la disposition RU à cause du fait que la disposition russe a un autre code pour cette touche. Pour contourner ce problème, créez simplement un autre raccourci avec la disposition russe: <code>Ctrl + Ё</code>",
         "description": "Hotkeys description"
+    },
+    "showNotificationIfGroupsNotSyncedAtStartup": {
+        "message": "Voir la notification si le dernier groupe d'onglets n'a pas était synchroniser au démarrage",
+        "description": "Show notification if no one last opened groups not synced at startup"
+    },
+    "noOneGroupWasNotSynchronized": {
+        "message": "Zéro groupe synchroniser!\n\nMerci de choisir un groupe pour synchroniser d'ongets",
+        "description": "No one group was not synchronized!\n\nPlease, select group to sync tabs"
+    },
+    "undoRemoveGroupItemTitle": {
+        "message": "Annuler la suppression du groupe \"$grouptitle$\"",
+        "description": "Undo remove group menu title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "isStickyGroupTitle": {
+        "message": "Group épingler",
+        "description": "Sticky group"
+    },
+    "isStickyGroupHelp": {
+        "message": "Les ongles de ce groupe ne seront jamais déplacer vers un autre groupe",
+        "description": "Tabs from this group will never be automatically moved to another group"
     }
 }
