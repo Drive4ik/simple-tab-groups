@@ -27,7 +27,6 @@
     };
 
     async function saveGroupsToStorage() {
-        _groups.map(group => console.log(group));
         browser.runtime.sendMessage({
             groupsUpdated: true,
         });
@@ -481,6 +480,10 @@
                 }
 
                 if (!group.tabs.length) {// if the destination tab group has no tab
+                    let original_active_tab = oldGroup.tabs.filter(t => ( t.active ));
+                    //console.log(_groups);
+                    //console.log("DEBUG: tabid "+original_active_tab.id+" is active before switch");
+                    // create a new tab in the new tab group, and set it active
                     await browser.tabs.create({
                         url: 'about:home',
                         active: true,
@@ -493,7 +496,9 @@
                                 cookieStoreId: DEFAULT_COOKIE_STORE_ID,
                                 id: tab.id,
                             });
+                            console.info("Destination tab group \""+group.title+"\" currently has no tab, so I created a new tab ID: "+tab.id);
                         });
+                    console.log(original_active_tab);
                 } else {
                     if ( group.tabs.filter(tab => tab.active === true).length === 0 ) {
                         console.log(group);
@@ -502,7 +507,7 @@
                         group.tabs.filter(tab => tab.active === true)[0].id,
                         {active: true}
                     );
-                    console.log("Switching to "+group.tabs.filter(tab => tab.active === true)[0].id);
+                    console.log("Switching to "+group.tabs.filter(tab => tab.active === true)[0].title);
                 }
 
                 await tempEmptyTabPromise;
@@ -512,9 +517,7 @@
                 });
 
                 if (oldTabIds.length) {
-                    await browser.tabs.hide(oldTabIds)
-                        .then(rv => console.log(rv))
-                        .catch(error => console.log(error));
+                    await browser.tabs.hide(oldTabIds);
                 }
 
                 browser.runtime.sendMessage({
