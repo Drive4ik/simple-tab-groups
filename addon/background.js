@@ -80,7 +80,6 @@
             windowId,
         });
 
-        console.table(tabs.filter(tab => tab.pinned || !isAllowUrl(tab.url)));
         return tabs.some(tab => tab.pinned || !isAllowUrl(tab.url));
     }
 
@@ -483,20 +482,26 @@
 
                 if (!group.tabs.length) {// if the destination tab group has no tab
                     await browser.tabs.create({
-                        url: 'about:blank',
+                        url: 'about:home',
                         active: true,
                         windowId: windowId,
                     })
                         .then(tab => {
                             group.tabs.push({
                                 active: true,
-                                url: 'about:blank',
+                                url: 'about:home',
                                 cookieStoreId: DEFAULT_COOKIE_STORE_ID,
                                 id: tab.id,
                             });
                         });
                 } else {
-                    await browser.tabs.update(group.tabs.filter(tab => tab.active === true)[0].id, {active: true});
+                    if ( group.tabs.filter(tab => tab.active === true).length === 0 ) {
+                        console.log(group);
+                    }
+                    await browser.tabs.update(
+                        group.tabs.filter(tab => tab.active === true)[0].id,
+                        {active: true}
+                    );
                     console.log("Switching to "+group.tabs.filter(tab => tab.active === true)[0].id);
                 }
 
