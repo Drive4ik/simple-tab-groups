@@ -318,8 +318,12 @@ let $ = document.querySelector.bind(document),
         return nextIndex;
     },
     dispatchEvent = function(eventName, element) {
+        if ('string' === type(element)) {
+            element = $(element);
+        }
+
         if (!element) {
-            return false
+            return false;
         }
 
         element.dispatchEvent(new Event(eventName, {
@@ -487,32 +491,33 @@ let $ = document.querySelector.bind(document),
             }
         },
     },
-    getGroupIconUrl = function(group) {
+    safeColor = function(color) {
+        let div = document.createElement('div');
+        div.style.backgroundColor = color;
+        return div.style.backgroundColor;
+    },
+    getGroupIconUrl = async function(group = {iconViewType: 'main-squares'}) {
         if (group.iconUrl) {
             return group.iconUrl;
         }
 
-        if (group.iconColor) {
-            return convertSvgToUrl(`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><circle fill="${group.iconColor}" cx="8" cy="8" r="8" /></svg>`);
+        if (!group.iconColor) {
+            group.iconColor = 'transparent';
         }
 
-        return '';
-    },
-    getBrowserActionSvgPath = async function(group) {
-        if (group && group.iconUrl) {
-            return group.iconUrl;
-        }
+        let mainIconSvgBlob = await fetch(MANIFEST.browser_action.default_icon),
+            mainIconSvg = await mainIconSvgBlob.text(),
+            options = await storage.get('browserActionIconColor'),
+            iconSvg = '';
 
-        let iconSvgBlob = await fetch(MANIFEST.browser_action.default_icon),
-            iconSvg = await iconSvgBlob.text(),
-            options = await storage.get('browserActionIconColor');
-
-        if (DEFAULT_OPTIONS.browserActionIconColor !== options.browserActionIconColor) {
-            iconSvg = iconSvg.replace(DEFAULT_OPTIONS.browserActionIconColor, options.browserActionIconColor);
-        }
-
-        if (group && group.iconColor) {
-            iconSvg = iconSvg.replace('transparent', group.iconColor);
+        if ('main-squares' === group.iconViewType) {
+            iconSvg = mainIconSvg
+                .replace(DEFAULT_OPTIONS.browserActionIconColor, options.browserActionIconColor)
+                .replace('transparent', group.iconColor);
+        } else if ('circle' === group.iconViewType) {
+            iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><circle fill="${group.iconColor}" cx="8" cy="8" r="8" /></svg>`;
+        } else if ('squares' === group.iconViewType) {
+            iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><circle fill="${group.iconColor}" cx="8" cy="8" r="5" /></svg>`;
         }
 
         return convertSvgToUrl(iconSvg);
@@ -520,13 +525,6 @@ let $ = document.querySelector.bind(document),
     convertSvgToUrl = function(svg) {
         return 'data:image/svg+xml;base64,' + b64EncodeUnicode(svg);
     },
-    // convertSvgToBlobUrl = function(svg) {
-    //     let blobIcon = new Blob([svg], {
-    //         type: 'image/svg+xml',
-    //     });
-
-    //     return URL.createObjectURL(blobIcon);
-    // },
     resizeImage = function(img, height, width, useTransparency = true) { // img: new Image()
         let canvas = document.createElement('canvas'),
             canvasCtx = canvas.getContext('2d');

@@ -412,6 +412,8 @@
     $on('change', '#browserActionIconColorButton', function(event) {
         $('#browserActionIconColorText').value = this.value;
 
+        _browserActionIconColor = this.value;
+
         storage.set({
             browserActionIconColor: this.value,
         });

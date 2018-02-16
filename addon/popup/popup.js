@@ -401,27 +401,16 @@
         };
     }
 
-    function getGroupIconHtml(group, idAddGroupTitle) {
+    async function getGroupIconHtml(group, idAddGroupTitle) {
         let title = idAddGroupTitle ? group.title : '';
 
-        if (group.iconUrl) {
-            return render('icon-img-tmpl', {
-                title,
-                iconUrl: group.iconUrl,
-            });
-        }
-
-        if (group.iconColor) {
-            return render('icon-color-tmpl', {
-                title,
-                iconColor: group.iconColor
-            });
-        }
-
-        return '';
+        return render('icon-img-tmpl', {
+            title,
+            iconUrl: await getGroupIconUrl(group),
+        });
     }
 
-    function renderSearchTabsList() {
+    async function renderSearchTabsList() {
         state.view = VIEW_SEARCH_TABS;
         state.searchStr = safeHtml($('#searchTabs').value.trim().toLowerCase());
 
@@ -432,19 +421,19 @@
         let tabsToView = [],
             searchHtml = null;
 
-        _groups.forEach(function(group) {
-            group.tabs.forEach(function(tab, tabIndex) {
+        await Promise.all(_groups.map(async function(group) {
+            await Promise.all(group.tabs.map(async function(tab, tabIndex) {
                 if ((tab.title || '').toLowerCase().indexOf(state.searchStr) !== -1 || (tab.url || '').toLowerCase().indexOf(state.searchStr) !== -1) {
                     let preparedTab = prepareTabToView(group.id, tab, tabIndex, true);
 
                     if (options.showGroupIconWhenSearchATab) {
-                        preparedTab.title = getGroupIconHtml(group, true) + preparedTab.title;
+                        preparedTab.title = await getGroupIconHtml(group, true) + preparedTab.title;
                     }
 
                     tabsToView.push(preparedTab);
                 }
-            });
-        });
+            }));
+        }));
 
         searchHtml = render('tabs-list-tmpl', {
             classList: 'h-margin-top-10',
@@ -454,27 +443,26 @@
         setHtml('result', searchHtml);
     }
 
-    function renderGroupsList() {
+    async function renderGroupsList() {
         state.view = VIEW_GROUPS;
 
-        let groupsHtml = _groups.map(function(group) {
-                let customData = {
-                    classList: group.id === getCurrentGroup().id ? 'is-active' : '',
-                    colorCircleHtml: getGroupIconHtml(group),
-                };
+        let groupsHtml = await Promise.all(_groups.map(async function(group) {
+            let customData = {
+                classList: group.id === getCurrentGroup().id ? 'is-active' : '',
+                colorCircleHtml: await getGroupIconHtml(group),
+            };
 
-                return render('group-tmpl', Object.assign({}, group, customData));
-            })
-            .join('');
+            return render('group-tmpl', Object.assign({}, group, customData));
+        }));
 
         let showGroupsHtml = render('groups-list-tmpl', {
-            groupsHtml,
+            groupsHtml: groupsHtml.join(''),
         });
 
         setHtml('result', showGroupsHtml);
     }
 
-    function renderTabsList(groupId) {
+    async function renderTabsList(groupId) {
         state.view = VIEW_GROUP_TABS;
         state.groupId = groupId;
 
@@ -496,7 +484,7 @@
         }
 
         let tabsListWrapperHtml = render('tabs-list-wrapper-tmpl', {
-            colorCircleHtml: getGroupIconHtml(group),
+            colorCircleHtml: await getGroupIconHtml(group),
             group,
             tabsListHtml,
             newTabContextMenu: containers.length ? 'contextmenu="create-tab-with-container-menu"' : '',
@@ -505,19 +493,18 @@
 
         setHtml('result', tabsListWrapperHtml, false);
 
-        let groupsMenuItems = _groups
-            .map(function(gr) {
+        let groupsMenuItems = await Promise.all(_groups
+            .map(async function(gr) {
                 return render('move-tab-to-group-menu-item-tmpl', {
                     title: gr.title,
                     groupId: gr.id,
-                    icon: getGroupIconUrl(gr),
+                    icon: await getGroupIconUrl(gr),
                     disabled: gr.id === state.groupId ? 'disabled' : '',
                 });
-            })
-            .join('');
+            }));
 
         setHtml('move-tab-to-group-menu', render('move-tab-to-group-menu-tmpl', {
-            groupsMenuItems,
+            groupsMenuItems: groupsMenuItems.join(''),
         }), false);
 
         let containersHtml = containers

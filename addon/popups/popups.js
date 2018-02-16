@@ -16,13 +16,28 @@ let Popups = {
     const TEMPORARY_ID = 'temporary';
 
     let templates = {
-            'icon-color-tmpl': '<span id="groupIconColorCircle" style="background-color: {{iconColor}}"></span>',
-            'icon-img-tmpl': '<img id="groupIconImg" src="{{iconUrl}}" class="is-inline-block size-16 h-margin-left-5" alt="" />',
+            // 'icon-color-tmpl': '<span id="groupIconColorCircle" style="background-color: {{iconColor}}"></span>',
+            // 'icon-img-tmpl': '<img id="groupIconImg" src="{{iconUrl}}" class="is-inline-block size-16 h-margin-left-5" alt="" />',
+            'group-icon-tmpl': `
+                <div class="control">
+                    <button data-action="group-change-icon-style" data-view-style="{{styleName}}" class="button {{className}}">
+                        <figure class="image is-16x16">
+                            <img src="{{iconUrl}}" />
+                        </figure>
+                    </button>
+                </div>
+            `,
             'catch-container-tmpl': `
-                <div class="container-wrapper">
-                    <input type="checkbox" id="{{cookieStoreId}}" data-container {{checked}} />
-                    <label for="{{cookieStoreId}}" class="h-margin-left-5"><img src="{{iconUrl}}" class="size-16" style="fill: {{colorCode}};" /> {{name}}</label>
-                </div>`,
+                <div class="field">
+                    <div class="control">
+                        <label class="checkbox">
+                            <input type="checkbox" id="{{cookieStoreId}}" data-container {{checked}} />
+                            <img src="{{iconUrl}}" class="size-16 align-bottom" style="fill: {{colorCode}};" />
+                            {{name}}
+                        </label>
+                    </div>
+                </div>
+            `,
         },
         lastData = null,
         lastOptions = null,
@@ -86,18 +101,15 @@ let Popups = {
             let group = lastData,
                 updateData = {
                     iconColor: group.iconColor,
-                },
-                groupIconWrapper = $('#groupIconWrapper');
+                };
 
-            if ('image' === groupIconWrapper.dataset.iconType) {
-                updateData.iconUrl = $('#groupIconImg').src;
-            } else if ('color' === groupIconWrapper.dataset.iconType) {
-                updateData.iconColor = $('#groupIconColorCircle').style.backgroundColor; // safed color
+            if (lastOptions.viewStyle) {
+                updateData.iconViewType = lastOptions.viewStyle;
+                updateData.iconColor = $('#groupIconColor').value;
                 updateData.iconUrl = null;
-            }
-
-            if (!updateData.iconColor) {
-                updateData.iconColor = 'transparent';
+            } else {
+                updateData.iconViewType = null;
+                updateData.iconUrl = $('#groupIconImg').src;
             }
 
             updateData.title = createGroupTitle($('#groupTitle').value, group.id);
@@ -131,19 +143,11 @@ let Popups = {
 
             hidePopup();
         } else if ('set-random-group-color' === action) {
-            event.preventDefault();
-
-            let groupIconWrapper = $('#groupIconWrapper'),
-                newColor = randomColor();
-
-            $('#groupIconColor').value = newColor;
-
-            groupIconWrapper[INNER_HTML] = format(templates['icon-color-tmpl'], {
-                iconColor: newColor,
-            });
-
-            groupIconWrapper.dataset.iconType = 'color';
-
+            $('#groupIconColor').value = randomColor();
+            dispatchEvent('change', '#groupIconColor');
+        } else if ('group-change-icon-style' === action) {
+            lastOptions.viewStyle = data.viewStyle;
+            dispatchEvent('change', '#groupIconColor');
         } else if ('select-user-group-icon' === action) {
             if (1 === lastOptions.popupDesign) { // maybe temporary solution
                 if (window.confirm(browser.i18n.getMessage('selectUserGroupIconWarnText'))) {
@@ -188,12 +192,9 @@ let Popups = {
                     resizedIconUrl = resizeImage(img, 16, 16);
                 }
 
-                let groupIconWrapper = $('#groupIconWrapper');
-
-                groupIconWrapper[INNER_HTML] = format(templates['icon-img-tmpl'], {
-                    iconUrl: resizedIconUrl,
-                });
-                groupIconWrapper.dataset.iconType = 'image';
+                lastOptions.viewStyle = null;
+                setActiveIconButton();
+                $('#groupIconImg').src = resizedIconUrl;
             };
             img.src = iconUrl;
         }
@@ -201,29 +202,38 @@ let Popups = {
 
     $on('click', '[data-action]', (event, data) => doAction(data.action, data, event));
 
-    $on('input', '#groupIconColor', function() {
-        let groupIconWrapper = $('#groupIconWrapper');
+    $on('change', '#groupIconColor', async function() {
+        if (!lastOptions.viewStyle) {
+            lastOptions.viewStyle = 'main-squares';
+        }
 
-        groupIconWrapper[INNER_HTML] = format(templates['icon-color-tmpl'], {
-            iconColor: this.value.trim(),
+        this.value = safeColor(this.value);
+
+        $('#groupIconImg').src = await getGroupIconUrl({
+            iconViewType: lastOptions.viewStyle,
+            iconColor: this.value,
         });
 
-        groupIconWrapper.dataset.iconType = 'color';
+        setActiveIconButton();
     });
+
+    function setActiveIconButton() {
+        $$('[data-action="group-change-icon-style"]')
+            .forEach(function(styleNode) {
+                if (styleNode.dataset.viewStyle === lastOptions.viewStyle) {
+                    styleNode.classList.add('is-focused');
+                } else {
+                    styleNode.classList.remove('is-focused');
+                }
+            });
+    }
 
     async function showEditGroup(group, options = {}) {
         lastData = group;
         lastOptions = options;
 
         let mainTemplate = await loadTemplate('edit-group-main'),
-            wrapperTemplate = await loadTemplate('edit-group-' + options.popupDesign),
-            iconHtml = null;
-
-        if (group.iconUrl) {
-            iconHtml = format(templates['icon-img-tmpl'], group);
-        } else {
-            iconHtml = format(templates['icon-color-tmpl'], group);
-        }
+            wrapperTemplate = await loadTemplate('edit-group-' + options.popupDesign);
 
         let containers = await loadContainers(),
             containersHtml = containers
@@ -233,10 +243,23 @@ let Popups = {
             })
             .join('');
 
+        let iconsStyleHtml = await Promise.all(['main-squares', 'circle', 'squares']
+            .map(async function(styleName) {
+                return format(templates['group-icon-tmpl'], {
+                    styleName: styleName,
+                    className: (!group.iconUrl && styleName === group.iconViewType) ? 'is-focused' : '',
+                    iconUrl: await getGroupIconUrl({
+                        iconViewType: styleName,
+                        iconColor: group.iconColor || 'rgb(66, 134, 244)',
+                    }),
+                });
+            }));
+
         let parsedMainTemplate = format(mainTemplate, {
-            groupTitle: unSafeHtml(group.title),
+            groupTitleRaw: unSafeHtml(group.title),
             groupIconColor: group.iconColor,
-            iconHtml: iconHtml,
+            iconUrl: await getGroupIconUrl(group),
+            iconsStyleHtml: iconsStyleHtml.join(''),
             groupCatchTabRules: group.catchTabRules,
             containersClass: containers.length ? '' : 'is-hidden',
             containersHtml: containersHtml,
@@ -246,12 +269,6 @@ let Popups = {
         let popupNode = showPopup(format(wrapperTemplate, {
             mainHtml: parsedMainTemplate,
         }));
-
-        if (group.iconUrl) {
-            $('#groupIconWrapper').dataset.iconType = 'image';
-        } else {
-            $('#groupIconWrapper').dataset.iconType = 'color';
-        }
 
         return popupNode;
     };

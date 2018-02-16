@@ -26,6 +26,9 @@ img {
 
 /* END BULMA */
 
+.align-bottom {
+    vertical-align: bottom;
+}
 
 .cursor-pointer {
     cursor: pointer;

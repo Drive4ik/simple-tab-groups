@@ -114,6 +114,7 @@
             title: browser.i18n.getMessage('newGroupTitle', id),
             iconColor: randomColor(),
             iconUrl: null,
+            iconViewType: 'main-squares',
             tabs: [],
             catchTabRules: '',
             catchTabContainers: [],
@@ -205,13 +206,13 @@
             });
     }
 
-    function addUndoRemoveGroupItem(group) {
+    async function addUndoRemoveGroupItem(group) {
         browser.menus.create({
             id: CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id,
             title: browser.i18n.getMessage('undoRemoveGroupItemTitle', unSafeHtml(group.title)),
             contexts: ['browser_action'],
             icons: {
-                16: getGroupIconUrl(group),
+                16: await getGroupIconUrl(group),
             },
             onclick: function(info) {
                 browser.menus.remove(info.menuItemId);
@@ -1100,14 +1101,14 @@
             documentUrlPatterns: ['<all_urls>'],
         }));
 
-        _groups.forEach(function(group) {
+        await Promise.all(_groups.map(async function(group) {
             moveTabToGroupMenusIds.push(browser.menus.create({
                 id: CONTEXT_MENU_PREFIX_GROUP + group.id,
                 parentId: 'stg-move-tab-helper',
                 title: unSafeHtml(group.title),
                 enabled: currentGroup ? group.id !== currentGroup.id : true,
                 icons: {
-                    16: getGroupIconUrl(group),
+                    16: await getGroupIconUrl(group),
                 },
                 contexts: ['tab'],
                 onclick: async function(destGroupId, info, tab) {
@@ -1129,7 +1130,7 @@
                     moveTabToGroup(tabIndex, undefined, (oldGroup && oldGroup.id), destGroupId);
                 }.bind(null, group.id),
             }));
-        });
+        }));
 
         if (_groups.length) {
             moveTabToGroupMenusIds.push(browser.menus.create({
@@ -1137,7 +1138,6 @@
                 parentId: 'stg-move-tab-helper',
                 type: 'separator',
                 contexts: ['tab'],
-                documentUrlPatterns: ['<all_urls>'],
             }));
         }
 
@@ -1149,7 +1149,6 @@
             icons: {
                 16: '/icons/group-new.svg',
             },
-            documentUrlPatterns: ['<all_urls>'],
             onclick: async function(info, tab) {
                 if (tab.incognito || tab.pinned) {
                     notify(browser.i18n.getMessage('privateAndPinnedTabsAreNotSupported', 10000));
@@ -1174,7 +1173,8 @@
 
     async function setBrowserActionData(currentGroup) {
         if (!currentGroup) {
-            return resetBrowserActionData();
+            resetBrowserActionData();
+            return;
         }
 
         browser.browserAction.setTitle({
@@ -1182,7 +1182,7 @@
         });
 
         browser.browserAction.setIcon({
-            path: await getBrowserActionSvgPath(currentGroup),
+            path: await getGroupIconUrl(currentGroup),
         });
     }
 
@@ -1192,7 +1192,7 @@
         });
 
         browser.browserAction.setIcon({
-            path: await getBrowserActionSvgPath(),
+            path: await getGroupIconUrl(),
         });
     }
 
@@ -1407,11 +1407,12 @@
         let extensionRules = {};
 
         if (!isAllowExternalRequestAndSender(request, sender, extensionRules)) {
-            return sendResponse({
+            sendResponse({
                 ok: false,
                 error: '[STG] Your extension/action does not in white list. If you want to add your extension/action to white list - please contact with me.',
                 yourExtentionRules: extensionRules,
             });
+            return;
         }
 
         if (request.areYouHere) {
@@ -1419,16 +1420,18 @@
                 ok: true,
             });
         } else if (request.getGroupsList) {
-            sendResponse({
-                ok: true,
-                groupsList: _groups.map(function(group) {
-                    return {
-                        id: group.id,
-                        title: unSafeHtml(group.title),
-                        iconUrl: getGroupIconUrl(group),
-                    };
-                }),
-            });
+            sendResponse(new Promise(async function(resolve) {
+                resolve({
+                    ok: true,
+                    groupsList: await Promise.all(_groups.map(async function(group) {
+                        return {
+                            id: group.id,
+                            title: unSafeHtml(group.title),
+                            iconUrl: await getGroupIconUrl(group),
+                        };
+                    })),
+                });
+            }));
         } else if (request.runAction) {
             sendResponse(runAction(request.runAction));
         }
@@ -1620,6 +1623,20 @@
             });
         }
 
+        if (0 > data.version.localeCompare('2.5')) {
+            result.dataChanged = true;
+
+            data.groups = data.groups.map(function(group) {
+                if (!group.iconColor.trim()) {
+                    group.iconColor = 'transparent';
+                }
+
+                group.iconViewType = 'main-squares';
+
+                return group;
+            });
+        }
+
 
 
         data.version = MANIFEST.version;
@@ -1753,8 +1770,6 @@
                 notify(browser.i18n.getMessage('noOneGroupWasNotSynchronized'));
             }
 
-            window.background.inited = true;
-
             await storage.set({
                 lastCreatedGroupPosition: data.lastCreatedGroupPosition,
                 groups: _groups,
@@ -1766,6 +1781,8 @@
             createMoveTabMenus();
 
             addEvents();
+
+            window.background.inited = true;
 
             Object.keys(EXTENSIONS_WHITE_LIST)
                 .forEach(function(exId) {
