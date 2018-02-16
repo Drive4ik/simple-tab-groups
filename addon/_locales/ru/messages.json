@@ -419,6 +419,6 @@
     },
     "isStickyGroupHelp": {
         "message": "Вкладки в этой группе никогда не будут автоматически перемещены в другие группы",
-        "description": "Tabs from this group will never be automatically moved to another group"
+        "description": "Tabs in this group will never be automatically moved to another group"
     }
 }

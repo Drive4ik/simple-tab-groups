@@ -516,8 +516,8 @@
     },
 
     "isStickyGroupHelp": {
-        "message": "Tabs from this group will never be automatically moved to another group",
-        "description": "Tabs from this group will never be automatically moved to another group"
+        "message": "Tabs in this group will never be automatically moved to another group",
+        "description": "Tabs in this group will never be automatically moved to another group"
     }
 
 }

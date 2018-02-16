@@ -211,7 +211,7 @@
             title: browser.i18n.getMessage('undoRemoveGroupItemTitle', unSafeHtml(group.title)),
             contexts: ['browser_action'],
             icons: {
-                16: createGroupSvgIconUrl(group),
+                16: getGroupIconUrl(group),
             },
             onclick: function(info) {
                 browser.menus.remove(info.menuItemId);
@@ -1062,9 +1062,16 @@
             icons: {
                 16: '/icons/image.svg',
             },
+            documentUrlPatterns: ['<all_urls>'],
             contexts: ['tab'],
             onclick: function(info, tab) {
                 if (tab.incognito) {
+                    notify(browser.i18n.getMessage('privateAndPinnedTabsAreNotSupported', 10000));
+                    return;
+                }
+
+                if (!isAllowUrl(tab.url)) {
+                    notify(browser.i18n.getMessage('thisTabIsNotSupported', 10000));
                     return;
                 }
 
@@ -1084,25 +1091,23 @@
         }));
 
         moveTabToGroupMenusIds.push(browser.menus.create({
-            id: 'stg-move-tab-separator',
-            type: 'separator',
-            contexts: ['tab'],
-        }));
-
-        moveTabToGroupMenusIds.push(browser.menus.create({
             id: 'stg-move-tab-helper',
-            title: browser.i18n.getMessage('moveTabToGroupDisabledTitle') + ':',
-            enabled: false,
+            title: browser.i18n.getMessage('moveTabToGroupDisabledTitle'),
             contexts: ['tab'],
+            icons: {
+                16: MANIFEST.browser_action.default_icon,
+            },
+            documentUrlPatterns: ['<all_urls>'],
         }));
 
         _groups.forEach(function(group) {
             moveTabToGroupMenusIds.push(browser.menus.create({
                 id: CONTEXT_MENU_PREFIX_GROUP + group.id,
+                parentId: 'stg-move-tab-helper',
                 title: unSafeHtml(group.title),
                 enabled: currentGroup ? group.id !== currentGroup.id : true,
                 icons: {
-                    16: createGroupSvgIconUrl(group),
+                    16: getGroupIconUrl(group),
                 },
                 contexts: ['tab'],
                 onclick: async function(destGroupId, info, tab) {
@@ -1126,13 +1131,25 @@
             }));
         });
 
+        if (_groups.length) {
+            moveTabToGroupMenusIds.push(browser.menus.create({
+                id: 'stg-move-tab-separator',
+                parentId: 'stg-move-tab-helper',
+                type: 'separator',
+                contexts: ['tab'],
+                documentUrlPatterns: ['<all_urls>'],
+            }));
+        }
+
         moveTabToGroupMenusIds.push(browser.menus.create({
             id: 'stg-move-tab-new-group',
+            parentId: 'stg-move-tab-helper',
             contexts: ['tab'],
             title: browser.i18n.getMessage('createNewGroup'),
             icons: {
                 16: '/icons/group-new.svg',
             },
+            documentUrlPatterns: ['<all_urls>'],
             onclick: async function(info, tab) {
                 if (tab.incognito || tab.pinned) {
                     notify(browser.i18n.getMessage('privateAndPinnedTabsAreNotSupported', 10000));
@@ -1408,7 +1425,7 @@
                     return {
                         id: group.id,
                         title: unSafeHtml(group.title),
-                        iconUrl: createGroupSvgIconUrl(group),
+                        iconUrl: getGroupIconUrl(group),
                     };
                 }),
             });

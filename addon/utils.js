@@ -487,7 +487,7 @@ let $ = document.querySelector.bind(document),
             }
         },
     },
-    createGroupSvgIconUrl = function(group) {
+    getGroupIconUrl = function(group) {
         if (group.iconUrl) {
             return group.iconUrl;
         }

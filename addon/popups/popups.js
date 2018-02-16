@@ -84,7 +84,9 @@ let Popups = {
             BG.removeGroup(lastData.id);
         } else if ('submit-edit-group-popup' === action) {
             let group = lastData,
-                updateData = {},
+                updateData = {
+                    iconColor: group.iconColor,
+                },
                 groupIconWrapper = $('#groupIconWrapper');
 
             if ('image' === groupIconWrapper.dataset.iconType) {
@@ -92,6 +94,10 @@ let Popups = {
             } else if ('color' === groupIconWrapper.dataset.iconType) {
                 updateData.iconColor = $('#groupIconColorCircle').style.backgroundColor; // safed color
                 updateData.iconUrl = null;
+            }
+
+            if (!updateData.iconColor) {
+                updateData.iconColor = 'transparent';
             }
 
             updateData.title = createGroupTitle($('#groupTitle').value, group.id);
