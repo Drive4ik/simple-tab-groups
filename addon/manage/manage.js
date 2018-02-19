@@ -109,7 +109,7 @@
                 let group = getGroupById(contextData.groupId);
 
                 BG.updateGroup(contextData.groupId, {
-                    iconUrl: group.tabs[contextData.tabIndex].favIconUrl || null,
+                    iconUrl: BG.getTabFavIconUrl(group.tabs[contextData.tabIndex]),
                 });
 
                 renderGroupsCards();

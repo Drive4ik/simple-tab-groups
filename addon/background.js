@@ -1103,7 +1103,7 @@
                     return;
                 }
 
-                group.iconUrl = tab.favIconUrl || null;
+                group.iconUrl = getTabFavIconUrl(tab);
 
                 updateBrowserActionData(group.windowId);
                 updateMoveTabMenus(group.windowId);
