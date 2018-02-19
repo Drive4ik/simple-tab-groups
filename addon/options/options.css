@@ -17,6 +17,10 @@ hr {
     border-top: 1px solid #e3e3e3;
 }
 
+.hotkey {
+    margin-bottom: 10px;
+}
+
 .hotkey > :not(:last-child) {
     margin-right: 5px;
 }
@@ -29,7 +33,7 @@ hr {
     line-height: 0;
 }
 
-.hotkey > .notification {
+.hotkey > .notify-message {
     margin: 0;
 }
 

@@ -403,16 +403,12 @@
 
 
     $on('change', '#browserActionIconColorText', function(event) {
-        let browserActionIconColorButtonNode = $('#browserActionIconColorButton');
-
-        browserActionIconColorButtonNode.value = this.value;
-        dispatchEvent('change', browserActionIconColorButtonNode);
+        $('#browserActionIconColorButton').value = this.value;
+        dispatchEvent('change', '#browserActionIconColorButton');
     });
 
     $on('change', '#browserActionIconColorButton', function(event) {
         $('#browserActionIconColorText').value = this.value;
-
-        _browserActionIconColor = this.value;
 
         storage.set({
             browserActionIconColor: this.value,
@@ -439,7 +435,7 @@
                 // set browser action color
                 $('#browserActionIconColorButton').dontLiveChangeBrowserAction = true;
                 $('#browserActionIconColorText').value = options.browserActionIconColor;
-                dispatchEvent('change', $('#browserActionIconColorText'));
+                dispatchEvent('change', '#browserActionIconColorText');
             })
             .then(checkEnabledCheckboxes)
             .then(translatePage);

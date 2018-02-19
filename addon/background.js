@@ -108,6 +108,22 @@
         };
     }
 
+    function getTabFavIconUrl(tab, useTabsFavIconsFromGoogleS2Converter) {
+        let safedFavIconUrl = '';
+
+        if (tab.url.startsWith('moz-extension') || tab.url.startsWith('about')) {
+            safedFavIconUrl = tab.favIconUrl;
+        } else {
+            safedFavIconUrl = useTabsFavIconsFromGoogleS2Converter ? ('http://www.google.com/s2/favicons?domain_url=' + encodeURIComponent(tab.url)) : tab.favIconUrl;
+        }
+
+        if (!safedFavIconUrl) {
+            safedFavIconUrl = '/icons/tab.svg';
+        }
+
+        return safedFavIconUrl;
+    }
+
     function createGroup(id, windowId = null) {
         return {
             id,
@@ -1320,7 +1336,7 @@
     }
 
     async function openManageGroups(windowScreen) {
-        let manageUrl = browser.extension.getURL('/manage/manage.html'),
+        let manageUrl = browser.extension.getURL(MANAGE_TABS_URL),
             options = await storage.get('openManageGroupsInTab'),
             currentWindow = await getWindow();
 
@@ -1525,6 +1541,7 @@
         loadGroup,
 
         mapTab,
+        getTabFavIconUrl,
 
         addTab,
         removeTab,

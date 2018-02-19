@@ -7,6 +7,7 @@ const INNER_HTML = 'innerHTML',
     CONTEXT_MENU_PREFIX_GROUP = 'stg-move-group-id-',
     CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP = 'stg-undo-remove-group-id-',
     NEW_TAB_URL = '/stg-newtab/newtab.html',
+    MANAGE_TABS_URL = '/manage/manage.html',
     EXTENSIONS_WHITE_LIST = {
         'stg-plugin-create-new-group@drive4ik': {
             allowedRequests: [
@@ -47,6 +48,7 @@ const INNER_HTML = 'innerHTML',
         individualWindowForEachGroup: false,
         openNewWindowWhenCreateNewGroup: false,
         showNotificationIfGroupsNotSyncedAtStartup: true,
+        useTabsFavIconsFromGoogleS2Converter: false,
 
         hotkeys: [
             {
@@ -505,19 +507,24 @@ let $ = document.querySelector.bind(document),
             group.iconColor = 'transparent';
         }
 
-        let mainIconSvgBlob = await fetch(MANIFEST.browser_action.default_icon),
-            mainIconSvg = await mainIconSvgBlob.text(),
-            options = await storage.get('browserActionIconColor'),
-            iconSvg = '';
+        let options = await storage.get('browserActionIconColor'),
+            iconsUrls = {
+                'main-squares': MANIFEST.browser_action.default_icon,
+                circle: '/icons/circle.svg',
+                squares: '/icons/squares.svg',
+                'old-tab-groups': '/icons/old-tab-groups.svg',
+            },
+            replaceData = {
+                [DEFAULT_OPTIONS.browserActionIconColor]: options.browserActionIconColor,
+                transparent: group.iconColor,
+                '{stroke}': 'transparent' === group.iconColor ? `stroke="${options.browserActionIconColor}" stroke-width="1"` : '',
+            };
 
-        if ('main-squares' === group.iconViewType) {
-            iconSvg = mainIconSvg
-                .replace(DEFAULT_OPTIONS.browserActionIconColor, options.browserActionIconColor)
-                .replace('transparent', group.iconColor);
-        } else if ('circle' === group.iconViewType) {
-            iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><circle fill="${group.iconColor}" cx="8" cy="8" r="8" /></svg>`;
-        } else if ('squares' === group.iconViewType) {
-            iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><circle fill="${group.iconColor}" cx="8" cy="8" r="5" /></svg>`;
+        let iconBlob = await fetch(iconsUrls[group.iconViewType]),
+            iconSvg = await iconBlob.text();
+
+        for(let key in replaceData) {
+            iconSvg = iconSvg.replace(key, replaceData[key]);
         }
 
         return convertSvgToUrl(iconSvg);

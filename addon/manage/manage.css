@@ -26,12 +26,6 @@ html {
     font-size: 20px;
 }
 
-.group-circle {
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-}
-
 #filterWrapper {
     width: 300px;
 }
@@ -59,6 +53,10 @@ html {
     display: flex;
     align-items: center;
     padding: var(--margin);
+}
+
+#result.grid > .group > .header > * {
+    display: flex;
 }
 
 #result.grid > .group > .header > .group-title {

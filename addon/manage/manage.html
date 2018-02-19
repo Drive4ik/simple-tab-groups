@@ -68,7 +68,7 @@
     <script id="new-tab-tmpl" type="text/template">
         <div class="tab new cursor-pointer" data-i18n="createNewTab:title" data-action="add-tab" data-group-id="{{groupId}}" {{newTabContextMenu}}>
             <div class="screenshot">
-                <img src="chrome://browser/skin/new-tab.svg" alt="">
+                <img src="/icons/tab-new.svg" alt="">
             </div>
             <div class="tab-title has-text-centered text-ellipsis" data-i18n="createNewTab"></div>
         </div>
@@ -106,12 +106,10 @@
         </div>
     </script>
 
-    <script id="icon-color-tmpl" type="text/template">
-        <div class="group-circle" style="background-color: {{iconColor}};"></div>
-    </script>
-
     <script id="icon-img-tmpl" type="text/template">
-        <img src="{{iconUrl}}" class="is-inline-block size-16" alt="" />
+        <figure class="image is-16x16">
+            <img src="{{iconUrl}}" alt="group-icon" />
+        </figure>
     </script>
 
     <menu id="create-tab-with-container-menu" type="context"></menu>

@@ -16,8 +16,6 @@ let Popups = {
     const TEMPORARY_ID = 'temporary';
 
     let templates = {
-            // 'icon-color-tmpl': '<span id="groupIconColorCircle" style="background-color: {{iconColor}}"></span>',
-            // 'icon-img-tmpl': '<img id="groupIconImg" src="{{iconUrl}}" class="is-inline-block size-16 h-margin-left-5" alt="" />',
             'group-icon-tmpl': `
                 <div class="control">
                     <button data-action="group-change-icon-style" data-view-style="{{styleName}}" class="button {{className}}">
@@ -151,7 +149,7 @@ let Popups = {
         } else if ('select-user-group-icon' === action) {
             if (1 === lastOptions.popupDesign) { // maybe temporary solution
                 if (window.confirm(browser.i18n.getMessage('selectUserGroupIconWarnText'))) {
-                    dispatchEvent('click', $('[data-action="open-manage-page"]'));
+                    dispatchEvent('click', '[data-action="open-manage-page"]');
                 }
 
                 return;
@@ -232,6 +230,8 @@ let Popups = {
         lastData = group;
         lastOptions = options;
 
+        lastOptions.viewStyle = group.iconViewType;
+
         let mainTemplate = await loadTemplate('edit-group-main'),
             wrapperTemplate = await loadTemplate('edit-group-' + options.popupDesign);
 
@@ -243,7 +243,7 @@ let Popups = {
             })
             .join('');
 
-        let iconsStyleHtml = await Promise.all(['main-squares', 'circle', 'squares']
+        let iconsStyleHtml = await Promise.all(['main-squares', 'circle', 'squares', 'old-tab-groups']
             .map(async function(styleName) {
                 return format(templates['group-icon-tmpl'], {
                     styleName: styleName,

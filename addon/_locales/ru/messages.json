@@ -420,5 +420,9 @@
     "isStickyGroupHelp": {
         "message": "Вкладки в этой группе никогда не будут автоматически перемещены в другие группы",
         "description": "Tabs in this group will never be automatically moved to another group"
+    },
+    "useTabsFavIconsFromGoogleS2Converter": {
+        "message": "Использовать Google S2 Converter для значков вкладок",
+        "description": "Use tabs fav-icons from Google S2 Converter"
     }
 }

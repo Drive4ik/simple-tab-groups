@@ -90,6 +90,12 @@
                 <span data-i18n="showNotificationIfGroupsNotSyncedAtStartup"></span>
             </label>
         </div>
+        <div class="field">
+            <label class="checkbox">
+                <input id="useTabsFavIconsFromGoogleS2Converter" type="checkbox" />
+                <span data-i18n="useTabsFavIconsFromGoogleS2Converter"></span>
+            </label>
+        </div>
         <div class="field browser-action-color-wrapper">
             <label class="label" data-i18n="enterBrowserActionIconColor"></label>
             <div class="control is-inline-block">
@@ -108,7 +114,7 @@
             <div id="hotkeys" class="hotkeys"></div>
             <div>
                 <div class="control">
-                    <button id="addHotKey" class="button h-margin-top-10">
+                    <button id="addHotKey" class="button">
                         <img class="size-14" src="/icons/new.svg" alt="" />
                         <span class="h-margin-left-5" data-i18n="addHotKeyButton"></span>
                     </button>
@@ -179,7 +185,7 @@
             <div class="delete-button">
                 <img data-hotkey-delete-hotkey class="size-16 cursor-pointer" data-i18n="deleteHotKeyButton:title" src="/icons/delete.svg" />
             </div>
-            <label data-hotkey-action-description class="notification has-text-danger">{{description}}</label>
+            <label data-hotkey-action-description class="notify-message has-text-danger">{{description}}</label>
         </div>
     </script>
 

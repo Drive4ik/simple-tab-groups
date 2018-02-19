@@ -518,6 +518,11 @@
     "isStickyGroupHelp": {
         "message": "Tabs in this group will never be automatically moved to another group",
         "description": "Tabs in this group will never be automatically moved to another group"
+    },
+
+    "useTabsFavIconsFromGoogleS2Converter": {
+        "message": "Use tabs fav-icons from Google S2 Converter",
+        "description": "Use tabs fav-icons from Google S2 Converter"
     }
 
 }

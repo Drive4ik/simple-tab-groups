@@ -397,7 +397,7 @@
             title: safeHtml(unSafeHtml(tab.title || tab.url)),
             url: tab.url,
             containerColorCode: containerColorCode,
-            favIconUrl: tab.favIconUrl || 'chrome://browser/skin/urlbar-tab.svg',
+            favIconUrl: BG.getTabFavIconUrl(tab, options.useTabsFavIconsFromGoogleS2Converter),
         };
     }
 

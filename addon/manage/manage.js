@@ -60,7 +60,7 @@
 
                 if ('popup' === currentWindow.type) {
                     BG.loadGroup(lastFocusedNormalWindow.id, getGroupIndex(data.groupId), data.tabIndex);
-                    browser.windows.remove(currentWindow.id);
+                    browser.windows.remove(currentWindow.id); // close manage groups popop window
                 } else if ('normal' === currentWindow.type) {
                     let currentGroup = _groups.find(gr => gr.windowId === currentWindowId),
                         _loadGroup = function() {
@@ -68,6 +68,12 @@
                         };
 
                     if (currentGroup) {
+                        let manageUrl = browser.extension.getURL(MANAGE_TABS_URL);
+
+                        BG.updateGroup(currentGroup.id, { // remome manage groups tabs
+                            tabs: currentGroup.tabs.filter(tab => tab.url !== manageUrl),
+                        });
+
                         _loadGroup();
                     } else {
                         if (options.individualWindowForEachGroup || getGroupById(data.groupId).windowId) {
@@ -290,7 +296,7 @@
             url: tab.url,
 
             favIconClass: tab.favIconUrl ? '' : 'is-hidden',
-            favIconUrl: tab.favIconUrl,
+            favIconUrl: BG.getTabFavIconUrl(tab, options.useTabsFavIconsFromGoogleS2Converter),
 
             containerClass: container.cookieStoreId ? '' : 'is-hidden',
             containerIconUrl: container.cookieStoreId ? container.iconUrl : '',
@@ -325,34 +331,26 @@
             .join('');
     }
 
-    function getGroupIconHtml(group) {
-        if (group.iconUrl) {
-            return render('icon-img-tmpl', group);
-        }
-
-        if (group.iconColor) {
-            return render('icon-color-tmpl', group);
-        }
-
-        return '';
-    }
-
-    function renderGroupsCards() {
+    async function renderGroupsCards() {
         let filters = $filterTabs.value
                 .trim()
                 .split(/\s*\*\s*/)
                 .filter(Boolean)
                 .map(s => s.toLowerCase());
 
-        let groupsHtml = _groups.map(function(group) {
-                let customData = {
-                    classList: '',
-                    iconHtml: getGroupIconHtml(group),
-                    tabsHtml: getTabsHtml(group, filters),
-                };
+        let groupsHtml = await Promise.all(_groups.map(async function(group) {
+            let customData = {
+                classList: '',
+                iconHtml: render('icon-img-tmpl', {
+                    iconUrl: await getGroupIconUrl(group),
+                }),
+                tabsHtml: getTabsHtml(group, filters),
+            };
 
-                return render('group-tmpl', Object.assign({}, group, customData));
-            })
+            return render('group-tmpl', Object.assign({}, group, customData));
+        }));
+
+        groupsHtml = groupsHtml
             .concat([render('new-group-tmpl')])
             .join('');
 
