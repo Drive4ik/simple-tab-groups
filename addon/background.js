@@ -1649,7 +1649,7 @@
             });
         }
 
-        if (0 > data.version.localeCompare('2.5')) {
+        if (0 > data.version.localeCompare('2.4.5')) {
             result.dataChanged = true;
 
             data.groups = data.groups.map(function(group) {
