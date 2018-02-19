@@ -162,8 +162,7 @@
             if (groupId) {
                 updateBrowserAction(groupId);
             }
-
-        }, showInstallSTGNotification);
+        });
 
     window.STG_ID = STG_ID;
     window.STG_HOME_PAGE = STG_HOME_PAGE;
