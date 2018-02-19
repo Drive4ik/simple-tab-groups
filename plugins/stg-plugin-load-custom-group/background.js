@@ -91,7 +91,7 @@
                 group = responce.groupsList.find(gr => gr.id === groupId);
 
             if (group) {
-                setBrowserAction(group.title, group.iconUrl);
+                setBrowserAction(group.title, group.iconUrl || undefined);
             } else {
                 resetBrowserAction();
             }
