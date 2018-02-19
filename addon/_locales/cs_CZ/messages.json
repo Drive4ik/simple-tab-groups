@@ -279,9 +279,9 @@
         "message": "Název",
         "description": "Title"
     },
-    "icon": {
-        "message": "Ikona",
-        "description": "Icon"
+    "iconColor": {
+        "message": "Barva odznaku",
+        "description": "Icon color"
     },
     "selectUserGroupIcon": {
         "message": "Nahrát ikonu",

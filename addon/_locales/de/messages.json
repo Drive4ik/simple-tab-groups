@@ -247,9 +247,9 @@
         "message": "Setze zufällige Farbe",
         "description": "Set random color"
     },
-    "icon": {
-        "message": "Icon",
-        "description": "Icon"
+    "iconColor": {
+        "message": "Iconfarbe",
+        "description": "Icon color"
     },
     "selectUserGroupIcon": {
         "message": "icon laden",

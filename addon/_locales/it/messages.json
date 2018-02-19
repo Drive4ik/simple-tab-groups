@@ -291,9 +291,9 @@
         "message": "Titolo",
         "description": "Title"
     },
-    "icon": {
-        "message": "Icona",
-        "description": "Icon"
+    "iconColor": {
+        "message": "Colore dell'icona",
+        "description": "Icon color"
     },
     "selectUserGroupIcon": {
         "message": "Carica l'icona",

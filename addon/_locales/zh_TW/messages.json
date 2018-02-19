@@ -209,9 +209,9 @@
         "description": "Title"
     },
 
-    "icon": {
-        "message": "圖標",
-        "description": "Icon"
+    "iconColor": {
+        "message": "圖標顏色",
+        "description": "Icon color"
     },
 
     "setRandomColor": {

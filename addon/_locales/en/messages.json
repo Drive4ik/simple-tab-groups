@@ -359,9 +359,9 @@
         "description": "Title"
     },
 
-    "icon": {
-        "message": "Icon",
-        "description": "Icon"
+    "iconColor": {
+        "message": "Icon color",
+        "description": "Icon color"
     },
 
     "selectUserGroupIcon": {
@@ -523,6 +523,11 @@
     "useTabsFavIconsFromGoogleS2Converter": {
         "message": "Use tabs fav-icons from Google S2 Converter",
         "description": "Use tabs fav-icons from Google S2 Converter"
+    },
+
+    "iconStyle": {
+        "message": "Icon style",
+        "description": "Icon style"
     }
 
 }

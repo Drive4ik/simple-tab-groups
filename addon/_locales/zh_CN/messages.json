@@ -287,9 +287,9 @@
         "message": "标题",
         "description": "Title"
     },
-    "icon": {
-        "message": "图标",
-        "description": "Icon"
+    "iconColor": {
+        "message": "图标颜色",
+        "description": "Icon color"
     },
     "selectUserGroupIcon": {
         "message": "加载图标",

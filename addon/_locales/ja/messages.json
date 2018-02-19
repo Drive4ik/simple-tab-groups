@@ -291,9 +291,9 @@
         "message": "タイトル",
         "description": "Title"
     },
-    "icon": {
-        "message": "アイコン",
-        "description": "Icon"
+    "iconColor": {
+        "message": "アイコンの色",
+        "description": "Icon color"
     },
     "selectUserGroupIcon": {
         "message": "アイコンをロードする",

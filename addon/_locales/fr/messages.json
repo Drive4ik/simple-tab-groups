@@ -129,9 +129,9 @@
         "message": "Charger icône",
         "description": "Load icon"
     },
-    "icon": {
-        "message": "Icône",
-        "description": "Icon"
+    "iconColor": {
+        "message": "Couleur de l'icône",
+        "description": "Icon color"
     },
     "title": {
         "message": "Titre",

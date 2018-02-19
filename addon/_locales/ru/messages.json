@@ -291,9 +291,9 @@
         "message": "Название",
         "description": "Title"
     },
-    "icon": {
-        "message": "Значок",
-        "description": "Icon"
+    "iconColor": {
+        "message": "Цвет значка",
+        "description": "Icon color"
     },
     "selectUserGroupIcon": {
         "message": "Загрузить значок",

@@ -18,7 +18,7 @@ let Popups = {
     let templates = {
             'group-icon-tmpl': `
                 <div class="control">
-                    <button data-action="group-change-icon-style" data-view-style="{{styleName}}" class="button {{className}}">
+                    <button data-action="group-change-icon-style" data-icon-view-type="{{styleName}}" class="button {{className}}">
                         <figure class="image is-16x16">
                             <img src="{{iconUrl}}" />
                         </figure>
@@ -101,8 +101,8 @@ let Popups = {
                     iconColor: group.iconColor,
                 };
 
-            if (lastOptions.viewStyle) {
-                updateData.iconViewType = lastOptions.viewStyle;
+            if (lastOptions.iconViewType) {
+                updateData.iconViewType = lastOptions.iconViewType;
                 updateData.iconColor = $('#groupIconColor').value;
                 updateData.iconUrl = null;
             } else {
@@ -144,7 +144,7 @@ let Popups = {
             $('#groupIconColor').value = randomColor();
             dispatchEvent('change', '#groupIconColor');
         } else if ('group-change-icon-style' === action) {
-            lastOptions.viewStyle = data.viewStyle;
+            lastOptions.iconViewType = data.iconViewType;
             dispatchEvent('change', '#groupIconColor');
         } else if ('select-user-group-icon' === action) {
             if (1 === lastOptions.popupDesign) { // maybe temporary solution
@@ -190,7 +190,7 @@ let Popups = {
                     resizedIconUrl = resizeImage(img, 16, 16);
                 }
 
-                lastOptions.viewStyle = null;
+                lastOptions.iconViewType = null;
                 setActiveIconButton();
                 $('#groupIconImg').src = resizedIconUrl;
             };
@@ -201,14 +201,14 @@ let Popups = {
     $on('click', '[data-action]', (event, data) => doAction(data.action, data, event));
 
     $on('change', '#groupIconColor', async function() {
-        if (!lastOptions.viewStyle) {
-            lastOptions.viewStyle = 'main-squares';
+        if (!lastOptions.iconViewType) {
+            lastOptions.iconViewType = 'main-squares';
         }
 
         this.value = safeColor(this.value);
 
         $('#groupIconImg').src = await getGroupIconUrl({
-            iconViewType: lastOptions.viewStyle,
+            iconViewType: lastOptions.iconViewType,
             iconColor: this.value,
         });
 
@@ -218,7 +218,7 @@ let Popups = {
     function setActiveIconButton() {
         $$('[data-action="group-change-icon-style"]')
             .forEach(function(styleNode) {
-                if (styleNode.dataset.viewStyle === lastOptions.viewStyle) {
+                if (styleNode.dataset.iconViewType === lastOptions.iconViewType) {
                     styleNode.classList.add('is-focused');
                 } else {
                     styleNode.classList.remove('is-focused');
@@ -230,7 +230,7 @@ let Popups = {
         lastData = group;
         lastOptions = options;
 
-        lastOptions.viewStyle = group.iconViewType;
+        lastOptions.iconViewType = group.iconViewType;
 
         let mainTemplate = await loadTemplate('edit-group-main'),
             wrapperTemplate = await loadTemplate('edit-group-' + options.popupDesign);

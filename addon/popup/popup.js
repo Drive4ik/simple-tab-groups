@@ -127,6 +127,7 @@
                 let group = getGroupById(state.groupId);
 
                 BG.updateGroup(state.groupId, {
+                    iconViewType: null,
                     iconUrl: BG.getTabFavIconUrl(group.tabs[contextData.tabIndex], options.useTabsFavIconsFromGoogleS2Converter),
                 });
 
