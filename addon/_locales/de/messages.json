@@ -323,14 +323,6 @@
         "message": "Zeige URL-Tooltip wenn Mauszeiger über Tab",
         "description": "Show url tooltip when hovering over tab"
     },
-    "enableFastGroupSwitching": {
-        "message": "Erlaube schnellen Gruppenwechsel (ohne alle Tabs zu laden, nur den aktiven)",
-        "description": "Enable fast group switching (without loading all tabs, only active)"
-    },
-    "enableFavIconsForNotLoadedTabs": {
-        "message": "Erlaube Fav-Icons für nicht geladene Tabs (für mehr Geschwindigkeit diese Checkbox abwählen)",
-        "description": "Enable fav-icons for not loaded tabs (disable this checkbox if more speed is needed)"
-    },
     "openGroupInNewWindow": {
         "message": "Öffne Gruppe in neuem Fenster",
         "description": "Open group in new window"

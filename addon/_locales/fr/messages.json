@@ -353,14 +353,6 @@
         "message": "Montrer l'url d'un onglet survolé dans une infobulle",
         "description": "Show url tooltip when hovering over tab"
     },
-    "enableFastGroupSwitching": {
-        "message": "Activer le changement rapide de groupe (sans charger tous les onglets, uniquement l'actif)",
-        "description": "Enable fast group switching (without loading all tabs, only active)"
-    },
-    "enableFavIconsForNotLoadedTabs": {
-        "message": "Activer les fav-icons pour les onglets non-chargés (décochez cette case si vous souhaitez de meilleures performances)",
-        "description": "Enable fav-icons for not loaded tabs (disable this checkbox if more speed is needed)"
-    },
     "searchTabNotFoundTitle": {
         "message": "La recherche d'onglets \"$search$\" n'a pas de résutat",
         "description": "Search for tabs not found",

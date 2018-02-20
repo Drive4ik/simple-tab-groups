@@ -29,10 +29,6 @@
         checkEnabledCheckboxes();
 
         await storage.set(options);
-
-        if ('enableFastGroupSwitching' === this.id && !this.checked) {
-            BG.updateNewTabUrls();
-        }
     });
 
     $on('click', '#saveErrorLogsIntoFile', function() {
@@ -140,7 +136,7 @@
             win.tabs.forEach(function(oldTab) {
                 let extData = {};
 
-                if (oldTab.pinned && oldTab.entries[0] && oldTab.entries[0].url && isAllowUrl(oldTab.entries[0].url)) {
+                if (oldTab.pinned && oldTab.entries[0] && oldTab.entries[0].url && isUrlAllow(oldTab.entries[0].url)) {
                     return browser.tabs.create({
                         url: oldTab.entries[0].url,
                         pinned: true,
@@ -158,7 +154,7 @@
 
                 let tab = oldTab.entries.pop();
 
-                if (isAllowUrl(tab.url) && newGroups[extData.groupID]) {
+                if (isUrlAllow(tab.url) && newGroups[extData.groupID]) {
                     newGroups[extData.groupID].tabs.push(BG.mapTab({
                         title: (tab.title || tab.url),
                         url: tab.url,
@@ -189,7 +185,6 @@
     });
 
     function checkEnabledCheckboxes() {
-        $('#enableFavIconsForNotLoadedTabs').disabled = !$('#enableFastGroupSwitching').checked;
         $('#openGroupAfterChange').disabled = $('#closePopupAfterChangeGroup').checked;
     }
 

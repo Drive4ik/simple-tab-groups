@@ -187,14 +187,6 @@
         "message": "Mostrar",
         "description": "Show url tooltip when hovering over tab"
     },
-    "enableFastGroupSwitching": {
-        "message": "Habilitar intercambio rápido de grupos (sin cargar todas las pestañas, solo la activa)",
-        "description": "Enable fast group switching (without loading all tabs, only active)"
-    },
-    "enableFavIconsForNotLoadedTabs": {
-        "message": "Habilitar fav-icons para las pestañas no cargadas (deshabilita esta casilla si necesitas mas velocidad)",
-        "description": "Enable fav-icons for not loaded tabs (disable this checkbox if more speed is needed)"
-    },
     "newGroupTitle": {
         "message": "Grupo $id$",
         "description": "group id",

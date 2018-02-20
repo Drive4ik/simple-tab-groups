@@ -175,14 +175,6 @@
         "message": "Zobrazit popisek adresy URL při přejetí nad náhledem panelu",
         "description": "Show url tooltip when hovering over tab"
     },
-    "enableFastGroupSwitching": {
-        "message": "Umožnit rychlé přepínání skupin (bez načtení všech panelů - pouze aktivních)",
-        "description": "Enable fast group switching (without loading all tabs, only active)"
-    },
-    "enableFavIconsForNotLoadedTabs": {
-        "message": "Zobrazit fav-ikony i nenačtených panelů (Vypněte v případě potřeby vyšší rychlosti)",
-        "description": "Enable fav-icons for not loaded tabs (disable this checkbox if more speed is needed)"
-    },
     "newGroupTitle": {
         "message": "Skupina $id$",
         "description": "group id",

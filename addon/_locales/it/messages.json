@@ -187,14 +187,6 @@
         "message": "Mostra il tooltip quando si passa con il cursore sopra una tab",
         "description": "Show url tooltip when hovering over tab"
     },
-    "enableFastGroupSwitching": {
-        "message": "Attiva il cambio veloce di gruppo (non carica tutte le tab, ma solamente quelle attive)",
-        "description": "Enable fast group switching (without loading all tabs, only active)"
-    },
-    "enableFavIconsForNotLoadedTabs": {
-        "message": "Attiva le icone per le tab non caricate (deseleziona questa checkbox se si vuole avere una maggiore velocità)",
-        "description": "Enable fav-icons for not loaded tabs (disable this checkbox if more speed is needed)"
-    },
     "newGroupTitle": {
         "message": "Gruppo $id$",
         "description": "group id",

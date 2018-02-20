@@ -187,14 +187,6 @@
         "message": "Pokaż podpowiedź adresu URL po najechaniu na kartę",
         "description": "Show url tooltip when hovering over tab"
     },
-    "enableFastGroupSwitching": {
-        "message": "Włącz szybkie przełączanie grup (bez ładowania wszystkich kart, tylko aktywne)",
-        "description": "Enable fast group switching (without loading all tabs, only active)"
-    },
-    "enableFavIconsForNotLoadedTabs": {
-        "message": "Włącz ikony ulubionych dla nie załadowanych kart (wyłącz to pole wyboru, jeśli wymagana jest większa szybkość)",
-        "description": "Enable fav-icons for not loaded tabs (disable this checkbox if more speed is needed)"
-    },
     "newGroupTitle": {
         "message": "Grupa $id$",
         "description": "group id",

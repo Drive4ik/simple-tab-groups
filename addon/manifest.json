@@ -3,8 +3,8 @@
 
     "applications": {
         "gecko": {
-            "id": "simple-tab-groups@drive4ik",
-            "strict_min_version": "56.0"
+            "id": "experimental-simple-tab-groups@drive4ik",
+            "strict_min_version": "59.0b10"
         }
     },
 
@@ -20,6 +20,7 @@
 
     "permissions": [
         "tabs",
+        "tabHide",
         "notifications",
         "menus",
         "contextualIdentities",

@@ -187,14 +187,6 @@
         "message": "鼠标悬停在标签页上时，显示其网址",
         "description": "Show url tooltip when hovering over tab"
     },
-    "enableFastGroupSwitching": {
-        "message": "启用快速群组切换（并不加载所有标签页，而只加载活跃的标签页）",
-        "description": "Enable fast group switching (without loading all tabs, only active)"
-    },
-    "enableFavIconsForNotLoadedTabs": {
-        "message": "对为加载的标签页也启用网站图标（如果需要更快速，那么禁用本选项吧）",
-        "description": "Enable fav-icons for not loaded tabs (disable this checkbox if more speed is needed)"
-    },
     "newGroupTitle": {
         "message": "群组\"$id$\"",
         "description": "group id",

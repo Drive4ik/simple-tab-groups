@@ -187,14 +187,6 @@
         "message": "Показывать подсказку с адресом вкладки при наведении мыши на вкладку",
         "description": "Show url tooltip when hovering over tab"
     },
-    "enableFastGroupSwitching": {
-        "message": "Включить быструю смену групп (будет загружаться только активная вкладка)",
-        "description": "Enable fast group switching (without loading all tabs, only active)"
-    },
-    "enableFavIconsForNotLoadedTabs": {
-        "message": "Включить значки для не загруженных вкладок (отключите это если нужна большая скорость)",
-        "description": "Enable fav-icons for not loaded tabs (disable this checkbox if more speed is needed)"
-    },
     "newGroupTitle": {
         "message": "Группа $id$",
         "description": "group id",

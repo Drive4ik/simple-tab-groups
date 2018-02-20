@@ -1,6 +1,6 @@
 {
     "extensionName": {
-        "message": "Simple Tab Groups",
+        "message": "[EXPERIMENTAL] Simple Tab Groups",
         "description": "Name of the extension."
     },
 
@@ -233,16 +233,6 @@
     "showUrlTooltipOnTabHover": {
         "message": "Show url tooltip when hovering over tab",
         "description": "Show url tooltip when hovering over tab"
-    },
-
-    "enableFastGroupSwitching": {
-        "message": "Enable fast group switching (without loading all tabs, only active)",
-        "description": "Enable fast group switching (without loading all tabs, only active)"
-    },
-
-    "enableFavIconsForNotLoadedTabs": {
-        "message": "Enable fav-icons for not loaded tabs (disable this checkbox if more speed is needed)",
-        "description": "Enable fav-icons for not loaded tabs (disable this checkbox if more speed is needed)"
     },
 
     "newGroupTitle": {

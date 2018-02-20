@@ -187,14 +187,6 @@
         "message": "タブをオンカーソルした時にURLツールチップを表示する",
         "description": "Show url tooltip when hovering over tab"
     },
-    "enableFastGroupSwitching": {
-        "message": "fast group switching を有効にする（グループを切り替えた際に、アクティブなタブのみを再読み込みする）",
-        "description": "Enable fast group switching (without loading all tabs, only active)"
-    },
-    "enableFavIconsForNotLoadedTabs": {
-        "message": "読み込みされていないタブへの fav-icons を有効にする（より軽快に動作させたい場合は無効にしてください）",
-        "description": "Enable fav-icons for not loaded tabs (disable this checkbox if more speed is needed)"
-    },
     "newGroupTitle": {
         "message": "グループ $id$",
         "description": "group id",

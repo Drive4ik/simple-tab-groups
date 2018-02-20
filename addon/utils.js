@@ -1,12 +1,12 @@
 'use strict';
 
 const INNER_HTML = 'innerHTML',
+    MAIN_WINDOW_ID = 3,
     MANIFEST = browser.runtime.getManifest(),
     DEFAULT_COOKIE_STORE_ID = 'firefox-default',
     PRIVATE_COOKIE_STORE_ID = 'firefox-private',
     CONTEXT_MENU_PREFIX_GROUP = 'stg-move-group-id-',
     CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP = 'stg-undo-remove-group-id-',
-    NEW_TAB_URL = '/stg-newtab/newtab.html',
     MANAGE_TABS_URL = '/manage/manage.html',
     EXTENSIONS_WHITE_LIST = {
         'stg-plugin-create-new-group@drive4ik': {
@@ -35,8 +35,6 @@ const INNER_HTML = 'innerHTML',
         version: '1.0',
 
         // options
-        enableFastGroupSwitching: false,
-        enableFavIconsForNotLoadedTabs: true,
         closePopupAfterChangeGroup: true,
         openGroupAfterChange: true,
         showGroupIconWhenSearchATab: true,
@@ -243,56 +241,43 @@ let $ = document.querySelector.bind(document),
 
         return true;
     },
-    isEmptyUrl = function(url) {
+    isUrlEmpty = function(url) {
         return ['about:blank', 'about:newtab', 'about:home'].includes(url);
     },
-    isAllowUrl = function(url) {
+    isUrlAllow = function(url) {
         if (!url) {
             return false;
         }
 
         return /^((https?|ftp|moz-extension):|about:(blank|newtab|home))/.test(url);
     },
-    isAllowTab = function(tab) {
-        if (!tab || tab.pinned || tab.incognito) {
-            return false;
-        }
+    // isAllowTab = function(tab) {
+    //     if (!isTabPinned(tab) || tab.incognito) {
+    //         return false;
+    //     }
 
-        return isAllowUrl(tab.url);
+    //     return true;
+    // },
+    isWindowAllow = function(win) {
+        return 'normal' === win.type && !win.incognito;
     },
-    isStgNewTabUrl = function(url, extendResult = {}) {
-        if (!url || !url.startsWith('moz-extension')) {
-            return false;
-        }
-
-        if (url.startsWith(browser.extension.getURL(NEW_TAB_URL))) {
-            return true;
-        }
-
-        let pregNewTabUrl = NEW_TAB_URL.replace(/\//g, '\\/').replace(/\./, '\\.'),
-            reg = new RegExp('^moz-extension:\/\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}' + pregNewTabUrl);
-
-        if (reg.test(url)) {
-            extendResult.isOldUrl = true;
-            return true;
-        }
-
-        return false;
+    isTabAllowToCreate = function(tab) {
+        return /^((https?|ftp|moz-extension):|about:(blank|home))/.test(tab.url);
     },
-    createStgTabNewUrl = function(tab, enableFavIconsForNotLoadedTabs = DEFAULT_OPTIONS.enableFavIconsForNotLoadedTabs) {
-        let params = new URLSearchParams;
-
-        params.set('url', tab.url);
-        params.set('title', tab.title || tab.url);
-
-        if (enableFavIconsForNotLoadedTabs) {
-            params.set('favIconUrl', tab.favIconUrl);
-        }
-
-        return browser.extension.getURL(NEW_TAB_URL) + '?' + params.toString();
+    isTabNotIncognito = function(tab) {
+        return !tab.incognito;
     },
-    revokeStgNewTabUrl = function(url) {
-        return new URL(url).searchParams.get('url');
+    isTabPinned = function(tab) {
+        return tab.pinned;
+    },
+    isTabHidden = function(tab) {
+        return tab.hidden;
+    },
+    isTabVisible = function(tab) {
+        return !isTabHidden(tab);
+    },
+    isTabCanBeHidden = function(tab) {
+        return !isTabPinned(tab) && !tab.sharingState.camera && !tab.sharingState.microphone;
     },
     getNextIndex = function(currentIndex, count, textPosition = 'next') {
         if (!count) {
