@@ -1740,12 +1740,7 @@
                         let equalGroupTabs = group.tabs.filter(function(tab, tabIndex) {
                             let findTab = winTabs[win.id].some(t => t.url === tab.url);
 
-                            if (
-                                !findTab &&
-                                winTabs[win.id][tabIndex].active &&
-                                'about:blank' === winTabs[win.id][tabIndex].url &&
-                                'loading' === winTabs[win.id][tabIndex].status
-                            ) {
+                            if (!findTab && winTabs[win.id][tabIndex] && winTabs[win.id][tabIndex].active) {
                                 return true;
                             }
 
@@ -1765,18 +1760,11 @@
                     group.windowId = winCandidate.id;
                     group.tabs = winTabs[winCandidate.id]
                         .map(function(tab, tabIndex) { // need if window id is equal but tabs are not equal
-                            let mappedTab = null;
+                            let mappedTab = mapTab(tab),
+                                tabInGroup = group.tabs.find(t => t.url === mappedTab.url && t.thumbnail);
 
-                            if (tab.active && 'about:blank' === tab.url && 'loading' === tab.status && group.tabs[tabIndex]) {
-                                mappedTab = group.tabs[tabIndex];
-                                mappedTab.id = tab.id;
-                            } else {
-                                mappedTab = mapTab(tab);
-
-                                let tabInGroup = group.tabs.find(t => t.url === mappedTab.url && t.thumbnail);
-                                if (tabInGroup) {
-                                    mappedTab.thumbnail = tabInGroup.thumbnail;
-                                }
+                            if (tabInGroup) {
+                                mappedTab.thumbnail = tabInGroup.thumbnail;
                             }
 
                             return mappedTab;
