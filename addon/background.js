@@ -508,7 +508,7 @@
                             {active: true}
                         );
                     } else {
-                        dest_tab = group.tabs.filter(tab => tab.active === true)[0],
+                        let dest_tab = group.tabs.filter(tab => tab.active === true)[0];
                         await browser.tabs.update(
                             dest_tab.id,
                             {active: true}
