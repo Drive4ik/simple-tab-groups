@@ -270,6 +270,9 @@ let $ = document.querySelector.bind(document),
     isTabPinned = function(tab) {
         return tab.pinned;
     },
+    isTabNotPinned = function(tab) {
+        return !isTabPinned(tab);
+    },
     isTabHidden = function(tab) {
         return tab.hidden;
     },
