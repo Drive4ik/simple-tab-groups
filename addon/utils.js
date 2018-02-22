@@ -40,11 +40,8 @@ const INNER_HTML = 'innerHTML',
         showGroupIconWhenSearchATab: true,
         showUrlTooltipOnTabHover: true,
         showNotificationAfterMoveTab: true,
-        createNewGroupAfterAttachTabToNewWindow: true,
         openManageGroupsInTab: true,
         showConfirmDialogBeforeGroupDelete: true,
-        individualWindowForEachGroup: false,
-        openNewWindowWhenCreateNewGroup: false,
         showNotificationIfGroupsNotSyncedAtStartup: true,
         useTabsFavIconsFromGoogleS2Converter: false,
 
@@ -240,6 +237,9 @@ let $ = document.querySelector.bind(document),
         }
 
         return true;
+    },
+    sleep = function(sec) {
+        return new Promise(resolve => setTimeout(resolve, sec * 1000));
     },
     isUrlEmpty = function(url) {
         return ['about:blank', 'about:newtab', 'about:home'].includes(url);

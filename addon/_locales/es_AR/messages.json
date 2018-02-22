@@ -19,10 +19,6 @@
         "message": "Mover la pestaña de grupo",
         "description": "Move tab to group title"
     },
-    "errorAnotherGroupAreLoading": {
-        "message": "Por favor aguarde, otro grupo esta siendo cargado",
-        "description": "Please wait, another group are loading"
-    },
     "moveTabToGroupMessage": {
         "message": "la pestaña \"$tabtitle$\" fue movida al grupo \"$grouptitle$\".\n\nHaga click aquí para ver esta pestaña.",
         "description": "Tab moved popup title",
@@ -69,10 +65,6 @@
         "message": "Esta pestaña no es soportada",
         "description": "This tab is not supported"
     },
-    "confirmLoadGroupAndDeleteTabs": {
-        "message": "Cargar este grupo, cerrara todas las pestañas actuales.",
-        "description": "Load this group will close all current tabs!"
-    },
     "confirmDeleteLastGroupAndCloseTabs": {
         "message": "Borrando este grupo, cerrara todas las pestañas actuales.",
         "description": "Deleting this group will close all current tabs!"
@@ -111,10 +103,6 @@
         "message": "Mostrar notificación cuando una pestaña es movida a otro grupo",
         "description": "Show notification when tab is moved to another group"
     },
-    "createNewGroupAfterAttachTabToNewWindow": {
-        "message": "Crear un grupo nuevo si la pestaña es movida a una ventana nueva",
-        "description": "Create new group if tab is moved to new window"
-    },
     "openManageGroupsInTab": {
         "message": "Abrir \"Administrar Grupos\" en una nueva pestaña.",
         "description": "Open \"Manage Groups\" in new tab"
@@ -122,14 +110,6 @@
     "showConfirmDialogBeforeGroupDelete": {
         "message": "Mostrar dialogo para confirmar antes de borrar el grupo",
         "description": "Show confirm dialog before group delete"
-    },
-    "individualWindowForEachGroup": {
-        "message": "ventana individual para cada grupo",
-        "description": "Individual window for each group"
-    },
-    "openNewWindowWhenCreateNewGroup": {
-        "message": "Abrir una ventana nueva cuando cree un grupo nuevo",
-        "description": "Open new window when create new group"
     },
     "exportAddonSettingsTitle": {
         "message": "Resguardar tus Simple Tab Groups",

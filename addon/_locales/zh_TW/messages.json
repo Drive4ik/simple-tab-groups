@@ -14,11 +14,6 @@
         "description": "Move tab to group title"
     },
 
-    "errorAnotherGroupAreLoading": {
-        "message": "正在載入另一個分頁群組，請稍候",
-        "description": "Please wait, another group are loading"
-    },
-
     "moveTabToGroupMessage": {
         "message": "已將分頁 \"$tabtitle$\" 移到分頁群組 \"$grouptitle$\"。\n\n點我顯示此分頁。",
         "description": "Tab moved popup title",
@@ -73,11 +68,6 @@
     "showNotificationAfterMoveTab": {
         "message": "分頁移到其他分頁群組時顯示通知",
         "description": "Show notification when tab is moved to another group"
-    },
-
-    "createNewGroupAfterAttachTabToNewWindow": {
-        "message": "分頁移到其他視窗時建立新分頁群組",
-        "description": "Create new group if tab is moved to new window"
     },
 
     "importSettingsOldTabGroupsAddon": {

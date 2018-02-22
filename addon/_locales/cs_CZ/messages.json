@@ -19,10 +19,6 @@
         "message": "Přesuň panel do skupiny",
         "description": "Move tab to group title"
     },
-    "errorAnotherGroupAreLoading": {
-        "message": "Vyčkejte, načítá se jiná skupina",
-        "description": "Please wait, another group are loading"
-    },
     "moveTabToGroupMessage": {
         "message": "Panel \"$tabtitle$\" byl přesunut do skupiny \"$grouptitle$\".\n\nPro zobrazení panelu klikněte sem.",
         "description": "Tab moved popup title",
@@ -65,10 +61,6 @@
         "message": "Tento panel není podporován",
         "description": "This tab is not supported"
     },
-    "confirmLoadGroupAndDeleteTabs": {
-        "message": "Načtení této skupiny zavře všechny aktuální panely!",
-        "description": "Load this group will close all current tabs!"
-    },
     "confirmDeleteLastGroupAndCloseTabs": {
         "message": "Smazáním této skupiny zavřete všechny aktuální panely!",
         "description": "Deleting this group will close all current tabs!"
@@ -103,10 +95,6 @@
         "message": "Upozornit, pokud je panel přesunut do jiné skupiny",
         "description": "Show notification when tab is moved to another group"
     },
-    "createNewGroupAfterAttachTabToNewWindow": {
-        "message": "Vytvořit novou skupinu, pokud je panel přesunut do nového okna",
-        "description": "Create new group if tab is moved to new window"
-    },
     "openManageGroupsInTab": {
         "message": "Otevřít \"Správu skupin\" v novém panelu",
         "description": "Open \"Manage Groups\" in new tab"
@@ -114,14 +102,6 @@
     "showConfirmDialogBeforeGroupDelete": {
         "message": "Ukázat potvrzující dialogové okno před smazáním skupiny",
         "description": "Show confirm dialog before group delete"
-    },
-    "individualWindowForEachGroup": {
-        "message": "Samostatné okno pro každou skupinu",
-        "description": "Individual window for each group"
-    },
-    "openNewWindowWhenCreateNewGroup": {
-        "message": "Při vytvoření nové skupiny otevřít nové okno",
-        "description": "Open new window when create new group"
     },
     "exportAddonSettingsTitle": {
         "message": "Zálohovat vaše Simple Tab Groups",

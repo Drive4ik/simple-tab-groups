@@ -19,10 +19,6 @@
         "message": "Переместить в группу",
         "description": "Move tab to group title"
     },
-    "errorAnotherGroupAreLoading": {
-        "message": "Пожалуйста подождите, грузится другая группа",
-        "description": "Please wait, another group are loading"
-    },
     "moveTabToGroupMessage": {
         "message": "Вкладка \"$tabtitle$\" перемещена в группу \"$grouptitle$\".\nНажмите здесь чтобы открыть её.",
         "description": "Tab moved popup title",
@@ -69,10 +65,6 @@
         "message": "Эта вкладка не поддерживается",
         "description": "This tab is not supported"
     },
-    "confirmLoadGroupAndDeleteTabs": {
-        "message": "Загрузка этой группы закроет все открытие вкладки!",
-        "description": "Load this group will close all current tabs!"
-    },
     "confirmDeleteLastGroupAndCloseTabs": {
         "message": "Удаление этой группы приведет к закрытию всех вкладок этой группы!",
         "description": "Deleting this group will close all current tabs!"
@@ -111,10 +103,6 @@
         "message": "Показывать уведомление при перемещении вкладки в другую группу",
         "description": "Show notification when tab is moved to another group"
     },
-    "createNewGroupAfterAttachTabToNewWindow": {
-        "message": "Создавать новую группу при перемещении вкладки в новое окно",
-        "description": "Create new group if tab is moved to new window"
-    },
     "openManageGroupsInTab": {
         "message": "Открывать \"Управление группами\" в новой вкладке",
         "description": "Open \"Manage Groups\" in new tab"
@@ -122,14 +110,6 @@
     "showConfirmDialogBeforeGroupDelete": {
         "message": "Подтверждать удаление группы",
         "description": "Show confirm dialog before group delete"
-    },
-    "individualWindowForEachGroup": {
-        "message": "Индивидуальное окно для каждой группы",
-        "description": "Individual window for each group"
-    },
-    "openNewWindowWhenCreateNewGroup": {
-        "message": "Открывать новое окно при создании новой группы",
-        "description": "Open new window when create new group"
     },
     "exportAddonSettingsTitle": {
         "message": "Резервное копирование Simple Tab Groups",

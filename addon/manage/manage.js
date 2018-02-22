@@ -62,44 +62,32 @@
                     BG.loadGroup(lastFocusedNormalWindow.id, getGroupIndex(data.groupId), data.tabIndex);
                     browser.windows.remove(currentWindow.id); // close manage groups popop window
                 } else if ('normal' === currentWindow.type) {
-                    let currentGroup = _groups.find(gr => gr.windowId === currentWindowId),
-                        _loadGroup = function() {
-                            BG.loadGroup(lastFocusedNormalWindow.id, getGroupIndex(data.groupId), data.tabIndex);
-                        };
+                    let currentGroup = _groups.find(gr => gr.windowId === currentWindowId);
 
                     if (currentGroup) {
-                        let manageUrl = browser.extension.getURL(MANAGE_TABS_URL);
+                        let manageUrl = browser.extension.getURL(MANAGE_TABS_URL),
+                            filteredTabs = currentGroup.tabs.filter(tab => tab.url !== manageUrl);
 
-                        BG.updateGroup(currentGroup.id, { // remome manage groups tabs
-                            tabs: currentGroup.tabs.filter(tab => tab.url !== manageUrl),
-                        });
-
-                        _loadGroup();
-                    } else {
-                        if (options.individualWindowForEachGroup || getGroupById(data.groupId).windowId) {
-                            _loadGroup();
-                        } else {
-                            let tabs = await BG.getTabs(currentWindowId);
-                            if (tabs.length) {
-                                Popups.confirm(browser.i18n.getMessage('confirmLoadGroupAndDeleteTabs'), browser.i18n.getMessage('warning')).then(_loadGroup);
-                            } else {
-                                _loadGroup();
-                            }
+                        if (filteredTabs.length !== currentGroup.tabs.length) {
+                            BG.updateGroup(currentGroup.id, { // remome manage groups tabs
+                                tabs: filteredTabs,
+                            });
                         }
                     }
+
+                    BG.loadGroup(lastFocusedNormalWindow.id, getGroupIndex(data.groupId), data.tabIndex);
                 }
             } else if ('add-tab' === action) {
                 BG.addTab(data.groupId, data.cookieStoreId);
             } else if ('context-add-tab' === action) {
                 BG.addTab(contextData.groupId, data.cookieStoreId);
             } else if ('context-open-group-in-new-window' === action) {
-                let group = getGroupById(contextData.groupId),
-                    win = await BG.getWindowByGroup(group);
+                let group = getGroupById(contextData.groupId);
 
-                if (win) {
-                    BG.setFocusOnWindow(win.id);
+                if (group.windowId) {
+                    BG.setFocusOnWindow(group.windowId);
                 } else {
-                    win = await BG.createWindow({
+                    let win = await BG.createWindow({
                         state: 'maximized',
                     });
 

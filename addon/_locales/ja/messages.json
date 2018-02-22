@@ -19,10 +19,6 @@
         "message": "タブをグループへ移動する",
         "description": "Move tab to group title"
     },
-    "errorAnotherGroupAreLoading": {
-        "message": "他のグループを読み込み中です。少々お待ちください。",
-        "description": "Please wait, another group are loading"
-    },
     "moveTabToGroupMessage": {
         "message": "タブ \"$tabtitle$\" をグループ \"$grouptitle$\" へ移動しました。移動したタブを表示するにはここをクリックしてください。",
         "description": "Tab moved popup title",
@@ -69,10 +65,6 @@
         "message": "このタブはサポートされていません",
         "description": "This tab is not supported"
     },
-    "confirmLoadGroupAndDeleteTabs": {
-        "message": "このグループをロードすると、現在のタブはすべて閉じます！",
-        "description": "Load this group will close all current tabs!"
-    },
     "confirmDeleteLastGroupAndCloseTabs": {
         "message": "このグループを削除すると、現在のタブはすべて閉じます！",
         "description": "Deleting this group will close all current tabs!"
@@ -111,10 +103,6 @@
         "message": "タブを別のグループへ移動した際に、通知を表示する",
         "description": "Show notification when tab is moved to another group"
     },
-    "createNewGroupAfterAttachTabToNewWindow": {
-        "message": "タブを新しいウィンドウへ移動した場合、新しいグループを作成する",
-        "description": "Create new group if tab is moved to new window"
-    },
     "openManageGroupsInTab": {
         "message": "\"グループの管理\" を新しいタブで開く",
         "description": "Open \"Manage Groups\" in new tab"
@@ -122,14 +110,6 @@
     "showConfirmDialogBeforeGroupDelete": {
         "message": "グループを削除する際に確認画面を表示する",
         "description": "Show confirm dialog before group delete"
-    },
-    "individualWindowForEachGroup": {
-        "message": "各グループを個別のウィンドウで表示する",
-        "description": "Individual window for each group"
-    },
-    "openNewWindowWhenCreateNewGroup": {
-        "message": "新しいグループを作成する際に、新しいウィンドウを開く",
-        "description": "Open new window when create new group"
     },
     "exportAddonSettingsTitle": {
         "message": "あなたの Simple Tab Groups をバックアップする",

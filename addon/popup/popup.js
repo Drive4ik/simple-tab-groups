@@ -47,39 +47,24 @@
         async function doAction(action, data, event) {
             if ('load-group' === action) {
                 let currentGroup = _groups.find(group => group.windowId === currentWindowId),
-                    isCurrentGroup = currentGroup ? currentGroup.id === data.groupId : false,
-                    _loadGroup = function() {
-                        BG.loadGroup(currentWindowId, getGroupIndex(data.groupId), data.tabIndex)
-                            .then(function() {
-                                if (!options.closePopupAfterChangeGroup && options.openGroupAfterChange) {
-                                    renderTabsList(data.groupId);
-                                }
-
-                                if (options.closePopupAfterChangeGroup && !isCurrentGroup) {
-                                    window.close();
-                                }
-                            });
-                    };
+                    isCurrentGroup = currentGroup ? currentGroup.id === data.groupId : false;
 
                 if (isCurrentGroup && -1 === data.tabIndex) { // open group
                     return renderTabsList(data.groupId);
                 }
 
-                if (currentGroup) {
-                    _loadGroup();
-                } else {
-                    if (options.individualWindowForEachGroup || getGroupById(data.groupId).windowId) {
-                        _loadGroup();
-                    } else {
-                        let tabs = await BG.getTabs(currentWindowId);
-                        if (tabs.length) {
-                            Popups.confirm(browser.i18n.getMessage('confirmLoadGroupAndDeleteTabs'), browser.i18n.getMessage('warning')).then(_loadGroup);
+                BG.loadGroup(currentWindowId, getGroupIndex(data.groupId), data.tabIndex)
+                    .then(function() {
+                        if (options.closePopupAfterChangeGroup) {
+                            if (!isCurrentGroup) {
+                                window.close();
+                            }
                         } else {
-                            _loadGroup();
+                            if (options.openGroupAfterChange) {
+                                renderTabsList(data.groupId);
+                            }
                         }
-                    }
-                }
-
+                    });
             } else if ('show-group' === action) {
                 renderTabsList(data.groupId);
             } else if ('remove-tab' === action) {
@@ -150,13 +135,12 @@
             } else if ('context-sort-groups' === action) {
                 BG.sortGroups(data.vector);
             } else if ('context-open-group-in-new-window' === action) {
-                let group = getGroupById(contextData.groupId),
-                    win = await BG.getWindowByGroup(group);
+                let group = getGroupById(contextData.groupId);
 
-                if (win) {
+                if (group.windowId) {
                     BG.setFocusOnWindow(group.windowId);
                 } else {
-                    win = await BG.createWindow({
+                    let win = await BG.createWindow({
                         state: 'maximized',
                     });
 
@@ -281,15 +265,6 @@
                     }, 100);
                 }
 
-                if (undefined !== request.loadingGroupPosition) {
-                    if (request.loadingGroupPosition) {
-                        $('#loading').firstElementChild.style.width = request.loadingGroupPosition + 'vw';
-                        $('#loading').classList.remove('is-hidden');
-                    } else {
-                        $('#loading').classList.add('is-hidden');
-                    }
-                }
-
                 if (request.optionsUpdated) {
                     loadOptions();
                 }
@@ -391,11 +366,11 @@
         }
 
         return {
-            urlTitle: options.showUrlTooltipOnTabHover ? tab.url : '',
+            urlTitle: options.showUrlTooltipOnTabHover ? safeHtml(unSafeHtml([String(tab.id), tab.title, tab.url].join('\n'))) : '', // TODO change
             classList: classList.join(' '),
             tabIndex: tabIndex,
             groupId: groupId,
-            title: safeHtml(unSafeHtml(tab.title || tab.url)),
+            title: safeHtml(unSafeHtml([String(tab.id), tab.title, tab.url].join('\n'))), // TODO change
             url: tab.url,
             containerColorCode: containerColorCode,
             favIconUrl: BG.getTabFavIconUrl(tab, options.useTabsFavIconsFromGoogleS2Converter),

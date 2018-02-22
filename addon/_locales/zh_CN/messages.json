@@ -19,10 +19,6 @@
         "message": "将标签页移到标签页群组",
         "description": "Move tab to group title"
     },
-    "errorAnotherGroupAreLoading": {
-        "message": "正在载入另一个标签页群组，请稍候",
-        "description": "Please wait, another group are loading"
-    },
     "moveTabToGroupMessage": {
         "message": "已将标签页 \"$tabtitle$\" 移到标签页群组 \"$grouptitle$\"。\n\n点我显示此标签页。",
         "description": "Tab moved popup title",
@@ -69,10 +65,6 @@
         "message": "这个标签页不被支持",
         "description": "This tab is not supported"
     },
-    "confirmLoadGroupAndDeleteTabs": {
-        "message": "加载这个群组，会关闭所有当前标签页！",
-        "description": "Load this group will close all current tabs!"
-    },
     "confirmDeleteLastGroupAndCloseTabs": {
         "message": "删除这个群组，会关闭所有当前标签页！",
         "description": "Deleting this group will close all current tabs!"
@@ -111,10 +103,6 @@
         "message": "标签页移到其他标签页群组时显示通知",
         "description": "Show notification when tab is moved to another group"
     },
-    "createNewGroupAfterAttachTabToNewWindow": {
-        "message": "标签页移到其他窗口时建立新标签页群组",
-        "description": "Create new group if tab is moved to new window"
-    },
     "openManageGroupsInTab": {
         "message": "在新标签页里打开【管理群组】",
         "description": "Open \"Manage Groups\" in new tab"
@@ -122,14 +110,6 @@
     "showConfirmDialogBeforeGroupDelete": {
         "message": "在删除群组之前，显示确认对话框",
         "description": "Show confirm dialog before group delete"
-    },
-    "individualWindowForEachGroup": {
-        "message": "每个群组独立窗口",
-        "description": "Individual window for each group"
-    },
-    "openNewWindowWhenCreateNewGroup": {
-        "message": "在创建新群组时，打开新窗口",
-        "description": "Open new window when create new group"
     },
     "exportAddonSettingsTitle": {
         "message": "备份你的“Simple Tab Groups”",

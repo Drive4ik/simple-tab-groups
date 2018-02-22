@@ -19,10 +19,6 @@
         "message": "Erzeuge, modifiziere und tausche schnell Tab-Gruppen. Inspiriert vom alten Addon \"Tab Groups\" :)",
         "description": "Description of the extension."
     },
-    "errorAnotherGroupAreLoading": {
-        "message": "Warte bitte, eine andere Gruppe lädt gerade",
-        "description": "Please wait, another group are loading"
-    },
     "moveTabToGroupMessage": {
         "message": "Tab \"$tabtitle$\" wurde zur Gruppe \"$grouptitle$\" bewegt.\n\nKlicke hier um diesen Tab zu zeigen",
         "description": "Tab moved popup title",
@@ -69,10 +65,6 @@
         "message": "Dieser Tab wird nicht unterstützt",
         "description": "This tab is not supported"
     },
-    "confirmLoadGroupAndDeleteTabs": {
-        "message": "Das Laden dieser Gruppe wird alle derzeitigen Tabs schließen!",
-        "description": "Load this group will close all current tabs!"
-    },
     "confirmDeleteLastGroupAndCloseTabs": {
         "message": "Das Löschen dieser Gruppe wird alle derzeitigen Tabs schließen!",
         "description": "Deleting this group will close all current tabs!"
@@ -111,10 +103,6 @@
         "message": "Zeige Benachrichtigung, wenn Tabs in eine andere Gruppe bewegt werden",
         "description": "Show notification when tab is moved to another group"
     },
-    "createNewGroupAfterAttachTabToNewWindow": {
-        "message": "Erzeuge neue Gruppe, wenn Tabs in ein neues Fenster bewegt werden",
-        "description": "Create new group if tab is moved to new window"
-    },
     "openManageGroupsInTab": {
         "message": "Öffne \"Verwalte Gruppen\" in neuen Tab",
         "description": "Open \"Manage Groups\" in new tab"
@@ -122,14 +110,6 @@
     "showConfirmDialogBeforeGroupDelete": {
         "message": "Zeige Prüfe-Dialog bevor Gruppe gelöscht wird",
         "description": "Show confirm dialog before group delete"
-    },
-    "individualWindowForEachGroup": {
-        "message": "Individuelles Fenster für jede Gruppe",
-        "description": "Individual window for each group"
-    },
-    "openNewWindowWhenCreateNewGroup": {
-        "message": "Öffne neues Fenster beim erzeugen einer neuen Gruppe",
-        "description": "Open new window when create new group"
     },
     "exportAddonSettingsTitle": {
         "message": "Backup deiner Simple Tab Gruppen",

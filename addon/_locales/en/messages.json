@@ -29,11 +29,6 @@
         "description": "Move tab to group title"
     },
 
-    "errorAnotherGroupAreLoading": {
-        "message": "Please wait, another group are loading",
-        "description": "Please wait, another group are loading"
-    },
-
     "moveTabToGroupMessage": {
         "message": "Tab \"$tabtitle$\" was moved to group \"$grouptitle$\".\n\nClick here to show this tab.",
         "description": "Tab moved popup title",
@@ -89,11 +84,6 @@
         "description": "This tab is not supported"
     },
 
-    "confirmLoadGroupAndDeleteTabs": {
-        "message": "Load this group will close all current tabs!",
-        "description": "Load this group will close all current tabs!"
-    },
-
     "confirmDeleteLastGroupAndCloseTabs": {
         "message": "Deleting this group will close all current tabs!",
         "description": "Deleting this group will close all current tabs!"
@@ -140,11 +130,6 @@
         "description": "Show notification when tab is moved to another group"
     },
 
-    "createNewGroupAfterAttachTabToNewWindow": {
-        "message": "Create new group if tab is moved to new window",
-        "description": "Create new group if tab is moved to new window"
-    },
-
     "openManageGroupsInTab": {
         "message": "Open \"Manage Groups\" in new tab",
         "description": "Open \"Manage Groups\" in new tab"
@@ -153,16 +138,6 @@
     "showConfirmDialogBeforeGroupDelete": {
         "message": "Show confirm dialog before group delete",
         "description": "Show confirm dialog before group delete"
-    },
-
-    "individualWindowForEachGroup": {
-        "message": "Individual window for each group",
-        "description": "Individual window for each group"
-    },
-
-    "openNewWindowWhenCreateNewGroup": {
-        "message": "Open new window when create new group",
-        "description": "Open new window when create new group"
     },
 
     "exportAddonSettingsTitle": {

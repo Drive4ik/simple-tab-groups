@@ -57,10 +57,6 @@
         "message": "Cet onglet n'est pas supporté",
         "description": "This tab is not supported"
     },
-    "errorAnotherGroupAreLoading": {
-        "message": "Attendez svp, d'autre groupes sont en chargement",
-        "description": "Please wait, another group are loading"
-    },
     "searchTabPlaceholder": {
         "message": "Chercher un onglet...",
         "description": "Search a tab placeholder"
@@ -235,10 +231,6 @@
         "message": "Ouvrir le groupe dans une nouvelle fenêtre",
         "description": "Open group in new window"
     },
-    "individualWindowForEachGroup": {
-        "message": "Fenêtre individuelle pour chaque groupe",
-        "description": "Individual window for each group"
-    },
     "showConfirmDialogBeforeGroupDelete": {
         "message": "Afficher une confirmation avant de supprimer le groupe",
         "description": "Show confirm dialog before group delete"
@@ -246,10 +238,6 @@
     "showNotificationAfterMoveTab": {
         "message": "Afficher une notification quand l'onglet est transféré dans un autre groupe",
         "description": "Show notification when tab is moved to another group"
-    },
-    "confirmLoadGroupAndDeleteTabs": {
-        "message": "Charger ce groupe va fermer tous les onglet courants!",
-        "description": "Load this group will close all current tabs!"
     },
     "privateAndPinnedTabsAreNotSupported": {
         "message": "Les onglets privés et verrouillés ne sont pas supportés",
@@ -274,14 +262,6 @@
     "exportAddonSettingsButton": {
         "message": "Créer une sauvegarde",
         "description": "Create backup"
-    },
-    "openNewWindowWhenCreateNewGroup": {
-        "message": "Ouvrir une nouvelle fenêtre lors de la création d'un nouveau groupe",
-        "description": "Open new window when create new group"
-    },
-    "createNewGroupAfterAttachTabToNewWindow": {
-        "message": "Créer un nouveau groupe si l'onglet est transféré dans une nouvelle fenêtre",
-        "description": "Create new group if tab is moved to new window"
     },
     "openManageGroupsInTab": {
         "message": "Ouvrir \"Gérer les groupes\" dans un nouvel onglet",
