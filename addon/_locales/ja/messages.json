@@ -187,10 +187,6 @@
             }
         }
     },
-    "openGroupInNewWindow": {
-        "message": "グループを新しいウィンドウで開く",
-        "description": "Open group in new window"
-    },
     "sortGroupsAZ": {
         "message": "グループを昇順 [A-Z] でソート",
         "description": "Sort groups [A-Z]"
@@ -358,14 +354,6 @@
     "saveErrorLogsIntoFile": {
         "message": "最後に発生したエラーのログをJSONファイル形式で保存する",
         "description": "Save last error logs into JSON file"
-    },
-    "showNotificationIfGroupsNotSyncedAtStartup": {
-        "message": "起動時に最後に開いたグループが同期されていない場合に通知を表示する",
-        "description": "Show notification if no one last opened groups not synced at startup"
-    },
-    "noOneGroupWasNotSynchronized": {
-        "message": "同期されていないグループはありません!\n\nタブを同期するグループを選択してください。",
-        "description": "No one group was not synchronized!\n\nPlease, select group to sync tabs"
     },
     "undoRemoveGroupItemTitle": {
         "message": "グループ \"$grouptitle$\" の削除を取り消す",

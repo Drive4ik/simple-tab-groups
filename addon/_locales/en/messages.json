@@ -232,11 +232,6 @@
         }
     },
 
-    "openGroupInNewWindow": {
-        "message": "Open group in new window",
-        "description": "Open group in new window"
-    },
-
     "sortGroupsAZ": {
         "message": "Sort groups [A-Z]",
         "description": "Sort groups [A-Z]"
@@ -449,16 +444,6 @@
         "description": "Save last error logs into JSON file"
     },
 
-    "showNotificationIfGroupsNotSyncedAtStartup": {
-        "message": "Show notification if no one last opened groups not synced at startup",
-        "description": "Show notification if no one last opened groups not synced at startup"
-    },
-
-    "noOneGroupWasNotSynchronized": {
-        "message": "No one group was not synchronized!\n\nPlease, select group to sync tabs",
-        "description": "No one group was not synchronized!\n\nPlease, select group to sync tabs"
-    },
-
     "undoRemoveGroupItemTitle": {
         "message": "Undo remove group \"$grouptitle$\"",
         "description": "Undo remove group menu title",
@@ -493,6 +478,11 @@
     "iconStyle": {
         "message": "Icon style",
         "description": "Icon style"
+    },
+
+    "discardTabsAfterHide": {
+        "message": "Discard tabs after hide (this will save the RAM)",
+        "description": "Discard tabs after hide (this will save the RAM)"
     }
 
 }

@@ -187,10 +187,6 @@
             }
         }
     },
-    "openGroupInNewWindow": {
-        "message": "在新窗口打开标签页群组",
-        "description": "Open group in new window"
-    },
     "sortGroupsAZ": {
         "message": "排序群组：升序↗",
         "description": "Sort groups [A-Z]"

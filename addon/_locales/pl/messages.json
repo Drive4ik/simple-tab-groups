@@ -187,10 +187,6 @@
             }
         }
     },
-    "openGroupInNewWindow": {
-        "message": "Otwórz grupę w nowym oknie",
-        "description": "Open group in new window"
-    },
     "sortGroupsAZ": {
         "message": "Sortuj grupy [A-Z]",
         "description": "Sort groups [A-Z]"
@@ -362,14 +358,6 @@
     "saveErrorLogsIntoFile": {
         "message": "Zapisz ostatnie dzienniki błędów w pliku JSON",
         "description": "Save last error logs into JSON file"
-    },
-    "showNotificationIfGroupsNotSyncedAtStartup": {
-        "message": "Pokaż powiadomienie, jeśli ostatnio nie otwierano grup nie synchronizowanych przy starcie",
-        "description": "Show notification if no one last opened groups not synced at startup"
-    },
-    "noOneGroupWasNotSynchronized": {
-        "message": "Żadna grupa nie została zsynchronizowana!\n\nProszę wybrać grupę kart do synchronizacji",
-        "description": "No one group was not synchronized!\n\nPlease, select group to sync tabs"
     },
     "undoRemoveGroupItemTitle": {
         "message": "Cofnij usunięcie grupy \"$grouptitle$\"",

@@ -187,10 +187,6 @@
             }
         }
     },
-    "openGroupInNewWindow": {
-        "message": "Apri il gruppo in una nuova finestra",
-        "description": "Open group in new window"
-    },
     "sortGroupsAZ": {
         "message": "Ordina i gruppi [A-Z]",
         "description": "Sort groups [A-Z]"
@@ -358,14 +354,6 @@
     "saveErrorLogsIntoFile": {
         "message": "Salva l'ultimo log degli errori in un file JSON",
         "description": "Save last error logs into JSON file"
-    },
-    "showNotificationIfGroupsNotSyncedAtStartup": {
-        "message": "Mostra una notifica all'avvio se i gruppi di tab non sono stati sincronizzati",
-        "description": "Show notification if no one last opened groups not synced at startup"
-    },
-    "noOneGroupWasNotSynchronized": {
-        "message": "Nessun gruppo di tab è stato sincronizzato!\n\nPer favore, seleziona un gruppo di tab da sincronizzare.",
-        "description": "No one group was not synchronized!\n\nPlease, select group to sync tabs"
     },
     "undoRemoveGroupItemTitle": {
         "message": "Ripristina il gruppo \"$grouptitle$\" che è stato chiuso",

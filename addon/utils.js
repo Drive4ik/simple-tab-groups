@@ -35,6 +35,7 @@ const INNER_HTML = 'innerHTML',
         version: '1.0',
 
         // options
+        discardTabsAfterHide: false,
         closePopupAfterChangeGroup: true,
         openGroupAfterChange: true,
         showGroupIconWhenSearchATab: true,
@@ -42,7 +43,6 @@ const INNER_HTML = 'innerHTML',
         showNotificationAfterMoveTab: true,
         openManageGroupsInTab: true,
         showConfirmDialogBeforeGroupDelete: true,
-        showNotificationIfGroupsNotSyncedAtStartup: true,
         useTabsFavIconsFromGoogleS2Converter: false,
 
         hotkeys: [
@@ -365,13 +365,17 @@ let $ = document.querySelector.bind(document),
 
         return !(rect.bottom < 0 || rect.top - viewHeight >= 0);
     },
-    normalizeCookieStoreId = function(cookieStoreId, containers) {
-        if (!cookieStoreId || PRIVATE_COOKIE_STORE_ID === cookieStoreId || DEFAULT_COOKIE_STORE_ID === cookieStoreId) {
+    getTabCookieStoreId = async function(tab, containers) {
+        if (!tab.cookieStoreId || PRIVATE_COOKIE_STORE_ID === tab.cookieStoreId || DEFAULT_COOKIE_STORE_ID === tab.cookieStoreId) {
             return DEFAULT_COOKIE_STORE_ID;
         }
 
-        let isContainerFound = containers.some(container => container.cookieStoreId === cookieStoreId);
-        return isContainerFound ? cookieStoreId : DEFAULT_COOKIE_STORE_ID;
+        if (!containers) {
+            containers = await loadContainers();
+        }
+
+        let isContainerFound = containers.some(container => container.cookieStoreId === tab.cookieStoreId);
+        return isContainerFound ? tab.cookieStoreId : DEFAULT_COOKIE_STORE_ID;
     },
     loadContainers = async function() {
         let containers = [];

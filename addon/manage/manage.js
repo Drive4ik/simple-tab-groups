@@ -81,18 +81,6 @@
                 BG.addTab(data.groupId, data.cookieStoreId);
             } else if ('context-add-tab' === action) {
                 BG.addTab(contextData.groupId, data.cookieStoreId);
-            } else if ('context-open-group-in-new-window' === action) {
-                let group = getGroupById(contextData.groupId);
-
-                if (group.windowId) {
-                    BG.setFocusOnWindow(group.windowId);
-                } else {
-                    let win = await BG.createWindow({
-                        state: 'maximized',
-                    });
-
-                    BG.loadGroup(win.id, getGroupIndex(group.id), contextData.tabIndex);
-                }
             } else if ('set-tab-icon-as-group-icon' === action) {
                 let group = getGroupById(contextData.groupId);
 

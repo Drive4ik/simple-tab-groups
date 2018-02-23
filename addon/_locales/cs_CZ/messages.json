@@ -175,10 +175,6 @@
             }
         }
     },
-    "openGroupInNewWindow": {
-        "message": "Otevřít skupinu v novém okně",
-        "description": "Open group in new window"
-    },
     "sortGroupsAZ": {
         "message": "Seřadit skupiny [A-Z]",
         "description": "Sort groups [A-Z]"

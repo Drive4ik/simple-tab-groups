@@ -187,10 +187,6 @@
             }
         }
     },
-    "openGroupInNewWindow": {
-        "message": "Abrir grupo en una ventana nueva",
-        "description": "Open group in new window"
-    },
     "sortGroupsAZ": {
         "message": "Ordenar grupos [A-Z]",
         "description": "Sort groups [A-Z]"

@@ -75,7 +75,7 @@
     </script>
 
     <script id="group-tmpl" type="text/template">
-        <div class="group {{classList}}" contextmenu="group-menu" data-is-group="true" data-group-id="{{id}}" data-draggable-group="groups">
+        <div class="group {{classList}}" data-is-group="true" data-group-id="{{id}}" data-draggable-group="groups">
             <div class="header">
                 <div class="group-title">
                     <input type="text" value="{{title}}" data-group-id="{{id}}" maxlength="120" placeholder="Please enter group name" />
@@ -117,12 +117,7 @@
         <menuitem data-action="context-add-tab" data-cookie-store-id="{{cookieStoreId}}" icon="{{icon}}" label="{{title}}"></menuitem>
     </script>
 
-    <menu id="group-menu" type="context">
-        <menuitem data-action="context-open-group-in-new-window" icon="chrome://browser/skin/new-window.svg" data-i18n="openGroupInNewWindow:label"></menuitem>
-    </menu>
-
     <menu id="tab-menu" type="context">
-        <menuitem data-action="context-open-group-in-new-window" icon="chrome://browser/skin/new-window.svg" data-i18n="openGroupInNewWindow:label"></menuitem>
         <menuitem data-action="set-tab-icon-as-group-icon" icon="/icons/image.svg" data-i18n="setTabIconAsGroupIcon:label"></menuitem>
     </menu>
 

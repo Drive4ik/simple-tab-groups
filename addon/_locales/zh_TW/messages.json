@@ -112,11 +112,6 @@
         }
     },
 
-    "openGroupInNewWindow": {
-        "message": "在新視窗開啟分頁群組",
-        "description": "Open group in new window"
-    },
-
     "moveGroupUp": {
         "message": "將分頁群組上移",
         "description": "Move group up"

@@ -227,10 +227,6 @@
             }
         }
     },
-    "openGroupInNewWindow": {
-        "message": "Ouvrir le groupe dans une nouvelle fenêtre",
-        "description": "Open group in new window"
-    },
     "showConfirmDialogBeforeGroupDelete": {
         "message": "Afficher une confirmation avant de supprimer le groupe",
         "description": "Show confirm dialog before group delete"
