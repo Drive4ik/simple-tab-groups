@@ -238,9 +238,7 @@ let $ = document.querySelector.bind(document),
 
         return true;
     },
-    sleep = function(sec) {
-        return new Promise(resolve => setTimeout(resolve, sec * 1000));
-    },
+    keyId = obj => obj.id,
     isUrlEmpty = function(url) {
         return ['about:blank', 'about:newtab', 'about:home'].includes(url);
     },

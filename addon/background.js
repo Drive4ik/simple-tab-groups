@@ -347,11 +347,17 @@ browser.tabs.query({
 
         let tabs = await getTabs(windowId);
 
+        let syncTabIds = _groups
+            .filter(gr => gr.id !== group.id)
+            .reduce((acc, gr) => acc.concat(gr.tabs.filter(keyId).map(keyId)), []); // dont savetabs if its are already saved in other groups
+
         if (excludeTabId) {
-            tabs = tabs.filter(tab => tab.id !== excludeTabId);
+            syncTabIds.push(excludeTabId);
         }
 
-        group.tabs = tabs.map(mapTab);
+        group.tabs = tabs
+            .filter(tab => !syncTabIds.includes(tab.id))
+            .map(mapTab);
 
         saveGroupsToStorage();
     }
@@ -461,18 +467,27 @@ browser.tabs.query({
 
                 let oldTabIds = [],
                     tempEmptyTab = null,
-                    pinnedTabs = await getPinnedTabs(windowId);
+                    pinnedTabs = await getPinnedTabs(windowId),
+                    pinnedTabsLength = pinnedTabs.length;
 
                 let oldGroup = _groups.find(gr => gr.windowId === windowId);
                 if (oldGroup) {
                     oldGroup.windowId = null;
-                    oldTabIds = oldGroup.tabs.map(tab => tab.id);
+                    oldTabIds = oldGroup.tabs.map(keyId);
                 }
 
                 group.windowId = windowId;
                 group.tabs = group.tabs.filter(tab => tab.id || isTabAllowToCreate(tab)); // remove missed unsupported tabs
 
-                if (pinnedTabs.length) {
+                if (!group.tabs.length && !pinnedTabsLength) {
+                    group.tabs.push({
+                        url: 'about:blank',
+                        active: true,
+                        cookieStoreId: DEFAULT_COOKIE_STORE_ID,
+                    });
+                }
+
+                if (pinnedTabsLength) {
                     browser.tabs.update(pinnedTabs[pinnedTabs.length - 1].id, {
                         active: true,
                     });
@@ -483,14 +498,7 @@ browser.tabs.query({
                         active: true,
                         windowId: windowId,
                     });
-                }
-
-                if (!group.tabs.length && !pinnedTabs.length) {
-                    group.tabs.push({
-                        url: 'about:blank',
-                        active: true,
-                        cookieStoreId: DEFAULT_COOKIE_STORE_ID,
-                    });
+                    pinnedTabsLength++;
                 }
 
                 if (oldTabIds.length) {
@@ -498,108 +506,39 @@ browser.tabs.query({
                 }
 
                 if (group.tabs.length) {
-                    let containers = await loadContainers();
-
-                    let hiddenTabsIds = group.tabs
-                        .filter(tab => tab.id)
-                        .map(tab => tab.id);
+                    let containers = await loadContainers(),
+                        hiddenTabsIds = group.tabs.filter(keyId).map(keyId);
 
                     if (hiddenTabsIds.length) {
                         await browser.tabs.show(hiddenTabsIds);
+                        await browser.tabs.move(hiddenTabsIds, {
+                            index: pinnedTabsLength,
+                        });
                     }
 
                     await Promise.all(group.tabs.map(async function(tab, tabIndex) {
-                        // let isTabActive = -1 === activeTabIndex ? Boolean(tab.active) : tabIndex === activeTabIndex,
-                            // nextIndex = pinnedTabs.length + tabIndex + 1;
-
-                        // if (tab.id) {
-                        //     await browser.tabs.show(tab.id);
-                        //     await browser.tabs.move(tab.id, {
-                        //         index: nextIndex,
-                        //     });
-
-                        //     if (isTabActive) {
-                        //         await browser.tabs.update(tab.id, {
-                        //             active: true,
-                        //         });
-                        //     }
-                        // } else {
-                            if (tab.id) {
-                                return;
-                            }
-
-                            let t = await browser.tabs.create({
+                        if (!tab.id) {
+                            let newTab = await browser.tabs.create({
                                 active: false,
+                                index: pinnedTabsLength + tabIndex,
                                 url: tab.url,
                                 windowId: windowId,
                                 cookieStoreId: normalizeCookieStoreId(tab.cookieStoreId, containers),
                             });
 
-                            tab.id = t.id;
-                        // }
+                            tab.id = newTab.id;
+                        }
                     }));
 
-                    // let tabs = await getTabs(windowId);
-
-                    // await Promise.all(group.tabs.map(async function(tab, tabIndex) {
                     group.tabs.some(function(tab, tabIndex) { // make tab is active
-                        // await ?
-                        // browser.tabs.move(tab.id, { // very slow ((
-                        //     index: pinnedTabs.length + tabIndex + (tempEmptyTab ? 1 : 0),
-                        // });
-
                         let isTabActive = -1 === activeTabIndex ? Boolean(tab.active) : tabIndex === activeTabIndex;
-
                         if (isTabActive) {
-                            // await ?
                             browser.tabs.update(tab.id, {
                                 active: true,
                             });
-
                             return true;
                         }
                     });
-
-                    // // let hiddenTabsIds = group.tabs
-                    // //     .filter(tab => tab.id)
-                    // //     .map(tab => tab.id);
-
-                    // // if (hiddenTabsIds.length) {
-                    // //     await browser.tabs.show(hiddenTabsIds);
-                    // //     // await sleep(2);
-                    // //     console.log('before move hiddenTabsIds', hiddenTabsIds);
-                    // //     await browser.tabs.move(hiddenTabsIds, {
-                    // //         index: pinnedTabs.length,
-                    // //     });
-                    // //     console.log('after move hiddenTabsIds', (await getTabs(windowId)).map(tab => tab.id));
-                    // // }
-
-                    // await Promise.all(group.tabs.map(async function(tab, tabIndex) {
-                    //     let isTabActive = -1 === activeTabIndex ? Boolean(tab.active) : tabIndex === activeTabIndex,
-                    //         nextIndex = pinnedTabs.length + tabIndex + 1;
-
-                    //     if (tab.id) {
-                    //         await browser.tabs.show(tab.id);
-                    //         await browser.tabs.move(tab.id, {
-                    //             index: nextIndex,
-                    //         });
-
-                    //         if (isTabActive) {
-                    //             await browser.tabs.update(tab.id, {
-                    //                 active: true,
-                    //             });
-                    //         }
-                    //     } else {
-                    //         await browser.tabs.create({
-                    //             active: isTabActive,
-                    //             // index: nextIndex,
-                    //             url: tab.url,
-                    //             windowId: windowId,
-                    //             cookieStoreId: normalizeCookieStoreId(tab.cookieStoreId, containers),
-                    //         });
-                    //     }
-                    // }));
-
                 }
 
                 if (tempEmptyTab) {
@@ -758,7 +697,7 @@ browser.tabs.query({
                 if (-1 === descGroupIndex) {
                     saveCurrentTabs(windowId);
                 } else {
-                    loadGroup(windowId, descGroupIndex, descTabIndex); // TODO нужно плавно показать группу
+                    loadGroup(windowId, descGroupIndex, descTabIndex);
                 }
             }
 

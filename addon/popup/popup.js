@@ -42,6 +42,22 @@
 
     function addEvents() {
 
+        $on('click', 'body', async function() {
+            let tabs = await BG.getTabs();
+            console.log(tabs);
+            // await browser.tabs.create({
+            //     active: false,
+            //     index: 4,
+            // });
+            // await browser.tabs.create({
+            //     active: false,
+            //     index: 6,
+            // });
+            // browser.tabs.move([7,6,5], {
+            //     index: 5,
+            // });
+        });
+
         $on('click', '[data-action]', (event, data) => doAction(data.action, data, event));
 
         async function doAction(action, data, event) {
