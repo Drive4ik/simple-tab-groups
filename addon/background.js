@@ -538,6 +538,7 @@ browser.tabs.query({
 
                 if (group.tabs.length) {
                     let containers = await loadContainers(),
+                        findActiveTab = false,
                         hiddenTabsIds = group.tabs.filter(keyId).map(keyId);
 
                     if (hiddenTabsIds.length) {
@@ -550,8 +551,14 @@ browser.tabs.query({
 
                     await Promise.all(group.tabs.map(async function(tab, tabIndex) {
                         if (!tab.id) {
+                            let isTabActive = -1 === activeTabIndex ? Boolean(tab.active) : tabIndex === activeTabIndex;
+
+                            if (isTabActive) {
+                                findActiveTab = true;
+                            }
+
                             let newTab = await browser.tabs.create({
-                                active: false,
+                                active: isTabActive,
                                 index: pinnedTabsLength + tabIndex,
                                 url: tab.url,
                                 windowId: windowId,
@@ -562,15 +569,17 @@ browser.tabs.query({
                         }
                     }));
 
-                    group.tabs.some(function(tab, tabIndex) { // make tab is active
-                        let isTabActive = -1 === activeTabIndex ? Boolean(tab.active) : tabIndex === activeTabIndex;
-                        if (isTabActive) {
-                            browser.tabs.update(tab.id, {
-                                active: true,
-                            });
-                            return true;
-                        }
-                    });
+                    if (!findActiveTab) {
+                        group.tabs.some(function(tab, tabIndex) { // make tab is active
+                            let isTabActive = -1 === activeTabIndex ? Boolean(tab.active) : tabIndex === activeTabIndex;
+                            if (isTabActive) {
+                                browser.tabs.update(tab.id, {
+                                    active: true,
+                                });
+                                return true;
+                            }
+                        });
+                    }
                 }
 
                 if (tempEmptyTab) {
@@ -823,6 +832,9 @@ browser.tabs.query({
             createdTabId = null,
             createdTabIndex = null;
 
+        notify('This feature does not work right now');
+        return;
+
         if (oldGroupId === newGroupId) { // if it's same group
             if (newGroup.windowId) {
                 let tabs = await getTabs(newGroup.windowId);
@@ -841,7 +853,6 @@ browser.tabs.query({
                 }
             }
         } else { // if it's different group
-
             if (oldGroupId) {
                 oldGroup = _groups.find(gr => gr.id === oldGroupId);
                 tab = oldGroup.tabs[oldTabIndex];
@@ -850,8 +861,140 @@ browser.tabs.query({
                 tab = mapTab(tabs[oldTabIndex]);
             }
 
+            // if (oldGroup) {
+            //     oldGroup.tabs.splice(oldTabIndex, 1);
+            // }
 
-            if (tab.id) {
+            // if (-1 === newTabIndex) {
+            //     createdTabIndex = newGroup.tabs.length;
+            //     newGroup.tabs.push(tab);
+            // } else {
+            //     createdTabIndex = newTabIndex;
+            //     newGroup.tabs.splice(newTabIndex, 0, tab);
+            // }
+
+            // if (tab.id) {
+                // let rawTab = await browser.tabs.get(tab.id);
+
+                // move beetwen windows
+                // hide/remove tab
+                // if (rawTab.hidden) {
+                //     if (newGroup.windowId) {
+                //         if (rawTab.windowId !== newGroup.windowId) {
+                //             let pinnedTabs = await getPinnedTabs(newGroup.windowId);
+
+                //             await browser.tabs.move(tab.id, {
+                //                 index: -1 === newTabIndex ? -1 : pinnedTabs.length + newTabIndex,
+                //                 windowId: newGroup.windowId,
+                //             });
+
+                //             await browser.tabs.show(tab.id);
+                //         } else {
+                //             // if in same winddow - do nothing
+                //         }
+                //     } else {
+                //         // id no window - do nothing
+                //     }
+                // } else {
+                //     let tempEmptyTab = null;
+
+                //     if (rawTab.active) {
+                //         tempEmptyTab = await createTempActiveTab(rawTab.windowId);
+                //     }
+        /*
+                    if (oldGroup) {
+                        if (oldGroup.windowId) {
+                            if (newGroup.windowId) {
+                                let pinnedTabs = await getPinnedTabs(newGroup.windowId);
+
+                                await browser.tabs.move(tab.id, {
+                                    index: -1 === newTabIndex ? -1 : pinnedTabs.length + newTabIndex,
+                                    windowId: newGroup.windowId,
+                                });
+                            } else {
+                                if (tab.active) {
+                                    await browser.tabs.remove(tab.id);
+                                } else {
+                                    await browser.tabs.hide(tab.id); // not working for active tab
+                                }
+
+                                newGroup.tabs.splice(newTabIndex, 0, oldGroup.tabs.splice(oldTabIndex, 1)[0]);
+
+                                if (tab.active) {
+                                    newGroup.tabs[newTabIndex].id = null;
+                                }
+
+                                callSaveGroups = true;
+                            }
+                        } else {
+                            if (newGroup.windowId) {
+                                let pinnedTabs = await getPinnedTabs(newGroup.windowId);
+
+                                await browser.tabs.move(tab.id, {
+                                    index: -1 === newTabIndex ? -1 : pinnedTabs.length + newTabIndex,
+                                    windowId: newGroup.windowId,
+                                });
+                                await browser.tabs.show(tab.id);
+                            } else {
+                                newGroup.tabs.splice(newTabIndex, 0, oldGroup.tabs.splice(oldTabIndex, 1)[0]);
+                                callSaveGroups = true;
+                            }
+                        }
+                    } else {
+                        //
+                    }
+                // }
+
+
+
+
+/*
+
+                if (newGroup.windowId) {
+                    if (tabWindowId === newGroup.windowId) {
+                        if (tab.active) {
+                            let tempEmptyTab = createTempActiveTab(newGroup.windowId);
+                            await browser.tabs.show(tab.id);
+                        }
+                    } else {
+                        await browser.tabs.move(tab.id, {
+                            windowId: newGroup.windowId,
+                        });
+                    }
+                }
+
+
+                let oldWindowId = rawTab.windowId,
+                    newWindowId = newGroup.windowId;
+
+                if (newWindowId) {
+                    if (oldWindowId === newWindowId) {
+                        let pinnedTabs = await getPinnedTabs(newWindowId);
+
+                        await browser.tabs.move(tab.id, {
+                            index: -1 === newTabIndex ? -1 : pinnedTabs.length + newTabIndex,
+                            windowId: newWindowId,
+                        });
+
+                        if (rawTab.hidden) {
+                            await browser.tabs.show(tab.id);
+                        }
+                    } else {
+                        //
+                    }
+                }
+
+*/
+
+
+
+
+
+/*
+
+                // TODO ...
+                let rawTab = await browser.tabs.get(tab.id);
+
                 if (oldGroup) {
                     if (oldGroup.windowId) {
                         if (newGroup.windowId) {
@@ -862,10 +1005,26 @@ browser.tabs.query({
                                 windowId: newGroup.windowId,
                             });
                         } else {
-                            // await browser.tabs.remove(tab.id);
-                            await browser.tabs.hide(tab.id);
                             newGroup.tabs.splice(newTabIndex, 0, oldGroup.tabs.splice(oldTabIndex, 1)[0]);
                             callSaveGroups = true;
+
+                            if (rawTab.hidden) {
+                                // do nothing
+                            } else {
+                                let tempEmptyTab = null;
+
+                                if (rawTab.active) {
+                                    tempEmptyTab = await createTempActiveTab(rawTab.windowId);
+                                }
+
+                                await browser.tabs.hide(tab.id);
+
+                                if (tempEmptyTab) {
+                                    await browser.tabs.remove(tempEmptyTab.id);
+                                }
+
+                                callSaveGroups = false;
+                            }
                         }
                     } else {
                         if (newGroup.windowId) {
@@ -875,6 +1034,7 @@ browser.tabs.query({
                                 index: -1 === newTabIndex ? -1 : pinnedTabs.length + newTabIndex,
                                 windowId: newGroup.windowId,
                             });
+                            await browser.tabs.show(tab.id);
                         } else {
                             newGroup.tabs.splice(newTabIndex, 0, oldGroup.tabs.splice(oldTabIndex, 1)[0]);
                             callSaveGroups = true;
@@ -900,13 +1060,15 @@ browser.tabs.query({
                     return;
                 }
 
-                if (oldGroup) { // remove tab
+                if (oldGroup) {
                     oldGroup.tabs.splice(oldTabIndex, 1);
                     callSaveGroups = true;
                 }
 
                 // add tab
                 if (newGroup.windowId) {
+                    callSaveGroups = false;
+
                     let newTabObj = {
                         active: false,
                         url: tab.url,
@@ -924,10 +1086,11 @@ browser.tabs.query({
                     createdTabId = newTab.id;
                 } else {
                     if (-1 === newTabIndex) {
-                        createdTabIndex = newGroup.tabs.push(tab) - 1;
+                        createdTabIndex = newGroup.tabs.length;
+                        newGroup.tabs.push(tab);
                     } else {
-                        newGroup.tabs.splice(newTabIndex, 0, tab);
                         createdTabIndex = newTabIndex;
+                        newGroup.tabs.splice(newTabIndex, 0, tab);
                     }
 
                     callSaveGroups = true;
@@ -936,7 +1099,7 @@ browser.tabs.query({
 
 
 
-
+*/
 
 
 
