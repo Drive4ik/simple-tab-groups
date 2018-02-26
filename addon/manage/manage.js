@@ -96,8 +96,7 @@
                     BG.updateMoveTabMenus(currentWindowId);
                 }
             } else if ('remove-tab' === action) {
-                let group = getGroupById(data.groupId);
-                BG.removeTab(data.tabIndex, group);
+                BG.removeTab(data.groupId, data.tabIndex);
             } else if ('show-delete-group-popup' === action) {
                 let group = getGroupById(data.groupId);
 

@@ -84,9 +84,7 @@
             } else if ('show-group' === action) {
                 renderTabsList(data.groupId);
             } else if ('remove-tab' === action) {
-                let group = getGroupById(data.groupId);
-
-                BG.removeTab(data.tabIndex, group);
+                BG.removeTab(data.groupId, data.tabIndex);
             } else if ('add-tab' === action) {
                 BG.addTab(data.groupId, data.cookieStoreId);
             } else if ('open-settings-group-popup' === action) {
