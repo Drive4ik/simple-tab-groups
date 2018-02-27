@@ -152,13 +152,17 @@ let $ = document.querySelector.bind(document),
             id = String(Date.now());
         }
 
+        if ('error' === type(message)) {
+            message = message.toString() + format('\n{fileName} {lineNumber}:{columnNumber}\n{stack}');
+        }
+
         // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/notifications/NotificationOptions
         // Only 'type', 'iconUrl', 'title', and 'message' are supported.
         browser.notifications.create(id, {
             type: 'basic',
             iconUrl: '/icons/icon.svg',
             title: browser.i18n.getMessage('extensionName'),
-            message: String(message),
+            message: message,
         });
 
         setTimeout(browser.notifications.clear, timer, id);
@@ -378,22 +382,7 @@ let $ = document.querySelector.bind(document),
         return isContainerFound ? tab.cookieStoreId : DEFAULT_COOKIE_STORE_ID;
     },
     loadContainers = async function() {
-        let containers = [];
-
-        try {
-            containers = await browser.contextualIdentities.query({});
-            if (!containers) {
-                containers = [];
-            }
-        } catch (e) {}
-
-        return containers.map(function(container) {
-            if (!container.iconUrl) {
-                container.iconUrl = `chrome://browser/content/usercontext-${container.icon}.svg`;
-            }
-
-            return container;
-        });
+        return await browser.contextualIdentities.query({}).catch(function() {}) || [];
     },
     on = function(eventsStr, query, func, extendNode = null, translatePage = true) {
         let events = this;

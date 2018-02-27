@@ -473,20 +473,27 @@ browser.tabs.query({
             throw Error('loadGroup: wrong windowId');
         }
 
-        if (!_groups[groupIndex]) {
+        let group = _groups[groupIndex];
+
+        if (!group) {
             throw Error('group index not found ' + groupIndex);
         }
-
-        let group = _groups[groupIndex];
 
         try {
             if (group.windowId) {
                 if (-1 === activeTabIndex) {
                     setFocusOnWindow(group.windowId);
                 } else {
-                    let tabs = await getTabs(group.windowId);
+                    let tabId = null;
 
-                    await browser.tabs.update(tabs[activeTabIndex].id, {
+                    if (group.tabs[activeTabIndex].id) {
+                        tabId = group.tabs[activeTabIndex].id;
+                    } else {
+                        let tabs = await getTabs(group.windowId);
+                        tabId = tabs[activeTabIndex].id;
+                    }
+
+                    await browser.tabs.update(tabId, {
                         active: true,
                     });
 
