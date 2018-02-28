@@ -378,22 +378,29 @@ browser.tabs.query({
         updateMoveTabMenus();
     }
 
-    async function saveCurrentTabs(windowId, excludeTabId) {
+    let savingTabsInWindow = {};
+
+    async function saveCurrentTabs(windowId, excludeTabId, calledFunc) {
+        if (savingTabsInWindow[windowId]) {
+            return;
+        }
+
+        savingTabsInWindow[windowId] = true;
+
         let group = _groups.find(gr => gr.windowId === windowId);
 
         if (!group) {
+            delete savingTabsInWindow[windowId];
             return;
+        }
+
+        if (calledFunc) {
+            console.info('saveCurrentTabs called from', calledFunc);
         }
 
         let tabs = await getTabs(windowId);
 
-        if (excludeTabId) {
-            if (!tabs.some(tab => tab.id === excludeTabId)) {
-                return;
-            }
-        }
-
-        console.info('saving tabs in window id:', windowId, JSON.parse(JSON.stringify(tabs)));
+        console.info('saving tabs ', {windowId, calledFunc}, JSON.parse(JSON.stringify(tabs)));
 
         // let syncTabIds = _groups
         //     .filter(gr => gr.id !== group.id)
@@ -404,10 +411,12 @@ browser.tabs.query({
         // }
 
         group.tabs = tabs
-            .filter(tab => tab.id !== excludeTabId)
+            .filter(tab => excludeTabId ? excludeTabId !== tab.id : true)
             .map(mapTab);
 
         saveGroupsToStorage();
+
+        delete savingTabsInWindow[windowId];
     }
 
     async function addTab(groupId, cookieStoreId) {
@@ -479,6 +488,8 @@ browser.tabs.query({
             throw Error('group index not found ' + groupIndex);
         }
 
+        console.log('loadGroup', {groupId: group.id, windowId, activeTabIndex});
+
         try {
             if (group.windowId) {
                 if (-1 === activeTabIndex) {
@@ -506,6 +517,10 @@ browser.tabs.query({
                 if (tmpWin.incognito) {
                     throw Error('does\'nt support private windows');
                 }
+
+                browser.browserAction.setIcon({
+                    path: '/icons/animate-spinner.svg',
+                });
 
                 removeEvents();
 
@@ -596,7 +611,7 @@ browser.tabs.query({
                     await browser.tabs.discard(oldTabIds);
                 }
 
-                await saveCurrentTabs(windowId);
+                await saveCurrentTabs(windowId, undefined, 'loadGroup');
 
                 updateMoveTabMenus(windowId);
 
@@ -697,7 +712,7 @@ browser.tabs.query({
     async function onCreatedTab(tab) {
         console.log('onCreatedTab', tab);
 
-        saveCurrentTabs(tab.windowId);
+        saveCurrentTabs(tab.windowId, undefined, 'onCreatedTab');
     }
 
     let currentlyMovingTabs = [], // tabIds // expample: open tab from bookmark and move it to other group: many calls method onUpdatedTab
@@ -725,7 +740,7 @@ browser.tabs.query({
 
         if ('hidden' in changeInfo) { // if other programm hide or show tabs
             if (changeInfo.hidden) {
-                saveCurrentTabs(windowId);
+                saveCurrentTabs(windowId, undefined, 'onUpdatedTab tab make hidden');
             } else {
                 let descTabIndex = -1,
                     descGroupIndex = _groups.findIndex(function(gr) {
@@ -737,9 +752,10 @@ browser.tabs.query({
                     });
 
                 if (-1 === descGroupIndex) {
-                    saveCurrentTabs(windowId);
+                    saveCurrentTabs(windowId, undefined, 'onUpdatedTab tab make visible');
                 } else {
-                    loadGroup(windowId, descGroupIndex, descTabIndex);
+                    // loadGroup(windowId, descGroupIndex, descTabIndex);
+                    setTimeout(() => loadGroup(windowId, descGroupIndex, descTabIndex), 10);
                 }
             }
 
@@ -747,7 +763,7 @@ browser.tabs.query({
         }
 
         if ('pinned' in changeInfo) {
-            saveCurrentTabs(windowId);
+            saveCurrentTabs(windowId, undefined, 'onUpdatedTab change pinned tab');
             return;
         }
 
@@ -768,7 +784,7 @@ browser.tabs.query({
                 }
             }
         } else if ('complete' === tab.status) {
-            await saveCurrentTabs(windowId);
+            await saveCurrentTabs(windowId, undefined, 'onUpdatedTab complete load tab');
 
             if (!group.tabs[savedTabIndex].thumbnail) {
                 updateTabThumbnail(windowId, tabId);
@@ -783,20 +799,67 @@ browser.tabs.query({
 
         console.log('onRemovedTab', arguments);
 
-        saveCurrentTabs(windowId, tabId);
+        saveCurrentTabs(windowId, tabId, 'onRemovedTab');
     }
 
     async function onMovedTab(tabId, { windowId, fromIndex, toIndex }) {
         console.log('onMovedTab', arguments);
-        saveCurrentTabs(windowId);
+        saveCurrentTabs(windowId, undefined, 'onMovedTab');
     }
 
     async function onAttachedTab(tabId, { newWindowId }) {
-        saveCurrentTabs(newWindowId);
+        console.log('onAttachedTab', tabId, { newWindowId });
+        saveCurrentTabs(newWindowId, undefined, 'onAttachedTab');
+
+        // let tab = await browser.tabs.get(tabId),
+        //     tabs = await getTabs(newWindowId),
+        //     group = _groups.find(gr => gr.windowId === newWindowId),
+        //     tabIndex = tabs.findIndex(({ id }) => id === tabId),
+        //     newTabId = tabId;
+
+        // if (!group || isTabPinned(tab) || !isTabNotIncognito(tab)) {
+        //     return;
+        // }
+
+        // if (-1 === tabIndex) { // if tab not allowed
+        //     // FF BUG: attached tab has new tab id :( https://bugzilla.mozilla.org/show_bug.cgi?id=1426872 https://bugzilla.mozilla.org/show_bug.cgi?id=1398272
+        //     newTabId = Math.max.apply(Math, tabs.map(tab => tab.id));
+        //     tabIndex = tabs.findIndex(({ id }) => id === newTabId);
+
+        //     if (tab.url !== tabs[tabIndex].url) { // if tab really not allowed, FF BUG
+        //         return;
+        //     }
+        // }
+
+        // if (group.tabs.some(t => t.id === newTabId)) { // if tab are added in another func (FF WTF??? call update tab event before attached?)
+        //     group.tabs[tabIndex] = mapTab(tab);
+        // } else {
+        //     group.tabs.splice(tabIndex, 0, mapTab(tab));
+        // }
+
+        // group.tabs[tabIndex].id = tabId; // TMP FF bug 1426872
+
+        // saveGroupsToStorage();
     }
 
     async function onDetachedTab(tabId, { oldWindowId }) {
-        saveCurrentTabs(oldWindowId);
+        console.log('onDetachedTab', tabId, { oldWindowId });
+        saveCurrentTabs(oldWindowId, tabId, 'onDetachedTab');
+
+        // let group = _groups.find(gr => gr.windowId === oldWindowId);
+
+        // if (!group) {
+        //     return;
+        // }
+
+        // let tabIndex = group.tabs.findIndex(tab => tab.id === tabId);
+
+        // if (-1 === tabIndex) { // if tab is not allowed
+        //     return;
+        // }
+
+        // group.tabs.splice(tabIndex, 1);
+        // saveGroupsToStorage();
     }
 
     let lastFocusedWinId = null,
@@ -827,8 +890,8 @@ browser.tabs.query({
     }
 
     async function _realHideTab(tabId) {
-        let tempEmptyTab = null,
-            tab = await browser.tabs.get(tabId);
+        let tab = await browser.tabs.get(tabId),
+            tempEmptyTab = null;
 
         if (tab.hidden) {
             return;
@@ -843,6 +906,16 @@ browser.tabs.query({
         if (tempEmptyTab) {
             await browser.tabs.remove(tempEmptyTab.id);
         }
+    }
+
+    async function _safeMoveTab(tabs, index, windowId) {
+        // let pinnedTabs = await getPinnedTabs(windowId),
+        //     tabs = await getTabs(windowId, null);
+
+        // await browser.tabs.move(tab.id, {
+        //     index: index,
+        //     windowId: windowId,
+        // });
     }
 
     // if oldGroupId === null, move tab from current window without group
@@ -1181,8 +1254,7 @@ browser.tabs.query({
         browser.tabs.onUpdated.addListener(onUpdatedTab);
         browser.tabs.onRemoved.addListener(onRemovedTab);
 
-        browser.tabs.onAttached.addListener(onAttachedTab);
-        browser.tabs.onDetached.addListener(onDetachedTab);
+        addEventsAttach();
 
         browser.windows.onFocusChanged.addListener(onFocusChangedWindow);
         browser.windows.onRemoved.addListener(onRemovedWindow);
@@ -1195,11 +1267,20 @@ browser.tabs.query({
         browser.tabs.onUpdated.removeListener(onUpdatedTab);
         browser.tabs.onRemoved.removeListener(onRemovedTab);
 
-        browser.tabs.onAttached.removeListener(onAttachedTab);
-        browser.tabs.onDetached.removeListener(onDetachedTab);
+        removeEventsAttach();
 
         browser.windows.onFocusChanged.removeListener(onFocusChangedWindow);
         browser.windows.onRemoved.removeListener(onRemovedWindow);
+    }
+
+    function addEventsAttach() {
+        browser.tabs.onAttached.addListener(onAttachedTab);
+        browser.tabs.onDetached.addListener(onDetachedTab);
+    }
+
+    function removeEventsAttach() {
+        browser.tabs.onAttached.removeListener(onAttachedTab);
+        browser.tabs.onDetached.removeListener(onDetachedTab);
     }
 
     async function loadGroupPosition(textPosition) {

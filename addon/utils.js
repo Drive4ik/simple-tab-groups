@@ -83,7 +83,7 @@ let $ = document.querySelector.bind(document),
             return '';
         }
 
-        if (1 === args.length && 'object' === type(args[0])) {
+        if (1 === args.length && ['object', 'error'].includes(type(args[0]))) {
             args = args[0];
         }
 
@@ -153,7 +153,7 @@ let $ = document.querySelector.bind(document),
         }
 
         if ('error' === type(message)) {
-            message = message.toString() + format('\n{fileName} {lineNumber}:{columnNumber}\n{stack}');
+            message = message.toString() + format('\n{{fileName}} {{lineNumber}}:{{columnNumber}}\n{{stack}}', message);
         }
 
         // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/notifications/NotificationOptions
