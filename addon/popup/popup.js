@@ -45,6 +45,12 @@
         $on('click', 'body', async function() {
             let tabs = await BG.getTabs();
             console.log(tabs);
+
+            // let tab1 = prompt('tab 1');
+            // let tab2 = prompt('tab 2');
+            // browser.tabs.get(parseInt(tab1, 10)).then(console.log);
+            // browser.tabs.get(parseInt(tab2, 10)).then(console.log);
+            browser.windows.getCurrent({populate: true}).then(console.log);
             // await browser.tabs.create({
             //     active: false,
             //     index: 4,
@@ -138,8 +144,6 @@
                 }
             } else if ('add-group' === action) {
                 BG.addGroup();
-            } else if ('context-add-group-with-current-tabs' === action) {
-                BG.addGroup(undefined, undefined, undefined, true);
             } else if ('show-groups-list' === action) {
                 renderGroupsList();
             } else if ('open-options-page' === action) {

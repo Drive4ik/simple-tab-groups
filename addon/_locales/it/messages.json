@@ -243,10 +243,6 @@
         "message": "Crea un nuovo gruppo",
         "description": "Create new group"
     },
-    "createNewGroupWithCurrentTabs": {
-        "message": "... con le tab correnti",
-        "description": "Create new group with current tabs"
-    },
     "goBackButtonTitle": {
         "message": "Torna indietro",
         "description": "Go back"

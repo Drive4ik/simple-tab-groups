@@ -231,10 +231,6 @@
         "message": "Vytvořit novou skupinu",
         "description": "Create new group"
     },
-    "createNewGroupWithCurrentTabs": {
-        "message": "... se současnými panely",
-        "description": "Create new group with current tabs"
-    },
     "goBackButtonTitle": {
         "message": "Zpět",
         "description": "Go back"

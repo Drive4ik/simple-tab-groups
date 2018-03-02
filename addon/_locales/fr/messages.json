@@ -141,10 +141,6 @@
         "message": "Retour aux groupes",
         "description": "Go back to groups"
     },
-    "createNewGroupWithCurrentTabs": {
-        "message": "... avec les onglets courants",
-        "description": "Create new group with current tabs"
-    },
     "createNewGroup": {
         "message": "Créer un nouveau groupe",
         "description": "Create new group"

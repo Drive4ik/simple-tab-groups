@@ -299,11 +299,6 @@
         "description": "Create new group"
     },
 
-    "createNewGroupWithCurrentTabs": {
-        "message": "... with current tabs",
-        "description": "Create new group with current tabs"
-    },
-
     "goBackButtonTitle": {
         "message": "Go back",
         "description": "Go back"
@@ -483,6 +478,11 @@
     "discardTabsAfterHide": {
         "message": "Discard tabs after hide (this will save the RAM)",
         "description": "Discard tabs after hide (this will save the RAM)"
+    },
+
+    "createThumbnailsForTabs": {
+        "message": "Create thumbnails for tabs (used in the \"Manage groups\")",
+        "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
     }
 
 }

@@ -259,10 +259,6 @@
         "message": "Erzeuge neue Gruppe",
         "description": "Create new group"
     },
-    "createNewGroupWithCurrentTabs": {
-        "message": "Erzeuge neue Gruppe mit derzeitigen Tabs",
-        "description": "Create new group with current tabs"
-    },
     "settingsTitle": {
         "message": "Einstellungen",
         "description": "Settings"

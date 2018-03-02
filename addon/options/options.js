@@ -29,6 +29,8 @@
         checkEnabledCheckboxes();
 
         await storage.set(options);
+
+        BG.reloadOptions();
     });
 
     $on('click', '#saveErrorLogsIntoFile', function() {

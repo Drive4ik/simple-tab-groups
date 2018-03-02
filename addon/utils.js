@@ -44,6 +44,7 @@ const INNER_HTML = 'innerHTML',
         openManageGroupsInTab: true,
         showConfirmDialogBeforeGroupDelete: true,
         useTabsFavIconsFromGoogleS2Converter: false,
+        createThumbnailsForTabs: true,
 
         hotkeys: [
             {

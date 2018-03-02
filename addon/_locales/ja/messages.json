@@ -243,10 +243,6 @@
         "message": "新しいグループを作成する",
         "description": "Create new group"
     },
-    "createNewGroupWithCurrentTabs": {
-        "message": "現在表示されているタブを使って新しいグループを作成する",
-        "description": "Create new group with current tabs"
-    },
     "goBackButtonTitle": {
         "message": "戻る",
         "description": "Go back"

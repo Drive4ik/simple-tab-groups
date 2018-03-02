@@ -243,10 +243,6 @@
         "message": "Создать новую группу",
         "description": "Create new group"
     },
-    "createNewGroupWithCurrentTabs": {
-        "message": "... с текущими вкладками",
-        "description": "Create new group with current tabs"
-    },
     "goBackButtonTitle": {
         "message": "Назад",
         "description": "Go back"
@@ -384,5 +380,9 @@
     "useTabsFavIconsFromGoogleS2Converter": {
         "message": "Использовать Google S2 Converter для значков вкладок",
         "description": "Use tabs fav-icons from Google S2 Converter"
+    },
+    "createThumbnailsForTabs": {
+        "message": "Создавать эскизы вкладок (используется в \"Управление группами\")",
+        "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
     }
 }
