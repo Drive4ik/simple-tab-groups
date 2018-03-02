@@ -1,7 +1,6 @@
 'use strict';
 
 const INNER_HTML = 'innerHTML',
-    MAIN_WINDOW_ID = 3,
     MANIFEST = browser.runtime.getManifest(),
     DEFAULT_COOKIE_STORE_ID = 'firefox-default',
     PRIVATE_COOKIE_STORE_ID = 'firefox-private',
@@ -154,7 +153,9 @@ let $ = document.querySelector.bind(document),
         }
 
         if ('error' === type(message)) {
+            message.stack = message.stack.split('@').join('\n');
             message = message.toString() + format('\n{{fileName}} {{lineNumber}}:{{columnNumber}}\n{{stack}}', message);
+            timer = 60000;
         }
 
         // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/notifications/NotificationOptions
@@ -201,7 +202,7 @@ let $ = document.querySelector.bind(document),
         document.querySelector('html').setAttribute('lang', browser.i18n.getUILanguage().substring(0, 2));
     },
     isAllowSender = function(sender) {
-        if (sender.tab && sender.tab.incognito) {
+        if (sender.tab && isTabIncognito(sender.tab)) {
             return false;
         }
 
@@ -267,8 +268,11 @@ let $ = document.querySelector.bind(document),
     isTabAllowToCreate = function(tab) {
         return /^((https?|ftp|moz-extension):|about:(blank|home))/.test(tab.url);
     },
+    isTabIncognito = function(tab) {
+        return tab.incognito;
+    },
     isTabNotIncognito = function(tab) {
-        return !tab.incognito;
+        return !isTabIncognito(tab);
     },
     isTabPinned = function(tab) {
         return tab.pinned;

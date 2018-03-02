@@ -233,7 +233,8 @@
     function prepareTabToView(group, tab, tabIndex, showTab) {
         let container = {},
             urlTitle = '',
-            classList = [];
+            classList = [],
+            thumbnail = BG.getTabThumbnail(tab);
 
         if (tab.cookieStoreId && tab.cookieStoreId !== DEFAULT_COOKIE_STORE_ID) {
             container = containers.find(container => container.cookieStoreId === tab.cookieStoreId) || container;
@@ -255,7 +256,7 @@
             }
         }
 
-        if (tab.thumbnail) {
+        if (thumbnail) {
             classList.push('has-thumbnail');
         }
 
@@ -279,7 +280,7 @@
             containerColorCodeFillStyle: container.cookieStoreId ? `fill: ${container.colorCode};` : '',
             containerColorCodeBorderStyle: container.cookieStoreId ? `border-color: ${container.colorCode};` : '',
 
-            thumbnail: tab.thumbnail || '',
+            thumbnail: thumbnail || '',
         };
     }
 
