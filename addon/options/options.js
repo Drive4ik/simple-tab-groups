@@ -188,6 +188,11 @@
 
     function checkEnabledCheckboxes() {
         $('#openGroupAfterChange').disabled = $('#closePopupAfterChangeGroup').checked;
+
+        $('#includeTabThumbnailsIntoBackup').disabled = !$('#createThumbnailsForTabs').checked;
+        if ($('#includeTabThumbnailsIntoBackup').disabled) {
+            $('#includeTabThumbnailsIntoBackup').checked = false;
+        }
     }
 
     function saveHotkeys() {
