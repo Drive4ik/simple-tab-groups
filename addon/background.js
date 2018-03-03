@@ -152,9 +152,10 @@
     }
 
     function getTabFavIconUrl(tab, useTabsFavIconsFromGoogleS2Converter) {
-        let safedFavIconUrl = '';
+        let safedFavIconUrl = '',
+            localUrls = ['moz-extension', 'about', 'data', 'view-source', 'javascript', 'chrome', 'file'];
 
-        if (tab.url.startsWith('moz-extension') || tab.url.startsWith('about')) {
+        if (localUrls.some(url => tab.url.startsWith(url))) {
             safedFavIconUrl = tab.favIconUrl;
         } else {
             safedFavIconUrl = useTabsFavIconsFromGoogleS2Converter ? ('http://www.google.com/s2/favicons?domain_url=' + encodeURIComponent(tab.url)) : tab.favIconUrl;
@@ -862,48 +863,12 @@
         lastFocusedWinId = windowId;
     }
 
-    async function _safeHideTabAndMoveToGroupWindow(tabId, groupTabs) {
-        let tab = await browser.tabs.get(tabId),
-            tempEmptyTab = null;
-
-        if (!isTabHidden(tab)) {
-            if (tab.active) {
-                tempEmptyTab = await createTempActiveTab(tab.windowId, false);
-            }
-
-            await browser.tabs.hide(tabId);
-        }
-
-        let tabInGroup = groupTabs.filter(keyId)[0];
-
-        if (tabInGroup) {
-            let tabInGroup = await browser.tabs.get(tabInGroup.id);
-
-            if (tab.windowId !== tabInGroup.windowId) {
-                await browser.tabs.move(tabId, {
-                    index: -1,
-                    windowId: tabInGroup.windowId,
-                });
-            }
-        }
-
-        if (tempEmptyTab) {
-            let winTabs = await browser.tabs.query({
-                windowId: tab.windowId,
-            });
-
-            if (winTabs.length > 1) {
-                await browser.tabs.remove(tempEmptyTab.id);
-            }
-        }
-    }
-
     // if oldGroupId === null, move tab from current window without group
     async function moveTabToGroup(oldTabIndex, newTabIndex = -1, oldGroupId = null, newGroupId, showNotificationAfterMoveTab = true) {
         let oldGroup = null,
             newGroup = _groups.find(gr => gr.id === newGroupId),
             tab = null,
-            callSaveGroups = false,
+            rawTab = null,
             pushToEnd = -1 === newTabIndex,
             newTabRealIndex = null;
 
@@ -921,7 +886,8 @@
             tab = oldGroup.tabs[oldTabIndex];
         } else {
             let tabs = await getTabs();
-            tab = mapTab(tabs[oldTabIndex]);
+            rawTab = fixTab(tabs[oldTabIndex]);
+            tab = mapTab(rawTab);
         }
 
 
@@ -933,68 +899,59 @@
             } else {
                 if (newTabIndex !== oldTabIndex) {
                     newGroup.tabs.splice(newTabIndex, 0, newGroup.tabs.splice(oldTabIndex, 1)[0]);
-                    callSaveGroups = true;
                 }
             }
         } else { // if it's different group
-
             if (tab.id) {
-                if (oldGroup) {
-                    if (oldGroup.windowId) {
-                        // tab is NOT HIDDEN
-                        if (newGroup.windowId) {
-                            await browser.tabs.move(tab.id, {
-                                index: newTabRealIndex,
-                                windowId: newGroup.windowId,
-                            });
-                        } else {
-                            await _safeHideTabAndMoveToGroupWindow(tab.id, newGroup.tabs);
-                            newGroup.tabs.splice(newTabIndex, 0, tab);
-                            callSaveGroups = true;
-                        }
-                    } else {
-                        // tab is HIDDEN
-                        if (newGroup.windowId) {
-                            oldGroup.tabs.splice(oldTabIndex, 1);
+                if (!rawTab) {
+                    rawTab = await browser.tabs.get(tab.id);
+                }
 
-                            await browser.tabs.move(tab.id, {
-                                index: newTabRealIndex,
-                                windowId: newGroup.windowId,
-                            });
-
-                            await browser.tabs.show(tab.id);
-                        } else {
-                            newGroup.tabs.splice(newTabIndex, 0, oldGroup.tabs.splice(oldTabIndex, 1)[0]);
-                            callSaveGroups = true;
-                        }
-                    }
-                } else {
-                    if (newGroup.windowId) {
-                        await browser.tabs.move(tab.id, {
-                            index: newTabRealIndex,
-                            windowId: newGroup.windowId,
-                        });
-                    } else {
-                        await _safeHideTabAndMoveToGroupWindow(tab.id, newGroup.tabs);
-                        newGroup.tabs.splice(newTabIndex, 0, tab);
-                        callSaveGroups = true;
-                    }
+                if (!newGroup.windowId && !isTabCanBeHidden(rawTab)) {
+                    notify(browser.i18n.getMessage('thisTabCanNotBeHidden'));
+                    return;
                 }
             } else {
                 if (!isTabAllowToCreate(tab)) {
-                    notify(browser.i18n.getMessage('thisTabIsNotSupported', 10000));
+                    notify(browser.i18n.getMessage('thisTabIsNotSupported'));
                     return;
                 }
+            }
 
-                if (oldGroup) {
-                    oldGroup.tabs.splice(oldTabIndex, 1);
-                    callSaveGroups = true;
+            if (oldGroup) {
+                oldGroup.tabs.splice(oldTabIndex, 1);
+            }
+
+            if (tab.id) {
+                newGroup.tabs.splice(newTabIndex, 0, tab);
+
+                if (newGroup.windowId) {
+                    await browser.tabs.move(tab.id, {
+                        index: newTabRealIndex,
+                        windowId: newGroup.windowId,
+                    });
+                } else {
+                    let tabInGroup = newGroup.tabs.filter(keyId)[0];
+
+                    if (tabInGroup) {
+                        let rawTabInGroup = await browser.tabs.get(tabInGroup.id);
+
+                        if (rawTab.windowId !== rawTabInGroup.windowId) {
+                            await browser.tabs.move(tab.id, {
+                                index: -1,
+                                windowId: rawTabInGroup.windowId,
+                            });
+                            rawTab = await browser.tabs.get(tab.id);
+                        }
+                    }
+
+                    if (!isTabHidden(rawTab)) {
+                        await browser.tabs.hide(tab.id);
+                    }
                 }
-
+            } else {
                 // add tab
                 if (newGroup.windowId) {
-                    callSaveGroups = false;
-
                     await browser.tabs.create({
                         active: false,
                         url: tab.url,
@@ -1004,16 +961,11 @@
                     });
                 } else {
                     newGroup.tabs.splice(newTabIndex, 0, tab);
-                    callSaveGroups = true;
                 }
             }
-
         }
 
-        if (callSaveGroups) {
-            saveGroupsToStorage();
-        }
-
+        saveGroupsToStorage();
 
         if (!showNotificationAfterMoveTab || !options.showNotificationAfterMoveTab) {
             return;
@@ -1067,12 +1019,12 @@
             contexts: ['tab'],
             onclick: function(info, tab) {
                 if (isTabIncognito(tab)) {
-                    notify(browser.i18n.getMessage('privateAndPinnedTabsAreNotSupported', 10000));
+                    notify(browser.i18n.getMessage('privateAndPinnedTabsAreNotSupported'));
                     return;
                 }
 
                 if (!isUrlAllow(tab.url)) {
-                    notify(browser.i18n.getMessage('thisTabIsNotSupported', 10000));
+                    notify(browser.i18n.getMessage('thisTabIsNotSupported'));
                     return;
                 }
 
@@ -1112,7 +1064,7 @@
                 contexts: ['tab'],
                 onclick: async function(destGroupId, info, tab) {
                     if (isTabIncognito(tab) || isTabPinned(tab)) {
-                        notify(browser.i18n.getMessage('privateAndPinnedTabsAreNotSupported', 10000));
+                        notify(browser.i18n.getMessage('privateAndPinnedTabsAreNotSupported'));
                         return;
                     }
 
@@ -1120,7 +1072,7 @@
                         tabIndex = tabs.findIndex(({ id }) => id === tab.id);
 
                     if (-1 === tabIndex) {
-                        notify(browser.i18n.getMessage('thisTabIsNotSupported', 10000));
+                        notify(browser.i18n.getMessage('thisTabIsNotSupported'));
                         return;
                     }
 
@@ -1150,7 +1102,7 @@
             },
             onclick: async function(info, tab) {
                 if (isTabIncognito(tab) || isTabPinned(tab)) {
-                    notify(browser.i18n.getMessage('privateAndPinnedTabsAreNotSupported', 10000));
+                    notify(browser.i18n.getMessage('privateAndPinnedTabsAreNotSupported'));
                     return;
                 }
 
@@ -1158,7 +1110,7 @@
                     tabIndex = tabs.findIndex(({ id }) => id === tab.id);
 
                 if (-1 === tabIndex) {
-                    notify(browser.i18n.getMessage('thisTabIsNotSupported', 10000));
+                    notify(browser.i18n.getMessage('thisTabIsNotSupported'));
                     return;
                 }
 

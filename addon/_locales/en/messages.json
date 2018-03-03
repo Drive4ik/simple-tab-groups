@@ -483,6 +483,11 @@
     "createThumbnailsForTabs": {
         "message": "Create thumbnails for tabs (used in the \"Manage groups\")",
         "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
+    },
+
+    "thisTabIsNotSupported": {
+        "message": "This tab can not be hidden because it uses a microphone or camera",
+        "description": "This tab can not be hidden because it uses a microphone or camera"
     }
 
 }

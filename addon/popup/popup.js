@@ -46,22 +46,7 @@
             let tabs = await BG.getTabs();
             console.log(tabs);
 
-            // let tab1 = prompt('tab 1');
-            // let tab2 = prompt('tab 2');
-            // browser.tabs.get(parseInt(tab1, 10)).then(console.log);
-            // browser.tabs.get(parseInt(tab2, 10)).then(console.log);
             browser.windows.getCurrent({populate: true}).then(console.log);
-            // await browser.tabs.create({
-            //     active: false,
-            //     index: 4,
-            // });
-            // await browser.tabs.create({
-            //     active: false,
-            //     index: 6,
-            // });
-            // browser.tabs.move([7,6,5], {
-            //     index: 5,
-            // });
         });
 
         $on('click', '[data-action]', (event, data) => doAction(data.action, data, event));

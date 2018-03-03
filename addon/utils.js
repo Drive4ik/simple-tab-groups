@@ -244,6 +244,7 @@ let $ = document.querySelector.bind(document),
 
         return true;
     },
+    sleep = (sec) => new Promise(resolve => setTimeout(resolve, sec * 1000)),
     keyId = obj => obj.id,
     isUrlEmpty = function(url) {
         return ['about:blank', 'about:newtab', 'about:home'].includes(url);
@@ -286,8 +287,8 @@ let $ = document.querySelector.bind(document),
     isTabVisible = function(tab) {
         return !isTabHidden(tab);
     },
-    isTabCanBeHidden = function(tab) {
-        return !isTabPinned(tab) && !tab.sharingState.camera && !tab.sharingState.microphone;
+    isTabCanBeHidden = function(rawTab) {
+        return !isTabPinned(rawTab) && !rawTab.sharingState.camera && !rawTab.sharingState.microphone;
     },
     getNextIndex = function(currentIndex, count, textPosition = 'next') {
         if (!count) {
