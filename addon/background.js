@@ -1635,7 +1635,6 @@
 
             await reloadOptions();
 
-            // NEW CODE
             windows = windows
                 .filter(isWindowAllow)
                 .map(function(win) {
@@ -1655,10 +1654,241 @@
                 });
             }
 
+            function isTabsAreMatched(groupTabs, winTabs, syncedTabsIds) {
+                return groupTabs.every(function(tab, tabIndex) {
+                    let findTab = winTabs.find(function(winTab) {
+                        if (!syncedTabsIds.includes(winTab.id)) {
+                            return winTab.url === tab.url;
+                        }
+                    })
+
+                    if (!findTab && winTabs[tabIndex].active) {
+                        findTab = true;
+                    }
+
+                    return findTab;
+                });
+            }
+
+            // let windowsObj = {};
+            // windows.forEach(win => windowsObj[win.id] = win);
+
+            let notSyncedGroups = [],
+                syncedTabsIds = [];
+
+            data.groups
+                .filter(group => group.windowId)
+                .forEach(function(group) {
+                    let groupWin = null,
+                        notSync = false;
+
+                    if (group.tabs.length) {
+                        groupWin = windows.find(function(win) {
+                            let winTabs = win.tabs.filter(isTabVisible);
+
+                            if (winTabs.length < group.tabs.length || winTabs.length > group.tabs.length + 1) {
+                                return false;
+                            }
+
+                            return isTabsAreMatched(group.tabs, winTabs, syncedTabsIds);
+                        });
+
+                        if (!groupWin) {
+                            notSync = true;
+                        }
+                    } else {
+                        groupWin = windows.find(win => win.id === group.windowId);
+
+                        if (!groupWin) {
+                            groupWin = windows.find(function(win) {
+                                let winTabs = win.tabs.filter(isTabVisible);
+                                return winTabs.length === 1 && isUrlEmpty(winTabs[0].url);
+                            });
+                        }
+                    }
+
+                    if (groupWin) {
+                        group.windowId = groupWin.id;
+                        group.tabs = groupWin.tabs
+                            .filter(isTabVisible)
+                            .map(mapTab);
+
+                        syncedTabsIds = syncedTabsIds.concat(group.tabs.filter(isTabVisible).map(keyId));
+                    } else {
+                        group.windowId = null;
+
+                        if (notSync) {
+                            notSyncedGroups.push(group.id);
+                        }
+                    }
+                });
+
+            if (data.groups.filter(group => group.windowId).length === 0 && notSyncedGroups.length) {
+                let hiddenTabsCount = windows.reduce(function(acc, win) {
+                    return acc + win.tabs.filter(isTabHidden).length;
+                }, 0);
+
+                if (hiddenTabsCount) {
+                    syncOtherGroups();
+                } else { // if no groups are synced because addon was disable (all tabs are visible)
+                    data.groups.forEach(function(group) {
+                        let tabsMatches = {}; // matches: win tabs
+
+                        windows.forEach(function(win) {
+                            let matches = group.tabs.filter(tab => win.tabs.some(t => !syncedTabsIds.includes(t.id) && t.url === tab.url)).length;
+
+                            if (!tabsMatches[matches]) {
+                                tabsMatches[matches] = win.tabs;
+                            }
+                        });
+
+                        let maxMatches = Math.max.apply(Math, Object.keys(tabsMatches).concat([0]));
+
+                        if (maxMatches) {
+                            group.tabs.forEach(function(tab) {
+                                let winTab = tabsMatches[maxMatches].find(t => !syncedTabsIds.includes(t.id) && t.url === tab.url);
+
+                                if (winTab) {
+                                    tab.id = winTab.id;
+                                    syncedTabsIds.push(tab.id);
+                                }
+                            });
+                        }
+                    });
+
+                    let syncedWindows = [],
+                        syncedGroups = [];
+
+                    windows.forEach(function(win) {
+                        if (syncedWindows.includes(win.id)) {
+                            return;
+                        }
+
+                        let tabsInWindow = win.tabs.map(keyId);
+
+                        let isWindowWasSynced = notSyncedGroups.some(function(groupId) {
+                            if (syncedGroups.includes(groupId)) {
+                                return;
+                            }
+
+                            let group = data.groups.find(gr => gr.id === groupId);
+
+                            if (!group.tabs.length) {
+                                return;
+                            }
+
+                            if (group.tabs.every(tab => win.tabs.some(winTab => winTab.id === tab.id))) {
+                                syncedWindows.push(win.id);
+                                syncedGroups.push(group.id);
+
+                                group.windowId = win.id;
+
+                                group.tabs[0].active = true;
+                                browser.tabs.update(group.tabs[0].id, {
+                                        active: true,
+                                    })
+                                    .then(function() {
+                                        let tabsToHide = win.tabs
+                                            .filter(winTab => !group.tabs.some(tab => tab.id === winTab.id))
+                                            .map(keyId);
+
+                                        if (tabsToHide.length) {
+                                            browser.tabs.hide(tabsToHide);
+                                        }
+                                    });
+
+                                notSyncedGroups.splice(notSyncedGroups.indexOf(groupId), 1);
+
+                                return true;
+                            }
+                        });
+
+                        if (!isWindowWasSynced) {
+                            groups.forEach(function(group) {
+                                if (syncedGroups.includes(group.id) || !group.tabs.length) {
+                                    return;
+                                }
+
+                                if (group.tabs.every(tab => win.tabs.some(winTab => winTab.id === tab.id))) {
+                                    syncedWindows.push(win.id);
+                                    syncedGroups.push(group.id);
+
+                                    group.windowId = win.id;
+
+                                    group.tabs[0].active = true;
+                                    browser.tabs.update(group.tabs[0].id, {
+                                            active: true,
+                                        })
+                                        .then(function() {
+                                            let tabsToHide = win.tabs
+                                                .filter(winTab => !group.tabs.some(tab => tab.id === winTab.id))
+                                                .map(keyId);
+
+                                            if (tabsToHide.length) {
+                                                browser.tabs.hide(tabsToHide);
+                                            }
+                                        });
+                                }
+                            });
+                        }
+                    });
+                }
+            } else {
+                syncOtherGroups();
+            }
+
+
+            function syncOtherGroups() {
+                windows = windows.map(function(win) {
+                    win.tabs = win.tabs.filter(isTabHidden); // leave only hidden tabs
+                    return win;
+                });
+
+                let syncedTabsIds = [];
+
+                data.groups
+                    .filter(group => !group.windowId)
+                    .forEach(function(group) {
+                        if (!group.tabs.length) {
+                            return;
+                        }
+
+                        let groupWin = windows.find(function(win) {
+                            return group.tabs.every(tab => win.tabs.some(t => !syncedTabsIds.includes(t.id) && t.url === tab.url));
+                        });
+
+                        if (groupWin) {
+                            group.tabs.forEach(function(tab) {
+                                let winTab = groupWin.tabs.find(t => !syncedTabsIds.includes(t.id) && t.url === tab.url);
+
+                                tab.id = winTab.id;
+                                syncedTabsIds.push(tab.id);
+                            });
+                        }
+                    });
+            }
+
+
+
+
+
+
+
+
+
+
+
+        /*
+            // OLD CODE
+
             // step 1: sync groups with window id
             data.groups
                 .filter(group => group.windowId)
                 .forEach(function(group) {
+                    if (syncAllTabsInGroup.includes(group.id)) {
+                        return;
+                    }
+
                     let groupWin = windows.find(win => win.id === group.windowId);
 
                     if (!groupWin && group.tabs.length) {
@@ -1684,17 +1914,21 @@
                     }
 
                     if (groupWin) {
+                        syncAllTabsInGroup.push(group.id);
+
                         group.windowId = groupWin.id;
                         group.tabs = groupWin.tabs
                             .filter(isTabVisible)
                             .map(mapTab);
+
+                        syncedTabsIds = syncedTabsIds.concat(group.tabs.map(keyId));
                     } else {
                         group.windowId = null;
                     }
                 });
 
-            let syncedTabsIds = [],
-                syncAllTabsInGroup = [];
+            let syncAllTabsInGroup = [],
+                syncedTabsIds = [];
 
             windows.forEach(function(win) {
                 let winTabsHidden = win.tabs.filter(isTabHidden);
@@ -1724,7 +1958,7 @@
                         }
                     });
             });
-
+            /**/
             // TODO if no one group are synced
 
             _groups = data.groups;
