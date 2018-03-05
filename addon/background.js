@@ -449,7 +449,7 @@
 
     async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
         if (!windowId) { // if click on notification after moving tab to window which is now closed :)
-            throw Error('loadGroup: wrong windowId');
+            throw Error('loadGroup: windowId not set');
         }
 
         let group = _groups[groupIndex];
@@ -462,24 +462,13 @@
 
         try {
             if (group.windowId) {
-                if (-1 === activeTabIndex) {
-                    setFocusOnWindow(group.windowId);
-                } else {
-                    let tabId = null;
-
-                    if (group.tabs[activeTabIndex].id) {
-                        tabId = group.tabs[activeTabIndex].id;
-                    } else {
-                        let tabs = await getTabs(group.windowId);
-                        tabId = tabs[activeTabIndex].id;
-                    }
-
-                    await browser.tabs.update(tabId, {
+                if (-1 !== activeTabIndex) {
+                    await browser.tabs.update(group.tabs[activeTabIndex].id, {
                         active: true,
                     });
-
-                    setFocusOnWindow(group.windowId);
                 }
+
+                setFocusOnWindow(group.windowId);
             } else {
                 // magic
 
@@ -513,17 +502,42 @@
                     });
                 }
 
-                let tempEmptyTab = await createTempActiveTab(windowId); // create empty tab (for quickly change group and not blinking)
+                let tempEmptyTab = null;
 
-                if (tempEmptyTab) {
-                    pinnedTabsLength++;
-                }
+                if (oldGroup) {
+                    tempEmptyTab = await createTempActiveTab(windowId); // create empty tab (for quickly change group and not blinking)
 
-                if (oldTabIds.length) {
-                    await browser.tabs.hide(oldTabIds);
+                    if (tempEmptyTab) {
+                        pinnedTabsLength++;
+                    }
 
-                    if (options.discardTabsAfterHide) {
-                        browser.tabs.discard(oldTabIds);
+                    if (oldTabIds.length) {
+                        await browser.tabs.hide(oldTabIds);
+
+                        if (options.discardTabsAfterHide) {
+                            browser.tabs.discard(oldTabIds);
+                        }
+                    }
+                } else {
+                    let winTabs = await getTabs(windowId);
+
+                    if (winTabs.length && group.tabs.length) {
+                        let syncedTabs = [];
+
+                        winTabs = winTabs.map(fixTab);
+
+                        group.tabs.forEach(function(tab) {
+                            let winTab = winTabs.find(function(t) {
+                                if (!syncedTabs.includes(t.id)) {
+                                    return t.url === tab.url;
+                                }
+                            });
+
+                            if (winTab) {
+                                tab.id = winTab.id;
+                                syncedTabs.push(winTab.id);
+                            }
+                        });
                     }
                 }
 
@@ -728,7 +742,6 @@
                     saveCurrentTabs(windowId, undefined, 'onUpdatedTab tab make visible');
                 } else {
                     loadGroup(windowId, descGroupIndex, descTabIndex);
-                    // setTimeout(() => loadGroup(windowId, descGroupIndex, descTabIndex), 10);
                 }
             }
 
@@ -978,7 +991,7 @@
             let groupIndex = _groups.findIndex(group => group.id === newGroupId);
 
             if (-1 !== groupIndex && _groups[groupIndex].tabs[newTabIndex]) {
-                // await setFocusOnWindow(lastFocusedNormalWindow.id);
+                await setFocusOnWindow(lastFocusedNormalWindow.id);
                 loadGroup(lastFocusedNormalWindow.id, groupIndex, newTabIndex);
             }
         }.bind(null, newGroup.id, newTabIndex));
@@ -1177,7 +1190,8 @@
         browser.tabs.onUpdated.addListener(onUpdatedTab);
         browser.tabs.onRemoved.addListener(onRemovedTab);
 
-        addEventsAttach();
+        browser.tabs.onAttached.addListener(onAttachedTab);
+        browser.tabs.onDetached.addListener(onDetachedTab);
 
         browser.windows.onFocusChanged.addListener(onFocusChangedWindow);
         browser.windows.onRemoved.addListener(onRemovedWindow);
@@ -1190,20 +1204,11 @@
         browser.tabs.onUpdated.removeListener(onUpdatedTab);
         browser.tabs.onRemoved.removeListener(onRemovedTab);
 
-        removeEventsAttach();
+        browser.tabs.onAttached.removeListener(onAttachedTab);
+        browser.tabs.onDetached.removeListener(onDetachedTab);
 
         browser.windows.onFocusChanged.removeListener(onFocusChangedWindow);
         browser.windows.onRemoved.removeListener(onRemovedWindow);
-    }
-
-    function addEventsAttach() {
-        browser.tabs.onAttached.addListener(onAttachedTab);
-        browser.tabs.onDetached.addListener(onDetachedTab);
-    }
-
-    function removeEventsAttach() {
-        browser.tabs.onAttached.removeListener(onAttachedTab);
-        browser.tabs.onDetached.removeListener(onDetachedTab);
     }
 
     async function loadGroupPosition(textPosition) {
@@ -1453,9 +1458,7 @@
         getTabs,
         moveTabToGroup,
 
-        createMoveTabMenus,
         updateMoveTabMenus,
-        removeMoveTabMenus,
 
         updateBrowserActionData,
         setFocusOnWindow,
@@ -1804,7 +1807,7 @@
                         });
 
                         if (!isWindowWasSynced) {
-                            groups.forEach(function(group) {
+                            data.groups.forEach(function(group) {
                                 if (syncedGroups.includes(group.id) || !group.tabs.length) {
                                     return;
                                 }
@@ -1973,14 +1976,14 @@
 
             addEvents();
 
+            window.background.inited = true;
+
             Object.keys(EXTENSIONS_WHITE_LIST)
                 .forEach(function(exId) {
                     browser.runtime.sendMessage(exId, {
                         IAmBack: true,
                     });
                 });
-
-            window.background.inited = true;
 
         })
         .catch(notify);

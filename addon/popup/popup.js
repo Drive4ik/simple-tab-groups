@@ -357,11 +357,11 @@
         }
 
         return {
-            urlTitle: options.showUrlTooltipOnTabHover ? safeHtml(unSafeHtml([String(tab.id), tab.title, tab.url].join('\n'))) : '', // TODO change
+            urlTitle: options.showUrlTooltipOnTabHover ? safeHtml(unSafeHtml(tab.title + '\n' + tab.url)) : '',
             classList: classList.join(' '),
             tabIndex: tabIndex,
             groupId: groupId,
-            title: safeHtml(unSafeHtml([String(tab.id), tab.title, tab.url].join('\n'))), // TODO change
+            title: safeHtml(unSafeHtml(tab.title)),
             url: tab.url,
             containerColorCode: containerColorCode,
             favIconUrl: BG.getTabFavIconUrl(tab, options.useTabsFavIconsFromGoogleS2Converter),
