@@ -385,8 +385,12 @@
         "message": "Создавать эскизы вкладок (используется в \"Управление группами\")",
         "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
     },
-    "thisTabIsNotSupported": {
+    "thisTabCanNotBeHidden": {
         "message": "Эта вкладка не может быть скрыта потому что в ней используется микрофон или камера",
         "description": "This tab can not be hidden because it uses a microphone or camera"
+    },
+    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
+        "message": "Невозможно изменить группу, потому что на одной из вкладок используется микрофон или камера",
+        "description": "It is not possible to change the group because one of the tabs share microphone or camera"
     }
 }

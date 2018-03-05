@@ -477,19 +477,26 @@
                     throw Error('does\'nt support private windows');
                 }
 
+                let oldTabIds = [],
+                    oldGroup = _groups.find(gr => gr.windowId === windowId);
+
+                if (oldGroup) {
+                    let tabs = await getTabs(windowId);
+
+                    if (tabs.some(isTabCanNotBeHidden)) {
+                        throw browser.i18n.getMessage('notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera');
+                    }
+
+                    // oldGroup.windowId = null;
+                    oldTabIds = oldGroup.tabs.map(keyId);
+                }
+
                 setLoadingToBrowserAction();
 
                 removeEvents();
 
-                let oldTabIds = [],
-                    pinnedTabs = await getPinnedTabs(windowId),
+                let pinnedTabs = await getPinnedTabs(windowId),
                     pinnedTabsLength = pinnedTabs.length;
-
-                let oldGroup = _groups.find(gr => gr.windowId === windowId);
-                if (oldGroup) {
-                    // oldGroup.windowId = null;
-                    oldTabIds = oldGroup.tabs.map(keyId);
-                }
 
                 // group.windowId = windowId;
                 group.tabs = group.tabs.filter(tab => tab.id || isTabAllowToCreate(tab)); // remove missed unsupported tabs

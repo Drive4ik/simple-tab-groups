@@ -290,6 +290,9 @@ let $ = document.querySelector.bind(document),
     isTabCanBeHidden = function(rawTab) {
         return !isTabPinned(rawTab) && !rawTab.sharingState.camera && !rawTab.sharingState.microphone;
     },
+    isTabCanNotBeHidden = function(rawTab) {
+        return !isTabCanBeHidden(rawTab);
+    },
     getNextIndex = function(currentIndex, count, textPosition = 'next') {
         if (!count) {
             return false;

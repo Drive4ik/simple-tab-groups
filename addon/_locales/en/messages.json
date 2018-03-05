@@ -485,9 +485,14 @@
         "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
     },
 
-    "thisTabIsNotSupported": {
+    "thisTabCanNotBeHidden": {
         "message": "This tab can not be hidden because it uses a microphone or camera",
         "description": "This tab can not be hidden because it uses a microphone or camera"
+    },
+
+    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
+        "message": "It is not possible to change the group because one of the tabs share microphone or camera",
+        "description": "It is not possible to change the group because one of the tabs share microphone or camera"
     }
 
 }
