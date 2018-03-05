@@ -755,13 +755,13 @@
             return;
         }
 
-        if (!group.tabs.some(t => t.id === tabId)) {
-            console.warn('saving tab by update was canceled: tab not found in group');
+        if ('pinned' in changeInfo) {
+            saveCurrentTabs(windowId, undefined, 'onUpdatedTab change pinned tab');
             return;
         }
 
-        if ('pinned' in changeInfo) {
-            saveCurrentTabs(windowId, undefined, 'onUpdatedTab change pinned tab');
+        if (!group.tabs.some(t => t.id === tabId)) {
+            console.warn('saving tab by update was canceled: tab not found in group');
             return;
         }
 
@@ -1626,7 +1626,6 @@
     Promise.all([
             storage.get(null),
             browser.windows.getAll({
-                populate: true,
                 windowTypes: ['normal'],
             })
         ])
@@ -1645,6 +1644,17 @@
 
             await reloadOptions();
 
+            // loading all tabs in all windows - FF bug on browser.windows.getAll with populate true and open window from shortcut on desktop
+            windows = await Promise.all(windows.map(async function(win) {
+                win.tabs = await browser.tabs.query({
+                    windowId: win.id,
+                });
+
+                return win;
+            }));
+
+            let weAreOnAboutAddonsPage = windows.some(win => win.focused && win.tabs.some(tab => tab.url.startsWith('about:addons') && tab.active));
+
             windows = windows
                 .filter(isWindowAllow)
                 .map(function(win) {
@@ -1652,7 +1662,11 @@
                     return win;
                 });
 
-            lastFocusedNormalWindow = windows.find(win => win.focused) || windows[0];
+            let hiddenTabsCount = windows.reduce(function(acc, win) {
+                return acc + win.tabs.filter(isTabHidden).length;
+            }, 0);
+
+            lastFocusedNormalWindow = windows.find(win => win.focused);
 
             if (options.createThumbnailsForTabs) {
                 data.groups.forEach(function(group) {
@@ -1663,25 +1677,6 @@
                     });
                 });
             }
-
-            function isTabsAreMatched(groupTabs, winTabs, syncedTabsIds) {
-                return groupTabs.every(function(tab, tabIndex) {
-                    let findTab = winTabs.find(function(winTab) {
-                        if (!syncedTabsIds.includes(winTab.id)) {
-                            return winTab.url === tab.url;
-                        }
-                    })
-
-                    if (!findTab && winTabs[tabIndex].active) {
-                        findTab = true;
-                    }
-
-                    return findTab;
-                });
-            }
-
-            // let windowsObj = {};
-            // windows.forEach(win => windowsObj[win.id] = win);
 
             let notSyncedGroups = [],
                 syncedTabsIds = [];
@@ -1696,11 +1691,37 @@
                         groupWin = windows.find(function(win) {
                             let winTabs = win.tabs.filter(isTabVisible);
 
-                            if (winTabs.length < group.tabs.length || winTabs.length > group.tabs.length + 1) {
+                            if (winTabs.length < group.tabs.length) {
                                 return false;
                             }
 
-                            return isTabsAreMatched(group.tabs, winTabs, syncedTabsIds);
+                            let allTabsMatched = group.tabs.every(function(tab, tabIndex) {
+                                let findTab = winTabs.find(function(winTab) {
+                                    if (!syncedTabsIds.includes(winTab.id)) {
+                                        return winTab.url === tab.url;
+                                    }
+                                });
+
+                                if (!findTab && winTabs[tabIndex].active) {
+                                    findTab = true;
+                                }
+
+                                return findTab;
+                            });
+
+                            if (winTabs.length === group.tabs.length) {
+                                return allTabsMatched;
+                            } else if (winTabs.length > group.tabs.length) {
+                                if (hiddenTabsCount) {
+                                    return allTabsMatched;
+                                } else {
+                                    if (allTabsMatched) {
+                                        return weAreOnAboutAddonsPage ? false : true; // if weAreOnAboutAddonsPage then user make disable/enable addon
+                                    } else {
+                                        return false;
+                                    }
+                                }
+                            }
                         });
 
                         if (!groupWin) {
@@ -1734,10 +1755,6 @@
                 });
 
             if (data.groups.filter(group => group.windowId).length === 0 && notSyncedGroups.length) {
-                let hiddenTabsCount = windows.reduce(function(acc, win) {
-                    return acc + win.tabs.filter(isTabHidden).length;
-                }, 0);
-
                 if (hiddenTabsCount) {
                     syncOtherGroups();
                 } else { // if no groups are synced because addon was disable (all tabs are visible)
