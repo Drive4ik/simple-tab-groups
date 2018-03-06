@@ -965,8 +965,18 @@
                         }
                     }
 
-                    if (!isTabHidden(rawTab)) {
+                    if (isTabVisible(rawTab)) {
+                        let tempEmptyTab = null;
+
+                        if (rawTab.active) {
+                            tempEmptyTab = await createTempActiveTab(rawTab.windowId);
+                        }
+
                         await browser.tabs.hide(tab.id);
+
+                        if (tempEmptyTab) {
+                            await browser.tabs.remove(tempEmptyTab.id);
+                        }
                     }
                 }
             } else {
