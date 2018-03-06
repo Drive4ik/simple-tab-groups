@@ -971,7 +971,23 @@
                         let tempEmptyTab = null;
 
                         if (rawTab.active) {
-                            tempEmptyTab = await createTempActiveTab(rawTab.windowId);
+                            let tabs = await getTabs(rawTab.windowId),
+                                activeIndex = tabs.findIndex(t => t.id === tab.id),
+                                tabIdToMakeActive = null;
+
+                            if (tabs[activeIndex + 1]) {
+                                tabIdToMakeActive = tabs[activeIndex + 1].id;
+                            } else if (activeIndex - 1 >= 0) {
+                                tabIdToMakeActive = tabs[activeIndex - 1].id;
+                            } else {
+                                tempEmptyTab = await createTempActiveTab(rawTab.windowId);
+                            }
+
+                            if (tabIdToMakeActive) {
+                                await browser.tabs.update(tabIdToMakeActive, {
+                                    active: true,
+                                });
+                            }
                         }
 
                         await browser.tabs.hide(tab.id);
