@@ -533,18 +533,20 @@
 
                         winTabs = winTabs.map(fixTab);
 
-                        group.tabs.forEach(function(tab) {
-                            let winTab = winTabs.find(function(t) {
-                                if (!syncedTabs.includes(t.id)) {
-                                    return t.url === tab.url;
+                        group.tabs
+                            .filter(tab => !tab.id)
+                            .forEach(function(tab) {
+                                let winTab = winTabs.find(function(t) {
+                                    if (!syncedTabs.includes(t.id)) {
+                                        return t.url === tab.url;
+                                    }
+                                });
+
+                                if (winTab) {
+                                    tab.id = winTab.id;
+                                    syncedTabs.push(winTab.id);
                                 }
                             });
-
-                            if (winTab) {
-                                tab.id = winTab.id;
-                                syncedTabs.push(winTab.id);
-                            }
-                        });
                     }
                 }
 
