@@ -1915,6 +1915,7 @@
                                 return win.tabs.some(function(t) {
                                     if (!tempSyncedTabIds.includes(t.id) && !syncedTabsIds.includes(t.id) && t.url === tab.url) {
                                         tempSyncedTabIds.push(t.id);
+                                        return true;
                                     }
                                 });
                             });
