@@ -1797,7 +1797,7 @@
                             }
                         });
 
-                        let maxMatches = Math.max.apply(Math, Object.keys(tabsMatches).concat([0]));
+                        let maxMatches = Math.max.apply(Math, Object.keys(tabsMatches));
 
                         if (maxMatches) {
                             group.tabs.forEach(function(tab) {
@@ -1909,7 +1909,15 @@
                         }
 
                         let groupWin = windows.find(function(win) {
-                            return group.tabs.every(tab => win.tabs.some(t => !syncedTabsIds.includes(t.id) && t.url === tab.url));
+                            let tempSyncedTabIds = [];
+
+                            return group.tabs.every(function(tab) {
+                                return win.tabs.some(function(t) {
+                                    if (!tempSyncedTabIds.includes(t.id) && !syncedTabsIds.includes(t.id) && t.url === tab.url) {
+                                        tempSyncedTabIds.push(t.id);
+                                    }
+                                });
+                            });
                         });
 
                         if (groupWin) {
