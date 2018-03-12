@@ -1679,7 +1679,6 @@
     Promise.all([
             storage.get(null),
             browser.windows.getAll({
-                populate: true,
                 windowTypes: ['normal'],
             })
         ])
@@ -1696,6 +1695,15 @@
                 await storage.set(data);
             }
 
+
+            // loading all tabs in all windows - FF bug on browser.windows.getAll with populate true and open window from shortcut on desktop
+            windows = await Promise.all(windows.map(async function(win) {
+                win.tabs = await browser.tabs.query({
+                    windowId: win.id,
+                });
+
+                return win;
+            }));
 
             getWindow().then(function(win) {
                 lastFocusedNormalWindow = win;
