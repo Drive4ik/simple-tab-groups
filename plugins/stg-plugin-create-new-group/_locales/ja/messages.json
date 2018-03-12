@@ -1,0 +1,18 @@
+{
+    "extensionDescription": {
+        "message": "タブのグループを作成/編集し、作成したグループ毎に切替えて表示することができます。\n\nこのアドオンは旧アドオンの”Tab Groups”にインスパイアされています。",
+        "description": "Extension description"
+    },
+    "needInstallSTGExtension": {
+        "message": "Simple Tab Groups extention をインストールする必要があります。\n\nここをクリックしてSimple Tab Groupsのホームページを開いてください。",
+        "description": "Need install Simple Tab Groups extention\n\nClick here to open home page Simple Tab Groups"
+    },
+    "createNewGroupTitle": {
+        "message": "新しいグループを作成する - [STG plugin]",
+        "description": "Create new group - [STG plugin]"
+    },
+    "enterBrowserActionIconColor": {
+        "message": "browser action icon の色を指定",
+        "description": "Enter browser action icon color"
+    }
+}
