@@ -10,7 +10,7 @@
 
     "name": "__MSG_extensionName__",
     "description": "__MSG_extensionDescription__",
-    "version": "1.1",
+    "version": "1.1.1",
     "author": "Drive4ik",
     "homepage_url": "https://github.com/drive4ik/simple-tab-groups",
 
@@ -31,12 +31,12 @@
         "storage"
     ],
 
-    "options_ui": {
-        "page": "options/options.html"
-    },
-
     "background": {
         "scripts": ["background.js"]
+    },
+
+    "options_ui": {
+        "page": "options/options.html"
     },
 
     "default_locale": "en"
