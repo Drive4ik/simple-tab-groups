@@ -400,6 +400,7 @@
             });
         }
 
+        console.log("removeCurrentTabByIndex: "+tabId);
         await browser.tabs.remove(tabId);
     }
 
@@ -495,19 +496,48 @@
 
                 if (oldTabIds.length || !isHasAnotherTabs) { // create empty tab (for quickly change group and not blinking)
                     tempEmptyTabPromise = browser.tabs.create({
-                            url: 'about:blank',
-                            active: true,
-                            windowId: windowId,
-                        })
+                        url: 'about:blank',
+                        active: true,
+                        windowId: windowId,
+                    })
                         .then(tab => tempEmptyTabId = tab.id);
                 }
 
-                if (!group.tabs.length && !isHasAnotherTabs) {
-                    group.tabs.push({
+                if (!group.tabs.length) {// if the destination tab group has no tab
+                    let original_active_tab = oldGroup.tabs.filter(t => ( t.active ));
+                    //console.log(_groups);
+                    //console.log("DEBUG: tabid "+original_active_tab.id+" is active before switch");
+                    // create a new tab in the new tab group, and set it active
+                    await browser.tabs.create({
+                        url: 'about:home',
                         active: true,
-                        url: 'about:blank',
-                        cookieStoreId: DEFAULT_COOKIE_STORE_ID,
-                    });
+                        windowId: windowId,
+                    })
+                        .then(tab => {
+                            group.tabs.push({
+                                active: true,
+                                url: 'about:home',
+                                cookieStoreId: DEFAULT_COOKIE_STORE_ID,
+                                id: tab.id,
+                            });
+                            console.info("Destination tab group \""+group.title+"\" currently has no tab, so I created a new tab ID: "+tab.id);
+                        });
+                    console.log(original_active_tab);
+                } else {
+                    // Workaround: when leaving each group, exactly one tab in the group should stay active, but if it somehow isn't, switch to the first tab in the group
+                    if ( group.tabs.filter(tab => tab.active === true).length === 0 ) {
+                        await browser.tabs.update(
+                            group.tabs[0].id,
+                            {active: true}
+                        );
+                    } else {
+                        let dest_tab = group.tabs.filter(tab => tab.active === true)[0];
+                        await browser.tabs.update(
+                            dest_tab.id,
+                            {active: true}
+                        );
+                        console.log("Switching to "+dest_tab.title);
+                    }
                 }
 
                 await tempEmptyTabPromise;
@@ -517,7 +547,7 @@
                 });
 
                 if (oldTabIds.length) {
-                    await browser.tabs.remove(oldTabIds);
+                    await browser.tabs.hide(oldTabIds);
                 }
 
                 browser.runtime.sendMessage({
@@ -537,14 +567,25 @@
                                 url = createStgTabNewUrl(tab, options.enableFavIconsForNotLoadedTabs);
                             }
 
+                        return browser.tabs.show(tab.id);
+                        /*
                             return browser.tabs.create({
                                 active: tab.active,
                                 url: url,
                                 windowId: windowId,
                                 cookieStoreId: normalizeCookieStoreId(tab.cookieStoreId, containers),
                             });
-                        }))
-                        .then(newTabs => newTabs.forEach((tab, tabIndex) => group.tabs[tabIndex].id = tab.id)); // update tabs id
+                            */
+                    }));
+                    /* tabs.show will be fulfilled with no arguments, and tab.id won't change. keep the code in place for TODO optional original behavior
+                        .then(newTabs => {
+                            console.log(newTabs);
+                            newTabs.forEach((tab, tabIndex) => {
+                                console.log(tab);
+                                group.tabs[tabIndex].id = tab.id;
+                            });
+                        }); // update tabs id
+                        */
                 }
 
                 // if (browser.tabs.discard && tabs) { // TODO - add discard tabs (bugs found)
@@ -576,6 +617,7 @@
         } catch (e) {
             delete currentlyLoadingGroups[windowId];
             notify(e);
+            console.log(e);
             throw Error(String(e));
         }
     }
@@ -639,7 +681,7 @@
     }
 
     async function onActivatedTab({ tabId, windowId }) {
-        // console.log('onActivatedTab', { tabId, windowId });
+        console.log('onActivatedTab', { tabId, windowId });
 
         let group = _groups.find(gr => gr.windowId === windowId);
 
@@ -661,7 +703,7 @@
     }
 
     async function onCreatedTab(tab) {
-        // console.log('onCreatedTab', tab);
+        console.log('onCreatedTab', tab);
 
         if (currentlyAddingTabs.includes(tab.id) || tab.incognito) {
             return;
@@ -794,7 +836,7 @@
     }
 
     async function onRemovedTab(tabId, { isWindowClosing, windowId }) {
-        // console.log('onRemovedTab', arguments);
+        console.log('onRemovedTab', arguments);
 
         if (isWindowClosing) {
             return;
