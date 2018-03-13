@@ -80,6 +80,7 @@
                 });
 
                 await browser.tabs.show(data.tabId);
+                renderGroupsList(); // need for refresh view when show in window without group
             } else if ('move-hidden-tabs-to-current-group' === action) {
                 let hiddenTabsIds = unSyncTabs.map(keyId);
 
@@ -109,6 +110,8 @@
                 }
             } else if ('create-new-group-with-hidden-tabs' === action) {
                 BG.addGroup(undefined, undefined, undefined, unSyncTabs);
+            } else if ('close-all-unsync-hidden-tabs' === action) {
+                browser.tabs.remove(unSyncTabs.map(keyId));
             } else if ('show-group' === action) {
                 renderTabsList(data.groupId);
             } else if ('remove-tab' === action) {

@@ -49,33 +49,48 @@
             let data = await importFromFile();
 
             if ('object' !== type(data) || !Array.isArray(data.groups)) {
-                throw Error('This is wrong backup!');
+                throw 'Error: this is wrong backup!';
             }
 
-            let resultMigration = {};
-            data = await BG.runMigrateForData(data, resultMigration);
+            data = await BG.runMigrateForData(data);
 
-            if (resultMigration.errorMessage) {
-                throw Error(resultMigration.errorMessage);
-            }
+            let syncedWindowIds = BG.getGroups().filter(group => group.windowId).map(group => group.windowId),
+                windows = await browser.windows.getAll({
+                    windowTypes: ['normal'],
+                });
 
-            let groupIndex = data.groups.findIndex(group => group.windowId !== null);
+            windows = windows
+                .filter(function(win) {
+                    if (!isWindowAllow(win) || !syncedWindowIds.includes(win.id)) {
+                        return false;
+                    }
 
-            if (-1 !== groupIndex) {
-                data.groups[groupIndex].windowId = null;
-            }
+                    return true;
+                });
+
+            windows = await Promise.all(windows.map(async function(win) {
+                win.tabs = await browser.tabs.query({
+                    pinned: false,
+                    hidden: false,
+                    windowId: win.id,
+                });
+
+                return win;
+            }));
+
+            await Promise.all(windows.map(async function(win) {
+                if (win.tabs.length) {
+                    await browser.tabs.create({
+                        active: true,
+                        windowId: win.id,
+                    });
+                    await browser.tabs.hide(win.tabs.map(keyId));
+                }
+            }));
 
             await storage.set(data);
-            await BG.reloadGroups();
 
-            if (-1 !== groupIndex) {
-                let win = await BG.getWindow();
-                await BG.loadGroup(win.id, groupIndex);
-            }
-
-            loadOptions();
-
-            notify('Groups and settings are successfully imported!');
+            browser.runtime.reload();
         } catch (e) {
             if (e) {
                 notify(e);
@@ -84,10 +99,9 @@
     });
 
     $on('click', '#exportAddonSettings', async function() {
-        let data = await storage.get(null),
-            includeTabThumbnailsIntoBackup = $('#includeTabThumbnailsIntoBackup').checked;
+        let data = await storage.get(null);
 
-        if (!includeTabThumbnailsIntoBackup) {
+        if (!$('#includeTabThumbnailsIntoBackup').checked) {
             data.groups = data.groups.map(function(group) {
                 group.tabs = group.tabs.map(function(tab) {
                     delete tab.thumbnail;

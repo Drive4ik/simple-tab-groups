@@ -476,7 +476,7 @@
 
                 let tmpWin = await getWindow(windowId);
                 if (tmpWin.incognito) {
-                    throw Error('does\'nt support private windows');
+                    throw 'Error: Does\'nt support private windows';
                 }
 
                 let oldTabIds = [],
@@ -618,7 +618,7 @@
             }
         } catch (e) {
             notify(e);
-            throw Error(String(e));
+            throw String(e);
         }
     }
 
@@ -1511,7 +1511,7 @@
         runMigrateForData,
     };
 
-    async function runMigrateForData(data, result = {}) {
+    async function runMigrateForData(data) {
         // reset tab ids
         data.groups.forEach(group => group.tabs.forEach(tab => tab.id = null));
 
@@ -1522,8 +1522,7 @@
         let compareVersion = data.version.localeCompare(MANIFEST.version);
 
         if (1 === compareVersion) {
-            result.errorMessage = 'Please, update addon to latest version';
-            return false;
+            throw 'Please, update addon to latest version';
         }
 
         // start migration
@@ -1536,8 +1535,6 @@
             };
 
         if (0 > data.version.localeCompare('1.8.1')) {
-            result.dataChanged = true;
-
             data.groups = data.groups.map(function(group) {
                 group.windowId = data.windowsGroup[win.id] === group.id ? win.id : null;
 
@@ -1560,24 +1557,14 @@
 
         if (0 > data.version.localeCompare('2.2')) {
             if ('showGroupCircleInSearchedTab' in data) {
-                result.dataChanged = true;
                 data.showGroupIconWhenSearchATab = data.showGroupCircleInSearchedTab;
                 removeKeys('showGroupCircleInSearchedTab');
             }
         }
 
         if (0 > data.version.localeCompare('2.3')) {
-            result.dataChanged = true;
-
             data.groups = data.groups.map(function(group) { // final fix nulls ...
-                let tabsLengthBefore = group.tabs.length;
-
                 group.tabs = group.tabs.filter(Boolean);
-
-                if (group.tabs.length !== tabsLengthBefore) {
-                    result.dataChanged = true;
-                }
-
                 return group;
             });
 
@@ -1585,8 +1572,6 @@
         }
 
         if (0 > data.version.localeCompare('2.4')) {
-            result.dataChanged = true;
-
             data.groups = data.groups.map(function(group) {
                 if (!group.catchTabContainers) {
                     group.catchTabContainers = [];
@@ -1597,8 +1582,6 @@
         }
 
         if (0 > data.version.localeCompare('2.4.5')) {
-            result.dataChanged = true;
-
             data.groups = data.groups.map(function(group) {
                 if (!group.iconColor.trim()) {
                     group.iconColor = 'transparent';
@@ -1611,10 +1594,9 @@
         }
 
         if (0 > data.version.localeCompare('3.0')) {
-            result.dataChanged = true;
-            result.doRemoveSTGNewTabUrls = true;
-
-            removeKeys('enableFastGroupSwitching', 'enableFavIconsForNotLoadedTabs', 'createNewGroupAfterAttachTabToNewWindow', 'individualWindowForEachGroup', 'openNewWindowWhenCreateNewGroup', 'showNotificationIfGroupsNotSyncedAtStartup');
+            data.doRemoveSTGNewTabUrls = true;
+            removeKeys('enableFastGroupSwitching', 'enableFavIconsForNotLoadedTabs', 'createNewGroupAfterAttachTabToNewWindow');
+            removeKeys('individualWindowForEachGroup', 'openNewWindowWhenCreateNewGroup', 'showNotificationIfGroupsNotSyncedAtStartup');
         }
 
 
@@ -1683,19 +1665,9 @@
             })
         ])
         .then(async function([data, windows]) {
-            let resultMigration = {};
+            data = await runMigrateForData(data); // migration data
 
-            data = await runMigrateForData(data, resultMigration); // migration data
-
-            if (resultMigration.errorMessage) {
-                throw Error(resultMigration.errorMessage);
-            }
-
-            if (resultMigration.dataChanged) {
-                await storage.set(data);
-            }
-
-            await reloadOptions();
+            allOptionsKeys.forEach(key => options[key] = key in data ? data[key] : DEFAULT_OPTIONS[key]) // reload options
 
             // loading all tabs in all windows - FF bug on browser.windows.getAll with populate true and open window from shortcut on desktop
             windows = await Promise.all(windows.map(async function(win) {
@@ -1706,7 +1678,8 @@
                 return win;
             }));
 
-            if (resultMigration.doRemoveSTGNewTabUrls) {
+            if (data.doRemoveSTGNewTabUrls) {
+                delete data.doRemoveSTGNewTabUrls;
                 windows = removeSTGNewTabUrls(windows);
             }
 
@@ -1723,7 +1696,7 @@
                 return acc + win.tabs.filter(isTabHidden).length;
             }, 0);
 
-            lastFocusedNormalWindow = windows.find(win => win.focused);
+            lastFocusedNormalWindow = windows.find(win => win.focused) || windows[0];
             lastFocusedWinId = lastFocusedNormalWindow.id;
 
             if (options.createThumbnailsForTabs) {
@@ -1989,10 +1962,7 @@
 
             _groups = data.groups;
 
-            await storage.set({
-                lastCreatedGroupPosition: data.lastCreatedGroupPosition,
-                groups: _groups,
-            });
+            await storage.set(data);
 
             updateBrowserActionData();
             createMoveTabMenus();

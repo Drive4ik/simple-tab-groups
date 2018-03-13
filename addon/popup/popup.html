@@ -99,7 +99,7 @@
                 </div>
                 <div class="item-title">
                     <span class="bordered" style="{{containerColorCode}}">
-                        <img src="/icons/refresh.svg" class="size-16 {{refreshTabIconClass}}" title="This tab will create as new" />
+                        <img src="/icons/refresh.svg" class="size-16 {{refreshTabIconClass}}" data-i18n="thisTabWillCreateAsNew:title" />
                         {{title}}
                     </span>
                 </div>
@@ -137,6 +137,7 @@
                 <span data-i18n="foundHiddenUnSyncTabsDescription"></span><br>
                 <a data-action="move-hidden-tabs-to-current-group" data-i18n="actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup"></a><br>
                 <a data-action="create-new-group-with-hidden-tabs" data-i18n="actionHiddenUnSyncTabsCreateGroup"></a><br>
+                <a data-action="close-all-unsync-hidden-tabs" data-i18n="actionHiddenUnSyncTabsCloseAll"></a><br>
             </p>
             {{unSyncTabsListHtml}}
         </div>

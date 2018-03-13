@@ -508,6 +508,16 @@
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "Create new group with all of this tabs",
         "description": "Create new group with all of this tabs"
+    },
+
+    "actionHiddenUnSyncTabsCloseAll": {
+        "message": "Close all of this tabs",
+        "description": "Close all of this tabs"
+    },
+
+    "thisTabWillCreateAsNew": {
+        "message": "This tab will create as new",
+        "description": "This tab will create as new"
     }
 
 }
