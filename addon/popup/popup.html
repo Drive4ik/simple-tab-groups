@@ -19,7 +19,7 @@
                 </div>
                 <div id="clearSearchTabsButton" class="control is-hidden">
                     <label class="button is-small">
-                        <img class="size-12" src="chrome://browser/skin/stop.svg" alt="" />
+                        <img class="size-12" src="/icons/close.svg" alt="" />
                     </label>
                 </div>
             </div>
@@ -36,7 +36,7 @@
             </div>
             <div class="is-flex is-aligin-items-center is-vertical-separator"></div>
             <div class="is-flex is-aligin-items-center settings is-full-height" data-action="open-options-page" data-i18n="settingsTitle:title">
-                <img class="icon" src="chrome://browser/skin/settings.svg" alt="" />
+                <img class="icon" src="/icons/settings.svg" alt="" />
             </div>
         </footer>
     </div>
@@ -52,7 +52,7 @@
         <div class="tabs-list">
             <div class="item" data-action="show-groups-list">
                 <span class="item-icon">
-                    <img class="size-16" src="chrome://browser/skin/arrow-left.svg" alt="" />
+                    <img class="size-16" src="/icons/arrow-left.svg" alt="" />
                 </span>
                 <span class="item-title" data-i18n="goBackToGroupsButtonTitle"></span>
             </div>
@@ -65,7 +65,7 @@
                 </div>
                 <div class="item-title">{{group.title}}</div>
                 <div class="item-action">
-                    <img data-action="open-settings-group-popup" data-group-id="{{group.id}}" src="chrome://browser/skin/settings.svg" class="size-16 cursor-pointer icon" data-i18n="groupSettings:title" alt="" />
+                    <img data-action="open-settings-group-popup" data-group-id="{{group.id}}" src="/icons/settings.svg" class="size-16 cursor-pointer icon" data-i18n="groupSettings:title" alt="" />
                     <img data-action="show-delete-group-popup" data-group-id="{{group.id}}" src="/icons/group-delete.svg" class="size-16 cursor-pointer icon" data-i18n="deleteGroup:title" alt="" />
                 </div>
             </div>
@@ -93,16 +93,19 @@
 
     <script id="tab-tmpl" type="text/template">
         <li>
-            <div contextmenu="move-tab-to-group-menu" class="item is-unselectable {{classList}}" title="{{urlTitle}}" data-is-tab="true" data-action="load-group" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}" data-draggable-group="tabs">
+            <div contextmenu="{{contextmenu}}" class="item is-unselectable {{classList}}" title="{{urlTitle}}" data-is-tab="true" data-action="{{action}}" data-tab-id="{{tabId}}" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}" data-is-not-sync-tab="{{isNotSyncTab}}" data-draggable-group="tabs">
                 <div class="item-icon">
                     <img src="{{favIconUrl}}" class="size-16 no-events" alt="" />
                 </div>
                 <div class="item-title">
-                    <span class="bordered" style="{{containerColorCode}}">{{title}}</span>
+                    <span class="bordered" style="{{containerColorCode}}">
+                        <img src="/icons/refresh.svg" class="size-16 {{refreshTabIconClass}}" title="This tab will create as new" />
+                        {{title}}
+                    </span>
                 </div>
                 <div class="item-action flex-on-hover">
-                    <span class="icon cursor-pointer" data-action="remove-tab" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}" data-i18n="deleteTab:title">
-                        <img class="size-16 no-events" src="chrome://browser/skin/stop.svg" alt="" />
+                    <span class="icon cursor-pointer" data-action="remove-tab" data-is-not-sync-tab="{{isNotSyncTab}}" data-group-id="{{groupId}}" data-tab-id="{{tabId}}" data-tab-index="{{tabIndex}}" data-i18n="deleteTab:title">
+                        <img class="size-16 no-events" src="/icons/close.svg" alt="" />
                     </span>
                 </div>
             </div>
@@ -128,6 +131,15 @@
                 <div class="item-title" data-i18n="createNewGroup"></div>
             </div>
         </div>
+        <div class="not-sync-tabs {{unSyncTabsBlockClass}}">
+            <div class="hr"></div>
+            <p class="h-margin-bottom-10">
+                <span data-i18n="foundHiddenUnSyncTabsDescription"></span><br>
+                <a data-action="move-hidden-tabs-to-current-group" data-i18n="actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup"></a><br>
+                <a data-action="create-new-group-with-hidden-tabs" data-i18n="actionHiddenUnSyncTabsCreateGroup"></a><br>
+            </p>
+            {{unSyncTabsListHtml}}
+        </div>
     </script>
 
     <script id="group-tmpl" type="text/template">
@@ -137,7 +149,7 @@
             </div>
             <div class="item-title">{{title}}</div>
             <div class="item-action hover is-unselectable" data-action="show-group" data-group-id="{{id}}">
-                <img class="size-16 rotate-180 no-events" src="chrome://browser/skin/arrow-left.svg" alt="" />
+                <img class="size-16 rotate-180 no-events" src="/icons/arrow-left.svg" alt="" />
                 <span class="tabs-text" data-i18n="groupTabsCount::{{tabs.length}}"></span>
             </div>
         </div>
@@ -148,21 +160,26 @@
     <menu id="group-menu" type="context">
         <menuitem data-action="context-sort-groups" data-vector="asc" icon="/icons/sort-alpha-asc.svg" data-i18n="sortGroupsAZ:label"></menuitem>
         <menuitem data-action="context-sort-groups" data-vector="desc" icon="/icons/sort-alpha-desc.svg" data-i18n="sortGroupsZA:label"></menuitem>
-        <menuitem data-action="context-open-settings-group-popup" icon="chrome://browser/skin/settings.svg" data-i18n="groupSettings:label"></menuitem>
+        <menuitem data-action="context-open-settings-group-popup" icon="/icons/settings.svg" data-i18n="groupSettings:label"></menuitem>
         <menuitem data-action="context-show-delete-group-popup" icon="/icons/group-delete.svg" data-i18n="deleteGroup:label"></menuitem>
     </menu>
 
     <menu id="move-tab-to-group-menu" type="context"></menu>
     <script id="move-tab-to-group-menu-tmpl" type="text/template">
         <menuitem data-i18n="setTabIconAsGroupIcon:label" data-action="set-tab-icon-as-group-icon" icon="/icons/image.svg"></menuitem>
-        <hr>
-        <menu data-i18n="moveTabToGroupDisabledTitle:label">
-            {{groupsMenuItems}}
-            <menuitem data-i18n="createNewGroup:label" data-action="move-tab-to-new-group" icon="/icons/group-new.svg"></menuitem>
-        </menu>
+        <menuitem data-i18n="moveTabToGroupDisabledTitle:label" disabled></menuitem>
+        {{groupsMenuItems}}
+        <menuitem data-i18n="createNewGroup:label" data-action="move-tab-to-new-group" icon="/icons/group-new.svg"></menuitem>
     </script>
+
+    <menu id="move-unsync-tab-to-group-menu" type="context"></menu>
+    <script id="move-unsync-tab-to-group-menu-tmpl" type="text/template">
+        <menuitem data-i18n="moveTabToGroupDisabledTitle:label" disabled></menuitem>
+        {{groupsMenuItems}}
+    </script>
+
     <script id="move-tab-to-group-menu-item-tmpl" type="text/template">
-        <menuitem data-action="move-tab-to-group" data-group-id="{{groupId}}" icon="{{icon}}" label="{{title}}" {{disabled}}></menuitem>
+        <menuitem data-action="{{action}}" data-group-id="{{groupId}}" icon="{{icon}}" label="{{title}}" {{disabled}}></menuitem>
     </script>
 
     <menu id="create-tab-with-container-menu" type="context"></menu>

@@ -7,15 +7,15 @@
         allThumbnails = {},
         tempTabIdFixWrongToRight = {}; // temporary fix bug https://bugzilla.mozilla.org/show_bug.cgi?id=1398272
 
-// browser.tabs.query({
-//     // windowId: windowId,
-// }).then(console.log);
+    // browser.tabs.query({
+    //     // windowId: windowId,
+    // }).then(console.log);
 
-// setTimeout(function() {
-//     browser.tabs.move(574, {index:2});
-// }, 5000);
+    // setTimeout(function() {
+    //     browser.tabs.move(574, {index:2});
+    // }, 5000);
 
-// return browser.tabs.get(54).then(console.log);
+    // return browser.tabs.get(54).then(console.log);
     // return storage.get(null).then(console.log);
     // return browser.windows.getAll({
     //                 windowTypes: ['normal'],
@@ -183,7 +183,7 @@
         };
     }
 
-    async function addGroup(windowId, resetGroups = false, returnNewGroupIndex = true) {
+    async function addGroup(windowId, resetGroups = false, returnNewGroupIndex = true, withTabs = []) {
         let { lastCreatedGroupPosition } = await storage.get('lastCreatedGroupPosition');
 
         lastCreatedGroupPosition++;
@@ -203,6 +203,8 @@
             _groups[0].tabs = await getTabs();
 
             updateBrowserActionData(_groups[0].windowId);
+        } else if (withTabs.length) {
+            _groups[newGroupIndex].tabs = withTabs.map(mapTab);
         }
 
         storage.set({
@@ -374,7 +376,7 @@
 
         let tabs = await getTabs(windowId);
 
-        console.info('saving tabs ', {windowId, excludeTabId, calledFunc}, JSON.parse(JSON.stringify(tabs)));
+        // console.info('saving tabs ', { windowId, excludeTabId, calledFunc }, JSON.parse(JSON.stringify(tabs)));
 
         // let syncTabIds = _groups
         //     .filter(gr => gr.id !== group.id)
@@ -458,7 +460,7 @@
             throw Error('group index not found ' + groupIndex);
         }
 
-        console.log('loadGroup', {groupId: group.id, windowId, activeTabIndex});
+        // console.log('loadGroup', { groupId: group.id, windowId, activeTabIndex });
 
         try {
             if (group.windowId) {
@@ -1094,16 +1096,13 @@
         moveTabToGroupMenusIds.push(browser.menus.create({
             id: 'stg-move-tab-helper',
             title: browser.i18n.getMessage('moveTabToGroupDisabledTitle'),
+            enabled: false,
             contexts: ['tab'],
-            icons: {
-                16: MANIFEST.browser_action.default_icon,
-            },
         }));
 
         await Promise.all(_groups.map(async function(group) {
             moveTabToGroupMenusIds.push(browser.menus.create({
                 id: CONTEXT_MENU_PREFIX_GROUP + group.id,
-                parentId: 'stg-move-tab-helper',
                 title: unSafeHtml(group.title),
                 enabled: currentGroup ? group.id !== currentGroup.id : true,
                 icons: {
@@ -1131,18 +1130,8 @@
             }));
         }));
 
-        if (_groups.length) {
-            moveTabToGroupMenusIds.push(browser.menus.create({
-                id: 'stg-move-tab-separator',
-                parentId: 'stg-move-tab-helper',
-                type: 'separator',
-                contexts: ['tab'],
-            }));
-        }
-
         moveTabToGroupMenusIds.push(browser.menus.create({
             id: 'stg-move-tab-new-group',
-            parentId: 'stg-move-tab-helper',
             contexts: ['tab'],
             title: browser.i18n.getMessage('createNewGroup'),
             icons: {
@@ -1347,7 +1336,7 @@
         onclick: () => browser.runtime.openOptionsPage(),
         contexts: ['browser_action'],
         icons: {
-            16: 'chrome://browser/skin/settings.svg',
+            16: '/icons/settings.svg',
         },
     });
 
@@ -1706,14 +1695,14 @@
                 });
             }
 
-            let notSyncedGroups = [],
+            let lastOpenedUnsyncedGroups = [],
                 syncedTabsIds = [];
 
             data.groups
                 .filter(group => group.windowId)
                 .forEach(function(group) {
                     let groupWin = null,
-                        notSync = false;
+                        unSync = false;
 
                     if (group.tabs.length) {
                         groupWin = windows.find(function(win) {
@@ -1723,10 +1712,13 @@
                                 return false;
                             }
 
+                            let tempSyncedTabIds = [];
+
                             let allTabsMatched = group.tabs.every(function(tab, tabIndex) {
                                 let findTab = winTabs.find(function(winTab) {
-                                    if (!syncedTabsIds.includes(winTab.id)) {
-                                        return winTab.url === tab.url;
+                                    if (!tempSyncedTabIds.includes(winTab.id) && !syncedTabsIds.includes(winTab.id) && winTab.url === tab.url) {
+                                        tempSyncedTabIds.push(winTab.id);
+                                        return true;
                                     }
                                 });
 
@@ -1753,7 +1745,7 @@
                         });
 
                         if (!groupWin) {
-                            notSync = true;
+                            unSync = true;
                         }
                     } else {
                         groupWin = windows.find(win => win.id === group.windowId);
@@ -1776,32 +1768,40 @@
                     } else {
                         group.windowId = null;
 
-                        if (notSync) {
-                            notSyncedGroups.push(group.id);
+                        if (unSync) {
+                            lastOpenedUnsyncedGroups.push(group.id);
                         }
                     }
                 });
 
-            if (data.groups.filter(group => group.windowId).length === 0 && notSyncedGroups.length) {
+            if (data.groups.filter(group => group.windowId).length === 0 && lastOpenedUnsyncedGroups.length) {
                 if (hiddenTabsCount) {
                     syncOtherGroups();
                 } else { // if no groups are synced because addon was disable (all tabs are visible)
                     data.groups.forEach(function(group) {
-                        let tabsMatches = {}; // matches: win tabs
+                        let tabsMatches = {}, // matches: win tabs
+                            tempSyncedTabIds = [];
 
-                        windows.forEach(function(win) {
-                            let matches = group.tabs.filter(tab => win.tabs.some(t => !syncedTabsIds.includes(t.id) && t.url === tab.url)).length;
+                            windows.forEach(function(win) {
+                                let matches = group.tabs.filter(function(tab) {
+                                    return win.tabs.some(function(winTab) {
+                                        if (!tempSyncedTabIds.includes(winTab.id) && !syncedTabsIds.includes(winTab.id) && winTab.url === tab.url) {
+                                            tempSyncedTabIds.push(winTab.id);
+                                            return true;
+                                        }
+                                    });
+                                }).length;
 
-                            if (!tabsMatches[matches]) {
-                                tabsMatches[matches] = win.tabs;
-                            }
-                        });
+                                if (!tabsMatches[matches]) {
+                                    tabsMatches[matches] = win.tabs;
+                                }
+                            });
 
                         let maxMatches = Math.max.apply(Math, Object.keys(tabsMatches));
 
                         if (maxMatches) {
                             group.tabs.forEach(function(tab) {
-                                let winTab = tabsMatches[maxMatches].find(t => !syncedTabsIds.includes(t.id) && t.url === tab.url);
+                                let winTab = tabsMatches[maxMatches].find(winTab => !syncedTabsIds.includes(winTab.id) && winTab.url === tab.url);
 
                                 if (winTab) {
                                     tab.id = winTab.id;
@@ -1821,7 +1821,7 @@
 
                         let tabsInWindow = win.tabs.map(keyId);
 
-                        let isWindowWasSynced = notSyncedGroups.some(function(groupId) {
+                        let isWindowWasSynced = lastOpenedUnsyncedGroups.some(function(groupId) {
                             if (syncedGroups.includes(groupId)) {
                                 return;
                             }
@@ -1852,7 +1852,7 @@
                                         }
                                     });
 
-                                notSyncedGroups.splice(notSyncedGroups.indexOf(groupId), 1);
+                                lastOpenedUnsyncedGroups.splice(lastOpenedUnsyncedGroups.indexOf(groupId), 1);
 
                                 return true;
                             }
@@ -1894,12 +1894,11 @@
 
 
             function syncOtherGroups() {
-                windows = windows.map(function(win) {
-                    win.tabs = win.tabs.filter(isTabHidden); // leave only hidden tabs
-                    return win;
-                });
-
-                let syncedTabsIds = [];
+                let syncedTabsIds = [],
+                    windowsWithHiddenTabs = windows.map(function(win) {
+                        win.tabs = win.tabs.filter(isTabHidden); // leave only hidden tabs
+                        return win;
+                    });
 
                 data.groups
                     .filter(group => !group.windowId)
@@ -1908,7 +1907,7 @@
                             return;
                         }
 
-                        let groupWin = windows.find(function(win) {
+                        let groupWin = windowsWithHiddenTabs.find(function(win) {
                             let tempSyncedTabIds = [];
 
                             return group.tabs.every(function(tab) {
@@ -1928,101 +1927,23 @@
                                 tab.id = winTab.id;
                                 syncedTabsIds.push(tab.id);
                             });
+                        } else {
+                            // sync unsync hidden tabs with unsync groups
+                            group.tabs.forEach(function(tab) {
+                                windowsWithHiddenTabs.some(function(win) {
+                                    let winTab = win.tabs.find(t => !syncedTabsIds.includes(t.id) && t.url === tab.url);
+
+                                    if (winTab) {
+                                        tab.id = winTab.id;
+                                        syncedTabsIds.push(tab.id);
+                                        return true;
+                                    }
+                                });
+                            });
                         }
                     });
             }
 
-
-
-
-
-
-
-
-
-
-
-        /*
-            // OLD CODE
-
-            // step 1: sync groups with window id
-            data.groups
-                .filter(group => group.windowId)
-                .forEach(function(group) {
-                    if (syncAllTabsInGroup.includes(group.id)) {
-                        return;
-                    }
-
-                    let groupWin = windows.find(win => win.id === group.windowId);
-
-                    if (!groupWin && group.tabs.length) {
-                        groupWin = windows.find(function(win) {
-                            let winTabs = win.tabs.filter(isTabVisible);
-
-                            if (winTabs.length < group.tabs.length) {
-                                return false;
-                            }
-
-                            let equalGroupTabs = group.tabs.filter(function(tab, tabIndex) {
-                                let findTab = winTabs.some(t => t.url === tab.url);
-
-                                if (!findTab && winTabs[tabIndex].active) {
-                                    findTab = true;
-                                }
-
-                                return findTab;
-                            });
-
-                            return (equalGroupTabs.length === group.tabs.length) || (equalGroupTabs.length - 1 === group.tabs.length);
-                        });
-                    }
-
-                    if (groupWin) {
-                        syncAllTabsInGroup.push(group.id);
-
-                        group.windowId = groupWin.id;
-                        group.tabs = groupWin.tabs
-                            .filter(isTabVisible)
-                            .map(mapTab);
-
-                        syncedTabsIds = syncedTabsIds.concat(group.tabs.map(keyId));
-                    } else {
-                        group.windowId = null;
-                    }
-                });
-
-            let syncAllTabsInGroup = [],
-                syncedTabsIds = [];
-
-            windows.forEach(function(win) {
-                let winTabsHidden = win.tabs.filter(isTabHidden);
-
-                if (!winTabsHidden.length) {
-                    return;
-                }
-
-                data.groups
-                    .filter(group => !group.windowId)
-                    .forEach(function(group) {
-                        if (!group.tabs.length || syncAllTabsInGroup.includes(group.id)) {
-                            return;
-                        }
-
-                        let findAllTabs = group.tabs.every(tab => winTabsHidden.some(t => !syncedTabsIds.includes(t.id) && t.url === tab.url));
-
-                        if (findAllTabs) {
-                            syncAllTabsInGroup.push(group.id);
-
-                            group.tabs.forEach(function(tab) {
-                                let winTab = winTabsHidden.find(t => !syncedTabsIds.includes(t.id) && t.url === tab.url);
-
-                                tab.id = winTab.id;
-                                syncedTabsIds.push(tab.id);
-                            });
-                        }
-                    });
-            });
-            /**/
             // TODO if no one group are synced
 
             _groups = data.groups;

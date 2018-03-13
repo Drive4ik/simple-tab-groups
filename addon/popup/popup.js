@@ -16,6 +16,7 @@
     let templates = {},
         options = null,
         _groups = BG.getGroups(),
+        unSyncTabs = [],
         containers = [],
         currentWindowId = null,
         contextData = null,
@@ -72,10 +73,50 @@
                             }
                         }
                     });
+            } else if ('show-tab-in-current-group' === action) {
+                await browser.tabs.move(data.tabId, {
+                    index: -1,
+                    windowId: currentWindowId,
+                });
+
+                await browser.tabs.show(data.tabId);
+            } else if ('move-hidden-tabs-to-current-group' === action) {
+                let hiddenTabsIds = unSyncTabs.map(keyId);
+
+                await browser.tabs.move(hiddenTabsIds, {
+                    index: -1,
+                    windowId: currentWindowId,
+                });
+
+                await browser.tabs.show(hiddenTabsIds);
+            } else if ('move-unsync-tab-to-group' === action) {
+                let group = getGroupById(data.groupId);
+
+                if (group.windowId) {
+                    await browser.tabs.move(contextData.tabId, {
+                        index: -1,
+                        windowId: group.windowId,
+                    });
+                    await browser.tabs.show(contextData.tabId);
+                } else {
+                    let tab = unSyncTabs.find(tab => tab.id === contextData.tabId);
+
+                    group.tabs.push(BG.mapTab(tab));
+
+                    BG.updateGroup(data.groupId, {
+                        tabs: group.tabs,
+                    });
+                }
+            } else if ('create-new-group-with-hidden-tabs' === action) {
+                BG.addGroup(undefined, undefined, undefined, unSyncTabs);
             } else if ('show-group' === action) {
                 renderTabsList(data.groupId);
             } else if ('remove-tab' === action) {
-                BG.removeTab(data.groupId, data.tabIndex);
+                if (data.isNotSyncTab) {
+                    browser.tabs.remove(data.tabId);
+                } else {
+                    BG.removeTab(data.groupId, data.tabIndex);
+                }
             } else if ('add-tab' === action) {
                 BG.addTab(data.groupId, data.cookieStoreId);
             } else if ('open-settings-group-popup' === action) {
@@ -280,7 +321,7 @@
         });
 
         DragAndDrop.create({
-            selector: '[data-is-tab]:not(.is-searching)',
+            selector: '[data-is-tab]:not(.is-searching):not([data-action="show-tab-in-current-group"])',
             group: 'tabs',
             draggableElements: '.item, .item-title, .item-title > .bordered, .item-icon',
             onDrop(event, from, to, dataFrom, dataTo) {
@@ -340,7 +381,7 @@
             .join('');
     }
 
-    function prepareTabToView(groupId, tab, tabIndex, isSearching = false) {
+    function prepareTabToView(groupId, tab, tabIndex, isSearching = false, isNotSyncTab = false) {
         let containerColorCode = '',
             classList = [];
 
@@ -357,10 +398,15 @@
         }
 
         return {
+            action: isNotSyncTab ? 'show-tab-in-current-group' : 'load-group',
+            contextmenu: isNotSyncTab ? 'move-unsync-tab-to-group-menu' : 'move-tab-to-group-menu',
+            isNotSyncTab: String(isNotSyncTab),
+            tabId: tab.id,
             urlTitle: options.showUrlTooltipOnTabHover ? safeHtml(unSafeHtml(tab.title + '\n' + tab.url)) : '',
             classList: classList.join(' '),
             tabIndex: tabIndex,
-            groupId: groupId,
+            groupId: isNotSyncTab ? '' : groupId,
+            refreshTabIconClass: tab.id ? 'is-hidden' : '',
             title: safeHtml(unSafeHtml(tab.title)),
             url: tab.url,
             containerColorCode: containerColorCode,
@@ -422,7 +468,40 @@
             return render('group-tmpl', Object.assign({}, group, customData));
         }));
 
+        unSyncTabs = await browser.tabs.query({
+            pinned: false,
+            hidden: true,
+        });
+
+        unSyncTabs = unSyncTabs.filter(unSyncTab => isTabNotIncognito(unSyncTab) && !_groups.some(group => group.tabs.some(tab => tab.id === unSyncTab.id)));
+
+        let unSyncTabsListHtml = '';
+
+        if (unSyncTabs.length) {
+            unSyncTabsListHtml = render('tabs-list-tmpl', {
+                classList: '',
+                tabsHtml: getPreparedTabsHtml(unSyncTabs.map((tab, tabIndex) => prepareTabToView(null, tab, tabIndex, false, true))),
+            });
+        }
+
+        let groupsMenuItems = await Promise.all(_groups
+            .map(async function(gr) {
+                return render('move-tab-to-group-menu-item-tmpl', {
+                    action: 'move-unsync-tab-to-group',
+                    title: gr.title,
+                    groupId: gr.id,
+                    icon: await getGroupIconUrl(gr),
+                    disabled: '',
+                });
+            }));
+
+        setHtml('move-unsync-tab-to-group-menu', render('move-unsync-tab-to-group-menu-tmpl', {
+            groupsMenuItems: groupsMenuItems.join(''),
+        }), false);
+
         let showGroupsHtml = render('groups-list-tmpl', {
+            unSyncTabsBlockClass: unSyncTabsListHtml ? '' : 'is-hidden',
+            unSyncTabsListHtml: unSyncTabsListHtml,
             groupsHtml: groupsHtml.join(''),
         });
 
@@ -463,6 +542,7 @@
         let groupsMenuItems = await Promise.all(_groups
             .map(async function(gr) {
                 return render('move-tab-to-group-menu-item-tmpl', {
+                    action: 'move-tab-to-group',
                     title: gr.title,
                     groupId: gr.id,
                     icon: await getGroupIconUrl(gr),

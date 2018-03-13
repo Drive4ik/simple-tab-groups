@@ -63,7 +63,7 @@ html {
 }
 
 #searchTabs {
-    background: url('chrome://browser/skin/search-glass.svg') no-repeat 4px center;
+    background: url('/icons/search.svg') no-repeat 4px center;
     padding-left: calc(16px + (2 * 4px));
 }
 
@@ -181,6 +181,10 @@ html {
     width: 16px;
     height: 16px;
     line-height: 0;
+}
+
+.not-sync-tabs > p {
+    padding: 0 var(--indent);
 }
 
 .is-vertical-separator {
