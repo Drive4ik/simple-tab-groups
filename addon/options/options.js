@@ -266,11 +266,11 @@
         options.hotkeys[hotkeyIndex].action.id = e.target.value;
 
         if ('load-custom-group' === options.hotkeys[hotkeyIndex].action.id) {
-            customGroupNode.classList.remove('is-hidden');
+            customGroupNode.parentNode.classList.remove('is-hidden');
             options.hotkeys[hotkeyIndex].action.groupId = parseInt(customGroupNode.value, 10);
         } else {
             delete options.hotkeys[hotkeyIndex].action.groupId;
-            customGroupNode.classList.add('is-hidden');
+            customGroupNode.parentNode.classList.add('is-hidden');
         }
 
         descriptionNode[INNER_HTML] = getDescriptionForHotkey(options.hotkeys[hotkeyIndex]);

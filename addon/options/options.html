@@ -154,9 +154,11 @@
             <div class="control">
                 <input type="text" data-hotkey-input value="{{hotkeyValue}}" autocomplete="off" class="input is-small" data-i18n="hotkeyPlaceholder:placeholder" />
             </div>
-            <div class="action">
+            <div class="select is-small">
                 <select data-hotkey-action>{{hotkeyActionsHtml}}</select>
-                <select data-hotkey-custom-group class="{{groupsSelectClass}}">{{groupsOptionsHtml}}</select>
+            </div>
+            <div class="select is-small {{groupsSelectClass}}">
+                <select data-hotkey-custom-group>{{groupsOptionsHtml}}</select>
             </div>
             <div class="delete-button">
                 <img data-hotkey-delete-hotkey class="size-16 cursor-pointer" data-i18n="deleteHotKeyButton:title" src="/icons/delete.svg" />
