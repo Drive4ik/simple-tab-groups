@@ -1528,9 +1528,11 @@
 
         // start migration
         let keysToRemoveFromStorage = [],
-            removeKey = function(key) {
-                delete data[key];
-                keysToRemoveFromStorage.push(key);
+            removeKeys = function(...keys) {
+                keys.forEach(function(key) {
+                    delete data[key];
+                    keysToRemoveFromStorage.push(key);
+                });
             };
 
         if (0 > data.version.localeCompare('1.8.1')) {
@@ -1553,14 +1555,14 @@
                 return group;
             });
 
-            removeKey('windowsGroup');
+            removeKeys('windowsGroup');
         }
 
         if (0 > data.version.localeCompare('2.2')) {
             if ('showGroupCircleInSearchedTab' in data) {
                 result.dataChanged = true;
                 data.showGroupIconWhenSearchATab = data.showGroupCircleInSearchedTab;
-                removeKey('showGroupCircleInSearchedTab');
+                removeKeys('showGroupCircleInSearchedTab');
             }
         }
 
@@ -1579,8 +1581,7 @@
                 return group;
             });
 
-            removeKey('enableKeyboardShortcutLoadNextPrevGroup');
-            removeKey('enableKeyboardShortcutLoadByIndexGroup');
+            removeKeys('enableKeyboardShortcutLoadNextPrevGroup', 'enableKeyboardShortcutLoadByIndexGroup');
         }
 
         if (0 > data.version.localeCompare('2.4')) {
@@ -1609,18 +1610,11 @@
             });
         }
 
-        if (0 > data.version.localeCompare('3.0')) { // TODO write migration with options
-            // result.dataChanged = true;
+        if (0 > data.version.localeCompare('3.0')) {
+            result.dataChanged = true;
+            result.doRemoveSTGNewTabUrls = true;
 
-            // data.groups = data.groups.map(function(group) {
-            //     if (!group.iconColor.trim()) {
-            //         group.iconColor = 'transparent';
-            //     }
-
-            //     group.iconViewType = 'main-squares';
-
-            //     return group;
-            // });
+            removeKeys('enableFastGroupSwitching', 'enableFavIconsForNotLoadedTabs', 'createNewGroupAfterAttachTabToNewWindow', 'individualWindowForEachGroup', 'openNewWindowWhenCreateNewGroup', 'showNotificationIfGroupsNotSyncedAtStartup');
         }
 
 
@@ -1633,6 +1627,48 @@
         // end migration
 
         return data;
+    }
+
+    async function removeSTGNewTabUrls(windows) {
+        let NEW_TAB_URL = '/stg-newtab/newtab.html';
+
+        function isStgNewTabUrl(url) {
+            if (!url || !url.startsWith('moz-extension')) {
+                return false;
+            }
+
+            if (url.startsWith(browser.extension.getURL(NEW_TAB_URL))) {
+                return true;
+            }
+
+            let pregNewTabUrl = NEW_TAB_URL.replace(/\//g, '\\/').replace(/\./, '\\.'),
+                reg = new RegExp('^moz-extension:\/\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}' + pregNewTabUrl);
+
+            return reg.test(url);
+        }
+
+        function revokeStgNewTabUrl(url) {
+            return new URL(url).searchParams.get('url');
+        }
+
+        return windows
+            .map(function(win) {
+                win.tabs = win.tabs
+                    .map(function(tab) {
+                        if (isStgNewTabUrl(tab.url)) {
+                            tab.url = revokeStgNewTabUrl(tab.url);
+
+                            browser.tabs.update(tab.id, {
+                                url: tab.url,
+                                loadReplace: true,
+                            });
+                        }
+
+                        return tab;
+                    });
+
+                return win;
+            });
     }
 
     // { reason: "update", previousVersion: "3.0.1", temporary: true }
@@ -1669,6 +1705,10 @@
 
                 return win;
             }));
+
+            if (resultMigration.doRemoveSTGNewTabUrls) {
+                windows = removeSTGNewTabUrls(windows);
+            }
 
             let weAreOnAboutAddonsPage = windows.some(win => win.focused && win.tabs.some(tab => tab.url.startsWith('about:addons') && tab.active));
 
