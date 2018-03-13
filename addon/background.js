@@ -1684,6 +1684,7 @@
             }, 0);
 
             lastFocusedNormalWindow = windows.find(win => win.focused);
+            lastFocusedWinId = lastFocusedNormalWindow.id;
 
             if (options.createThumbnailsForTabs) {
                 data.groups.forEach(function(group) {
