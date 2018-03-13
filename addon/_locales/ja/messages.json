@@ -1,6 +1,6 @@
 {
     "extensionDescription": {
-        "message": "タブのグループを作成し、すばやくグループを切替えて表示することができます。このアドオンは旧アドオンの”Tab Groups”にインスパイアされています。",
+        "message": "タブのグループを作成/編集し、作成したグループ毎に切替えて表示することができます。\n\nこのアドオンは旧アドオンの”Tab Groups”にインスパイアされています。",
         "description": "Description of the extension."
     },
     "openSettings": {
@@ -20,7 +20,7 @@
         "description": "Move tab to group title"
     },
     "moveTabToGroupMessage": {
-        "message": "タブ \"$tabtitle$\" をグループ \"$grouptitle$\" へ移動しました。移動したタブを表示するにはここをクリックしてください。",
+        "message": "タブ \"$tabtitle$\" をグループ \"$grouptitle$\" へ移動しました。\n\n移動したタブを表示するにはここをクリックしてください。",
         "description": "Tab moved popup title",
         "placeholders": {
             "grouptitle": {
@@ -128,7 +128,7 @@
         "description": "Include tab thumbnails into backup (make backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "Simple Tab Groupsの復元",
+        "message": "Simple Tab Groups の復元",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
@@ -152,7 +152,7 @@
         "description": "Load a backup file old \"Tab Groups\" addon."
     },
     "importSettingsOldTabGroupsAddonButton": {
-        "message": "旧アドオンのタブグループ設定をインポートする",
+        "message": "旧アドオンの ”Tab Groups” の設定をインポートする",
         "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
     },
     "openGroupAfterChange": {
@@ -178,7 +178,7 @@
         }
     },
     "searchTabNotFoundTitle": {
-        "message": "タブを検索しましたが\"$search$\"は見つかりませんでした。",
+        "message": "タブを検索しましたが \"$search$\" は見つかりませんでした。",
         "description": "Search for tabs not found",
         "placeholders": {
             "search": {
@@ -264,12 +264,16 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "カスタムアイコンをロードできませんでした。\"グループの管理\" によってグループアイコンのカスタマイズが可能です。\n \"グループの管理\"を開きますか？",
+        "message": "カスタムアイコンをロードできませんでした。\"グループの管理\" によってグループアイコンのカスタマイズが可能です。\n\"グループの管理\"を開きますか？",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
         "message": "色をランダムに設定する",
         "description": "Set random color"
+    },
+    "catchTabContainers": {
+        "message": "Firefox のコンテナーにより分類されたタブを自動的にキャッチしてこのグループに移動します（空のタブは移動しません）",
+        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
     },
     "regexpForTabsTitle": {
         "message": "正規表現でタブをキャッチする",
@@ -280,7 +284,7 @@
         "description": "Regular expressions"
     },
     "regexpForTabsHelp": {
-        "message": "ここに web addresses を正規表現で記入してください。正規表現にマッチするタブを自動的にこのグループ内に移動（キャッチ）します。\n一行に一個のルールを記載してください。記載できるルールの数に制限はありません。\n例：\ngithub\\.com/drive4ik/simple-tab-groups　すべてのアドオンページをキャッチします。repository\nbugzilla\\.mozilla\\.org　Firefoxのバグレポートをキャッチします。\n(facebook|twitter|youtube)\\.com　すべてのソーシャルページをキャッチします。",
+        "message": "ここに web addresses を正規表現で記入してください。正規表現にマッチするタブを自動的にこのグループ内に移動（キャッチ）します。\n一行に一個のルールを記載してください。記載できるルールの数に制限はありません。\n例：\ngithub\\.com/drive4ik/simple-tab-groups　すべてのアドオンリポジトリのページをキャッチします。\nbugzilla\\.mozilla\\.org　Firefoxのバグレポートをキャッチします。\n(facebook|twitter|youtube)\\.com　すべてのソーシャルページをキャッチします。",
         "description": "Regular exceptions helper"
     },
     "hotkeysTitle": {
@@ -360,5 +364,25 @@
                 "example": "Group 2"
             }
         }
+    },
+    "enterBrowserActionIconColor": {
+        "message": "browser action icon の色を指定",
+        "description": "Enter browser action icon color"
+    },
+    "isStickyGroupTitle": {
+        "message": "Sticky グループ",
+        "description": "Sticky group"
+    },
+    "isStickyGroupHelp": {
+        "message": "このグループ内のタグが他のグループへ自動的には移動しないようにします。",
+        "description": "Tabs in this group will never be automatically moved to another group"
+    },
+    "useTabsFavIconsFromGoogleS2Converter": {
+        "message": "Google S2 Converter からの fav-icons を使用する",
+        "description": "Use tabs fav-icons from Google S2 Converter"
+    },
+    "iconStyle": {
+        "message": "アイコンスタイル",
+        "description": "Icon style"
     }
 }
