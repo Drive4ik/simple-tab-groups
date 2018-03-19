@@ -1667,7 +1667,7 @@
         .then(async function([data, windows]) {
             data = await runMigrateForData(data); // migration data
 
-            allOptionsKeys.forEach(key => options[key] = key in data ? data[key] : DEFAULT_OPTIONS[key]) // reload options
+            allOptionsKeys.forEach(key => options[key] = key in data ? data[key] : DEFAULT_OPTIONS[key]); // reload options
 
             // loading all tabs in all windows - FF bug on browser.windows.getAll with populate true and open window from shortcut on desktop
             windows = await Promise.all(windows.map(async function(win) {
