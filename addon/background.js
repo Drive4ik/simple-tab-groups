@@ -1611,7 +1611,7 @@
         return data;
     }
 
-    async function removeSTGNewTabUrls(windows) {
+    function removeSTGNewTabUrls(windows) {
         let NEW_TAB_URL = '/stg-newtab/newtab.html';
 
         function isStgNewTabUrl(url) {
