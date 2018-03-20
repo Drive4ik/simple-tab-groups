@@ -13,7 +13,7 @@
 
     async function load(url) {
         let blob = await fetch(url);
-        return await blob.json();
+        return blob.json();
     }
 
     let plugins = await load(pluginsApiUrl);
@@ -36,6 +36,9 @@
             selectedComponentName: null,
 
             defaultLocale: {},
+
+            currentLocale: {},
+            showOldValueByKey: null,
 
             locale: {},
         },
@@ -67,14 +70,42 @@
                     this.loadLocaleFromSelectedComponent();
                 }
             },
+
+            'locale.locale': async function(locale) {
+                this.currentLocale = {};
+
+                if (locale.length > 1) {
+                    try {
+                        this.currentLocale = await load(this.getLocaleUrl(locale));
+                    } catch (e) {
+                        if (locale.includes('_')) {
+                            try {
+                                this.currentLocale = await load(this.getLocaleUrl(locale.split('_').shift().toLowerCase()));
+                            } catch (e) {}
+                        }
+                    }
+                }
+            },
         },
 
         methods: {
+            resetValue: function(key) {
+                this.locale[key] = this.currentLocale[key].message;
+
+                if (this.showOldValueByKey === key) {
+                    this.showOldValueByKey = null;
+                }
+
+                this.$forceUpdate();
+            },
+            getLocaleUrl: function(locale) {
+                return urlPrefix + this.selectedComponentPath + '/_locales/' + locale + '/messages' + LOCALE_FILE_EXT;
+            },
             async loadLocaleFromSelectedComponent() {
                 this.loading = true;
 
                 this.manifest = await load(urlPrefix + this.selectedComponentPath + '/manifest.json');
-                this.defaultLocale = await load(urlPrefix + this.selectedComponentPath + '/_locales/' + this.manifest.default_locale + '/messages.json');
+                this.defaultLocale = await load(this.getLocaleUrl(this.manifest.default_locale));
 
                 this.$emit('locale-loaded');
 

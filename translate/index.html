@@ -6,9 +6,13 @@
     <meta charset="utf-8" />
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.13/vue.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.16/vue.js"></script>
     <script type="text/javascript" src="./index.js"></script>
     <style type="text/css">
+    .textarea {
+        resize: both;
+        min-width: auto;
+    }
     .text-break-all {
         word-break: break-all;
     }
@@ -91,14 +95,34 @@
                         <th>Translated value</th>
                     </thead>
                     <tbody>
-                        <tr v-for="(val, key) in defaultLocale" v-if="!notAllowedKeys.includes(key)" :key="selectedComponentName + key">
+                        <tr v-for="(val, key) in defaultLocale" v-show="!notAllowedKeys.includes(key)" :key="selectedComponentName + key">
                             <td class="text-break-all" v-html="key"></td>
                             <td v-text="val.message.replace(/\n/g, '\&#92n')"></td>
                             <td>
                                 <div class="columns">
                                     <div class="column">
-                                        <div class="control">
-                                            <textarea class="textarea" v-model.trim="locale[key]" :placeholder="val.description"></textarea>
+                                        <div class="field">
+                                            <div class="control">
+                                                <textarea v-if="!showOldValueByKey || showOldValueByKey !== key || (showOldValueByKey == key && !currentLocale[key])" :class="['textarea', {
+                                                    'is-info': locale[key] && (!currentLocale[key] || !currentLocale[key].message),
+                                                    'is-danger': !locale[key] && currentLocale[key] && currentLocale[key].message
+                                                }]" v-model.trim="locale[key]" :placeholder="val.description" @input="$forceUpdate()"></textarea>
+
+                                                <textarea v-if="showOldValueByKey === key && currentLocale[key]" readonly class="textarea" v-model="currentLocale[key].message"></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="field is-grouped" v-if="locale[key] && currentLocale[key] && locale[key] !== currentLocale[key].message">
+                                            <div class="control">
+                                                <button class="button" @click="showOldValueByKey = showOldValueByKey === key ? null : key">
+                                                    <span class="icon">
+                                                        <i :class="['fa', showOldValueByKey === key ? 'fa-check-square-o' : 'fa-square-o']" aria-hidden="true"></i>
+                                                    </span>
+                                                    <span>Old value</span>
+                                                </button>
+                                            </div>
+                                            <div class="control">
+                                                <button class="button is-danger" @click="resetValue(key)">Restore old value</button>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="column" v-if="val.placeholders">
