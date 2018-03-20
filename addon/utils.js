@@ -280,6 +280,10 @@ let $ = document.querySelector.bind(document),
         return false;
     },
     createStgTabNewUrl = function(tab, enableFavIconsForNotLoadedTabs = DEFAULT_OPTIONS.enableFavIconsForNotLoadedTabs) {
+        if (tab.active || tab.url.startsWith('moz-extension') || tab.url.startsWith('about')) {
+            return tab.url;
+        }
+
         let params = new URLSearchParams;
 
         params.set('url', tab.url);

@@ -533,7 +533,7 @@
 
                             let url = tab.url;
 
-                            if (options.enableFastGroupSwitching && !isEmptyUrl(tab.url) && !tab.active) {
+                            if (options.enableFastGroupSwitching) {
                                 url = createStgTabNewUrl(tab, options.enableFavIconsForNotLoadedTabs);
                             }
 
