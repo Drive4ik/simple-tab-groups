@@ -153,17 +153,6 @@
         },
     });
 
-    sendExternalMessage({
-            areYouHere: true,
-        })
-        .then(async function() {
-            let { groupId } = await browser.storage.local.get('groupId');
-
-            if (groupId) {
-                updateBrowserAction(groupId);
-            }
-        });
-
     window.STG_ID = STG_ID;
     window.STG_HOME_PAGE = STG_HOME_PAGE;
     window.sendExternalMessage = sendExternalMessage;
