@@ -1520,6 +1520,12 @@
         return result;
     }
 
+    function setLoadingToBrowserAction() {
+        browser.browserAction.setIcon({
+            path: '/icons/animate-spinner.svg',
+        });
+    }
+
     window.background = {
         inited: false,
 
@@ -1675,14 +1681,24 @@
         return data;
     }
 
+    setLoadingToBrowserAction();
+
+    // fix FF bug on browser.windows.getAll ... function not return all windows
+    async function getAllWindows() {
+        let allTabs = await browser.tabs.query({
+            pinned: false,
+        });
+
+        return Promise.all(
+            allTabs
+                .reduce((acc, tab) => acc.includes(tab.windowId) ? acc : acc.concat([tab.windowId]), [])
+                .map(winId => browser.windows.get(winId))
+        );
+    }
+
     // initialization
-    Promise.all([
-            storage.get(null),
-            browser.windows.getAll({
-                windowTypes: ['normal'],
-            })
-        ])
-        .then(async function([data, windows]) {
+    storage.get(null)
+        .then(async function(data) {
             let resultMigration = {};
 
             data = await runMigrateForData(data, resultMigration); // migration data
@@ -1695,45 +1711,68 @@
                 await storage.set(data);
             }
 
-
-            // loading all tabs in all windows - FF bug on browser.windows.getAll with populate true and open window from shortcut on desktop
-            windows = await Promise.all(windows.map(async function(win) {
-                win.tabs = await browser.tabs.query({
-                    windowId: win.id,
-                });
-
-                return win;
-            }));
-
-            getWindow().then(function(win) {
-                lastFocusedNormalWindow = win;
-                lastFocusedWinId = win.id;
-            });
+            // fix FF bug on browser.windows.getAll ... function not return all windows
+            let windows = await getAllWindows();
 
             windows = windows.filter(win => 'normal' === win.type && !win.incognito);
 
-            let winTabs = {};
-            windows.forEach(function(win) {
-                winTabs[win.id] = win.tabs
-                    .filter(isAllowTab)
-                    .map(function(tab) {
-                        tab.url = normalizeUrl(tab.url);
-                        return tab;
+            lastFocusedNormalWindow = windows.find(win => win.focused) || windows[0];
+            lastFocusedWinId = lastFocusedNormalWindow.id;
+
+            async function getWindows() {
+                // loading all tabs in all windows - FF bug on browser.windows.getAll with populate true and open window from shortcut on desktop
+                return Promise.all(windows.map(async function(win) {
+                    let tabs = await browser.tabs.query({
+                        windowId: win.id,
+                        pinned: false,
                     });
+
+                    win.tabs = tabs
+                        .filter(isAllowTab)
+                        .map(function(tab) {
+                            tab.url = normalizeUrl(tab.url);
+                            return tab;
+                        });
+
+                    return win;
+                }));
+            }
+
+            let tryCounter = 0;
+
+            // wait load tabs
+            await new Promise(function(resolve) {
+                let timer = setInterval(async function() {
+                    windows = await getWindows();
+
+                    let someWinNotSync = windows.some(win => win.tabs.some(winTab => winTab.status === 'loading' && isEmptyUrl(winTab.url)));
+
+                    tryCounter++;
+
+                    if (!someWinNotSync || tryCounter > 30) {
+                        clearInterval(timer);
+                        resolve();
+                    }
+                }, 1000);
             });
+
+
+            let winTabs = {};
+            windows.forEach(win => winTabs[win.id] = win.tabs);
 
             let syncedWinIds = [],
                 groupHasBeenSync = true;
 
-            _groups = data.groups.map(function(group) {
+            data.groups.forEach(function(group) {
                 if (!group.windowId) {
-                    return group;
+                    return;
                 }
 
                 let winCandidate = windows
                     .filter(win => !syncedWinIds.includes(win.id))
                     .find(function(win) {
-                        if (win.id === group.windowId && !group.tabs.length && 1 === winTabs[win.id].length && isEmptyUrl(winTabs[win.id][0].url)) {
+                        if (win.id === group.windowId) {
+                            syncedWinIds.push(win.id);
                             return true;
                         }
 
@@ -1745,18 +1784,22 @@
                             return false;
                         }
 
-                        let equalGroupTabs = group.tabs.filter(function(tab, tabIndex) {
-                            let findTab = winTabs[win.id].some(t => t.url === tab.url);
+                        let syncedTabIds = [],
+                            isTabsEqual = group.tabs.every(function(tab, tabIndex) {
+                                let findTab = winTabs[win.id].find(t => !syncedTabIds.includes(t.id) && t.url === tab.url);
 
-                            if (!findTab && winTabs[win.id][tabIndex] && winTabs[win.id][tabIndex].active) {
-                                return true;
-                            }
+                                if (!findTab && winTabs[win.id][tabIndex] && winTabs[win.id][tabIndex].active) {
+                                    findTab = winTabs[win.id][tabIndex];
+                                }
 
-                            return findTab;
-                        });
+                                if (findTab) {
+                                    syncedTabIds.push(findTab.id);
+                                }
 
+                                return !!findTab;
+                            });
 
-                        if (equalGroupTabs.length === group.tabs.length && winTabs[win.id].length >= group.tabs.length) {
+                        if (isTabsEqual) {
                             syncedWinIds.push(win.id);
                             return true;
                         }
@@ -1784,17 +1827,16 @@
                 if (!group.windowId) {
                     groupHasBeenSync = false;
                 }
-
-                return group;
             });
 
-            if (data.showNotificationIfGroupsNotSyncedAtStartup && !groupHasBeenSync && 0 === _groups.filter(gr => gr.windowId).length) {
+            if (data.showNotificationIfGroupsNotSyncedAtStartup && !groupHasBeenSync && 0 === data.groups.filter(gr => gr.windowId).length) {
                 notify(browser.i18n.getMessage('noOneGroupWasNotSynchronized'));
             }
 
+            _groups = data.groups;
+
             await storage.set({
-                lastCreatedGroupPosition: data.lastCreatedGroupPosition,
-                groups: _groups,
+                groups: data.groups,
             });
 
             updateNewTabUrls();
