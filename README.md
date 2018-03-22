@@ -1,6 +1,7 @@
 # Simple Tab Groups
 
 To install Simple Tab Groups go on https://addons.mozilla.org/firefox/addon/simple-tab-groups/
+
 [EXPERIMENTAL] Simple Tab Groups https://addons.mozilla.org/firefox/addon/experimental-simple-tab-groups/
 
 ## Translations
