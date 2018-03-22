@@ -1685,9 +1685,7 @@
 
     // fix FF bug on browser.windows.getAll ... function not return all windows
     async function getAllWindows() {
-        let allTabs = await browser.tabs.query({
-            pinned: false,
-        });
+        let allTabs = await browser.tabs.query({});
 
         return Promise.all(
             allTabs
@@ -1716,7 +1714,7 @@
 
             windows = windows.filter(win => 'normal' === win.type && !win.incognito);
 
-            lastFocusedNormalWindow = windows.find(win => win.focused) || windows[0];
+            lastFocusedNormalWindow = await getWindow();
             lastFocusedWinId = lastFocusedNormalWindow.id;
 
             async function getWindows() {
