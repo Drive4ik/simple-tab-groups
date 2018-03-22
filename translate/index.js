@@ -1,80 +1,122 @@
 (async function() {
     'use strict';
 
-    window.onbeforeunload = function() {
-        return 'You really want to close?';
-    };
-
-    const BRANCH = 'master',
+    const USER_NAME = 'Drive4ik',
+        REPOSITORY = 'simple-tab-groups',
         LOCALE_FILE_EXT = '.json',
-        urlPrefix = `https://raw.githubusercontent.com/Drive4ik/simple-tab-groups/${BRANCH}/`,
-        htmlApiPrefix = `https://github.com/Drive4ik/simple-tab-groups/tree/${BRANCH}/`,
-        pluginsApiUrl = `https://api.github.com/repos/Drive4ik/simple-tab-groups/contents/plugins?ref=${BRANCH}`;
+        apiUrlPrefix = `https://api.github.com/repos/${USER_NAME}/${REPOSITORY}/`,
+        contentUrlPrefix = `https://raw.githubusercontent.com/${USER_NAME}/${REPOSITORY}/`;
 
-    async function load(url) {
-        let blob = await fetch(url);
-        return blob.json();
+    function notify(body, title = document.title) {
+        new window.Notification(title, {
+            body: body,
+            // icon: contentUrlPrefix + 'master/addon/icons/icon.svg',
+        });
     }
 
-    let plugins = await load(pluginsApiUrl);
+    async function load(url, defaultValue) {
+        let blob = await fetch(url),
+            result = await blob.json();
+
+        if (!blob.ok) {
+            notify(`GitHub error: ${blob.status} ${blob.statusText}. Please wait a few minutes and try again.\n${result.message}`);
+            result = defaultValue;
+        }
+
+        return result;
+    }
 
     new Vue({
         el: '#content',
         data: {
-            loading: true,
-
             notAllowedKeys: ['component', 'locale', 'version', 'polyglot', 'extensionName'],
+
+            branchesLoading: true,
+            branches: [],
+            branch: 'master',
 
             manifest: {},
 
-            components: [
-                {
-                    name: 'simple-tab-groups-addon',
-                    path: 'addon',
-                }
-            ].concat(plugins.filter(p => 'dir' === p.type)),
-            selectedComponentName: null,
+            componentLoading: true,
+            components: [{
+                name: 'simple-tab-groups-addon',
+                path: 'addon',
+            }],
+            componentName: 'simple-tab-groups-addon',
+
+            availableLocalesLoading: false,
+            locales: [],
+            componentLocale: '',
 
             defaultLocale: {},
-
             currentLocale: {},
-            showOldValueByKey: null,
+            showOldValueForKey: null,
 
             locale: {},
         },
 
         async mounted() {
-            this.selectedComponentName = this.components[0].name;
+            let branches = await load(apiUrlPrefix + 'branches', []);
+            this.branches = branches.map(branch => branch.name);
+            this.branchesLoading = false;
+
+            this.init();
         },
 
         computed: {
+            pluginsApiUrl() {
+                return apiUrlPrefix + `contents/plugins?ref=${this.branch}`;
+            },
+            localesApiUrl() {
+                return apiUrlPrefix + `contents/${this.componentPath}/_locales?ref=${this.branch}`;
+            },
+            contentUrlPrefix() {
+                return contentUrlPrefix + this.branch + '/';
+            },
             emailHref() {
-                let component = this.selectedComponentName || 'unknown component',
+                let component = this.componentName || 'unknown component',
                     polyglot = this.locale.polyglot || 'unknown polyglot',
                     locale = this.locale.locale || 'unknown locale';
 
                 return `mailto:drive4ik@gmail.com?subject=[${component}-translation] ${locale} from ${polyglot}`;
             },
-            localesFolder() {
-                return htmlApiPrefix + this.selectedComponentPath + '/_locales';
-            },
-            selectedComponentPath() {
-                let component = this.components.find(c => c.name === this.selectedComponentName);
+            componentPath() {
+                let component = this.components.find(comp => comp.name === this.componentName);
                 return component ? component.path : null;
             },
         },
 
         watch: {
-            selectedComponentName: function(selectedComponentName) {
-                if (selectedComponentName) {
-                    this.loadLocaleFromSelectedComponent();
+            branch: 'init',
+
+            componentName(componentName) {
+                this.componentLocale = '';
+
+                if (componentName) {
+                    this.loadComponentData();
+                }
+            },
+
+            async componentLocale(componentLocale) {
+                if (componentLocale) {
+                    this.availableLocalesLoading = true;
+
+                    let locale = await load(this.getLocaleUrl(componentLocale));
+
+                    locale.locale = componentLocale;
+                    locale.version = this.manifest.version;
+                    locale.component = this.componentName;
+
+                    this.setLocale(locale);
+
+                    this.availableLocalesLoading = false;
                 }
             },
 
             'locale.locale': async function(locale) {
                 this.currentLocale = {};
 
-                if (locale.length > 1) {
+                if (locale && locale.length > 1) {
                     try {
                         this.currentLocale = await load(this.getLocaleUrl(locale));
                     } catch (e) {
@@ -89,30 +131,30 @@
         },
 
         methods: {
-            resetValue: function(key) {
-                this.locale[key] = this.currentLocale[key].message;
+            async init() {
+                let plugins = await load(this.pluginsApiUrl, []);
+                this.components = [this.components[0]].concat(plugins.filter(element => 'dir' === element.type));
 
-                if (this.showOldValueByKey === key) {
-                    this.showOldValueByKey = null;
-                }
+                let locales = await load(this.localesApiUrl, []);
+                this.locales = locales.map(lang => lang.name);
 
-                this.$forceUpdate();
+                this.loadComponentData();
             },
             getLocaleUrl: function(locale) {
-                return urlPrefix + this.selectedComponentPath + '/_locales/' + locale + '/messages' + LOCALE_FILE_EXT;
+                return this.contentUrlPrefix + this.componentPath + '/_locales/' + locale + '/messages' + LOCALE_FILE_EXT;
             },
-            async loadLocaleFromSelectedComponent() {
-                this.loading = true;
+            async loadComponentData() {
+                this.componentLoading = true;
+                this.availableLocalesLoading = true;
 
-                this.manifest = await load(urlPrefix + this.selectedComponentPath + '/manifest.json');
+                this.manifest = await load(this.contentUrlPrefix + this.componentPath + '/manifest.json');
                 this.defaultLocale = await load(this.getLocaleUrl(this.manifest.default_locale));
 
-                this.$emit('locale-loaded');
-
-                this.loading = false;
+                this.componentLoading = false;
+                this.availableLocalesLoading = false;
             },
             setLocale(locale) {
-                this.locale = {
+                let localeToSet = {
                     locale: locale.locale,
                     version: locale.version,
                     polyglot: locale.polyglot,
@@ -124,23 +166,39 @@
                     }
 
                     if (locale[key]) {
-                        this.locale[key] = locale[key].message;
+                        localeToSet[key] = locale[key].message;
                     }
                 }, this);
+
+                this.locale = localeToSet;
+            },
+            resetValue: function(key) {
+                this.locale[key] = this.currentLocale[key].message;
+
+                if (this.showOldValueForKey === key) {
+                    this.showOldValueForKey = null;
+                }
+
+                this.$forceUpdate();
+            },
+            onChangeMessage() {
+                if (!window.onbeforeunload) {
+                    window.onbeforeunload = function() {
+                        return 'You really want to close?';
+                    };
+                }
+
+                this.$forceUpdate();
             },
             async clickLoadLocaleFileButton() {
                 let locale = await this.importFromFile();
 
-                if (locale.component) {
-                    if (this.selectedComponentName === locale.component) {
-                        this.setLocale(locale);
-                    } else {
-                        this.$once('locale-loaded', () => this.setLocale(locale));
-                        this.selectedComponentName = locale.component;
-                    }
-                } else {
-                    this.selectedComponentName = null;
-                    this.$once('locale-loaded', () => this.setLocale(locale));
+                this.componentName = locale.component || '';
+                this.componentLocale = '';
+
+                this.setLocale(locale);
+
+                if (!this.componentName) {
                     alert('Please, select component of this file');
                 }
             },
@@ -150,12 +208,12 @@
                 }
 
                 let localeToSave = {
-                        component: this.selectedComponentName,
+                        component: this.componentName,
                         locale: this.locale.locale,
                         version: this.manifest.version,
                         polyglot: this.locale.polyglot,
                     },
-                    fileName = this.selectedComponentName + '-translation-' + this.locale.locale + LOCALE_FILE_EXT;
+                    fileName = this.componentName + '-translation-' + this.locale.locale + LOCALE_FILE_EXT;
 
                 Object.keys(this.defaultLocale).forEach(function(key) {
                     if (this.notAllowedKeys.includes(key)) {

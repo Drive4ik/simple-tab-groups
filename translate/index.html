@@ -6,8 +6,6 @@
     <meta charset="utf-8" />
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.16/vue.js"></script>
-    <script type="text/javascript" src="./index.js"></script>
     <style type="text/css">
     .textarea {
         resize: both;
@@ -23,32 +21,58 @@
     <main id="content" class="container is-fluid" style="padding-top: 20px">
         <header>
             <h4 class="title is-4">Simple Tab Groups - translation utility</h4>
-            <div class="columns">
+
+            <div class="columns is-multiline">
                 <div class="column">
-                    <p>Component:</p>
+                    <p class="subtitle">Branch:</p>
+                    <div class="control has-icons-left">
+                        <div :class="['select is-fullwidth', {'is-loading': branchesLoading}]">
+                            <select v-model="branch" :disabled="!componentName">
+                                <option v-for="br in branches" :value="br" v-text="br"></option>
+                            </select>
+                        </div>
+                        <span class="icon is-left">
+                            <i class="fa fa-code-fork"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="column">
+                    <p class="subtitle">Select component:</p>
                     <div class="control">
-                        <div :class="['select is-medium', {'is-danger': !selectedComponentName, 'is-loading': loading}]">
-                            <select v-model="selectedComponentName">
-                                <option v-for="ex in components" :value="ex.name" v-html="ex.name"></option>
+                        <div :class="['select is-fullwidth', {'is-danger': !componentName, 'is-loading': componentLoading}]">
+                            <select v-model="componentName">
+                                <option v-for="ex in components" :value="ex.name" v-text="ex.name"></option>
                             </select>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="columns">
                 <div class="column">
-                    <button type="button" class="button is-primary is-large" @click="clickLoadLocaleFileButton">
-                        <span class="icon is-medium">
+                    <p class="subtitle">Load locale file:</p>
+                    <button type="button" class="button is-primary is-fullwidth" @click="clickLoadLocaleFileButton">
+                        <span class="icon">
                             <i class="fa fa-upload" aria-hidden="true"></i>
                         </span>
-                        <span>Load translation file</span>
+                        <span>Load locale file</span>
                     </button>
-                    <br>
-                    <span class="has-text-success">You can load exist translation file messages.json from <a :href="localesFolder" target="_blank">_locales</a> folder</span>
                 </div>
-                <div class="column has-text-right">
-                    <button type="button" class="button is-info is-large" @click="clickSaveLocaleFileButton">
-                        <span class="icon is-medium">
+                <div class="column">
+                    <p class="subtitle">Or load existing locale:</p>
+                    <div class="control has-icons-left">
+                        <div :class="['select is-fullwidth', {'is-loading': availableLocalesLoading}]">
+                            <select v-model="componentLocale" :disabled="!componentName">
+                                <option disabled value="">Select component locale</option>
+                                <option v-for="locale in locales" :value="locale" v-html="locale"></option>
+                            </select>
+                        </div>
+                        <span class="icon is-left">
+                            <i class="fa fa-globe"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="column">
+                    <p class="subtitle">Save locale:</p>
+                    <button type="button" class="button is-info is-fullwidth" @click="clickSaveLocaleFileButton" :disabled="!componentName">
+                        <span class="icon">
                             <i class="fa fa-download" aria-hidden="true"></i>
                         </span>
                         <span>Save translation file</span>
@@ -57,13 +81,15 @@
                     <span>Please send this file to <a :href="emailHref" target="_blank">email</a></span>
                 </div>
             </div>
+
             <div class="columns">
                 <div class="column">
                     Current addon version: <span v-html="manifest.version"></span><br>
                     Loaded translation version: <span v-html="locale.version || 'Unknown version'"></span>
                 </div>
             </div>
-            <div class="columns" v-if="selectedComponentName">
+
+            <div class="columns" v-if="componentName">
                 <div class="column">
                     <div class="field">
                         <label class="label" for="locale">
@@ -71,7 +97,7 @@
                             <span class="tag is-rounded is-danger">required</span>
                         </label>
                         <div class="control">
-                            <input id="locale" class="input" type="text" placeholder="en, en_US, ru_RU, fr_CA, es_MX etc." v-model.trim="locale.locale">
+                            <input id="locale" :class="['input', {'is-danger': !locale.locale}]" type="text" placeholder="en, en_US, ru_RU, fr_CA, es_MX etc." v-model.trim="locale.locale">
                         </div>
                     </div>
                     <div class="field">
@@ -86,7 +112,7 @@
                 </div>
             </div>
         </header>
-        <div class="columns" v-if="selectedComponentName">
+        <div class="columns" v-if="componentName">
             <div class="column">
                 <table class="table is-bordered is-narrow is-hoverable is-fullwidth">
                     <thead>
@@ -95,7 +121,7 @@
                         <th>Translated value</th>
                     </thead>
                     <tbody>
-                        <tr v-for="(val, key) in defaultLocale" v-show="!notAllowedKeys.includes(key)" :key="selectedComponentName + key">
+                        <tr v-for="(val, key) in defaultLocale" v-show="!notAllowedKeys.includes(key)" :key="componentName + key">
                             <td class="text-break-all" v-html="key"></td>
                             <td v-text="val.message.replace(/\n/g, '\&#92n')"></td>
                             <td>
@@ -103,19 +129,25 @@
                                     <div class="column">
                                         <div class="field">
                                             <div class="control">
-                                                <textarea v-if="!showOldValueByKey || showOldValueByKey !== key || (showOldValueByKey == key && !currentLocale[key])" :class="['textarea', {
-                                                    'is-info': locale[key] && (!currentLocale[key] || !currentLocale[key].message),
-                                                    'is-danger': !locale[key] && currentLocale[key] && currentLocale[key].message
-                                                }]" v-model.trim="locale[key]" :placeholder="val.description" @input="$forceUpdate()"></textarea>
+                                                <textarea
+                                                    v-if="!showOldValueForKey || showOldValueForKey !== key || (showOldValueForKey == key && !currentLocale[key])"
+                                                    :class="['textarea', {
+                                                        'is-info': locale[key] && (!currentLocale[key] || !currentLocale[key].message),
+                                                        'is-danger': !locale[key] && currentLocale[key] && currentLocale[key].message
+                                                    }]"
+                                                    v-model.trim="locale[key]"
+                                                    :placeholder="val.description"
+                                                    @input="onChangeMessage"
+                                                ></textarea>
 
-                                                <textarea v-if="showOldValueByKey === key && currentLocale[key]" readonly class="textarea" v-model="currentLocale[key].message"></textarea>
+                                                <textarea v-if="showOldValueForKey === key && currentLocale[key]" readonly class="textarea" v-model="currentLocale[key].message"></textarea>
                                             </div>
                                         </div>
                                         <div class="field is-grouped" v-if="locale[key] && currentLocale[key] && locale[key] !== currentLocale[key].message">
                                             <div class="control">
-                                                <button class="button" @click="showOldValueByKey = showOldValueByKey === key ? null : key">
+                                                <button class="button" @click="showOldValueForKey = showOldValueForKey === key ? null : key">
                                                     <span class="icon">
-                                                        <i :class="['fa', showOldValueByKey === key ? 'fa-check-square-o' : 'fa-square-o']" aria-hidden="true"></i>
+                                                        <i :class="['fa', showOldValueForKey === key ? 'fa-check-square-o' : 'fa-square-o']" aria-hidden="true"></i>
                                                     </span>
                                                     <span>Old value</span>
                                                 </button>
@@ -139,6 +171,8 @@
             </div>
         </div>
     </main>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.16/vue.js"></script>
+    <script type="text/javascript" src="./index.js"></script>
 </body>
 
 </html>
