@@ -26,7 +26,7 @@
                 <div class="column">
                     <p class="subtitle">Branch:</p>
                     <div class="control has-icons-left">
-                        <div :class="['select is-fullwidth', {'is-loading': branchesLoading}]">
+                        <div :class="['select is-fullwidth', {'is-danger': !branch, 'is-loading': branchesLoading}]">
                             <select v-model="branch" :disabled="!componentName">
                                 <option v-for="br in branches" :value="br" v-text="br"></option>
                             </select>

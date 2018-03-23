@@ -29,7 +29,7 @@
     new Vue({
         el: '#content',
         data: {
-            notAllowedKeys: ['component', 'locale', 'version', 'polyglot', 'extensionName'],
+            notAllowedKeys: ['branch', 'component', 'locale', 'version', 'polyglot', 'extensionName'],
 
             branchesLoading: true,
             branches: [],
@@ -135,9 +135,6 @@
                 let plugins = await load(this.pluginsApiUrl, []);
                 this.components = [this.components[0]].concat(plugins.filter(element => 'dir' === element.type));
 
-                let locales = await load(this.localesApiUrl, []);
-                this.locales = locales.map(lang => lang.name);
-
                 this.loadComponentData();
             },
             getLocaleUrl: function(locale) {
@@ -150,6 +147,9 @@
                 this.manifest = await load(this.contentUrlPrefix + this.componentPath + '/manifest.json');
                 this.defaultLocale = await load(this.getLocaleUrl(this.manifest.default_locale));
 
+                let locales = await load(this.localesApiUrl, []);
+                this.locales = locales.map(lang => lang.name);
+
                 this.componentLoading = false;
                 this.availableLocalesLoading = false;
             },
@@ -159,6 +159,10 @@
                     version: locale.version,
                     polyglot: locale.polyglot,
                 };
+
+                if (locale.branch) {
+                    this.branch = locale.branch;
+                }
 
                 Object.keys(this.defaultLocale).forEach(function(key) {
                     if (this.notAllowedKeys.includes(key)) {
@@ -208,6 +212,7 @@
                 }
 
                 let localeToSave = {
+                        branch: this.branch,
                         component: this.componentName,
                         locale: this.locale.locale,
                         version: this.manifest.version,
