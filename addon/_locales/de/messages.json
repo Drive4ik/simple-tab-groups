@@ -69,10 +69,6 @@
         "message": "Dieser Tab wird nicht unterstützt",
         "description": "This tab is not supported"
     },
-    "confirmLoadGroupAndDeleteTabs": {
-        "message": "Das Laden dieser Gruppe wird alle derzeitigen Tabs schließen!",
-        "description": "Load this group will close all current tabs!"
-    },
     "confirmDeleteLastGroupAndCloseTabs": {
         "message": "Das Löschen dieser Gruppe wird alle derzeitigen Tabs schließen!",
         "description": "Deleting this group will close all current tabs!"

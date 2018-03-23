@@ -69,10 +69,6 @@
         "message": "Ta zakładka nie jest wspierana",
         "description": "This tab is not supported"
     },
-    "confirmLoadGroupAndDeleteTabs": {
-        "message": "Załadowanie tej grupy, spowoduje zamknięcie obecnych kart!",
-        "description": "Load this group will close all current tabs!"
-    },
     "confirmDeleteLastGroupAndCloseTabs": {
         "message": "Usunięcie tej grupy, spowoduje zamknięcie obecnych kart!",
         "description": "Deleting this group will close all current tabs!"

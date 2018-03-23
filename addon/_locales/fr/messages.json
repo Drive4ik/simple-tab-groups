@@ -69,10 +69,6 @@
         "message": "Cet onglet n'est pas supporté",
         "description": "This tab is not supported"
     },
-    "confirmLoadGroupAndDeleteTabs": {
-        "message": "Charger ce groupe va fermer tous les onglet courants!",
-        "description": "Load this group will close all current tabs!"
-    },
     "confirmDeleteLastGroupAndCloseTabs": {
         "message": "Supprimer ce groupe fermera tous les onglets courants!",
         "description": "Deleting this group will close all current tabs!"

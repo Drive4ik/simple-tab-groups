@@ -69,10 +69,6 @@
         "message": "Эта вкладка не поддерживается",
         "description": "This tab is not supported"
     },
-    "confirmLoadGroupAndDeleteTabs": {
-        "message": "Загрузка этой группы закроет все открытие вкладки!",
-        "description": "Load this group will close all current tabs!"
-    },
     "confirmDeleteLastGroupAndCloseTabs": {
         "message": "Удаление этой группы приведет к закрытию всех вкладок этой группы!",
         "description": "Deleting this group will close all current tabs!"

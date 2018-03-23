@@ -65,10 +65,6 @@
         "message": "Tento panel není podporován",
         "description": "This tab is not supported"
     },
-    "confirmLoadGroupAndDeleteTabs": {
-        "message": "Načtení této skupiny zavře všechny aktuální panely!",
-        "description": "Load this group will close all current tabs!"
-    },
     "confirmDeleteLastGroupAndCloseTabs": {
         "message": "Smazáním této skupiny zavřete všechny aktuální panely!",
         "description": "Deleting this group will close all current tabs!"

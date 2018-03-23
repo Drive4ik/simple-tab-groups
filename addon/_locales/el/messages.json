@@ -69,10 +69,6 @@
         "message": "Αυτή η καρτέλα δεν υποστηρίζεται",
         "description": "This tab is not supported"
     },
-    "confirmLoadGroupAndDeleteTabs": {
-        "message": "Η φόρτωση αυτής της ομάδας θα κλείσει όλες τις τρέχουσες καρτέλες!",
-        "description": "Load this group will close all current tabs!"
-    },
     "confirmDeleteLastGroupAndCloseTabs": {
         "message": "Η διαγραφή αυτής της ομάδας θα κλείσει όλες τις τρέχουσες καρτέλες!",
         "description": "Deleting this group will close all current tabs!"

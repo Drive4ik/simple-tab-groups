@@ -74,12 +74,12 @@
         }
     }
 
-    async function hasAnotherTabs(windowId = browser.windows.WINDOW_ID_CURRENT) {
+    async function countAnotherTabs(windowId = browser.windows.WINDOW_ID_CURRENT) {
         let tabs = await browser.tabs.query({
             windowId,
         });
 
-        return tabs.some(tab => tab.pinned || !isAllowUrl(tab.url));
+        return tabs.filter(tab => tab.pinned || !isAllowUrl(tab.url)).length;
     }
 
     function normalizeUrl(url) {
@@ -286,9 +286,9 @@
                 let tabs = await getTabs(currentWindow.id);
 
                 if (tabs.length) {
-                    let isHasAnotherTabs = await hasAnotherTabs(currentWindow.id);
+                    let countOtherTabs = await countAnotherTabs(currentWindow.id);
 
-                    if (!isHasAnotherTabs) {
+                    if (!countOtherTabs) {
                         await browser.tabs.create({
                             active: true,
                         });
@@ -377,7 +377,7 @@
 
     async function removeCurrentTabByIndex(windowId, tabIndex) {
         let tabs = await getTabs(windowId),
-            isHasAnotherTabs = await hasAnotherTabs(windowId),
+            countOtherTabs = await countAnotherTabs(windowId),
             tabId = null;
 
         // if (!tabs[tabIndex]) { // TMP if bug found
@@ -393,7 +393,7 @@
 
         tabId = tabs[tabIndex].id;
 
-        if (!isHasAnotherTabs && 1 === tabs.length) {
+        if (!countOtherTabs && 1 === tabs.length) {
             await browser.tabs.create({
                 active: true,
                 windowId,
@@ -478,22 +478,33 @@
                     tempEmptyTabId = null,
                     tempEmptyTabPromise = Promise.resolve(),
                     tabs = await getTabs(windowId),
-                    isHasAnotherTabs = await hasAnotherTabs(windowId);
+                    countOtherTabs = await countAnotherTabs(windowId);
 
                 browser.runtime.sendMessage({
                     loadingGroupPosition: 20,
                 });
 
-                oldTabIds = tabs.map(tab => tab.id);
+                group.tabs.forEach(tab => tab.id = null);
 
                 let oldGroup = _groups.find(gr => gr.windowId === windowId);
                 if (oldGroup) {
                     oldGroup.windowId = null;
+                    oldTabIds = tabs.map(tab => tab.id);
+                } else {
+                    let syncedTabIds = [];
+                    group.tabs.forEach(function(tab) {
+                        let winTab = tabs.find(t => !syncedTabIds.includes(tab.id) && tab.url === normalizeUrl(t.url));
+
+                        if (winTab) {
+                            tab.id = winTab.id;
+                            syncedTabIds.push(winTab.id);
+                        }
+                    });
                 }
 
                 group.windowId = windowId;
 
-                if (oldTabIds.length || !isHasAnotherTabs) { // create empty tab (for quickly change group and not blinking)
+                if (oldTabIds.length || !countOtherTabs) { // create empty tab (for quickly change group and not blinking)
                     tempEmptyTabPromise = browser.tabs.create({
                             url: 'about:blank',
                             active: true,
@@ -502,7 +513,7 @@
                         .then(tab => tempEmptyTabId = tab.id);
                 }
 
-                if (!group.tabs.length && !isHasAnotherTabs) {
+                if (!group.tabs.length && !countOtherTabs) {
                     group.tabs.push({
                         active: true,
                         url: 'about:blank',
@@ -524,27 +535,44 @@
                     loadingGroupPosition: 90,
                 });
 
-                if (group.tabs.length) {
+                if (group.tabs.filter(tab => !tab.id).length) {
                     let options = await storage.get(['enableFastGroupSwitching', 'enableFavIconsForNotLoadedTabs']),
                         containers = await loadContainers();
 
-                    await Promise.all(group.tabs.map(function(tab, tabIndex) {
-                            tab.active = -1 === activeTabIndex ? Boolean(tab.active) : tabIndex === activeTabIndex;
+                    let newTabs = await Promise.all(group.tabs.map(function(tab, tabIndex) {
+                        if (tab.id) {
+                            return tab;
+                        }
 
-                            let url = tab.url;
+                        let url = tab.url;
 
-                            if (options.enableFastGroupSwitching) {
-                                url = createStgTabNewUrl(tab, options.enableFavIconsForNotLoadedTabs);
-                            }
+                        if (options.enableFastGroupSwitching) {
+                            url = createStgTabNewUrl(tab, options.enableFavIconsForNotLoadedTabs);
+                        }
 
-                            return browser.tabs.create({
-                                active: tab.active,
-                                url: url,
-                                windowId: windowId,
-                                cookieStoreId: normalizeCookieStoreId(tab.cookieStoreId, containers),
-                            });
-                        }))
-                        .then(newTabs => newTabs.forEach((tab, tabIndex) => group.tabs[tabIndex].id = tab.id)); // update tabs id
+                        return browser.tabs.create({
+                            active: false,
+                            url: url,
+                            windowId: windowId,
+                            cookieStoreId: normalizeCookieStoreId(tab.cookieStoreId, containers),
+                        });
+                    }));
+
+                    // update tabs id
+                    newTabs.forEach((tab, tabIndex) => group.tabs[tabIndex].id = tab.id);
+                }
+
+                if (group.tabs.length) {
+                    await browser.tabs.move(group.tabs.map(tab => tab.id), {
+                        index: countOtherTabs,
+                    });
+                }
+
+                let activeTab = group.tabs.find((tab, tabIndex) => -1 === activeTabIndex ? Boolean(tab.active) : tabIndex === activeTabIndex);
+                if (activeTab) {
+                    browser.tabs.update(activeTab.id, {
+                        active: true,
+                    });
                 }
 
                 // if (browser.tabs.discard && tabs) { // TODO - add discard tabs (bugs found)

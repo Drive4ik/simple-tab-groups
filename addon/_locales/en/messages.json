@@ -89,11 +89,6 @@
         "description": "This tab is not supported"
     },
 
-    "confirmLoadGroupAndDeleteTabs": {
-        "message": "Load this group will close all current tabs!",
-        "description": "Load this group will close all current tabs!"
-    },
-
     "confirmDeleteLastGroupAndCloseTabs": {
         "message": "Deleting this group will close all current tabs!",
         "description": "Deleting this group will close all current tabs!"

@@ -69,10 +69,6 @@
         "message": "这个标签页不被支持",
         "description": "This tab is not supported"
     },
-    "confirmLoadGroupAndDeleteTabs": {
-        "message": "加载这个群组，会关闭所有当前标签页！",
-        "description": "Load this group will close all current tabs!"
-    },
     "confirmDeleteLastGroupAndCloseTabs": {
         "message": "删除这个群组，会关闭所有当前标签页！",
         "description": "Deleting this group will close all current tabs!"

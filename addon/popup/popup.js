@@ -47,38 +47,22 @@
         async function doAction(action, data, event) {
             if ('load-group' === action) {
                 let currentGroup = _groups.find(group => group.windowId === currentWindowId),
-                    isCurrentGroup = currentGroup ? currentGroup.id === data.groupId : false,
-                    _loadGroup = function() {
-                        BG.loadGroup(currentWindowId, getGroupIndex(data.groupId), data.tabIndex)
-                            .then(function() {
-                                if (!options.closePopupAfterChangeGroup && options.openGroupAfterChange) {
-                                    renderTabsList(data.groupId);
-                                }
-
-                                if (options.closePopupAfterChangeGroup && !isCurrentGroup) {
-                                    window.close();
-                                }
-                            });
-                    };
+                    isCurrentGroup = currentGroup ? currentGroup.id === data.groupId : false;
 
                 if (isCurrentGroup && -1 === data.tabIndex) { // open group
                     return renderTabsList(data.groupId);
                 }
 
-                if (currentGroup) {
-                    _loadGroup();
-                } else {
-                    if (options.individualWindowForEachGroup || getGroupById(data.groupId).windowId) {
-                        _loadGroup();
-                    } else {
-                        let tabs = await BG.getTabs(currentWindowId);
-                        if (tabs.length) {
-                            Popups.confirm(browser.i18n.getMessage('confirmLoadGroupAndDeleteTabs'), browser.i18n.getMessage('warning')).then(_loadGroup);
-                        } else {
-                            _loadGroup();
+                BG.loadGroup(currentWindowId, getGroupIndex(data.groupId), data.tabIndex)
+                    .then(function() {
+                        if (!options.closePopupAfterChangeGroup && options.openGroupAfterChange) {
+                            renderTabsList(data.groupId);
                         }
-                    }
-                }
+
+                        if (options.closePopupAfterChangeGroup && !isCurrentGroup) {
+                            window.close();
+                        }
+                    });
 
             } else if ('show-group' === action) {
                 renderTabsList(data.groupId);
