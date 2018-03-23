@@ -1657,26 +1657,39 @@
     // { reason: "install", temporary: true }
     // browser.runtime.onInstalled.addListener(console.info.bind(null, 'onInstalled'));
 
+    // fix FF bug on browser.windows.getAll ... function not return all windows
+    async function getAllWindows() {
+        let allTabs = await browser.tabs.query({});
+
+        return Promise.all(
+            allTabs
+                .reduce((acc, tab) => acc.includes(tab.windowId) ? acc : acc.concat([tab.windowId]), [])
+                .map(async function(winId) {
+                    let win = await browser.windows.get(winId);
+
+                    // loading all tabs in all windows - FF bug on browser.windows.getAll with populate true and open window from shortcut on desktop
+                    // win.tabs = await browser.tabs.query({
+                    //     windowId: win.id,
+                    // });
+                    win.tabs = allTabs.filter(tab => tab.windowId === win.id);
+
+                    return win;
+                })
+        );
+    }
+
     // initialization
-    Promise.all([
-            storage.get(null),
-            browser.windows.getAll({
-                windowTypes: ['normal'],
-            })
-        ])
-        .then(async function([data, windows]) {
+    storage.get(null)
+        .then(async function(data) {
             data = await runMigrateForData(data); // migration data
 
             allOptionsKeys.forEach(key => options[key] = key in data ? data[key] : DEFAULT_OPTIONS[key]); // reload options
 
-            // loading all tabs in all windows - FF bug on browser.windows.getAll with populate true and open window from shortcut on desktop
-            windows = await Promise.all(windows.map(async function(win) {
-                win.tabs = await browser.tabs.query({
-                    windowId: win.id,
-                });
+            let windows = await getAllWindows();
 
-                return win;
-            }));
+            if (!data.doRemoveSTGNewTabUrls) {
+                data.doRemoveSTGNewTabUrls = windows.some(win => win.tabs.some(tab => tab.url.startsWith('moz-extension') && tab.url.includes('/stg-newtab/')));
+            }
 
             if (data.doRemoveSTGNewTabUrls) {
                 delete data.doRemoveSTGNewTabUrls;
@@ -1692,11 +1705,9 @@
                     return win;
                 });
 
-            let hiddenTabsCount = windows.reduce(function(acc, win) {
-                return acc + win.tabs.filter(isTabHidden).length;
-            }, 0);
+            let hiddenTabsCount = windows.reduce((acc, win) => acc + win.tabs.filter(isTabHidden).length, 0);
 
-            lastFocusedNormalWindow = windows.find(win => win.focused) || windows[0];
+            lastFocusedNormalWindow = windows.find(win => win.focused) || windows[0] || await getWindow();
             lastFocusedWinId = lastFocusedNormalWindow.id;
 
             if (options.createThumbnailsForTabs) {
