@@ -275,6 +275,10 @@
         "message": "建立新群组",
         "description": "Create new group"
     },
+    "createNewGroupWithCurrentTabs": {
+        "message": "...带有当前标签页",
+        "description": "Create new group with current tabs"
+    },
     "goBackButtonTitle": {
         "message": "返回到标签页",
         "description": "Go back"
@@ -302,6 +306,10 @@
     "setRandomColor": {
         "message": "设置随机颜色",
         "description": "Set random color"
+    },
+    "catchTabContainers": {
+        "message": "捕捉并移动身份标签页到该群组（仅对有链接标签页有效，不支持空标签页）",
+        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
     },
     "regexpForTabsTitle": {
         "message": "用来捕捉标签页的正则表述式",
@@ -382,5 +390,43 @@
     "saveErrorLogsIntoFile": {
         "message": "把最新错误日志保存为JSON文件",
         "description": "Save last error logs into JSON file"
+    },
+    "showNotificationIfGroupsNotSyncedAtStartup": {
+        "message": "当上次打开的群组未在启动时同步显示通知",
+        "description": "Show notification if no one last opened groups not synced at startup"
+    },
+    "noOneGroupWasNotSynchronized": {
+        "message": "没有群组被同步!\n\n请选择群组以同步标签页",
+        "description": "No one group was not synchronized!\n\nPlease, select group to sync tabs"
+    },
+    "undoRemoveGroupItemTitle": {
+        "message": "撤销移除群组\"$grouptitle$\"",
+        "description": "Undo remove group menu title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "enterBrowserActionIconColor": {
+        "message": "输入浏览器动作图标颜色",
+        "description": "Enter browser action icon color"
+    },
+    "isStickyGroupTitle": {
+        "message": "固定群组",
+        "description": "Sticky group"
+    },
+    "isStickyGroupHelp": {
+        "message": "在该群组的标签页不会自动移到其他群组",
+        "description": "Tabs in this group will never be automatically moved to another group"
+    },
+    "useTabsFavIconsFromGoogleS2Converter": {
+        "message": "使用谷歌S2转换器生成的网站标签",
+        "description": "Use tabs fav-icons from Google S2 Converter"
+    },
+    "iconStyle": {
+        "message": "图标类型",
+        "description": "Icon style"
     }
 }
