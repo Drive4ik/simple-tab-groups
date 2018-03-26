@@ -485,8 +485,8 @@
     },
 
     "noOneGroupWasNotSynchronized": {
-        "message": "No one group was not synchronized!\n\nPlease, select group to sync tabs",
-        "description": "No one group was not synchronized!\n\nPlease, select group to sync tabs"
+        "message": "No one group was synchronized!\n\nPlease, select group to sync tabs",
+        "description": "No one group was synchronized!\n\nPlease, select group to sync tabs"
     },
 
     "undoRemoveGroupItemTitle": {
