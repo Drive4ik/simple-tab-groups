@@ -1,0 +1,405 @@
+{
+    "branch": "master",
+    "component": "simple-tab-groups-addon",
+    "locale": "nl",
+    "version": "2.5.3",
+    "polyglot": "Pimm \"de Chinchilla\" Hogeling",
+    "extensionDescription": {
+        "message": "Creëer, verander en wissel snel tussen tabgroepen. Geïnspireerd door de oude add-on \"Tab Groups\" :)",
+        "description": "Description of the extension."
+    },
+    "openSettings": {
+        "message": "Instellingen",
+        "description": "Settings context button title"
+    },
+    "manageGroupsTitle": {
+        "message": "Groepen beheren",
+        "description": "Manage groups"
+    },
+    "setTabIconAsGroupIcon": {
+        "message": "Stel tabbladicoon in als groepicoon",
+        "description": "Set tab icon as group icon"
+    },
+    "moveTabToGroupDisabledTitle": {
+        "message": "Tabblad naar groep verplaatsen",
+        "description": "Move tab to group title"
+    },
+    "errorAnotherGroupAreLoading": {
+        "message": "Een moment geduld, een andere groep wordt geladen",
+        "description": "Please wait, another group are loading"
+    },
+    "moveTabToGroupMessage": {
+        "message": "Tabblad \"$tabtitle$\" is verplaatst naar groep \"$grouptitle$\".\n\nKlik hier om deze tabblad te tonen.",
+        "description": "Tab moved popup title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            },
+            "tabtitle": {
+                "content": "$2",
+                "example": "tab title"
+            }
+        }
+    },
+    "warning": {
+        "message": "Waarschuwing!",
+        "description": "Warning!"
+    },
+    "success": {
+        "message": "Geslaagd!",
+        "description": "Success!"
+    },
+    "ok": {
+        "message": "OK",
+        "description": "OK button"
+    },
+    "save": {
+        "message": "Opslaan",
+        "description": "Save"
+    },
+    "delete": {
+        "message": "Verwijderen",
+        "description": "Delete"
+    },
+    "cancel": {
+        "message": "Annuleren",
+        "description": "Cancel"
+    },
+    "privateAndPinnedTabsAreNotSupported": {
+        "message": "Privé‒ en vastgemaakte tabbladen worden niet ondersteund",
+        "description": "Private and pinned tabs are not supported"
+    },
+    "thisTabIsNotSupported": {
+        "message": "Dit tabblad wordt niet ondersteund",
+        "description": "This tab is not supported"
+    },
+    "confirmDeleteLastGroupAndCloseTabs": {
+        "message": "Het verwijderen van deze groep zal alle huidige tabbladen sluiten",
+        "description": "Deleting this group will close all current tabs!"
+    },
+    "searchTabPlaceholder": {
+        "message": "Zoek een tabblad…",
+        "description": "Search a tab placeholder"
+    },
+    "filterTabsPlaceholder": {
+        "message": "Tabbladen filteren (meerdere filters met *)",
+        "description": "Filter tabs (multiple filter with *)"
+    },
+    "invalidRegExpRuleTitle": {
+        "message": "Regel '$regexp$' is niet geldig en zal worden overgeslagen.",
+        "description": "Invalid rule description",
+        "placeholders": {
+            "regexp": {
+                "content": "$1",
+                "example": "googlecom"
+            }
+        }
+    },
+    "manageGroupViewGrid": {
+        "message": "Roosterweergave",
+        "description": "Grid display"
+    },
+    "manageGroupViewFreeArrange": {
+        "message": "Vrij plaatsen (in toekomstige versies)",
+        "description": "Free arrange"
+    },
+    "closePopupAfterChangeGroup": {
+        "message": "Sluit popup na het wisselen van groep",
+        "description": "Close popup after changing group"
+    },
+    "showNotificationAfterMoveTab": {
+        "message": "Toon notificatie wanneer tabbladen worden verplaatst naar een andere groep",
+        "description": "Show notification when tab is moved to another group"
+    },
+    "createNewGroupAfterAttachTabToNewWindow": {
+        "message": "Creëer een nieuwe groep wanneer een tabblad wordt verplaatst naar een nieuw venster",
+        "description": "Create new group if tab is moved to new window"
+    },
+    "openManageGroupsInTab": {
+        "message": "Open \"Groepen beheren\" in nieuw tabblad",
+        "description": "Open \"Manage Groups\" in new tab"
+    },
+    "showConfirmDialogBeforeGroupDelete": {
+        "message": "Toon dialoogvenster om verwijderen van een groep te bevestigen",
+        "description": "Show confirm dialog before group delete"
+    },
+    "individualWindowForEachGroup": {
+        "message": "Individueel venster voor elke groep",
+        "description": "Individual window for each group"
+    },
+    "openNewWindowWhenCreateNewGroup": {
+        "message": "Open nieuw venster bij het aanmaken van een nieuwe groep",
+        "description": "Open new window when create new group"
+    },
+    "exportAddonSettingsTitle": {
+        "message": "Maak reservekopie van Simple Tab Groups",
+        "description": "Backup your Simple Tab Groups"
+    },
+    "exportAddonSettingsDescription": {
+        "message": "Exporteer een reservekopie van je tabgroepen, zodat je deze later kunt herstellen als dat nodig is.",
+        "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
+    },
+    "exportAddonSettingsButton": {
+        "message": "Maak reservekopie aan",
+        "description": "Create backup"
+    },
+    "includeTabThumbnailsIntoBackup": {
+        "message": "Voorbeeld van tabbladen toevoegen aan reservekopie (produceert een groter bestand)",
+        "description": "Include tab thumbnails into backup (make backup file size bigger)"
+    },
+    "importAddonSettingsTitle": {
+        "message": "Simple Tab Groups herstellen",
+        "description": "Restore Simple Tab Groups"
+    },
+    "importAddonSettingsDescription": {
+        "message": "Laadt een reservekopie van de tabgroepen die je wilt herstellen.",
+        "description": "Load a backup file containing the tab groups you want to restore."
+    },
+    "importAddonSettingsWarning": {
+        "message": "Add-on instellingen herstellen zal de huidige instellingen en groepen VERWIJDEREN!",
+        "description": "Restore add-on settings will ERASE all existing settings and groups!"
+    },
+    "importAddonSettingsButton": {
+        "message": "Reservekopie herstellen",
+        "description": "Restore backup"
+    },
+    "importSettingsOldTabGroupsAddonTitle": {
+        "message": "Herstel Quicksaver's \"Tab Groups\"",
+        "description": "Restore Quicksaver's \"Tab Groups\""
+    },
+    "importSettingsOldTabGroupsAddonDescription": {
+        "message": "Laadt een reservekopie van de oude \"Tab Groups\" add-on.",
+        "description": "Load a backup file old \"Tab Groups\" addon."
+    },
+    "importSettingsOldTabGroupsAddonButton": {
+        "message": "Importeer instellingen uit Quicksaver's \"Tab Groups\" add-on",
+        "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
+    },
+    "openGroupAfterChange": {
+        "message": "Open groep nadat er naartoe gewisseld is",
+        "description": "Open group after changing to it"
+    },
+    "showGroupIconWhenSearchATab": {
+        "message": "Toon groepicoon bij het zoeken naar een tabblad",
+        "description": "Show group icon when search a tab"
+    },
+    "showUrlTooltipOnTabHover": {
+        "message": "Toon URL-tooltip wanneer de muiscursor zich boven een tabblad bevindt",
+        "description": "Show url tooltip when hovering over tab"
+    },
+    "enableFastGroupSwitching": {
+        "message": "Schakel snel wisselen van groepen in (waarbij niet alle tabbladen geladen worden, slechts de actieve)",
+        "description": "Enable fast group switching (without loading all tabs, only active)"
+    },
+    "enableFavIconsForNotLoadedTabs": {
+        "message": "Schakel favicons in voor niet-geladen tabbladen (schakel dit uit voor meer snelheid)",
+        "description": "Enable fav-icons for not loaded tabs (disable this checkbox if more speed is needed)"
+    },
+    "newGroupTitle": {
+        "message": "Groep $id$",
+        "description": "group id",
+        "placeholders": {
+            "id": {
+                "content": "$1",
+                "example": "1"
+            }
+        }
+    },
+    "searchTabNotFoundTitle": {
+        "message": "Tabblad \"$search$\" is niet gevonden",
+        "description": "Search for tabs not found",
+        "placeholders": {
+            "search": {
+                "content": "$1",
+                "example": "mail"
+            }
+        }
+    },
+    "openGroupInNewWindow": {
+        "message": "Open groep in nieuw venster",
+        "description": "Open group in new window"
+    },
+    "sortGroupsAZ": {
+        "message": "Sorteer groepen [A–Z]",
+        "description": "Sort groups [A-Z]"
+    },
+    "sortGroupsZA": {
+        "message": "Sorteer groepen [Z–A]",
+        "description": "Sort groups [Z-A]"
+    },
+    "settingsTitle": {
+        "message": "Instellingen",
+        "description": "Settings"
+    },
+    "groupSettings": {
+        "message": "Instellingen voor groepen",
+        "description": "Group settings"
+    },
+    "deleteGroup": {
+        "message": "Verwijder groep",
+        "description": "Delete group"
+    },
+    "deleteGroupTitle": {
+        "message": "Groep verwijderen?",
+        "description": "Delete group?"
+    },
+    "deleteGroupBody": {
+        "message": "Wil je de groep \"$name$\" verwijderen?<br>Het verwijderen van de groep sluit ook de tabbladen en verbonden venster als deze open is.",
+        "description": "Delete group?",
+        "placeholders": {
+            "name": {
+                "content": "$1",
+                "example": "Group #4"
+            }
+        }
+    },
+    "groupTabsCount": {
+        "message": "$count$ tabbladen",
+        "description": "Group tabs count",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "deleteTab": {
+        "message": "Verwijder tabblad",
+        "description": "Delete tab"
+    },
+    "createNewTab": {
+        "message": "Open nieuw tabblad",
+        "description": "Open new tab"
+    },
+    "createNewGroup": {
+        "message": "Creëer nieuwe tabgroep",
+        "description": "Create new group"
+    },
+    "createNewGroupWithCurrentTabs": {
+        "message": "…met huidige tabbladen",
+        "description": "Create new group with current tabs"
+    },
+    "goBackButtonTitle": {
+        "message": "Ga terug",
+        "description": "Go back"
+    },
+    "goBackToGroupsButtonTitle": {
+        "message": "Ga terug naar groepen",
+        "description": "Go back to groups"
+    },
+    "title": {
+        "message": "Titel",
+        "description": "Title"
+    },
+    "iconColor": {
+        "message": "Kleur van icoon",
+        "description": "Icon color"
+    },
+    "selectUserGroupIcon": {
+        "message": "Laad icoon",
+        "description": "Load icon"
+    },
+    "selectUserGroupIconWarnText": {
+        "message": "Excuses, je kunt geen aangepast icoon laden in deze popup, maar je kunt een aangepast groepicoon laden in \"Groepen beheren\".\n\"Groepen beheren\" openen?",
+        "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
+    },
+    "setRandomColor": {
+        "message": "Stel willekeurige kleur in",
+        "description": "Set random color"
+    },
+    "catchTabContainers": {
+        "message": "Pak tabbladen met containers beet en verplaats ze naar deze groep (alleen voor web-URLs, lege tabbladen worden niet ondersteund)",
+        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
+    },
+    "regexpForTabsTitle": {
+        "message": "Regular expression voor tabbladen beetpakken",
+        "description": "Regular expressions for catch tabs"
+    },
+    "regexpForTabsPlaceholder": {
+        "message": "Regular expression",
+        "description": "Regular expressions"
+    },
+    "regexpForTabsHelp": {
+        "message": "Voer een regular expression voor een webadres in. Tabbladen die hieraan voldoen zullen automatisch naar deze groep worden verplaatst.\nGebruik een regel per regular expression, je kunt er zo veel gebruiken als je wilt.\nBijvoorbeeld:\ngithub\\.com/drive4ik/simple-tab-groups - pakt alle pagina's in de repository van deze add-on beet \nbugzilla\\.mozilla\\.org - pakt Firefox bug reports beet\n(facebook|twitter|youtube)\\.com - pakt sociale media websites beet",
+        "description": "Regular exceptions helper"
+    },
+    "hotkeysTitle": {
+        "message": "Sneltoetsen",
+        "description": "Hotkeys"
+    },
+    "hotkeysDescription": {
+        "message": "Hier kan je sneltoetsen toevoegen.<br>Beperkingen:<br>1. Deze sneltoetsen zullen alleen werken op webpagina's (http:, https:). Op de browserpagina's (about:) werken ze niet: de WebExtensions API staat dit niet toe.<br>2. Sommige sneltoetsen werken niet op bepaalde toetsenbordindelingen. Bijvoorbeeld: de sneltoets <code>Ctrl + ~</code> aangemaakt met een Engelse toetsenbordindeling zal niet werken met een Russische toetsenbordindeling, omdat deze toets daar een andere code heeft. Om dit op te lossen, voeg je een sneltoets toe met de Russische toetsenbordindeling: <code>Ctrl + Ё</code>",
+        "description": "Hotkeys description"
+    },
+    "addHotKeyButton": {
+        "message": "Sneltoets toevoegen",
+        "description": "Add hotkey"
+    },
+    "deleteHotKeyButton": {
+        "message": "Sneltoets verwijderen",
+        "description": "Delete hotkey"
+    },
+    "hotkeyPlaceholder": {
+        "message": "Druk toetsen in",
+        "description": "Press keys here"
+    },
+    "selectAction": {
+        "message": "Selecteer actie",
+        "description": "Select action"
+    },
+    "selectGroup": {
+        "message": "Selecteer groep",
+        "description": "Select group"
+    },
+    "hotkeyActionTitleLoadNextGroup": {
+        "message": "Laad volgende groep",
+        "description": "Load next group"
+    },
+    "hotkeyActionTitleLoadPrevGroup": {
+        "message": "Laad vorige groep",
+        "description": "Load previous group"
+    },
+    "hotkeyActionTitleLoadFirstGroup": {
+        "message": "Laad eerste groep",
+        "description": "Load first group"
+    },
+    "hotkeyActionTitleLoadLastGroup": {
+        "message": "Laad laatste groep",
+        "description": "Load last group"
+    },
+    "hotkeyActionTitleLoadCustomGroup": {
+        "message": "Laad aangepaste groep",
+        "description": "Load custom group"
+    },
+    "hotkeyActionTitleAddNewGroup": {
+        "message": "Voeg nieuwe groep toe",
+        "description": "Add new group"
+    },
+    "hotkeyActionTitleDeleteCurrentGroup": {
+        "message": "Verwijder huidige groep",
+        "description": "Delete current group"
+    },
+    "hotkeyActionTitleOpenManageGroups": {
+        "message": "Open \"Beheer groepen\"",
+        "description": "Open manage groups"
+    },
+    "whatsWrongMessage": {
+        "message": "Wat is er mis…\nNeem alsjeblieft contact op met de ontwikkelaar met het e-mailadres voor ondersteuning en voeg de meest recente foutlogboeken toe (knop onderaan opties)",
+        "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
+    },
+    "saveErrorLogsIntoFile": {
+        "message": "Sla laatste foutlogboeken op als JSON-bestand",
+        "description": "Save last error logs into JSON file"
+    },
+    "undoRemoveGroupItemTitle": {
+        "message": "Verwijderen groep \"$grouptitle$\" ongedaan maken",
+        "description": "Undo remove group menu title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    }
+}
