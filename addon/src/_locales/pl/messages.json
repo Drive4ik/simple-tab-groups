@@ -1,0 +1,368 @@
+{
+    "extensionDescription": {
+        "message": "Twórz, modyfikuj i szybko zmieniaj grupy zakładek. \nZainspirowane starym dodatkiem \"Grupy Kart\"",
+        "description": "Description of the extension."
+    },
+    "openSettings": {
+        "message": "Ustawienia",
+        "description": "Settings context button title"
+    },
+    "manageGroupsTitle": {
+        "message": "Zarządzanie grupami",
+        "description": "Manage groups"
+    },
+    "setTabIconAsGroupIcon": {
+        "message": "Ustaw ikonę strony jako ikonę grupy",
+        "description": "Set tab icon as group icon"
+    },
+    "moveTabToGroupDisabledTitle": {
+        "message": "Przesuń zakładkę do grupy",
+        "description": "Move tab to group title"
+    },
+    "moveTabToGroupMessage": {
+        "message": "Zakładka \"$tabtitle$\" została przeniesiona do grupy \"$grouptitle$\".\n\nKliknij tutaj, aby wyświetlić tę kartę.",
+        "description": "Tab moved popup title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            },
+            "tabtitle": {
+                "content": "$2",
+                "example": "tab title"
+            }
+        }
+    },
+    "warning": {
+        "message": "Uwaga!",
+        "description": "Warning!"
+    },
+    "success": {
+        "message": "Udało się!",
+        "description": "Success!"
+    },
+    "ok": {
+        "message": "OK",
+        "description": "OK button"
+    },
+    "save": {
+        "message": "Zapisz",
+        "description": "Save"
+    },
+    "delete": {
+        "message": "Usuń",
+        "description": "Delete"
+    },
+    "cancel": {
+        "message": "Anuluj",
+        "description": "Cancel"
+    },
+    "privateAndPinnedTabsAreNotSupported": {
+        "message": "Prywatne i przypięte zakładki nie są wspierane",
+        "description": "Private and pinned tabs are not supported"
+    },
+    "thisTabIsNotSupported": {
+        "message": "Ta zakładka nie jest wspierana",
+        "description": "This tab is not supported"
+    },
+    "confirmDeleteLastGroupAndCloseTabs": {
+        "message": "Usunięcie tej grupy, spowoduje zamknięcie obecnych kart!",
+        "description": "Deleting this group will close all current tabs!"
+    },
+    "searchPlaceholder": {
+        "message": "Wyszukaj zakładkę...",
+        "description": "Search placeholder"
+    },
+    "filterTabsPlaceholder": {
+        "message": "Filtr zakładek (filtrowanie kilkukrotne z użyciem *)",
+        "description": "Filter tabs (multiple filter with *)"
+    },
+    "invalidRegExpRuleTitle": {
+        "message": "Reguła '$regexp$' nie jest prawidłowa i zostanie pominięta.",
+        "description": "Invalid rule description",
+        "placeholders": {
+            "regexp": {
+                "content": "$1",
+                "example": "googlecom"
+            }
+        }
+    },
+    "manageGroupViewGrid": {
+        "message": "Układ siatki",
+        "description": "Grid display"
+    },
+    "manageGroupViewFreeArrange": {
+        "message": "Układ dowolny (w przyszłych wersjach)",
+        "description": "Free arrange"
+    },
+    "closePopupAfterChangeGroup": {
+        "message": "Zamknij okno pop-up po zmianie grupy",
+        "description": "Close popup after changing group"
+    },
+    "showNotificationAfterMoveTab": {
+        "message": "Pokaż powiadomienie kiedy zakładka zostanie przesunięta do innej grupy",
+        "description": "Show notification when tab is moved to another group"
+    },
+    "openManageGroupsInTab": {
+        "message": "Otwórz \"Menadżer grup\" w nowej zakładce",
+        "description": "Open \"Manage Groups\" in new tab"
+    },
+    "showConfirmDialogBeforeGroupDelete": {
+        "message": "Pokaż okno potwierdzające usunięcie grupy",
+        "description": "Show confirm dialog before group delete"
+    },
+    "exportAddonSettingsTitle": {
+        "message": "Kopia zapasowa twoich zakładek",
+        "description": "Backup your Simple Tab Groups"
+    },
+    "exportAddonSettingsDescription": {
+        "message": "Wyeksportuj grupy kart do pliku kopii zapasowej w celu ich bezpiecznego przechowywania, aby w razie potrzeby móc je przywrócić w późniejszym czasie.",
+        "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
+    },
+    "exportAddonSettingsButton": {
+        "message": "Utwórz kopię",
+        "description": "Create backup"
+    },
+    "includeTabThumbnailsIntoBackup": {
+        "message": "Dołącz miniaturki kart do kopii zapasowej (zwiększy to rozmiar pliku kopii zapasowej)",
+        "description": "Include tab thumbnails into backup (make backup file size bigger)"
+    },
+    "importAddonSettingsTitle": {
+        "message": "Przywróć zakładki",
+        "description": "Restore Simple Tab Groups"
+    },
+    "importAddonSettingsDescription": {
+        "message": "Załaduj plik kopii zapasowej zawierający grupy kart, które chcesz przywrócić.",
+        "description": "Load a backup file containing the tab groups you want to restore."
+    },
+    "importAddonSettingsWarning": {
+        "message": "Przywrócenie ustawień dodatkowych usunie wszystkie istniejące ustawienia i grupy!",
+        "description": "Restore add-on settings will ERASE all existing settings and groups!"
+    },
+    "importAddonSettingsButton": {
+        "message": "Przywróć kopię",
+        "description": "Restore backup"
+    },
+    "importSettingsOldTabGroupsAddonTitle": {
+        "message": "Przywróć grupy zakładek z dodatku Quicksaver-a",
+        "description": "Restore Quicksaver's \"Tab Groups\""
+    },
+    "importSettingsOldTabGroupsAddonDescription": {
+        "message": "Załaduj plik kopii zapasowej",
+        "description": "Load a backup file old \"Tab Groups\" addon."
+    },
+    "importSettingsOldTabGroupsAddonButton": {
+        "message": "Importuj ustawienia z dodatku Quicksaver-a",
+        "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
+    },
+    "openGroupAfterChange": {
+        "message": "Otwórz grupę po jej zmianie",
+        "description": "Open group after changing to it"
+    },
+    "showUrlTooltipOnTabHover": {
+        "message": "Pokaż podpowiedź adresu URL po najechaniu na kartę",
+        "description": "Show url tooltip when hovering over tab"
+    },
+    "newGroupTitle": {
+        "message": "Grupa $id$",
+        "description": "group id",
+        "placeholders": {
+            "id": {
+                "content": "$1",
+                "example": "1"
+            }
+        }
+    },
+    "searchNotFoundTitle": {
+        "message": "Wyszukaj karty dla \"$search$\" nie znaleziono",
+        "description": "No results found",
+        "placeholders": {
+            "search": {
+                "content": "$1",
+                "example": "mail"
+            }
+        }
+    },
+    "sortGroupsAZ": {
+        "message": "Sortuj grupy [A-Z]",
+        "description": "Sort groups [A-Z]"
+    },
+    "sortGroupsZA": {
+        "message": "Sortuj grupy [Z-A]",
+        "description": "Sort groups [Z-A]"
+    },
+    "settingsTitle": {
+        "message": "Ustawienia",
+        "description": "Settings"
+    },
+    "groupSettings": {
+        "message": "Ustawienia grup",
+        "description": "Group settings"
+    },
+    "deleteGroup": {
+        "message": "Usuń grupę",
+        "description": "Delete group"
+    },
+    "deleteGroupTitle": {
+        "message": "Czy usunąć grupę?",
+        "description": "Delete group?"
+    },
+    "deleteGroupBody": {
+        "message": "Czy chcesz usunąc grupę \"$name$\" ?<br>Usunięcie grupy spowoduje również zamknięcie kart i powiązanego okna, jeśli jest już otwarte!",
+        "description": "Delete group?",
+        "placeholders": {
+            "name": {
+                "content": "$1",
+                "example": "Group #4"
+            }
+        }
+    },
+    "groupTabsCount": {
+        "message": "$count$ zakładek",
+        "description": "Group tabs count",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "deleteTab": {
+        "message": "Usuń zakładkę",
+        "description": "Delete tab"
+    },
+    "createNewTab": {
+        "message": "Otwórz nową zakładkę",
+        "description": "Open new tab"
+    },
+    "createNewGroup": {
+        "message": "Utwórz nowę grupę",
+        "description": "Create new group"
+    },
+    "goBackButtonTitle": {
+        "message": "Wstecz",
+        "description": "Go back"
+    },
+    "goBackToGroupsButtonTitle": {
+        "message": "Powrót do grup",
+        "description": "Go back to groups"
+    },
+    "title": {
+        "message": "Tytuł",
+        "description": "Title"
+    },
+    "iconColor": {
+        "message": "Kolor ikony",
+        "description": "Icon color"
+    },
+    "selectUserGroupIcon": {
+        "message": "Załaduj ikonę",
+        "description": "Load icon"
+    },
+    "selectUserGroupIconWarnText": {
+        "message": "Niestety, nie możesz załadować niestandardowej ikony w tym okienku, ale możesz załadować niestandardową ikonę grupy w  ustawieniu \"Zarządzaj grupami\". \nOtwórz \"Zarządzaj grupami\"?",
+        "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
+    },
+    "setRandomColor": {
+        "message": "Ustaw losowy kolor",
+        "description": "Set random color"
+    },
+    "catchTabContainers": {
+        "message": "Złap i przenieś zakładki z kontenerami do tej grupy (tylko dla adresów internetowych, puste karty nie są obsługiwane)",
+        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
+    },
+    "regexpForTabsTitle": {
+        "message": "Szukaj kart za pomocą wyrażenia regularnego",
+        "description": "Regular expressions for catch tabs"
+    },
+    "regexpForTabsPlaceholder": {
+        "message": "Wyrażenie regularne",
+        "description": "Regular expressions"
+    },
+    "regexpForTabsHelp": {
+        "message": "Wstaw tutaj wyrażenia regularne dla adresów internetowych. Pasujące karty zostaną automatycznie przeniesione do tej grupy.\nUżyj jednego wiersza na regułę, może być ich tyle, ile chcesz.\nPrzykłady:\ngithub\\.com/drive4ik/simple-tab-groups - przechwytuje wszystkie strony w repozytorium dodatków \nbugzilla\\.mozilla\\.org - przechwytuje raporty o błędach Firefoksa\n(facebook|twitter|youtube)\\.com - przechwytuje wszystkie strony portali społecznościowych",
+        "description": "Regular exceptions helper"
+    },
+    "hotkeysTitle": {
+        "message": "Skróty klawiaturowe",
+        "description": "Hotkeys"
+    },
+    "hotkeysDescription": {
+        "message": "Tutaj możesz dodać skróty klawiszowe.<br>Ograniczenia:<br>1. Skróty te działają tylko na stronach internetowych (http:, https:). Na stronach przeglądarki np. (about:) - to nie działa, interfejs WebExtensions API na to nie zezwala.<br>2. Niektóre skróty klawiszowe nie działają w różnych układach klawiatury. Na przykład skrót utworzony w angielskim układzie <code>Ctrl + ~</code> nie będzie działał na rosyjskim układzie, ponieważ w rosyjskim układzie ten klucz ma inny kod. Aby to naprawić, po prostu utwórz kolejny skrót w rosyjskim układzie: <code>Ctrl + Ё</code>",
+        "description": "Hotkeys description"
+    },
+    "addHotKeyButton": {
+        "message": "Dodaj skrót",
+        "description": "Add hotkey"
+    },
+    "deleteHotKeyButton": {
+        "message": "Usuń skrót",
+        "description": "Delete hotkey"
+    },
+    "hotkeyPlaceholder": {
+        "message": "W tym polu wciśnij klawisze",
+        "description": "Press keys here"
+    },
+    "selectAction": {
+        "message": "Wybierz akcję",
+        "description": "Select action"
+    },
+    "selectGroup": {
+        "message": "Wybierz grupę",
+        "description": "Select group"
+    },
+    "hotkeyActionTitleLoadNextGroup": {
+        "message": "Załaduj następną grupę",
+        "description": "Load next group"
+    },
+    "hotkeyActionTitleLoadPrevGroup": {
+        "message": "Załaduj poprzednią grupę",
+        "description": "Load previous group"
+    },
+    "hotkeyActionTitleLoadFirstGroup": {
+        "message": "Załaduj pierwszą grupę",
+        "description": "Load first group"
+    },
+    "hotkeyActionTitleLoadLastGroup": {
+        "message": "Załaduj ostatnią grupę",
+        "description": "Load last group"
+    },
+    "hotkeyActionTitleLoadCustomGroup": {
+        "message": "Załaduj niestandardową grupę",
+        "description": "Load custom group"
+    },
+    "hotkeyActionTitleAddNewGroup": {
+        "message": "Dodaj nową grupę",
+        "description": "Add new group"
+    },
+    "hotkeyActionTitleDeleteCurrentGroup": {
+        "message": "Usuń bieżąca grupę",
+        "description": "Delete current group"
+    },
+    "hotkeyActionTitleOpenManageGroups": {
+        "message": "Otwórz zarządzanie grupami",
+        "description": "Open manage groups"
+    },
+    "whatsWrongMessage": {
+        "message": "Co jest nie tak ...\nProszę skontaktuj się z programistą, wysyłając e-maila z powiadomieniami o błędach (przycisk dostępny na dole strony z opcjami)",
+        "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
+    },
+    "saveErrorLogsIntoFile": {
+        "message": "Zapisz ostatnie dzienniki błędów w pliku JSON",
+        "description": "Save last error logs into JSON file"
+    },
+    "undoRemoveGroupItemTitle": {
+        "message": "Cofnij usunięcie grupy \"$grouptitle$\"",
+        "description": "Undo remove group menu title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "enterBrowserActionIconColor": {
+        "message": "Wprowadź kolor ikony-akcji",
+        "description": "Enter browser action icon color"
+    }
+}

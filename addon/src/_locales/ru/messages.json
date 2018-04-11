@@ -1,0 +1,392 @@
+{
+    "extensionDescription": {
+        "message": "Создание, изменение и быстрая смена групп вкладок. Вдохновлен плагином \"Tab Groups\" :)",
+        "description": "Description of the extension."
+    },
+    "openSettings": {
+        "message": "Настройки",
+        "description": "Settings context button title"
+    },
+    "manageGroupsTitle": {
+        "message": "Управление группами",
+        "description": "Manage groups"
+    },
+    "setTabIconAsGroupIcon": {
+        "message": "Установить значок группы из этой вкладки",
+        "description": "Set tab icon as group icon"
+    },
+    "moveTabToGroupDisabledTitle": {
+        "message": "Переместить в группу",
+        "description": "Move tab to group title"
+    },
+    "moveTabToGroupMessage": {
+        "message": "Вкладка \"$tabtitle$\" перемещена в группу \"$grouptitle$\".\nНажмите здесь чтобы открыть её.",
+        "description": "Tab moved popup title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            },
+            "tabtitle": {
+                "content": "$2",
+                "example": "tab title"
+            }
+        }
+    },
+    "warning": {
+        "message": "Внимание!",
+        "description": "Warning!"
+    },
+    "success": {
+        "message": "Успех!",
+        "description": "Success!"
+    },
+    "ok": {
+        "message": "OK",
+        "description": "OK button"
+    },
+    "save": {
+        "message": "Сохранить",
+        "description": "Save"
+    },
+    "delete": {
+        "message": "Удалить",
+        "description": "Delete"
+    },
+    "cancel": {
+        "message": "Отмена",
+        "description": "Cancel"
+    },
+    "privateAndPinnedTabsAreNotSupported": {
+        "message": "Приватные и закрепленные вкладки не поддерживаются",
+        "description": "Private and pinned tabs are not supported"
+    },
+    "thisTabIsNotSupported": {
+        "message": "Эта вкладка не поддерживается",
+        "description": "This tab is not supported"
+    },
+    "confirmDeleteLastGroupAndCloseTabs": {
+        "message": "Удаление этой группы приведет к закрытию всех вкладок этой группы!",
+        "description": "Deleting this group will close all current tabs!"
+    },
+    "searchPlaceholder": {
+        "message": "Поиск",
+        "description": "Search placeholder"
+    },
+    "filterTabsPlaceholder": {
+        "message": "Фильтр вкладок (множественный фильтр по *)",
+        "description": "Filter tabs (multiple filter with *)"
+    },
+    "invalidRegExpRuleTitle": {
+        "message": "Ошибка в правиле \"$regexp$\". Это правило будет проигнорировано.",
+        "description": "Invalid rule description",
+        "placeholders": {
+            "regexp": {
+                "content": "$1",
+                "example": "googlecom"
+            }
+        }
+    },
+    "manageGroupViewGrid": {
+        "message": "Сетка",
+        "description": "Grid display"
+    },
+    "manageGroupViewFreeArrange": {
+        "message": "Свободное перемещение (будет доступно в будущем)",
+        "description": "Free arrange"
+    },
+    "closePopupAfterChangeGroup": {
+        "message": "Закрыть всплывающее окно после смены группы",
+        "description": "Close popup after changing group"
+    },
+    "showNotificationAfterMoveTab": {
+        "message": "Показывать уведомление при перемещении вкладки в другую группу",
+        "description": "Show notification when tab is moved to another group"
+    },
+    "openManageGroupsInTab": {
+        "message": "Открывать \"Управление группами\" в новой вкладке",
+        "description": "Open \"Manage Groups\" in new tab"
+    },
+    "showConfirmDialogBeforeGroupDelete": {
+        "message": "Подтверждать удаление группы",
+        "description": "Show confirm dialog before group delete"
+    },
+    "exportAddonSettingsTitle": {
+        "message": "Резервное копирование Simple Tab Groups",
+        "description": "Backup your Simple Tab Groups"
+    },
+    "exportAddonSettingsDescription": {
+        "message": "Экспортируйте свои группы вкладок в резервный файл для безопасного хранения, чтобы вы могли восстановить их в любое время.",
+        "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
+    },
+    "exportAddonSettingsButton": {
+        "message": "Создать бекап",
+        "description": "Create backup"
+    },
+    "includeTabThumbnailsIntoBackup": {
+        "message": "Включить эскизы вкладок в резервную копию (размер файла резервной копии будет больше)",
+        "description": "Include tab thumbnails into backup (make backup file size bigger)"
+    },
+    "importAddonSettingsTitle": {
+        "message": "Восстановление Simple Tab Groups",
+        "description": "Restore Simple Tab Groups"
+    },
+    "importAddonSettingsDescription": {
+        "message": "Загрузите файл резервной копии для того чтобы восстановить вкладки и настройки.",
+        "description": "Load a backup file containing the tab groups you want to restore."
+    },
+    "importAddonSettingsWarning": {
+        "message": "Восстановление данных приведет к УДАЛЕНИЮ всех текущих вкладок, групп и настроек!",
+        "description": "Restore add-on settings will ERASE all existing settings and groups!"
+    },
+    "importAddonSettingsButton": {
+        "message": "Восстановить бекап",
+        "description": "Restore backup"
+    },
+    "importSettingsOldTabGroupsAddonTitle": {
+        "message": "Восстановление резервной копии от старого плагина Quicksaver'а \"Tab Groups\"",
+        "description": "Restore Quicksaver's \"Tab Groups\""
+    },
+    "importSettingsOldTabGroupsAddonDescription": {
+        "message": "Загрузка резервной копии от старого плагина \"Tab Groups\"",
+        "description": "Load a backup file old \"Tab Groups\" addon."
+    },
+    "importSettingsOldTabGroupsAddonButton": {
+        "message": "Загрузить резервную копию \"Tab Groups\"",
+        "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
+    },
+    "openGroupAfterChange": {
+        "message": "Открыть группу после перехода на неё",
+        "description": "Open group after changing to it"
+    },
+    "showUrlTooltipOnTabHover": {
+        "message": "Показывать подсказку с адресом вкладки при наведении мыши на вкладку",
+        "description": "Show url tooltip when hovering over tab"
+    },
+    "newGroupTitle": {
+        "message": "Группа $id$",
+        "description": "group id",
+        "placeholders": {
+            "id": {
+                "content": "$1",
+                "example": "1"
+            }
+        }
+    },
+    "searchNotFoundTitle": {
+        "message": "Ничего не найдено с \"$search$\"",
+        "description": "No results found",
+        "placeholders": {
+            "search": {
+                "content": "$1",
+                "example": "mail"
+            }
+        }
+    },
+    "sortGroupsAZ": {
+        "message": "Сортировка групп [А-Я]",
+        "description": "Sort groups [A-Z]"
+    },
+    "sortGroupsZA": {
+        "message": "Сортировка групп [Я-А]",
+        "description": "Sort groups [Z-A]"
+    },
+    "settingsTitle": {
+        "message": "Настройки",
+        "description": "Settings"
+    },
+    "groupSettings": {
+        "message": "Настройки группы",
+        "description": "Group settings"
+    },
+    "deleteGroup": {
+        "message": "Удалить группу",
+        "description": "Delete group"
+    },
+    "deleteGroupTitle": {
+        "message": "Удалить группу?",
+        "description": "Delete group?"
+    },
+    "deleteGroupBody": {
+        "message": "Вы хотите удалить группу $name$?<br>Удаление группы приведет к закрытию всех вкладок и окна этой группы!",
+        "description": "Delete group?",
+        "placeholders": {
+            "name": {
+                "content": "$1",
+                "example": "Group #4"
+            }
+        }
+    },
+    "groupTabsCount": {
+        "message": "$count$ вкладок",
+        "description": "Group tabs count",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "deleteTab": {
+        "message": "Удалить вкладку",
+        "description": "Delete tab"
+    },
+    "createNewTab": {
+        "message": "Открыть новую вкладку",
+        "description": "Open new tab"
+    },
+    "createNewGroup": {
+        "message": "Создать новую группу",
+        "description": "Create new group"
+    },
+    "goBackButtonTitle": {
+        "message": "Назад",
+        "description": "Go back"
+    },
+    "goBackToGroupsButtonTitle": {
+        "message": "Назад к группам",
+        "description": "Go back to groups"
+    },
+    "title": {
+        "message": "Название",
+        "description": "Title"
+    },
+    "iconColor": {
+        "message": "Цвет значка",
+        "description": "Icon color"
+    },
+    "selectUserGroupIcon": {
+        "message": "Загрузить значок",
+        "description": "Load icon"
+    },
+    "selectUserGroupIconWarnText": {
+        "message": "Простите, Вы не можете загрузить значок в этом окне, но Вы можете сделать это в \"Управление группами\". Открыть \"Управление группами\"?",
+        "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
+    },
+    "setRandomColor": {
+        "message": "Случайный цвет",
+        "description": "Set random color"
+    },
+    "catchTabContainers": {
+        "message": "Захватывать и перемещать вкладки с контейнерами в эту группу (только для веб адресов, пустые вкладки не поддерживаются)",
+        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
+    },
+    "regexpForTabsTitle": {
+        "message": "Регулярные выражения для захвата вкладок",
+        "description": "Regular expressions for catch tabs"
+    },
+    "regexpForTabsPlaceholder": {
+        "message": "Регулярные выражения",
+        "description": "Regular expressions"
+    },
+    "regexpForTabsHelp": {
+        "message": "Здесь вы можете указать регулярные выражения для URL адреса. При совпадении адреса вкладки хотя бы с одним регулярным выражением - вкладка автоматически будет перемещена в эту группу. Одно правило на строку.\nНапример:\ngithub\\.com/drive4ik/simple-tab-groups - захват всех вкладок этого плагина на github\n(facebook|twitter|youtube)\\.com - захват вкладок социальных сетей",
+        "description": "Regular exceptions helper"
+    },
+    "hotkeysTitle": {
+        "message": "Горячие клавиши",
+        "description": "Hotkeys"
+    },
+    "hotkeysDescription": {
+        "message": "Здесь вы можете управлять горячими клавишами для плагина.<br>Ограничения:<br>1. Эти горячие клавиши будут работать только на веб страницах (http:, https:). На защищенных страницах браузера (about:addons например) они работать не будут. Это ограничение WebExtensions API.<br>2. Некоторые горячие клавиши могут не работать на разных раскладках клавиатуры. Например у вас есть горячая клавиша <code>Ctrl + ~</code> создана на английской раскладке клавиатуры, но на русской раскладке она работать не будет, потому что клавиша Ё там имеет другой код. Для решения этой проблемы достаточно создать такую же горячую клавишу с тем же действием, только уже на русской раскладке - <code>Ctrl + Ё</code>.",
+        "description": "Hotkeys description"
+    },
+    "addHotKeyButton": {
+        "message": "Добавить горячую клавишу",
+        "description": "Add hotkey"
+    },
+    "deleteHotKeyButton": {
+        "message": "Удалить горячую клавишу",
+        "description": "Delete hotkey"
+    },
+    "hotkeyPlaceholder": {
+        "message": "Нажимать здесь",
+        "description": "Press keys here"
+    },
+    "selectAction": {
+        "message": "Выберите действие",
+        "description": "Select action"
+    },
+    "selectGroup": {
+        "message": "Выберите группу",
+        "description": "Select group"
+    },
+    "hotkeyActionTitleLoadNextGroup": {
+        "message": "Загрузить следующую группу",
+        "description": "Load next group"
+    },
+    "hotkeyActionTitleLoadPrevGroup": {
+        "message": "Загрузить предыдущую группу",
+        "description": "Load previous group"
+    },
+    "hotkeyActionTitleLoadFirstGroup": {
+        "message": "Загрузить первую группу",
+        "description": "Load first group"
+    },
+    "hotkeyActionTitleLoadLastGroup": {
+        "message": "Загрузить последнюю группу",
+        "description": "Load last group"
+    },
+    "hotkeyActionTitleLoadCustomGroup": {
+        "message": "Загрузить другую группу",
+        "description": "Load custom group"
+    },
+    "hotkeyActionTitleAddNewGroup": {
+        "message": "Создать новую группу",
+        "description": "Add new group"
+    },
+    "hotkeyActionTitleDeleteCurrentGroup": {
+        "message": "Удалить текущую группу",
+        "description": "Delete current group"
+    },
+    "hotkeyActionTitleOpenManageGroups": {
+        "message": "Открыть \"Управление группами\"",
+        "description": "Open manage groups"
+    },
+    "whatsWrongMessage": {
+        "message": "Что-то не так... Пожалуйста свяжитесь с разработчиком по email с логом ошибок (есть кнопка внизу на странице настроек плагина)",
+        "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
+    },
+    "saveErrorLogsIntoFile": {
+        "message": "Сохранить последние ошибки в JSON файл",
+        "description": "Save last error logs into JSON file"
+    },
+    "undoRemoveGroupItemTitle": {
+        "message": "Отменить удаление группы \"$grouptitle$\"",
+        "description": "Undo remove group menu title",
+        "placeholders": {
+            "grouptitle" : {
+                "content" : "$1",
+                "example" : "Group 2"
+            }
+        }
+    },
+    "enterBrowserActionIconColor": {
+        "message": "Здесь можно изменить цвет значка аддона",
+        "description": "Enter browser action icon color"
+    },
+    "isStickyGroupTitle": {
+        "message": "Липкая группа",
+        "description": "Sticky group"
+    },
+    "isStickyGroupHelp": {
+        "message": "Вкладки в этой группе никогда не будут автоматически перемещены в другие группы",
+        "description": "Tabs in this group will never be automatically moved to another group"
+    },
+    "useTabsFavIconsFromGoogleS2Converter": {
+        "message": "Использовать Google S2 Converter для значков вкладок",
+        "description": "Use tabs fav-icons from Google S2 Converter"
+    },
+    "createThumbnailsForTabs": {
+        "message": "Создавать эскизы вкладок (используется в \"Управление группами\")",
+        "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
+    },
+    "thisTabCanNotBeHidden": {
+        "message": "Эта вкладка не может быть скрыта потому что в ней используется микрофон или камера",
+        "description": "This tab can not be hidden because it uses a microphone or camera"
+    },
+    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
+        "message": "Невозможно изменить группу, потому что на одной из вкладок используется микрофон или камера",
+        "description": "It is not possible to change the group because one of the tabs share microphone or camera"
+    }
+}
