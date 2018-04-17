@@ -236,7 +236,7 @@ async function updateGroup(groupId, updateData) {
         return;
     }
 
-    Object.assign(_groups[groupIndex], JSON.parse(JSON.stringify(updateData))); // JSON need for fix bug: dead object after close tab which create object
+    Object.assign(_groups[groupIndex], utils.clone(updateData)); // clone need for fix bug: dead object after close tab which create object
 
     saveGroupsToStorage();
 
