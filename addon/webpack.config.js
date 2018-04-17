@@ -7,9 +7,6 @@ const config = {
     context: __dirname + '/src',
     entry: {
         'background': './background.js',
-        // 'js/constants': './js/constants.js',
-        // 'js/utils': './js/utils.js',
-        // 'js/storage': './js/storage.js',
         'popup/popup': './popup/popup.js',
         'options/options': './options/options.js',
         // 'manage/manage': './manage/manage.js',

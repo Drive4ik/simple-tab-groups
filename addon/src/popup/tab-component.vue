@@ -37,7 +37,8 @@
                 textStyle: {},
             };
         },
-        async mounted() {
+        async created() {
+            console.log('created', this.tab.title);
             this.favIconUrl = BG.getTabFavIconUrl(this.tab, this.useTabsFavIconsFromGoogleS2Converter);
 
             this.isDefaultCookieStoreId = isDefaultCookieStoreId(this.tab.cookieStoreId);
@@ -46,6 +47,9 @@
                 let container = await utils.getContainer(this.tab.cookieStoreId, this.containers);
                 this.textStyle.borderBottom = '2px solid ' + container.colorCode;
             }
+        },
+        mounted() {
+            console.log('mounted()', this.tab.title);
         },
         methods: {
             lang: browser.i18n.getMessage,
@@ -66,7 +70,7 @@
         </div>
         <div class="item-title">
             <span :class="{bordered: !isDefaultCookieStoreId}" :style="textStyle">
-                <img v-show="!tab.id" src="/icons/refresh.svg" class="size-16" :title="lang('thisTabWillCreateAsNew')" />
+                <img v-if="!tab.id" src="/icons/refresh.svg" class="size-16" :title="lang('thisTabWillCreateAsNew')" />
                 <span v-text="tab.title"></span>
             </span>
         </div>

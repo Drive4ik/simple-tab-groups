@@ -161,7 +161,7 @@ function getTabFavIconUrl(tab, useTabsFavIconsFromGoogleS2Converter) {
     if (localUrls.some(url => tab.url.startsWith(url))) {
         safedFavIconUrl = tab.favIconUrl;
     } else {
-        safedFavIconUrl = useTabsFavIconsFromGoogleS2Converter ? ('http://www.google.com/s2/favicons?domain_url=' + encodeURIComponent(tab.url)) : tab.favIconUrl;
+        safedFavIconUrl = useTabsFavIconsFromGoogleS2Converter ? ('https://www.google.com/s2/favicons?domain_url=' + encodeURIComponent(tab.url)) : tab.favIconUrl;
     }
 
     if (!safedFavIconUrl) {
@@ -271,7 +271,7 @@ async function addUndoRemoveGroupItem(group) {
         title: browser.i18n.getMessage('undoRemoveGroupItemTitle', utils.unSafeHtml(group.title)),
         contexts: ['browser_action'],
         icons: {
-            16: await utils.getGroupIconUrl(group),
+            16: utils.getGroupIconUrl(group, options.browserActionIconColor),
         },
         onclick: function(info) {
             browser.menus.remove(info.menuItemId);
@@ -406,7 +406,7 @@ async function saveCurrentTabs(windowId, excludeTabId, calledFunc) {
     group.tabs = tabs
         .filter(tab => excludeTabId ? excludeTabId !== tab.id : true)
         .map(mapTab);
-
+// console.log('0000000');
     sendMessage({
         action: 'group-updated',
         group: group,
@@ -434,6 +434,11 @@ async function addTab(groupId, cookieStoreId) {
         });
         saveGroupsToStorage();
     }
+
+    sendMessage({
+        action: 'group-updated',
+        group: group,
+    });
 }
 
 async function removeTab(groupId, tabIndex) {
@@ -463,6 +468,11 @@ async function removeTab(groupId, tabIndex) {
         group.tabs.splice(tabIndex, 1);
         saveGroupsToStorage();
     }
+
+    sendMessage({
+        action: 'group-updated',
+        group: group,
+    });
 }
 
 function setLoadingToBrowserAction() {
@@ -638,6 +648,12 @@ async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
 
             addEvents();
         }
+
+        sendMessage({
+            action: 'group-loaded',
+            group: group,
+        });
+
     } catch (e) {
         utils.notify(e);
         throw String(e);
@@ -723,6 +739,11 @@ async function onActivatedTab({ tabId, windowId }) {
         }
 
         return tab;
+    });
+
+    sendMessage({
+        action: 'group-updated',
+        group: group,
     });
 
     saveGroupsToStorage();
@@ -840,6 +861,8 @@ async function onRemovedTab(tabId, { isWindowClosing, windowId }) {
 
     saveCurrentTabs(windowId, tabId, 'onRemovedTab');
 }
+
+// setInterval(() => console.log(_groups), 3000);
 
 async function onMovedTab(tabId, { windowId }) {
     console.log('onMovedTab', arguments);
@@ -1123,13 +1146,13 @@ async function createMoveTabMenus(windowId) {
         contexts: ['tab'],
     }));
 
-    await Promise.all(_groups.map(async function(group) {
+    await Promise.all(_groups.map(function(group) {
         moveTabToGroupMenusIds.push(browser.menus.create({
             id: constants.CONTEXT_MENU_PREFIX_GROUP + group.id,
             title: utils.unSafeHtml(group.title),
             enabled: currentGroup ? group.id !== currentGroup.id : true,
             icons: {
-                16: await utils.getGroupIconUrl(group),
+                16: utils.getGroupIconUrl(group, options.browserActionIconColor),
             },
             contexts: ['tab'],
             onclick: async function(destGroupId, info, tab) {
@@ -1182,7 +1205,7 @@ async function createMoveTabMenus(windowId) {
     }));
 }
 
-async function setBrowserActionData(currentGroup) {
+function setBrowserActionData(currentGroup) {
     if (!currentGroup) {
         resetBrowserActionData();
         return;
@@ -1193,17 +1216,17 @@ async function setBrowserActionData(currentGroup) {
     });
 
     browser.browserAction.setIcon({
-        path: await utils.getGroupIconUrl(currentGroup),
+        path: utils.getGroupIconUrl(currentGroup, options.browserActionIconColor),
     });
 }
 
-async function resetBrowserActionData() {
+function resetBrowserActionData() {
     browser.browserAction.setTitle({
         title: browser.runtime.getManifest().browser_action.default_title,
     });
 
     browser.browserAction.setIcon({
-        path: await utils.getGroupIconUrl(),
+        path: utils.getGroupIconUrl(undefined, options.browserActionIconColor),
     });
 }
 
@@ -1400,18 +1423,28 @@ browser.runtime.onMessageExternal.addListener(function(request, sender, sendResp
             ok: true,
         });
     } else if (request.getGroupsList) {
-        sendResponse(new Promise(async function(resolve) {
-            resolve({
-                ok: true,
-                groupsList: await Promise.all(_groups.map(async function(group) {
-                    return {
-                        id: group.id,
-                        title: utils.unSafeHtml(group.title),
-                        iconUrl: await utils.getGroupIconUrl(group),
-                    };
-                })),
-            });
-        }));
+        // sendResponse(new Promise(async function(resolve) {
+        //     resolve({
+        //         ok: true,
+        //         groupsList: await Promise.all(_groups.map(async function(group) {
+        //             return {
+        //                 id: group.id,
+        //                 title: utils.unSafeHtml(group.title),
+        //                 iconUrl: utils.getGroupIconUrl(group, options.browserActionIconColor),
+        //             };
+        //         })),
+        //     });
+        // }));
+        sendResponse({
+            ok: true,
+            groupsList: _groups.map(function(group) {
+                return {
+                    id: group.id,
+                    title: utils.unSafeHtml(group.title),
+                    iconUrl: utils.getGroupIconUrl(group, options.browserActionIconColor),
+                };
+            }),
+        });
     } else if (request.runAction) {
         sendResponse(runAction(request.runAction));
     }
@@ -1707,7 +1740,7 @@ storage.get(null)
     .then(async function(data) {
         data = await runMigrateForData(data); // migration data
 
-        constants.onlyBoolOptionsKeys.forEach(key => options[key] = key in data ? data[key] : constants.DEFAULT_OPTIONS[key]); // reload options
+        constants.allOptionsKeys.forEach(key => options[key] = key in data ? data[key] : utils.clone(constants.DEFAULT_OPTIONS[key])); // reload options
 
         let windows = await getAllWindows();
 

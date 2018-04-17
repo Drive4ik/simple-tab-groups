@@ -17,7 +17,7 @@
     export default {
         data() {
             return {
-                activeSection: 'general',
+                section: 'general',
                 sections: [{
                     id: 'general',
                     title: 'generalTitle',
@@ -305,7 +305,7 @@
     <div id="stg-options">
         <div class="tabs is-boxed">
             <ul>
-                <li v-for="section in sections" :class="{'is-active': activeSection === section.id}" @click="activeSection = section.id">
+                <li v-for="section in sections" :class="{'is-active': section === section.id}" @click="section = section.id">
                     <a>
                         <span class="icon is-small">
                             <img :src="'/icons/' + section.icon + '.svg'">
@@ -316,7 +316,7 @@
             </ul>
         </div>
 
-        <div v-show="activeSection === 'general'">
+        <div v-show="section === 'general'">
             <div class="field">
                 <label class="checkbox">
                     <input v-model="options.discardTabsAfterHide" type="checkbox" />
@@ -385,7 +385,7 @@
             </div>
         </div>
 
-        <div v-show="activeSection === 'hotkeys'">
+        <div v-show="section === 'hotkeys'">
             <label class="has-text-weight-bold" v-text="lang('hotkeysTitle')"></label>
             <div class="h-margin-bottom-10" v-html="lang('hotkeysDescription')"></div>
             <div class="hotkeys">
@@ -434,7 +434,7 @@
             </div>
         </div>
 
-        <div v-show="activeSection === 'backup'">
+        <div v-show="section === 'backup'">
             <div class="h-margin-bottom-20">
                 <div class="has-text-weight-bold h-margin-bottom-5" v-text="lang('exportAddonSettingsTitle')"></div>
                 <div class="h-margin-bottom-5" v-html="lang('exportAddonSettingsDescription')"></div>

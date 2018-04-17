@@ -95,7 +95,7 @@ function notify(message, timer = 20000, id) {
 
     if ('error' === type(message)) {
         message.stack = message.stack.split('@').join('\n');
-        message = message.toString() + format('\n{{fileName}} {{lineNumber}}:{{columnNumber}}\n{{stack}}', message);
+        message = message.toString() + `\n${message.fileName} ${message.lineNumber}:${message.columnNumber}\n${message.stack}`;
         timer = 60000;
     }
 
@@ -315,7 +315,7 @@ function safeColor(color) {
     return div.style.backgroundColor;
 }
 
-async function getGroupIconUrl(group = { iconViewType: 'main-squares' }) {
+function getGroupIconUrl(group = { iconViewType: 'main-squares' }, browserActionIconColor = 'red') {
     if (group.iconUrl) {
         return group.iconUrl;
     }
@@ -324,27 +324,48 @@ async function getGroupIconUrl(group = { iconViewType: 'main-squares' }) {
         group.iconColor = 'transparent';
     }
 
-    let options = await storage.get('browserActionIconColor'),
-        iconsUrls = {
-            'main-squares': browser.runtime.getManifest().browser_action.default_icon,
-            circle: '/icons/circle.svg',
-            squares: '/icons/squares.svg',
-            'old-tab-groups': '/icons/old-tab-groups.svg',
-        },
-        replaceData = {
-            [constants.DEFAULT_OPTIONS.browserActionIconColor]: options.browserActionIconColor,
-            transparent: group.iconColor,
-            '{stroke}': 'transparent' === group.iconColor ? `stroke="${options.browserActionIconColor}" stroke-width="1"` : '',
-        };
+    let stroke = 'transparent' === group.iconColor ? `stroke="${browserActionIconColor}" stroke-width="1"` : '';
 
-    let iconBlob = await fetch(iconsUrls[group.iconViewType]),
-        iconSvg = await iconBlob.text();
+    let icons = {
+        'main-squares': `
+            <svg width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+                <g fill="${browserActionIconColor}">
+                    <rect height="8" width="8" y="0" x="0" />
+                    <rect height="8" width="8" y="0" x="12" />
+                    <rect height="8" width="8" y="12" x="24" />
+                    <rect height="8" width="8" y="12" x="0" />
+                    <rect height="8" width="8" y="12" x="12" />
+                    <rect height="8" width="8" y="0" x="24" />
+                    <rect height="8" width="8" y="24" x="0" />
+                    <rect height="8" width="8" y="24" x="12" />
+                    <rect height="8" width="8" y="24" x="24" />
+                    <path transform="rotate(-90, 18, 18)" d="m3.87079,31.999319l0,-28.125684l28.126548,28.125684l-28.126548,0z" fill="${group.iconColor}" />
+                </g>
+            </svg>
+        `,
+        circle: `
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+                <circle fill="${group.iconColor}" cx="8" cy="8" r="8" ${stroke} />
+            </svg>
+        `,
+        squares: `
+            <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg">
+                <g fill="${browserActionIconColor}">
+                    <rect x="1" y="1" width="6" height="6" rx="1" ry="1"></rect>
+                    <rect x="9" y="1" width="6" height="6" rx="1" ry="1"></rect>
+                    <rect x="1" y="9" width="6" height="6" rx="1" ry="1"></rect>
+                    <rect x="9" y="9" width="6" height="6" rx="1" ry="1" fill="${group.iconColor}"></rect>
+                </g>
+            </svg>
+        `,
+        'old-tab-groups': `
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="1 1 16 16">
+                <path fill="${group.iconColor}" ${stroke} d="M15 16H9c-.6 0-1-.4-1-1v-5c0-.6.4-1 1-1h6c.6 0 1 .4 1 1v5c0 .6-.4 1-1 1zm0-8h-2c-.6 0-1-.4-1-1V3c0-.6.4-1 1-1h2c.6 0 1 .4 1 1v4c0 .6-.4 1-1 1zm-5 0H3c-.6 0-1-.4-1-1V3c0-.6.4-1 1-1h7c.6 0 1 .4 1 1v4c0 .6-.4 1-1 1zM3 9h3c.6 0 1 .4 1 1v5c0 .6-.4 1-1 1H3c-.6 0-1-.4-1-1v-5c0-.6.4-1 1-1z"/>
+            </svg>
+        `,
+    };
 
-    for (let key in replaceData) {
-        iconSvg = iconSvg.replace(key, replaceData[key]);
-    }
-
-    return convertSvgToUrl(iconSvg);
+    return convertSvgToUrl(icons[group.iconViewType]);
 }
 
 function convertSvgToUrl(svg) {
