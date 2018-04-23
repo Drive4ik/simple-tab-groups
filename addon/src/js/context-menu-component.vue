@@ -93,7 +93,7 @@
 
             li {
                 margin: 0;
-                padding: 0 12px;
+                padding: 0 10px;
                 cursor: pointer;
                 white-space: nowrap;
                 text-overflow: ellipsis;
@@ -101,7 +101,19 @@
                 height: 25px;
                 line-height: 25px;
 
-                &:hover {
+                > img {
+                    margin-right: 5px;
+                }
+
+                &.is-disabled {
+                    color: GrayText;
+                }
+
+                &.is-disabled:hover {
+                    background: $gray93;
+                }
+
+                &:not(.is-disabled):hover {
                     background: $blue600;
                     color: $gray98;
                 }

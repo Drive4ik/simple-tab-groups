@@ -11,7 +11,8 @@
         "watch:dev": "npm run build:dev -- --watch"
     },
     "dependencies": {
-        "vue": "^2.5.16"
+        "vue": "^2.5.16",
+        "vue-swatches": "^1.0.1"
     },
     "devDependencies": {
         "@babel/core": "^7.0.0-beta.39",

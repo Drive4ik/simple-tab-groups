@@ -8,23 +8,6 @@ img {
     vertical-align: middle;
 }
 
-/* BULMA */
-.modal-card-title {
-    font-size: 1.2rem;
-}
-
-.modal-card-head,
-.modal-card-body,
-.modal-card-foot {
-    padding: 10px;
-}
-
-.modal-background {
-    background-color: rgba(10, 10, 10, 0.6);
-}
-
-/* END BULMA */
-
 .align-bottom {
     vertical-align: bottom;
 }
@@ -43,6 +26,10 @@ img {
 
 .is-full-height {
     height: 100%;
+}
+
+.container-icon {
+    -moz-context-properties: fill;
 }
 
 

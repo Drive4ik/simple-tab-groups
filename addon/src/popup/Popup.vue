@@ -3,13 +3,14 @@
 
     import * as utils from '../js/utils';
     import storage from '../js/storage';
-    import {allOptionsKeys} from '../js/constants';
+    import * as constants from '../js/constants';
     import {importFromFile, exportToFile} from '../js/fileImportExport';
 
     import Vue from 'vue';
 
-    // import groupComponent from './group-component.vue';
-    // import tabComponent from './tab-component.vue';
+    import popup from '../js/popup.vue';
+    import editGroupPopup from './edit-group-popup.vue';
+    import editGroup from '../js/edit-group.vue';
     import contextMenu from '../js/context-menu-component.vue';
 
     const BG = (function(bgWin) {
@@ -41,6 +42,8 @@
                 currentWindowId: null,
 
                 groupToShow: null,
+                groupToEdit: null,
+                groupToRemove: null,
 
                 containers: [],
                 options: {},
@@ -50,8 +53,9 @@
             };
         },
         components: {
-            // group: groupComponent,
-            // tab: tabComponent,
+            popup: popup,
+            'edit-group-popup': editGroupPopup,
+            'edit-group': editGroup,
             'context-menu': contextMenu,
         },
         async mounted() {
@@ -60,7 +64,7 @@
 
             this.containers = await utils.loadContainers();
 
-            this.options = await storage.get(allOptionsKeys);
+            this.options = await storage.get(constants.allOptionsKeys);
 
             this.loadGroups();
 
@@ -74,6 +78,11 @@
             search(search) {
                 if (search) {
                     this.showSectionSearch();
+                }
+            },
+            currentGroup(group) {
+                if (group && this.groupToShow && group.id === this.groupToShow.id && group._uid !== this.groupToShow._uid) {
+                    this.groupToShow = group;
                 }
             },
         },
@@ -102,6 +111,23 @@
 
                 return groups;
             },
+            groupToRemovePopupData() {
+                if (!this.groupToRemove) {
+                    return null;
+                }
+
+                if (this.groupToRemove.windowId === this.currentWindowId && 1 === this.groups.length && this.groupToRemove.tabs.length) {
+                    return {
+                        title: this.lang('warning'),
+                        body: this.lang('confirmDeleteLastGroupAndCloseTabs'),
+                    };
+                }
+
+                return {
+                    title: this.lang('deleteGroupTitle'),
+                    body: this.lang('deleteGroupBody', utils.safeHtml(this.groupToRemove.title)),
+                };
+            },
         },
         methods: {
             lang: browser.i18n.getMessage,
@@ -117,7 +143,11 @@
                     if ('group-updated' === request.action) { // group
                         let groupIndex = this.groups.findIndex(group => group.id === request.group.id);
 
-                        this.groups.splice(groupIndex, 1, this.$_groupMap(request.group));
+                        if (request.group.tabs) {
+                            request.group.tabs = request.group.tabs.map(this.$_tabMap, this);
+                        }
+
+                        Object.assign(this.groups[groupIndex], request.group);
                     } else if (['group-loaded', 'groups-updated'].includes(request.action)) {
                         this.loadGroups();
                     }
@@ -163,10 +193,12 @@
             $_groupMap(group) {
                 let vm = this;
 
+                Object.assign(group, {
+                    tabs: group.tabs.map(vm.$_tabMap, vm),
+                });
+
                 return new Vue({
-                    data: Object.assign(group, {
-                        tabs: group.tabs.map(vm.$_tabMap, vm),
-                    }),
+                    data: group,
                     computed: {
                         iconUrlToDisplay() {
                             // watch variables
@@ -226,7 +258,7 @@
                 BG.addGroup();
             },
             addTab(cookieStoreId) {
-                BG.addTab(this.groupToShow.id, cookieStoreId);
+                BG.addTab(this.groupToShow.id, cookieStoreId || constants.DEFAULT_COOKIE_STORE_ID);
             },
             removeTab(groupId, tabIndex) {
                 this.groups.some(function(group) {
@@ -248,6 +280,10 @@
                 if (isCurrentGroup) {
                     if (-1 === tabIndex) { // open group
                         this.showSectionGroupTabs(group);
+                        return;
+                    }
+
+                    if (group.tabs[tabIndex].active) {
                         return;
                     }
 
@@ -294,30 +330,22 @@
             },
 
             openGroupSettings(group) {
-                //
+                this.groupToEdit = group;
             },
-            deleteGroup(group) {
-                let _removeGroup = () => BG.removeGroup(group.id).then(() => this.section === SECTION_DEFAULT);
-
+            removeGroup(group) {
                 if (this.options.showConfirmDialogBeforeGroupDelete) {
-                    if (group.windowId === this.currentWindowId && 1 === this.groups.length && group.tabs.length) {
-                        // Popups.confirm(browser.i18n.getMessage('confirmDeleteLastGroupAndCloseTabs'), browser.i18n.getMessage('warning'))
-                            // .then(_removeGroup);
-                    } else {
-                        // Popups.confirm(
-                        //         browser.i18n.getMessage('deleteGroupBody', group.title),
-                        //         browser.i18n.getMessage('deleteGroupTitle'),
-                        //         'delete',
-                        //         'is-danger'
-                        //     )
-                        //     .then(_removeGroup);
-                    }
+                    this.groupToRemove = group;
                 } else {
-                    // _removeGroup();
+                    this.onSubmitRemoveGroup(group);
                 }
+            },
+            async onSubmitRemoveGroup(group) {
+                await BG.removeGroup(group.id);
+                this.groupToRemove = null;
 
-                // add popups, dialogs etc...
-                _removeGroup();
+                this.groups.splice(this.groups.indexOf(group), 1);
+
+                this.showSectionDefault();
             },
             moveTabToGroup(oldTabIndex, oldGroupId, newGroupId) {
                 BG.moveTabToGroup(oldTabIndex, undefined, oldGroupId, newGroupId);
@@ -339,23 +367,24 @@
                 }
             },
 
-
-
             openOptionsPage() {
                 browser.runtime.openOptionsPage();
+                window.close();
             },
             openManageGroups() {
                 BG.openManageGroups(window.screen);
+                window.close();
             },
             sortGroups(vector) {
                 BG.sortGroups(vector);
             },
+
         },
     }
 </script>
 
 <template>
-    <div id="stg" class="is-flex is-column" @contextmenu="$event.target.nodeName === 'INPUT' ? null : $event.preventDefault()">
+    <div id="stg" class="is-flex is-column" @contextmenu="['INPUT', 'TEXTAREA'].includes($event.target.nodeName) ? null : $event.preventDefault()">
         <header id="searchWrapper">
             <div :class="['field', {'has-addons': search}]">
                 <div class="control is-expanded">
@@ -373,34 +402,8 @@
             <!-- SEARCH TABS -->
             <div v-show="section === SECTION_SEARCH">
                 <div v-if="filteredGroupsBySearch.length">
-<!--                     <group
-                        v-for="group in filteredGroupsBySearch"
-                        :key="group.id"
-                        :group="group"
-                        :is-active="group === currentGroup"
-                        @load-group="loadGroup(group, -1)"
-                        @show-group="showSectionGroupTabs(group)"
-                        > -->
-                            <!-- <div slot="tabs">
-                                <tab
-                                    v-for="tab in group.filteredTabsBySearch"
-                                    class="space-left"
-                                    :key="tab.url + tab.id + tab.index"
-                                    :tab="tab"
-                                    :show-active="group === currentGroup"
-                                    :containers="containers"
-                                    :show-url-tooltip-on-tab-hover="options.showUrlTooltipOnTabHover"
-                                    :use-fav-icons-from-google-converter="options.useTabsFavIconsFromGoogleS2Converter"
-                                    @click="loadGroup(group, tab.index)"
-                                    @remove-tab="removeTab(group.id, tab.index)"
-                                    @contextmenu="$refs.tabsContextMenu.open($event, {tab, tabIndex: tab.index})"
-                                    ></tab>
-                            </div> -->
-                        <!-- </group> -->
-
-
                     <div v-for="group in filteredGroupsBySearch" :key="group.id">
-                        <div class="group">
+                        <div class="group" @contextmenu="$refs.groupContextMenu.open($event, {group})">
                             <div :class="['item', {'is-active': group === currentGroup}]" @click="loadGroup(group, -1)">
                                 <div class="item-icon" :title="group.title">
                                     <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" alt="" />
@@ -414,7 +417,7 @@
                         </div>
 
                         <div v-for="tab in group.filteredTabsBySearch"
-                            @contextmenu.prevent="$refs.tabsContextMenu.open($event, {tab, tabIndex: tab.index})"
+                            @contextmenu="$refs.tabsContextMenu.open($event, {tab, group, tabIndex: tab.index})"
                             @click="loadGroup(group, tab.index)"
                             @mousedown.middle.prevent
                             @mouseup.middle.prevent="removeTab(group.id, tab.index)"
@@ -438,10 +441,6 @@
                         </div>
 
                     </div>
-
-
-
-
                 </div>
                 <div v-else>
                     <i class="item no-hover">
@@ -454,16 +453,7 @@
             <!-- GROUPS LIST -->
             <div v-show="section === SECTION_GROUPS_LIST">
                 <div class="groups">
-<!--                     <group
-                        v-for="group in groups"
-                        :key="group.id"
-                        :group="group"
-                        :is-active="group === currentGroup"
-                        @load-group="loadGroup(group, -1)"
-                        @show-group="showSectionGroupTabs(group)"
-                        ></group> -->
-
-                    <div class="group" v-for="group in groups" :key="group.id">
+                    <div class="group" v-for="group in groups" :key="group.id" @contextmenu="$refs.groupContextMenu.open($event, {group})">
                         <div :class="['item', {'is-active': group === currentGroup}]" @click="loadGroup(group, -1)">
                             <div class="item-icon" :title="group.title">
                                 <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" alt="" />
@@ -475,8 +465,6 @@
                             </div>
                         </div>
                     </div>
-
-
 
                 </div>
                 <div class="hr"></div>
@@ -497,20 +485,8 @@
                         <a @click="unsyncHiddenTabsCloseAll" v-text="lang('actionHiddenUnSyncTabsCloseAll')"></a>
                     </p>
                     <div>
-<!--                         <tab
-                            v-for="tab in unSyncTabs"
-                            :key="tab.id"
-                            :tab="tab"
-                            :containers="containers"
-                            :show-url-tooltip-on-tab-hover="options.showUrlTooltipOnTabHover"
-                            :use-fav-icons-from-google-converter="options.useTabsFavIconsFromGoogleS2Converter"
-                            @click="unsyncHiddenTabsShowIntoCurrentWindow(tab)"
-                            @remove-tab="removeUnSyncTab(tab)"
-                            ></tab> -->
-
-
                         <div v-for="tab in unSyncTabs"
-                            @TODO-contextmenu.prevent="$refs.tabsContextMenu.open($event, {tab, tabIndex})"
+                            @TODO-contextmenu="$refs.tabsContextMenu.open($event, {tab, tabIndex})"
                             @click="unsyncHiddenTabsShowIntoCurrentWindow(tab)"
                             @mousedown.middle.prevent
                             @mouseup.middle.prevent="removeUnSyncTab(tab)"
@@ -556,27 +532,12 @@
                         <div class="item-title" v-text="groupToShow.title"></div>
                         <div class="item-action">
                             <img @click="openGroupSettings(groupToShow)" src="/icons/settings.svg" class="size-16 cursor-pointer icon" :title="lang('groupSettings')" />
-                            <img @click="deleteGroup(groupToShow)" src="/icons/group-delete.svg" class="size-16 cursor-pointer icon" :title="lang('deleteGroup')" />
+                            <img @click="removeGroup(groupToShow)" src="/icons/group-delete.svg" class="size-16 cursor-pointer icon" :title="lang('deleteGroup')" />
                         </div>
                     </div>
-<!--
-                    <tab
-                        v-for="(tab, tabIndex) in groupToShow.tabs"
-                        :key="tab.url + tab.id + tabIndex"
-                        :tab="tab"
-                        :show-active="groupToShow === currentGroup"
-                        :containers="containers"
-                        :show-url-tooltip-on-tab-hover="options.showUrlTooltipOnTabHover"
-                        :use-fav-icons-from-google-converter="options.useTabsFavIconsFromGoogleS2Converter"
-                        @click="loadGroup(groupToShow, tabIndex)"
-                        @remove-tab="removeTab(groupToShow.id, tabIndex)"
-                        @contextmenu="$refs.tabsContextMenu.open($event, {tab, tabIndex})"
-                        ></tab>
- -->
-
 
                     <div v-for="(tab, tabIndex) in groupToShow.tabs"
-                        @contextmenu.prevent="$refs.tabsContextMenu.open($event, {tab, tabIndex})"
+                        @contextmenu="$refs.tabsContextMenu.open($event, {tab, tabIndex, group: groupToShow})"
                         @click="loadGroup(groupToShow, tabIndex)"
                         @mousedown.middle.prevent
                         @mouseup.middle.prevent="removeTab(groupToShow.id, tabIndex)"
@@ -599,49 +560,116 @@
                         </div>
                     </div>
 
-                    <context-menu ref="tabsContextMenu">
-                        <ul slot-scope="menu" class="is-unselectable">
-                            <li @click="setTabIconAsGroupIcon(menu.data.tab)">
-                                <img src="/icons/image.svg" class="size-16" />
-                                <span v-text="lang('setTabIconAsGroupIcon')"></span>
-                            </li>
-
-                            <li v-text="lang('moveTabToGroupDisabledTitle')"></li>
-
-                            <li
-                                v-for="group in groups"
-                                :class="{'is-disabled': groupToShow.id === group.id}"
-                                @click="groupToShow.id === group.id ? null : moveTabToGroup(menu.data.tabIndex, groupToShow.id, group.id)"
-                                >
-                                <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" alt="" />
-                                <span v-text="group.title"></span>
-                            </li>
-
-                            <li @click="moveTabToNewGroup(menu.data.tabIndex, groupToShow.id)">
-                                <img src="/icons/group-new.svg" class="size-16" />
-                                <span v-text="lang('createNewGroup')"></span>
-                            </li>
-                        </ul>
-                    </context-menu>
-
                     <div class="hr"></div>
 
                     <div class="create-new-tab">
-                        <div class="item" @click="addTab('TODO NEED cookieStoreId')">
+                        <div class="item" @contextmenu="containers.length && $refs.createNewTabContextMenu.open($event)" @click="addTab(null)">
                             <div class="item-icon">
                                 <img class="size-16" src="/icons/tab-new.svg" alt="">
                             </div>
                             <div class="item-title" v-text="lang('createNewTab')"></div>
                         </div>
+
+                        <context-menu v-if="containers.length" ref="createNewTabContextMenu">
+                            <ul class="is-unselectable">
+                                <li v-for="container in containers" @click="addTab(container.cookieStoreId)">
+                                    <img :src="container.iconUrl" class="is-inline-block size-16 container-icon" :style="{fill: container.colorCode}" alt="" />
+                                    <span v-text="container.name"></span>
+                                </li>
+                            </ul>
+                        </context-menu>
+
                     </div>
                 </div>
             </div>
         </main>
 
+        <context-menu ref="groupContextMenu">
+            <ul slot-scope="menu" class="is-unselectable">
+                <li @click="sortGroups('asc')">
+                    <img src="/icons/sort-alpha-asc.svg" class="size-16" />
+                    <span v-text="lang('sortGroupsAZ')"></span>
+                </li>
+                <li @click="sortGroups('desc')">
+                    <img src="/icons/sort-alpha-desc.svg" class="size-16" />
+                    <span v-text="lang('sortGroupsZA')"></span>
+                </li>
+                <li @click="openGroupSettings(menu.data.group)">
+                    <img src="/icons/settings.svg" class="size-16" />
+                    <span v-text="lang('groupSettings')"></span>
+                </li>
+                <li @click="removeGroup(menu.data.group)">
+                    <img src="/icons/group-delete.svg" class="size-16" />
+                    <span v-text="lang('deleteGroup')"></span>
+                </li>
+            </ul>
+        </context-menu>
+
+        <context-menu ref="tabsContextMenu">
+            <ul slot-scope="menu" v-if="menu.data" class="is-unselectable">
+                <li @click="setTabIconAsGroupIcon(menu.data.tab)">
+                    <img src="/icons/image.svg" class="size-16" />
+                    <span v-text="lang('setTabIconAsGroupIcon')"></span>
+                </li>
+
+                <li class="is-disabled" v-text="lang('moveTabToGroupDisabledTitle')"></li>
+
+                <li
+                    v-for="group in groups"
+                    :class="{'is-disabled': menu.data.group.id === group.id}"
+                    @click="menu.data.group.id !== group.id && moveTabToGroup(menu.data.tabIndex, menu.data.group.id, group.id)"
+                    >
+                    <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" alt="" />
+                    <span v-text="group.title"></span>
+                </li>
+
+                <li @click="moveTabToNewGroup(menu.data.tabIndex, menu.data.group.id)">
+                    <img src="/icons/group-new.svg" class="size-16" />
+                    <span v-text="lang('createNewGroup')"></span>
+                </li>
+            </ul>
+        </context-menu>
+
+        <edit-group-popup
+            v-if="groupToEdit"
+            :buttons="
+                [{
+                    event: 'save-group',
+                    classList: 'is-success',
+                    lang: 'save',
+                }, {
+                    event: 'close-popup',
+                    lang: 'cancel',
+                }]
+            "
+            @close-popup="groupToEdit = null"
+            @save-group="() => $refs.editGroup.saveGroup()"
+            >
+            <edit-group
+                ref="editGroup"
+                :group="groupToEdit"
+                :containers="containers"
+                :browser-action-icon-color="options.browserActionIconColor"
+                @saved="groupToEdit = null" />
+        </edit-group-popup>
+
+        <popup v-if="groupToRemove" :title="groupToRemovePopupData.title" @remove-group="onSubmitRemoveGroup(groupToRemove)" @close-popup="groupToRemove = null" :buttons="
+                [{
+                    event: 'remove-group',
+                    classList: 'is-danger',
+                    lang: 'delete',
+                }, {
+                    event: 'close-popup',
+                    lang: 'cancel',
+                }]
+            ">
+            <span v-html="groupToRemovePopupData.body"></span>
+        </popup>
+
         <div class="spacer"></div>
 
         <footer class="is-flex is-unselectable">
-            <div class="is-flex is-aligin-items-center manage-groups is-full-height is-full-width" data-action="open-manage-page" :title="lang('manageGroupsTitle')">
+            <div class="is-flex is-aligin-items-center manage-groups is-full-height is-full-width" @click="openManageGroups" :title="lang('manageGroupsTitle')">
                 <img class="icon" src="/icons/icon.svg" alt="" />
                 <span class="h-margin-left-10" v-text="lang('manageGroupsTitle')"></span>
             </div>
@@ -854,7 +882,7 @@
         height: 75%;
     }
 
-    #stg footer {
+    #stg > footer {
         height: 45px;
         min-height: 45px;
         align-items: center;

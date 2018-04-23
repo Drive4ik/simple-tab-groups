@@ -92,9 +92,11 @@ function notify(message, timer = 20000, id) {
     } else {
         id = String(Date.now());
     }
-
+console.log('type(message)', type(message));
     if ('error' === type(message)) {
-        message.stack = message.stack.split('@').join('\n');
+        let prefix = browser.extension.getURL('');
+        message.stack = message.stack.split('@').map(path => path.replace(prefix, '').trim()).filter(Boolean).join('\n');
+        message.fileName = message.fileName.replace(prefix, '');
         message = message.toString() + `\n${message.fileName} ${message.lineNumber}:${message.columnNumber}\n${message.stack}`;
         timer = 60000;
     }
@@ -260,13 +262,7 @@ function capitalize(str) {
 }
 
 function createGroupTitle(title, groupId) {
-    title = (title || '').trim();
-
-    if (!title) {
-        title = browser.i18n.getMessage('newGroupTitle', groupId);
-    }
-
-    return safeHtml(title);
+    return title || browser.i18n.getMessage('newGroupTitle', groupId);
 }
 
 function checkVisibleElement(element) {
@@ -302,6 +298,14 @@ async function getContainer(cookieStoreId, containers) {
 }
 
 async function loadContainers() {
+    // CONTAINER PROPS:
+    // color: "blue"
+    // ​​colorCode: "#37adff"
+    // ​​cookieStoreId: "firefox-container-1"
+    // ​​icon: "fingerprint"
+    // ​​iconUrl: "resource://usercontext-content/fingerprint.svg"
+    // ​​name: "Personal"
+
     return await browser.contextualIdentities.query({}).catch(function() {}) || [];
 }
 
@@ -395,6 +399,31 @@ function extractKeys(obj, keys, clone = false) {
 
     return newObj;
 }
+
+
+// TODO
+// function renderElapsedTimeToString(unix) {
+//     var value = (Date.now() - unix) / 60000;
+//     if ( value < 2 ) {
+//         return vAPI.i18n('elapsedOneMinuteAgo');
+//     }
+//     if ( value < 60 ) {
+//         return vAPI.i18n('elapsedManyMinutesAgo').replace('{{value}}', Math.floor(value).toLocaleString());
+//     }
+//     value /= 60;
+//     if ( value < 2 ) {
+//         return vAPI.i18n('elapsedOneHourAgo');
+//     }
+//     if ( value < 24 ) {
+//         return vAPI.i18n('elapsedManyHoursAgo').replace('{{value}}', Math.floor(value).toLocaleString());
+//     }
+//     value /= 24;
+//     if ( value < 2 ) {
+//         return vAPI.i18n('elapsedOneDayAgo');
+//     }
+//     return vAPI.i18n('elapsedManyDaysAgo').replace('{{value}}', Math.floor(value).toLocaleString());
+// };
+
 
 export {
     keyId,
