@@ -9,6 +9,14 @@
         return window.close();
     }
 
+    let addonUrlPrefix = browser.extension.getURL('/');
+
+    window.onerror = function(...args) {
+        let [message, file, line] = args;
+        file = file.replace(addonUrlPrefix, '');
+        notify(`${message}\n${file}:${line}`);
+    };
+
     let templates = {},
         options = null,
         _groups = BG.getGroups(),
