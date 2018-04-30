@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+
+<!-- single view -->
+<!-- grid display -->
+<!-- free arrange -->
+
+<head>
+    <title data-i18n="manageGroupsTitle"></title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="/icons/icon.svg">
+    <link rel="stylesheet" type="text/css" href="/css/bulma.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+    <link rel="stylesheet" type="text/css" href="manage.css">
+</head>
+
+<body>
+    <div id="manage" class="is-flex is-column">
+        <header class="is-flex is-aligin-items-center">
+            <span class="page-title">
+                <span data-i18n="extensionName"></span> - <span data-i18n="manageGroupsTitle"></span>
+            </span>
+            <span class="is-full-width">
+                <div class="buttons has-addons">
+                    <span class="button is-small is-primary" data-i18n="manageGroupViewGrid"></span><span class="button is-small" disabled data-i18n="manageGroupViewFreeArrange"></span>
+                </div>
+            </span>
+            <span>
+                <div id="filterWrapper" class="field">
+                    <div class="control is-expanded">
+                        <input id="filterTabs" type="text" class="input is-small" data-i18n="filterTabsPlaceholder:placeholder" autocomplete="on" />
+                    </div>
+                    <div id="clearFilterTabsButton" class="control is-hidden">
+                        <label class="button is-small">
+                            <img class="size-12" src="/icons/close.svg" alt="" />
+                        </label>
+                    </div>
+                </div>
+            </span>
+        </header>
+
+        <main id="result" class="grid"></main>
+
+        <!-- <footer class="is-flex is-unselectable">
+            footer
+        </footer> -->
+    </div>
+
+    <script id="tab-tmpl" type="text/template">
+        <div class="tab cursor-pointer {{classList}}" contextmenu="tab-menu" title="{{urlTitle}}" data-is-tab="true" data-action="load-group" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}" data-draggable-group="tabs">
+            <div class="tab-icon {{favIconClass}}" style="{{containerColorCodeBorderStyle}}">
+                <img class="size-16" src="{{favIconUrl}}" alt="" />
+            </div>
+            <div class="delete-tab-button {{deleteButtonClass}}" data-action="remove-tab" data-group-id="{{groupId}}" data-tab-index="{{tabIndex}}" data-i18n="deleteTab:title" style="{{containerColorCodeBorderStyle}}">
+                <img class="size-14" src="/icons/close.svg" alt="" />
+            </div>
+            <div class="container {{containerClass}}" style="{{containerColorCodeBorderStyle}}">
+                <img class="size-16" src="{{containerIconUrl}}" style="{{containerColorCodeFillStyle}}" alt="">
+            </div>
+            <div class="screenshot" style="{{containerColorCodeBorderStyle}}">
+                <img src="{{thumbnail}}" alt="">
+            </div>
+            <div class="tab-title has-text-centered text-ellipsis">{{title}}</div>
+        </div>
+    </script>
+
+    <script id="new-tab-tmpl" type="text/template">
+        <div class="tab new cursor-pointer" data-i18n="createNewTab:title" data-action="add-tab" data-group-id="{{groupId}}" {{newTabContextMenu}}>
+            <div class="screenshot">
+                <img src="/icons/tab-new.svg" alt="">
+            </div>
+            <div class="tab-title has-text-centered text-ellipsis" data-i18n="createNewTab"></div>
+        </div>
+    </script>
+
+    <script id="group-tmpl" type="text/template">
+        <div class="group {{classList}}" data-is-group="true" data-group-id="{{id}}" data-draggable-group="groups">
+            <div class="header">
+                <div class="group-title">
+                    <input type="text" value="{{title}}" data-group-id="{{id}}" maxlength="120" placeholder="Please enter group name" />
+                </div>
+                <div class="group-icon">
+                    {{iconHtml}}
+                </div>
+                <div class="tabs-count" data-i18n="groupTabsCount::{{tabs.length}}"></div>
+                <div class="group-icon cursor-pointer is-unselectable" data-action="open-settings-group-popup" data-group-id="{{id}}" data-i18n="groupSettings:title">
+                    <img class="size-16" src="/icons/settings.svg" alt="" />
+                </div>
+                <div class="group-icon cursor-pointer is-unselectable" data-action="show-delete-group-popup" data-group-id="{{id}}" data-i18n="deleteGroup:title">
+                    <img class="size-16" src="/icons/group-delete.svg" alt="" />
+                </div>
+            </div>
+            <div class="body">
+                {{tabsHtml}}
+            </div>
+        </div>
+    </script>
+
+    <script id="new-group-tmpl" type="text/template">
+        <div class="group new cursor-pointer" data-action="add-group">
+            <div class="body">
+                <img src="/icons/group-new.svg" alt="">
+                <div class="h-margin-top-10" data-i18n="createNewGroup"></div>
+            </div>
+        </div>
+    </script>
+
+    <script id="icon-img-tmpl" type="text/template">
+        <figure class="image is-16x16">
+            <img src="{{iconUrl}}" alt="group-icon" />
+        </figure>
+    </script>
+
+    <menu id="create-tab-with-container-menu" type="context"></menu>
+    <script id="create-tab-with-container-item-tmpl" type="text/template">
+        <menuitem data-action="context-add-tab" data-cookie-store-id="{{cookieStoreId}}" icon="{{icon}}" label="{{title}}"></menuitem>
+    </script>
+
+    <menu id="tab-menu" type="context">
+        <menuitem data-action="set-tab-icon-as-group-icon" icon="/icons/image.svg" data-i18n="setTabIconAsGroupIcon:label"></menuitem>
+    </menu>
+
+    <script type="text/javascript" src="/utils.js"></script>
+    <script type="text/javascript" src="/popups/popups.js"></script>
+    <script type="text/javascript" src="/drag-and-drop.js"></script>
+    <script type="text/javascript" src="/js/hotkeys.js"></script>
+    <script type="text/javascript" src="manage.js"></script>
+</body>
+
+</html>

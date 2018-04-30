@@ -103,6 +103,7 @@
 
                 > img {
                     margin-right: 5px;
+                    vertical-align: middle;
                 }
 
                 &.is-disabled {
@@ -117,6 +118,10 @@
                     background: $blue600;
                     color: $gray98;
                 }
+            }
+
+            hr {
+                margin: 4px 0 4px calc(10px + 16px + 5px + 3px);
             }
         }
     }

@@ -254,10 +254,6 @@
         margin-top: 5px;
     }
 
-    figure.image {
-        top: calc((100% / 2) - 16px / 2);
-    }
-
     .field.cut-bottom-margin {
         margin-bottom: -.75em;
     }

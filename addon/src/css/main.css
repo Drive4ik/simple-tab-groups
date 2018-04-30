@@ -1,3 +1,6 @@
+:root {
+    --indent: 10px;
+}
 
 html {
     font-family: Segoe UI, Arial;
@@ -5,7 +8,7 @@ html {
 }
 
 img {
-    vertical-align: middle;
+    /* vertical-align: middle; */
 }
 
 .align-bottom {

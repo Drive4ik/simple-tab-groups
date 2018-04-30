@@ -4,7 +4,6 @@
     import * as utils from '../js/utils';
     import storage from '../js/storage';
     import * as constants from '../js/constants';
-    import {importFromFile, exportToFile} from '../js/fileImportExport';
 
     import Vue from 'vue';
 
@@ -35,7 +34,6 @@
                 SECTION_GROUP_TABS,
 
                 section: SECTION_DEFAULT,
-                sections: [SECTION_SEARCH, SECTION_GROUPS_LIST, SECTION_GROUP_TABS],
 
                 search: '',
 
@@ -384,7 +382,7 @@
 </script>
 
 <template>
-    <div id="stg" class="is-flex is-column" @contextmenu="['INPUT', 'TEXTAREA'].includes($event.target.nodeName) ? null : $event.preventDefault()">
+    <div id="stg-popup" class="is-flex is-column" @contextmenu="['INPUT', 'TEXTAREA'].includes($event.target.nodeName) ? null : $event.preventDefault()">
         <header id="searchWrapper">
             <div :class="['field', {'has-addons': search}]">
                 <div class="control is-expanded">
@@ -594,6 +592,7 @@
                     <img src="/icons/sort-alpha-desc.svg" class="size-16" />
                     <span v-text="lang('sortGroupsZA')"></span>
                 </li>
+                <hr>
                 <li @click="openGroupSettings(menu.data.group)">
                     <img src="/icons/settings.svg" class="size-16" />
                     <span v-text="lang('groupSettings')"></span>
@@ -679,12 +678,10 @@
             </div>
         </footer>
     </div>
-
 </template>
 
 <style lang="scss">
     :root {
-        --indent: 10px;
         --color-light-gray: #eceded;
         --color-gray: #e3e3e3;
         --color-dark-gray: #d4d4d4;
@@ -716,13 +713,13 @@
 
     .hr,
     .spacer,
-    #stg,
+    #stg-popup,
     #searchWrapper,
     #result {
         background-color: #ffffff;
     }
 
-    #stg {
+    #stg-popup {
         width: 348px;
         // min-width: 348px;
         // max-width: 425px;
@@ -852,13 +849,13 @@
 
     /* .group-icon,
     .tab-icon { */
-    .icon {
-        display: inline-block;
-        text-align: center;
-        width: 16px;
-        height: 16px;
-        line-height: 0;
-    }
+    // .icon { // TODO refactor this
+    //     display: inline-block;
+    //     text-align: center;
+    //     width: 16px;
+    //     height: 16px;
+    //     line-height: 0;
+    // }
 
     .bordered {
         display: inline-block;
@@ -882,7 +879,7 @@
         height: 75%;
     }
 
-    #stg > footer {
+    #stg-popup > footer {
         height: 45px;
         min-height: 45px;
         align-items: center;
@@ -902,12 +899,12 @@
 
 
     /* Drag & Drop Styles */
-    #stg .drag-over {
+    #stg-popup .drag-over {
         outline: 2px dashed rgba(0, 0, 0, 0.5) !important;
         outline-offset: -3px;
     }
 
-    #stg .drag-moving {
+    #stg-popup .drag-moving {
         opacity: 0.4;
     }
 
@@ -915,7 +912,7 @@
     /* media */
     /*
     @media screen and (min-height: 600px) {
-        #stg {
+        #stg-popup {
             padding-right: 17px;
         }
     }
