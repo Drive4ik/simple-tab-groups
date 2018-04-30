@@ -96,11 +96,11 @@
         "description": "Grid display"
     },
     "manageGroupViewFreeArrange": {
-        "message": "Arrangement automatique (dans une future version)",
+        "message": "Arrangement libre (dans une future version)",
         "description": "Free arrange"
     },
     "closePopupAfterChangeGroup": {
-        "message": "Fermer le popup après avoir changé de groupe",
+        "message": "Fermer la popup après avoir changé de groupe",
         "description": "Close popup after changing group"
     },
     "showNotificationAfterMoveTab": {
@@ -152,7 +152,7 @@
         "description": "Load a backup file containing the tab groups you want to restore."
     },
     "importAddonSettingsWarning": {
-        "message": "Restaurer les préférences d'add-on vont SUPPRIMER toutes les préférences et groupes existants!",
+        "message": "Restaurer les préférences d'add-on SUPPRIMERA toutes les préférences et groupes existants!",
         "description": "Restore add-on settings will ERASE all existing settings and groups!"
     },
     "importAddonSettingsButton": {
@@ -164,15 +164,15 @@
         "description": "Restore Quicksaver's \"Tab Groups\""
     },
     "importSettingsOldTabGroupsAddonDescription": {
-        "message": "Charge un fichier de sauvegarde de l'ancien addon \"Tab Groups\".",
+        "message": "Charger un fichier de sauvegarde de l'ancien addon \"Tab Groups\".",
         "description": "Load a backup file old \"Tab Groups\" addon."
     },
     "importSettingsOldTabGroupsAddonButton": {
-        "message": "Importe les préférences de l'addon \"Tab Groups\" de Quicksaver",
+        "message": "Importer les préférences de l'addon \"Tab Groups\" de Quicksaver",
         "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
     },
     "openGroupAfterChange": {
-        "message": "Ouvrir le groupe après avoir changé pour celui-ci",
+        "message": "Ouvrir le groupe après s'y être rendu",
         "description": "Open group after changing to it"
     },
     "showGroupIconWhenSearchATab": {
@@ -240,7 +240,7 @@
         "description": "Delete group?"
     },
     "deleteGroupBody": {
-        "message": "Souhaitez-vous supprimer \"$name$\" ?<br>Supprimer un groupe ferme également les onglets et ferme la fenêtre!",
+        "message": "Souhaitez-vous supprimer \"$name$\" ?<br>Supprimer un groupe ferme également les onglets et la fenêtre liée si elle est ouverte!",
         "description": "Delete group?",
         "placeholders": {
             "name": {
@@ -296,7 +296,7 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Désolé, vous ne pouvez pas charger d'icône personnalisé dans ce popup, mais vous pouvez charger un icône de groupe dans \"Gérer les groupes\".\nOuvrir \"Gérer les groupes\"?",
+        "message": "Désolé, vous ne pouvez pas charger d'icône personnalisé dans cette popup, mais vous pouvez charger un icône de groupe dans \"Gérer les groupes\".\nOuvrir \"Gérer les groupes\"?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -320,7 +320,7 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Ici vous pouvez ajouter des raccourcis.<br>Restrictions:<br>1. Ces raccourcis ne fonctionneront que sur des pages webs (http:, https:). Sur des pages du navigateur (about:) - cela ne fonctionne pas, l'API WebExtensions ne l'autorise pas.<br>2. Certains raccourcis ne fonctionneront pas sur différentes dispositions de clavier. Par exemple, le raccourci créé dans la disposition US <code>Ctrl + ~</code> ne fonctionnera pas sur la disposition RU à cause du fait que la disposition russe a un autre code pour cette touche. Pour contourner ce problème, créez simplement un autre raccourci avec la disposition russe: <code>Ctrl + Ё</code>",
+        "message": "Ici vous pouvez ajouter des raccourcis.<br>Restrictions:<br>1. Ces raccourcis ne fonctionneront que sur des pages web (http:, https:). Sur des pages du navigateur (about:) - cela ne fonctionne pas, l'API WebExtensions ne l'autorise pas.<br>2. Certains raccourcis ne fonctionneront pas sur différentes dispositions de clavier. Par exemple, le raccourci <code>Ctrl + ~</code> créé dans la disposition US  ne fonctionnera pas sur la disposition RU, car la disposition russe a un autre code pour cette touche. Pour contourner ce problème, créez simplement un autre raccourci avec la disposition russe: <code>Ctrl + Ё</code>",
         "description": "Hotkeys description"
     },
     "addHotKeyButton": {
@@ -384,12 +384,12 @@
         "description": "Save last error logs into JSON file"
     },
     "showNotificationIfGroupsNotSyncedAtStartup": {
-        "message": "Voir la notification si le dernier groupe d'onglets n'a pas était synchroniser au démarrage",
+        "message": "Afficher une notification si le dernier groupe d'onglets ouvert ne s'est pas synchronisé au démarrage",
         "description": "Show notification if no one last opened groups not synced at startup"
     },
     "noOneGroupWasNotSynchronized": {
-        "message": "Zéro groupe synchroniser!\n\nMerci de choisir un groupe pour synchroniser d'ongets",
-        "description": "No one group was not synchronized!\n\nPlease, select group to sync tabs"
+        "message": "Aucun groupe n'a été synchronisé!\n\nMerci de choisir un groupe pour synchroniser les onglets",
+        "description": "No one group was synchronized!\n\nPlease, select group to sync tabs"
     },
     "undoRemoveGroupItemTitle": {
         "message": "Annuler la suppression du groupe \"$grouptitle$\"",
@@ -402,11 +402,19 @@
         }
     },
     "isStickyGroupTitle": {
-        "message": "Groupe épingler",
+        "message": "Groupe épinglé",
         "description": "Sticky group"
     },
     "isStickyGroupHelp": {
-        "message": "Les onglets de ce groupe ne seront jamais déplacer vers un autre groupe",
+        "message": "Les onglets de ce groupe ne seront jamais déplacé vers un autre groupe",
         "description": "Tabs in this group will never be automatically moved to another group"
+    },
+    "useTabsFavIconsFromGoogleS2Converter": {
+        "message": "Utiliser les favicons depuis Google S2 Converter",
+        "description": "Use tabs fav-icons from Google S2 Converter"
+    },
+    "iconStyle": {
+        "message": "Style d’icônes",
+        "description": "Icon style"
     }
 }
