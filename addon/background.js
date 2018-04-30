@@ -114,7 +114,7 @@
         if (tab.url.startsWith('moz-extension') || tab.url.startsWith('about')) {
             safedFavIconUrl = tab.favIconUrl;
         } else {
-            safedFavIconUrl = useTabsFavIconsFromGoogleS2Converter ? ('http://www.google.com/s2/favicons?domain_url=' + encodeURIComponent(tab.url)) : tab.favIconUrl;
+            safedFavIconUrl = useTabsFavIconsFromGoogleS2Converter ? ('https://www.google.com/s2/favicons?domain_url=' + encodeURIComponent(tab.url)) : tab.favIconUrl;
         }
 
         if (!safedFavIconUrl) {
