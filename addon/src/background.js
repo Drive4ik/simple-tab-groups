@@ -7,8 +7,7 @@ import storage from './js/storage';
 let errorLogs = [],
     options = {},
     _groups = [],
-    allThumbnails = {},
-    tempTabIdFixWrongToRight = {}; // temporary fix bug https://bugzilla.mozilla.org/show_bug.cgi?id=1398272
+    allThumbnails = {};
 
 // browser.tabs.query({
 //     // windowId: windowId,
@@ -26,11 +25,6 @@ let errorLogs = [],
 // browser.tabs.create({
 //     url: 'about:newtab',
 // });
-
-function fixTab(tab) { // temporary fix bug https://bugzilla.mozilla.org/show_bug.cgi?id=1398272
-    tab.id = tempTabIdFixWrongToRight[tab.id] || tab.id;
-    return tab;
-}
 
 let log = function(message = 'log', data = null, showNotification = true) {
     try {
@@ -53,10 +47,12 @@ let log = function(message = 'log', data = null, showNotification = true) {
 
 let saveGroupsToStorageTimer = null;
 
-async function saveGroupsToStorage() {
-    // browser.runtime.sendMessage({
-    //     groupsUpdated: true,
-    // });
+async function saveGroupsToStorage(sendMessageToAll = true) {
+    if (sendMessageToAll) {
+        sendMessage({
+            action: 'groups-updated',
+        });
+    }
 
     if (saveGroupsToStorageTimer) {
         clearTimeout(saveGroupsToStorageTimer);
@@ -109,8 +105,6 @@ async function getTabs(windowId = browser.windows.WINDOW_ID_CURRENT, status = 'v
         pinned: false,
     });
 
-    tabs = tabs.map(fixTab); // temporary fix bug https://bugzilla.mozilla.org/show_bug.cgi?id=1398272
-
     if ('v' === status) {
         return tabs.filter(utils.isTabVisible);
     } else if ('h' === status) {
@@ -139,8 +133,7 @@ function mapTab(tab) {
     tab.url = normalizeUrl(tab.url);
 
     return {
-        // id: tab.id,
-        id: fixTab(tab).id, // temporary fix bug https://bugzilla.mozilla.org/show_bug.cgi?id=1398272
+        id: tab.id,
         title: tab.title || tab.url,
         url: tab.url,
         active: tab.active,
@@ -214,10 +207,6 @@ async function addGroup(windowId, resetGroups = false, returnNewGroupIndex = tru
         lastCreatedGroupPosition,
     });
 
-    sendMessage({
-        action: 'groups-updated',
-    });
-
     sendExternalMessage({
         groupAdded: true,
         groupId: _groups[newGroupIndex].id,
@@ -234,8 +223,6 @@ async function updateGroup(groupId, updateData) {
 
     Object.assign(_groups[groupIndex], utils.clone(updateData)); // clone need for fix bug: dead object after close tab which create object
 
-    saveGroupsToStorage();
-
     sendMessage({
         action: 'group-updated',
         group: _groups[groupIndex],
@@ -245,6 +232,18 @@ async function updateGroup(groupId, updateData) {
         groupUpdated: true,
         groupId: groupId,
     });
+
+    saveGroupsToStorage(false);
+
+    let win = await getWindow();
+
+    if (['title', 'iconUrl', 'iconColor', 'iconViewType'].some(key => key in updateData)) {
+        updateMoveTabMenus(win.id);
+    }
+
+    if (_groups[groupIndex].windowId &&_groups[groupIndex].windowId === win.id) {
+        updateBrowserActionData(win.id);
+    }
 }
 
 function sendMessage(data) {
@@ -413,7 +412,7 @@ async function saveCurrentTabs(windowId, excludeTabId, calledFunc) {
         group: group,
     });
 
-    saveGroupsToStorage();
+    saveGroupsToStorage(false);
 
     delete savingTabsInWindow[windowId];
 }
@@ -433,7 +432,7 @@ async function addTab(groupId, cookieStoreId) {
             url: 'about:home',
             cookieStoreId,
         });
-        saveGroupsToStorage();
+        saveGroupsToStorage(false);
     }
 
     sendMessage({
@@ -451,7 +450,7 @@ async function removeTab(groupId, tabIndex) {
 
         if (utils.isTabHidden(tab)) {
             group.tabs.splice(tabIndex, 1);
-            saveGroupsToStorage();
+            saveGroupsToStorage(false);
         } else {
             let pinnedTabs = await getPinnedTabs(tab.windowId),
                 tabs = await getTabs(tab.windowId);
@@ -467,7 +466,7 @@ async function removeTab(groupId, tabIndex) {
         await browser.tabs.remove(tabId);
     } else {
         group.tabs.splice(tabIndex, 1);
-        saveGroupsToStorage();
+        saveGroupsToStorage(false);
     }
 
     sendMessage({
@@ -565,8 +564,6 @@ async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
 
                 if (winTabs.length && group.tabs.length) {
                     let syncedTabs = [];
-
-                    winTabs = winTabs.map(fixTab);
 
                     group.tabs
                         .filter(tab => !tab.id)
@@ -747,7 +744,7 @@ async function onActivatedTab({ tabId, windowId }) {
         group: group,
     });
 
-    saveGroupsToStorage();
+    saveGroupsToStorage(false);
 }
 
 async function onCreatedTab(tab) {
@@ -761,9 +758,6 @@ let currentlyMovingTabs = []; // tabIds // expample: open tab from bookmark and 
 async function onUpdatedTab(tabId, changeInfo, tab) {
     let windowId = tab.windowId,
         group = _groups.find(gr => gr.windowId === windowId);
-
-    tab = fixTab(tab); // temporary fix bug https://bugzilla.mozilla.org/show_bug.cgi?id=1398272
-    tabId = tab.id;
 
     if (!group ||
         utils.isTabIncognito(tab) ||
@@ -873,23 +867,11 @@ async function onMovedTab(tabId, { windowId }) {
 async function onAttachedTab(tabId, { newWindowId }) {
     console.log('onAttachedTab', tabId, { newWindowId });
 
-    if (!tempTabIdFixWrongToRight[tabId]) { // tmp fix bug https://bugzilla.mozilla.org/show_bug.cgi?id=1398272
-        let tab = await browser.tabs.get(tabId);
-        tempTabIdFixWrongToRight[tab.id] = tabId;
-        console.log(`onAttachedTab: fixed tab id from ${tab.id} to ${tabId}`);
-    }
-
     saveCurrentTabs(newWindowId, undefined, 'onAttachedTab');
 }
 
 async function onDetachedTab(tabId, { oldWindowId }) { // notice: call before onAttached
     console.log('onDetachedTab', tabId, { oldWindowId });
-
-    if (!tempTabIdFixWrongToRight[tabId]) { // tmp fix bug https://bugzilla.mozilla.org/show_bug.cgi?id=1398272
-        let tab = await browser.tabs.get(tabId);
-        tempTabIdFixWrongToRight[tab.id] = tabId;
-        console.log(`onDetachedTab: fixed tab id from ${tab.id} to ${tabId}`);
-    }
 
     let group = _groups.find(gr => gr.windowId === oldWindowId);
 
@@ -936,6 +918,8 @@ async function onFocusChangedWindow(windowId) {
 
 // if oldGroupId === null, move tab from current window without group
 async function moveTabToGroup(oldTabIndex, newTabIndex = -1, oldGroupId = null, newGroupId, showNotificationAfterMoveTab = true) {
+    console.warn('moveTabToGroup', oldTabIndex, newTabIndex, oldGroupId, newGroupId, showNotificationAfterMoveTab);
+
     let oldGroup = null,
         newGroup = _groups.find(gr => gr.id === newGroupId),
         tab = null,
@@ -957,7 +941,7 @@ async function moveTabToGroup(oldTabIndex, newTabIndex = -1, oldGroupId = null, 
         tab = oldGroup.tabs[oldTabIndex];
     } else {
         let tabs = await getTabs();
-        rawTab = fixTab(tabs[oldTabIndex]);
+        rawTab = tabs[oldTabIndex];
         tab = mapTab(rawTab);
     }
 
@@ -1001,6 +985,7 @@ async function moveTabToGroup(oldTabIndex, newTabIndex = -1, oldGroupId = null, 
                     index: newTabRealIndex,
                     windowId: newGroup.windowId,
                 });
+                await browser.tabs.show(tab.id);
             } else {
                 let tabInGroup = newGroup.tabs.filter(utils.keyId)[0];
 
@@ -1012,6 +997,7 @@ async function moveTabToGroup(oldTabIndex, newTabIndex = -1, oldGroupId = null, 
                             index: -1,
                             windowId: rawTabInGroup.windowId,
                         });
+                        await browser.tabs.show(tab.id);
                         rawTab = await browser.tabs.get(tab.id);
                     }
                 }
@@ -1062,7 +1048,7 @@ async function moveTabToGroup(oldTabIndex, newTabIndex = -1, oldGroupId = null, 
         }
     }
 
-    if (oldGroup) {
+    if (oldGroup && oldGroup !== newGroup) {
         sendMessage({
             action: 'group-updated',
             group: oldGroup,
@@ -1074,7 +1060,7 @@ async function moveTabToGroup(oldTabIndex, newTabIndex = -1, oldGroupId = null, 
         group: newGroup,
     });
 
-    saveGroupsToStorage();
+    saveGroupsToStorage(false);
 
     if (!showNotificationAfterMoveTab || !options.showNotificationAfterMoveTab) {
         return;
@@ -1542,7 +1528,12 @@ window.background = {
     inited: false,
 
     log,
-    getLogs: () => errorLogs,
+    // getLogs: () => errorLogs,
+    getLogs: function() {
+        let logs = errorLogs;
+        errorLogs = [];
+        return logs;
+    },
 
     openManageGroups,
 

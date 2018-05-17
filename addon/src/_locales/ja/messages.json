@@ -65,10 +65,6 @@
         "message": "このタブはサポートされていません",
         "description": "This tab is not supported"
     },
-    "confirmDeleteLastGroupAndCloseTabs": {
-        "message": "このグループを削除すると、現在のタブはすべて閉じます！",
-        "description": "Deleting this group will close all current tabs!"
-    },
     "searchPlaceholder": {
         "message": "タブを検索中...",
         "description": "Search placeholder"

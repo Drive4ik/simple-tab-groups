@@ -10,7 +10,7 @@
         },
         methods: {
             lang: browser.i18n.getMessage,
-        }
+        },
     }
 </script>
 
@@ -39,10 +39,6 @@
 </template>
 
 <style lang="scss">
-    #stg {
-        min-height: 600px;
-    }
-
     #editGroupPopup {
         position: fixed;
         padding: var(--indent) 0;

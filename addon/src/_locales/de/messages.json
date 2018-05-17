@@ -65,10 +65,6 @@
         "message": "Dieser Tab wird nicht unterstützt",
         "description": "This tab is not supported"
     },
-    "confirmDeleteLastGroupAndCloseTabs": {
-        "message": "Das Löschen dieser Gruppe wird alle derzeitigen Tabs schließen!",
-        "description": "Deleting this group will close all current tabs!"
-    },
     "searchPlaceholder": {
         "message": "Tab suchen",
         "description": "Search placeholder"

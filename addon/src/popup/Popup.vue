@@ -109,26 +109,10 @@
 
                 return groups;
             },
-            groupToRemovePopupData() {
-                if (!this.groupToRemove) {
-                    return null;
-                }
-
-                if (this.groupToRemove.windowId === this.currentWindowId && 1 === this.groups.length && this.groupToRemove.tabs.length) {
-                    return {
-                        title: this.lang('warning'),
-                        body: this.lang('confirmDeleteLastGroupAndCloseTabs'),
-                    };
-                }
-
-                return {
-                    title: this.lang('deleteGroupTitle'),
-                    body: this.lang('deleteGroupBody', utils.safeHtml(this.groupToRemove.title)),
-                };
-            },
         },
         methods: {
             lang: browser.i18n.getMessage,
+            safeHtml: utils.safeHtml,
 
             setupListeners() {
                 let listener = function(request, sender) {
@@ -249,7 +233,8 @@
 
                 this.unSyncTabs = unSyncTabs
                     .filter(utils.isTabNotIncognito)
-                    .filter(unSyncTab => !this.groups.some(group => group.tabs.some(tab => tab.id === unSyncTab.id)));
+                    .filter(unSyncTab => !this.groups.some(group => group.tabs.some(tab => tab.id === unSyncTab.id)))
+                    .map(this.$_tabMap, this);
             },
 
             addGroup() {
@@ -325,6 +310,8 @@
                 });
 
                 await browser.tabs.show(tab.id);
+
+                this.unSyncTabs.splice(this.unSyncTabs.indexOf(tab), 1);
             },
 
             openGroupSettings(group) {
@@ -358,11 +345,6 @@
                     iconViewType: null,
                     iconUrl: BG.getTabFavIconUrl(tab, this.options.useTabsFavIconsFromGoogleS2Converter),
                 });
-
-                if (this.groupToShow.windowId === this.currentWindowId) {
-                    BG.updateBrowserActionData(this.currentWindowId);
-                    BG.updateMoveTabMenus(this.currentWindowId);
-                }
             },
 
             openOptionsPage() {
@@ -382,7 +364,11 @@
 </script>
 
 <template>
-    <div id="stg-popup" class="is-flex is-column" @contextmenu="['INPUT', 'TEXTAREA'].includes($event.target.nodeName) ? null : $event.preventDefault()">
+    <div
+        id="stg-popup"
+        :class="['is-flex is-column', {'edit-group-popup': !!groupToEdit}]"
+        @contextmenu="['INPUT', 'TEXTAREA'].includes($event.target.nodeName) ? null : $event.preventDefault()"
+        >
         <header id="searchWrapper">
             <div :class="['field', {'has-addons': search}]">
                 <div class="control is-expanded">
@@ -652,7 +638,12 @@
                 @saved="groupToEdit = null" />
         </edit-group-popup>
 
-        <popup v-if="groupToRemove" :title="groupToRemovePopupData.title" @remove-group="onSubmitRemoveGroup(groupToRemove)" @close-popup="groupToRemove = null" :buttons="
+        <popup
+            v-if="groupToRemove"
+            :title="lang('deleteGroupTitle')"
+            @remove-group="onSubmitRemoveGroup(groupToRemove)"
+            @close-popup="groupToRemove = null"
+            :buttons="
                 [{
                     event: 'remove-group',
                     classList: 'is-danger',
@@ -662,19 +653,19 @@
                     lang: 'cancel',
                 }]
             ">
-            <span v-html="groupToRemovePopupData.body"></span>
+            <span v-html="lang('deleteGroupBody', safeHtml(groupToRemove.title))"></span>
         </popup>
 
         <div class="spacer"></div>
 
         <footer class="is-flex is-unselectable">
             <div class="is-flex is-aligin-items-center manage-groups is-full-height is-full-width" @click="openManageGroups" :title="lang('manageGroupsTitle')">
-                <img class="icon" src="/icons/icon.svg" alt="" />
+                <img class="icon size-16" src="/icons/icon.svg" alt="" />
                 <span class="h-margin-left-10" v-text="lang('manageGroupsTitle')"></span>
             </div>
             <div class="is-flex is-aligin-items-center is-vertical-separator"></div>
             <div class="is-flex is-aligin-items-center settings is-full-height" @click="openOptionsPage" :title="lang('settingsTitle')">
-                <img class="icon" src="/icons/settings.svg" alt="" />
+                <img class="icon size-16" src="/icons/settings.svg" alt="" />
             </div>
         </footer>
     </div>
@@ -726,6 +717,39 @@
         min-height: 400px;
         max-height: 600px;
         overflow-y: auto;
+        // margin: 0 auto;
+
+        &.edit-group-popup {
+            min-height: 600px;
+        }
+
+        > footer {
+            height: 45px;
+            min-height: 45px;
+            align-items: center;
+            justify-content: space-between;
+            background-color: var(--color-light-gray);
+            cursor: default;
+
+            > :hover {
+                background-color: var(--color-gray); /* dark-dark */
+            }
+
+            > .manage-groups,
+            > .settings {
+                padding: 0 20px;
+            }
+        }
+
+        /* Drag & Drop Styles */
+        .drag-over {
+            outline: 2px dashed rgba(0, 0, 0, 0.5) !important;
+            outline-offset: -3px;
+        }
+
+        .drag-moving {
+            opacity: 0.4;
+        }
     }
 
     .group-circle {
@@ -760,8 +784,8 @@
         height: 28px;
         min-height: 28px;
         padding-left: var(--indent);
-        border-top: 1px solid transparent;
-        border-bottom: 1px solid transparent;
+        // border-top: 1px solid transparent;
+        // border-bottom: 1px solid transparent;
 
         > :last-child {
             padding-right: var(--indent);
@@ -774,8 +798,8 @@
         &.is-active,
         &.is-hover,
         &:not(.no-hover):hover {
-            border-top-color: var(--color-dark-dark-gray);
-            border-bottom-color: var(--color-dark-dark-gray);
+            // border-top-color: var(--color-dark-dark-gray);
+            // border-bottom-color: var(--color-dark-dark-gray);
         }
 
         &.is-hover,
@@ -877,35 +901,6 @@
         background-color: var(--color-dark-gray);
         width: 1px;
         height: 75%;
-    }
-
-    #stg-popup > footer {
-        height: 45px;
-        min-height: 45px;
-        align-items: center;
-        justify-content: space-between;
-        background-color: var(--color-light-gray);
-        cursor: default;
-
-        & > :hover {
-            background-color: var(--color-gray); /* dark-dark */
-        }
-
-        & > .manage-groups,
-        & > .settings {
-            padding: 0 20px;
-        }
-    }
-
-
-    /* Drag & Drop Styles */
-    #stg-popup .drag-over {
-        outline: 2px dashed rgba(0, 0, 0, 0.5) !important;
-        outline-offset: -3px;
-    }
-
-    #stg-popup .drag-moving {
-        opacity: 0.4;
     }
 
 

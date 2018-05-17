@@ -84,11 +84,6 @@
         "description": "This tab is not supported"
     },
 
-    "confirmDeleteLastGroupAndCloseTabs": {
-        "message": "Deleting this group will close all current tabs!",
-        "description": "Deleting this group will close all current tabs!"
-    },
-
     "searchPlaceholder": {
         "message": "Search",
         "description": "Search placeholder"

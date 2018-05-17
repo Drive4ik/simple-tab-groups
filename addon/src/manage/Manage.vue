@@ -10,7 +10,9 @@
     import popup from '../js/popup.vue';
     import editGroup from '../js/edit-group.vue';
     import contextMenu from '../js/context-menu-component.vue';
-    import draggable from 'vuedraggable';
+    // import dnd from '../js/dnd';
+    // import { Drag, Drop } from 'vue-drag-drop';
+    // import draggable from 'vuedraggable';
 
     const BG = (function(bgWin) {
         return bgWin && bgWin.background && bgWin.background.inited ? bgWin.background : false;
@@ -42,6 +44,9 @@
                 options: {},
 
                 groups: [],
+
+
+                dragData: null,
             };
         },
         components: {
@@ -49,10 +54,36 @@
             'edit-group': editGroup,
             'context-menu': contextMenu,
 
-            draggable: draggable,
+            // Drag: Drag,
+            // Drop: Drop,
+            // draggable: draggable,
+            // dnd: dnd,
         },
+        // directives: {
+        //     dnd: dnd,
+        // },
         created() {
             document.title = this.lang('manageGroupsTitle');
+
+            this
+                .$on('drag-move-group', function(from, to) {
+                    BG.moveGroup(from.data.item.id, to.data.itemIndex);
+                })
+                .$on('drag-move-tab', function(from, to) {
+                    let newTabIndex = undefined,
+                        groupTo = null;
+
+                    if (to.data.isGroup) {
+                        groupTo = to.data.item;
+                    } else {
+                        groupTo = to.data.group;
+                        newTabIndex = to.data.itemIndex;
+                    }
+
+                    BG.moveTabToGroup(from.data.itemIndex, newTabIndex, from.data.group.id, groupTo.id, false);
+                })
+                .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
+                .$on('drag-over', (item, isOver) => item.isOver = isOver);
         },
         async mounted() {
             let currentWindow = await BG.getWindow();
@@ -91,32 +122,16 @@
                     group.filteredTabs = group.tabs
                         .filter(function(tab, tabIndex) {
                             tab.index = tabIndex;
-                            return this.$_mySearchFunc(searchStr, tab.title.toLowerCase()) || this.$_mySearchFunc(searchStr, tab.url.toLowerCase());
+                            return this.$_mySearchFunc(searchStr, (tab.title || tab.url).toLowerCase()) || this.$_mySearchFunc(searchStr, tab.url.toLowerCase());
                         }, this);
 
                     return group;
                 }, this);
             },
-            groupToRemovePopupData() {
-                if (!this.groupToRemove) {
-                    return null;
-                }
-
-                if (this.groupToRemove.windowId === this.currentWindowId && 1 === this.groups.length && this.groupToRemove.tabs.length) {
-                    return {
-                        title: this.lang('warning'),
-                        body: this.lang('confirmDeleteLastGroupAndCloseTabs'),
-                    };
-                }
-
-                return {
-                    title: this.lang('deleteGroupTitle'),
-                    body: this.lang('deleteGroupBody', utils.safeHtml(this.groupToRemove.title)),
-                };
-            },
         },
         methods: {
             lang: browser.i18n.getMessage,
+            safeHtml: utils.safeHtml,
 
             setupListeners() {
                 let listener = function(request, sender) {
@@ -166,8 +181,19 @@
                     tabs: group.tabs.map(vm.$_tabMap, vm),
                 });
 
+                group.isMoving = false;
+                group.isOver = false;
+
                 return new Vue({
+                    name: 'group',
                     data: group,
+                    watch: {
+                        title: function(title) {
+                            BG.updateGroup(this.id, {
+                                title: title,
+                            });
+                        },
+                    },
                     computed: {
                         iconUrlToDisplay() {
                             // watch variables
@@ -195,7 +221,11 @@
                     })(),
                 });
 
+                tab.isMoving = false;
+                tab.isOver = false;
+
                 return new Vue({
+                    name: 'tab',
                     data: tab,
                 });
             },
@@ -265,8 +295,6 @@
                 this.groupToRemove = null;
 
                 this.groups.splice(this.groups.indexOf(group), 1);
-
-                this.showSectionDefault();
             },
             moveTabToGroup(oldTabIndex, oldGroupId, newGroupId) {
                 BG.moveTabToGroup(oldTabIndex, undefined, oldGroupId, newGroupId);
@@ -281,19 +309,82 @@
                     iconViewType: null,
                     iconUrl: BG.getTabFavIconUrl(tab, this.options.useTabsFavIconsFromGoogleS2Converter),
                 });
-
-                if (group.windowId === this.currentWindowId) {
-                    BG.updateBrowserActionData(this.currentWindowId);
-                    BG.updateMoveTabMenus(this.currentWindowId);
-                }
             },
 
             sortGroups(vector) {
                 BG.sortGroups(vector);
             },
 
-            handleDrop(...args) {
-                console.log('handleDrop', args);
+            startDragBehaviour(event, groupId) {
+                if ('INPUT' === event.target.nodeName) {
+                    return;
+                }
+
+                if ('mousedown' === event.type) {
+                    this.$refs['group_' + groupId][0].draggable = true;
+                } else if ('mouseup' === event.type) {
+                    this.$refs['group_' + groupId][0].draggable = false;
+                }
+            },
+
+            // allowTypes: Array ['groups', 'tabs']
+            dragHandle(event, itemType, allowTypes, data) {
+                if ('INPUT' === event.target.nodeName) {
+                    return;
+                }
+
+                if (event.type !== 'dragstart' && (!this.dragData || !this.dragData.allowTypes.includes(itemType))) {
+                    return;
+                }
+
+                switch (event.type) {
+                    case 'dragstart':
+                        event.stopPropagation();
+                        this.$emit('drag-moving', data.item, true);
+
+                        this.dragData = {itemType, allowTypes, data};
+
+                        event.dataTransfer.effectAllowed = 'move';
+                        event.dataTransfer.setData('text/html', '');
+
+                        // if (itemType !== 'group') {
+                        //     event.dataTransfer.setDragImage(event.target, event.target.clientWidth / 2, event.target.clientHeight / 2);
+                        // }
+                        break;
+                    case 'dragenter':
+                        event.preventDefault();
+                        event.stopPropagation();
+                        this.$emit('drag-over', data.item, true);
+                        break;
+                    case 'dragover':
+                        event.preventDefault();
+                        event.stopPropagation();
+                        event.dataTransfer.dropEffect = 'move';
+                        return false;
+                        break;
+                    case 'dragleave':
+                        event.stopPropagation();
+                        this.$emit('drag-over', data.item, false);
+                        break;
+                    case 'drop':
+                        event.preventDefault();
+                        event.stopPropagation();
+                        this.$emit('drag-over', data.item, false);
+
+                        if (data.item !== this.dragData.data.item) {
+                            this.$emit('drag-move-' + this.dragData.itemType, this.dragData, {itemType, allowTypes, data});
+                        }
+
+                        return false;
+                        break;
+                    case 'dragend':
+                        event.stopPropagation();
+                        this.$emit('drag-moving', this.dragData.data.item, false);
+
+                        this.dragData = null;
+                        break;
+
+                }
             },
 
         },
@@ -331,70 +422,109 @@
 
         <main id="result">
             <!-- GRID -->
-            <div v-if="view === VIEW_GRID">
-                <draggable class="grid" :list="filteredGroups" :options="{group: 'group'}">
-                    <div
-                        class="group"
-                        v-for="group in filteredGroups"
-                        :key="group.id"
-                        @contextmenu="'INPUT' !== $event.target.nodeName && $refs.groupContextMenu.open($event, {group})"
-                        >
-                        <div class="header">
-                            <div class="group-title">
-                                <input type="text" v-model.lazy.trim="group.title" data-group-id="" maxlength="120" placeholder="Please enter group name" />
-                            </div>
-                            <div class="group-icon">
-                                <figure class="image is-16x16">
-                                    <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" alt="" />
-                                </figure>
-                            </div>
-                            <div class="tabs-count" v-text="lang('groupTabsCount', group.filteredTabs.length)"></div>
-                            <div class="group-icon cursor-pointer is-unselectable" @click="openGroupSettings(group)" :title="lang('groupSettings')">
-                                <img class="size-16" src="/icons/settings.svg" alt="" />
-                            </div>
-                            <div class="group-icon cursor-pointer is-unselectable" @click="removeGroup(group)" data-action="show-delete-group-popup" data-group-id="" :title="lang('deleteGroup')">
-                                <img class="size-16" src="/icons/group-delete.svg" alt="" />
-                            </div>
+            <div v-if="view === VIEW_GRID" :class="['grid',
+                    dragData ? 'drag-' + dragData.itemType : false,
+                ]">
+
+
+                <!--
+
+                    v-dnd:group.group="{itemIndex: groupIndex, item: group}"
+
+                    TODO move to dnd.js
+
+                -->
+
+
+                 <div
+                    v-for="(group, groupIndex) in filteredGroups"
+                    :key="group.id"
+                    :class="['group', {
+                        'drag-moving': group.isMoving,
+                        'drag-over': group.isOver,
+                    }]"
+                    @contextmenu="'INPUT' !== $event.target.nodeName && $refs.groupContextMenu.open($event, {group})"
+
+                    :ref="'group_' + group.id"
+                    @mousedown.left="startDragBehaviour($event, group.id)"
+                    @mouseup.left="startDragBehaviour($event, group.id)"
+
+                    @dragstart="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
+                    @dragenter="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
+                    @dragover="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
+                    @dragleave="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
+                    @drop="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
+                    @dragend="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
+
+                    >
+                    <div class="header">
+                        <div class="group-title">
+                            <input type="text" v-model.lazy.trim="group.title" maxlength="120" placeholder="Please enter group name" />
                         </div>
-                        <div class="body">
-                            <div
-                                v-for="tab in group.filteredTabs"
-                                @contextmenu.stop.prevent="$refs.tabsContextMenu.open($event, {tab, group, tabIndex: tab.index})"
-                                :class="['tab cursor-pointer', {
-                                    'is-active': tab.active,
-                                    'is-current': tab.active && group.windowId,
-                                    'has-thumbnail': tab.thumbnail,
-
-                                }]"
-                                :title="options.showUrlTooltipOnTabHover && (tab.title + '\n' + tab.url)"
-                                data-is-tab="true" data-action="load-group" data-group-id="" data-tab-index="" data-draggable-group="tabs"
-                                >
-                                <div v-if="tab.favIconUrlToDisplay" class="tab-icon" :style="tab.container && {borderColor: tab.container.colorCode}">
-                                    <img class="size-16" :src="tab.favIconUrlToDisplay" alt="" />
-                                </div>
-                                <div class="delete-tab-button" @click="removeTab(group, tab.index)" data-action="remove-tab" data-group-id="" data-tab-index="" :title="lang('deleteTab')" :style="tab.container && {borderColor: tab.container.colorCode}">
-                                    <img class="size-14" src="/icons/close.svg" alt="" />
-                                </div>
-                                <div v-if="tab.container" class="container" :style="{borderColor: tab.container.colorCode}">
-                                    <img class="size-16" :src="tab.container.iconUrl" :style="{fill: tab.container.colorCode}" alt="">
-                                </div>
-                                <div class="screenshot" :style="tab.container && {borderColor: tab.container.colorCode}">
-                                    <img :src="tab.thumbnail" alt="">
-                                </div>
-                                <div class="tab-title has-text-centered text-ellipsis" v-text="tab.title"></div>
-                            </div>
-
-                            <div class="tab new cursor-pointer" :title="lang('createNewTab')" @click="addTab(group)">
-                                <div class="screenshot">
-                                    <img src="/icons/tab-new.svg" alt="">
-                                </div>
-                                <div class="tab-title has-text-centered text-ellipsis" v-text="lang('createNewTab')"></div>
-                            </div>
+                        <div class="group-icon">
+                            <figure class="image is-16x16">
+                                <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" alt="" />
+                            </figure>
+                        </div>
+                        <div class="tabs-count" v-text="lang('groupTabsCount', group.filteredTabs.length)"></div>
+                        <div class="group-icon cursor-pointer is-unselectable" @click="openGroupSettings(group)" :title="lang('groupSettings')">
+                            <img class="size-16" src="/icons/settings.svg" alt="" />
+                        </div>
+                        <div class="group-icon cursor-pointer is-unselectable" @click="removeGroup(group)" :title="lang('deleteGroup')">
+                            <img class="size-16" src="/icons/group-delete.svg" alt="" />
                         </div>
                     </div>
-                </draggable>
+                    <div class="body">
+                        <div
+                            v-for="tab in group.filteredTabs"
+                            :key="tab.index"
+                            :class="['tab cursor-pointer', {
+                                'is-active': tab.active,
+                                'is-current': tab.active && group.windowId,
+                                'has-thumbnail': tab.thumbnail,
+                                'drag-moving': tab.isMoving,
+                                'drag-over': tab.isOver,
+                            }]"
 
-                <div class="group new cursor-pointer" data-action="add-group">
+                            @click.stop="loadGroup(group, tab.index)"
+
+                            @contextmenu.stop.prevent="$refs.tabsContextMenu.open($event, {tab, group, tabIndex: tab.index})"
+
+                            draggable="true"
+                            @dragstart="dragHandle($event, 'tab', ['tab', 'group'], {itemIndex: tab.index, item: tab, group})"
+                            @dragenter="dragHandle($event, 'tab', ['tab', 'group'], {itemIndex: tab.index, item: tab, group})"
+                            @dragover="dragHandle($event, 'tab', ['tab', 'group'], {itemIndex: tab.index, item: tab, group})"
+                            @dragleave="dragHandle($event, 'tab', ['tab', 'group'], {itemIndex: tab.index, item: tab, group})"
+                            @drop="dragHandle($event, 'tab', ['tab', 'group'], {itemIndex: tab.index, item: tab, group})"
+                            @dragend="dragHandle($event, 'tab', ['tab', 'group'], {itemIndex: tab.index, item: tab, group})"
+
+                            :title="options.showUrlTooltipOnTabHover && (tab.title + '\n' + tab.url)"
+                            >
+                            <div v-if="tab.favIconUrlToDisplay" class="tab-icon" :style="tab.container && {borderColor: tab.container.colorCode}">
+                                <img class="size-16" :src="tab.favIconUrlToDisplay" alt="" />
+                            </div>
+                            <div class="delete-tab-button" @click.stop="removeTab(group, tab.index)" :title="lang('deleteTab')" :style="tab.container && {borderColor: tab.container.colorCode}">
+                                <img class="size-14" src="/icons/close.svg" alt="" />
+                            </div>
+                            <div v-if="tab.container" class="container" :style="{borderColor: tab.container.colorCode}">
+                                <img class="size-16" :src="tab.container.iconUrl" :style="{fill: tab.container.colorCode}" alt="">
+                            </div>
+                            <div class="screenshot" :style="tab.container && {borderColor: tab.container.colorCode}">
+                                <img :src="tab.thumbnail" alt="">
+                            </div>
+                            <div class="tab-title has-text-centered text-ellipsis" v-text="tab.title"></div>
+                        </div>
+
+                        <div class="tab new cursor-pointer" :title="lang('createNewTab')" @click="addTab(group)">
+                            <div class="screenshot">
+                                <img src="/icons/tab-new.svg" alt="">
+                            </div>
+                            <div class="tab-title has-text-centered text-ellipsis" v-text="lang('createNewTab')"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="group new cursor-pointer" @click="addGroup">
                     <div class="body">
                         <img src="/icons/group-new.svg" alt="">
                         <div class="h-margin-top-10" v-text="lang('createNewGroup')"></div>
@@ -445,6 +575,24 @@
                 @saved="groupToEdit = null" />
         </popup>
 
+        <popup
+            v-if="groupToRemove"
+            :title="lang('deleteGroupTitle')"
+            @remove-group="onSubmitRemoveGroup(groupToRemove)"
+            @close-popup="groupToRemove = null"
+            :buttons="
+                [{
+                    event: 'remove-group',
+                    classList: 'is-danger',
+                    lang: 'delete',
+                }, {
+                    event: 'close-popup',
+                    lang: 'cancel',
+                }]
+            ">
+            <span v-html="lang('deleteGroupBody', safeHtml(groupToRemove.title))"></span>
+        </popup>
+
 
         <!-- <footer class="is-flex is-unselectable">
             footer
@@ -488,6 +636,12 @@
 
     #result {
 
+        .drag-group .group > *,
+        .drag-tab .tab > *,
+        .drag-tab .group input {
+            pointer-events: none;
+        }
+
         // GRID VIEW
         .grid {
             display: grid;
@@ -504,33 +658,33 @@
                 background-color: #fcfcfc;
 
                 transition: transform 0.3s;
-            }
 
-            .group > .header {
-                display: flex;
-                align-items: center;
-                padding: var(--margin);
-            }
+                > .header {
+                    display: flex;
+                    align-items: center;
+                    padding: var(--margin);
 
-            .group > .header > * {
-                display: flex;
-            }
+                    > * {
+                        display: flex;
+                    }
 
-            .group > .header > .group-title {
-                flex-grow: 1;
-            }
+                    > .group-title {
+                        flex-grow: 1;
 
-            .group > .header > .group-title > input {
-                width: 100%;
-                font-size: 12px;
-                background-color: transparent;
-                border: 1px solid #e4e4e4;
-                padding: 1px 3px;
-            }
+                        > input {
+                            width: 100%;
+                            font-size: 12px;
+                            background-color: transparent;
+                            border: 1px solid #e4e4e4;
+                            padding: 1px 3px;
+                        }
 
-            .group > .header > .group-title > input:focus {
-                border: 1px solid #d5d5d5;
-                background-color: #ffffff;
+                        > input:focus {
+                            border: 1px solid #d5d5d5;
+                            background-color: #ffffff;
+                        }
+                    }
+                }
             }
 
             .group > .header > .delete-group-button {

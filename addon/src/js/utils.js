@@ -392,10 +392,10 @@ function resizeImage(img, height, width, useTransparency = true) { // img: new I
     return canvas.toDataURL();
 }
 
-function extractKeys(obj, keys, clone = false) {
+function extractKeys(obj, keys, useClone = false) {
     let newObj = {};
 
-    keys.forEach(key => newObj[key] = clone ? clone(obj[key]) : obj[key]);
+    keys.forEach(key => newObj[key] = (useClone ? clone(obj[key]) : obj[key]));
 
     return newObj;
 }

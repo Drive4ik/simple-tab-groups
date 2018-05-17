@@ -12,8 +12,8 @@
     },
     "dependencies": {
         "vue": "^2.5.16",
-        "vue-swatches": "^1.0.1",
-        "vuedraggable": "^2.16.0"
+        "vue-drag-drop": "^1.0.0",
+        "vue-swatches": "^1.0.1"
     },
     "devDependencies": {
         "@babel/core": "^7.0.0-beta.39",

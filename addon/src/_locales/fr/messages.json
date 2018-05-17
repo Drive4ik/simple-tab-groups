@@ -239,10 +239,6 @@
         "message": "Transférer l'onglet dans un groupe",
         "description": "Move tab to group title"
     },
-    "confirmDeleteLastGroupAndCloseTabs": {
-        "message": "Supprimer ce groupe fermera tous les onglets courants!",
-        "description": "Deleting this group will close all current tabs!"
-    },
     "importAddonSettingsButton": {
         "message": "Restaurer une sauvegarde",
         "description": "Restore backup"

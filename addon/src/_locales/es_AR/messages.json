@@ -65,10 +65,6 @@
         "message": "Esta pestaña no es soportada",
         "description": "This tab is not supported"
     },
-    "confirmDeleteLastGroupAndCloseTabs": {
-        "message": "Borrando este grupo, cerrara todas las pestañas actuales.",
-        "description": "Deleting this group will close all current tabs!"
-    },
     "searchPlaceholder": {
         "message": "Buscar una pestaña...",
         "description": "Search placeholder"

@@ -65,10 +65,6 @@
         "message": "Эта вкладка не поддерживается",
         "description": "This tab is not supported"
     },
-    "confirmDeleteLastGroupAndCloseTabs": {
-        "message": "Удаление этой группы приведет к закрытию всех вкладок этой группы!",
-        "description": "Deleting this group will close all current tabs!"
-    },
     "searchPlaceholder": {
         "message": "Поиск",
         "description": "Search placeholder"

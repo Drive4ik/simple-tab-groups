@@ -65,10 +65,6 @@
         "message": "Ta zakładka nie jest wspierana",
         "description": "This tab is not supported"
     },
-    "confirmDeleteLastGroupAndCloseTabs": {
-        "message": "Usunięcie tej grupy, spowoduje zamknięcie obecnych kart!",
-        "description": "Deleting this group will close all current tabs!"
-    },
     "searchPlaceholder": {
         "message": "Wyszukaj zakładkę...",
         "description": "Search placeholder"

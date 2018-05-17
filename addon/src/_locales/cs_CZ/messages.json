@@ -61,10 +61,6 @@
         "message": "Tento panel není podporován",
         "description": "This tab is not supported"
     },
-    "confirmDeleteLastGroupAndCloseTabs": {
-        "message": "Smazáním této skupiny zavřete všechny aktuální panely!",
-        "description": "Deleting this group will close all current tabs!"
-    },
     "searchPlaceholder": {
         "message": "Vyhledat panel...",
         "description": "Search placeholder"

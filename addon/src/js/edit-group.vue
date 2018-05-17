@@ -11,6 +11,18 @@
         return bgWin && bgWin.background && bgWin.background.inited ? bgWin.background : false;
     })(browser.extension.getBackgroundPage());
 
+    const fieldsToEdit = [
+        'id',
+        'title',
+        'iconColor',
+        'iconUrl',
+        'iconViewType',
+        'catchTabRules',
+        'catchTabContainers',
+        'isSticky',
+        'windowId'
+    ];
+
     export default {
         name: 'edit-group',
         props: {
@@ -36,7 +48,7 @@
             return {
                 iconTypes: ['main-squares', 'circle', 'squares', 'old-tab-groups'],
                 groupClone: new Vue({
-                    data: utils.extractKeys(this.group, ['id', 'title', 'iconColor', 'iconUrl', 'iconViewType', 'catchTabRules', 'catchTabContainers', 'isSticky']),
+                    data: utils.extractKeys(this.group, fieldsToEdit),
                     computed: {
                         iconUrlToDisplay() {
                             // watch variables
@@ -136,6 +148,8 @@
             async saveGroup() {
                 let group = utils.clone(this.groupClone.$data);
 
+                delete group.windowId;
+
                 group.title = utils.createGroupTitle(group.title, group.id);
                 group.catchTabRules
                     .split(/\s*\n\s*/)
@@ -149,13 +163,6 @@
                     });
 
                 BG.updateGroup(group.id, group);
-
-                let win = await BG.getWindow();
-
-                if (group.windowId === win.id) {
-                    BG.updateBrowserActionData(win.id);
-                    BG.updateMoveTabMenus(win.id);
-                }
 
                 this.$emit('saved');
             },
@@ -214,8 +221,8 @@
                 <label class="checkbox">
                     <input id="isStickyGroup" type="checkbox" v-model="groupClone.isSticky" />
                     <span v-text="lang('isStickyGroupTitle')"></span>
-                    <img class="size-18 cursor-help align-bottom" src="/icons/help.svg" :title="lang('isStickyGroupHelp')" alt="">
                 </label>
+                <img class="size-18 cursor-help align-bottom" src="/icons/help.svg" :title="lang('isStickyGroupHelp')" />
             </div>
         </div>
 
@@ -239,7 +246,7 @@
         <div class="field">
             <label class="label">
                 <span v-text="lang('regexpForTabsTitle')"></span>
-                <img class="size-18 cursor-help" src="/icons/help.svg" :title="lang('regexpForTabsHelp')" alt="">
+                <img class="size-18 cursor-help" src="/icons/help.svg" :title="lang('regexpForTabsHelp')" />
             </label>
             <div class="control">
                 <textarea class="textarea" v-model="groupClone.catchTabRules" :placeholder="lang('regexpForTabsPlaceholder')"></textarea>
