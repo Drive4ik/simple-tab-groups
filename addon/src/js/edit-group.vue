@@ -23,6 +23,13 @@
         'windowId'
     ];
 
+    const iconTypes = [
+        'main-squares',
+        'circle',
+        'squares',
+        'old-tab-groups'
+    ];
+
     export default {
         name: 'edit-group',
         props: {
@@ -46,7 +53,7 @@
             let vm = this;
 
             return {
-                iconTypes: ['main-squares', 'circle', 'squares', 'old-tab-groups'],
+                iconTypes: iconTypes,
                 groupClone: new Vue({
                     data: utils.extractKeys(this.group, fieldsToEdit),
                     computed: {

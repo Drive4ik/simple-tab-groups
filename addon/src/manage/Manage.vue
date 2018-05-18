@@ -45,7 +45,6 @@
 
                 groups: [],
 
-
                 dragData: null,
             };
         },
@@ -122,7 +121,7 @@
                     group.filteredTabs = group.tabs
                         .filter(function(tab, tabIndex) {
                             tab.index = tabIndex;
-                            return this.$_mySearchFunc(searchStr, (tab.title || tab.url).toLowerCase()) || this.$_mySearchFunc(searchStr, tab.url.toLowerCase());
+                            return this.$_mySearchFunc(searchStr, (tab.title || '').toLowerCase()) || this.$_mySearchFunc(searchStr, tab.url.toLowerCase());
                         }, this);
 
                     return group;
@@ -181,6 +180,7 @@
                     tabs: group.tabs.map(vm.$_tabMap, vm),
                 });
 
+                group.draggable = true;
                 group.isMoving = false;
                 group.isOver = false;
 
@@ -249,6 +249,9 @@
 
                 BG.removeTab(group.id, tabIndex);
             },
+            updateTabThumbnail(tabId) {
+                BG.updateTabThumbnail(tabId, true);
+            },
             async loadGroup(group, tabIndex) {
                 let isCurrentGroup = group === this.currentGroup;
 
@@ -315,24 +318,8 @@
                 BG.sortGroups(vector);
             },
 
-            startDragBehaviour(event, groupId) {
-                if ('INPUT' === event.target.nodeName) {
-                    return;
-                }
-
-                if ('mousedown' === event.type) {
-                    this.$refs['group_' + groupId][0].draggable = true;
-                } else if ('mouseup' === event.type) {
-                    this.$refs['group_' + groupId][0].draggable = false;
-                }
-            },
-
             // allowTypes: Array ['groups', 'tabs']
             dragHandle(event, itemType, allowTypes, data) {
-                if ('INPUT' === event.target.nodeName) {
-                    return;
-                }
-
                 if (event.type !== 'dragstart' && (!this.dragData || !this.dragData.allowTypes.includes(itemType))) {
                     return;
                 }
@@ -383,7 +370,6 @@
 
                         this.dragData = null;
                         break;
-
                 }
             },
 
@@ -445,10 +431,7 @@
                     }]"
                     @contextmenu="'INPUT' !== $event.target.nodeName && $refs.groupContextMenu.open($event, {group})"
 
-                    :ref="'group_' + group.id"
-                    @mousedown.left="startDragBehaviour($event, group.id)"
-                    @mouseup.left="startDragBehaviour($event, group.id)"
-
+                    :draggable="String(group.draggable)"
                     @dragstart="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
                     @dragenter="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
                     @dragover="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
@@ -459,7 +442,14 @@
                     >
                     <div class="header">
                         <div class="group-title">
-                            <input type="text" v-model.lazy.trim="group.title" maxlength="120" placeholder="Please enter group name" />
+                            <input
+                                type="text"
+                                @focus="group.draggable = false"
+                                @blur="group.draggable = true"
+                                v-model.lazy.trim="group.title"
+                                :placeholder="lang('title')"
+                                maxlength="120"
+                                />
                         </div>
                         <div class="group-icon">
                             <figure class="image is-16x16">
@@ -533,8 +523,12 @@
             </div>
         </main>
 
-        <context-menu v-if="containers.length" ref="groupContextMenu">
+        <context-menu ref="groupContextMenu">
             <ul slot-scope="menu" class="is-unselectable">
+                <li @click="addTab(menu.data.group)">
+                    <img src="/icons/tab-new.svg" class="size-16" />
+                    <span v-text="lang('createNewTab')"></span>
+                </li>
                 <li v-for="container in containers" @click="addTab(menu.data.group, container.cookieStoreId)">
                     <img :src="container.iconUrl" class="is-inline-block size-16 container-icon" :style="{fill: container.colorCode}" alt="" />
                     <span v-text="container.name"></span>
@@ -547,6 +541,10 @@
                 <li @click="setTabIconAsGroupIcon(menu.data.tab, menu.data.group)">
                     <img src="/icons/image.svg" class="size-16" />
                     <span v-text="lang('setTabIconAsGroupIcon')"></span>
+                </li>
+                <li v-if="menu.data.tab.id" @click="updateTabThumbnail(menu.data.tab.id)">
+                    <img src="/icons/image.svg" class="size-16" />
+                    <span v-text="'updateTabThumbnail'"></span>
                 </li>
             </ul>
         </context-menu>

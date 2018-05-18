@@ -29,6 +29,7 @@ export default {
     clear: browser.storage.local.clear,
     remove: browser.storage.local.remove,
     async set(data, useClone = false) {
+
         if (useClone) {
             data = clone(data);
         }
