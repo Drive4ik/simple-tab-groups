@@ -46,6 +46,7 @@
                 groups: [],
 
                 dragData: null,
+                multipleDropTabs: [],
             };
         },
         components: {
@@ -69,6 +70,10 @@
                     BG.moveGroup(from.data.item.id, to.data.itemIndex);
                 })
                 .$on('drag-move-tab', function(from, to) {
+                    if (!this.multipleDropTabs.includes(from.data.item)) {
+                        this.multipleDropTabs.push(from.data.item);
+                    }
+
                     let newTabIndex = undefined,
                         groupTo = null;
 
@@ -79,7 +84,15 @@
                         newTabIndex = to.data.itemIndex;
                     }
 
-                    BG.moveTabToGroup(from.data.itemIndex, newTabIndex, from.data.group.id, groupTo.id, false);
+                    let promise = Promise.resolve(),
+                        data = this.getDataForMultipleMove();
+
+                    data.forEach(function(dataItem) {
+                        promise = promise.then(() => BG.moveTabToGroup(dataItem.tabIndex, newTabIndex, dataItem.groupId, groupTo.id, false, false));
+                    });
+
+                    promise.then(BG.sendMessageGroupsUpdated);
+                    // BG.moveTabToGroup(from.data.itemIndex, newTabIndex, from.data.group.id, groupTo.id, false);
                 })
                 .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
                 .$on('drag-over', (item, isOver) => item.isOver = isOver);
@@ -140,7 +153,15 @@
 
                     console.info('BG event:', request.action, utils.clone(request));
 
-                    if ('group-updated' === request.action) { // group
+                    if ('tab-thumbnail-updated' === request.action) {
+                        let group = this.groups.find(group => group.id === request.groupId);
+                        group.tabs.some(function(tab, tabIndex) {
+                            if (tabIndex === request.tabIndex) {
+                                tab.thumbnail = request.thumbnail;
+                                return true;
+                            }
+                        });
+                    } else if ('group-updated' === request.action) {
                         let groupIndex = this.groups.findIndex(group => group.id === request.group.id);
 
                         if (request.group.tabs) {
@@ -148,6 +169,10 @@
                         }
 
                         Object.assign(this.groups[groupIndex], request.group);
+                    } else if ('group-added' === request.action) {
+                        this.groups.push(this.$_mapGroup(request.action));
+                    } else if ('group-removed' === request.action) {
+                        this.groups.splice(this.groups.findIndex(gr => gr.id === request.groupId), 1);
                     } else if (['group-loaded', 'groups-updated'].includes(request.action)) {
                         this.loadGroups();
                     }
@@ -156,6 +181,34 @@
 
                 browser.runtime.onMessage.addListener(listener);
                 window.addEventListener('unload', () => browser.runtime.onMessage.removeListener(listener));
+            },
+
+            getDataForMultipleMove() {
+                let data = [];
+
+                this.multipleDropTabs.forEach(function(tab) {
+                    let groupId = null,
+                        tabIndex = null;
+
+                    this.groups.some(function(gr) {
+                        let index = gr.tabs.indexOf(tab);
+
+                        if (-1 !== index) {
+                            groupId = gr.id;
+                            tabIndex = index;
+                            return true;
+                        }
+                    });
+
+                    if (groupId) {
+                        data.push({
+                            groupId,
+                            tabIndex,
+                        });
+                    }
+                }, this);
+
+                return data.reverse();
             },
 
             $_mySearchFunc(searchStr, inStr) {
@@ -190,7 +243,7 @@
                     watch: {
                         title: function(title) {
                             BG.updateGroup(this.id, {
-                                title: title,
+                                title: utils.createGroupTitle(title, this.id),
                             });
                         },
                     },
@@ -252,34 +305,20 @@
             updateTabThumbnail(tabId) {
                 BG.updateTabThumbnail(tabId, true);
             },
-            async loadGroup(group, tabIndex) {
-                let isCurrentGroup = group === this.currentGroup;
-
-                if (isCurrentGroup) {
-                    if (-1 === tabIndex) { // open group
-                        this.showSectionGroupTabs(group);
-                        return;
-                    }
-
-                    if (group.tabs[tabIndex].active) {
-                        return;
-                    }
-
-                    group.tabs.forEach((tab, index) => tab.active = index === tabIndex);
-                }
-
+            loadGroup(group, tabIndex) {
                 let groupIndex = this.groups.findIndex(gr => gr.id === group.id);
+                BG.loadGroup(this.currentWindowId, groupIndex, tabIndex);
+            },
 
-                await BG.loadGroup(this.currentWindowId, groupIndex, tabIndex);
-
-                if (this.options.closePopupAfterChangeGroup) {
-                    if (!isCurrentGroup) {
-                        window.close();
+            clickOnTab(event, tabIndex, tab, group) {
+                if (event.ctrlKey) {
+                    if (this.multipleDropTabs.includes(tab)) {
+                        this.multipleDropTabs.splice(this.multipleDropTabs.indexOf(tab), 1);
+                    } else {
+                        this.multipleDropTabs.push(tab);
                     }
                 } else {
-                    if (this.options.openGroupAfterChange) {
-                        this.showSectionGroupTabs(group);
-                    }
+                    this.loadGroup(group, tabIndex);
                 }
             },
 
@@ -399,7 +438,7 @@
                     </div>
                     <div v-show="search" class="control" @click="search = ''">
                         <label class="button is-small">
-                            <img class="size-12" src="/icons/close.svg" alt="" />
+                            <img class="size-12" src="/icons/close.svg" />
                         </label>
                     </div>
                 </div>
@@ -453,15 +492,15 @@
                         </div>
                         <div class="group-icon">
                             <figure class="image is-16x16">
-                                <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" alt="" />
+                                <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                             </figure>
                         </div>
                         <div class="tabs-count" v-text="lang('groupTabsCount', group.filteredTabs.length)"></div>
                         <div class="group-icon cursor-pointer is-unselectable" @click="openGroupSettings(group)" :title="lang('groupSettings')">
-                            <img class="size-16" src="/icons/settings.svg" alt="" />
+                            <img class="size-16" src="/icons/settings.svg" />
                         </div>
                         <div class="group-icon cursor-pointer is-unselectable" @click="removeGroup(group)" :title="lang('deleteGroup')">
-                            <img class="size-16" src="/icons/group-delete.svg" alt="" />
+                            <img class="size-16" src="/icons/group-delete.svg" />
                         </div>
                     </div>
                     <div class="body">
@@ -471,12 +510,13 @@
                             :class="['tab cursor-pointer', {
                                 'is-active': tab.active,
                                 'is-current': tab.active && group.windowId,
+                                'is-in-multiple-drop': multipleDropTabs.includes(tab),
                                 'has-thumbnail': tab.thumbnail,
                                 'drag-moving': tab.isMoving,
                                 'drag-over': tab.isOver,
                             }]"
 
-                            @click.stop="loadGroup(group, tab.index)"
+                            @click.stop="clickOnTab($event, tab.index, tab, group)"
 
                             @contextmenu.stop.prevent="$refs.tabsContextMenu.open($event, {tab, group, tabIndex: tab.index})"
 
@@ -488,26 +528,29 @@
                             @drop="dragHandle($event, 'tab', ['tab', 'group'], {itemIndex: tab.index, item: tab, group})"
                             @dragend="dragHandle($event, 'tab', ['tab', 'group'], {itemIndex: tab.index, item: tab, group})"
 
-                            :title="options.showUrlTooltipOnTabHover && (tab.title + '\n' + tab.url)"
+                            :title="options.showUrlTooltipOnTabHover && ((tab.title ? tab.title + '\n' : '') + tab.url)"
                             >
                             <div v-if="tab.favIconUrlToDisplay" class="tab-icon" :style="tab.container && {borderColor: tab.container.colorCode}">
-                                <img class="size-16" :src="tab.favIconUrlToDisplay" alt="" />
+                                <img class="size-16" :src="tab.favIconUrlToDisplay" />
                             </div>
                             <div class="delete-tab-button" @click.stop="removeTab(group, tab.index)" :title="lang('deleteTab')" :style="tab.container && {borderColor: tab.container.colorCode}">
-                                <img class="size-14" src="/icons/close.svg" alt="" />
+                                <img class="size-14" src="/icons/close.svg" />
                             </div>
                             <div v-if="tab.container" class="container" :style="{borderColor: tab.container.colorCode}">
-                                <img class="size-16" :src="tab.container.iconUrl" :style="{fill: tab.container.colorCode}" alt="">
+                                <img class="size-16" :src="tab.container.iconUrl" :style="{fill: tab.container.colorCode}">
+                            </div>
+                            <div v-if="!tab.id" class="refresh-icon" :style="{borderColor: tab.container.colorCode}">
+                                <img class="size-16" src="/icons/refresh.svg" />
                             </div>
                             <div class="screenshot" :style="tab.container && {borderColor: tab.container.colorCode}">
-                                <img :src="tab.thumbnail" alt="">
+                                <img :src="tab.thumbnail">
                             </div>
-                            <div class="tab-title has-text-centered text-ellipsis" v-text="tab.title"></div>
+                            <div class="tab-title has-text-centered text-ellipsis" v-text="tab.title || tab.url"></div>
                         </div>
 
                         <div class="tab new cursor-pointer" :title="lang('createNewTab')" @click="addTab(group)">
                             <div class="screenshot">
-                                <img src="/icons/tab-new.svg" alt="">
+                                <img src="/icons/tab-new.svg">
                             </div>
                             <div class="tab-title has-text-centered text-ellipsis" v-text="lang('createNewTab')"></div>
                         </div>
@@ -516,7 +559,7 @@
 
                 <div class="group new cursor-pointer" @click="addGroup">
                     <div class="body">
-                        <img src="/icons/group-new.svg" alt="">
+                        <img src="/icons/group-new.svg">
                         <div class="h-margin-top-10" v-text="lang('createNewGroup')"></div>
                     </div>
                 </div>
@@ -530,7 +573,7 @@
                     <span v-text="lang('createNewTab')"></span>
                 </li>
                 <li v-for="container in containers" @click="addTab(menu.data.group, container.cookieStoreId)">
-                    <img :src="container.iconUrl" class="is-inline-block size-16 container-icon" :style="{fill: container.colorCode}" alt="" />
+                    <img :src="container.iconUrl" class="is-inline-block size-16 container-icon" :style="{fill: container.colorCode}" />
                     <span v-text="container.name"></span>
                 </li>
             </ul>
@@ -605,6 +648,7 @@
         --tab-inner-padding: 3px;
         --fill-color: #818181;
         --active-tab-bg-color: #e4e4e4;
+        --multiple-drag-tab-bg-color: #1e88e5;
     }
 
     html {
@@ -633,12 +677,7 @@
     }
 
     #result {
-
-        .drag-group .group > *,
-        .drag-tab .tab > *,
-        .drag-tab .group input {
-            pointer-events: none;
-        }
+        padding: 10px 10px 100px 10px;
 
         // GRID VIEW
         .grid {
@@ -646,14 +685,15 @@
             grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
             /* grid-template-rows: minmax(auto, 600px) minmax(auto, 600px); */
             grid-gap: 10px;
-            padding: 10px;
 
             .group {
+                --background-color: #fcfcfc;
+
                 display: flex;
                 flex-direction: column;
                 border: 1px solid rgba(0, 0, 0, 0.15);
                 max-height: 600px;
-                background-color: #fcfcfc;
+                background-color: var(--background-color);
 
                 transition: transform 0.3s;
 
@@ -682,209 +722,240 @@
                             background-color: #ffffff;
                         }
                     }
+
+                    > .delete-group-button {
+                        line-height: 0;
+                    }
+
+                    > :not(:first-child) {
+                        padding-left: var(--margin);
+                    }
+
+                    > .group-icon > * {
+                        pointer-events: none;
+                    }
+                }
+
+                > .body {
+                    -moz-user-select: none;
+                    user-select: none;
+
+                    overflow-y: auto;
+                    padding: var(--margin);
+
+                    display: grid;
+                    grid-gap: var(--margin);
+                    /* grid-gap: 10px; */
+                    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                    grid-auto-rows: 100px;
+
+                    min-height: 110px;
+                    /* flex-grow: 1; */
+                }
+
+                .tab {
+                    position: relative;
+                    font-size: 12px;
+                    padding: var(--tab-inner-padding);
+
+
+                    &.has-thumbnail:hover > .tab-icon,
+                    &:hover > .delete-tab-button,
+                    &:hover > .container,
+                    &:hover > .refresh-icon,
+                    &.is-current,
+                    &:not(.is-current):hover,
+                    &.is-current.has-thumbnail > .tab-icon,
+                    &.is-current > .delete-tab-button,
+                    &.is-current > .container,
+                    &.is-current > .refresh-icon {
+                        background-color: var(--active-tab-bg-color);
+                    }
+
+                    &.is-active {
+                        outline: 1px solid #0093e0;
+                    }
+
+                    &:not(.is-active):hover {
+                        outline: 1px solid #cfcfcf;
+                    }
+
+                    &.is-in-multiple-drop {
+                        background-color: var(--multiple-drag-tab-bg-color);
+                    }
+
+                    &:not(.has-thumbnail) > .tab-icon {
+                        position: absolute;
+                        width: 16px;
+                        height: 16px;
+                        top: calc((calc(100% - 1em - var(--tab-inner-padding)) / 2) - 8px);
+                        left: calc((100% / 2) - 8px);
+                        pointer-events: none;
+                    }
+
+                    &.has-thumbnail > .tab-icon {
+                        position: absolute;
+                        top: var(--tab-inner-padding);
+                        left: var(--tab-inner-padding);
+                        border-bottom-right-radius: 75%;
+                        width: 25px;
+                        height: 25px;
+                        display: flex;
+                        align-items: start;
+                        justify-content: left;
+                        background-color: var(--background-color);
+                        border-bottom: 1px solid #c6ced4;
+                        border-right: 1px solid #c6ced4;
+                        pointer-events: none;
+                    }
+
+                    .tab-icon > img {
+                        line-height: 0;
+                    }
+
+                    > .delete-tab-button {
+                        display: flex;
+                        align-items: start;
+                        justify-content: right;
+                        position: absolute;
+                        top: var(--tab-inner-padding);
+                        right: var(--tab-inner-padding);
+                        height: 25px;
+                        width: 25px;
+                        border-bottom-left-radius: 75%;
+                        border-bottom: 1px solid #C6CED4;
+                        border-left: 1px solid #C6CED4;
+                        background-color: var(--background-color);
+                        line-height: 0;
+                    }
+
+                    > .container {
+                        position: absolute;
+                        bottom: calc(1em + var(--tab-inner-padding) * 2);
+                        left: var(--tab-inner-padding);
+                        border-right-style: solid;
+                        border-right-width: 1px;
+                        border-top-style: solid;
+                        border-top-width: 1px;
+                        display: flex;
+                        align-items: end;
+                        justify-content: left;
+                        width: 25px;
+                        height: 25px;
+                        background-color: var(--background-color);
+                        border-top-right-radius: 75%;
+
+                        > img {
+                            -moz-context-properties: fill;
+                        }
+                    }
+
+                    > .refresh-icon {
+                        position: absolute;
+                        bottom: calc(1em + var(--tab-inner-padding) * 2);
+                        right: var(--tab-inner-padding);
+                        border-left-style: solid;
+                        border-left-width: 1px;
+                        border-top-style: solid;
+                        border-top-width: 1px;
+                        display: flex;
+                        align-items: end;
+                        justify-content: right;
+                        width: 25px;
+                        height: 25px;
+                        background-color: var(--background-color);
+                        border-top-left-radius: 75%;
+                    }
+
+                    > .tab-title {
+                        line-height: 1.3em;
+                        position: absolute;
+                        left: var(--tab-inner-padding);
+                        right: var(--tab-inner-padding);
+                        bottom: var(--tab-inner-padding);
+                    }
+
+                    > .screenshot {
+                        height: calc(100% - 1em - var(--tab-inner-padding));
+                        /* flex-grow: 1; */
+                        overflow: hidden;
+                        border: 1px solid #C6CED4;
+
+                        > img {
+                            width: 100%;
+                            height: 100%;
+                        }
+
+                        > img[src=""] {
+                            display: none;
+                        }
+                    }
+
+                    &.new > .screenshot {
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+
+                        > img {
+                            width: 4em;
+                            height: auto;
+                            -moz-context-properties: fill;
+                            fill: var(--fill-color);
+                        }
+                    }
+
+                    > .tab-icon > *,
+                    > .screenshot > *,
+                    > .delete-tab-button > * {
+                        pointer-events: none;
+                    }
+
+                }
+
+                &.new {
+                    display: flex;
+                    align-content: center;
+                    justify-content: center;
+                    min-height: 250px;
+
+                    > .body {
+                        display: block;
+                        text-align: center;
+
+                        > img {
+                            width: 100px;
+                            -moz-context-properties: fill;
+                            fill: var(--fill-color);
+                        }
+                    }
                 }
             }
-
-            .group > .header > .delete-group-button {
-                line-height: 0;
-            }
-
-            .group > .header > :not(:first-child) {
-                padding-left: var(--margin);
-            }
-
-            .group > .header > .group-icon > * {
-                pointer-events: none;
-            }
-
-            .group > .body {
-                -moz-user-select: none;
-                user-select: none;
-
-                overflow-y: auto;
-                padding: var(--margin);
-
-                display: grid;
-                grid-gap: var(--margin);
-                /* grid-gap: 10px; */
-                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-                grid-auto-rows: 100px;
-
-                min-height: 110px;
-                /* flex-grow: 1; */
-            }
-
-            .group .tab {
-                position: relative;
-                font-size: 12px;
-                padding: var(--tab-inner-padding);
-            }
-
-            .group .tab.has-thumbnail:hover > .tab-icon,
-            .group .tab:hover > .delete-tab-button,
-            .group .tab:hover > .container,
-            .group .tab.is-current,
-            .group .tab:not(.is-current):hover,
-            .group .tab.is-current.has-thumbnail > .tab-icon,
-            .group .tab.is-current > .delete-tab-button,
-            .group .tab.is-current > .container {
-                background-color: var(--active-tab-bg-color);
-            }
-
-            .group .tab.is-active {
-                outline: 1px solid #0093e0;
-            }
-
-            .group .tab:not(.is-active):hover {
-                outline: 1px solid #cfcfcf;
-            }
-
-            .group .tab:not(.has-thumbnail) > .tab-icon {
-                position: absolute;
-                width: 16px;
-                height: 16px;
-                top: calc((calc(100% - 1em - var(--tab-inner-padding)) / 2) - 8px);
-                left: calc((100% / 2) - 8px);
-                pointer-events: none;
-            }
-
-            .group .tab.has-thumbnail > .tab-icon {
-                position: absolute;
-                top: var(--tab-inner-padding);
-                left: var(--tab-inner-padding);
-                border-bottom-right-radius: 75%;
-                width: 25px;
-                height: 25px;
-                display: flex;
-                align-items: start;
-                justify-content: left;
-                background-color: #fcfcfc;
-                border-bottom: 1px solid #c6ced4;
-                border-right: 1px solid #c6ced4;
-                pointer-events: none;
-            }
-
-            .tab-icon > img {
-                line-height: 0;
-            }
-
-            .group .tab > .delete-tab-button {
-                display: flex;
-                align-items: start;
-                justify-content: right;
-                position: absolute;
-                top: var(--tab-inner-padding);
-                right: var(--tab-inner-padding);
-                height: 25px;
-                width: 25px;
-                border-bottom-left-radius: 75%;
-                border-bottom: 1px solid #C6CED4;
-                border-left: 1px solid #C6CED4;
-                background-color: #fcfcfc;
-                line-height: 0;
-            }
-
-            .group .tab > .container {
-                position: absolute;
-                bottom: calc(1em + var(--tab-inner-padding) * 2);
-                left: var(--tab-inner-padding);
-                border-right-style: solid;
-                border-right-width: 1px;
-                border-top-style: solid;
-                border-top-width: 1px;
-                display: flex;
-                align-items: end;
-                justify-content: left;
-                width: 25px;
-                height: 25px;
-                background-color: #FCFCFC;
-                border-top-right-radius: 75%;
-            }
-
-            .group .tab > .container > img {
-                -moz-context-properties: fill;
-            }
-
-            .group .tab > .tab-title {
-                line-height: 1.3em;
-                position: absolute;
-                left: var(--tab-inner-padding);
-                right: var(--tab-inner-padding);
-                bottom: var(--tab-inner-padding);
-            }
-
-            .group .tab > .screenshot {
-                height: calc(100% - 1em - var(--tab-inner-padding));
-                /* flex-grow: 1; */
-                overflow: hidden;
-                border: 1px solid #C6CED4;
-            }
-
-            > .group .tab > .screenshot > img {
-                width: 100%;
-                height: 100%;
-            }
-
-            .group .tab > .screenshot > img[src=""] {
-                display: none;
-            }
-
-
-            .group .tab > .tab-icon > *,
-            .group .tab > .screenshot > *,
-            .group .tab > .delete-tab-button > * {
-                pointer-events: none;
-            }
-
-            .group .tab.new > .screenshot {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-            }
-
-            .group .tab.new > .screenshot > img {
-                width: 4em;
-                height: auto;
-                -moz-context-properties: fill;
-                fill: var(--fill-color);
-            }
-
-            .group.new {
-                display: flex;
-                align-content: center;
-                justify-content: center;
-                min-height: 250px;
-            }
-
-            .group.new > .body {
-                display: block;
-                text-align: center;
-            }
-
-            .group.new > .body > img {
-                width: 100px;
-                -moz-context-properties: fill;
-                fill: var(--fill-color);
-            }
         }
-    }
 
+        .drag-group .group > *,
+        .drag-tab .tab > *,
+        .drag-tab .group input {
+            pointer-events: none;
+        }
 
-    /* Drag & Drop Styles */
-    #result .drag-over {
-        outline: 2px dashed rgba(0, 0, 0, 0.5) !important;
-    }
+        /* Drag & Drop Styles */
 
-    #result .group.drag-over {
-        outline-offset: 3px;
-    }
+        .drag-over {
+            outline: 2px dashed rgba(0, 0, 0, 0.5) !important;
+        }
 
-    #result .drag-moving {
-        opacity: 0.4;
-        animation-name: in-out;
-        animation-duration: 0.5s;
-        animation-iteration-count: infinite;
-        animation-direction: alternate;
+        .group.drag-over {
+            outline-offset: 3px;
+        }
+
+        .drag-moving,
+        .drag-tab .tab.is-in-multiple-drop {
+            opacity: 0.4;
+            animation-name: in-out;
+            animation-duration: 0.5s;
+            animation-iteration-count: infinite;
+            animation-direction: alternate;
+        }
     }
 
     @keyframes in-out {
@@ -895,6 +966,5 @@
             transform: scale(0.8);
         }
     }
-
 
 </style>

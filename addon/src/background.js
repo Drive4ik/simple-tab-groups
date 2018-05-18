@@ -47,11 +47,9 @@ let log = function(message = 'log', data = null, showNotification = true) {
 
 let saveGroupsToStorageTimer = null;
 
-async function saveGroupsToStorage(sendMessageToAll = true) {
+async function saveGroupsToStorage(sendMessageToAll = false) {
     if (sendMessageToAll) {
-        sendMessage({
-            action: 'groups-updated',
-        });
+        sendMessageGroupsUpdated();
     }
 
     if (saveGroupsToStorageTimer) {
@@ -190,17 +188,23 @@ async function addGroup(windowId, resetGroups = false, returnNewGroupIndex = tru
 
     if (0 === newGroupIndex) {
         let win = await getWindow();
+        let tabs = await getTabs();
 
         _groups[0].windowId = win.id;
-        _groups[0].tabs = await getTabs();
+        _groups[0].tabs = tabs.map(mapTab);
 
         updateBrowserActionData(_groups[0].windowId);
     } else if (withTabs.length) {
         _groups[newGroupIndex].tabs = withTabs.map(mapTab);
     }
 
-    storage.set({
+    await storage.set({
         lastCreatedGroupPosition,
+    });
+
+    sendMessage({
+        action: 'group-added',
+        group: _groups[newGroupIndex],
     });
 
     sendExternalMessage({
@@ -219,9 +223,10 @@ async function updateGroup(groupId, updateData) {
 
     Object.assign(_groups[groupIndex], utils.clone(updateData)); // clone need for fix bug: dead object after close tab which create object
 
+    updateData.id = groupId;
     sendMessage({
         action: 'group-updated',
-        group: _groups[groupIndex],
+        group: updateData,
     });
 
     sendExternalMessage({
@@ -229,7 +234,7 @@ async function updateGroup(groupId, updateData) {
         groupId: groupId,
     });
 
-    saveGroupsToStorage(false);
+    saveGroupsToStorage();
 
     let win = await getWindow();
 
@@ -240,6 +245,12 @@ async function updateGroup(groupId, updateData) {
     if (_groups[groupIndex].windowId &&_groups[groupIndex].windowId === win.id) {
         updateBrowserActionData(win.id);
     }
+}
+
+function sendMessageGroupsUpdated() {
+    sendMessage({
+        action: 'groups-updated',
+    });
 }
 
 function sendMessage(data) {
@@ -259,7 +270,7 @@ function sendExternalMessage(data, allowedRequestKeys = ['getGroupsList']) {
 async function addUndoRemoveGroupItem(group) {
     browser.menus.create({
         id: constants.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id,
-        title: browser.i18n.getMessage('undoRemoveGroupItemTitle', utils.unSafeHtml(group.title)),
+        title: browser.i18n.getMessage('undoRemoveGroupItemTitle', group.title),
         contexts: ['browser_action'],
         icons: {
             16: utils.getGroupIconUrl(group, options.browserActionIconColor),
@@ -273,7 +284,7 @@ async function addUndoRemoveGroupItem(group) {
             _groups.push(group);
 
             updateMoveTabMenus();
-            saveGroupsToStorage();
+            saveGroupsToStorage(true);
         },
     });
 }
@@ -333,8 +344,6 @@ async function removeGroup(groupId) {
 
     updateBrowserActionData();
 
-    saveGroupsToStorage();
-
     sendMessage({
         action: 'group-removed',
         groupId: groupId,
@@ -344,6 +353,8 @@ async function removeGroup(groupId) {
         groupDeleted: true,
         groupId: groupId,
     });
+
+    saveGroupsToStorage();
 }
 
 async function moveGroup(groupId, position = 'up') {
@@ -365,8 +376,8 @@ async function moveGroup(groupId, position = 'up') {
         _groups.splice(position, 0, _groups.splice(groupIndex, 1)[0]);
     }
 
-    saveGroupsToStorage();
     updateMoveTabMenus();
+    saveGroupsToStorage(true);
 }
 
 let savingTabsInWindow = {};
@@ -407,10 +418,13 @@ async function saveCurrentTabs(windowId, excludeTabId, calledFunc) {
 
     sendMessage({
         action: 'group-updated',
-        group: group,
+        group: {
+            id: group.id,
+            tabs: group.tabs,
+        },
     });
 
-    saveGroupsToStorage(false);
+    saveGroupsToStorage();
 
     delete savingTabsInWindow[windowId];
 }
@@ -430,12 +444,15 @@ async function addTab(groupId, cookieStoreId) {
             url: 'about:home',
             cookieStoreId,
         });
-        saveGroupsToStorage(false);
+        saveGroupsToStorage();
     }
 
     sendMessage({
         action: 'group-updated',
-        group: group,
+        group: {
+            id: group.id,
+            tabs: group.tabs,
+        },
     });
 }
 
@@ -448,7 +465,7 @@ async function removeTab(groupId, tabIndex) {
 
         if (utils.isTabHidden(tab)) {
             group.tabs.splice(tabIndex, 1);
-            saveGroupsToStorage(false);
+            saveGroupsToStorage();
         } else {
             let pinnedTabs = await getPinnedTabs(tab.windowId),
                 tabs = await getTabs(tab.windowId);
@@ -464,13 +481,17 @@ async function removeTab(groupId, tabIndex) {
         await browser.tabs.remove(tabId);
     } else {
         group.tabs.splice(tabIndex, 1);
-        saveGroupsToStorage(false);
-    }
 
-    sendMessage({
-        action: 'group-updated',
-        group: group,
-    });
+        sendMessage({
+            action: 'group-updated',
+            group: {
+                id: group.id,
+                tabs: group.tabs,
+            },
+        });
+
+        saveGroupsToStorage();
+    }
 }
 
 function setLoadingToBrowserAction() {
@@ -701,19 +722,21 @@ async function updateTabThumbnail(tabId, force = false) {
         return;
     }
 
-    let group = null,
-        tab = null;
+    let groupId = null,
+        tab = null,
+        tabIndex = null;
 
     _groups.some(function(gr) {
-        let found = gr.tabs.some(function(t) {
+        let found = gr.tabs.some(function(t, tIndex) {
             if (t.id === tabId) {
                 tab = t;
+                tabIndex = tIndex;
                 return true;
             }
         });
 
         if (found) {
-            group = gr;
+            groupId = gr.id;
         }
 
         return found;
@@ -736,11 +759,13 @@ async function updateTabThumbnail(tabId, force = false) {
         }
 
         sendMessage({
-            action: 'group-updated',
-            group: group,
+            action: 'tab-thumbnail-updated',
+            tabIndex,
+            groupId,
+            thumbnail: tab.thumbnail,
         });
 
-        saveGroupsToStorage(false);
+        saveGroupsToStorage();
     }
 }
 
@@ -765,10 +790,13 @@ async function onActivatedTab({ tabId, windowId }) {
 
     sendMessage({
         action: 'group-updated',
-        group: group,
+        group: {
+            id: group.id,
+            tabs: group.tabs,
+        },
     });
 
-    saveGroupsToStorage(false);
+    saveGroupsToStorage();
 }
 
 async function onCreatedTab(tab) {
@@ -910,6 +938,15 @@ async function onDetachedTab(tabId, { oldWindowId }) { // notice: call before on
     }
 
     group.tabs.splice(tabIndex, 1);
+
+    sendMessage({
+        action: 'group-updated',
+        group: {
+            id: group.id,
+            tabs: group.tabs,
+        },
+    });
+
     saveGroupsToStorage();
 }
 
@@ -941,8 +978,8 @@ async function onFocusChangedWindow(windowId) {
 }
 
 // if oldGroupId === null, move tab from current window without group
-async function moveTabToGroup(oldTabIndex, newTabIndex = -1, oldGroupId = null, newGroupId, showNotificationAfterMoveTab = true) {
-    console.warn('moveTabToGroup', oldTabIndex, newTabIndex, oldGroupId, newGroupId, showNotificationAfterMoveTab);
+async function moveTabToGroup(oldTabIndex, newTabIndex = -1, oldGroupId = null, newGroupId, showNotificationAfterMoveTab = true, sendMessageAction = true) {
+    console.warn('moveTabToGroup', [].join.call(arguments, ' '));
 
     let oldGroup = null,
         newGroup = _groups.find(gr => gr.id === newGroupId),
@@ -1072,19 +1109,27 @@ async function moveTabToGroup(oldTabIndex, newTabIndex = -1, oldGroupId = null, 
         }
     }
 
-    if (oldGroup && oldGroup !== newGroup) {
+    if (sendMessageAction) {
+        if (oldGroup && oldGroup !== newGroup) {
+            sendMessage({
+                action: 'group-updated',
+                group: {
+                    id: oldGroup.id,
+                    tabs: oldGroup.tabs,
+                },
+            });
+        }
+
         sendMessage({
             action: 'group-updated',
-            group: oldGroup,
+            group: {
+                id: newGroup.id,
+                tabs: newGroup.tabs,
+            },
         });
     }
 
-    sendMessage({
-        action: 'group-updated',
-        group: newGroup,
-    });
-
-    saveGroupsToStorage(false);
+    saveGroupsToStorage();
 
     if (!showNotificationAfterMoveTab || !options.showNotificationAfterMoveTab) {
         return;
@@ -1158,6 +1203,14 @@ async function createMoveTabMenus(windowId) {
             updateBrowserActionData(group.windowId);
             updateMoveTabMenus(group.windowId);
 
+            sendMessage({
+                action: 'group-updated',
+                group: {
+                    id: group.id,
+                    iconUrl: group.iconUrl,
+                },
+            });
+
             saveGroupsToStorage();
         }
     }));
@@ -1172,7 +1225,7 @@ async function createMoveTabMenus(windowId) {
     await Promise.all(_groups.map(function(group) {
         moveTabToGroupMenusIds.push(browser.menus.create({
             id: constants.CONTEXT_MENU_PREFIX_GROUP + group.id,
-            title: utils.unSafeHtml(group.title),
+            title: group.title,
             enabled: currentGroup ? group.id !== currentGroup.id : true,
             icons: {
                 16: utils.getGroupIconUrl(group, options.browserActionIconColor),
@@ -1235,7 +1288,7 @@ function setBrowserActionData(currentGroup) {
     }
 
     browser.browserAction.setTitle({
-        title: utils.unSafeHtml(currentGroup.title) + ' - ' + browser.i18n.getMessage('extensionName'),
+        title: currentGroup.title + ' - ' + browser.i18n.getMessage('extensionName'),
     });
 
     browser.browserAction.setIcon({
@@ -1267,7 +1320,17 @@ async function onRemovedWindow(windowId) {
 
     if (group) {
         group.windowId = null;
-        // group.tabs.forEach(tab => tab.id = null); // reset tab id in func onRemovedTab
+        group.tabs.forEach(tab => tab.id = null); // reset tab id in func onRemovedTab
+
+        sendMessage({
+            action: 'group-updated',
+            group: {
+                id: group.id,
+                windowId: null,
+                tabs: group.tabs,
+            },
+        });
+
         saveGroupsToStorage();
     }
 
@@ -1342,12 +1405,8 @@ function sortGroups(vector = 'asc') {
         }
     });
 
-    saveGroupsToStorage();
     updateMoveTabMenus();
-
-    sendMessage({
-        action: 'groups-updated',
-    });
+    saveGroupsToStorage(true);
 }
 
 async function openManageGroups(windowScreen) {
@@ -1450,24 +1509,12 @@ browser.runtime.onMessageExternal.addListener(function(request, sender, sendResp
             ok: true,
         });
     } else if (request.getGroupsList) {
-        // sendResponse(new Promise(async function(resolve) {
-        //     resolve({
-        //         ok: true,
-        //         groupsList: await Promise.all(_groups.map(async function(group) {
-        //             return {
-        //                 id: group.id,
-        //                 title: utils.unSafeHtml(group.title),
-        //                 iconUrl: utils.getGroupIconUrl(group, options.browserActionIconColor),
-        //             };
-        //         })),
-        //     });
-        // }));
         sendResponse({
             ok: true,
             groupsList: _groups.map(function(group) {
                 return {
                     id: group.id,
-                    title: utils.unSafeHtml(group.title),
+                    title: group.title,
                     iconUrl: utils.getGroupIconUrl(group, options.browserActionIconColor),
                 };
             }),
@@ -1578,6 +1625,8 @@ window.background = {
 
     sortGroups,
     loadGroup,
+
+    sendMessageGroupsUpdated,
 
     mapTab,
     getTabFavIconUrl,
