@@ -7,12 +7,18 @@ html {
     overflow-y: auto;
 }
 
-img {
-    /* vertical-align: middle; */
+img[src$=".svg"] {
+    pointer-events: none;
+    -moz-user-select: none;
+    user-select: none;
 }
 
 .align-bottom {
     vertical-align: bottom;
+}
+
+.align-text-bottom {
+    vertical-align: text-bottom;
 }
 
 .cursor-pointer {
@@ -22,11 +28,11 @@ img {
 .cursor-help {
     cursor: help;
 }
-
+/*
 .no-events {
     pointer-events: none;
 }
-
+ */
 .is-full-height {
     height: 100%;
 }

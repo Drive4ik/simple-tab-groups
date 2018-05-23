@@ -287,10 +287,6 @@
             }
         }
     },
-    "showUrlTooltipOnTabHover": {
-        "message": "Zeige URL-Tooltip wenn Mauszeiger über Tab",
-        "description": "Show url tooltip when hovering over tab"
-    },
     "sortGroupsAZ": {
         "message": "Sortiere Gruppen [A–Z]",
         "description": "Sort groups [A-Z]"

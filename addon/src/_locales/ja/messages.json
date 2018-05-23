@@ -155,10 +155,6 @@
         "message": "変更したグループを開く",
         "description": "Open group after changing to it"
     },
-    "showUrlTooltipOnTabHover": {
-        "message": "タブをオンカーソルした時にURLツールチップを表示する",
-        "description": "Show url tooltip when hovering over tab"
-    },
     "newGroupTitle": {
         "message": "グループ $id$",
         "description": "group id",

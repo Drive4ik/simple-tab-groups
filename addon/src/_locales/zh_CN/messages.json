@@ -155,10 +155,6 @@
         "message": "改动标签页群组后，打开该群组",
         "description": "Open group after changing to it"
     },
-    "showUrlTooltipOnTabHover": {
-        "message": "鼠标悬停在标签页上时，显示其网址",
-        "description": "Show url tooltip when hovering over tab"
-    },
     "newGroupTitle": {
         "message": "群组\"$id$\"",
         "description": "group id",

@@ -11,8 +11,8 @@ let tagsToReplace = {
     '&': '&amp;',
 };
 
-function keyId(obj) {
-    return obj.id;
+function keyId({id}) {
+    return id;
 }
 
 function type(obj) {
@@ -92,7 +92,7 @@ function notify(message, timer = 20000, id) {
     } else {
         id = String(Date.now());
     }
-console.log('type(message)', type(message));
+
     if ('error' === type(message)) {
         let prefix = browser.extension.getURL('');
         message.stack = message.stack.split('@').map(path => path.replace(prefix, '').trim()).filter(Boolean).join('\n');
@@ -190,7 +190,7 @@ function isWindowAllow(win) {
 }
 
 function isTabAllowToCreate(tab) {
-    return /^((https?|ftp|moz-extension):|about:(blank|home))/.test(tab.url);
+    return /^((https?|ftp|moz-extension):|about:blank)/.test(tab.url);
 }
 
 function isTabIncognito(tab) {
@@ -276,25 +276,13 @@ function isDefaultCookieStoreId(cookieStoreId) {
     return constants.DEFAULT_COOKIE_STORE_ID === cookieStoreId || !cookieStoreId || constants.PRIVATE_COOKIE_STORE_ID === cookieStoreId;
 }
 
-async function normalizeCookieStoreId(cookieStoreId, containers) {
+function normalizeCookieStoreId(cookieStoreId, containers) {
     if (isDefaultCookieStoreId(cookieStoreId)) {
         return constants.DEFAULT_COOKIE_STORE_ID;
     }
 
-    if (!containers) {
-        containers = await loadContainers();
-    }
-
-    let isContainerFound = await getContainer(cookieStoreId, containers);
+    let isContainerFound = containers.some(container => container.cookieStoreId === cookieStoreId);
     return isContainerFound ? cookieStoreId : constants.DEFAULT_COOKIE_STORE_ID;
-}
-
-async function getContainer(cookieStoreId, containers) {
-    if (!containers) {
-        containers = await loadContainers();
-    }
-
-    return containers.find(container => container.cookieStoreId === cookieStoreId);
 }
 
 async function loadContainers() {
@@ -437,7 +425,6 @@ export {
 
     isDefaultCookieStoreId,
     normalizeCookieStoreId,
-    getContainer,
     loadContainers,
 
     notify,

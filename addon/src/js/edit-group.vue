@@ -229,7 +229,9 @@
                     <input id="isStickyGroup" type="checkbox" v-model="groupClone.isSticky" />
                     <span v-text="lang('isStickyGroupTitle')"></span>
                 </label>
-                <img class="size-18 cursor-help align-bottom" src="/icons/help.svg" :title="lang('isStickyGroupHelp')" />
+                <span class="cursor-help" :title="lang('isStickyGroupHelp')">
+                    <img class="size-18 align-bottom" src="/icons/help.svg" />
+                </span>
             </div>
         </div>
 
@@ -253,7 +255,9 @@
         <div class="field">
             <label class="label">
                 <span v-text="lang('regexpForTabsTitle')"></span>
-                <img class="size-18 cursor-help" src="/icons/help.svg" :title="lang('regexpForTabsHelp')" />
+                <span class="cursor-help" :title="lang('regexpForTabsHelp')">
+                    <img class="size-18" src="/icons/help.svg" />
+                </span>
             </label>
             <div class="control">
                 <textarea class="textarea" v-model="groupClone.catchTabRules" :placeholder="lang('regexpForTabsPlaceholder')"></textarea>

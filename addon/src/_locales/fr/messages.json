@@ -313,10 +313,6 @@
         "message": "Importe les préférences de l'addon \"Tab Groups\" de Quicksaver",
         "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
     },
-    "showUrlTooltipOnTabHover": {
-        "message": "Montrer l'url d'un onglet survolé dans une infobulle",
-        "description": "Show url tooltip when hovering over tab"
-    },
     "searchNotFoundTitle": {
         "message": "La recherche d'onglets \"$search$\" n'a pas de résutat",
         "description": "No results found",

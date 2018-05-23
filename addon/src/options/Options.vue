@@ -305,12 +305,12 @@
     <div id="stg-options">
         <div class="tabs is-boxed">
             <ul>
-                <li v-for="section in sections" :class="{'is-active': section === section.id}" @click="section = section.id">
+                <li v-for="sectionObj in sections" :class="{'is-active': section === sectionObj.id}" @click="section = sectionObj.id">
                     <a>
                         <span class="icon is-small">
-                            <img :src="'/icons/' + section.icon + '.svg'">
+                            <img :src="'/icons/' + sectionObj.icon + '.svg'">
                         </span>
-                        <span v-text="lang(section.title)"></span>
+                        <span v-text="lang(sectionObj.title)"></span>
                     </a>
                 </li>
             </ul>
@@ -333,12 +333,6 @@
                 <label class="checkbox" :disabled="options.closePopupAfterChangeGroup">
                     <input v-model="options.openGroupAfterChange" type="checkbox" :disabled="options.closePopupAfterChangeGroup"/>
                     <span v-text="lang('openGroupAfterChange')"></span>
-                </label>
-            </div>
-            <div class="field">
-                <label class="checkbox">
-                    <input v-model="options.showUrlTooltipOnTabHover" type="checkbox" />
-                    <span v-text="lang('showUrlTooltipOnTabHover')"></span>
                 </label>
             </div>
             <div class="field">
@@ -418,7 +412,9 @@
                         </select>
                     </div>
                     <div class="delete-button">
-                        <img @click="options.hotkeys.splice(hotkeyIndex, 1)" class="size-16 cursor-pointer" :title="lang('deleteHotKeyButton')" src="/icons/delete.svg" />
+                        <span @click="options.hotkeys.splice(hotkeyIndex, 1)" class="cursor-pointer" :title="lang('deleteHotKeyButton')">
+                            <img class="size-16" src="/icons/delete.svg" />
+                        </span>
                     </div>
                 </div>
             </div>
@@ -426,7 +422,7 @@
                 <div class="control">
                     <button @click="options.hotkeys.push(createHotkey())" class="button">
                         <span class="icon">
-                            <img class="size-14" src="/icons/new.svg" alt="" />
+                            <img class="size-14" src="/icons/new.svg" />
                         </span>
                         <span v-text="lang('addHotKeyButton')"></span>
                     </button>
@@ -446,7 +442,7 @@
                 </div>
                 <div class="control">
                     <button @click="exportAddonSettings" class="button">
-                        <img class="size-14" src="/icons/download.svg" alt="" />
+                        <img class="size-14" src="/icons/download.svg" />
                         <span class="h-margin-left-5" v-text="lang('exportAddonSettingsButton')"></span>
                     </button>
                 </div>
@@ -460,7 +456,7 @@
                 </div>
                 <div class="control">
                     <button @click="importAddonSettings" class="button">
-                        <img class="size-14" src="/icons/upload.svg" alt="" />
+                        <img class="size-14" src="/icons/upload.svg" />
                         <span class="h-margin-left-5" v-text="lang('importAddonSettingsButton')"></span>
                     </button>
                 </div>

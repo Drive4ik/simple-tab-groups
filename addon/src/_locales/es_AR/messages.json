@@ -155,10 +155,6 @@
         "message": "Abrir un grupo después de cambiarlo",
         "description": "Open group after changing to it"
     },
-    "showUrlTooltipOnTabHover": {
-        "message": "Mostrar",
-        "description": "Show url tooltip when hovering over tab"
-    },
     "newGroupTitle": {
         "message": "Grupo $id$",
         "description": "group id",

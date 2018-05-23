@@ -155,10 +155,6 @@
         "message": "Otwórz grupę po jej zmianie",
         "description": "Open group after changing to it"
     },
-    "showUrlTooltipOnTabHover": {
-        "message": "Pokaż podpowiedź adresu URL po najechaniu na kartę",
-        "description": "Show url tooltip when hovering over tab"
-    },
     "newGroupTitle": {
         "message": "Grupa $id$",
         "description": "group id",

@@ -35,6 +35,9 @@
 
                 section: SECTION_DEFAULT,
 
+                dragData: null,
+                someGroupAreLoading: false,
+
                 search: '',
 
                 currentWindowId: null,
@@ -55,6 +58,27 @@
             'edit-group-popup': editGroupPopup,
             'edit-group': editGroup,
             'context-menu': contextMenu,
+        },
+        created() {
+            this
+                .$on('drag-move-group', function(from, to) {
+                    BG.moveGroup(from.data.item.id, to.data.itemIndex);
+                })
+                .$on('drag-move-tab', function(from, to) {
+                    let newTabIndex = undefined,
+                        groupTo = null;
+
+                    if (to.data.isGroup) {
+                        groupTo = to.data.item;
+                    } else {
+                        groupTo = to.data.group;
+                        newTabIndex = to.data.itemIndex;
+                    }
+
+                    BG.moveTabToGroup(from.data.itemIndex, newTabIndex, from.data.group.id, groupTo.id, false);
+                })
+                .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
+                .$on('drag-over', (item, isOver) => item.isOver = isOver);
         },
         async mounted() {
             let currentWindow = await BG.getWindow();
@@ -99,10 +123,11 @@
                 this.groups.forEach(function(group) {
                     group.filteredTabsBySearch = group.tabs.filter(function(tab, tabIndex) {
                         tab.index = tabIndex;
-                        return this.$_mySearchFunc(searchStr, tab.title.toLowerCase()) || this.$_mySearchFunc(searchStr, tab.url.toLowerCase());
+                        return this.$_mySearchFunc(searchStr, (tab.title || '').toLowerCase()) || this.$_mySearchFunc(searchStr, tab.url.toLowerCase());
                     }, this);
 
                     if (group.filteredTabsBySearch.length || this.$_mySearchFunc(searchStr, group.title.toLowerCase())) {
+                        group.filteredTabsBySearch.sort(this.$_simpleSortTabs.bind(null, searchStr));
                         groups.push(group);
                     }
                 }, this);
@@ -122,16 +147,35 @@
 
                     console.info('BG event:', request.action, utils.clone(request));
 
-                    if ('group-updated' === request.action) { // group
-                        let groupIndex = this.groups.findIndex(group => group.id === request.group.id);
+                    switch (request.action) {
+                        case 'tab-thumbnail-updated':
+                            let group = this.groups.find(group => group.id === request.groupId);
+                            group.tabs.some(function(tab, tabIndex) {
+                                if (tabIndex === request.tabIndex) {
+                                    tab.thumbnail = request.thumbnail;
+                                    return true;
+                                }
+                            });
+                            break;
+                        case 'group-updated':
+                            let groupIndex = this.groups.findIndex(group => group.id === request.group.id);
 
-                        if (request.group.tabs) {
-                            request.group.tabs = request.group.tabs.map(this.$_tabMap, this);
-                        }
+                            if (request.group.tabs) {
+                                request.group.tabs = request.group.tabs.map(this.$_tabMap, this);
+                            }
 
-                        Object.assign(this.groups[groupIndex], request.group);
-                    } else if (['group-loaded', 'groups-updated'].includes(request.action)) {
-                        this.loadGroups();
+                            Object.assign(this.groups[groupIndex], request.group);
+                            break;
+                        case 'group-added':
+                            this.groups.push(this.$_groupMap(request.group));
+                            break;
+                        case 'group-removed':
+                            this.groups.splice(this.groups.findIndex(gr => gr.id === request.groupId), 1);
+                            break;
+                        case 'group-loaded':
+                        case 'groups-updated':
+                            this.loadGroups();
+                            break;
                     }
 
                 }.bind(this);
@@ -172,12 +216,27 @@
                     });
             },
 
+            $_simpleSortTabs(searchStr, a, b) {
+                let aIncludes = (a.title || '').toLowerCase().includes(searchStr) || a.url.includes(searchStr),
+                    bIncludes = (b.title || '').toLowerCase().includes(searchStr) || b.url.includes(searchStr);
+
+                if (aIncludes && !bIncludes) { // move up
+                    return -1;
+                }
+
+                if (!aIncludes && bIncludes) { // move down
+                    return 1;
+                }
+
+                return 0; // stay
+            },
+
             $_groupMap(group) {
                 let vm = this;
 
-                Object.assign(group, {
-                    tabs: group.tabs.map(vm.$_tabMap, vm),
-                });
+                group.tabs = group.tabs.map(this.$_tabMap, this);
+                group.isMoving = false;
+                group.isOver = false;
 
                 return new Vue({
                     data: group,
@@ -197,25 +256,25 @@
             $_tabMap(tab) {
                 let vm = this;
 
-                Object.assign(tab, {
-                    favIconUrlToDisplay: BG.getTabFavIconUrl(tab, this.options.useTabsFavIconsFromGoogleS2Converter),
-                    isDefaultCookieStoreId: utils.isDefaultCookieStoreId(tab.cookieStoreId),
-                    borderedStyle: (function() {
-                        if (utils.isDefaultCookieStoreId(tab.cookieStoreId)) {
-                            return false;
-                        }
+                tab.favIconUrlToDisplay = BG.getTabFavIconUrl(tab, this.options.useTabsFavIconsFromGoogleS2Converter);
+                tab.borderedStyle = (function() {
+                    if (utils.isDefaultCookieStoreId(tab.cookieStoreId)) {
+                        return false;
+                    }
 
-                        let container = vm.containers.find(container => container.cookieStoreId === tab.cookieStoreId);
+                    let container = vm.containers.find(container => container.cookieStoreId === tab.cookieStoreId);
 
-                        if (!container) {
-                            return false;
-                        }
+                    if (!container) {
+                        return false;
+                    }
 
-                        return {
-                            borderColor: container.colorCode,
-                        };
-                    })(),
-                });
+                    return {
+                        borderColor: container.colorCode,
+                    };
+                })();
+
+                tab.isMoving = false;
+                tab.isOver = false;
 
                 return new Vue({
                     data: tab,
@@ -258,6 +317,10 @@
                 this.unSyncTabs.splice(this.unSyncTabs.indexOf(tab), 1);
             },
             async loadGroup(group, tabIndex) {
+                if (this.someGroupAreLoading) {
+                    return;
+                }
+
                 let isCurrentGroup = group === this.currentGroup;
 
                 if (isCurrentGroup) {
@@ -275,7 +338,11 @@
 
                 let groupIndex = this.groups.findIndex(gr => gr.id === group.id);
 
+                this.someGroupAreLoading = true;
+
                 await BG.loadGroup(this.currentWindowId, groupIndex, tabIndex);
+
+                this.someGroupAreLoading = false;
 
                 if (this.options.closePopupAfterChangeGroup) {
                     if (!isCurrentGroup) {
@@ -296,14 +363,22 @@
                 });
 
                 await browser.tabs.show(hiddenTabsIds);
+
+                this.unSyncTabs = [];
+                this.loadGroups();
             },
-            unsyncHiddenTabsCreateNewGroup() {
-                BG.addGroup(undefined, undefined, undefined, utils.clone(this.unSyncTabs));
+            async unsyncHiddenTabsCreateNewGroup() {
+                await BG.addGroup(undefined, undefined, undefined, this.unSyncTabs);
+
+                this.unSyncTabs = [];
+                this.loadGroups();
             },
             unsyncHiddenTabsCloseAll() {
                 browser.tabs.remove(this.unSyncTabs.map(utils.keyId));
+
+                this.unSyncTabs = [];
             },
-            async unsyncHiddenTabsShowIntoCurrentWindow(tab) {
+            async unsyncHiddenTabsShowTabIntoCurrentWindow(tab) {
                 await browser.tabs.move(tab.id, {
                     windowId: this.currentWindowId,
                     index: -1,
@@ -328,23 +403,35 @@
                 await BG.removeGroup(group.id);
                 this.groupToRemove = null;
 
-                this.groups.splice(this.groups.indexOf(group), 1);
+                // this.groups.splice(this.groups.indexOf(group), 1);
 
                 this.showSectionDefault();
             },
-            moveTabToGroup(oldTabIndex, oldGroupId, newGroupId) {
-                BG.moveTabToGroup(oldTabIndex, undefined, oldGroupId, newGroupId);
+            async moveTabToGroup(oldTabIndex, oldGroupId, newGroupId, callLoadUnsyncedTabs) {
+                await BG.moveTabToGroup(oldTabIndex, undefined, oldGroupId, newGroupId);
+
+                if (callLoadUnsyncedTabs) {
+                    this.loadUnsyncedTabs();
+                }
             },
-            async moveTabToNewGroup(oldTabIndex, oldGroupId) {
+            async moveTabToNewGroup(oldTabIndex, oldGroupId, callLoadUnsyncedTabs) {
                 let newGroup = await BG.addGroup(undefined, undefined, false);
 
-                BG.moveTabToGroup(oldTabIndex, undefined, oldGroupId, newGroup.id);
+                await BG.moveTabToGroup(oldTabIndex, undefined, oldGroupId, newGroup.id);
+
+                if (callLoadUnsyncedTabs) {
+                    this.loadUnsyncedTabs();
+                }
             },
             setTabIconAsGroupIcon(tab) {
                 BG.updateGroup(this.groupToShow.id, {
                     iconViewType: null,
                     iconUrl: BG.getTabFavIconUrl(tab, this.options.useTabsFavIconsFromGoogleS2Converter),
                 });
+            },
+
+            getTabTitle(tab) {
+                return [tab.title, tab.url].filter(Boolean).join('\n');
             },
 
             openOptionsPage() {
@@ -359,6 +446,61 @@
                 BG.sortGroups(vector);
             },
 
+            // allowTypes: Array ['groups', 'tabs']
+            dragHandle(event, itemType, allowTypes, data) {
+                if (event.type !== 'dragstart' && (!this.dragData || !this.dragData.allowTypes.includes(itemType))) {
+                    return;
+                }
+
+                switch (event.type) {
+                    case 'dragstart':
+                        event.stopPropagation();
+                        this.$emit('drag-moving', data.item, true);
+
+                        this.dragData = {itemType, allowTypes, data};
+
+                        event.dataTransfer.effectAllowed = 'move';
+                        event.dataTransfer.setData('text/html', '');
+
+                        // if (itemType !== 'group') {
+                        //     event.dataTransfer.setDragImage(event.target, event.target.clientWidth / 2, event.target.clientHeight / 2);
+                        // }
+                        break;
+                    case 'dragenter':
+                        event.preventDefault();
+                        event.stopPropagation();
+                        this.$emit('drag-over', data.item, true);
+                        break;
+                    case 'dragover':
+                        event.preventDefault();
+                        event.stopPropagation();
+                        event.dataTransfer.dropEffect = 'move';
+                        return false;
+                        break;
+                    case 'dragleave':
+                        event.stopPropagation();
+                        this.$emit('drag-over', data.item, false);
+                        break;
+                    case 'drop':
+                        event.preventDefault();
+                        event.stopPropagation();
+                        this.$emit('drag-over', data.item, false);
+
+                        if (data.item !== this.dragData.data.item) {
+                            this.$emit('drag-move-' + this.dragData.itemType, this.dragData, {itemType, allowTypes, data});
+                        }
+
+                        return false;
+                        break;
+                    case 'dragend':
+                        event.stopPropagation();
+                        this.$emit('drag-moving', this.dragData.data.item, false);
+
+                        this.dragData = null;
+                        break;
+                }
+            },
+
         },
     }
 </script>
@@ -368,21 +510,23 @@
         id="stg-popup"
         :class="['is-flex is-column', {'edit-group-popup': !!groupToEdit}]"
         @contextmenu="['INPUT', 'TEXTAREA'].includes($event.target.nodeName) ? null : $event.preventDefault()"
+        @wheel.ctrl.prevent
         >
         <header id="searchWrapper">
             <div :class="['field', {'has-addons': search}]">
                 <div class="control is-expanded">
-                    <input id="search" v-model.trim="search" @input="$refs.search.value === '' && showSectionDefault()" ref="search" type="text" class="input is-small no-shadow" autocomplete="off" :placeholder="lang('searchPlaceholder')" />
+                    <input id="search" v-model.trim="search" @input="$refs.search.value === '' ? showSectionDefault() : null" ref="search" type="text" class="input is-small no-shadow" autocomplete="off" :placeholder="lang('searchPlaceholder')" />
                 </div>
                 <div v-show="search" class="control">
-                    <label class="button is-small" @click="showSectionDefault">
-                        <img class="size-12" src="/icons/close.svg" alt="" />
+                    <label class="button is-small" @click="showSectionDefault(); $refs.search.focus();">
+                        <img class="size-12" src="/icons/close.svg" />
                     </label>
                 </div>
             </div>
         </header>
 
-        <main id="result" class="is-full-width">
+        <main id="result"
+            :class="['is-full-width', dragData ? 'drag-' + dragData.itemType : false]">
             <!-- SEARCH TABS -->
             <div v-show="section === SECTION_SEARCH">
                 <div v-if="filteredGroupsBySearch.length">
@@ -390,11 +534,11 @@
                         <div class="group" @contextmenu="$refs.groupContextMenu.open($event, {group})">
                             <div :class="['item', {'is-active': group === currentGroup}]" @click="loadGroup(group, -1)">
                                 <div class="item-icon" :title="group.title">
-                                    <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" alt="" />
+                                    <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                                 </div>
                                 <div class="item-title" :title="group.title" v-text="group.title"></div>
                                 <div class="item-action hover is-unselectable" @click.stop="showSectionGroupTabs(group)">
-                                    <img class="size-16 rotate-180 no-events" src="/icons/arrow-left.svg" alt="" />
+                                    <img class="size-16 rotate-180" src="/icons/arrow-left.svg" />
                                     <span class="tabs-text" v-text="lang('groupTabsCount', group.tabs.length)"></span>
                                 </div>
                             </div>
@@ -406,20 +550,22 @@
                             @mousedown.middle.prevent
                             @mouseup.middle.prevent="removeTab(group.id, tab.index)"
                             :class="['item is-unselectable space-left', {'is-active': group === currentGroup && tab.active}]"
-                            :title="options.showUrlTooltipOnTabHover && (tab.title + '\n' + tab.url)"
+                            :title="getTabTitle(tab)"
                             >
                             <div class="item-icon">
-                                <img :src="tab.favIconUrlToDisplay" class="size-16 no-events" alt="" />
+                                <img :src="tab.favIconUrlToDisplay" class="size-16" />
                             </div>
                             <div class="item-title">
-                                <span :class="{bordered: !tab.isDefaultCookieStoreId}" :style="tab.borderedStyle">
-                                    <img v-if="!tab.id" src="/icons/refresh.svg" class="size-16" :title="lang('thisTabWillCreateAsNew')" />
-                                    <span v-text="tab.title"></span>
+                                <span :class="{bordered: !!tab.borderedStyle}" :style="tab.borderedStyle">
+                                    <span v-if="!tab.id" :title="lang('thisTabWillCreateAsNew')">
+                                        <img src="/icons/refresh.svg" class="size-16 align-text-bottom" />
+                                    </span>
+                                    <span v-text="tab.title || tab.url"></span>
                                 </span>
                             </div>
                             <div class="item-action flex-on-hover">
                                 <span class="icon cursor-pointer" @click.stop="removeTab(group.id, tab.index)" :title="lang('deleteTab')">
-                                    <img class="size-16 no-events" src="/icons/close.svg" alt="" />
+                                    <img class="size-16" src="/icons/close.svg" />
                                 </span>
                             </div>
                         </div>
@@ -437,14 +583,30 @@
             <!-- GROUPS LIST -->
             <div v-show="section === SECTION_GROUPS_LIST">
                 <div class="groups">
-                    <div class="group" v-for="group in groups" :key="group.id" @contextmenu="$refs.groupContextMenu.open($event, {group})">
+                    <div
+                        v-for="(group, groupIndex) in groups"
+                        :key="group.id"
+                        :class="['group', {
+                            'drag-moving': group.isMoving,
+                            'drag-over': group.isOver,
+                        }]"
+                        @contextmenu="$refs.groupContextMenu.open($event, {group})"
+
+                        draggable="true"
+                        @dragstart="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
+                        @dragenter="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
+                        @dragover="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
+                        @dragleave="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
+                        @drop="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
+                        @dragend="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
+                        >
                         <div :class="['item', {'is-active': group === currentGroup}]" @click="loadGroup(group, -1)">
                             <div class="item-icon" :title="group.title">
-                                <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" alt="" />
+                                <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                             </div>
                             <div class="item-title" :title="group.title" v-text="group.title"></div>
                             <div class="item-action hover is-unselectable" @click.stop="showSectionGroupTabs(group)">
-                                <img class="size-16 rotate-180 no-events" src="/icons/arrow-left.svg" alt="" />
+                                <img class="size-16 rotate-180" src="/icons/arrow-left.svg" />
                                 <span class="tabs-text" v-text="lang('groupTabsCount', group.tabs.length)"></span>
                             </div>
                         </div>
@@ -455,11 +617,12 @@
                 <div class="create-new-group">
                     <div class="item" @click="addGroup">
                         <div class="item-icon">
-                            <img class="size-16 icon" src="/icons/group-new.svg" alt="" />
+                            <img class="size-16 icon" src="/icons/group-new.svg" />
                         </div>
                         <div class="item-title" v-text="lang('createNewGroup')"></div>
                     </div>
                 </div>
+
                 <div v-show="unSyncTabs.length" class="not-sync-tabs">
                     <div class="hr"></div>
                     <p class="h-margin-bottom-10">
@@ -470,25 +633,22 @@
                     </p>
                     <div>
                         <div v-for="tab in unSyncTabs"
-                            @TODO-contextmenu="$refs.tabsContextMenu.open($event, {tab, tabIndex})"
-                            @click="unsyncHiddenTabsShowIntoCurrentWindow(tab)"
+                            @contextmenu="$refs.tabsContextMenu.open($event, {tab})"
+                            @click="unsyncHiddenTabsShowTabIntoCurrentWindow(tab)"
                             @mousedown.middle.prevent
                             @mouseup.middle.prevent="removeUnSyncTab(tab)"
                             class="item is-unselectable"
-                            :title="options.showUrlTooltipOnTabHover && (tab.title + '\n' + tab.url)"
+                            :title="getTabTitle(tab)"
                             >
                             <div class="item-icon">
-                                <img :src="tab.favIconUrlToDisplay" class="size-16 no-events" alt="" />
+                                <img :src="tab.favIconUrlToDisplay" class="size-16" />
                             </div>
                             <div class="item-title">
-                                <span :class="{bordered: !tab.isDefaultCookieStoreId}" :style="tab.borderedStyle">
-                                    <img v-if="!tab.id" src="/icons/refresh.svg" class="size-16" :title="lang('thisTabWillCreateAsNew')" />
-                                    <span v-text="tab.title"></span>
-                                </span>
+                                <span :class="{bordered: !!tab.borderedStyle}" :style="tab.borderedStyle" v-text="tab.title || tab.url"></span>
                             </div>
                             <div class="item-action flex-on-hover">
-                                <span class="icon cursor-pointer" @click.stop="removeUnSyncTab(groupToShow.id, tabIndex)" :title="lang('deleteTab')">
-                                    <img class="size-16 no-events" src="/icons/close.svg" alt="" />
+                                <span class="icon cursor-pointer" @click.stop="removeUnSyncTab(tab)" :title="lang('deleteTab')">
+                                    <img class="size-16" src="/icons/close.svg" />
                                 </span>
                             </div>
                         </div>
@@ -500,9 +660,9 @@
             <!-- GROUP -->
             <div v-if="section === SECTION_GROUP_TABS">
                 <div class="tabs-list">
-                    <div class="item" @click="showSectionDefault">
+                    <div class="item is-unselectable" @click="showSectionDefault">
                         <span class="item-icon">
-                            <img class="size-16" src="/icons/arrow-left.svg" alt="" />
+                            <img class="size-16" src="/icons/arrow-left.svg" />
                         </span>
                         <span class="item-title" v-text="lang('goBackToGroupsButtonTitle')"></span>
                     </div>
@@ -511,35 +671,55 @@
 
                     <div class="group-info item no-hover">
                         <div class="item-icon">
-                            <img :src="groupToShow.iconUrlToDisplay" class="is-inline-block size-16" alt="" />
+                            <img :src="groupToShow.iconUrlToDisplay" class="is-inline-block size-16" />
                         </div>
                         <div class="item-title" v-text="groupToShow.title"></div>
-                        <div class="item-action">
-                            <img @click="openGroupSettings(groupToShow)" src="/icons/settings.svg" class="size-16 cursor-pointer icon" :title="lang('groupSettings')" />
-                            <img @click="removeGroup(groupToShow)" src="/icons/group-delete.svg" class="size-16 cursor-pointer icon" :title="lang('deleteGroup')" />
+                        <div class="item-action is-unselectable">
+                            <span @click="openGroupSettings(groupToShow)" class="cursor-pointer" :title="lang('groupSettings')">
+                                <img src="/icons/settings.svg" class="size-16 icon" />
+                            </span>
+                            <span @click="removeGroup(groupToShow)" class="cursor-pointer" :title="lang('deleteGroup')">
+                                <img src="/icons/group-delete.svg" class="size-16 icon" />
+                            </span>
                         </div>
                     </div>
 
-                    <div v-for="(tab, tabIndex) in groupToShow.tabs"
+                    <div
+                        v-for="(tab, tabIndex) in groupToShow.tabs"
+                        :key="tabIndex"
                         @contextmenu="$refs.tabsContextMenu.open($event, {tab, tabIndex, group: groupToShow})"
                         @click="loadGroup(groupToShow, tabIndex)"
                         @mousedown.middle.prevent
                         @mouseup.middle.prevent="removeTab(groupToShow.id, tabIndex)"
-                        :class="['item is-unselectable', {'is-active': groupToShow === currentGroup && tab.active}]"
-                        :title="options.showUrlTooltipOnTabHover && (tab.title + '\n' + tab.url)"
+                        :class="['item is-unselectable', {
+                            'is-active': groupToShow === currentGroup && tab.active,
+                            'drag-moving': tab.isMoving,
+                            'drag-over': tab.isOver,
+                        }]"
+                        :title="getTabTitle(tab)"
+
+                        draggable="true"
+                        @dragstart="dragHandle($event, 'tab', ['tab'], {itemIndex: tabIndex, item: tab, group: groupToShow})"
+                        @dragenter="dragHandle($event, 'tab', ['tab'], {itemIndex: tabIndex, item: tab, group: groupToShow})"
+                        @dragover="dragHandle($event, 'tab', ['tab'], {itemIndex: tabIndex, item: tab, group: groupToShow})"
+                        @dragleave="dragHandle($event, 'tab', ['tab'], {itemIndex: tabIndex, item: tab, group: groupToShow})"
+                        @drop="dragHandle($event, 'tab', ['tab'], {itemIndex: tabIndex, item: tab, group: groupToShow})"
+                        @dragend="dragHandle($event, 'tab', ['tab'], {itemIndex: tabIndex, item: tab, group: groupToShow})"
                         >
                         <div class="item-icon">
-                            <img :src="tab.favIconUrlToDisplay" class="size-16 no-events" alt="" />
+                            <img :src="tab.favIconUrlToDisplay" class="size-16" />
                         </div>
                         <div class="item-title">
-                            <span :class="{bordered: !tab.isDefaultCookieStoreId}" :style="tab.borderedStyle">
-                                <img v-if="!tab.id" src="/icons/refresh.svg" class="size-16" :title="lang('thisTabWillCreateAsNew')" />
-                                <span v-text="tab.title"></span>
+                            <span :class="{bordered: !!tab.borderedStyle}" :style="tab.borderedStyle">
+                                <span v-if="!tab.id" :title="lang('thisTabWillCreateAsNew')">
+                                    <img src="/icons/refresh.svg" class="size-16 align-text-bottom" />
+                                </span>
+                                <span v-text="tab.title || tab.url"></span>
                             </span>
                         </div>
                         <div class="item-action flex-on-hover">
                             <span class="icon cursor-pointer" @click.stop="removeTab(groupToShow.id, tabIndex)" :title="lang('deleteTab')">
-                                <img class="size-16 no-events" src="/icons/close.svg" alt="" />
+                                <img class="size-16" src="/icons/close.svg" />
                             </span>
                         </div>
                     </div>
@@ -549,7 +729,7 @@
                     <div class="create-new-tab">
                         <div class="item" @contextmenu="containers.length && $refs.createNewTabContextMenu.open($event)" @click="addTab(null)">
                             <div class="item-icon">
-                                <img class="size-16" src="/icons/tab-new.svg" alt="">
+                                <img class="size-16" src="/icons/tab-new.svg">
                             </div>
                             <div class="item-title" v-text="lang('createNewTab')"></div>
                         </div>
@@ -557,7 +737,7 @@
                         <context-menu v-if="containers.length" ref="createNewTabContextMenu">
                             <ul class="is-unselectable">
                                 <li v-for="container in containers" @click="addTab(container.cookieStoreId)">
-                                    <img :src="container.iconUrl" class="is-inline-block size-16 container-icon" :style="{fill: container.colorCode}" alt="" />
+                                    <img :src="container.iconUrl" class="is-inline-block size-16 container-icon" :style="{fill: container.colorCode}" />
                                     <span v-text="container.name"></span>
                                 </li>
                             </ul>
@@ -592,7 +772,7 @@
 
         <context-menu ref="tabsContextMenu">
             <ul slot-scope="menu" v-if="menu.data" class="is-unselectable">
-                <li @click="setTabIconAsGroupIcon(menu.data.tab)">
+                <li v-if="menu.data.group" @click="setTabIconAsGroupIcon(menu.data.tab)">
                     <img src="/icons/image.svg" class="size-16" />
                     <span v-text="lang('setTabIconAsGroupIcon')"></span>
                 </li>
@@ -601,14 +781,17 @@
 
                 <li
                     v-for="group in groups"
-                    :class="{'is-disabled': menu.data.group.id === group.id}"
-                    @click="menu.data.group.id !== group.id && moveTabToGroup(menu.data.tabIndex, menu.data.group.id, group.id)"
+                    :class="{'is-disabled': menu.data.group ? menu.data.group.id === group.id : false}"
+                    @click="menu.data.group
+                        ? (menu.data.group.id !== group.id && moveTabToGroup(menu.data.tabIndex, menu.data.group.id, group.id))
+                        : moveTabToGroup(menu.data.tab.id, undefined, group.id, true)
+                        "
                     >
-                    <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" alt="" />
+                    <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                     <span v-text="group.title"></span>
                 </li>
 
-                <li @click="moveTabToNewGroup(menu.data.tabIndex, menu.data.group.id)">
+                <li @click="menu.data.group ? moveTabToNewGroup(menu.data.tabIndex, menu.data.group.id) : moveTabToNewGroup(menu.data.tab.id, undefined, true)">
                     <img src="/icons/group-new.svg" class="size-16" />
                     <span v-text="lang('createNewGroup')"></span>
                 </li>
@@ -660,12 +843,12 @@
 
         <footer class="is-flex is-unselectable">
             <div class="is-flex is-aligin-items-center manage-groups is-full-height is-full-width" @click="openManageGroups" :title="lang('manageGroupsTitle')">
-                <img class="icon size-16" src="/icons/icon.svg" alt="" />
+                <img class="icon size-16" src="/icons/icon.svg" />
                 <span class="h-margin-left-10" v-text="lang('manageGroupsTitle')"></span>
             </div>
             <div class="is-flex is-aligin-items-center is-vertical-separator"></div>
             <div class="is-flex is-aligin-items-center settings is-full-height" @click="openOptionsPage" :title="lang('settingsTitle')">
-                <img class="icon size-16" src="/icons/settings.svg" alt="" />
+                <img class="icon size-16" src="/icons/settings.svg" />
             </div>
         </footer>
     </div>
@@ -673,6 +856,12 @@
 
 <style lang="scss">
     :root {
+        --popup-width: 348px;
+        --max-popup-width: 800px;
+
+        --max-popup-height: 600px;
+        --min-popup-height: 200px;
+
         --color-light-gray: #eceded;
         --color-gray: #e3e3e3;
         --color-dark-gray: #d4d4d4;
@@ -680,11 +869,11 @@
     }
 
     html {
-        overflow-x: hidden;
         font-size: 13px;
-        width: 348px;
-        // min-width: 348px;
-        // max-width: 425px;
+        width: var(--popup-width);
+        min-height: var(--min-popup-height);
+        max-height: var(--max-popup-height);
+        overflow-x: hidden;
     }
 
     .hr { /* fix FF UI bugs on margin when scrolling */
@@ -711,16 +900,15 @@
     }
 
     #stg-popup {
-        width: 348px;
-        // min-width: 348px;
-        // max-width: 425px;
-        min-height: 400px;
-        max-height: 600px;
+        width: var(--popup-width);
+        min-height: var(--min-popup-height);
+        max-height: var(--max-popup-height);
+
         overflow-y: auto;
         // margin: 0 auto;
 
         &.edit-group-popup {
-            min-height: 600px;
+            min-height: var(--max-popup-height);
         }
 
         > footer {
@@ -742,6 +930,11 @@
         }
 
         /* Drag & Drop Styles */
+        .drag-group .item > *,
+        .drag-tab .item > * {
+            pointer-events: none;
+        }
+
         .drag-over {
             outline: 2px dashed rgba(0, 0, 0, 0.5) !important;
             outline-offset: -3px;
@@ -787,22 +980,22 @@
         // border-top: 1px solid transparent;
         // border-bottom: 1px solid transparent;
 
-        > :last-child {
-            padding-right: var(--indent);
-        }
-
         &.space-left {
             padding-left: calc(var(--indent) * 2);
         }
 
+        > :last-child {
+            padding-right: var(--indent);
+        }
+
         &.is-active,
-        &.is-hover,
+        // &.is-hover,
         &:not(.no-hover):hover {
             // border-top-color: var(--color-dark-dark-gray);
             // border-bottom-color: var(--color-dark-dark-gray);
         }
 
-        &.is-hover,
+        // &.is-hover,
         &:not(.no-hover):not(.is-active):hover {
             background-color: var(--color-light-gray);
         }
@@ -813,6 +1006,11 @@
 
         .hover:hover {
             background-color: var(--color-dark-gray);
+        }
+
+        &:not(.no-hover):active,
+        .hover:active {
+            background-color: var(--color-dark-gray) !important;
         }
 
         .item-icon {

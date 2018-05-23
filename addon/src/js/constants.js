@@ -37,7 +37,6 @@ const DEFAULT_OPTIONS = {
     discardTabsAfterHide: false,
     closePopupAfterChangeGroup: true,
     openGroupAfterChange: true,
-    showUrlTooltipOnTabHover: true,
     showNotificationAfterMoveTab: true,
     openManageGroupsInTab: true,
     showConfirmDialogBeforeGroupDelete: true,

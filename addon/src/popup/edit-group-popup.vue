@@ -18,7 +18,7 @@
     <div id="editGroupPopup">
         <div class="item" @click="$emit('close-popup')">
             <span class="item-icon">
-                <img class="size-16" src="/icons/arrow-left.svg" alt="" />
+                <img class="size-16" src="/icons/arrow-left.svg" />
             </span>
             <span class="item-title" v-text="lang('goBackButtonTitle')"></span>
         </div>

@@ -143,10 +143,6 @@
         "message": "Importovat nastavení z doplňku Tab Groups od Quicksaver",
         "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
     },
-    "showUrlTooltipOnTabHover": {
-        "message": "Zobrazit popisek adresy URL při přejetí nad náhledem panelu",
-        "description": "Show url tooltip when hovering over tab"
-    },
     "newGroupTitle": {
         "message": "Skupina $id$",
         "description": "group id",

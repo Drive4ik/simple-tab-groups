@@ -195,11 +195,6 @@
         "description": "Open group after changing to it"
     },
 
-    "showUrlTooltipOnTabHover": {
-        "message": "Show url tooltip when hovering over tab",
-        "description": "Show url tooltip when hovering over tab"
-    },
-
     "newGroupTitle": {
         "message": "Group $id$",
         "description": "group id",
@@ -513,6 +508,16 @@
     "thisTabWillCreateAsNew": {
         "message": "This tab will create as new",
         "description": "This tab will create as new"
+    },
+
+    "updateTabThumbnail": {
+        "message": "Update thumbnail for this tab",
+        "description": "Update thumbnail for this tab"
+    },
+
+    "cantMakeThumbnailTabWasDiscarded": {
+        "message": "You can not make a thumbnail of a tab if the tab was not loaded",
+        "description": "You can not make a thumbnail of a tab if the tab was not loaded"
     }
 
 }
