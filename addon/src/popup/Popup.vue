@@ -28,6 +28,7 @@
         'arrow-down': KeyEvent.DOM_VK_DOWN,
         'enter': KeyEvent.DOM_VK_RETURN,
         'tab': KeyEvent.DOM_VK_TAB,
+        'delete': KeyEvent.DOM_VK_DELETE,
     }
 
     const SECTION_SEARCH = 'search',
@@ -173,6 +174,10 @@
 
                             if (request.group.tabs) {
                                 request.group.tabs = request.group.tabs.map(this.$_tabMap, this);
+
+                                if (this.hoverItem && !this.isGroup(this.hoverItem) && this.hoverItem.id) {
+                                    this.hoverItem = request.group.tabs.find(tab => tab.id === this.hoverItem.id) || null;
+                                }
                             }
 
                             Object.assign(this.groups[groupIndex], request.group);
@@ -294,6 +299,10 @@
 
             loadGroups() {
                 this.groups = utils.clone(BG.getGroups()).map(this.$_groupMap, this);
+
+                if (this.hoverItem && this.isGroup(this.hoverItem)) {
+                    this.hoverItem = this.groups.find(group => group.id === this.hoverItem.id) || null;
+                }
             },
             async loadUnsyncedTabs() {
                 let unSyncTabs = await browser.tabs.query({
@@ -512,6 +521,10 @@
                 }
             },
 
+            isGroup(obj) {
+                return 'tabs' in obj;
+            },
+
             async setHoverItemByKey(arrow, event) {
                 let index = null;
 
@@ -519,10 +532,6 @@
 
                 if ('up' === arrow || 'down' === arrow) {
                     event.preventDefault();
-                }
-
-                function isGroup(obj) {
-                    return 'tabs' in obj;
                 }
 
                 switch (this.section) {
@@ -548,19 +557,19 @@
                             index = utils.getNextIndex(index, allItems.length, 'next');
                             this.hoverItem = allItems[index] || null;
                         } else if ('right' === arrow) {
-                            if (this.hoverItem && isGroup(this.hoverItem)) { // open group
+                            if (this.hoverItem && this.isGroup(this.hoverItem)) { // open group
                                 this.showSectionGroupTabs(this.hoverItem);
                             }
                         } else if ('enter' === arrow) {
                             if (this.hoverItem) {
-                                if (isGroup(this.hoverItem)) { // is group
+                                if (this.isGroup(this.hoverItem)) { // is group
                                     this.loadGroup(this.hoverItem, -1);
                                 } else { // is tab
                                     // find group
                                     let group = null;
 
                                     for (let i = allItems.indexOf(this.hoverItem); i >= 0; i--) { // wheel up - find group
-                                        if (isGroup(allItems[i])) {
+                                        if (this.isGroup(allItems[i])) {
                                             group = allItems[i];
                                             break;
                                         }
@@ -588,11 +597,11 @@
                             index = utils.getNextIndex(index, this.groups.length, 'next');
                             this.hoverItem = this.groups[index] || null;
                         } else if ('right' === arrow) {
-                            if (this.hoverItem && isGroup(this.hoverItem)) {
+                            if (this.hoverItem && this.isGroup(this.hoverItem)) {
                                 this.showSectionGroupTabs(this.hoverItem);
                             }
                         } else if ('enter' === arrow) {
-                            if (this.hoverItem && isGroup(this.hoverItem)) {
+                            if (this.hoverItem && this.isGroup(this.hoverItem)) {
                                 this.loadGroup(this.hoverItem, -1);
                                 window.close(); // fix bug: after load group or change tab focus popup window lost focus and arrows not working but popup still open
                             }
@@ -618,6 +627,12 @@
                             if (this.hoverItem && -1 !== index) {
                                 this.loadGroup(this.groupToShow, index);
                                 window.close(); // fix bug: after load group or change tab focus popup window lost focus and arrows not working but popup still open
+                            }
+                        } else if ('delete' === arrow) {
+                            if (this.hoverItem && !this.isGroup(this.hoverItem)) {
+                                let tabIndex = this.groupToShow.tabs.indexOf(this.hoverItem);
+                                await this.setHoverItemByKey('down', event);
+                                this.removeTab(this.groupToShow.id, tabIndex);
                             }
                         }
 
@@ -657,6 +672,7 @@
         @keydown.arrow-down="setHoverItemByKey('down', $event)"
         @keydown.tab="setHoverItemByKey('down', $event)"
         @keyup.enter="setHoverItemByKey('enter', $event)"
+        @keyup.delete="setHoverItemByKey('delete', $event)"
 
         >
         <header id="searchWrapper">
