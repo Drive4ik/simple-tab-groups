@@ -108,7 +108,7 @@
             async saveOptions(options) {
                 await storage.set(options, true);
                 BG.reloadOptions();
-                this.$emit('options-updated');
+                // this.$emit('options-updated');
             },
 
             saveHotkeyKeyCode(hotkey, event) {

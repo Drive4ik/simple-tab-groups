@@ -1616,7 +1616,7 @@ async function runAction(action) {
 }
 
 async function reloadOptions() {
-    options = await storage.get(constants.onlyBoolOptionsKeys);
+    options = await storage.get(constants.allOptionsKeys);
 }
 
 window.background = {
