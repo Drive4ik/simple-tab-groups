@@ -21,6 +21,15 @@
         throw Error('background not inited');
     }
 
+    Vue.config.keyCodes = {
+        'arrow-left': KeyEvent.DOM_VK_LEFT,
+        'arrow-up': KeyEvent.DOM_VK_UP,
+        'arrow-right': KeyEvent.DOM_VK_RIGHT,
+        'arrow-down': KeyEvent.DOM_VK_DOWN,
+        'enter': KeyEvent.DOM_VK_RETURN,
+        'tab': KeyEvent.DOM_VK_TAB,
+    }
+
     const SECTION_SEARCH = 'search',
         SECTION_GROUPS_LIST = 'groupsList',
         SECTION_GROUP_TABS = 'groupTabs',
@@ -37,6 +46,8 @@
 
                 dragData: null,
                 someGroupAreLoading: false,
+
+                hoverItem: null,
 
                 search: '',
 
@@ -501,6 +512,132 @@
                 }
             },
 
+            async setHoverItemByKey(arrow, event) {
+                let index = null;
+
+                this.$el.focus();
+
+                if ('up' === arrow || 'down' === arrow) {
+                    event.preventDefault();
+                }
+
+                function isGroup(obj) {
+                    return 'tabs' in obj;
+                }
+
+                switch (this.section) {
+                    case SECTION_SEARCH:
+                        if (!this.filteredGroupsBySearch.length) {
+                            return;
+                        }
+
+                        let allItems = this.filteredGroupsBySearch.reduce(function(accum, group) {
+                            accum.push(group);
+
+                            group.filteredTabsBySearch.forEach(tab => accum.push(tab));
+
+                            return accum;
+                        }, []);
+
+                        index = this.hoverItem ? allItems.indexOf(this.hoverItem) : -1;
+
+                        if ('up' === arrow) {
+                            index = utils.getNextIndex(index, allItems.length, 'prev');
+                            this.hoverItem = allItems[index] || null;
+                        } else if ('down' === arrow) {
+                            index = utils.getNextIndex(index, allItems.length, 'next');
+                            this.hoverItem = allItems[index] || null;
+                        } else if ('right' === arrow) {
+                            if (this.hoverItem && isGroup(this.hoverItem)) { // open group
+                                this.showSectionGroupTabs(this.hoverItem);
+                            }
+                        } else if ('enter' === arrow) {
+                            if (this.hoverItem) {
+                                if (isGroup(this.hoverItem)) { // is group
+                                    this.loadGroup(this.hoverItem, -1);
+                                } else { // is tab
+                                    // find group
+                                    let group = null;
+
+                                    for (let i = allItems.indexOf(this.hoverItem); i >= 0; i--) { // wheel up - find group
+                                        if (isGroup(allItems[i])) {
+                                            group = allItems[i];
+                                            break;
+                                        }
+                                    }
+
+                                    this.loadGroup(group, this.hoverItem.index);
+                                }
+
+                                window.close(); // fix bug: after load group or change tab focus popup window lost focus and arrows not working but popup still open
+                            }
+                        }
+
+                        break;
+                    case SECTION_GROUPS_LIST:
+                        index = this.hoverItem ? this.groups.indexOf(this.hoverItem) : -1;
+
+                        if (-1 === index) {
+                            index = this.groups.findIndex(group => group === this.currentGroup);
+                        }
+
+                        if ('up' === arrow) {
+                            index = utils.getNextIndex(index, this.groups.length, 'prev');
+                            this.hoverItem = this.groups[index] || null;
+                        } else if ('down' === arrow) {
+                            index = utils.getNextIndex(index, this.groups.length, 'next');
+                            this.hoverItem = this.groups[index] || null;
+                        } else if ('right' === arrow) {
+                            if (this.hoverItem && isGroup(this.hoverItem)) {
+                                this.showSectionGroupTabs(this.hoverItem);
+                            }
+                        } else if ('enter' === arrow) {
+                            if (this.hoverItem && isGroup(this.hoverItem)) {
+                                this.loadGroup(this.hoverItem, -1);
+                                window.close(); // fix bug: after load group or change tab focus popup window lost focus and arrows not working but popup still open
+                            }
+                        }
+
+                        break;
+                    case SECTION_GROUP_TABS:
+                        index = this.hoverItem ? this.groupToShow.tabs.indexOf(this.hoverItem) : -1;
+
+                        if (-1 === index && this.groupToShow.windowId) {
+                            index = this.groupToShow.tabs.findIndex(tab => tab.active);
+                        }
+
+                        if ('up' === arrow) {
+                            index = utils.getNextIndex(index, this.groupToShow.tabs.length, 'prev');
+                            this.hoverItem = this.groupToShow.tabs[index] || null;
+                        } else if ('down' === arrow) {
+                            index = utils.getNextIndex(index, this.groupToShow.tabs.length, 'next');
+                            this.hoverItem = this.groupToShow.tabs[index] || null;
+                        } else if ('left' === arrow) {
+                            this.showSectionDefault();
+                        } else if ('enter' === arrow) {
+                            if (this.hoverItem && -1 !== index) {
+                                this.loadGroup(this.groupToShow, index);
+                                window.close(); // fix bug: after load group or change tab focus popup window lost focus and arrows not working but popup still open
+                            }
+                        }
+
+                        break;
+                }
+
+                this.$nextTick(function() {
+                    let hoverItemNode = document.querySelector('.is-hovered-item');
+
+                    if (hoverItemNode && !utils.isElementVisible(hoverItemNode)) {
+                        let alignTo;
+
+                        if ('up' === arrow) {
+                            alignTo = false;
+                        }
+
+                        hoverItemNode.scrollIntoView(alignTo);
+                    }
+                });
+            },
         },
     }
 </script>
@@ -511,10 +648,24 @@
         :class="['is-flex is-column', {'edit-group-popup': !!groupToEdit}]"
         @contextmenu="['INPUT', 'TEXTAREA'].includes($event.target.nodeName) ? null : $event.preventDefault()"
         @wheel.ctrl.prevent
+
+        tabindex="-1"
+        @mousemove="hoverItem = null"
+        @keyup.arrow-left="setHoverItemByKey('left', $event)"
+        @keydown.arrow-up="setHoverItemByKey('up', $event)"
+        @keyup.arrow-right="setHoverItemByKey('right', $event)"
+        @keydown.arrow-down="setHoverItemByKey('down', $event)"
+        @keydown.tab="setHoverItemByKey('down', $event)"
+        @keyup.enter="setHoverItemByKey('enter', $event)"
+
         >
         <header id="searchWrapper">
             <div :class="['field', {'has-addons': search}]">
-                <div class="control is-expanded">
+                <div class="control is-expanded"
+                    @keydown.arrow-right.stop @keyup.arrow-right.stop
+                    @keydown.arrow-left.stop @keyup.arrow-left.stop
+                    @keydown.enter.stop @keyup.enter.stop
+                    >
                     <input id="search" v-model.trim="search" @input="$refs.search.value === '' ? showSectionDefault() : null" ref="search" type="text" class="input is-small no-shadow" autocomplete="off" :placeholder="lang('searchPlaceholder')" />
                 </div>
                 <div v-show="search" class="control">
@@ -525,14 +676,19 @@
             </div>
         </header>
 
-        <main id="result"
-            :class="['is-full-width', dragData ? 'drag-' + dragData.itemType : false]">
+        <main id="result" :class="['is-full-width', dragData ? 'drag-' + dragData.itemType : false]">
             <!-- SEARCH TABS -->
             <div v-show="section === SECTION_SEARCH">
                 <div v-if="filteredGroupsBySearch.length">
                     <div v-for="group in filteredGroupsBySearch" :key="group.id">
                         <div class="group" @contextmenu="$refs.groupContextMenu.open($event, {group})">
-                            <div :class="['item', {'is-active': group === currentGroup}]" @click="loadGroup(group, -1)">
+                            <div
+                                :class="['item', {
+                                    'is-active': group === currentGroup,
+                                    'is-hovered-item': group === hoverItem,
+                                }]"
+                                @click="loadGroup(group, -1)"
+                                >
                                 <div class="item-icon" :title="group.title">
                                     <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                                 </div>
@@ -549,7 +705,10 @@
                             @click="loadGroup(group, tab.index)"
                             @mousedown.middle.prevent
                             @mouseup.middle.prevent="removeTab(group.id, tab.index)"
-                            :class="['item is-unselectable space-left', {'is-active': group === currentGroup && tab.active}]"
+                            :class="['item is-unselectable space-left', {
+                                'is-active': group === currentGroup && tab.active,
+                                'is-hovered-item': tab === hoverItem,
+                            }]"
                             :title="getTabTitle(tab)"
                             >
                             <div class="item-icon">
@@ -577,7 +736,6 @@
                         <span class="item-title" v-text="lang('searchNotFoundTitle', search)"></span>
                     </i>
                 </div>
-
             </div>
 
             <!-- GROUPS LIST -->
@@ -600,7 +758,13 @@
                         @drop="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
                         @dragend="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
                         >
-                        <div :class="['item', {'is-active': group === currentGroup}]" @click="loadGroup(group, -1)">
+                        <div
+                            :class="['item', {
+                                'is-active': group === currentGroup,
+                                'is-hovered-item': group === hoverItem,
+                            }]"
+                            @click="loadGroup(group, -1)"
+                            >
                             <div class="item-icon" :title="group.title">
                                 <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                             </div>
@@ -695,6 +859,7 @@
                             'is-active': groupToShow === currentGroup && tab.active,
                             'drag-moving': tab.isMoving,
                             'drag-over': tab.isOver,
+                            'is-hovered-item': tab === hoverItem,
                         }]"
                         :title="getTabTitle(tab)"
 
@@ -872,7 +1037,7 @@
         font-size: 13px;
         width: var(--popup-width);
         min-height: var(--min-popup-height);
-        max-height: var(--max-popup-height);
+        // max-height: calc(var(--max-popup-height) - 10px);
         overflow-x: hidden;
     }
 
@@ -1000,7 +1165,8 @@
             background-color: var(--color-light-gray);
         }
 
-        &.is-active {
+        &.is-active,
+        &.is-hovered-item {
             background-color: var(--color-gray);
         }
 

@@ -243,7 +243,7 @@ function getNextIndex(currentIndex, count, textPosition = 'next') {
     let nextIndex = null;
 
     if ('prev' === textPosition) {
-        nextIndex = currentIndex ? (currentIndex - 1) : (count - 1);
+        nextIndex = currentIndex > 0 ? (currentIndex - 1) : (count - 1);
     } else if ('next' === textPosition) {
         nextIndex = currentIndex === count - 1 ? 0 : currentIndex + 1;
     }
@@ -265,11 +265,14 @@ function createGroupTitle(title, groupId) {
     return title || browser.i18n.getMessage('newGroupTitle', groupId);
 }
 
-function checkVisibleElement(element) {
-    let rect = element.getBoundingClientRect(),
-        viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
+function isElementVisible(element) {
+    let rect = element.getBoundingClientRect();
 
-    return !(rect.bottom < 0 || rect.top - viewHeight >= 0);
+    // Only completely visible elements return true:
+    return rect.top >= 0 && rect.bottom <= window.innerHeight;
+    // Partially visible elements return true:
+    // let isVisible = elemTop < window.innerHeight && elemBottom >= 0;
+    // return isVisible;
 }
 
 function isDefaultCookieStoreId(cookieStoreId) {
@@ -449,7 +452,7 @@ export {
     capitalize,
 
     createGroupTitle,
-    checkVisibleElement,
+    isElementVisible,
     getGroupIconUrl,
 
     safeColor,
