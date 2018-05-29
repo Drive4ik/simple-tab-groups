@@ -2152,6 +2152,8 @@ async function init() {
     window.background.inited = true;
 }
 
+setLoadingToBrowserAction();
+
 init()
     .then(function() {
         // send message for addon plugins
