@@ -10,7 +10,7 @@
 
     "name": "__MSG_extensionName__",
     "description": "__MSG_extensionDescription__",
-    "version": "3.0.5.1",
+    "version": "3.0.6",
     "author": "Drive4ik",
     "homepage_url": "https://github.com/drive4ik/simple-tab-groups",
 
@@ -26,7 +26,8 @@
         "contextualIdentities",
         "cookies",
         "<all_urls>",
-        "storage"
+        "storage",
+        "unlimitedStorage"
     ],
 
     "browser_action": {
