@@ -24,7 +24,7 @@ const removeEvals = (file) => {
                 return;
             }
 
-            data = data.replace('self.Math==Math?self:Function("return this")();', 'self.Math==Math?self:window;');
+            data = data.replace('self.Math==Math?self:Function("return this")();', 'self.Math==Math?self:window;'); // vue-swatches plugin
 
             const regex = process.env.NODE_ENV === 'production' ? evalRegexForProduction : evalRegexForDevelopment;
 
