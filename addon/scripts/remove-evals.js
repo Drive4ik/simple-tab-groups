@@ -6,7 +6,9 @@ const fs = require('fs');
 const BUNDLE_DIR = path.join(__dirname, '../dist');
 const bundles = [
     'background.js',
-    'popup/popup.js'
+    'popup/popup.js',
+    'manage/manage.js',
+    'options/options.js',
 ];
 
 const evalRegexForProduction = /;([a-z])=function\(\){return this}\(\);try{\1=\1\|\|Function\("return this"\)\(\)\|\|\(0,eval\)\("this"\)}catch\(t\){"object"==typeof window&&\(\1=window\)}/g;
@@ -21,6 +23,8 @@ const removeEvals = (file) => {
                 reject(err);
                 return;
             }
+
+            data = data.replace('self.Math==Math?self:Function("return this")();', 'self.Math==Math?self:window;');
 
             const regex = process.env.NODE_ENV === 'production' ? evalRegexForProduction : evalRegexForDevelopment;
 
