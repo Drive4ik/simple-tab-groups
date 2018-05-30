@@ -4,8 +4,9 @@
     import * as utils from '../js/utils';
     import Vue from 'vue';
 
-    import swatches from 'vue-swatches'
-    import "vue-swatches/dist/vue-swatches.min.css"
+    import popup from './popup.vue';
+    import swatches from 'vue-swatches';
+    import "vue-swatches/dist/vue-swatches.min.css";
 
     const BG = (function(bgWin) {
         return bgWin && bgWin.background && bgWin.background.inited ? bgWin.background : false;
@@ -45,14 +46,21 @@
                 required: true,
                 type: Array,
             },
+            canLoadFile: {
+                type: Boolean,
+                default: true,
+            },
         },
         components: {
+            popup: popup,
             swatches: swatches,
         },
         data() {
             let vm = this;
 
             return {
+                showMessageCantLoadFile: false,
+
                 iconTypes: iconTypes,
                 groupClone: new Vue({
                     data: utils.extractKeys(this.group, fieldsToEdit),
@@ -102,6 +110,10 @@
             },
 
             async selectUserGroupIcon() {
+                if (!this.canLoadFile) {
+                    this.showMessageCantLoadFile = true;
+                    return;
+                }
                 // if (1 === lastOptions.popupDesign) { // maybe temporary solution
                 //     if (window.confirm(browser.i18n.getMessage('selectUserGroupIconWarnText'))) {
                 //         dispatchEvent('click', '[data-action="open-manage-page"]');
@@ -263,6 +275,25 @@
                 <textarea class="textarea" v-model="groupClone.catchTabRules" :placeholder="lang('regexpForTabsPlaceholder')"></textarea>
             </div>
         </div>
+
+        <popup
+            v-if="showMessageCantLoadFile"
+            :title="lang('warning')"
+            @open-manage-groups="$emit('open-manage-groups')"
+            @close-popup="showMessageCantLoadFile = false"
+            :buttons="
+                [{
+                    event: 'open-manage-groups',
+                    classList: 'is-info',
+                    lang: 'manageGroupsTitle',
+                }, {
+                    event: 'close-popup',
+                    lang: 'ok',
+                }]
+            "
+            >
+            <span v-text="lang('selectUserGroupIconWarnText')"></span>
+        </popup>
 
     </div>
 </template>

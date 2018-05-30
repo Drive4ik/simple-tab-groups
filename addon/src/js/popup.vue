@@ -4,8 +4,8 @@
     export default {
         props: {
             title: {
-                required: true,
                 type: String,
+                default: '',
             },
             buttons: {
                 required: true,

@@ -1000,8 +1000,10 @@
                 ref="editGroup"
                 :group="groupToEdit"
                 :containers="containers"
+                :can-load-file="false"
                 :browser-action-icon-color="options.browserActionIconColor"
-                @saved="groupToEdit = null" />
+                @saved="groupToEdit = null"
+                @open-manage-groups="openManageGroups"/>
         </edit-group-popup>
 
         <popup

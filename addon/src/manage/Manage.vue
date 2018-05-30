@@ -602,7 +602,7 @@
 
         <popup
             v-if="groupToEdit"
-            title="groupSettings"
+            :title="lang('groupSettings')"
             :buttons="
                 [{
                     event: 'save-group',
