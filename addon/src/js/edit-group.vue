@@ -277,11 +277,10 @@
             :buttons="
                 [{
                     event: 'open-manage-groups',
-                    classList: 'is-info',
-                    lang: 'manageGroupsTitle',
+                    lang: 'ok',
                 }, {
                     event: 'close-popup',
-                    lang: 'ok',
+                    lang: 'cancel',
                 }]
             "
             >
