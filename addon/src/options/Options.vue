@@ -305,7 +305,7 @@
     <div id="stg-options">
         <div class="tabs is-boxed">
             <ul>
-                <li v-for="sectionObj in sections" :class="{'is-active': section === sectionObj.id}" @click="section = sectionObj.id">
+                <li v-for="sectionObj in sections" :key="sectionObj.id" :class="{'is-active': section === sectionObj.id}" @click="section = sectionObj.id">
                     <a>
                         <span class="icon is-small">
                             <img :src="'/icons/' + sectionObj.icon + '.svg'">
@@ -383,7 +383,7 @@
             <label class="has-text-weight-bold" v-text="lang('hotkeysTitle')"></label>
             <div class="h-margin-bottom-10" v-html="lang('hotkeysDescription')"></div>
             <div class="hotkeys">
-                <div v-for="(hotkey, hotkeyIndex) in options.hotkeys" class="hotkey is-flex is-aligin-items-center">
+                <div v-for="(hotkey, hotkeyIndex) in options.hotkeys" :key="hotkeyIndex" class="hotkey is-flex is-aligin-items-center">
                     <label class="checkbox">
                         <input v-model="hotkey.ctrlKey" type="checkbox" />
                         <span>Ctrl</span>
@@ -402,13 +402,13 @@
                     <div class="select is-small">
                         <select v-model="hotkey.action.id">
                             <option v-if="!hotkey.action.id" selected disabled value="" v-text="lang('selectAction')"></option>
-                            <option v-for="action in hotkeyActions" :value="action" v-text="getHotkeyActionTitle(action)"></option>
+                            <option v-for="action in hotkeyActions" :key="action" :value="action" v-text="getHotkeyActionTitle(action)"></option>
                         </select>
                     </div>
                     <div v-show="'load-custom-group' === hotkey.action.id" class="select is-small custom-group">
                         <select v-model="hotkey.action.groupId">
                             <option selected disabled value="" v-text="lang('selectGroup')"></option>
-                            <option v-for="group in groups" :value="group.id" v-text="group.title"></option>
+                            <option v-for="group in groups" :key="group.id" :value="group.id" v-text="group.title"></option>
                         </select>
                     </div>
                     <div class="delete-button">

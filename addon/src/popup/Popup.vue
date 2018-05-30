@@ -716,7 +716,7 @@
                             </div>
                         </div>
 
-                        <div v-for="tab in group.filteredTabsBySearch"
+                        <div v-for="tab in group.filteredTabsBySearch" :key="tab.index"
                             @contextmenu="$refs.tabsContextMenu.open($event, {tab, group, tabIndex: tab.index})"
                             @click="loadGroup(group, tab.index)"
                             @mousedown.middle.prevent
@@ -814,7 +814,7 @@
                         <a @click="unsyncHiddenTabsCloseAll" v-text="lang('actionHiddenUnSyncTabsCloseAll')"></a>
                     </p>
                     <div>
-                        <div v-for="tab in unSyncTabs"
+                        <div v-for="tab in unSyncTabs" :key="tab.id"
                             @contextmenu="$refs.tabsContextMenu.open($event, {tab})"
                             @click="unsyncHiddenTabsShowTabIntoCurrentWindow(tab)"
                             @mousedown.middle.prevent
@@ -919,7 +919,7 @@
 
                         <context-menu v-if="containers.length" ref="createNewTabContextMenu">
                             <ul class="is-unselectable">
-                                <li v-for="container in containers" @click="addTab(container.cookieStoreId)">
+                                <li v-for="container in containers" :key="container.cookieStoreId" @click="addTab(container.cookieStoreId)">
                                     <img :src="container.iconUrl" class="is-inline-block size-16 container-icon" :style="{fill: container.colorCode}" />
                                     <span v-text="container.name"></span>
                                 </li>
@@ -964,6 +964,7 @@
 
                 <li
                     v-for="group in groups"
+                    :key="group.id"
                     :class="{'is-disabled': menu.data.group ? menu.data.group.id === group.id : false}"
                     @click="menu.data.group
                         ? (menu.data.group.id !== group.id && moveTabToGroup(menu.data.tabIndex, menu.data.group.id, group.id))

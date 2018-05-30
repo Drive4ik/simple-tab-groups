@@ -580,7 +580,7 @@
                     <img src="/icons/tab-new.svg" class="size-16" />
                     <span v-text="lang('createNewTab')"></span>
                 </li>
-                <li v-for="container in containers" @click="addTab(menu.data.group, container.cookieStoreId)">
+                <li v-for="container in containers" :key="container.cookieStoreId" @click="addTab(menu.data.group, container.cookieStoreId)">
                     <img :src="container.iconUrl" class="is-inline-block size-16 container-icon" :style="{fill: container.colorCode}" />
                     <span v-text="container.name"></span>
                 </li>

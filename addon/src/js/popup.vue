@@ -30,7 +30,7 @@
                 <slot></slot>
             </section>
             <footer class="modal-card-foot">
-                <button v-for="button in buttons" @click="$emit(button.event)" :class="['button', button.classList]" v-text="lang(button.lang)"></button>
+                <button v-for="button in buttons" :key="button.lang" @click="$emit(button.event)" :class="['button', button.classList]" v-text="lang(button.lang)"></button>
             </footer>
         </div>
     </div>

@@ -110,17 +110,10 @@
             },
 
             async selectUserGroupIcon() {
-                if (!this.canLoadFile) {
+                if (!this.canLoadFile) { // maybe temporary solution
                     this.showMessageCantLoadFile = true;
                     return;
                 }
-                // if (1 === lastOptions.popupDesign) { // maybe temporary solution
-                //     if (window.confirm(browser.i18n.getMessage('selectUserGroupIconWarnText'))) {
-                //         dispatchEvent('click', '[data-action="open-manage-page"]');
-                //     }
-
-                //     return;
-                // }
 
                 let vm = this;
 
@@ -213,7 +206,7 @@
                         borderRadius: '4px',
                     }" />
                 </div>
-                <div v-for="iconType in iconTypes" class="control">
+                <div v-for="iconType in iconTypes" :key="iconType" class="control">
                     <button @click="setIconView(iconType)" :class="['button', {'is-focused': !groupClone.iconUrl && iconType === groupClone.iconViewType}]">
                         <figure class="image is-16x16 is-inline-block">
                             <img :src="getIconTypeUrl(iconType)" />
@@ -252,7 +245,7 @@
                 <span v-text="lang('catchTabContainers')"></span>
             </label>
             <div class="control">
-                <div v-for="container in containers" class="field">
+                <div v-for="container in containers" :key="container.cookieStoreId" class="field">
                     <div class="control">
                         <label class="checkbox">
                             <input type="checkbox" :value="container.cookieStoreId" v-model="groupClone.catchTabContainers" />

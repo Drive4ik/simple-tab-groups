@@ -31,7 +31,7 @@
         </div>
 
         <div class="field is-grouped is-grouped-right action-buttons">
-            <div class="control" v-for="button in buttons">
+            <div class="control" v-for="button in buttons" :key="button.lang">
                 <button @click="$emit(button.event)" :class="['button', button.classList]" v-text="lang(button.lang)"></button>
             </div>
         </div>
