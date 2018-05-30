@@ -65,14 +65,9 @@
 </script>
 
 <style lang="scss" scoped>
-    $blue600: #1e88e5;
-    $gray74: #bdbdbd;
-    $gray93: #ededed;
-    $gray98: #fafafa;
-
     .v-context-menu {
-        background: $gray98;
-        border: 1px solid $gray74;
+        background: #f2f2f2;
+        border: 1px solid #bdbdbd;
         box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
         display: block;
         margin: 0;
@@ -92,18 +87,23 @@
             font-weight: 600;
 
             li {
+                display: flex;
+                align-items: center;
                 margin: 0;
-                padding: 0 10px;
+                padding: 0 10px 0 5px;
                 cursor: pointer;
-                white-space: nowrap;
-                text-overflow: ellipsis;
-                overflow: hidden;
                 height: 25px;
-                line-height: 25px;
 
                 > img {
                     margin-right: 5px;
-                    vertical-align: middle;
+                    width: 16px;
+                    height: 16px;
+                }
+
+                > span {
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    overflow: hidden;
                 }
 
                 &.is-disabled {
@@ -111,17 +111,16 @@
                 }
 
                 &.is-disabled:hover {
-                    background: $gray93;
+                    background: #e3e3e3;
                 }
 
                 &:not(.is-disabled):hover {
-                    background: $blue600;
-                    color: $gray98;
+                    background: #91c9f7;
                 }
             }
 
             hr {
-                margin: 4px 0 4px calc(10px + 16px + 5px + 3px);
+                margin: 2px 0 2px calc(10px + 16px + 5px + 3px);
             }
         }
     }

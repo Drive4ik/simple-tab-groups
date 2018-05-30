@@ -1,5 +1,6 @@
 :root {
     --indent: 10px;
+    --color-hr: #d7d7d7;
 }
 
 html {
@@ -39,6 +40,16 @@ img[src$=".svg"] {
 
 .container-icon {
     -moz-context-properties: fill;
+}
+
+.field + hr {
+    margin-top: calc(var(--indent) * 2);
+}
+
+hr {
+    height: 1px;
+    margin: var(--indent, 10px) 0;
+    background-color: var(--color-hr);
 }
 
 

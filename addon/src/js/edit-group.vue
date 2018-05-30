@@ -221,7 +221,7 @@
             </div>
         </div>
 
-        <div class="hr"></div>
+        <hr>
 
         <div class="field">
             <div class="control">
@@ -278,5 +278,9 @@
 
     .field.is-grouped > .control:not(:last-child) {
         margin-right: .68rem;
+    }
+
+    .containers-wrapper .field {
+        margin: 0;
     }
 </style>

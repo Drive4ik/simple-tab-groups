@@ -23,7 +23,7 @@
             <span class="item-title" v-text="lang('goBackButtonTitle')"></span>
         </div>
 
-        <div class="hr"></div>
+        <hr>
 
         <div class="body is-full-width">
             <h3 class="has-text-centered" v-text="lang('groupSettings')"></h3>

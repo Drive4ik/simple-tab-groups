@@ -675,7 +675,7 @@
         @keyup.delete="setHoverItemByKey('delete', $event)"
 
         >
-        <header id="searchWrapper">
+        <header id="search-wrapper">
             <div :class="['field', {'has-addons': search}]">
                 <div class="control is-expanded"
                     @keydown.arrow-right.stop @keyup.arrow-right.stop
@@ -739,7 +739,7 @@
                                 </span>
                             </div>
                             <div class="item-action flex-on-hover">
-                                <span class="icon cursor-pointer" @click.stop="removeTab(group.id, tab.index)" :title="lang('deleteTab')">
+                                <span class="cursor-pointer" @click.stop="removeTab(group.id, tab.index)" :title="lang('deleteTab')">
                                     <img class="size-16" src="/icons/close.svg" />
                                 </span>
                             </div>
@@ -793,18 +793,20 @@
                     </div>
 
                 </div>
-                <div class="hr"></div>
+
+                <hr>
+
                 <div class="create-new-group">
                     <div class="item" @click="addGroup">
                         <div class="item-icon">
-                            <img class="size-16 icon" src="/icons/group-new.svg" />
+                            <img class="size-16" src="/icons/group-new.svg" />
                         </div>
                         <div class="item-title" v-text="lang('createNewGroup')"></div>
                     </div>
                 </div>
 
                 <div v-show="unSyncTabs.length" class="not-sync-tabs">
-                    <div class="hr"></div>
+                    <hr>
                     <p class="h-margin-bottom-10">
                         <span v-text="lang('foundHiddenUnSyncTabsDescription')"></span><br>
                         <a @click="unsyncHiddenTabsMoveToCurrentGroup" v-text="lang('actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup')"></a><br>
@@ -827,7 +829,7 @@
                                 <span :class="{bordered: !!tab.borderedStyle}" :style="tab.borderedStyle" v-text="tab.title || tab.url"></span>
                             </div>
                             <div class="item-action flex-on-hover">
-                                <span class="icon cursor-pointer" @click.stop="removeUnSyncTab(tab)" :title="lang('deleteTab')">
+                                <span class="cursor-pointer" @click.stop="removeUnSyncTab(tab)" :title="lang('deleteTab')">
                                     <img class="size-16" src="/icons/close.svg" />
                                 </span>
                             </div>
@@ -847,7 +849,7 @@
                         <span class="item-title" v-text="lang('goBackToGroupsButtonTitle')"></span>
                     </div>
 
-                    <div class="hr"></div>
+                    <hr>
 
                     <div class="group-info item no-hover">
                         <div class="item-icon">
@@ -855,11 +857,11 @@
                         </div>
                         <div class="item-title" v-text="groupToShow.title"></div>
                         <div class="item-action is-unselectable">
-                            <span @click="openGroupSettings(groupToShow)" class="cursor-pointer" :title="lang('groupSettings')">
-                                <img src="/icons/settings.svg" class="size-16 icon" />
+                            <span @click="openGroupSettings(groupToShow)" class="size-16 cursor-pointer" :title="lang('groupSettings')">
+                                <img src="/icons/settings.svg" />
                             </span>
-                            <span @click="removeGroup(groupToShow)" class="cursor-pointer" :title="lang('deleteGroup')">
-                                <img src="/icons/group-delete.svg" class="size-16 icon" />
+                            <span @click="removeGroup(groupToShow)" class="size-16 cursor-pointer" :title="lang('deleteGroup')">
+                                <img src="/icons/group-delete.svg" />
                             </span>
                         </div>
                     </div>
@@ -899,13 +901,13 @@
                             </span>
                         </div>
                         <div class="item-action flex-on-hover">
-                            <span class="icon cursor-pointer" @click.stop="removeTab(groupToShow.id, tabIndex)" :title="lang('deleteTab')">
-                                <img class="size-16" src="/icons/close.svg" />
+                            <span class="size-16 cursor-pointer" @click.stop="removeTab(groupToShow.id, tabIndex)" :title="lang('deleteTab')">
+                                <img src="/icons/close.svg" />
                             </span>
                         </div>
                     </div>
 
-                    <div class="hr"></div>
+                    <hr>
 
                     <div class="create-new-tab">
                         <div class="item" @contextmenu="containers.length && $refs.createNewTabContextMenu.open($event)" @click="addTab(null)">
@@ -1020,16 +1022,14 @@
             <span v-html="lang('deleteGroupBody', safeHtml(groupToRemove.title))"></span>
         </popup>
 
-        <div class="spacer"></div>
-
-        <footer class="is-flex is-unselectable">
+        <footer class="is-flex is-unselectable h-margin-top-10">
             <div class="is-flex is-aligin-items-center manage-groups is-full-height is-full-width" @click="openManageGroups" :title="lang('manageGroupsTitle')">
-                <img class="icon size-16" src="/icons/icon.svg" />
+                <img class="size-16" src="/icons/icon.svg" />
                 <span class="h-margin-left-10" v-text="lang('manageGroupsTitle')"></span>
             </div>
             <div class="is-flex is-aligin-items-center is-vertical-separator"></div>
             <div class="is-flex is-aligin-items-center settings is-full-height" @click="openOptionsPage" :title="lang('settingsTitle')">
-                <img class="icon size-16" src="/icons/settings.svg" />
+                <img class="size-16" src="/icons/settings.svg" />
             </div>
         </footer>
     </div>
@@ -1057,29 +1057,6 @@
         overflow-x: hidden;
     }
 
-    .hr { /* fix FF UI bugs on margin when scrolling */
-        height: calc((var(--indent) * 2) + 1px);
-        position: relative;
-
-        &::after {
-            content: "";
-            position: absolute;
-            height: 1px;
-            left: 0;
-            top: 50%;
-            width: 100%;
-            background-color: var(--color-gray);
-        }
-    }
-
-    .hr,
-    .spacer,
-    #stg-popup,
-    #searchWrapper,
-    #result {
-        background-color: #ffffff;
-    }
-
     #stg-popup {
         width: var(--popup-width);
         min-height: var(--min-popup-height);
@@ -1097,16 +1074,22 @@
             min-height: 45px;
             align-items: center;
             justify-content: space-between;
-            background-color: var(--color-light-gray);
             cursor: default;
+            background-color: var(--color-light-gray);
 
             > :hover {
-                background-color: var(--color-gray); /* dark-dark */
+                background-color: var(--color-gray);
             }
 
-            > .manage-groups,
-            > .settings {
+            .manage-groups,
+            .settings {
                 padding: 0 20px;
+            }
+
+            .is-vertical-separator {
+                background-color: var(--color-hr);
+                width: 1px;
+                height: 75%;
             }
         }
 
@@ -1126,21 +1109,8 @@
         }
     }
 
-    .group-circle {
-        width: 14px;
-        height: 14px;
-        margin: 0 auto;
-        border-radius: 50%;
-        display: inline-block;
-        vertical-align: -3px;
-    }
-
-    .spacer { /* fix FF UI bugs on margin then scrolling */
-        min-height: var(--indent);
-    }
-
     /* END HELPERS */
-    #searchWrapper {
+    #search-wrapper {
         padding: var(--indent);
     }
 
@@ -1158,8 +1128,6 @@
         height: 28px;
         min-height: 28px;
         padding-left: var(--indent);
-        // border-top: 1px solid transparent;
-        // border-bottom: 1px solid transparent;
 
         &.space-left {
             padding-left: calc(var(--indent) * 2);
@@ -1167,13 +1135,6 @@
 
         > :last-child {
             padding-right: var(--indent);
-        }
-
-        &.is-active,
-        // &.is-hover,
-        &:not(.no-hover):hover {
-            // border-top-color: var(--color-dark-dark-gray);
-            // border-bottom-color: var(--color-dark-dark-gray);
         }
 
         // &.is-hover,
@@ -1190,8 +1151,7 @@
             background-color: var(--color-dark-gray);
         }
 
-        &:not(.no-hover):active,
-        .hover:active {
+        &:not(.no-hover):active {
             background-color: var(--color-dark-gray) !important;
         }
 
@@ -1251,16 +1211,6 @@
         line-height: 1;
     }
 
-    /* .group-icon,
-    .tab-icon { */
-    // .icon { // TODO refactor this
-    //     display: inline-block;
-    //     text-align: center;
-    //     width: 16px;
-    //     height: 16px;
-    //     line-height: 0;
-    // }
-
     .bordered {
         display: inline-block;
         border-bottom-right-radius: 5px;
@@ -1275,12 +1225,6 @@
 
     .not-sync-tabs > p {
         padding: 0 var(--indent);
-    }
-
-    .is-vertical-separator {
-        background-color: var(--color-dark-gray);
-        width: 1px;
-        height: 75%;
     }
 
 
