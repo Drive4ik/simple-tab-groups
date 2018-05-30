@@ -1,10 +1,17 @@
+const path = require('path');
 const webpack = require('webpack');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const WebpackShellPlugin = require('webpack-shell-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const { VueLoaderPlugin } = require('vue-loader');
+
+const setPath = function(folderName) {
+    return path.join(__dirname, folderName);
+};
 
 const config = {
-    context: __dirname + '/src',
+    context: setPath('src'),
     entry: {
         'background': './background.js',
         'popup/popup': './popup/popup.js',
@@ -12,7 +19,7 @@ const config = {
         'manage/manage': './manage/manage.js',
     },
     output: {
-        path: __dirname + '/dist',
+        path: setPath('dist'),
         filename: '[name].js',
     },
     resolve: {
@@ -21,47 +28,67 @@ const config = {
     node: {
         setImmediate: false,
     },
+    devtool: false,
     watchOptions: {
-        poll: true,
+        ignored: /node_modules/,
+        // poll: true,
+    },
+    optimization: {
+        minimizer: [
+            new UglifyJsPlugin({
+                cache: true,
+                parallel: true,
+                sourceMap: false,
+            })
+        ],
     },
     module: {
-        loaders: [{
-            test: /\.vue$/,
-            loaders: 'vue-loader',
-            options: {
-                loaders: {
-                    scss: ExtractTextPlugin.extract({
-                        use: 'css-loader!sass-loader',
-                        fallback: 'vue-style-loader',
-                    }),
-                    sass: ExtractTextPlugin.extract({
-                        use: 'css-loader!sass-loader?indentedSyntax',
-                        fallback: 'vue-style-loader',
-                    }),
-                }
-            }
-        }, {
-            test: /\.js$/,
-            loader: 'babel-loader',
-            exclude: /node_modules/,
-        }, {
-            test: /\.css$/,
-            use: ExtractTextPlugin.extract({
-                use: 'css-loader',
-                fallback: 'vue-loader',
-            })
-        }, {
-            test: /\.(png|jpg|gif|svg|ico)$/,
-            loader: 'file-loader',
-            options: {
-                name: '[name].[ext]?emitFile=false',
+        rules: [{
+                test: /\.vue$/,
+                loader: 'vue-loader',
+                // options: {
+                //     loaders: {
+                //         scss: ExtractTextPlugin.extract({
+                //             use: 'css-loader!sass-loader',
+                //             fallback: 'vue-style-loader',
+                //         }),
+                //         sass: ExtractTextPlugin.extract({
+                //             use: 'css-loader!sass-loader?indentedSyntax',
+                //             fallback: 'vue-style-loader',
+                //         }),
+                //     }
+                // },
+            }, {
+                test: /\.js$/,
+                loader: 'babel-loader',
+                // include: [path.join(__dirname, 'src')],
+                exclude: file => (/node_modules/.test(file) && !/\.vue\.js/.test(file)),
+            }, {
+                test: /\.scss$/,
+                use: [
+                    'vue-style-loader',
+                    'css-loader', {
+                        loader: 'sass-loader',
+                    },
+                ],
+            }, {
+                test: /\.css$/,
+                loader: 'vue-loader',
+            }, {
+                test: /\.(png|jpg|gif|svg|ico)$/,
+                loader: 'file-loader',
+                options: {
+                    name: '[name].[ext]?emitFile=false',
+                },
             },
-        }],
+
+        ],
     },
     plugins: [
-        new ExtractTextPlugin({
-            filename: '[name].css'
-        }),
+        new VueLoaderPlugin(),
+        // new ExtractTextPlugin({
+        //     filename: '[name].css'
+        // }),
         new CopyWebpackPlugin([{
             from: 'icons',
             to: 'icons',
@@ -94,25 +121,35 @@ const config = {
     ],
 };
 
-if (process.env.NODE_ENV === 'production') {
-    config.devtool = '#cheap-module-source-map';
+// if (process.env.NODE_ENV === 'production') {
+//     // config.devtool = '#cheap-module-source-map';
 
-    config.plugins = (config.plugins || []).concat([
-        new webpack.DefinePlugin({
-            'process.env': {
-                NODE_ENV: '"production"',
-            },
-        }),
-        new webpack.optimize.UglifyJsPlugin({
-            sourceMap: true,
-            compress: {
-                warnings: false,
-            },
-        }),
-        new webpack.LoaderOptionsPlugin({
-            minimize: true,
-        }),
-    ]);
-}
+//     config.plugins = (config.plugins || []).concat([
+//         // new webpack.DefinePlugin({
+//         //     'process.env': {
+//         //         NODE_ENV: '"production"',
+//         //     },
+//         // }),
+//         // new webpack.LoaderOptionsPlugin({
+//         //     debug: true,
+//         // }),
+//         // new webpack.optimize.UglifyJsPlugin({
+//         //     sourceMap: true,
+//         //     compress: {
+//         //         warnings: false,
+//         //     },
+//         // }),
+//         // new webpack.LoaderOptionsPlugin({
+//         //     minimize: true,
+//         // }),
+//     ]);
+// }
 
-module.exports = config;
+// module.exports = config;
+module.exports = function(env, argv) {
+    // let isProduction = argv.mode === 'production';
+
+    // config.optimization.minimize = isProduction;
+
+    return config;
+};
