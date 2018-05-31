@@ -158,7 +158,7 @@
                                 active: true,
                                 windowId: win.id,
                             });
-                            await browser.tabs.hide(win.tabs.map(keyId));
+                            await browser.tabs.hide(win.tabs.map(utils.keyId));
                         }
                     }));
 

@@ -231,7 +231,7 @@
         <div class="field">
             <div class="control">
                 <label class="checkbox">
-                    <input id="isStickyGroup" type="checkbox" v-model="groupClone.isSticky" />
+                    <input type="checkbox" v-model="groupClone.isSticky" />
                     <span v-text="lang('isStickyGroupTitle')"></span>
                 </label>
                 <span class="cursor-help" :title="lang('isStickyGroupHelp')">
