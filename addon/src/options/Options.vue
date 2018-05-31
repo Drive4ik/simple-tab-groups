@@ -270,7 +270,7 @@
 
                     browser.runtime.reload(); // reload addon
                 } else {
-                    utils.notify('Nothig imported');
+                    utils.notify('Nothing imported');
                 }
             },
 
