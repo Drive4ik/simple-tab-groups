@@ -189,8 +189,8 @@ function isWindowAllow(win) {
     return 'normal' === win.type && !win.incognito;
 }
 
-function isTabAllowToCreate(tab) {
-    return /^((https?|ftp|moz-extension):|about:blank)/.test(tab.url);
+function isTabAllowToCreate({ url }) {
+    return /^((https?|ftp|moz-extension):|about:blank)/.test(url);
 }
 
 function isTabIncognito(tab) {

@@ -14,23 +14,19 @@
         throw Error('Please, update addon to latest version');
     }
 
+    const SECTION_GENERAL = 'general',
+        SECTION_HOTKEYS = 'hotkeys',
+        SECTION_BACKUP = 'backup',
+        SECTION_DEFAULT = SECTION_GENERAL;
+
     export default {
         data() {
             return {
-                section: 'general',
-                sections: [{
-                    id: 'general',
-                    title: 'generalTitle',
-                    icon: 'cog',
-                }, {
-                    id: 'hotkeys',
-                    title: 'hotkeysTitle',
-                    icon: 'keyboard-o',
-                }, {
-                    id: 'backup',
-                    title: 'exportAddonSettingsTitle',
-                    icon: 'cloud-upload',
-                }],
+                SECTION_GENERAL,
+                SECTION_HOTKEYS,
+                SECTION_BACKUP,
+
+                section: SECTION_DEFAULT,
 
                 hotkeyActions: [
                     'load-next-group',
@@ -55,7 +51,7 @@
             let data = await storage.get(null);
 
             this.options = utils.extractKeys(data, allOptionsKeys);
-            this.groups = data.groups;
+            this.groups = Array.isArray(data.groups) ? data.groups : [];
 
             onlyBoolOptionsKeys.forEach(function(option) {
                 this.$watch(`options.${option}`, function(newValue) {
@@ -133,7 +129,7 @@
                             windowTypes: ['normal'],
                         });
 
-                    windows = windows
+                    windows = windows // find allowed windows
                         .filter(function(win) {
                             if (!utils.isWindowAllow(win) || !syncedWindowIds.includes(win.id)) {
                                 return false;
@@ -142,7 +138,7 @@
                             return true;
                         });
 
-                    windows = await Promise.all(windows.map(async function(win) {
+                    windows = await Promise.all(windows.map(async function(win) { // find all allowed tabs in allowed windows
                         win.tabs = await browser.tabs.query({
                             pinned: false,
                             hidden: false,
@@ -152,7 +148,7 @@
                         return win;
                     }));
 
-                    await Promise.all(windows.map(async function(win) {
+                    await Promise.all(windows.map(async function(win) { // hide all tabs in allowed windows
                         if (win.tabs.length) {
                             await browser.tabs.create({
                                 active: true,
@@ -162,9 +158,11 @@
                         }
                     }));
 
+                    data.groups.forEach(gr => gr.windowId = null); // reset window ids
+
                     await storage.set(data);
 
-                    browser.runtime.reload();
+                    browser.runtime.reload(); // reload addon
                 } catch (e) {
                     if (e) {
                         utils.notify(e);
@@ -224,11 +222,16 @@
                     });
 
                     win.tabs.forEach(function(oldTab) {
-                        let extData = {};
+                        let extData = {},
+                            tabEntry = oldTab.entries.pop();
 
-                        if (oldTab.pinned && oldTab.entries[0] && oldTab.entries[0].url && utils.isUrlAllow(oldTab.entries[0].url)) {
+                        if (!utils.isTabAllowToCreate(tabEntry)) {
+                            return;
+                        }
+
+                        if (oldTab.pinned) {
                             return browser.tabs.create({
-                                url: oldTab.entries[0].url,
+                                url: tabEntry.url,
                                 pinned: true,
                             });
                         }
@@ -242,12 +245,10 @@
                             return utils.notify('Cannot parse groups: ' + e);
                         }
 
-                        let tab = oldTab.entries.pop();
-
-                        if (utils.isUrlAllow(tab.url) && newGroups[extData.groupID]) {
+                        if (newGroups[extData.groupID]) {
                             newGroups[extData.groupID].tabs.push(BG.mapTab({
-                                title: (tab.title || tab.url),
-                                url: tab.url,
+                                title: (tabEntry.title || tabEntry.url),
+                                url: tabEntry.url,
                                 favIconUrl: oldTab.image || '',
                                 active: Boolean(extData.active),
                             }));
@@ -264,9 +265,10 @@
 
                 if (groups.length) {
                     data.groups = data.groups.concat(groups);
-                    storage.set(data)
-                        .then(BG.reloadGroups)
-                        .then(() => utils.notify('Old "Tab Groups" groups are imported successfully!'));
+
+                    await storage.set(data);
+
+                    browser.runtime.reload(); // reload addon
                 } else {
                     utils.notify('Nothig imported');
                 }
@@ -305,18 +307,34 @@
     <div id="stg-options">
         <div class="tabs is-boxed">
             <ul>
-                <li v-for="sectionObj in sections" :key="sectionObj.id" :class="{'is-active': section === sectionObj.id}" @click="section = sectionObj.id">
+                <li :class="{'is-active': section === SECTION_GENERAL}" @click="section = SECTION_GENERAL">
                     <a>
                         <span class="icon is-small">
-                            <img :src="'/icons/' + sectionObj.icon + '.svg'">
+                            <img :src="'/icons/cog.svg'">
                         </span>
-                        <span v-text="lang(sectionObj.title)"></span>
+                        <span v-text="lang('generalTitle')"></span>
+                    </a>
+                </li>
+                <li :class="{'is-active': section === SECTION_HOTKEYS}" @click="section = SECTION_HOTKEYS">
+                    <a>
+                        <span class="icon is-small">
+                            <img :src="'/icons/keyboard-o.svg'">
+                        </span>
+                        <span v-text="lang('hotkeysTitle')"></span>
+                    </a>
+                </li>
+                <li :class="{'is-active': section === SECTION_BACKUP}" @click="section = SECTION_BACKUP">
+                    <a>
+                        <span class="icon is-small">
+                            <img :src="'/icons/cloud-upload.svg'">
+                        </span>
+                        <span v-text="lang('exportAddonSettingsTitle')"></span>
                     </a>
                 </li>
             </ul>
         </div>
 
-        <div v-show="section === 'general'">
+        <div v-show="section === SECTION_GENERAL">
             <div class="field">
                 <label class="checkbox">
                     <input v-model="options.discardTabsAfterHide" type="checkbox" />
@@ -365,12 +383,17 @@
                     <span v-text="lang('createThumbnailsForTabs')"></span>
                 </label>
             </div>
+
+            <hr>
+
             <div class="field browser-action-color-wrapper">
                 <label class="label" v-text="lang('enterBrowserActionIconColor')"></label>
                 <div class="control is-inline-block">
                     <input v-model.lazy="options.browserActionIconColor" class="input" type="color" />
                 </div>
             </div>
+
+            <hr>
 
             <div class="field is-hidden_">
                 <div class="control">
@@ -379,7 +402,7 @@
             </div>
         </div>
 
-        <div v-show="section === 'hotkeys'">
+        <div v-show="section === SECTION_HOTKEYS">
             <label class="has-text-weight-bold" v-text="lang('hotkeysTitle')"></label>
             <div class="h-margin-bottom-10" v-html="lang('hotkeysDescription')"></div>
             <div class="hotkeys">
@@ -430,7 +453,7 @@
             </div>
         </div>
 
-        <div v-show="section === 'backup'">
+        <div v-show="section === SECTION_BACKUP">
             <div class="h-margin-bottom-20">
                 <div class="has-text-weight-bold h-margin-bottom-5" v-text="lang('exportAddonSettingsTitle')"></div>
                 <div class="h-margin-bottom-5" v-html="lang('exportAddonSettingsDescription')"></div>

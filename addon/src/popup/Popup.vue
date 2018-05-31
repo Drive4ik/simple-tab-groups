@@ -941,7 +941,9 @@
                     <img src="/icons/sort-alpha-desc.svg" class="size-16" />
                     <span v-text="lang('sortGroupsZA')"></span>
                 </li>
+
                 <hr>
+
                 <li @click="openGroupSettings(menu.data.group)">
                     <img src="/icons/settings.svg" class="size-16" />
                     <span v-text="lang('groupSettings')"></span>
@@ -959,6 +961,8 @@
                     <img src="/icons/image.svg" class="size-16" />
                     <span v-text="lang('setTabIconAsGroupIcon')"></span>
                 </li>
+
+                <hr>
 
                 <li class="is-disabled" v-text="lang('moveTabToGroupDisabledTitle')"></li>
 

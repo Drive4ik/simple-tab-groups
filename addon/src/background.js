@@ -131,12 +131,12 @@ function mapTab(tab) {
     tab.url = normalizeUrl(tab.url);
 
     return {
-        id: tab.id,
+        id: tab.id || null,
         title: tab.title || tab.url,
         url: tab.url,
-        active: tab.active,
-        favIconUrl: tab.favIconUrl,
-        cookieStoreId: tab.cookieStoreId,
+        active: Boolean(tab.active),
+        favIconUrl: tab.favIconUrl ? tab.favIconUrl : String(tab.favIconUrl),
+        cookieStoreId: tab.cookieStoreId || constants.DEFAULT_COOKIE_STORE_ID,
         thumbnail: options.createThumbnailsForTabs ? (tab.thumbnail || allThumbnails[tab.url] || null) : null,
     };
 }
@@ -1666,10 +1666,6 @@ window.background = {
     updateGroup,
     removeGroup,
 
-    reloadGroups: async function() {
-        let data = await storage.get('groups');
-        _groups = data.groups;
-    },
     runMigrateForData,
 };
 
