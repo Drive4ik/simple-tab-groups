@@ -8,13 +8,13 @@ const DEST_DIR = path.join(__dirname, '../dist');
 const DEST_ZIP_DIR = path.join(__dirname, '../dist-zip');
 
 const extractExtensionData = () => {
-    const extPackageJson = require('../package.json');
+    const manifest = require('../src/manifest.json');
 
     return {
-        name: extPackageJson.name,
-        version: extPackageJson.version
+        name: manifest.applications.gecko.id,
+        version: manifest.version,
     }
-};
+}
 
 const makeDestZipDirIfNotExists = () => {
     if (!fs.existsSync(DEST_ZIP_DIR)) {
@@ -38,7 +38,8 @@ const buildZip = (src, dist, zipFilename) => {
 
 const main = () => {
     const { name, version } = extractExtensionData();
-    const zipFilename = `${name}-v${version}.zip`;
+    const prod = process.env.IS_PRODUCTION ? 'prod' : 'dev';
+    const zipFilename = `${name}-v${version}-${prod}.zip`;
 
     makeDestZipDirIfNotExists();
 
