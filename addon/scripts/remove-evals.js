@@ -26,7 +26,7 @@ const removeEvals = (file) => {
 
             data = data.replace('self.Math==Math?self:Function("return this")();', 'self.Math==Math?self:window;'); // vue-swatches plugin
 
-            const regex = process.env.NODE_ENV === 'production' ? evalRegexForProduction : evalRegexForDevelopment;
+            const regex = process.env.IS_PRODUCTION ? evalRegexForProduction : evalRegexForDevelopment;
 
             if (!regex.test(data)) {
                 reject(`No CSP specific code found in ${file}.`);
