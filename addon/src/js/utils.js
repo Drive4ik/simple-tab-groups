@@ -177,19 +177,11 @@ function isUrlEmpty(url) {
     return ['about:blank', 'about:newtab', 'about:home'].includes(url);
 }
 
-function isUrlAllow(url) {
-    if (!url) {
-        return false;
-    }
-
-    return /^((https?|ftp|moz-extension):|about:(blank|newtab|home))/.test(url);
-}
-
 function isWindowAllow(win) {
     return 'normal' === win.type && !win.incognito;
 }
 
-function isTabAllowToCreate({ url }) {
+function isUrlAllowToCreate(url) {
     return /^((https?|ftp|moz-extension):|about:blank)/.test(url);
 }
 
@@ -435,9 +427,8 @@ export {
     isAllowSender,
     isAllowExternalRequestAndSender,
     isUrlEmpty,
-    isUrlAllow,
     isWindowAllow,
-    isTabAllowToCreate,
+    isUrlAllowToCreate,
     isTabIncognito,
     isTabNotIncognito,
     isTabPinned,

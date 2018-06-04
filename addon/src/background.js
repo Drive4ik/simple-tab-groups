@@ -9,23 +9,6 @@ let errorLogs = [],
     _groups = [],
     allThumbnails = {};
 
-// browser.tabs.query({
-//     // windowId: windowId,
-// }).then(console.log);
-
-// setTimeout(function() {
-//     browser.tabs.move(574, {index:2});
-// }, 5000);
-
-// return browser.tabs.get(54).then(console.log);
-// return storage.get(null).then(console.log);
-// return browser.windows.getAll({
-//                 windowTypes: ['normal'],
-//             }).then(console.log);
-// browser.tabs.create({
-//     url: 'about:newtab',
-// });
-
 let log = function(message = 'log', data = null, showNotification = true) {
     try {
         throw Error(message);
@@ -119,16 +102,10 @@ function getPinnedTabs(windowId = browser.windows.WINDOW_ID_CURRENT) {
     });
 }
 
-function normalizeUrl(url) {
-    if (!url || 'about:newtab' === url || 'about:blank' === url) {
-        return 'about:blank';
-    }
-
-    return url;
-}
-
 function mapTab(tab) {
-    tab.url = normalizeUrl(tab.url);
+    if (!tab.url || 'about:newtab' === tab.url || 'about:blank' === tab.url) {
+        tab.url = 'about:blank';
+    }
 
     return {
         id: tab.id || null,
@@ -566,7 +543,7 @@ async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
                 pinnedTabsLength = pinnedTabs.length;
 
             // group.windowId = windowId;
-            group.tabs = group.tabs.filter(tab => tab.id || utils.isTabAllowToCreate(tab)); // remove missed unsupported tabs
+            group.tabs = group.tabs.filter(tab => tab.id || utils.isUrlAllowToCreate(tab.url)); // remove missed unsupported tabs
 
             if (!group.tabs.length && !pinnedTabsLength && oldGroup) {
                 group.tabs.push({
@@ -788,7 +765,7 @@ async function updateTabThumbnail(tabId, force = false) {
 }
 
 async function onActivatedTab({ tabId, windowId }) {
-    console.log('onActivatedTab', { tabId, windowId });
+    // console.log('onActivatedTab', { tabId, windowId });
 
     let group = _groups.find(gr => gr.windowId === windowId);
 
@@ -818,7 +795,7 @@ async function onActivatedTab({ tabId, windowId }) {
 }
 
 async function onCreatedTab(tab) {
-    console.log('onCreatedTab', tab);
+    // console.log('onCreatedTab', tab);
 
     saveCurrentTabs(tab.windowId, undefined, 'onCreatedTab');
 }
@@ -838,11 +815,11 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
         return;
     }
 
-    console.log('onUpdatedTab\n tabId:', tabId, JSON.stringify(changeInfo) + '\n', JSON.stringify({ // TODO comment
-        status: tab.status,
-        url: tab.url,
-        title: tab.title,
-    }));
+    // console.log('onUpdatedTab\n tabId:', tabId, JSON.stringify(changeInfo) + '\n', JSON.stringify({ // TODO comment
+    //     status: tab.status,
+    //     url: tab.url,
+    //     title: tab.title,
+    // }));
 
     if ('hidden' in changeInfo) { // if other programm hide or show tabs
         if (changeInfo.hidden) {
@@ -881,7 +858,7 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
     let savedTabIndex = group.tabs.findIndex(t => t.id === tabId);
 
     if ('loading' === changeInfo.status && changeInfo.url) {
-        if (!group.isSticky && utils.isUrlAllow(changeInfo.url) && !utils.isUrlEmpty(changeInfo.url)) {
+        if (!group.isSticky && utils.isUrlAllowToCreate(changeInfo.url) && !utils.isUrlEmpty(changeInfo.url)) {
             let destGroup = _groups.find(gr => gr.catchTabContainers.includes(tab.cookieStoreId)) || _groups.find(gr => isCatchedUrl(changeInfo.url, gr));
 
             if (destGroup && destGroup.id !== group.id) {
@@ -904,7 +881,7 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
 }
 
 async function onRemovedTab(tabId, { isWindowClosing, windowId }) {
-    console.log('onRemovedTab', arguments);
+    // console.log('onRemovedTab', arguments);
 
     let findTab = _groups.some(function(group) {
         let tabIndex = group.tabs.findIndex(tab => tab.id === tabId);
@@ -930,18 +907,18 @@ async function onRemovedTab(tabId, { isWindowClosing, windowId }) {
 // setInterval(() => console.log(_groups), 3000);
 
 async function onMovedTab(tabId, { windowId }) {
-    console.log('onMovedTab', arguments);
+    // console.log('onMovedTab', arguments);
     saveCurrentTabs(windowId, undefined, 'onMovedTab');
 }
 
 async function onAttachedTab(tabId, { newWindowId }) {
-    console.log('onAttachedTab', tabId, { newWindowId });
+    // console.log('onAttachedTab', tabId, { newWindowId });
 
     saveCurrentTabs(newWindowId, undefined, 'onAttachedTab');
 }
 
 async function onDetachedTab(tabId, { oldWindowId }) { // notice: call before onAttached
-    console.log('onDetachedTab', tabId, { oldWindowId });
+    // console.log('onDetachedTab', tabId, { oldWindowId });
 
     let group = _groups.find(gr => gr.windowId === oldWindowId);
 
@@ -1046,7 +1023,7 @@ async function moveTabToGroup(oldTabIndex, newTabIndex = -1, oldGroupId = null, 
                 return;
             }
         } else {
-            if (!utils.isTabAllowToCreate(tab)) {
+            if (!utils.isUrlAllowToCreate(tab.url)) {
                 utils.notify(browser.i18n.getMessage('thisTabIsNotSupported'));
                 return;
             }
@@ -1205,11 +1182,6 @@ async function createMoveTabMenus(windowId) {
         onclick: function(info, tab) {
             if (utils.isTabIncognito(tab)) {
                 utils.notify(browser.i18n.getMessage('privateAndPinnedTabsAreNotSupported'));
-                return;
-            }
-
-            if (!utils.isUrlAllow(tab.url)) {
-                utils.notify(browser.i18n.getMessage('thisTabIsNotSupported'));
                 return;
             }
 

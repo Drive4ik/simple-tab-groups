@@ -225,7 +225,7 @@
                         let extData = {},
                             tabEntry = oldTab.entries.pop();
 
-                        if (!utils.isTabAllowToCreate(tabEntry)) {
+                        if (!utils.isUrlAllowToCreate(tabEntry.url)) {
                             return;
                         }
 
@@ -278,11 +278,11 @@
                 let logs = BG.getLogs(),
                     logsStr = null;
 
-                if (!logs.length) {
-                    return utils.notify('No logs found');
+                if (logs.length) {
+                    exportToFile(logs, 'STG-error-logs.json');
+                } else {
+                    utils.notify('No logs found');
                 }
-
-                exportToFile(logs, 'STG-error-logs.json');
             },
 
             createHotkey() {

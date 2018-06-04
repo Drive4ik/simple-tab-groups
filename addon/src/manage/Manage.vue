@@ -117,18 +117,6 @@
                 this.$refs.search.focus();
             });
         },
-        watch: {
-            // search(search) {
-            //     if (search) {
-            //         this.showSectionSearch();
-            //     }
-            // },
-            // currentGroup(group) {
-            //     if (group && this.groupToShow && group.id === this.groupToShow.id && group._uid !== this.groupToShow._uid) {
-            //         this.groupToShow = group;
-            //     }
-            // },
-        },
         computed: {
             currentGroup() {
                 return this.groups.find(group => group.windowId === this.currentWindowId); // TODO: if attach/detach tab to other window - need update window id
@@ -501,7 +489,7 @@
                             </div>
                             <div class="group-icon">
                                 <figure class="image is-16x16">
-                                    <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
+                                    <img :src="group.iconUrlToDisplay" />
                                 </figure>
                             </div>
                             <div class="tabs-count" v-text="lang('groupTabsCount', group.filteredTabs.length)"></div>
