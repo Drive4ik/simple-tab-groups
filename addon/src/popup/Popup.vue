@@ -829,8 +829,8 @@
                                 <span :class="{bordered: !!tab.borderedStyle}" :style="tab.borderedStyle" v-text="tab.title || tab.url"></span>
                             </div>
                             <div class="item-action flex-on-hover">
-                                <span class="cursor-pointer" @click.stop="removeUnSyncTab(tab)" :title="lang('deleteTab')">
-                                    <img class="size-16" src="/icons/close.svg" />
+                                <span class="size-16 cursor-pointer" @click.stop="removeUnSyncTab(tab)" :title="lang('deleteTab')">
+                                    <img src="/icons/close.svg" />
                                 </span>
                             </div>
                         </div>
