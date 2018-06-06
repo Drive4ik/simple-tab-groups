@@ -57,9 +57,7 @@ async function saveGroupsToStorage(sendMessageToAll = false) {
 }
 
 async function getWindow(windowId = browser.windows.WINDOW_ID_CURRENT) {
-    try {
-        return await browser.windows.get(windowId);
-    } catch (e) {}
+    return await browser.windows.get(windowId).catch(function() {});
 }
 
 async function createWindow(createData = {}) {

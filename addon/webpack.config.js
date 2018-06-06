@@ -1,14 +1,25 @@
 const path = require('path');
-const webpack = require('webpack');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
+// const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const WebpackShellPlugin = require('webpack-shell-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const DelWebpackPlugin = require('del-webpack-plugin');
 const { VueLoaderPlugin } = require('vue-loader');
 
-const setPath = function(folderName) {
+function setPath(folderName) {
     return path.join(__dirname, folderName);
 };
+
+function copy(path) {
+    return {
+        from: path,
+        to: path,
+    };
+}
+
+function multipleCopy(...paths) {
+    return paths.map(copy);
+}
 
 const config = {
     context: setPath('src'),
@@ -28,10 +39,8 @@ const config = {
     node: {
         setImmediate: false,
     },
-    devtool: false,
     watchOptions: {
         ignored: /node_modules/,
-        // poll: true,
     },
     optimization: {
         minimizer: [
@@ -39,47 +48,32 @@ const config = {
                 cache: true,
                 parallel: true,
                 sourceMap: false,
+                uglifyOptions: {
+                    ecma: 6,
+                    compress: {
+                        drop_console: true,
+                    },
+                },
             })
         ],
     },
     module: {
-        rules: [{
+        rules: [
+            {
                 test: /\.vue$/,
                 loader: 'vue-loader',
-                // options: {
-                //     loaders: {
-                //         scss: ExtractTextPlugin.extract({
-                //             use: 'css-loader!sass-loader',
-                //             fallback: 'vue-style-loader',
-                //         }),
-                //         sass: ExtractTextPlugin.extract({
-                //             use: 'css-loader!sass-loader?indentedSyntax',
-                //             fallback: 'vue-style-loader',
-                //         }),
-                //     }
-                // },
-            }, {
-                test: /\.js$/,
-                loader: 'babel-loader',
-                // include: [path.join(__dirname, 'src')],
-                exclude: file => (/node_modules/.test(file) && !/\.vue\.js/.test(file)),
-            }, {
+            },
+            {
                 test: /\.scss$/,
                 use: [
                     'vue-style-loader',
-                    'css-loader', {
-                        loader: 'sass-loader',
-                    },
+                    'css-loader',
+                    'sass-loader',
                 ],
-            }, {
+            },
+            {
                 test: /\.css$/,
-                loader: 'vue-loader',
-            }, {
-                test: /\.(png|jpg|gif|svg|ico)$/,
-                loader: 'file-loader',
-                options: {
-                    name: '[name].[ext]?emitFile=false',
-                },
+                loader: 'css-loader',
             },
 
         ],
@@ -89,67 +83,25 @@ const config = {
         // new ExtractTextPlugin({
         //     filename: '[name].css'
         // }),
-        new CopyWebpackPlugin([{
-            from: 'icons',
-            to: 'icons',
-            // ignore: ['icon.xcf'],
-        }, {
-            from: '_locales',
-            to: '_locales',
-        }, {
-            from: 'css',
-            to: 'css',
-        }, {
-            from: 'web',
-            to: 'web',
-        }, {
-            from: 'popup/popup.html',
-            to: 'popup/popup.html',
-        }, {
-            from: 'manage/manage.html',
-            to: 'manage/manage.html',
-        }, {
-            from: 'options/options.html',
-            to: 'options/options.html',
-        }, {
-            from: 'manifest.json',
-            to: 'manifest.json',
-        }]),
+        new CopyWebpackPlugin(multipleCopy('icons', '_locales', 'css', 'web', 'popup/popup.html', 'manage/manage.html', 'options/options.html', 'manifest.json')),
+
         new WebpackShellPlugin({
             onBuildEnd: ['node scripts/remove-evals.js'],
         }),
     ],
 };
 
-// if (process.env.NODE_ENV === 'production') {
-//     // config.devtool = '#cheap-module-source-map';
-
-//     config.plugins = (config.plugins || []).concat([
-//         // new webpack.DefinePlugin({
-//         //     'process.env': {
-//         //         NODE_ENV: '"production"',
-//         //     },
-//         // }),
-//         // new webpack.LoaderOptionsPlugin({
-//         //     debug: true,
-//         // }),
-//         // new webpack.optimize.UglifyJsPlugin({
-//         //     sourceMap: true,
-//         //     compress: {
-//         //         warnings: false,
-//         //     },
-//         // }),
-//         // new webpack.LoaderOptionsPlugin({
-//         //     minimize: true,
-//         // }),
-//     ]);
-// }
-
 // module.exports = config;
-module.exports = function(env, argv) {
-    // let isProduction = argv.mode === 'production';
+module.exports = function(env, options) {
+    let isProduction = options.mode === 'production';
 
-    // config.optimization.minimize = isProduction;
+    config.devtool = isProduction ? false : 'source-map';
+
+    if (isProduction) {
+        config.plugins.push(new DelWebpackPlugin({
+            include: ['*.map', '**/*.map'],
+        }));
+    }
 
     return config;
 };
