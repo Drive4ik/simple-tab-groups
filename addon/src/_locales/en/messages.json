@@ -518,6 +518,11 @@
     "cantMakeThumbnailTabWasDiscarded": {
         "message": "You can not make a thumbnail of a tab if the tab was not loaded",
         "description": "You can not make a thumbnail of a tab if the tab was not loaded"
+    },
+
+    "nowFoundWindowsAddonStoppedWorking": {
+        "message": "Error: not found any normal windows, only private/incognito/popups\nAddon stopped working. Please, restart browser.",
+        "description": "Error: not found any normal windows, only private/incognito/popups\nAddon stopped working. Please, restart browser."
     }
 
 }

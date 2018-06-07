@@ -1745,9 +1745,9 @@ async function runMigrateForData(data) {
     return data;
 }
 
-function removeSTGNewTabUrls(windows) {
-    let NEW_TAB_URL = '/stg-newtab/newtab.html';
+const NEW_TAB_URL = '/stg-newtab/newtab.html';
 
+function removeSTGNewTabUrls(windows) {
     function isStgNewTabUrl(url) {
         if (!url || !url.startsWith('moz-extension')) {
             return false;
@@ -1822,7 +1822,7 @@ async function init() {
     let windows = await getAllWindows();
 
     if (!data.doRemoveSTGNewTabUrls) {
-        data.doRemoveSTGNewTabUrls = windows.some(win => win.tabs.some(tab => tab.url.startsWith('moz-extension') && tab.url.includes('/stg-newtab/')));
+        data.doRemoveSTGNewTabUrls = windows.some(win => win.tabs.some(tab => tab.url.startsWith('moz-extension') && tab.url.includes(NEW_TAB_URL)));
     }
 
     if (data.doRemoveSTGNewTabUrls) {
@@ -1840,9 +1840,15 @@ async function init() {
             return win;
         });
 
+    if (!windows.length) {
+        utils.notify(browser.i18n.getMessage('nowFoundWindowsAddonStoppedWorking'));
+        browser.browserAction.disable();
+        return;
+    }
+
     let hiddenTabsCount = windows.reduce((acc, win) => acc + win.tabs.filter(utils.isTabHidden).length, 0);
 
-    lastFocusedNormalWindow = windows.find(win => win.focused) || windows[0] || await getWindow();
+    lastFocusedNormalWindow = windows.find(win => win.focused) || windows[0];
     lastFocusedWinId = lastFocusedNormalWindow.id;
 
     if (options.createThumbnailsForTabs) {
