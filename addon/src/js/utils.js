@@ -361,7 +361,7 @@ function convertSvgToUrl(svg) {
 
 function resizeImage(img, height, width, useTransparency = true) { // img: new Image()
     let canvas = document.createElement('canvas'),
-        canvasCtx = canvas.getContext('2d');
+        context = canvas.getContext('2d');
 
     if (!useTransparency) {
         canvas.mozOpaque = true;
@@ -370,9 +370,34 @@ function resizeImage(img, height, width, useTransparency = true) { // img: new I
     canvas.width = width;
     canvas.height = height;
 
-    canvasCtx.drawImage(img, 0, 0, width, height);
+    context.drawImage(img, 0, 0, width, height);
 
-    return canvas.toDataURL();
+    return isCanvasBlank(canvas, useTransparency) ? null : canvas.toDataURL();
+}
+
+function isCanvasBlank(canvas, useTransparency) {
+    let blank = document.createElement('canvas'),
+        canvasDataUrl = canvas.toDataURL();
+
+    if (!useTransparency) {
+        blank.mozOpaque = true;
+    }
+
+    blank.width = canvas.width;
+    blank.height = canvas.height;
+
+    let isEmpty = canvasDataUrl === blank.toDataURL();
+
+    if (!isEmpty) {
+        let blankContext = blank.getContext('2d');
+
+        blankContext.fillStyle = 'rgb(255, 255, 255)';
+        blankContext.fillRect(0, 0, blank.width, blank.height);
+
+        isEmpty = canvasDataUrl === blank.toDataURL();
+    }
+
+    return isEmpty;
 }
 
 function extractKeys(obj, keys, useClone = false) {
