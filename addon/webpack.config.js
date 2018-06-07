@@ -1,5 +1,6 @@
 const path = require('path');
-// const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const webpack = require('webpack');
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const WebpackShellPlugin = require('webpack-shell-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
@@ -8,7 +9,7 @@ const { VueLoaderPlugin } = require('vue-loader');
 
 function setPath(folderName) {
     return path.join(__dirname, folderName);
-};
+}
 
 function copy(path) {
     return {
@@ -65,24 +66,22 @@ const config = {
             },
             {
                 test: /\.scss$/,
-                use: [
-                    'vue-style-loader',
-                    'css-loader',
-                    'sass-loader',
-                ],
+                use: ['vue-style-loader', 'css-loader', 'sass-loader'],
             },
             {
                 test: /\.css$/,
-                loader: 'css-loader',
-            },
-
+                use: ExtractTextPlugin.extract(['css-loader']),
+                // use: ['style-loader', 'css-loader'],
+            }
         ],
     },
     plugins: [
         new VueLoaderPlugin(),
-        // new ExtractTextPlugin({
-        //     filename: '[name].css'
-        // }),
+
+        new ExtractTextPlugin({
+            filename: '[name].css'
+        }),
+
         new CopyWebpackPlugin(multipleCopy('icons', '_locales', 'css', 'web', 'popup/popup.html', 'manage/manage.html', 'options/options.html', 'manifest.json')),
 
         new WebpackShellPlugin({
@@ -102,6 +101,10 @@ module.exports = function(env, options) {
             include: ['*.map', '**/*.map'],
         }));
     }
+
+    config.plugins.push(new webpack.DefinePlugin({
+        IS_PRODUCTION: isProduction,
+    }));
 
     return config;
 };
