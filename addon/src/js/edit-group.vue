@@ -170,7 +170,7 @@
                         try {
                             new RegExp(regExpStr);
                         } catch (e) {
-                            notify(browser.i18n.getMessage('invalidRegExpRuleTitle', regExpStr));
+                            utils.notify(browser.i18n.getMessage('invalidRegExpRuleTitle', regExpStr));
                         }
                     });
 

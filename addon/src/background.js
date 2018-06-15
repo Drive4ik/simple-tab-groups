@@ -220,7 +220,7 @@ async function updateGroup(groupId, updateData) {
         updateMoveTabMenus(win.id);
     }
 
-    if (_groups[groupIndex].windowId &&_groups[groupIndex].windowId === win.id) {
+    if (_groups[groupIndex].windowId && _groups[groupIndex].windowId === win.id) {
         updateBrowserActionData(win.id);
     }
 }
@@ -271,9 +271,11 @@ async function createTempActiveTab(windowId = browser.windows.WINDOW_ID_CURRENT,
     let pinnedTabs = await getPinnedTabs(windowId);
 
     if (pinnedTabs.length) {
-        browser.tabs.update(pinnedTabs[pinnedTabs.length - 1].id, {
-            active: true,
-        });
+        if (!pinnedTabs.some(tab => tab.active)) {
+            browser.tabs.update(pinnedTabs[pinnedTabs.length - 1].id, {
+                active: true,
+            });
+        }
     } else {
         return browser.tabs.create({
             url: 'about:blank',
@@ -292,6 +294,7 @@ async function removeGroup(groupId) {
 
     if (group.windowId) {
         setLoadingToBrowserAction();
+        await setWindowValue(group.windowId, 'groupId', null);
     }
 
     addUndoRemoveGroupItem(group);
@@ -592,7 +595,6 @@ async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
 
             if (group.tabs.length) {
                 let containers = await utils.loadContainers(),
-                    findActiveTab = false,
                     hiddenTabsIds = group.tabs.filter(utils.keyId).map(utils.keyId);
 
                 if (hiddenTabsIds.length) {
@@ -610,10 +612,6 @@ async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
 
                     let isTabActive = -1 === activeTabIndex ? Boolean(tab.active) : tabIndex === activeTabIndex;
 
-                    if (isTabActive) {
-                        findActiveTab = true;
-                    }
-
                     let newTab = await browser.tabs.create({
                         active: isTabActive,
                         index: pinnedTabsLength + tabIndex,
@@ -625,18 +623,17 @@ async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
                     tab.id = newTab.id;
                 }));
 
-                if (!findActiveTab) {
-                    group.tabs.some(function(tab, tabIndex) { // make tab is active
-                        let isTabActive = -1 === activeTabIndex ? Boolean(tab.active) : tabIndex === activeTabIndex;
+                // set active tab
+                group.tabs.some(function(tab, tabIndex) {
+                    let isTabActive = -1 === activeTabIndex ? Boolean(tab.active) : tabIndex === activeTabIndex;
 
-                        if (isTabActive) {
-                            browser.tabs.update(tab.id, {
-                                active: true,
-                            });
-                            return true;
-                        }
-                    });
-                }
+                    if (isTabActive) {
+                        browser.tabs.update(tab.id, {
+                            active: true,
+                        });
+                        return true;
+                    }
+                });
             }
 
             if (tempEmptyTab) {
@@ -648,6 +645,7 @@ async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
             }
 
             group.windowId = windowId;
+            await setWindowValue(windowId, 'groupId', group.id);
 
             await saveCurrentTabs(windowId, undefined, 'loadGroup');
 
@@ -763,7 +761,7 @@ async function updateTabThumbnail(tabId, force = false) {
 }
 
 async function onActivatedTab({ tabId, windowId }) {
-    // console.log('onActivatedTab', { tabId, windowId });
+    console.log('onActivatedTab', { tabId, windowId });
 
     let group = _groups.find(gr => gr.windowId === windowId);
 
@@ -813,11 +811,11 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
         return;
     }
 
-    // console.log('onUpdatedTab\n tabId:', tabId, JSON.stringify(changeInfo) + '\n', JSON.stringify({ // TODO comment
-    //     status: tab.status,
-    //     url: tab.url,
-    //     title: tab.title,
-    // }));
+    console.log('onUpdatedTab\n tabId:', tabId, JSON.stringify(changeInfo) + '\n', JSON.stringify({
+        status: tab.status,
+        url: tab.url,
+        title: tab.title,
+    }));
 
     if ('hidden' in changeInfo) { // if other programm hide or show tabs
         if (changeInfo.hidden) {
@@ -879,7 +877,7 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
 }
 
 async function onRemovedTab(tabId, { isWindowClosing, windowId }) {
-    // console.log('onRemovedTab', arguments);
+    console.log('onRemovedTab', arguments);
 
     let findTab = _groups.some(function(group) {
         let tabIndex = group.tabs.findIndex(tab => tab.id === tabId);
@@ -947,6 +945,8 @@ let lastFocusedWinId = null,
     lastFocusedNormalWindow = null; // fix bug with browser.windows.getLastFocused({windowTypes: ['normal']}), maybe find exists bug??
 
 async function onFocusChangedWindow(windowId) {
+    console.log('onFocusChangedWindow', windowId);
+
     if (browser.windows.WINDOW_ID_NONE === windowId) {
         return;
     }
@@ -1747,44 +1747,35 @@ async function runMigrateForData(data) {
 
 const NEW_TAB_URL = '/stg-newtab/newtab.html';
 
-function removeSTGNewTabUrls(windows) {
+async function removeSTGNewTabUrls(windows) {
     function isStgNewTabUrl(url) {
-        if (!url || !url.startsWith('moz-extension')) {
-            return false;
-        }
-
-        if (url.startsWith(browser.extension.getURL(NEW_TAB_URL))) {
-            return true;
-        }
-
-        let pregNewTabUrl = NEW_TAB_URL.replace(/\//g, '\\/').replace(/\./, '\\.'),
-            reg = new RegExp('^moz-extension:\/\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}' + pregNewTabUrl);
-
-        return reg.test(url);
+        return url.startsWith('moz-extension') && url.includes(NEW_TAB_URL);
     }
 
     function revokeStgNewTabUrl(url) {
         return new URL(url).searchParams.get('url');
     }
 
-    return windows
-        .map(function(win) {
-            win.tabs = win.tabs
-                .map(function(tab) {
-                    if (isStgNewTabUrl(tab.url)) {
-                        tab.url = revokeStgNewTabUrl(tab.url);
+    return Promise.all(
+        windows
+            .map(async function(win) {
+                await Promise.all(
+                    win.tabs
+                        .map(async function(tab) {
+                            if (isStgNewTabUrl(tab.url)) {
+                                tab.url = revokeStgNewTabUrl(tab.url);
 
-                        browser.tabs.update(tab.id, {
-                            url: tab.url,
-                            loadReplace: true,
-                        });
-                    }
+                                await browser.tabs.update(tab.id, {
+                                    url: tab.url,
+                                    loadReplace: true,
+                                });
+                            }
+                        })
+                );
 
-                    return tab;
-                });
-
-            return win;
-        });
+                return win;
+            })
+    );
 }
 
 // { reason: "update", previousVersion: "3.0.1", temporary: true }
@@ -1801,52 +1792,64 @@ async function getAllWindows() {
         .map(async function(winId) {
             let win = await browser.windows.get(winId);
 
-            // loading all tabs in all windows - FF bug on browser.windows.getAll with populate true and open window from shortcut on desktop
-            // win.tabs = await browser.tabs.query({
-            //     windowId: win.id,
-            // });
+            if (!utils.isWindowAllow(win)) {
+                return false;
+            }
+
             win.tabs = allTabs.filter(tab => tab.windowId === win.id);
 
             return win;
         })
+        .filter(Boolean)
     );
+}
+
+async function setWindowValue(windowId, key, value = null) {
+    return browser.sessions.setWindowValue(windowId, key, value);
+}
+
+async function getWindowValue(windowId, key) {
+    return await browser.sessions.getWindowValue(windowId, key).catch(utils.notify) || null;
+}
+
+async function getSessionDataFromWindow(windowId) {
+    return {
+        groupId: await getWindowValue(windowId, 'groupId'),
+    };
 }
 
 async function init() {
     let data = await storage.get(null);
 
-    data = await runMigrateForData(data); // migration data
+    data = await runMigrateForData(data); // run migration for data
 
     constants.allOptionsKeys.forEach(key => options[key] = key in data ? data[key] : utils.clone(constants.DEFAULT_OPTIONS[key])); // reload options
 
     let windows = await getAllWindows();
+
+    if (!windows.length) {
+        utils.notify(browser.i18n.getMessage('nowFoundWindowsAddonStoppedWorking'));
+        return;
+    }
 
     if (!data.doRemoveSTGNewTabUrls) {
         data.doRemoveSTGNewTabUrls = windows.some(win => win.tabs.some(tab => tab.url.startsWith('moz-extension') && tab.url.includes(NEW_TAB_URL)));
     }
 
     if (data.doRemoveSTGNewTabUrls) {
-        windows = removeSTGNewTabUrls(windows);
+        windows = await removeSTGNewTabUrls(windows);
     }
 
     delete data.doRemoveSTGNewTabUrls;
 
-    let weAreOnAboutAddonsPage = windows.some(win => win.focused && win.tabs.some(tab => tab.url.startsWith('about:addons') && tab.active));
-
-    windows = windows
-        .filter(utils.isWindowAllow)
-        .map(function(win) {
-            win.tabs = win.tabs.filter(utils.isTabNotPinned);
-            return win;
-        });
-
-    if (!windows.length) {
-        utils.notify(browser.i18n.getMessage('nowFoundWindowsAddonStoppedWorking'));
-        browser.browserAction.disable();
-        return;
-    }
-
-    let hiddenTabsCount = windows.reduce((acc, win) => acc + win.tabs.filter(utils.isTabHidden).length, 0);
+    windows = await Promise.all(
+        windows
+            .map(async function(win) {
+                win.tabs = win.tabs.filter(utils.isTabNotPinned);
+                win.session = await getSessionDataFromWindow(win.id);
+                return win;
+            })
+    );
 
     lastFocusedNormalWindow = windows.find(win => win.focused) || windows[0];
     lastFocusedWinId = lastFocusedNormalWindow.id;
@@ -1861,256 +1864,211 @@ async function init() {
         });
     }
 
-    let lastOpenedUnsyncedGroups = [],
-        syncedTabsIds = [];
+    data.groups.forEach(group => group.tabs.forEach(tab => tab.id = null)); // clear all tab ids
 
-    data.groups
-        .filter(group => group.windowId)
-        .forEach(function(group) {
-            let groupWin = null,
-                unSync = false;
+    let loadingRawTabs = {}; // window id : tabs that were in the loading state
 
-            if (group.tabs.length) {
-                groupWin = windows.find(function(win) {
-                    let winTabs = win.tabs.filter(utils.isTabVisible);
+    windows.forEach(function(win) {
+        loadingRawTabs[win.id] = win.tabs.filter(winTab => utils.isTabVisible(winTab) && winTab.status === 'loading' && winTab.url.startsWith('about:'));
+    });
 
-                    if (winTabs.length < group.tabs.length) {
-                        return false;
-                    }
+    let tryCount = 0,
+        tryTime = 250, // ms
+        showNotificationMessageForLongTimeLoading = 90; // sec
 
-                    let tempSyncedTabIds = [];
+    // waiting all tabs to load
+    await new Promise(function(resolve) {
+        async function checkTabs() {
+            let loadingTabs = await browser.tabs.query({
+                pinned: false,
+                hidden: false,
+                status: 'loading',
+                windowType: 'normal',
+            });
 
-                    let allTabsMatched = group.tabs.every(function(tab, tabIndex) {
-                        let findTab = winTabs.find(function(winTab) {
-                            if (!tempSyncedTabIds.includes(winTab.id) && !syncedTabsIds.includes(winTab.id) && winTab.url === tab.url) {
-                                tempSyncedTabIds.push(winTab.id);
-                                return true;
-                            }
-                        });
+            if (loadingTabs.length) {
+                tryCount++;
 
-                        if (!findTab && winTabs[tabIndex].active) {
-                            findTab = true;
-                        }
-
-                        return findTab;
-                    });
-
-                    if (winTabs.length === group.tabs.length) {
-                        return allTabsMatched;
-                    } else if (winTabs.length > group.tabs.length) {
-                        if (hiddenTabsCount) {
-                            return allTabsMatched;
-                        } else {
-                            if (allTabsMatched) {
-                                return weAreOnAboutAddonsPage ? false : true; // if weAreOnAboutAddonsPage then user make disable/enable addon
-                            } else {
-                                return false;
-                            }
-                        }
-                    }
-                });
-
-                if (!groupWin) {
-                    unSync = true;
+                if (Math.floor(tryCount % (1000 / tryTime * showNotificationMessageForLongTimeLoading)) === 0) {
+                    utils.notify(browser.i18n.getMessage('waitingToLoadAllTabs'));
                 }
+
+                setTimeout(checkTabs, tryTime);
             } else {
-                groupWin = windows.find(win => win.id === group.windowId);
-
-                if (!groupWin) {
-                    groupWin = windows.find(function(win) {
-                        let winTabs = win.tabs.filter(utils.isTabVisible);
-                        return winTabs.length === 1 && utils.isUrlEmpty(winTabs[0].url);
-                    });
-                }
+                resolve();
             }
+        }
 
-            if (groupWin) {
-                group.windowId = groupWin.id;
-                group.tabs = groupWin.tabs
-                    .filter(utils.isTabVisible)
-                    .map(mapTab);
+        checkTabs();
+    });
 
-                syncedTabsIds = syncedTabsIds.concat(group.tabs.filter(utils.isTabVisible).map(utils.keyId));
-            } else {
-                group.windowId = null;
 
-                if (unSync) {
-                    lastOpenedUnsyncedGroups.push(group.id);
-                }
+    let syncedTabsIds = [];
+
+    let containers = await utils.loadContainers(),
+        syncedGroupsIds = [];
+
+    await Promise.all(windows.map(async function(win) {
+        let group = null;
+
+        // find group which was synced with window
+        if (win.session.groupId) {
+            group = data.groups.find(group => group.id === win.session.groupId);
+        } else {
+            win.session.groupId = null;
+            await setWindowValue(win.id, 'groupId', win.session.groupId);
+            return;
+        }
+
+        group.windowId = win.id;
+        syncedGroupsIds.push(group.id);
+
+        if (!group.tabs.length && !loadingRawTabs[win.id].length) {
+            let tabsToHide = win.tabs.filter(utils.isTabVisible).map(utils.keyId);
+
+            if (tabsToHide.length) {
+                await createTempActiveTab(win.id, false);
+                await browser.tabs.hide(tabsToHide);
             }
+            return;
+        }
+
+        let tempSyncedTabIds = [];
+
+        // синхронизируем вкладки, пытаемся найти вкладки что есть в группе чтоб не создавать заного
+        group.tabs.forEach(function(groupTab) {
+            win.tabs.some(function(winTab) {
+                if (!tempSyncedTabIds.includes(winTab.id) && winTab.url === groupTab.url) {
+                    tempSyncedTabIds.push(winTab.id);
+                    groupTab.id = winTab.id;
+                    return true;
+                }
+            });
         });
 
-    if (data.groups.filter(group => group.windowId).length === 0 && lastOpenedUnsyncedGroups.length) {
-        if (hiddenTabsCount) {
-            syncOtherGroups();
-        } else { // if no groups are synced because addon was disable (all tabs are visible)
-            data.groups.forEach(function(group) {
-                let tabsMatches = {}, // matches: win tabs
-                    tempSyncedTabIds = [];
+        group.tabs = group.tabs.filter(tab => tab.id || utils.isUrlAllowToCreate(tab.url)); // remove missed unsupported tabs
 
-                windows.forEach(function(win) {
-                    let matches = group.tabs.filter(function(tab) {
+        await Promise.all(group.tabs.map(async function(tab, tabIndex) {
+            if (tab.id) {
+                let winTab = win.tabs.find(winT => winT.id === tab.id);
+
+                if (utils.isTabHidden(winTab)) {
+                    await browser.tabs.show(winTab.id);
+                }
+
+                return;
+            }
+
+            let newTab = await browser.tabs.create({
+                active: Boolean(tab.active),
+                url: tab.url,
+                windowId: win.id,
+                cookieStoreId: utils.normalizeCookieStoreId(tab.cookieStoreId, containers),
+            });
+
+            tab.id = newTab.id;
+        }));
+
+        // add loading tabs to current group
+        if (loadingRawTabs[win.id].length) {
+            group.tabs = group.tabs.concat(
+                loadingRawTabs[win.id]
+                    .filter(tab => !group.tabs.some(t => t.id === tab.id))
+                    .map(mapTab)
+            );
+        }
+
+        let tabsIdsSortingInOrderInGroup = group.tabs.map(utils.keyId);
+
+        syncedTabsIds = syncedTabsIds.concat(tabsIdsSortingInOrderInGroup);
+
+        let pinnedTabs = await getPinnedTabs(win.id),
+            pinnedTabsLength = pinnedTabs.length;
+
+        await browser.tabs.move(tabsIdsSortingInOrderInGroup, {
+            windowId: win.id,
+            index: pinnedTabsLength,
+        });
+
+        let tabsToHide = win.tabs
+            .filter(winTab => utils.isTabVisible(winTab) && !tabsIdsSortingInOrderInGroup.includes(winTab.id))
+            .map(utils.keyId);
+
+        if (tabsToHide.length) {
+            await createTempActiveTab(win.id, false);
+            await browser.tabs.hide(tabsToHide);
+        }
+    }));
+
+    // find all tabs in group and in window and sync this tabs
+    data.groups
+        .filter(group => !syncedGroupsIds.includes(group.id) && group.tabs.length)
+        .forEach(function(group) {
+            group.windowId = null;
+
+            windows.some(function(win) {
+                let tempSyncedTabIds = [];
+
+                let isAllTabsFinded = group.tabs.every(function(groupTab) {
+                    return win.tabs.some(function(winTab) {
+                        if (!tempSyncedTabIds.includes(winTab.id) && !syncedTabsIds.includes(winTab.id) && winTab.url === groupTab.url) {
+                            groupTab.id = winTab.id; // temporary set tab id
+                            tempSyncedTabIds.push(winTab.id);
+                            return true;
+                        }
+                    });
+                });
+
+                if (isAllTabsFinded) {
+                    syncedGroupsIds.push(group.id);
+                    syncedTabsIds = syncedTabsIds.concat(group.tabs.map(utils.keyId));
+                    return true;
+                }
+
+                // if not found all tabs - clear tab ids
+                group.tabs.forEach(tab => tab.id = null);
+            });
+        });
+
+    // sync other tabs
+    data.groups
+        .filter(group => !syncedGroupsIds.includes(group.id) && group.tabs.length)
+        .forEach(function(group) {
+            group.windowId = null;
+
+            let tabsMatches = {}, // matches: win tabs
+                tempSyncedTabIds = [];
+
+            windows.forEach(function(win) {
+                let matches = group.tabs
+                    .filter(function(groupTab) {
                         return win.tabs.some(function(winTab) {
-                            if (!tempSyncedTabIds.includes(winTab.id) && !syncedTabsIds.includes(winTab.id) && winTab.url === tab.url) {
+                            if (!tempSyncedTabIds.includes(winTab.id) && !syncedTabsIds.includes(winTab.id) && winTab.url === groupTab.url) {
                                 tempSyncedTabIds.push(winTab.id);
                                 return true;
                             }
                         });
-                    }).length;
+                    })
+                    .length;
 
-                    if (!tabsMatches[matches]) {
-                        tabsMatches[matches] = win.tabs;
+                if (!tabsMatches[matches]) {
+                    tabsMatches[matches] = win.tabs;
+                }
+            });
+
+            let maxMatches = Math.max.apply(Math, Object.keys(tabsMatches));
+
+            if (maxMatches) {
+                group.tabs.forEach(function(groupTab) {
+                    let winTab = tabsMatches[maxMatches].find(winTab => !syncedTabsIds.includes(winTab.id) && winTab.url === groupTab.url);
+
+                    if (winTab) {
+                        groupTab.id = winTab.id;
+                        syncedTabsIds.push(winTab.id);
                     }
                 });
-
-                let maxMatches = Math.max.apply(Math, Object.keys(tabsMatches));
-
-                if (maxMatches) {
-                    group.tabs.forEach(function(tab) {
-                        let winTab = tabsMatches[maxMatches].find(winTab => !syncedTabsIds.includes(winTab.id) && winTab.url === tab.url);
-
-                        if (winTab) {
-                            tab.id = winTab.id;
-                            syncedTabsIds.push(tab.id);
-                        }
-                    });
-                }
-            });
-
-            let syncedWindows = [],
-                syncedGroups = [];
-
-            windows.forEach(function(win) {
-                if (syncedWindows.includes(win.id)) {
-                    return;
-                }
-
-                let tabsInWindow = win.tabs.map(utils.keyId);
-
-                let isWindowWasSynced = lastOpenedUnsyncedGroups.some(function(groupId) {
-                    if (syncedGroups.includes(groupId)) {
-                        return;
-                    }
-
-                    let group = data.groups.find(gr => gr.id === groupId);
-
-                    if (!group.tabs.length) {
-                        return;
-                    }
-
-                    if (group.tabs.every(tab => win.tabs.some(winTab => winTab.id === tab.id))) {
-                        syncedWindows.push(win.id);
-                        syncedGroups.push(group.id);
-
-                        group.windowId = win.id;
-
-                        group.tabs[0].active = true;
-                        browser.tabs.update(group.tabs[0].id, {
-                                active: true,
-                            })
-                            .then(function() {
-                                let tabsToHide = win.tabs
-                                    .filter(winTab => !group.tabs.some(tab => tab.id === winTab.id))
-                                    .map(utils.keyId);
-
-                                if (tabsToHide.length) {
-                                    browser.tabs.hide(tabsToHide);
-                                }
-                            });
-
-                        lastOpenedUnsyncedGroups.splice(lastOpenedUnsyncedGroups.indexOf(groupId), 1);
-
-                        return true;
-                    }
-                });
-
-                if (!isWindowWasSynced) {
-                    data.groups.forEach(function(group) {
-                        if (syncedGroups.includes(group.id) || !group.tabs.length) {
-                            return;
-                        }
-
-                        if (group.tabs.every(tab => win.tabs.some(winTab => winTab.id === tab.id))) {
-                            syncedWindows.push(win.id);
-                            syncedGroups.push(group.id);
-
-                            group.windowId = win.id;
-
-                            group.tabs[0].active = true;
-                            browser.tabs.update(group.tabs[0].id, {
-                                    active: true,
-                                })
-                                .then(function() {
-                                    let tabsToHide = win.tabs
-                                        .filter(winTab => !group.tabs.some(tab => tab.id === winTab.id))
-                                        .map(utils.keyId);
-
-                                    if (tabsToHide.length) {
-                                        browser.tabs.hide(tabsToHide);
-                                    }
-                                });
-                        }
-                    });
-                }
-            });
-        }
-    } else {
-        syncOtherGroups();
-    }
-
-
-    function syncOtherGroups() {
-        let syncedTabsIds = [],
-            windowsWithHiddenTabs = windows.map(function(win) {
-                win.tabs = win.tabs.filter(utils.isTabHidden); // leave only hidden tabs
-                return win;
-            });
-
-        data.groups
-            .filter(group => !group.windowId)
-            .forEach(function(group) {
-                if (!group.tabs.length) {
-                    return;
-                }
-
-                let groupWin = windowsWithHiddenTabs.find(function(win) {
-                    let tempSyncedTabIds = [];
-
-                    return group.tabs.every(function(tab) {
-                        return win.tabs.some(function(t) {
-                            if (!tempSyncedTabIds.includes(t.id) && !syncedTabsIds.includes(t.id) && t.url === tab.url) {
-                                tempSyncedTabIds.push(t.id);
-                                return true;
-                            }
-                        });
-                    });
-                });
-
-                if (groupWin) {
-                    group.tabs.forEach(function(tab) {
-                        let winTab = groupWin.tabs.find(t => !syncedTabsIds.includes(t.id) && t.url === tab.url);
-
-                        tab.id = winTab.id;
-                        syncedTabsIds.push(tab.id);
-                    });
-                } else {
-                    // sync unsync hidden tabs with unsync groups
-                    group.tabs.forEach(function(tab) {
-                        windowsWithHiddenTabs.some(function(win) {
-                            let winTab = win.tabs.find(t => !syncedTabsIds.includes(t.id) && t.url === tab.url);
-
-                            if (winTab) {
-                                tab.id = winTab.id;
-                                syncedTabsIds.push(tab.id);
-                                return true;
-                            }
-                        });
-                    });
-                }
-            });
-    }
-
-    // TODO if no one group are synced
+            }
+        });
 
     _groups = data.groups;
 
@@ -2119,10 +2077,17 @@ async function init() {
     updateBrowserActionData();
     createMoveTabMenus();
 
+    browser.browserAction.enable();
+
     addEvents();
 
     window.background.inited = true;
 }
+
+browser.browserAction.setTitle({
+    title: browser.i18n.getMessage('waitingToLoadAllTabs'),
+});
+browser.browserAction.disable();
 
 setLoadingToBrowserAction();
 

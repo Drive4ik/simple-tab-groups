@@ -408,31 +408,6 @@ function extractKeys(obj, keys, useClone = false) {
     return newObj;
 }
 
-
-// TODO
-// function renderElapsedTimeToString(unix) {
-//     var value = (Date.now() - unix) / 60000;
-//     if ( value < 2 ) {
-//         return vAPI.i18n('elapsedOneMinuteAgo');
-//     }
-//     if ( value < 60 ) {
-//         return vAPI.i18n('elapsedManyMinutesAgo').replace('{{value}}', Math.floor(value).toLocaleString());
-//     }
-//     value /= 60;
-//     if ( value < 2 ) {
-//         return vAPI.i18n('elapsedOneHourAgo');
-//     }
-//     if ( value < 24 ) {
-//         return vAPI.i18n('elapsedManyHoursAgo').replace('{{value}}', Math.floor(value).toLocaleString());
-//     }
-//     value /= 24;
-//     if ( value < 2 ) {
-//         return vAPI.i18n('elapsedOneDayAgo');
-//     }
-//     return vAPI.i18n('elapsedManyDaysAgo').replace('{{value}}', Math.floor(value).toLocaleString());
-// };
-
-
 export {
     keyId,
     type,

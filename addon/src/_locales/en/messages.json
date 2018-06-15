@@ -521,8 +521,18 @@
     },
 
     "nowFoundWindowsAddonStoppedWorking": {
-        "message": "Error: not found any normal windows, only private/incognito/popups\nAddon stopped working. Please, restart browser.",
-        "description": "Error: not found any normal windows, only private/incognito/popups\nAddon stopped working. Please, restart browser."
+        "message": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser.",
+        "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
+    },
+
+    "waitingToLoadAllTabs": {
+        "message": "Waiting for all tabs to load.\nPlease wait...",
+        "description": "Waiting for all tabs to load.\nPlease wait..."
+    },
+
+    "reloadAddon": {
+        "message": "Reload addon",
+        "description": "Reload addon"
     }
 
 }

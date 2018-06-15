@@ -37,7 +37,7 @@ export default {
                     }
                 });
             } else {
-                utils.notify('Groups is not a array. Saving canceled.\nPlease contact me by email:\ndrive4ik@gmail.com\n(mouse over on this message prevent it\'s closing)');
+                utils.notify('Groups is not an array. Saving canceled.\nPlease contact me by email:\ndrive4ik@gmail.com');
                 return Promise.reject();
             }
         }

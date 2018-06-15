@@ -19,12 +19,14 @@
     })(browser.extension.getBackgroundPage());
 
     if (!BG) {
-        notify('background not inited');
+        utils.notify('background not inited');
         throw Error('background not inited');
     }
 
     const VIEW_GRID = 'grid',
         VIEW_DEFAULT = VIEW_GRID;
+
+    let currentWindow = null;
 
     export default {
         data() {
@@ -100,7 +102,8 @@
                 .$on('drag-over', (item, isOver) => item.isOver = isOver);
         },
         async mounted() {
-            let currentWindow = await BG.getWindow();
+            currentWindow = await BG.getWindow();
+
             this.currentWindowId = currentWindow.id;
 
             this.containers = await utils.loadContainers();
@@ -119,7 +122,7 @@
         },
         computed: {
             currentGroup() {
-                return this.groups.find(group => group.windowId === this.currentWindowId); // TODO: if attach/detach tab to other window - need update window id
+                return this.groups.find(group => group.windowId === this.currentWindowId); // TODO: if attach/detach manage group tab to other window - need update window id
             },
             filteredGroups() {
                 let searchStr = this.search.toLowerCase();
@@ -299,8 +302,16 @@
                 BG.updateTabThumbnail(tabId, true);
             },
             loadGroup(group, tabIndex) {
+                // fix bug with browser.windows.getLastFocused({windowTypes: ['normal']}), maybe find exists bug??
+                let lastFocusedNormalWindow = BG.getLastFocusedNormalWindow();
+
                 let groupIndex = this.groups.findIndex(gr => gr.id === group.id);
-                BG.loadGroup(this.currentWindowId, groupIndex, tabIndex);
+
+                BG.loadGroup(lastFocusedNormalWindow.id, groupIndex, tabIndex);
+
+                if ('popup' === currentWindow.type) {
+                    browser.windows.remove(currentWindow.id); // close manage groups popop window
+                }
             },
 
             clickOnTab(event, tabIndex, tab, group) {

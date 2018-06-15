@@ -458,6 +458,9 @@
                 browser.runtime.openOptionsPage();
                 window.close();
             },
+            reloadAddon() {
+                browser.runtime.reload();
+            },
             openManageGroups() {
                 BG.openManageGroups(window.screen);
                 window.close();
@@ -1035,7 +1038,11 @@
                 <span class="h-margin-left-10" v-text="lang('manageGroupsTitle')"></span>
             </div>
             <div class="is-flex is-aligin-items-center is-vertical-separator"></div>
-            <div class="is-flex is-aligin-items-center settings is-full-height" @click="openOptionsPage" :title="lang('settingsTitle')">
+            <div class="is-flex is-aligin-items-center is-full-height" @click="reloadAddon" :title="lang('reloadAddon')">
+                <img class="size-16" src="/icons/refresh.svg" />
+            </div>
+            <div class="is-flex is-aligin-items-center is-vertical-separator"></div>
+            <div class="is-flex is-aligin-items-center is-full-height" @click="openOptionsPage" :title="lang('settingsTitle')">
                 <img class="size-16" src="/icons/settings.svg" />
             </div>
         </footer>
@@ -1088,8 +1095,14 @@
                 background-color: var(--color-gray);
             }
 
-            .manage-groups,
-            .settings {
+            .manage-groups span {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                max-width: 165px;
+            }
+
+            & > *:not(.is-vertical-separator) {
                 padding: 0 20px;
             }
 
