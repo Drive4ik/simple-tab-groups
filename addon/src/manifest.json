@@ -3,14 +3,14 @@
 
     "applications": {
         "gecko": {
-            "id": "experimental-simple-tab-groups@drive4ik",
+            "id": "experimental-simple-tab-groups_1@drive4ik",
             "strict_min_version": "61.0"
         }
     },
 
     "name": "__MSG_extensionName__",
     "description": "__MSG_extensionDescription__",
-    "version": "3.0.6.2",
+    "version": "3.0.6.5",
     "author": "Drive4ik",
     "homepage_url": "https://github.com/drive4ik/simple-tab-groups",
 

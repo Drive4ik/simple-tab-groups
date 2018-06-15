@@ -110,7 +110,7 @@ function mapTab(tab) {
         title: tab.title || tab.url,
         url: tab.url,
         active: Boolean(tab.active),
-        favIconUrl: tab.favIconUrl ? tab.favIconUrl : String(tab.favIconUrl),
+        favIconUrl: tab.favIconUrl || '',
         cookieStoreId: tab.cookieStoreId || constants.DEFAULT_COOKIE_STORE_ID,
         thumbnail: options.createThumbnailsForTabs ? (tab.thumbnail || allThumbnails[tab.url] || null) : null,
     };
@@ -1796,7 +1796,8 @@ async function getAllWindows() {
                 return false;
             }
 
-            win.tabs = allTabs.filter(tab => tab.windowId === win.id);
+            win.tabs = allTabs.filter(tab => tab.windowId === win.id && utils.isTabNotPinned(tab));
+            win.session = await getSessionDataFromWindow(win.id);
 
             return win;
         })
@@ -1842,14 +1843,14 @@ async function init() {
 
     delete data.doRemoveSTGNewTabUrls;
 
-    windows = await Promise.all(
-        windows
-            .map(async function(win) {
-                win.tabs = win.tabs.filter(utils.isTabNotPinned);
-                win.session = await getSessionDataFromWindow(win.id);
-                return win;
-            })
-    );
+    // windows = await Promise.all(
+    //     windows
+    //         .map(async function(win) {
+    //             win.tabs = win.tabs.filter(utils.isTabNotPinned);
+    //             win.session = await getSessionDataFromWindow(win.id);
+    //             return win;
+    //         })
+    // );
 
     lastFocusedNormalWindow = windows.find(win => win.focused) || windows[0];
     lastFocusedWinId = lastFocusedNormalWindow.id;
@@ -1869,7 +1870,7 @@ async function init() {
     let loadingRawTabs = {}; // window id : tabs that were in the loading state
 
     windows.forEach(function(win) {
-        loadingRawTabs[win.id] = win.tabs.filter(winTab => utils.isTabVisible(winTab) && winTab.status === 'loading' && winTab.url.startsWith('about:'));
+        loadingRawTabs[win.id] = win.tabs.filter(winTab => utils.isTabVisible(winTab) && winTab.status === 'loading');
     });
 
     let tryCount = 0,
@@ -1902,6 +1903,17 @@ async function init() {
         checkTabs();
     });
 
+    windows = await getAllWindows();
+
+    windows.forEach(function(win) {
+        if (loadingRawTabs[win.id]) {
+            loadingRawTabs[win.id] = loadingRawTabs[win.id]
+                .map(oldTab => win.tabs.find(t => t.id === oldTab.id))
+                .filter(Boolean);
+        } else {
+            delete loadingRawTabs[win.id];
+        }
+    });
 
     let syncedTabsIds = [];
 
@@ -1969,6 +1981,8 @@ async function init() {
             tab.id = newTab.id;
         }));
 
+        console.log('loadingRawTabs[win.id]', loadingRawTabs[win.id]);
+
         // add loading tabs to current group
         if (loadingRawTabs[win.id].length) {
             group.tabs = group.tabs.concat(
@@ -1992,11 +2006,17 @@ async function init() {
 
         let tabsToHide = win.tabs
             .filter(winTab => utils.isTabVisible(winTab) && !tabsIdsSortingInOrderInGroup.includes(winTab.id))
-            .map(utils.keyId);
-
+            ;
+console.log('group.tabs', group.tabs);
+console.log('tabsToHide', tabsToHide);
         if (tabsToHide.length) {
-            await createTempActiveTab(win.id, false);
-            await browser.tabs.hide(tabsToHide);
+            let tmpTab = await createTempActiveTab(win.id, false);
+
+            await browser.tabs.hide(tabsToHide.map(utils.keyId));
+
+            if (tmpTab) {
+                await browser.tabs.remove(tmpTab.id);
+            }
         }
     }));
 
