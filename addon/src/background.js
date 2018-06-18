@@ -791,7 +791,7 @@ async function onActivatedTab({ tabId, windowId }) {
 }
 
 async function onCreatedTab(tab) {
-    // console.log('onCreatedTab', tab);
+    console.log('onCreatedTab', tab);
 
     saveCurrentTabs(tab.windowId, undefined, 'onCreatedTab');
 }
@@ -900,21 +900,20 @@ async function onRemovedTab(tabId, { isWindowClosing, windowId }) {
     saveCurrentTabs(windowId, tabId, 'onRemovedTab');
 }
 
-// setInterval(() => console.log(_groups), 3000);
-
 async function onMovedTab(tabId, { windowId }) {
-    // console.log('onMovedTab', arguments);
+    console.log('onMovedTab', tabId, { windowId });
+
     saveCurrentTabs(windowId, undefined, 'onMovedTab');
 }
 
 async function onAttachedTab(tabId, { newWindowId }) {
-    // console.log('onAttachedTab', tabId, { newWindowId });
+    console.log('onAttachedTab', tabId, { newWindowId });
 
     saveCurrentTabs(newWindowId, undefined, 'onAttachedTab');
 }
 
 async function onDetachedTab(tabId, { oldWindowId }) { // notice: call before onAttached
-    // console.log('onDetachedTab', tabId, { oldWindowId });
+    console.log('onDetachedTab', tabId, { oldWindowId });
 
     let group = _groups.find(gr => gr.windowId === oldWindowId);
 
@@ -1788,20 +1787,20 @@ async function getAllWindows() {
 
     return Promise.all(
         allTabs
-        .reduce((acc, tab) => acc.includes(tab.windowId) ? acc : acc.concat([tab.windowId]), [])
-        .map(async function(winId) {
-            let win = await browser.windows.get(winId);
+            .reduce((acc, tab) => acc.includes(tab.windowId) ? acc : acc.concat([tab.windowId]), [])
+            .map(async function(winId) {
+                let win = await browser.windows.get(winId);
 
-            if (!utils.isWindowAllow(win)) {
-                return false;
-            }
+                if (!utils.isWindowAllow(win)) {
+                    return false;
+                }
 
-            win.tabs = allTabs.filter(tab => tab.windowId === win.id && utils.isTabNotPinned(tab));
-            win.session = await getSessionDataFromWindow(win.id);
+                win.tabs = allTabs.filter(tab => tab.windowId === win.id && utils.isTabNotPinned(tab));
+                win.session = await getSessionDataFromWindow(win.id);
 
-            return win;
-        })
-        .filter(Boolean)
+                return win;
+            })
+            .filter(Boolean)
     );
 }
 
@@ -1842,15 +1841,6 @@ async function init() {
     }
 
     delete data.doRemoveSTGNewTabUrls;
-
-    // windows = await Promise.all(
-    //     windows
-    //         .map(async function(win) {
-    //             win.tabs = win.tabs.filter(utils.isTabNotPinned);
-    //             win.session = await getSessionDataFromWindow(win.id);
-    //             return win;
-    //         })
-    // );
 
     lastFocusedNormalWindow = windows.find(win => win.focused) || windows[0];
     lastFocusedWinId = lastFocusedNormalWindow.id;
@@ -1905,13 +1895,14 @@ async function init() {
 
     windows = await getAllWindows();
 
+    // update saved loading tabs
     windows.forEach(function(win) {
         if (loadingRawTabs[win.id]) {
             loadingRawTabs[win.id] = loadingRawTabs[win.id]
                 .map(oldTab => win.tabs.find(t => t.id === oldTab.id))
                 .filter(Boolean);
         } else {
-            delete loadingRawTabs[win.id];
+            loadingRawTabs[win.id] = [];
         }
     });
 
@@ -1981,8 +1972,6 @@ async function init() {
             tab.id = newTab.id;
         }));
 
-        console.log('loadingRawTabs[win.id]', loadingRawTabs[win.id]);
-
         // add loading tabs to current group
         if (loadingRawTabs[win.id].length) {
             group.tabs = group.tabs.concat(
@@ -2004,15 +1993,14 @@ async function init() {
             index: pinnedTabsLength,
         });
 
-        let tabsToHide = win.tabs
+        let tabsIdsToHide = win.tabs
             .filter(winTab => utils.isTabVisible(winTab) && !tabsIdsSortingInOrderInGroup.includes(winTab.id))
-            ;
-console.log('group.tabs', group.tabs);
-console.log('tabsToHide', tabsToHide);
-        if (tabsToHide.length) {
+            .map(utils.keyId);
+
+        if (tabsIdsToHide.length) {
             let tmpTab = await createTempActiveTab(win.id, false);
 
-            await browser.tabs.hide(tabsToHide.map(utils.keyId));
+            await browser.tabs.hide(tabsIdsToHide);
 
             if (tmpTab) {
                 await browser.tabs.remove(tmpTab.id);
