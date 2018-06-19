@@ -912,7 +912,7 @@
                     <hr>
 
                     <div class="create-new-tab">
-                        <div class="item" @contextmenu="containers.length && $refs.createNewTabContextMenu.open($event)" @click="addTab(null)">
+                        <div class="item" @contextmenu="containers.length && $refs.createNewTabContextMenu.open($event)" @click="addTab()">
                             <div class="item-icon">
                                 <img class="size-16" src="/icons/tab-new.svg">
                             </div>

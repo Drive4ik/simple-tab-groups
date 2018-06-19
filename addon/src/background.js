@@ -2049,6 +2049,7 @@ async function init() {
                     syncedTabsIds = syncedTabsIds.concat(group.tabs.map(utils.keyId));
 
                     if (!win.session.groupId && isMigrateToV3) { // sync group with window if all tabs found but window was not synchronized
+                        group.windowId = win.id;
                         win.session.groupId = group.id;
                         setWindowValue(win.id, 'groupId', group.id);
                     }
