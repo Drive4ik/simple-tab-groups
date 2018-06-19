@@ -260,7 +260,7 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "捕捉并移动身份标签页到该群组（仅对有链接标签页有效，不支持空标签页）",
+        "message": "捕捉并移动Firefox身份标签页（多账户容器）到该群组（仅对网页有效，不支持空标签页）",
         "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
     },
     "regexpForTabsTitle": {

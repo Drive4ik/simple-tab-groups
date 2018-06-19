@@ -1,26 +1,26 @@
 {
     "extensionDescription": {
-        "message": "Crear, modificar y cambiar rápidamente los grupos de pestañas.\nInspirado en el antiguo add-on \"Tab Groups\" :)",
+        "message": "Skapa, organisera och byt mellan flikgrupper. \nInspirerat av det gamla \"Tab Groups\"-tillägget :)",
         "description": "Description of the extension."
     },
     "openSettings": {
-        "message": "Configuración",
+        "message": "Inställningar",
         "description": "Settings context button title"
     },
     "manageGroupsTitle": {
-        "message": "Administrar grupos",
+        "message": "Gruppöversikt",
         "description": "Manage groups"
     },
     "setTabIconAsGroupIcon": {
-        "message": "Colocar el icono de pestaña como icono de grupo",
+        "message": "Använd denna ikon för",
         "description": "Set tab icon as group icon"
     },
     "moveTabToGroupDisabledTitle": {
-        "message": "Mover la pestaña de grupo",
+        "message": "Flytta flik till grupp",
         "description": "Move tab to group title"
     },
     "moveTabToGroupMessage": {
-        "message": "la pestaña \"$tabtitle$\" fue movida al grupo \"$grouptitle$\".\n\nHaga click aquí para ver esta pestaña.",
+        "message": "Fliken \"$tabtitle$\" flyttades till gruppen \"$grouptitle$\".\n\nKlicka för att visa den här fliken.",
         "description": "Tab moved popup title",
         "placeholders": {
             "grouptitle": {
@@ -34,47 +34,43 @@
         }
     },
     "warning": {
-        "message": "Cuidado!",
+        "message": "Varning!",
         "description": "Warning!"
     },
     "success": {
-        "message": "Éxito!",
+        "message": "Framgång!",
         "description": "Success!"
     },
     "ok": {
-        "message": "OK",
+        "message": "Ok",
         "description": "OK button"
     },
     "save": {
-        "message": "Guardar",
+        "message": "Spara",
         "description": "Save"
     },
     "delete": {
-        "message": "Borrar",
+        "message": "Ta bort",
         "description": "Delete"
     },
     "cancel": {
-        "message": "Cancelar",
+        "message": "Avbryt",
         "description": "Cancel"
     },
     "privateAndPinnedTabsAreNotSupported": {
-        "message": "Las pestañas privadas y fijadas no son soportadas",
+        "message": "Privata och fästa flikar stöds ej",
         "description": "Private and pinned tabs are not supported"
     },
     "thisTabIsNotSupported": {
-        "message": "Esta pestaña no es soportada",
+        "message": "Den här fliken stöds ej",
         "description": "This tab is not supported"
     },
-    "searchPlaceholder": {
-        "message": "Buscar una pestaña...",
-        "description": "Search placeholder"
-    },
     "filterTabsPlaceholder": {
-        "message": "Filtrar pestañas (filtro múltiple utilizando *)",
+        "message": "Filtrera flikar (särskilj flera filter med *)",
         "description": "Filter tabs (multiple filter with *)"
     },
     "invalidRegExpRuleTitle": {
-        "message": "Regla '$regexp$' no es validad y sera omitida.",
+        "message": "Regeln '$regexp' är ogiltig och kommer inte att användas.",
         "description": "Invalid rule description",
         "placeholders": {
             "regexp": {
@@ -84,79 +80,79 @@
         }
     },
     "manageGroupViewGrid": {
-        "message": "Pantalla en forma de grilla.",
+        "message": "Rutnätsvy",
         "description": "Grid display"
     },
     "manageGroupViewFreeArrange": {
-        "message": "Organizador libre (en versiones futuras)",
+        "message": "Fri formation (i framtida versioner)",
         "description": "Free arrange"
     },
     "closePopupAfterChangeGroup": {
-        "message": "Cerrar ventanas emergentes después de cambiar de grupo",
+        "message": "Stäng popup efter byte av grupp",
         "description": "Close popup after changing group"
     },
     "showNotificationAfterMoveTab": {
-        "message": "Mostrar notificación cuando una pestaña es movida a otro grupo",
+        "message": "Visa en notifikation när en flik flyttas till en annan grupp",
         "description": "Show notification when tab is moved to another group"
     },
     "openManageGroupsInTab": {
-        "message": "Abrir \"Administrar Grupos\" en una nueva pestaña.",
+        "message": "Öppna \"Gruppöversikt\" i en ny flik",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
-        "message": "Mostrar dialogo para confirmar antes de borrar el grupo",
+        "message": "Bekräfta borttagning av en hel grupp",
         "description": "Show confirm dialog before group delete"
     },
     "exportAddonSettingsTitle": {
-        "message": "Resguardar tus Simple Tab Groups",
+        "message": "Ta en säkerhetskopia av Simple Tab Groups-datan",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
-        "message": "Exportar tus grupos de pestañas en un archivo de resguardo para mantenerlo seguro, para que puedas restaurarlos en otro momento si es necesario.",
+        "message": "Säkerhetskopia dina flikgrupper till fil, för att vid behov kunna återställa dem.",
         "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
     },
     "exportAddonSettingsButton": {
-        "message": "Crear una copia de resguardo",
+        "message": "Skapa säkerhetskopia",
         "description": "Create backup"
     },
     "includeTabThumbnailsIntoBackup": {
-        "message": "Incluir vistas en miniaturas de pestañas en la copia de resguardo (hace que el tamaño del archivo de la copia de resguardo sea mayor)",
+        "message": "Inkludera en minityrbild av fliken i säkerhetskopian (gör säkerhetskopian större)",
         "description": "Include tab thumbnails into backup (make backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "Restaurar Simple Tabs Groups",
+        "message": "Återställ Simple Tab Groups-data",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
-        "message": "Cargar el grupo de pestañas desde un archivo de resguardo que quieras restaurar.",
+        "message": "Ladda säkerhetskopia från en fil som innehåller flikar som du vill återtälla.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
     "importAddonSettingsWarning": {
-        "message": "Restaurar la configuración de add-on BORRARA todas las configuraciones existentes y grupos!",
+        "message": "Återställ tilläggsinställningar tar bort ALLA flikgrupper och inställningar!",
         "description": "Restore add-on settings will ERASE all existing settings and groups!"
     },
     "importAddonSettingsButton": {
-        "message": "Restaurar copia de resguardo",
+        "message": "Återställ från säkerhetskopia",
         "description": "Restore backup"
     },
     "importSettingsOldTabGroupsAddonTitle": {
-        "message": "Restaurar las \"Tab Groups\" de Quicksaver",
+        "message": "Återställ från Quicksavers \"Tab Groups\"-tillägg",
         "description": "Restore Quicksaver's \"Tab Groups\""
     },
     "importSettingsOldTabGroupsAddonDescription": {
-        "message": "Cargar un archivo de copia de resguardo del viejo addon \"Tab Groups\"",
+        "message": "Återställ säkerhetskopia från en fil i \"Tab Groups\"-tilläggets format.",
         "description": "Load a backup file old \"Tab Groups\" addon."
     },
     "importSettingsOldTabGroupsAddonButton": {
-        "message": "Importar la configuración desde el addon \"Tab Groups\" de Quicksaver",
+        "message": "Hämta inställningar från Quicksavers \"Tab Groups\"-tillägg",
         "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
     },
     "openGroupAfterChange": {
-        "message": "Abrir el grupo después de cambiar a él",
+        "message": "Öppna grupp efter byte",
         "description": "Open group after changing to it"
     },
     "newGroupTitle": {
-        "message": "Grupo $id$",
+        "message": "Grupp $id$",
         "description": "group id",
         "placeholders": {
             "id": {
@@ -165,42 +161,32 @@
             }
         }
     },
-    "searchNotFoundTitle": {
-        "message": "Buscar pestañas \"$search$\" no encontrada",
-        "description": "No results found",
-        "placeholders": {
-            "search": {
-                "content": "$1",
-                "example": "mail"
-            }
-        }
-    },
     "sortGroupsAZ": {
-        "message": "Ordenar grupos [A-Z]",
+        "message": "Sortera grupper [A-Z]",
         "description": "Sort groups [A-Z]"
     },
     "sortGroupsZA": {
-        "message": "Ordenar grupos [Z-A]",
+        "message": "Sortera grupper [Z-A]",
         "description": "Sort groups [Z-A]"
     },
     "settingsTitle": {
-        "message": "Configuraciones",
+        "message": "Inställningar",
         "description": "Settings"
     },
     "groupSettings": {
-        "message": "Grupo de configuraciones",
+        "message": "Gruppinställningar",
         "description": "Group settings"
     },
     "deleteGroup": {
-        "message": "Borrar grupo",
+        "message": "Ta bort grupp",
         "description": "Delete group"
     },
     "deleteGroupTitle": {
-        "message": "¿Borrar el grupo?",
+        "message": "Ta bort grupp?",
         "description": "Delete group?"
     },
     "deleteGroupBody": {
-        "message": "¿Quiere borrar el grupo \"$name$\"?<br>Borrar el grupo también cierra las pestañas y la ventana enlazada si la ventana esta activa ahora!",
+        "message": "Vill du ta bort gruppen \"$name$\"?<br>Att stänga en grupp stänger också alla flikar och eventuella fönster kopplade till dem!",
         "description": "Delete group?",
         "placeholders": {
             "name": {
@@ -210,7 +196,7 @@
         }
     },
     "groupTabsCount": {
-        "message": "$count$ pestañas",
+        "message": "$count$ flikar",
         "description": "Group tabs count",
         "placeholders": {
             "count": {
@@ -220,127 +206,131 @@
         }
     },
     "deleteTab": {
-        "message": "Borrar pestaña",
+        "message": "Ta bort flik",
         "description": "Delete tab"
     },
     "createNewTab": {
-        "message": "Abrir una pestaña nueva",
+        "message": "Öppna ny flik",
         "description": "Open new tab"
     },
     "createNewGroup": {
-        "message": "Crear un grupo nuevo",
+        "message": "Skapa ny grupp",
         "description": "Create new group"
     },
     "goBackButtonTitle": {
-        "message": "Regresar",
+        "message": "Bakåt",
         "description": "Go back"
     },
     "goBackToGroupsButtonTitle": {
-        "message": "Regresar a los grupos",
+        "message": "Tillbaka till grupper",
         "description": "Go back to groups"
     },
     "title": {
-        "message": "Titulo",
+        "message": "Titel",
         "description": "Title"
     },
     "iconColor": {
-        "message": "Color del icono",
+        "message": "Ikonfärg",
         "description": "Icon color"
     },
     "selectUserGroupIcon": {
-        "message": "Cargar icono",
+        "message": "Ladda ikon",
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Disculpe, no puede cargar un icono personalizado en este grupo, pero puede cargar un icono de grupo personalizad en \"Administrador de grupos\".\n¿Abrir \"Administrador de grupos\"?",
+        "message": "Tyvärr, du kan inte välja egna ikoner här, men du kan välja en egen gruppikon i \"Gruppöversikt\".\n Öppna \"Gruppöversikt\"?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
-        "message": "Colocar color aleatorio",
+        "message": "Välj slumpmässig färg",
         "description": "Set random color"
     },
+    "catchTabContainers": {
+        "message": "Fånga och flytta flikar i behållare till den här gruppen (endast för web URLs, tomma flikar stöds ej)",
+        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
+    },
     "regexpForTabsTitle": {
-        "message": "Expresiones regulares para fijar las pestañas",
+        "message": "Reguljärt uttryck för att fånga nya flikar",
         "description": "Regular expressions for catch tabs"
     },
     "regexpForTabsPlaceholder": {
-        "message": "Expresiones regulares",
+        "message": "Reguljärt uttryck",
         "description": "Regular expressions"
     },
     "regexpForTabsHelp": {
-        "message": "Inserte expresiones regulares para direcciones web aqui. Las pestanas encontradas seran movidas automaticamente de este grupo. \nUse solo una linea por regla, puede haber tantas como quiera. \nEjemplos:\ngithub\\.com/drive4ik/simple-tab-groups - devuelve todas las paginas del repositorio del addon \nbugzilla\\.mozilla\\.org - devuelve el reporte de errores (bugs) de Firefox\n(facebook|twitter|youtube)\\.com - devuelve todas tus redes sociales",
+        "message": "Ge ett reguljärt uttryck för webbadresser. Flikar med adresser som matcher flyttas automatiskt till den här grpupen.\nDu kan ha hur många regler som helst, men en regel per rad.\\Exempel:\ngithub\\.com/drive4ik/simple-tab-groups - fångar alla sidor från tilläggets källkodssida\nbugzilla\\.mozilla\\.org - fånga alla Firefox-buggrapporter\n(facebook|twitter|youtube)\\.com - fånga sociala medier",
         "description": "Regular exceptions helper"
     },
     "hotkeysTitle": {
-        "message": "Tecla rápida",
+        "message": "Snabbval",
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Aquí puedes agregar teclas rápidas. <br>Restricciones:<br>1. Estas teclas rápidas solo funcionan en paginas web (http:; https:) En las paginas de navegadores (about:) - estas no funcionan, WebExtensions API no lo permite.<br>2. Algunas teclas rápidas no funcionaran en diferentes diseños de teclados. Por ejemplo, el acceso creado en un teclado en Ingles <code>Ctrl + ~</code>no funcionara en un teclado de diseño Ruso, porque en el diseño Ruso esta tecla tiene otro código. Para corregir esto, solo cree una tecla rápida en el teclado de diseño Ruso <code>Ctrl + Ё</code>",
+        "message": "Här kan du ange snabbval.<br>Begränsningar<br>1. Snabbbvalen fungerar endast på webbsidor (http://, https://). På grund av begränsningar i WebExtensions API:t fungerar de inte på webbläsarens egna sidor (about:).<br>2. Alla snabbvalskombinationer fungerar inte med alla typer av tangentbordslayouter. Till exempel: snabbvalet <code>Ctrl + ~</code> skapat för engelsk layout fungerar inte med ett tangentbord med rysk layout, eftersom kombinationen med ett ryskt tangentbord ger en annan kod.",
         "description": "Hotkeys description"
     },
     "addHotKeyButton": {
-        "message": "Agregar tecla rapida",
+        "message": "Lägg till snabbval",
         "description": "Add hotkey"
     },
     "deleteHotKeyButton": {
-        "message": "Borrar tecla rápida",
+        "message": "Ta bort snabbval",
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Presiona teclas aquí",
+        "message": "Välj snabbval",
         "description": "Press key here"
     },
     "selectAction": {
-        "message": "Seleccionar acción",
+        "message": "Välj funktion",
         "description": "Select action"
     },
     "selectGroup": {
-        "message": "Seleccionar grupo",
+        "message": "Välj grupp",
         "description": "Select group"
     },
     "hotkeyActionTitleLoadNextGroup": {
-        "message": "Cargar el próximo grupo",
+        "message": "Visa nästa grupp",
         "description": "Load next group"
     },
     "hotkeyActionTitleLoadPrevGroup": {
-        "message": "Cargar el grupo anterior",
+        "message": "Visa föregående grupp",
         "description": "Load previous group"
     },
     "hotkeyActionTitleLoadFirstGroup": {
-        "message": "Cargar el primer grupo",
+        "message": "Visa första gruppen",
         "description": "Load first group"
     },
     "hotkeyActionTitleLoadLastGroup": {
-        "message": "Cargar el ultimo grupo",
+        "message": "Visa sista gruppen",
         "description": "Load last group"
     },
     "hotkeyActionTitleLoadCustomGroup": {
-        "message": "Cargar un grupo personalizado",
+        "message": "Visa valfri grupp",
         "description": "Load custom group"
     },
     "hotkeyActionTitleAddNewGroup": {
-        "message": "Agregar un grupo nuevo",
+        "message": "Skapa ny grupp",
         "description": "Add new group"
     },
     "hotkeyActionTitleDeleteCurrentGroup": {
-        "message": "Borrar grupo actual",
+        "message": "Ta bort nuvarande grupp",
         "description": "Delete current group"
     },
     "hotkeyActionTitleOpenManageGroups": {
-        "message": "Abrir administrador de grupos",
+        "message": "Visa Gruppöversikt",
         "description": "Open manage groups"
     },
     "whatsWrongMessage": {
-        "message": "Que esta yendo mal...\nPor favor, contacte con el desarrollador al correo de mantenimiento con el ultimo registro de errores (existe un boton abajo con estas opciones)",
+        "message": "Någonting gick fel...\nVänligen kontakta utvecklaren per e-post (drive4ik@gmail.com) med senaste fellogg (hittas längst ner på inställningssidan)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
     },
     "saveErrorLogsIntoFile": {
-        "message": "Guardar el ultimo error registrado en un archivo JSON",
+        "message": "Spara senaste fel i en JSON-fil",
         "description": "Save last error logs into JSON file"
     },
     "undoRemoveGroupItemTitle": {
-        "message": "Deshacer remover grupo \"$grouptitle$\"",
+        "message": "Ångra borttagning av gruppen \"$grouptitle$\"",
         "description": "Undo remove group menu title",
         "placeholders": {
             "grouptitle": {
@@ -350,19 +340,23 @@
         }
     },
     "enterBrowserActionIconColor": {
-        "message": "Ingrese el color del icono de acción del navegador",
+        "message": "Välj ikonfärg för webbläsarfunktion",
         "description": "Enter browser action icon color"
     },
+    "isStickyGroupTitle": {
+        "message": "Fast grupp",
+        "description": "Sticky group"
+    },
     "isStickyGroupHelp": {
-        "message": "Las pestañas en este grupo nunca seran movidas de forma automatica a otro grupo",
+        "message": "Flikar i den här gruppen flyttas aldrig automatiskt till andra grupper",
         "description": "Tabs in this group will never be automatically moved to another group"
     },
     "useTabsFavIconsFromGoogleS2Converter": {
-        "message": "Usar en las pestañas los sfav-icons de Google S2 Converter",
+        "message": "Använd favoritikoner för flikar från Google S2 Converter",
         "description": "Use tabs fav-icons from Google S2 Converter"
     },
     "iconStyle": {
-        "message": "Estilo del icono",
+        "message": "Ikonstil",
         "description": "Icon style"
     }
 }
