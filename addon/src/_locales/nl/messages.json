@@ -1,26 +1,26 @@
 {
     "extensionDescription": {
-        "message": "Créer, modifier et changer rapidement de groupe d'onglets. \nInspiré par l'ancien add-on \"Tab Groups\" :)",
+        "message": "Creëer, verander en wissel snel tussen tabgroepen. Geïnspireerd door de oude add-on \"Tab Groups\" :)",
         "description": "Description of the extension."
     },
     "openSettings": {
-        "message": "Préférences",
+        "message": "Instellingen",
         "description": "Settings context button title"
     },
     "manageGroupsTitle": {
-        "message": "Gérer les groupes",
+        "message": "Groepen beheren",
         "description": "Manage groups"
     },
     "setTabIconAsGroupIcon": {
-        "message": "Définir l’icône de l'onglet en tant qu'icône de groupe",
+        "message": "Stel tabbladicoon in als groepicoon",
         "description": "Set tab icon as group icon"
     },
     "moveTabToGroupDisabledTitle": {
-        "message": "Transférer l'onglet dans un groupe",
+        "message": "Tabblad naar groep verplaatsen",
         "description": "Move tab to group title"
     },
     "moveTabToGroupMessage": {
-        "message": "L'onglet \"$tabtitle$\" a été déplacé vers le groupe \"$grouptitle$\".\n\nCliquez ici pour voir cet onglet.",
+        "message": "Tabblad \"$tabtitle$\" is verplaatst naar groep \"$grouptitle$\".\n\nKlik hier om deze tabblad te tonen.",
         "description": "Tab moved popup title",
         "placeholders": {
             "grouptitle": {
@@ -34,11 +34,11 @@
         }
     },
     "warning": {
-        "message": "Attention!",
+        "message": "Waarschuwing!",
         "description": "Warning!"
     },
     "success": {
-        "message": "Succès!",
+        "message": "Geslaagd!",
         "description": "Success!"
     },
     "ok": {
@@ -46,35 +46,31 @@
         "description": "OK button"
     },
     "save": {
-        "message": "Sauver",
+        "message": "Opslaan",
         "description": "Save"
     },
     "delete": {
-        "message": "Supprimer",
+        "message": "Verwijderen",
         "description": "Delete"
     },
     "cancel": {
-        "message": "Annuler",
+        "message": "Annuleren",
         "description": "Cancel"
     },
     "privateAndPinnedTabsAreNotSupported": {
-        "message": "Les onglets privés et verrouillés ne sont pas supportés",
+        "message": "Privé‒ en vastgemaakte tabbladen worden niet ondersteund",
         "description": "Private and pinned tabs are not supported"
     },
     "thisTabIsNotSupported": {
-        "message": "Cet onglet n'est pas supporté",
+        "message": "Dit tabblad wordt niet ondersteund",
         "description": "This tab is not supported"
     },
-    "searchPlaceholder": {
-        "message": "Chercher un onglet...",
-        "description": "Search placeholder"
-    },
     "filterTabsPlaceholder": {
-        "message": "Filtrer les onglets (filtre multiple avec *)",
+        "message": "Tabbladen filteren (meerdere filters met *)",
         "description": "Filter tabs (multiple filter with *)"
     },
     "invalidRegExpRuleTitle": {
-        "message": "La règle '$regexp$' n'est pas valide et sera ignorée.",
+        "message": "Regel '$regexp$' is niet geldig en zal worden overgeslagen.",
         "description": "Invalid rule description",
         "placeholders": {
             "regexp": {
@@ -84,79 +80,79 @@
         }
     },
     "manageGroupViewGrid": {
-        "message": "Vue en grille",
+        "message": "Roosterweergave",
         "description": "Grid display"
     },
     "manageGroupViewFreeArrange": {
-        "message": "Arrangement libre (dans une future version)",
+        "message": "Vrij plaatsen (in toekomstige versies)",
         "description": "Free arrange"
     },
     "closePopupAfterChangeGroup": {
-        "message": "Fermer la popup après avoir changé de groupe",
+        "message": "Sluit popup na het wisselen van groep",
         "description": "Close popup after changing group"
     },
     "showNotificationAfterMoveTab": {
-        "message": "Afficher une notification quand l'onglet est transféré dans un autre groupe",
+        "message": "Toon notificatie wanneer tabbladen worden verplaatst naar een andere groep",
         "description": "Show notification when tab is moved to another group"
     },
     "openManageGroupsInTab": {
-        "message": "Ouvrir \"Gérer les groupes\" dans un nouvel onglet",
+        "message": "Open \"Groepen beheren\" in nieuw tabblad",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
-        "message": "Afficher une confirmation avant de supprimer le groupe",
+        "message": "Toon dialoogvenster om verwijderen van een groep te bevestigen",
         "description": "Show confirm dialog before group delete"
     },
     "exportAddonSettingsTitle": {
-        "message": "Sauvegarder vos groupes Simple Tab Groups",
+        "message": "Maak reservekopie van Simple Tab Groups",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
-        "message": "Exporte vos groupes d'onglets dans un fichier de sauvegarde que vous pourrez restaurer plus tard si nécessaire.",
+        "message": "Exporteer een reservekopie van je tabgroepen, zodat je deze later kunt herstellen als dat nodig is.",
         "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
     },
     "exportAddonSettingsButton": {
-        "message": "Créer une sauvegarde",
+        "message": "Maak reservekopie aan",
         "description": "Create backup"
     },
     "includeTabThumbnailsIntoBackup": {
-        "message": "Inclure les icônes d'onglet dans la sauvegarde (le fichier de sauvegarde sera plus volumineux)",
+        "message": "Voorbeeld van tabbladen toevoegen aan reservekopie (produceert een groter bestand)",
         "description": "Include tab thumbnails into backup (make backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "Restaurer des groupes Simple Tab Groups",
+        "message": "Simple Tab Groups herstellen",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
-        "message": "Charger un fichier de sauvegarde contenant les groupes d'onglets que vous souhaitez restaurer.",
+        "message": "Laadt een reservekopie van de tabgroepen die je wilt herstellen.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
     "importAddonSettingsWarning": {
-        "message": "Restaurer les préférences d'add-on SUPPRIMERA toutes les préférences et groupes existants!",
+        "message": "Add-on instellingen herstellen zal de huidige instellingen en groepen VERWIJDEREN!",
         "description": "Restore add-on settings will ERASE all existing settings and groups!"
     },
     "importAddonSettingsButton": {
-        "message": "Restaurer une sauvegarde",
+        "message": "Reservekopie herstellen",
         "description": "Restore backup"
     },
     "importSettingsOldTabGroupsAddonTitle": {
-        "message": "Restaurer des groupes d'onglets de \"Tab Groups\" de Quicksaver",
+        "message": "Herstel Quicksaver's \"Tab Groups\"",
         "description": "Restore Quicksaver's \"Tab Groups\""
     },
     "importSettingsOldTabGroupsAddonDescription": {
-        "message": "Charger un fichier de sauvegarde de l'ancien addon \"Tab Groups\".",
+        "message": "Laadt een reservekopie van de oude \"Tab Groups\" add-on.",
         "description": "Load a backup file old \"Tab Groups\" addon."
     },
     "importSettingsOldTabGroupsAddonButton": {
-        "message": "Importer les préférences de l'addon \"Tab Groups\" de Quicksaver",
+        "message": "Importeer instellingen uit Quicksaver's \"Tab Groups\" add-on",
         "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
     },
     "openGroupAfterChange": {
-        "message": "Ouvrir le groupe après s'y être rendu",
+        "message": "Open groep nadat er naartoe gewisseld is",
         "description": "Open group after changing to it"
     },
     "newGroupTitle": {
-        "message": "Groupe $id$",
+        "message": "Groep $id$",
         "description": "group id",
         "placeholders": {
             "id": {
@@ -165,42 +161,32 @@
             }
         }
     },
-    "searchNotFoundTitle": {
-        "message": "La recherche d'onglets \"$search$\" n'a pas de résutat",
-        "description": "No results found",
-        "placeholders": {
-            "search": {
-                "content": "$1",
-                "example": "mail"
-            }
-        }
-    },
     "sortGroupsAZ": {
-        "message": "Trier les groupes [A-Z]",
+        "message": "Sorteer groepen [A–Z]",
         "description": "Sort groups [A-Z]"
     },
     "sortGroupsZA": {
-        "message": "Trier les groupes [Z-A]",
+        "message": "Sorteer groepen [Z–A]",
         "description": "Sort groups [Z-A]"
     },
     "settingsTitle": {
-        "message": "Préférences",
+        "message": "Instellingen",
         "description": "Settings"
     },
     "groupSettings": {
-        "message": "Préférences de groupe",
+        "message": "Instellingen voor groepen",
         "description": "Group settings"
     },
     "deleteGroup": {
-        "message": "Supprimer le groupe",
+        "message": "Verwijder groep",
         "description": "Delete group"
     },
     "deleteGroupTitle": {
-        "message": "Supprimer le groupe?",
+        "message": "Groep verwijderen?",
         "description": "Delete group?"
     },
     "deleteGroupBody": {
-        "message": "Souhaitez-vous supprimer \"$name$\" ?<br>Supprimer un groupe ferme également les onglets et la fenêtre liée si elle est ouverte!",
+        "message": "Wil je de groep \"$name$\" verwijderen?<br>Het verwijderen van de groep sluit ook de tabbladen en verbonden venster als deze open is.",
         "description": "Delete group?",
         "placeholders": {
             "name": {
@@ -210,7 +196,7 @@
         }
     },
     "groupTabsCount": {
-        "message": "$count$ onglets",
+        "message": "$count$ tabbladen",
         "description": "Group tabs count",
         "placeholders": {
             "count": {
@@ -220,127 +206,131 @@
         }
     },
     "deleteTab": {
-        "message": "Supprimer l'onglet",
+        "message": "Verwijder tabblad",
         "description": "Delete tab"
     },
     "createNewTab": {
-        "message": "Ouvrir un nouvel onglet",
+        "message": "Open nieuw tabblad",
         "description": "Open new tab"
     },
     "createNewGroup": {
-        "message": "Créer un nouveau groupe",
+        "message": "Creëer nieuwe tabgroep",
         "description": "Create new group"
     },
     "goBackButtonTitle": {
-        "message": "Retour",
+        "message": "Ga terug",
         "description": "Go back"
     },
     "goBackToGroupsButtonTitle": {
-        "message": "Retour aux groupes",
+        "message": "Ga terug naar groepen",
         "description": "Go back to groups"
     },
     "title": {
-        "message": "Titre",
+        "message": "Titel",
         "description": "Title"
     },
     "iconColor": {
-        "message": "Couleur de l'icône",
+        "message": "Kleur van icoon",
         "description": "Icon color"
     },
     "selectUserGroupIcon": {
-        "message": "Charger icône",
+        "message": "Laad icoon",
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Désolé, vous ne pouvez pas charger d'icône personnalisé dans cette popup, mais vous pouvez charger un icône de groupe dans \"Gérer les groupes\".\nOuvrir \"Gérer les groupes\"?",
+        "message": "Excuses, je kunt geen aangepast icoon laden in deze popup, maar je kunt een aangepast groepicoon laden in \"Groepen beheren\".\n\"Groepen beheren\" openen?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
-        "message": "Définir une couleur aléatoire",
+        "message": "Stel willekeurige kleur in",
         "description": "Set random color"
     },
+    "catchTabContainers": {
+        "message": "Pak tabbladen met containers beet en verplaats ze naar deze groep (alleen voor web-URLs, lege tabbladen worden niet ondersteund)",
+        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
+    },
     "regexpForTabsTitle": {
-        "message": "Expressions régulières pour les onglets trouvés",
+        "message": "Regular expression voor tabbladen beetpakken",
         "description": "Regular expressions for catch tabs"
     },
     "regexpForTabsPlaceholder": {
-        "message": "Expressions régulières",
+        "message": "Regular expression",
         "description": "Regular expressions"
     },
     "regexpForTabsHelp": {
-        "message": "Insérez ici des expressions régulières pour des adresses web. Les onglets correspondants seront automatiquement transférés dans ce groupe.\nN'utilisez qu'une ligne par règle, avec autant de règles que vous souhaitez.\nExemples:\ngithub\\.com/drive4ik/simple-tab-groups - récupère toutes les pages dans le répertoire de l'addon\nbugzilla\\.mozilla\\.org - récupère les rapports de bug firefox\n(facebook|twitter|youtube)\\.com - récupère toutes vos pages sociales",
+        "message": "Voer een regular expression voor een webadres in. Tabbladen die hieraan voldoen zullen automatisch naar deze groep worden verplaatst.\nGebruik een regel per regular expression, je kunt er zo veel gebruiken als je wilt.\nBijvoorbeeld:\ngithub\\.com/drive4ik/simple-tab-groups - pakt alle pagina's in de repository van deze add-on beet \nbugzilla\\.mozilla\\.org - pakt Firefox bug reports beet\n(facebook|twitter|youtube)\\.com - pakt sociale media websites beet",
         "description": "Regular exceptions helper"
     },
     "hotkeysTitle": {
-        "message": "Raccourcis",
+        "message": "Sneltoetsen",
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Ici vous pouvez ajouter des raccourcis.<br>Restrictions:<br>1. Ces raccourcis ne fonctionneront que sur des pages web (http:, https:). Sur des pages du navigateur (about:) - cela ne fonctionne pas, l'API WebExtensions ne l'autorise pas.<br>2. Certains raccourcis ne fonctionneront pas sur différentes dispositions de clavier. Par exemple, le raccourci <code>Ctrl + ~</code> créé dans la disposition US  ne fonctionnera pas sur la disposition RU, car la disposition russe a un autre code pour cette touche. Pour contourner ce problème, créez simplement un autre raccourci avec la disposition russe: <code>Ctrl + Ё</code>",
+        "message": "Hier kan je sneltoetsen toevoegen.<br>Beperkingen:<br>1. Deze sneltoetsen zullen alleen werken op webpagina's (http:, https:). Op de browserpagina's (about:) werken ze niet: de WebExtensions API staat dit niet toe.<br>2. Sommige sneltoetsen werken niet op bepaalde toetsenbordindelingen. Bijvoorbeeld: de sneltoets <code>Ctrl + ~</code> aangemaakt met een Engelse toetsenbordindeling zal niet werken met een Russische toetsenbordindeling, omdat deze toets daar een andere code heeft. Om dit op te lossen, voeg je een sneltoets toe met de Russische toetsenbordindeling: <code>Ctrl + Ё</code>",
         "description": "Hotkeys description"
     },
     "addHotKeyButton": {
-        "message": "Ajouter un raccourci",
+        "message": "Sneltoets toevoegen",
         "description": "Add hotkey"
     },
     "deleteHotKeyButton": {
-        "message": "Supprimer le raccourci",
+        "message": "Sneltoets verwijderen",
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Appuyez sur des touches ici",
+        "message": "Druk toetsen in",
         "description": "Press key here"
     },
     "selectAction": {
-        "message": "Sélectionner l'action",
+        "message": "Selecteer actie",
         "description": "Select action"
     },
     "selectGroup": {
-        "message": "Sélectionner le groupe",
+        "message": "Selecteer groep",
         "description": "Select group"
     },
     "hotkeyActionTitleLoadNextGroup": {
-        "message": "Charger le groupe suivant",
+        "message": "Laad volgende groep",
         "description": "Load next group"
     },
     "hotkeyActionTitleLoadPrevGroup": {
-        "message": "Charger le groupe précédent",
+        "message": "Laad vorige groep",
         "description": "Load previous group"
     },
     "hotkeyActionTitleLoadFirstGroup": {
-        "message": "Charger le premier groupe",
+        "message": "Laad eerste groep",
         "description": "Load first group"
     },
     "hotkeyActionTitleLoadLastGroup": {
-        "message": "Charger le dernier groupe",
+        "message": "Laad laatste groep",
         "description": "Load last group"
     },
     "hotkeyActionTitleLoadCustomGroup": {
-        "message": "Charger un groupe personnalisé",
+        "message": "Laad aangepaste groep",
         "description": "Load custom group"
     },
     "hotkeyActionTitleAddNewGroup": {
-        "message": "Ajouter un nouveau groupe",
+        "message": "Voeg nieuwe groep toe",
         "description": "Add new group"
     },
     "hotkeyActionTitleDeleteCurrentGroup": {
-        "message": "Supprimer le groupe courant",
+        "message": "Verwijder huidige groep",
         "description": "Delete current group"
     },
     "hotkeyActionTitleOpenManageGroups": {
-        "message": "Ouvrir \"Gérer les groupes\"",
+        "message": "Open \"Beheer groepen\"",
         "description": "Open manage groups"
     },
     "whatsWrongMessage": {
-        "message": "Un problème... ?\nPrenez contact avec le développeur par email avec le dernier log d'erreur (le bouton existe en bas des préférences)",
+        "message": "Wat is er mis…\nNeem alsjeblieft contact op met de ontwikkelaar met het e-mailadres voor ondersteuning en voeg de meest recente foutlogboeken toe (knop onderaan opties)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
     },
     "saveErrorLogsIntoFile": {
-        "message": "Enregistrer le dernier log d'erreurs dans un fichier JSON",
+        "message": "Sla laatste foutlogboeken op als JSON-bestand",
         "description": "Save last error logs into JSON file"
     },
     "undoRemoveGroupItemTitle": {
-        "message": "Annuler la suppression du groupe \"$grouptitle$\"",
+        "message": "Verwijderen groep \"$grouptitle$\" ongedaan maken",
         "description": "Undo remove group menu title",
         "placeholders": {
             "grouptitle": {
@@ -348,21 +338,5 @@
                 "example": "Group 2"
             }
         }
-    },
-    "isStickyGroupTitle": {
-        "message": "Groupe épinglé",
-        "description": "Sticky group"
-    },
-    "isStickyGroupHelp": {
-        "message": "Les onglets de ce groupe ne seront jamais déplacé vers un autre groupe",
-        "description": "Tabs in this group will never be automatically moved to another group"
-    },
-    "useTabsFavIconsFromGoogleS2Converter": {
-        "message": "Utiliser les favicons depuis Google S2 Converter",
-        "description": "Use tabs fav-icons from Google S2 Converter"
-    },
-    "iconStyle": {
-        "message": "Style d’icônes",
-        "description": "Icon style"
     }
 }

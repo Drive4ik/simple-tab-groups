@@ -292,7 +292,7 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "W tym polu wciśnij klawisze",
+        "message": "W tym polu wciśnij klawisze skrótów",
         "description": "Press key here"
     },
     "selectAction": {
@@ -328,7 +328,7 @@
         "description": "Add new group"
     },
     "hotkeyActionTitleDeleteCurrentGroup": {
-        "message": "Usuń bieżąca grupę",
+        "message": "Usuń bieżącą grupę",
         "description": "Delete current group"
     },
     "hotkeyActionTitleOpenManageGroups": {
@@ -356,5 +356,21 @@
     "enterBrowserActionIconColor": {
         "message": "Wprowadź kolor ikony-akcji",
         "description": "Enter browser action icon color"
+    },
+    "isStickyGroupTitle": {
+        "message": "Przypięta grupa",
+        "description": "Sticky group"
+    },
+    "isStickyGroupHelp": {
+        "message": "Karty w tej grupie nigdy nie zostaną automatycznie przeniesione do innej grupy",
+        "description": "Tabs in this group will never be automatically moved to another group"
+    },
+    "useTabsFavIconsFromGoogleS2Converter": {
+        "message": "Użyj favikonek z konwertera Google S2",
+        "description": "Use tabs fav-icons from Google S2 Converter"
+    },
+    "iconStyle": {
+        "message": "Styl ikony",
+        "description": "Icon style"
     }
 }

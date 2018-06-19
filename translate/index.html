@@ -143,7 +143,7 @@
                                                 <textarea v-if="showOldValueForKey === key && currentLocale[key]" readonly class="textarea" v-model="currentLocale[key].message"></textarea>
                                             </div>
                                         </div>
-                                        <div class="field is-grouped" v-if="locale[key] && currentLocale[key] && locale[key] !== currentLocale[key].message">
+                                        <div class="field is-grouped" v-if="currentLocale[key] && locale[key] !== currentLocale[key].message">
                                             <div class="control">
                                                 <button class="button" @click="showOldValueForKey = showOldValueForKey === key ? null : key">
                                                     <span class="icon">

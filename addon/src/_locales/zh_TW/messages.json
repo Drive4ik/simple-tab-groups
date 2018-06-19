@@ -7,6 +7,14 @@
         "message": "設定",
         "description": "Settings context button title"
     },
+    "manageGroupsTitle": {
+        "message": "管理分頁群組",
+        "description": "Manage groups"
+    },
+    "setTabIconAsGroupIcon": {
+        "message": "將分頁圖標設為分頁群組圖標",
+        "description": "Set tab icon as group icon"
+    },
     "moveTabToGroupDisabledTitle": {
         "message": "將分頁移到分頁群組",
         "description": "Move tab to group title"
@@ -25,6 +33,18 @@
             }
         }
     },
+    "warning": {
+        "message": "警告！",
+        "description": "Warning!"
+    },
+    "success": {
+        "message": "成功！",
+        "description": "Success!"
+    },
+    "ok": {
+        "message": "好",
+        "description": "OK button"
+    },
     "save": {
         "message": "儲存",
         "description": "Save"
@@ -37,9 +57,21 @@
         "message": "取消",
         "description": "Cancel"
     },
+    "privateAndPinnedTabsAreNotSupported": {
+        "message": "不支援隱私及釘選的分頁",
+        "description": "Private and pinned tabs are not supported"
+    },
+    "thisTabIsNotSupported": {
+        "message": "不支援此分頁",
+        "description": "This tab is not supported"
+    },
     "searchPlaceholder": {
         "message": "搜尋分頁...",
         "description": "Search placeholder"
+    },
+    "filterTabsPlaceholder": {
+        "message": "篩選分頁 (用 * 分隔多個篩選條件)",
+        "description": "Filter tabs (multiple filter with *)"
     },
     "invalidRegExpRuleTitle": {
         "message": "正規表述式 '$regexp$' 語法有誤，將忽略之。",
@@ -51,6 +83,14 @@
             }
         }
     },
+    "manageGroupViewGrid": {
+        "message": "格狀檢視",
+        "description": "Grid display"
+    },
+    "manageGroupViewFreeArrange": {
+        "message": "自由調整 (開發中)",
+        "description": "Free arrange"
+    },
     "closePopupAfterChangeGroup": {
         "message": "切換分頁群組後關閉彈出框",
         "description": "Close popup after changing group"
@@ -58,6 +98,58 @@
     "showNotificationAfterMoveTab": {
         "message": "分頁移到其他分頁群組時顯示通知",
         "description": "Show notification when tab is moved to another group"
+    },
+    "openManageGroupsInTab": {
+        "message": "在新分頁開啟「管理分頁群組」",
+        "description": "Open \"Manage Groups\" in new tab"
+    },
+    "showConfirmDialogBeforeGroupDelete": {
+        "message": "刪除分頁群組前顯示確認對話框",
+        "description": "Show confirm dialog before group delete"
+    },
+    "exportAddonSettingsTitle": {
+        "message": "備份 Simple Tab Groups",
+        "description": "Backup your Simple Tab Groups"
+    },
+    "exportAddonSettingsDescription": {
+        "message": "將分頁群組匯出為備份檔，以供需要時恢復。",
+        "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
+    },
+    "exportAddonSettingsButton": {
+        "message": "建立備份",
+        "description": "Create backup"
+    },
+    "includeTabThumbnailsIntoBackup": {
+        "message": "備份分頁縮圖 (會讓備份檔變大)",
+        "description": "Include tab thumbnails into backup (make backup file size bigger)"
+    },
+    "importAddonSettingsTitle": {
+        "message": "恢復 Simple Tab Groups",
+        "description": "Restore Simple Tab Groups"
+    },
+    "importAddonSettingsDescription": {
+        "message": "載入備份檔並恢復分頁群組",
+        "description": "Load a backup file containing the tab groups you want to restore."
+    },
+    "importAddonSettingsWarning": {
+        "message": "恢復套件設定將會刪除目前所有設定及分頁群組。",
+        "description": "Restore add-on settings will ERASE all existing settings and groups!"
+    },
+    "importAddonSettingsButton": {
+        "message": "恢復備份",
+        "description": "Restore backup"
+    },
+    "importSettingsOldTabGroupsAddonTitle": {
+        "message": "恢復 Quicksaver 的 Tab Groups",
+        "description": "Restore Quicksaver's \"Tab Groups\""
+    },
+    "importSettingsOldTabGroupsAddonDescription": {
+        "message": "載入舊版 Tab Groups 附加元件的備份檔。",
+        "description": "Load a backup file old \"Tab Groups\" addon."
+    },
+    "importSettingsOldTabGroupsAddonButton": {
+        "message": "匯入 Quicksaver 的 Tab Groups 附加元件的設定",
+        "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
     },
     "openGroupAfterChange": {
         "message": "切換分頁群組後開啟該分頁群組",
@@ -82,6 +174,14 @@
                 "example": "mail"
             }
         }
+    },
+    "sortGroupsAZ": {
+        "message": "排序分頁群組 [A-Z]",
+        "description": "Sort groups [A-Z]"
+    },
+    "sortGroupsZA": {
+        "message": "排序分頁群組 [Z-A]",
+        "description": "Sort groups [Z-A]"
     },
     "settingsTitle": {
         "message": "設定",
@@ -147,9 +247,21 @@
         "message": "圖標顏色",
         "description": "Icon color"
     },
+    "selectUserGroupIcon": {
+        "message": "載入圖標",
+        "description": "Load icon"
+    },
+    "selectUserGroupIconWarnText": {
+        "message": "這裡無法載入自訂圖標，而「管理分頁群組」可以。\n要開啟「管理分頁群組」嗎？",
+        "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
+    },
     "setRandomColor": {
         "message": "設定隨機顏色",
         "description": "Set random color"
+    },
+    "catchTabContainers": {
+        "message": "捕捉並將有內容的分頁移至此分頁群組 (只適用網路 URL，不支援空分頁)",
+        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
     },
     "regexpForTabsTitle": {
         "message": "捕捉分頁的正規表述式",
@@ -162,5 +274,103 @@
     "regexpForTabsHelp": {
         "message": "在這裡輸入正規表述式，網址與之相符的分頁會被自動移到此分頁群組。\n每行一條規則，可設定多條規則。\n例如：\ngithub\\.com/drive4ik/simple-tab-groups - 捕捉此套件版本庫的所有頁面\nbugzilla\\.mozilla\\.org - 捕捉 Firefox 錯誤回報的頁面\n(facebook|twitter|youtube)\\.com - 捕捉社群網站頁面",
         "description": "Regular exceptions helper"
+    },
+    "hotkeysTitle": {
+        "message": "快捷鍵",
+        "description": "Hotkeys"
+    },
+    "hotkeysDescription": {
+        "message": "可以在這裡加入快捷鍵。<br>限制：<br>1. 這些快捷鍵只適用於網頁 (http:, https:)，不適用於瀏覽器頁面 (about:)，因 WebExtension 的 API 不允許。<br>2. 有些快捷鍵在不同的鍵盤佈局可能無法運作。例如英文佈局下設定的快捷鍵 <code>Ctrl + ~</code> 在俄羅斯文佈局下無法運作，因該按鍵在後者有不同的按鍵碼；在俄羅斯文佈局下設定快捷鍵 <code>Ctrl +Ё</code> 即可修復此問題。",
+        "description": "Hotkeys description"
+    },
+    "addHotKeyButton": {
+        "message": "增加快捷鍵",
+        "description": "Add hotkey"
+    },
+    "deleteHotKeyButton": {
+        "message": "刪除快捷鍵",
+        "description": "Delete hotkey"
+    },
+    "hotkeyPlaceholder": {
+        "message": "在這裡按下按鍵",
+        "description": "Press key here"
+    },
+    "selectAction": {
+        "message": "選擇動作",
+        "description": "Select action"
+    },
+    "selectGroup": {
+        "message": "選擇分頁群組",
+        "description": "Select group"
+    },
+    "hotkeyActionTitleLoadNextGroup": {
+        "message": "載入下一個分頁群組",
+        "description": "Load next group"
+    },
+    "hotkeyActionTitleLoadPrevGroup": {
+        "message": "載入上一個分頁群組",
+        "description": "Load previous group"
+    },
+    "hotkeyActionTitleLoadFirstGroup": {
+        "message": "載入第一個分頁群組",
+        "description": "Load first group"
+    },
+    "hotkeyActionTitleLoadLastGroup": {
+        "message": "載入最後一個分頁群組",
+        "description": "Load last group"
+    },
+    "hotkeyActionTitleLoadCustomGroup": {
+        "message": "載入自訂分頁群組",
+        "description": "Load custom group"
+    },
+    "hotkeyActionTitleAddNewGroup": {
+        "message": "增加分頁群組",
+        "description": "Add new group"
+    },
+    "hotkeyActionTitleDeleteCurrentGroup": {
+        "message": "刪除目前的分頁群組",
+        "description": "Delete current group"
+    },
+    "hotkeyActionTitleOpenManageGroups": {
+        "message": "開啟管理分頁群組",
+        "description": "Open manage groups"
+    },
+    "whatsWrongMessage": {
+        "message": "出錯囉...\n請寄信聯絡開發者，並附上最近的錯誤日誌 (選項頁面最下面的按鈕)",
+        "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
+    },
+    "saveErrorLogsIntoFile": {
+        "message": "將最近的錯誤日誌儲存為 JSON 檔案",
+        "description": "Save last error logs into JSON file"
+    },
+    "undoRemoveGroupItemTitle": {
+        "message": "復原刪除分頁群組 \"$grouptitle$\"",
+        "description": "Undo remove group menu title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "enterBrowserActionIconColor": {
+        "message": "輸入瀏覽器動作圖標顏色",
+        "description": "Enter browser action icon color"
+    },
+    "isStickyGroupTitle": {
+        "message": "固定分頁群組",
+        "description": "Sticky group"
+    },
+    "isStickyGroupHelp": {
+        "message": "讓分頁群組中的分頁不會被自動移到其他分頁群組",
+        "description": "Tabs in this group will never be automatically moved to another group"
+    },
+    "useTabsFavIconsFromGoogleS2Converter": {
+        "message": "使用 Google S2 Converter 生成的分頁圖標",
+        "description": "Use tabs fav-icons from Google S2 Converter"
+    },
+    "iconStyle": {
+        "message": "圖標樣式",
+        "description": "Icon style"
     }
 }
