@@ -166,7 +166,7 @@
         }
     },
     "searchNotFoundTitle": {
-        "message": "Ничего не найдено с \"$search$\"",
+        "message": "Не найдено: \"$search$\"",
         "description": "No results found",
         "placeholders": {
             "search": {
@@ -182,6 +182,10 @@
     "sortGroupsZA": {
         "message": "Сортировка групп [Я-А]",
         "description": "Sort groups [Z-A]"
+    },
+    "generalTitle": {
+        "message": "Основные",
+        "description": "General"
     },
     "settingsTitle": {
         "message": "Настройки",
@@ -280,7 +284,7 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Здесь вы можете управлять горячими клавишами для плагина.<br>Ограничения:<br>1. Эти горячие клавиши будут работать только на веб страницах (http:, https:). На защищенных страницах браузера (about:addons например) они работать не будут. Это ограничение WebExtensions API.<br>2. Некоторые горячие клавиши могут не работать на разных раскладках клавиатуры. Например у вас есть горячая клавиша <code>Ctrl + ~</code> создана на английской раскладке клавиатуры, но на русской раскладке она работать не будет, потому что клавиша Ё там имеет другой код. Для решения этой проблемы достаточно создать такую же горячую клавишу с тем же действием, только уже на русской раскладке - <code>Ctrl + Ё</code>.",
+        "message": "Здесь вы можете управлять горячими клавишами для плагина.<br>Ограничения:<br>1. Эти горячие клавиши будут работать только на веб страницах (http:, https:). На защищенных страницах браузера (about:addons например) они работать не будут. Это ограничение WebExtensions API.<br>2. Возможно некоторые горячие клавиши могут не работать на разных раскладках клавиатуры. Например у вас есть горячая клавиша <code>Ctrl + ~</code> создана на английской раскладке клавиатуры, но на русской раскладке она работать не будет, потому что клавиша Ё там имеет другой код. Для решения этой проблемы достаточно создать такую же горячую клавишу с тем же действием, только уже на русской раскладке - <code>Ctrl + Ё</code>.",
         "description": "Hotkeys description"
     },
     "addHotKeyButton": {
@@ -362,12 +366,20 @@
         "description": "Sticky group"
     },
     "isStickyGroupHelp": {
-        "message": "Вкладки в этой группе никогда не будут автоматически перемещены в другие группы",
+        "message": "Вкладки в этой группе никогда не будут автоматически перемещены в другие группы посредством регулярных выражений",
         "description": "Tabs in this group will never be automatically moved to another group"
     },
     "useTabsFavIconsFromGoogleS2Converter": {
         "message": "Использовать Google S2 Converter для значков вкладок",
         "description": "Use tabs fav-icons from Google S2 Converter"
+    },
+    "iconStyle": {
+        "message": "Стиль значка",
+        "description": "Icon style"
+    },
+    "discardTabsAfterHide": {
+        "message": "Выгружать вкладки из памяти после смены группы (позволяет сэкономить ОЗУ)",
+        "description": "Discard tabs after hide (this will save the RAM)"
     },
     "createThumbnailsForTabs": {
         "message": "Создавать эскизы вкладок (используется в \"Управление группами\")",
@@ -380,5 +392,45 @@
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Невозможно изменить группу, потому что на одной из вкладок используется микрофон или камера",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
+    },
+    "foundHiddenUnSyncTabsDescription": {
+        "message": "Найдены скрытые не синхронизированные вкладки. Нажмите на вкладку, чтобы отобразить ее в текущей группе/окне или:",
+        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
+    },
+    "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
+        "message": "Переместить все эти вкладки в текущую группу/окно",
+        "description": "Move all of this tabs into current group/window"
+    },
+    "actionHiddenUnSyncTabsCreateGroup": {
+        "message": "Создать новую группу со всеми этими вкладками",
+        "description": "Create new group with all of this tabs"
+    },
+    "actionHiddenUnSyncTabsCloseAll": {
+        "message": "Закрыть все эти вкладки",
+        "description": "Close all of this tabs"
+    },
+    "thisTabWillCreateAsNew": {
+        "message": "Эта вкладка будет создана как новая",
+        "description": "This tab will create as new"
+    },
+    "updateTabThumbnail": {
+        "message": "Обновить эскиз для этой вкладки",
+        "description": "Update thumbnail for this tab"
+    },
+    "cantMakeThumbnailTabWasDiscarded": {
+        "message": "Вы не можете сделать эскиз вкладки, если вкладка не была загружена",
+        "description": "You can not make a thumbnail of a tab if the tab was not loaded"
+    },
+    "nowFoundWindowsAddonStoppedWorking": {
+        "message": "Ошибка: не найдено нормальных окон, только приватные или всплывающие. Дополнение прекращает работу.\nПожалуйста, перезагрузите браузер.",
+        "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
+    },
+    "waitingToLoadAllTabs": {
+        "message": "Ожидание загрузки всех вкладок.\nПожалуйста подождите...",
+        "description": "Waiting for all tabs to load.\nPlease wait..."
+    },
+    "reloadAddon": {
+        "message": "Перезагрузка дополнения",
+        "description": "Reload addon"
     }
 }
