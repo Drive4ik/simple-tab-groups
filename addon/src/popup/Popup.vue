@@ -391,7 +391,6 @@
                 await BG.addGroup(undefined, undefined, undefined, this.unSyncTabs);
 
                 this.unSyncTabs = [];
-                this.loadGroups();
             },
             unsyncHiddenTabsCloseAll() {
                 browser.tabs.remove(this.unSyncTabs.map(utils.keyId));
