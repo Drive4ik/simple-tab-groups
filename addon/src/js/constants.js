@@ -43,7 +43,8 @@ const DEFAULT_OPTIONS = {
     useTabsFavIconsFromGoogleS2Converter: false,
     createThumbnailsForTabs: true,
 
-    hotkeys: [{
+    hotkeys: [
+        {
             ctrlKey: true,
             shiftKey: false,
             altKey: false,

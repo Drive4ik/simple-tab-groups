@@ -11,7 +11,8 @@
     })(browser.extension.getBackgroundPage());
 
     if (!BG) {
-        throw Error('Please, update addon to latest version');
+        setTimeout(() => browser.tabs.getCurrent().then(tab => browser.tabs.reload(tab.id)), 1500);
+        throw Error('wait loading addon');
     }
 
     const SECTION_GENERAL = 'general',
@@ -80,7 +81,7 @@
                     }
 
                     let filteredHotkeys = hotkeys.filter(function(hotkey) {
-                        let ok = (hotkey.keyCode || hotkey.key) && hotkey.action.id && (hotkey.ctrlKey || hotkey.shiftKey || hotkey.altKey);
+                        let ok = (hotkey.keyCode || hotkey.key) && hotkey.action.id/* && (hotkey.ctrlKey || hotkey.shiftKey || hotkey.altKey)*/;
 
                         if (ok && 'load-custom-group' === hotkey.action.id && !this.groups.some(gr => gr.id === hotkey.action.groupId)) {
                             ok = false;
@@ -103,8 +104,9 @@
 
             async saveOptions(options) {
                 await storage.set(options, true);
-                BG.reloadOptions();
-                // this.$emit('options-updated');
+                await browser.runtime.sendMessage({
+                    optionsUpdated: Object.keys(options),
+                });
             },
 
             saveHotkeyKeyCode(hotkey, event) {
