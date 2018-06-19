@@ -581,7 +581,7 @@
                                     this.loadGroup(group, this.hoverItem.index);
                                 }
 
-                                window.close(); // fix bug: after load group or change tab focus popup window lost focus and arrows not working but popup still open
+                                // window.close(); // fix bug: after load group or change tab focus popup window lost focus and arrows not working but popup still open
                             }
                         }
 
@@ -606,7 +606,7 @@
                         } else if ('enter' === arrow) {
                             if (this.hoverItem && this.isGroup(this.hoverItem)) {
                                 this.loadGroup(this.hoverItem, -1);
-                                window.close(); // fix bug: after load group or change tab focus popup window lost focus and arrows not working but popup still open
+                                // window.close(); // fix bug: after load group or change tab focus popup window lost focus and arrows not working but popup still open
                             }
                         }
 
@@ -629,7 +629,7 @@
                         } else if ('enter' === arrow) {
                             if (this.hoverItem && -1 !== index) {
                                 this.loadGroup(this.groupToShow, index);
-                                window.close(); // fix bug: after load group or change tab focus popup window lost focus and arrows not working but popup still open
+                                // window.close(); // fix bug: after load group or change tab focus popup window lost focus and arrows not working but popup still open
                             }
                         } else if ('delete' === arrow) {
                             if (this.hoverItem && !this.isGroup(this.hoverItem)) {

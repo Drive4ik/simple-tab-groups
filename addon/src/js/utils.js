@@ -257,6 +257,15 @@ function createGroupTitle(title, groupId) {
     return title || browser.i18n.getMessage('newGroupTitle', groupId);
 }
 
+// -1 : a < b
+// 0 : a === b
+// 1 : a > b
+function compareStrings(a, b, numeric = true) {
+    return String(a).localeCompare(String(b), [], {
+        numeric: numeric,
+    });
+}
+
 function isElementVisible(element) {
     let rect = element.getBoundingClientRect();
 
@@ -441,6 +450,7 @@ export {
     getNextIndex,
     toCamelCase,
     capitalize,
+    compareStrings,
 
     createGroupTitle,
     isElementVisible,

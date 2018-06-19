@@ -46,19 +46,6 @@ export default {
             data = utils.clone(data);
         }
 
-        await browser.storage.local.set(data);
-
-        let eventObj = {},
-            doCallEvent = false,
-            optionsKeys = Object.keys(data).filter(key => allOptionsKeys.includes(key));
-
-        if (optionsKeys.length) {
-            eventObj.optionsUpdated = optionsKeys;
-            doCallEvent = true;
-        }
-
-        if (doCallEvent) {
-            browser.runtime.sendMessage(eventObj);
-        }
+        return browser.storage.local.set(data);
     },
 }

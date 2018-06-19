@@ -29,6 +29,7 @@ const config = {
         'popup/popup': './popup/popup.js',
         'options/options': './options/options.js',
         'manage/manage': './manage/manage.js',
+        'web/hotkeys': './web/hotkeys.js',
     },
     output: {
         path: setPath('dist'),

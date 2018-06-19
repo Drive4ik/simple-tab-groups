@@ -61,9 +61,10 @@ function generateFileName() {
     let today = new Date(),
         dd = ('0' + today.getDate()).substr(-2),
         mm = ('0' + (today.getMonth() + 1)).substr(-2),
-        yyyy = today.getFullYear();
+        yyyy = today.getFullYear(),
+        appName = browser.runtime.getManifest().applications.gecko.id.split('@').shift();
 
-    return `simple-tab-groups-backup-${yyyy}-${mm}-${dd}${BACKUP_FILE_EXT}`;
+    return `${appName}-backup-${yyyy}-${mm}-${dd}${BACKUP_FILE_EXT}`;
 }
 
 export {
