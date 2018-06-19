@@ -57,6 +57,10 @@
         "message": "Zrušit",
         "description": "Cancel"
     },
+    "privateAndPinnedTabsAreNotSupported": {
+        "message": "Anonymní a připnuté panely nejsou podporovány",
+        "description": "Private and pinned tabs are not supported"
+    },
     "thisTabIsNotSupported": {
         "message": "Tento panel není podporován",
         "description": "This tab is not supported"
@@ -64,6 +68,10 @@
     "searchPlaceholder": {
         "message": "Vyhledat panel...",
         "description": "Search placeholder"
+    },
+    "filterTabsPlaceholder": {
+        "message": "Filtrovat panely (násobný filtr pomocí *)",
+        "description": "Filter tabs (multiple filter with *)"
     },
     "invalidRegExpRuleTitle": {
         "message": "Pravidlo '$regexp$' není platné a bude přeskočeno.",
@@ -142,6 +150,10 @@
     "importSettingsOldTabGroupsAddonButton": {
         "message": "Importovat nastavení z doplňku Tab Groups od Quicksaver",
         "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
+    },
+    "openGroupAfterChange": {
+        "message": "Po změně otevřít novou skupinu",
+        "description": "Open group after changing to it"
     },
     "newGroupTitle": {
         "message": "Skupina $id$",
@@ -277,7 +289,7 @@
     },
     "hotkeyPlaceholder": {
         "message": "Stiskni klávesu",
-        "description": "Press keys here"
+        "description": "Press key here"
     },
     "selectAction": {
         "message": "Vybrat akci",
@@ -326,17 +338,5 @@
     "saveErrorLogsIntoFile": {
         "message": "Uložit poslední chybový protokol do JSON souboru",
         "description": "Save last error logs into JSON file"
-    },
-    "privateAndPinnedTabsAreNotSupported": {
-        "message": "Anonymní a připnuté panely nejsou podporovány",
-        "description": "Private and pinned tabs are not supported"
-    },
-    "filterTabsPlaceholder": {
-        "message": "Filtrovat panely (násobný filtr pomocí *)",
-        "description": "Filter tabs (multiple filter with *)"
-    },
-    "openGroupAfterChange": {
-        "message": "Po změně otevřít novou skupinu",
-        "description": "Open group after changing to it"
     }
 }

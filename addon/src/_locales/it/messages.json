@@ -289,7 +289,7 @@
     },
     "hotkeyPlaceholder": {
         "message": "Premere i tasti",
-        "description": "Press keys here"
+        "description": "Press key here"
     },
     "selectAction": {
         "message": "Seleziona l'azione",

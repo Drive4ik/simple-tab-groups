@@ -1,4 +1,8 @@
 {
+    "extensionDescription": {
+        "message": "Erzeuge, modifiziere und tausche schnell Tab-Gruppen. Inspiriert vom alten Addon \"Tab Groups\" :)",
+        "description": "Description of the extension."
+    },
     "openSettings": {
         "message": "Einstellungen",
         "description": "Settings context button title"
@@ -14,10 +18,6 @@
     "moveTabToGroupDisabledTitle": {
         "message": "Tab zu Gruppe bewegen",
         "description": "Move tab to group title"
-    },
-    "extensionDescription": {
-        "message": "Erzeuge, modifiziere und tausche schnell Tab-Gruppen. Inspiriert vom alten Addon \"Tab Groups\" :)",
-        "description": "Description of the extension."
     },
     "moveTabToGroupMessage": {
         "message": "Tab \"$tabtitle$\" wurde zur Gruppe \"$grouptitle$\" bewegt.\n\nKlicke hier um diesen Tab zu zeigen",
@@ -73,10 +73,6 @@
         "message": "Tabs filtern (mehrere Filter mit *)",
         "description": "Filter tabs (multiple filter with *)"
     },
-    "manageGroupViewGrid": {
-        "message": "Grid-Anzeige",
-        "description": "Grid display"
-    },
     "invalidRegExpRuleTitle": {
         "message": "Regel '$regexp$' ist nicht gültig und wird übersprungen.",
         "description": "Invalid rule description",
@@ -86,6 +82,10 @@
                 "example": "googlecom"
             }
         }
+    },
+    "manageGroupViewGrid": {
+        "message": "Grid-Anzeige",
+        "description": "Grid display"
     },
     "manageGroupViewFreeArrange": {
         "message": "Freie Anordnung (in zukünftigen Versionen)",
@@ -119,13 +119,13 @@
         "message": "Erzeuge Backup",
         "description": "Create backup"
     },
-    "importAddonSettingsTitle": {
-        "message": "Simple Tab Gruppen wiederherstellen",
-        "description": "Restore Simple Tab Groups"
-    },
     "includeTabThumbnailsIntoBackup": {
         "message": "Tab-Vorschau bei Backup mitsichern (erzeugt größere Backup-Datei)",
         "description": "Include tab thumbnails into backup (make backup file size bigger)"
+    },
+    "importAddonSettingsTitle": {
+        "message": "Simple Tab Gruppen wiederherstellen",
+        "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
         "message": "Lädt eine Backup-Datei mit den Tab-Gruppen, welche du wiederherstellen willst.",
@@ -155,106 +155,6 @@
         "message": "Öffne Gruppe nach Änderungen an ihr",
         "description": "Open group after changing to it"
     },
-    "hotkeyActionTitleAddNewGroup": {
-        "message": "Neue Gruppe hinzufügen",
-        "description": "Add new group"
-    },
-    "hotkeyActionTitleLoadCustomGroup": {
-        "message": "Lade benutzerdefinierte Gruppe",
-        "description": "Load custom group"
-    },
-    "hotkeyActionTitleLoadLastGroup": {
-        "message": "Lade letzte Gruppe",
-        "description": "Load last group"
-    },
-    "hotkeyActionTitleLoadFirstGroup": {
-        "message": "Lade erste Gruppe",
-        "description": "Load first group"
-    },
-    "hotkeyActionTitleLoadPrevGroup": {
-        "message": "Lade vorherige Gruppe",
-        "description": "Load previous group"
-    },
-    "hotkeyActionTitleLoadNextGroup": {
-        "message": "Lade nächste Gruppe",
-        "description": "Load next group"
-    },
-    "selectGroup": {
-        "message": "Wähle Gruppe",
-        "description": "Select group"
-    },
-    "selectAction": {
-        "message": "Wähle Aktion",
-        "description": "Select action"
-    },
-    "hotkeyActionTitleDeleteCurrentGroup": {
-        "message": "Lösche derzeitige Gruppe",
-        "description": "Delete current group"
-    },
-    "hotkeyActionTitleOpenManageGroups": {
-        "message": "Öffne Gruppen verwalten",
-        "description": "Open manage groups"
-    },
-    "addHotKeyButton": {
-        "message": "Hotkey hinzufügen",
-        "description": "Add hotkey"
-    },
-    "deleteHotKeyButton": {
-        "message": "Hotkey entfernen",
-        "description": "Delete hotkey"
-    },
-    "hotkeyPlaceholder": {
-        "message": "Drücke Tasten hier",
-        "description": "Press keys here"
-    },
-    "hotkeysTitle": {
-        "message": "Hotkeys",
-        "description": "Hotkeys"
-    },
-    "regexpForTabsPlaceholder": {
-        "message": "Regulärer Ausdruck",
-        "description": "Regular expressions"
-    },
-    "setRandomColor": {
-        "message": "Setze zufällige Farbe",
-        "description": "Set random color"
-    },
-    "iconColor": {
-        "message": "Iconfarbe",
-        "description": "Icon color"
-    },
-    "selectUserGroupIcon": {
-        "message": "icon laden",
-        "description": "Load icon"
-    },
-    "goBackButtonTitle": {
-        "message": "Gehe zurück",
-        "description": "Go back"
-    },
-    "goBackToGroupsButtonTitle": {
-        "message": "Gehe zurück zu Gruppen",
-        "description": "Go back to groups"
-    },
-    "title": {
-        "message": "Titel",
-        "description": "Title"
-    },
-    "deleteTab": {
-        "message": "Lösche Tab",
-        "description": "Delete tab"
-    },
-    "createNewTab": {
-        "message": "Öffne neuen Tab",
-        "description": "Open new tab"
-    },
-    "createNewGroup": {
-        "message": "Erzeuge neue Gruppe",
-        "description": "Create new group"
-    },
-    "settingsTitle": {
-        "message": "Einstellungen",
-        "description": "Settings"
-    },
     "newGroupTitle": {
         "message": "Gruppe $id$",
         "description": "group id",
@@ -264,18 +164,6 @@
                 "example": "1"
             }
         }
-    },
-    "groupSettings": {
-        "message": "Gruppen-Einstellungen",
-        "description": "Group settings"
-    },
-    "deleteGroup": {
-        "message": "Lösche Gruppe",
-        "description": "Delete group"
-    },
-    "deleteGroupTitle": {
-        "message": "Lösche Gruppe?",
-        "description": "Delete group?"
     },
     "searchNotFoundTitle": {
         "message": "Suche in Tabs nach \"$search$\" nicht gefunden",
@@ -294,6 +182,22 @@
     "sortGroupsZA": {
         "message": "Sortiere Gruppen [Z–A]",
         "description": "Sort groups [Z-A]"
+    },
+    "settingsTitle": {
+        "message": "Einstellungen",
+        "description": "Settings"
+    },
+    "groupSettings": {
+        "message": "Gruppen-Einstellungen",
+        "description": "Group settings"
+    },
+    "deleteGroup": {
+        "message": "Lösche Gruppe",
+        "description": "Delete group"
+    },
+    "deleteGroupTitle": {
+        "message": "Lösche Gruppe?",
+        "description": "Delete group?"
     },
     "deleteGroupBody": {
         "message": "Willst du die Gruppe \"$name$\" löschen?<br>Entfernen der Gruppe schließt alle Tabs und das verbundene Fenster, wenn es jetzt geöffnet ist!",
@@ -315,28 +219,124 @@
             }
         }
     },
-    "saveErrorLogsIntoFile": {
-        "message": "Sichere die letzten Error-Logs in einer JSON-Datei",
-        "description": "Save last error logs into JSON file"
+    "deleteTab": {
+        "message": "Lösche Tab",
+        "description": "Delete tab"
     },
-    "whatsWrongMessage": {
-        "message": "Was ist los...\nBitte kontaktiere den Entwickler über die Support-Email mit den letzten Error-Logs (Knopf am Ende der Optionen)",
-        "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
+    "createNewTab": {
+        "message": "Öffne neuen Tab",
+        "description": "Open new tab"
+    },
+    "createNewGroup": {
+        "message": "Erzeuge neue Gruppe",
+        "description": "Create new group"
+    },
+    "goBackButtonTitle": {
+        "message": "Gehe zurück",
+        "description": "Go back"
+    },
+    "goBackToGroupsButtonTitle": {
+        "message": "Gehe zurück zu Gruppen",
+        "description": "Go back to groups"
+    },
+    "title": {
+        "message": "Titel",
+        "description": "Title"
+    },
+    "iconColor": {
+        "message": "Iconfarbe",
+        "description": "Icon color"
+    },
+    "selectUserGroupIcon": {
+        "message": "icon laden",
+        "description": "Load icon"
+    },
+    "selectUserGroupIconWarnText": {
+        "message": "Entschuldigung, du kannst kein benutzerdefiniertes Icon in dieses Popup laden, aber du kannst ein benutzerdefiniertes Icon in \"Verwalte Gruppen\" laden.\n\"Verwalte Gruppen\" öffnen?",
+        "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
+    },
+    "setRandomColor": {
+        "message": "Setze zufällige Farbe",
+        "description": "Set random color"
     },
     "regexpForTabsTitle": {
         "message": "Reguläre Ausdrücke zum Einfangen der Tabs",
         "description": "Regular expressions for catch tabs"
     },
+    "regexpForTabsPlaceholder": {
+        "message": "Regulärer Ausdruck",
+        "description": "Regular expressions"
+    },
     "regexpForTabsHelp": {
         "message": "Trage Reguläre Ausdrücke für Web-Adressen hier ein. Übereinstimmende Tabs werden automatisch dieser Gruppe hinzugefügt.\nNutze pro Regel eine Zeile, es können so viele sein wie du willst.\nBeispiele:\ngithub\\.com/drive4ik/simple-tab-groups - fängt alle Seiten in der Add-on-Repository\nbugzilla\\.mozilla\\.org - fängt Firefox bug reports\n(facebook|twitter|youtube)\\.com - fängt alle deine Soial-Network-Seiten",
         "description": "Regular exceptions helper"
+    },
+    "hotkeysTitle": {
+        "message": "Hotkeys",
+        "description": "Hotkeys"
     },
     "hotkeysDescription": {
         "message": "Hier kannst du Hot Keys hinzufügen.<br>Beschränkungen:<br>1. Diese Hotkeys funktionieren nur auf den Webseiten (http:, https:). Auf den Browserseiten (about:) - funktioniert es nicht, die WebExtensions API erlaubt dies nicht.<br>2. Einige Hotkeys funktionieren nicht in verschiedenen Tastatur-Layouts. Zum Beispiel, der Shortcut <code>Ctrl + ~</code> erzeugt im Englisch-Layout wird nicht im Russisch-Layout funktionieren, weil im Russisch-Layout diese Taste mit einem anderen Code belegt ist. Um dies zu beheben, erzeuge einen anderen Hotkey im Russisch-Layout: <code>Ctrl + Ё</code>",
         "description": "Hotkeys description"
     },
-    "selectUserGroupIconWarnText": {
-        "message": "Entschuldigung, du kannst kein benutzerdefiniertes Icon in dieses Popup laden, aber du kannst ein benutzerdefiniertes Icon in \"Verwalte Gruppen\" laden.\n\"Verwalte Gruppen\" öffnen?",
-        "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
+    "addHotKeyButton": {
+        "message": "Hotkey hinzufügen",
+        "description": "Add hotkey"
+    },
+    "deleteHotKeyButton": {
+        "message": "Hotkey entfernen",
+        "description": "Delete hotkey"
+    },
+    "hotkeyPlaceholder": {
+        "message": "Drücke Tasten hier",
+        "description": "Press key here"
+    },
+    "selectAction": {
+        "message": "Wähle Aktion",
+        "description": "Select action"
+    },
+    "selectGroup": {
+        "message": "Wähle Gruppe",
+        "description": "Select group"
+    },
+    "hotkeyActionTitleLoadNextGroup": {
+        "message": "Lade nächste Gruppe",
+        "description": "Load next group"
+    },
+    "hotkeyActionTitleLoadPrevGroup": {
+        "message": "Lade vorherige Gruppe",
+        "description": "Load previous group"
+    },
+    "hotkeyActionTitleLoadFirstGroup": {
+        "message": "Lade erste Gruppe",
+        "description": "Load first group"
+    },
+    "hotkeyActionTitleLoadLastGroup": {
+        "message": "Lade letzte Gruppe",
+        "description": "Load last group"
+    },
+    "hotkeyActionTitleLoadCustomGroup": {
+        "message": "Lade benutzerdefinierte Gruppe",
+        "description": "Load custom group"
+    },
+    "hotkeyActionTitleAddNewGroup": {
+        "message": "Neue Gruppe hinzufügen",
+        "description": "Add new group"
+    },
+    "hotkeyActionTitleDeleteCurrentGroup": {
+        "message": "Lösche derzeitige Gruppe",
+        "description": "Delete current group"
+    },
+    "hotkeyActionTitleOpenManageGroups": {
+        "message": "Öffne Gruppen verwalten",
+        "description": "Open manage groups"
+    },
+    "whatsWrongMessage": {
+        "message": "Was ist los...\nBitte kontaktiere den Entwickler über die Support-Email mit den letzten Error-Logs (Knopf am Ende der Optionen)",
+        "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
+    },
+    "saveErrorLogsIntoFile": {
+        "message": "Sichere die letzten Error-Logs in einer JSON-Datei",
+        "description": "Save last error logs into JSON file"
     }
 }

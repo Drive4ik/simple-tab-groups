@@ -37,13 +37,13 @@
         "message": "Cuidado!",
         "description": "Warning!"
     },
-    "ok": {
-        "message": "OK",
-        "description": "OK button"
-    },
     "success": {
         "message": "Éxito!",
         "description": "Success!"
+    },
+    "ok": {
+        "message": "OK",
+        "description": "OK button"
     },
     "save": {
         "message": "Guardar",
@@ -267,76 +267,76 @@
         "message": "Expresiones regulares",
         "description": "Regular expressions"
     },
-    "saveErrorLogsIntoFile": {
-        "message": "Guardar el ultimo error registrado en un archivo JSON",
-        "description": "Save last error logs into JSON file"
-    },
-    "hotkeyActionTitleOpenManageGroups": {
-        "message": "Abrir administrador de grupos",
-        "description": "Open manage groups"
-    },
-    "hotkeyActionTitleDeleteCurrentGroup": {
-        "message": "Borrar grupo actual",
-        "description": "Delete current group"
-    },
-    "hotkeyActionTitleAddNewGroup": {
-        "message": "Agregar un grupo nuevo",
-        "description": "Add new group"
-    },
-    "hotkeyActionTitleLoadCustomGroup": {
-        "message": "Cargar un grupo personalizado",
-        "description": "Load custom group"
-    },
-    "hotkeyActionTitleLoadLastGroup": {
-        "message": "Cargar el ultimo grupo",
-        "description": "Load last group"
-    },
-    "hotkeyActionTitleLoadFirstGroup": {
-        "message": "Cargar el primer grupo",
-        "description": "Load first group"
-    },
-    "hotkeyActionTitleLoadPrevGroup": {
-        "message": "Cargar el grupo anterior",
-        "description": "Load previous group"
-    },
-    "hotkeyActionTitleLoadNextGroup": {
-        "message": "Cargar el próximo grupo",
-        "description": "Load next group"
-    },
-    "selectGroup": {
-        "message": "Seleccionar grupo",
-        "description": "Select group"
-    },
-    "selectAction": {
-        "message": "Seleccionar acción",
-        "description": "Select action"
-    },
-    "hotkeyPlaceholder": {
-        "message": "Presiona teclas aquí",
-        "description": "Press keys here"
-    },
-    "deleteHotKeyButton": {
-        "message": "Borrar tecla rápida",
-        "description": "Delete hotkey"
-    },
-    "addHotKeyButton": {
-        "message": "Agregar tecla rapida",
-        "description": "Add hotkey"
+    "regexpForTabsHelp": {
+        "message": "Inserte expresiones regulares para direcciones web aqui.\nLas pestanas encontradas seran removidas automaticamente de este grupo. Use solo una linea por regla, puede haber tantas como quiera. Ejemplos:\ngithub\\.com/drive4ik/simple-tab-groups - devuelve todas las paginas del addon \nrepository\nbugzilla\\.mozilla\\.org - devuelve el bug de Firefox\nreports\n(facebook|twitter|youtube)\\.com - devuelve todas tus redes sociales",
+        "description": "Regular exceptions helper"
     },
     "hotkeysTitle": {
         "message": "Tecla rápida",
         "description": "Hotkeys"
     },
-    "regexpForTabsHelp": {
-        "message": "Inserte expresiones regulares para direcciones web aqui.\nLas pestanas encontradas seran removidas automaticamente de este grupo. Use solo una linea por regla, puede haber tantas como quiera. Ejemplos:\ngithub\\.com/drive4ik/simple-tab-groups - devuelve todas las paginas del addon \nrepository\nbugzilla\\.mozilla\\.org - devuelve el bug de Firefox\nreports\n(facebook|twitter|youtube)\\.com - devuelve todas tus redes sociales",
-        "description": "Regular exceptions helper"
-    },
     "hotkeysDescription": {
         "message": "Aquí puedes agregar teclas rápidas. <br>Restricciones:<br>1. Estas teclas rápidas solo funcionan en paginas web (http:; https:) En las paginas de navegadores (about:) - estas no funcionan, WebExtensions API no lo permite.<br>2. Algunas teclas rápidas no funcionaran en diferentes diseños de teclados. Por ejemplo, el acceso creado en un teclado en Ingles <code>Ctrl + ~</code>no funcionara en un teclado de diseño Ruso, porque en el diseño Ruso esta tecla tiene otro código. Para corregir esto, solo cree una tecla rápida en el teclado de diseño Ruso <code>Ctrl + Ё</code>",
         "description": "Hotkeys description"
     },
+    "addHotKeyButton": {
+        "message": "Agregar tecla rapida",
+        "description": "Add hotkey"
+    },
+    "deleteHotKeyButton": {
+        "message": "Borrar tecla rápida",
+        "description": "Delete hotkey"
+    },
+    "hotkeyPlaceholder": {
+        "message": "Presiona teclas aquí",
+        "description": "Press key here"
+    },
+    "selectAction": {
+        "message": "Seleccionar acción",
+        "description": "Select action"
+    },
+    "selectGroup": {
+        "message": "Seleccionar grupo",
+        "description": "Select group"
+    },
+    "hotkeyActionTitleLoadNextGroup": {
+        "message": "Cargar el próximo grupo",
+        "description": "Load next group"
+    },
+    "hotkeyActionTitleLoadPrevGroup": {
+        "message": "Cargar el grupo anterior",
+        "description": "Load previous group"
+    },
+    "hotkeyActionTitleLoadFirstGroup": {
+        "message": "Cargar el primer grupo",
+        "description": "Load first group"
+    },
+    "hotkeyActionTitleLoadLastGroup": {
+        "message": "Cargar el ultimo grupo",
+        "description": "Load last group"
+    },
+    "hotkeyActionTitleLoadCustomGroup": {
+        "message": "Cargar un grupo personalizado",
+        "description": "Load custom group"
+    },
+    "hotkeyActionTitleAddNewGroup": {
+        "message": "Agregar un grupo nuevo",
+        "description": "Add new group"
+    },
+    "hotkeyActionTitleDeleteCurrentGroup": {
+        "message": "Borrar grupo actual",
+        "description": "Delete current group"
+    },
+    "hotkeyActionTitleOpenManageGroups": {
+        "message": "Abrir administrador de grupos",
+        "description": "Open manage groups"
+    },
     "whatsWrongMessage": {
         "message": "Que esta yendo mal...\nPor favor, contacte con el desarrollador al correo de mantenimiento con el ultimo registro de errores (existe un boton abajo con estas opciones)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
+    },
+    "saveErrorLogsIntoFile": {
+        "message": "Guardar el ultimo error registrado en un archivo JSON",
+        "description": "Save last error logs into JSON file"
     }
 }

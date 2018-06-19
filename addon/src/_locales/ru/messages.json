@@ -293,7 +293,7 @@
     },
     "hotkeyPlaceholder": {
         "message": "Нажимать здесь",
-        "description": "Press keys here"
+        "description": "Press key here"
     },
     "selectAction": {
         "message": "Выберите действие",
@@ -347,9 +347,9 @@
         "message": "Отменить удаление группы \"$grouptitle$\"",
         "description": "Undo remove group menu title",
         "placeholders": {
-            "grouptitle" : {
-                "content" : "$1",
-                "example" : "Group 2"
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
             }
         }
     },
@@ -379,6 +379,6 @@
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Невозможно изменить группу, потому что на одной из вкладок используется микрофон или камера",
-        "description": "It is not possible to change the group because one of the tabs share microphone or camera"
+        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
     }
 }

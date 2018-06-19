@@ -293,7 +293,7 @@
     },
     "hotkeyPlaceholder": {
         "message": "このキーを押してください",
-        "description": "Press keys here"
+        "description": "Press key here"
     },
     "selectAction": {
         "message": "アクションを選択",
