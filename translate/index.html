@@ -123,7 +123,10 @@
                     <tbody>
                         <tr v-for="(val, key) in defaultLocale" v-show="!notAllowedKeys.includes(key)" :key="componentName + key">
                             <td class="text-break-all" v-html="key"></td>
-                            <td v-text="val.message.replace(/\n/g, '\&#92n')"></td>
+                            <td>
+                                <span v-if="val.message.includes('\n') && !val.message.includes('<') && !val.message.includes('>')" v-html="val.message.replace(/\n/g, '<br>')"></span>
+                                <span v-else v-text="val.message"></span>
+                            </td>
                             <td>
                                 <div class="columns">
                                     <div class="column">
