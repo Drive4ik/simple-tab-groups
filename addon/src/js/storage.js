@@ -21,8 +21,6 @@ export default {
                     });
                 }
 
-                // console.log('storage get', data, result);
-
                 return result;
             });
     },

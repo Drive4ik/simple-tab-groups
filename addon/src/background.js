@@ -1642,10 +1642,6 @@ window.background = {
 };
 
 async function runMigrateForData(data) {
-    if (!data || !Array.isArray(data.groups)) {
-        throw TypeError('data type or groups type is wrong');
-    }
-
     // reset tab ids
     data.groups.forEach(group => group.tabs.forEach(tab => tab.id = null));
 
@@ -1828,6 +1824,11 @@ async function getSessionDataFromWindow(windowId) {
 
 async function init() {
     let data = await storage.get(null);
+
+    if (!Array.isArray(data.groups)) {
+        utils.notify(browser.i18n.getMessage('ffFailedAndLostDataMessage'));
+        data.groups = [];
+    }
 
     data = await runMigrateForData(data); // run migration for data
 

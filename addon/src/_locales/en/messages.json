@@ -436,5 +436,9 @@
     "reloadAddon": {
         "message": "Reload addon",
         "description": "Reload addon"
+    },
+    "ffFailedAndLostDataMessage": {
+        "message": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it",
+        "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
     }
 }

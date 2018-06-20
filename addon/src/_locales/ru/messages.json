@@ -432,5 +432,9 @@
     "reloadAddon": {
         "message": "Перезагрузка дополнения",
         "description": "Reload addon"
+    },
+    "ffFailedAndLostDataMessage": {
+        "message": "Firefox завершил свою работу с ошибкой и все группы были утеряны.\nЕсли у Вас имеется резервная копия, Вы можете восстановить данные из нее",
+        "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
     }
 }
