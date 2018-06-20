@@ -84,7 +84,7 @@
                 let component = this.components.find(comp => comp.name === this.componentName);
 
                 if (component) { // TMP
-                    if (this.branch.includes('vue')) {
+                    if (component.name === 'simple-tab-groups-addon' && this.branch.includes('vue')) {
                         return 'addon/src'
                     }
 
