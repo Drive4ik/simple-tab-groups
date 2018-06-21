@@ -1,8 +1,6 @@
 # gitignore file
 
 /*.sublime-*
-*.zip
-# /*.log
 
 /addon/node_modules/
 /addon/dist/
