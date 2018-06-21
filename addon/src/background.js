@@ -43,7 +43,7 @@ async function saveGroupsToStorage(sendMessageToAll = false) {
         if (!options.createThumbnailsForTabs) {
             _groups.forEach(function(group) {
                 group.tabs.forEach(function(tab) {
-                    if (tab.thumbnail) {
+                    if (tab && tab.thumbnail) { // TODO find null in tabs...
                         delete tab.thumbnail;
                     }
                 });
@@ -369,7 +369,7 @@ async function moveGroup(groupId, position = 'up') {
 
 let savingTabsInWindow = {};
 
-async function saveCurrentTabs(windowId, excludeTabId, calledFunc) {
+async function saveCurrentTabs(windowId, excludeTabId, calledFuncStringName) {
     if (!windowId || savingTabsInWindow[windowId]) {
         return;
     }
@@ -383,13 +383,13 @@ async function saveCurrentTabs(windowId, excludeTabId, calledFunc) {
         return;
     }
 
-    if (calledFunc) {
-        console.info('saveCurrentTabs called from', calledFunc);
+    if (calledFuncStringName) {
+        console.info('saveCurrentTabs called from', calledFuncStringName);
     }
 
     let tabs = await getTabs(windowId);
 
-    // console.info('saving tabs ', { windowId, excludeTabId, calledFunc }, JSON.parse(JSON.stringify(tabs)));
+    // console.info('saving tabs ', { windowId, excludeTabId, calledFuncStringName }, JSON.parse(JSON.stringify(tabs)));
 
     // let syncTabIds = _groups
     //     .filter(gr => gr.id !== group.id)
@@ -848,12 +848,12 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
         return;
     }
 
-    if (!group.tabs.some(t => t.id === tabId)) {
+    let savedTabIndex = group.tabs.findIndex(t => t.id === tabId);
+
+    if (-1 === savedTabIndex) {
         console.warn('saving tab by update was canceled: tab not found in group');
         return;
     }
-
-    let savedTabIndex = group.tabs.findIndex(t => t.id === tabId);
 
     if ('loading' === changeInfo.status && changeInfo.url) {
         if (!group.isSticky && utils.isUrlAllowToCreate(changeInfo.url) && !utils.isUrlEmpty(changeInfo.url)) {
@@ -881,7 +881,7 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
 async function onRemovedTab(tabId, { isWindowClosing, windowId }) {
     console.log('onRemovedTab', arguments);
 
-    let findTab = _groups.some(function(group) {
+    _groups.some(function(group) {
         let tabIndex = group.tabs.findIndex(tab => tab.id === tabId);
 
         if (-1 !== tabIndex) {
@@ -1138,7 +1138,7 @@ async function moveTabToGroup(oldTabIndex, newTabIndex = -1, oldGroupId = null, 
     utils.notify(message).then(async function(newGroupId, newTabIndex) {
         let groupIndex = _groups.findIndex(group => group.id === newGroupId);
 
-        if (-1 !== groupIndex && _groups[groupIndex].tabs[newTabIndex]) {
+        if (-1 !== groupIndex && _groups[groupIndex] && _groups[groupIndex].tabs[newTabIndex]) {
             await setFocusOnWindow(lastFocusedNormalWindow.id);
             loadGroup(lastFocusedNormalWindow.id, groupIndex, newTabIndex);
         }
@@ -1729,10 +1729,7 @@ async function runMigrateForData(data) {
         removeKeys('individualWindowForEachGroup', 'openNewWindowWhenCreateNewGroup', 'showNotificationIfGroupsNotSyncedAtStartup');
         removeKeys('showGroupIconWhenSearchATab', 'showUrlTooltipOnTabHover');
 
-        data.groups = data.groups.map(function(group) {
-            group.title = utils.unSafeHtml(group.title);
-            return group;
-        });
+        data.groups.forEach(group => group.title = utils.unSafeHtml(group.title));
     }
 
 
