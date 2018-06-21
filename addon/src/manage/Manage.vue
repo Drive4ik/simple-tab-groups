@@ -263,7 +263,7 @@
             $_tabMap(tab) {
                 let vm = this;
 
-                tab.favIconUrlToDisplay = BG.getTabFavIconUrl(tab, this.options.useTabsFavIconsFromGoogleS2Converter);
+                tab.favIconUrlToDisplay = BG.getTabFavIconUrl(tab);
                 tab.container = (function() {
                     if (utils.isDefaultCookieStoreId(tab.cookieStoreId)) {
                         return false;
@@ -351,7 +351,7 @@
             setTabIconAsGroupIcon(tab, group) {
                 BG.updateGroup(group.id, {
                     iconViewType: null,
-                    iconUrl: BG.getTabFavIconUrl(tab, this.options.useTabsFavIconsFromGoogleS2Converter),
+                    iconUrl: BG.getTabFavIconUrl(tab),
                 });
             },
 

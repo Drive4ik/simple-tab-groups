@@ -101,7 +101,7 @@ function getPinnedTabs(windowId = browser.windows.WINDOW_ID_CURRENT) {
 }
 
 function mapTab(tab) {
-    if (!tab.url || 'about:newtab' === tab.url || 'about:blank' === tab.url) {
+    if (!tab.url || 'about:newtab' === tab.url) {
         tab.url = 'about:blank';
     }
 
@@ -116,14 +116,16 @@ function mapTab(tab) {
     };
 }
 
-function getTabFavIconUrl(tab, useTabsFavIconsFromGoogleS2Converter) {
+function getTabFavIconUrl(tab) {
     let safedFavIconUrl = '',
         localUrls = ['moz-extension', 'about', 'data', 'view-source', 'javascript', 'chrome', 'file'];
 
     if (localUrls.some(url => tab.url.startsWith(url))) {
         safedFavIconUrl = tab.favIconUrl;
+    } else if (options.useTabsFavIconsFromGoogleS2Converter) {
+        safedFavIconUrl = 'https://www.google.com/s2/favicons?domain_url=' + encodeURIComponent(tab.url);
     } else {
-        safedFavIconUrl = useTabsFavIconsFromGoogleS2Converter ? ('https://www.google.com/s2/favicons?domain_url=' + encodeURIComponent(tab.url)) : tab.favIconUrl;
+        safedFavIconUrl = tab.favIconUrl;
     }
 
     if (!safedFavIconUrl) {
