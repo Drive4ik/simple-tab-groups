@@ -440,5 +440,9 @@
     "ffFailedAndLostDataMessage": {
         "message": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
+    },
+    "enterDefaultGroupIconViewTypeTitle": {
+        "message": "Icon style for a new group",
+        "description": "Icon style for a new group"
     }
 }

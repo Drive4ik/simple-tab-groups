@@ -1,7 +1,8 @@
 <script>
     'use strict';
 
-    import * as utils from '../js/utils';
+    import * as utils from './utils';
+    import { groupIconViewTypes } from './constants';
     import Vue from 'vue';
 
     import popup from './popup.vue';
@@ -22,13 +23,6 @@
         'catchTabContainers',
         'isSticky',
         'windowId'
-    ];
-
-    const iconTypes = [
-        'main-squares',
-        'circle',
-        'squares',
-        'old-tab-groups'
     ];
 
     export default {
@@ -61,7 +55,7 @@
             return {
                 showMessageCantLoadFile: false,
 
-                iconTypes: iconTypes,
+                groupIconViewTypes: groupIconViewTypes,
                 groupClone: new Vue({
                     data: utils.extractKeys(this.group, fieldsToEdit),
                     computed: {
@@ -98,7 +92,7 @@
                 this.groupClone.iconColor = utils.randomColor();
 
                 if (!this.groupClone.iconViewType) {
-                    this.groupClone.iconViewType = this.iconTypes[0];
+                    this.groupClone.iconViewType = this.groupIconViewTypes[0];
                 }
             },
 
@@ -206,10 +200,10 @@
                         borderRadius: '4px',
                     }" />
                 </div>
-                <div v-for="iconType in iconTypes" :key="iconType" class="control">
-                    <button @click="setIconView(iconType)" :class="['button', {'is-focused': !groupClone.iconUrl && iconType === groupClone.iconViewType}]">
+                <div v-for="iconViewType in groupIconViewTypes" :key="iconViewType" class="control">
+                    <button @click="setIconView(iconViewType)" :class="['button', {'is-focused': !groupClone.iconUrl && iconViewType === groupClone.iconViewType}]">
                         <figure class="image is-16x16 is-inline-block">
-                            <img :src="getIconTypeUrl(iconType)" />
+                            <img :src="getIconTypeUrl(iconViewType)" />
                         </figure>
                     </button>
                 </div>

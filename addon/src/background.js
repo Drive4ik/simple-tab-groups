@@ -135,18 +135,18 @@ function getTabFavIconUrl(tab) {
     return safedFavIconUrl;
 }
 
-function createGroup(id, windowId = null) {
+function createGroup(id, windowId = null, groupIconViewType = null) {
     return {
         id: id,
         title: browser.i18n.getMessage('newGroupTitle', id),
         iconColor: utils.randomColor(),
         iconUrl: null,
-        iconViewType: 'main-squares',
+        iconViewType: groupIconViewType || options.defaultGroupIconViewType,
         tabs: [],
         catchTabRules: '',
         catchTabContainers: [],
         isSticky: false,
-        windowId: windowId || null,
+        windowId: windowId,
     };
 }
 
@@ -1725,6 +1725,7 @@ async function runMigrateForData(data) {
 
     if (-1 === utils.compareStrings(data.version, '3.0')) {
         data.doRemoveSTGNewTabUrls = true;
+
         removeKeys('enableFastGroupSwitching', 'enableFavIconsForNotLoadedTabs', 'createNewGroupAfterAttachTabToNewWindow');
         removeKeys('individualWindowForEachGroup', 'openNewWindowWhenCreateNewGroup', 'showNotificationIfGroupsNotSyncedAtStartup');
         removeKeys('showGroupIconWhenSearchATab', 'showUrlTooltipOnTabHover');

@@ -3,7 +3,7 @@
 
     import * as utils from '../js/utils';
     import storage from '../js/storage';
-    import {onlyBoolOptionsKeys, allOptionsKeys} from '../js/constants';
+    import {onlyBoolOptionsKeys, allOptionsKeys, groupIconViewTypes} from '../js/constants';
     import {importFromFile, exportToFile} from '../js/fileImportExport';
 
     const BG = (function(bgWin) {
@@ -40,6 +40,8 @@
                     'open-manage-groups',
                 ],
 
+                groupIconViewTypes: groupIconViewTypes,
+
                 includeTabThumbnailsIntoBackup: false,
 
                 options: {
@@ -54,13 +56,15 @@
             this.options = utils.extractKeys(data, allOptionsKeys);
             this.groups = Array.isArray(data.groups) ? data.groups : [];
 
-            onlyBoolOptionsKeys.forEach(function(option) {
-                this.$watch(`options.${option}`, function(newValue) {
-                    this.saveOptions({
-                        [option]: newValue,
+            onlyBoolOptionsKeys
+                .concat(['defaultGroupIconViewType'])
+                .forEach(function(option) {
+                    this.$watch(`options.${option}`, function(newValue) {
+                        this.saveOptions({
+                            [option]: newValue,
+                        });
                     });
-                });
-            }, this);
+                }, this);
         },
         watch: {
             'options.browserActionIconColor': async function(newValue, oldValue) {
@@ -97,7 +101,6 @@
                 deep: true,
             },
         },
-        computed: {},
         methods: {
             lang: browser.i18n.getMessage,
             getHotkeyActionTitle: action => browser.i18n.getMessage('hotkeyActionTitle' + utils.capitalize(utils.toCamelCase(action))),
@@ -287,6 +290,13 @@
                 }
             },
 
+            getIconTypeUrl(iconType) {
+                return utils.getGroupIconUrl({
+                    iconViewType: iconType,
+                    iconColor: 'hsl(200, 100%, 50%)',
+                }, this.options.browserActionIconColor);
+            },
+
             createHotkey() {
                 return {
                     ctrlKey: false,
@@ -392,6 +402,19 @@
                 <label class="label" v-text="lang('enterBrowserActionIconColor')"></label>
                 <div class="control is-inline-block">
                     <input v-model.lazy="options.browserActionIconColor" class="input" type="color" />
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" v-text="lang('enterDefaultGroupIconViewTypeTitle')"></label>
+                <div class="field is-grouped">
+                    <div v-for="iconViewType in groupIconViewTypes" :key="iconViewType" class="control">
+                        <button @click="options.defaultGroupIconViewType = iconViewType" :class="['button', {'is-focused': options.defaultGroupIconViewType === iconViewType}]">
+                            <figure class="image is-16x16 is-inline-block">
+                                <img :src="getIconTypeUrl(iconViewType)" />
+                            </figure>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -515,7 +538,7 @@
     }
 
     #stg-options {
-        min-height: 500px;
+        min-height: 600px;
 
         & > div {
             max-width: 99%;
