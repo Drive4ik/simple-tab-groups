@@ -428,7 +428,7 @@
     <!-- free arrange -->
 
     <div id="stg-manage" class="is-flex is-column" @contextmenu="['INPUT', 'TEXTAREA'].includes($event.target.nodeName) ? null : $event.preventDefault()">
-        <header class="is-flex is-aligin-items-center">
+        <header class="is-flex is-align-items-center">
             <span class="page-title">
                 <span v-text="lang('extensionName')"></span> - <span v-text="lang('manageGroupsTitle')"></span>
             </span>

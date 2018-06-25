@@ -1032,16 +1032,16 @@
         </popup>
 
         <footer class="is-flex is-unselectable h-margin-top-10">
-            <div class="is-flex is-aligin-items-center manage-groups is-full-height is-full-width" @click="openManageGroups" :title="lang('manageGroupsTitle')">
+            <div class="is-flex is-align-items-center manage-groups is-full-height is-full-width" @click="openManageGroups" :title="lang('manageGroupsTitle')">
                 <img class="size-16" src="/icons/icon.svg" />
                 <span class="h-margin-left-10" v-text="lang('manageGroupsTitle')"></span>
             </div>
-            <div class="is-flex is-aligin-items-center is-vertical-separator"></div>
-            <div class="is-flex is-aligin-items-center is-full-height" @click="reloadAddon" :title="lang('reloadAddon')">
+            <div class="is-flex is-align-items-center is-vertical-separator"></div>
+            <div class="is-flex is-align-items-center is-full-height" @click="reloadAddon" :title="lang('reloadAddon')">
                 <img class="size-16" src="/icons/refresh.svg" />
             </div>
-            <div class="is-flex is-aligin-items-center is-vertical-separator"></div>
-            <div class="is-flex is-aligin-items-center is-full-height" @click="openOptionsPage" :title="lang('settingsTitle')">
+            <div class="is-flex is-align-items-center is-vertical-separator"></div>
+            <div class="is-flex is-align-items-center is-full-height" @click="openOptionsPage" :title="lang('settingsTitle')">
                 <img class="size-16" src="/icons/settings.svg" />
             </div>
         </footer>

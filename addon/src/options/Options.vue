@@ -40,6 +40,13 @@
                     'open-manage-groups',
                 ],
 
+                openPopupCommand: {
+                    ctrlKey: false,
+                    shiftKey: false,
+                    altKey: false,
+                    key: '',
+                },
+
                 groupIconViewTypes: groupIconViewTypes,
 
                 includeTabThumbnailsIntoBackup: false,
@@ -65,6 +72,8 @@
                         });
                     });
                 }, this);
+
+            this.initPopupHotkey();
         },
         watch: {
             'options.browserActionIconColor': async function(newValue, oldValue) {
@@ -112,10 +121,68 @@
                 });
             },
 
-            saveHotkeyKeyCode(hotkey, event) {
+            resetPopupCommand() {
+                this.openPopupCommand.ctrlKey = false;
+                this.openPopupCommand.shiftKey = false;
+                this.openPopupCommand.altKey = false;
+                this.openPopupCommand.key = browser.runtime.getManifest().commands._execute_browser_action.suggested_key.default;
+
+                // browser.commands.reset('_execute_browser_action');
+            },
+
+            async initPopupHotkey() {
+                let commands = await browser.commands.getAll(),
+                    popupCommand = commands.find(command => command.name === '_execute_browser_action');
+
+                this.openPopupCommand.ctrlKey = popupCommand.shortcut.includes('Ctrl');
+                this.openPopupCommand.shiftKey = popupCommand.shortcut.includes('Shift');
+                this.openPopupCommand.altKey = popupCommand.shortcut.includes('Alt');
+                this.openPopupCommand.key = popupCommand.shortcut.split('+').pop();
+
+                this.$watch('openPopupCommand', {
+                    async handler(openPopupCommand) {
+                        let shortcut = [];
+
+                        if (openPopupCommand.ctrlKey) {
+                            shortcut.push('Ctrl');
+                        }
+
+                        if (openPopupCommand.shiftKey) {
+                            shortcut.push('Shift');
+                        }
+
+                        if (openPopupCommand.altKey) {
+                            shortcut.push('Alt');
+                        }
+
+                        let key = openPopupCommand.key.replace('Arrow', '');
+
+                        shortcut.push(key.length === 1 ? key.toUpperCase() : key);
+
+                        try {
+                            await browser.commands.update({
+                                name: '_execute_browser_action',
+                                shortcut: shortcut.join('+'),
+                            });
+                        } catch (e) {
+                            this.resetPopupCommand();
+                        }
+                    },
+                    deep: true,
+                });
+            },
+
+            saveHotkeyKeyCodeAndStopEvent(hotkey, event, withKeyCode) {
+                event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation();
+
                 if (!event.ctrlKey && !event.shiftKey && !event.altKey) {
-                    hotkey.key = event.key;
-                    hotkey.keyCode = event.keyCode;
+                    hotkey.key = event.key.length === 1 ? event.key.toUpperCase() : event.key;
+
+                    if (withKeyCode) {
+                        hotkey.keyCode = event.keyCode;
+                    }
                 }
             },
 
@@ -431,7 +498,31 @@
             <label class="has-text-weight-bold" v-text="lang('hotkeysTitle')"></label>
             <div class="h-margin-bottom-10" v-html="lang('hotkeysDescription')"></div>
             <div class="hotkeys">
-                <div v-for="(hotkey, hotkeyIndex) in options.hotkeys" :key="hotkeyIndex" class="hotkey is-flex is-aligin-items-center">
+                <div class="hotkey is-flex is-align-items-center">
+                    <label class="checkbox">
+                        <input v-model="openPopupCommand.ctrlKey" type="checkbox" />
+                        <span>Ctrl</span>
+                    </label>
+                    <label class="checkbox">
+                        <input v-model="openPopupCommand.shiftKey" type="checkbox" />
+                        <span>Shift</span>
+                    </label>
+                    <label class="checkbox">
+                        <input v-model="openPopupCommand.altKey" type="checkbox" />
+                        <span>Alt</span>
+                    </label>
+                    <div class="control">
+                        <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(openPopupCommand, $event, false)" :value="openPopupCommand.key" autocomplete="off" class="input is-small" />
+                    </div>
+                    <div class="is-flex">
+                        <span class="is-size-7" v-text="lang('openPopupHotkeyTitle')"></span>
+                    </div>
+                    <div class="delete-button">
+                        <button class="button is-danger is-outlined is-small" @click="resetPopupCommand">Reset</button>
+                    </div>
+                </div>
+
+                <div v-for="(hotkey, hotkeyIndex) in options.hotkeys" :key="hotkeyIndex" class="hotkey is-flex is-align-items-center">
                     <label class="checkbox">
                         <input v-model="hotkey.ctrlKey" type="checkbox" />
                         <span>Ctrl</span>
@@ -445,7 +536,7 @@
                         <span>Alt</span>
                     </label>
                     <div class="control">
-                        <input type="text" @keydown.stop="saveHotkeyKeyCode(hotkey, $event)" v-model="hotkey.key" autocomplete="off" maxlength="1" class="input is-small" :placeholder="lang('hotkeyPlaceholder')" />
+                        <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(hotkey, $event, true)" :value="hotkey.key" autocomplete="off" class="input is-small" :placeholder="lang('hotkeyPlaceholder')" />
                     </div>
                     <div class="select is-small">
                         <select v-model="hotkey.action.id">
@@ -558,7 +649,7 @@
             margin-right: 10px;
         }
 
-        & > .control {
+        & > :nth-child(4) {
             width: 100px;
         }
 

@@ -440,5 +440,9 @@
     "enterDefaultGroupIconViewTypeTitle": {
         "message": "Стиль значка для новой группы",
         "description": "Icon style for a new group"
+    },
+    "openPopupHotkeyTitle": {
+        "message": "Открыть всплывающее окно групп",
+        "description": "Open the groups pop-up"
     }
 }

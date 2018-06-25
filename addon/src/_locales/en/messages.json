@@ -444,5 +444,9 @@
     "enterDefaultGroupIconViewTypeTitle": {
         "message": "Icon style for a new group",
         "description": "Icon style for a new group"
+    },
+    "openPopupHotkeyTitle": {
+        "message": "Open the groups pop-up",
+        "description": "Open the groups pop-up"
     }
 }

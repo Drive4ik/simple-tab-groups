@@ -63,7 +63,7 @@ function checkKey(e) {
             hotkey.altKey === e.altKey &&
             (
                 (hotkey.keyCode && hotkey.keyCode === e.keyCode) ||
-                (!hotkey.keyCode && !e.keyCode && hotkey.key.toLowerCase() === e.key.toLowerCase())
+                (!hotkey.keyCode && !e.keyCode && hotkey.key.toUpperCase() === e.key.toUpperCase())
             )
         ) {
             foundHotKey = true;
