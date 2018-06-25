@@ -528,6 +528,10 @@
             },
 
             async setHoverItemByKey(arrow, event) {
+                if (this.groupToEdit || this.groupToRemove) {
+                    return;
+                }
+
                 let index = null;
 
                 this.$el.focus();

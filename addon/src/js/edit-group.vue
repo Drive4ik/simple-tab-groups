@@ -177,7 +177,7 @@
 </script>
 
 <template>
-    <div>
+    <div @keydown.enter.stop="saveGroup" tabindex="-1">
         <div class="field">
             <label class="label" v-text="lang('title')"></label>
             <div class="control has-icons-left">
@@ -259,7 +259,7 @@
                 </span>
             </label>
             <div class="control">
-                <textarea class="textarea" v-model="groupClone.catchTabRules" :placeholder="lang('regexpForTabsPlaceholder')"></textarea>
+                <textarea class="textarea" @keydown.enter.stop v-model="groupClone.catchTabRules" :placeholder="lang('regexpForTabsPlaceholder')"></textarea>
             </div>
         </div>
 
