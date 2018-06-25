@@ -544,9 +544,9 @@
                             <option v-for="action in hotkeyActions" :key="action" :value="action" v-text="getHotkeyActionTitle(action)"></option>
                         </select>
                     </div>
-                    <div v-show="'load-custom-group' === hotkey.action.id" class="select is-small custom-group">
+                    <div v-if="'load-custom-group' === hotkey.action.id" class="select is-small custom-group">
                         <select v-model="hotkey.action.groupId">
-                            <option selected disabled value="" v-text="lang('selectGroup')"></option>
+                            <option v-if="!hotkey.action.groupId" selected disabled value="0" v-text="lang('selectGroup')"></option>
                             <option v-for="group in groups" :key="group.id" :value="group.id" v-text="group.title"></option>
                         </select>
                     </div>
