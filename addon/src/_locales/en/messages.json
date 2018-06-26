@@ -100,8 +100,8 @@
         "description": "Close popup after changing group"
     },
     "showNotificationAfterMoveTab": {
-        "message": "Show notification when tab is moved to another group",
-        "description": "Show notification when tab is moved to another group"
+        "message": "Show notification when a tab is moved to another group",
+        "description": "Show notification when a tab is moved to another group"
     },
     "openManageGroupsInTab": {
         "message": "Open \"Manage Groups\" in new tab",
@@ -124,20 +124,20 @@
         "description": "Create backup"
     },
     "includeTabThumbnailsIntoBackup": {
-        "message": "Include tab thumbnails into backup (make backup file size bigger)",
-        "description": "Include tab thumbnails into backup (make backup file size bigger)"
+        "message": "Include tab thumbnails in backup (makes backup file size bigger)",
+        "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "Restore Simple Tab Groups",
-        "description": "Restore Simple Tab Groups"
+        "message": "Restore Simple Tab Groups from backup",
+        "description": "Restore Simple Tab Groups from backup"
     },
     "importAddonSettingsDescription": {
         "message": "Load a backup file containing the tab groups you want to restore.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
     "importAddonSettingsWarning": {
-        "message": "Restore add-on settings will ERASE all existing settings and groups!",
-        "description": "Restore add-on settings will ERASE all existing settings and groups!"
+        "message": "Restoring from backup will ERASE all existing settings and groups!",
+        "description": "Restoring from backup will ERASE all existing settings and groups!"
     },
     "importAddonSettingsButton": {
         "message": "Restore backup",
@@ -148,12 +148,12 @@
         "description": "Restore Quicksaver's \"Tab Groups\""
     },
     "importSettingsOldTabGroupsAddonDescription": {
-        "message": "Load a backup file old \"Tab Groups\" addon.",
-        "description": "Load a backup file old \"Tab Groups\" addon."
+        "message": "Load a backup file from the old \"Tab Groups\" addon.",
+        "description": "Load a backup file from the old \"Tab Groups\" addon."
     },
     "importSettingsOldTabGroupsAddonButton": {
-        "message": "Import settings from Quicksaver's \"Tab Groups\" add-on",
-        "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
+        "message": "Choose file",
+        "description": "Choose file"
     },
     "openGroupAfterChange": {
         "message": "Open group after changing to it",
@@ -252,7 +252,7 @@
         "description": "Title"
     },
     "iconColor": {
-        "message": "Icon colour",
+        "message": "Icon color",
         "description": "Icon color"
     },
     "selectUserGroupIcon": {
@@ -264,12 +264,12 @@
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
-        "message": "Set random colour",
+        "message": "Set random color",
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)",
-        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
+        "message": "Catch and move tabs with containers to this group (only for web URLs, empty tabs are not supported)",
+        "description": "Catch and move tabs with containers to this group (only for web URLs, empty tabs are not supported)"
     },
     "regexpForTabsTitle": {
         "message": "Regular expressions for catch tabs",
@@ -280,7 +280,7 @@
         "description": "Regular expressions"
     },
     "regexpForTabsHelp": {
-        "message": "Insert regular expressions for web addresses here. Matching tabs will be moved automatically to this group.\nUse one line per rule, there can be as many as you want.\nExamples:\ngithub\\.com/drive4ik/simple-tab-groups - catch all pages in the add-on's repository\nbugzilla\\.mozilla\\.org - catch Firefox bug reports\n(facebook|twitter|youtube)\\.com - catch all your social pages",
+        "message": "Insert regular expressions for web addresses here. Matching tabs will be automatically moved to this group.\nUse one line per rule, there can be as many as you want.\nExamples:\ngithub\\.com/drive4ik/simple-tab-groups - catch all pages in the add-on's repository\nbugzilla\\.mozilla\\.org - catch Firefox bug reports\n(facebook|twitter|youtube)\\.com - catch all your social pages",
         "description": "Regular exceptions helper"
     },
     "hotkeysTitle": {
@@ -288,7 +288,7 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Here you can add hot keys.<br>Restrictions:<br>1. These hotkeys will only work on web pages (http:, https:). On the browser pages (about:) - it's doesn't work, the WebExtensions API does not allow this.<br>2. Some hotkeys will not work in different keyboard layouts. For example, the shortcut created in English layout <code>Ctrl + ~</code> will not work on the Russian layout, because in Russian layout this key has another code. To fix this, just create another hotkey on the Russian layout: <code>Ctrl + Ё</code>",
+        "message": "Here you can add hotkeys.<br>Restrictions:<br>1. These hotkeys will only work on web pages (http:, https:), not on the browser pages (about:), because the WebExtensions API does not allow this.<br>2. Some hotkeys will not work with all keyboard layouts. For example, a <code>Ctrl + ~</code> shortcut created with an English layout will not work with a keyboard with Russian layout, because in the Russian layout this key has another code. To fix this, just create another hotkey with the Russian layout: <code>Ctrl + Ё</code>",
         "description": "Hotkeys description"
     },
     "addHotKeyButton": {
@@ -344,8 +344,8 @@
         "description": "Open manage groups"
     },
     "whatsWrongMessage": {
-        "message": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)",
-        "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
+        "message": "What's wrong...\nPlease notify the developer by support email with last error logs (button exists at the bottom of the Options page)",
+        "description": "What's wrong...\nPlease notify the developer by support email with last error logs (button exists at the bottom of the Options page)"
     },
     "saveErrorLogsIntoFile": {
         "message": "Save last error logs into JSON file",
@@ -362,7 +362,7 @@
         }
     },
     "enterBrowserActionIconColor": {
-        "message": "Enter browser action icon colour",
+        "message": "Enter browser action icon color",
         "description": "Enter browser action icon color"
     },
     "isStickyGroupTitle": {
@@ -382,36 +382,36 @@
         "description": "Icon style"
     },
     "discardTabsAfterHide": {
-        "message": "Discard tabs after hide (this will save the RAM)",
-        "description": "Discard tabs after hide (this will save the RAM)"
+        "message": "Discard tabs after hide (this will reduce RAM usage)",
+        "description": "Discard tabs after hide (this will reduce RAM usage)"
     },
     "createThumbnailsForTabs": {
-        "message": "Create thumbnails for tabs (used in the \"Manage groups\")",
-        "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
+        "message": "Create thumbnails for tabs (used in the \"Manage groups\" view)",
+        "description": "Create thumbnails for tabs (used in the \"Manage groups\" view)"
     },
     "thisTabCanNotBeHidden": {
-        "message": "This tab can not be hidden because it uses a microphone or camera",
-        "description": "This tab can not be hidden because it uses a microphone or camera"
+        "message": "This tab can't be hidden because it uses a microphone or camera",
+        "description": "This tab can't be hidden because it uses a microphone or camera"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
-        "message": "It is not possible to change the group because one of the opened tabs share microphone or camera",
-        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
+        "message": "It isn't possible to switch group because one of the opened tabs uses the microphone or camera",
+        "description": "It isn't possible to switch group because one of the opened tabs uses the microphone or camera"
     },
     "foundHiddenUnSyncTabsDescription": {
         "message": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:",
         "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
     },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
-        "message": "Move all of this tabs into current group/window",
-        "description": "Move all of this tabs into current group/window"
+        "message": "Move all these tabs into current group/window",
+        "description": "Move all these tabs into current group/window"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
-        "message": "Create new group with all of this tabs",
-        "description": "Create new group with all of this tabs"
+        "message": "Create new group with all these tabs",
+        "description": "Create new group with all these tabs"
     },
     "actionHiddenUnSyncTabsCloseAll": {
-        "message": "Close all of this tabs",
-        "description": "Close all of this tabs"
+        "message": "Close all these tabs",
+        "description": "Close all these tabs"
     },
     "thisTabWillCreateAsNew": {
         "message": "This tab will create as new",
@@ -422,12 +422,12 @@
         "description": "Update thumbnail for this tab"
     },
     "cantMakeThumbnailTabWasDiscarded": {
-        "message": "You can not make a thumbnail of a tab if the tab was not loaded",
-        "description": "You can not make a thumbnail of a tab if the tab was not loaded"
+        "message": "You can't create a thumbnail of a tab if the tab was not loaded",
+        "description": "You can't create a thumbnail of a tab if the tab was not loaded"
     },
     "nowFoundWindowsAddonStoppedWorking": {
-        "message": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser.",
-        "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
+        "message": "Error: couldn't find any normal non-private/incognito/popup windows.\nAddon stopped working. Please restart Firefox.",
+        "description": "Error: couldn't find any normal non-private/incognito/popup windows.\nAddon stopped working. Please restart Firefox."
     },
     "waitingToLoadAllTabs": {
         "message": "Waiting for all tabs to load.\nPlease wait...",
@@ -438,8 +438,8 @@
         "description": "Reload addon"
     },
     "ffFailedAndLostDataMessage": {
-        "message": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it",
-        "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
+        "message": "Firefox failed and all the groups were lost.\nIf you have a backup, you can restore data from it",
+        "description": "Firefox failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
     },
     "enterDefaultGroupIconViewTypeTitle": {
         "message": "Icon style for a new group",
