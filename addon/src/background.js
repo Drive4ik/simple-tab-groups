@@ -1647,11 +1647,18 @@ async function runMigrateForData(data) {
     // reset tab ids
     data.groups.forEach(group => group.tabs.forEach(tab => tab.id = null));
 
-    if (data.version === browser.runtime.getManifest().version) {
+    let currentVersion = browser.runtime.getManifest().version;
+
+    if (data.version === currentVersion) {
         return data;
     }
 
-    if (1 === utils.compareStrings(data.version, browser.runtime.getManifest().version)) {
+    if (data.version === constants.DEFAULT_OPTIONS.version) {
+        data.version = currentVersion;
+        return data;
+    }
+
+    if (1 === utils.compareStrings(data.version, currentVersion)) {
         throw 'Please, update addon to latest version';
     }
 
@@ -1735,7 +1742,7 @@ async function runMigrateForData(data) {
 
 
 
-    data.version = browser.runtime.getManifest().version;
+    data.version = currentVersion;
 
     if (keysToRemoveFromStorage.length) {
         await storage.remove(keysToRemoveFromStorage);
@@ -1950,7 +1957,7 @@ async function init() {
 
         let tempSyncedTabIds = [];
 
-        // синхронизируем вкладки, пытаемся найти вкладки что есть в группе чтоб не создавать заного
+        // синхронизируем вкладки, пытаемся найти вкладки что есть в группе чтоб не создавать заново
         group.tabs.forEach(function(groupTab) {
             win.tabs.some(function(winTab) {
                 if (!tempSyncedTabIds.includes(winTab.id) && winTab.url === groupTab.url) {
