@@ -1958,6 +1958,7 @@ async function init() {
                 await createTempActiveTab(win.id, false);
                 await browser.tabs.hide(tabsToHide);
             }
+
             return;
         }
 
@@ -1976,17 +1977,7 @@ async function init() {
 
         group.tabs = group.tabs.filter(tab => tab.id || utils.isUrlAllowToCreate(tab.url)); // remove missed unsupported tabs
 
-        await Promise.all(group.tabs.map(async function(tab, tabIndex) {
-            if (tab.id) {
-                // let winTab = win.tabs.find(winT => winT.id === tab.id);
-
-                // if (utils.isTabHidden(winTab)) {
-                //     await browser.tabs.show(winTab.id);
-                // }
-
-                return;
-            }
-
+        await Promise.all(group.tabs.filter(tab => !tab.id).map(async function(tab) {
             let newTab = await browser.tabs.create({
                 active: Boolean(tab.active),
                 url: tab.url,
@@ -2014,34 +2005,9 @@ async function init() {
             }
         }
 
-        // let tabsIdsSortingInOrderInGroup = group.tabs.map(utils.keyId);
-
         syncedTabsIds = syncedTabsIds.concat(group.tabs.map(utils.keyId));
 
-
         await showHideAndSortTabsInWindow(win, group.tabs);
-
-        // let pinnedTabs = await getPinnedTabs(win.id),
-        //     pinnedTabsLength = pinnedTabs.length;
-
-        // await browser.tabs.move(tabsIdsSortingInOrderInGroup, {
-        //     windowId: win.id,
-        //     index: pinnedTabsLength,
-        // });
-
-        // let tabsIdsToHide = win.tabs
-        //     .filter(winTab => utils.isTabVisible(winTab) && !tabsIdsSortingInOrderInGroup.includes(winTab.id))
-        //     .map(utils.keyId);
-
-        // if (tabsIdsToHide.length) {
-        //     let tmpTab = await createTempActiveTab(win.id, false);
-
-        //     await browser.tabs.hide(tabsIdsToHide);
-
-        //     if (tmpTab) {
-        //         await browser.tabs.remove(tmpTab.id);
-        //     }
-        // }
     }));
 
     async function showHideAndSortTabsInWindow(win, groupTabs) {
@@ -2099,44 +2065,41 @@ async function init() {
     }
 
     // find all tabs in group and in window and sync this tabs
-    data.groups
-        .filter(group => !syncedGroupsIds.includes(group.id) && group.tabs.length)
-        .forEach(function(group) {
-            windows.some(function(win) {
-                let tempSyncedTabIds = [];
+    let missedGroupsForSync = data.groups.filter(group => !syncedGroupsIds.includes(group.id) && group.tabs.length);
 
-                let isAllTabsFinded = group.tabs.every(function(groupTab) {
-                    return win.tabs.some(function(winTab) {
-                        if (!tempSyncedTabIds.includes(winTab.id) && !syncedTabsIds.includes(winTab.id) && winTab.url === groupTab.url) {
-                            groupTab.id = winTab.id; // temporary set tab id
-                            tempSyncedTabIds.push(winTab.id);
-                            return true;
-                        }
-                    });
-                });
+    for await (let group of missedGroupsForSync) {
+        for (let win of windows) {
+            let tempSyncedTabIds = [];
 
-                if (isAllTabsFinded) {
-                    syncedGroupsIds.push(group.id);
-                    syncedTabsIds = syncedTabsIds.concat(group.tabs.map(utils.keyId));
-
-                    if (!win.session.groupId) { // sync group with window if all tabs found but window was not synchronized
-                        group.windowId = win.id;
-                        win.session.groupId = group.id;
-                        setWindowValue(win.id, 'groupId', group.id);
-
-                        if (group.tabs.length < win.tabs.length) {
-                            // show and hide other tabs
-                            showHideAndSortTabsInWindow(win, group.tabs);
-                        }
+            let isAllTabsFinded = group.tabs.every(function(groupTab) {
+                return win.tabs.some(function(winTab) {
+                    if (!tempSyncedTabIds.includes(winTab.id) && !syncedTabsIds.includes(winTab.id) && winTab.url === groupTab.url) {
+                        groupTab.id = winTab.id; // temporary set tab id
+                        tempSyncedTabIds.push(winTab.id);
+                        return true;
                     }
+                });
+            });
 
-                    return true;
+            if (isAllTabsFinded) {
+                syncedGroupsIds.push(group.id);
+                syncedTabsIds = syncedTabsIds.concat(group.tabs.map(utils.keyId));
+
+                if (!win.session.groupId) { // sync group with window if all tabs found but window was not synchronized
+                    group.windowId = win.id;
+                    win.session.groupId = group.id;
+                    await setWindowValue(win.id, 'groupId', group.id);
+
+                    await showHideAndSortTabsInWindow(win, group.tabs);
                 }
 
-                // if not found all tabs - clear tab ids
-                group.tabs.forEach(tab => tab.id = null);
-            });
-        });
+                break;
+            }
+
+            // if not found all tabs - clear tab ids
+            group.tabs.forEach(tab => tab.id = null);
+        }
+    }
 
     // sync other tabs by max tab matches in window
     data.groups
