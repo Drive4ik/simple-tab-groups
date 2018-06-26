@@ -1645,7 +1645,10 @@ window.background = {
 
 async function runMigrateForData(data) {
     // reset tab ids
-    data.groups.forEach(group => group.tabs.forEach(tab => tab.id = null));
+    data.groups.forEach(function(group) {
+        group.windowId = null;
+        group.tabs.forEach(tab => tab.id = null);
+    });
 
     let currentVersion = browser.runtime.getManifest().version;
 
@@ -1861,7 +1864,7 @@ async function init() {
     delete data.doRemoveSTGNewTabUrls;
 
     lastFocusedNormalWindow = windows.find(win => win.focused) || windows[0];
-    lastFocusedWinId = lastFocusedNormalWindow.id;
+    lastFocusedWinId = lastFocusedNormalWindow && lastFocusedNormalWindow.id;
 
     if (options.createThumbnailsForTabs) {
         data.groups.forEach(function(group) {
@@ -1912,6 +1915,11 @@ async function init() {
     browser.notifications.clear('loading-tab-message');
 
     windows = await getAllWindows();
+
+    if (!windows.length) {
+        utils.notify(browser.i18n.getMessage('nowFoundWindowsAddonStoppedWorking'));
+        return;
+    }
 
     // update saved loading tabs
     windows.forEach(function(win) {
@@ -1997,12 +2005,12 @@ async function init() {
 
             if (tabsToConcatWithGroupTabs.length) {
                 group.tabs = group.tabs.concat(tabsToConcatWithGroupTabs.map(mapTab));
-            }
 
-            let loadedActiveTab = tabsToConcatWithGroupTabs.find(tab => tab.active);
+                let loadedActiveTab = tabsToConcatWithGroupTabs.find(tab => tab.active);
 
-            if (loadedActiveTab) {
-                group.tabs.forEach(tab => tab.active = tab.id === loadedActiveTab.id);
+                if (loadedActiveTab) {
+                    group.tabs.forEach(tab => tab.active = tab.id === loadedActiveTab.id);
+                }
             }
         }
 
@@ -2037,8 +2045,6 @@ async function init() {
     data.groups
         .filter(group => !syncedGroupsIds.includes(group.id) && group.tabs.length)
         .forEach(function(group) {
-            group.windowId = null;
-
             windows.some(function(win) {
                 let tempSyncedTabIds = [];
 
@@ -2074,12 +2080,11 @@ async function init() {
     data.groups
         .filter(group => !syncedGroupsIds.includes(group.id) && group.tabs.length)
         .forEach(function(group) {
-            group.windowId = null;
-
-            let tabsMatches = {}, // matches: win tabs
-                tempSyncedTabIds = [];
+            let tabsMatches = {}; // matches: win tabs
 
             windows.forEach(function(win) {
+                let tempSyncedTabIds = [];
+
                 let matches = group.tabs
                     .filter(function(groupTab) {
                         return win.tabs.some(function(winTab) {
