@@ -1,0 +1,14 @@
+{
+    "iconColor": {
+        "message": "Icon colour",
+        "description": "Icon color"
+    },
+    "setRandomColor": {
+        "message": "Set random colour",
+        "description": "Set random color"
+    },
+    "enterBrowserActionIconColor": {
+        "message": "Enter browser action icon colour",
+        "description": "Enter browser action icon color"
+    }
+}
