@@ -1,6 +1,6 @@
 {
     "extensionDescription": {
-        "message": "Skapa, organisera och byt mellan flikgrupper. \nInspirerat av det gamla \"Tab Groups\"-tillägget :)",
+        "message": "Skapa, organisera och byt mellan flikgrupper. \nInspirerat av Quicksavers gamla \"Tab Groups\"-tillägget :)",
         "description": "Description of the extension."
     },
     "openSettings": {
@@ -12,7 +12,7 @@
         "description": "Manage groups"
     },
     "setTabIconAsGroupIcon": {
-        "message": "Använd denna ikon för",
+        "message": "Använd som ikon för nuvarande grupp",
         "description": "Set tab icon as group icon"
     },
     "moveTabToGroupDisabledTitle": {
@@ -92,7 +92,7 @@
         "description": "Close popup after changing group"
     },
     "showNotificationAfterMoveTab": {
-        "message": "Visa en notifikation när en flik flyttas till en annan grupp",
+        "message": "Visa en notis när en flik flyttas till en annan grupp",
         "description": "Show notification when tab is moved to another group"
     },
     "openManageGroupsInTab": {
@@ -104,11 +104,11 @@
         "description": "Show confirm dialog before group delete"
     },
     "exportAddonSettingsTitle": {
-        "message": "Ta en säkerhetskopia av Simple Tab Groups-datan",
+        "message": "Ta en säkerhetskopia av Simple Tab Groups-inställningar och -flikar",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
-        "message": "Säkerhetskopia dina flikgrupper till fil, för att vid behov kunna återställa dem.",
+        "message": "Säkerhetskopiera dina flikgrupper till en fil, för att vid behov kunna återställa dem.",
         "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
     },
     "exportAddonSettingsButton": {
@@ -116,7 +116,7 @@
         "description": "Create backup"
     },
     "includeTabThumbnailsIntoBackup": {
-        "message": "Inkludera en minityrbild av fliken i säkerhetskopian (gör säkerhetskopian större)",
+        "message": "Inkludera en miniatyrbild av varje flik i säkerhetskopian (gör säkerhetskopian större)",
         "description": "Include tab thumbnails into backup (make backup file size bigger)"
     },
     "importAddonSettingsTitle": {
@@ -124,11 +124,11 @@
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
-        "message": "Ladda säkerhetskopia från en fil som innehåller flikar som du vill återtälla.",
+        "message": "Ladda säkerhetskopia från en fil som innehåller flikar och inställningar som du vill återtälla.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
     "importAddonSettingsWarning": {
-        "message": "Återställ tilläggsinställningar tar bort ALLA flikgrupper och inställningar!",
+        "message": "Återställ tilläggsinställningar tar bort ALLA existerande flikar och inställningar!",
         "description": "Restore add-on settings will ERASE all existing settings and groups!"
     },
     "importAddonSettingsButton": {
@@ -162,12 +162,16 @@
         }
     },
     "sortGroupsAZ": {
-        "message": "Sortera grupper [A-Z]",
+        "message": "Sortera grupper [A-Ö]",
         "description": "Sort groups [A-Z]"
     },
     "sortGroupsZA": {
-        "message": "Sortera grupper [Z-A]",
+        "message": "Sortera grupper [Ö-A]",
         "description": "Sort groups [Z-A]"
+    },
+    "generalTitle": {
+        "message": "Allmänt",
+        "description": "General"
     },
     "settingsTitle": {
         "message": "Inställningar",
@@ -246,7 +250,7 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Fånga och flytta flikar i behållare till den här gruppen (endast för web URLs, tomma flikar stöds ej)",
+        "message": "Fånga och flytta flikar i behållare till den här gruppen (endast för web-URLs, tomma flikar stöds ej)",
         "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
     },
     "regexpForTabsTitle": {
@@ -326,7 +330,7 @@
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
     },
     "saveErrorLogsIntoFile": {
-        "message": "Spara senaste fel i en JSON-fil",
+        "message": "Spara logg över senaste fel i en JSON-fil",
         "description": "Save last error logs into JSON file"
     },
     "undoRemoveGroupItemTitle": {
@@ -358,5 +362,73 @@
     "iconStyle": {
         "message": "Ikonstil",
         "description": "Icon style"
+    },
+    "discardTabsAfterHide": {
+        "message": "Kassera flikar i grupper som göms (minskar på minnesanvändningen)",
+        "description": "Discard tabs after hide (this will reduce RAM usage)"
+    },
+    "createThumbnailsForTabs": {
+        "message": "Skapa miniatyrbild för flikar (används i \"Gruppöversikt\"-vyn)",
+        "description": "Create thumbnails for tabs (used in the \"Manage groups\" view)"
+    },
+    "thisTabCanNotBeHidden": {
+        "message": "Den här fliken kan inte gömmas, eftersom den använder mikrofonen eller kameran",
+        "description": "This tab can't be hidden because it uses a microphone or camera"
+    },
+    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
+        "message": "Det är inte möjligt att byta grupp, eftersom en av de öppna flikarna använder mikrofonen eller kameran",
+        "description": "It isn't possible to switch group because one of the opened tabs uses the microphone or camera"
+    },
+    "foundHiddenUnSyncTabsDescription": {
+        "message": "Hittade gömda och osynkroniserade flikar. Klicka på en flik för att öppna den i nuvarande grupp eller fönster, eller:",
+        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
+    },
+    "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
+        "message": "Move all these tabs into current group/window",
+        "description": "Move all these tabs into current group/window"
+    },
+    "actionHiddenUnSyncTabsCreateGroup": {
+        "message": "Skapa en ny grupp med alla dessa flikar",
+        "description": "Create new group with all these tabs"
+    },
+    "actionHiddenUnSyncTabsCloseAll": {
+        "message": "Stäng alla dessa flikar",
+        "description": "Close all these tabs"
+    },
+    "thisTabWillCreateAsNew": {
+        "message": "Den här fliken skapas som ny",
+        "description": "This tab will create as new"
+    },
+    "updateTabThumbnail": {
+        "message": "Uppdatera miniatyrbild för den här fliken",
+        "description": "Update thumbnail for this tab"
+    },
+    "cantMakeThumbnailTabWasDiscarded": {
+        "message": "Det går inte att skapa en miniatyrbild om inte fliken är laddad",
+        "description": "You can't create a thumbnail of a tab if the tab was not loaded"
+    },
+    "nowFoundWindowsAddonStoppedWorking": {
+        "message": "Fel: kunde inte hitta något vanligt icke-privat fönster.\nTillägget slutade fungera. Vänligen starta om Firefox.",
+        "description": "Error: couldn't find any normal non-private/incognito/popup windows.\nAddon stopped working. Please restart Firefox."
+    },
+    "waitingToLoadAllTabs": {
+        "message": "Väntar på att alla flikar skall laddas.\nVänligen vänta...",
+        "description": "Waiting for all tabs to load.\nPlease wait..."
+    },
+    "reloadAddon": {
+        "message": "Ladda om tillägg",
+        "description": "Reload addon"
+    },
+    "ffFailedAndLostDataMessage": {
+        "message": "Firefox tappade bort alla flikgrupper.\nOm du har en säkerhetskopia kan du återställa data från den.",
+        "description": "Firefox failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
+    },
+    "enterDefaultGroupIconViewTypeTitle": {
+        "message": "Ikonstil för en ny grupp",
+        "description": "Icon style for a new group"
+    },
+    "openPopupHotkeyTitle": {
+        "message": "Öppna grupp-popup:en",
+        "description": "Open the groups pop-up"
     }
 }
