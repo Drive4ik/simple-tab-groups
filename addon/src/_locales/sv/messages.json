@@ -1,6 +1,6 @@
 {
     "extensionDescription": {
-        "message": "Skapa, organisera och byt mellan flikgrupper. \nInspirerat av det gamla \"Tab Groups\"-tillägget :)",
+        "message": "Skapa, organisera och byt mellan flikgrupper. \nInspirerat av Quicksavers gamla \"Tab Groups\"-tillägget :)",
         "description": "Description of the extension."
     },
     "openSettings": {
@@ -12,7 +12,7 @@
         "description": "Manage groups"
     },
     "setTabIconAsGroupIcon": {
-        "message": "Använd denna ikon för",
+        "message": "Använd som ikon för nuvarande grupp",
         "description": "Set tab icon as group icon"
     },
     "moveTabToGroupDisabledTitle": {
@@ -92,7 +92,7 @@
         "description": "Close popup after changing group"
     },
     "showNotificationAfterMoveTab": {
-        "message": "Visa en notifikation när en flik flyttas till en annan grupp",
+        "message": "Visa en notis när en flik flyttas till en annan grupp",
         "description": "Show notification when tab is moved to another group"
     },
     "openManageGroupsInTab": {
@@ -104,11 +104,11 @@
         "description": "Show confirm dialog before group delete"
     },
     "exportAddonSettingsTitle": {
-        "message": "Ta en säkerhetskopia av Simple Tab Groups-datan",
+        "message": "Ta en säkerhetskopia av Simple Tab Groups-inställningar och -flikar",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
-        "message": "Säkerhetskopia dina flikgrupper till fil, för att vid behov kunna återställa dem.",
+        "message": "Säkerhetskopiera dina flikgrupper till en fil, för att vid behov kunna återställa dem.",
         "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
     },
     "exportAddonSettingsButton": {
@@ -116,7 +116,7 @@
         "description": "Create backup"
     },
     "includeTabThumbnailsIntoBackup": {
-        "message": "Inkludera en minityrbild av fliken i säkerhetskopian (gör säkerhetskopian större)",
+        "message": "Inkludera en miniatyrbild av varje flik i säkerhetskopian (gör säkerhetskopian större)",
         "description": "Include tab thumbnails into backup (make backup file size bigger)"
     },
     "importAddonSettingsTitle": {
@@ -124,11 +124,11 @@
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
-        "message": "Ladda säkerhetskopia från en fil som innehåller flikar som du vill återtälla.",
+        "message": "Ladda säkerhetskopia från en fil som innehåller flikar och inställningar som du vill återtälla.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
     "importAddonSettingsWarning": {
-        "message": "Återställ tilläggsinställningar tar bort ALLA flikgrupper och inställningar!",
+        "message": "Återställ tilläggsinställningar tar bort ALLA existerande flikar och inställningar!",
         "description": "Restore add-on settings will ERASE all existing settings and groups!"
     },
     "importAddonSettingsButton": {
@@ -162,11 +162,11 @@
         }
     },
     "sortGroupsAZ": {
-        "message": "Sortera grupper [A-Z]",
+        "message": "Sortera grupper [A-Ö]",
         "description": "Sort groups [A-Z]"
     },
     "sortGroupsZA": {
-        "message": "Sortera grupper [Z-A]",
+        "message": "Sortera grupper [Ö-A]",
         "description": "Sort groups [Z-A]"
     },
     "settingsTitle": {
@@ -246,7 +246,7 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Fånga och flytta flikar i behållare till den här gruppen (endast för web URLs, tomma flikar stöds ej)",
+        "message": "Fånga och flytta flikar i behållare till den här gruppen (endast för web-URLs, tomma flikar stöds ej)",
         "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
     },
     "regexpForTabsTitle": {
@@ -326,7 +326,7 @@
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
     },
     "saveErrorLogsIntoFile": {
-        "message": "Spara senaste fel i en JSON-fil",
+        "message": "Spara logg över senaste fel i en JSON-fil",
         "description": "Save last error logs into JSON file"
     },
     "undoRemoveGroupItemTitle": {
