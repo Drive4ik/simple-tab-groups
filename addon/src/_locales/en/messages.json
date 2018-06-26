@@ -100,7 +100,7 @@
         "description": "Close popup after changing group"
     },
     "showNotificationAfterMoveTab": {
-        "message": "Show notification when tab is moved to another group",
+        "message": "Show notification when a tab is moved to another group",
         "description": "Show notification when tab is moved to another group"
     },
     "openManageGroupsInTab": {
@@ -124,11 +124,11 @@
         "description": "Create backup"
     },
     "includeTabThumbnailsIntoBackup": {
-        "message": "Include tab thumbnails into backup (make backup file size bigger)",
+        "message": "Include tab thumbnails in backup (makes backup file size bigger)",
         "description": "Include tab thumbnails into backup (make backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "Restore Simple Tab Groups",
+        "message": "Restore Simple Tab Groups from backup",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
@@ -136,7 +136,7 @@
         "description": "Load a backup file containing the tab groups you want to restore."
     },
     "importAddonSettingsWarning": {
-        "message": "Restore add-on settings will ERASE all existing settings and groups!",
+        "message": "Restoring from backup will ERASE all existing settings and groups!",
         "description": "Restore add-on settings will ERASE all existing settings and groups!"
     },
     "importAddonSettingsButton": {
@@ -148,12 +148,12 @@
         "description": "Restore Quicksaver's \"Tab Groups\""
     },
     "importSettingsOldTabGroupsAddonDescription": {
-        "message": "Load a backup file old \"Tab Groups\" addon.",
+        "message": "Load a backup file from the old \"Tab Groups\" addon.",
         "description": "Load a backup file old \"Tab Groups\" addon."
     },
     "importSettingsOldTabGroupsAddonButton": {
-        "message": "Import settings from Quicksaver's \"Tab Groups\" add-on",
-        "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
+        "message": "Choose file",
+        "description": "Choose file"
     },
     "openGroupAfterChange": {
         "message": "Open group after changing to it",
@@ -252,7 +252,7 @@
         "description": "Title"
     },
     "iconColor": {
-        "message": "Icon colour",
+        "message": "Icon color",
         "description": "Icon color"
     },
     "selectUserGroupIcon": {
@@ -264,11 +264,11 @@
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
-        "message": "Set random colour",
+        "message": "Set random color",
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)",
+        "message": "Catch and move tabs with containers to this group (only for web URLs, empty tabs are not supported)",
         "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
     },
     "regexpForTabsTitle": {
@@ -280,7 +280,7 @@
         "description": "Regular expressions"
     },
     "regexpForTabsHelp": {
-        "message": "Insert regular expressions for web addresses here. Matching tabs will be moved automatically to this group.\nUse one line per rule, there can be as many as you want.\nExamples:\ngithub\\.com/drive4ik/simple-tab-groups - catch all pages in the add-on's repository\nbugzilla\\.mozilla\\.org - catch Firefox bug reports\n(facebook|twitter|youtube)\\.com - catch all your social pages",
+        "message": "Insert regular expressions for web addresses here. Matching tabs will be automatically moved to this group.\nUse one line per rule, there can be as many as you want.\nExamples:\ngithub\\.com/drive4ik/simple-tab-groups - catch all pages in the add-on's repository\nbugzilla\\.mozilla\\.org - catch Firefox bug reports\n(facebook|twitter|youtube)\\.com - catch all your social pages",
         "description": "Regular exceptions helper"
     },
     "hotkeysTitle": {
@@ -288,7 +288,7 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Here you can add hot keys.<br>Restrictions:<br>1. These hotkeys will only work on web pages (http:, https:). On the browser pages (about:) - it's doesn't work, the WebExtensions API does not allow this.<br>2. Some hotkeys will not work in different keyboard layouts. For example, the shortcut created in English layout <code>Ctrl + ~</code> will not work on the Russian layout, because in Russian layout this key has another code. To fix this, just create another hotkey on the Russian layout: <code>Ctrl + Ё</code>",
+        "message": "Here you can add hotkeys.<br>Restrictions:<br>1. These hotkeys will only work on web pages (http:, https:), not on the browser pages (about:), because the WebExtensions API does not allow this.<br>2. Some hotkeys will not work with all keyboard layouts. For example, a <code>Ctrl + ~</code> shortcut created with an English layout will not work with a keyboard with Russian layout, because in the Russian layout this key has another code. To fix this, just create another hotkey with the Russian layout: <code>Ctrl + Ё</code>",
         "description": "Hotkeys description"
     },
     "addHotKeyButton": {
@@ -344,7 +344,7 @@
         "description": "Open manage groups"
     },
     "whatsWrongMessage": {
-        "message": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)",
+        "message": "What's wrong...\nPlease notify the developer by support email with last error logs (button exists at the bottom of the Options page)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
     },
     "saveErrorLogsIntoFile": {
@@ -362,7 +362,7 @@
         }
     },
     "enterBrowserActionIconColor": {
-        "message": "Enter browser action icon colour",
+        "message": "Enter browser action icon color",
         "description": "Enter browser action icon color"
     },
     "isStickyGroupTitle": {
