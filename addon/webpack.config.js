@@ -51,7 +51,7 @@ const config = {
                 parallel: true,
                 sourceMap: false,
                 uglifyOptions: {
-                    ecma: 6,
+                    ecma: 8,
                     compress: {
                         drop_console: true,
                     },
