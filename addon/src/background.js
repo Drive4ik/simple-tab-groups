@@ -2067,7 +2067,7 @@ async function init() {
     // find all tabs in group and in window and sync this tabs
     let missedGroupsForSync = data.groups.filter(group => !syncedGroupsIds.includes(group.id) && group.tabs.length);
 
-    for await (let group of missedGroupsForSync) {
+    for (let group of missedGroupsForSync) {
         for (let win of windows) {
             let tempSyncedTabIds = [];
 
