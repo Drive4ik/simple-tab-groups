@@ -1,0 +1,74 @@
+{
+    "manifest_version": 2,
+
+    "applications": {
+        "gecko": {
+            "id": "experimental-simple-tab-groups@drive4ik",
+            "strict_min_version": "61.0"
+        }
+    },
+
+    "name": "__MSG_extensionName__",
+    "description": "__MSG_extensionDescription__",
+    "version": "3.0.6.5",
+    "author": "Drive4ik",
+    "homepage_url": "https://github.com/drive4ik/simple-tab-groups",
+
+    "icons": {
+        "96": "/icons/icon.svg"
+    },
+
+    "permissions": [
+        "tabs",
+        "tabHide",
+        "notifications",
+        "menus",
+        "contextualIdentities",
+        "cookies",
+        "<all_urls>",
+        "sessions",
+        "storage",
+        "unlimitedStorage"
+    ],
+
+    "browser_action": {
+        "default_area": "tabstrip",
+        "browser_style": false,
+        "default_icon": "/icons/icon.svg",
+        "default_title": "__MSG_extensionName__",
+        "default_popup": "popup/popup.html"
+    },
+
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["/web/hotkeys.js"],
+            "all_frames" : true,
+            "match_about_blank": true,
+            "run_at": "document_start"
+        }
+    ],
+
+    "options_ui": {
+        "page": "options/options.html",
+        "browser_style": false
+    },
+
+    "background": {
+        "scripts": ["background.js"]
+    },
+
+    "content_security_policy": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data:; script-src 'self'",
+
+    "default_locale": "en",
+
+    "commands": {
+        "_execute_browser_action": {
+            "suggested_key": {
+                "default": "F8"
+            },
+            "description": "Open popup"
+        }
+    }
+
+}

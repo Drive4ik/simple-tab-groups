@@ -1,0 +1,352 @@
+{
+    "extensionDescription": {
+        "message": "Δημιούργησε, τροποποίησε και γρήγορα άλλαξε tab groups. \nΕμπνευσμένο από το παλιόadd-on \"Tab Groups\" :)",
+        "description": "Description of the extension."
+    },
+    "openSettings": {
+        "message": "Ρυθμίσεις",
+        "description": "Settings context button title"
+    },
+    "manageGroupsTitle": {
+        "message": "Διαχείριση groups",
+        "description": "Manage groups"
+    },
+    "setTabIconAsGroupIcon": {
+        "message": "Το εικονίδιο του tab να γίνει εικονίδιο του group",
+        "description": "Set tab icon as group icon"
+    },
+    "moveTabToGroupDisabledTitle": {
+        "message": "Μετακίνηση του tab στο group",
+        "description": "Move tab to group title"
+    },
+    "moveTabToGroupMessage": {
+        "message": "Το tab \"$tabtitle$\" μετακινήθηκε στο group \"$grouptitle$\".\n\nΚάνετε click εδώ για να δείτε αυτό το tab.",
+        "description": "Tab moved popup title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            },
+            "tabtitle": {
+                "content": "$2",
+                "example": "tab title"
+            }
+        }
+    },
+    "warning": {
+        "message": "Προσοχή!",
+        "description": "Warning!"
+    },
+    "success": {
+        "message": "Επιτυχία!",
+        "description": "Success!"
+    },
+    "ok": {
+        "message": "ΟΚ",
+        "description": "OK button"
+    },
+    "save": {
+        "message": "Αποθήκευση",
+        "description": "Save"
+    },
+    "delete": {
+        "message": "Διαγραφή",
+        "description": "Delete"
+    },
+    "cancel": {
+        "message": "Ακύρωση",
+        "description": "Cancel"
+    },
+    "privateAndPinnedTabsAreNotSupported": {
+        "message": "Ιδιωτικά (Private) και καρφιτσωμένα (pinned) tabs δεν υποστηρίζονται",
+        "description": "Private and pinned tabs are not supported"
+    },
+    "thisTabIsNotSupported": {
+        "message": "Αυτό το tab δεν υποστηρίζεται",
+        "description": "This tab is not supported"
+    },
+    "filterTabsPlaceholder": {
+        "message": "Φίλτρο tabs (πολλαπλά φίλτρα με *)",
+        "description": "Filter tabs (multiple filter with *)"
+    },
+    "invalidRegExpRuleTitle": {
+        "message": "Ο κανόνας '$regexp$' είναι άκυρος και θα παραληφθεί.",
+        "description": "Invalid rule description",
+        "placeholders": {
+            "regexp": {
+                "content": "$1",
+                "example": "googlecom"
+            }
+        }
+    },
+    "manageGroupViewGrid": {
+        "message": "Απεικόνιση πλέγματος",
+        "description": "Grid display"
+    },
+    "manageGroupViewFreeArrange": {
+        "message": "Ελεύθερη ταξινόμηση (σε μελλοντικές εκδόσεις)",
+        "description": "Free arrange"
+    },
+    "closePopupAfterChangeGroup": {
+        "message": "Κλείσιμο αναδυόμενου μηνύματος μετά την αλλαγή group",
+        "description": "Close popup after changing group"
+    },
+    "showNotificationAfterMoveTab": {
+        "message": "Να εμφανίζεται ειδοποίηση όταν ένα tab μετακινείται σε άλλο  group",
+        "description": "Show notification when tab is moved to another group"
+    },
+    "openManageGroupsInTab": {
+        "message": "Άνοιγμα \"Διαχείριση Groups\" σε νέο tab",
+        "description": "Open \"Manage Groups\" in new tab"
+    },
+    "showConfirmDialogBeforeGroupDelete": {
+        "message": "Να εμφανίζεται μήνυμα επιβεβαίωσης πριν την διαγραφή ενός  group",
+        "description": "Show confirm dialog before group delete"
+    },
+    "exportAddonSettingsTitle": {
+        "message": "Αντίγραφο ασφαλείας (backup) των Simple Tab Groups",
+        "description": "Backup your Simple Tab Groups"
+    },
+    "exportAddonSettingsDescription": {
+        "message": "Εξαγωγή των tab groups σε αρχείο ασφαλείας για φύλαξη, ώστε να μπορείτε να τα επαναφέρετε αργότερα αν χρειαστεί.",
+        "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
+    },
+    "exportAddonSettingsButton": {
+        "message": "Δημιουργία backup",
+        "description": "Create backup"
+    },
+    "includeTabThumbnailsIntoBackup": {
+        "message": "Να συμπεριληφθούν οι μικρογραφίες των tab (thumbnails) στο backup (το αρχείο θα έχει μεγαλύτερο μέγεθος)",
+        "description": "Include tab thumbnails into backup (make backup file size bigger)"
+    },
+    "importAddonSettingsTitle": {
+        "message": "Επαναφορά των Simple Tab Groups (από αντίγραφο ασφαλείας)",
+        "description": "Restore Simple Tab Groups"
+    },
+    "importAddonSettingsDescription": {
+        "message": "Φόρτωμα αντιγράφου ασφαλείας που περιέχει τα tab groups που θέλετε να επαναφέρετε.",
+        "description": "Load a backup file containing the tab groups you want to restore."
+    },
+    "importAddonSettingsWarning": {
+        "message": "Η επαναφορά των ρυθμίσεων του πρόσθετου ΘΑ ΔΙΑΓΡΑΨΕΙ όλες τις υπάρχουσες ρυθμίσεις και groups!",
+        "description": "Restore add-on settings will ERASE all existing settings and groups!"
+    },
+    "importAddonSettingsButton": {
+        "message": "Επαναφορά από backup",
+        "description": "Restore backup"
+    },
+    "importSettingsOldTabGroupsAddonTitle": {
+        "message": "Επαναφορά \"Tab Groups\" του Quicksaver",
+        "description": "Restore Quicksaver's \"Tab Groups\""
+    },
+    "importSettingsOldTabGroupsAddonDescription": {
+        "message": "Φόρτωμα αρχείου backup παλαιού πρόσθετου \"Tab Groups\".",
+        "description": "Load a backup file old \"Tab Groups\" addon."
+    },
+    "importSettingsOldTabGroupsAddonButton": {
+        "message": "Εισαγωγή ρυθμίσεων παλαιού \"Tab Groups\" πρόσθετου",
+        "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
+    },
+    "openGroupAfterChange": {
+        "message": "Άνοιγμα group όταν μετακινείστε σε αυτό",
+        "description": "Open group after changing to it"
+    },
+    "sortGroupsAZ": {
+        "message": "Κατάταξη groups [A-Ω]",
+        "description": "Sort groups [A-Z]"
+    },
+    "sortGroupsZA": {
+        "message": "Κατάταξη groups [Ω-Α]",
+        "description": "Sort groups [Z-A]"
+    },
+    "settingsTitle": {
+        "message": "Ρυθμίσεις",
+        "description": "Settings"
+    },
+    "groupSettings": {
+        "message": "Ρυθμίσεις groups",
+        "description": "Group settings"
+    },
+    "deleteGroup": {
+        "message": "Διαγραφή group",
+        "description": "Delete group"
+    },
+    "deleteGroupTitle": {
+        "message": "Να διαγραφεί το group?",
+        "description": "Delete group?"
+    },
+    "deleteGroupBody": {
+        "message": "Να διαγραφεί το group \"$name$\" ?<br>τα tabs ή το παράθυρο του group θα κλείσουν!",
+        "description": "Delete group?",
+        "placeholders": {
+            "name": {
+                "content": "$1",
+                "example": "Group #4"
+            }
+        }
+    },
+    "groupTabsCount": {
+        "message": "$count$ tabs",
+        "description": "Group tabs count",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "deleteTab": {
+        "message": "Διαγραφή tab",
+        "description": "Delete tab"
+    },
+    "createNewTab": {
+        "message": "Άνοιγμα νέου tab",
+        "description": "Open new tab"
+    },
+    "createNewGroup": {
+        "message": "Δημιουργία νέου group",
+        "description": "Create new group"
+    },
+    "goBackButtonTitle": {
+        "message": "Επιστροφή",
+        "description": "Go back"
+    },
+    "goBackToGroupsButtonTitle": {
+        "message": "Επιστροφή στα groups",
+        "description": "Go back to groups"
+    },
+    "title": {
+        "message": "Τίτλος",
+        "description": "Title"
+    },
+    "iconColor": {
+        "message": "Χρώμα εικονίδιου",
+        "description": "Icon color"
+    },
+    "selectUserGroupIcon": {
+        "message": "Φόρτωση εικονίδιου",
+        "description": "Load icon"
+    },
+    "selectUserGroupIconWarnText": {
+        "message": "Δεν μπορείτε να φορτώσετε custom εικονίδιο εδώ, αλλά μπορείτε να φορτώσετε custom εικονίδιο για group στην \"Διαχείριση groups\".\nΝα ανοίξει η \"Διαχείριση groups\"?",
+        "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
+    },
+    "setRandomColor": {
+        "message": "Τυχαίο χρώμα",
+        "description": "Set random color"
+    },
+    "catchTabContainers": {
+        "message": "Μετακίνηση όλων των tabs με containers σε αυτό το group (μόνο για web urls, άδεια tabs δεν υποστηρίζονται)",
+        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
+    },
+    "regexpForTabsTitle": {
+        "message": "Regular expressions για tabs",
+        "description": "Regular expressions for catch tabs"
+    },
+    "regexpForTabsPlaceholder": {
+        "message": "Regular expressions",
+        "description": "Regular expressions"
+    },
+    "regexpForTabsHelp": {
+        "message": "Εισάγετε regular expressions για διευθύνσεις web εδώ. Τα tabs που θα βρεθούν θα μετακινηθούν αυτόματα σε αυτό το group.\nΧρησιμοποιείστε μία γραμμή ανά κανόνα, μπορείτε να βάλετε όσους θέλετε.\nΠαραδείγματα:\ngithub\\.com/drive4ik/simple-tab-groups - βρίσκει όλες τις σελίδες στο αποθετήριο του πρόσθετου\nbugzilla\\.mozilla\\.org - βρίσκει αναφορές λαθών του  Firefox\n(facebook|twitter|youtube)\\.com - βρίσκει όλες τις σελίδες σας στα κοινωνικά μέσα",
+        "description": "Regular exceptions helper"
+    },
+    "hotkeysTitle": {
+        "message": "Hotkeys",
+        "description": "Hotkeys"
+    },
+    "hotkeysDescription": {
+        "message": "Εδώ μπορείτε να προσθέσετε hot keys.<br>Περιορισμοί:<br>1. Τα hotkeys λειτουργούν μόνο σε σελίδες web (http:, https:). Δεν λειτουργούν σε σελίδες browser (about:) - το WebExtensions API δεν το επιτρέπει.<br>2. Μερικά hotkeys δεν θα λειτουργούν σε κάποιες γλώσσες πληκτρολογίου. Για παράδειγμα, η συντόμευση  (δημιουργημένη σε Αγγλικό πληκτρολόγιο) <code>Ctrl + ~</code> δεν θα λειτουργεί στο Ρωσσικό πληκτρολόγιο, γιατί εκεί αυτό το πλήκτρο έχει άλλον κωδικό. Για να το ξεπεράσετε, απλά δημιουργείστε ένα άλλο hotkey στο Ρωσσικό πληκτρολόγιο: <code>Ctrl + Ё</code>",
+        "description": "Hotkeys description"
+    },
+    "addHotKeyButton": {
+        "message": "Προσθήκη hotkey",
+        "description": "Add hotkey"
+    },
+    "deleteHotKeyButton": {
+        "message": "Διαγραφή hotkey",
+        "description": "Delete hotkey"
+    },
+    "hotkeyPlaceholder": {
+        "message": "Πιέστε τα πλήκτρα που θέλετε",
+        "description": "Press key here"
+    },
+    "selectAction": {
+        "message": "Επιλέξτε δράση",
+        "description": "Select action"
+    },
+    "selectGroup": {
+        "message": "Επιλογή group",
+        "description": "Select group"
+    },
+    "hotkeyActionTitleLoadNextGroup": {
+        "message": "Φόρτωση επόμενου group",
+        "description": "Load next group"
+    },
+    "hotkeyActionTitleLoadPrevGroup": {
+        "message": "Φόρτωση προηγούμενου group",
+        "description": "Load previous group"
+    },
+    "hotkeyActionTitleLoadFirstGroup": {
+        "message": "Φόρτωση πρώτου group",
+        "description": "Load first group"
+    },
+    "hotkeyActionTitleLoadLastGroup": {
+        "message": "Φόρτωση τελευταίου group",
+        "description": "Load last group"
+    },
+    "hotkeyActionTitleLoadCustomGroup": {
+        "message": "Φόρτωση custom group",
+        "description": "Load custom group"
+    },
+    "hotkeyActionTitleAddNewGroup": {
+        "message": "Προσθήκη νέου group",
+        "description": "Add new group"
+    },
+    "hotkeyActionTitleDeleteCurrentGroup": {
+        "message": "Διαγραφή τρέχοντος group",
+        "description": "Delete current group"
+    },
+    "hotkeyActionTitleOpenManageGroups": {
+        "message": "Άνοιγμα Διαχείρισης groups",
+        "description": "Open manage groups"
+    },
+    "whatsWrongMessage": {
+        "message": "Κάτι δεν πήγε καλά...\nΠαρακαλώ επικοινωνείστε με τον δημιουργό στο support email με τα τελευταία αρχεία καταγραφής σφαλμάτων (υπάρχει σχετικό κουμπί στο τέλος των options)",
+        "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
+    },
+    "saveErrorLogsIntoFile": {
+        "message": "Αποθήκευση τελευταίων αρχείων καταγραφής σφαλμάτων σε αρχείο JSON",
+        "description": "Save last error logs into JSON file"
+    },
+    "undoRemoveGroupItemTitle": {
+        "message": "Αναίρεση αφαίρεσης του group \"$grouptitle$\"",
+        "description": "Undo remove group menu title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "enterBrowserActionIconColor": {
+        "message": "Δώστε χρώμα εικονιδίου για browser action",
+        "description": "Enter browser action icon color"
+    },
+    "isStickyGroupTitle": {
+        "message": "Αμετάβλητο group",
+        "description": "Sticky group"
+    },
+    "isStickyGroupHelp": {
+        "message": "Τα tab σε αυτό το group ποτέ δεν θα μετακινηθούν αυτόματα σε άλλο group",
+        "description": "Tabs in this group will never be automatically moved to another group"
+    },
+    "useTabsFavIconsFromGoogleS2Converter": {
+        "message": "Χρήση αγαπημένων εικονιδίων tabs  από Google S2 Converter",
+        "description": "Use tabs fav-icons from Google S2 Converter"
+    },
+    "iconStyle": {
+        "message": "Στυλ εικονιδίου",
+        "description": "Icon style"
+    }
+}

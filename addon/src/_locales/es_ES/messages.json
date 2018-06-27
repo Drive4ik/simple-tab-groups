@@ -1,0 +1,362 @@
+{
+    "extensionDescription": {
+        "message": "Crea, modifica y muévete fácilmente entre grupos de pestañas. \nInspirado en el antiguo add-on \"Tab Groups\" :)",
+        "description": "Description of the extension."
+    },
+    "openSettings": {
+        "message": "Configuración",
+        "description": "Settings context button title"
+    },
+    "manageGroupsTitle": {
+        "message": "Gestión de grupos",
+        "description": "Manage groups"
+    },
+    "setTabIconAsGroupIcon": {
+        "message": "Usar el favicon como icono del grupo",
+        "description": "Set tab icon as group icon"
+    },
+    "moveTabToGroupDisabledTitle": {
+        "message": "Mover pestaña al grupo…",
+        "description": "Move tab to group title"
+    },
+    "moveTabToGroupMessage": {
+        "message": "\"$tabtitle$\" se ha movido a \"$grouptitle$\".\n\nHaz click aquí para abrirlo.",
+        "description": "Tab moved popup title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            },
+            "tabtitle": {
+                "content": "$2",
+                "example": "tab title"
+            }
+        }
+    },
+    "warning": {
+        "message": "¡Aviso!",
+        "description": "Warning!"
+    },
+    "success": {
+        "message": "¡Éxito!",
+        "description": "Success!"
+    },
+    "ok": {
+        "message": "Ok",
+        "description": "OK button"
+    },
+    "save": {
+        "message": "Guardar",
+        "description": "Save"
+    },
+    "delete": {
+        "message": "Eliminar",
+        "description": "Delete"
+    },
+    "cancel": {
+        "message": "Cancelar",
+        "description": "Cancel"
+    },
+    "privateAndPinnedTabsAreNotSupported": {
+        "message": "Las pestañas privadas y/o fijadas no estan soportadas",
+        "description": "Private and pinned tabs are not supported"
+    },
+    "thisTabIsNotSupported": {
+        "message": "Esta pestaña no está soportada",
+        "description": "This tab is not supported"
+    },
+    "filterTabsPlaceholder": {
+        "message": "Filtrar pestañas (* para separar filtros)",
+        "description": "Filter tabs (multiple filter with *)"
+    },
+    "invalidRegExpRuleTitle": {
+        "message": "La expresión '$regexp$' no es válida y será omitida.",
+        "description": "Invalid rule description",
+        "placeholders": {
+            "regexp": {
+                "content": "$1",
+                "example": "googlecom"
+            }
+        }
+    },
+    "manageGroupViewGrid": {
+        "message": "Vista de cuadrícula",
+        "description": "Grid display"
+    },
+    "manageGroupViewFreeArrange": {
+        "message": "Vista libre (en futuras versiones)",
+        "description": "Free arrange"
+    },
+    "closePopupAfterChangeGroup": {
+        "message": "Cerrar panel al cambiar de grupo",
+        "description": "Close popup after changing group"
+    },
+    "showNotificationAfterMoveTab": {
+        "message": "Mostrar notificación cuando una pestaña se haya movido a otro grupo",
+        "description": "Show notification when tab is moved to another group"
+    },
+    "openManageGroupsInTab": {
+        "message": "Abrir \"Gestión de grupos\" en una nueva pestaña",
+        "description": "Open \"Manage Groups\" in new tab"
+    },
+    "showConfirmDialogBeforeGroupDelete": {
+        "message": "Pedir confirmación antes de eliminar un grupo",
+        "description": "Show confirm dialog before group delete"
+    },
+    "exportAddonSettingsTitle": {
+        "message": "Exportar pestañas",
+        "description": "Backup your Simple Tab Groups"
+    },
+    "exportAddonSettingsDescription": {
+        "message": "Almacenar tus pestañas en un fichero te permitirá restaurarlas en caso de ser necesario.",
+        "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
+    },
+    "exportAddonSettingsButton": {
+        "message": "Guardar…",
+        "description": "Create backup"
+    },
+    "includeTabThumbnailsIntoBackup": {
+        "message": "Incluir miniaturas de las pestañas al exportar (aumentará el tamaño del archivo)",
+        "description": "Include tab thumbnails into backup (make backup file size bigger)"
+    },
+    "importAddonSettingsTitle": {
+        "message": "Restaurar pestañas",
+        "description": "Restore Simple Tab Groups"
+    },
+    "importAddonSettingsDescription": {
+        "message": "Indica qué archivo quieres utilizar para restaurar las pestañas.",
+        "description": "Load a backup file containing the tab groups you want to restore."
+    },
+    "importAddonSettingsWarning": {
+        "message": "Restaurar la configuración por defecto eliminará también los grupos.",
+        "description": "Restore add-on settings will ERASE all existing settings and groups!"
+    },
+    "importAddonSettingsButton": {
+        "message": "Restaurar…",
+        "description": "Restore backup"
+    },
+    "importSettingsOldTabGroupsAddonTitle": {
+        "message": "Importar pestañas de Tab Groups",
+        "description": "Restore Quicksaver's \"Tab Groups\""
+    },
+    "importSettingsOldTabGroupsAddonDescription": {
+        "message": "Ya que has tenido que cambiar de add-on, qué menos que poder traerte contigo tus pestañas de Tab Groups (Autor: Quicksaver).",
+        "description": "Load a backup file old \"Tab Groups\" addon."
+    },
+    "importSettingsOldTabGroupsAddonButton": {
+        "message": "Importar…",
+        "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
+    },
+    "openGroupAfterChange": {
+        "message": "Abrir grupo cuando es seleccionado",
+        "description": "Open group after changing to it"
+    },
+    "newGroupTitle": {
+        "message": "Grupo $id$",
+        "description": "group id",
+        "placeholders": {
+            "id": {
+                "content": "$1",
+                "example": "1"
+            }
+        }
+    },
+    "sortGroupsAZ": {
+        "message": "Ordenar grupos [A-Z]",
+        "description": "Sort groups [A-Z]"
+    },
+    "sortGroupsZA": {
+        "message": "Ordenar grupos [Z-A]",
+        "description": "Sort groups [Z-A]"
+    },
+    "settingsTitle": {
+        "message": "Configuración general",
+        "description": "Settings"
+    },
+    "groupSettings": {
+        "message": "Configuración de grupo",
+        "description": "Group settings"
+    },
+    "deleteGroup": {
+        "message": "Eliminar grupo",
+        "description": "Delete group"
+    },
+    "deleteGroupTitle": {
+        "message": "Eliminar grupo",
+        "description": "Delete group?"
+    },
+    "deleteGroupBody": {
+        "message": "¿Estás seguro de que quieres borrar \"$name$\"?<br>Perderás todas sus pestañas.",
+        "description": "Delete group?",
+        "placeholders": {
+            "name": {
+                "content": "$1",
+                "example": "Group #4"
+            }
+        }
+    },
+    "groupTabsCount": {
+        "message": "$count$ pestaña/s",
+        "description": "Group tabs count",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "deleteTab": {
+        "message": "Cerrar pestaña",
+        "description": "Delete tab"
+    },
+    "createNewTab": {
+        "message": "Abrir nueva pestaña",
+        "description": "Open new tab"
+    },
+    "createNewGroup": {
+        "message": "Crear nuevo grupo",
+        "description": "Create new group"
+    },
+    "goBackButtonTitle": {
+        "message": "Volver",
+        "description": "Go back"
+    },
+    "goBackToGroupsButtonTitle": {
+        "message": "Volver a grupos",
+        "description": "Go back to groups"
+    },
+    "title": {
+        "message": "Título",
+        "description": "Title"
+    },
+    "iconColor": {
+        "message": "Color del icono",
+        "description": "Icon color"
+    },
+    "selectUserGroupIcon": {
+        "message": "Cargar imagen para el icono",
+        "description": "Load icon"
+    },
+    "selectUserGroupIconWarnText": {
+        "message": "Lo sentimos, de momento no es posible cambiar el icono desde este panel, tendrás que hacerlo a través de la página de configuración. ¿Deseas abrirla?",
+        "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
+    },
+    "setRandomColor": {
+        "message": "Color aleatorio",
+        "description": "Set random color"
+    },
+    "catchTabContainers": {
+        "message": "Traer a este grupo pestañas dentro de contenedores (Firefox Multi-Account Containers)",
+        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
+    },
+    "regexpForTabsTitle": {
+        "message": "Traer a este grupo pestañas bajo expresión regular",
+        "description": "Regular expressions for catch tabs"
+    },
+    "regexpForTabsPlaceholder": {
+        "message": "Expresiones regulares…",
+        "description": "Regular expressions"
+    },
+    "regexpForTabsHelp": {
+        "message": "Inserta aquí tus expresiones regulares, cada una en una línea por separado\n\nEjemplo:\ngithub\\.com/drive4ik/simple-tab-groups – cualquier página del repo\nbugzilla\\.mozilla\\.org – cualquier «bug report» de Mozilla\n(facebook|twitter|youtube)\\.com – cualquiera de estas páginas",
+        "description": "Regular exceptions helper"
+    },
+    "hotkeysTitle": {
+        "message": "Atajos de teclado",
+        "description": "Hotkeys"
+    },
+    "hotkeysDescription": {
+        "message": "¡Importante! La detección de atajos:<br>- Sólo funciona dentro de páginas bajo protocolo http/s: (otros como about: no están permitidos por WebExtensions)<br>- Dependerá de la distribución/idioma de tu teclado en el sistema operativo, no físicamente",
+        "description": "Hotkeys description"
+    },
+    "addHotKeyButton": {
+        "message": "Añadir atajo",
+        "description": "Add hotkey"
+    },
+    "deleteHotKeyButton": {
+        "message": "Eliminar atajo",
+        "description": "Delete hotkey"
+    },
+    "hotkeyPlaceholder": {
+        "message": "Pulsa el atajo",
+        "description": "Press key here"
+    },
+    "selectAction": {
+        "message": "Selecciona una acción",
+        "description": "Select action"
+    },
+    "selectGroup": {
+        "message": "Selecciona un grupo",
+        "description": "Select group"
+    },
+    "hotkeyActionTitleLoadNextGroup": {
+        "message": "Ir al siguiente grupo",
+        "description": "Load next group"
+    },
+    "hotkeyActionTitleLoadPrevGroup": {
+        "message": "Ir al anterior grupo",
+        "description": "Load previous group"
+    },
+    "hotkeyActionTitleLoadFirstGroup": {
+        "message": "Ir al primer grupo",
+        "description": "Load first group"
+    },
+    "hotkeyActionTitleLoadLastGroup": {
+        "message": "Ir al último grupo",
+        "description": "Load last group"
+    },
+    "hotkeyActionTitleLoadCustomGroup": {
+        "message": "Ir al grupo…",
+        "description": "Load custom group"
+    },
+    "hotkeyActionTitleAddNewGroup": {
+        "message": "Añadir nuevo grupo",
+        "description": "Add new group"
+    },
+    "hotkeyActionTitleDeleteCurrentGroup": {
+        "message": "Eliminar grupo actual",
+        "description": "Delete current group"
+    },
+    "hotkeyActionTitleOpenManageGroups": {
+        "message": "Abrir \"Gestión de grupos\"",
+        "description": "Open manage groups"
+    },
+    "whatsWrongMessage": {
+        "message": "¡Ups! Se ha producido un error\nSi deseas enviarle un informe al desarrollador, puedes generarlo desde la página de configuración.",
+        "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
+    },
+    "saveErrorLogsIntoFile": {
+        "message": "Generar informe de errores (.json)",
+        "description": "Save last error logs into JSON file"
+    },
+    "undoRemoveGroupItemTitle": {
+        "message": "Deshacer eliminación del grupo $grouptitle$\"",
+        "description": "Undo remove group menu title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "enterBrowserActionIconColor": {
+        "message": "Color base de icono Button Action",
+        "description": "Enter browser action icon color"
+    },
+    "isStickyGroupTitle": {
+        "message": "Grupo «Sticky»",
+        "description": "Sticky group"
+    },
+    "isStickyGroupHelp": {
+        "message": "Las pestañas de este grupo no moverán automáticamente bajo ninguna condición",
+        "description": "Tabs in this group will never be automatically moved to another group"
+    },
+    "useTabsFavIconsFromGoogleS2Converter": {
+        "message": "Usar favicons de Google S2 Converter para las pestañas",
+        "description": "Use tabs fav-icons from Google S2 Converter"
+    },
+    "iconStyle": {
+        "message": "Estilo del icono",
+        "description": "Icon style"
+    }
+}

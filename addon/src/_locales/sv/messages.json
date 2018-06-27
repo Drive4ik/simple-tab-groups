@@ -1,0 +1,362 @@
+{
+    "extensionDescription": {
+        "message": "Skapa, organisera och byt mellan flikgrupper. \nInspirerat av Quicksavers gamla \"Tab Groups\"-tillägget :)",
+        "description": "Description of the extension."
+    },
+    "openSettings": {
+        "message": "Inställningar",
+        "description": "Settings context button title"
+    },
+    "manageGroupsTitle": {
+        "message": "Gruppöversikt",
+        "description": "Manage groups"
+    },
+    "setTabIconAsGroupIcon": {
+        "message": "Använd som ikon för nuvarande grupp",
+        "description": "Set tab icon as group icon"
+    },
+    "moveTabToGroupDisabledTitle": {
+        "message": "Flytta flik till grupp",
+        "description": "Move tab to group title"
+    },
+    "moveTabToGroupMessage": {
+        "message": "Fliken \"$tabtitle$\" flyttades till gruppen \"$grouptitle$\".\n\nKlicka för att visa den här fliken.",
+        "description": "Tab moved popup title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            },
+            "tabtitle": {
+                "content": "$2",
+                "example": "tab title"
+            }
+        }
+    },
+    "warning": {
+        "message": "Varning!",
+        "description": "Warning!"
+    },
+    "success": {
+        "message": "Framgång!",
+        "description": "Success!"
+    },
+    "ok": {
+        "message": "Ok",
+        "description": "OK button"
+    },
+    "save": {
+        "message": "Spara",
+        "description": "Save"
+    },
+    "delete": {
+        "message": "Ta bort",
+        "description": "Delete"
+    },
+    "cancel": {
+        "message": "Avbryt",
+        "description": "Cancel"
+    },
+    "privateAndPinnedTabsAreNotSupported": {
+        "message": "Privata och fästa flikar stöds ej",
+        "description": "Private and pinned tabs are not supported"
+    },
+    "thisTabIsNotSupported": {
+        "message": "Den här fliken stöds ej",
+        "description": "This tab is not supported"
+    },
+    "filterTabsPlaceholder": {
+        "message": "Filtrera flikar (särskilj flera filter med *)",
+        "description": "Filter tabs (multiple filter with *)"
+    },
+    "invalidRegExpRuleTitle": {
+        "message": "Regeln '$regexp' är ogiltig och kommer inte att användas.",
+        "description": "Invalid rule description",
+        "placeholders": {
+            "regexp": {
+                "content": "$1",
+                "example": "googlecom"
+            }
+        }
+    },
+    "manageGroupViewGrid": {
+        "message": "Rutnätsvy",
+        "description": "Grid display"
+    },
+    "manageGroupViewFreeArrange": {
+        "message": "Fri formation (i framtida versioner)",
+        "description": "Free arrange"
+    },
+    "closePopupAfterChangeGroup": {
+        "message": "Stäng popup efter byte av grupp",
+        "description": "Close popup after changing group"
+    },
+    "showNotificationAfterMoveTab": {
+        "message": "Visa en notis när en flik flyttas till en annan grupp",
+        "description": "Show notification when tab is moved to another group"
+    },
+    "openManageGroupsInTab": {
+        "message": "Öppna \"Gruppöversikt\" i en ny flik",
+        "description": "Open \"Manage Groups\" in new tab"
+    },
+    "showConfirmDialogBeforeGroupDelete": {
+        "message": "Bekräfta borttagning av en hel grupp",
+        "description": "Show confirm dialog before group delete"
+    },
+    "exportAddonSettingsTitle": {
+        "message": "Ta en säkerhetskopia av Simple Tab Groups-inställningar och -flikar",
+        "description": "Backup your Simple Tab Groups"
+    },
+    "exportAddonSettingsDescription": {
+        "message": "Säkerhetskopiera dina flikgrupper till en fil, för att vid behov kunna återställa dem.",
+        "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
+    },
+    "exportAddonSettingsButton": {
+        "message": "Skapa säkerhetskopia",
+        "description": "Create backup"
+    },
+    "includeTabThumbnailsIntoBackup": {
+        "message": "Inkludera en miniatyrbild av varje flik i säkerhetskopian (gör säkerhetskopian större)",
+        "description": "Include tab thumbnails into backup (make backup file size bigger)"
+    },
+    "importAddonSettingsTitle": {
+        "message": "Återställ Simple Tab Groups-data",
+        "description": "Restore Simple Tab Groups"
+    },
+    "importAddonSettingsDescription": {
+        "message": "Ladda säkerhetskopia från en fil som innehåller flikar och inställningar som du vill återtälla.",
+        "description": "Load a backup file containing the tab groups you want to restore."
+    },
+    "importAddonSettingsWarning": {
+        "message": "Återställ tilläggsinställningar tar bort ALLA existerande flikar och inställningar!",
+        "description": "Restore add-on settings will ERASE all existing settings and groups!"
+    },
+    "importAddonSettingsButton": {
+        "message": "Återställ från säkerhetskopia",
+        "description": "Restore backup"
+    },
+    "importSettingsOldTabGroupsAddonTitle": {
+        "message": "Återställ från Quicksavers \"Tab Groups\"-tillägg",
+        "description": "Restore Quicksaver's \"Tab Groups\""
+    },
+    "importSettingsOldTabGroupsAddonDescription": {
+        "message": "Återställ säkerhetskopia från en fil i \"Tab Groups\"-tilläggets format.",
+        "description": "Load a backup file old \"Tab Groups\" addon."
+    },
+    "importSettingsOldTabGroupsAddonButton": {
+        "message": "Hämta inställningar från Quicksavers \"Tab Groups\"-tillägg",
+        "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
+    },
+    "openGroupAfterChange": {
+        "message": "Öppna grupp efter byte",
+        "description": "Open group after changing to it"
+    },
+    "newGroupTitle": {
+        "message": "Grupp $id$",
+        "description": "group id",
+        "placeholders": {
+            "id": {
+                "content": "$1",
+                "example": "1"
+            }
+        }
+    },
+    "sortGroupsAZ": {
+        "message": "Sortera grupper [A-Ö]",
+        "description": "Sort groups [A-Z]"
+    },
+    "sortGroupsZA": {
+        "message": "Sortera grupper [Ö-A]",
+        "description": "Sort groups [Z-A]"
+    },
+    "settingsTitle": {
+        "message": "Inställningar",
+        "description": "Settings"
+    },
+    "groupSettings": {
+        "message": "Gruppinställningar",
+        "description": "Group settings"
+    },
+    "deleteGroup": {
+        "message": "Ta bort grupp",
+        "description": "Delete group"
+    },
+    "deleteGroupTitle": {
+        "message": "Ta bort grupp?",
+        "description": "Delete group?"
+    },
+    "deleteGroupBody": {
+        "message": "Vill du ta bort gruppen \"$name$\"?<br>Att stänga en grupp stänger också alla flikar och eventuella fönster kopplade till dem!",
+        "description": "Delete group?",
+        "placeholders": {
+            "name": {
+                "content": "$1",
+                "example": "Group #4"
+            }
+        }
+    },
+    "groupTabsCount": {
+        "message": "$count$ flikar",
+        "description": "Group tabs count",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "deleteTab": {
+        "message": "Ta bort flik",
+        "description": "Delete tab"
+    },
+    "createNewTab": {
+        "message": "Öppna ny flik",
+        "description": "Open new tab"
+    },
+    "createNewGroup": {
+        "message": "Skapa ny grupp",
+        "description": "Create new group"
+    },
+    "goBackButtonTitle": {
+        "message": "Bakåt",
+        "description": "Go back"
+    },
+    "goBackToGroupsButtonTitle": {
+        "message": "Tillbaka till grupper",
+        "description": "Go back to groups"
+    },
+    "title": {
+        "message": "Titel",
+        "description": "Title"
+    },
+    "iconColor": {
+        "message": "Ikonfärg",
+        "description": "Icon color"
+    },
+    "selectUserGroupIcon": {
+        "message": "Ladda ikon",
+        "description": "Load icon"
+    },
+    "selectUserGroupIconWarnText": {
+        "message": "Tyvärr, du kan inte välja egna ikoner här, men du kan välja en egen gruppikon i \"Gruppöversikt\".\n Öppna \"Gruppöversikt\"?",
+        "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
+    },
+    "setRandomColor": {
+        "message": "Välj slumpmässig färg",
+        "description": "Set random color"
+    },
+    "catchTabContainers": {
+        "message": "Fånga och flytta flikar i behållare till den här gruppen (endast för web-URLs, tomma flikar stöds ej)",
+        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
+    },
+    "regexpForTabsTitle": {
+        "message": "Reguljärt uttryck för att fånga nya flikar",
+        "description": "Regular expressions for catch tabs"
+    },
+    "regexpForTabsPlaceholder": {
+        "message": "Reguljärt uttryck",
+        "description": "Regular expressions"
+    },
+    "regexpForTabsHelp": {
+        "message": "Ge ett reguljärt uttryck för webbadresser. Flikar med adresser som matcher flyttas automatiskt till den här grpupen.\nDu kan ha hur många regler som helst, men en regel per rad.\\Exempel:\ngithub\\.com/drive4ik/simple-tab-groups - fångar alla sidor från tilläggets källkodssida\nbugzilla\\.mozilla\\.org - fånga alla Firefox-buggrapporter\n(facebook|twitter|youtube)\\.com - fånga sociala medier",
+        "description": "Regular exceptions helper"
+    },
+    "hotkeysTitle": {
+        "message": "Snabbval",
+        "description": "Hotkeys"
+    },
+    "hotkeysDescription": {
+        "message": "Här kan du ange snabbval.<br>Begränsningar<br>1. Snabbbvalen fungerar endast på webbsidor (http://, https://). På grund av begränsningar i WebExtensions API:t fungerar de inte på webbläsarens egna sidor (about:).<br>2. Alla snabbvalskombinationer fungerar inte med alla typer av tangentbordslayouter. Till exempel: snabbvalet <code>Ctrl + ~</code> skapat för engelsk layout fungerar inte med ett tangentbord med rysk layout, eftersom kombinationen med ett ryskt tangentbord ger en annan kod.",
+        "description": "Hotkeys description"
+    },
+    "addHotKeyButton": {
+        "message": "Lägg till snabbval",
+        "description": "Add hotkey"
+    },
+    "deleteHotKeyButton": {
+        "message": "Ta bort snabbval",
+        "description": "Delete hotkey"
+    },
+    "hotkeyPlaceholder": {
+        "message": "Välj snabbval",
+        "description": "Press key here"
+    },
+    "selectAction": {
+        "message": "Välj funktion",
+        "description": "Select action"
+    },
+    "selectGroup": {
+        "message": "Välj grupp",
+        "description": "Select group"
+    },
+    "hotkeyActionTitleLoadNextGroup": {
+        "message": "Visa nästa grupp",
+        "description": "Load next group"
+    },
+    "hotkeyActionTitleLoadPrevGroup": {
+        "message": "Visa föregående grupp",
+        "description": "Load previous group"
+    },
+    "hotkeyActionTitleLoadFirstGroup": {
+        "message": "Visa första gruppen",
+        "description": "Load first group"
+    },
+    "hotkeyActionTitleLoadLastGroup": {
+        "message": "Visa sista gruppen",
+        "description": "Load last group"
+    },
+    "hotkeyActionTitleLoadCustomGroup": {
+        "message": "Visa valfri grupp",
+        "description": "Load custom group"
+    },
+    "hotkeyActionTitleAddNewGroup": {
+        "message": "Skapa ny grupp",
+        "description": "Add new group"
+    },
+    "hotkeyActionTitleDeleteCurrentGroup": {
+        "message": "Ta bort nuvarande grupp",
+        "description": "Delete current group"
+    },
+    "hotkeyActionTitleOpenManageGroups": {
+        "message": "Visa Gruppöversikt",
+        "description": "Open manage groups"
+    },
+    "whatsWrongMessage": {
+        "message": "Någonting gick fel...\nVänligen kontakta utvecklaren per e-post (drive4ik@gmail.com) med senaste fellogg (hittas längst ner på inställningssidan)",
+        "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
+    },
+    "saveErrorLogsIntoFile": {
+        "message": "Spara logg över senaste fel i en JSON-fil",
+        "description": "Save last error logs into JSON file"
+    },
+    "undoRemoveGroupItemTitle": {
+        "message": "Ångra borttagning av gruppen \"$grouptitle$\"",
+        "description": "Undo remove group menu title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "enterBrowserActionIconColor": {
+        "message": "Välj ikonfärg för webbläsarfunktion",
+        "description": "Enter browser action icon color"
+    },
+    "isStickyGroupTitle": {
+        "message": "Fast grupp",
+        "description": "Sticky group"
+    },
+    "isStickyGroupHelp": {
+        "message": "Flikar i den här gruppen flyttas aldrig automatiskt till andra grupper",
+        "description": "Tabs in this group will never be automatically moved to another group"
+    },
+    "useTabsFavIconsFromGoogleS2Converter": {
+        "message": "Använd favoritikoner för flikar från Google S2 Converter",
+        "description": "Use tabs fav-icons from Google S2 Converter"
+    },
+    "iconStyle": {
+        "message": "Ikonstil",
+        "description": "Icon style"
+    }
+}

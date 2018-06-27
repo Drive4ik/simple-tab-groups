@@ -1,0 +1,376 @@
+{
+    "extensionDescription": {
+        "message": "タブのグループを作成/編集し、作成したグループ毎に切替えて表示することができます。\n\nこのアドオンは旧アドオンの”Tab Groups”にインスパイアされています。",
+        "description": "Description of the extension."
+    },
+    "openSettings": {
+        "message": "設定",
+        "description": "Settings context button title"
+    },
+    "manageGroupsTitle": {
+        "message": "グループの管理",
+        "description": "Manage groups"
+    },
+    "setTabIconAsGroupIcon": {
+        "message": "このタブのアイコンをグループのアイコンに設定する",
+        "description": "Set tab icon as group icon"
+    },
+    "moveTabToGroupDisabledTitle": {
+        "message": "タブをグループへ移動する",
+        "description": "Move tab to group title"
+    },
+    "moveTabToGroupMessage": {
+        "message": "タブ \"$tabtitle$\" をグループ \"$grouptitle$\" へ移動しました。\n\n移動したタブを表示するにはここをクリックしてください。",
+        "description": "Tab moved popup title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            },
+            "tabtitle": {
+                "content": "$2",
+                "example": "tab title"
+            }
+        }
+    },
+    "warning": {
+        "message": "警告！",
+        "description": "Warning!"
+    },
+    "success": {
+        "message": "成功しました！",
+        "description": "Success!"
+    },
+    "ok": {
+        "message": "OK",
+        "description": "OK button"
+    },
+    "save": {
+        "message": "保存",
+        "description": "Save"
+    },
+    "delete": {
+        "message": "削除",
+        "description": "Delete"
+    },
+    "cancel": {
+        "message": "キャンセル",
+        "description": "Cancel"
+    },
+    "privateAndPinnedTabsAreNotSupported": {
+        "message": "プライベートタブとタブのピン止めは非サポートです",
+        "description": "Private and pinned tabs are not supported"
+    },
+    "thisTabIsNotSupported": {
+        "message": "このタブはサポートされていません",
+        "description": "This tab is not supported"
+    },
+    "searchPlaceholder": {
+        "message": "タブを検索中...",
+        "description": "Search placeholder"
+    },
+    "filterTabsPlaceholder": {
+        "message": "タブをフィルタ表示（フィルターを複数指定する場合は * で区切る）",
+        "description": "Filter tabs (multiple filter with *)"
+    },
+    "invalidRegExpRuleTitle": {
+        "message": "正規表現ルール '$regexp$' は無効です。このルールは無視されます。",
+        "description": "Invalid rule description",
+        "placeholders": {
+            "regexp": {
+                "content": "$1",
+                "example": "googlecom"
+            }
+        }
+    },
+    "manageGroupViewGrid": {
+        "message": "グリッド表示",
+        "description": "Grid display"
+    },
+    "manageGroupViewFreeArrange": {
+        "message": "自由にアレンジ（将来のバージョンで対応）",
+        "description": "Free arrange"
+    },
+    "closePopupAfterChangeGroup": {
+        "message": "グループを変更後にポップアップを閉じる",
+        "description": "Close popup after changing group"
+    },
+    "showNotificationAfterMoveTab": {
+        "message": "タブを別のグループへ移動した際に、通知を表示する",
+        "description": "Show notification when tab is moved to another group"
+    },
+    "openManageGroupsInTab": {
+        "message": "\"グループの管理\" を新しいタブで開く",
+        "description": "Open \"Manage Groups\" in new tab"
+    },
+    "showConfirmDialogBeforeGroupDelete": {
+        "message": "グループを削除する際に確認画面を表示する",
+        "description": "Show confirm dialog before group delete"
+    },
+    "exportAddonSettingsTitle": {
+        "message": "あなたの Simple Tab Groups をバックアップする",
+        "description": "Backup your Simple Tab Groups"
+    },
+    "exportAddonSettingsDescription": {
+        "message": "タブグループをバックアップファイルにエクスポートする。もしものときにバックアップからタブグループを復元することができます。",
+        "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
+    },
+    "exportAddonSettingsButton": {
+        "message": "バックアップの作成",
+        "description": "Create backup"
+    },
+    "includeTabThumbnailsIntoBackup": {
+        "message": "バックアップにタブのサムネイルを含める（バックアップファイルのサイズが大きくなります）",
+        "description": "Include tab thumbnails into backup (make backup file size bigger)"
+    },
+    "importAddonSettingsTitle": {
+        "message": "Simple Tab Groups の復元",
+        "description": "Restore Simple Tab Groups"
+    },
+    "importAddonSettingsDescription": {
+        "message": "復元するバックアップファイルをロードしてください",
+        "description": "Load a backup file containing the tab groups you want to restore."
+    },
+    "importAddonSettingsWarning": {
+        "message": "復元を行うと現在のタブグループと設定がすべて削除されます！",
+        "description": "Restore add-on settings will ERASE all existing settings and groups!"
+    },
+    "importAddonSettingsButton": {
+        "message": "バックアップの復元",
+        "description": "Restore backup"
+    },
+    "importSettingsOldTabGroupsAddonTitle": {
+        "message": "Quicksaver's \"Tab Groups\" をインポートする",
+        "description": "Restore Quicksaver's \"Tab Groups\""
+    },
+    "importSettingsOldTabGroupsAddonDescription": {
+        "message": "旧アドオンの ”Tab Groups” のバックアップを読み込みます",
+        "description": "Load a backup file old \"Tab Groups\" addon."
+    },
+    "importSettingsOldTabGroupsAddonButton": {
+        "message": "旧アドオンの ”Tab Groups” の設定をインポートする",
+        "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
+    },
+    "openGroupAfterChange": {
+        "message": "変更したグループを開く",
+        "description": "Open group after changing to it"
+    },
+    "newGroupTitle": {
+        "message": "グループ $id$",
+        "description": "group id",
+        "placeholders": {
+            "id": {
+                "content": "$1",
+                "example": "1"
+            }
+        }
+    },
+    "searchNotFoundTitle": {
+        "message": "タブを検索しましたが \"$search$\" は見つかりませんでした。",
+        "description": "No results found",
+        "placeholders": {
+            "search": {
+                "content": "$1",
+                "example": "mail"
+            }
+        }
+    },
+    "sortGroupsAZ": {
+        "message": "グループを昇順 [A-Z] でソート",
+        "description": "Sort groups [A-Z]"
+    },
+    "sortGroupsZA": {
+        "message": "グループを降順 [Z-A] でソート",
+        "description": "Sort groups [Z-A]"
+    },
+    "settingsTitle": {
+        "message": "設定",
+        "description": "Settings"
+    },
+    "groupSettings": {
+        "message": "グループ設定",
+        "description": "Group settings"
+    },
+    "deleteGroup": {
+        "message": "グループを削除",
+        "description": "Delete group"
+    },
+    "deleteGroupTitle": {
+        "message": "グループを削除しますか？",
+        "description": "Delete group?"
+    },
+    "deleteGroupBody": {
+        "message": "グループ \"$name$\" を削除しますか？<br>グループを削除するとタブが閉じられます。グループを表示しているウィンドウも閉じます。",
+        "description": "Delete group?",
+        "placeholders": {
+            "name": {
+                "content": "$1",
+                "example": "Group #4"
+            }
+        }
+    },
+    "groupTabsCount": {
+        "message": "$count$ tabs",
+        "description": "Group tabs count",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "deleteTab": {
+        "message": "タブを削除",
+        "description": "Delete tab"
+    },
+    "createNewTab": {
+        "message": "新しいタブを開く",
+        "description": "Open new tab"
+    },
+    "createNewGroup": {
+        "message": "新しいグループを作成する",
+        "description": "Create new group"
+    },
+    "goBackButtonTitle": {
+        "message": "戻る",
+        "description": "Go back"
+    },
+    "goBackToGroupsButtonTitle": {
+        "message": "グループ一覧に戻る",
+        "description": "Go back to groups"
+    },
+    "title": {
+        "message": "タイトル",
+        "description": "Title"
+    },
+    "iconColor": {
+        "message": "アイコンの色",
+        "description": "Icon color"
+    },
+    "selectUserGroupIcon": {
+        "message": "アイコンをロードする",
+        "description": "Load icon"
+    },
+    "selectUserGroupIconWarnText": {
+        "message": "カスタムアイコンをロードできませんでした。\"グループの管理\" によってグループアイコンのカスタマイズが可能です。\n\"グループの管理\"を開きますか？",
+        "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
+    },
+    "setRandomColor": {
+        "message": "色をランダムに設定する",
+        "description": "Set random color"
+    },
+    "catchTabContainers": {
+        "message": "Firefox のコンテナーにより分類されたタブを自動的にキャッチしてこのグループに移動します（空のタブは移動しません）",
+        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
+    },
+    "regexpForTabsTitle": {
+        "message": "正規表現でタブをキャッチする",
+        "description": "Regular expressions for catch tabs"
+    },
+    "regexpForTabsPlaceholder": {
+        "message": "正規表現を記入してください",
+        "description": "Regular expressions"
+    },
+    "regexpForTabsHelp": {
+        "message": "ここに web addresses を正規表現で記入してください。正規表現にマッチするタブを自動的にこのグループ内に移動（キャッチ）します。\n一行に一個のルールを記載してください。記載できるルールの数に制限はありません。\n例：\ngithub\\.com/drive4ik/simple-tab-groups　すべてのアドオンリポジトリのページをキャッチします。\nbugzilla\\.mozilla\\.org　Firefoxのバグレポートをキャッチします。\n(facebook|twitter|youtube)\\.com　すべてのソーシャルページをキャッチします。",
+        "description": "Regular exceptions helper"
+    },
+    "hotkeysTitle": {
+        "message": "ホットキー",
+        "description": "Hotkeys"
+    },
+    "hotkeysDescription": {
+        "message": "ホットキーを追加できます。<br>制限事項<br>1. これらのホットキーはWebページ (http:, https:) でのみ機能します。ブラウザーページ  (about:) では機能しません。WebExtensions API の制限によるもです。<br>2. いくつかのホットキーは English layout 以外のキーボードレイアウトでは機能しません。例えば、English layout で作成したホットキー <code>Ctrl + ~</code> は Russian layout では動作しません。この問題を解決するには、別のホットキーを新たに作成してください。例：Russian layout にて <code>Ctrl + Ё</code> を作成する",
+        "description": "Hotkeys description"
+    },
+    "addHotKeyButton": {
+        "message": "ホットキーの追加",
+        "description": "Add hotkey"
+    },
+    "deleteHotKeyButton": {
+        "message": "ホットキーの削除",
+        "description": "Delete hotkey"
+    },
+    "hotkeyPlaceholder": {
+        "message": "このキーを押してください",
+        "description": "Press key here"
+    },
+    "selectAction": {
+        "message": "アクションを選択",
+        "description": "Select action"
+    },
+    "selectGroup": {
+        "message": "グループを選択",
+        "description": "Select group"
+    },
+    "hotkeyActionTitleLoadNextGroup": {
+        "message": "次のグループをロード",
+        "description": "Load next group"
+    },
+    "hotkeyActionTitleLoadPrevGroup": {
+        "message": "前のグループをロード",
+        "description": "Load previous group"
+    },
+    "hotkeyActionTitleLoadFirstGroup": {
+        "message": "最初のグループをロード",
+        "description": "Load first group"
+    },
+    "hotkeyActionTitleLoadLastGroup": {
+        "message": "最後のグループをロード",
+        "description": "Load last group"
+    },
+    "hotkeyActionTitleLoadCustomGroup": {
+        "message": "カスタムグループをロード",
+        "description": "Load custom group"
+    },
+    "hotkeyActionTitleAddNewGroup": {
+        "message": "新しいグループの追加",
+        "description": "Add new group"
+    },
+    "hotkeyActionTitleDeleteCurrentGroup": {
+        "message": "現在のグループを削除",
+        "description": "Delete current group"
+    },
+    "hotkeyActionTitleOpenManageGroups": {
+        "message": "グループの管理を開く",
+        "description": "Open manage groups"
+    },
+    "whatsWrongMessage": {
+        "message": "なにか問題が起きました...\n開発者にEメールでエラーログをお送りいただけますようご協力をお願いします。(Simple Tab Groups の設定画面の一番下にログを出力するためのボタンがあります)",
+        "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
+    },
+    "saveErrorLogsIntoFile": {
+        "message": "最後に発生したエラーのログをJSONファイル形式で保存する",
+        "description": "Save last error logs into JSON file"
+    },
+    "undoRemoveGroupItemTitle": {
+        "message": "グループ \"$grouptitle$\" の削除を取り消す",
+        "description": "Undo remove group menu title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "enterBrowserActionIconColor": {
+        "message": "browser action icon の色を指定",
+        "description": "Enter browser action icon color"
+    },
+    "isStickyGroupTitle": {
+        "message": "Sticky グループ",
+        "description": "Sticky group"
+    },
+    "isStickyGroupHelp": {
+        "message": "このグループ内のタグが他のグループへ自動的には移動しないようにします。",
+        "description": "Tabs in this group will never be automatically moved to another group"
+    },
+    "useTabsFavIconsFromGoogleS2Converter": {
+        "message": "Google S2 Converter からの fav-icons を使用する",
+        "description": "Use tabs fav-icons from Google S2 Converter"
+    },
+    "iconStyle": {
+        "message": "アイコンスタイル",
+        "description": "Icon style"
+    }
+}

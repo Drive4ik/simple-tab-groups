@@ -5,7 +5,7 @@
     <title>Simple Tab Groups - translation utility</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.0/css/bulma.min.css">
     <style type="text/css">
     .textarea {
         resize: both;
@@ -123,7 +123,10 @@
                     <tbody>
                         <tr v-for="(val, key) in defaultLocale" v-show="!notAllowedKeys.includes(key)" :key="componentName + key">
                             <td class="text-break-all" v-html="key"></td>
-                            <td v-text="val.message.replace(/\n/g, '\&#92n')"></td>
+                            <td>
+                                <span v-if="val.message.includes('\n') && !val.message.includes('<') && !val.message.includes('>')" v-html="val.message.replace(/\n/g, '<br>')"></span>
+                                <span v-else v-text="val.message"></span>
+                            </td>
                             <td>
                                 <div class="columns">
                                     <div class="column">
@@ -143,7 +146,7 @@
                                                 <textarea v-if="showOldValueForKey === key && currentLocale[key]" readonly class="textarea" v-model="currentLocale[key].message"></textarea>
                                             </div>
                                         </div>
-                                        <div class="field is-grouped" v-if="locale[key] && currentLocale[key] && locale[key] !== currentLocale[key].message">
+                                        <div class="field is-grouped" v-if="currentLocale[key] && locale[key] !== currentLocale[key].message">
                                             <div class="control">
                                                 <button class="button" @click="showOldValueForKey = showOldValueForKey === key ? null : key">
                                                     <span class="icon">

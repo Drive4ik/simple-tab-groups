@@ -14,7 +14,7 @@
         });
     }
 
-    async function load(url, defaultValue) {
+    async function load(url, defaultValue = {}) {
         let blob = await fetch(url),
             result = await blob.json();
 
@@ -82,7 +82,23 @@
             },
             componentPath() {
                 let component = this.components.find(comp => comp.name === this.componentName);
-                return component ? component.path : null;
+
+                if (component) { // TMP
+                    if (component === this.components[0] && this.branch.includes('vue')) {
+                        return 'addon/src'
+                    }
+
+                    return component.path;
+                }
+
+                return 'component-not-found';
+
+                // return component ? component.path : 'component-not-found';
+            },
+            currentLocaleUrl() {
+                if (this.locale.locale && this.locale.locale.length > 1) {
+                    return this.contentUrlPrefix + this.componentPath + '/_locales/' + this.locale.locale + '/messages' + LOCALE_FILE_EXT;
+                }
             },
         },
 
@@ -113,19 +129,13 @@
                 }
             },
 
-            'locale.locale': async function(locale) {
+            async currentLocaleUrl() {
                 this.currentLocale = {};
 
-                if (locale && locale.length > 1) {
+                if (this.currentLocaleUrl) {
                     try {
-                        this.currentLocale = await load(this.getLocaleUrl(locale));
-                    } catch (e) {
-                        if (locale.includes('_')) {
-                            try {
-                                this.currentLocale = await load(this.getLocaleUrl(locale.split('_').shift().toLowerCase()));
-                            } catch (e) {}
-                        }
-                    }
+                        this.currentLocale = await load(this.currentLocaleUrl);
+                    } catch (e) {}
                 }
             },
         },
@@ -135,7 +145,7 @@
                 let plugins = await load(this.pluginsApiUrl, []);
                 this.components = [this.components[0]].concat(plugins.filter(element => 'dir' === element.type));
 
-                this.loadComponentData();
+                await this.loadComponentData();
             },
             getLocaleUrl: function(locale) {
                 return this.contentUrlPrefix + this.componentPath + '/_locales/' + locale + '/messages' + LOCALE_FILE_EXT;
@@ -152,6 +162,7 @@
 
                 this.componentLoading = false;
                 this.availableLocalesLoading = false;
+                this.$emit('component-data-loaded');
             },
             setLocale(locale) {
                 let localeToSet = {
@@ -160,21 +171,26 @@
                     polyglot: locale.polyglot,
                 };
 
-                if (locale.branch) {
+                let mergeAndApplyLocale = function() {
+                    Object.keys(this.defaultLocale).forEach(function(key) {
+                        if (this.notAllowedKeys.includes(key)) {
+                            return;
+                        }
+
+                        if (locale[key]) {
+                            localeToSet[key] = locale[key].message;
+                        }
+                    }, this);
+
+                    this.locale = localeToSet;
+                }.bind(this);
+
+                if (locale.branch && this.branch !== locale.branch) {
+                    this.$once('component-data-loaded', mergeAndApplyLocale);
                     this.branch = locale.branch;
+                } else {
+                    mergeAndApplyLocale();
                 }
-
-                Object.keys(this.defaultLocale).forEach(function(key) {
-                    if (this.notAllowedKeys.includes(key)) {
-                        return;
-                    }
-
-                    if (locale[key]) {
-                        localeToSet[key] = locale[key].message;
-                    }
-                }, this);
-
-                this.locale = localeToSet;
             },
             resetValue: function(key) {
                 this.locale[key] = this.currentLocale[key].message;

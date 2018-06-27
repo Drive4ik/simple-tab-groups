@@ -1,4 +1,8 @@
 # gitignore file
 
 /*.sublime-*
-*.zip
+
+/addon/node_modules/
+/addon/dist/
+/addon/dist-zip/
+/addon/package-lock.json

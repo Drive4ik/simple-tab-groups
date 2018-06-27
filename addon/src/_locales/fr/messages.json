@@ -1,0 +1,368 @@
+{
+    "extensionDescription": {
+        "message": "Créer, modifier et changer rapidement de groupe d'onglets. \nInspiré par l'ancien add-on \"Tab Groups\" :)",
+        "description": "Description of the extension."
+    },
+    "openSettings": {
+        "message": "Préférences",
+        "description": "Settings context button title"
+    },
+    "manageGroupsTitle": {
+        "message": "Gérer les groupes",
+        "description": "Manage groups"
+    },
+    "setTabIconAsGroupIcon": {
+        "message": "Définir l’icône de l'onglet en tant qu'icône de groupe",
+        "description": "Set tab icon as group icon"
+    },
+    "moveTabToGroupDisabledTitle": {
+        "message": "Transférer l'onglet dans un groupe",
+        "description": "Move tab to group title"
+    },
+    "moveTabToGroupMessage": {
+        "message": "L'onglet \"$tabtitle$\" a été déplacé vers le groupe \"$grouptitle$\".\n\nCliquez ici pour voir cet onglet.",
+        "description": "Tab moved popup title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            },
+            "tabtitle": {
+                "content": "$2",
+                "example": "tab title"
+            }
+        }
+    },
+    "warning": {
+        "message": "Attention!",
+        "description": "Warning!"
+    },
+    "success": {
+        "message": "Succès!",
+        "description": "Success!"
+    },
+    "ok": {
+        "message": "OK",
+        "description": "OK button"
+    },
+    "save": {
+        "message": "Sauver",
+        "description": "Save"
+    },
+    "delete": {
+        "message": "Supprimer",
+        "description": "Delete"
+    },
+    "cancel": {
+        "message": "Annuler",
+        "description": "Cancel"
+    },
+    "privateAndPinnedTabsAreNotSupported": {
+        "message": "Les onglets privés et verrouillés ne sont pas supportés",
+        "description": "Private and pinned tabs are not supported"
+    },
+    "thisTabIsNotSupported": {
+        "message": "Cet onglet n'est pas supporté",
+        "description": "This tab is not supported"
+    },
+    "searchPlaceholder": {
+        "message": "Chercher un onglet...",
+        "description": "Search placeholder"
+    },
+    "filterTabsPlaceholder": {
+        "message": "Filtrer les onglets (filtre multiple avec *)",
+        "description": "Filter tabs (multiple filter with *)"
+    },
+    "invalidRegExpRuleTitle": {
+        "message": "La règle '$regexp$' n'est pas valide et sera ignorée.",
+        "description": "Invalid rule description",
+        "placeholders": {
+            "regexp": {
+                "content": "$1",
+                "example": "googlecom"
+            }
+        }
+    },
+    "manageGroupViewGrid": {
+        "message": "Vue en grille",
+        "description": "Grid display"
+    },
+    "manageGroupViewFreeArrange": {
+        "message": "Arrangement libre (dans une future version)",
+        "description": "Free arrange"
+    },
+    "closePopupAfterChangeGroup": {
+        "message": "Fermer la popup après avoir changé de groupe",
+        "description": "Close popup after changing group"
+    },
+    "showNotificationAfterMoveTab": {
+        "message": "Afficher une notification quand l'onglet est transféré dans un autre groupe",
+        "description": "Show notification when tab is moved to another group"
+    },
+    "openManageGroupsInTab": {
+        "message": "Ouvrir \"Gérer les groupes\" dans un nouvel onglet",
+        "description": "Open \"Manage Groups\" in new tab"
+    },
+    "showConfirmDialogBeforeGroupDelete": {
+        "message": "Afficher une confirmation avant de supprimer le groupe",
+        "description": "Show confirm dialog before group delete"
+    },
+    "exportAddonSettingsTitle": {
+        "message": "Sauvegarder vos groupes Simple Tab Groups",
+        "description": "Backup your Simple Tab Groups"
+    },
+    "exportAddonSettingsDescription": {
+        "message": "Exporte vos groupes d'onglets dans un fichier de sauvegarde que vous pourrez restaurer plus tard si nécessaire.",
+        "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
+    },
+    "exportAddonSettingsButton": {
+        "message": "Créer une sauvegarde",
+        "description": "Create backup"
+    },
+    "includeTabThumbnailsIntoBackup": {
+        "message": "Inclure les icônes d'onglet dans la sauvegarde (le fichier de sauvegarde sera plus volumineux)",
+        "description": "Include tab thumbnails into backup (make backup file size bigger)"
+    },
+    "importAddonSettingsTitle": {
+        "message": "Restaurer des groupes Simple Tab Groups",
+        "description": "Restore Simple Tab Groups"
+    },
+    "importAddonSettingsDescription": {
+        "message": "Charger un fichier de sauvegarde contenant les groupes d'onglets que vous souhaitez restaurer.",
+        "description": "Load a backup file containing the tab groups you want to restore."
+    },
+    "importAddonSettingsWarning": {
+        "message": "Restaurer les préférences d'add-on SUPPRIMERA toutes les préférences et groupes existants!",
+        "description": "Restore add-on settings will ERASE all existing settings and groups!"
+    },
+    "importAddonSettingsButton": {
+        "message": "Restaurer une sauvegarde",
+        "description": "Restore backup"
+    },
+    "importSettingsOldTabGroupsAddonTitle": {
+        "message": "Restaurer des groupes d'onglets de \"Tab Groups\" de Quicksaver",
+        "description": "Restore Quicksaver's \"Tab Groups\""
+    },
+    "importSettingsOldTabGroupsAddonDescription": {
+        "message": "Charger un fichier de sauvegarde de l'ancien addon \"Tab Groups\".",
+        "description": "Load a backup file old \"Tab Groups\" addon."
+    },
+    "importSettingsOldTabGroupsAddonButton": {
+        "message": "Importer les préférences de l'addon \"Tab Groups\" de Quicksaver",
+        "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
+    },
+    "openGroupAfterChange": {
+        "message": "Ouvrir le groupe après s'y être rendu",
+        "description": "Open group after changing to it"
+    },
+    "newGroupTitle": {
+        "message": "Groupe $id$",
+        "description": "group id",
+        "placeholders": {
+            "id": {
+                "content": "$1",
+                "example": "1"
+            }
+        }
+    },
+    "searchNotFoundTitle": {
+        "message": "La recherche d'onglets \"$search$\" n'a pas de résutat",
+        "description": "No results found",
+        "placeholders": {
+            "search": {
+                "content": "$1",
+                "example": "mail"
+            }
+        }
+    },
+    "sortGroupsAZ": {
+        "message": "Trier les groupes [A-Z]",
+        "description": "Sort groups [A-Z]"
+    },
+    "sortGroupsZA": {
+        "message": "Trier les groupes [Z-A]",
+        "description": "Sort groups [Z-A]"
+    },
+    "settingsTitle": {
+        "message": "Préférences",
+        "description": "Settings"
+    },
+    "groupSettings": {
+        "message": "Préférences de groupe",
+        "description": "Group settings"
+    },
+    "deleteGroup": {
+        "message": "Supprimer le groupe",
+        "description": "Delete group"
+    },
+    "deleteGroupTitle": {
+        "message": "Supprimer le groupe?",
+        "description": "Delete group?"
+    },
+    "deleteGroupBody": {
+        "message": "Souhaitez-vous supprimer \"$name$\" ?<br>Supprimer un groupe ferme également les onglets et la fenêtre liée si elle est ouverte!",
+        "description": "Delete group?",
+        "placeholders": {
+            "name": {
+                "content": "$1",
+                "example": "Group #4"
+            }
+        }
+    },
+    "groupTabsCount": {
+        "message": "$count$ onglets",
+        "description": "Group tabs count",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "deleteTab": {
+        "message": "Supprimer l'onglet",
+        "description": "Delete tab"
+    },
+    "createNewTab": {
+        "message": "Ouvrir un nouvel onglet",
+        "description": "Open new tab"
+    },
+    "createNewGroup": {
+        "message": "Créer un nouveau groupe",
+        "description": "Create new group"
+    },
+    "goBackButtonTitle": {
+        "message": "Retour",
+        "description": "Go back"
+    },
+    "goBackToGroupsButtonTitle": {
+        "message": "Retour aux groupes",
+        "description": "Go back to groups"
+    },
+    "title": {
+        "message": "Titre",
+        "description": "Title"
+    },
+    "iconColor": {
+        "message": "Couleur de l'icône",
+        "description": "Icon color"
+    },
+    "selectUserGroupIcon": {
+        "message": "Charger icône",
+        "description": "Load icon"
+    },
+    "selectUserGroupIconWarnText": {
+        "message": "Désolé, vous ne pouvez pas charger d'icône personnalisé dans cette popup, mais vous pouvez charger un icône de groupe dans \"Gérer les groupes\".\nOuvrir \"Gérer les groupes\"?",
+        "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
+    },
+    "setRandomColor": {
+        "message": "Définir une couleur aléatoire",
+        "description": "Set random color"
+    },
+    "regexpForTabsTitle": {
+        "message": "Expressions régulières pour les onglets trouvés",
+        "description": "Regular expressions for catch tabs"
+    },
+    "regexpForTabsPlaceholder": {
+        "message": "Expressions régulières",
+        "description": "Regular expressions"
+    },
+    "regexpForTabsHelp": {
+        "message": "Insérez ici des expressions régulières pour des adresses web. Les onglets correspondants seront automatiquement transférés dans ce groupe.\nN'utilisez qu'une ligne par règle, avec autant de règles que vous souhaitez.\nExemples:\ngithub\\.com/drive4ik/simple-tab-groups - récupère toutes les pages dans le répertoire de l'addon\nbugzilla\\.mozilla\\.org - récupère les rapports de bug firefox\n(facebook|twitter|youtube)\\.com - récupère toutes vos pages sociales",
+        "description": "Regular exceptions helper"
+    },
+    "hotkeysTitle": {
+        "message": "Raccourcis",
+        "description": "Hotkeys"
+    },
+    "hotkeysDescription": {
+        "message": "Ici vous pouvez ajouter des raccourcis.<br>Restrictions:<br>1. Ces raccourcis ne fonctionneront que sur des pages web (http:, https:). Sur des pages du navigateur (about:) - cela ne fonctionne pas, l'API WebExtensions ne l'autorise pas.<br>2. Certains raccourcis ne fonctionneront pas sur différentes dispositions de clavier. Par exemple, le raccourci <code>Ctrl + ~</code> créé dans la disposition US  ne fonctionnera pas sur la disposition RU, car la disposition russe a un autre code pour cette touche. Pour contourner ce problème, créez simplement un autre raccourci avec la disposition russe: <code>Ctrl + Ё</code>",
+        "description": "Hotkeys description"
+    },
+    "addHotKeyButton": {
+        "message": "Ajouter un raccourci",
+        "description": "Add hotkey"
+    },
+    "deleteHotKeyButton": {
+        "message": "Supprimer le raccourci",
+        "description": "Delete hotkey"
+    },
+    "hotkeyPlaceholder": {
+        "message": "Appuyez sur des touches ici",
+        "description": "Press key here"
+    },
+    "selectAction": {
+        "message": "Sélectionner l'action",
+        "description": "Select action"
+    },
+    "selectGroup": {
+        "message": "Sélectionner le groupe",
+        "description": "Select group"
+    },
+    "hotkeyActionTitleLoadNextGroup": {
+        "message": "Charger le groupe suivant",
+        "description": "Load next group"
+    },
+    "hotkeyActionTitleLoadPrevGroup": {
+        "message": "Charger le groupe précédent",
+        "description": "Load previous group"
+    },
+    "hotkeyActionTitleLoadFirstGroup": {
+        "message": "Charger le premier groupe",
+        "description": "Load first group"
+    },
+    "hotkeyActionTitleLoadLastGroup": {
+        "message": "Charger le dernier groupe",
+        "description": "Load last group"
+    },
+    "hotkeyActionTitleLoadCustomGroup": {
+        "message": "Charger un groupe personnalisé",
+        "description": "Load custom group"
+    },
+    "hotkeyActionTitleAddNewGroup": {
+        "message": "Ajouter un nouveau groupe",
+        "description": "Add new group"
+    },
+    "hotkeyActionTitleDeleteCurrentGroup": {
+        "message": "Supprimer le groupe courant",
+        "description": "Delete current group"
+    },
+    "hotkeyActionTitleOpenManageGroups": {
+        "message": "Ouvrir \"Gérer les groupes\"",
+        "description": "Open manage groups"
+    },
+    "whatsWrongMessage": {
+        "message": "Un problème... ?\nPrenez contact avec le développeur par email avec le dernier log d'erreur (le bouton existe en bas des préférences)",
+        "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
+    },
+    "saveErrorLogsIntoFile": {
+        "message": "Enregistrer le dernier log d'erreurs dans un fichier JSON",
+        "description": "Save last error logs into JSON file"
+    },
+    "undoRemoveGroupItemTitle": {
+        "message": "Annuler la suppression du groupe \"$grouptitle$\"",
+        "description": "Undo remove group menu title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "isStickyGroupTitle": {
+        "message": "Groupe épinglé",
+        "description": "Sticky group"
+    },
+    "isStickyGroupHelp": {
+        "message": "Les onglets de ce groupe ne seront jamais déplacé vers un autre groupe",
+        "description": "Tabs in this group will never be automatically moved to another group"
+    },
+    "useTabsFavIconsFromGoogleS2Converter": {
+        "message": "Utiliser les favicons depuis Google S2 Converter",
+        "description": "Use tabs fav-icons from Google S2 Converter"
+    },
+    "iconStyle": {
+        "message": "Style d’icônes",
+        "description": "Icon style"
+    }
+}
