@@ -246,15 +246,13 @@
                 let data = await storage.get(null);
 
                 if (!this.includeTabThumbnailsIntoBackup) {
-                    data.groups = data.groups.map(function(group) {
-                        group.tabs = group.tabs.map(function(tab) {
-                            delete tab.thumbnail;
-                            return tab;
-                        });
-
-                        return group;
-                    });
+                    data.groups.forEach(group => group.tabs.forEach(tab => delete tab.thumbnail));
                 }
+
+                data.groups.forEach(function(group) {
+                    group.windowId = null;
+                    group.tabs.forEach(tab => tab.id = null);
+                });
 
                 exportToFile(data);
             },
