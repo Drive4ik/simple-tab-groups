@@ -551,7 +551,11 @@
                                 <div class="screenshot" :style="tab.container && {borderColor: tab.container.colorCode}">
                                     <img :src="tab.thumbnail">
                                 </div>
-                                <div class="tab-title text-ellipsis" v-text="tab.title || tab.url"></div>
+                                <div
+                                    @mousedown.middle.prevent
+                                    @mouseup.middle.prevent="removeTab(group, tab.index)"
+                                    class="tab-title text-ellipsis"
+                                    v-text="tab.title || tab.url"></div>
                             </div>
 
                             <div class="tab new" :title="lang('createNewTab')" @click="addTab(group)">
