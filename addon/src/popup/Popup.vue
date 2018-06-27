@@ -107,6 +107,14 @@
             this.setupListeners();
 
             this.$refs.search.focus();
+
+            this.$nextTick(function() {
+                let activeItemNode = document.querySelector('.is-active');
+
+                if (activeItemNode && !utils.isElementVisible(activeItemNode)) {
+                    activeItemNode.scrollIntoView(false);
+                }
+            });
         },
         watch: {
             search(search) {

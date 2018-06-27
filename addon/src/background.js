@@ -1743,6 +1743,7 @@ async function runMigrateForData(data) {
         data.groups.forEach(group => group.title = utils.unSafeHtml(group.title));
     }
 
+    // TODO remove group option isExpanded
 
 
     data.version = currentVersion;
