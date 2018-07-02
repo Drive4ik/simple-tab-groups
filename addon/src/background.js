@@ -1800,7 +1800,7 @@ async function getAllWindows() {
         windowType: 'normal',
     });
 
-    return Promise.all(
+    let windows = await Promise.all(
         allTabs
             .reduce((acc, tab) => acc.includes(tab.windowId) ? acc : acc.concat([tab.windowId]), [])
             .map(async function(winId) {
@@ -1815,8 +1815,9 @@ async function getAllWindows() {
 
                 return win;
             })
-            .filter(Boolean)
     );
+
+    return windows.filter(Boolean);
 }
 
 async function setWindowValue(windowId, key, value = null) {
