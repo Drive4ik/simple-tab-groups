@@ -40,7 +40,7 @@
             componentLoading: true,
             components: [{
                 name: 'simple-tab-groups-addon',
-                path: 'addon',
+                path: 'addon/src',
             }],
             componentName: 'simple-tab-groups-addon',
 
@@ -83,17 +83,7 @@
             componentPath() {
                 let component = this.components.find(comp => comp.name === this.componentName);
 
-                if (component) { // TMP
-                    if (component === this.components[0] && this.branch.includes('vue')) {
-                        return 'addon/src'
-                    }
-
-                    return component.path;
-                }
-
-                return 'component-not-found';
-
-                // return component ? component.path : 'component-not-found';
+                return component ? component.path : 'component-not-found';
             },
             currentLocaleUrl() {
                 if (this.locale.locale && this.locale.locale.length > 1) {
