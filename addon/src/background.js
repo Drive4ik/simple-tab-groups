@@ -7,7 +7,9 @@ import storage from './js/storage';
 let errorLogs = [],
     options = {},
     _groups = [],
-    allThumbnails = {};
+    allThumbnails = {},
+    manifest = browser.runtime.getManifest(),
+    manageTabsPageUrl = browser.extension.getURL(constants.MANAGE_TABS_URL);
 
 let log = function(message = 'log', data = null, showNotification = true) {
     try {
@@ -644,6 +646,15 @@ async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
 
             if (oldGroup) {
                 oldGroup.windowId = null;
+
+                oldGroup.tabs = oldGroup.tabs.filter(function(tab) {
+                    if (tab.id && tab.url === manageTabsPageUrl) {
+                        browser.tabs.remove(tab.id);
+                        return false;
+                    }
+
+                    return true;
+                });
             }
 
             group.windowId = windowId;
@@ -1292,7 +1303,7 @@ function setBrowserActionData(currentGroup) {
 
 function resetBrowserActionData() {
     browser.browserAction.setTitle({
-        title: browser.runtime.getManifest().browser_action.default_title,
+        title: manifest.browser_action.default_title,
     });
 
     browser.browserAction.setIcon({
@@ -1400,12 +1411,10 @@ function sortGroups(vector = 'asc') {
 }
 
 async function openManageGroups(windowScreen) {
-    let manageUrl = browser.extension.getURL(constants.MANAGE_TABS_URL);
-
     if (options.openManageGroupsInTab) {
         let tabs = await browser.tabs.query({
             windowId: browser.windows.WINDOW_ID_CURRENT,
-            url: manageUrl,
+            url: manageTabsPageUrl,
             // pinned: false,
             // hidden: false,
         });
@@ -1417,7 +1426,7 @@ async function openManageGroups(windowScreen) {
         } else {
             browser.tabs.create({
                 active: true,
-                url: manageUrl,
+                url: manageTabsPageUrl,
             });
         }
     } else {
@@ -1427,7 +1436,7 @@ async function openManageGroups(windowScreen) {
         });
 
         let isFoundWindow = allWindows.some(function(win) {
-            if ('popup' === win.type && 1 === win.tabs.length && manageUrl === win.tabs[0].url) { // if manage popup is now open
+            if ('popup' === win.type && 1 === win.tabs.length && manageTabsPageUrl === win.tabs[0].url) { // if manage popup is now open
                 BG.setFocusOnWindow(win.id);
                 return true;
             }
@@ -1438,7 +1447,7 @@ async function openManageGroups(windowScreen) {
         }
 
         let createData = {
-            url: manageUrl,
+            url: manageTabsPageUrl,
             type: 'popup',
         };
 
@@ -1650,7 +1659,7 @@ async function runMigrateForData(data) {
         group.tabs.forEach(tab => tab.id = null);
     });
 
-    let currentVersion = browser.runtime.getManifest().version;
+    let currentVersion = manifest.version;
 
     if (data.version === currentVersion) {
         return data;
