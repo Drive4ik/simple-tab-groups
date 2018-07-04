@@ -68,7 +68,7 @@ const DEFAULT_OPTIONS = {
             shiftKey: true,
             altKey: false,
             metaKey: false,
-            key: '~',
+            key: '`',
             keyCode: 192,
             action: {
                 id: 'load-prev-group',
