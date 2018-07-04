@@ -137,10 +137,10 @@ function getTabFavIconUrl(tab) {
     return safedFavIconUrl;
 }
 
-function createGroup(id, windowId = null, groupIconViewType = null) {
+function createGroup(id, windowId = null, groupIconViewType = null, title = null) {
     return {
         id: id,
-        title: browser.i18n.getMessage('newGroupTitle', id),
+        title: utils.createGroupTitle(title, id),
         iconColor: utils.randomColor(),
         iconUrl: null,
         iconViewType: groupIconViewType || options.defaultGroupIconViewType,
@@ -152,7 +152,7 @@ function createGroup(id, windowId = null, groupIconViewType = null) {
     };
 }
 
-async function addGroup(windowId, resetGroups = false, returnNewGroupIndex = true, withTabs = []) {
+async function addGroup(windowId, resetGroups = false, returnNewGroupIndex = true, withTabs = [], title) {
     let { lastCreatedGroupPosition } = await storage.get('lastCreatedGroupPosition');
 
     lastCreatedGroupPosition++;
@@ -163,7 +163,7 @@ async function addGroup(windowId, resetGroups = false, returnNewGroupIndex = tru
 
     let newGroupIndex = _groups.length;
 
-    _groups.push(createGroup(lastCreatedGroupPosition, windowId));
+    _groups.push(createGroup(lastCreatedGroupPosition, windowId, undefined, title));
 
     if (0 === newGroupIndex) {
         let win = await getWindow(),

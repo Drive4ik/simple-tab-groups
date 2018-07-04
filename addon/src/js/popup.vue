@@ -14,7 +14,10 @@
         },
         methods: {
             lang: browser.i18n.getMessage,
-        }
+        },
+        mounted() {
+            this.$nextTick(() => this.$emit('show-popup'));
+        },
     }
 </script>
 
@@ -29,7 +32,7 @@
             <section class="modal-card-body">
                 <slot></slot>
             </section>
-            <footer class="modal-card-foot">
+            <footer v-if="buttons.length" class="modal-card-foot">
                 <button v-for="button in buttons" :key="button.lang" @click="$emit(button.event)" :class="['button', button.classList]" v-text="lang(button.lang)"></button>
             </footer>
         </div>

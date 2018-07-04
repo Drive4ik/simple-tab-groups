@@ -50,6 +50,9 @@
 
                 hoverItem: null,
 
+                nextGroupTitle: '',
+                isShowingCreateGroupPopup: false,
+
                 search: '',
 
                 currentWindowId: null,
@@ -324,9 +327,16 @@
                     .map(this.$_tabMap, this);
             },
 
-            addGroup() {
-                BG.addGroup();
+            async showCreateGroupPopup() {
+                let { lastCreatedGroupPosition } = await storage.get('lastCreatedGroupPosition');
+                this.nextGroupTitle = browser.i18n.getMessage('newGroupTitle', lastCreatedGroupPosition + 1);
+                this.isShowingCreateGroupPopup = true;
             },
+
+            createNewGroup() {
+                BG.addGroup(undefined, undefined, undefined, undefined, this.nextGroupTitle);
+            },
+
             addTab(cookieStoreId) {
                 BG.addTab(this.groupToShow.id, cookieStoreId || constants.DEFAULT_COOKIE_STORE_ID);
             },
@@ -811,7 +821,7 @@
                 <hr>
 
                 <div class="create-new-group">
-                    <div class="item" @click="addGroup">
+                    <div class="item" @click="showCreateGroupPopup">
                         <div class="item-icon">
                             <img class="size-16" src="/icons/group-new.svg" />
                         </div>
@@ -945,6 +955,21 @@
             </div>
         </main>
 
+        <footer class="is-flex is-unselectable">
+            <div class="is-flex is-align-items-center manage-groups is-full-height is-full-width" @click="openManageGroups" :title="lang('manageGroupsTitle')">
+                <img class="size-16" src="/icons/icon.svg" />
+                <span class="h-margin-left-10" v-text="lang('manageGroupsTitle')"></span>
+            </div>
+            <div class="is-flex is-align-items-center is-vertical-separator"></div>
+            <div class="is-flex is-align-items-center is-full-height" @click="reloadAddon" :title="lang('reloadAddon')">
+                <img class="size-16" src="/icons/refresh.svg" />
+            </div>
+            <div class="is-flex is-align-items-center is-vertical-separator"></div>
+            <div class="is-flex is-align-items-center is-full-height" @click="openOptionsPage" :title="lang('settingsTitle')">
+                <img class="size-16" src="/icons/settings.svg" />
+            </div>
+        </footer>
+
         <context-menu ref="groupContextMenu">
             <ul slot-scope="menu" class="is-unselectable">
                 <li @click="sortGroups('asc')">
@@ -1043,20 +1068,31 @@
             <span v-html="lang('deleteGroupBody', safeHtml(groupToRemove.title))"></span>
         </popup>
 
-        <footer class="is-flex is-unselectable h-margin-top-10">
-            <div class="is-flex is-align-items-center manage-groups is-full-height is-full-width" @click="openManageGroups" :title="lang('manageGroupsTitle')">
-                <img class="size-16" src="/icons/icon.svg" />
-                <span class="h-margin-left-10" v-text="lang('manageGroupsTitle')"></span>
+        <popup
+            v-if="isShowingCreateGroupPopup"
+            :title="lang('createNewGroup')"
+            @create-group="createNewGroup(); isShowingCreateGroupPopup = false"
+            @close-popup="isShowingCreateGroupPopup = false"
+            @show-popup="$refs.nextGroupTitle.focus()"
+            :buttons="
+                [{
+                    event: 'create-group',
+                    classList: 'is-success',
+                    lang: 'ok',
+                }, {
+                    event: 'close-popup',
+                    lang: 'cancel',
+                }]
+            ">
+            <div class="control is-expanded">
+                <input
+                    ref="nextGroupTitle"
+                    @keydown.enter.stop="createNewGroup(); isShowingCreateGroupPopup = false"
+                    v-model.trim="nextGroupTitle"
+                    type="text"
+                    class="input" />
             </div>
-            <div class="is-flex is-align-items-center is-vertical-separator"></div>
-            <div class="is-flex is-align-items-center is-full-height" @click="reloadAddon" :title="lang('reloadAddon')">
-                <img class="size-16" src="/icons/refresh.svg" />
-            </div>
-            <div class="is-flex is-align-items-center is-vertical-separator"></div>
-            <div class="is-flex is-align-items-center is-full-height" @click="openOptionsPage" :title="lang('settingsTitle')">
-                <img class="size-16" src="/icons/settings.svg" />
-            </div>
-        </footer>
+        </popup>
     </div>
 </template>
 
@@ -1097,6 +1133,7 @@
         > footer {
             height: 45px;
             min-height: 45px;
+            margin-top: var(--indent);
             align-items: center;
             justify-content: space-between;
             cursor: default;
