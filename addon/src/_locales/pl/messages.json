@@ -149,7 +149,7 @@
     },
     "importSettingsOldTabGroupsAddonButton": {
         "message": "Importuj ustawienia z dodatku Quicksaver-a",
-        "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
+        "description": "Choose file"
     },
     "openGroupAfterChange": {
         "message": "Otwórz grupę po jej zmianie",
@@ -183,6 +183,10 @@
         "message": "Sortuj grupy [Z-A]",
         "description": "Sort groups [Z-A]"
     },
+    "generalTitle": {
+        "message": "Ogólne",
+        "description": "General"
+    },
     "settingsTitle": {
         "message": "Ustawienia",
         "description": "Settings"
@@ -200,7 +204,7 @@
         "description": "Delete group?"
     },
     "deleteGroupBody": {
-        "message": "Czy chcesz usunąc grupę \"$name$\" ?<br>Usunięcie grupy spowoduje również zamknięcie kart i powiązanego okna, jeśli jest już otwarte!",
+        "message": "Czy chcesz usunąć grupę \"$name$\" ?<br>Usunięcie grupy spowoduje również zamknięcie kart i powiązanego okna, jeśli jest już otwarte!",
         "description": "Delete group?",
         "placeholders": {
             "name": {
@@ -252,7 +256,7 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Niestety, nie możesz załadować niestandardowej ikony w tym okienku, ale możesz załadować niestandardową ikonę grupy w  ustawieniu \"Zarządzaj grupami\". \nOtwórz \"Zarządzaj grupami\"?",
+        "message": "Niestety, nie możesz załadować niestandardowej ikony w tym okienku, ale możesz załadować niestandardową ikonę grupy w opcji \"Zarządzaj grupami\". \nOtwórz \"Zarządzaj grupami\"?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -336,7 +340,7 @@
         "description": "Open manage groups"
     },
     "whatsWrongMessage": {
-        "message": "Co jest nie tak ...\nProszę skontaktuj się z programistą, wysyłając e-maila z powiadomieniami o błędach (przycisk dostępny na dole strony z opcjami)",
+        "message": "Co jest nie tak...\nProszę skontaktuj się z programistą, wysyłając e-maila z powiadomieniami o błędach (przycisk dostępny na dole strony z opcjami)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
     },
     "saveErrorLogsIntoFile": {
@@ -372,5 +376,73 @@
     "iconStyle": {
         "message": "Styl ikony",
         "description": "Icon style"
+    },
+    "discardTabsAfterHide": {
+        "message": "Zamknij zakładki po ich ukryciu (to zmniejszy użycie pamięci RAM)",
+        "description": "Discard tabs after hide (this will save the RAM)"
+    },
+    "createThumbnailsForTabs": {
+        "message": "Twórz miniatury dla kart (dostępne w opcji \"Zarządzaj grupami\")",
+        "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
+    },
+    "thisTabCanNotBeHidden": {
+        "message": "Ta karta nie może być ukryta, ponieważ używa mikrofonu lub kamery",
+        "description": "This tab can not be hidden because it uses a microphone or camera"
+    },
+    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
+        "message": "Nie można zmienić grupy, ponieważ jedna z otwartych kart współdzieli mikrofon lub kamerę",
+        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
+    },
+    "foundHiddenUnSyncTabsDescription": {
+        "message": "Znaleziono ukryte niezsynchronizowane karty. Kliknij zakładkę, aby wyświetlić ją w bieżącej grupie / oknie lub:",
+        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
+    },
+    "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
+        "message": "Przenieś wszystkie te karty do bieżącej grupy / okna",
+        "description": "Move all of this tabs into current group/window"
+    },
+    "actionHiddenUnSyncTabsCreateGroup": {
+        "message": "Utwórz nową grupę z tymi zakładkami",
+        "description": "Create new group with all of this tabs"
+    },
+    "actionHiddenUnSyncTabsCloseAll": {
+        "message": "Zamknij wszystkie te karty",
+        "description": "Close all of this tabs"
+    },
+    "thisTabWillCreateAsNew": {
+        "message": "Ta zakładka zostanie utworzona jako nowa",
+        "description": "This tab will create as new"
+    },
+    "updateTabThumbnail": {
+        "message": "Zaktualizuj miniaturę dla tej zakładki",
+        "description": "Update thumbnail for this tab"
+    },
+    "cantMakeThumbnailTabWasDiscarded": {
+        "message": "Nie można utworzyć miniatury dla karty, jeśli karta nie została załadowana",
+        "description": "You can not make a thumbnail of a tab if the tab was not loaded"
+    },
+    "nowFoundWindowsAddonStoppedWorking": {
+        "message": "Błąd: nie znaleziono żadnych okien typu nie prywatne, pop-up lub incognito\nDodatek przestał działać. Uruchom ponownie przeglądarkę.",
+        "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
+    },
+    "waitingToLoadAllTabs": {
+        "message": "Oczekiwanie na wczytanie wszystkich kart.\nProszę czekać...",
+        "description": "Waiting for all tabs to load.\nPlease wait..."
+    },
+    "reloadAddon": {
+        "message": "Załaduj ponownie dodatek",
+        "description": "Reload addon"
+    },
+    "ffFailedAndLostDataMessage": {
+        "message": "Firefox uległ awarii i wszystkie grupy zostały utracone.\nJeśli masz kopię zapasową, możesz przywrócić z niej dane",
+        "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
+    },
+    "enterDefaultGroupIconViewTypeTitle": {
+        "message": "Styl ikon dla nowej grupy",
+        "description": "Icon style for a new group"
+    },
+    "openPopupHotkeyTitle": {
+        "message": "Otwórz okno popup z grupami",
+        "description": "Open the groups pop-up"
     }
 }
