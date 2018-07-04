@@ -56,6 +56,7 @@ const DEFAULT_OPTIONS = {
             ctrlKey: true,
             shiftKey: false,
             altKey: false,
+            metaKey: false,
             key: '`',
             keyCode: 192,
             action: {
@@ -66,6 +67,7 @@ const DEFAULT_OPTIONS = {
             ctrlKey: true,
             shiftKey: true,
             altKey: false,
+            metaKey: false,
             key: '~',
             keyCode: 192,
             action: {

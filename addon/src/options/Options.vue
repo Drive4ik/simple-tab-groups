@@ -41,6 +41,7 @@
                 ],
 
                 openPopupCommand: {
+                    metaKey: false,
                     ctrlKey: false,
                     shiftKey: false,
                     altKey: false,
@@ -55,11 +56,21 @@
                     empty: true,
                 },
                 groups: [],
+                os: "unknown",
+                isMac: false,
             };
         },
         async mounted() {
             let data = await storage.get(null);
 
+            if (this.os === "unknown") {
+                // Check OS, especially see if it is macOS
+                let sysInfo = await browser.runtime.getPlatformInfo();
+                let os = await sysInfo.os;
+                this.os = os;
+                this.isMac = os.indexOf('mac') !== -1;
+            }
+            
             this.options = utils.extractKeys(data, allOptionsKeys);
             this.groups = Array.isArray(data.groups) ? data.groups : [];
 
@@ -125,6 +136,7 @@
                 this.openPopupCommand.ctrlKey = false;
                 this.openPopupCommand.shiftKey = false;
                 this.openPopupCommand.altKey = false;
+                this.openPopupCommand.metaKey = false;
                 this.openPopupCommand.key = browser.runtime.getManifest().commands._execute_browser_action.suggested_key.default;
 
                 // browser.commands.reset('_execute_browser_action');
@@ -133,8 +145,10 @@
             async initPopupHotkey() {
                 let commands = await browser.commands.getAll(),
                     popupCommand = commands.find(command => command.name === '_execute_browser_action');
-
-                this.openPopupCommand.ctrlKey = popupCommand.shortcut.includes('Ctrl');
+                // See https://developer.mozilla.org/en-US/Add-ons/WebExtensions/manifest.json/commands#Key_combinations
+                let Ctrl = this.isMac ? 'MacCtrl' : 'Ctrl';
+                this.openPopupCommand.ctrlKey = popupCommand.shortcut.includes(Ctrl);
+                this.openPopupCommand.metaKey = this.isMac ? popupCommand.shortcut.includes('Command') : false;
                 this.openPopupCommand.shiftKey = popupCommand.shortcut.includes('Shift');
                 this.openPopupCommand.altKey = popupCommand.shortcut.includes('Alt');
                 this.openPopupCommand.key = popupCommand.shortcut.split('+').pop();
@@ -144,7 +158,7 @@
                         let shortcut = [];
 
                         if (openPopupCommand.ctrlKey) {
-                            shortcut.push('Ctrl');
+                            shortcut.push(Ctrl);
                         }
 
                         if (openPopupCommand.shiftKey) {
@@ -153,6 +167,10 @@
 
                         if (openPopupCommand.altKey) {
                             shortcut.push('Alt');
+                        }
+
+                        if (openPopupCommand.metaKey) {
+                            shortcut.push('Command');
                         }
 
                         let key = openPopupCommand.key.replace('Arrow', '');
@@ -177,7 +195,7 @@
                 event.stopPropagation();
                 event.stopImmediatePropagation();
 
-                if (!event.ctrlKey && !event.shiftKey && !event.altKey) {
+                if (!event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey) {
                     hotkey.key = event.key.length === 1 ? event.key.toUpperCase() : event.key;
 
                     if (withKeyCode) {
@@ -367,6 +385,7 @@
                     ctrlKey: false,
                     shiftKey: false,
                     altKey: false,
+                    metaKey: false,
                     key: '',
                     keyCode: 0,
                     action: {
@@ -507,7 +526,12 @@
                     </label>
                     <label class="checkbox">
                         <input v-model="openPopupCommand.altKey" type="checkbox" />
-                        <span>Alt</span>
+                        <span v-if="isMac">Option</span>
+                        <span v-else>Alt</span>
+                    </label>
+                    <label class="checkbox" v-if="isMac">
+                        <input v-model="openPopupCommand.metaKey" type="checkbox" />
+                        <span>Command</span>
                     </label>
                     <div class="control">
                         <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(openPopupCommand, $event, false)" :value="openPopupCommand.key" autocomplete="off" class="input is-small" />
@@ -531,7 +555,12 @@
                     </label>
                     <label class="checkbox">
                         <input v-model="hotkey.altKey" type="checkbox" />
-                        <span>Alt</span>
+                        <span v-if="isMac">Option</span>
+                        <span v-else>Alt</span>
+                    </label>
+                    <label class="checkbox" v-if="isMac">
+                        <input v-model="hotkey.metaKey" type="checkbox" />
+                        <span>Command</span>
                     </label>
                     <div class="control">
                         <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(hotkey, $event, true)" :value="hotkey.key" autocomplete="off" class="input is-small" :placeholder="lang('hotkeyPlaceholder')" />

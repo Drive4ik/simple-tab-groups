@@ -469,7 +469,7 @@
                 browser.runtime.reload();
             },
             openManageGroups() {
-                BG.openManageGroups(window.screen);
+                BG.openManageGroups(utils.clone(window.screen));
                 window.close();
             },
             sortGroups(vector) {
