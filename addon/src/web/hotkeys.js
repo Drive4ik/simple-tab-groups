@@ -61,7 +61,7 @@ function checkKey(e) {
         if (hotkey.ctrlKey === e.ctrlKey &&
             hotkey.shiftKey === e.shiftKey &&
             hotkey.altKey === e.altKey &&
-            hotkey.metaKey === e.metaKey &&
+            Boolean(hotkey.metaKey) === e.metaKey &&
             (
                 (hotkey.keyCode && hotkey.keyCode === e.keyCode) ||
                 (!hotkey.keyCode && !e.keyCode && hotkey.key.toUpperCase() === e.key.toUpperCase())

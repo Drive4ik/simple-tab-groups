@@ -41,10 +41,10 @@
                 ],
 
                 openPopupCommand: {
-                    metaKey: false,
                     ctrlKey: false,
                     shiftKey: false,
                     altKey: false,
+                    metaKey: false,
                     key: '',
                 },
 
@@ -56,21 +56,15 @@
                     empty: true,
                 },
                 groups: [],
-                os: "unknown",
                 isMac: false,
             };
         },
         async mounted() {
+            let { os } = await browser.runtime.getPlatformInfo();
+            this.isMac = os === 'mac';
+
             let data = await storage.get(null);
 
-            if (this.os === "unknown") {
-                // Check OS, especially see if it is macOS
-                let sysInfo = await browser.runtime.getPlatformInfo();
-                let os = await sysInfo.os;
-                this.os = os;
-                this.isMac = os.indexOf('mac') !== -1;
-            }
-            
             this.options = utils.extractKeys(data, allOptionsKeys);
             this.groups = Array.isArray(data.groups) ? data.groups : [];
 
@@ -121,6 +115,11 @@
                 deep: true,
             },
         },
+        computed: {
+            ctrlCommandKey() {
+                return this.isMac ? 'MacCtrl' : 'Ctrl';
+            },
+        },
         methods: {
             lang: browser.i18n.getMessage,
             getHotkeyActionTitle: action => browser.i18n.getMessage('hotkeyActionTitle' + utils.capitalize(utils.toCamelCase(action))),
@@ -145,12 +144,11 @@
             async initPopupHotkey() {
                 let commands = await browser.commands.getAll(),
                     popupCommand = commands.find(command => command.name === '_execute_browser_action');
-                // See https://developer.mozilla.org/en-US/Add-ons/WebExtensions/manifest.json/commands#Key_combinations
-                let Ctrl = this.isMac ? 'MacCtrl' : 'Ctrl';
-                this.openPopupCommand.ctrlKey = popupCommand.shortcut.includes(Ctrl);
-                this.openPopupCommand.metaKey = this.isMac ? popupCommand.shortcut.includes('Command') : false;
+
+                this.openPopupCommand.ctrlKey = popupCommand.shortcut.includes(this.ctrlCommandKey);
                 this.openPopupCommand.shiftKey = popupCommand.shortcut.includes('Shift');
                 this.openPopupCommand.altKey = popupCommand.shortcut.includes('Alt');
+                this.openPopupCommand.metaKey = this.isMac ? popupCommand.shortcut.includes('Command') : false;
                 this.openPopupCommand.key = popupCommand.shortcut.split('+').pop();
 
                 this.$watch('openPopupCommand', {
@@ -158,7 +156,11 @@
                         let shortcut = [];
 
                         if (openPopupCommand.ctrlKey) {
-                            shortcut.push(Ctrl);
+                            shortcut.push(this.ctrlCommandKey);
+                        }
+
+                        if (this.isMac && openPopupCommand.metaKey) {
+                            shortcut.push('Command');
                         }
 
                         if (openPopupCommand.shiftKey) {
@@ -167,10 +169,6 @@
 
                         if (openPopupCommand.altKey) {
                             shortcut.push('Alt');
-                        }
-
-                        if (openPopupCommand.metaKey) {
-                            shortcut.push('Command');
                         }
 
                         let key = openPopupCommand.key.replace('Arrow', '');
@@ -518,7 +516,8 @@
                 <div class="hotkey is-flex is-align-items-center">
                     <label class="checkbox">
                         <input v-model="openPopupCommand.ctrlKey" type="checkbox" />
-                        <span>Ctrl</span>
+                        <span v-if="isMac">Control</span>
+                        <span v-else>Ctrl</span>
                     </label>
                     <label class="checkbox">
                         <input v-model="openPopupCommand.shiftKey" type="checkbox" />
@@ -529,7 +528,7 @@
                         <span v-if="isMac">Option</span>
                         <span v-else>Alt</span>
                     </label>
-                    <label class="checkbox" v-if="isMac">
+                    <label v-if="isMac" class="checkbox">
                         <input v-model="openPopupCommand.metaKey" type="checkbox" />
                         <span>Command</span>
                     </label>
@@ -547,7 +546,8 @@
                 <div v-for="(hotkey, hotkeyIndex) in options.hotkeys" :key="hotkeyIndex" class="hotkey is-flex is-align-items-center">
                     <label class="checkbox">
                         <input v-model="hotkey.ctrlKey" type="checkbox" />
-                        <span>Ctrl</span>
+                        <span v-if="isMac">Control</span>
+                        <span v-else>Ctrl</span>
                     </label>
                     <label class="checkbox">
                         <input v-model="hotkey.shiftKey" type="checkbox" />
@@ -558,7 +558,7 @@
                         <span v-if="isMac">Option</span>
                         <span v-else>Alt</span>
                     </label>
-                    <label class="checkbox" v-if="isMac">
+                    <label v-if="isMac" class="checkbox">
                         <input v-model="hotkey.metaKey" type="checkbox" />
                         <span>Command</span>
                     </label>
