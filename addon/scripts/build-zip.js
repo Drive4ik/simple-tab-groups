@@ -1,51 +1,62 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
+const fse = require('fs-extra');
 const path = require('path');
 const zipFolder = require('zip-folder');
 
-const DEST_DIR = path.join(__dirname, '../dist');
-const DEST_ZIP_DIR = path.join(__dirname, '../dist-zip');
+function setPath(folderName) {
+    return path.join(__dirname, '../' + folderName);
+}
 
-const extractExtensionData = () => {
-    const manifest = require('../src/manifest.json');
+function extractExtensionData() {
+    let manifest = require('../src/manifest.json');
 
     return {
         name: manifest.applications.gecko.id,
         version: manifest.version,
-    }
+    };
 }
 
-const makeDestZipDirIfNotExists = () => {
-    if (!fs.existsSync(DEST_ZIP_DIR)) {
-        fs.mkdirSync(DEST_ZIP_DIR);
-    }
-}
-
-const buildZip = (src, dist, zipFilename) => {
+function buildZip(src, dist, zipFilename) {
     console.info(`Building ${zipFilename}...`);
 
-    return new Promise((resolve, reject) => {
-        zipFolder(src, path.join(dist, zipFilename), (err) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve();
-            }
-        });
+    fse.ensureDirSync(dist);
+
+    return new Promise(function(resolve, reject) {
+        zipFolder(src, path.join(dist, zipFilename), err => err ? reject(err) : resolve());
     });
 };
 
-const main = () => {
-    const { name, version } = extractExtensionData();
-    const prod = process.env.IS_PRODUCTION ? 'prod' : 'dev';
-    const zipFilename = `${name}-v${version}-${prod}.zip`;
+function init() {
+    let { name, version } = extractExtensionData(),
+        prod = process.env.IS_PRODUCTION ? 'prod' : 'dev',
+        zipFilename = `${name}-v${version}-${prod}.zip`,
+        distZipPath = setPath('dist-zip');
 
-    makeDestZipDirIfNotExists();
+    if (process.env.IS_PRODUCTION) {
+        buildZip(setPath('dist'), distZipPath, zipFilename)
+            .then(() => console.info('OK'))
+            .catch(console.err);
+    } else {
+        let devPath = setPath('dev'),
+            setDevPath = path.join.bind(path, devPath);
 
-    buildZip(DEST_DIR, DEST_ZIP_DIR, zipFilename)
-        .then(() => console.info('OK'))
-        .catch(console.err);
+        fse.copySync(setPath('src'), setDevPath('src'));
+        fse.copySync(setPath('scripts'), setDevPath('scripts'));
+        fse.copySync(setPath('../README.md'), setDevPath('README.md'));
+        fse.copySync(setPath('package.json'), setDevPath('package.json'));
+        fse.copySync(setPath('package-lock.json'), setDevPath('package-lock.json'));
+        fse.copySync(setPath('webpack.config.js'), setDevPath('webpack.config.js'));
+
+        buildZip(devPath, distZipPath, zipFilename)
+            .then(function() {
+                fse.removeSync(devPath);
+
+                console.info('OK');
+            })
+            .catch(console.err);
+    }
+
 };
 
-main();
+init();
