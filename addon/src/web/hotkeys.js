@@ -53,7 +53,7 @@ function resetFoundHotKey() {
 }
 
 function checkKey(e) {
-    if (foundHotKey || !e.isTrusted || [KeyEvent.DOM_VK_SHIFT, KeyEvent.DOM_VK_CONTROL, KeyEvent.DOM_VK_ALT].includes(e.keyCode)) { // not track only auxiliary keys
+    if (foundHotKey || !e.isTrusted || [KeyEvent.DOM_VK_SHIFT, KeyEvent.DOM_VK_CONTROL, KeyEvent.DOM_VK_ALT, KeyEvent.DOM_VK_META].includes(e.keyCode)) { // not track only auxiliary keys
         return;
     }
 
@@ -61,6 +61,7 @@ function checkKey(e) {
         if (hotkey.ctrlKey === e.ctrlKey &&
             hotkey.shiftKey === e.shiftKey &&
             hotkey.altKey === e.altKey &&
+            Boolean(hotkey.metaKey) === e.metaKey &&
             (
                 (hotkey.keyCode && hotkey.keyCode === e.keyCode) ||
                 (!hotkey.keyCode && !e.keyCode && hotkey.key.toUpperCase() === e.key.toUpperCase())

@@ -1410,7 +1410,7 @@ function sortGroups(vector = 'asc') {
     saveGroupsToStorage(true);
 }
 
-async function openManageGroups(windowScreen) {
+async function openManageGroups(winScreenAvailWidth, winScreenAvailHeight) {
     if (options.openManageGroupsInTab) {
         let tabs = await browser.tabs.query({
             windowId: browser.windows.WINDOW_ID_CURRENT,
@@ -1451,11 +1451,11 @@ async function openManageGroups(windowScreen) {
             type: 'popup',
         };
 
-        if (windowScreen) {
+        if (winScreenAvailWidth && winScreenAvailHeight) {
             createData.left = 0;
             createData.top = 0;
-            createData.width = windowScreen.availWidth;
-            createData.height = windowScreen.availHeight;
+            createData.width = winScreenAvailWidth;
+            createData.height = winScreenAvailHeight;
         }
 
         createWindow(createData);

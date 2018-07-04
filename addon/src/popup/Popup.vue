@@ -479,7 +479,7 @@
                 browser.runtime.reload();
             },
             openManageGroups() {
-                BG.openManageGroups(window.screen);
+                BG.openManageGroups(window.screen.availWidth, window.screen.availHeight);
                 window.close();
             },
             sortGroups(vector) {
