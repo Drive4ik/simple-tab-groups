@@ -1654,9 +1654,14 @@ window.background = {
 
 async function runMigrateForData(data) {
     // reset tab ids
-    data.groups.forEach(function(group) {
+    data.groups = data.groups.map(function(group) {
         group.windowId = null;
-        group.tabs.forEach(tab => tab.id = null);
+        group.tabs = group.tabs.filter(Boolean).map(function(tab) {
+            tab.id = null;
+            return tab;
+        });
+
+        return group;
     });
 
     let currentVersion = manifest.version;
