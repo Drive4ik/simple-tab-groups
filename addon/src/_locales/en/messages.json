@@ -402,16 +402,16 @@
         "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
     },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
-        "message": "Move all of this tabs into current group/window",
-        "description": "Move all of this tabs into current group/window"
+        "message": "Move all of these tabs into current group/window",
+        "description": "Move all of these tabs into current group/window"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
-        "message": "Create new group with all of this tabs",
-        "description": "Create new group with all of this tabs"
+        "message": "Create new group with all of these tabs",
+        "description": "Create new group with all of these tabs"
     },
     "actionHiddenUnSyncTabsCloseAll": {
-        "message": "Close all of this tabs",
-        "description": "Close all of this tabs"
+        "message": "Close all of these tabs",
+        "description": "Close all of these tabs"
     },
     "thisTabWillCreateAsNew": {
         "message": "This tab will create as new",
