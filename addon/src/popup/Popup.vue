@@ -1073,7 +1073,7 @@
             :title="lang('createNewGroup')"
             @create-group="createNewGroup(); isShowingCreateGroupPopup = false"
             @close-popup="isShowingCreateGroupPopup = false"
-            @show-popup="$refs.nextGroupTitle.focus()"
+            @show-popup="$refs.nextGroupTitle.focus(); $refs.nextGroupTitle.select()"
             :buttons="
                 [{
                     event: 'create-group',
