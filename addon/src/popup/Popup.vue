@@ -481,8 +481,13 @@
 
                 if (group.tabs.length) {
                     title += ':\n' + group.tabs
+                        .slice(0, 30)
                         .map(tab => utils.sliceText(tab.title, 70))
                         .join('\n');
+
+                    if (group.tabs.length > 30) {
+                        title += '\n...';
+                    }
                 }
 
                 return title;
