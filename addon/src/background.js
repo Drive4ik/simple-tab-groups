@@ -1757,7 +1757,10 @@ async function runMigrateForData(data) {
         data.groups.forEach(group => group.title = utils.unSafeHtml(group.title));
     }
 
-    // TODO remove group option isExpanded
+    if (-1 === utils.compareStrings(data.version, '3.0.8.1')) {
+        data.hotkeys.forEach(hotkey => 'metaKey' in hotkey ? null : hotkey.metaKey = false);
+        data.groups.forEach(group => delete group.isExpanded);
+    }
 
 
     data.version = currentVersion;
