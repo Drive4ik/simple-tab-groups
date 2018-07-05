@@ -354,7 +354,7 @@
                 browser.tabs.remove(tab.id);
                 this.unSyncTabs.splice(this.unSyncTabs.indexOf(tab), 1);
             },
-            async loadGroup(group, tabIndex) {
+            async loadGroup(group, tabIndex = -1, closePopup = false) {
                 if (this.someGroupAreLoading) {
                     return;
                 }
@@ -376,19 +376,24 @@
 
                 let groupIndex = this.groups.findIndex(gr => gr.id === group.id);
 
-                this.someGroupAreLoading = true;
-
-                await BG.loadGroup(this.currentWindowId, groupIndex, tabIndex);
-
-                this.someGroupAreLoading = false;
-
-                if (this.options.closePopupAfterChangeGroup) {
-                    if (!isCurrentGroup) {
-                        window.close();
-                    }
+                if (closePopup) {
+                    BG.loadGroup(this.currentWindowId, groupIndex, tabIndex);
+                    window.close();
                 } else {
-                    if (this.options.openGroupAfterChange) {
-                        this.showSectionGroupTabs(group);
+                    this.someGroupAreLoading = true;
+
+                    await BG.loadGroup(this.currentWindowId, groupIndex, tabIndex);
+
+                    this.someGroupAreLoading = false;
+
+                    if (this.options.closePopupAfterChangeGroup) {
+                        if (!isCurrentGroup) {
+                            window.close();
+                        }
+                    } else {
+                        if (this.options.openGroupAfterChange) {
+                            this.showSectionGroupTabs(group);
+                        }
                     }
                 }
             },
@@ -585,9 +590,13 @@
                                 this.showSectionGroupTabs(this.hoverItem);
                             }
                         } else if ('enter' === arrow) {
+                            if (!this.hoverItem && allItems.length) {
+                                this.hoverItem = allItems[0];
+                            }
+
                             if (this.hoverItem) {
                                 if (this.isGroup(this.hoverItem)) { // is group
-                                    this.loadGroup(this.hoverItem, -1);
+                                    this.loadGroup(this.hoverItem, undefined, true);
                                 } else { // is tab
                                     // find group
                                     let group = null;
@@ -599,10 +608,8 @@
                                         }
                                     }
 
-                                    this.loadGroup(group, this.hoverItem.index);
+                                    this.loadGroup(group, this.hoverItem.index, true);
                                 }
-
-                                // window.close(); // fix bug: after load group or change tab focus popup window lost focus and arrows not working but popup still open
                             }
                         }
 
@@ -626,8 +633,7 @@
                             }
                         } else if ('enter' === arrow) {
                             if (this.hoverItem && this.isGroup(this.hoverItem)) {
-                                this.loadGroup(this.hoverItem, -1);
-                                // window.close(); // fix bug: after load group or change tab focus popup window lost focus and arrows not working but popup still open
+                                this.loadGroup(this.hoverItem, undefined, true);
                             }
                         }
 
@@ -649,8 +655,7 @@
                             this.showSectionDefault();
                         } else if ('enter' === arrow) {
                             if (this.hoverItem && -1 !== index) {
-                                this.loadGroup(this.groupToShow, index);
-                                // window.close(); // fix bug: after load group or change tab focus popup window lost focus and arrows not working but popup still open
+                                this.loadGroup(this.groupToShow, index, true);
                             }
                         } else if ('delete' === arrow) {
                             if (this.hoverItem && !this.isGroup(this.hoverItem)) {
@@ -704,7 +709,6 @@
                 <div class="control is-expanded"
                     @keydown.arrow-right.stop @keyup.arrow-right.stop
                     @keydown.arrow-left.stop @keyup.arrow-left.stop
-                    @keydown.enter.stop @keyup.enter.stop
                     >
                     <input id="search" v-model.trim="search" @input="$refs.search.value === '' ? showSectionDefault() : null" ref="search" type="text" class="input is-small no-shadow" autocomplete="off" :placeholder="lang('searchPlaceholder')" />
                 </div>
@@ -727,7 +731,7 @@
                                     'is-active': group === currentGroup,
                                     'is-hovered-item': group === hoverItem,
                                 }]"
-                                @click="loadGroup(group, -1)"
+                                @click="loadGroup(group)"
                                 >
                                 <div class="item-icon" :title="group.title">
                                     <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
@@ -803,7 +807,7 @@
                                 'is-active': group === currentGroup,
                                 'is-hovered-item': group === hoverItem,
                             }]"
-                            @click="loadGroup(group, -1)"
+                            @click="loadGroup(group)"
                             >
                             <div class="item-icon" :title="group.title">
                                 <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
