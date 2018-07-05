@@ -632,8 +632,12 @@
                                 this.showSectionGroupTabs(this.hoverItem);
                             }
                         } else if ('enter' === arrow) {
-                            if (this.hoverItem && this.isGroup(this.hoverItem)) {
-                                this.loadGroup(this.hoverItem, undefined, true);
+                            if (this.hoverItem) {
+                                if (this.isGroup(this.hoverItem)) {
+                                    this.loadGroup(this.hoverItem, undefined, true);
+                                }
+                            } else {
+                                this.$refs.search.focus();
                             }
                         }
 
