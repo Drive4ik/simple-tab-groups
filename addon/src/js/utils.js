@@ -86,6 +86,10 @@ function b64DecodeUnicode(str) {
     }).join(''));
 }
 
+function sliceText(text, length = 50) {
+    return text.length > length ? (text.slice(0, length - 3) + '...') : text;
+}
+
 function notify(message, timer = 20000, id) {
     if (id) {
         browser.notifications.clear(id);
@@ -426,6 +430,8 @@ export {
 
     safeHtml,
     unSafeHtml,
+
+    sliceText,
 
     isDefaultCookieStoreId,
     normalizeCookieStoreId,

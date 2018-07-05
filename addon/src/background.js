@@ -1143,8 +1143,8 @@ async function moveTabToGroup(oldTabIndex, newTabIndex = -1, oldGroupId = null, 
         return;
     }
 
-    let title = tab.title.length > 50 ? (tab.title.slice(0, 50) + '...') : tab.title,
-        message = browser.i18n.getMessage('moveTabToGroupMessage', [newGroup.title, title]);
+    let tabTitle = utils.sliceText(tab.title),
+        message = browser.i18n.getMessage('moveTabToGroupMessage', [newGroup.title, tabTitle]);
 
     utils.notify(message).then(async function(newGroupId, newTabIndex) {
         let groupIndex = _groups.findIndex(group => group.id === newGroupId);

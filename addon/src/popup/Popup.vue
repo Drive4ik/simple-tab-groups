@@ -476,6 +476,18 @@
                 return [tab.title, tab.url].filter(Boolean).join('\n');
             },
 
+            getFullGroupTitleWithTabs(group) {
+                let title = group.title + ' (' + this.lang('groupTabsCount', group.tabs.length) + ')';
+
+                if (group.tabs.length) {
+                    title += ':\n' + group.tabs
+                        .map(tab => utils.sliceText(tab.title, 70))
+                        .join('\n');
+                }
+
+                return title;
+            },
+
             openOptionsPage() {
                 browser.runtime.openOptionsPage();
                 window.close();
@@ -812,12 +824,13 @@
                                 'is-hovered-item': group === hoverItem,
                             }]"
                             @click="loadGroup(group)"
+                            :title="group.title"
                             >
-                            <div class="item-icon" :title="group.title">
+                            <div class="item-icon">
                                 <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                             </div>
-                            <div class="item-title" :title="group.title" v-text="group.title"></div>
-                            <div class="item-action hover is-unselectable" @click.stop="showSectionGroupTabs(group)">
+                            <div class="item-title" v-text="group.title"></div>
+                            <div class="item-action hover is-unselectable" :title="getFullGroupTitleWithTabs(group)" @click.stop="showSectionGroupTabs(group)">
                                 <img class="size-16 rotate-180" src="/icons/arrow-left.svg" />
                                 <span class="tabs-text" v-text="lang('groupTabsCount', group.tabs.length)"></span>
                             </div>
