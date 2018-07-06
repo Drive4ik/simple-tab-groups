@@ -28,6 +28,30 @@
 
     let currentWindow = null;
 
+    function setSaveWindowPositionTimer() {
+        setTimeout(async function() {
+            currentWindow = await BG.getWindow();
+
+            if (window.localStorage.manageGroupsWindowLeft != currentWindow.left) {
+                window.localStorage.manageGroupsWindowLeft = currentWindow.left;
+            }
+
+            if (window.localStorage.manageGroupsWindowTop != currentWindow.top) {
+                window.localStorage.manageGroupsWindowTop = currentWindow.top;
+            }
+
+            if (window.localStorage.manageGroupsWindowWidth != currentWindow.width) {
+                window.localStorage.manageGroupsWindowWidth = currentWindow.width;
+            }
+
+            if (window.localStorage.manageGroupsWindowHeight != currentWindow.height) {
+                window.localStorage.manageGroupsWindowHeight = currentWindow.height;
+            }
+
+            setSaveWindowPositionTimer();
+        }, 5000);
+    }
+
     export default {
         data() {
             return {
@@ -119,6 +143,10 @@
             this.$nextTick(function() {
                 this.$refs.search.focus();
             });
+
+            if ('popup' === currentWindow.type) {
+                setSaveWindowPositionTimer();
+            }
         },
         computed: {
             currentGroup() {

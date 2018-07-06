@@ -1410,7 +1410,7 @@ function sortGroups(vector = 'asc') {
     saveGroupsToStorage(true);
 }
 
-async function openManageGroups(winScreenAvailWidth, winScreenAvailHeight) {
+async function openManageGroups() {
     if (options.openManageGroupsInTab) {
         let tabs = await browser.tabs.query({
             windowId: browser.windows.WINDOW_ID_CURRENT,
@@ -1420,11 +1420,11 @@ async function openManageGroups(winScreenAvailWidth, winScreenAvailHeight) {
         });
 
         if (tabs.length) { // if manage tab is found
-            browser.tabs.update(tabs[0].id, {
+            await browser.tabs.update(tabs[0].id, {
                 active: true,
             });
         } else {
-            browser.tabs.create({
+            await browser.tabs.create({
                 active: true,
                 url: manageTabsPageUrl,
             });
@@ -1437,7 +1437,7 @@ async function openManageGroups(winScreenAvailWidth, winScreenAvailHeight) {
 
         let isFoundWindow = allWindows.some(function(win) {
             if ('popup' === win.type && 1 === win.tabs.length && manageTabsPageUrl === win.tabs[0].url) { // if manage popup is now open
-                BG.setFocusOnWindow(win.id);
+                setFocusOnWindow(win.id);
                 return true;
             }
         });
@@ -1446,19 +1446,14 @@ async function openManageGroups(winScreenAvailWidth, winScreenAvailHeight) {
             return;
         }
 
-        let createData = {
+        await createWindow({
             url: manageTabsPageUrl,
             type: 'popup',
-        };
-
-        if (winScreenAvailWidth && winScreenAvailHeight) {
-            createData.left = 0;
-            createData.top = 0;
-            createData.width = winScreenAvailWidth;
-            createData.height = winScreenAvailHeight;
-        }
-
-        createWindow(createData);
+            left: Number(window.localStorage.manageGroupsWindowLeft) || 100,
+            top: Number(window.localStorage.manageGroupsWindowTop) || 100,
+            width: Number(window.localStorage.manageGroupsWindowWidth) || 1000,
+            height: Number(window.localStorage.manageGroupsWindowHeight) || 700,
+        });
     }
 }
 
