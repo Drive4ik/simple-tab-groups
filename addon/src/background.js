@@ -1752,7 +1752,7 @@ async function runMigrateForData(data) {
         data.groups.forEach(group => group.title = utils.unSafeHtml(group.title));
     }
 
-    if (-1 === utils.compareStrings(data.version, '3.0.8.1')) {
+    if (-1 === utils.compareStrings(data.version, '3.0.9')) {
         data.hotkeys.forEach(hotkey => 'metaKey' in hotkey ? null : hotkey.metaKey = false);
         data.groups.forEach(group => delete group.isExpanded);
     }
