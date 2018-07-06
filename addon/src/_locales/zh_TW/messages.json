@@ -372,5 +372,9 @@
     "iconStyle": {
         "message": "圖標樣式",
         "description": "Icon style"
+    },
+    "openGroupInNewWindow": {
+        "message": "在新視窗開啟分頁群組",
+        "description": "Open group in new window"
     }
 }

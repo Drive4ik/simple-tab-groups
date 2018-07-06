@@ -448,5 +448,9 @@
     "openPopupHotkeyTitle": {
         "message": "Open the groups pop-up",
         "description": "Open the groups pop-up"
+    },
+    "openGroupInNewWindow": {
+        "message": "Open group in new window",
+        "description": "Open group in new window"
     }
 }

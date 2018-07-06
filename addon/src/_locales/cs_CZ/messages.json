@@ -338,5 +338,9 @@
     "saveErrorLogsIntoFile": {
         "message": "Uložit poslední chybový protokol do JSON souboru",
         "description": "Save last error logs into JSON file"
+    },
+    "openGroupInNewWindow": {
+        "message": "Otevřít skupinu v novém okně",
+        "description": "Open group in new window"
     }
 }

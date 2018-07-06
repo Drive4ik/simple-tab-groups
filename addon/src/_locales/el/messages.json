@@ -348,5 +348,9 @@
     "iconStyle": {
         "message": "Στυλ εικονιδίου",
         "description": "Icon style"
+    },
+    "openGroupInNewWindow": {
+        "message": "Άνοιγμα ομάδας σε νέο παράθυρο",
+        "description": "Open group in new window"
     }
 }

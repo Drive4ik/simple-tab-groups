@@ -338,5 +338,9 @@
     "saveErrorLogsIntoFile": {
         "message": "Sichere die letzten Error-Logs in einer JSON-Datei",
         "description": "Save last error logs into JSON file"
+    },
+    "openGroupInNewWindow": {
+        "message": "Öffne Gruppe in neuem Fenster",
+        "description": "Open group in new window"
     }
 }

@@ -364,5 +364,9 @@
     "iconStyle": {
         "message": "Estilo del icono",
         "description": "Icon style"
+    },
+    "openGroupInNewWindow": {
+        "message": "Abrir grupo en una ventana nueva",
+        "description": "Open group in new window"
     }
 }

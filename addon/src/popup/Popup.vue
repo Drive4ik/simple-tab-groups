@@ -431,6 +431,17 @@
                 this.unSyncTabs.splice(this.unSyncTabs.indexOf(tab), 1);
             },
 
+            async openGroupInNewWindow(group) {
+                if (group.windowId) {
+                    BG.setFocusOnWindow(group.windowId);
+                } else {
+                    let win = await BG.createWindow(),
+                        groupIndex = this.groups.findIndex(gr => gr.id === group.id);
+
+                    BG.loadGroup(win.id, groupIndex);
+                }
+            },
+
             openGroupSettings(group) {
                 this.groupToEdit = group;
             },
@@ -998,6 +1009,10 @@
 
         <context-menu ref="groupContextMenu">
             <ul slot-scope="menu" class="is-unselectable">
+                <li @click="openGroupInNewWindow(menu.data.group)">
+                    <img src="/icons/window-new.svg" class="size-16" />
+                    <span v-text="lang('openGroupInNewWindow')"></span>
+                </li>
                 <li @click="sortGroups('asc')">
                     <img src="/icons/sort-alpha-asc.svg" class="size-16" />
                     <span v-text="lang('sortGroupsAZ')"></span>
