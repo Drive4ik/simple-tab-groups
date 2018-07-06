@@ -1675,15 +1675,20 @@ async function runMigrateForData(data) {
     }
 
     // start migration
-    let keysToRemoveFromStorage = [],
-        removeKeys = function(...keys) {
-            keys.forEach(function(key) {
-                delete data[key];
-                keysToRemoveFromStorage.push(key);
-            });
-        };
+    let keysToRemoveFromStorage = [];
 
-    if (-1 === utils.compareStrings(data.version, '1.8.1')) {
+    function removeKeys(...keys) {
+        keys.forEach(function(key) {
+            delete data[key];
+            keysToRemoveFromStorage.push(key);
+        });
+    }
+
+    function ifVersionInDataLessThan(version) {
+        return -1 === utils.compareStrings(data.version, version);
+    }
+
+    if (ifVersionInDataLessThan('1.8.1')) {
         data.groups = data.groups.map(function(group) {
             group.windowId = data.windowsGroup[win.id] === group.id ? win.id : null;
 
@@ -1704,14 +1709,14 @@ async function runMigrateForData(data) {
         removeKeys('windowsGroup');
     }
 
-    if (-1 === utils.compareStrings(data.version, '2.2')) {
+    if (ifVersionInDataLessThan('2.2')) {
         if ('showGroupCircleInSearchedTab' in data) {
             data.showGroupIconWhenSearchATab = data.showGroupCircleInSearchedTab;
             removeKeys('showGroupCircleInSearchedTab');
         }
     }
 
-    if (-1 === utils.compareStrings(data.version, '2.3')) {
+    if (ifVersionInDataLessThan('2.3')) {
         data.groups = data.groups.map(function(group) {
             group.tabs = group.tabs.filter(Boolean);
             return group;
@@ -1720,7 +1725,7 @@ async function runMigrateForData(data) {
         removeKeys('enableKeyboardShortcutLoadNextPrevGroup', 'enableKeyboardShortcutLoadByIndexGroup');
     }
 
-    if (-1 === utils.compareStrings(data.version, '2.4')) {
+    if (ifVersionInDataLessThan('2.4')) {
         data.groups = data.groups.map(function(group) {
             if (!group.catchTabContainers) {
                 group.catchTabContainers = [];
@@ -1730,7 +1735,7 @@ async function runMigrateForData(data) {
         });
     }
 
-    if (-1 === utils.compareStrings(data.version, '2.4.5')) {
+    if (ifVersionInDataLessThan('2.4.5')) {
         data.groups = data.groups.map(function(group) {
             if (!group.iconColor.trim()) {
                 group.iconColor = 'transparent';
@@ -1742,7 +1747,7 @@ async function runMigrateForData(data) {
         });
     }
 
-    if (-1 === utils.compareStrings(data.version, '3.0')) {
+    if (ifVersionInDataLessThan('3.0')) {
         data.doRemoveSTGNewTabUrls = true;
 
         removeKeys('enableFastGroupSwitching', 'enableFavIconsForNotLoadedTabs', 'createNewGroupAfterAttachTabToNewWindow');
@@ -1752,7 +1757,7 @@ async function runMigrateForData(data) {
         data.groups.forEach(group => group.title = utils.unSafeHtml(group.title));
     }
 
-    if (-1 === utils.compareStrings(data.version, '3.0.9')) {
+    if (ifVersionInDataLessThan('3.0.9')) {
         data.hotkeys.forEach(hotkey => 'metaKey' in hotkey ? null : hotkey.metaKey = false);
         data.groups.forEach(group => delete group.isExpanded);
     }
