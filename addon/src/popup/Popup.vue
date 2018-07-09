@@ -1140,7 +1140,7 @@
 <style lang="scss">
     :root {
         --popup-width: 348px;
-        --max-popup-width: 800px;
+        --max-popup-width: 100%;
 
         --max-popup-height: 600px;
         --min-popup-height: 200px;
@@ -1155,6 +1155,7 @@
         font-size: 13px;
         width: var(--popup-width);
         min-height: var(--min-popup-height);
+        max-width: var(--max-popup-width);
         // max-height: calc(var(--max-popup-height) - 10px);
         overflow-x: hidden;
     }
@@ -1163,6 +1164,7 @@
         width: var(--popup-width);
         min-height: var(--min-popup-height);
         max-height: var(--max-popup-height);
+        max-width: var(--max-popup-width);
 
         overflow-y: auto;
         // margin: 0 auto;
