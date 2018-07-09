@@ -65,6 +65,10 @@
         "message": "Essa aba não é suportada",
         "description": "This tab is not supported"
     },
+    "searchPlaceholder": {
+        "message": "Pesquisar",
+        "description": "Search placeholder"
+    },
     "filterTabsPlaceholder": {
         "message": "Filtrar abas (filtro múltiplo com *)",
         "description": "Filter tabs (multiple filter with *)"
@@ -96,7 +100,7 @@
         "description": "Show notification when tab is moved to another group"
     },
     "openManageGroupsInTab": {
-        "message": "Abrir \"Gerenciador de Grupos\" em nova aba",
+        "message": "Abrir \"Gerenciar Grupos\" em nova aba",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
@@ -120,7 +124,7 @@
         "description": "Include tab thumbnails into backup (make backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "Restaurar Simple Tab Groups",
+        "message": "Restaurar Simple Tab Groups a partir do backup",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
@@ -145,7 +149,7 @@
     },
     "importSettingsOldTabGroupsAddonButton": {
         "message": "Importar configurações da extenção \"Tab Groups\" do Quicksaver",
-        "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
+        "description": "Choose file"
     },
     "openGroupAfterChange": {
         "message": "Abrir grupo depois de muda-lo",
@@ -161,6 +165,16 @@
             }
         }
     },
+    "searchNotFoundTitle": {
+        "message": "Nenhum resultado encontrado para \"$search$\"",
+        "description": "No results found",
+        "placeholders": {
+            "search": {
+                "content": "$1",
+                "example": "mail"
+            }
+        }
+    },
     "sortGroupsAZ": {
         "message": "Ordenar grupos [A-Z]",
         "description": "Sort groups [A-Z]"
@@ -168,6 +182,10 @@
     "sortGroupsZA": {
         "message": "Ordenar grupos [Z-A]",
         "description": "Sort groups [Z-A]"
+    },
+    "generalTitle": {
+        "message": "Geral",
+        "description": "General"
     },
     "settingsTitle": {
         "message": "Configurações",
@@ -234,7 +252,7 @@
         "description": "Icon color"
     },
     "selectUserGroupIcon": {
-        "message": "Carregar icone",
+        "message": "Carregar ícone",
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
@@ -358,5 +376,77 @@
     "iconStyle": {
         "message": "Estilo do ícone",
         "description": "Icon style"
+    },
+    "discardTabsAfterHide": {
+        "message": "Descartar abas depois de desaparecer (isso vai economizar RAM)",
+        "description": "Discard tabs after hide (this will save the RAM)"
+    },
+    "createThumbnailsForTabs": {
+        "message": "Criar miniaturas para abas (usado em \"Gerenciar grupos\")",
+        "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
+    },
+    "thisTabCanNotBeHidden": {
+        "message": "Essa aba não pode ser escondida porque usa microfone ou câmera",
+        "description": "This tab can not be hidden because it uses a microphone or camera"
+    },
+    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
+        "message": "Não é possível mudar o grupo porque uma das abas abertas compartilha microfone ou câmera",
+        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
+    },
+    "foundHiddenUnSyncTabsDescription": {
+        "message": "Encontrado abas escondidas dessincronizadas. Clique na aba para mostrar no grupo/janela atual ou:",
+        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
+    },
+    "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
+        "message": "Mover todas essas abas para o grupo/janela atual",
+        "description": "Move all of these tabs into current group/window"
+    },
+    "actionHiddenUnSyncTabsCreateGroup": {
+        "message": "Crie novo grupo com todas essas abas",
+        "description": "Create new group with all of these tabs"
+    },
+    "actionHiddenUnSyncTabsCloseAll": {
+        "message": "Feche todas essas abas",
+        "description": "Close all of these tabs"
+    },
+    "thisTabWillCreateAsNew": {
+        "message": "Essa aba vai criar como nova",
+        "description": "This tab will create as new"
+    },
+    "updateTabThumbnail": {
+        "message": "Atualize a miniatura para essa aba",
+        "description": "Update thumbnail for this tab"
+    },
+    "cantMakeThumbnailTabWasDiscarded": {
+        "message": "Você não pode fazer uma miniatura de uma aba se a aba não foi carregada",
+        "description": "You can not make a thumbnail of a tab if the tab was not loaded"
+    },
+    "nowFoundWindowsAddonStoppedWorking": {
+        "message": "Error: não encontrado nenhuma janela normal não privado/incógnito/popup.\nExtensão parou de funcionar. Por favor, reinicie o navegador.",
+        "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
+    },
+    "waitingToLoadAllTabs": {
+        "message": "Aguardando todas as abas carregar.\nPor favor aguarde...",
+        "description": "Waiting for all tabs to load.\nPlease wait..."
+    },
+    "reloadAddon": {
+        "message": "Recarregar extensão",
+        "description": "Reload addon"
+    },
+    "ffFailedAndLostDataMessage": {
+        "message": "FF falhou e todos os grupos foram perdidos.\nSe você tiver um backup, você pode restaurar os dados a partir dele",
+        "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
+    },
+    "enterDefaultGroupIconViewTypeTitle": {
+        "message": "Estilo do ícone para novo grupo",
+        "description": "Icon style for a new group"
+    },
+    "openPopupHotkeyTitle": {
+        "message": "Abrir o pop-up de grupos",
+        "description": "Open the groups pop-up"
+    },
+    "openGroupInNewWindow": {
+        "message": "Abrir o grupo em nova janela",
+        "description": "Open group in new window"
     }
 }
