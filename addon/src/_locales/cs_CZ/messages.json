@@ -34,7 +34,7 @@
         }
     },
     "warning": {
-        "message": "Upozornění!",
+        "message": "Pozor!",
         "description": "Warning!"
     },
     "success": {
@@ -50,7 +50,7 @@
         "description": "Save"
     },
     "delete": {
-        "message": "Vymazat",
+        "message": "Odstranit",
         "description": "Delete"
     },
     "cancel": {
@@ -92,7 +92,7 @@
         "description": "Free arrange"
     },
     "closePopupAfterChangeGroup": {
-        "message": "Zavřít popup okno po změně skupiny",
+        "message": "Zavřít vyskakovací okno po změně skupiny",
         "description": "Close popup after changing group"
     },
     "showNotificationAfterMoveTab": {
@@ -104,11 +104,11 @@
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
-        "message": "Ukázat potvrzující dialogové okno před smazáním skupiny",
+        "message": "Vyžadovat potvrzení před smazáním skupiny",
         "description": "Show confirm dialog before group delete"
     },
     "exportAddonSettingsTitle": {
-        "message": "Zálohovat vaše Simple Tab Groups",
+        "message": "Zálohovat Simple Tab Groups",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
@@ -132,7 +132,7 @@
         "description": "Load a backup file containing the tab groups you want to restore."
     },
     "importAddonSettingsWarning": {
-        "message": "Obnovení nastavení doplňku VYMAŽE všechny existující nastavení a skupiny!",
+        "message": "Nahrání zálohy doplňku VYMAŽE všechna současná nastavení a skupiny!",
         "description": "Restore add-on settings will ERASE all existing settings and groups!"
     },
     "importAddonSettingsButton": {
@@ -148,11 +148,11 @@
         "description": "Load a backup file old \"Tab Groups\" addon."
     },
     "importSettingsOldTabGroupsAddonButton": {
-        "message": "Importovat nastavení z doplňku Tab Groups od Quicksaver",
-        "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
+        "message": "Vyberte soubor",
+        "description": "Choose file"
     },
     "openGroupAfterChange": {
-        "message": "Po změně otevřít novou skupinu",
+        "message": "Rozbalit vybranou skupinu po jejím zvolení přes vyskakovací okno",
         "description": "Open group after changing to it"
     },
     "newGroupTitle": {
@@ -166,7 +166,7 @@
         }
     },
     "searchNotFoundTitle": {
-        "message": "Panel \"$search$\" nenalezen",
+        "message": "Pro výraz \"$search$\" nebyl nalezen žádný panel",
         "description": "No results found",
         "placeholders": {
             "search": {
@@ -183,6 +183,10 @@
         "message": "Seřadit skupiny [Z-A]",
         "description": "Sort groups [Z-A]"
     },
+    "generalTitle": {
+        "message": "Obecné",
+        "description": "General"
+    },
     "settingsTitle": {
         "message": "Nastavení",
         "description": "Settings"
@@ -192,15 +196,15 @@
         "description": "Group settings"
     },
     "deleteGroup": {
-        "message": "Smazat skupinu",
+        "message": "Odstranit skupinu",
         "description": "Delete group"
     },
     "deleteGroupTitle": {
-        "message": "Opravdu chcete smazat skupinu?",
+        "message": "Opravdu chcete odstranit skupinu?",
         "description": "Delete group?"
     },
     "deleteGroupBody": {
-        "message": "Chcete smazat skupinu \"$name$\"?<br>Odstraněním skupiny také zavřete panely a přiřazená okna, pokud jsou otevřena!",
+        "message": "Chcete smazat skupinu \"$name$\"?<br>Odstraněním skupiny zavřete přiřazené panely a okna, pokud jsou otevřena!",
         "description": "Delete group?",
         "placeholders": {
             "name": {
@@ -220,7 +224,7 @@
         }
     },
     "deleteTab": {
-        "message": "Smazat panel",
+        "message": "Zavřít panel",
         "description": "Delete tab"
     },
     "createNewTab": {
@@ -244,7 +248,7 @@
         "description": "Title"
     },
     "iconColor": {
-        "message": "Barva odznaku",
+        "message": "Barva ikony",
         "description": "Icon color"
     },
     "selectUserGroupIcon": {
@@ -252,12 +256,16 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Omlouváme se, ale v tomto vyskakovacím popup okně nemůžete nahrát vlastní ikonu skupiny. Lze ji nahrát ve \"Správě skupin\".\nOtevřít \"Správu skupin\"?",
+        "message": "Omlouváme se, ale v tomto vyskakovacím okně nelze nahrát vlastní ikonu skupiny. Je možné ji nahrát ve \"Správě skupin\".\nOtevřít \"Správu skupin\"?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
-        "message": "Nastav náhodnou barvu",
+        "message": "Nastavit náhodnou barvu",
         "description": "Set random color"
+    },
+    "catchTabContainers": {
+        "message": "Panely otevřené ve vybraných kontejnerech budou přesouvány do této skupiny (neplatí pro prázdné panely)",
+        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
     },
     "regexpForTabsTitle": {
         "message": "Pravidla pro automatický přesun panelů",
@@ -324,7 +332,7 @@
         "description": "Add new group"
     },
     "hotkeyActionTitleDeleteCurrentGroup": {
-        "message": "Smazat současnou skupinu",
+        "message": "Odstranit současnou skupinu",
         "description": "Delete current group"
     },
     "hotkeyActionTitleOpenManageGroups": {
@@ -338,6 +346,104 @@
     "saveErrorLogsIntoFile": {
         "message": "Uložit poslední chybový protokol do JSON souboru",
         "description": "Save last error logs into JSON file"
+    },
+    "undoRemoveGroupItemTitle": {
+        "message": "Obnovit skupinu \"$grouptitle$\"",
+        "description": "Undo remove group menu title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "enterBrowserActionIconColor": {
+        "message": "Vybrat základní barvu ikony doplňku",
+        "description": "Enter browser action icon color"
+    },
+    "isStickyGroupTitle": {
+        "message": "Pevná skupina",
+        "description": "Sticky group"
+    },
+    "isStickyGroupHelp": {
+        "message": "Panely z této skupiny nebudou nikdy automaticky přesunuty do jiné",
+        "description": "Tabs in this group will never be automatically moved to another group"
+    },
+    "useTabsFavIconsFromGoogleS2Converter": {
+        "message": "Použít favikonu z Google S2 Converter",
+        "description": "Use tabs fav-icons from Google S2 Converter"
+    },
+    "iconStyle": {
+        "message": "Styl ikony",
+        "description": "Icon style"
+    },
+    "discardTabsAfterHide": {
+        "message": "Zavřít panely skupiny po přepnutí na jinou (tím se sníží využití paměti RAM)",
+        "description": "Discard tabs after hide (this will save the RAM)"
+    },
+    "createThumbnailsForTabs": {
+        "message": "Vytvářet náhledy panelů (ve \"Správě skupin\")",
+        "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
+    },
+    "thisTabCanNotBeHidden": {
+        "message": "Tento panel nemůže být skryt, protože používá mikrofon nebo kameru",
+        "description": "This tab can not be hidden because it uses a microphone or camera"
+    },
+    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
+        "message": "Není možné změnit skupinu, protože jeden z otevřených panelů sdílí mikrofon nebo kameru",
+        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
+    },
+    "foundHiddenUnSyncTabsDescription": {
+        "message": "Nalezeny skryté nesynchronizované panely. Kliknutím na panel ho zobrazíte v aktulání skupině/okně nebo:",
+        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
+    },
+    "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
+        "message": "Přesunout všechny tyto panely do aktuální skupiny/okna.",
+        "description": "Move all of these tabs into current group/window"
+    },
+    "actionHiddenUnSyncTabsCreateGroup": {
+        "message": "Vytvořit novou skupinu se všemi těmito panely",
+        "description": "Create new group with all of these tabs"
+    },
+    "actionHiddenUnSyncTabsCloseAll": {
+        "message": "Zavřít všechny tyto panely",
+        "description": "Close all of these tabs"
+    },
+    "thisTabWillCreateAsNew": {
+        "message": "Tento panel bude vytvořen jako nový",
+        "description": "This tab will create as new"
+    },
+    "updateTabThumbnail": {
+        "message": "Aktualizovat náhled panelu",
+        "description": "Update thumbnail for this tab"
+    },
+    "cantMakeThumbnailTabWasDiscarded": {
+        "message": "Nelze vytvořit náhled panelu, pokud nebyl načten.",
+        "description": "You can not make a thumbnail of a tab if the tab was not loaded"
+    },
+    "nowFoundWindowsAddonStoppedWorking": {
+        "message": "Chyba: nenalezeno žádné normální okno, ale pouze anonymní nebo vyskakovací.\nDoplněk přestal fungovat. Prosím, restartujte prohlížeč.",
+        "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
+    },
+    "waitingToLoadAllTabs": {
+        "message": "Čeká se na načtení všech panelů.\nČekejte prosím...",
+        "description": "Waiting for all tabs to load.\nPlease wait..."
+    },
+    "reloadAddon": {
+        "message": "Znovu načíst doplněk",
+        "description": "Reload addon"
+    },
+    "ffFailedAndLostDataMessage": {
+        "message": "FF spadl a došlo ke ztrátě všech skupin.\nPokud máte zálohu, obnovte ji.",
+        "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
+    },
+    "enterDefaultGroupIconViewTypeTitle": {
+        "message": "Styl ikony pro nové skupiny",
+        "description": "Icon style for a new group"
+    },
+    "openPopupHotkeyTitle": {
+        "message": "Otevřít vyskakovací okno se skupinami",
+        "description": "Open the groups pop-up"
     },
     "openGroupInNewWindow": {
         "message": "Otevřít skupinu v novém okně",
