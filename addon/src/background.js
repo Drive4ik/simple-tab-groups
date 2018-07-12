@@ -491,7 +491,7 @@ function setLoadingToBrowserAction() {
 
 let loadingGroupInWindow = {}; // windowId: true;
 async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
-    if (!windowId) { // if click on notification after moving tab to window which is now closed :)
+    if (!windowId || 1 > windowId) { // if click on notification after moving tab to window which is now closed :)
         throw Error('loadGroup: windowId not set');
     }
 
@@ -524,18 +524,11 @@ async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
                 throw 'Error: Does\'nt support private windows';
             }
 
-            let oldTabIds = [],
+            let winTabs = await getTabs(windowId),
                 oldGroup = _groups.find(gr => gr.windowId === windowId);
 
-            if (oldGroup) {
-                let tabs = await getTabs(windowId);
-
-                if (tabs.some(utils.isTabCanNotBeHidden)) {
-                    throw browser.i18n.getMessage('notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera');
-                }
-
-                // oldGroup.windowId = null;
-                oldTabIds = oldGroup.tabs.map(utils.keyId);
+            if (oldGroup && winTabs.some(utils.isTabCanNotBeHidden)) {
+                throw browser.i18n.getMessage('notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera');
             }
 
             loadingGroupInWindow[windowId] = true;
@@ -548,7 +541,7 @@ async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
                 pinnedTabsLength = pinnedTabs.length;
 
             // group.windowId = windowId;
-            group.tabs = group.tabs.filter(tab => tab.id || utils.isUrlAllowToCreate(tab.url)); // remove missed unsupported tabs
+            group.tabs = group.tabs.filter(tab => tab.id || utils.isUrlAllowToCreate(tab.url)); // remove unsupported tabs
 
             if (!group.tabs.length && !pinnedTabsLength && oldGroup) {
                 group.tabs.push({
@@ -558,16 +551,16 @@ async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
                 });
             }
 
-            let tempEmptyTab = null;
+            let tempEmptyTab = await createTempActiveTab(windowId); // create empty tab (for quickly change group and not blinking)
+
+            if (tempEmptyTab) {
+                pinnedTabsLength++;
+            }
 
             if (oldGroup) {
-                tempEmptyTab = await createTempActiveTab(windowId); // create empty tab (for quickly change group and not blinking)
+                if (oldGroup.tabs.length) {
+                    let oldTabIds = oldGroup.tabs.map(utils.keyId);
 
-                if (tempEmptyTab) {
-                    pinnedTabsLength++;
-                }
-
-                if (oldTabIds.length) {
                     await browser.tabs.hide(oldTabIds);
 
                     if (options.discardTabsAfterHide) {
@@ -575,9 +568,7 @@ async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
                     }
                 }
             } else {
-                let winTabs = await getTabs(windowId);
-
-                if (winTabs.length && group.tabs.length) {
+                if (winTabs.length) {
                     let syncedTabs = [];
 
                     group.tabs
@@ -594,6 +585,12 @@ async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
                                 syncedTabs.push(winTab.id);
                             }
                         });
+
+                    let tabIdsToHide = winTabs.filter(winTab => !group.tabs.some(tab => tab.id === winTab));
+
+                    if (tabIdsToHide.length) {
+                        await browser.tabs.hide(tabIdsToHide.map(utils.keyId));
+                    }
                 }
             }
 
