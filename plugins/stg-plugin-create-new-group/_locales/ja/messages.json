@@ -10,9 +10,5 @@
     "createNewGroupTitle": {
         "message": "新しいグループを作成する - [STG plugin]",
         "description": "Create new group - [STG plugin]"
-    },
-    "enterBrowserActionIconColor": {
-        "message": "browser action icon の色を指定",
-        "description": "Enter browser action icon color"
     }
 }

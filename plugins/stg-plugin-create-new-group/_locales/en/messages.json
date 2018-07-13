@@ -14,13 +14,5 @@
     "createNewGroupTitle": {
         "message": "Create new group - [STG plugin]",
         "description": "Create new group - [STG plugin]"
-    },
-    "createNewGroupAndLoadItTitle": {
-        "message": "... and load it",
-        "description": "Create new group and load it"
-    },
-    "enterBrowserActionIconColor": {
-        "message": "Enter browser action icon color",
-        "description": "Enter browser action icon color"
     }
 }

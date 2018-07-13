@@ -10,13 +10,5 @@
     "createNewGroupTitle": {
         "message": "Создать новую группу - [STG plugin]",
         "description": "Create new group"
-    },
-    "createNewGroupAndLoadItTitle": {
-        "message": "... и загрузить её",
-        "description": "Create new group and load it"
-    },
-    "enterBrowserActionIconColor": {
-        "message": "Здесь можно изменить цвет значка аддона",
-        "description": "Enter browser action icon color"
     }
 }
