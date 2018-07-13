@@ -1523,6 +1523,11 @@ browser.runtime.onMessageExternal.addListener(function(request, sender, sendResp
                 };
             }),
         });
+    } else if (request.openManageGroups) {
+        openManageGroups();
+        sendResponse({
+            ok: true,
+        });
     } else if (request.runAction) {
         sendResponse(runAction(request.runAction));
     }

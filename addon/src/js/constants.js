@@ -32,6 +32,11 @@ const EXTENSIONS_WHITE_LIST = {
             'load-custom-group',
         ],
     },
+    'stg-plugin-manage-groups@drive4ik': {
+        allowedRequests: [
+            'openManageGroups',
+        ],
+    },
 };
 
 const DEFAULT_OPTIONS = {
