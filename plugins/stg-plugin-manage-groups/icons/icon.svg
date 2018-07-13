@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <style>
+        view#dark.theme:target~use#default {
+            fill: #606060;
+        }
+
+        view#light.theme:target~use#default {
+            fill: #bebebe;
+        }
+        </style>
+        <symbol id="shape">
+            <g>
+                <rect height="8" width="8" y="0" x="0" />
+                <rect height="8" width="8" y="0" x="12" />
+                <rect height="8" width="8" y="12" x="24" />
+                <rect height="8" width="8" y="12" x="0" />
+                <rect height="8" width="8" y="12" x="12" />
+                <rect height="8" width="8" y="0" x="24" />
+                <rect height="8" width="8" y="24" x="0" />
+                <rect height="8" width="8" y="24" x="12" />
+                <rect height="8" width="8" y="24" x="24" />
+            </g>
+        </symbol>
+    </defs>
+    <view class="theme" id="dark" viewTarget="default" />
+    <view class="theme" id="light" viewTarget="default" />
+    <use class="theme" id="default" fill="#535353" href="#shape" />
+</svg>
