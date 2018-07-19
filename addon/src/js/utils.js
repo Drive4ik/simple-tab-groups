@@ -87,7 +87,7 @@ function b64DecodeUnicode(str) {
 }
 
 function sliceText(text, length = 50) {
-    return text.length > length ? (text.slice(0, length - 3) + '...') : text;
+    return (text && text.length > length) ? (text.slice(0, length - 3) + '...') : (text || '');
 }
 
 function notify(message, timer = 20000, id) {
