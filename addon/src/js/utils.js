@@ -308,7 +308,7 @@ function getGroupIconUrl(group = { iconViewType: 'main-squares' }) {
 
     let icons = {
         'main-squares': `
-            <svg width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32">
                 <g fill="context-fill" fill-opacity="context-fill-opacity">
                     <rect height="8" width="8" y="0" x="0" />
                     <rect height="8" width="8" y="0" x="12" />
@@ -329,7 +329,7 @@ function getGroupIconUrl(group = { iconViewType: 'main-squares' }) {
             </svg>
         `,
         squares: `
-            <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
                 <g fill="context-fill" fill-opacity="context-fill-opacity">
                     <rect x="1" y="1" width="6" height="6" rx="1" ry="1"></rect>
                     <rect x="9" y="1" width="6" height="6" rx="1" ry="1"></rect>
@@ -339,8 +339,13 @@ function getGroupIconUrl(group = { iconViewType: 'main-squares' }) {
             </svg>
         `,
         'old-tab-groups': `
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="1 1 16 16">
-                <path fill="context-fill" fill-opacity="context-fill-opacity" ${stroke} d="M15 16H9c-.6 0-1-.4-1-1v-5c0-.6.4-1 1-1h6c.6 0 1 .4 1 1v5c0 .6-.4 1-1 1zm0-8h-2c-.6 0-1-.4-1-1V3c0-.6.4-1 1-1h2c.6 0 1 .4 1 1v4c0 .6-.4 1-1 1zm-5 0H3c-.6 0-1-.4-1-1V3c0-.6.4-1 1-1h7c.6 0 1 .4 1 1v4c0 .6-.4 1-1 1zM3 9h3c.6 0 1 .4 1 1v5c0 .6-.4 1-1 1H3c-.6 0-1-.4-1-1v-5c0-.6.4-1 1-1z"/>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+                <g fill="context-fill" fill-opacity="context-fill-opacity">
+                    <rect width="9" height="6" x="1" y="1" rx="1"></rect>
+                    <rect width="4" height="6" x="11" y="1" rx="1"></rect>
+                    <rect width="5" height="7" x="1" y="8" rx="1"></rect>
+                    <rect width="8" height="7" x="7" y="8" rx="1" fill="${group.iconColor}"></rect>
+                </g>
             </svg>
         `,
     };
