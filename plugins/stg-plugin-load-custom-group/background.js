@@ -99,10 +99,11 @@
 
     function resetBrowserAction(resetGroupInStorage) {
         setBrowserAction();
+
         if (false !== resetGroupInStorage) {
             browser.storage.local.remove('groupId');
+            showSelectGroupNotification();
         }
-        showSelectGroupNotification();
     }
 
     function setBrowserAction(title, iconUrl = MANIFEST.browser_action.default_icon) {
