@@ -1313,6 +1313,7 @@
         overflow: hidden;
         display: inline-block;
         text-overflow: ellipsis;
+        height: 16px;
     }
 
     .groups .item .item-action {
