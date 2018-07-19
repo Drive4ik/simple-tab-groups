@@ -79,7 +79,7 @@
         }
     });
 
-    async function updateBrowserAction() {
+    async function updateBrowserAction(resetGroupInStorage) {
         try {
             let { groupId } = await browser.storage.local.get('groupId'),
                 { groupsList } = await sendExternalMessage({
@@ -90,16 +90,18 @@
             if (group) {
                 setBrowserAction(group.title, group.iconUrl || undefined);
             } else {
-                resetBrowserAction();
+                resetBrowserAction(resetGroupInStorage);
             }
         } catch (e) {
-            resetBrowserAction();
+            resetBrowserAction(resetGroupInStorage);
         }
     }
 
-    function resetBrowserAction() {
+    function resetBrowserAction(resetGroupInStorage) {
         setBrowserAction();
-        browser.storage.local.remove('groupId');
+        if (false !== resetGroupInStorage) {
+            browser.storage.local.remove('groupId');
+        }
         showSelectGroupNotification();
     }
 
@@ -154,6 +156,6 @@
     window.sendExternalMessage = sendExternalMessage;
     window.updateBrowserAction = updateBrowserAction;
 
-    updateBrowserAction();
+    updateBrowserAction(false);
 
 })()
