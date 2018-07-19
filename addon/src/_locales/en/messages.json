@@ -361,10 +361,6 @@
             }
         }
     },
-    "enterBrowserActionIconColor": {
-        "message": "Enter browser action icon color",
-        "description": "Enter browser action icon color"
-    },
     "isStickyGroupTitle": {
         "message": "Sticky group",
         "description": "Sticky group"

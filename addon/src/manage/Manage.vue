@@ -282,7 +282,7 @@
                             this.iconColor;
                             this.iconViewType;
 
-                            return utils.getGroupIconUrl(this, vm.options.browserActionIconColor);
+                            return utils.getGroupIconUrl(this);
                         },
                     },
                 });
@@ -308,7 +308,7 @@
             },
 
             loadGroups() {
-                this.groups = utils.clone(BG.getGroups()).map(this.$_groupMap, this);
+                this.groups = BG.getGroups().map(this.$_groupMap, this);
             },
             addGroup() {
                 BG.addGroup();
@@ -651,7 +651,6 @@
                 ref="editGroup"
                 :group="groupToEdit"
                 :containers="containers"
-                :browser-action-icon-color="options.browserActionIconColor"
                 @saved="groupToEdit = null" />
         </popup>
 

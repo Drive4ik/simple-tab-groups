@@ -2,7 +2,7 @@
     'use strict';
 
     let $ = document.querySelector.bind(document),
-        bg = browser.extension.getBackgroundPage(),
+        BG = browser.extension.getBackgroundPage(),
         groupsSelect = $('#groups-select'),
         selectGroupHeader = $('#select-group-header');
 
@@ -14,7 +14,7 @@
         let a = document.createElement('a');
         a.innerText = browser.i18n.getMessage('needInstallSTGExtension').replace(/\n+/, '\n');
         a.id = 'notificationInstallSTG';
-        a.href = bg.STG_HOME_PAGE;
+        a.href = BG.STG_HOME_PAGE;
         a.target = '_blank';
         selectGroupHeader.parentNode.insertBefore(a, selectGroupHeader);
         return;
@@ -31,23 +31,27 @@
             groupId: groupId,
         });
 
-        bg.updateBrowserAction(groupId);
+        BG.updateBrowserAction();
     });
 
     browser.runtime.onMessageExternal.addListener(function(request, sender, sendResponse) {
-        if (sender.id !== bg.STG_ID) {
+        if (sender.id !== BG.STG_ID) {
             return;
         }
 
-        if (request.groupUpdated || request.groupDeleted || request.groupAdded) {
-            init();
+        switch (request.action) {
+            case 'group-added':
+            case 'group-updated':
+            case 'group-removed':
+                init();
+                break;
         }
     });
 
     async function init() {
         let { groupId } = await browser.storage.local.get('groupId'),
-            { groupsList } = await bg.sendExternalMessage({
-                getGroupsList: true,
+            { groupsList } = await BG.sendExternalMessage({
+                action: 'get-groups-list',
             });
 
         while (groupsSelect.firstElementChild) {

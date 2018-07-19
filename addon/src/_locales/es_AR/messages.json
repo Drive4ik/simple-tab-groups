@@ -349,10 +349,6 @@
             }
         }
     },
-    "enterBrowserActionIconColor": {
-        "message": "Ingrese el color del icono de acción del navegador",
-        "description": "Enter browser action icon color"
-    },
     "isStickyGroupHelp": {
         "message": "Las pestañas en este grupo nunca seran movidas de forma automatica a otro grupo",
         "description": "Tabs in this group will never be automatically moved to another group"

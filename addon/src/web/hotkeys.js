@@ -3,17 +3,18 @@
 import storage from '../js/storage';
 
 let hotkeys = [],
-    foundHotKey = false,
-    changeHotkeysListener = function(request, sender) {
-        if (sender.tab && sender.tab.incognito) {
-            unsubscribeFromAllEvents();
-            return;
-        }
+    foundHotKey = false;
 
-        if (request.updateHotkeys) {
-            reloadHotKeys().then(init);
-        }
-    };
+function changeHotkeysListener(request, sender) {
+    if (sender.tab && sender.tab.incognito) {
+        unsubscribeFromAllEvents();
+        return;
+    }
+
+    if (request.action === 'update-hotkeys') {
+        reloadHotKeys().then(init);
+    }
+};
 
 browser.runtime.onMessage.addListener(changeHotkeysListener);
 
@@ -74,7 +75,8 @@ function checkKey(e) {
             e.stopImmediatePropagation();
 
             browser.runtime.sendMessage({
-                    runAction: hotkey.action,
+                    action: hotkey.action,
+                    groupId: hotkey.groupId,
                 })
                 .then(function(response) {
                     foundHotKey = false;

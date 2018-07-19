@@ -357,10 +357,6 @@
             }
         }
     },
-    "enterBrowserActionIconColor": {
-        "message": "Vybrat základní barvu ikony doplňku",
-        "description": "Enter browser action icon color"
-    },
     "isStickyGroupTitle": {
         "message": "Pevná skupina",
         "description": "Sticky group"

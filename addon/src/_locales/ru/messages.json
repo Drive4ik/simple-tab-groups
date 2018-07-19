@@ -357,10 +357,6 @@
             }
         }
     },
-    "enterBrowserActionIconColor": {
-        "message": "Здесь можно изменить цвет значка аддона",
-        "description": "Enter browser action icon color"
-    },
     "isStickyGroupTitle": {
         "message": "Липкая группа",
         "description": "Sticky group"

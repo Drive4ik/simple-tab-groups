@@ -353,10 +353,6 @@
             }
         }
     },
-    "enterBrowserActionIconColor": {
-        "message": "输入浏览器动作图标颜色",
-        "description": "Enter browser action icon color"
-    },
     "isStickyGroupTitle": {
         "message": "固定群组",
         "description": "Sticky group"

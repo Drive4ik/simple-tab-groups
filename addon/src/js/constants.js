@@ -15,26 +15,29 @@ const groupIconViewTypes = [
 
 const EXTENSIONS_WHITE_LIST = {
     'stg-plugin-create-new-group@drive4ik': {
-        allowedRequests: [
-            'runAction',
-        ],
-        allowedActionIds: [
+        postActions: [],
+        getActions: [
             'add-new-group',
             'load-last-group',
         ],
     },
     'stg-plugin-load-custom-group@drive4ik': {
-        allowedRequests: [
-            'runAction',
-            'getGroupsList',
+        postActions: [
+            'i-am-back',
+            'group-added',
+            'group-updated',
+            'group-removed',
         ],
-        allowedActionIds: [
+        getActions: [
+            'are-you-here',
+            'get-groups-list',
             'load-custom-group',
         ],
     },
     'stg-plugin-manage-groups@drive4ik': {
-        allowedRequests: [
-            'openManageGroups',
+        postActions: [],
+        getActions: [
+            'open-manage-groups',
         ],
     },
 };
@@ -42,7 +45,6 @@ const EXTENSIONS_WHITE_LIST = {
 const DEFAULT_OPTIONS = {
     groups: [],
     lastCreatedGroupPosition: 0,
-    browserActionIconColor: '#606060',
     defaultGroupIconViewType: groupIconViewTypes[0],
     version: '1.0',
 
@@ -64,9 +66,7 @@ const DEFAULT_OPTIONS = {
             metaKey: false,
             key: '`',
             keyCode: 192,
-            action: {
-                id: 'load-next-group',
-            },
+            action: 'load-next-group',
         },
         {
             ctrlKey: true,
@@ -75,9 +75,7 @@ const DEFAULT_OPTIONS = {
             metaKey: false,
             key: '`',
             keyCode: 192,
-            action: {
-                id: 'load-prev-group',
-            },
+            action: 'load-prev-group',
         },
     ],
 };
@@ -86,7 +84,7 @@ const onlyBoolOptionsKeys = (function() {
     return Object.keys(DEFAULT_OPTIONS).filter(key => 'boolean' === typeof DEFAULT_OPTIONS[key]);
 })();
 
-const allOptionsKeys = onlyBoolOptionsKeys.concat(['hotkeys', 'browserActionIconColor', 'defaultGroupIconViewType']);
+const allOptionsKeys = onlyBoolOptionsKeys.concat(['hotkeys', 'defaultGroupIconViewType']);
 
 export {
     DEFAULT_COOKIE_STORE_ID,

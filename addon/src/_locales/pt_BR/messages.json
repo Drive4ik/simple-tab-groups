@@ -357,10 +357,6 @@
             }
         }
     },
-    "enterBrowserActionIconColor": {
-        "message": "Cor do ícone da ação do navegador",
-        "description": "Enter browser action icon color"
-    },
     "isStickyGroupTitle": {
         "message": "Grupo pegajoso",
         "description": "Sticky group"

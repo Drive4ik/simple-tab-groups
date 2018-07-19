@@ -66,29 +66,26 @@
 
         let { groupId } = await browser.storage.local.get('groupId');
 
-        if (!groupId) {
+        if (!groupId || !request.action) {
             return;
         }
 
-        if (request.groupUpdated) {
-            if (request.groupId === groupId) {
-                updateBrowserAction(groupId);
-            }
-        } else if (request.groupDeleted) {
-            if (request.groupId === groupId) {
-                resetBrowserAction();
-            }
-        } else if (request.IAmBack) {
-            updateBrowserAction(groupId);
+        if (request.action === 'group-updated' && request.group.id === groupId) {
+            updateBrowserAction();
+        } else if (request.action === 'group-removed' && request.groupId === groupId) {
+            resetBrowserAction();
+        } else if (request.action === 'i-am-back') {
+            updateBrowserAction();
         }
     });
 
-    async function updateBrowserAction(groupId) {
+    async function updateBrowserAction() {
         try {
-            let responce = await sendExternalMessage({
-                    getGroupsList: true,
+            let { groupId } = await browser.storage.local.get('groupId'),
+                { groupsList } = await sendExternalMessage({
+                    action: 'get-groups-list',
                 }),
-                group = responce.groupsList.find(gr => gr.id === groupId);
+                group = groupsList.find(gr => gr.id === groupId);
 
             if (group) {
                 setBrowserAction(group.title, group.iconUrl || undefined);
@@ -106,7 +103,7 @@
         showSelectGroupNotification();
     }
 
-    function setBrowserAction(title = MANIFEST.browser_action.default_title, iconUrl = MANIFEST.browser_action.default_icon) {
+    function setBrowserAction(title, iconUrl = MANIFEST.browser_action.default_icon) {
         browser.browserAction.setTitle({
             title: title ? title + ' - [STG plugin]' : MANIFEST.browser_action.default_title,
         });
@@ -121,19 +118,18 @@
 
         try {
             await sendExternalMessage({
-                areYouHere: true,
+                action: 'are-you-here',
             });
 
             if (!groupId) {
-                return browser.runtime.openOptionsPage();
+                browser.runtime.openOptionsPage();
+                return;
             }
 
             try {
                 await sendExternalMessage({
-                    runAction: {
-                        id: 'load-custom-group',
-                        groupId: groupId,
-                    },
+                    action: 'load-custom-group',
+                    groupId: groupId,
                 });
             } catch (e) {
                 browser.runtime.openOptionsPage();
@@ -149,7 +145,7 @@
         onclick: () => browser.runtime.openOptionsPage(),
         contexts: ['browser_action'],
         icons: {
-            16: 'chrome://browser/skin/settings.svg',
+            16: '/icons/settings.svg',
         },
     });
 
@@ -157,5 +153,7 @@
     window.STG_HOME_PAGE = STG_HOME_PAGE;
     window.sendExternalMessage = sendExternalMessage;
     window.updateBrowserAction = updateBrowserAction;
+
+    updateBrowserAction();
 
 })()

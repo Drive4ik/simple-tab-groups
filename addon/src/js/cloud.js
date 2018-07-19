@@ -13,7 +13,7 @@ function getAllChunkKeys(key, fromIndex = 0) {
     return Array(MAX_ITEMS)
         .fill()
         .map((v, i) => i)
-        .filter(i => fromIndex <= i)
+        .slice(fromIndex)
         .map(i => key + i);
 }
 
@@ -27,7 +27,7 @@ async function get(key) {
         json = '';
 
     while (data[key + i] !== undefined) {
-        json = json.concat(data[key + i]);
+        json += data[key + i];
         i++;
     }
 

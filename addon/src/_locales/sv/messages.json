@@ -357,10 +357,6 @@
             }
         }
     },
-    "enterBrowserActionIconColor": {
-        "message": "Välj ikonfärg för webbläsarfunktion",
-        "description": "Enter browser action icon color"
-    },
     "isStickyGroupTitle": {
         "message": "Fast grupp",
         "description": "Sticky group"

@@ -133,7 +133,7 @@ function notify(message, timer = 20000, id) {
 }
 
 function isAllowSender(request, sender) {
-    if (sender.id !== browser.runtime.getManifest().applications.gecko.id || request.isExternalMessage || (sender.tab && isTabIncognito(sender.tab))) {
+    if (sender.id !== browser.runtime.getManifest().applications.gecko.id || !request || request.isExternalMessage || (sender.tab && isTabIncognito(sender.tab))) {
         return false;
     }
 
@@ -141,16 +141,6 @@ function isAllowSender(request, sender) {
 }
 
 function isAllowExternalRequestAndSender(request, sender, extensionRules = {}) {
-    // all allowed action ids
-    // 'load-next-group',
-    // 'load-prev-group',
-    // 'load-first-group',
-    // 'load-last-group',
-    // 'load-custom-group',
-    // 'add-new-group',
-    // 'delete-current-group',
-    // 'open-manage-groups',
-
     let extension = constants.EXTENSIONS_WHITE_LIST[sender.id];
 
     if (!extension) {
@@ -160,21 +150,11 @@ function isAllowExternalRequestAndSender(request, sender, extensionRules = {}) {
     Object.assign(extensionRules, extension);
 
     if (!request || 'object' !== type(request)) {
+        extensionRules.error = 'request is wrong';
         return false;
     }
 
-    let requestKeys = Object.keys(request),
-        allowedRequestKeys = extension.allowedRequests.concat(['areYouHere']);
-
-    if (!requestKeys.length || !requestKeys.every(key => allowedRequestKeys.includes(key))) {
-        return false;
-    }
-
-    if (request.runAction) {
-        return extension.allowedActionIds.includes(request.runAction.id);
-    }
-
-    return true;
+    return extension.getActions.includes(request.action);
 }
 
 function isUrlEmpty(url) {
@@ -315,7 +295,7 @@ function safeColor(color) {
     return div.style.backgroundColor;
 }
 
-function getGroupIconUrl(group = { iconViewType: 'main-squares' }, browserActionIconColor = 'red') {
+function getGroupIconUrl(group = { iconViewType: 'main-squares' }) {
     if (group.iconUrl) {
         return group.iconUrl;
     }
@@ -324,12 +304,12 @@ function getGroupIconUrl(group = { iconViewType: 'main-squares' }, browserAction
         group.iconColor = 'transparent';
     }
 
-    let stroke = 'transparent' === group.iconColor ? `stroke="${browserActionIconColor}" stroke-width="1"` : '';
+    let stroke = 'transparent' === group.iconColor ? 'stroke="#606060" stroke-width="1"' : '';
 
     let icons = {
         'main-squares': `
             <svg width="32" height="32" xmlns="http://www.w3.org/2000/svg">
-                <g fill="${browserActionIconColor}">
+                <g fill="context-fill" fill-opacity="context-fill-opacity">
                     <rect height="8" width="8" y="0" x="0" />
                     <rect height="8" width="8" y="0" x="12" />
                     <rect height="8" width="8" y="12" x="24" />
@@ -350,7 +330,7 @@ function getGroupIconUrl(group = { iconViewType: 'main-squares' }, browserAction
         `,
         squares: `
             <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg">
-                <g fill="${browserActionIconColor}">
+                <g fill="context-fill" fill-opacity="context-fill-opacity">
                     <rect x="1" y="1" width="6" height="6" rx="1" ry="1"></rect>
                     <rect x="9" y="1" width="6" height="6" rx="1" ry="1"></rect>
                     <rect x="1" y="9" width="6" height="6" rx="1" ry="1"></rect>
@@ -360,7 +340,7 @@ function getGroupIconUrl(group = { iconViewType: 'main-squares' }, browserAction
         `,
         'old-tab-groups': `
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="1 1 16 16">
-                <path fill="${group.iconColor}" ${stroke} d="M15 16H9c-.6 0-1-.4-1-1v-5c0-.6.4-1 1-1h6c.6 0 1 .4 1 1v5c0 .6-.4 1-1 1zm0-8h-2c-.6 0-1-.4-1-1V3c0-.6.4-1 1-1h2c.6 0 1 .4 1 1v4c0 .6-.4 1-1 1zm-5 0H3c-.6 0-1-.4-1-1V3c0-.6.4-1 1-1h7c.6 0 1 .4 1 1v4c0 .6-.4 1-1 1zM3 9h3c.6 0 1 .4 1 1v5c0 .6-.4 1-1 1H3c-.6 0-1-.4-1-1v-5c0-.6.4-1 1-1z"/>
+                <path fill="context-fill" fill-opacity="context-fill-opacity" ${stroke} d="M15 16H9c-.6 0-1-.4-1-1v-5c0-.6.4-1 1-1h6c.6 0 1 .4 1 1v5c0 .6-.4 1-1 1zm0-8h-2c-.6 0-1-.4-1-1V3c0-.6.4-1 1-1h2c.6 0 1 .4 1 1v4c0 .6-.4 1-1 1zm-5 0H3c-.6 0-1-.4-1-1V3c0-.6.4-1 1-1h7c.6 0 1 .4 1 1v4c0 .6-.4 1-1 1zM3 9h3c.6 0 1 .4 1 1v5c0 .6-.4 1-1 1H3c-.6 0-1-.4-1-1v-5c0-.6.4-1 1-1z"/>
             </svg>
         `,
     };

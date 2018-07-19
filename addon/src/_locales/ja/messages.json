@@ -353,10 +353,6 @@
             }
         }
     },
-    "enterBrowserActionIconColor": {
-        "message": "browser action icon の色を指定",
-        "description": "Enter browser action icon color"
-    },
     "isStickyGroupTitle": {
         "message": "Sticky グループ",
         "description": "Sticky group"

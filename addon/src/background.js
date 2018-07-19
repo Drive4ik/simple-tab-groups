@@ -189,8 +189,8 @@ async function addGroup(windowId, resetGroups = false, returnNewGroupIndex = tru
     });
 
     sendExternalMessage({
-        groupAdded: true,
-        groupId: _groups[newGroupIndex].id,
+        action: 'group-added',
+        group: _mapGroupForAnotherExtension(_groups[newGroupIndex]),
     });
 
     updateMoveTabMenus(windowId);
@@ -212,8 +212,8 @@ async function updateGroup(groupId, updateData) {
     });
 
     sendExternalMessage({
-        groupUpdated: true,
-        groupId: groupId,
+        action: 'group-updated',
+        group: _mapGroupForAnotherExtension(_groups[groupIndex]),
     });
 
     saveGroupsToStorage();
@@ -239,10 +239,10 @@ function sendMessage(data) {
     browser.runtime.sendMessage(data);
 }
 
-function sendExternalMessage(data, allowedRequestKeys = ['getGroupsList']) {
+function sendExternalMessage(data) {
     Object.keys(constants.EXTENSIONS_WHITE_LIST)
         .forEach(function(exId) {
-            if (allowedRequestKeys.some(key => constants.EXTENSIONS_WHITE_LIST[exId].allowedRequests.includes(key))) {
+            if (constants.EXTENSIONS_WHITE_LIST[exId].postActions.includes(data.action)) {
                 data.isExternalMessage = true;
                 browser.runtime.sendMessage(exId, data);
             }
@@ -255,7 +255,7 @@ async function addUndoRemoveGroupItem(group) {
         title: browser.i18n.getMessage('undoRemoveGroupItemTitle', group.title),
         contexts: ['browser_action'],
         icons: {
-            16: utils.getGroupIconUrl(group, options.browserActionIconColor),
+            16: utils.getGroupIconUrl(group),
         },
         onclick: function(info) {
             browser.menus.remove(info.menuItemId);
@@ -339,7 +339,7 @@ async function removeGroup(groupId) {
     });
 
     sendExternalMessage({
-        groupDeleted: true,
+        action: 'group-removed',
         groupId: groupId,
     });
 
@@ -505,7 +505,12 @@ async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
         return;
     }
 
-    // console.log('loadGroup', { groupId: group.id, windowId, activeTabIndex });
+    console.log('loadGroup', { groupId: group.id, windowId, activeTabIndex });
+
+    // try to fix bug invalid tab id
+    function _fixTabsIds(tabs) {
+        return Promise.all(tabs.filter(utils.keyId).map(tab => browser.tabs.get(tab.id).catch(() => tab.id = null)));
+    }
 
     try {
         if (group.windowId) {
@@ -557,14 +562,19 @@ async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
                 pinnedTabsLength++;
             }
 
+            // hide tabs
             if (oldGroup) {
                 if (oldGroup.tabs.length) {
-                    let oldTabIds = oldGroup.tabs.map(utils.keyId);
+                    await _fixTabsIds(oldGroup.tabs);
 
-                    await browser.tabs.hide(oldTabIds);
+                    let oldTabIds = oldGroup.tabs.filter(utils.keyId).map(utils.keyId);
 
-                    if (options.discardTabsAfterHide) {
-                        browser.tabs.discard(oldTabIds);
+                    if (oldTabIds.length) {
+                        await browser.tabs.hide(oldTabIds);
+
+                        if (options.discardTabsAfterHide) {
+                            browser.tabs.discard(oldTabIds);
+                        }
                     }
                 }
             } else {
@@ -594,7 +604,10 @@ async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
                 }
             }
 
+            // show tabs
             if (group.tabs.length) {
+                await _fixTabsIds(group.tabs);
+
                 let containers = await utils.loadContainers(),
                     hiddenTabsIds = group.tabs.filter(utils.keyId).map(utils.keyId);
 
@@ -886,43 +899,38 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
     }
 }
 
-async function onRemovedTab(tabId, { isWindowClosing, windowId }) {
+function onRemovedTab(tabId, { isWindowClosing, windowId }) {
     console.log('onRemovedTab', arguments);
-
-    _groups.some(function(group) {
-        let tabIndex = group.tabs.findIndex(tab => tab.id === tabId);
-
-        if (-1 !== tabIndex) {
-            if (isWindowClosing) {
-                group.tabs[tabIndex].id = null;
-            } else {
-                group.tabs.splice(tabIndex, 1);
-            }
-
-            return true;
-        }
-    });
 
     if (isWindowClosing) {
         return;
     }
 
+    _groups.some(function(group) {
+        let tabIndex = group.tabs.findIndex(tab => tab.id === tabId);
+
+        if (-1 !== tabIndex) {
+            group.tabs.splice(tabIndex, 1);
+            return true;
+        }
+    });
+
     saveCurrentTabs(windowId, tabId, 'onRemovedTab');
 }
 
-async function onMovedTab(tabId, { windowId }) {
+function onMovedTab(tabId, { windowId }) {
     console.log('onMovedTab', tabId, { windowId });
 
     saveCurrentTabs(windowId, undefined, 'onMovedTab');
 }
 
-async function onAttachedTab(tabId, { newWindowId }) {
+function onAttachedTab(tabId, { newWindowId }) {
     console.log('onAttachedTab', tabId, { newWindowId });
 
     saveCurrentTabs(newWindowId, undefined, 'onAttachedTab');
 }
 
-async function onDetachedTab(tabId, { oldWindowId }) { // notice: call before onAttached
+function onDetachedTab(tabId, { oldWindowId }) { // notice: call before onAttached
     console.log('onDetachedTab', tabId, { oldWindowId });
 
     let group = _groups.find(gr => gr.windowId === oldWindowId);
@@ -1228,7 +1236,7 @@ async function createMoveTabMenus(windowId) {
             title: group.title,
             enabled: currentGroup ? group.id !== currentGroup.id : true,
             icons: {
-                16: utils.getGroupIconUrl(group, options.browserActionIconColor),
+                16: utils.getGroupIconUrl(group),
             },
             contexts: ['tab'],
             onclick: async function(destGroupId, info, tab) {
@@ -1294,7 +1302,7 @@ function setBrowserActionData(currentGroup) {
     });
 
     browser.browserAction.setIcon({
-        path: utils.getGroupIconUrl(currentGroup, options.browserActionIconColor),
+        path: utils.getGroupIconUrl(currentGroup),
     });
 }
 
@@ -1304,7 +1312,7 @@ function resetBrowserActionData() {
     });
 
     browser.browserAction.setIcon({
-        path: utils.getGroupIconUrl(undefined, options.browserActionIconColor),
+        path: utils.getGroupIconUrl(),
     });
 }
 
@@ -1388,6 +1396,8 @@ async function loadGroupPosition(textPosition) {
     }
 
     await loadGroup(_groups[groupIndex].windowId, nextGroupIndex);
+
+    return true;
 }
 
 function sortGroups(vector = 'asc') {
@@ -1471,28 +1481,8 @@ browser.runtime.onMessage.addListener(async function(request, sender) {
         };
     }
 
-    if (request.optionsUpdated) {
-        options = await storage.get(constants.allOptionsKeys);
-
-        if (request.optionsUpdated.includes('hotkeys')) {
-            let tabs = await browser.tabs.query({
-                discarded: false,
-                pinned: false,
-                windowType: 'normal',
-            });
-
-            tabs.forEach(function(tab) {
-                if (utils.isTabNotIncognito(tab)) {
-                    browser.tabs.sendMessage(tab.id, {
-                        updateHotkeys: true,
-                    });
-                }
-            });
-        }
-    }
-
-    if (request.runAction) {
-        runAction(request.runAction);
+    if (request.action) {
+        runAction(request);
     }
 });
 
@@ -1508,93 +1498,143 @@ browser.runtime.onMessageExternal.addListener(function(request, sender, sendResp
         return;
     }
 
-    if (request.areYouHere) {
+    if (request.action) {
+        sendResponse(runAction(request));
+    } else {
         sendResponse({
-            ok: true,
+            ok: false,
+            error: 'unknown action',
         });
-    } else if (request.getGroupsList) {
-        sendResponse({
-            ok: true,
-            groupsList: _groups.map(function(group) {
-                return {
-                    id: group.id,
-                    title: group.title,
-                    iconUrl: utils.getGroupIconUrl(group, options.browserActionIconColor),
-                };
-            }),
-        });
-    } else if (request.openManageGroups) {
-        openManageGroups();
-        sendResponse({
-            ok: true,
-        });
-    } else if (request.runAction) {
-        sendResponse(runAction(request.runAction));
     }
 });
 
-async function runAction(action) {
-    let result = {
-        ok: false,
+function _mapGroupForAnotherExtension(group) {
+    return {
+        id: group.id,
+        title: group.title,
+        iconUrl: utils.getGroupIconUrl(group),
     };
+}
 
-    if (!action || !action.id) {
-        result.error = '[STG] Action id is empty';
+async function runAction(data) {
+    let result = {
+            ok: false,
+        },
+        loadOk = null;
+
+    if (!data.action) {
+        result.error = '[STG] Action or it\'s id is empty';
         return result;
     }
 
-    let currentWindow = await getWindow(),
-        currentGroup = _groups.find(gr => gr.windowId === currentWindow.id);
+    async function getCurrentWindow() {
+        let currentWindow = await getWindow();
 
-    if (!utils.isWindowAllow(currentWindow)) {
-        result.error = '[STG] This window is not supported';
-        return result;
+        if (!utils.isWindowAllow(currentWindow)) {
+            throw Error('This window is not supported');
+        }
+
+        return currentWindow;
+    }
+
+    async function getCurrentGroup() {
+        let currentWindow = await getCurrentWindow();
+
+        return _groups.find(gr => gr.windowId === currentWindow.id);
     }
 
     try {
-        if ('load-next-group' === action.id) {
-            if (currentGroup) {
-                await loadGroupPosition('next');
+        switch (data.action) {
+            case 'are-you-here':
                 result.ok = true;
-            }
-        } else if ('load-prev-group' === action.id) {
-            if (currentGroup) {
-                await loadGroupPosition('prev');
-                result.ok = true;
-            }
-        } else if ('load-first-group' === action.id) {
-            if (_groups[0]) {
-                await loadGroup(currentWindow.id, 0);
-                result.ok = true;
-            }
-        } else if ('load-last-group' === action.id) {
-            if (_groups[_groups.length - 1]) {
-                await loadGroup(currentWindow.id, _groups.length - 1);
-                result.ok = true;
-            }
-        } else if ('load-custom-group' === action.id) {
-            let groupIndex = _groups.findIndex(gr => gr.id === action.groupId);
+                break;
+            case 'options-updated':
+                options = await storage.get(constants.allOptionsKeys);
 
-            if (-1 === groupIndex) {
-                throw Error('group id not found');
-            } else {
-                await loadGroup(currentWindow.id, groupIndex);
+                if (data.optionsUpdated.includes('hotkeys')) {
+                    let tabs = await browser.tabs.query({
+                        discarded: false,
+                        pinned: false,
+                        windowType: 'normal',
+                    });
+
+                    tabs
+                        .filter(utils.isTabNotIncognito)
+                        .forEach(function(tab) {
+                            browser.tabs.sendMessage(tab.id, {
+                                action: 'update-hotkeys',
+                            });
+                        });
+                }
+
+                break;
+            case 'get-groups-list':
+                result.groupsList = _groups.map(_mapGroupForAnotherExtension);
                 result.ok = true;
-            }
-        } else if ('add-new-group' === action.id) {
-            await addGroup();
-            result.ok = true;
-        } else if ('delete-current-group' === action.id) {
-            if (currentGroup) {
-                await removeGroup(currentGroup.id);
+                break;
+            case 'load-next-group':
+                loadOk = await loadGroupPosition('next');
+
+                if (loadOk) {
+                    result.ok = true;
+                }
+                break;
+            case 'load-prev-group':
+                loadOk = await loadGroupPosition('prev');
+
+                if (loadOk) {
+                    result.ok = true;
+                }
+                break;
+            case 'load-first-group':
+                if (_groups[0]) {
+                    let currentWindow = await getCurrentWindow();
+                    await loadGroup(currentWindow.id, 0);
+                    result.ok = true;
+                }
+                break;
+            case 'load-last-group':
+                if (_groups.length > 0) {
+                    let currentWindow = await getCurrentWindow();
+                    await loadGroup(currentWindow.id, _groups.length - 1);
+                    result.ok = true;
+                }
+                break;
+            case 'load-custom-group':
+                let groupIndex = _groups.findIndex(gr => gr.id === data.groupId);
+
+                if (-1 === groupIndex) {
+                    throw Error(`Group id '${data.groupId}' type: '${typeof data.groupId}' not found. Need exists int group id.`);
+                } else {
+                    let currentWindow = await getCurrentWindow();
+                    await loadGroup(currentWindow.id, groupIndex);
+                    result.ok = true;
+                }
+                break;
+            case 'add-new-group':
+                await addGroup();
                 result.ok = true;
-            }
-        } else if ('open-manage-groups' === action.id) {
-            await openManageGroups();
-            result.ok = true;
+                break;
+            case 'delete-current-group':
+                let currentGroup = await getCurrentGroup();
+
+                if (currentGroup) {
+                    await removeGroup(currentGroup.id);
+                    result.ok = true;
+                }
+                break;
+            case 'open-manage-groups':
+                await openManageGroups();
+                result.ok = true;
+                break;
+            default:
+                throw Error(`Action '${data.action}' is wrong`);
+                break;
         }
+
     } catch (e) {
         result.error = '[STG] ' + String(e);
+        console.error(result.error);
     }
 
     return result;
@@ -1604,16 +1644,11 @@ window.background = {
     inited: false,
 
     log,
-    // getLogs: () => errorLogs,
-    getLogs: function() {
-        let logs = errorLogs;
-        errorLogs = [];
-        return logs;
-    },
+    getLogs: () => utils.clone(errorLogs),
 
     openManageGroups,
 
-    getGroups: () => _groups,
+    getGroups: () => utils.clone(_groups),
 
     createWindow,
     getWindow,
@@ -1625,7 +1660,7 @@ window.background = {
 
     updateBrowserActionData,
     setFocusOnWindow,
-    getLastFocusedNormalWindow: () => lastFocusedNormalWindow,
+    getLastFocusedNormalWindow: () => utils.clone(lastFocusedNormalWindow),
 
     sortGroups,
     loadGroup,
@@ -1762,6 +1797,18 @@ async function runMigrateForData(data) {
     if (ifVersionInDataLessThan('3.0.9')) {
         data.hotkeys.forEach(hotkey => 'metaKey' in hotkey ? null : hotkey.metaKey = false);
         data.groups.forEach(group => delete group.isExpanded);
+    }
+
+    if (ifVersionInDataLessThan('3.0.10')) {
+        data.hotkeys.forEach(function(hotkey) {
+            if (hotkey.action.groupId) {
+                hotkey.groupId = hotkey.action.groupId;
+            }
+
+            hotkey.action = hotkey.action.id;
+        });
+
+        removeKeys('browserActionIconColor');
     }
 
 
@@ -2185,11 +2232,8 @@ setLoadingToBrowserAction();
 init()
     .then(function() {
         // send message for addon plugins
-        Object.keys(constants.EXTENSIONS_WHITE_LIST)
-            .forEach(function(exId) {
-                browser.runtime.sendMessage(exId, {
-                    IAmBack: true,
-                });
-            });
+        sendExternalMessage({
+            action: 'i-am-back',
+        });
     })
     .catch(utils.notify);

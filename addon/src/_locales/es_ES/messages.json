@@ -339,10 +339,6 @@
             }
         }
     },
-    "enterBrowserActionIconColor": {
-        "message": "Color base de icono Button Action",
-        "description": "Enter browser action icon color"
-    },
     "isStickyGroupTitle": {
         "message": "Grupo «Sticky»",
         "description": "Sticky group"

@@ -357,10 +357,6 @@
             }
         }
     },
-    "enterBrowserActionIconColor": {
-        "message": "Wprowadź kolor ikony-akcji",
-        "description": "Enter browser action icon color"
-    },
     "isStickyGroupTitle": {
         "message": "Przypięta grupa",
         "description": "Sticky group"

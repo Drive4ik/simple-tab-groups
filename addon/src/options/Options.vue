@@ -57,6 +57,8 @@
                 },
                 groups: [],
                 isMac: false,
+
+                errorLogs: BG.getLogs(),
             };
         },
         async mounted() {
@@ -81,17 +83,6 @@
             this.initPopupHotkey();
         },
         watch: {
-            'options.browserActionIconColor': async function(newValue, oldValue) {
-                if (!oldValue) {
-                    return;
-                }
-
-                await this.saveOptions({
-                    browserActionIconColor: newValue,
-                });
-
-                BG.updateBrowserActionData();
-            },
             'options.hotkeys': {
                 handler(hotkeys, oldValue) {
                     if (!oldValue) {
@@ -99,9 +90,9 @@
                     }
 
                     let filteredHotkeys = hotkeys.filter(function(hotkey) {
-                        let ok = (hotkey.keyCode || hotkey.key) && hotkey.action.id/* && (hotkey.ctrlKey || hotkey.shiftKey || hotkey.altKey)*/;
+                        let ok = (hotkey.keyCode || hotkey.key) && hotkey.action/* && (hotkey.ctrlKey || hotkey.shiftKey || hotkey.altKey)*/;
 
-                        if (ok && 'load-custom-group' === hotkey.action.id && !this.groups.some(gr => gr.id === hotkey.action.groupId)) {
+                        if (ok && 'load-custom-group' === hotkey.action && !this.groups.some(gr => gr.id === hotkey.groupId)) {
                             ok = false;
                         }
 
@@ -127,6 +118,7 @@
             async saveOptions(options) {
                 await storage.set(options, true);
                 await browser.runtime.sendMessage({
+                    action: 'options-updated',
                     optionsUpdated: Object.keys(options),
                 });
             },
@@ -361,8 +353,7 @@
             },
 
             saveErrorLogsIntoFile() {
-                let logs = BG.getLogs(),
-                    logsStr = null;
+                let logs = BG.getLogs();
 
                 if (logs.length) {
                     exportToFile(logs, 'STG-error-logs.json');
@@ -375,7 +366,7 @@
                 return utils.getGroupIconUrl({
                     iconViewType: iconType,
                     iconColor: 'hsl(200, 100%, 50%)',
-                }, this.options.browserActionIconColor);
+                });
             },
 
             createHotkey() {
@@ -386,10 +377,7 @@
                     metaKey: false,
                     key: '',
                     keyCode: 0,
-                    action: {
-                        id: '',
-                        groupId: 0,
-                    },
+                    action: '',
                 };
             },
 
@@ -480,18 +468,14 @@
 
             <hr>
 
-            <div class="field browser-action-color-wrapper">
-                <label class="label" v-text="lang('enterBrowserActionIconColor')"></label>
-                <div class="control is-inline-block">
-                    <input v-model.lazy="options.browserActionIconColor" class="input" type="color" />
-                </div>
-            </div>
-
             <div class="field">
                 <label class="label" v-text="lang('enterDefaultGroupIconViewTypeTitle')"></label>
                 <div class="field is-grouped">
                     <div v-for="iconViewType in groupIconViewTypes" :key="iconViewType" class="control">
-                        <button @click="options.defaultGroupIconViewType = iconViewType" :class="['button', {'is-focused': options.defaultGroupIconViewType === iconViewType}]">
+                        <button
+                            @click="options.defaultGroupIconViewType = iconViewType"
+                            :class="['button', {'is-focused': options.defaultGroupIconViewType === iconViewType}]"
+                            >
                             <figure class="image is-16x16 is-inline-block">
                                 <img :src="getIconTypeUrl(iconViewType)" />
                             </figure>
@@ -500,9 +484,9 @@
                 </div>
             </div>
 
-            <hr>
+            <hr v-if="errorLogs.length">
 
-            <div class="field is-hidden_">
+            <div v-if="errorLogs.length" class="field">
                 <div class="control">
                     <button @click="saveErrorLogsIntoFile" class="button is-warning is-small" v-text="lang('saveErrorLogsIntoFile')"></button>
                 </div>
@@ -566,14 +550,14 @@
                         <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(hotkey, $event, true)" :value="hotkey.key" autocomplete="off" class="input is-small" :placeholder="lang('hotkeyPlaceholder')" />
                     </div>
                     <div class="select is-small">
-                        <select v-model="hotkey.action.id">
-                            <option v-if="!hotkey.action.id" selected disabled value="" v-text="lang('selectAction')"></option>
+                        <select v-model="hotkey.action">
+                            <option v-if="!hotkey.action" selected disabled value="" v-text="lang('selectAction')"></option>
                             <option v-for="action in hotkeyActions" :key="action" :value="action" v-text="getHotkeyActionTitle(action)"></option>
                         </select>
                     </div>
-                    <div v-if="'load-custom-group' === hotkey.action.id" class="select is-small custom-group">
-                        <select v-model="hotkey.action.groupId">
-                            <option v-if="!hotkey.action.groupId" selected disabled value="0" v-text="lang('selectGroup')"></option>
+                    <div v-if="'load-custom-group' === hotkey.action" class="select is-small custom-group">
+                        <select v-model="hotkey.groupId">
+                            <option v-if="!hotkey.groupId" selected disabled value="undefined" v-text="lang('selectGroup')"></option>
                             <option v-for="group in groups" :key="group.id" :value="group.id" v-text="group.title"></option>
                         </select>
                     </div>

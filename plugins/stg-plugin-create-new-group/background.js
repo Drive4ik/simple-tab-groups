@@ -12,15 +12,11 @@
 
     browser.browserAction.onClicked.addListener(function() {
         browser.runtime.sendMessage(STG_ID, {
-            runAction: {
-                id: 'add-new-group',
-            },
+            action: 'add-new-group',
         }, function(responce) {
             if (responce && responce.ok) {
                 browser.runtime.sendMessage(STG_ID, {
-                    runAction: {
-                        id: 'load-last-group',
-                    },
+                    action: 'load-last-group',
                 });
             } else {
                 browser.notifications.create({

@@ -32,10 +32,6 @@
                 required: true,
                 type: Object,
             },
-            browserActionIconColor: {
-                required: true,
-                type: String,
-            },
             containers: {
                 required: true,
                 type: Array,
@@ -65,7 +61,7 @@
                             this.iconColor;
                             this.iconViewType;
 
-                            return utils.getGroupIconUrl(this, vm.browserActionIconColor);
+                            return utils.getGroupIconUrl(this);
                         },
                     },
                 }),
@@ -100,7 +96,7 @@
                 return utils.getGroupIconUrl({
                     iconViewType: iconType,
                     iconColor: this.groupClone.iconColor || 'rgb(66, 134, 244)',
-                }, this.browserActionIconColor);
+                });
             },
 
             async selectUserGroupIcon() {

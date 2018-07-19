@@ -274,7 +274,7 @@
                             this.iconColor;
                             this.iconViewType;
 
-                            return utils.getGroupIconUrl(this, vm.options.browserActionIconColor);
+                            return utils.getGroupIconUrl(this);
                         },
                     },
                 });
@@ -309,7 +309,7 @@
             },
 
             loadGroups() {
-                this.groups = utils.clone(BG.getGroups()).map(this.$_groupMap, this);
+                this.groups = BG.getGroups().map(this.$_groupMap, this);
 
                 if (this.hoverItem && this.isGroup(this.hoverItem)) {
                     this.hoverItem = this.groups.find(group => group.id === this.hoverItem.id) || null;
@@ -1086,7 +1086,6 @@
                 :group="groupToEdit"
                 :containers="containers"
                 :can-load-file="false"
-                :browser-action-icon-color="options.browserActionIconColor"
                 @saved="groupToEdit = null"
                 @open-manage-groups="openManageGroups"/>
         </edit-group-popup>

@@ -329,10 +329,6 @@
             }
         }
     },
-    "enterBrowserActionIconColor": {
-        "message": "Δώστε χρώμα εικονιδίου για browser action",
-        "description": "Enter browser action icon color"
-    },
     "isStickyGroupTitle": {
         "message": "Αμετάβλητο group",
         "description": "Sticky group"
