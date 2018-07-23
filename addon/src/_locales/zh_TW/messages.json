@@ -183,6 +183,10 @@
         "message": "排序分頁群組 [Z-A]",
         "description": "Sort groups [Z-A]"
     },
+    "generalTitle": {
+        "message": "一般",
+        "description": "General"
+    },
     "settingsTitle": {
         "message": "設定",
         "description": "Settings"
@@ -369,6 +373,26 @@
         "message": "圖示樣式",
         "description": "Icon style"
     },
+    "discardTabsAfterHide": {
+        "message": "隱藏後廢棄分頁 (這將能夠節省記憶體)",
+        "description": "Discard tabs after hide (this will save the RAM)"
+    },
+    "createThumbnailsForTabs": {
+        "message": "為分頁建立縮圖 (使用於「管理分頁群組」頁面)",
+        "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
+    },
+    "thisTabCanNotBeHidden": {
+        "message": "此分頁無法隱藏，因為它正在使用麥克風或攝影機。",
+        "description": "This tab can not be hidden because it uses a microphone or camera"
+    },
+    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
+        "message": "無法變更分頁群組，因為其中一個開啟的分頁正在分享麥克風或是攝影機。",
+        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
+    },
+    "foundHiddenUnSyncTabsDescription": {
+        "message": "發現隱藏的未同步分頁。點選分頁將其顯示於目前群組/視窗或：",
+        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
+    },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
         "message": "將所有分頁移動至目前群組/視窗",
         "description": "Move all of these tabs into current group/window"
@@ -381,6 +405,10 @@
         "message": "關閉所有的分頁",
         "description": "Close all of these tabs"
     },
+    "thisTabWillCreateAsNew": {
+        "message": "此分頁將以新分頁的形式建立",
+        "description": "This tab will create as new"
+    },
     "updateTabThumbnail": {
         "message": "更新此分頁之縮圖",
         "description": "Update thumbnail for this tab"
@@ -388,6 +416,10 @@
     "cantMakeThumbnailTabWasDiscarded": {
         "message": "在未載入分頁的情況下，無法建立分頁縮圖",
         "description": "You can not make a thumbnail of a tab if the tab was not loaded"
+    },
+    "nowFoundWindowsAddonStoppedWorking": {
+        "message": "錯誤：找不到任何正常的非隱私/匿名/彈出式視窗。\n套件停止運作，請重新啟動瀏覽器。",
+        "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
     },
     "waitingToLoadAllTabs": {
         "message": "等待所有分頁載入。\n請稍候...",
