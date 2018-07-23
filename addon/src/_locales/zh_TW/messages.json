@@ -12,7 +12,7 @@
         "description": "Manage groups"
     },
     "setTabIconAsGroupIcon": {
-        "message": "將分頁圖標設為分頁群組圖標",
+        "message": "將分頁圖示設為分頁群組圖示",
         "description": "Set tab icon as group icon"
     },
     "moveTabToGroupDisabledTitle": {
@@ -112,7 +112,7 @@
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
-        "message": "將分頁群組匯出為備份檔，以供需要時恢復。",
+        "message": "將分頁群組匯出為備份檔，以供需要時還原。",
         "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
     },
     "exportAddonSettingsButton": {
@@ -124,23 +124,23 @@
         "description": "Include tab thumbnails into backup (make backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "恢復 Simple Tab Groups",
+        "message": "還原 Simple Tab Groups",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
-        "message": "載入備份檔並恢復分頁群組",
+        "message": "載入備份檔並還原分頁群組",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
     "importAddonSettingsWarning": {
-        "message": "恢復套件設定將會刪除目前所有設定及分頁群組。",
+        "message": "還原套件設定將會刪除目前所有設定及分頁群組。",
         "description": "Restore add-on settings will ERASE all existing settings and groups!"
     },
     "importAddonSettingsButton": {
-        "message": "恢復備份",
+        "message": "還原備份",
         "description": "Restore backup"
     },
     "importSettingsOldTabGroupsAddonTitle": {
-        "message": "恢復 Quicksaver 的 Tab Groups",
+        "message": "還原 Quicksaver 的 Tab Groups",
         "description": "Restore Quicksaver's \"Tab Groups\""
     },
     "importSettingsOldTabGroupsAddonDescription": {
@@ -149,7 +149,7 @@
     },
     "importSettingsOldTabGroupsAddonButton": {
         "message": "匯入 Quicksaver 的 Tab Groups 附加元件的設定",
-        "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
+        "description": "Choose file"
     },
     "openGroupAfterChange": {
         "message": "切換分頁群組後開啟該分頁群組",
@@ -244,19 +244,19 @@
         "description": "Title"
     },
     "iconColor": {
-        "message": "圖標顏色",
+        "message": "圖示色彩",
         "description": "Icon color"
     },
     "selectUserGroupIcon": {
-        "message": "載入圖標",
+        "message": "載入圖示",
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "這裡無法載入自訂圖標，而「管理分頁群組」可以。\n要開啟「管理分頁群組」嗎？",
+        "message": "這裡無法載入自訂圖示，而「管理分頁群組」可以。\n要開啟「管理分頁群組」嗎？",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
-        "message": "設定隨機顏色",
+        "message": "設定隨機色彩",
         "description": "Set random color"
     },
     "catchTabContainers": {
@@ -276,19 +276,19 @@
         "description": "Regular exceptions helper"
     },
     "hotkeysTitle": {
-        "message": "快捷鍵",
+        "message": "快速鍵",
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "可以在這裡加入快捷鍵。<br>限制：<br>1. 這些快捷鍵只適用於網頁 (http:, https:)，不適用於瀏覽器頁面 (about:)，因 WebExtension 的 API 不允許。<br>2. 有些快捷鍵在不同的鍵盤佈局可能無法運作。例如英文佈局下設定的快捷鍵 <code>Ctrl + ~</code> 在俄羅斯文佈局下無法運作，因該按鍵在後者有不同的按鍵碼；在俄羅斯文佈局下設定快捷鍵 <code>Ctrl +Ё</code> 即可修復此問題。",
+        "message": "可以在這裡新增快速鍵。<br>限制：<br>1. 這些快速鍵只適用於網頁 (http:, https:)，不適用於瀏覽器頁面 (about:)，因 WebExtension 的 API 不允許。<br>2. 有些快速鍵在不同的鍵盤配置可能無法運作。例如英文配置下設定的快速鍵 <code>Ctrl + ~</code> 在俄羅斯文配置下無法運作，因該按鍵在後者有不同的按鍵碼；在俄羅斯文配置下設定快速鍵 <code>Ctrl +Ё</code> 即可修復此問題。",
         "description": "Hotkeys description"
     },
     "addHotKeyButton": {
-        "message": "增加快捷鍵",
+        "message": "新增快速鍵",
         "description": "Add hotkey"
     },
     "deleteHotKeyButton": {
-        "message": "刪除快捷鍵",
+        "message": "刪除快速鍵",
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
@@ -324,7 +324,7 @@
         "description": "Load custom group"
     },
     "hotkeyActionTitleAddNewGroup": {
-        "message": "增加分頁群組",
+        "message": "新增分頁群組",
         "description": "Add new group"
     },
     "hotkeyActionTitleDeleteCurrentGroup": {
@@ -336,11 +336,11 @@
         "description": "Open manage groups"
     },
     "whatsWrongMessage": {
-        "message": "出錯囉...\n請寄信聯絡開發者，並附上最近的錯誤日誌 (選項頁面最下面的按鈕)",
+        "message": "出錯囉...\n請寄信聯絡開發者，並附上最近的錯誤記錄 (選項頁面最下面的按鈕)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
     },
     "saveErrorLogsIntoFile": {
-        "message": "將最近的錯誤日誌儲存為 JSON 檔案",
+        "message": "將最近的錯誤記錄儲存為 JSON 檔案",
         "description": "Save last error logs into JSON file"
     },
     "undoRemoveGroupItemTitle": {
@@ -362,12 +362,52 @@
         "description": "Tabs in this group will never be automatically moved to another group"
     },
     "useTabsFavIconsFromGoogleS2Converter": {
-        "message": "使用 Google S2 Converter 生成的分頁圖標",
+        "message": "使用 Google S2 Converter 生成的分頁圖示",
         "description": "Use tabs fav-icons from Google S2 Converter"
     },
     "iconStyle": {
-        "message": "圖標樣式",
+        "message": "圖示樣式",
         "description": "Icon style"
+    },
+    "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
+        "message": "將所有分頁移動至目前群組/視窗",
+        "description": "Move all of these tabs into current group/window"
+    },
+    "actionHiddenUnSyncTabsCreateGroup": {
+        "message": "將所有分頁建立為分頁群組",
+        "description": "Create new group with all of these tabs"
+    },
+    "actionHiddenUnSyncTabsCloseAll": {
+        "message": "關閉所有的分頁",
+        "description": "Close all of these tabs"
+    },
+    "updateTabThumbnail": {
+        "message": "更新此分頁之縮圖",
+        "description": "Update thumbnail for this tab"
+    },
+    "cantMakeThumbnailTabWasDiscarded": {
+        "message": "在未載入分頁的情況下，無法建立分頁縮圖",
+        "description": "You can not make a thumbnail of a tab if the tab was not loaded"
+    },
+    "waitingToLoadAllTabs": {
+        "message": "等待所有分頁載入。\n請稍候...",
+        "description": "Waiting for all tabs to load.\nPlease wait..."
+    },
+    "reloadAddon": {
+        "message": "重新載入套件",
+        "description": "Reload addon"
+    },
+    "ffFailedAndLostDataMessage": {
+        "message": "Firefox 發生了錯誤，將遺失所有分頁群組。\n若擁有備份檔，請從備份檔還原分頁群組資料。",
+        "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
+    },
+    "enterDefaultGroupIconViewTypeTitle": {
+        "message": "新分頁群組的圖示樣式",
+        "description": "Icon style for a new group"
+    },
+    "openPopupHotkeyTitle": {
+        "message": "開啟分頁群組彈出式視窗",
+        "description": "Open the groups pop-up"
     },
     "openGroupInNewWindow": {
         "message": "在新視窗開啟分頁群組",
