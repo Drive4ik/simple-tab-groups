@@ -454,8 +454,8 @@
         "description": "Mute tabs when group close and restore when open"
     },
     "showTabAfterMovingItIntoThisGroup": {
-        "message": "Show the tab after moving it into this group",
-        "description": "Show the tab after moving it into this group"
+        "message": "Show the tab after auto-moving it into this group",
+        "description": "Show the tab after auto-moving it into this group"
     },
     "tabMoving": {
         "message": "Tab moving",

@@ -121,7 +121,7 @@
     },
     "includeTabThumbnailsIntoBackup": {
         "message": "Включить эскизы вкладок в резервную копию (размер файла резервной копии будет больше)",
-        "description": "Include tab thumbnails into backup (make backup file size bigger)"
+        "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
         "message": "Восстановление Simple Tab Groups",
@@ -149,7 +149,7 @@
     },
     "importSettingsOldTabGroupsAddonButton": {
         "message": "Загрузить резервную копию \"Tab Groups\"",
-        "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
+        "description": "Choose file"
     },
     "openGroupAfterChange": {
         "message": "Открыть группу после перехода на неё",
@@ -395,15 +395,15 @@
     },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
         "message": "Переместить все эти вкладки в текущую группу/окно",
-        "description": "Move all of this tabs into current group/window"
+        "description": "Move all of these tabs into current group/window"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "Создать новую группу со всеми этими вкладками",
-        "description": "Create new group with all of this tabs"
+        "description": "Create new group with all of these tabs"
     },
     "actionHiddenUnSyncTabsCloseAll": {
         "message": "Закрыть все эти вкладки",
-        "description": "Close all of this tabs"
+        "description": "Close all of these tabs"
     },
     "thisTabWillCreateAsNew": {
         "message": "Эта вкладка будет создана как новая",
@@ -444,5 +444,49 @@
     "openGroupInNewWindow": {
         "message": "Открыть группу в новом окне",
         "description": "Open group in new window"
+    },
+    "muteTabsWhenGroupCloseAndRestoreWhenOpen": {
+        "message": "Отключать звук во вкладках при закрытии группы и восстанавливать при открытии",
+        "description": "Mute tabs when group close and restore when open"
+    },
+    "showTabAfterMovingItIntoThisGroup": {
+        "message": "Переключаться на вкладку после авто-перемещения её в эту группу",
+        "description": "Show the tab after auto-moving it into this group"
+    },
+    "tabMoving": {
+        "message": "Перемещение вкладок",
+        "description": "Tab moving"
+    },
+    "includeTabFavIconsIntoBackup": {
+        "message": "Включить значки вкладок в резервную копию (размер файла резервной копии будет больше)",
+        "description": "Include tab fav-icons in backup (makes backup file size bigger)"
+    },
+    "tabsThumbnailsSize": {
+        "message": "Размер миниатюр вкладок: $size$",
+        "description": "Tabs thumbnails size: $size$",
+        "placeholders": {
+            "size": {
+                "content": "$1",
+                "example": "2 MB"
+            }
+        }
+    },
+    "clearTabsThumbnails": {
+        "message": "Очистить миниатюры",
+        "description": "Clear tabs thumbnails"
+    },
+    "groupRemovedByExtension": {
+        "message": "Группа \"$group$\" удалена расширением: $extension$",
+        "description": "Group \"$group$\" removed by extension: $extension$",
+        "placeholders": {
+            "group": {
+                "content": "$1",
+                "example": "group title"
+            },
+            "extension": {
+                "content": "$2",
+                "example": "external extension title"
+            }
+        }
     }
 }
