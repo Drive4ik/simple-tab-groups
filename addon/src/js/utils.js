@@ -169,6 +169,10 @@ function isAllowExternalRequestAndSender(request, sender, extensionRules = {}) {
     return extension.getActions.includes(request.action);
 }
 
+function getSupportedExternalExtensionName(extId) {
+    return constants.EXTENSIONS_WHITE_LIST[extId] ? constants.EXTENSIONS_WHITE_LIST[extId].title : 'Unknown';
+}
+
 function isUrlEmpty(url) {
     return ['about:blank', 'about:newtab', 'about:home'].includes(url);
 }
@@ -436,6 +440,8 @@ export {
     loadContainers,
 
     notify,
+
+    getSupportedExternalExtensionName,
 
     isAllowSender,
     isAllowExternalRequestAndSender,

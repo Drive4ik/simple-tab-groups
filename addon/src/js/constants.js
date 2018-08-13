@@ -40,7 +40,9 @@ const EXTENSIONS_WHITE_LIST = {
             'open-manage-groups',
         ],
     },
-    '{506e023c-7f2b-40a3-8066-bc5deb40aebe}': { // Gesturefy: https://addons.mozilla.org/firefox/addon/gesturefy/
+    '{506e023c-7f2b-40a3-8066-bc5deb40aebe}': {
+        title: 'Gesturefy',
+        url: 'https://addons.mozilla.org/firefox/addon/gesturefy/',
         postActions: [
             'i-am-back',
             'group-added',

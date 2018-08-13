@@ -1575,7 +1575,7 @@ browser.runtime.onMessageExternal.addListener(function(request, sender, sendResp
     }
 
     if (request.action) {
-        sendResponse(runAction(request));
+        sendResponse(runAction(request, sender.id));
     } else {
         sendResponse({
             ok: false,
@@ -1592,7 +1592,7 @@ function _mapGroupForAnotherExtension(group) {
     };
 }
 
-async function runAction(data) {
+async function runAction(data, externalExtId) {
     let result = {
             ok: false,
         },
@@ -1696,6 +1696,11 @@ async function runAction(data) {
 
                 if (currentGroup) {
                     await removeGroup(currentGroup.id);
+
+                    if (externalExtId) {
+                        utils.notify(browser.i18n.getMessage('groupRemovedByExtension', [currentGroup.title, utils.getSupportedExternalExtensionName(externalExtId)]));
+                    }
+
                     result.ok = true;
                 }
                 break;

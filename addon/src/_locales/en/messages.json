@@ -478,5 +478,19 @@
     "clearTabsThumbnails": {
         "message": "Clear tabs thumbnails",
         "description": "Clear tabs thumbnails"
+    },
+    "groupRemovedByExtension": {
+        "message": "Group \"$group$\" removed by extension: $extension$",
+        "description": "Group \"$group$\" removed by extension: $extension$",
+        "placeholders": {
+            "group": {
+                "content": "$1",
+                "example": "group title"
+            },
+            "extension": {
+                "content": "$2",
+                "example": "external extension title"
+            }
+        }
     }
 }
