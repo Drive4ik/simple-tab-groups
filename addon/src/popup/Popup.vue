@@ -171,15 +171,6 @@
                     console.info('BG event:', request.action, utils.clone(request));
 
                     switch (request.action) {
-                        case 'tab-thumbnail-updated':
-                            let group = this.groups.find(group => group.id === request.groupId);
-                            group.tabs.some(function(tab, tabIndex) {
-                                if (tabIndex === request.tabIndex) {
-                                    tab.thumbnail = request.thumbnail;
-                                    return true;
-                                }
-                            });
-                            break;
                         case 'group-updated':
                             let groupIndex = this.groups.findIndex(group => group.id === request.group.id);
 
@@ -714,6 +705,7 @@
                     }
                 });
             },
+
         },
     }
 </script>

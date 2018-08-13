@@ -11,7 +11,7 @@
         "build-zip": "node scripts/build-zip.js && npm run build:prod && cross-env IS_PRODUCTION=true node scripts/build-zip.js"
     },
     "dependencies": {
-        "vue": "^2.5.16",
+        "vue": "^2.5.17",
         "vue-swatches": "^1.0.1"
     },
     "devDependencies": {
@@ -23,12 +23,12 @@
         "file-loader": "^1.1.11",
         "fs-extra": "^7.0.0",
         "html-webpack-plugin": "^3.2.0",
-        "node-sass": "^4.9.2",
-        "sass-loader": "^7.0.3",
+        "node-sass": "^4.9.3",
+        "sass-loader": "^7.1.0",
         "style-loader": "^0.21.0",
-        "vue-loader": "^15.2.6",
-        "vue-template-compiler": "^2.5.13",
-        "webpack": "^4.16.1",
+        "vue-loader": "^15.3.0",
+        "vue-template-compiler": "^2.5.17",
+        "webpack": "^4.16.5",
         "webpack-cli": "^3.1.0",
         "webpack-shell-plugin": "^0.5.0",
         "zip-folder": "^1.0.0"

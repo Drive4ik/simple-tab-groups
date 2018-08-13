@@ -21,7 +21,9 @@
         'iconViewType',
         'catchTabRules',
         'catchTabContainers',
+        'muteTabsWhenGroupCloseAndRestoreWhenOpen',
         'isSticky',
+        'showTabAfterMovingItIntoThisGroup',
         'windowId'
     ];
 
@@ -216,9 +218,19 @@
             </div>
         </div>
 
+        <div class="field">
+            <div class="control">
+                <label class="checkbox">
+                    <input type="checkbox" v-model="groupClone.muteTabsWhenGroupCloseAndRestoreWhenOpen" />
+                    <span v-text="lang('muteTabsWhenGroupCloseAndRestoreWhenOpen')"></span>
+                </label>
+            </div>
+        </div>
+
         <hr>
 
         <div class="field">
+            <label class="label" v-text="lang('tabMoving')"></label>
             <div class="control">
                 <label class="checkbox">
                     <input type="checkbox" v-model="groupClone.isSticky" />
@@ -227,6 +239,12 @@
                 <span class="cursor-help" :title="lang('isStickyGroupHelp')">
                     <img class="size-18 align-bottom" src="/icons/help.svg" />
                 </span>
+            </div>
+            <div class="control">
+                <label class="checkbox">
+                    <input type="checkbox" v-model="groupClone.showTabAfterMovingItIntoThisGroup" />
+                    <span v-text="lang('showTabAfterMovingItIntoThisGroup')"></span>
+                </label>
             </div>
         </div>
 

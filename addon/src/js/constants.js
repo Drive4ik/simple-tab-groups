@@ -43,10 +43,10 @@ const EXTENSIONS_WHITE_LIST = {
 };
 
 const DEFAULT_OPTIONS = {
+    version: '1.0',
     groups: [],
     lastCreatedGroupPosition: 0,
-    defaultGroupIconViewType: groupIconViewTypes[0],
-    version: '1.0',
+    thumbnails: {},
 
     // options
     discardTabsAfterHide: false,
@@ -57,6 +57,8 @@ const DEFAULT_OPTIONS = {
     showConfirmDialogBeforeGroupDelete: true,
     useTabsFavIconsFromGoogleS2Converter: false,
     createThumbnailsForTabs: true,
+
+    defaultGroupIconViewType: groupIconViewTypes[0],
 
     hotkeys: [
         {

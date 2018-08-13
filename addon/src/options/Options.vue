@@ -3,15 +3,15 @@
 
     import * as utils from '../js/utils';
     import storage from '../js/storage';
-    import {onlyBoolOptionsKeys, allOptionsKeys, groupIconViewTypes} from '../js/constants';
-    import {importFromFile, exportToFile} from '../js/fileImportExport';
+    import {onlyBoolOptionsKeys, allOptionsKeys, groupIconViewTypes, DEFAULT_COOKIE_STORE_ID} from '../js/constants';
+    import {importFromFile, exportToFile, generateBackupFileName} from '../js/fileImportExport';
 
     const BG = (function(bgWin) {
         return bgWin && bgWin.background && bgWin.background.inited ? bgWin.background : false;
     })(browser.extension.getBackgroundPage());
 
     if (!BG) {
-        setTimeout(() => browser.tabs.getCurrent().then(tab => browser.tabs.reload(tab.id)), 1500);
+        setTimeout(() => window.location.reload(), 3000);
         throw Error('wait loading addon');
     }
 
@@ -51,6 +51,9 @@
                 groupIconViewTypes: groupIconViewTypes,
 
                 includeTabThumbnailsIntoBackup: false,
+                includeTabFavIconsIntoBackup: true,
+
+                thumbnailsSize: '',
 
                 options: {
                     empty: true,
@@ -66,6 +69,8 @@
             this.isMac = os === 'mac';
 
             let data = await storage.get(null);
+
+            this.calculateThumbnailsSize(data.thumbnails);
 
             this.options = utils.extractKeys(data, allOptionsKeys);
             this.groups = Array.isArray(data.groups) ? data.groups : [];
@@ -121,6 +126,15 @@
                     action: 'options-updated',
                     optionsUpdated: Object.keys(options),
                 });
+            },
+
+            calculateThumbnailsSize(thumbnails = {}) {
+                this.thumbnailsSize = utils.formatBytes(Object.keys(thumbnails).length ? JSON.stringify(thumbnails).length : 0);
+            },
+
+            async clearTabsThumbnails() {
+                await BG.clearTabsThumbnails();
+                this.calculateThumbnailsSize();
             },
 
             resetPopupCommand() {
@@ -204,42 +218,6 @@
 
                     data = await BG.runMigrateForData(data);
 
-                    let syncedWindowIds = BG.getGroups().filter(group => group.windowId).map(group => group.windowId),
-                        windows = await browser.windows.getAll({
-                            windowTypes: ['normal'],
-                        });
-
-                    windows = windows // find allowed windows
-                        .filter(function(win) {
-                            if (!utils.isWindowAllow(win) || !syncedWindowIds.includes(win.id)) {
-                                return false;
-                            }
-
-                            return true;
-                        });
-
-                    windows = await Promise.all(windows.map(async function(win) { // find all allowed tabs in allowed windows
-                        win.tabs = await browser.tabs.query({
-                            pinned: false,
-                            hidden: false,
-                            windowId: win.id,
-                        });
-
-                        return win;
-                    }));
-
-                    await Promise.all(windows.map(async function(win) { // hide all tabs in allowed windows
-                        if (win.tabs.length) {
-                            await browser.tabs.create({
-                                active: true,
-                                windowId: win.id,
-                            });
-                            await browser.tabs.hide(win.tabs.map(utils.keyId));
-                        }
-                    }));
-
-                    data.groups.forEach(gr => gr.windowId = null); // reset window ids
-
                     await storage.set(data);
 
                     browser.runtime.reload(); // reload addon
@@ -254,15 +232,26 @@
                 let data = await storage.get(null);
 
                 if (!this.includeTabThumbnailsIntoBackup) {
-                    data.groups.forEach(group => group.tabs.forEach(tab => delete tab.thumbnail));
+                    delete data.thumbnails;
                 }
 
                 data.groups.forEach(function(group) {
-                    group.windowId = null;
-                    group.tabs.forEach(tab => tab.id = null);
-                });
+                    delete group.windowId;
 
-                exportToFile(data);
+                    group.tabs.forEach(function(tab) {
+                        delete tab.id;
+
+                        if (tab.cookieStoreId === DEFAULT_COOKIE_STORE_ID) {
+                            delete tab.cookieStoreId;
+                        }
+
+                        if (!this.includeTabFavIconsIntoBackup) {
+                            delete tab.favIconUrl;
+                        }
+                    }, this);
+                }, this);
+
+                exportToFile(data, generateBackupFileName());
             },
 
             async importSettingsOldTabGroupsAddonButton() {
@@ -325,7 +314,7 @@
 
                         if (newGroups[extData.groupID]) {
                             newGroups[extData.groupID].tabs.push(BG.mapTab({
-                                title: (tabEntry.title || tabEntry.url),
+                                title: tabEntry.title,
                                 url: tabEntry.url,
                                 favIconUrl: oldTab.image || '',
                                 active: Boolean(extData.active),
@@ -335,7 +324,7 @@
                 });
 
                 let groups = Object.values(newGroups)
-                    .sort((a, b) => String(a.slot).localeCompare(String(b.slot), [], { numeric: true }))
+                    .sort((a, b) => utils.compareStrings(a.slot, b.slot))
                     .map(function(group) {
                         delete group.slot;
                         return group;
@@ -352,11 +341,15 @@
                 }
             },
 
-            saveErrorLogsIntoFile() {
-                let logs = BG.getLogs();
+            async saveErrorLogsIntoFile() {
+                let options = await storage.get('version'),
+                    data = {
+                        version: options.version,
+                        logs: BG.getLogs(),
+                    };
 
-                if (logs.length) {
-                    exportToFile(logs, 'STG-error-logs.json');
+                if (data.logs.length) {
+                    exportToFile(data, 'STG-error-logs.json');
                 } else {
                     utils.notify('No logs found');
                 }
@@ -461,9 +454,14 @@
             </div>
             <div class="field">
                 <label class="checkbox">
-                    <input v-model="options.createThumbnailsForTabs" @change="!options.createThumbnailsForTabs && (includeTabThumbnailsIntoBackup = false) " type="checkbox" />
+                    <input type="checkbox" v-model="options.createThumbnailsForTabs" @change="!options.createThumbnailsForTabs && (includeTabThumbnailsIntoBackup = false) " />
                     <span v-text="lang('createThumbnailsForTabs')"></span>
                 </label>
+
+                <div class="control h-margin-top-10">
+                    <span v-text="lang('tabsThumbnailsSize', thumbnailsSize)"></span>
+                    <button class="button is-warning is-small" @click="clearTabsThumbnails" v-text="lang('clearTabsThumbnails')"></button>
+                </div>
             </div>
 
             <hr>
@@ -588,6 +586,12 @@
                     <label class="checkbox">
                         <input v-model="includeTabThumbnailsIntoBackup" :disabled="!options.createThumbnailsForTabs" type="checkbox" />
                         <span v-text="lang('includeTabThumbnailsIntoBackup')"></span>
+                    </label>
+                </div>
+                <div class="field">
+                    <label class="checkbox">
+                        <input v-model="includeTabFavIconsIntoBackup" type="checkbox" />
+                        <span v-text="lang('includeTabFavIconsIntoBackup')"></span>
                     </label>
                 </div>
                 <div class="control">

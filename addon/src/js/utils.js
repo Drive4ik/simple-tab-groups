@@ -48,6 +48,18 @@ function format(str, ...args) {
     });
 }
 
+function formatBytes(bytes, decimals = 2) {
+    if (0 === bytes) {
+        return '0 Bytes';
+    }
+
+    let k = 1024,
+        sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
+        i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + sizes[i];
+}
+
 function objectReplaceKeyValue(obj) {
     let result = {};
 
@@ -411,6 +423,7 @@ export {
     type,
     clone,
     format,
+    formatBytes,
     extractKeys,
 
     safeHtml,

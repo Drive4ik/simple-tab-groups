@@ -125,7 +125,7 @@
     },
     "includeTabThumbnailsIntoBackup": {
         "message": "Include tab thumbnails in backup (makes backup file size bigger)",
-        "description": "Include tab thumbnails into backup (make backup file size bigger)"
+        "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
         "message": "Restore Simple Tab Groups from backup",
@@ -448,5 +448,35 @@
     "openGroupInNewWindow": {
         "message": "Open group in new window",
         "description": "Open group in new window"
+    },
+    "muteTabsWhenGroupCloseAndRestoreWhenOpen": {
+        "message": "Mute tabs when group close and restore when open",
+        "description": "Mute tabs when group close and restore when open"
+    },
+    "showTabAfterMovingItIntoThisGroup": {
+        "message": "Show the tab after moving it into this group",
+        "description": "Show the tab after moving it into this group"
+    },
+    "tabMoving": {
+        "message": "Tab moving",
+        "description": "Tab moving"
+    },
+    "includeTabFavIconsIntoBackup": {
+        "message": "Include tab fav-icons in backup (makes backup file size bigger)",
+        "description": "Include tab fav-icons in backup (makes backup file size bigger)"
+    },
+    "tabsThumbnailsSize": {
+        "message": "Tabs thumbnails size: $size$",
+        "description": "Tabs thumbnails size: $size$",
+        "placeholders": {
+            "size": {
+                "content": "$1",
+                "example": "2 MB"
+            }
+        }
+    },
+    "clearTabsThumbnails": {
+        "message": "Clear tabs thumbnails",
+        "description": "Clear tabs thumbnails"
     }
 }

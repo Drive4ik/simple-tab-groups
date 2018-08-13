@@ -47,17 +47,21 @@ function importFromFile() {
     });
 }
 
-function exportToFile(data, fileName = generateFileName()) { // data : Object
-    let text = JSON.stringify(data, null, '    '),
+function exportToFile(data, fileName, type = 'application/json') { // data : Object/Array/Text
+    let text = data,
         a = document.createElement('a');
 
-    a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(text);
+    if ('string' !== typeof data) {
+        text = JSON.stringify(data, null, '    ');
+    }
+
+    a.href = `data:${type};charset=utf-8,` + encodeURIComponent(text);
     a.setAttribute('download', fileName);
-    a.setAttribute('type', 'application/json');
+    a.setAttribute('type', type);
     a.dispatchEvent(new MouseEvent('click'));
 }
 
-function generateFileName() {
+function generateBackupFileName() {
     let today = new Date(),
         dd = ('0' + today.getDate()).substr(-2),
         mm = ('0' + (today.getMonth() + 1)).substr(-2),
@@ -70,4 +74,5 @@ function generateFileName() {
 export {
     importFromFile,
     exportToFile,
+    generateBackupFileName,
 };

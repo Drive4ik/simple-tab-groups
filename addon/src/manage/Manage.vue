@@ -19,7 +19,7 @@
     })(browser.extension.getBackgroundPage());
 
     if (!BG) {
-        utils.notify('background not inited');
+        setTimeout(() => window.location.reload(), 3000);
         throw Error('background not inited');
     }
 
@@ -70,6 +70,7 @@
 
                 containers: [],
                 options: {},
+                thumbnails: BG.getThumbnails(),
 
                 groups: [],
 
@@ -97,7 +98,7 @@
                 .$on('drag-move-group', function(from, to) {
                     BG.moveGroup(from.data.item.id, to.data.itemIndex);
                 })
-                .$on('drag-move-tab', function(from, to) {
+                .$on('drag-move-tab', async function(from, to) {
                     if (!this.multipleDropTabs.includes(from.data.item)) {
                         this.multipleDropTabs.push(from.data.item);
                     }
@@ -115,12 +116,11 @@
                     let promise = Promise.resolve(),
                         data = this.getDataForMultipleMove();
 
-                    data.forEach(function(dataItem) {
-                        promise = promise.then(() => BG.moveTabToGroup(dataItem.tabIndex, newTabIndex, dataItem.groupId, groupTo.id, false, false));
-                    });
+                    for (let {tabIndex, groupId} of data) {
+                        await BG.moveTabToGroup(tabIndex, newTabIndex, groupId, groupTo.id, false, false);
+                    }
 
-                    promise.then(BG.sendMessageGroupsUpdated);
-                    // BG.moveTabToGroup(from.data.itemIndex, newTabIndex, from.data.group.id, groupTo.id, false);
+                    BG.sendMessageGroupsUpdated();
                 })
                 .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
                 .$on('drag-over', (item, isOver) => item.isOver = isOver);
@@ -179,14 +179,11 @@
                     console.info('BG event:', request.action, utils.clone(request));
 
                     switch (request.action) {
-                        case 'tab-thumbnail-updated':
-                            let group = this.groups.find(group => group.id === request.groupId);
-                            group.tabs.some(function(tab, tabIndex) {
-                                if (tabIndex === request.tabIndex) {
-                                    tab.thumbnail = request.thumbnail;
-                                    return true;
-                                }
-                            });
+                        case 'thumbnail-updated':
+                            this.$set(this.thumbnails, request.url, request.thumbnail);
+                            break;
+                        case 'thumbnails-updated':
+                            this.thumbnails = BG.getThumbnails();
                             break;
                         case 'group-updated':
                             let groupIndex = this.groups.findIndex(group => group.id === request.group.id);
@@ -222,11 +219,11 @@
                     let groupId = null,
                         tabIndex = null;
 
-                    this.groups.some(function(gr) {
-                        let index = gr.tabs.indexOf(tab);
+                    this.groups.some(function(group) {
+                        let index = group.tabs.indexOf(tab);
 
                         if (-1 !== index) {
-                            groupId = gr.id;
+                            groupId = group.id;
                             tabIndex = index;
                             return true;
                         }
@@ -326,8 +323,8 @@
 
                 BG.removeTab(group.id, tabIndex);
             },
-            updateTabThumbnail(tabId) {
-                BG.updateTabThumbnail(tabId, true);
+            updateTabThumbnail(tab) {
+                BG.updateTabThumbnail(tab, true);
             },
             loadGroup(group, tabIndex) {
                 // fix bug with browser.windows.getLastFocused({windowTypes: ['normal']}), maybe find exists bug??
@@ -385,6 +382,10 @@
 
             getTabTitle(tab) {
                 return [tab.title, tab.url].filter(Boolean).join('\n');
+            },
+
+            prepareThumbnailUrl(url) {
+                return url.split('#', 1).shift();
             },
 
             sortGroups(vector) {
@@ -471,7 +472,7 @@
                     <div class="control is-expanded">
                         <input :readonly="!isLoaded" ref="search" v-model.trim="search" type="text" class="input is-small" :placeholder="lang('filterTabsPlaceholder')" autocomplete="on" />
                     </div>
-                    <div v-show="search" class="control" @click="search = ''">
+                    <div v-show="search" class="control" @click="search = ''; $refs.search.focus();">
                         <label class="button is-small">
                             <img class="size-12" src="/icons/close.svg" />
                         </label>
@@ -503,6 +504,7 @@
                         :class="['group', {
                             'drag-moving': group.isMoving,
                             'drag-over': group.isOver,
+                            'loaded': group.windowId,
                         }]"
                         @contextmenu="'INPUT' !== $event.target.nodeName && $refs.groupContextMenu.open($event, {group})"
 
@@ -547,7 +549,7 @@
                                     'is-active': tab.active,
                                     'is-current': tab.active && group.windowId,
                                     'is-in-multiple-drop': multipleDropTabs.includes(tab),
-                                    'has-thumbnail': tab.thumbnail,
+                                    'has-thumbnail': thumbnails[prepareThumbnailUrl(tab.url)],
                                     'drag-moving': tab.isMoving,
                                     'drag-over': tab.isOver,
                                 }]"
@@ -564,20 +566,20 @@
                                 @drop="dragHandle($event, 'tab', ['tab', 'group'], {itemIndex: tab.index, item: tab, group})"
                                 @dragend="dragHandle($event, 'tab', ['tab', 'group'], {itemIndex: tab.index, item: tab, group})"
                                 >
-                                <div v-if="tab.favIconUrlToDisplay" class="tab-icon" :style="tab.container && {borderColor: tab.container.colorCode}">
+                                <div v-if="tab.favIconUrlToDisplay" class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <img class="size-16" :src="tab.favIconUrlToDisplay" />
                                 </div>
-                                <div class="delete-tab-button" @click.stop="removeTab(group, tab.index)" :title="lang('deleteTab')" :style="tab.container && {borderColor: tab.container.colorCode}">
+                                <div class="delete-tab-button" @click.stop="removeTab(group, tab.index)" :title="lang('deleteTab')" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <img class="size-14" src="/icons/close.svg" />
                                 </div>
                                 <div v-if="tab.container" class="container" :title="tab.container.name" :style="{borderColor: tab.container.colorCode}">
                                     <img class="size-16" :src="tab.container.iconUrl" :style="{fill: tab.container.colorCode}">
                                 </div>
-                                <div v-if="!tab.id" class="refresh-icon" :title="lang('thisTabWillCreateAsNew')" :style="{borderColor: tab.container.colorCode}">
+                                <div v-if="!tab.id" class="refresh-icon" :title="lang('thisTabWillCreateAsNew')" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <img class="size-16" src="/icons/refresh.svg"/>
                                 </div>
-                                <div class="screenshot" :style="tab.container && {borderColor: tab.container.colorCode}">
-                                    <img :src="tab.thumbnail">
+                                <div class="screenshot" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                    <img v-if="thumbnails[prepareThumbnailUrl(tab.url)]" :src="thumbnails[prepareThumbnailUrl(tab.url)]">
                                 </div>
                                 <div
                                     @mousedown.middle.prevent
@@ -605,6 +607,14 @@
             </main>
         </transition>
 
+        <transition name="fade">
+            <div class="loading" v-show="!isLoaded">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                    <path d="M288 39.056v16.659c0 10.804 7.281 20.159 17.686 23.066C383.204 100.434 440 171.518 440 256c0 101.689-82.295 184-184 184-101.689 0-184-82.295-184-184 0-84.47 56.786-155.564 134.312-177.219C216.719 75.874 224 66.517 224 55.712V39.064c0-15.709-14.834-27.153-30.046-23.234C86.603 43.482 7.394 141.206 8.003 257.332c.72 137.052 111.477 246.956 248.531 246.667C393.255 503.711 504 392.788 504 256c0-115.633-79.14-212.779-186.211-240.236C302.678 11.889 288 23.456 288 39.056z"></path>
+                </svg>
+            </div>
+        </transition>
+
         <context-menu ref="groupContextMenu">
             <ul slot-scope="menu" class="is-unselectable">
                 <li @click="addTab(menu.data.group)">
@@ -624,7 +634,7 @@
                     <img src="/icons/image.svg" class="size-16" />
                     <span v-text="lang('setTabIconAsGroupIcon')"></span>
                 </li>
-                <li v-if="menu.data.tab.id" @click="updateTabThumbnail(menu.data.tab.id)">
+                <li v-if="options.createThumbnailsForTabs" @click="updateTabThumbnail(menu.data.tab)">
                     <img src="/icons/image.svg" class="size-16" />
                     <span v-text="lang('updateTabThumbnail')"></span>
                 </li>
@@ -684,6 +694,12 @@
     :root {
         --margin: 5px;
         --fill-color: #5d5d5d;
+        --outline-color: #2188ff;
+        --tab-hover-outline-color: #cfcfcf;
+        --is-in-multiple-drop-text-color: #ffffff;
+        --border-radius: 3px;
+        --group-shadow: 0 0 0 0.2em rgba(3, 102, 214, 0.3);
+        --tab-shadow: 0 0 2px 3px rgba(3, 102, 214, 0.5);
 
         --group-bg-color: #fcfcfc;
 
@@ -729,6 +745,16 @@
         width: 300px;
     }
 
+    .loading {
+        height: 50px;
+        width: 50px;
+        position: absolute;
+        top: calc(100vh / 2 - 25px);
+        left: calc(100vw / 2 - 25px);
+        fill: #6e6e6e;
+        animation: spin 2s linear infinite;
+    }
+
     #result {
         padding: 10px 10px 100px 10px;
 
@@ -745,6 +771,7 @@
                 border: 1px solid rgba(0, 0, 0, 0.15);
                 max-height: 600px;
                 background-color: var(--group-bg-color);
+                border-radius: var(--border-radius);
 
                 transition: transform 0.3s;
 
@@ -766,6 +793,7 @@
                             background-color: transparent;
                             border: 1px solid #e4e4e4;
                             padding: 1px 3px;
+                            border-radius: var(--border-radius);
                         }
 
                         > input:focus {
@@ -809,6 +837,7 @@
                     font-size: 12px;
                     cursor: pointer;
                     padding: var(--tab-inner-padding);
+                    border-radius: var(--border-radius);
 
                     > * > * {
                         pointer-events: none;
@@ -905,6 +934,7 @@
                         height: calc(100% - 1em - var(--tab-inner-padding) - 1px);
                         overflow: hidden;
                         border-width: var(--tab-border-width);
+                        border-radius: var(--border-radius);
 
                         > img {
                             width: 100%;
@@ -914,7 +944,6 @@
                                 display: none;
                             }
                         }
-
                     }
 
                     &.new > .screenshot {
@@ -928,29 +957,35 @@
                         }
                     }
 
-                    &:hover,
-                    &:hover > * {
-                        background-color: var(--active-tab-bg-color);
-                    }
+                    // &:hover,
+                    // &:hover > * {
+                    //     background-color: var(--active-tab-bg-color);
+                    // }
 
                     &.is-active {
-                        outline: 1px solid #0093e0;
+                        outline: 1px solid var(--outline-color);
+                        box-shadow: var(--tab-shadow);
                     }
 
                     &:not(.is-active):hover {
-                        outline: 1px solid #cfcfcf;
+                        outline: 1px solid var(--tab-hover-outline-color);
+                        outline-offset: 1px;
                     }
 
                     &.is-in-multiple-drop,
                     &.is-in-multiple-drop > * {
-                        --fill-color: #ffffff;
+                        --fill-color: var(--is-in-multiple-drop-text-color);
                         background-color: var(--multiple-drag-tab-bg-color);
                     }
 
                     &.is-in-multiple-drop > .tab-title {
-                        color: #ffffff;
+                        color: var(--is-in-multiple-drop-text-color);
                     }
+                }
 
+                &.loaded {
+                    border-color: var(--outline-color);
+                    box-shadow: var(--group-shadow);
                 }
 
                 &.new {
@@ -1000,6 +1035,12 @@
             animation-duration: 0.5s;
             animation-iteration-count: infinite;
             animation-direction: alternate;
+        }
+    }
+
+    @keyframes spin {
+        100% {
+            transform: rotate(360deg);
         }
     }
 

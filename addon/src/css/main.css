@@ -42,10 +42,6 @@ img[src$=".svg"] {
     -moz-context-properties: fill;
 }
 
-.field + hr {
-    margin-top: calc(var(--indent) * 2);
-}
-
 hr {
     height: 1px;
     margin: var(--indent, 10px) 0;
