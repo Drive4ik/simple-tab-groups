@@ -121,7 +121,7 @@
     },
     "includeTabThumbnailsIntoBackup": {
         "message": "Dołącz miniaturki kart do kopii zapasowej (zwiększy to rozmiar pliku kopii zapasowej)",
-        "description": "Include tab thumbnails into backup (make backup file size bigger)"
+        "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
         "message": "Przywróć zakładki",
@@ -395,15 +395,15 @@
     },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
         "message": "Przenieś wszystkie te karty do bieżącej grupy / okna",
-        "description": "Move all of this tabs into current group/window"
+        "description": "Move all of these tabs into current group/window"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "Utwórz nową grupę z tymi zakładkami",
-        "description": "Create new group with all of this tabs"
+        "description": "Create new group with all of these tabs"
     },
     "actionHiddenUnSyncTabsCloseAll": {
         "message": "Zamknij wszystkie te karty",
-        "description": "Close all of this tabs"
+        "description": "Close all of these tabs"
     },
     "thisTabWillCreateAsNew": {
         "message": "Ta zakładka zostanie utworzona jako nowa",
@@ -444,5 +444,49 @@
     "openGroupInNewWindow": {
         "message": "Otwórz grupę w nowym oknie",
         "description": "Open group in new window"
+    },
+    "muteTabsWhenGroupCloseAndRestoreWhenOpen": {
+        "message": "Wycisz karty podczas zamykania całej grupy oraz przywróć gdy będzie otwierana",
+        "description": "Mute tabs when group close and restore when open"
+    },
+    "showTabAfterMovingItIntoThisGroup": {
+        "message": "Pokaż kartę po auto-przeniesieniu jej do nowej grupy",
+        "description": "Show the tab after auto-moving it into this group"
+    },
+    "tabMoving": {
+        "message": "Przenoszenie kart",
+        "description": "Tab moving"
+    },
+    "includeTabFavIconsIntoBackup": {
+        "message": "Uwzględnij favikony kart w kopii (plik kopii będzie przez to większy)",
+        "description": "Include tab fav-icons in backup (makes backup file size bigger)"
+    },
+    "tabsThumbnailsSize": {
+        "message": "Waga miniaturek kart: $size$",
+        "description": "Tabs thumbnails size: $size$",
+        "placeholders": {
+            "size": {
+                "content": "$1",
+                "example": "2 MB"
+            }
+        }
+    },
+    "clearTabsThumbnails": {
+        "message": "Usuń miniaturki kart",
+        "description": "Clear tabs thumbnails"
+    },
+    "groupRemovedByExtension": {
+        "message": "Grupa \"$group$\" została usunięta przez rozszerzenie: $extension$",
+        "description": "Group \"$group$\" removed by extension: $extension$",
+        "placeholders": {
+            "group": {
+                "content": "$1",
+                "example": "group title"
+            },
+            "extension": {
+                "content": "$2",
+                "example": "external extension title"
+            }
+        }
     }
 }
