@@ -1565,6 +1565,14 @@ browser.runtime.onMessage.addListener(async function(request, sender) {
 browser.runtime.onMessageExternal.addListener(function(request, sender, sendResponse) {
     let extensionRules = {};
 
+    if (!window.background.inited) {
+        sendResponse({
+            ok: false,
+            error: '[STG] I am not yet loaded',
+        });
+        return;
+    }
+
     if (!utils.isAllowExternalRequestAndSender(request, sender, extensionRules)) {
         sendResponse({
             ok: false,
