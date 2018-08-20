@@ -2333,7 +2333,7 @@ async function init() {
 
     await storage.set(data);
 
-    _groups.forEach(gr => gr.windowId && updateBrowserActionData(gr.windowId));
+    windows.forEach(win => updateBrowserActionData(win.id));
 
     createMoveTabMenus();
 
