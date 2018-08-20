@@ -488,5 +488,9 @@
                 "example": "external extension title"
             }
         }
+    },
+    "clickHereToReloadAddon": {
+        "message": "Что-то произошло, нажмите здесь для перезагрузка расширения STG",
+        "description": "Something went wrong, click here to reload STG addon"
     }
 }

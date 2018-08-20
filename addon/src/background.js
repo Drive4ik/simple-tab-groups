@@ -950,7 +950,7 @@ async function onUpdatedTab(tabId, changeInfo, rawTab) {
 }
 
 function onRemovedTab(tabId, { isWindowClosing, windowId }) {
-    console.log('onRemovedTab', arguments);
+    console.log('onRemovedTab', {tabId, args: { isWindowClosing, windowId }});
 
     if (isWindowClosing) {
         return;
@@ -1029,7 +1029,6 @@ async function onFocusChangedWindow(windowId) {
 
     if (win.incognito) {
         browser.browserAction.disable();
-        resetBrowserActionData();
         removeMoveTabMenus();
     } else if (!lastFocusedWinId || lastFocusedWinId !== windowId) {
         browser.browserAction.enable();
@@ -1288,8 +1287,14 @@ async function createMoveTabMenus(windowId) {
     }));
 
     moveTabToGroupMenusIds.push(browser.menus.create({
+        id: 'stg-separator-1',
+        type: 'separator',
+        contexts: ['tab'],
+    }));
+
+    moveTabToGroupMenusIds.push(browser.menus.create({
         id: 'stg-move-tab-helper',
-        title: browser.i18n.getMessage('moveTabToGroupDisabledTitle'),
+        title: browser.i18n.getMessage('moveTabToGroupDisabledTitle') + ':',
         enabled: false,
         contexts: ['tab'],
     }));
@@ -1355,28 +1360,32 @@ async function createMoveTabMenus(windowId) {
     }));
 }
 
-function setBrowserActionData(currentGroup) {
+function setBrowserActionData(currentGroup, windowId) {
     if (!currentGroup) {
-        resetBrowserActionData();
+        resetBrowserActionData(windowId);
         return;
     }
 
     browser.browserAction.setTitle({
+        windowId: windowId,
         title: currentGroup.title + ' - ' + browser.i18n.getMessage('extensionName'),
     });
 
     browser.browserAction.setIcon({
+        windowId: windowId,
         path: utils.getGroupIconUrl(currentGroup),
     });
 }
 
-function resetBrowserActionData() {
+function resetBrowserActionData(windowId) {
     browser.browserAction.setTitle({
+        windowId: windowId,
         title: manifest.browser_action.default_title,
     });
 
     browser.browserAction.setIcon({
-        path: utils.getGroupIconUrl(),
+        windowId: windowId,
+        path: manifest.browser_action.default_icon,
     });
 }
 
@@ -1386,7 +1395,7 @@ async function updateBrowserActionData(windowId) {
         windowId = win.id;
     }
 
-    setBrowserActionData(_groups.find(gr => gr.windowId === windowId));
+    setBrowserActionData(_groups.find(gr => gr.windowId === windowId), windowId);
 }
 
 async function onRemovedWindow(windowId) {
@@ -1442,7 +1451,7 @@ function removeEvents() {
 }
 
 async function loadGroupPosition(textPosition) {
-    if (1 === _groups.length) {
+    if (1 <= _groups.length) {
         return;
     }
 
@@ -1459,7 +1468,7 @@ async function loadGroupPosition(textPosition) {
         return;
     }
 
-    await loadGroup(_groups[groupIndex].windowId, nextGroupIndex);
+    await loadGroup(win.id, nextGroupIndex);
 
     return true;
 }
@@ -1539,16 +1548,6 @@ async function clearTabsThumbnails() {
         action: 'thumbnails-updated',
     });
 }
-
-browser.menus.create({
-    id: 'openSettings',
-    title: browser.i18n.getMessage('openSettings'),
-    onclick: () => browser.runtime.openOptionsPage(),
-    contexts: ['browser_action'],
-    icons: {
-        16: '/icons/settings.svg',
-    },
-});
 
 browser.runtime.onMessage.addListener(async function(request, sender) {
     if (!utils.isAllowSender(request, sender)) {
@@ -2010,6 +2009,24 @@ async function getSessionDataFromWindow(windowId) {
     };
 }
 
+function setReloadButtonOnPopup() {
+    browser.browserAction.setPopup({
+        popup: '',
+    });
+
+    browser.browserAction.setTitle({
+        title: browser.i18n.getMessage('clickHereToReloadAddon'),
+    });
+
+    browser.browserAction.setIcon({
+        path: '/icons/exclamation-triangle.svg',
+    });
+
+    browser.browserAction.onClicked.addListener(() => browser.runtime.reload());
+
+    browser.browserAction.enable();
+}
+
 async function init() {
     let data = await storage.get(null);
 
@@ -2026,6 +2043,7 @@ async function init() {
 
     if (!windows.length) {
         utils.notify(browser.i18n.getMessage('nowFoundWindowsAddonStoppedWorking'));
+        setReloadButtonOnPopup();
         return;
     }
 
@@ -2084,6 +2102,7 @@ async function init() {
 
     if (!windows.length) {
         utils.notify(browser.i18n.getMessage('nowFoundWindowsAddonStoppedWorking'));
+        setReloadButtonOnPopup();
         return;
     }
 
@@ -2314,8 +2333,19 @@ async function init() {
 
     await storage.set(data);
 
-    updateBrowserActionData();
+    _groups.forEach(gr => gr.windowId && updateBrowserActionData(gr.windowId));
+
     createMoveTabMenus();
+
+    browser.menus.create({
+        id: 'openSettings',
+        title: browser.i18n.getMessage('openSettings'),
+        onclick: () => browser.runtime.openOptionsPage(),
+        contexts: ['browser_action'],
+        icons: {
+            16: '/icons/settings.svg',
+        },
+    });
 
     browser.browserAction.enable();
 

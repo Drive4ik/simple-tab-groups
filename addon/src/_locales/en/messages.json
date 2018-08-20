@@ -492,5 +492,9 @@
                 "example": "external extension title"
             }
         }
+    },
+    "clickHereToReloadAddon": {
+        "message": "Something went wrong, click here to reload STG addon",
+        "description": "Something went wrong, click here to reload STG addon"
     }
 }
