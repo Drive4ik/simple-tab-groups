@@ -121,7 +121,7 @@
     },
     "includeTabThumbnailsIntoBackup": {
         "message": "バックアップにタブのサムネイルを含める（バックアップファイルのサイズが大きくなります）",
-        "description": "Include tab thumbnails into backup (make backup file size bigger)"
+        "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
         "message": "Simple Tab Groups の復元",
@@ -149,7 +149,7 @@
     },
     "importSettingsOldTabGroupsAddonButton": {
         "message": "旧アドオンの ”Tab Groups” の設定をインポートする",
-        "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
+        "description": "Choose file"
     },
     "openGroupAfterChange": {
         "message": "変更したグループを開く",
@@ -182,6 +182,10 @@
     "sortGroupsZA": {
         "message": "グループを降順 [Z-A] でソート",
         "description": "Sort groups [Z-A]"
+    },
+    "generalTitle": {
+        "message": "一般",
+        "description": "General"
     },
     "settingsTitle": {
         "message": "設定",
@@ -369,8 +373,124 @@
         "message": "アイコンスタイル",
         "description": "Icon style"
     },
+    "discardTabsAfterHide": {
+        "message": "タブが隠れた後に破棄する（this will save the RAM）",
+        "description": "Discard tabs after hide (this will save the RAM)"
+    },
+    "createThumbnailsForTabs": {
+        "message": "タブのサムネイルを作成する（\"グループの管理\"で使用されます）",
+        "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
+    },
+    "thisTabCanNotBeHidden": {
+        "message": "このタブはマイクかカメラを使用しているため隠すことができません",
+        "description": "This tab can not be hidden because it uses a microphone or camera"
+    },
+    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
+        "message": "開いているタブの中にマイクかカメラを使用しているものがあるためグループを変更することができません",
+        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
+    },
+    "foundHiddenUnSyncTabsDescription": {
+        "message": "同期されていない隠れたタブがみつかりました。タブをクリックして現在のグループ/ウィンドウに表示するかまたは：",
+        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
+    },
+    "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
+        "message": "これらのタブを現在のグループ/ウィンドウに移動する",
+        "description": "Move all of these tabs into current group/window"
+    },
+    "actionHiddenUnSyncTabsCreateGroup": {
+        "message": "これらのタブを使って新しいグループを作成する",
+        "description": "Create new group with all of these tabs"
+    },
+    "actionHiddenUnSyncTabsCloseAll": {
+        "message": "これらのタブをクローズする",
+        "description": "Close all of these tabs"
+    },
+    "thisTabWillCreateAsNew": {
+        "message": "このタブは新規として作成されます",
+        "description": "This tab will create as new"
+    },
+    "updateTabThumbnail": {
+        "message": "このタブのサムネイルを更新する",
+        "description": "Update thumbnail for this tab"
+    },
+    "cantMakeThumbnailTabWasDiscarded": {
+        "message": "タブがロードされていないためサムネイルを作成できません",
+        "description": "You can not make a thumbnail of a tab if the tab was not loaded"
+    },
+    "nowFoundWindowsAddonStoppedWorking": {
+        "message": "エラー：not found any normal not private/incognito/popup windows.\nアドオンは動作を停止しました。ブラウザを再起動してください。",
+        "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
+    },
+    "waitingToLoadAllTabs": {
+        "message": "すべてのタブがロードされるまで待機しています。\nPlease wait...",
+        "description": "Waiting for all tabs to load.\nPlease wait..."
+    },
+    "reloadAddon": {
+        "message": "アドオンを再起動する",
+        "description": "Reload addon"
+    },
+    "ffFailedAndLostDataMessage": {
+        "message": "FF failed and all the groups were lost.\nバックアップがもしあれば、バックアップからデータを復元可能です。",
+        "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
+    },
+    "enterDefaultGroupIconViewTypeTitle": {
+        "message": "新しいグループのアイコンスタイル",
+        "description": "Icon style for a new group"
+    },
+    "openPopupHotkeyTitle": {
+        "message": "グループポップアップを開く",
+        "description": "Open the groups pop-up"
+    },
     "openGroupInNewWindow": {
         "message": "グループを新しいウィンドウで開く",
         "description": "Open group in new window"
+    },
+    "muteTabsWhenGroupCloseAndRestoreWhenOpen": {
+        "message": "グループを閉じるときにタブをミュートし、開くときに復元する",
+        "description": "Mute tabs when group close and restore when open"
+    },
+    "showTabAfterMovingItIntoThisGroup": {
+        "message": "このグループにタブが自動的に移動した場合そのタブを表示する",
+        "description": "Show the tab after auto-moving it into this group"
+    },
+    "tabMoving": {
+        "message": "タブ移動",
+        "description": "Tab moving"
+    },
+    "includeTabFavIconsIntoBackup": {
+        "message": "バックアップにタブのfav-iconsを含める（バックアップファイルのサイズが増加します）",
+        "description": "Include tab fav-icons in backup (makes backup file size bigger)"
+    },
+    "tabsThumbnailsSize": {
+        "message": "タブのサムネイルのサイズ：$size$",
+        "description": "Tabs thumbnails size: $size$",
+        "placeholders": {
+            "size": {
+                "content": "$1",
+                "example": "2 MB"
+            }
+        }
+    },
+    "clearTabsThumbnails": {
+        "message": "タブのサムネイルをクリアする",
+        "description": "Clear tabs thumbnails"
+    },
+    "groupRemovedByExtension": {
+        "message": "グループ \"$group$\" は拡張: $extension$ によって削除されました",
+        "description": "Group \"$group$\" removed by extension: $extension$",
+        "placeholders": {
+            "group": {
+                "content": "$1",
+                "example": "group title"
+            },
+            "extension": {
+                "content": "$2",
+                "example": "external extension title"
+            }
+        }
+    },
+    "clickHereToReloadAddon": {
+        "message": "なんらかの問題が発生しました ここをクリックしてSTGアドオンを再起動してください",
+        "description": "Something went wrong, click here to reload STG addon"
     }
 }
