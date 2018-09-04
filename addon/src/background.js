@@ -241,6 +241,18 @@ function sendExternalMessage(data) {
 }
 
 async function addUndoRemoveGroupItem(group) {
+    let restoreGroup = function(group) {
+        browser.menus.remove(constants.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id);
+
+        group.windowId = null;
+        group.tabs.forEach(tab => tab.id = null);
+
+        _groups.push(group);
+
+        updateMoveTabMenus();
+        saveGroupsToStorage(true);
+    }.bind(null, group);
+
     browser.menus.create({
         id: constants.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id,
         title: browser.i18n.getMessage('undoRemoveGroupItemTitle', group.title),
@@ -248,18 +260,10 @@ async function addUndoRemoveGroupItem(group) {
         icons: {
             16: utils.getGroupIconUrl(group),
         },
-        onclick: function(info) {
-            browser.menus.remove(info.menuItemId);
-
-            group.windowId = null;
-            group.tabs.forEach(tab => tab.id = null);
-
-            _groups.push(group);
-
-            updateMoveTabMenus();
-            saveGroupsToStorage(true);
-        },
+        onclick: restoreGroup,
     });
+
+    utils.notify(browser.i18n.getMessage('undoRemoveGroupNotification', group.title)).then(restoreGroup);
 }
 
 async function createTempActiveTab(windowId = browser.windows.WINDOW_ID_CURRENT, createPinnedTab = true) {

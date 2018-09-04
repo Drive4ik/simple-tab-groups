@@ -352,8 +352,18 @@
         "description": "Save last error logs into JSON file"
     },
     "undoRemoveGroupItemTitle": {
-        "message": "Undo remove group \"$grouptitle$\"",
-        "description": "Undo remove group menu title",
+        "message": "Undelete a group \"$grouptitle$\"",
+        "description": "Undelete a group menu title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "undoRemoveGroupNotification": {
+        "message": "Click here to cancel the deletion of the group \"$grouptitle$\"",
+        "description": "Click here to cancel the deletion of the group title",
         "placeholders": {
             "grouptitle": {
                 "content": "$1",

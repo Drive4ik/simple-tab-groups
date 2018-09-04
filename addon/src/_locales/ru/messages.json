@@ -357,6 +357,16 @@
             }
         }
     },
+    "undoRemoveGroupNotification": {
+        "message": "Нажмите здесь чтобы отменить удаление группы \"$grouptitle$\"",
+        "description": "Click here to cancel the deletion of the group title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
     "isStickyGroupTitle": {
         "message": "Липкая группа",
         "description": "Sticky group"
