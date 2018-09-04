@@ -414,6 +414,10 @@ function isCanvasBlank(canvas, useTransparency) {
     return isEmpty;
 }
 
+function makeSafeUrlForThumbnail(tabUrl) {
+    return tabUrl.split('#', 1).shift();
+}
+
 function extractKeys(obj, keys, useClone = false) {
     let newObj = {};
 
@@ -470,4 +474,6 @@ export {
     randomColor,
 
     resizeImage,
+
+    makeSafeUrlForThumbnail,
 };

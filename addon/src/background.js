@@ -738,7 +738,7 @@ async function updateTabThumbnail(tab, force = false) {
         return;
     }
 
-    let tabUrl = tab.url.split('#', 1).shift();
+    let tabUrl = utils.makeSafeUrlForThumbnail(tab.url);
 
     if (!force && _thumbnails[tabUrl]) {
         return;
@@ -805,6 +805,10 @@ async function updateTabThumbnail(tab, force = false) {
         thumbnail: thumbnail,
     });
 
+    await saveThumbnails();
+}
+
+async function saveThumbnails() {
     await storage.set({
         thumbnails: _thumbnails,
     });
@@ -957,10 +961,26 @@ function onRemovedTab(tabId, { isWindowClosing, windowId }) {
     }
 
     _groups.some(function(group) {
-        let tabIndex = group.tabs.findIndex(tab => tab.id === tabId);
+        let tabToTemove = group.tabs.find(tab => tab.id === tabId);
 
-        if (-1 !== tabIndex) {
-            group.tabs.splice(tabIndex, 1);
+        if (tabToTemove) {
+            group.tabs.splice(group.tabs.indexOf(tabToTemove), 1);
+
+            let safeTabUrl = utils.makeSafeUrlForThumbnail(tabToTemove.url);
+
+            if (safeTabUrl in _thumbnails) {
+                setTimeout(async function() {
+                    let foundUrl = _groups.some(gr => gr.tabs.some(tab => utils.makeSafeUrlForThumbnail(tab.url) === safeTabUrl));
+
+                    if (!foundUrl) {
+                        delete _thumbnails[safeTabUrl];
+                        await saveThumbnails();
+                        sendMessage({
+                            action: 'thumbnails-updated',
+                        });
+                    }
+                }, 0);
+            }
 
             sendMessage({
                 action: 'group-updated',
@@ -1920,6 +1940,20 @@ async function runMigrateForData(data) {
         });
     }
 
+    if (ifVersionInDataLessThan('3.1.1')) {
+        let keysToRemove = [];
+
+        for (let url in data.thumbnails) {
+            let foundUrl = data.groups.some(group => group.tabs.some(tab => utils.makeSafeUrlForThumbnail(tab.url) === url));
+
+            if (!foundUrl) {
+                keysToRemove.push(url);
+            }
+        }
+
+        keysToRemove.forEach(key => delete data.thumbnails[key]);
+    }
+
 
     data.version = currentVersion;
 
@@ -2009,24 +2043,6 @@ async function getSessionDataFromWindow(windowId) {
     };
 }
 
-function setReloadButtonOnPopup() {
-    browser.browserAction.setPopup({
-        popup: '',
-    });
-
-    browser.browserAction.setTitle({
-        title: browser.i18n.getMessage('clickHereToReloadAddon'),
-    });
-
-    browser.browserAction.setIcon({
-        path: '/icons/exclamation-triangle.svg',
-    });
-
-    browser.browserAction.onClicked.addListener(() => browser.runtime.reload());
-
-    browser.browserAction.enable();
-}
-
 async function init() {
     let data = await storage.get(null);
 
@@ -2042,9 +2058,7 @@ async function init() {
     let windows = await getAllWindows();
 
     if (!windows.length) {
-        utils.notify(browser.i18n.getMessage('nowFoundWindowsAddonStoppedWorking'));
-        setReloadButtonOnPopup();
-        return;
+        throw browser.i18n.getMessage('nowFoundWindowsAddonStoppedWorking');
     }
 
     if (!data.doRemoveSTGNewTabUrls) {
@@ -2101,9 +2115,7 @@ async function init() {
     windows = await getAllWindows();
 
     if (!windows.length) {
-        utils.notify(browser.i18n.getMessage('nowFoundWindowsAddonStoppedWorking'));
-        setReloadButtonOnPopup();
-        return;
+        throw browser.i18n.getMessage('nowFoundWindowsAddonStoppedWorking');
     }
 
     // update saved loading tabs
@@ -2368,4 +2380,22 @@ init()
             action: 'i-am-back',
         });
     })
-    .catch(utils.notify);
+    .catch(function(e) {
+        utils.notify(e);
+
+        browser.browserAction.setPopup({
+            popup: '',
+        });
+
+        browser.browserAction.setTitle({
+            title: browser.i18n.getMessage('clickHereToReloadAddon'),
+        });
+
+        browser.browserAction.setIcon({
+            path: '/icons/exclamation-triangle.svg',
+        });
+
+        browser.browserAction.onClicked.addListener(() => browser.runtime.reload());
+
+        browser.browserAction.enable();
+    });
