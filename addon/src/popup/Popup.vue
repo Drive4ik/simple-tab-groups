@@ -54,6 +54,7 @@
                 isShowingCreateGroupPopup: false,
 
                 search: '',
+                extendedSearch: false,
 
                 currentWindowId: null,
 
@@ -220,6 +221,10 @@
             },
 
             $_mySearchFunc(searchStr, inStr) {
+                if (!this.extendedSearch) {
+                    return inStr.includes(searchStr);
+                }
+
                 let lastFindIndex = -1;
 
                 return searchStr
@@ -737,6 +742,11 @@
                     @keydown.arrow-left.stop @keyup.arrow-left.stop
                     >
                     <input id="search" v-model.trim="search" @input="$refs.search.value === '' ? showSectionDefault() : null" ref="search" type="text" class="input is-small no-shadow" autocomplete="off" :placeholder="lang('searchPlaceholder')" />
+                </div>
+                <div v-show="search" class="control">
+                    <label class="button is-small" :title="lang('extendedTabSearch')">
+                        <input type="checkbox" v-model="extendedSearch" />
+                    </label>
                 </div>
                 <div v-show="search" class="control">
                     <label class="button is-small" @click="showSectionDefault(); $refs.search.focus();">
