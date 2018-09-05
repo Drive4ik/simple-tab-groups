@@ -169,10 +169,6 @@
         "message": "Ordenar grupos [Z-A]",
         "description": "Sort groups [Z-A]"
     },
-    "settingsTitle": {
-        "message": "Configuración general",
-        "description": "Settings"
-    },
     "groupSettings": {
         "message": "Configuración de grupo",
         "description": "Group settings"

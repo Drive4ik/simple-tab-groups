@@ -169,10 +169,6 @@
         "message": "Sorteer groepen [Z–A]",
         "description": "Sort groups [Z-A]"
     },
-    "settingsTitle": {
-        "message": "Instellingen",
-        "description": "Settings"
-    },
     "groupSettings": {
         "message": "Instellingen voor groepen",
         "description": "Group settings"

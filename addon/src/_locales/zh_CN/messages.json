@@ -183,10 +183,6 @@
         "message": "排序群组：降序↘",
         "description": "Sort groups [Z-A]"
     },
-    "settingsTitle": {
-        "message": "设置",
-        "description": "Settings"
-    },
     "groupSettings": {
         "message": "群组设置",
         "description": "Group settings"

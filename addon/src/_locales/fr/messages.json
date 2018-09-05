@@ -183,10 +183,6 @@
         "message": "Trier les groupes [Z-A]",
         "description": "Sort groups [Z-A]"
     },
-    "settingsTitle": {
-        "message": "Préférences",
-        "description": "Settings"
-    },
     "groupSettings": {
         "message": "Préférences de groupe",
         "description": "Group settings"

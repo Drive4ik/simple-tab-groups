@@ -187,10 +187,6 @@
         "message": "Obecné",
         "description": "General"
     },
-    "settingsTitle": {
-        "message": "Nastavení",
-        "description": "Settings"
-    },
     "groupSettings": {
         "message": "Nastavení skupiny",
         "description": "Group settings"

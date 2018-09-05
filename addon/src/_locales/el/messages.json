@@ -159,10 +159,6 @@
         "message": "Κατάταξη groups [Ω-Α]",
         "description": "Sort groups [Z-A]"
     },
-    "settingsTitle": {
-        "message": "Ρυθμίσεις",
-        "description": "Settings"
-    },
     "groupSettings": {
         "message": "Ρυθμίσεις groups",
         "description": "Group settings"

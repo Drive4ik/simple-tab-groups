@@ -618,10 +618,10 @@ async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
                             }
                         });
 
-                    let tabIdsToHide = winTabs.filter(winTab => !group.tabs.some(tab => tab.id === winTab));
+                    let tabsToHide = winTabs.filter(winTab => !group.tabs.some(tab => tab.id === winTab.id));
 
-                    if (tabIdsToHide.length) {
-                        await browser.tabs.hide(tabIdsToHide.map(utils.keyId));
+                    if (tabsToHide.length) {
+                        await browser.tabs.hide(tabsToHide.map(utils.keyId));
                     }
                 }
             }
@@ -2352,16 +2352,6 @@ async function init() {
     windows.forEach(win => updateBrowserActionData(win.id));
 
     createMoveTabMenus();
-
-    browser.menus.create({
-        id: 'openSettings',
-        title: browser.i18n.getMessage('openSettings'),
-        onclick: () => browser.runtime.openOptionsPage(),
-        contexts: ['browser_action'],
-        icons: {
-            16: '/icons/settings.svg',
-        },
-    });
 
     browser.browserAction.enable();
 

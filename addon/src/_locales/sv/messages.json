@@ -187,10 +187,6 @@
         "message": "Allmänt",
         "description": "General"
     },
-    "settingsTitle": {
-        "message": "Inställningar",
-        "description": "Settings"
-    },
     "groupSettings": {
         "message": "Gruppinställningar",
         "description": "Group settings"

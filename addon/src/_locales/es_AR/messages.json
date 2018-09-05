@@ -183,10 +183,6 @@
         "message": "Ordenar grupos [Z-A]",
         "description": "Sort groups [Z-A]"
     },
-    "settingsTitle": {
-        "message": "Configuraciones",
-        "description": "Settings"
-    },
     "groupSettings": {
         "message": "Grupo de configuraciones",
         "description": "Group settings"

@@ -187,10 +187,6 @@
         "message": "一般",
         "description": "General"
     },
-    "settingsTitle": {
-        "message": "設定",
-        "description": "Settings"
-    },
     "groupSettings": {
         "message": "分頁群組設定",
         "description": "Group settings"

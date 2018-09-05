@@ -187,10 +187,6 @@
         "message": "Основные",
         "description": "General"
     },
-    "settingsTitle": {
-        "message": "Настройки",
-        "description": "Settings"
-    },
     "groupSettings": {
         "message": "Настройки группы",
         "description": "Group settings"

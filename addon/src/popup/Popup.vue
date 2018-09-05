@@ -384,6 +384,8 @@
                     } else {
                         if (this.options.openGroupAfterChange) {
                             this.showSectionGroupTabs(group);
+                        } else {
+                            this.loadUnsyncedTabs();
                         }
                     }
                 }
@@ -994,7 +996,7 @@
                 <img class="size-16" src="/icons/refresh.svg" />
             </div>
             <div class="is-flex is-align-items-center is-vertical-separator"></div>
-            <div class="is-flex is-align-items-center is-full-height" @click="openOptionsPage" :title="lang('settingsTitle')">
+            <div class="is-flex is-align-items-center is-full-height" @click="openOptionsPage" :title="lang('openSettings')">
                 <img class="size-16" src="/icons/settings.svg" />
             </div>
         </footer>
