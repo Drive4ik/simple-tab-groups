@@ -1475,7 +1475,7 @@ function removeEvents() {
 }
 
 async function loadGroupPosition(textPosition) {
-    if (1 <= _groups.length) {
+    if (1 >= _groups.length) {
         return;
     }
 
