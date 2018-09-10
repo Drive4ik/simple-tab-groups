@@ -498,6 +498,7 @@ async function setMuteTabs(windowId, setMute) {
         pinned: false,
         [setMute ? 'audible' : 'muted']: true,
         windowId: windowId,
+        hidden: false,
     });
 
     if (tabs.length) {
