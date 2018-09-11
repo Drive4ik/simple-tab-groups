@@ -383,11 +383,11 @@ async function saveCurrentTabs(windowId, excludeTabId, calledFuncStringName) {
         console.info('saveCurrentTabs called from', calledFuncStringName);
     }
 
-    let tabs = await getTabs(windowId);
+    let winTabs = await getTabs(windowId);
 
-    console.info('saving tabs ', { windowId, excludeTabId, calledFuncStringName }, utils.clone(tabs));
+    console.info('saving tabs ', { windowId, excludeTabId, calledFuncStringName }, utils.clone(winTabs));
 
-    group.tabs = tabs
+    group.tabs = winTabs
         .filter(function(winTab) {
             if (excludeTabId) {
                 return excludeTabId !== winTab.id;
@@ -852,8 +852,6 @@ async function onCreatedTab(tab) {
         group.tabs.push(mapTab(tab));
         saveCurrentTabs(group.windowId, undefined, 'onCreatedTab');
     }
-
-    console.log('onCreatedTab FINISH', tab);
 }
 
 async function onUpdatedTab(tabId, changeInfo, rawTab) {
@@ -1018,6 +1016,12 @@ function onDetachedTab(tabId, { oldWindowId }) { // notice: call before onAttach
     });
 
     saveGroupsToStorage();
+}
+
+function onCreatedWindow(win) {
+    if (!utils.isWindowAllow(win)) {
+        resetBrowserActionData(win.id);
+    }
 }
 
 let lastFocusedWinId = null,
@@ -1437,6 +1441,7 @@ function addEvents() {
     browser.tabs.onAttached.addListener(onAttachedTab);
     browser.tabs.onDetached.addListener(onDetachedTab);
 
+    browser.windows.onCreated.addListener(onCreatedWindow);
     browser.windows.onFocusChanged.addListener(onFocusChangedWindow);
     browser.windows.onRemoved.addListener(onRemovedWindow);
 }
@@ -1451,6 +1456,7 @@ function removeEvents() {
     browser.tabs.onAttached.removeListener(onAttachedTab);
     browser.tabs.onDetached.removeListener(onDetachedTab);
 
+    browser.windows.onCreated.removeListener(onCreatedWindow);
     browser.windows.onFocusChanged.removeListener(onFocusChangedWindow);
     browser.windows.onRemoved.removeListener(onRemovedWindow);
 }
@@ -1986,6 +1992,7 @@ async function getAllWindows() {
                 let win = await browser.windows.get(winId);
 
                 if (!utils.isWindowAllow(win)) {
+                    resetBrowserActionData(win.id);
                     return false;
                 }
 
