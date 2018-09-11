@@ -502,5 +502,9 @@
     "extendedTabSearch": {
         "message": "Расширенный поиск",
         "description": "Extended search"
+    },
+    "waitingForSessionRestoreNotification": {
+        "message": "Ожидание восстановления сессии...",
+        "description": "Waiting for session restore..."
     }
 }

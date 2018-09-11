@@ -2048,6 +2048,10 @@ async function getSessionDataFromWindow(windowId) {
     };
 }
 
+function isRestoreSessionNow(windows) {
+    return 1 === windows.length && 1 === windows[0].tabs.length && 'about:sessionrestore' === windows[0].tabs[0].url;
+}
+
 async function init() {
     let data = await storage.get(null);
 
@@ -2064,6 +2068,41 @@ async function init() {
 
     if (!windows.length) {
         throw browser.i18n.getMessage('nowFoundWindowsAddonStoppedWorking');
+    }
+
+    if (isRestoreSessionNow(windows)) {
+        // waiting for session restore
+        await new Promise(function(resolve) {
+            let tryCount = 0,
+                tryTime = 1000, // ms
+                showWaitForRestoreSessionNotification = false;
+
+            async function checkRestoreSession() {
+                let wins = await getAllWindows();
+
+                if (isRestoreSessionNow(wins)) {
+                    tryCount++;
+
+                    if (3 === tryCount && !showWaitForRestoreSessionNotification) {
+                        showWaitForRestoreSessionNotification = true;
+
+                        browser.browserAction.setTitle({
+                            title: browser.i18n.getMessage('waitingForSessionRestoreNotification'),
+                        });
+
+                        utils.notify(browser.i18n.getMessage('waitingForSessionRestoreNotification'), undefined, 'wait-session-restore-message');
+                    }
+
+                    setTimeout(checkRestoreSession, tryTime);
+                } else {
+                    resolve();
+                }
+            }
+
+            setTimeout(checkRestoreSession, tryTime);
+        });
+
+        browser.notifications.clear('wait-session-restore-message');
     }
 
     if (!data.doRemoveSTGNewTabUrls) {
@@ -2085,12 +2124,12 @@ async function init() {
         loadingRawTabs[win.id] = win.tabs.filter(winTab => utils.isTabVisible(winTab) && winTab.status === 'loading');
     });
 
-    let tryCount = 0,
-        tryTime = 250, // ms
-        showNotificationMessageForLongTimeLoading = 90; // sec
-
     // waiting all tabs to load
     await new Promise(function(resolve) {
+        let tryCount = 0,
+            tryTime = 250, // ms
+            showNotificationMessageForLongTimeLoading = 90; // sec
+
         async function checkTabs() {
             let loadingTabs = await browser.tabs.query({
                 pinned: false,
@@ -2112,7 +2151,7 @@ async function init() {
             }
         }
 
-        checkTabs();
+        setTimeout(checkTabs, tryTime);
     });
 
     browser.notifications.clear('loading-tab-message');
