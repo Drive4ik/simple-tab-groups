@@ -147,10 +147,10 @@
                 this.groups.forEach(function(group) {
                     group.filteredTabsBySearch = group.tabs.filter(function(tab, tabIndex) {
                         tab.index = tabIndex;
-                        return this.$_mySearchFunc(searchStr, (tab.title || '').toLowerCase()) || this.$_mySearchFunc(searchStr, tab.url.toLowerCase());
+                        return utils.mySearchFunc(searchStr, tab.title, this.extendedSearch) || utils.mySearchFunc(searchStr, tab.url, this.extendedSearch);
                     }, this);
 
-                    if (group.filteredTabsBySearch.length || this.$_mySearchFunc(searchStr, group.title.toLowerCase())) {
+                    if (group.filteredTabsBySearch.length || utils.mySearchFunc(searchStr, group.title, this.extendedSearch)) {
                         group.filteredTabsBySearch.sort(this.$_simpleSortTabs.bind(null, searchStr));
                         groups.push(group);
                     }
@@ -218,25 +218,6 @@
                 this.section = SECTION_DEFAULT;
                 this.groupToShow = null;
                 this.search = '';
-            },
-
-            $_mySearchFunc(searchStr, inStr) {
-                if (!this.extendedSearch) {
-                    return inStr.includes(searchStr);
-                }
-
-                let lastFindIndex = -1;
-
-                return searchStr
-                    .split('')
-                    .every(function(char) {
-                        if (' ' === char) {
-                            return true;
-                        }
-
-                        lastFindIndex = inStr.indexOf(char, lastFindIndex + 1);
-                        return -1 !== lastFindIndex;
-                    });
             },
 
             $_simpleSortTabs(searchStr, a, b) {

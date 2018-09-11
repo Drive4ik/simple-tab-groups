@@ -62,6 +62,7 @@
                 isLoaded: false,
 
                 search: '',
+                extendedSearch: false,
 
                 currentWindowId: null,
 
@@ -159,7 +160,7 @@
                     group.filteredTabs = group.tabs
                         .filter(function(tab, tabIndex) {
                             tab.index = tabIndex;
-                            return this.$_mySearchFunc(searchStr, (tab.title || '').toLowerCase()) || this.$_mySearchFunc(searchStr, tab.url.toLowerCase());
+                            return utils.mySearchFunc(searchStr, tab.title, this.extendedSearch) || utils.mySearchFunc(searchStr, tab.url, this.extendedSearch);
                         }, this);
 
                     return group;
@@ -238,21 +239,6 @@
                 }, this);
 
                 return data.reverse();
-            },
-
-            $_mySearchFunc(searchStr, inStr) {
-                let lastFindIndex = -1;
-
-                return searchStr
-                    .split('')
-                    .every(function(char) {
-                        if (' ' === char) {
-                            return true;
-                        }
-
-                        lastFindIndex = inStr.indexOf(char, lastFindIndex + 1);
-                        return -1 !== lastFindIndex;
-                    });
             },
 
             $_groupMap(group) {
@@ -471,6 +457,11 @@
                 <div id="searchWrapper" :class="['field', {'has-addons': search}]">
                     <div class="control is-expanded">
                         <input :readonly="!isLoaded" ref="search" v-model.trim="search" type="text" class="input is-small" :placeholder="lang('filterTabsPlaceholder')" autocomplete="on" />
+                    </div>
+                    <div v-show="search" class="control">
+                        <label class="button is-small" :title="lang('extendedTabSearch')">
+                            <input type="checkbox" v-model="extendedSearch" />
+                        </label>
                     </div>
                     <div v-show="search" class="control" @click="search = ''; $refs.search.focus();">
                         <label class="button is-small">

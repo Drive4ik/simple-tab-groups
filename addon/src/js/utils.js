@@ -418,6 +418,28 @@ function makeSafeUrlForThumbnail(tabUrl) {
     return tabUrl.split('#', 1).shift();
 }
 
+// needle need to be "LowerCased"
+function mySearchFunc(needle, haystack, extendedSearch = false) {
+    haystack = 'string' === typeof haystack ? haystack.toLowerCase() : '';
+
+    if (!extendedSearch) {
+        return haystack.includes(needle);
+    }
+
+    let lastFindIndex = -1;
+
+    return needle
+        .split('')
+        .every(function(char) {
+            if (' ' === char) {
+                return true;
+            }
+
+            lastFindIndex = haystack.indexOf(char, lastFindIndex + 1);
+            return -1 !== lastFindIndex;
+        });
+}
+
 function extractKeys(obj, keys, useClone = false) {
     let newObj = {};
 
@@ -476,4 +498,6 @@ export {
     resizeImage,
 
     makeSafeUrlForThumbnail,
+
+    mySearchFunc,
 };
