@@ -810,10 +810,6 @@ async function updateTabThumbnail(tab, force = false) {
         thumbnail: thumbnail,
     });
 
-    await saveThumbnails();
-}
-
-async function saveThumbnails() {
     await storage.set({
         thumbnails: _thumbnails,
     });
@@ -966,26 +962,10 @@ function onRemovedTab(tabId, { isWindowClosing, windowId }) {
     }
 
     _groups.some(function(group) {
-        let tabToTemove = group.tabs.find(tab => tab.id === tabId);
+        let tabIndexToTemove = group.tabs.findIndex(tab => tab.id === tabId);
 
-        if (tabToTemove) {
-            group.tabs.splice(group.tabs.indexOf(tabToTemove), 1);
-
-            let safeTabUrl = utils.makeSafeUrlForThumbnail(tabToTemove.url);
-
-            if (safeTabUrl in _thumbnails) {
-                setTimeout(async function() {
-                    let foundUrl = _groups.some(gr => gr.tabs.some(tab => utils.makeSafeUrlForThumbnail(tab.url) === safeTabUrl));
-
-                    if (!foundUrl) {
-                        delete _thumbnails[safeTabUrl];
-                        await saveThumbnails();
-                        sendMessage({
-                            action: 'thumbnails-updated',
-                        });
-                    }
-                }, 0);
-            }
+        if (-1 !== tabIndexToTemove) {
+            group.tabs.splice(tabIndexToTemove, 1);
 
             sendMessage({
                 action: 'group-updated',
@@ -1945,21 +1925,6 @@ async function runMigrateForData(data) {
         });
     }
 
-    if (ifVersionInDataLessThan('3.1.1')) {
-        let keysToRemove = [];
-
-        for (let url in data.thumbnails) {
-            let foundUrl = data.groups.some(group => group.tabs.some(tab => utils.makeSafeUrlForThumbnail(tab.url) === url));
-
-            if (!foundUrl) {
-                keysToRemove.push(url);
-            }
-        }
-
-        keysToRemove.forEach(key => delete data.thumbnails[key]);
-    }
-
-
     data.version = currentVersion;
 
     if (keysToRemoveFromStorage.length) {
@@ -2069,6 +2034,12 @@ async function init() {
     if (!windows.length) {
         throw browser.i18n.getMessage('nowFoundWindowsAddonStoppedWorking');
     }
+
+    // clear unused thumbnails
+    let allSafedTabUrls = data.groups.reduce((acc, group) => acc.concat(group.tabs.map(tab => utils.makeSafeUrlForThumbnail(tab.url))), []);
+    Object
+        .keys(data.thumbnails)
+        .forEach(url => !allSafedTabUrls.includes(url) ? delete data.thumbnails[url] : null);
 
     if (isRestoreSessionNow(windows)) {
         // waiting for session restore
