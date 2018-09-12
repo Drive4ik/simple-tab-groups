@@ -1277,6 +1277,7 @@
             align-self: stretch;
             padding-left: 5px;
             white-space: nowrap;
+            line-height: 1;
         }
 
         .item-action > :not(:first-child) {
@@ -1307,7 +1308,6 @@
     .groups .item .item-action {
         width: 100px;
         min-width: 100px;
-        line-height: 1;
     }
 
     .bordered {
