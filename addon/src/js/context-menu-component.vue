@@ -66,6 +66,9 @@
 
 <style lang="scss" scoped>
     .v-context-menu {
+        --top-bottom-indent-blocks: 6px;
+        --left-right-indent-blocks: 10px;
+
         background: #f2f2f2;
         border: 1px solid #bdbdbd;
         box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
@@ -81,7 +84,7 @@
 
         ul {
             list-style: none;
-            padding: 6px 0;
+            padding: var(--top-bottom-indent-blocks) 0;
             margin: 0;
             font-size: 12px;
             font-weight: 600;
@@ -90,12 +93,12 @@
                 display: flex;
                 align-items: center;
                 margin: 0;
-                padding: 0 10px 0 5px;
+                padding: 0 var(--left-right-indent-blocks) 0 var(--top-bottom-indent-blocks);
                 cursor: pointer;
                 height: 25px;
 
                 > img {
-                    margin-right: 5px;
+                    margin-right: var(--left-right-indent-blocks);
                     width: 16px;
                     height: 16px;
                 }
@@ -120,7 +123,7 @@
             }
 
             hr {
-                margin: 2px 0 2px calc(10px + 16px + 5px + 3px);
+                margin: var(--top-bottom-indent-blocks) 0 var(--top-bottom-indent-blocks) calc(var(--left-right-indent-blocks) + 16px + var(--top-bottom-indent-blocks));
             }
         }
     }

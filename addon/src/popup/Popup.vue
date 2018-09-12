@@ -1027,9 +1027,12 @@
                     <span v-text="lang('setTabIconAsGroupIcon')"></span>
                 </li>
 
-                <hr>
+                <hr v-if="menu.data.group">
 
-                <li class="is-disabled" v-text="lang('moveTabToGroupDisabledTitle')"></li>
+                <li class="is-disabled">
+                    <img class="size-16" />
+                    <span v-text="lang('moveTabToGroupDisabledTitle') + ':'"></span>
+                </li>
 
                 <li
                     v-for="group in groups"
