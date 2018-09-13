@@ -627,7 +627,11 @@ async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
                     let tabsToHide = winTabs.filter(winTab => !group.tabs.some(tab => tab.id === winTab.id));
 
                     if (tabsToHide.length) {
-                        await browser.tabs.hide(tabsToHide.map(utils.keyId));
+                        if (1 === tabsToHide.length && 'about:blank' === tabsToHide[0].url) {
+                            await browser.tabs.remove(tabsToHide[0].id);
+                        } else {
+                            await browser.tabs.hide(tabsToHide.map(utils.keyId));
+                        }
                     }
                 }
             }
