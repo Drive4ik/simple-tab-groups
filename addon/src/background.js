@@ -70,6 +70,14 @@ function setFocusOnWindow(windowId) {
     });
 }
 
+function _fixTabUrl(tab) {
+    if (!tab.url || ['about:newtab', 'about:home'].includes(tab.url)) {
+        tab.url = 'about:blank';
+    }
+
+    return tab;
+}
+
 async function getTabs(windowId = browser.windows.WINDOW_ID_CURRENT, status = 'v') { // v: visible, h: hidden, null: all
     let tabs = await browser.tabs.query({
         windowId: windowId,
@@ -77,11 +85,11 @@ async function getTabs(windowId = browser.windows.WINDOW_ID_CURRENT, status = 'v
     });
 
     if ('v' === status) {
-        return tabs.filter(utils.isTabVisible);
+        return tabs.filter(utils.isTabVisible).map(_fixTabUrl);
     } else if ('h' === status) {
-        return tabs.filter(utils.isTabHidden);
+        return tabs.filter(utils.isTabHidden).map(_fixTabUrl);
     } else if (!status) {
-        return tabs;
+        return tabs.map(_fixTabUrl);
     }
 }
 
@@ -93,9 +101,7 @@ function getPinnedTabs(windowId = browser.windows.WINDOW_ID_CURRENT) {
 }
 
 function mapTab(tab) {
-    if (!tab.url || 'about:newtab' === tab.url) {
-        tab.url = 'about:blank';
-    }
+    tab = _fixTabUrl(tab);
 
     return {
         id: tab.id || null,
@@ -569,7 +575,6 @@ async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
 
             if (!group.tabs.length && !pinnedTabsLength && oldGroup) {
                 group.tabs.push({
-                    url: 'about:blank',
                     active: true,
                     cookieStoreId: constants.DEFAULT_COOKIE_STORE_ID,
                 });
@@ -654,13 +659,18 @@ async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
 
                     let isTabActive = -1 === activeTabIndex ? Boolean(tab.active) : tabIndex === activeTabIndex;
 
-                    let newTab = await browser.tabs.create({
+                    let tabObj = {
                         active: isTabActive,
                         index: pinnedTabsLength + tabIndex,
-                        url: tab.url,
                         windowId: windowId,
                         cookieStoreId: utils.normalizeCookieStoreId(tab.cookieStoreId, containers),
-                    });
+                    };
+
+                    if (tab.url) {
+                        tabObj.url = tab.url;
+                    }
+
+                    let newTab = await browser.tabs.create(tabObj);
 
                     tab.id = newTab.id;
                 }));
@@ -1996,7 +2006,7 @@ async function getAllWindows() {
                     return false;
                 }
 
-                win.tabs = allTabs.filter(tab => tab.windowId === win.id);
+                win.tabs = allTabs.filter(tab => tab.windowId === win.id).map(_fixTabUrl);
                 win.session = await getSessionDataFromWindow(win.id);
 
                 return win;
