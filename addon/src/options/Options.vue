@@ -292,7 +292,7 @@
                         let extData = {},
                             tabEntry = oldTab.entries.pop();
 
-                        if (!utils.isUrlAllowToCreate(tabEntry.url)) {
+                        if (!tabEntry.url || !utils.isUrlAllowToCreate(tabEntry.url)) {
                             return;
                         }
 

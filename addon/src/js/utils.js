@@ -2,6 +2,7 @@
 
 import storage from './storage';
 import * as constants from './constants';
+import * as npmCompareVersions from 'compare-versions';
 
 let tagsToReplace = {
     '<': '&lt;',
@@ -182,7 +183,7 @@ function isWindowAllow(win) {
 }
 
 function isUrlAllowToCreate(url) {
-    return /^((https?|ftp|moz-extension):|about:blank)/.test(url);
+    return url ? /^((https?|ftp|moz-extension):|about:blank)/.test(url) : true;
 }
 
 function isTabIncognito(tab) {
@@ -215,6 +216,20 @@ function isTabCanBeHidden(rawTab) {
 
 function isTabCanNotBeHidden(rawTab) {
     return !isTabCanBeHidden(rawTab);
+}
+
+function getTabTitle(tab, withUrl) {
+    let title = 'about:blank';
+
+    if (tab.title) {
+        title = tab.title;
+    }
+
+    if (withUrl && tab.url && title !== tab.url) {
+        title += '\n' + tab.url;
+    }
+
+    return title;
 }
 
 function getNextIndex(currentIndex, count, textPosition = 'next') {
@@ -264,6 +279,13 @@ function compareStrings(a, b, numeric = true) {
     return String(a).localeCompare(String(b), [], {
         numeric: numeric,
     });
+}
+
+// -1 : a < b
+// 0 : a === b
+// 1 : a > b
+function compareVersions(a, b) {
+    return npmCompareVersions(String(a), String(b));
 }
 
 function isElementVisible(element) {
@@ -415,7 +437,7 @@ function isCanvasBlank(canvas, useTransparency) {
 }
 
 function makeSafeUrlForThumbnail(tabUrl) {
-    return tabUrl.split('#', 1).shift();
+    return (tabUrl || '').split('#', 1).shift();
 }
 
 // needle need to be "LowerCased"
@@ -483,10 +505,13 @@ export {
     isTabCanBeHidden,
     isTabCanNotBeHidden,
 
+    getTabTitle,
+
     getNextIndex,
     toCamelCase,
     capitalize,
     compareStrings,
+    compareVersions,
 
     createGroupTitle,
     isElementVisible,

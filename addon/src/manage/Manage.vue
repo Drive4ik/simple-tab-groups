@@ -296,7 +296,7 @@
             addGroup() {
                 BG.addGroup();
             },
-            addTab(group, cookieStoreId = constants.DEFAULT_COOKIE_STORE_ID) {
+            addTab(group, cookieStoreId) {
                 BG.addTab(group.id, cookieStoreId);
             },
             removeTab(group, tabIndex) {
@@ -366,9 +366,7 @@
                 });
             },
 
-            getTabTitle(tab) {
-                return [tab.title, tab.url].filter(Boolean).join('\n');
-            },
+            getTabTitle: utils.getTabTitle,
 
             prepareThumbnailUrl(url) {
                 return url.split('#', 1).shift();
@@ -544,7 +542,7 @@
                                     'drag-moving': tab.isMoving,
                                     'drag-over': tab.isOver,
                                 }]"
-                                :title="getTabTitle(tab)"
+                                :title="getTabTitle(tab, true)"
                                 @contextmenu.stop.prevent="$refs.tabsContextMenu.open($event, {tab, group, tabIndex: tab.index})"
 
                                 @click.stop="clickOnTab($event, tab.index, tab, group)"
@@ -576,7 +574,7 @@
                                     @mousedown.middle.prevent
                                     @mouseup.middle.prevent="removeTab(group, tab.index)"
                                     class="tab-title text-ellipsis"
-                                    v-text="tab.title || tab.url"></div>
+                                    v-text="getTabTitle(tab)"></div>
                             </div>
 
                             <div class="tab new" :title="lang('createNewTab')" @click="addTab(group)">

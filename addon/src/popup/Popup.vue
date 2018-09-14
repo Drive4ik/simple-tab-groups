@@ -315,7 +315,7 @@
             },
 
             addTab(cookieStoreId) {
-                BG.addTab(this.groupToShow.id, cookieStoreId || constants.DEFAULT_COOKIE_STORE_ID);
+                BG.addTab(this.groupToShow.id, cookieStoreId);
             },
             removeTab(groupId, tabIndex) {
                 this.groups.some(function(group) {
@@ -462,9 +462,7 @@
                 });
             },
 
-            getTabTitle(tab) {
-                return [tab.title, tab.url].filter(Boolean).join('\n');
-            },
+            getTabTitle: utils.getTabTitle,
 
             getFullGroupTitleWithTabs(group) {
                 let title = group.title + ' (' + this.lang('groupTabsCount', group.tabs.length) + ')';
@@ -770,7 +768,7 @@
                                 'is-active': group === currentGroup && tab.active,
                                 'is-hovered-item': tab === hoverItem,
                             }]"
-                            :title="getTabTitle(tab)"
+                            :title="getTabTitle(tab, true)"
                             >
                             <div class="item-icon">
                                 <img :src="tab.favIconUrlToDisplay" class="size-16" />
@@ -780,7 +778,7 @@
                                     <span v-if="!tab.id" :title="lang('thisTabWillCreateAsNew')">
                                         <img src="/icons/refresh.svg" class="size-16 align-text-bottom" />
                                     </span>
-                                    <span v-text="tab.title || tab.url"></span>
+                                    <span v-text="getTabTitle(tab)"></span>
                                 </span>
                             </div>
                             <div class="item-action flex-on-hover">
@@ -866,13 +864,13 @@
                             @mousedown.middle.prevent
                             @mouseup.middle.prevent="removeUnSyncTab(tab)"
                             class="item is-unselectable"
-                            :title="getTabTitle(tab)"
+                            :title="getTabTitle(tab, true)"
                             >
                             <div class="item-icon">
                                 <img :src="tab.favIconUrlToDisplay" class="size-16" />
                             </div>
                             <div class="item-title">
-                                <span :class="{bordered: !!tab.borderedStyle}" :style="tab.borderedStyle" v-text="tab.title || tab.url"></span>
+                                <span :class="{bordered: !!tab.borderedStyle}" :style="tab.borderedStyle" v-text="getTabTitle(tab)"></span>
                             </div>
                             <div class="item-action flex-on-hover">
                                 <span class="size-16 cursor-pointer" @click.stop="removeUnSyncTab(tab)" :title="lang('deleteTab')">
@@ -925,7 +923,7 @@
                             'drag-over': tab.isOver,
                             'is-hovered-item': tab === hoverItem,
                         }]"
-                        :title="getTabTitle(tab)"
+                        :title="getTabTitle(tab, true)"
 
                         draggable="true"
                         @dragstart="dragHandle($event, 'tab', ['tab'], {itemIndex: tabIndex, item: tab, group: groupToShow})"
@@ -943,7 +941,7 @@
                                 <span v-if="!tab.id" :title="lang('thisTabWillCreateAsNew')">
                                     <img src="/icons/refresh.svg" class="size-16 align-text-bottom" />
                                 </span>
-                                <span v-text="tab.title || tab.url"></span>
+                                <span v-text="getTabTitle(tab)"></span>
                             </span>
                         </div>
                         <div class="item-action flex-on-hover">

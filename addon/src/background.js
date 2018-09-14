@@ -9,7 +9,8 @@ let errorLogs = [],
     _groups = [],
     _thumbnails = {},
     manifest = browser.runtime.getManifest(),
-    manageTabsPageUrl = browser.extension.getURL(constants.MANAGE_TABS_URL);
+    manageTabsPageUrl = browser.extension.getURL(constants.MANAGE_TABS_URL),
+    browserInfo = null;
 
 let log = function(message = 'log', data = null, showNotification = true) {
     try {
@@ -29,6 +30,10 @@ let log = function(message = 'log', data = null, showNotification = true) {
         }
     }
 };
+
+function isFFVersionEqualOrHighThan(version) {
+    return 0 <= utils.compareVersions(browserInfo.version.replace(/[a-z]/ig, ''), version);
+}
 
 let saveGroupsToStorageTimer = null;
 
@@ -71,11 +76,33 @@ function setFocusOnWindow(windowId) {
 }
 
 function _fixTabUrl(tab) {
-    if (!tab.url || ['about:newtab', 'about:home'].includes(tab.url)) {
+    if (!tab.url || utils.isUrlEmpty(tab.url)) {
         tab.url = 'about:blank';
     }
 
     return tab;
+}
+
+async function createTab(tab) {
+    if (!tab.url) {
+        delete tab.url;
+    }
+
+    if (isFFVersionEqualOrHighThan(63)) {
+        if (tab.active) {
+            delete tab.title;
+        } else if (tab.url && !utils.isUrlEmpty(tab.url)) {
+            tab.discarded = true;
+        }
+    } else {
+        delete tab.title;
+    }
+
+    if (0 > tab.index) {
+        delete tab.index;
+    }
+
+    return browser.tabs.create(tab);
 }
 
 async function getTabs(windowId = browser.windows.WINDOW_ID_CURRENT, status = 'v') { // v: visible, h: hidden, null: all
@@ -117,9 +144,9 @@ function getTabFavIconUrl(tab) {
     let safedFavIconUrl = '',
         localUrls = ['moz-extension', 'about', 'data', 'view-source', 'javascript', 'chrome', 'file'];
 
-    if (localUrls.some(url => tab.url.startsWith(url))) {
+    if (tab.url && localUrls.some(url => tab.url.startsWith(url))) {
         safedFavIconUrl = tab.favIconUrl;
-    } else if (options.useTabsFavIconsFromGoogleS2Converter) {
+    } else if (tab.url && options.useTabsFavIconsFromGoogleS2Converter) {
         safedFavIconUrl = 'https://www.google.com/s2/favicons?domain_url=' + encodeURIComponent(tab.url);
     } else {
         safedFavIconUrl = tab.favIconUrl;
@@ -412,6 +439,12 @@ async function saveCurrentTabs(windowId, excludeTabId, calledFuncStringName) {
                 }
             }
 
+            let tab = group.tabs.find(tab => winTab.url === tab.url && tab.favIconUrl);
+
+            if (!winTab.favIconUrl && tab) {
+                winTab.favIconUrl = tab.favIconUrl;
+            }
+
             return mapTab(winTab);
         });
 
@@ -428,8 +461,10 @@ async function saveCurrentTabs(windowId, excludeTabId, calledFuncStringName) {
     delete savingTabsInWindow[windowId];
 }
 
-async function addTab(groupId, cookieStoreId) {
+async function addTab(groupId, cookieStoreId = constants.DEFAULT_COOKIE_STORE_ID) {
     let group = _groups.find(gr => gr.id === groupId);
+
+    cookieStoreId = cookieStoreId || constants.DEFAULT_COOKIE_STORE_ID;
 
     if (group.windowId) {
         await browser.tabs.create({
@@ -440,7 +475,6 @@ async function addTab(groupId, cookieStoreId) {
     } else {
         group.tabs.push({
             active: false,
-            url: 'about:blank',
             cookieStoreId,
         });
         saveGroupsToStorage();
@@ -502,9 +536,9 @@ function setLoadingToBrowserAction() {
 async function setMuteTabs(windowId, setMute) {
     let tabs = await browser.tabs.query({
         pinned: false,
-        [setMute ? 'audible' : 'muted']: true,
-        windowId: windowId,
         hidden: false,
+        windowId: windowId,
+        [setMute ? 'audible' : 'muted']: true,
     });
 
     if (tabs.length) {
@@ -573,7 +607,7 @@ async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
             // group.windowId = windowId;
             group.tabs = group.tabs.filter(tab => tab.id || utils.isUrlAllowToCreate(tab.url)); // remove unsupported tabs
 
-            if (!group.tabs.length && !pinnedTabsLength && oldGroup) {
+            if (!group.tabs.length && !pinnedTabsLength && (oldGroup || (1 === winTabs.length && utils.isUrlEmpty(winTabs[0].url)))) {
                 group.tabs.push({
                     active: true,
                     cookieStoreId: constants.DEFAULT_COOKIE_STORE_ID,
@@ -612,11 +646,12 @@ async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
                     group.tabs
                         .filter(tab => !tab.id)
                         .forEach(function(tab) {
-                            let winTab = winTabs.find(function(t) {
-                                if (!syncedTabs.includes(t.id)) {
-                                    return t.url === tab.url;
-                                }
-                            });
+                            let tabUrl = tab.url || 'about:blank',
+                                winTab = winTabs.find(function(t) {
+                                    if (!syncedTabs.includes(t.id)) {
+                                        return t.url === tabUrl;
+                                    }
+                                });
 
                             if (winTab) {
                                 tab.id = winTab.id;
@@ -627,7 +662,7 @@ async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
                     let tabsToHide = winTabs.filter(winTab => !group.tabs.some(tab => tab.id === winTab.id));
 
                     if (tabsToHide.length) {
-                        if (1 === tabsToHide.length && 'about:blank' === tabsToHide[0].url) {
+                        if (1 === tabsToHide.length && utils.isUrlEmpty(tabsToHide[0].url)) {
                             await browser.tabs.remove(tabsToHide[0].id);
                         } else {
                             await browser.tabs.hide(tabsToHide.map(utils.keyId));
@@ -663,18 +698,14 @@ async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
 
                     let isTabActive = -1 === activeTabIndex ? Boolean(tab.active) : tabIndex === activeTabIndex;
 
-                    let tabObj = {
+                    let newTab = await createTab({
                         active: isTabActive,
+                        url: tab.url,
+                        title: tab.title,
                         index: pinnedTabsLength + tabIndex,
                         windowId: windowId,
                         cookieStoreId: utils.normalizeCookieStoreId(tab.cookieStoreId, containers),
-                    };
-
-                    if (tab.url) {
-                        tabObj.url = tab.url;
-                    }
-
-                    let newTab = await browser.tabs.create(tabObj);
+                    });
 
                     tab.id = newTab.id;
                 }));
@@ -753,7 +784,7 @@ function isCatchedUrl(url, group) {
 }
 
 async function updateTabThumbnail(tab, force = false) {
-    if (!options.createThumbnailsForTabs || !tab || !tab.url) {
+    if (!options.createThumbnailsForTabs || !tab.url) {
         return;
     }
 
@@ -1116,7 +1147,7 @@ async function moveTabToGroup(oldTabIndex, newTabIndex = -1, oldGroupId = null, 
                 return;
             }
         } else {
-            if (!utils.isUrlAllowToCreate(tab.url)) {
+            if (tab.url && !utils.isUrlAllowToCreate(tab.url)) {
                 utils.notify(browser.i18n.getMessage('thisTabIsNotSupported'));
                 return;
             }
@@ -1187,9 +1218,10 @@ async function moveTabToGroup(oldTabIndex, newTabIndex = -1, oldGroupId = null, 
             if (newGroup.windowId) {
                 let containers = await utils.loadContainers();
 
-                await browser.tabs.create({
+                await createTab({
                     active: false,
                     url: tab.url,
+                    title: tab.title,
                     index: newTabRealIndex,
                     windowId: newGroup.windowId,
                     cookieStoreId: utils.normalizeCookieStoreId(tab.cookieStoreId, containers),
@@ -1234,7 +1266,7 @@ async function moveTabToGroup(oldTabIndex, newTabIndex = -1, oldGroupId = null, 
         return;
     }
 
-    let tabTitle = utils.sliceText(tab.title),
+    let tabTitle = utils.sliceText(utils.getTabTitle(tab)),
         message = browser.i18n.getMessage('moveTabToGroupMessage', [newGroup.title, tabTitle]);
 
     utils.notify(message).then(async function(newGroupId, newTabIndex) {
@@ -1822,7 +1854,7 @@ async function runMigrateForData(data) {
         return data;
     }
 
-    if (1 === utils.compareStrings(data.version, currentVersion)) {
+    if (1 === utils.compareVersions(data.version, currentVersion)) {
         throw 'Please, update addon to latest version';
     }
 
@@ -1837,7 +1869,7 @@ async function runMigrateForData(data) {
     }
 
     function ifVersionInDataLessThan(version) {
-        return -1 === utils.compareStrings(data.version, version);
+        return -1 === utils.compareVersions(data.version, version);
     }
 
     if (ifVersionInDataLessThan('1.8.1')) {
@@ -1971,12 +2003,12 @@ async function removeSTGNewTabUrls(windows) {
             .map(async function(win) {
                 await Promise.all(
                     win.tabs
-                        .map(async function(tab) {
-                            if (isStgNewTabUrl(tab.url)) {
-                                tab.url = revokeStgNewTabUrl(tab.url);
+                        .map(async function(winTab) {
+                            if (isStgNewTabUrl(winTab.url)) {
+                                winTab.url = revokeStgNewTabUrl(winTab.url);
 
-                                await browser.tabs.update(tab.id, {
-                                    url: tab.url,
+                                await browser.tabs.update(winTab.id, {
+                                    url: winTab.url,
                                     loadReplace: true,
                                 });
                             }
@@ -2039,6 +2071,8 @@ function isRestoreSessionNow(windows) {
 }
 
 async function init() {
+    browserInfo = await browser.runtime.getBrowserInfo();
+
     let data = await storage.get(null);
 
     if (!Array.isArray(data.groups)) {
@@ -2098,7 +2132,7 @@ async function init() {
     }
 
     if (!data.doRemoveSTGNewTabUrls) {
-        data.doRemoveSTGNewTabUrls = windows.some(win => win.tabs.some(tab => tab.url.startsWith('moz-extension') && tab.url.includes(NEW_TAB_URL)));
+        data.doRemoveSTGNewTabUrls = windows.some(win => win.tabs.some(winTab => winTab.url.startsWith('moz-extension') && winTab.url.includes(NEW_TAB_URL)));
     }
 
     if (data.doRemoveSTGNewTabUrls) {
@@ -2213,9 +2247,10 @@ async function init() {
         group.tabs = group.tabs.filter(tab => tab.id || utils.isUrlAllowToCreate(tab.url)); // remove missed unsupported tabs
 
         await Promise.all(group.tabs.filter(tab => !tab.id).map(async function(tab) {
-            let newTab = await browser.tabs.create({
+            let newTab = await createTab({
                 active: Boolean(tab.active),
                 url: tab.url,
+                title: tab.title,
                 windowId: win.id,
                 cookieStoreId: utils.normalizeCookieStoreId(tab.cookieStoreId, containers),
             });
