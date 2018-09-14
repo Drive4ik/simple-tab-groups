@@ -4,7 +4,6 @@ const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const WebpackShellPlugin = require('webpack-shell-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
-const DelWebpackPlugin = require('del-webpack-plugin');
 const { VueLoaderPlugin } = require('vue-loader');
 
 function setPath(folderName) {
@@ -44,6 +43,7 @@ const config = {
     watchOptions: {
         ignored: /node_modules/,
     },
+    devtool: false,
     optimization: {
         minimizer: [
             new UglifyJsPlugin({
@@ -94,14 +94,6 @@ const config = {
 // module.exports = config;
 module.exports = function(env, options) {
     let isProduction = options.mode === 'production';
-
-    config.devtool = isProduction ? false : 'source-map';
-
-    if (isProduction) {
-        config.plugins.push(new DelWebpackPlugin({
-            include: ['*.map', '**/*.map'],
-        }));
-    }
 
     config.plugins.push(new webpack.DefinePlugin({
         IS_PRODUCTION: isProduction,
