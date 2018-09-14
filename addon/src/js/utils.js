@@ -219,14 +219,12 @@ function isTabCanNotBeHidden(rawTab) {
 }
 
 function getTabTitle(tab, withUrl) {
-    let title = 'about:blank';
+    let title = tab.title || tab.url || 'about:blank';
 
-    if (tab.title) {
-        title = tab.title;
-    }
-
-    if (withUrl && tab.url && title !== tab.url) {
-        title += '\n' + tab.url;
+    if (withUrl) {
+        if (tab.url && title !== tab.url) {
+            title += '\n' + tab.url;
+        }
     }
 
     return title;
