@@ -325,7 +325,7 @@ async function removeGroup(groupId) {
     _groups.splice(groupIndex, 1);
 
     if (group.windowId) {
-        setLoadingToBrowserAction();
+        setLoadingToBrowserAction(group.windowId);
         await setWindowValue(group.windowId, 'groupId', null);
     }
 
@@ -527,10 +527,16 @@ async function removeTab(groupId, tabIndex) {
     }
 }
 
-function setLoadingToBrowserAction() {
-    browser.browserAction.setIcon({
+function setLoadingToBrowserAction(windowId) {
+    let iconObj = {
         path: '/icons/animate-spinner.svg',
-    });
+    };
+
+    if (windowId && windowId > 0) {
+        iconObj.windowId = windowId;
+    }
+
+    browser.browserAction.setIcon(iconObj);
 }
 
 async function setMuteTabs(windowId, setMute) {
@@ -597,7 +603,7 @@ async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
 
             loadingGroupInWindow[windowId] = true;
 
-            setLoadingToBrowserAction();
+            setLoadingToBrowserAction(windowId);
 
             removeEvents();
 
@@ -2100,8 +2106,7 @@ async function init() {
         // waiting for session restore
         await new Promise(function(resolve) {
             let tryCount = 0,
-                tryTime = 1000, // ms
-                showWaitForRestoreSessionNotification = false;
+                tryTime = 1000; // ms
 
             async function checkRestoreSession() {
                 let wins = await getAllWindows();
@@ -2109,9 +2114,7 @@ async function init() {
                 if (isRestoreSessionNow(wins)) {
                     tryCount++;
 
-                    if (3 === tryCount && !showWaitForRestoreSessionNotification) {
-                        showWaitForRestoreSessionNotification = true;
-
+                    if (3 === tryCount) {
                         browser.browserAction.setTitle({
                             title: browser.i18n.getMessage('waitingForSessionRestoreNotification'),
                         });
