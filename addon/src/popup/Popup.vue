@@ -617,16 +617,8 @@
                                     this.loadGroup(this.hoverItem, undefined, true);
                                 } else { // is tab
                                     // find group
-                                    let group = null;
-
-                                    for (let i = allItems.indexOf(this.hoverItem); i >= 0; i--) { // wheel up - find group
-                                        if (this.isGroup(allItems[i])) {
-                                            group = allItems[i];
-                                            break;
-                                        }
-                                    }
-
-                                    this.loadGroup(group, this.hoverItem.index, true);
+                                    let group = this.groups.find(gr => gr.tabs.includes(this.hoverItem));
+                                    this.loadGroup(group, group.tabs.indexOf(this.hoverItem), true);
                                 }
                             }
                         }
@@ -636,7 +628,7 @@
                         index = this.hoverItem ? this.groups.indexOf(this.hoverItem) : -1;
 
                         if (-1 === index) {
-                            index = this.groups.findIndex(group => group === this.currentGroup);
+                            index = this.groups.indexOf(this.currentGroup);
                         }
 
                         if ('up' === arrow) {
