@@ -57,14 +57,6 @@
         "message": "Abbrechen",
         "description": "Cancel"
     },
-    "privateAndPinnedTabsAreNotSupported": {
-        "message": "Private oder gepinnte Tabs werden nicht unterstützt",
-        "description": "Private and pinned tabs are not supported"
-    },
-    "thisTabIsNotSupported": {
-        "message": "Dieser Tab wird nicht unterstützt",
-        "description": "This tab is not supported"
-    },
     "searchPlaceholder": {
         "message": "Tab suchen",
         "description": "Search placeholder"

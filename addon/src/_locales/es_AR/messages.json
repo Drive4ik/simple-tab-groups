@@ -57,14 +57,6 @@
         "message": "Cancelar",
         "description": "Cancel"
     },
-    "privateAndPinnedTabsAreNotSupported": {
-        "message": "Las pestañas privadas y fijadas no son soportadas",
-        "description": "Private and pinned tabs are not supported"
-    },
-    "thisTabIsNotSupported": {
-        "message": "Esta pestaña no es soportada",
-        "description": "This tab is not supported"
-    },
     "searchPlaceholder": {
         "message": "Buscar una pestaña...",
         "description": "Search placeholder"

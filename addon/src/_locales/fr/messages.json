@@ -57,14 +57,6 @@
         "message": "Annuler",
         "description": "Cancel"
     },
-    "privateAndPinnedTabsAreNotSupported": {
-        "message": "Les onglets privés et verrouillés ne sont pas supportés",
-        "description": "Private and pinned tabs are not supported"
-    },
-    "thisTabIsNotSupported": {
-        "message": "Cet onglet n'est pas supporté",
-        "description": "This tab is not supported"
-    },
     "searchPlaceholder": {
         "message": "Chercher un onglet...",
         "description": "Search placeholder"

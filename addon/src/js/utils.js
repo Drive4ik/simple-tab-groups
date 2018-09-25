@@ -211,7 +211,7 @@ function isTabVisible(tab) {
 }
 
 function isTabCanBeHidden(rawTab) {
-    return !isTabPinned(rawTab) && !rawTab.sharingState.camera && !rawTab.sharingState.microphone;
+    return !isTabPinned(rawTab) && !rawTab.sharingState.screen && !rawTab.sharingState.camera && !rawTab.sharingState.microphone;
 }
 
 function isTabCanNotBeHidden(rawTab) {
@@ -433,7 +433,7 @@ function isCanvasBlank(canvas, useTransparency) {
 }
 
 function makeSafeUrlForThumbnail(tabUrl) {
-    return (tabUrl || '').split('#', 1).shift();
+    return tabUrl ? tabUrl.split('#', 1).shift() : '';
 }
 
 // needle need to be "LowerCased"
@@ -458,6 +458,10 @@ function mySearchFunc(needle, haystack, extendedSearch = false) {
         });
 }
 
+function onlyUnique(value, index, self) {
+    return self.indexOf(value) === index;
+}
+
 function extractKeys(obj, keys, useClone = false) {
     let newObj = {};
 
@@ -473,6 +477,7 @@ export {
     format,
     formatBytes,
     extractKeys,
+    onlyUnique,
 
     safeHtml,
     unSafeHtml,

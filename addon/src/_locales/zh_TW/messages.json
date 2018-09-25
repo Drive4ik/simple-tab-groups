@@ -57,14 +57,6 @@
         "message": "取消",
         "description": "Cancel"
     },
-    "privateAndPinnedTabsAreNotSupported": {
-        "message": "不支援隱私及釘選的分頁",
-        "description": "Private and pinned tabs are not supported"
-    },
-    "thisTabIsNotSupported": {
-        "message": "不支援此分頁",
-        "description": "This tab is not supported"
-    },
     "searchPlaceholder": {
         "message": "搜尋分頁...",
         "description": "Search placeholder"
@@ -260,8 +252,8 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "捕捉並將有內容的分頁移至此分頁群組 (只適用網路 URL，不支援空分頁)",
-        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
+        "message": "捕捉並將有內容的分頁移至此分頁群組",
+        "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
         "message": "捕捉分頁的正規表述式",
@@ -376,10 +368,6 @@
     "createThumbnailsForTabs": {
         "message": "為分頁建立縮圖 (使用於「管理分頁群組」頁面)",
         "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
-    },
-    "thisTabCanNotBeHidden": {
-        "message": "此分頁無法隱藏，因為它正在使用麥克風或攝影機。",
-        "description": "This tab can not be hidden because it uses a microphone or camera"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "無法變更分頁群組，因為其中一個開啟的分頁正在分享麥克風或是攝影機。",

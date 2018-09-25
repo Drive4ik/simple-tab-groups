@@ -15,6 +15,8 @@ const groupIconViewTypes = [
 
 const EXTENSIONS_WHITE_LIST = {
     'stg-plugin-create-new-group@drive4ik': {
+        title: '[STG plugin] Create new group',
+        url: 'https://addons.mozilla.org/firefox/addon/stg-plugin-create-new-group/',
         postActions: [],
         getActions: [
             'add-new-group',
@@ -22,6 +24,8 @@ const EXTENSIONS_WHITE_LIST = {
         ],
     },
     'stg-plugin-load-custom-group@drive4ik': {
+        title: '[STG plugin] Load custom group',
+        url: 'https://addons.mozilla.org/firefox/addon/stg-plugin-load-custom-group/',
         postActions: [
             'i-am-back',
             'group-added',
@@ -35,6 +39,8 @@ const EXTENSIONS_WHITE_LIST = {
         ],
     },
     'stg-plugin-manage-groups@drive4ik': {
+        title: '[STG plugin] Open Manage groups',
+        url: 'https://addons.mozilla.org/firefox/addon/stg-plugin-open-manage-groups/',
         postActions: [],
         getActions: [
             'open-manage-groups',

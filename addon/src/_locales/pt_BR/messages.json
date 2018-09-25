@@ -57,14 +57,6 @@
         "message": "Cancelar",
         "description": "Cancel"
     },
-    "privateAndPinnedTabsAreNotSupported": {
-        "message": "Abas privadas e abas fixas não são suportadas",
-        "description": "Private and pinned tabs are not supported"
-    },
-    "thisTabIsNotSupported": {
-        "message": "Essa aba não é suportada",
-        "description": "This tab is not supported"
-    },
     "searchPlaceholder": {
         "message": "Pesquisar",
         "description": "Search placeholder"
@@ -260,8 +252,8 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Capturar e mover abas com 'containers' para esse grupo (somente para endereços web, abas vazias não são suportadas)",
-        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
+        "message": "Capturar e mover abas com 'containers' para esse grupo",
+        "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
         "message": "Expressões regulares para pegar abas",
@@ -376,10 +368,6 @@
     "createThumbnailsForTabs": {
         "message": "Criar miniaturas para abas (usado em \"Gerenciar grupos\")",
         "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
-    },
-    "thisTabCanNotBeHidden": {
-        "message": "Essa aba não pode ser escondida porque usa microfone ou câmera",
-        "description": "This tab can not be hidden because it uses a microphone or camera"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Não é possível mudar o grupo porque uma das abas abertas compartilha microfone ou câmera",

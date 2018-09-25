@@ -57,14 +57,6 @@
         "message": "Zrušit",
         "description": "Cancel"
     },
-    "privateAndPinnedTabsAreNotSupported": {
-        "message": "Anonymní a připnuté panely nejsou podporovány",
-        "description": "Private and pinned tabs are not supported"
-    },
-    "thisTabIsNotSupported": {
-        "message": "Tento panel není podporován",
-        "description": "This tab is not supported"
-    },
     "searchPlaceholder": {
         "message": "Vyhledat panel...",
         "description": "Search placeholder"
@@ -260,8 +252,8 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Panely otevřené ve vybraných kontejnerech budou přesouvány do této skupiny (neplatí pro prázdné panely)",
-        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
+        "message": "Panely otevřené ve vybraných kontejnerech budou přesouvány do této skupiny",
+        "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
         "message": "Pravidla pro automatický přesun panelů",
@@ -376,10 +368,6 @@
     "createThumbnailsForTabs": {
         "message": "Vytvářet náhledy panelů (ve \"Správě skupin\")",
         "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
-    },
-    "thisTabCanNotBeHidden": {
-        "message": "Tento panel nemůže být skryt, protože používá mikrofon nebo kameru",
-        "description": "This tab can not be hidden because it uses a microphone or camera"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Není možné změnit skupinu, protože jeden z otevřených panelů sdílí mikrofon nebo kameru",

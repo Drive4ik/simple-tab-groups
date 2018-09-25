@@ -57,14 +57,6 @@
         "message": "Отмена",
         "description": "Cancel"
     },
-    "privateAndPinnedTabsAreNotSupported": {
-        "message": "Приватные и закрепленные вкладки не поддерживаются",
-        "description": "Private and pinned tabs are not supported"
-    },
-    "thisTabIsNotSupported": {
-        "message": "Эта вкладка не поддерживается",
-        "description": "This tab is not supported"
-    },
     "searchPlaceholder": {
         "message": "Поиск",
         "description": "Search placeholder"
@@ -260,8 +252,8 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Захватывать и перемещать вкладки с контейнерами в эту группу (только для веб адресов, пустые вкладки не поддерживаются)",
-        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
+        "message": "Захватывать и перемещать вкладки с контейнерами в эту группу",
+        "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
         "message": "Регулярные выражения для захвата вкладок",
@@ -387,10 +379,6 @@
         "message": "Создавать эскизы вкладок (используется в \"Управление группами\")",
         "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
     },
-    "thisTabCanNotBeHidden": {
-        "message": "Эта вкладка не может быть скрыта потому что в ней используется микрофон или камера",
-        "description": "This tab can not be hidden because it uses a microphone or camera"
-    },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Невозможно изменить группу, потому что на одной из вкладок используется микрофон или камера",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
@@ -506,5 +494,39 @@
     "waitingForSessionRestoreNotification": {
         "message": "Ожидание восстановления сессии...",
         "description": "Waiting for session restore..."
+    },
+    "movingMultipleTabsText": {
+        "message": "Перемещение $count$ вкладок",
+        "description": "Перемещение $count$ вкладок",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "7"
+            }
+        }
+    },
+    "pinnedTabsAreNotSupported": {
+        "message": "Закреплённые вкладки не поддерживаются",
+        "description": "Pinned tabs are not supported"
+    },
+    "thisUrlsAreNotSupported": {
+        "message": "Эти адреса \"$urls$\" не поддерживаются",
+        "description": "This urls \"$urls$\" are not supported",
+        "placeholders": {
+            "urls": {
+                "content": "$1",
+                "example": "about:addons, file://..."
+            }
+        }
+    },
+    "thisTabsCanNotBeHidden": {
+        "message": "Эти вкладки не могут быть скрыты, потому что они закреплены, используют микрофон, камеру или экран совместного доступа: \"$titles$\"",
+        "description": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
+        "placeholders": {
+            "titles": {
+                "content": "$1",
+                "example": "some titles"
+            }
+        }
     }
 }

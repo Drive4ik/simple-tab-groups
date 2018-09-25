@@ -57,14 +57,6 @@
         "message": "Annuleren",
         "description": "Cancel"
     },
-    "privateAndPinnedTabsAreNotSupported": {
-        "message": "Privé‒ en vastgemaakte tabbladen worden niet ondersteund",
-        "description": "Private and pinned tabs are not supported"
-    },
-    "thisTabIsNotSupported": {
-        "message": "Dit tabblad wordt niet ondersteund",
-        "description": "This tab is not supported"
-    },
     "filterTabsPlaceholder": {
         "message": "Tabbladen filteren (meerdere filters met *)",
         "description": "Filter tabs (multiple filter with *)"
@@ -242,8 +234,8 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Pak tabbladen met containers beet en verplaats ze naar deze groep (alleen voor web-URLs, lege tabbladen worden niet ondersteund)",
-        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
+        "message": "Pak tabbladen met containers beet en verplaats ze naar deze groep",
+        "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
         "message": "Regular expression voor tabbladen beetpakken",

@@ -57,14 +57,6 @@
         "message": "Ακύρωση",
         "description": "Cancel"
     },
-    "privateAndPinnedTabsAreNotSupported": {
-        "message": "Ιδιωτικά (Private) και καρφιτσωμένα (pinned) tabs δεν υποστηρίζονται",
-        "description": "Private and pinned tabs are not supported"
-    },
-    "thisTabIsNotSupported": {
-        "message": "Αυτό το tab δεν υποστηρίζεται",
-        "description": "This tab is not supported"
-    },
     "filterTabsPlaceholder": {
         "message": "Φίλτρο tabs (πολλαπλά φίλτρα με *)",
         "description": "Filter tabs (multiple filter with *)"
@@ -232,8 +224,8 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Μετακίνηση όλων των tabs με containers σε αυτό το group (μόνο για web urls, άδεια tabs δεν υποστηρίζονται)",
-        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
+        "message": "Μετακίνηση όλων των tabs με containers σε αυτό το group",
+        "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
         "message": "Regular expressions για tabs",

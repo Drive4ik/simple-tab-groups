@@ -57,14 +57,6 @@
         "message": "キャンセル",
         "description": "Cancel"
     },
-    "privateAndPinnedTabsAreNotSupported": {
-        "message": "プライベートタブとタブのピン止めは非サポートです",
-        "description": "Private and pinned tabs are not supported"
-    },
-    "thisTabIsNotSupported": {
-        "message": "このタブはサポートされていません",
-        "description": "This tab is not supported"
-    },
     "searchPlaceholder": {
         "message": "タブを検索中...",
         "description": "Search placeholder"
@@ -260,8 +252,8 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Firefox のコンテナーにより分類されたタブを自動的にキャッチしてこのグループに移動します（空のタブは移動しません）",
-        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
+        "message": "Firefox のコンテナーにより分類されたタブを自動的にキャッチしてこのグループに移動します",
+        "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
         "message": "正規表現でタブをキャッチする",
@@ -376,10 +368,6 @@
     "createThumbnailsForTabs": {
         "message": "タブのサムネイルを作成する（\"グループの管理\"で使用されます）",
         "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
-    },
-    "thisTabCanNotBeHidden": {
-        "message": "このタブはマイクかカメラを使用しているため隠すことができません",
-        "description": "This tab can not be hidden because it uses a microphone or camera"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "開いているタブの中にマイクかカメラを使用しているものがあるためグループを変更することができません",

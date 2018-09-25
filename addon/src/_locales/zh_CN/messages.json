@@ -57,14 +57,6 @@
         "message": "取消",
         "description": "Cancel"
     },
-    "privateAndPinnedTabsAreNotSupported": {
-        "message": "隐私和固定的标签页不被支持",
-        "description": "Private and pinned tabs are not supported"
-    },
-    "thisTabIsNotSupported": {
-        "message": "这个标签页不被支持",
-        "description": "This tab is not supported"
-    },
     "searchPlaceholder": {
         "message": "搜索标签页……",
         "description": "Search placeholder"
@@ -256,8 +248,8 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "捕捉并移动Firefox身份标签页（多账户容器）到该群组（仅对网页有效，不支持空标签页）",
-        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
+        "message": "捕捉并移动Firefox身份标签页（多账户容器）到该群组",
+        "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
         "message": "用来捕捉标签页的正则表述式",

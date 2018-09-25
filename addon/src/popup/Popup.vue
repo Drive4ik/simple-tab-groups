@@ -78,20 +78,23 @@
         created() {
             this
                 .$on('drag-move-group', function(from, to) {
-                    BG.moveGroup(from.data.item.id, to.data.itemIndex);
+                    BG.moveGroup(from.data.item.id, this.groups.indexOf(to.data.item));
                 })
                 .$on('drag-move-tab', function(from, to) {
-                    let newTabIndex = undefined,
-                        groupTo = null;
+                    let tabData = {};
 
-                    if (to.data.isGroup) {
-                        groupTo = to.data.item;
+                    if (from.data.item.id) {
+                        tabData.tabId = from.data.item.id;
                     } else {
-                        groupTo = to.data.group;
-                        newTabIndex = to.data.itemIndex;
+                        tabData.groupId = from.data.group.id;
+                        tabData.tabIndex = from.data.group.tabs.indexOf(from.data.item);
                     }
 
-                    BG.moveTabToGroup(from.data.itemIndex, newTabIndex, from.data.group.id, groupTo.id, false);
+                    BG.moveTabs([tabData], {
+                            newTabIndex: to.data.group.tabs.indexOf(to.data.item),
+                            groupId: to.data.group.id,
+                        }, false)
+                        .catch(utils.notify);
                 })
                 .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
                 .$on('drag-over', (item, isOver) => item.isOver = isOver);
@@ -145,10 +148,11 @@
                     groups = [];
 
                 this.groups.forEach(function(group) {
-                    group.filteredTabsBySearch = group.tabs.filter(function(tab, tabIndex) {
-                        tab.index = tabIndex;
-                        return utils.mySearchFunc(searchStr, tab.title, this.extendedSearch) || utils.mySearchFunc(searchStr, tab.url, this.extendedSearch);
-                    }, this);
+                    group.filteredTabsBySearch = group.tabs
+                        .filter(function(tab) {
+                            return utils.mySearchFunc(searchStr, tab.title, this.extendedSearch)
+                                || utils.mySearchFunc(searchStr, tab.url, this.extendedSearch);
+                        }, this);
 
                     if (group.filteredTabsBySearch.length || utils.mySearchFunc(searchStr, group.title, this.extendedSearch)) {
                         group.filteredTabsBySearch.sort(this.$_simpleSortTabs.bind(null, searchStr));
@@ -168,8 +172,6 @@
                     if (!utils.isAllowSender(request, sender)) {
                         return;
                     }
-
-                    console.info('BG event:', request.action, utils.clone(request));
 
                     switch (request.action) {
                         case 'group-updated':
@@ -439,21 +441,32 @@
 
                 this.showSectionDefault();
             },
-            async moveTabToGroup(oldTabIndex, oldGroupId, newGroupId, callLoadUnsyncedTabs) {
-                await BG.moveTabToGroup(oldTabIndex, undefined, oldGroupId, newGroupId);
+            async moveTab(tab, oldGroup, newGroup) {
+                let tabData = {};
 
-                if (callLoadUnsyncedTabs) {
+                if (tab.id) {
+                    tabData.tabId = tab.id;
+                } else {
+                    tabData.tabIndex = oldGroup.tabs.indexOf(tab);
+                    tabData.groupId = oldGroup.id;
+                }
+
+                try {
+                    await BG.moveTabs([tabData], {
+                        groupId: newGroup.id,
+                    }, false);
+                } catch (e) {
+                    utils.notify(e);
+                }
+
+                if (!oldGroup) {
                     this.loadUnsyncedTabs();
                 }
             },
-            async moveTabToNewGroup(oldTabIndex, oldGroupId, callLoadUnsyncedTabs) {
+            async moveTabToNewGroup(tab, oldGroup) {
                 let newGroup = await BG.addGroup(undefined, undefined, false);
 
-                await BG.moveTabToGroup(oldTabIndex, undefined, oldGroupId, newGroup.id);
-
-                if (callLoadUnsyncedTabs) {
-                    this.loadUnsyncedTabs();
-                }
+                await this.moveTab(tab, oldGroup, newGroup);
             },
             setTabIconAsGroupIcon(tab) {
                 BG.updateGroup(this.groupToShow.id, {
@@ -759,11 +772,11 @@
                             </div>
                         </div>
 
-                        <div v-for="tab in group.filteredTabsBySearch" :key="tab.index"
-                            @contextmenu="$refs.tabsContextMenu.open($event, {tab, group, tabIndex: tab.index})"
-                            @click="loadGroup(group, tab.index)"
+                        <div v-for="(tab, index) in group.filteredTabsBySearch" :key="index"
+                            @contextmenu="$refs.tabsContextMenu.open($event, {tab, group})"
+                            @click="loadGroup(group, group.tabs.indexOf(tab))"
                             @mousedown.middle.prevent
-                            @mouseup.middle.prevent="removeTab(group.id, tab.index)"
+                            @mouseup.middle.prevent="removeTab(group.id, group.tabs.indexOf(tab))"
                             :class="['item is-unselectable space-left', {
                                 'is-active': group === currentGroup && tab.active,
                                 'is-hovered-item': tab === hoverItem,
@@ -782,7 +795,7 @@
                                 </span>
                             </div>
                             <div class="item-action flex-on-hover">
-                                <span class="size-16 cursor-pointer" @click.stop="removeTab(group.id, tab.index)" :title="lang('deleteTab')">
+                                <span class="size-16 cursor-pointer" @click.stop="removeTab(group.id, group.tabs.indexOf(tab))" :title="lang('deleteTab')">
                                     <img src="/icons/close.svg" />
                                 </span>
                             </div>
@@ -801,7 +814,7 @@
             <div v-show="section === SECTION_GROUPS_LIST">
                 <div class="groups">
                     <div
-                        v-for="(group, groupIndex) in groups"
+                        v-for="group in groups"
                         :key="group.id"
                         :class="['group', {
                             'drag-moving': group.isMoving,
@@ -810,12 +823,12 @@
                         @contextmenu="$refs.groupContextMenu.open($event, {group})"
 
                         draggable="true"
-                        @dragstart="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
-                        @dragenter="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
-                        @dragover="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
-                        @dragleave="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
-                        @drop="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
-                        @dragend="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
+                        @dragstart="dragHandle($event, 'group', ['group'], {item: group})"
+                        @dragenter="dragHandle($event, 'group', ['group'], {item: group})"
+                        @dragover="dragHandle($event, 'group', ['group'], {item: group})"
+                        @dragleave="dragHandle($event, 'group', ['group'], {item: group})"
+                        @drop="dragHandle($event, 'group', ['group'], {item: group})"
+                        @dragend="dragHandle($event, 'group', ['group'], {item: group})"
                         >
                         <div
                             :class="['item', {
@@ -828,7 +841,7 @@
                             <div class="item-icon">
                                 <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                             </div>
-                            <div class="item-title" v-text="group.title"></div>
+                            <div class="item-title" v-text="group.id + ' ' + group.title"></div>
                             <div class="item-action hover is-unselectable" :title="getFullGroupTitleWithTabs(group)" @click.stop="showSectionGroupTabs(group)">
                                 <img class="size-16 rotate-180" src="/icons/arrow-left.svg" />
                                 <span class="tabs-text" v-text="lang('groupTabsCount', group.tabs.length)"></span>
@@ -913,7 +926,7 @@
                     <div
                         v-for="(tab, tabIndex) in groupToShow.tabs"
                         :key="tabIndex"
-                        @contextmenu="$refs.tabsContextMenu.open($event, {tab, tabIndex, group: groupToShow})"
+                        @contextmenu="$refs.tabsContextMenu.open($event, {tab, group: groupToShow})"
                         @click="loadGroup(groupToShow, tabIndex)"
                         @mousedown.middle.prevent
                         @mouseup.middle.prevent="removeTab(groupToShow.id, tabIndex)"
@@ -926,12 +939,12 @@
                         :title="getTabTitle(tab, true)"
 
                         draggable="true"
-                        @dragstart="dragHandle($event, 'tab', ['tab'], {itemIndex: tabIndex, item: tab, group: groupToShow})"
-                        @dragenter="dragHandle($event, 'tab', ['tab'], {itemIndex: tabIndex, item: tab, group: groupToShow})"
-                        @dragover="dragHandle($event, 'tab', ['tab'], {itemIndex: tabIndex, item: tab, group: groupToShow})"
-                        @dragleave="dragHandle($event, 'tab', ['tab'], {itemIndex: tabIndex, item: tab, group: groupToShow})"
-                        @drop="dragHandle($event, 'tab', ['tab'], {itemIndex: tabIndex, item: tab, group: groupToShow})"
-                        @dragend="dragHandle($event, 'tab', ['tab'], {itemIndex: tabIndex, item: tab, group: groupToShow})"
+                        @dragstart="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
+                        @dragenter="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
+                        @dragover="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
+                        @dragleave="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
+                        @drop="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
+                        @dragend="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
                         >
                         <div class="item-icon">
                             <img :src="tab.favIconUrlToDisplay" class="size-16" />
@@ -1037,15 +1050,15 @@
                     :key="group.id"
                     :class="{'is-disabled': menu.data.group ? menu.data.group.id === group.id : false}"
                     @click="menu.data.group
-                        ? (menu.data.group.id !== group.id && moveTabToGroup(menu.data.tabIndex, menu.data.group.id, group.id))
-                        : moveTabToGroup(menu.data.tab.id, undefined, group.id, true)
+                        ? (menu.data.group.id === group.id ? null : moveTab(menu.data.tab, menu.data.group, group))
+                        : moveTab(menu.data.tab, undefined, group)
                         "
                     >
                     <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                     <span v-text="group.title"></span>
                 </li>
 
-                <li @click="menu.data.group ? moveTabToNewGroup(menu.data.tabIndex, menu.data.group.id) : moveTabToNewGroup(menu.data.tab.id, undefined, true)">
+                <li @click="moveTabToNewGroup(menu.data.tab, menu.data.group)">
                     <img src="/icons/group-new.svg" class="size-16" />
                     <span v-text="lang('createNewGroup')"></span>
                 </li>
@@ -1224,6 +1237,7 @@
         height: 28px;
         min-height: 28px;
         padding-left: var(--indent);
+        position: relative;
 
         &.space-left {
             padding-left: calc(var(--indent) * 2);
@@ -1241,6 +1255,16 @@
         &.is-active,
         &.is-hovered-item {
             background-color: var(--color-gray);
+        }
+
+        &.is-active:before {
+            content: '';
+            position: absolute;
+            background-color: #0a84ff;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
         }
 
         .hover:hover {

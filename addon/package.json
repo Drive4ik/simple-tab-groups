@@ -28,8 +28,8 @@
         "style-loader": "^0.23.0",
         "vue-loader": "^15.4.2",
         "vue-template-compiler": "^2.5.17",
-        "webpack": "^4.19.0",
-        "webpack-cli": "^3.1.0",
+        "webpack": "^4.20.1",
+        "webpack-cli": "^3.1.1",
         "webpack-shell-plugin": "^0.5.0",
         "zip-folder": "^1.0.0"
     }

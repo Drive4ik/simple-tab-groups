@@ -57,14 +57,6 @@
         "message": "Annulla",
         "description": "Cancel"
     },
-    "privateAndPinnedTabsAreNotSupported": {
-        "message": "Le schede private e quelle bloccate non sono supportate",
-        "description": "Private and pinned tabs are not supported"
-    },
-    "thisTabIsNotSupported": {
-        "message": "Questa tab non è supportata",
-        "description": "This tab is not supported"
-    },
     "searchPlaceholder": {
         "message": "Cerca una tab...",
         "description": "Search placeholder"

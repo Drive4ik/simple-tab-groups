@@ -61,14 +61,6 @@
         "message": "Cancel",
         "description": "Cancel"
     },
-    "privateAndPinnedTabsAreNotSupported": {
-        "message": "Private and pinned tabs are not supported",
-        "description": "Private and pinned tabs are not supported"
-    },
-    "thisTabIsNotSupported": {
-        "message": "This tab is not supported",
-        "description": "This tab is not supported"
-    },
     "searchPlaceholder": {
         "message": "Search",
         "description": "Search placeholder"
@@ -264,8 +256,8 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Catch and move tabs with containers to this group (only for web URLs, empty tabs are not supported)",
-        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
+        "message": "Catch and move tabs with containers to this group",
+        "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
         "message": "Regular expressions for catch tabs",
@@ -391,10 +383,6 @@
         "message": "Create thumbnails for tabs (used in the \"Manage groups\")",
         "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
     },
-    "thisTabCanNotBeHidden": {
-        "message": "This tab can not be hidden because it uses a microphone or camera",
-        "description": "This tab can not be hidden because it uses a microphone or camera"
-    },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "It is not possible to change the group because one of the opened tabs share microphone or camera",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
@@ -510,5 +498,39 @@
     "waitingForSessionRestoreNotification": {
         "message": "Waiting for session restore...",
         "description": "Waiting for session restore..."
+    },
+    "movingMultipleTabsText": {
+        "message": "Moving $count$ tabs",
+        "description": "Moving $count$ tabs",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "7"
+            }
+        }
+    },
+    "pinnedTabsAreNotSupported": {
+        "message": "Pinned tabs are not supported",
+        "description": "Pinned tabs are not supported"
+    },
+    "thisUrlsAreNotSupported": {
+        "message": "This urls \"$urls$\" are not supported",
+        "description": "This urls \"$urls$\" are not supported",
+        "placeholders": {
+            "urls": {
+                "content": "$1",
+                "example": "about:addons, file://..."
+            }
+        }
+    },
+    "thisTabsCanNotBeHidden": {
+        "message": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
+        "description": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
+        "placeholders": {
+            "titles": {
+                "content": "$1",
+                "example": "some titles"
+            }
+        }
     }
 }
