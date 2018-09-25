@@ -587,13 +587,7 @@
                             return;
                         }
 
-                        let allItems = this.filteredGroupsBySearch.reduce(function(accum, group) {
-                            accum.push(group);
-
-                            group.filteredTabsBySearch.forEach(tab => accum.push(tab));
-
-                            return accum;
-                        }, []);
+                        let allItems = this.filteredGroupsBySearch.reduce((accum, group) => accum.concat([group]).concat(group.filteredTabsBySearch), []);
 
                         index = this.hoverItem ? allItems.indexOf(this.hoverItem) : -1;
 
