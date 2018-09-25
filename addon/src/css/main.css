@@ -48,6 +48,12 @@ hr {
     background-color: var(--color-hr);
 }
 
+/*BULMA REWRITE*/
+.checkbox {
+    -moz-user-select: none;
+    user-select: none;
+}
+/*BULMA REWRITE END*/
 
 /* HEPLERS */
 .h-margin-top-10 {

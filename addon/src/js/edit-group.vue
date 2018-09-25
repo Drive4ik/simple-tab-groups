@@ -232,7 +232,7 @@
 
         <div class="field">
             <div class="control">
-                <label class="checkbox is-unselectable">
+                <label class="checkbox">
                     <input type="checkbox" v-model="groupClone.muteTabsWhenGroupCloseAndRestoreWhenOpen" />
                     <span v-text="lang('muteTabsWhenGroupCloseAndRestoreWhenOpen')"></span>
                 </label>
@@ -244,7 +244,7 @@
         <div class="field">
             <label class="label" v-text="lang('tabMoving')"></label>
             <div class="control">
-                <label class="checkbox is-unselectable">
+                <label class="checkbox">
                     <input type="checkbox" v-model="groupClone.isSticky" />
                     <span v-text="lang('isStickyGroupTitle')"></span>
                 </label>
@@ -253,7 +253,7 @@
                 </span>
             </div>
             <div class="control">
-                <label class="checkbox is-unselectable">
+                <label class="checkbox">
                     <input type="checkbox" v-model="groupClone.showTabAfterMovingItIntoThisGroup" />
                     <span v-text="lang('showTabAfterMovingItIntoThisGroup')"></span>
                 </label>
@@ -267,7 +267,7 @@
             <div class="control">
                 <div v-for="container in containers" :key="container.cookieStoreId" class="field">
                     <div class="control">
-                        <label class="checkbox is-unselectable">
+                        <label class="checkbox">
                             <input type="checkbox"
                                 :disabled="!groupClone.catchTabContainers.includes(container.cookieStoreId) && container.cookieStoreId in disabledContainers"
                                 :value="container.cookieStoreId"
@@ -275,7 +275,7 @@
                                 />
                             <img :src="container.iconUrl" class="size-16 align-bottom container-icon" :style="{fill: container.colorCode}" />
                             <span v-text="container.name"></span>
-                            <i v-if="container.cookieStoreId in disabledContainers" v-once>({{ disabledContainers[container.cookieStoreId] }})</i>
+                            <i v-if="container.cookieStoreId in disabledContainers">({{ disabledContainers[container.cookieStoreId] }})</i>
                         </label>
                     </div>
                 </div>
