@@ -65,8 +65,8 @@
             };
         },
         async mounted() {
-            let { os } = await browser.runtime.getPlatformInfo();
-            this.isMac = os === 'mac';
+            let platformInfo = await browser.runtime.getPlatformInfo();
+            this.isMac = platformInfo.os === 'mac';
 
             let data = await storage.get(null);
 

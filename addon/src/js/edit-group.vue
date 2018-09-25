@@ -48,9 +48,21 @@
             swatches: swatches,
         },
         data() {
-            let vm = this;
+            let vm = this,
+                groups = BG.getGroups(),
+                disabledContainers = {};
+
+            this.containers.forEach(function(container) {
+                let groupWhichHasContainer = groups.find(group => group.id !== this.group.id && group.catchTabContainers.includes(container.cookieStoreId));
+
+                if (groupWhichHasContainer) {
+                    disabledContainers[container.cookieStoreId] = groupWhichHasContainer.title;
+                }
+            }, this);
 
             return {
+                disabledContainers: disabledContainers,
+
                 showMessageCantLoadFile: false,
 
                 groupIconViewTypes: groupIconViewTypes,
@@ -220,7 +232,7 @@
 
         <div class="field">
             <div class="control">
-                <label class="checkbox">
+                <label class="checkbox is-unselectable">
                     <input type="checkbox" v-model="groupClone.muteTabsWhenGroupCloseAndRestoreWhenOpen" />
                     <span v-text="lang('muteTabsWhenGroupCloseAndRestoreWhenOpen')"></span>
                 </label>
@@ -232,7 +244,7 @@
         <div class="field">
             <label class="label" v-text="lang('tabMoving')"></label>
             <div class="control">
-                <label class="checkbox">
+                <label class="checkbox is-unselectable">
                     <input type="checkbox" v-model="groupClone.isSticky" />
                     <span v-text="lang('isStickyGroupTitle')"></span>
                 </label>
@@ -241,7 +253,7 @@
                 </span>
             </div>
             <div class="control">
-                <label class="checkbox">
+                <label class="checkbox is-unselectable">
                     <input type="checkbox" v-model="groupClone.showTabAfterMovingItIntoThisGroup" />
                     <span v-text="lang('showTabAfterMovingItIntoThisGroup')"></span>
                 </label>
@@ -255,10 +267,15 @@
             <div class="control">
                 <div v-for="container in containers" :key="container.cookieStoreId" class="field">
                     <div class="control">
-                        <label class="checkbox">
-                            <input type="checkbox" :value="container.cookieStoreId" v-model="groupClone.catchTabContainers" />
+                        <label class="checkbox is-unselectable">
+                            <input type="checkbox"
+                                :disabled="!groupClone.catchTabContainers.includes(container.cookieStoreId) && container.cookieStoreId in disabledContainers"
+                                :value="container.cookieStoreId"
+                                v-model="groupClone.catchTabContainers"
+                                />
                             <img :src="container.iconUrl" class="size-16 align-bottom container-icon" :style="{fill: container.colorCode}" />
                             <span v-text="container.name"></span>
+                            <i v-if="container.cookieStoreId in disabledContainers" v-once>({{ disabledContainers[container.cookieStoreId] }})</i>
                         </label>
                     </div>
                 </div>
