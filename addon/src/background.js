@@ -93,12 +93,12 @@ async function createTab(tab) {
     }
 
     if (isFFVersionEqualOrHighThan(63)) {
-        if (tab.active) {
-            delete tab.title;
-        } else if (tab.url && !utils.isUrlEmpty(tab.url)) {
+        if (!tab.active && tab.url && !utils.isUrlEmpty(tab.url)) {
             tab.discarded = true;
         }
-    } else {
+    }
+
+    if (tab.active || !tab.discarded) {
         delete tab.title;
     }
 
@@ -119,6 +119,10 @@ async function getActiveTab(windowId = browser.windows.WINDOW_ID_CURRENT) {
 }
 
 async function getHighlightedTabs(windowId = browser.windows.WINDOW_ID_CURRENT, clickedTab = null) {
+    if (clickedTab && utils.isTabPinned(clickedTab)) {
+        return [];
+    }
+
     let tabs = await browser.tabs.query({
         pinned: false,
         hidden: false,
@@ -126,17 +130,13 @@ async function getHighlightedTabs(windowId = browser.windows.WINDOW_ID_CURRENT, 
         windowId: windowId,
     });
 
-    if (clickedTab && utils.isTabNotPinned(clickedTab)) {
+    if (clickedTab) {
         if (!tabs.some(tab => tab.id === clickedTab.id)) { // if clicked tab not in selected tabs - add it
             tabs.push(clickedTab);
         }
 
-        if (1 === tabs.length) { // if need to move only one tab
-            let activeTab = await getActiveTab(windowId);
-
-            if (activeTab.id !== clickedTab.id) { // and active tab is not equal with clicked tab - move clicked tab, not active
-                tabs = tabs.filter(tab => tab.id !== activeTab.id); // exclude active tab
-            }
+        if (2 === tabs.length) {
+            tabs = tabs.filter(tab => tab.active ? (tab.id === clickedTab.id) : true); // exclude active tab if need to move another tab
         }
     }
 
@@ -1288,7 +1288,8 @@ async function moveTabs(fromData, toData, showNotificationAfterMoveTab = true, s
         }
     }
 
-    let workedGroups = [];
+    let countMovedTabs = 0,
+        workedGroups = [];
 
     function setGroupAsWorked(group) {
         if (!workedGroups.includes(group)) {
@@ -1297,6 +1298,8 @@ async function moveTabs(fromData, toData, showNotificationAfterMoveTab = true, s
     }
 
     function moveTabLocal(tabData, newTab) {
+        countMovedTabs++;
+
         if (tabData.tabId) {
             let foundTab = _groups.some(function(group) {
                 return group.tabs.some(function(tab, tabIndex) {
@@ -1519,8 +1522,14 @@ async function moveTabs(fromData, toData, showNotificationAfterMoveTab = true, s
         return;
     }
 
-    let tabTitle = utils.sliceText(utils.getTabTitle(newGroup.tabs[toData.newTabIndex]), 50),
+    let message = '';
+
+    if (countMovedTabs > 1) {
+        message = browser.i18n.getMessage('moveMultipleTabsToGroupMessage', countMovedTabs);
+    } else {
+        let tabTitle = utils.sliceText(utils.getTabTitle(newGroup.tabs[toData.newTabIndex]), 50);
         message = browser.i18n.getMessage('moveTabToGroupMessage', [newGroup.title, tabTitle]);
+    }
 
     utils.notify(message)
         .then(async function(newGroupId, newTabIndex) {

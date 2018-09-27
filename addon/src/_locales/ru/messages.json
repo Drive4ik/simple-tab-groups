@@ -528,5 +528,15 @@
                 "example": "some titles"
             }
         }
+    },
+    "moveMultipleTabsToGroupMessage": {
+        "message": "Перемещено $tabscount$ вкладок.\nНажмите здесь для открытия первой вкладки",
+        "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
     }
 }
