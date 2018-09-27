@@ -223,8 +223,8 @@
             },
 
             $_simpleSortTabs(searchStr, a, b) {
-                let aIncludes = (a.title || '').toLowerCase().includes(searchStr) || a.url.includes(searchStr),
-                    bIncludes = (b.title || '').toLowerCase().includes(searchStr) || b.url.includes(searchStr);
+                let aIncludes = (a.title || '').toLowerCase().includes(searchStr) || (a.url || '').toLowerCase().includes(searchStr),
+                    bIncludes = (b.title || '').toLowerCase().includes(searchStr) || (b.url || '').toLowerCase().includes(searchStr);
 
                 if (aIncludes && !bIncludes) { // move up
                     return -1;
@@ -827,7 +827,7 @@
                             <div class="item-icon">
                                 <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                             </div>
-                            <div class="item-title" v-text="group.id + ' ' + group.title"></div>
+                            <div class="item-title" v-text="group.title"></div>
                             <div class="item-action hover is-unselectable" :title="getFullGroupTitleWithTabs(group)" @click.stop="showSectionGroupTabs(group)">
                                 <img class="size-16 rotate-180" src="/icons/arrow-left.svg" />
                                 <span class="tabs-text" v-text="lang('groupTabsCount', group.tabs.length)"></span>

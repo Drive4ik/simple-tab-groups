@@ -49,18 +49,11 @@ const EXTENSIONS_WHITE_LIST = {
     '{506e023c-7f2b-40a3-8066-bc5deb40aebe}': {
         title: 'Gesturefy',
         url: 'https://addons.mozilla.org/firefox/addon/gesturefy/',
-        postActions: [
-            'i-am-back',
-            'group-added',
-            'group-updated',
-            'group-removed',
-        ],
+        postActions: [],
         getActions: [
-            'are-you-here',
             'add-new-group',
-            'get-groups-list',
-            'load-last-group',
             'load-first-group',
+            'load-last-group',
             'load-next-group',
             'load-prev-group',
             'load-custom-group',

@@ -109,6 +109,44 @@ async function createTab(tab) {
     return browser.tabs.create(tab);
 }
 
+async function getActiveTab(windowId = browser.windows.WINDOW_ID_CURRENT) {
+    let [activeTab] = await browser.tabs.query({
+        active: true,
+        windowId: windowId,
+    });
+
+    return activeTab;
+}
+
+async function getHighlightedTabs(windowId = browser.windows.WINDOW_ID_CURRENT, clickedTab = null) {
+    let tabs = await browser.tabs.query({
+        pinned: false,
+        hidden: false,
+        highlighted: true,
+        windowId: windowId,
+    });
+
+    if (clickedTab && utils.isTabNotPinned(clickedTab)) {
+        if (!tabs.some(tab => tab.id === clickedTab.id)) { // if clicked tab not in selected tabs - add it
+            tabs.push(clickedTab);
+        }
+
+        if (1 === tabs.length) { // if need to move only one tab
+            let activeTab = await getActiveTab(windowId);
+
+            if (activeTab.id !== clickedTab.id) { // and active tab is not equal with clicked tab - move clicked tab, not active
+                tabs = tabs.filter(tab => tab.id !== activeTab.id); // exclude active tab
+            }
+        }
+    }
+
+    return tabs.map(function(tab) {
+        return {
+            tabId: tab.id,
+        };
+    });
+}
+
 async function getTabs(windowId = browser.windows.WINDOW_ID_CURRENT, status = 'v') { // v: visible, h: hidden, null: all
     let tabs = await browser.tabs.query({
         windowId: windowId,
@@ -1299,7 +1337,7 @@ async function moveTabs(fromData, toData, showNotificationAfterMoveTab = true, s
     }
 
     let tabsWhichCantMove = {
-        // showPinnedMessage: false,
+        showPinnedMessage: false,
         urlNotAllow: [],
         cantHide: [],
     };
@@ -1322,10 +1360,10 @@ async function moveTabs(fromData, toData, showNotificationAfterMoveTab = true, s
             if (tabData.tabId) {
                 let tab = await browser.tabs.get(tabData.tabId);
 
-                // if (utils.isTabPinned(tab)) {
-                //     tabsWhichCantMove.showPinnedMessage = true;
-                //     continue;
-                // }
+                if (utils.isTabPinned(tab)) {
+                    tabsWhichCantMove.showPinnedMessage = true;
+                    continue;
+                }
 
                 moveTabLocal(tabData, mapTab(tab));
 
@@ -1376,10 +1414,10 @@ async function moveTabs(fromData, toData, showNotificationAfterMoveTab = true, s
             if (tabData.tabId) {
                 let tab = await browser.tabs.get(tabData.tabId);
 
-                // if (utils.isTabPinned(tab)) {
-                //     tabsWhichCantMove.showPinnedMessage = true;
-                //     continue;
-                // }
+                if (utils.isTabPinned(tab)) {
+                    tabsWhichCantMove.showPinnedMessage = true;
+                    continue;
+                }
 
                 if (utils.isTabCanNotBeHidden(tab)) {
                     tabsWhichCantMove.cantHide.push(tab.title);
@@ -1448,15 +1486,13 @@ async function moveTabs(fromData, toData, showNotificationAfterMoveTab = true, s
 
     isMovingTabs = false;
 
-    saveGroupsToStorage();
-
     function join(strArray) {
         return strArray.filter(utils.onlyUnique).map(str => utils.sliceText(str, 25)).join(', ');
     }
 
-    // if (tabsWhichCantMove.showPinnedMessage) {
-    //     utils.notify(browser.i18n.getMessage('pinnedTabsAreNotSupported'));
-    // }
+    if (tabsWhichCantMove.showPinnedMessage) {
+        utils.notify(browser.i18n.getMessage('pinnedTabsAreNotSupported'));
+    }
 
     if (tabsWhichCantMove.urlNotAllow.length) {
         utils.notify(browser.i18n.getMessage('thisUrlsAreNotSupported', join(tabsWhichCantMove.urlNotAllow)));
@@ -1470,11 +1506,11 @@ async function moveTabs(fromData, toData, showNotificationAfterMoveTab = true, s
         return;
     }
 
-    let firstMovedTabIndex = pushToEnd ? Math.max(0, toData.newTabIndex - 1) : toData.newTabIndex;
+    saveGroupsToStorage();
 
     if (showTabAfterMoving) {
         let winId = newGroup.windowId || lastFocusedNormalWindow.id;
-        await loadGroup(winId, _groups.indexOf(newGroup), firstMovedTabIndex);
+        await loadGroup(winId, _groups.indexOf(newGroup), toData.newTabIndex);
 
         return;
     }
@@ -1483,7 +1519,7 @@ async function moveTabs(fromData, toData, showNotificationAfterMoveTab = true, s
         return;
     }
 
-    let tabTitle = utils.sliceText(utils.getTabTitle(newGroup.tabs[firstMovedTabIndex]), 50),
+    let tabTitle = utils.sliceText(utils.getTabTitle(newGroup.tabs[toData.newTabIndex]), 50),
         message = browser.i18n.getMessage('moveTabToGroupMessage', [newGroup.title, tabTitle]);
 
     utils.notify(message)
@@ -1494,7 +1530,7 @@ async function moveTabs(fromData, toData, showNotificationAfterMoveTab = true, s
                 await setFocusOnWindow(lastFocusedNormalWindow.id);
                 loadGroup(lastFocusedNormalWindow.id, groupIndex, newTabIndex);
             }
-        }.bind(null, newGroup.id, firstMovedTabIndex));
+        }.bind(null, newGroup.id, toData.newTabIndex));
 }
 
 let moveTabToGroupMenusIds = [];
@@ -1512,21 +1548,6 @@ async function removeMoveTabMenus() {
     await Promise.all(moveTabToGroupMenusIds.map(id => browser.menus.remove(id)));
 
     moveTabToGroupMenusIds = [];
-}
-
-async function getHighlightedTabs(windowId) {
-    let tabs = await browser.tabs.query({
-        pinned: false,
-        hidden: false,
-        highlighted: true,
-        windowId: windowId,
-    });
-
-    return tabs.map(function(tab) {
-        return {
-            tabId: tab.id,
-        };
-    });
 }
 
 async function createMoveTabMenus(windowId) {
@@ -1598,7 +1619,7 @@ async function createMoveTabMenus(windowId) {
             },
             contexts: ['tab'],
             onclick: async function(destGroupId, info, tab) {
-                let tabsToMove = await getHighlightedTabs(tab.windowId);
+                let tabsToMove = await getHighlightedTabs(tab.windowId, tab);
 
                 if (!tabsToMove.length) {
                     utils.notify(browser.i18n.getMessage('pinnedTabsAreNotSupported'));
@@ -1621,7 +1642,7 @@ async function createMoveTabMenus(windowId) {
             16: '/icons/group-new.svg',
         },
         onclick: async function(info, tab) {
-            let tabsToMove = await getHighlightedTabs(tab.windowId);
+            let tabsToMove = await getHighlightedTabs(tab.windowId, tab);
 
             if (!tabsToMove.length) {
                 utils.notify(browser.i18n.getMessage('pinnedTabsAreNotSupported'));
@@ -2370,11 +2391,14 @@ async function init() {
         loadingRawTabs[win.id] = win.tabs.filter(winTab => utils.isTabVisible(winTab) && winTab.status === 'loading');
     });
 
+    let startLoadingTabsTime = Date.now();
+
     // waiting all tabs to load
-    await new Promise(function(resolve) {
+    await new Promise(function(resolve, reject) {
         let tryCount = 0,
             tryTime = 250, // ms
-            showNotificationMessageForLongTimeLoading = 90; // sec
+            showNotificationMessageForLongTimeLoading = 90, // sec
+            fullStopAddonAfterLoadingWaitFor = 10; // min
 
         async function checkTabs() {
             let loadingTabs = await browser.tabs.query({
@@ -2385,6 +2409,11 @@ async function init() {
             });
 
             if (loadingTabs.length) {
+                if (Date.now() - startLoadingTabsTime > fullStopAddonAfterLoadingWaitFor * 60 * 1000) { // after 10 min loading - stop loading
+                    reject(browser.i18n.getMessage('waitingToLoadAllTabs'));
+                    return;
+                }
+
                 tryCount++;
 
                 if (Math.floor(tryCount % (1000 / tryTime * showNotificationMessageForLongTimeLoading)) === 0) {
@@ -2397,7 +2426,7 @@ async function init() {
             }
         }
 
-        setTimeout(checkTabs, tryTime);
+        checkTabs();
     });
 
     browser.notifications.clear('loading-tab-message');
