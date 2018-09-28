@@ -2028,11 +2028,14 @@ async function runAction(data, externalExtId) {
                 let activeTab = await getActiveTab();
 
                 if (utils.isTabPinned(activeTab)) {
-                    throw Error(browser.i18n.getMessage('pinnedTabsAreNotSupported'));
+                    utils.notify(browser.i18n.getMessage('pinnedTabsAreNotSupported'));
+                    break;
                 } else if (utils.isTabIncognito(activeTab)) {
-                    throw Error(browser.i18n.getMessage('privateTabsAreNotSupported'));
+                    utils.notify(browser.i18n.getMessage('privateTabsAreNotSupported'));
+                    break;
                 } else if (utils.isTabCanNotBeHidden(activeTab)) {
-                    throw Error(browser.i18n.getMessage('thisTabsCanNotBeHidden', utils.sliceText(activeTab.title, 25)));
+                    utils.notify(browser.i18n.getMessage('thisTabsCanNotBeHidden', utils.sliceText(activeTab.title, 25)));
+                    break;
                 }
 
                 let activeGroup = _groups.find(group => group.windowId === activeTab.windowId);
