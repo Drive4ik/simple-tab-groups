@@ -309,7 +309,7 @@ function showGroupsForMovingTab(data) {
         wrapper.style.transform = 'none';
         wrapper.style.opacity = '1';
         wrapper.style.visibility = 'visible';
-        groupsWrapper.firstChild.focus();
+        setFocusToNextElement(groupsWrapper.lastChild, 'down');
     }, 0);
 
 }
