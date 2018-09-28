@@ -18,7 +18,9 @@
     const SECTION_GENERAL = 'general',
         SECTION_HOTKEYS = 'hotkeys',
         SECTION_BACKUP = 'backup',
-        SECTION_DEFAULT = SECTION_GENERAL;
+        SECTION_DEFAULT = SECTION_GENERAL,
+        _funcKeys = Array(12).fill().reduce((acc, v, key) => acc.concat(key + 1), []),
+        isFunctionKey = keyCode => _funcKeys.some(n => keyCode === KeyEvent[`DOM_VK_F${n}`]);
 
     export default {
         data() {
@@ -96,7 +98,7 @@
                     }
 
                     let filteredHotkeys = hotkeys.filter(function(hotkey) {
-                        let ok = (hotkey.keyCode || hotkey.key) && hotkey.action/* && (hotkey.ctrlKey || hotkey.shiftKey || hotkey.altKey)*/;
+                        let ok = (hotkey.keyCode || hotkey.key) && hotkey.action && (hotkey.ctrlKey || hotkey.shiftKey || hotkey.altKey || isFunctionKey(hotkey.keyCode));
 
                         if (ok && 'load-custom-group' === hotkey.action && !this.groups.some(gr => gr.id === hotkey.groupId)) {
                             ok = false;
