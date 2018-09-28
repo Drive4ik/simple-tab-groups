@@ -59,6 +59,7 @@ const EXTENSIONS_WHITE_LIST = {
             'load-custom-group',
             'delete-current-group',
             'open-manage-groups',
+            'move-active-tab-to-custom-group',
         ],
     },
 };

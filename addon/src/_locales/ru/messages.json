@@ -327,6 +327,10 @@
         "message": "Открыть \"Управление группами\"",
         "description": "Open manage groups"
     },
+    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
+        "message": "Переместить активную вкладку в другую группу",
+        "description": "Move active tab to custom group"
+    },
     "whatsWrongMessage": {
         "message": "Что-то не так... Пожалуйста свяжитесь с разработчиком по email с логом ошибок (есть кнопка внизу на странице настроек плагина)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
@@ -508,6 +512,10 @@
     "pinnedTabsAreNotSupported": {
         "message": "Закреплённые вкладки не поддерживаются",
         "description": "Pinned tabs are not supported"
+    },
+    "privateTabsAreNotSupported": {
+        "message": "Приватные вкладки не поддерживаются",
+        "description": "Private tabs are not supported"
     },
     "thisUrlsAreNotSupported": {
         "message": "Эти адреса \"$urls$\" не поддерживаются",

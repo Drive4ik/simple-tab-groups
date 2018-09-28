@@ -1911,9 +1911,8 @@ function _mapGroupForAnotherExtension(group) {
 
 async function runAction(data, externalExtId) {
     let result = {
-            ok: false,
-        },
-        loadOk = null;
+        ok: false,
+    };
 
     if (!data.action) {
         result.error = '[STG] Action or it\'s id is empty';
@@ -1966,16 +1965,16 @@ async function runAction(data, externalExtId) {
                 result.ok = true;
                 break;
             case 'load-next-group':
-                loadOk = await loadGroupPosition('next');
+                let loadNextOk = await loadGroupPosition('next');
 
-                if (loadOk) {
+                if (loadNextOk) {
                     result.ok = true;
                 }
                 break;
             case 'load-prev-group':
-                loadOk = await loadGroupPosition('prev');
+                let loadPrevOk = await loadGroupPosition('prev');
 
-                if (loadOk) {
+                if (loadPrevOk) {
                     result.ok = true;
                 }
                 break;
@@ -2023,6 +2022,45 @@ async function runAction(data, externalExtId) {
                 break;
             case 'open-manage-groups':
                 await openManageGroups();
+                result.ok = true;
+                break;
+            case 'move-active-tab-to-custom-group':
+                let activeTab = await getActiveTab();
+
+                if (utils.isTabPinned(activeTab)) {
+                    throw Error(browser.i18n.getMessage('pinnedTabsAreNotSupported'));
+                } else if (utils.isTabIncognito(activeTab)) {
+                    throw Error(browser.i18n.getMessage('privateTabsAreNotSupported'));
+                } else if (utils.isTabCanNotBeHidden(activeTab)) {
+                    throw Error(browser.i18n.getMessage('thisTabsCanNotBeHidden', utils.sliceText(activeTab.title, 25)));
+                }
+
+                let activeGroup = _groups.find(group => group.windowId === activeTab.windowId);
+
+                await browser.tabs.sendMessage(activeTab.id, {
+                    action: 'move-tab-to-custom-group',
+                    groups: _groups.map(_mapGroupForAnotherExtension),
+                    activeGroupId: activeGroup ? activeGroup.id : null,
+                });
+
+                result.ok = true;
+                break;
+            case 'move-active-tab-to-group':
+                let activeTabForMove = await getActiveTab();
+
+                if ('new' === data.groupId) {
+                    let newGroup = await addGroup(undefined, undefined, false);
+                    data.groupId = newGroup.id;
+                } else if (!_groups.some(group => group.id === data.groupId)) {
+                    throw Error('Group not found');
+                }
+
+                await moveTabs([{
+                    tabId: activeTabForMove.id,
+                }], {
+                    groupId: data.groupId,
+                });
+
                 result.ok = true;
                 break;
             default:

@@ -331,6 +331,10 @@
         "message": "Open manage groups",
         "description": "Open manage groups"
     },
+    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
+        "message": "Move active tab to custom group",
+        "description": "Move active tab to custom group"
+    },
     "whatsWrongMessage": {
         "message": "What's wrong...\nPlease notify the developer by support email with last error logs (button exists at the bottom of the Options page)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
@@ -512,6 +516,10 @@
     "pinnedTabsAreNotSupported": {
         "message": "Pinned tabs are not supported",
         "description": "Pinned tabs are not supported"
+    },
+    "privateTabsAreNotSupported": {
+        "message": "Private tabs are not supported",
+        "description": "Private tabs are not supported"
     },
     "thisUrlsAreNotSupported": {
         "message": "This urls \"$urls$\" are not supported",

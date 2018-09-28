@@ -38,6 +38,7 @@
                     'add-new-group',
                     'delete-current-group',
                     'open-manage-groups',
+                    'move-active-tab-to-custom-group',
                 ],
 
                 openPopupCommand: {
