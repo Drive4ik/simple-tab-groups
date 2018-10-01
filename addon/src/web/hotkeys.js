@@ -274,14 +274,14 @@ function showGroupsForMovingTab(data) {
         if (1 === groupsWrapper.children.length) {
             groupsWrapper.firstChild.focus();
         } else if ('down' === vector) {
-            if (node.nextSibling) {
-                node.nextSibling.focus();
+            if (node.nextElementSibling) {
+                node.nextElementSibling.focus();
             } else {
                 groupsWrapper.firstChild.focus();
             }
         } else if ('up' === vector) {
-            if (node.previousSibling) {
-                node.previousSibling.focus();
+            if (node.previousElementSibling) {
+                node.previousElementSibling.focus();
             } else {
                 groupsWrapper.lastChild.focus();
             }
