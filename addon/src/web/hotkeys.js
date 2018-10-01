@@ -189,10 +189,10 @@ function showGroupsForMovingTab(data) {
         onkeydown: function(e) {
             if (KeyEvent.DOM_VK_DOWN === e.keyCode) {
                 stopEvent(e);
-                setFocusToNextElement(groupsWrapper.lastChild, 'down');
+                setFocusToNextElement(groupsWrapper.lastElementChild, 'down');
             } else if (KeyEvent.DOM_VK_UP === e.keyCode) {
                 stopEvent(e);
-                setFocusToNextElement(groupsWrapper.firstChild, 'up');
+                setFocusToNextElement(groupsWrapper.firstElementChild, 'up');
             }
         },
     });
@@ -272,18 +272,18 @@ function showGroupsForMovingTab(data) {
         lastVector = vector;
 
         if (1 === groupsWrapper.children.length) {
-            groupsWrapper.firstChild.focus();
+            groupsWrapper.firstElementChild.focus();
         } else if ('down' === vector) {
             if (node.nextElementSibling) {
                 node.nextElementSibling.focus();
             } else {
-                groupsWrapper.firstChild.focus();
+                groupsWrapper.firstElementChild.focus();
             }
         } else if ('up' === vector) {
             if (node.previousElementSibling) {
                 node.previousElementSibling.focus();
             } else {
-                groupsWrapper.lastChild.focus();
+                groupsWrapper.lastElementChild.focus();
             }
         }
 
@@ -309,7 +309,7 @@ function showGroupsForMovingTab(data) {
         wrapper.style.transform = 'none';
         wrapper.style.opacity = '1';
         wrapper.style.visibility = 'visible';
-        setFocusToNextElement(groupsWrapper.lastChild, 'down');
+        setFocusToNextElement(groupsWrapper.lastElementChild, 'down');
     }, 0);
 
 }
