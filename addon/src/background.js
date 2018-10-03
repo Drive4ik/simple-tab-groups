@@ -2098,7 +2098,7 @@ async function resetAutoBackup() {
         timer = 0,
         value = Number(options.autoBackupIntervalValue);
 
-    if (isNaN(value) || 0 <= value) {
+    if (isNaN(value) || 0 >= value) {
         return;
     }
 
