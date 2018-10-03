@@ -546,5 +546,25 @@
                 "example": "4"
             }
         }
+    },
+    "autoBackupEnableTitle": {
+        "message": "Включить автоматическое резервное копирование",
+        "description": "Enable auto backup"
+    },
+    "autoBackupCreateEveryTitle": {
+        "message": "Создавать резервные копии каждый:",
+        "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyHours": {
+        "message": "час",
+        "description": "hour(s)"
+    },
+    "autoBackupIntervalKeyDays": {
+        "message": "день",
+        "description": "day(s)"
+    },
+    "autoBackupLastBackupTitle": {
+        "message": "Последнее резервное копирование:",
+        "description": "Last backup:"
     }
 }

@@ -3,8 +3,8 @@
 
     import * as utils from '../js/utils';
     import storage from '../js/storage';
-    import {onlyBoolOptionsKeys, allOptionsKeys, groupIconViewTypes, DEFAULT_COOKIE_STORE_ID} from '../js/constants';
-    import {importFromFile, exportToFile, generateBackupFileName} from '../js/fileImportExport';
+    import * as constants from '../js/constants';
+    import * as file from '../js/file';
 
     const BG = (function(bgWin) {
         return bgWin && bgWin.background && bgWin.background.inited ? bgWin.background : false;
@@ -12,6 +12,7 @@
 
     if (!BG) {
         setTimeout(() => window.location.reload(), 3000);
+        document.getElementById('stg-options').innerText = browser.i18n.getMessage('waitingToLoadAllTabs');
         throw Error('wait loading addon');
     }
 
@@ -51,7 +52,7 @@
                     key: '',
                 },
 
-                groupIconViewTypes: groupIconViewTypes,
+                groupIconViewTypes: constants.groupIconViewTypes,
 
                 includeTabThumbnailsIntoBackup: false,
                 includeTabFavIconsIntoBackup: true,
@@ -75,11 +76,11 @@
 
             this.calculateThumbnailsSize(data.thumbnails);
 
-            this.options = utils.extractKeys(data, allOptionsKeys);
+            this.options = utils.extractKeys(data, constants.allOptionsKeys);
             this.groups = Array.isArray(data.groups) ? data.groups : [];
 
-            onlyBoolOptionsKeys
-                .concat(['defaultGroupIconViewType'])
+            constants.onlyBoolOptionsKeys
+                .concat(['defaultGroupIconViewType', 'autoBackupIntervalKey'])
                 .forEach(function(option) {
                     this.$watch(`options.${option}`, function(newValue) {
                         this.saveOptions({
@@ -91,6 +92,19 @@
             this.initPopupHotkey();
         },
         watch: {
+            'options.autoBackupIntervalValue': function(value, oldValue) {
+                if (!value || !oldValue) {
+                    return;
+                }
+
+                if (1 > value || 20 < value) {
+                    value = 1;
+                }
+
+                this.saveOptions({
+                    autoBackupIntervalValue: value,
+                });
+            },
             'options.hotkeys': {
                 handler(hotkeys, oldValue) {
                     if (!oldValue) {
@@ -213,7 +227,7 @@
 
             async importAddonSettings() {
                 try {
-                    let data = await importFromFile();
+                    let data = await file.load();
 
                     if ('object' !== utils.type(data) || !Array.isArray(data.groups)) {
                         throw 'Error: this is wrong backup!';
@@ -231,37 +245,15 @@
                 }
             },
 
-            async exportAddonSettings() {
-                let data = await storage.get(null);
-
-                if (!this.includeTabThumbnailsIntoBackup) {
-                    delete data.thumbnails;
-                }
-
-                data.groups.forEach(function(group) {
-                    delete group.windowId;
-
-                    group.tabs.forEach(function(tab) {
-                        delete tab.id;
-
-                        if (tab.cookieStoreId === DEFAULT_COOKIE_STORE_ID) {
-                            delete tab.cookieStoreId;
-                        }
-
-                        if (!this.includeTabFavIconsIntoBackup) {
-                            delete tab.favIconUrl;
-                        }
-                    }, this);
-                }, this);
-
-                exportToFile(data, generateBackupFileName());
+            exportAddonSettings() {
+                BG.createBackup(this.includeTabThumbnailsIntoBackup, this.includeTabFavIconsIntoBackup);
             },
 
             async importSettingsOldTabGroupsAddonButton() {
                 let oldOptions = null;
 
                 try {
-                    oldOptions = await importFromFile();
+                    oldOptions = await file.load();
                 } catch (e) {
                     return utils.notify(e);
                 }
@@ -352,7 +344,7 @@
                     };
 
                 if (data.logs.length) {
-                    exportToFile(data, 'STG-error-logs.json');
+                    await file.save(data, 'STG-error-logs.json');
                 } else {
                     utils.notify('No logs found');
                 }
@@ -602,6 +594,32 @@
                         <img class="size-14" src="/icons/download.svg" />
                         <span class="h-margin-left-5" v-text="lang('exportAddonSettingsButton')"></span>
                     </button>
+                </div>
+            </div>
+            <div class="h-margin-bottom-20">
+                <div class="field">
+                    <label class="checkbox">
+                        <input v-model="options.autoBackupEnable" type="checkbox" />
+                        <span v-text="lang('autoBackupEnableTitle')"></span>
+                    </label>
+                </div>
+                <div v-show="options.autoBackupEnable" class="field has-addons">
+                    <div class="h-margin-right-5" v-html="lang('autoBackupCreateEveryTitle')"></div>
+                    <div class="control">
+                        <input type="number" class="input is-small" v-model.number="options.autoBackupIntervalValue" min="1" max="20" />
+                    </div>
+                    <div class="control">
+                        <div class="select is-small">
+                            <select v-model="options.autoBackupIntervalKey">
+                                <option value="hours" v-text="lang('autoBackupIntervalKeyHours')"></option>
+                                <option value="days" v-text="lang('autoBackupIntervalKeyDays')"></option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div v-show="options.autoBackupEnable">
+                    <span v-text="lang('autoBackupLastBackupTitle')"></span>
+                    <span v-text="new Date(options.autoBackupLastBackupTimeStamp * 1000).toLocaleString()"></span>
                 </div>
             </div>
             <div>

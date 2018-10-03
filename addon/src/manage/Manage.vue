@@ -20,7 +20,8 @@
 
     if (!BG) {
         setTimeout(() => window.location.reload(), 3000);
-        throw Error('background not inited');
+        document.getElementById('stg-manage').innerText = browser.i18n.getMessage('waitingToLoadAllTabs');
+        throw Error('wait loading addon');
     }
 
     const VIEW_GRID = 'grid',

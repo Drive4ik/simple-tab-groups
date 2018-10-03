@@ -550,5 +550,25 @@
                 "example": "4"
             }
         }
+    },
+    "autoBackupEnableTitle": {
+        "message": "Enable auto backup",
+        "description": "Enable auto backup"
+    },
+    "autoBackupCreateEveryTitle": {
+        "message": "Create backup every:",
+        "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyHours": {
+        "message": "hour(s)",
+        "description": "hour(s)"
+    },
+    "autoBackupIntervalKeyDays": {
+        "message": "day(s)",
+        "description": "day(s)"
+    },
+    "autoBackupLastBackupTitle": {
+        "message": "Last backup:",
+        "description": "Last backup:"
     }
 }

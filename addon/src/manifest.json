@@ -27,6 +27,7 @@
         "cookies",
         "<all_urls>",
         "sessions",
+        "downloads",
         "storage",
         "unlimitedStorage"
     ],

@@ -82,6 +82,11 @@ const DEFAULT_OPTIONS = {
 
     defaultGroupIconViewType: groupIconViewTypes[0],
 
+    autoBackupEnable: true,
+    autoBackupLastBackupTimeStamp: 1,
+    autoBackupIntervalKey: 'days', // days, hours
+    autoBackupIntervalValue: 1,
+
     hotkeys: [
         {
             ctrlKey: true,
@@ -108,7 +113,17 @@ const onlyBoolOptionsKeys = (function() {
     return Object.keys(DEFAULT_OPTIONS).filter(key => 'boolean' === typeof DEFAULT_OPTIONS[key]);
 })();
 
-const allOptionsKeys = onlyBoolOptionsKeys.concat(['hotkeys', 'defaultGroupIconViewType']);
+const allOptionsKeys = onlyBoolOptionsKeys
+    .concat([
+        'hotkeys',
+        'defaultGroupIconViewType',
+        'autoBackupLastBackupTimeStamp',
+        'autoBackupIntervalKey',
+        'autoBackupIntervalValue'
+    ]);
+
+const HOUR_SEC = 60 * 60;
+const DAY_SEC = 24 * HOUR_SEC;
 
 export {
     DEFAULT_COOKIE_STORE_ID,
@@ -121,4 +136,6 @@ export {
     onlyBoolOptionsKeys,
     allOptionsKeys,
     groupIconViewTypes,
+    HOUR_SEC,
+    DAY_SEC,
 };

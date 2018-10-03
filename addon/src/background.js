@@ -3,6 +3,7 @@
 import * as constants from './js/constants';
 import * as utils from './js/utils';
 import storage from './js/storage';
+import * as file from './js/file';
 
 let errorLogs = [],
     options = {},
@@ -60,7 +61,7 @@ async function getWindow(windowId = browser.windows.WINDOW_ID_CURRENT) {
 async function createWindow(createData = {}) {
     let win = await browser.windows.create(createData);
 
-    if ('normal' === win.type) {
+    if (utils.isWindowAllow(win)) {
         lastFocusedNormalWindow = win;
     }
 
@@ -1945,18 +1946,21 @@ async function runAction(data, externalExtId) {
 
                 if (data.optionsUpdated.includes('hotkeys')) {
                     let tabs = await browser.tabs.query({
-                        discarded: false,
-                        pinned: false,
-                        windowType: 'normal',
-                    });
+                            discarded: false,
+                            pinned: false,
+                            windowType: 'normal',
+                        }),
+                        actionData = {
+                            action: 'update-hotkeys',
+                        };
 
                     tabs
                         .filter(utils.isTabNotIncognito)
-                        .forEach(function(tab) {
-                            browser.tabs.sendMessage(tab.id, {
-                                action: 'update-hotkeys',
-                            });
-                        });
+                        .forEach(tab => browser.tabs.sendMessage(tab.id, actionData));
+                }
+
+                if (data.optionsUpdated.some(key => key.startsWith('autoBackup'))) {
+                    resetAutoBackup();
                 }
 
                 break;
@@ -2079,6 +2083,85 @@ async function runAction(data, externalExtId) {
     return result;
 }
 
+let _autoBackupTimer = 0;
+async function resetAutoBackup() {
+    if (_autoBackupTimer) {
+        clearTimeout(_autoBackupTimer);
+        _autoBackupTimer = 0;
+    }
+
+    if (!options.autoBackupEnable) {
+        return;
+    }
+
+    let now = utils.unixNow(),
+        timer = 0,
+        value = Number(options.autoBackupIntervalValue);
+
+    if (isNaN(value)) {
+        return;
+    }
+
+    let intervalSec = null;
+
+    if ('hours' === options.autoBackupIntervalKey) {
+        intervalSec = constants.HOUR_SEC;
+    } else if ('days' === options.autoBackupIntervalKey) {
+        intervalSec = constants.DAY_SEC;
+    } else {
+        return;
+    }
+
+    let timeToBackup = value * intervalSec + options.autoBackupLastBackupTimeStamp;
+
+    if (now > timeToBackup) {
+        await createBackup(true, true, true);
+        timer = value * intervalSec;
+    } else {
+        timer = timeToBackup - now;
+    }
+
+    _autoBackupTimer = setTimeout(resetAutoBackup, (timer + 10) * 1000);
+}
+
+async function createBackup(includeTabThumbnails, includeTabFavIcons, isAutoBackup = false) {
+    let data = await storage.get(null);
+
+    if (!includeTabThumbnails) {
+        delete data.thumbnails;
+    }
+
+    data.groups.forEach(function(group) {
+        delete group.windowId;
+
+        group.tabs.forEach(function(tab) {
+            delete tab.id;
+
+            if (tab.cookieStoreId === constants.DEFAULT_COOKIE_STORE_ID) {
+                delete tab.cookieStoreId;
+            }
+
+            if (!includeTabFavIcons) {
+                delete tab.favIconUrl;
+            }
+        });
+    });
+
+    if (isAutoBackup) {
+        data.autoBackupLastBackupTimeStamp = utils.unixNow();
+    }
+
+    await file.save(data, undefined, !isAutoBackup);
+
+    if (isAutoBackup) {
+        await storage.set({
+            autoBackupLastBackupTimeStamp: data.autoBackupLastBackupTimeStamp,
+        });
+
+        options.autoBackupLastBackupTimeStamp = data.autoBackupLastBackupTimeStamp;
+    }
+}
+
 window.background = {
     inited: false,
 
@@ -2123,6 +2206,8 @@ window.background = {
     removeGroup,
 
     runMigrateForData,
+
+    createBackup,
 };
 
 async function runMigrateForData(data) {
@@ -2714,6 +2799,8 @@ async function init() {
     _thumbnails = data.thumbnails;
 
     await storage.set(data);
+
+    resetAutoBackup();
 
     windows.forEach(win => updateBrowserActionData(win.id));
 

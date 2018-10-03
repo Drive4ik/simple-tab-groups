@@ -16,11 +16,15 @@ function keyId({id}) {
     return id;
 }
 
+function unixNow() {
+    return Math.round(Date.now() / 1000);
+}
+
 function type(obj) {
     return Object.prototype.toString.call(obj).replace(/(^\[.+\ |\]$)/g, '').toLowerCase();
 }
 
-function clone(obj) {
+function clone(obj = null) {
     return JSON.parse(JSON.stringify(obj));
 }
 
@@ -472,6 +476,7 @@ function extractKeys(obj, keys, useClone = false) {
 
 export {
     keyId,
+    unixNow,
     type,
     clone,
     format,
