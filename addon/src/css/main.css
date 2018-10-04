@@ -6,12 +6,14 @@
 html {
     font-family: Segoe UI, Arial;
     overflow-y: auto;
+    font-size: 15px;
 }
 
 img[src$=".svg"] {
     pointer-events: none;
     -moz-user-select: none;
     user-select: none;
+    vertical-align: middle;
 }
 
 .align-bottom {
@@ -44,7 +46,7 @@ img[src$=".svg"] {
 
 hr {
     height: 1px;
-    margin: var(--indent, 10px) 0;
+    margin: var(--indent) 0;
     background-color: var(--color-hr);
 }
 
@@ -52,6 +54,28 @@ hr {
 .checkbox {
     -moz-user-select: none;
     user-select: none;
+    display: inline-flex;
+    align-items: center;
+}
+
+.checkbox > input,
+.radio > input {
+    margin-right: 6px;
+}
+
+.indent-children > :first-child {
+    margin-right: 0;
+}
+
+.indent-children > * + * {
+    margin-left: 6px;
+}
+
+.checkbox,
+.radio,
+.checkbox input,
+.radio input {
+    cursor: inherit;
 }
 /*BULMA REWRITE END*/
 
@@ -124,11 +148,17 @@ hr {
 
 
 /* FLEX HELPERS */
-.is-flex.is-align-items-center {
+.is-inline-flex {
+    display: inline-flex;
+}
+
+.is-flex.is-align-items-center,
+.is-inline-flex.is-align-items-center {
     align-items: center;
 }
 
-.is-flex.is-column {
+.is-flex.is-column,
+.is-inline-flex.is-column {
     flex-direction: column;
 }
 
@@ -136,10 +166,12 @@ hr {
     flex-grow: 1;
 }
 
-.is-flex > .is-start {
+.is-flex > .is-start,
+.is-inline-flex > .is-start {
     align-self: flex-start;
 }
 
-.is-flex > .is-end {
+.is-flex > .is-end,
+.is-inline-flex > .is-end {
     align-self: flex-end;
 }

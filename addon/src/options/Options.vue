@@ -379,24 +379,24 @@
             <ul>
                 <li :class="{'is-active': section === SECTION_GENERAL}" @click="section = SECTION_GENERAL">
                     <a>
-                        <span class="icon is-small">
-                            <img :src="'/icons/cog.svg'">
+                        <span class="icon">
+                            <img class="size-18" src="/icons/cog.svg">
                         </span>
                         <span v-text="lang('generalTitle')"></span>
                     </a>
                 </li>
                 <li :class="{'is-active': section === SECTION_HOTKEYS}" @click="section = SECTION_HOTKEYS">
                     <a>
-                        <span class="icon is-small">
-                            <img :src="'/icons/keyboard-o.svg'">
+                        <span class="icon">
+                            <img class="size-18" src="/icons/keyboard-o.svg">
                         </span>
                         <span v-text="lang('hotkeysTitle')"></span>
                     </a>
                 </li>
                 <li :class="{'is-active': section === SECTION_BACKUP}" @click="section = SECTION_BACKUP">
                     <a>
-                        <span class="icon is-small">
-                            <img :src="'/icons/cloud-upload.svg'">
+                        <span class="icon">
+                            <img class="size-18" src="/icons/cloud-upload.svg">
                         </span>
                         <span v-text="lang('exportAddonSettingsTitle')"></span>
                     </a>
@@ -453,9 +453,9 @@
                     <span v-text="lang('createThumbnailsForTabs')"></span>
                 </label>
 
-                <div class="control h-margin-top-10">
+                <div class="control h-margin-top-10 is-flex is-align-items-center">
                     <span v-text="lang('tabsThumbnailsSize', thumbnailsSize)"></span>
-                    <button class="button is-warning is-small" @click="clearTabsThumbnails" v-text="lang('clearTabsThumbnails')"></button>
+                    <button class="button is-warning h-margin-left-10" @click="clearTabsThumbnails" v-text="lang('clearTabsThumbnails')"></button>
                 </div>
             </div>
 
@@ -481,7 +481,7 @@
 
             <div v-if="errorLogs.length" class="field">
                 <div class="control">
-                    <button @click="saveErrorLogsIntoFile" class="button is-warning is-small" v-text="lang('saveErrorLogsIntoFile')"></button>
+                    <button @click="saveErrorLogsIntoFile" class="button is-warning" v-text="lang('saveErrorLogsIntoFile')"></button>
                 </div>
             </div>
         </div>
@@ -510,13 +510,13 @@
                         <span>Command</span>
                     </label>
                     <div class="control">
-                        <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(openPopupCommand, $event, false)" :value="openPopupCommand.key" autocomplete="off" class="input is-small" />
+                        <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(openPopupCommand, $event, false)" :value="openPopupCommand.key" autocomplete="off" class="input" />
                     </div>
                     <div class="is-flex">
-                        <span class="is-size-7" v-text="lang('openPopupHotkeyTitle')"></span>
+                        <span v-text="lang('openPopupHotkeyTitle')"></span>
                     </div>
                     <div class="delete-button">
-                        <button class="button is-danger is-outlined is-small" @click="resetPopupCommand">Reset</button>
+                        <button class="button is-danger is-outlined" @click="resetPopupCommand">Reset</button>
                     </div>
                 </div>
 
@@ -540,15 +540,15 @@
                         <span>Command</span>
                     </label>
                     <div class="control">
-                        <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(hotkey, $event, true)" :value="hotkey.key" autocomplete="off" class="input is-small" :placeholder="lang('hotkeyPlaceholder')" />
+                        <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(hotkey, $event, true)" :value="hotkey.key" autocomplete="off" class="input" :placeholder="lang('hotkeyPlaceholder')" />
                     </div>
-                    <div class="select is-small">
+                    <div class="select">
                         <select v-model="hotkey.action">
                             <option v-if="!hotkey.action" selected disabled value="" v-text="lang('selectAction')"></option>
                             <option v-for="action in hotkeyActions" :key="action" :value="action" v-text="getHotkeyActionTitle(action)"></option>
                         </select>
                     </div>
-                    <div v-if="'load-custom-group' === hotkey.action" class="select is-small custom-group">
+                    <div v-if="'load-custom-group' === hotkey.action" class="select custom-group">
                         <select v-model="hotkey.groupId">
                             <option v-if="!hotkey.groupId" selected disabled value="undefined" v-text="lang('selectGroup')"></option>
                             <option v-for="group in groups" :key="group.id" :value="group.id" v-text="group.title"></option>
@@ -565,7 +565,7 @@
                 <div class="control">
                     <button @click="options.hotkeys.push(createHotkey())" class="button">
                         <span class="icon">
-                            <img class="size-14" src="/icons/new.svg" />
+                            <img class="size-16" src="/icons/new.svg" />
                         </span>
                         <span v-text="lang('addHotKeyButton')"></span>
                     </button>
@@ -574,7 +574,7 @@
         </div>
 
         <div v-show="section === SECTION_BACKUP">
-            <div class="h-margin-bottom-20">
+            <div class="field">
                 <div class="has-text-weight-bold h-margin-bottom-5" v-text="lang('exportAddonSettingsTitle')"></div>
                 <div class="h-margin-bottom-5" v-html="lang('exportAddonSettingsDescription')"></div>
                 <div class="field">
@@ -589,40 +589,50 @@
                         <span v-text="lang('includeTabFavIconsIntoBackup')"></span>
                     </label>
                 </div>
-                <div class="control">
-                    <button @click="exportAddonSettings" class="button">
-                        <img class="size-14" src="/icons/download.svg" />
-                        <span class="h-margin-left-5" v-text="lang('exportAddonSettingsButton')"></span>
-                    </button>
+                <div class="field">
+                    <div class="control">
+                        <button @click="exportAddonSettings" class="button">
+                            <img class="size-16" src="/icons/download.svg" />
+                            <span class="h-margin-left-5" v-text="lang('exportAddonSettingsButton')"></span>
+                        </button>
+                    </div>
                 </div>
             </div>
-            <div class="h-margin-bottom-20">
+
+            <hr>
+
+            <div class="field">
                 <div class="field">
                     <label class="checkbox">
                         <input v-model="options.autoBackupEnable" type="checkbox" />
                         <span v-text="lang('autoBackupEnableTitle')"></span>
                     </label>
                 </div>
-                <div v-show="options.autoBackupEnable" class="field has-addons">
+                <div v-if="options.autoBackupEnable" class="field is-flex is-align-items-center indent-children">
                     <div class="h-margin-right-5" v-html="lang('autoBackupCreateEveryTitle')"></div>
-                    <div class="control">
-                        <input type="number" class="input is-small" v-model.number="options.autoBackupIntervalValue" min="1" max="20" />
-                    </div>
-                    <div class="control">
-                        <div class="select is-small">
-                            <select v-model="options.autoBackupIntervalKey">
-                                <option value="hours" v-text="lang('autoBackupIntervalKeyHours')"></option>
-                                <option value="days" v-text="lang('autoBackupIntervalKeyDays')"></option>
-                            </select>
+                    <div class="field has-addons">
+                        <div class="control">
+                            <input type="number" class="input" v-model.number="options.autoBackupIntervalValue" min="1" max="20" />
+                        </div>
+                        <div class="control">
+                            <div class="select">
+                                <select v-model="options.autoBackupIntervalKey">
+                                    <option value="hours" v-text="lang('autoBackupIntervalKeyHours')"></option>
+                                    <option value="days" v-text="lang('autoBackupIntervalKeyDays')"></option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div v-show="options.autoBackupEnable">
+                <div v-if="options.autoBackupEnable" class="field is-flex is-align-items-center indent-children">
                     <span v-text="lang('autoBackupLastBackupTitle')"></span>
                     <span v-text="new Date(options.autoBackupLastBackupTimeStamp * 1000).toLocaleString()"></span>
                 </div>
             </div>
-            <div>
+
+            <hr>
+
+            <div class="field">
                 <div class="has-text-weight-bold h-margin-bottom-5" v-text="lang('importAddonSettingsTitle')"></div>
                 <div class="h-margin-bottom-5" v-html="lang('importAddonSettingsDescription')"></div>
                 <div class="has-text-danger has-text-weight-bold h-margin-bottom-5">
@@ -631,7 +641,7 @@
                 </div>
                 <div class="control">
                     <button @click="importAddonSettings" class="button">
-                        <img class="size-14" src="/icons/upload.svg" />
+                        <img class="size-16" src="/icons/upload.svg" />
                         <span class="h-margin-left-5" v-text="lang('importAddonSettingsButton')"></span>
                     </button>
                 </div>
@@ -641,8 +651,13 @@
 
             <div class="has-text-weight-bold h-margin-bottom-5" v-text="lang('importSettingsOldTabGroupsAddonTitle')"></div>
             <div class="h-margin-bottom-5" v-html="lang('importSettingsOldTabGroupsAddonDescription')"></div>
-            <div class="control">
-                <button @click="importSettingsOldTabGroupsAddonButton" class="button" v-text="lang('importSettingsOldTabGroupsAddonButton')"></button>
+            <div class="field">
+                <div class="control">
+                    <button @click="importSettingsOldTabGroupsAddonButton" class="button">
+                        <img class="size-16" src="/icons/old-tab-groups.svg" />
+                        <span class="h-margin-left-5" v-text="lang('importSettingsOldTabGroupsAddonButton')"></span>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -651,17 +666,13 @@
 </template>
 
 <style lang="scss">
-    * {
-        font-size: 15px;
-    }
-
     body {
-        background-color: #f9f9fa;
+        background-color: var(--in-content-page-background);
         padding: 0 6px;
     }
 
     .tabs.is-boxed li.is-active a {
-        background-color: #f9f9fa;
+        background-color: var(--in-content-page-background);
     }
 
     #stg-options {
@@ -672,33 +683,23 @@
         }
     }
 
-    hr {
-        margin: 10px -4px;
-        color: transparent;
-        border-top: 1px solid #e3e3e3;
-    }
-
     .hotkey {
-        margin-bottom: 10px;
+        margin-bottom: var(--indent);
 
         & > :not(:last-child) {
-            margin-right: 10px;
+            margin-right: var(--indent);
         }
 
         & > :nth-child(4) {
-            width: 100px;
+            width: 140px;
         }
 
         & > .delete-button {
-            line-height: 0;
+            line-height: 1;
         }
 
         & > .notify-message {
             margin: 0;
         }
-    }
-
-    .browser-action-color-wrapper > .control:last-child {
-        min-width: 44px;
     }
 </style>

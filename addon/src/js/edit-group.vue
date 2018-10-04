@@ -113,6 +113,10 @@
                 });
             },
 
+            isDisabledContainer(container) {
+                return !this.groupClone.catchTabContainers.includes(container.cookieStoreId) && container.cookieStoreId in this.disabledContainers;
+            },
+
             async selectUserGroupIcon() {
                 if (!this.canLoadFile) { // maybe temporary solution
                     this.showMessageCantLoadFile = true;
@@ -243,13 +247,13 @@
 
         <div class="field">
             <label class="label" v-text="lang('tabMoving')"></label>
-            <div class="control">
+            <div class="control is-inline-flex indent-children">
                 <label class="checkbox">
                     <input type="checkbox" v-model="groupClone.isSticky" />
                     <span v-text="lang('isStickyGroupTitle')"></span>
                 </label>
                 <span class="cursor-help" :title="lang('isStickyGroupHelp')">
-                    <img class="size-18 align-bottom" src="/icons/help.svg" />
+                    <img class="size-18" src="/icons/help.svg" />
                 </span>
             </div>
             <div class="control">
@@ -267,13 +271,13 @@
             <div class="control">
                 <div v-for="container in containers" :key="container.cookieStoreId" class="field">
                     <div class="control">
-                        <label class="checkbox">
+                        <label class="checkbox indent-children" :disabled="isDisabledContainer(container)">
                             <input type="checkbox"
-                                :disabled="!groupClone.catchTabContainers.includes(container.cookieStoreId) && container.cookieStoreId in disabledContainers"
+                                :disabled="isDisabledContainer(container)"
                                 :value="container.cookieStoreId"
                                 v-model="groupClone.catchTabContainers"
                                 />
-                            <img :src="container.iconUrl" class="size-16 align-bottom container-icon" :style="{fill: container.colorCode}" />
+                            <img :src="container.iconUrl" class="size-16 container-icon" :style="{fill: container.colorCode}" />
                             <span v-text="container.name"></span>
                             <i v-if="container.cookieStoreId in disabledContainers">({{ disabledContainers[container.cookieStoreId] }})</i>
                         </label>
@@ -283,7 +287,7 @@
         </div>
 
         <div class="field">
-            <label class="label">
+            <label class="label is-inline-flex indent-children">
                 <span v-text="lang('regexpForTabsTitle')"></span>
                 <span class="cursor-help" :title="lang('regexpForTabsHelp')">
                     <img class="size-18" src="/icons/help.svg" />

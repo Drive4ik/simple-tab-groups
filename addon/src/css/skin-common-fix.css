@@ -1,0 +1,20 @@
+/* skin-common-fix.css */
+
+input[type="text"],
+input[type="number"] {
+    border-radius: 4px;
+}
+
+a:hover {
+    text-decoration: none;
+}
+
+button {
+    min-width: unset;
+}
+
+select:not([size]):not([multiple]) {
+    margin: unset;
+    background-image: unset;
+    background-color: #ffffff !important;
+}
