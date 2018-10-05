@@ -6,6 +6,8 @@
     import * as constants from '../js/constants';
     import * as file from '../js/file';
 
+    import popup from '../js/popup.vue';
+
     const BG = (function(bgWin) {
         return bgWin && bgWin.background && bgWin.background.inited ? bgWin.background : false;
     })(browser.extension.getBackgroundPage());
@@ -65,8 +67,13 @@
                 groups: [],
                 isMac: false,
 
+                showEnableDarkThemeNotification: false,
+
                 errorLogs: BG.getLogs(),
             };
+        },
+        components: {
+            popup: popup,
         },
         async mounted() {
             let platformInfo = await browser.runtime.getPlatformInfo();
@@ -104,6 +111,11 @@
                 this.saveOptions({
                     autoBackupIntervalValue: value,
                 });
+            },
+            'options.enableDarkTheme': function(enableDarkTheme) {
+                if (enableDarkTheme) {
+                    this.showEnableDarkThemeNotification = true;
+                }
             },
             'options.hotkeys': {
                 handler(hotkeys, oldValue) {
@@ -669,6 +681,20 @@
                 </div>
             </div>
         </div>
+
+        <popup
+            v-if="showEnableDarkThemeNotification"
+            :title="lang('enableDarkTheme')"
+            @close-popup="showEnableDarkThemeNotification = false"
+            :buttons="
+                [{
+                    event: 'close-popup',
+                    lang: 'ok',
+                    classList: 'is-success',
+                }]
+            ">
+            <span v-html="lang('enableDarkThemeNotification')"></span>
+        </popup>
 
     </div>
 
