@@ -127,4 +127,20 @@
             }
         }
     }
+
+    .dark-theme {
+        .v-context-menu {
+            background-color: var(--input-background-color);
+
+            li {
+                &.is-disabled:hover {
+                    background: #393939;
+                }
+
+                &:not(.is-disabled):hover {
+                    background: #5d5d5d;
+                }
+            }
+        }
+    }
 </style>

@@ -152,6 +152,7 @@ const styles = {
             width: '16px',
             height: '16px',
             marginRight: '5px',
+            fill: '#5d5d5d',
         },
         titleNode: {
             // color: 'initial',
@@ -212,6 +213,7 @@ function showGroupsForMovingTab(data) {
         Object.assign(imgNode.style, styles.imgNode);
 
         imgNode.src = group.iconUrl;
+        imgNode.style.setProperty('-moz-context-properties', 'fill');
         groupNode.append(imgNode);
 
         titleNode.innerText = group.title;

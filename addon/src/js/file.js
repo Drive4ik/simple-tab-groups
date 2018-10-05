@@ -18,48 +18,61 @@ browser.downloads.onChanged.addListener(function(delta) {
     }
 });
 
-async function load(accept = BACKUP_FILE_EXT) {
-    return new Promise(function(resolve, reject) {
+async function load(accept = BACKUP_FILE_EXT, readAs = 'json') { // readAs: json, text, url
+    if (!['json', 'text', 'url'].includes(readAs)) {
+        throw Error('wrong readAs parameter');
+    }
+
+    let result = await new Promise(function(resolve, reject) {
         let fileInput = document.createElement('input');
 
         fileInput.type = 'file';
         fileInput.accept = accept;
-        fileInput.acceptCharset = 'utf-8';
+
+        if ('json' === readAs || 'text' === readAs) {
+            fileInput.acceptCharset = 'utf-8';
+        }
 
         fileInput.initialValue = fileInput.value;
+
         fileInput.onchange = function() {
-            if (fileInput.value !== fileInput.initialValue) {
-                let file = fileInput.files[0];
-                if (file.size > 100e6) {
-                    reject('100MB backup? I don\'t believe you');
-                    return;
-                }
+            if (fileInput.value === fileInput.initialValue) {
+                reject('no changes');
+                return;
+            }
 
-                let fReader = new FileReader();
+            let file = fileInput.files[0];
 
-                fReader.addEventListener('loadend', function(event) {
-                    fileInput.remove();
-                    try {
-                        resolve(JSON.parse(event.target.result)); // resolve: parsed Object
-                    } catch (e) {
-                        reject(e);
-                    }
-                });
+            if (0 === file.size) {
+                reject('empty file');
+                return;
+            }
 
-                fReader.addEventListener('error', function(event) {
-                    fileInput.remove();
-                    reject(event);
-                });
+            if (file.size > 500e6) {
+                reject('500MB backup? I don\'t believe you');
+                return;
+            }
 
-                fReader.readAsText(file, 'utf-8');
-            } else {
-                fileInput.remove();
-                reject();
+            let reader = new FileReader();
+
+            reader.addEventListener('loadend', () => resolve(reader.result));
+            reader.addEventListener('error', reject);
+
+            if ('json' === readAs || 'text' === readAs) {
+                reader.readAsText(file, 'utf-8');
+            } else if ('url' === readAs) {
+                reader.readAsDataURL(file);
             }
         };
 
         fileInput.click();
     });
+
+    if ('json' === readAs) {
+        return JSON.parse(result);
+    }
+
+    return result;
 }
 
 async function save(data, fileName = generateBackupFileName(), saveAs = true) { // data : Object/Array/Text

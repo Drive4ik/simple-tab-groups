@@ -570,5 +570,9 @@
     "autoBackupLastBackupTitle": {
         "message": "Last backup:",
         "description": "Last backup:"
+    },
+    "enableDarkTheme": {
+        "message": "Enable dark theme",
+        "description": "Enable dark theme"
     }
 }

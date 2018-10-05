@@ -46,7 +46,7 @@
         left: 0;
         width: 100vw;
         height: 100vh;
-        background-color: #ffffff;
+        background-color: var(--background-color);
         z-index: 5;
 
         h3 {
@@ -56,12 +56,12 @@
 
         .body {
             padding: 0 var(--indent);
-            max-height: 500px;
+            max-height: calc(500px - var(--indent));
             overflow-y: auto;
         }
 
         .action-buttons {
-            margin: var(--indent);
+            padding: var(--indent);
         }
     }
 

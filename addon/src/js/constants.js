@@ -87,6 +87,8 @@ const DEFAULT_OPTIONS = {
     autoBackupIntervalKey: 'days', // days, hours
     autoBackupIntervalValue: 1,
 
+    enableDarkTheme: false,
+
     hotkeys: [
         {
             ctrlKey: true,

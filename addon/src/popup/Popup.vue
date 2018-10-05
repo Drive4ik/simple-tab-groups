@@ -100,12 +100,16 @@
                 .$on('drag-over', (item, isOver) => item.isOver = isOver);
         },
         async mounted() {
+            this.options = await storage.get(constants.allOptionsKeys);
+
+            if (this.options.enableDarkTheme) {
+                document.documentElement.classList.add('dark-theme');
+            }
+
             let currentWindow = await BG.getWindow();
             this.currentWindowId = currentWindow.id;
 
             this.containers = await utils.loadContainers();
-
-            this.options = await storage.get(constants.allOptionsKeys);
 
             this.loadGroups();
 
@@ -719,7 +723,7 @@
                     @keydown.arrow-right.stop @keyup.arrow-right.stop
                     @keydown.arrow-left.stop @keyup.arrow-left.stop
                     >
-                    <input id="search" v-model.trim="search" @input="$refs.search.value === '' ? showSectionDefault() : null" ref="search" type="text" class="input is-small no-shadow" autocomplete="off" :placeholder="lang('searchPlaceholder')" />
+                    <input id="search" v-model.trim="search" @input="$refs.search.value === '' ? showSectionDefault() : null" ref="search" type="text" class="input is-small fill-context" autocomplete="off" :placeholder="lang('searchPlaceholder')" />
                 </div>
                 <div v-show="search" class="control">
                     <label class="button is-small" :title="lang('extendedTabSearch')">
@@ -751,7 +755,7 @@
                                     <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                                 </div>
                                 <div class="item-title" :title="group.title" v-text="group.title"></div>
-                                <div class="item-action hover is-unselectable" @click.stop="showSectionGroupTabs(group)">
+                                <div class="item-action bold-hover is-unselectable" @click.stop="showSectionGroupTabs(group)">
                                     <img class="size-16 rotate-180" src="/icons/arrow-left.svg" />
                                     <span class="tabs-text" v-text="lang('groupTabsCount', group.tabs.length)"></span>
                                 </div>
@@ -828,7 +832,7 @@
                                 <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                             </div>
                             <div class="item-title" v-text="group.title"></div>
-                            <div class="item-action hover is-unselectable" :title="getFullGroupTitleWithTabs(group)" @click.stop="showSectionGroupTabs(group)">
+                            <div class="item-action bold-hover is-unselectable" :title="getFullGroupTitleWithTabs(group)" @click.stop="showSectionGroupTabs(group)">
                                 <img class="size-16 rotate-180" src="/icons/arrow-left.svg" />
                                 <span class="tabs-text" v-text="lang('groupTabsCount', group.tabs.length)"></span>
                             </div>
@@ -963,7 +967,7 @@
                         <context-menu v-if="containers.length" ref="createNewTabContextMenu">
                             <ul class="is-unselectable">
                                 <li v-for="container in containers" :key="container.cookieStoreId" @click="addTab(container.cookieStoreId)">
-                                    <img :src="container.iconUrl" class="is-inline-block size-16 container-icon" :style="{fill: container.colorCode}" />
+                                    <img :src="container.iconUrl" class="is-inline-block size-16 fill-context" :style="{fill: container.colorCode}" />
                                     <span v-text="container.name"></span>
                                 </li>
                             </ul>
@@ -1129,10 +1133,13 @@
         --max-popup-height: 600px;
         --min-popup-height: 200px;
 
-        --color-light-gray: #eceded;
-        --color-gray: #e3e3e3;
-        --color-dark-gray: #d4d4d4;
-        --color-dark-dark-gray: #bababa;
+        --item-background-color-active: var(--color-light-gray);
+        --item-background-color-hover: var(--color-gray);
+        --item-background-color-active-hover: var(--color-dark-gray);
+
+        --footer-background-color: var(--item-background-color-active);
+        --footer-background-hover-color: var(--item-background-color-hover);
+
     }
 
     html {
@@ -1142,6 +1149,15 @@
         max-width: var(--max-popup-width);
         // max-height: calc(var(--max-popup-height) - 10px);
         overflow-x: hidden;
+    }
+
+    html.dark-theme {
+        --item-background-color-active: #686869;
+        --item-background-color-hover: var(--input-background-color);
+        --item-background-color-active-hover: #4b4b4b;
+
+        --footer-background-color: var(--item-background-color-active-hover);
+        --footer-background-hover-color: var(--item-background-color-hover);
     }
 
     #stg-popup {
@@ -1164,10 +1180,10 @@
             align-items: center;
             justify-content: space-between;
             cursor: default;
-            background-color: var(--color-light-gray);
+            background-color: var(--footer-background-color);
 
             > :hover {
-                background-color: var(--color-gray);
+                background-color: var(--footer-background-hover-color);
             }
 
             .manage-groups span {
@@ -1195,7 +1211,6 @@
         }
 
         .drag-over {
-            outline: 2px dashed rgba(0, 0, 0, 0.5) !important;
             outline-offset: -3px;
         }
 
@@ -1210,7 +1225,10 @@
     }
 
     #search {
-        background: url('/icons/search.svg') no-repeat 4px center;
+        background-position-x: 4px;
+        background-position-y: center;
+        background-repeat: no-repeat;
+        background-image: url('/icons/search.svg');
         padding-left: calc(16px + (2 * 4px));
     }
 
@@ -1234,13 +1252,10 @@
         }
 
         // &.is-hover,
-        &:not(.no-hover):not(.is-active):hover {
-            background-color: var(--color-light-gray);
-        }
-
+        &:not(.no-hover):hover,
         &.is-active,
         &.is-hovered-item {
-            background-color: var(--color-gray);
+            background-color: var(--item-background-color-hover);
         }
 
         &.is-active:before {
@@ -1253,12 +1268,12 @@
             width: 4px;
         }
 
-        .hover:hover {
-            background-color: var(--color-dark-gray);
+        .item-action.bold-hover:hover {
+            background-color: var(--item-background-color-active-hover);
         }
 
         &:not(.no-hover):active {
-            background-color: var(--color-dark-gray) !important;
+            background-color: var(--item-background-color-active-hover);
         }
 
         .item-icon {

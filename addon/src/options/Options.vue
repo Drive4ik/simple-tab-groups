@@ -477,6 +477,15 @@
                 </div>
             </div>
 
+            <hr>
+
+            <div class="field">
+                <label class="checkbox">
+                    <input v-model="options.enableDarkTheme" type="checkbox" />
+                    <span v-text="lang('enableDarkTheme')"></span>
+                </label>
+            </div>
+
             <hr v-if="errorLogs.length">
 
             <div v-if="errorLogs.length" class="field">

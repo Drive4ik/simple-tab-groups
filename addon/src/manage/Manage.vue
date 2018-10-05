@@ -117,13 +117,13 @@
                 .$on('drag-over', (item, isOver) => item.isOver = isOver);
         },
         async mounted() {
+            await this.loadOptions();
+
             currentWindow = await BG.getWindow();
 
             this.currentWindowId = currentWindow.id;
 
             this.containers = await utils.loadContainers();
-
-            this.options = await storage.get(constants.allOptionsKeys);
 
             this.loadGroups();
 
@@ -138,6 +138,15 @@
             if ('popup' === currentWindow.type) {
                 setSaveWindowPositionTimer();
             }
+        },
+        watch: {
+            'options.enableDarkTheme': function(enableDarkTheme) {
+                if (enableDarkTheme) {
+                    document.documentElement.classList.add('dark-theme');
+                } else {
+                    document.documentElement.classList.remove('dark-theme');
+                }
+            },
         },
         computed: {
             currentGroup() {
@@ -161,6 +170,10 @@
         methods: {
             lang: browser.i18n.getMessage,
             safeHtml: utils.safeHtml,
+
+            async loadOptions() {
+                this.options = await storage.get(constants.allOptionsKeys);
+            },
 
             setupListeners() {
                 let listener = function(request, sender) {
@@ -201,6 +214,9 @@
                         case 'group-loaded':
                         case 'groups-updated':
                             this.loadGroups();
+                            break;
+                        case 'options-updated':
+                            this.loadOptions();
                             break;
                     }
 
@@ -509,20 +525,21 @@
 
                         >
                         <div class="header">
+                            <div class="group-icon">
+                                <figure class="image is-16x16">
+                                    <img :src="group.iconUrlToDisplay" />
+                                </figure>
+                            </div>
                             <div class="group-title">
                                 <input
                                     type="text"
+                                    class="input is-small"
                                     @focus="group.draggable = false"
                                     @blur="group.draggable = true"
                                     v-model.lazy.trim="group.title"
                                     :placeholder="lang('title')"
                                     maxlength="120"
                                     />
-                            </div>
-                            <div class="group-icon">
-                                <figure class="image is-16x16">
-                                    <img :src="group.iconUrlToDisplay" />
-                                </figure>
                             </div>
                             <div class="tabs-count" v-text="lang('groupTabsCount', group.filteredTabs.length)"></div>
                             <div class="group-icon cursor-pointer is-unselectable" @click="openGroupSettings(group)" :title="lang('groupSettings')">
@@ -615,7 +632,7 @@
                     <span v-text="lang('createNewTab')"></span>
                 </li>
                 <li v-for="container in containers" :key="container.cookieStoreId" @click="addTab(menu.data.group, container.cookieStoreId)">
-                    <img :src="container.iconUrl" class="is-inline-block size-16 container-icon" :style="{fill: container.colorCode}" />
+                    <img :src="container.iconUrl" class="is-inline-block size-16 fill-context" :style="{fill: container.colorCode}" />
                     <span v-text="container.name"></span>
                 </li>
             </ul>
@@ -686,8 +703,6 @@
 <style lang="scss">
     :root {
         --margin: 5px;
-        --fill-color: #5d5d5d;
-        --outline-color: #2188ff;
         --tab-hover-outline-color: #cfcfcf;
         --is-in-multiple-drop-text-color: #ffffff;
         --border-radius: 3px;
@@ -704,6 +719,12 @@
         --tab-buttons-size: 25px;
         --active-tab-bg-color: #e4e4e4;
         --multiple-drag-tab-bg-color: #1e88e5;
+    }
+
+    html.dark-theme {
+        --text-color: #e0e0e0;
+        --group-bg-color: #444444;
+        --tab-bg-color: var(--group-bg-color);
     }
 
     .fade-enter-active, .fade-leave-active {
@@ -780,8 +801,6 @@
                 background-color: var(--group-bg-color);
                 border-radius: var(--border-radius);
 
-                transition: transform 0.3s;
-
                 > .header {
                     display: flex;
                     align-items: center;
@@ -793,20 +812,6 @@
 
                     > .group-title {
                         flex-grow: 1;
-
-                        > input {
-                            width: 100%;
-                            font-size: 12px;
-                            background-color: transparent;
-                            border: 1px solid #e4e4e4;
-                            padding: 1px 3px;
-                            border-radius: var(--border-radius);
-                        }
-
-                        > input:focus {
-                            border: 1px solid #d5d5d5;
-                            background-color: #ffffff;
-                        }
                     }
 
                     > .delete-group-button {
@@ -853,12 +858,6 @@
                     > * {
                         border: 0 solid var(--tab-inner-border-color);
                         background-color: var(--tab-bg-color);
-                    }
-
-                    img {
-                        -moz-context-properties: fill;
-                        fill: var(--fill-color);
-                        pointer-events: none;
                     }
 
                     > .tab-icon,
@@ -975,7 +974,7 @@
                         box-shadow: var(--tab-shadow);
                     }
 
-                    &:not(.is-active):hover {
+                    &:not(.is-active):not(.drag-moving):hover {
                         outline: 1px solid var(--tab-hover-outline-color);
                         outline-offset: 1px;
                     }
@@ -1008,11 +1007,16 @@
 
                         > img {
                             width: 100px;
-                            -moz-context-properties: fill;
-                            fill: var(--fill-color);
                         }
                     }
                 }
+            }
+
+            .group,
+            .group .tab {
+                will-change: transition;
+                transition-property: transform;
+                transition: transform 0.3s;
             }
         }
 
@@ -1028,10 +1032,6 @@
 
         /* Drag & Drop Styles */
 
-        .drag-over {
-            outline: 2px dashed rgba(0, 0, 0, 0.5) !important;
-        }
-
         .group.drag-over {
             outline-offset: 3px;
         }
@@ -1039,25 +1039,13 @@
         .drag-moving,
         .drag-tab .tab.is-in-multiple-drop {
             opacity: 0.4;
-            animation-name: in-out;
-            animation-duration: 0.5s;
-            animation-iteration-count: infinite;
-            animation-direction: alternate;
+            transform: scale(0.8);
         }
     }
 
     @keyframes spin {
         100% {
             transform: rotate(360deg);
-        }
-    }
-
-    @keyframes in-out {
-        from {
-            transform: scale(0.95);
-        }
-        to {
-            transform: scale(0.8);
         }
     }
 

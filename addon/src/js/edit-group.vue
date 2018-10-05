@@ -2,6 +2,7 @@
     'use strict';
 
     import * as utils from './utils';
+    import * as file from './file';
     import { groupIconViewTypes } from './constants';
     import Vue from 'vue';
 
@@ -82,10 +83,14 @@
             };
         },
         mounted() {
-            this.$refs.groupTitle.focus();
+            this.setFocus();
         },
         methods: {
             lang: browser.i18n.getMessage,
+
+            setFocus() {
+                this.$refs.groupTitle.focus();
+            },
 
             setIconView(groupIcon) {
                 this.groupClone.iconViewType = groupIcon;
@@ -123,36 +128,9 @@
                     return;
                 }
 
-                let vm = this;
+                let iconUrl = await file.load('.ico,.png,.jpg,.svg', 'url'),
+                    img = new Image();
 
-                let iconUrl = await new Promise(function(resolve) {
-                    let fileInput = document.createElement('input');
-
-                    fileInput.type = 'file';
-                    fileInput.accept = '.ico,.png,.jpg,.svg';
-                    fileInput.initialValue = fileInput.value;
-                    fileInput.onchange = function() {
-                        if (fileInput.value !== fileInput.initialValue) {
-                            let file = fileInput.files[0];
-                            if (file.size > 100e6) {
-                                reject();
-                                return;
-                            }
-
-                            let reader = new FileReader();
-                            reader.addEventListener('loadend', function() {
-                                fileInput.remove();
-                                resolve(reader.result);
-                            });
-                            reader.readAsDataURL(file);
-                        } else {
-                            reject();
-                        }
-                    };
-                    fileInput.click();
-                });
-
-                let img = new Image();
                 img.addEventListener('load', function() {
                     let resizedIconUrl = iconUrl;
 
@@ -160,8 +138,9 @@
                         resizedIconUrl = utils.resizeImage(img, 16, 16);
                     }
 
-                    vm.setIconUrl(resizedIconUrl);
-                });
+                    this.setIconUrl(resizedIconUrl);
+                }.bind(this));
+
                 img.src = iconUrl;
             },
 
@@ -191,11 +170,11 @@
 </script>
 
 <template>
-    <div @keydown.enter.stop="saveGroup" tabindex="-1">
+    <div @keydown.enter.stop="saveGroup" tabindex="-1" class="no-outline">
         <div class="field">
             <label class="label" v-text="lang('title')"></label>
             <div class="control has-icons-left">
-                <input ref="groupTitle" v-model.trim="groupClone.title" data-auto-focus type="text" class="input" maxlength="120" :placeholder="lang('title')" />
+                <input ref="groupTitle" v-model.trim="groupClone.title" type="text" class="input" maxlength="120" :placeholder="lang('title')" />
                 <span class="icon is-small is-left">
                     <figure class="image is-16x16 is-inline-block">
                         <img :src="groupClone.iconUrlToDisplay" />
@@ -277,7 +256,7 @@
                                 :value="container.cookieStoreId"
                                 v-model="groupClone.catchTabContainers"
                                 />
-                            <img :src="container.iconUrl" class="size-16 container-icon" :style="{fill: container.colorCode}" />
+                            <img :src="container.iconUrl" class="size-16 fill-context" :style="{fill: container.colorCode}" />
                             <span v-text="container.name"></span>
                             <i v-if="container.cookieStoreId in disabledContainers">({{ disabledContainers[container.cookieStoreId] }})</i>
                         </label>
@@ -286,7 +265,7 @@
             </div>
         </div>
 
-        <div class="field">
+        <div class="field h-margin-bottom-10">
             <label class="label is-inline-flex indent-children">
                 <span v-text="lang('regexpForTabsTitle')"></span>
                 <span class="cursor-help" :title="lang('regexpForTabsHelp')">
@@ -311,8 +290,7 @@
                     event: 'close-popup',
                     lang: 'cancel',
                 }]
-            "
-            >
+            ">
             <span v-text="lang('selectUserGroupIconWarnText')"></span>
         </popup>
 

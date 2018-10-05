@@ -566,5 +566,9 @@
     "autoBackupLastBackupTitle": {
         "message": "Последнее резервное копирование:",
         "description": "Last backup:"
+    },
+    "enableDarkTheme": {
+        "message": "Включить темную тему",
+        "description": "Enable dark theme"
     }
 }
