@@ -112,7 +112,11 @@
                     autoBackupIntervalValue: value,
                 });
             },
-            'options.enableDarkTheme': function(enableDarkTheme) {
+            'options.enableDarkTheme': function(enableDarkTheme, oldValue) {
+                if (null == oldValue) {
+                    return;
+                }
+
                 if (enableDarkTheme) {
                     this.showEnableDarkThemeNotification = true;
                 }
@@ -267,7 +271,8 @@
                 try {
                     oldOptions = await file.load();
                 } catch (e) {
-                    return utils.notify(e);
+                    utils.notify(e);
+                    return;
                 }
 
                 let data = await storage.get(['groups', 'lastCreatedGroupPosition']),
@@ -279,7 +284,8 @@
                     try {
                         oldGroups = JSON.parse(win.extData['tabview-group']);
                     } catch (e) {
-                        return utils.notify('Error: cannot parse backup file - ' + e);
+                        utils.notify('Error: cannot parse backup file - ' + e);
+                        return;
                     }
 
                     Object.keys(oldGroups).forEach(function(key) {
@@ -348,6 +354,74 @@
                 }
             },
 
+            async importSettingsPanoramaViewAddonButton() {
+                let panoramaOptions = null;
+
+                try {
+                    panoramaOptions = await file.load();
+
+                    if (!panoramaOptions || !panoramaOptions.file || 'panoramaView' !== panoramaOptions.file.type || !Array.isArray(panoramaOptions.windows)) {
+                        throw 'Error: this is wrong backup!';
+                    }
+
+                    if (1 !== panoramaOptions.file.version) {
+                        throw 'Error: panorama backup has unsupported version';
+                    }
+                } catch (e) {
+                    utils.notify(e);
+                    return;
+                }
+
+                let data = await storage.get(['groups', 'lastCreatedGroupPosition']),
+                    newGroups = {};
+
+                panoramaOptions.windows.forEach(function(win) {
+                    win.groups.forEach(function(group) {
+                        if (!newGroups[group.id]) {
+                            data.lastCreatedGroupPosition++;
+
+                            newGroups[group.id] = BG.createGroup(data.lastCreatedGroupPosition, undefined, undefined, group.name);
+                        }
+                    });
+
+                    win.tabs.forEach(function(tab) {
+                        if (!newGroups[tab.groupId]) {
+                            return;
+                        }
+
+                        if (!utils.isUrlAllowToCreate(tab.url)) {
+                            return;
+                        }
+
+                        let newTab = BG.mapTab(tab);
+
+                        if (tab.pinned) {
+                            if (!utils.isUrlEmpty(newTab.url)) {
+                                browser.tabs.create({
+                                    url: newTab.url,
+                                    pinned: true,
+                                });
+                            }
+                        } else {
+                            newGroups[tab.groupId].tabs.push(newTab);
+                        }
+                    });
+
+                });
+
+                let groups = Object.values(newGroups);
+
+                if (groups.length) {
+                    data.groups = data.groups.concat(groups);
+
+                    await storage.set(data);
+
+                    browser.runtime.reload(); // reload addon
+                } else {
+                    utils.notify('Nothing imported');
+                }
+            },
+
             async saveErrorLogsIntoFile() {
                 let options = await storage.get('version'),
                     data = {
@@ -356,7 +430,7 @@
                     };
 
                 if (data.logs.length) {
-                    await file.save(data, 'STG-error-logs.json');
+                    file.save(data, 'STG-error-logs.json');
                 } else {
                     utils.notify('No logs found');
                 }
@@ -677,6 +751,19 @@
                     <button @click="importSettingsOldTabGroupsAddonButton" class="button">
                         <img class="size-16" src="/icons/old-tab-groups.svg" />
                         <span class="h-margin-left-5" v-text="lang('importSettingsOldTabGroupsAddonButton')"></span>
+                    </button>
+                </div>
+            </div>
+
+            <hr>
+
+            <div class="has-text-weight-bold h-margin-bottom-5" v-text="lang('importSettingsPanoramaViewAddonTitle')"></div>
+            <div class="h-margin-bottom-5" v-html="lang('importSettingsPanoramaViewAddonDescription')"></div>
+            <div class="field">
+                <div class="control">
+                    <button @click="importSettingsPanoramaViewAddonButton" class="button">
+                        <img class="size-16" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAiklEQVR42mP4KO/o/UXJ/slXRfv/2PBnBfs3DFDgExj61i8o7D8I+waGPvb0DfFk+Kxo9xiXZhiGGQDTDMM+gSGPGAhpxmcACA8HA0ChjE8zciwAQ/4NsmYQn2HgAXLiQHcWuhw6BqvFGjB4Ag1D7TAwAJSryDUAnJlAWRLZEORYQE846Jq9/AI9AD3nkgARmnBEAAAAAElFTkSuQmCC" />
+                        <span class="h-margin-left-5" v-text="lang('importSettingsPanoramaViewAddonButton')"></span>
                     </button>
                 </div>
             </div>

@@ -140,7 +140,7 @@
         "description": "Load a backup file old \"Tab Groups\" addon."
     },
     "importSettingsOldTabGroupsAddonButton": {
-        "message": "Загрузить резервную копию \"Tab Groups\"",
+        "message": "Выбрать файл",
         "description": "Choose file"
     },
     "openGroupAfterChange": {
@@ -574,5 +574,17 @@
     "enableDarkThemeNotification": {
         "message": "Для полной поддержки темной темы установите параметр<br><code>svg.context-properties.content.enabled</code> в <code>true</code> на странице<br><code>about:config</code><br><br><a href='https://support.mozilla.org/ru/kb/redaktor-nastroek-firefox#w_zajaoaii-aboutconfig'>Как это сделать?</a>",
         "description": "Fully support the dark theme text"
+    },
+    "importSettingsPanoramaViewAddonTitle": {
+        "message": "Восстановление резервной копии от плагина photodiode \"Panorama View\"",
+        "description": "Restore photodiode's \"Panorama View\""
+    },
+    "importSettingsPanoramaViewAddonDescription": {
+        "message": "Загрузка резервной копии от плагина \"Panorama View\"",
+        "description": "Load a backup file from \"Panorama View\" addon."
+    },
+    "importSettingsPanoramaViewAddonButton": {
+        "message": "Выбрать файл",
+        "description": "Choose file"
     }
 }

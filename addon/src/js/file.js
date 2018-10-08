@@ -8,7 +8,7 @@ browser.downloads.onChanged.addListener(function(delta) {
     if (_downloads[delta.id] && delta.state && 'in_progress' !== delta.state.current) {
         URL.revokeObjectURL(_downloads[delta.id].url);
 
-        if (!_downloads[delta.id].saveAs && 'complete' === delta.state.current) {
+        if (_downloads[delta.id].clearAfter && 'complete' === delta.state.current) {
             browser.downloads.erase({
                 id: delta.id,
             });
@@ -75,7 +75,7 @@ async function load(accept = BACKUP_FILE_EXT, readAs = 'json') { // readAs: json
     return result;
 }
 
-async function save(data, fileName = generateBackupFileName(), saveAs = true) { // data : Object/Array/Text
+async function save(data, fileName = 'file-name', saveAs = true, overwrite = false) { // data : Object/Array/Text
     let body = null,
         type = null;
 
@@ -93,11 +93,15 @@ async function save(data, fileName = generateBackupFileName(), saveAs = true) { 
     try {
         let deltaId = await browser.downloads.download({
             filename: fileName,
-            saveAs: saveAs,
             url: url,
+            saveAs: saveAs,
+            conflictAction: overwrite ? 'overwrite' : 'uniquify',
         });
 
-        _downloads[deltaId] = {url, saveAs};
+        _downloads[deltaId] = {
+            url: url,
+            clearAfter: !saveAs,
+        };
 
         return true;
     } catch (e) {
@@ -106,18 +110,31 @@ async function save(data, fileName = generateBackupFileName(), saveAs = true) { 
     }
 }
 
-function generateBackupFileName() {
+async function backup(data, isAutoBackup, overwrite) {
+    let fileName = generateBackupFileName(!overwrite),
+        saveAs = !isAutoBackup;
+
+    if (isAutoBackup) {
+        fileName = 'STG-backups/' + fileName;
+    }
+
+    return save(data, fileName, saveAs, overwrite);
+}
+
+function generateBackupFileName(withTime) {
     let now = new Date(),
         day = ('0' + now.getDate()).substr(-2),
         month = ('0' + (now.getMonth() + 1)).substr(-2),
         year = now.getFullYear(),
         hours = now.getHours(),
-        min = now.getMinutes();
+        min = now.getMinutes(),
+        time = withTime ? `-${hours}-${min}` : '';
 
-    return `stg-backup-${year}-${month}-${day}-${hours}-${min}@drive4ik${BACKUP_FILE_EXT}`;
+    return `stg-backup-${year}-${month}-${day}${time}@drive4ik${BACKUP_FILE_EXT}`;
 }
 
 export {
     load,
     save,
+    backup,
 };
