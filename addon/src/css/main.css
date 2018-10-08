@@ -48,6 +48,10 @@ html.dark-theme {
     --background-color-other: var(--input-background-color);
 }
 
+html.dark-theme a:hover {
+    color: #22519c;
+}
+
 html.dark-theme .checkbox:not([disabled]):hover,
 html.dark-theme .radio:not([disabled]):hover,
 html.dark-theme label:not([disabled]) {
