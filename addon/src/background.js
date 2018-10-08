@@ -2102,24 +2102,23 @@ async function resetAutoBackup() {
         return;
     }
 
-    let intervalSec = null;
+    let intervalSec = null,
+        overwrite = 'days' === options.autoBackupIntervalKey && 1 === value;
 
     if ('hours' === options.autoBackupIntervalKey) {
         intervalSec = constants.HOUR_SEC;
     } else if ('days' === options.autoBackupIntervalKey) {
-        intervalSec = constants.DAY_SEC;
+        // if backup will create every day - overwrite backups every 2 hours in order to keep as recent changes as possible
+        intervalSec = overwrite ? constants.HOUR_SEC * 2 : constants.DAY_SEC;
     } else {
         return;
     }
 
     let timeToBackup = value * intervalSec + options.autoBackupLastBackupTimeStamp;
 
-    // if backup will create every day - overwrite backups every 2 hours in order to keep as recent changes as possible
-    if ('days' === options.autoBackupIntervalKey && 1 === value) {
-        createBackup(true, true, true, true);
-        timer = constants.HOUR_SEC * 2;
-    } else if (now > timeToBackup) {
-        createBackup(true, true, true);
+
+    if (now > timeToBackup) {
+        createBackup(true, true, true, overwrite);
         timer = value * intervalSec;
     } else {
         timer = timeToBackup - now;
