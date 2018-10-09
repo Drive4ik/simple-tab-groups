@@ -139,10 +139,6 @@
         "message": "Carica un file di backup dall'estensione \"Tab Groups\".",
         "description": "Load a backup file old \"Tab Groups\" addon."
     },
-    "importSettingsOldTabGroupsAddonButton": {
-        "message": "Importa le impostazioni dall'estensione Quicksaver.",
-        "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
-    },
     "openGroupAfterChange": {
         "message": "Apri un gruppo dopo averlo modificato",
         "description": "Open group after changing to it"

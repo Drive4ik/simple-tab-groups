@@ -135,10 +135,6 @@
         "message": "Laadt een reservekopie van de oude \"Tab Groups\" add-on.",
         "description": "Load a backup file old \"Tab Groups\" addon."
     },
-    "importSettingsOldTabGroupsAddonButton": {
-        "message": "Importeer instellingen uit Quicksaver's \"Tab Groups\" add-on",
-        "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
-    },
     "openGroupAfterChange": {
         "message": "Open groep nadat er naartoe gewisseld is",
         "description": "Open group after changing to it"

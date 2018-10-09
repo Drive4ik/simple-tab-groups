@@ -139,10 +139,6 @@
         "message": "Załaduj plik kopii zapasowej",
         "description": "Load a backup file old \"Tab Groups\" addon."
     },
-    "importSettingsOldTabGroupsAddonButton": {
-        "message": "Importuj ustawienia z dodatku Quicksaver-a",
-        "description": "Choose file"
-    },
     "openGroupAfterChange": {
         "message": "Otwórz grupę po jej zmianie",
         "description": "Open group after changing to it"

@@ -143,10 +143,6 @@
         "message": "Load a backup file from the old \"Tab Groups\" addon.",
         "description": "Load a backup file old \"Tab Groups\" addon."
     },
-    "importSettingsOldTabGroupsAddonButton": {
-        "message": "Choose file",
-        "description": "Choose file"
-    },
     "openGroupAfterChange": {
         "message": "Open group after changing to it",
         "description": "Open group after changing to it"
@@ -587,10 +583,6 @@
         "message": "Load a backup file from \"Panorama View\" addon.",
         "description": "Load a backup file from \"Panorama View\" addon."
     },
-    "importSettingsPanoramaViewAddonButton": {
-        "message": "Choose file",
-        "description": "Choose file"
-    },
     "importSettingsSyncTabGroupsAddonTitle": {
         "message": "Restore Morikko's \"Sync Tab Groups\"",
         "description": "Restore Morikko's \"Sync Tab Groups\""
@@ -599,8 +591,8 @@
         "message": "Load a backup file from \"Sync Tab Groups\" addon.",
         "description": "Load a backup file from \"Sync Tab Groups\" addon."
     },
-    "importSettingsSyncTabGroupsAddonButton": {
-        "message": "Choose file",
-        "description": "Choose file"
+    "browseFileTitle": {
+        "message": "Browse...",
+        "description": "Browse..."
     }
 }

@@ -139,10 +139,6 @@
         "message": "Загрузка резервной копии от старого плагина \"Tab Groups\"",
         "description": "Load a backup file old \"Tab Groups\" addon."
     },
-    "importSettingsOldTabGroupsAddonButton": {
-        "message": "Выбрать файл",
-        "description": "Choose file"
-    },
     "openGroupAfterChange": {
         "message": "Открыть группу после перехода на неё",
         "description": "Open group after changing to it"
@@ -583,10 +579,6 @@
         "message": "Загрузка резервной копии от плагина \"Panorama View\"",
         "description": "Load a backup file from \"Panorama View\" addon."
     },
-    "importSettingsPanoramaViewAddonButton": {
-        "message": "Выбрать файл",
-        "description": "Choose file"
-    },
     "importSettingsSyncTabGroupsAddonTitle": {
         "message": "Восстановление резервной копии от плагина Morikko \"Sync Tab Groups\"",
         "description": "Restore Morikko's \"Sync Tab Groups\""
@@ -595,8 +587,8 @@
         "message": "Загрузка резервной копии от плагина \"Sync Tab Groups\"",
         "description": "Load a backup file from \"Sync Tab Groups\" addon."
     },
-    "importSettingsSyncTabGroupsAddonButton": {
-        "message": "Выбрать файл",
-        "description": "Choose file"
+    "browseFileTitle": {
+        "message": "Обзор...",
+        "description": "Browse..."
     }
 }

@@ -139,10 +139,6 @@
         "message": "載入舊版 Tab Groups 附加元件的備份檔。",
         "description": "Load a backup file old \"Tab Groups\" addon."
     },
-    "importSettingsOldTabGroupsAddonButton": {
-        "message": "匯入 Quicksaver 的 Tab Groups 附加元件的設定",
-        "description": "Choose file"
-    },
     "openGroupAfterChange": {
         "message": "切換分頁群組後開啟該分頁群組",
         "description": "Open group after changing to it"

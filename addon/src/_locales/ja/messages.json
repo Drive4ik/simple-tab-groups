@@ -139,10 +139,6 @@
         "message": "旧アドオンの ”Tab Groups” のバックアップを読み込みます",
         "description": "Load a backup file old \"Tab Groups\" addon."
     },
-    "importSettingsOldTabGroupsAddonButton": {
-        "message": "旧アドオンの ”Tab Groups” の設定をインポートする",
-        "description": "Choose file"
-    },
     "openGroupAfterChange": {
         "message": "変更したグループを開く",
         "description": "Open group after changing to it"

@@ -139,10 +139,6 @@
         "message": "加载老扩展“Tab Groups”的备份文件。",
         "description": "Load a backup file old \"Tab Groups\" addon."
     },
-    "importSettingsOldTabGroupsAddonButton": {
-        "message": "导入 Quicksaver 的“Tab Groups”的设置",
-        "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
-    },
     "openGroupAfterChange": {
         "message": "改动标签页群组后，打开该群组",
         "description": "Open group after changing to it"

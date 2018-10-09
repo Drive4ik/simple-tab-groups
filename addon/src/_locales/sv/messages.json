@@ -139,10 +139,6 @@
         "message": "Återställ säkerhetskopia från en fil i \"Tab Groups\"-tilläggets format.",
         "description": "Load a backup file old \"Tab Groups\" addon."
     },
-    "importSettingsOldTabGroupsAddonButton": {
-        "message": "Välj fil",
-        "description": "Choose file"
-    },
     "openGroupAfterChange": {
         "message": "Öppna grupp efter byte",
         "description": "Open group after changing to it"

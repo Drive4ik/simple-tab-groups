@@ -139,10 +139,6 @@
         "message": "Načíst záložní soubor starého doplňku \"Tab Groups\".",
         "description": "Load a backup file old \"Tab Groups\" addon."
     },
-    "importSettingsOldTabGroupsAddonButton": {
-        "message": "Vyberte soubor",
-        "description": "Choose file"
-    },
     "openGroupAfterChange": {
         "message": "Rozbalit vybranou skupinu po jejím zvolení přes vyskakovací okno",
         "description": "Open group after changing to it"
