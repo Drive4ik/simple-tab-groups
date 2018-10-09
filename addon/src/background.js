@@ -2099,17 +2099,23 @@ async function resetAutoBackup() {
         value = Number(options.autoBackupIntervalValue);
 
     if (isNaN(value) || 1 > value || 20 < value) {
+        log('invalid autoBackupIntervalValue', options.autoBackupIntervalValue);
         return;
     }
 
     let intervalSec = null,
-        overwrite = 'days' === options.autoBackupIntervalKey && 1 === value;
+        overwrite = false;
 
     if ('hours' === options.autoBackupIntervalKey) {
         intervalSec = constants.HOUR_SEC;
     } else if ('days' === options.autoBackupIntervalKey) {
-        // if backup will create every day - overwrite backups every 2 hours in order to keep as recent changes as possible
-        intervalSec = overwrite ? constants.HOUR_SEC * 2 : constants.DAY_SEC;
+        if (1 === value) {
+            // if backup will create every day - overwrite backups every 2 hours in order to keep as recent changes as possible
+            overwrite = true;
+            intervalSec = constants.HOUR_SEC * 2;
+        } else {
+            intervalSec = constants.DAY_SEC;
+        }
     } else {
         return;
     }
