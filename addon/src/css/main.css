@@ -110,9 +110,7 @@ img,
 }
 
 .drag-over {
-    outline-color: var(--outline-color);
-    outline-style: dashed;
-    outline-width: 2px;
+    outline: 2px dashed var(--outline-color) !important;
 }
 
 .align-bottom {

@@ -702,13 +702,16 @@
 <style lang="scss">
     :root {
         --margin: 5px;
-        --tab-hover-outline-color: #cfcfcf;
         --is-in-multiple-drop-text-color: #ffffff;
         --border-radius: 3px;
-        --group-shadow: 0 0 0 0.2em rgba(3, 102, 214, 0.3);
-        --tab-shadow: 0 0 2px 3px rgba(3, 102, 214, 0.5);
 
+        --group-active-shadow: 0 0 0 3.5px rgba(3, 102, 214, 0.3);
+        --group-active-border: 1px solid #2188ff;
         --group-bg-color: #fcfcfc;
+
+        --tab-active-shadow: var(--group-active-shadow);
+        --tab-active-border: var(--group-active-border);
+        --tab-hover-outline-color: #cfcfcf;
 
         --tab-inner-padding: 3px;
         --tab-inner-border-color: #c6ced4;
@@ -722,8 +725,14 @@
 
     html.dark-theme {
         --text-color: #e0e0e0;
+
         --group-bg-color: #444444;
+        --group-active-shadow: 0 0 0 3.5px rgba(255, 255, 255, 0.3);
+        --group-active-border: 1px solid #e0e0e0;
+
         --tab-bg-color: var(--group-bg-color);
+        --tab-active-shadow: var(--group-active-shadow);
+        --tab-active-border: var(--group-active-border);
     }
 
     .fade-enter-active, .fade-leave-active {
@@ -965,7 +974,10 @@
                     // }
 
                     &.is-active {
-                        box-shadow: var(--tab-shadow);
+                        box-shadow: var(--tab-active-shadow);
+                        outline: var(--tab-active-border);
+                        outline-offset: -1px;
+                        -moz-outline-radius: var(--border-radius);
                     }
 
                     &:not(.is-active):not(.drag-moving):hover {
@@ -985,8 +997,8 @@
                 }
 
                 &.loaded {
-                    border-color: var(--outline-color);
-                    box-shadow: var(--group-shadow);
+                    box-shadow: var(--group-active-shadow);
+                    border: var(--group-active-border);
                 }
 
                 &.new {
@@ -1008,8 +1020,7 @@
 
             .group,
             .group .tab {
-                will-change: transition;
-                transition-property: transform;
+                will-change: transform;
                 transition: transform 0.3s;
             }
         }
@@ -1026,8 +1037,12 @@
 
         /* Drag & Drop Styles */
 
-        .group.drag-over {
+        .grid .group.drag-over {
             outline-offset: 3px;
+        }
+
+        .grid .group .tab.drag-moving.drag-over {
+            outline-offset: 4px;
         }
 
         .drag-moving,
