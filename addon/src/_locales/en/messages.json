@@ -590,5 +590,17 @@
     "importSettingsPanoramaViewAddonButton": {
         "message": "Choose file",
         "description": "Choose file"
+    },
+    "importSettingsSyncTabGroupsAddonTitle": {
+        "message": "Restore Morikko's \"Sync Tab Groups\"",
+        "description": "Restore Morikko's \"Sync Tab Groups\""
+    },
+    "importSettingsSyncTabGroupsAddonDescription": {
+        "message": "Load a backup file from \"Sync Tab Groups\" addon.",
+        "description": "Load a backup file from \"Sync Tab Groups\" addon."
+    },
+    "importSettingsSyncTabGroupsAddonButton": {
+        "message": "Choose file",
+        "description": "Choose file"
     }
 }

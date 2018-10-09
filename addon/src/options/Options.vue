@@ -365,7 +365,7 @@
                     }
 
                     if (1 !== panoramaOptions.file.version) {
-                        throw 'Error: panorama backup has unsupported version';
+                        throw 'Error: Panorama View backup has unsupported version';
                     }
                 } catch (e) {
                     utils.notify(e);
@@ -410,6 +410,79 @@
                 });
 
                 let groups = Object.values(newGroups);
+
+                if (groups.length) {
+                    data.groups = data.groups.concat(groups);
+
+                    await storage.set(data);
+
+                    browser.runtime.reload(); // reload addon
+                } else {
+                    utils.notify('Nothing imported');
+                }
+            },
+
+            async importSettingsSyncTabGroupsAddonButton() {
+                let syncTabOptions = null;
+
+                try {
+                    syncTabOptions = await file.load();
+
+                    if (!syncTabOptions || !syncTabOptions.version || 'syncTabGroups' !== syncTabOptions.version[0] || !Array.isArray(syncTabOptions.groups)) {
+                        throw 'Error: this is wrong backup!';
+                    }
+
+                    if (1 !== syncTabOptions.version[1]) {
+                        throw 'Error: Sync Tab Groups backup has unsupported version';
+                    }
+                } catch (e) {
+                    utils.notify(e);
+                    return;
+                }
+
+                let data = await storage.get(['groups', 'lastCreatedGroupPosition']),
+                    newGroups = {};
+
+                syncTabOptions.groups.forEach(function(group) {
+                    if (group.incognito) {
+                        return;
+                    }
+
+                    if (!newGroups[group.id]) {
+                        data.lastCreatedGroupPosition++;
+
+                        newGroups[group.id] = BG.createGroup(data.lastCreatedGroupPosition, undefined, undefined, group.title);
+                        newGroups[group.id].position = group.position;
+                    }
+
+                    group.tabs.forEach(function(tab) {
+                        if (!utils.isUrlAllowToCreate(tab.url)) {
+                            return;
+                        }
+
+                        delete tab.id;
+
+                        let newTab = BG.mapTab(tab);
+
+                        if (tab.pinned) {
+                            if (!utils.isUrlEmpty(newTab.url)) {
+                                browser.tabs.create({
+                                    url: newTab.url,
+                                    pinned: true,
+                                });
+                            }
+                        } else {
+                            newGroups[group.id].tabs.push(newTab);
+                        }
+                    });
+                });
+
+                let groups = Object.values(newGroups)
+                    .sort((a, b) => utils.compareStrings(a.position, b.position))
+                    .map(function(group) {
+                        delete group.position;
+                        return group;
+                    });
 
                 if (groups.length) {
                     data.groups = data.groups.concat(groups);
@@ -767,6 +840,20 @@
                     </button>
                 </div>
             </div>
+
+            <hr>
+
+            <div class="has-text-weight-bold h-margin-bottom-5" v-text="lang('importSettingsSyncTabGroupsAddonTitle')"></div>
+            <div class="h-margin-bottom-5" v-html="lang('importSettingsSyncTabGroupsAddonDescription')"></div>
+            <div class="field">
+                <div class="control">
+                    <button @click="importSettingsSyncTabGroupsAddonButton" class="button">
+                        <img class="size-16" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAC4ElEQVR42m1Tu09TcRQ+bVx0dyFYZGiqCelQaAwNVtMApe/29t375LYNCqSFxISBRBdD1MV/wsHBaDQScTYmYkV0MDGBQRExGAddhF65v+M55eXgTb6c331833deFxJ3zlxLP4YfuWeA0iIIjkfnp2CnlwCLd8/fBLrSUvJ2sVgUhD1Jkn7mcrkIMFl/A2gQOnHl+Ky9Btt878D4A+eaVI32qBVt26yOo6Zptq7rGI1GP0Nu6YC0ckw+jFoLRHXViYlF2EpMXvLrcvWPMa6joiiCRDCZTCJwqv/NoNURsM1VB6aewKY0ddGnlo1dTVdRlmWbRDAej9uQpTrZST9w1I/JQl0mgRYJPGKBkE8uaTuqpmC5XLYJIhaL7UH+uYMJlvpqHxpjeT8qL6BtvnRayYdcQsCvFg2rLJetQqHQLpVKFgkgRO7DhrIKOLHmwNpHQPMDYJVgvqP4lkAZxe7Bujld6spm8tuKqnATMZvN4vDwcAsat1RX8vq5+lkJZjwlaPjqp+a9+omFAYp9irM52DjdlG9c6OYxqqra6/f7m263u0ljvDo7O3sS5hpzrmxcrrtdfU2/d6ip5mu9/LEsyd3BwXCzz9PfHBq4PN/v718IBALzXq+34fF4Zo4E0pnURrU+jtONKbwyOYHlSmHbNM2uVCaxbpg66oaGFaVMna8gLRA3sINUKoWhUKgFPI5arWYZhtEmWFSfRep+mvEWpWwRqU1Ns/L5vEWbx++sdDrdieFwGIFHQo6CyDaBZ7xDJF8ikdhkcTrbRBaETuMymYwg9w6oiXtA4xAkgLSaNne3UqnssgAtySadkYj2IZlckdx5AwVvIQnYwHURUfB6krsgUqcEmvFXrpWIgu4FOR+RKTveQjEyMkKrLEm/+ccgAZtqRqrzFz3riUQiXyg7FrDZ+R8BJAGbRYLB4HfgX5LcPrHy2NgY1zbRGaMs65Qi8rPR0VEGMjhtgiDyNzJ0/QXvYtJ0HU94ewAAAABJRU5ErkJggg==" />
+                        <span class="h-margin-left-5" v-text="lang('importSettingsSyncTabGroupsAddonButton')"></span>
+                    </button>
+                </div>
+            </div>
+
         </div>
 
         <popup
