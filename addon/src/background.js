@@ -47,6 +47,8 @@ async function saveGroupsToStorage(sendMessageToAll = false) {
         storage.set({
             groups: _groups,
         });
+
+        localStorage.lastUsedGroups = JSON.stringify(_groups);
     }, 500);
 }
 
@@ -2465,7 +2467,19 @@ async function init() {
 
     if (!Array.isArray(data.groups)) {
         utils.notify(browser.i18n.getMessage('ffFailedAndLostDataMessage'));
+
         data.groups = [];
+
+        if (localStorage.lastUsedGroups) {
+            try {
+                let lastUsedGroups = JSON.parse(localStorage.lastUsedGroups);
+                if (Array.isArray(lastUsedGroups)) {
+                    data.groups = lastUsedGroups;
+                }
+            } catch (e) {
+                delete localStorage.lastUsedGroups;
+            }
+        }
     }
 
     data = await runMigrateForData(data); // run migration for data
