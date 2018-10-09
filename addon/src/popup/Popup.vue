@@ -117,7 +117,7 @@
 
             this.setupListeners();
 
-            this.$refs.search.focus();
+            this.setFocus();
 
             this.$nextTick(function() {
                 let activeItemNode = document.querySelector('.is-active');
@@ -128,6 +128,11 @@
             });
         },
         watch: {
+            groupToEdit(groupToEdit) {
+                if (!groupToEdit) {
+                    this.setFocus();
+                }
+            },
             search(search) {
                 if (search) {
                     this.showSectionSearch();
@@ -170,6 +175,10 @@
         methods: {
             lang: browser.i18n.getMessage,
             safeHtml: utils.safeHtml,
+
+            setFocus() {
+                this.$refs.search.focus();
+            },
 
             setupListeners() {
                 let listener = function(request, sender) {
@@ -722,8 +731,16 @@
                 <div class="control is-expanded"
                     @keydown.arrow-right.stop @keyup.arrow-right.stop
                     @keydown.arrow-left.stop @keyup.arrow-left.stop
+                    @keydown.delete.stop @keyup.delete.stop
                     >
-                    <input id="search" v-model.trim="search" @input="$refs.search.value === '' ? showSectionDefault() : null" ref="search" type="text" class="input is-small fill-context" autocomplete="off" :placeholder="lang('searchPlaceholder')" />
+                    <input id="search"
+                        ref="search"
+                        type="text"
+                        class="input is-small fill-context"
+                        v-model.trim="search"
+                        @input="$refs.search.value === '' ? showSectionDefault() : null"
+                        autocomplete="off"
+                        :placeholder="lang('searchPlaceholder')" />
                 </div>
                 <div v-show="search" class="control">
                     <label class="button is-small" :title="lang('extendedTabSearch')">

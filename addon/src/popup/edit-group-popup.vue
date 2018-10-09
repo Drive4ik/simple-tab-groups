@@ -16,17 +16,16 @@
 
 <template>
     <div id="editGroupPopup">
-        <div class="item" @click="$emit('close-popup')">
-            <span class="item-icon">
+        <div class="popup-back-toolbar">
+            <div class="back-button" @click="$emit('close-popup')">
                 <img class="size-16" src="/icons/arrow-left.svg" />
-            </span>
-            <span class="item-title" v-text="lang('goBackButtonTitle')"></span>
+            </div>
+            <div class="text" v-text="lang('groupSettings')"></div>
         </div>
 
         <hr>
 
         <div class="body is-full-width">
-            <h3 class="has-text-centered" v-text="lang('groupSettings')"></h3>
             <slot></slot>
         </div>
 
@@ -41,7 +40,7 @@
 <style lang="scss">
     #editGroupPopup {
         position: fixed;
-        padding: var(--indent) 0;
+        padding-top: 4px;
         top: 0;
         left: 0;
         width: 100vw;
@@ -49,19 +48,47 @@
         background-color: var(--background-color);
         z-index: 5;
 
-        h3 {
-            font-size: 1.2rem;
-            font-weight: bold;
+        > hr {
+            margin-top: 4px;
         }
 
         .body {
             padding: 0 var(--indent);
-            max-height: calc(500px - var(--indent));
+            max-height: 500px;
             overflow-y: auto;
         }
 
         .action-buttons {
             padding: var(--indent);
+        }
+
+        .popup-back-toolbar {
+            display: flex;
+            align-items: center;
+            padding: 0 4px;
+
+            > .back-button {
+                width: 32px;
+                height: 32px;
+                padding: 8px;
+                display: flex;
+
+                &:hover {
+                    background-color: var(--item-background-color-hover);
+                }
+
+                &:active {
+                    background-color: var(--item-background-color-active-hover);
+                }
+
+            }
+
+            > .text {
+                text-align: center;
+                font-weight: bold;
+                flex-grow: 1;
+                padding-right: 32px;
+            }
         }
     }
 
