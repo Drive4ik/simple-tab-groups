@@ -511,7 +511,7 @@
                         :class="['group', {
                             'drag-moving': group.isMoving,
                             'drag-over': group.isOver,
-                            'loaded': group.windowId,
+                            'loaded': !!group.windowId,
                         }]"
                         @contextmenu="'INPUT' !== $event.target.nodeName && $refs.groupContextMenu.open($event, {group})"
 
@@ -555,7 +555,6 @@
                                 :key="group.tabs.indexOf(tab)"
                                 :class="['tab', {
                                     'is-active': tab.active,
-                                    'is-current': tab.active && group.windowId,
                                     'is-in-multiple-drop': multipleDropTabs.includes(tab),
                                     'has-thumbnail': thumbnails[makeSafeUrlForThumbnail(tab.url)],
                                     'drag-moving': tab.isMoving,
@@ -851,10 +850,6 @@
                     padding: var(--tab-inner-padding);
                     border-radius: var(--border-radius);
 
-                    > :not(.delete-tab-button):not(.tab-title) {
-                        pointer-events: none;
-                    }
-
                     > * {
                         border: 0 solid var(--tab-inner-border-color);
                         background-color: var(--tab-bg-color);
@@ -970,7 +965,6 @@
                     // }
 
                     &.is-active {
-                        outline: 1px solid var(--outline-color);
                         box-shadow: var(--tab-shadow);
                     }
 
