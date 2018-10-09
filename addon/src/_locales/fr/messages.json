@@ -113,7 +113,7 @@
     },
     "includeTabThumbnailsIntoBackup": {
         "message": "Inclure les icônes d'onglet dans la sauvegarde (le fichier de sauvegarde sera plus volumineux)",
-        "description": "Include tab thumbnails into backup (make backup file size bigger)"
+        "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
         "message": "Restaurer des groupes Simple Tab Groups",
@@ -141,7 +141,7 @@
     },
     "importSettingsOldTabGroupsAddonButton": {
         "message": "Importer les préférences de l'addon \"Tab Groups\" de Quicksaver",
-        "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
+        "description": "Choose file"
     },
     "openGroupAfterChange": {
         "message": "Ouvrir le groupe après s'y être rendu",
@@ -174,6 +174,10 @@
     "sortGroupsZA": {
         "message": "Trier les groupes [Z-A]",
         "description": "Sort groups [Z-A]"
+    },
+    "generalTitle": {
+        "message": "Général",
+        "description": "General"
     },
     "groupSettings": {
         "message": "Préférences de groupe",
@@ -329,7 +333,17 @@
     },
     "undoRemoveGroupItemTitle": {
         "message": "Annuler la suppression du groupe \"$grouptitle$\"",
-        "description": "Undo remove group menu title",
+        "description": "Undelete a group menu title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "undoRemoveGroupNotification": {
+        "message": "Cliquez ici pour annuler la suppression du groupe \"$grouptitle$\"",
+        "description": "Click here to cancel the deletion of the group title",
         "placeholders": {
             "grouptitle": {
                 "content": "$1",
@@ -353,8 +367,74 @@
         "message": "Style d’icônes",
         "description": "Icon style"
     },
+    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
+        "message": "Il n'est pas possible de changer de groupe car un des onglet ouvert partage le micro ou la caméra",
+        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
+    },
+    "foundHiddenUnSyncTabsDescription": {
+        "message": "Des onglet non synchronisés ont été trouvés. Cliquez sur l'onglet pour l'ouvrir dans le groupe ou la fenêtre courante ou :",
+        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
+    },
+    "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
+        "message": "Déplacer tout les onglets dans le groupe ou la fenêtre courante",
+        "description": "Move all of these tabs into current group/window"
+    },
+    "actionHiddenUnSyncTabsCreateGroup": {
+        "message": "Créer un nouveau groupe avec ces onglets",
+        "description": "Create new group with all of these tabs"
+    },
+    "actionHiddenUnSyncTabsCloseAll": {
+        "message": "Fermet tout ces onglets",
+        "description": "Close all of these tabs"
+    },
+    "updateTabThumbnail": {
+        "message": "Mettre à jour la capture de cet onglet",
+        "description": "Update thumbnail for this tab"
+    },
+    "cantMakeThumbnailTabWasDiscarded": {
+        "message": "Impossible de créer une capture d'un onglet qui n'a pas été chargé",
+        "description": "You can not make a thumbnail of a tab if the tab was not loaded"
+    },
+    "waitingToLoadAllTabs": {
+        "message": "En attente du chargement de tout les onglets.\nVeuillez patienter...",
+        "description": "Waiting for all tabs to load.\nPlease wait..."
+    },
+    "reloadAddon": {
+        "message": "Recharger le module complémentaire",
+        "description": "Reload addon"
+    },
+    "ffFailedAndLostDataMessage": {
+        "message": "FireFox à planté et tout les groupes ont été perdus.\nSi vous avez une sauvegarde, vous pouvez effectuer une restauration à partir de celle-ci.",
+        "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
+    },
     "openGroupInNewWindow": {
         "message": "Ouvrir le groupe dans une nouvelle fenêtre",
         "description": "Open group in new window"
+    },
+    "muteTabsWhenGroupCloseAndRestoreWhenOpen": {
+        "message": "Rendre les onglets silencieux lorsqu'on ferme le groupe et les réactiver lorsqu'on l'ouvre à nouveau.",
+        "description": "Mute tabs when group close and restore when open"
+    },
+    "tabsThumbnailsSize": {
+        "message": "Taille des captures : $size$",
+        "description": "Tabs thumbnails size: $size$",
+        "placeholders": {
+            "size": {
+                "content": "$1",
+                "example": "2 MB"
+            }
+        }
+    },
+    "clearTabsThumbnails": {
+        "message": "Effacer les captures",
+        "description": "Clear tabs thumbnails"
+    },
+    "extendedTabSearch": {
+        "message": "Recherche étendue",
+        "description": "Extended search"
+    },
+    "waitingForSessionRestoreNotification": {
+        "message": "En attente de la restauration de la session...",
+        "description": "Waiting for session restore..."
     }
 }
