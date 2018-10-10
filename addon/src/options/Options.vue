@@ -382,7 +382,7 @@
                         if (!newGroups[group.id]) {
                             data.lastCreatedGroupPosition++;
 
-                            newGroups[group.id] = BG.createGroup(data.lastCreatedGroupPosition, undefined, undefined, group.name);
+                            newGroups[group.id] = BG.createGroup(data.lastCreatedGroupPosition, undefined, group.name);
                         }
                     });
 
@@ -453,7 +453,7 @@
                     if (!newGroups[group.id]) {
                         data.lastCreatedGroupPosition++;
 
-                        newGroups[group.id] = BG.createGroup(data.lastCreatedGroupPosition, undefined, undefined, group.title);
+                        newGroups[group.id] = BG.createGroup(data.lastCreatedGroupPosition, undefined, group.title);
                         newGroups[group.id].position = group.position;
                     }
 
@@ -582,6 +582,12 @@
                 <label class="checkbox" :disabled="options.closePopupAfterChangeGroup">
                     <input v-model="options.openGroupAfterChange" type="checkbox" :disabled="options.closePopupAfterChangeGroup"/>
                     <span v-text="lang('openGroupAfterChange')"></span>
+                </label>
+            </div>
+            <div class="field">
+                <label class="checkbox">
+                    <input v-model="options.createNewGroupWhenOpenNewWindow" type="checkbox" />
+                    <span v-text="lang('createNewGroupWhenOpenNewWindow')"></span>
                 </label>
             </div>
             <div class="field">

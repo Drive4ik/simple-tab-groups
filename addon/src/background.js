@@ -56,7 +56,10 @@ async function getWindow(windowId = browser.windows.WINDOW_ID_CURRENT) {
     return await browser.windows.get(windowId).catch(function() {});
 }
 
-async function createWindow(createData = {}) {
+let _dontCreateNewGroupForNextWindow = false;
+async function createWindow(createData = {}, dontCreateNewGroup = false) {
+    _dontCreateNewGroupForNextWindow = dontCreateNewGroup;
+
     let win = await browser.windows.create(createData);
 
     if (utils.isWindowAllow(win)) {
@@ -198,13 +201,13 @@ function getTabFavIconUrl(tab) {
     return safedFavIconUrl;
 }
 
-function createGroup(id, windowId = null, groupIconViewType = null, title = null) {
+function createGroup(id, windowId = null, title = null) {
     return {
         id: id,
         title: utils.createGroupTitle(title, id),
         iconColor: utils.randomColor(),
         iconUrl: null,
-        iconViewType: groupIconViewType || options.defaultGroupIconViewType,
+        iconViewType: options.defaultGroupIconViewType,
         tabs: [],
         catchTabRules: '',
         catchTabContainers: [],
@@ -215,29 +218,25 @@ function createGroup(id, windowId = null, groupIconViewType = null, title = null
     };
 }
 
-async function addGroup(windowId, resetGroups = false, returnNewGroupIndex = true, withTabs = [], title) {
+async function addGroup(windowId, returnNewGroupIndex = true, withTabs = [], title) {
     let { lastCreatedGroupPosition } = await storage.get('lastCreatedGroupPosition');
 
     lastCreatedGroupPosition++;
 
-    if (resetGroups) {
-        _groups = [];
-    }
-
     let newGroupIndex = _groups.length;
 
-    _groups.push(createGroup(lastCreatedGroupPosition, windowId, undefined, title));
+    _groups.push(createGroup(lastCreatedGroupPosition, windowId, title));
 
-    if (0 === newGroupIndex) {
-        let win = await getWindow(),
-            tabs = await getTabs();
+    if (0 === newGroupIndex || windowId) {
+        let win = await getWindow(windowId),
+            tabs = await getTabs(windowId);
 
         windowId = win.id;
 
-        _groups[0].windowId = windowId;
-        _groups[0].tabs = tabs.map(mapTab);
+        _groups[newGroupIndex].windowId = windowId;
+        _groups[newGroupIndex].tabs = tabs.map(mapTab);
 
-        updateBrowserActionData(_groups[0].windowId);
+        updateBrowserActionData(_groups[newGroupIndex].windowId);
     } else if (withTabs.length) {
         _groups[newGroupIndex].tabs = utils.clone(withTabs.map(mapTab)); // clone need for fix bug: dead object after close tab which create object
     }
@@ -1178,9 +1177,15 @@ function onDetachedTab(tabId, { oldWindowId }) { // notice: call before onAttach
     saveGroupsToStorage();
 }
 
-function onCreatedWindow(win) {
+async function onCreatedWindow(win) {
     if (utils.isWindowAllow(win)) {
-        updateBrowserActionData(win.id);
+        if (options.createNewGroupWhenOpenNewWindow && !_dontCreateNewGroupForNextWindow) {
+            addGroup(win.id);
+        } else {
+            updateBrowserActionData(win.id);
+        }
+
+        _dontCreateNewGroupForNextWindow = false;
     } else {
         resetBrowserActionData(win.id);
     }
@@ -1487,7 +1492,7 @@ async function moveTabs(fromData, toData, showNotificationAfterMoveTab = true, s
     isMovingTabs = false;
 
     function join(strArray) {
-        return strArray.filter(utils.onlyUnique).map(str => utils.sliceText(str, 25)).join(', ');
+        return strArray.filter(utils.onlyUniqueFilter).map(str => utils.sliceText(str, 25)).join(', ');
     }
 
     if (tabsWhichCantMove.showPinnedMessage) {
@@ -1655,7 +1660,7 @@ async function createMoveTabMenus(windowId) {
                 return;
             }
 
-            let newGroup = await addGroup(undefined, undefined, false);
+            let newGroup = await addGroup(undefined, false);
 
             moveTabs(tabsToMove, {
                     groupId: newGroup.id,
@@ -2052,7 +2057,7 @@ async function runAction(data, externalExtId) {
                 let activeTabForMove = await getActiveTab();
 
                 if ('new' === data.groupId) {
-                    let newGroup = await addGroup(undefined, undefined, false);
+                    let newGroup = await addGroup(undefined, false);
                     data.groupId = newGroup.id;
                 } else if (!_groups.some(group => group.id === data.groupId)) {
                     throw Error('Group not found');
@@ -2473,7 +2478,7 @@ async function init() {
         if (localStorage.lastUsedGroups) {
             try {
                 let lastUsedGroups = JSON.parse(localStorage.lastUsedGroups);
-                if (Array.isArray(lastUsedGroups)) {
+                if (Array.isArray(lastUsedGroups) && lastUsedGroups.length) {
                     data.groups = lastUsedGroups;
                 }
             } catch (e) {

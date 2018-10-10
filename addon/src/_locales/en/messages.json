@@ -598,5 +598,9 @@
     "openBackupFolder": {
         "message": "Open backup folder",
         "description": "Open backup folder"
+    },
+    "createNewGroupWhenOpenNewWindow": {
+        "message": "Create a new group when opening a new window",
+        "description": "Create a new group when opening a new window"
     }
 }

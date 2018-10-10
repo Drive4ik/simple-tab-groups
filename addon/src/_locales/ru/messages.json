@@ -594,5 +594,9 @@
     "openBackupFolder": {
         "message": "Открыть папку резервного копирования",
         "description": "Open backup folder"
+    },
+    "createNewGroupWhenOpenNewWindow": {
+        "message": "Создавать новую группу при открытии нового окна",
+        "description": "Create a new group when opening a new window"
     }
 }

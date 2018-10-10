@@ -1,6 +1,6 @@
 <template>
     <div
-        class="v-context-menu"
+        class="v-context-menu no-outline"
         v-show="show"
         :style="style"
         tabindex="-1"

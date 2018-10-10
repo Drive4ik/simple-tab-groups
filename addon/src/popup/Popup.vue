@@ -326,7 +326,7 @@
             },
 
             createNewGroup() {
-                BG.addGroup(undefined, undefined, undefined, undefined, this.nextGroupTitle);
+                BG.addGroup(undefined, undefined, undefined, this.nextGroupTitle);
             },
 
             addTab(cookieStoreId) {
@@ -405,7 +405,7 @@
                 this.loadGroups();
             },
             async unsyncHiddenTabsCreateNewGroup() {
-                await BG.addGroup(undefined, undefined, undefined, this.unSyncTabs);
+                await BG.addGroup(undefined, undefined, this.unSyncTabs);
 
                 this.unSyncTabs = [];
             },
@@ -429,7 +429,7 @@
                 if (group.windowId) {
                     BG.setFocusOnWindow(group.windowId);
                 } else {
-                    let win = await BG.createWindow(),
+                    let win = await BG.createWindow(undefined, true),
                         groupIndex = this.groups.findIndex(gr => gr.id === group.id);
 
                     BG.loadGroup(win.id, groupIndex);
@@ -477,7 +477,7 @@
                 }
             },
             async moveTabToNewGroup(tab, oldGroup) {
-                let newGroup = await BG.addGroup(undefined, undefined, false);
+                let newGroup = await BG.addGroup(undefined, false);
 
                 await this.moveTab(tab, oldGroup, newGroup);
             },
@@ -711,7 +711,7 @@
 <template>
     <div
         id="stg-popup"
-        :class="['is-flex is-column', {'edit-group-popup': !!groupToEdit}]"
+        :class="['is-flex is-column no-outline', {'edit-group-popup': !!groupToEdit}]"
         @contextmenu="['INPUT', 'TEXTAREA'].includes($event.target.nodeName) ? null : $event.preventDefault()"
         @wheel.ctrl.prevent
 

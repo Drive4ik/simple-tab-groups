@@ -597,7 +597,7 @@
 
                             <div class="tab new" :title="lang('createNewTab')" @click="addTab(group)">
                                 <div class="screenshot">
-                                    <img src="/icons/tab-new.svg" class="size-16">
+                                    <img src="/icons/tab-new.svg">
                                 </div>
                                 <div class="tab-title text-ellipsis" v-text="lang('createNewTab')"></div>
                             </div>

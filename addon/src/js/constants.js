@@ -75,6 +75,7 @@ const DEFAULT_OPTIONS = {
     discardTabsAfterHide: false,
     closePopupAfterChangeGroup: true,
     openGroupAfterChange: true,
+    createNewGroupWhenOpenNewWindow: false,
     showNotificationAfterMoveTab: true,
     openManageGroupsInTab: true,
     showConfirmDialogBeforeGroupDelete: true,
