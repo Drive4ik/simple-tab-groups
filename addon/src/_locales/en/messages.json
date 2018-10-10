@@ -594,5 +594,9 @@
     "browseFileTitle": {
         "message": "Browse...",
         "description": "Browse..."
+    },
+    "openBackupFolder": {
+        "message": "Open backup folder",
+        "description": "Open backup folder"
     }
 }

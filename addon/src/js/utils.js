@@ -474,6 +474,26 @@ function extractKeys(obj, keys, useClone = false) {
     return newObj;
 }
 
+async function wait(ms = 200) {
+    return new Promise(resolve => setTimeout(resolve, ms, ms));
+}
+
+async function waitDownload(id, timeForWait = 5) {
+    let downloadObj = null;
+
+    for (let i = 0; i < timeForWait * 5; i++) {
+        [downloadObj] = await browser.downloads.search({id});
+
+        if (!downloadObj || 'in_progress' !== downloadObj.state) {
+            break;
+        }
+
+        await wait(200);
+    }
+
+    return downloadObj ? downloadObj.state : null;
+}
+
 export {
     keyId,
     unixNow,
@@ -531,4 +551,7 @@ export {
     makeSafeUrlForThumbnail,
 
     mySearchFunc,
+
+    wait,
+    waitDownload,
 };

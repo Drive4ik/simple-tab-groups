@@ -153,6 +153,8 @@
             lang: browser.i18n.getMessage,
             getHotkeyActionTitle: action => browser.i18n.getMessage('hotkeyActionTitle' + utils.capitalize(utils.toCamelCase(action))),
 
+            openBackupFolder: file.openBackupFolder,
+
             async saveOptions(options) {
                 await storage.set(options, true);
                 await browser.runtime.sendMessage({
@@ -780,7 +782,7 @@
                     <div class="h-margin-right-5" v-html="lang('autoBackupCreateEveryTitle')"></div>
                     <div class="field has-addons">
                         <div class="control">
-                            <input type="number" class="input" v-model.number="options.autoBackupIntervalValue" min="1" max="20" />
+                            <input type="number" class="input backup-time-input" v-model.number="options.autoBackupIntervalValue" min="1" max="20" />
                         </div>
                         <div class="control">
                             <div class="select">
@@ -795,6 +797,9 @@
                 <div v-if="options.autoBackupEnable" class="field is-flex is-align-items-center indent-children">
                     <span v-text="lang('autoBackupLastBackupTitle')"></span>
                     <span v-text="new Date(options.autoBackupLastBackupTimeStamp * 1000).toLocaleString()"></span>
+                </div>
+                <div>
+                    <button class="button" @click="openBackupFolder" v-text="lang('openBackupFolder')"></button>
                 </div>
             </div>
 
@@ -889,6 +894,10 @@
 
         & > div {
             max-width: 99%;
+        }
+
+        .backup-time-input {
+            width: 100px;
         }
     }
 

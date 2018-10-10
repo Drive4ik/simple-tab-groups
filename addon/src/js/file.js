@@ -1,22 +1,9 @@
 'use strict';
 
+import * as utils from './utils';
+import * as constants from './constants';
+
 const BACKUP_FILE_EXT = '.json';
-
-let _downloads = {};
-
-browser.downloads.onChanged.addListener(function(delta) {
-    if (_downloads[delta.id] && delta.state && 'in_progress' !== delta.state.current) {
-        URL.revokeObjectURL(_downloads[delta.id].url);
-
-        if (_downloads[delta.id].clearAfter && 'complete' === delta.state.current) {
-            browser.downloads.erase({
-                id: delta.id,
-            });
-        }
-
-        delete _downloads[delta.id];
-    }
-});
 
 async function load(accept = BACKUP_FILE_EXT, readAs = 'json') { // readAs: json, text, url
     if (!['json', 'text', 'url'].includes(readAs)) {
@@ -75,7 +62,7 @@ async function load(accept = BACKUP_FILE_EXT, readAs = 'json') { // readAs: json
     return result;
 }
 
-async function save(data, fileName = 'file-name', saveAs = true, overwrite = false) { // data : Object/Array/Text
+async function save(data, fileName = 'file-name', saveAs = true, overwrite = false, clearOnComplete = false) { // data : Object/Array/Text
     let body = null,
         type = null;
 
@@ -91,34 +78,43 @@ async function save(data, fileName = 'file-name', saveAs = true, overwrite = fal
         url = URL.createObjectURL(blob);
 
     try {
-        let deltaId = await browser.downloads.download({
+        let id = await browser.downloads.download({
             filename: fileName,
             url: url,
             saveAs: saveAs,
             conflictAction: overwrite ? 'overwrite' : 'uniquify',
         });
 
-        _downloads[deltaId] = {
-            url: url,
-            clearAfter: !saveAs,
-        };
+        let state = await utils.waitDownload(id);
 
-        return true;
-    } catch (e) {
+        if (clearOnComplete && 'complete' === state) {
+            await browser.downloads.erase({id});
+        }
+
+        return id;
+    } finally {
         URL.revokeObjectURL(url);
-        throw e;
     }
 }
 
 async function backup(data, isAutoBackup, overwrite) {
-    let fileName = generateBackupFileName(!overwrite),
-        saveAs = !isAutoBackup;
+    let fileName = generateBackupFileName(!overwrite);
 
     if (isAutoBackup) {
-        fileName = 'STG-backups/' + fileName;
+        fileName = constants.BACKUP_FOLDER + fileName;
     }
 
-    return save(data, fileName, saveAs, overwrite);
+    return save(data, fileName, !isAutoBackup, overwrite, isAutoBackup);
+}
+
+async function openBackupFolder() {
+    let id = await save('temp file', constants.BACKUP_FOLDER + 'tmp.tmp', false, true, false);
+
+    await browser.downloads.show(id);
+    await utils.wait(150);
+    await browser.downloads.removeFile(id);
+    await browser.downloads.erase({id});
+
 }
 
 function generateBackupFileName(withTime) {
@@ -137,4 +133,5 @@ export {
     load,
     save,
     backup,
+    openBackupFolder,
 };
