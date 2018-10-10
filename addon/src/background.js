@@ -201,7 +201,7 @@ function getTabFavIconUrl(tab) {
     return safedFavIconUrl;
 }
 
-function createGroup(id, windowId = null, title = null) {
+function createGroup(id, windowId, title) {
     return {
         id: id,
         title: utils.createGroupTitle(title, id),
@@ -214,31 +214,33 @@ function createGroup(id, windowId = null, title = null) {
         isSticky: false,
         muteTabsWhenGroupCloseAndRestoreWhenOpen: false,
         showTabAfterMovingItIntoThisGroup: false,
-        windowId: windowId,
+        windowId: windowId || null,
     };
 }
 
-async function addGroup(windowId, returnNewGroupIndex = true, withTabs = [], title) {
+async function addGroup(windowId, withTabs = [], title) {
     let { lastCreatedGroupPosition } = await storage.get('lastCreatedGroupPosition');
 
     lastCreatedGroupPosition++;
 
-    let newGroupIndex = _groups.length;
+    let newGroup = createGroup(lastCreatedGroupPosition, windowId, title);
 
-    _groups.push(createGroup(lastCreatedGroupPosition, windowId, title));
+    _groups.push(newGroup);
 
-    if (0 === newGroupIndex || windowId) {
+    if (!withTabs.length && (1 === _groups.length || windowId)) {
         let win = await getWindow(windowId),
             tabs = await getTabs(windowId);
 
         windowId = win.id;
 
-        _groups[newGroupIndex].windowId = windowId;
-        _groups[newGroupIndex].tabs = tabs.map(mapTab);
+        newGroup.windowId = windowId;
+        await setWindowValue(windowId, 'groupId', newGroup.id);
 
-        updateBrowserActionData(_groups[newGroupIndex].windowId);
+        newGroup.tabs = tabs.map(mapTab);
+
+        updateBrowserActionData(windowId);
     } else if (withTabs.length) {
-        _groups[newGroupIndex].tabs = utils.clone(withTabs.map(mapTab)); // clone need for fix bug: dead object after close tab which create object
+        newGroup.tabs = utils.clone(withTabs.map(mapTab)); // clone need for fix bug: dead object after close tab which create object
     }
 
     await storage.set({
@@ -247,18 +249,18 @@ async function addGroup(windowId, returnNewGroupIndex = true, withTabs = [], tit
 
     sendMessage({
         action: 'group-added',
-        group: _groups[newGroupIndex],
+        group: newGroup,
     });
 
     sendExternalMessage({
         action: 'group-added',
-        group: _mapGroupForAnotherExtension(_groups[newGroupIndex]),
+        group: _mapGroupForAnotherExtension(newGroup),
     });
 
     updateMoveTabMenus(windowId);
     saveGroupsToStorage();
 
-    return returnNewGroupIndex ? newGroupIndex : _groups[newGroupIndex];
+    return newGroup;
 }
 
 async function updateGroup(groupId, updateData) {
@@ -802,8 +804,6 @@ async function loadGroup(windowId, groupId, activeTabIndex = -1) {
             addEvents();
         }
 
-        loadingGroupInWindow[windowId] = false;
-
         sendMessage({
             action: 'group-loaded',
             group: group,
@@ -811,9 +811,10 @@ async function loadGroup(windowId, groupId, activeTabIndex = -1) {
 
         return true;
     } catch (e) {
-        loadingGroupInWindow[windowId] = false;
         utils.notify(e);
         throw String(e);
+    } finally {
+        loadingGroupInWindow[windowId] = false;
     }
 }
 
@@ -1656,7 +1657,11 @@ async function createMoveTabMenus(windowId) {
                 return;
             }
 
-            let newGroup = await addGroup(undefined, false);
+            let newGroup = await addGroup();
+
+            if (1 === _groups.length) { // new group already contains this tab
+                return;
+            }
 
             moveTabs(tabsToMove, {
                     groupId: newGroup.id,
@@ -2050,7 +2055,7 @@ async function runAction(data, externalExtId) {
                 let activeTabForMove = await getActiveTab();
 
                 if ('new' === data.groupId) {
-                    let newGroup = await addGroup(undefined, false);
+                    let newGroup = await addGroup();
                     data.groupId = newGroup.id;
                 } else if (!_groups.some(group => group.id === data.groupId)) {
                     throw Error('Group not found');

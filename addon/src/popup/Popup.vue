@@ -326,7 +326,7 @@
             },
 
             createNewGroup() {
-                BG.addGroup(undefined, undefined, undefined, this.nextGroupTitle);
+                BG.addGroup(undefined, undefined, this.nextGroupTitle);
             },
 
             addTab(cookieStoreId) {
@@ -403,7 +403,7 @@
                 this.loadGroups();
             },
             async unsyncHiddenTabsCreateNewGroup() {
-                await BG.addGroup(undefined, undefined, this.unSyncTabs);
+                await BG.addGroup(undefined, this.unSyncTabs);
 
                 this.unSyncTabs = [];
             },
@@ -474,7 +474,7 @@
                 }
             },
             async moveTabToNewGroup(tab, oldGroup) {
-                let newGroup = await BG.addGroup(undefined, false);
+                let newGroup = await BG.addGroup();
 
                 await this.moveTab(tab, oldGroup, newGroup);
             },
