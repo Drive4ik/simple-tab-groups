@@ -96,6 +96,23 @@ html.dark-theme .button.is-focused:not(:active) {
     background-color: var(--input-background-color);
 }
 
+.input,
+.textarea {
+    box-shadow: unset;
+}
+
+.input.is-active,
+.input.is-focused,
+.input:active,
+.input:focus,
+.textarea.is-active,
+.textarea.is-focused,
+.textarea:active,
+.textarea:focus {
+    box-shadow: unset;
+    border-color: #0a84ff;
+}
+
 img {
     pointer-events: none;
     -moz-user-select: none;
