@@ -17,7 +17,7 @@
 <template>
     <div id="editGroupPopup">
         <div class="popup-back-toolbar">
-            <div class="back-button" @click="$emit('close-popup')">
+            <div class="back-button" @click="$emit('close-popup')" :title="lang('goBackButtonTitle')">
                 <img class="size-16" src="/icons/arrow-left.svg" />
             </div>
             <div class="text" v-text="lang('groupSettings')"></div>
@@ -85,7 +85,7 @@
 
             > .text {
                 text-align: center;
-                font-weight: bold;
+                font-weight: 600;
                 flex-grow: 1;
                 padding-right: 32px;
             }

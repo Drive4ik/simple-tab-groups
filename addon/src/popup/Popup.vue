@@ -784,7 +784,7 @@
                             @click="loadGroup(group, group.tabs.indexOf(tab))"
                             @mousedown.middle.prevent
                             @mouseup.middle.prevent="removeTab(group.id, group.tabs.indexOf(tab))"
-                            :class="['item is-unselectable space-left', {
+                            :class="['tab item is-unselectable space-left', {
                                 'is-active': group === currentGroup && tab.active,
                                 'is-hovered-item': tab === hoverItem,
                             }]"
@@ -883,7 +883,7 @@
                             @click="unsyncHiddenTabsShowTabIntoCurrentWindow(tab)"
                             @mousedown.middle.prevent
                             @mouseup.middle.prevent="removeUnSyncTab(tab)"
-                            class="item is-unselectable"
+                            class="tab item is-unselectable"
                             :title="getTabTitle(tab, true)"
                             >
                             <div class="item-icon">
@@ -937,7 +937,7 @@
                         @click="loadGroup(groupToShow, tabIndex)"
                         @mousedown.middle.prevent
                         @mouseup.middle.prevent="removeTab(groupToShow.id, tabIndex)"
-                        :class="['item is-unselectable', {
+                        :class="['tab item is-unselectable', {
                             'is-active': groupToShow === currentGroup && tab.active,
                             'drag-moving': tab.isMoving,
                             'drag-over': tab.isOver,
@@ -1258,7 +1258,6 @@
         height: 28px;
         min-height: 28px;
         padding-left: var(--indent);
-        position: relative;
 
         &.space-left {
             padding-left: calc(var(--indent) * 2);
@@ -1266,13 +1265,6 @@
 
         > :last-child {
             padding-right: var(--indent);
-        }
-
-        // &.is-hover,
-        &:not(.no-hover):hover,
-        &.is-active,
-        &.is-hovered-item {
-            background-color: var(--item-background-color-hover);
         }
 
         &.is-active:before {
@@ -1285,11 +1277,17 @@
             width: 4px;
         }
 
+        &:not(.no-hover):hover,
+        &.is-hovered-item {
+            background-color: var(--item-background-color-hover);
+        }
+
         .item-action.bold-hover:hover {
             background-color: var(--item-background-color-active-hover);
         }
 
-        &:not(.no-hover):active {
+        &:not(.no-hover):active,
+        &.is-active {
             background-color: var(--item-background-color-active-hover);
         }
 
@@ -1335,6 +1333,11 @@
 
     .tabs-list .group-info.item .item-title {
         text-align: center;
+    }
+
+    .group,
+    .tab {
+        position: relative;
     }
 
     .group .tabs-text {
