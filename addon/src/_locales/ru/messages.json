@@ -568,7 +568,7 @@
         "description": "Enable dark theme"
     },
     "enableDarkThemeNotification": {
-        "message": "Для полной поддержки темной темы установите параметр<br><code>svg.context-properties.content.enabled</code> в <code>true</code> на странице<br><code>about:config</code><br><br><a href='https://support.mozilla.org/ru/kb/redaktor-nastroek-firefox#w_zajaoaii-aboutconfig'>Как это сделать?</a>",
+        "message": "Для полной поддержки тёмной темы установите параметр<br><code>svg.context-properties.content.enabled</code> в <code>true</code> на странице<br><code>about:config</code><br><br><a href='https://support.mozilla.org/ru/kb/redaktor-nastroek-firefox#w_zajaoaii-aboutconfig'>Как это сделать?</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {
