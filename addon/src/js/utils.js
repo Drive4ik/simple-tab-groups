@@ -232,30 +232,22 @@ function getTabTitle(tab, withUrl) {
     return title;
 }
 
-function getNextIndex(currentIndex, count, textPosition = 'next') {
-    if (!count) {
+function getNextIndex(index, length, textPosition = 'next') {
+    if (!length || 0 > length) {
         return false;
     }
 
-    if (1 === count) {
+    if (1 === length) {
         return 0;
     }
 
-    if (0 > currentIndex) {
-        return 'next' === textPosition ? 0 : count - 1;
-    } else if (count - 1 < currentIndex) {
-        return 'next' === textPosition ? count - 1 : 0;
+    if ('next' === textPosition) {
+        return (index + 1) % length;
+    } else if ('prev' === textPosition) {
+        return 0 === index ? length - 1 : index - 1;
+    } else {
+        throw Error(`invalid textPosition: ${textPosition}`);
     }
-
-    let nextIndex = null;
-
-    if ('prev' === textPosition) {
-        nextIndex = currentIndex > 0 ? (currentIndex - 1) : (count - 1);
-    } else if ('next' === textPosition) {
-        nextIndex = currentIndex === count - 1 ? 0 : currentIndex + 1;
-    }
-
-    return nextIndex;
 }
 
 function toCamelCase(str) {

@@ -366,15 +366,13 @@
                     group.tabs.forEach((tab, index) => tab.active = index === tabIndex);
                 }
 
-                let groupIndex = this.groups.findIndex(gr => gr.id === group.id);
-
                 if (closePopup) {
-                    BG.loadGroup(this.currentWindowId, groupIndex, tabIndex);
+                    BG.loadGroup(this.currentWindowId, group.id, tabIndex);
                     window.close();
                 } else {
                     this.someGroupAreLoading = true;
 
-                    await BG.loadGroup(this.currentWindowId, groupIndex, tabIndex);
+                    await BG.loadGroup(this.currentWindowId, group.id, tabIndex);
 
                     this.someGroupAreLoading = false;
 
@@ -429,10 +427,9 @@
                 if (group.windowId) {
                     BG.setFocusOnWindow(group.windowId);
                 } else {
-                    let win = await BG.createWindow(undefined, true),
-                        groupIndex = this.groups.findIndex(gr => gr.id === group.id);
+                    let win = await BG.createWindow(undefined, true);
 
-                    BG.loadGroup(win.id, groupIndex);
+                    BG.loadGroup(win.id, group.id);
                 }
             },
 

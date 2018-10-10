@@ -327,9 +327,7 @@
                 // fix bug with browser.windows.getLastFocused({windowTypes: ['normal']}), maybe find exists bug??
                 let lastFocusedNormalWindow = BG.getLastFocusedNormalWindow();
 
-                let groupIndex = this.groups.findIndex(gr => gr.id === group.id);
-
-                BG.loadGroup(lastFocusedNormalWindow.id, groupIndex, tabIndex);
+                BG.loadGroup(lastFocusedNormalWindow.id, group.id, tabIndex);
 
                 if ('popup' === currentWindow.type) {
                     browser.windows.remove(currentWindow.id); // close manage groups popop window

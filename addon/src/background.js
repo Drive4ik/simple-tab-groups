@@ -262,9 +262,9 @@ async function addGroup(windowId, returnNewGroupIndex = true, withTabs = [], tit
 }
 
 async function updateGroup(groupId, updateData) {
-    let groupIndex = _groups.findIndex(gr => gr.id === groupId);
+    let group = _groups.find(gr => gr.id === groupId);
 
-    Object.assign(_groups[groupIndex], utils.clone(updateData)); // clone need for fix bug: dead object after close tab which create object
+    Object.assign(group, utils.clone(updateData)); // clone need for fix bug: dead object after close tab which create object
 
     sendMessage({
         action: 'group-updated',
@@ -275,7 +275,7 @@ async function updateGroup(groupId, updateData) {
 
     sendExternalMessage({
         action: 'group-updated',
-        group: _mapGroupForAnotherExtension(_groups[groupIndex]),
+        group: _mapGroupForAnotherExtension(group),
     });
 
     saveGroupsToStorage();
@@ -286,7 +286,7 @@ async function updateGroup(groupId, updateData) {
         updateMoveTabMenus(win.id);
     }
 
-    if (_groups[groupIndex].windowId && _groups[groupIndex].windowId === win.id) {
+    if (group.windowId && group.windowId === win.id) {
         updateBrowserActionData(win.id);
     }
 }
@@ -599,19 +599,19 @@ async function setMuteTabs(windowId, setMute) {
 }
 
 let loadingGroupInWindow = {}; // windowId: true;
-async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
+async function loadGroup(windowId, groupId, activeTabIndex = -1) {
     if (!windowId || 1 > windowId) { // if click on notification after moving tab to window which is now closed :)
         throw Error('loadGroup: windowId not set');
     }
 
-    let group = _groups[groupIndex];
+    let group = _groups.find(gr => gr.id === groupId);
 
     if (!group) {
-        throw Error('group index not found ' + groupIndex);
+        throw Error('group not found ' + groupId);
     }
 
     if (loadingGroupInWindow[windowId]) {
-        return;
+        return false;
     }
 
     loadingGroupInWindow[windowId] = true;
@@ -809,6 +809,7 @@ async function loadGroup(windowId, groupIndex, activeTabIndex = -1) {
             group: group,
         });
 
+        return true;
     } catch (e) {
         loadingGroupInWindow[windowId] = false;
         utils.notify(e);
@@ -1000,9 +1001,7 @@ async function onCreatedTab(tab) {
 
 async function onUpdatedTab(tabId, changeInfo, rawTab) {
     let tab = null,
-        tabIndex = -1,
-        group = null,
-        groupIndex = -1;
+        group = null;
 
     if (isMovingTabs ||
         utils.isTabIncognito(rawTab) ||
@@ -1013,13 +1012,10 @@ async function onUpdatedTab(tabId, changeInfo, rawTab) {
         return;
     }
 
-    _groups.some(function(gr, grIndex) {
-        tabIndex = gr.tabs.findIndex(t => t.id === tabId);
+    group = _groups.find(function(gr) {
+        tab = gr.tabs.find(t => t.id === tabId);
 
-        if (-1 !== tabIndex) {
-            groupIndex = grIndex;
-            tab = gr.tabs[tabIndex];
-            group = gr;
+        if (tab) {
             return true;
         }
     });
@@ -1028,17 +1024,17 @@ async function onUpdatedTab(tabId, changeInfo, rawTab) {
         if (changeInfo.hidden) {
             saveCurrentTabs(rawTab.windowId, undefined, 'onUpdatedTab tab make hidden');
         } else { // show tab
-            if (-1 === tabIndex) {
-                saveCurrentTabs(rawTab.windowId, undefined, 'onUpdatedTab tab make visible');
+            if (group) {
+                loadGroup(rawTab.windowId, group.id, group.tabs.indexOf(tab));
             } else {
-                loadGroup(rawTab.windowId, groupIndex, tabIndex);
+                saveCurrentTabs(rawTab.windowId, undefined, 'onUpdatedTab tab make visible');
             }
         }
 
         return;
     }
 
-    if (-1 === tabIndex) {
+    if (!tab) {
         if ('favIconUrl' in changeInfo) {
             favIconUrl.favIconUrl = 'favIconUrl';
         }
@@ -1515,7 +1511,7 @@ async function moveTabs(fromData, toData, showNotificationAfterMoveTab = true, s
 
     if (showTabAfterMoving) {
         let winId = newGroup.windowId || lastFocusedNormalWindow.id;
-        await loadGroup(winId, _groups.indexOf(newGroup), toData.newTabIndex);
+        await loadGroup(winId, newGroup.id, toData.newTabIndex);
 
         return;
     }
@@ -1535,11 +1531,11 @@ async function moveTabs(fromData, toData, showNotificationAfterMoveTab = true, s
 
     utils.notify(message)
         .then(async function(newGroupId, newTabIndex) {
-            let groupIndex = _groups.findIndex(group => group.id === newGroupId);
+            let group = _groups.find(gr => gr.id === newGroupId);
 
-            if (-1 !== groupIndex && _groups[groupIndex].tabs[newTabIndex]) {
+            if (group && group.tabs[newTabIndex]) {
                 await setFocusOnWindow(lastFocusedNormalWindow.id);
-                loadGroup(lastFocusedNormalWindow.id, groupIndex, newTabIndex);
+                loadGroup(lastFocusedNormalWindow.id, group.id, newTabIndex);
             }
         }.bind(null, newGroup.id, toData.newTabIndex));
 }
@@ -1780,7 +1776,7 @@ async function loadGroupPosition(textPosition) {
         return;
     }
 
-    await loadGroup(win.id, nextGroupIndex);
+    await loadGroup(win.id, _groups[nextGroupIndex].id);
 
     return true;
 }
@@ -1986,26 +1982,23 @@ async function runAction(data, externalExtId) {
             case 'load-first-group':
                 if (_groups[0]) {
                     let currentWindow = await getCurrentWindow();
-                    await loadGroup(currentWindow.id, 0);
-                    result.ok = true;
+                    result.ok = await loadGroup(currentWindow.id, _groups[0].id);
                 }
                 break;
             case 'load-last-group':
                 if (_groups.length > 0) {
                     let currentWindow = await getCurrentWindow();
-                    await loadGroup(currentWindow.id, _groups.length - 1);
-                    result.ok = true;
+                    result.ok = await loadGroup(currentWindow.id, _groups[_groups.length - 1].id);
                 }
                 break;
             case 'load-custom-group':
-                let groupIndex = _groups.findIndex(gr => gr.id === data.groupId);
+                let group = _groups.find(gr => gr.id === data.groupId);
 
-                if (-1 === groupIndex) {
-                    throw Error(`Group id '${data.groupId}' type: '${typeof data.groupId}' not found. Need exists int group id.`);
-                } else {
+                if (group) {
                     let currentWindow = await getCurrentWindow();
-                    await loadGroup(currentWindow.id, groupIndex);
-                    result.ok = true;
+                    result.ok = await loadGroup(currentWindow.id, group.id);
+                } else {
+                    throw Error(`Group id '${data.groupId}' type: '${typeof data.groupId}' not found. Need exists int group id.`);
                 }
                 break;
             case 'add-new-group':
