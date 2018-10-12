@@ -61,10 +61,6 @@
         "message": "Wyszukaj zakładkę...",
         "description": "Search placeholder"
     },
-    "filterTabsPlaceholder": {
-        "message": "Filtr zakładek (filtrowanie kilkukrotne z użyciem *)",
-        "description": "Filter tabs (multiple filter with *)"
-    },
     "invalidRegExpRuleTitle": {
         "message": "Reguła '$regexp$' nie jest prawidłowa i zostanie pominięta.",
         "description": "Invalid rule description",

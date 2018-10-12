@@ -61,10 +61,6 @@
         "message": "Tab suchen",
         "description": "Search placeholder"
     },
-    "filterTabsPlaceholder": {
-        "message": "Tabs filtern (mehrere Filter mit *)",
-        "description": "Filter tabs (multiple filter with *)"
-    },
     "invalidRegExpRuleTitle": {
         "message": "Regel '$regexp$' ist nicht gültig und wird übersprungen.",
         "description": "Invalid rule description",

@@ -61,10 +61,6 @@
         "message": "搜索标签页……",
         "description": "Search placeholder"
     },
-    "filterTabsPlaceholder": {
-        "message": "过滤标签页（多个过滤器用*）",
-        "description": "Filter tabs (multiple filter with *)"
-    },
     "invalidRegExpRuleTitle": {
         "message": "正则表述式 '$regexp$' 有语法错误，将被忽略。",
         "description": "Invalid rule description",

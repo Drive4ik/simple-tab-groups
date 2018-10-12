@@ -61,10 +61,6 @@
         "message": "Vyhledat panel...",
         "description": "Search placeholder"
     },
-    "filterTabsPlaceholder": {
-        "message": "Filtrovat panely (násobný filtr pomocí *)",
-        "description": "Filter tabs (multiple filter with *)"
-    },
     "invalidRegExpRuleTitle": {
         "message": "Pravidlo '$regexp$' není platné a bude přeskočeno.",
         "description": "Invalid rule description",

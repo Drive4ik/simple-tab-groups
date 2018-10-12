@@ -1,6 +1,6 @@
 'use strict';
 
-import {DEFAULT_OPTIONS, allOptionsKeys} from './constants';
+import {DEFAULT_OPTIONS} from './constants';
 import * as utils from './utils';
 
 export default {
@@ -8,17 +8,13 @@ export default {
         return browser.storage.local.get(data)
             .then(function(result) {
                 if (null === data) {
-                    result = Object.assign({}, DEFAULT_OPTIONS, result);
+                    result = Object.assign({}, utils.clone(DEFAULT_OPTIONS), result);
                 } else if ('string' === utils.type(data)) {
                     if (undefined === result[data]) {
-                        result[data] = DEFAULT_OPTIONS[data];
+                        result[data] = utils.clone(DEFAULT_OPTIONS[data]);
                     }
                 } else if (Array.isArray(data)) {
-                    data.forEach(function(key) {
-                        if (undefined === result[key]) {
-                            result[key] = DEFAULT_OPTIONS[key];
-                        }
-                    });
+                    data.forEach(key => undefined === result[key] ? result[key] = utils.clone(DEFAULT_OPTIONS[key]) : null);
                 }
 
                 return result;
@@ -26,7 +22,7 @@ export default {
     },
     clear: browser.storage.local.clear,
     remove: browser.storage.local.remove,
-    async set(data, useClone = false) {
+    async set(data) {
         if ('groups' in data) {
             if (Array.isArray(data.groups)) {
                 data.groups.forEach(function(group) {
@@ -38,10 +34,6 @@ export default {
                 utils.notify('Groups is not an array. Saving canceled.\nPlease contact me by email:\ndrive4ik@gmail.com');
                 return Promise.reject();
             }
-        }
-
-        if (useClone) {
-            data = utils.clone(data);
         }
 
         return browser.storage.local.set(data);

@@ -61,10 +61,6 @@
         "message": "Sök",
         "description": "Search placeholder"
     },
-    "filterTabsPlaceholder": {
-        "message": "Filtrera flikar (särskilj flera filter med *)",
-        "description": "Filter tabs (multiple filter with *)"
-    },
     "invalidRegExpRuleTitle": {
         "message": "Regeln '$regexp' är ogiltig och kommer inte att användas.",
         "description": "Invalid rule description",

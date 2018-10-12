@@ -119,14 +119,18 @@ async function openBackupFolder() {
 
 function generateBackupFileName(withTime) {
     let now = new Date(),
-        day = ('0' + now.getDate()).substr(-2),
-        month = ('0' + (now.getMonth() + 1)).substr(-2),
+        day = _intToStr(now.getDate()),
+        month = _intToStr(now.getMonth() + 1),
         year = now.getFullYear(),
-        hours = now.getHours(),
-        min = now.getMinutes(),
-        time = withTime ? `-${hours}-${min}` : '';
+        hours = _intToStr(now.getHours()),
+        min = _intToStr(now.getMinutes()),
+        time = withTime ? `~${hours}-${min}` : '';
 
     return `stg-backup-${year}-${month}-${day}${time}@drive4ik${BACKUP_FILE_EXT}`;
+}
+
+function _intToStr(i) {
+    return ('0' + i).substr(-2);
 }
 
 export {

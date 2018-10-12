@@ -61,10 +61,6 @@
         "message": "タブを検索中...",
         "description": "Search placeholder"
     },
-    "filterTabsPlaceholder": {
-        "message": "タブをフィルタ表示（フィルターを複数指定する場合は * で区切る）",
-        "description": "Filter tabs (multiple filter with *)"
-    },
     "invalidRegExpRuleTitle": {
         "message": "正規表現ルール '$regexp$' は無効です。このルールは無視されます。",
         "description": "Invalid rule description",

@@ -61,10 +61,6 @@
         "message": "Поиск",
         "description": "Search placeholder"
     },
-    "filterTabsPlaceholder": {
-        "message": "Фильтр вкладок (множественный фильтр по *)",
-        "description": "Filter tabs (multiple filter with *)"
-    },
     "invalidRegExpRuleTitle": {
         "message": "Ошибка в правиле \"$regexp$\". Это правило будет проигнорировано.",
         "description": "Invalid rule description",

@@ -96,6 +96,8 @@
         created() {
             document.title = this.lang('manageGroupsTitle');
 
+            this.loadOptions();
+
             this
                 .$on('drag-move-group', function(from, to) {
                     BG.moveGroup(from.data.item.id, this.groups.indexOf(to.data.item));
@@ -117,8 +119,6 @@
                 .$on('drag-over', (item, isOver) => item.isOver = isOver);
         },
         async mounted() {
-            await this.loadOptions();
-
             currentWindow = await BG.getWindow();
 
             this.currentWindowId = currentWindow.id;
@@ -171,8 +171,8 @@
             lang: browser.i18n.getMessage,
             safeHtml: utils.safeHtml,
 
-            async loadOptions() {
-                this.options = await storage.get(constants.allOptionsKeys);
+            loadOptions() {
+                this.options = BG.getOptions();
             },
 
             setupListeners() {
@@ -470,7 +470,13 @@
             <span>
                 <div id="search-wrapper" :class="['field', {'has-addons': search}]">
                     <div class="control is-expanded">
-                        <input :readonly="!isLoaded" ref="search" v-model.trim="search" type="text" class="input is-small" :placeholder="lang('filterTabsPlaceholder')" autocomplete="on" />
+                        <input
+                            type="text"
+                            class="input is-small search-input"
+                            ref="search"
+                            :placeholder="lang('searchPlaceholder')"
+                            :readonly="!isLoaded"
+                            v-model.trim="search" />
                     </div>
                     <div v-show="search" class="control">
                         <label class="button is-small" :title="lang('extendedTabSearch')">
@@ -1039,7 +1045,8 @@
             outline-offset: 3px;
         }
 
-        .grid .group .tab.drag-moving.drag-over {
+        .grid .group .tab.drag-moving.drag-over,
+        .grid .group .tab.is-in-multiple-drop.drag-over {
             outline-offset: 4px;
         }
 

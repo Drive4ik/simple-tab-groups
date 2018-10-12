@@ -121,9 +121,18 @@ img {
 }
 
 img,
-.fill-context {
+.fill-context,
+.search-input {
     -moz-context-properties: fill;
     fill: var(--fill-color);
+}
+
+.search-input {
+    background-position-x: 4px;
+    background-position-y: center;
+    background-repeat: no-repeat;
+    background-image: url('/icons/search.svg');
+    padding-left: calc(16px + (2 * 4px));
 }
 
 .drag-over {

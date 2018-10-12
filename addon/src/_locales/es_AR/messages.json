@@ -61,10 +61,6 @@
         "message": "Buscar una pestaña...",
         "description": "Search placeholder"
     },
-    "filterTabsPlaceholder": {
-        "message": "Filtrar pestañas (filtro múltiple utilizando *)",
-        "description": "Filter tabs (multiple filter with *)"
-    },
     "invalidRegExpRuleTitle": {
         "message": "Regla '$regexp$' no es validad y sera omitida.",
         "description": "Invalid rule description",

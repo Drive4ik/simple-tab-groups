@@ -61,10 +61,6 @@
         "message": "搜尋分頁...",
         "description": "Search placeholder"
     },
-    "filterTabsPlaceholder": {
-        "message": "篩選分頁 (用 * 分隔多個篩選條件)",
-        "description": "Filter tabs (multiple filter with *)"
-    },
     "invalidRegExpRuleTitle": {
         "message": "正規表述式 '$regexp$' 語法有誤，將忽略之。",
         "description": "Invalid rule description",

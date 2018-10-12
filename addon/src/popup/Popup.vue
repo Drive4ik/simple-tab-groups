@@ -63,7 +63,7 @@
                 groupToRemove: null,
 
                 containers: [],
-                options: {},
+                options: BG.getOptions(),
                 groups: [],
 
                 unSyncTabs: [],
@@ -75,7 +75,22 @@
             'edit-group': editGroup,
             'context-menu': contextMenu,
         },
-        created() {
+        async created() {
+            if (this.options.enableDarkTheme) {
+                document.documentElement.classList.add('dark-theme');
+            }
+
+            let currentWindow = await BG.getWindow();
+            this.currentWindowId = currentWindow.id;
+
+            this.containers = await utils.loadContainers();
+
+            this.loadGroups();
+
+            await this.loadUnsyncedTabs();
+
+            this.setupListeners();
+
             this
                 .$on('drag-move-group', function(from, to) {
                     BG.moveGroup(from.data.item.id, this.groups.indexOf(to.data.item));
@@ -100,23 +115,6 @@
                 .$on('drag-over', (item, isOver) => item.isOver = isOver);
         },
         async mounted() {
-            this.options = await storage.get(constants.allOptionsKeys);
-
-            if (this.options.enableDarkTheme) {
-                document.documentElement.classList.add('dark-theme');
-            }
-
-            let currentWindow = await BG.getWindow();
-            this.currentWindowId = currentWindow.id;
-
-            this.containers = await utils.loadContainers();
-
-            this.loadGroups();
-
-            await this.loadUnsyncedTabs();
-
-            this.setupListeners();
-
             this.setFocus();
 
             this.$nextTick(function() {
@@ -188,17 +186,13 @@
 
                     switch (request.action) {
                         case 'group-updated':
-                            let groupIndex = this.groups.findIndex(group => group.id === request.group.id);
+                            let group = this.groups.find(gr => gr.id === request.group.id);
 
                             if (request.group.tabs) {
                                 request.group.tabs = request.group.tabs.map(this.$_tabMap, this);
-
-                                if (this.hoverItem && !this.isGroup(this.hoverItem) && this.hoverItem.id) {
-                                    this.hoverItem = request.group.tabs.find(tab => tab.id === this.hoverItem.id) || null;
-                                }
                             }
 
-                            Object.assign(this.groups[groupIndex], request.group);
+                            Object.assign(group, request.group);
                             break;
                         case 'group-added':
                             this.groups.push(this.$_groupMap(request.group));
@@ -333,12 +327,9 @@
                 BG.addTab(this.groupToShow.id, cookieStoreId);
             },
             removeTab(groupId, tabIndex) {
-                this.groups.some(function(group) {
-                    if (group.id === groupId) {
-                        group.tabs.splice(tabIndex, 1);
-                        return true;
-                    }
-                });
+                let group = this.groups.find(gr => gr.id === groupId);
+
+                group.tabs.splice(tabIndex, 1);
 
                 BG.removeTab(groupId, tabIndex);
             },
@@ -427,7 +418,7 @@
                 if (group.windowId) {
                     BG.setFocusOnWindow(group.windowId);
                 } else {
-                    let win = await BG.createWindow(undefined, true);
+                    let win = await BG.createWindow(undefined, false);
 
                     BG.loadGroup(win.id, group.id);
                 }
@@ -629,7 +620,7 @@
 
                         break;
                     case SECTION_GROUPS_LIST:
-                        index = this.hoverItem ? this.groups.indexOf(this.hoverItem) : -1;
+                        index = this.groups.indexOf(this.hoverItem);
 
                         if (-1 === index) {
                             index = this.groups.indexOf(this.currentGroup);
@@ -657,7 +648,7 @@
 
                         break;
                     case SECTION_GROUP_TABS:
-                        index = this.hoverItem ? this.groupToShow.tabs.indexOf(this.hoverItem) : -1;
+                        index = this.groupToShow.tabs.indexOf(this.hoverItem);
 
                         if (-1 === index && this.groupToShow.windowId) {
                             index = this.groupToShow.tabs.findIndex(tab => tab.active);
@@ -676,10 +667,9 @@
                                 this.loadGroup(this.groupToShow, index, true);
                             }
                         } else if ('delete' === arrow) {
-                            if (this.hoverItem && !this.isGroup(this.hoverItem)) {
-                                let tabIndex = this.groupToShow.tabs.indexOf(this.hoverItem);
-                                await this.setHoverItemByKey('down', event);
-                                this.removeTab(this.groupToShow.id, tabIndex);
+                            if (this.hoverItem && this.groupToShow.tabs.includes(this.hoverItem)) {
+                                this.removeTab(this.groupToShow.id, index);
+                                this.hoverItem = null;
                             }
                         }
 
@@ -730,10 +720,10 @@
                     @keydown.arrow-left.stop @keyup.arrow-left.stop
                     @keydown.delete.stop @keyup.delete.stop
                     >
-                    <input id="search"
-                        ref="search"
+                    <input
                         type="text"
-                        class="input is-small fill-context"
+                        class="input is-small search-input"
+                        ref="search"
                         v-model.trim="search"
                         @input="$refs.search.value === '' ? showSectionDefault() : null"
                         autocomplete="off"
@@ -1236,14 +1226,6 @@
     /* END HELPERS */
     #search-wrapper {
         padding: var(--indent);
-    }
-
-    #search {
-        background-position-x: 4px;
-        background-position-y: center;
-        background-repeat: no-repeat;
-        background-image: url('/icons/search.svg');
-        padding-left: calc(16px + (2 * 4px));
     }
 
     .item {

@@ -57,10 +57,6 @@
         "message": "Ακύρωση",
         "description": "Cancel"
     },
-    "filterTabsPlaceholder": {
-        "message": "Φίλτρο tabs (πολλαπλά φίλτρα με *)",
-        "description": "Filter tabs (multiple filter with *)"
-    },
     "invalidRegExpRuleTitle": {
         "message": "Ο κανόνας '$regexp$' είναι άκυρος και θα παραληφθεί.",
         "description": "Invalid rule description",

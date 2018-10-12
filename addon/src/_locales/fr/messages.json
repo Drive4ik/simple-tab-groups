@@ -61,10 +61,6 @@
         "message": "Chercher un onglet...",
         "description": "Search placeholder"
     },
-    "filterTabsPlaceholder": {
-        "message": "Filtrer les onglets (filtre multiple avec *)",
-        "description": "Filter tabs (multiple filter with *)"
-    },
     "invalidRegExpRuleTitle": {
         "message": "La règle '$regexp$' n'est pas valide et sera ignorée.",
         "description": "Invalid rule description",

@@ -100,7 +100,7 @@
         },
         watch: {
             'options.autoBackupIntervalValue': function(value, oldValue) {
-                if (!value || !oldValue) {
+                if (!value || null == oldValue) {
                     return;
                 }
 

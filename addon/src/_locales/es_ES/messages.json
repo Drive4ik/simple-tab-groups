@@ -57,10 +57,6 @@
         "message": "Cancelar",
         "description": "Cancel"
     },
-    "filterTabsPlaceholder": {
-        "message": "Filtrar pestañas (* para separar filtros)",
-        "description": "Filter tabs (multiple filter with *)"
-    },
     "invalidRegExpRuleTitle": {
         "message": "La expresión '$regexp$' no es válida y será omitida.",
         "description": "Invalid rule description",
