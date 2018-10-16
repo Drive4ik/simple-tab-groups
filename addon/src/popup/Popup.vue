@@ -3,7 +3,6 @@
 
     import * as utils from '../js/utils';
     import storage from '../js/storage';
-    import * as constants from '../js/constants';
 
     import Vue from 'vue';
 
@@ -418,9 +417,7 @@
                 if (group.windowId) {
                     BG.setFocusOnWindow(group.windowId);
                 } else {
-                    let win = await BG.createWindow(undefined, false);
-
-                    BG.loadGroup(win.id, group.id);
+                    await BG.createWindow(undefined, group.id);
                 }
             },
 

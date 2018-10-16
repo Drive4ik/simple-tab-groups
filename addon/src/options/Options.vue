@@ -22,7 +22,7 @@
         SECTION_HOTKEYS = 'hotkeys',
         SECTION_BACKUP = 'backup',
         SECTION_DEFAULT = SECTION_GENERAL,
-        _funcKeys = Array(12).fill().reduce((acc, v, key) => acc.concat(key + 1), []),
+        _funcKeys = [...Array(12).keys()].map(n => n + 1),
         isFunctionKey = keyCode => _funcKeys.some(n => keyCode === KeyEvent[`DOM_VK_F${n}`]);
 
     export default {

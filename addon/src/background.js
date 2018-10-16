@@ -56,8 +56,8 @@ async function getWindow(windowId = browser.windows.WINDOW_ID_CURRENT) {
 }
 
 let _createNewGroupForNextWindow = true;
-async function createWindow(createData = {}, createNewGroup = true) {
-    _createNewGroupForNextWindow = createNewGroup;
+async function createWindow(createData = {}, loadGroupId = false) {
+    _createNewGroupForNextWindow = !loadGroupId;
 
     let win = await browser.windows.create(createData);
 
@@ -66,6 +66,10 @@ async function createWindow(createData = {}, createNewGroup = true) {
     }
 
     lastFocusedWinId = win.id;
+
+    if (loadGroupId) {
+        await loadGroup(win.id, loadGroupId);
+    }
 
     return win;
 }

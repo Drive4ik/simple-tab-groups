@@ -159,6 +159,10 @@ img,
     outline: none;
 }
 
+.word-break-all {
+    word-break: break-all;
+}
+
 /*
 .no-events {
     pointer-events: none;

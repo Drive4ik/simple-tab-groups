@@ -257,8 +257,8 @@
                                 v-model="groupClone.catchTabContainers"
                                 />
                             <img :src="container.iconUrl" class="size-16 fill-context" :style="{fill: container.colorCode}" />
-                            <span v-text="container.name"></span>
-                            <i v-if="container.cookieStoreId in disabledContainers">({{ disabledContainers[container.cookieStoreId] }})</i>
+                            <span class="word-break-all" v-text="container.name"></span>
+                            <i class="word-break-all" v-if="container.cookieStoreId in disabledContainers">({{ disabledContainers[container.cookieStoreId] }})</i>
                         </label>
                     </div>
                 </div>
@@ -273,7 +273,7 @@
                 </span>
             </label>
             <div class="control">
-                <textarea class="textarea" :rows="canLoadFile ? false : 1" @keydown.enter.stop v-model="groupClone.catchTabRules" :placeholder="lang('regexpForTabsPlaceholder')"></textarea>
+                <textarea class="textarea" :rows="canLoadFile ? false : 1" @keydown.enter.stop v-model.trim="groupClone.catchTabRules" :placeholder="lang('regexpForTabsPlaceholder')"></textarea>
             </div>
         </div>
 
