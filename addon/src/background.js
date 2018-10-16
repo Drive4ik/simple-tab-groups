@@ -10,8 +10,7 @@ let errorLogs = [],
     _groups = [],
     _thumbnails = {},
     manifest = browser.runtime.getManifest(),
-    manageTabsPageUrl = browser.extension.getURL(constants.MANAGE_TABS_URL),
-    allowDiscardedTabs = false;
+    manageTabsPageUrl = browser.extension.getURL(constants.MANAGE_TABS_URL);
 
 function log(message = 'log', data = null, showNotification = true) {
     try {
@@ -94,7 +93,7 @@ async function createTab(tab) {
         tab.active = false;
     }
 
-    if (allowDiscardedTabs && !tab.active && tab.url && !utils.isUrlEmpty(tab.url)) {
+    if (!tab.active && tab.url && !utils.isUrlEmpty(tab.url)) {
         tab.discarded = true;
     }
 
@@ -2454,15 +2453,15 @@ function isRestoreSessionNow(windows) {
     return 1 === windows.length && 1 === windows[0].tabs.length && 'about:sessionrestore' === windows[0].tabs[0].url;
 }
 
-async function initFeatures() {
-    let browserInfo = await browser.runtime.getBrowserInfo(),
-        isFFVersionEqualOrHighThan = version => 0 <= utils.compareVersions(browserInfo.version.replace(/[a-z]/ig, ''), version);
+// async function initFeatures() {
+//     let browserInfo = await browser.runtime.getBrowserInfo(),
+//         isFFVersionEqualOrHighThan = version => 0 <= utils.compareVersions(browserInfo.version.replace(/[a-z]/ig, ''), version);
 
-    allowDiscardedTabs = isFFVersionEqualOrHighThan(63);
-}
+//     allowDiscardedTabs = isFFVersionEqualOrHighThan(63);
+// }
 
 async function init() {
-    await initFeatures();
+    // await initFeatures();
 
     let data = await storage.get(null);
 

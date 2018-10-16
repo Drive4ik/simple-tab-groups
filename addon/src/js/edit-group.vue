@@ -273,7 +273,7 @@
                 </span>
             </label>
             <div class="control">
-                <textarea class="textarea" rows="2" @keydown.enter.stop v-model="groupClone.catchTabRules" :placeholder="lang('regexpForTabsPlaceholder')"></textarea>
+                <textarea class="textarea" :rows="canLoadFile ? false : 1" @keydown.enter.stop v-model="groupClone.catchTabRules" :placeholder="lang('regexpForTabsPlaceholder')"></textarea>
             </div>
         </div>
 
