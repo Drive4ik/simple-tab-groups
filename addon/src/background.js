@@ -31,18 +31,18 @@ function log(message = 'log', data = null, showNotification = true) {
     }
 }
 
-let saveGroupsToStorageTimer = null;
-
+let _saveGroupsToStorageTimer = 0;
 async function saveGroupsToStorage(sendMessageToAll = false) {
     if (sendMessageToAll) {
         sendMessageGroupsUpdated();
     }
 
-    if (saveGroupsToStorageTimer) {
-        clearTimeout(saveGroupsToStorageTimer);
+    if (_saveGroupsToStorageTimer) {
+        clearTimeout(_saveGroupsToStorageTimer);
+        _saveGroupsToStorageTimer = 0;
     }
 
-    saveGroupsToStorageTimer = setTimeout(function() {
+    _saveGroupsToStorageTimer = setTimeout(function() {
         storage.set({
             groups: _groups,
         });
@@ -593,7 +593,7 @@ async function setMuteTabs(windowId, setMute) {
     }
 }
 
-let loadingGroupInWindow = {}; // windowId: true;
+let _loadingGroupInWindow = {}; // windowId: true;
 async function loadGroup(windowId, groupId, activeTabIndex = -1) {
     if (!windowId || 1 > windowId) { // if click on notification after moving tab to window which is now closed :)
         throw Error('loadGroup: windowId not set');
@@ -605,11 +605,11 @@ async function loadGroup(windowId, groupId, activeTabIndex = -1) {
         throw Error('group not found ' + groupId);
     }
 
-    if (loadingGroupInWindow[windowId]) {
+    if (_loadingGroupInWindow[windowId]) {
         return false;
     }
 
-    loadingGroupInWindow[windowId] = true;
+    _loadingGroupInWindow[windowId] = true;
 
     console.log('loadGroup', { groupId: group.id, windowId, activeTabIndex });
 
@@ -807,7 +807,7 @@ async function loadGroup(windowId, groupId, activeTabIndex = -1) {
         utils.notify(e);
         throw String(e);
     } finally {
-        loadingGroupInWindow[windowId] = false;
+        _loadingGroupInWindow[windowId] = false;
     }
 }
 
@@ -1723,8 +1723,14 @@ async function onRemovedWindow(windowId) {
         saveGroupsToStorage();
     }
 
-    if (lastFocusedNormalWindow.id === windowId) {
-        lastFocusedNormalWindow = await getWindow();
+    if (lastFocusedNormalWindow && lastFocusedNormalWindow.id === windowId) {
+        let windows = await browser.windows.getAll({
+            windowTypes: ['normal'],
+        });
+
+        lastFocusedNormalWindow = windows.find(utils.isWindowAllow) || null;
+
+        lastFocusedWinId = (lastFocusedNormalWindow && lastFocusedNormalWindow.id) || windows[0].id;
     }
 }
 

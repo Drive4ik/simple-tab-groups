@@ -1,6 +1,6 @@
 'use strict';
 
-import storage from '../js/storage';
+import { DEFAULT_OPTIONS } from '../js/constants';
 
 let hotkeys = [],
     foundHotKey = false,
@@ -21,9 +21,13 @@ function changeHotkeysListener(request, sender) {
 browser.runtime.onMessage.addListener(changeHotkeysListener);
 
 async function reloadHotKeys() {
-    let options = await storage.get('hotkeys');
+    let options = await browser.storage.local.get('hotkeys');
 
-    hotkeys = options.hotkeys;
+    if (options.hotkeys && Array.isArray(options.hotkeys)) {
+        hotkeys = options.hotkeys;
+    } else {
+        hotkeys = DEFAULT_OPTIONS.hotkeys;
+    }
 }
 
 reloadHotKeys().then(init);
