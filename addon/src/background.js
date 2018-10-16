@@ -47,7 +47,7 @@ async function saveGroupsToStorage(sendMessageToAll = false) {
             groups: _groups,
         });
 
-        // localStorage.lastUsedGroups = JSON.stringify(_groups);
+        storage.indexed.set('groups', _groups);
     }, 500);
 }
 
@@ -2470,16 +2470,17 @@ async function init() {
 
         data.groups = [];
 
-        // if (localStorage.lastUsedGroups) {
-        //     try {
-        //         let lastUsedGroups = JSON.parse(localStorage.lastUsedGroups);
-        //         if (Array.isArray(lastUsedGroups) && lastUsedGroups.length) {
-        //             data.groups = lastUsedGroups;
-        //         }
-        //     } catch (e) {
-        //         delete localStorage.lastUsedGroups;
-        //     }
-        // }
+        try {
+            let indexedGroups = await storage.indexed.get('groups');
+
+            if (indexedGroups && Array.isArray(indexedGroups)) {
+                data.groups = indexedGroups;
+            } else {
+                throw 'groups are not an array';
+            }
+        } catch (e) {
+            storage.indexed.remove('groups');
+        }
     }
 
     data = await runMigrateForData(data); // run migration for data
