@@ -61,12 +61,6 @@ async function createWindow(createData = {}, loadGroupId = false) {
 
     let win = await browser.windows.create(createData);
 
-    if (utils.isWindowAllow(win)) {
-        lastFocusedNormalWindow = win;
-    }
-
-    lastFocusedWinId = win.id;
-
     if (loadGroupId) {
         await loadGroup(win.id, loadGroupId);
     }
@@ -1174,7 +1168,11 @@ function onDetachedTab(tabId, { oldWindowId }) { // notice: call before onAttach
 }
 
 async function onCreatedWindow(win) {
+    lastFocusedWinId = win.id;
+
     if (utils.isWindowAllow(win)) {
+        lastFocusedNormalWindow = win;
+
         if (options.createNewGroupWhenOpenNewWindow && _createNewGroupForNextWindow) {
             addGroup(win.id);
         } else {
@@ -1421,7 +1419,7 @@ async function moveTabs(fromData, toData, showNotificationAfterMoveTab = true, s
                 }
 
                 if (utils.isTabCanNotBeHidden(tab)) {
-                    tabsWhichCantMove.cantHide.push(tab.title);
+                    tabsWhichCantMove.cantHide.push(utils.getTabTitle(tab));
                     continue;
                 }
 
@@ -2042,7 +2040,7 @@ async function runAction(data, externalExtId) {
                     utils.notify(browser.i18n.getMessage('privateTabsAreNotSupported'));
                     break;
                 } else if (utils.isTabCanNotBeHidden(activeTab)) {
-                    utils.notify(browser.i18n.getMessage('thisTabsCanNotBeHidden', utils.sliceText(activeTab.title, 25)));
+                    utils.notify(browser.i18n.getMessage('thisTabsCanNotBeHidden', utils.sliceText(utils.getTabTitle(activeTab), 25)));
                     break;
                 }
 

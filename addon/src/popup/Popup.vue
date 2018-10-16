@@ -481,7 +481,7 @@
                 if (group.tabs.length) {
                     title += ':\n' + group.tabs
                         .slice(0, 30)
-                        .map(tab => utils.sliceText(tab.title, 70))
+                        .map(tab => utils.sliceText(utils.getTabTitle(tab), 70))
                         .join('\n');
 
                     if (group.tabs.length > 30) {
@@ -1291,7 +1291,6 @@
             align-self: stretch;
             padding-left: 5px;
             white-space: nowrap;
-            line-height: 1;
         }
 
         .item-action > :not(:first-child) {
@@ -1317,11 +1316,8 @@
     }
 
     .group .tabs-text {
-        white-space: nowrap;
         overflow: hidden;
-        display: inline-block;
         text-overflow: ellipsis;
-        height: 16px;
     }
 
     .groups .item .item-action {

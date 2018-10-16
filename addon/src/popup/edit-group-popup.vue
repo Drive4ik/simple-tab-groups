@@ -55,6 +55,7 @@
         .body {
             padding: 0 var(--indent);
             max-height: 500px;
+            height: 600px;
             overflow-y: auto;
         }
 
