@@ -87,7 +87,7 @@
             padding: var(--top-bottom-indent-blocks) 0;
             margin: 0;
             font-size: 12px;
-            font-weight: 600;
+            font-weight: normal;
 
             li {
                 display: flex;
