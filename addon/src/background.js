@@ -1087,15 +1087,15 @@ function onRemovedTab(tabId, { isWindowClosing, windowId }) {
         group.tabs[tabIndex].id = null;
     } else {
         group.tabs.splice(tabIndex, 1);
-
-        sendMessage({
-            action: 'group-updated',
-            group: {
-                id: group.id,
-                tabs: group.tabs,
-            },
-        });
     }
+
+    sendMessage({
+        action: 'group-updated',
+        group: {
+            id: group.id,
+            tabs: group.tabs,
+        },
+    });
 
     saveGroupsToStorage();
 }
