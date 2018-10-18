@@ -1,9 +1,10 @@
 const path = require('path');
 const webpack = require('webpack');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const WebpackShellPlugin = require('webpack-shell-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const { VueLoaderPlugin } = require('vue-loader');
 
 function setPath(folderName) {
@@ -56,7 +57,8 @@ const config = {
                         drop_console: true,
                     },
                 },
-            })
+            }),
+            new OptimizeCSSAssetsPlugin({})
         ],
     },
     module: {
@@ -71,16 +73,18 @@ const config = {
             },
             {
                 test: /\.css$/,
-                use: ExtractTextPlugin.extract(['css-loader']),
-                // use: ['style-loader', 'css-loader'],
+                use: [MiniCssExtractPlugin.loader, 'css-loader'],
             }
         ],
     },
     plugins: [
         new VueLoaderPlugin(),
 
-        new ExtractTextPlugin({
-            filename: '[name].css'
+        new MiniCssExtractPlugin({
+            // Options similar to the same options in webpackOptions.output
+            // both options are optional
+            filename: '[name].css',
+            // chunkFilename: "[id].css"
         }),
 
         new CopyWebpackPlugin(multipleCopy('icons', '_locales', 'css', 'popup/popup.html', 'manage/manage.html', 'options/options.html', 'manifest.json')),
