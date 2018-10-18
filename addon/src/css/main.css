@@ -18,6 +18,8 @@
     --outline-color: rgba(0, 0, 0, 0.5);
 
     --background-color-other: var(--color-gray);
+
+    --in-content-border-focus: #0a84ff;
 }
 
 html {
@@ -110,7 +112,7 @@ html.dark-theme .button.is-focused:not(:active) {
 .textarea:active,
 .textarea:focus {
     box-shadow: unset;
-    border-color: #0a84ff;
+    border-color: var(--in-content-border-focus);
 }
 
 img {
@@ -241,30 +243,35 @@ hr {
 .size-12 {
     width: 12px;
     height: 12px;
+    min-width: 12px;
     line-height: 1;
 }
 
 .size-14 {
     width: 14px;
     height: 14px;
+    min-width: 14px;
     line-height: 1;
 }
 
 .size-16 {
     width: 16px;
     height: 16px;
+    min-width: 16px;
     line-height: 1;
 }
 
 .size-18 {
     width: 18px;
     height: 18px;
+    min-width: 18px;
     line-height: 1;
 }
 
 .size-20 {
     width: 20px;
     height: 20px;
+    min-width: 20px;
     line-height: 1;
 }
 

@@ -96,7 +96,7 @@
         "description": "Show confirm dialog before group delete"
     },
     "exportAddonSettingsTitle": {
-        "message": "Резервное копирование Simple Tab Groups",
+        "message": "Резервное копирование",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {

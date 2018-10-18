@@ -32,14 +32,15 @@ function log(message = 'log', data = null, showNotification = true) {
 }
 
 let _saveGroupsToStorageTimer = 0;
-async function saveGroupsToStorage(sendMessageToAll = false) {
-    if (sendMessageToAll) {
-        sendMessageGroupsUpdated();
+async function saveGroupsToStorage(withMessage = false) {
+    if (withMessage) {
+        sendMessage({
+            action: 'groups-updated',
+        });
     }
 
     if (_saveGroupsToStorageTimer) {
         clearTimeout(_saveGroupsToStorageTimer);
-        _saveGroupsToStorageTimer = 0;
     }
 
     _saveGroupsToStorageTimer = setTimeout(function() {
@@ -290,12 +291,6 @@ async function updateGroup(groupId, updateData) {
     }
 }
 
-function sendMessageGroupsUpdated() {
-    sendMessage({
-        action: 'groups-updated',
-    });
-}
-
 function sendMessage(data) {
     console.info('BG event:', data.action, utils.clone(data));
 
@@ -438,10 +433,9 @@ async function moveGroup(groupId, position = 'up') {
     saveGroupsToStorage(true);
 }
 
-let savingTabsInWindow = {};
-
+let _savingTabsInWindow = {};
 async function saveCurrentTabs(windowId) {
-    if (!windowId || savingTabsInWindow[windowId]) {
+    if (!windowId || _savingTabsInWindow[windowId]) {
         return;
     }
 
@@ -451,7 +445,7 @@ async function saveCurrentTabs(windowId) {
         return;
     }
 
-    savingTabsInWindow[windowId] = true;
+    _savingTabsInWindow[windowId] = true;
 
     if (arguments[1]) {
         console.info('saveCurrentTabs called from', arguments[1]);
@@ -498,7 +492,7 @@ async function saveCurrentTabs(windowId) {
 
     saveGroupsToStorage();
 
-    delete savingTabsInWindow[windowId];
+    delete _savingTabsInWindow[windowId];
 }
 
 async function addTab(groupId, cookieStoreId) {
@@ -1168,6 +1162,8 @@ function onDetachedTab(tabId, { oldWindowId }) { // notice: call before onAttach
 }
 
 async function onCreatedWindow(win) {
+    console.log('onCreatedWindow', win);
+
     lastFocusedWinId = win.id;
 
     if (utils.isWindowAllow(win)) {
@@ -1768,25 +1764,23 @@ function removeEvents() {
 
 async function loadGroupPosition(textPosition) {
     if (1 >= _groups.length) {
-        return;
+        return false;
     }
 
     let win = await getWindow(),
         groupIndex = _groups.findIndex(group => group.windowId === win.id);
 
     if (-1 === groupIndex) {
-        return;
+        return false;
     }
 
     let nextGroupIndex = utils.getNextIndex(groupIndex, _groups.length, textPosition);
 
     if (false === nextGroupIndex) {
-        return;
+        return false;
     }
 
-    await loadGroup(win.id, _groups[nextGroupIndex].id);
-
-    return true;
+    return loadGroup(win.id, _groups[nextGroupIndex].id);
 }
 
 function sortGroups(vector = 'asc') {
@@ -1794,13 +1788,11 @@ function sortGroups(vector = 'asc') {
         return;
     }
 
-    _groups = _groups.sort(function(a, b) {
-        if ('asc' === vector) {
-            return utils.compareStrings(a.title, b.title);
-        } else if ('desc' === vector) {
-            return utils.compareStrings(b.title, a.title);
-        }
-    });
+    if ('asc' === vector) {
+        _groups.sort((a, b) => utils.compareStrings(a.title, b.title));
+    } else {
+        _groups.sort((a, b) => utils.compareStrings(b.title, a.title));
+    }
 
     updateMoveTabMenus();
     saveGroupsToStorage(true);
@@ -1952,7 +1944,6 @@ async function runAction(data, externalExtId) {
                 if (data.optionsUpdated.includes('hotkeys')) {
                     let tabs = await browser.tabs.query({
                             discarded: false,
-                            pinned: false,
                             windowType: 'normal',
                         }),
                         actionData = {
@@ -1974,18 +1965,10 @@ async function runAction(data, externalExtId) {
                 result.ok = true;
                 break;
             case 'load-next-group':
-                let loadNextOk = await loadGroupPosition('next');
-
-                if (loadNextOk) {
-                    result.ok = true;
-                }
+                result.ok = await loadGroupPosition('next');
                 break;
             case 'load-prev-group':
-                let loadPrevOk = await loadGroupPosition('prev');
-
-                if (loadPrevOk) {
-                    result.ok = true;
-                }
+                result.ok = await loadGroupPosition('prev');
                 break;
             case 'load-first-group':
                 if (_groups[0]) {
@@ -2199,8 +2182,6 @@ window.background = {
 
     sortGroups,
     loadGroup,
-
-    sendMessageGroupsUpdated,
 
     mapTab,
     getTabFavIconUrl,

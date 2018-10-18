@@ -1194,7 +1194,7 @@
                 max-width: 165px;
             }
 
-            & > *:not(.is-vertical-separator) {
+            > *:not(.is-vertical-separator) {
                 padding: 0 20px;
             }
 
@@ -1246,7 +1246,7 @@
         &.is-active:before {
             content: '';
             position: absolute;
-            background-color: #0a84ff;
+            background-color: var(--in-content-border-focus);
             left: 0;
             top: 0;
             bottom: 0;

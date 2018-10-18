@@ -156,7 +156,7 @@
             openBackupFolder: file.openBackupFolder,
 
             async saveOptions(options) {
-                await storage.set(options, true);
+                await storage.set(utils.clone(options));
                 await browser.runtime.sendMessage({
                     action: 'options-updated',
                     optionsUpdated: Object.keys(options),
@@ -536,12 +536,12 @@
 
 <template>
     <div id="stg-options">
-        <div class="tabs is-boxed">
+        <div class="tabs is-fullwidth">
             <ul>
                 <li :class="{'is-active': section === SECTION_GENERAL}" @click="section = SECTION_GENERAL">
                     <a>
                         <span class="icon">
-                            <img class="size-18" src="/icons/cog.svg">
+                            <img class="size-16" src="/icons/cog.svg">
                         </span>
                         <span v-text="lang('generalTitle')"></span>
                     </a>
@@ -549,7 +549,7 @@
                 <li :class="{'is-active': section === SECTION_HOTKEYS}" @click="section = SECTION_HOTKEYS">
                     <a>
                         <span class="icon">
-                            <img class="size-18" src="/icons/keyboard-o.svg">
+                            <img class="size-16" src="/icons/keyboard-o.svg">
                         </span>
                         <span v-text="lang('hotkeysTitle')"></span>
                     </a>
@@ -557,7 +557,7 @@
                 <li :class="{'is-active': section === SECTION_BACKUP}" @click="section = SECTION_BACKUP">
                     <a>
                         <span class="icon">
-                            <img class="size-18" src="/icons/cloud-upload.svg">
+                            <img class="size-16" src="/icons/cloud-upload.svg">
                         </span>
                         <span v-text="lang('exportAddonSettingsTitle')"></span>
                     </a>
@@ -767,7 +767,7 @@
                 </div>
                 <div class="field">
                     <div class="control">
-                        <button @click="exportAddonSettings" class="button">
+                        <button @click="exportAddonSettings" class="button is-info">
                             <img class="size-16" src="/icons/download.svg" />
                             <span class="h-margin-left-5" v-text="lang('exportAddonSettingsButton')"></span>
                         </button>
@@ -819,7 +819,7 @@
                     <span v-text="lang('importAddonSettingsWarning')"></span>
                 </div>
                 <div class="control">
-                    <button @click="importAddonSettings" class="button">
+                    <button @click="importAddonSettings" class="button is-primary">
                         <img class="size-16" src="/icons/upload.svg" />
                         <span class="h-margin-left-5" v-text="lang('importAddonSettingsButton')"></span>
                     </button>
@@ -832,7 +832,7 @@
             <div class="h-margin-bottom-5" v-html="lang('importSettingsOldTabGroupsAddonDescription')"></div>
             <div class="field">
                 <div class="control">
-                    <button @click="importSettingsOldTabGroupsAddonButton" class="button">
+                    <button @click="importSettingsOldTabGroupsAddonButton" class="button is-primary">
                         <img class="size-16" src="/icons/old-tab-groups.svg" />
                         <span class="h-margin-left-5" v-text="lang('browseFileTitle')"></span>
                     </button>
@@ -845,7 +845,7 @@
             <div class="h-margin-bottom-5" v-html="lang('importSettingsPanoramaViewAddonDescription')"></div>
             <div class="field">
                 <div class="control">
-                    <button @click="importSettingsPanoramaViewAddonButton" class="button">
+                    <button @click="importSettingsPanoramaViewAddonButton" class="button is-primary">
                         <img class="size-16" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAiklEQVR42mP4KO/o/UXJ/slXRfv/2PBnBfs3DFDgExj61i8o7D8I+waGPvb0DfFk+Kxo9xiXZhiGGQDTDMM+gSGPGAhpxmcACA8HA0ChjE8zciwAQ/4NsmYQn2HgAXLiQHcWuhw6BqvFGjB4Ag1D7TAwAJSryDUAnJlAWRLZEORYQE846Jq9/AI9AD3nkgARmnBEAAAAAElFTkSuQmCC" />
                         <span class="h-margin-left-5" v-text="lang('browseFileTitle')"></span>
                     </button>
@@ -858,7 +858,7 @@
             <div class="h-margin-bottom-5" v-html="lang('importSettingsSyncTabGroupsAddonDescription')"></div>
             <div class="field">
                 <div class="control">
-                    <button @click="importSettingsSyncTabGroupsAddonButton" class="button">
+                    <button @click="importSettingsSyncTabGroupsAddonButton" class="button is-primary">
                         <img class="size-16" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAC4ElEQVR42m1Tu09TcRQ+bVx0dyFYZGiqCelQaAwNVtMApe/29t375LYNCqSFxISBRBdD1MV/wsHBaDQScTYmYkV0MDGBQRExGAddhF65v+M55eXgTb6c331833deFxJ3zlxLP4YfuWeA0iIIjkfnp2CnlwCLd8/fBLrSUvJ2sVgUhD1Jkn7mcrkIMFl/A2gQOnHl+Ky9Btt878D4A+eaVI32qBVt26yOo6Zptq7rGI1GP0Nu6YC0ckw+jFoLRHXViYlF2EpMXvLrcvWPMa6joiiCRDCZTCJwqv/NoNURsM1VB6aewKY0ddGnlo1dTVdRlmWbRDAej9uQpTrZST9w1I/JQl0mgRYJPGKBkE8uaTuqpmC5XLYJIhaL7UH+uYMJlvpqHxpjeT8qL6BtvnRayYdcQsCvFg2rLJetQqHQLpVKFgkgRO7DhrIKOLHmwNpHQPMDYJVgvqP4lkAZxe7Bujld6spm8tuKqnATMZvN4vDwcAsat1RX8vq5+lkJZjwlaPjqp+a9+omFAYp9irM52DjdlG9c6OYxqqra6/f7m263u0ljvDo7O3sS5hpzrmxcrrtdfU2/d6ip5mu9/LEsyd3BwXCzz9PfHBq4PN/v718IBALzXq+34fF4Zo4E0pnURrU+jtONKbwyOYHlSmHbNM2uVCaxbpg66oaGFaVMna8gLRA3sINUKoWhUKgFPI5arWYZhtEmWFSfRep+mvEWpWwRqU1Ns/L5vEWbx++sdDrdieFwGIFHQo6CyDaBZ7xDJF8ikdhkcTrbRBaETuMymYwg9w6oiXtA4xAkgLSaNne3UqnssgAtySadkYj2IZlckdx5AwVvIQnYwHURUfB6krsgUqcEmvFXrpWIgu4FOR+RKTveQjEyMkKrLEm/+ccgAZtqRqrzFz3riUQiXyg7FrDZ+R8BJAGbRYLB4HfgX5LcPrHy2NgY1zbRGaMs65Qi8rPR0VEGMjhtgiDyNzJ0/QXvYtJ0HU94ewAAAABJRU5ErkJggg==" />
                         <span class="h-margin-left-5" v-text="lang('browseFileTitle')"></span>
                     </button>
@@ -882,48 +882,36 @@
         </popup>
 
     </div>
-
 </template>
 
 <style lang="scss">
-    body {
-        background-color: var(--in-content-page-background);
-        padding: 0 6px;
-    }
-
-    .tabs.is-boxed li.is-active a {
-        background-color: var(--in-content-page-background);
-    }
-
     #stg-options {
-        min-height: 600px;
-
-        & > div {
-            max-width: 99%;
-        }
+        overflow-x: auto;
 
         .backup-time-input {
             width: 100px;
         }
+
+        .hotkey {
+            margin-bottom: var(--indent);
+
+            > :not(:last-child) {
+                margin-right: var(--indent);
+            }
+
+            > :nth-child(4) {
+                width: 110px;
+                min-width: 110px;
+            }
+
+            > .delete-button {
+                line-height: 1;
+            }
+
+            > .notify-message {
+                margin: 0;
+            }
+        }
     }
 
-    .hotkey {
-        margin-bottom: var(--indent);
-
-        & > :not(:last-child) {
-            margin-right: var(--indent);
-        }
-
-        & > :nth-child(4) {
-            width: 140px;
-        }
-
-        & > .delete-button {
-            line-height: 1;
-        }
-
-        & > .notify-message {
-            margin: 0;
-        }
-    }
 </style>

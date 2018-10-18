@@ -29,9 +29,9 @@
         "style-loader": "^0.23.1",
         "vue-loader": "^15.4.2",
         "vue-template-compiler": "^2.5.17",
-        "webpack": "^4.20.2",
+        "webpack": "^4.21.0",
         "webpack-cli": "^3.1.2",
         "webpack-shell-plugin": "^0.5.0",
-        "zip-folder": "^1.0.0"
+        "zip-a-folder": "0.0.6"
     }
 }

@@ -113,9 +113,7 @@ const DEFAULT_OPTIONS = {
     ],
 };
 
-const onlyBoolOptionsKeys = (function() {
-    return Object.keys(DEFAULT_OPTIONS).filter(key => 'boolean' === typeof DEFAULT_OPTIONS[key]);
-})();
+const onlyBoolOptionsKeys = Object.keys(DEFAULT_OPTIONS).filter(key => 'boolean' === typeof DEFAULT_OPTIONS[key]);
 
 const allOptionsKeys = onlyBoolOptionsKeys
     .concat([

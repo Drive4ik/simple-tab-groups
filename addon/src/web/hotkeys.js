@@ -125,7 +125,7 @@ const styles = {
             zIndex: 2147483647,
         },
         main: {
-            backgroundColor: '#fff',
+            backgroundColor: '#fbfbfb',
             borderRadius: '5px',
             padding: '10px',
             minWidth: '600px',
@@ -134,6 +134,7 @@ const styles = {
         },
         header: {
             color: 'initial',
+            textAlign: 'center',
             outline: 'none',
         },
         groupsWrapper: {
@@ -152,6 +153,7 @@ const styles = {
             outline: 'none',
             overflow: 'hidden',
         },
+        groupNodeFocusBackgroudColor: '#91c9f7',
         imgNode: {
             width: '16px',
             height: '16px',
@@ -189,15 +191,17 @@ function showGroupsForMovingTab(data) {
     Object.assign(header.style, styles.text, styles.header);
     Object.assign(header, {
         tabIndex: '-1',
-        innerText: browser.i18n.getMessage('moveTabToGroupDisabledTitle') + ':',
+        innerText: browser.i18n.getMessage('moveTabToGroupDisabledTitle'),
         onclick: e => e.stopPropagation(),
         onkeydown: function(e) {
+            if (checkUpDownKeys(e)) {
+                return;
+            }
+
             if (KeyEvent.DOM_VK_DOWN === e.keyCode) {
-                stopEvent(e);
-                setFocusToNextElement(groupsWrapper.lastElementChild, 'down');
+                setFocusToNextElement(groupsWrapper.lastElementChild, 'down', e);
             } else if (KeyEvent.DOM_VK_UP === e.keyCode) {
-                stopEvent(e);
-                setFocusToNextElement(groupsWrapper.firstElementChild, 'up');
+                setFocusToNextElement(groupsWrapper.firstElementChild, 'up', e);
             }
         },
     });
@@ -206,6 +210,16 @@ function showGroupsForMovingTab(data) {
     let groupsWrapper = document.createElement('div');
     Object.assign(groupsWrapper.style, styles.groupsWrapper);
     main.append(groupsWrapper);
+
+    function checkUpDownKeys(e) {
+        if ([KeyEvent.DOM_VK_PAGE_UP, KeyEvent.DOM_VK_HOME].includes(e.keyCode)) {
+            setFocusToNextElement(groupsWrapper.lastElementChild, 'down', e);
+            return true;
+        } else if ([KeyEvent.DOM_VK_PAGE_DOWN, KeyEvent.DOM_VK_END].includes(e.keyCode)) {
+            setFocusToNextElement(groupsWrapper.firstElementChild, 'up', e);
+            return true;
+        }
+    }
 
     function createGroupNode(group, tabIndex, isEnabled) {
         let groupNode = document.createElement('div'),
@@ -232,7 +246,7 @@ function showGroupsForMovingTab(data) {
                     header.focus();
                 }
 
-                groupNode.style.backgroundColor = '#91c9f7';
+                groupNode.style.backgroundColor = styles.groupNodeFocusBackgroudColor;
             };
             groupNode.onblur = groupNode.onmouseout = () => groupNode.style.backgroundColor = '';
 
@@ -245,22 +259,19 @@ function showGroupsForMovingTab(data) {
             }.bind(null, group.id);
 
             groupNode.onkeydown = function(e) {
+                if (checkUpDownKeys(e)) {
+                    return;
+                }
+
                 if ([KeyEvent.DOM_VK_RETURN, KeyEvent.DOM_VK_SPACE].includes(e.keyCode)) {
                     stopEvent(e);
                     groupNode.click();
                 } else if (KeyEvent.DOM_VK_TAB === e.keyCode) {
-                    stopEvent(e);
-                    if (e.shiftKey) {
-                        setFocusToNextElement(groupNode, 'up');
-                    } else {
-                        setFocusToNextElement(groupNode, 'down');
-                    }
+                    setFocusToNextElement(groupNode, e.shiftKey ? 'up' : 'down', e);
                 } else if (KeyEvent.DOM_VK_DOWN === e.keyCode) {
-                    stopEvent(e);
-                    setFocusToNextElement(groupNode, 'down');
+                    setFocusToNextElement(groupNode, 'down', e);
                 } else if (KeyEvent.DOM_VK_UP === e.keyCode) {
-                    stopEvent(e);
-                    setFocusToNextElement(groupNode, 'up');
+                    setFocusToNextElement(groupNode, 'up', e);
                 }
             };
         } else {
@@ -274,8 +285,12 @@ function showGroupsForMovingTab(data) {
         return groupNode;
     }
 
-    function setFocusToNextElement(node, vector = 'down') {
+    function setFocusToNextElement(node, vector = 'down', eventToStop = false) {
         lastVector = vector;
+
+        if (eventToStop) {
+            stopEvent(eventToStop);
+        }
 
         if (1 === groupsWrapper.children.length) {
             groupsWrapper.firstElementChild.focus();
