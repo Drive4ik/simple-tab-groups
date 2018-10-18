@@ -66,6 +66,8 @@
                 groups: [],
 
                 unSyncTabs: [],
+
+                multipleMoveTabs: [],
             };
         },
         components: {
@@ -95,16 +97,9 @@
                     BG.moveGroup(from.data.item.id, this.groups.indexOf(to.data.item));
                 })
                 .$on('drag-move-tab', function(from, to) {
-                    let tabData = {};
+                    let tabsData = this.getTabForMove(from.data.item);
 
-                    if (from.data.item.id) {
-                        tabData.tabId = from.data.item.id;
-                    } else {
-                        tabData.groupId = from.data.group.id;
-                        tabData.tabIndex = from.data.group.tabs.indexOf(from.data.item);
-                    }
-
-                    BG.moveTabs([tabData], {
+                    BG.moveTabs(tabsData, {
                             newTabIndex: to.data.group.tabs.indexOf(to.data.item),
                             groupId: to.data.group.id,
                         }, false)
@@ -125,6 +120,9 @@
             });
         },
         watch: {
+            section() {
+                this.multipleMoveTabs = [];
+            },
             groupToEdit(groupToEdit) {
                 if (!groupToEdit) {
                     this.setFocus();
@@ -188,6 +186,14 @@
                             let group = this.groups.find(gr => gr.id === request.group.id);
 
                             if (request.group.tabs) {
+                                group.tabs.forEach(function(tab) {
+                                    let multipleTabIndex = this.multipleMoveTabs.indexOf(tab);
+
+                                    if (-1 !== multipleTabIndex) {
+                                        this.multipleMoveTabs.splice(multipleTabIndex, 1);
+                                    }
+                                }, this);
+
                                 request.group.tabs = request.group.tabs.map(this.$_tabMap, this);
                             }
 
@@ -299,6 +305,8 @@
                 if (this.hoverItem && this.isGroup(this.hoverItem)) {
                     this.hoverItem = this.groups.find(group => group.id === this.hoverItem.id) || null;
                 }
+
+                this.multipleMoveTabs = [];
             },
             async loadUnsyncedTabs() {
                 let unSyncTabs = await browser.tabs.query({
@@ -336,10 +344,25 @@
                 browser.tabs.remove(tab.id);
                 this.unSyncTabs.splice(this.unSyncTabs.indexOf(tab), 1);
             },
+
+            clickOnTab(event, tab, group) {
+                if (event.ctrlKey) {
+                    if (this.multipleMoveTabs.includes(tab)) {
+                        this.multipleMoveTabs.splice(this.multipleMoveTabs.indexOf(tab), 1);
+                    } else {
+                        this.multipleMoveTabs.push(tab);
+                    }
+                } else {
+                    this.loadGroup(group, group.tabs.indexOf(tab));
+                }
+            },
+
             async loadGroup(group, tabIndex = -1, closePopup = false) {
                 if (this.someGroupAreLoading) {
                     return;
                 }
+
+                this.multipleMoveTabs = [];
 
                 let isCurrentGroup = group === this.currentGroup;
 
@@ -439,32 +462,50 @@
 
                 this.showSectionDefault();
             },
-            async moveTab(tab, oldGroup, newGroup) {
-                let tabData = {};
-
-                if (tab.id) {
-                    tabData.tabId = tab.id;
-                } else {
-                    tabData.tabIndex = oldGroup.tabs.indexOf(tab);
-                    tabData.groupId = oldGroup.id;
+            getTabForMove(withTab) {
+                if (!this.multipleMoveTabs.includes(withTab)) {
+                    this.multipleMoveTabs.push(withTab);
                 }
 
+                let result = this.multipleMoveTabs
+                    .map(function(tab) {
+                        let tabData = {};
+
+                        if (tab.id) {
+                            tabData.tabId = tab.id;
+                        } else {
+                            let group = this.groups.find(gr => gr.tabs.includes(tab));
+
+                            tabData.tabIndex = group.tabs.indexOf(tab);
+                            tabData.groupId = group.id;
+                        }
+
+                        return tabData;
+                    }, this);
+
+                this.multipleMoveTabs = [];
+
+                return result;
+            },
+            async moveTab(tab, newGroup, loadUnsync) {
+                let tabsData = this.getTabForMove(tab);
+
                 try {
-                    await BG.moveTabs([tabData], {
+                    await BG.moveTabs(tabsData, {
                         groupId: newGroup.id,
                     }, false);
                 } catch (e) {
                     utils.notify(e);
                 }
 
-                if (!oldGroup) {
+                if (loadUnsync) {
                     this.loadUnsyncedTabs();
                 }
             },
-            async moveTabToNewGroup(tab, oldGroup) {
+            async moveTabToNewGroup(tab, loadUnsync) {
                 let newGroup = await BG.addGroup();
 
-                await this.moveTab(tab, oldGroup, newGroup);
+                await this.moveTab(tab, newGroup, loadUnsync);
             },
             setTabIconAsGroupIcon(tab) {
                 BG.updateGroup(this.groupToShow.id, {
@@ -765,12 +806,13 @@
 
                         <div v-for="(tab, index) in group.filteredTabsBySearch" :key="index"
                             @contextmenu="$refs.tabsContextMenu.open($event, {tab, group})"
-                            @click="loadGroup(group, group.tabs.indexOf(tab))"
+                            @click="clickOnTab($event, tab, group)"
                             @mousedown.middle.prevent
                             @mouseup.middle.prevent="removeTab(group.id, group.tabs.indexOf(tab))"
                             :class="['tab item is-unselectable space-left', {
                                 'is-active': group === currentGroup && tab.active,
                                 'is-hovered-item': tab === hoverItem,
+                                'is-multiple-tab-to-move': multipleMoveTabs.includes(tab),
                             }]"
                             :title="getTabTitle(tab, true)"
                             >
@@ -864,10 +906,12 @@
                     <div>
                         <div v-for="tab in unSyncTabs" :key="tab.id"
                             @contextmenu="$refs.tabsContextMenu.open($event, {tab})"
-                            @click="unsyncHiddenTabsShowTabIntoCurrentWindow(tab)"
+                            @click="$event.ctrlKey ? clickOnTab($event, tab) : unsyncHiddenTabsShowTabIntoCurrentWindow(tab)"
                             @mousedown.middle.prevent
                             @mouseup.middle.prevent="removeUnSyncTab(tab)"
-                            class="tab item is-unselectable"
+                            :class="['tab item is-unselectable', {
+                                'is-multiple-tab-to-move': multipleMoveTabs.includes(tab),
+                            }]"
                             :title="getTabTitle(tab, true)"
                             >
                             <div class="item-icon">
@@ -918,7 +962,7 @@
                         v-for="(tab, tabIndex) in groupToShow.tabs"
                         :key="tabIndex"
                         @contextmenu="$refs.tabsContextMenu.open($event, {tab, group: groupToShow})"
-                        @click="loadGroup(groupToShow, tabIndex)"
+                        @click="clickOnTab($event, tab, groupToShow)"
                         @mousedown.middle.prevent
                         @mouseup.middle.prevent="removeTab(groupToShow.id, tabIndex)"
                         :class="['tab item is-unselectable', {
@@ -926,6 +970,7 @@
                             'drag-moving': tab.isMoving,
                             'drag-over': tab.isOver,
                             'is-hovered-item': tab === hoverItem,
+                            'is-multiple-tab-to-move': multipleMoveTabs.includes(tab),
                         }]"
                         :title="getTabTitle(tab, true)"
 
@@ -1040,16 +1085,13 @@
                     v-for="group in groups"
                     :key="group.id"
                     :class="{'is-disabled': menu.data.group ? menu.data.group.id === group.id : false}"
-                    @click="menu.data.group
-                        ? (menu.data.group.id === group.id ? null : moveTab(menu.data.tab, menu.data.group, group))
-                        : moveTab(menu.data.tab, undefined, group)
-                        "
+                    @click="moveTab(menu.data.tab, group, !menu.data.group)"
                     >
                     <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                     <span v-text="group.title"></span>
                 </li>
 
-                <li @click="moveTabToNewGroup(menu.data.tab, menu.data.group)">
+                <li @click="moveTabToNewGroup(menu.data.tab, !menu.data.group)">
                     <img src="/icons/group-new.svg" class="size-16" />
                     <span v-text="lang('createNewGroup')"></span>
                 </li>
@@ -1215,7 +1257,8 @@
             outline-offset: -3px;
         }
 
-        .drag-moving {
+        .drag-moving,
+        .drag-tab .is-multiple-tab-to-move {
             opacity: 0.4;
         }
     }
@@ -1243,7 +1286,8 @@
             padding-right: var(--indent);
         }
 
-        &.is-active:before {
+        &.is-active:before,
+        &.is-multiple-tab-to-move:before {
             content: '';
             position: absolute;
             background-color: var(--in-content-border-focus);
@@ -1251,6 +1295,10 @@
             top: 0;
             bottom: 0;
             width: 4px;
+        }
+
+        &.is-active.is-multiple-tab-to-move:before {
+            width: 6px;
         }
 
         &:not(.no-hover):hover,

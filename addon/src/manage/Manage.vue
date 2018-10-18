@@ -189,10 +189,10 @@
                             this.thumbnails = BG.getThumbnails();
                             break;
                         case 'group-updated':
-                            let groupIndex = this.groups.findIndex(group => group.id === request.group.id);
+                            let group = this.groups.find(gr => gr.id === request.group.id);
 
                             if (request.group.tabs) {
-                                this.groups[groupIndex].tabs.forEach(function(tab) {
+                                group.tabs.forEach(function(tab) {
                                     let multipleTabIndex = this.multipleDropTabs.indexOf(tab);
 
                                     if (-1 !== multipleTabIndex) {
@@ -203,7 +203,7 @@
                                 request.group.tabs = request.group.tabs.map(this.$_tabMap, this);
                             }
 
-                            Object.assign(this.groups[groupIndex], request.group);
+                            Object.assign(group, request.group);
                             break;
                         case 'group-added':
                             this.groups.push(this.$_groupMap(request.group));
