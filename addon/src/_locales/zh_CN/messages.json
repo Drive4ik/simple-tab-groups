@@ -16,11 +16,11 @@
         "description": "Set tab icon as group icon"
     },
     "moveTabToGroupDisabledTitle": {
-        "message": "将标签页移到标签页群组",
+        "message": "将标签页移到群组",
         "description": "Move tab to group title"
     },
     "moveTabToGroupMessage": {
-        "message": "已将标签页 \"$tabtitle$\" 移到标签页群组 \"$grouptitle$\"。\n\n点我显示此标签页。",
+        "message": "已将标签页 \"$tabtitle$\" 移到群组 \"$grouptitle$\"。\n\n点这里显示该标签页。",
         "description": "Tab moved popup title",
         "placeholders": {
             "grouptitle": {
@@ -58,11 +58,11 @@
         "description": "Cancel"
     },
     "searchPlaceholder": {
-        "message": "搜索标签页……",
+        "message": "搜索",
         "description": "Search placeholder"
     },
     "invalidRegExpRuleTitle": {
-        "message": "正则表述式 '$regexp$' 有语法错误，将被忽略。",
+        "message": "正则表达式 '$regexp$' 有语法错误，将被忽略。",
         "description": "Invalid rule description",
         "placeholders": {
             "regexp": {
@@ -72,7 +72,7 @@
         }
     },
     "manageGroupViewGrid": {
-        "message": "网格式显示",
+        "message": "网格显示",
         "description": "Grid display"
     },
     "manageGroupViewFreeArrange": {
@@ -80,15 +80,15 @@
         "description": "Free arrange"
     },
     "closePopupAfterChangeGroup": {
-        "message": "切换标签页群组后关闭弹出框",
+        "message": "切换群组后关闭弹出框",
         "description": "Close popup after changing group"
     },
     "showNotificationAfterMoveTab": {
-        "message": "标签页移到其他标签页群组时显示通知",
+        "message": "标签页移到其他群组时显示通知",
         "description": "Show notification when tab is moved to another group"
     },
     "openManageGroupsInTab": {
-        "message": "在新标签页里打开【管理群组】",
+        "message": "在新标签页里打开”管理群组“",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
@@ -109,7 +109,7 @@
     },
     "includeTabThumbnailsIntoBackup": {
         "message": "在备份中包括缩略图（会让备份文件更大）",
-        "description": "Include tab thumbnails into backup (make backup file size bigger)"
+        "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
         "message": "恢复“Simple Tab Groups”",
@@ -120,7 +120,7 @@
         "description": "Load a backup file containing the tab groups you want to restore."
     },
     "importAddonSettingsWarning": {
-        "message": "还原扩展设置，会*清除*所有当前的设置和群组！",
+        "message": "从备份文件还原，会*清除*所有当前的设置和群组！",
         "description": "Restore add-on settings will ERASE all existing settings and groups!"
     },
     "importAddonSettingsButton": {
@@ -136,7 +136,7 @@
         "description": "Load a backup file old \"Tab Groups\" addon."
     },
     "openGroupAfterChange": {
-        "message": "改动标签页群组后，打开该群组",
+        "message": "更改标签页群组后，打开该群组",
         "description": "Open group after changing to it"
     },
     "newGroupTitle": {
@@ -160,12 +160,16 @@
         }
     },
     "sortGroupsAZ": {
-        "message": "排序群组：升序↗",
+        "message": "排序群组：升序",
         "description": "Sort groups [A-Z]"
     },
     "sortGroupsZA": {
-        "message": "排序群组：降序↘",
+        "message": "排序群组：降序",
         "description": "Sort groups [Z-A]"
+    },
+    "generalTitle": {
+        "message": "常规",
+        "description": "General"
     },
     "groupSettings": {
         "message": "群组设置",
@@ -212,7 +216,7 @@
         "description": "Create new group"
     },
     "goBackButtonTitle": {
-        "message": "返回到标签页",
+        "message": "返回",
         "description": "Go back"
     },
     "goBackToGroupsButtonTitle": {
@@ -232,7 +236,7 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "抱歉，你不能在这个弹出层里加载自定义图标，但你在【管理群组】里可以。\n打开【管理群组】吗？",
+        "message": "抱歉，你不能在这个弹出层里加载自定义图标，但在“管理群组”里可以。\n打开“管理群组”吗？",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -244,15 +248,15 @@
         "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
-        "message": "用来捕捉标签页的正则表述式",
+        "message": "用来捕捉标签页的正则表达式",
         "description": "Regular expressions for catch tabs"
     },
     "regexpForTabsPlaceholder": {
-        "message": "正则表述式",
+        "message": "正则表达式",
         "description": "Regular expressions"
     },
     "regexpForTabsHelp": {
-        "message": "在这里输入正则表述式。网址与之相符的标签页会被自动移到本群组。\n每行一条规则，可设置多条规则。\n例如：\ngithub\\.com/drive4ik/simple-tab-groups - 捕捉此扩展源码库的所有页面\nbugzilla\\.mozilla\\.org - 捕捉 Firefox 错误反馈的所有页面\n(facebook|twitter|youtube)\\.com - 捕捉这几个社交网站的所有页面",
+        "message": "在这里输入正则表达式。网址与之相符的标签页会被自动移到本群组。\n每行一条规则，可设置多条规则。\n例如：\ngithub\\.com/drive4ik/simple-tab-groups - 捕捉此扩展源码库的所有页面\nbugzilla\\.mozilla\\.org - 捕捉 Firefox 错误反馈的所有页面\n(facebook|twitter|youtube)\\.com - 捕捉这几个社交网站的所有页面",
         "description": "Regular exceptions helper"
     },
     "hotkeysTitle": {
@@ -292,11 +296,11 @@
         "description": "Load previous group"
     },
     "hotkeyActionTitleLoadFirstGroup": {
-        "message": "加载最先的群组",
+        "message": "加载第一个群组",
         "description": "Load first group"
     },
     "hotkeyActionTitleLoadLastGroup": {
-        "message": "加载最后的群组",
+        "message": "加载最后一个群组",
         "description": "Load last group"
     },
     "hotkeyActionTitleLoadCustomGroup": {
@@ -312,11 +316,11 @@
         "description": "Delete current group"
     },
     "hotkeyActionTitleOpenManageGroups": {
-        "message": "打开【管理群组】",
+        "message": "打开管理群组",
         "description": "Open manage groups"
     },
     "whatsWrongMessage": {
-        "message": "出什么岔子了……\n请联系开发者，发送电子邮件，附上最新错误日志的JSON文件（在选项的底部有个保存日志的按钮）",
+        "message": "出什么错了……\n请联系开发者，发送电子邮件，附上最新错误日志的JSON文件（在选项的底部有个保存日志的按钮）",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
     },
     "saveErrorLogsIntoFile": {
@@ -325,7 +329,17 @@
     },
     "undoRemoveGroupItemTitle": {
         "message": "撤销移除群组\"$grouptitle$\"",
-        "description": "Undo remove group menu title",
+        "description": "Undelete a group menu title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "undoRemoveGroupNotification": {
+        "message": "点击这里撤销移除群组\"$grouptitle$\"",
+        "description": "Click here to cancel the deletion of the group title",
         "placeholders": {
             "grouptitle": {
                 "content": "$1",
@@ -342,15 +356,135 @@
         "description": "Tabs in this group will never be automatically moved to another group"
     },
     "useTabsFavIconsFromGoogleS2Converter": {
-        "message": "使用谷歌S2转换器生成的网站标签",
+        "message": "使用谷歌S2转换器生成的网站图标",
         "description": "Use tabs fav-icons from Google S2 Converter"
     },
     "iconStyle": {
         "message": "图标类型",
         "description": "Icon style"
     },
+    "discardTabsAfterHide": {
+        "message": "隐藏后丢弃图标（该操作节省内存）",
+        "description": "Discard tabs after hide (this will save the RAM)"
+    },
+    "createThumbnailsForTabs": {
+        "message": "创建标签页的缩略图（在“管理群组”中使用）",
+        "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
+    },
+    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
+        "message": "无法更改群组，因为在打开的标签页中，有一个共用了麦克风或摄像头",
+        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
+    },
+    "foundHiddenUnSyncTabsDescription": {
+        "message": "发现隐藏的未同步标签页。在标签页上点击以在当前群组或窗口中显示，或者：",
+        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
+    },
+    "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
+        "message": "将这些标签页移动到当前群组或窗口中",
+        "description": "Move all of these tabs into current group/window"
+    },
+    "actionHiddenUnSyncTabsCreateGroup": {
+        "message": "为这些标签页创建新群组",
+        "description": "Create new group with all of these tabs"
+    },
+    "actionHiddenUnSyncTabsCloseAll": {
+        "message": "关闭这些标签",
+        "description": "Close all of these tabs"
+    },
+    "thisTabWillCreateAsNew": {
+        "message": "该标签页将会新建",
+        "description": "This tab will create as new"
+    },
+    "updateTabThumbnail": {
+        "message": "更新该标签页的缩略图",
+        "description": "Update thumbnail for this tab"
+    },
+    "cantMakeThumbnailTabWasDiscarded": {
+        "message": "标签页未加载时无法创建它的缩略图",
+        "description": "You can not make a thumbnail of a tab if the tab was not loaded"
+    },
+    "nowFoundWindowsAddonStoppedWorking": {
+        "message": "错误：未找到正常的非隐私/匿名/弹出窗口。扩展停止工作，请重启浏览器。",
+        "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
+    },
+    "waitingToLoadAllTabs": {
+        "message": "正在等待所有标签页加载完成。\n请稍等……",
+        "description": "Waiting for all tabs to load.\nPlease wait..."
+    },
+    "reloadAddon": {
+        "message": "重新加载扩展",
+        "description": "Reload addon"
+    },
+    "ffFailedAndLostDataMessage": {
+        "message": "FF出错，所有标签页群组丢失。\n如果你创建了备份，可以从中恢复数据",
+        "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
+    },
+    "enterDefaultGroupIconViewTypeTitle": {
+        "message": "新群组的图标样式",
+        "description": "Icon style for a new group"
+    },
+    "openPopupHotkeyTitle": {
+        "message": "打开群组弹出框",
+        "description": "Open the groups pop-up"
+    },
     "openGroupInNewWindow": {
-        "message": "在新窗口打开标签页群组",
+        "message": "在新窗口打开群组",
         "description": "Open group in new window"
+    },
+    "muteTabsWhenGroupCloseAndRestoreWhenOpen": {
+        "message": "当群组关闭和恢复时静音标签页",
+        "description": "Mute tabs when group close and restore when open"
+    },
+    "showTabAfterMovingItIntoThisGroup": {
+        "message": "标签页自动移动到该群组后，显示该标签页",
+        "description": "Show the tab after auto-moving it into this group"
+    },
+    "tabMoving": {
+        "message": "标签页正在移动",
+        "description": "Tab moving"
+    },
+    "includeTabFavIconsIntoBackup": {
+        "message": "在备份中保存标签页网站图标（会让备份文件更大）",
+        "description": "Include tab fav-icons in backup (makes backup file size bigger)"
+    },
+    "tabsThumbnailsSize": {
+        "message": "标签页缩略图大小：$size$",
+        "description": "Tabs thumbnails size: $size$",
+        "placeholders": {
+            "size": {
+                "content": "$1",
+                "example": "2 MB"
+            }
+        }
+    },
+    "clearTabsThumbnails": {
+        "message": "清除标签页缩略图",
+        "description": "Clear tabs thumbnails"
+    },
+    "groupRemovedByExtension": {
+        "message": "群组\"$group$\" 被扩展\"$extension$\"移除",
+        "description": "Group \"$group$\" removed by extension: $extension$",
+        "placeholders": {
+            "group": {
+                "content": "$1",
+                "example": "group title"
+            },
+            "extension": {
+                "content": "$2",
+                "example": "external extension title"
+            }
+        }
+    },
+    "clickHereToReloadAddon": {
+        "message": "出现错误，点击这里重新加载 STG 扩展",
+        "description": "Something went wrong, click here to reload STG addon"
+    },
+    "extendedTabSearch": {
+        "message": "扩展搜索",
+        "description": "Extended search"
+    },
+    "waitingForSessionRestoreNotification": {
+        "message": "正在等待会话恢复……",
+        "description": "Waiting for session restore..."
     }
 }
