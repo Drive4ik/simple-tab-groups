@@ -605,11 +605,6 @@ async function loadGroup(windowId, groupId, activeTabIndex = -1) {
 
     console.log('loadGroup', { groupId: group.id, windowId, activeTabIndex });
 
-    // try to fix bug invalid tab id
-    function _fixTabsIds(tabs) {
-        return Promise.all(tabs.filter(utils.keyId).map(tab => browser.tabs.get(tab.id).catch(() => tab.id = null)));
-    }
-
     try {
         if (group.windowId) {
             if (-1 !== activeTabIndex) {
@@ -660,8 +655,6 @@ async function loadGroup(windowId, groupId, activeTabIndex = -1) {
             // hide tabs
             if (oldGroup) {
                 if (oldGroup.tabs.length) {
-                    await _fixTabsIds(oldGroup.tabs);
-
                     let oldTabIds = oldGroup.tabs.filter(utils.keyId).map(utils.keyId);
 
                     if (oldTabIds.length) {
@@ -710,8 +703,6 @@ async function loadGroup(windowId, groupId, activeTabIndex = -1) {
 
             // show tabs
             if (group.tabs.length) {
-                await _fixTabsIds(group.tabs);
-
                 let containers = await utils.loadContainers(),
                     hiddenTabsIds = group.tabs.filter(utils.keyId).map(utils.keyId);
 
@@ -1084,29 +1075,29 @@ async function onUpdatedTab(tabId, changeInfo, rawTab) {
 function onRemovedTab(tabId, { isWindowClosing, windowId }) {
     console.log('onRemovedTab', {tabId, args: { isWindowClosing, windowId }});
 
-    if (isWindowClosing) {
+    let group = _groups.find(gr => gr.tabs.some(tab => tab.id === tabId));
+
+    if (!group) {
         return;
     }
 
-    _groups.some(function(group) {
-        let tabIndexToTemove = group.tabs.findIndex(tab => tab.id === tabId);
+    let tabIndex = group.tabs.findIndex(tab => tab.id === tabId);
 
-        if (-1 !== tabIndexToTemove) {
-            group.tabs.splice(tabIndexToTemove, 1);
+    if (isWindowClosing) {
+        group.tabs[tabIndex].id = null;
+    } else {
+        group.tabs.splice(tabIndex, 1);
 
-            sendMessage({
-                action: 'group-updated',
-                group: {
-                    id: group.id,
-                    tabs: group.tabs,
-                },
-            });
+        sendMessage({
+            action: 'group-updated',
+            group: {
+                id: group.id,
+                tabs: group.tabs,
+            },
+        });
+    }
 
-            saveGroupsToStorage();
-
-            return true;
-        }
-    });
+    saveGroupsToStorage();
 }
 
 function onMovedTab(tabId, { windowId }) {
@@ -1703,6 +1694,8 @@ async function updateBrowserActionData(windowId) {
 }
 
 async function onRemovedWindow(windowId) {
+    console.log('onRemovedWindow windowId:', windowId);
+
     let group = _groups.find(gr => gr.windowId === windowId);
 
     if (group) {
