@@ -2,7 +2,7 @@
 
 const fse = require('fs-extra');
 const path = require('path');
-const zipFolder = require('zip-folder');
+const ZipAFolder = require('zip-a-folder');
 
 function setPath(folderName) {
     return path.join(__dirname, '../' + folderName);
@@ -18,13 +18,11 @@ function extractExtensionData() {
 }
 
 function buildZip(src, dist, zipFilename) {
-    console.info(`Building ${zipFilename}...`);
+    console.info(`\n------------------\nBuilding ${zipFilename}...`);
 
     fse.ensureDirSync(dist);
 
-    return new Promise(function(resolve, reject) {
-        zipFolder(src, path.join(dist, zipFilename), err => err ? reject(err) : resolve());
-    });
+    return ZipAFolder.zip(src, path.join(dist, zipFilename));
 };
 
 function init() {
@@ -35,7 +33,7 @@ function init() {
 
     if (process.env.IS_PRODUCTION) {
         buildZip(setPath('dist'), distZipPath, zipFilename)
-            .then(() => console.info('OK'))
+            .then(() => console.info('\nBuild ZIP OK'))
             .catch(console.err);
     } else {
         let devPath = setPath('dev'),
@@ -52,7 +50,7 @@ function init() {
             .then(function() {
                 fse.removeSync(devPath);
 
-                console.info('OK');
+                console.info('\nBuild ZIP OK');
             })
             .catch(console.err);
     }

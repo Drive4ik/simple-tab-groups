@@ -2,6 +2,7 @@
     'use strict';
 
     import * as utils from './utils';
+    import * as file from './file';
     import { groupIconViewTypes } from './constants';
     import Vue from 'vue';
 
@@ -48,9 +49,21 @@
             swatches: swatches,
         },
         data() {
-            let vm = this;
+            let vm = this,
+                groups = BG.getGroups(),
+                disabledContainers = {};
+
+            this.containers.forEach(function(container) {
+                let groupWhichHasContainer = groups.find(group => group.id !== this.group.id && group.catchTabContainers.includes(container.cookieStoreId));
+
+                if (groupWhichHasContainer) {
+                    disabledContainers[container.cookieStoreId] = groupWhichHasContainer.title;
+                }
+            }, this);
 
             return {
+                disabledContainers: disabledContainers,
+
                 showMessageCantLoadFile: false,
 
                 groupIconViewTypes: groupIconViewTypes,
@@ -70,10 +83,14 @@
             };
         },
         mounted() {
-            this.$refs.groupTitle.focus();
+            this.setFocus();
         },
         methods: {
             lang: browser.i18n.getMessage,
+
+            setFocus() {
+                this.$refs.groupTitle.focus();
+            },
 
             setIconView(groupIcon) {
                 this.groupClone.iconViewType = groupIcon;
@@ -101,42 +118,19 @@
                 });
             },
 
+            isDisabledContainer(container) {
+                return !this.groupClone.catchTabContainers.includes(container.cookieStoreId) && container.cookieStoreId in this.disabledContainers;
+            },
+
             async selectUserGroupIcon() {
                 if (!this.canLoadFile) { // maybe temporary solution
                     this.showMessageCantLoadFile = true;
                     return;
                 }
 
-                let vm = this;
+                let iconUrl = await file.load('.ico,.png,.jpg,.svg', 'url'),
+                    img = new Image();
 
-                let iconUrl = await new Promise(function(resolve) {
-                    let fileInput = document.createElement('input');
-
-                    fileInput.type = 'file';
-                    fileInput.accept = '.ico,.png,.jpg,.svg';
-                    fileInput.initialValue = fileInput.value;
-                    fileInput.onchange = function() {
-                        if (fileInput.value !== fileInput.initialValue) {
-                            let file = fileInput.files[0];
-                            if (file.size > 100e6) {
-                                reject();
-                                return;
-                            }
-
-                            let reader = new FileReader();
-                            reader.addEventListener('loadend', function() {
-                                fileInput.remove();
-                                resolve(reader.result);
-                            });
-                            reader.readAsDataURL(file);
-                        } else {
-                            reject();
-                        }
-                    };
-                    fileInput.click();
-                });
-
-                let img = new Image();
                 img.addEventListener('load', function() {
                     let resizedIconUrl = iconUrl;
 
@@ -144,8 +138,9 @@
                         resizedIconUrl = utils.resizeImage(img, 16, 16);
                     }
 
-                    vm.setIconUrl(resizedIconUrl);
-                });
+                    this.setIconUrl(resizedIconUrl);
+                }.bind(this));
+
                 img.src = iconUrl;
             },
 
@@ -175,11 +170,11 @@
 </script>
 
 <template>
-    <div @keydown.enter.stop="saveGroup" tabindex="-1">
+    <div @keydown.enter.stop="saveGroup" tabindex="-1" class="no-outline">
         <div class="field">
             <label class="label" v-text="lang('title')"></label>
             <div class="control has-icons-left">
-                <input ref="groupTitle" v-model.trim="groupClone.title" data-auto-focus type="text" class="input" maxlength="120" :placeholder="lang('title')" />
+                <input ref="groupTitle" v-model.trim="groupClone.title" type="text" class="input" maxlength="120" :placeholder="lang('title')" />
                 <span class="icon is-small is-left">
                     <figure class="image is-16x16 is-inline-block">
                         <img :src="groupClone.iconUrlToDisplay" />
@@ -231,13 +226,13 @@
 
         <div class="field">
             <label class="label" v-text="lang('tabMoving')"></label>
-            <div class="control">
+            <div class="control is-inline-flex indent-children">
                 <label class="checkbox">
                     <input type="checkbox" v-model="groupClone.isSticky" />
                     <span v-text="lang('isStickyGroupTitle')"></span>
                 </label>
                 <span class="cursor-help" :title="lang('isStickyGroupHelp')">
-                    <img class="size-18 align-bottom" src="/icons/help.svg" />
+                    <img class="size-18" src="/icons/help.svg" />
                 </span>
             </div>
             <div class="control">
@@ -255,25 +250,30 @@
             <div class="control">
                 <div v-for="container in containers" :key="container.cookieStoreId" class="field">
                     <div class="control">
-                        <label class="checkbox">
-                            <input type="checkbox" :value="container.cookieStoreId" v-model="groupClone.catchTabContainers" />
-                            <img :src="container.iconUrl" class="size-16 align-bottom container-icon" :style="{fill: container.colorCode}" />
-                            <span v-text="container.name"></span>
+                        <label class="checkbox indent-children" :disabled="isDisabledContainer(container)">
+                            <input type="checkbox"
+                                :disabled="isDisabledContainer(container)"
+                                :value="container.cookieStoreId"
+                                v-model="groupClone.catchTabContainers"
+                                />
+                            <img :src="container.iconUrl" class="size-16 fill-context" :style="{fill: container.colorCode}" />
+                            <span class="word-break-all" v-text="container.name"></span>
+                            <i class="word-break-all" v-if="container.cookieStoreId in disabledContainers">({{ disabledContainers[container.cookieStoreId] }})</i>
                         </label>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="field">
-            <label class="label">
+        <div class="field h-margin-bottom-10">
+            <label class="label is-inline-flex indent-children">
                 <span v-text="lang('regexpForTabsTitle')"></span>
                 <span class="cursor-help" :title="lang('regexpForTabsHelp')">
                     <img class="size-18" src="/icons/help.svg" />
                 </span>
             </label>
             <div class="control">
-                <textarea class="textarea" @keydown.enter.stop v-model="groupClone.catchTabRules" :placeholder="lang('regexpForTabsPlaceholder')"></textarea>
+                <textarea class="textarea" :rows="canLoadFile ? false : 1" @keydown.enter.stop v-model.trim="groupClone.catchTabRules" :placeholder="lang('regexpForTabsPlaceholder')"></textarea>
             </div>
         </div>
 
@@ -290,8 +290,7 @@
                     event: 'close-popup',
                     lang: 'cancel',
                 }]
-            "
-            >
+            ">
             <span v-text="lang('selectUserGroupIconWarnText')"></span>
         </popup>
 

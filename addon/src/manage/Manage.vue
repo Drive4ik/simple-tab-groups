@@ -20,7 +20,8 @@
 
     if (!BG) {
         setTimeout(() => window.location.reload(), 3000);
-        throw Error('background not inited');
+        document.getElementById('stg-manage').innerText = browser.i18n.getMessage('waitingToLoadAllTabs');
+        throw Error('wait loading addon');
     }
 
     const VIEW_GRID = 'grid',
@@ -95,33 +96,24 @@
         created() {
             document.title = this.lang('manageGroupsTitle');
 
+            this.loadOptions();
+
             this
                 .$on('drag-move-group', function(from, to) {
-                    BG.moveGroup(from.data.item.id, to.data.itemIndex);
+                    BG.moveGroup(from.data.item.id, this.groups.indexOf(to.data.item));
                 })
                 .$on('drag-move-tab', async function(from, to) {
-                    if (!this.multipleDropTabs.includes(from.data.item)) {
-                        this.multipleDropTabs.push(from.data.item);
-                    }
+                    let tabsToMove = this.getDataForMultipleMove(),
+                        toData = {};
 
-                    let newTabIndex = undefined,
-                        groupTo = null;
-
-                    if (to.data.isGroup) {
-                        groupTo = to.data.item;
+                    if (this.isGroup(to.data.item)) {
+                        toData.groupId = to.data.item.id;
                     } else {
-                        groupTo = to.data.group;
-                        newTabIndex = to.data.itemIndex;
+                        toData.groupId = to.data.group.id;
+                        toData.newTabIndex = to.data.group.tabs.indexOf(to.data.item);
                     }
 
-                    let promise = Promise.resolve(),
-                        data = this.getDataForMultipleMove();
-
-                    for (let {tabIndex, groupId} of data) {
-                        await BG.moveTabToGroup(tabIndex, newTabIndex, groupId, groupTo.id, false, false);
-                    }
-
-                    BG.sendMessageGroupsUpdated();
+                    BG.moveTabs(tabsToMove, toData, false).catch(utils.notify);
                 })
                 .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
                 .$on('drag-over', (item, isOver) => item.isOver = isOver);
@@ -132,8 +124,6 @@
             this.currentWindowId = currentWindow.id;
 
             this.containers = await utils.loadContainers();
-
-            this.options = await storage.get(constants.allOptionsKeys);
 
             this.loadGroups();
 
@@ -149,20 +139,25 @@
                 setSaveWindowPositionTimer();
             }
         },
+        watch: {
+            'options.enableDarkTheme': function(enableDarkTheme) {
+                if (enableDarkTheme) {
+                    document.documentElement.classList.add('dark-theme');
+                } else {
+                    document.documentElement.classList.remove('dark-theme');
+                }
+            },
+        },
         computed: {
             currentGroup() {
-                return this.groups.find(group => group.windowId === this.currentWindowId); // TODO: if attach/detach manage group tab to other window - need update window id
+                // TODO: if attach/detach manage group tab to other window - need update window id
+                return this.groups.find(group => group.windowId === this.currentWindowId);
             },
             filteredGroups() {
                 let searchStr = this.search.toLowerCase();
 
                 return this.groups.map(function(group) {
-                    group.filteredTabs = group.tabs
-                        .filter(function(tab, tabIndex) {
-                            tab.index = tabIndex;
-                            return utils.mySearchFunc(searchStr, tab.title, this.extendedSearch) || utils.mySearchFunc(searchStr, tab.url, this.extendedSearch);
-                        }, this);
-
+                    group.filteredTabs = group.tabs.filter(tab => utils.mySearchFunc(searchStr, utils.getTabTitle(tab, true), this.extendedSearch));
                     return group;
                 }, this);
             },
@@ -171,13 +166,15 @@
             lang: browser.i18n.getMessage,
             safeHtml: utils.safeHtml,
 
+            loadOptions() {
+                this.options = BG.getOptions();
+            },
+
             setupListeners() {
                 let listener = function(request, sender) {
                     if (!utils.isAllowSender(request, sender)) {
                         return;
                     }
-
-                    console.info('BG event:', request.action, utils.clone(request));
 
                     switch (request.action) {
                         case 'thumbnail-updated':
@@ -187,13 +184,21 @@
                             this.thumbnails = BG.getThumbnails();
                             break;
                         case 'group-updated':
-                            let groupIndex = this.groups.findIndex(group => group.id === request.group.id);
+                            let group = this.groups.find(gr => gr.id === request.group.id);
 
                             if (request.group.tabs) {
+                                group.tabs.forEach(function(tab) {
+                                    let multipleTabIndex = this.multipleDropTabs.indexOf(tab);
+
+                                    if (-1 !== multipleTabIndex) {
+                                        this.multipleDropTabs.splice(multipleTabIndex, 1);
+                                    }
+                                }, this);
+
                                 request.group.tabs = request.group.tabs.map(this.$_tabMap, this);
                             }
 
-                            Object.assign(this.groups[groupIndex], request.group);
+                            Object.assign(group, request.group);
                             break;
                         case 'group-added':
                             this.groups.push(this.$_groupMap(request.group));
@@ -205,6 +210,9 @@
                         case 'groups-updated':
                             this.loadGroups();
                             break;
+                        case 'options-updated':
+                            this.loadOptions();
+                            break;
                     }
 
                 }.bind(this);
@@ -214,31 +222,31 @@
             },
 
             getDataForMultipleMove() {
-                let data = [];
+                let tabsToMove = [];
 
                 this.multipleDropTabs.forEach(function(tab) {
-                    let groupId = null,
-                        tabIndex = null;
+                    if (tab.id) {
+                        tabsToMove.push({
+                            tabId: tab.id,
+                        });
+                    } else {
+                        this.groups.some(function(group) {
+                            let tabIndex = group.tabs.indexOf(tab);
 
-                    this.groups.some(function(group) {
-                        let index = group.tabs.indexOf(tab);
-
-                        if (-1 !== index) {
-                            groupId = group.id;
-                            tabIndex = index;
-                            return true;
-                        }
-                    });
-
-                    if (groupId) {
-                        data.push({
-                            groupId,
-                            tabIndex,
+                            if (-1 !== tabIndex) {
+                                tabsToMove.push({
+                                    tabIndex: tabIndex,
+                                    groupId: group.id,
+                                });
+                                return true;
+                            }
                         });
                     }
                 }, this);
 
-                return data.reverse();
+                this.multipleDropTabs = [];
+
+                return tabsToMove.reverse();
             },
 
             $_groupMap(group) {
@@ -292,6 +300,7 @@
 
             loadGroups() {
                 this.groups = BG.getGroups().map(this.$_groupMap, this);
+                this.multipleDropTabs = [];
             },
             addGroup() {
                 BG.addGroup();
@@ -299,13 +308,10 @@
             addTab(group, cookieStoreId) {
                 BG.addTab(group.id, cookieStoreId);
             },
-            removeTab(group, tabIndex) {
-                this.groups.some(function(gr) {
-                    if (gr.id === group.id) {
-                        gr.tabs.splice(tabIndex, 1);
-                        return true;
-                    }
-                });
+            removeTab(group, tab) {
+                let tabIndex = group.tabs.indexOf(tab);
+
+                group.tabs.splice(tabIndex, 1);
 
                 BG.removeTab(group.id, tabIndex);
             },
@@ -316,16 +322,14 @@
                 // fix bug with browser.windows.getLastFocused({windowTypes: ['normal']}), maybe find exists bug??
                 let lastFocusedNormalWindow = BG.getLastFocusedNormalWindow();
 
-                let groupIndex = this.groups.findIndex(gr => gr.id === group.id);
-
-                BG.loadGroup(lastFocusedNormalWindow.id, groupIndex, tabIndex);
+                BG.loadGroup(lastFocusedNormalWindow.id, group.id, tabIndex);
 
                 if ('popup' === currentWindow.type) {
                     browser.windows.remove(currentWindow.id); // close manage groups popop window
                 }
             },
 
-            clickOnTab(event, tabIndex, tab, group) {
+            clickOnTab(event, tab, group) {
                 if (event.ctrlKey) {
                     if (this.multipleDropTabs.includes(tab)) {
                         this.multipleDropTabs.splice(this.multipleDropTabs.indexOf(tab), 1);
@@ -333,7 +337,7 @@
                         this.multipleDropTabs.push(tab);
                     }
                 } else {
-                    this.loadGroup(group, tabIndex);
+                    this.loadGroup(group, group.tabs.indexOf(tab));
                 }
             },
 
@@ -351,14 +355,6 @@
                 await BG.removeGroup(group.id);
                 this.groupToRemove = null;
             },
-            moveTabToGroup(oldTabIndex, oldGroupId, newGroupId) {
-                BG.moveTabToGroup(oldTabIndex, undefined, oldGroupId, newGroupId);
-            },
-            async moveTabToNewGroup(oldTabIndex, oldGroupId) {
-                let newGroup = await BG.addGroup(undefined, undefined, false);
-
-                BG.moveTabToGroup(oldTabIndex, undefined, oldGroupId, newGroup.id);
-            },
             setTabIconAsGroupIcon(tab, group) {
                 BG.updateGroup(group.id, {
                     iconViewType: null,
@@ -368,8 +364,10 @@
 
             getTabTitle: utils.getTabTitle,
 
-            prepareThumbnailUrl(url) {
-                return url.split('#', 1).shift();
+            makeSafeUrlForThumbnail: utils.makeSafeUrlForThumbnail,
+
+            isGroup(obj) {
+                return 'tabs' in obj;
             },
 
             sortGroups(vector) {
@@ -392,9 +390,18 @@
                         event.dataTransfer.effectAllowed = 'move';
                         event.dataTransfer.setData('text/html', '');
 
-                        // if (itemType !== 'group') {
-                        //     event.dataTransfer.setDragImage(event.target, event.target.clientWidth / 2, event.target.clientHeight / 2);
-                        // }
+                        if ('tab' === itemType) {
+                            if (!this.multipleDropTabs.includes(data.item)) {
+                                this.multipleDropTabs.push(data.item);
+                            }
+
+                            if (1 < this.multipleDropTabs.length) {
+                                let multiTabsNode = document.getElementById('multipleTabsText');
+                                multiTabsNode.innerText = browser.i18n.getMessage('movingMultipleTabsText', this.multipleDropTabs.length);
+
+                                event.dataTransfer.setDragImage(multiTabsNode, multiTabsNode.clientWidth / 2, multiTabsNode.offsetHeight - 100);
+                            }
+                        }
                         break;
                     case 'dragenter':
                         event.preventDefault();
@@ -426,6 +433,10 @@
                         event.stopPropagation();
                         this.$emit('drag-moving', this.dragData.data.item, false);
 
+                        if (1 === this.multipleDropTabs.length) {
+                            this.multipleDropTabs = [];
+                        }
+
                         this.dragData = null;
                         break;
                 }
@@ -452,9 +463,15 @@
                 </div>
             </span>
             <span>
-                <div id="searchWrapper" :class="['field', {'has-addons': search}]">
+                <div id="search-wrapper" :class="['field', {'has-addons': search}]">
                     <div class="control is-expanded">
-                        <input :readonly="!isLoaded" ref="search" v-model.trim="search" type="text" class="input is-small" :placeholder="lang('filterTabsPlaceholder')" autocomplete="on" />
+                        <input
+                            type="text"
+                            class="input is-small search-input"
+                            ref="search"
+                            :placeholder="lang('searchPlaceholder')"
+                            :readonly="!isLoaded"
+                            v-model.trim="search" />
                     </div>
                     <div v-show="search" class="control">
                         <label class="button is-small" :title="lang('extendedTabSearch')">
@@ -480,7 +497,7 @@
 
                     <!--
 
-                        v-dnd:group.group="{itemIndex: groupIndex, item: group}"
+                        v-dnd:group.group="{item: group}"
 
                         TODO move to dnd.js
 
@@ -488,39 +505,40 @@
 
 
                      <div
-                        v-for="(group, groupIndex) in filteredGroups"
+                        v-for="group in filteredGroups"
                         :key="group.id"
                         :class="['group', {
                             'drag-moving': group.isMoving,
                             'drag-over': group.isOver,
-                            'loaded': group.windowId,
+                            'loaded': !!group.windowId,
                         }]"
                         @contextmenu="'INPUT' !== $event.target.nodeName && $refs.groupContextMenu.open($event, {group})"
 
                         :draggable="String(group.draggable)"
-                        @dragstart="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
-                        @dragenter="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
-                        @dragover="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
-                        @dragleave="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
-                        @drop="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
-                        @dragend="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
+                        @dragstart="dragHandle($event, 'group', ['group'], {item: group})"
+                        @dragenter="dragHandle($event, 'group', ['group'], {item: group})"
+                        @dragover="dragHandle($event, 'group', ['group'], {item: group})"
+                        @dragleave="dragHandle($event, 'group', ['group'], {item: group})"
+                        @drop="dragHandle($event, 'group', ['group'], {item: group})"
+                        @dragend="dragHandle($event, 'group', ['group'], {item: group})"
 
                         >
                         <div class="header">
+                            <div class="group-icon">
+                                <figure class="image is-16x16">
+                                    <img :src="group.iconUrlToDisplay" />
+                                </figure>
+                            </div>
                             <div class="group-title">
                                 <input
                                     type="text"
+                                    class="input is-small"
                                     @focus="group.draggable = false"
                                     @blur="group.draggable = true"
                                     v-model.lazy.trim="group.title"
                                     :placeholder="lang('title')"
                                     maxlength="120"
                                     />
-                            </div>
-                            <div class="group-icon">
-                                <figure class="image is-16x16">
-                                    <img :src="group.iconUrlToDisplay" />
-                                </figure>
                             </div>
                             <div class="tabs-count" v-text="lang('groupTabsCount', group.filteredTabs.length)"></div>
                             <div class="group-icon cursor-pointer is-unselectable" @click="openGroupSettings(group)" :title="lang('groupSettings')">
@@ -533,32 +551,31 @@
                         <div class="body">
                             <div
                                 v-for="tab in group.filteredTabs"
-                                :key="tab.index"
+                                :key="group.tabs.indexOf(tab)"
                                 :class="['tab', {
                                     'is-active': tab.active,
-                                    'is-current': tab.active && group.windowId,
                                     'is-in-multiple-drop': multipleDropTabs.includes(tab),
-                                    'has-thumbnail': thumbnails[prepareThumbnailUrl(tab.url)],
+                                    'has-thumbnail': thumbnails[makeSafeUrlForThumbnail(tab.url)],
                                     'drag-moving': tab.isMoving,
                                     'drag-over': tab.isOver,
                                 }]"
                                 :title="getTabTitle(tab, true)"
-                                @contextmenu.stop.prevent="$refs.tabsContextMenu.open($event, {tab, group, tabIndex: tab.index})"
+                                @contextmenu.stop.prevent="$refs.tabsContextMenu.open($event, {tab, group})"
 
-                                @click.stop="clickOnTab($event, tab.index, tab, group)"
+                                @click.stop="clickOnTab($event, tab, group)"
 
                                 draggable="true"
-                                @dragstart="dragHandle($event, 'tab', ['tab', 'group'], {itemIndex: tab.index, item: tab, group})"
-                                @dragenter="dragHandle($event, 'tab', ['tab', 'group'], {itemIndex: tab.index, item: tab, group})"
-                                @dragover="dragHandle($event, 'tab', ['tab', 'group'], {itemIndex: tab.index, item: tab, group})"
-                                @dragleave="dragHandle($event, 'tab', ['tab', 'group'], {itemIndex: tab.index, item: tab, group})"
-                                @drop="dragHandle($event, 'tab', ['tab', 'group'], {itemIndex: tab.index, item: tab, group})"
-                                @dragend="dragHandle($event, 'tab', ['tab', 'group'], {itemIndex: tab.index, item: tab, group})"
+                                @dragstart="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
+                                @dragenter="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
+                                @dragover="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
+                                @dragleave="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
+                                @drop="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
+                                @dragend="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
                                 >
                                 <div v-if="tab.favIconUrlToDisplay" class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <img class="size-16" :src="tab.favIconUrlToDisplay" />
                                 </div>
-                                <div class="delete-tab-button" @click.stop="removeTab(group, tab.index)" :title="lang('deleteTab')" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                <div class="delete-tab-button" @click.stop="removeTab(group, tab)" :title="lang('deleteTab')" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <img class="size-14" src="/icons/close.svg" />
                                 </div>
                                 <div v-if="tab.container" class="container" :title="tab.container.name" :style="{borderColor: tab.container.colorCode}">
@@ -568,18 +585,18 @@
                                     <img class="size-16" src="/icons/refresh.svg"/>
                                 </div>
                                 <div class="screenshot" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                    <img v-if="thumbnails[prepareThumbnailUrl(tab.url)]" :src="thumbnails[prepareThumbnailUrl(tab.url)]">
+                                    <img v-if="thumbnails[makeSafeUrlForThumbnail(tab.url)]" :src="thumbnails[makeSafeUrlForThumbnail(tab.url)]">
                                 </div>
                                 <div
                                     @mousedown.middle.prevent
-                                    @mouseup.middle.prevent="removeTab(group, tab.index)"
+                                    @mouseup.middle.prevent="removeTab(group, tab)"
                                     class="tab-title text-ellipsis"
                                     v-text="getTabTitle(tab)"></div>
                             </div>
 
                             <div class="tab new" :title="lang('createNewTab')" @click="addTab(group)">
                                 <div class="screenshot">
-                                    <img src="/icons/tab-new.svg" class="size-16">
+                                    <img src="/icons/tab-new.svg">
                                 </div>
                                 <div class="tab-title text-ellipsis" v-text="lang('createNewTab')"></div>
                             </div>
@@ -604,6 +621,8 @@
             </div>
         </transition>
 
+        <div id="multipleTabsText"></div>
+
         <context-menu ref="groupContextMenu">
             <ul slot-scope="menu" class="is-unselectable">
                 <li @click="addTab(menu.data.group)">
@@ -611,7 +630,7 @@
                     <span v-text="lang('createNewTab')"></span>
                 </li>
                 <li v-for="container in containers" :key="container.cookieStoreId" @click="addTab(menu.data.group, container.cookieStoreId)">
-                    <img :src="container.iconUrl" class="is-inline-block size-16 container-icon" :style="{fill: container.colorCode}" />
+                    <img :src="container.iconUrl" class="is-inline-block size-16 fill-context" :style="{fill: container.colorCode}" />
                     <span v-text="container.name"></span>
                 </li>
             </ul>
@@ -682,15 +701,16 @@
 <style lang="scss">
     :root {
         --margin: 5px;
-        --fill-color: #5d5d5d;
-        --outline-color: #2188ff;
-        --tab-hover-outline-color: #cfcfcf;
         --is-in-multiple-drop-text-color: #ffffff;
         --border-radius: 3px;
-        --group-shadow: 0 0 0 0.2em rgba(3, 102, 214, 0.3);
-        --tab-shadow: 0 0 2px 3px rgba(3, 102, 214, 0.5);
 
+        --group-active-shadow: 0 0 0 3.5px rgba(3, 102, 214, 0.3);
+        --group-active-border: 1px solid #2188ff;
         --group-bg-color: #fcfcfc;
+
+        --tab-active-shadow: var(--group-active-shadow);
+        --tab-active-border: var(--group-active-border);
+        --tab-hover-outline-color: #cfcfcf;
 
         --tab-inner-padding: 3px;
         --tab-inner-border-color: #c6ced4;
@@ -700,6 +720,18 @@
         --tab-buttons-size: 25px;
         --active-tab-bg-color: #e4e4e4;
         --multiple-drag-tab-bg-color: #1e88e5;
+    }
+
+    html.dark-theme {
+        --text-color: #e0e0e0;
+
+        --group-bg-color: #444444;
+        --group-active-shadow: 0 0 0 3.5px rgba(255, 255, 255, 0.3);
+        --group-active-border: 1px solid #e0e0e0;
+
+        --tab-bg-color: var(--group-bg-color);
+        --tab-active-shadow: var(--group-active-shadow);
+        --tab-active-border: var(--group-active-border);
     }
 
     .fade-enter-active, .fade-leave-active {
@@ -730,7 +762,7 @@
         }
     }
 
-    #searchWrapper {
+    #search-wrapper {
         width: 300px;
     }
 
@@ -742,6 +774,20 @@
         left: calc(100vw / 2 - 25px);
         fill: #6e6e6e;
         animation: spin 2s linear infinite;
+    }
+
+    #multipleTabsText {
+        position: fixed;
+        text-align: center;
+        color: #000;
+        font-size: 15px;
+        font-weight: bold;
+        background-color: #fff;
+        border-radius: 50%;
+        left: -1000%;
+        max-width: 450px;
+        padding: 100px;
+        pointer-events: none;
     }
 
     #result {
@@ -762,8 +808,6 @@
                 background-color: var(--group-bg-color);
                 border-radius: var(--border-radius);
 
-                transition: transform 0.3s;
-
                 > .header {
                     display: flex;
                     align-items: center;
@@ -775,20 +819,6 @@
 
                     > .group-title {
                         flex-grow: 1;
-
-                        > input {
-                            width: 100%;
-                            font-size: 12px;
-                            background-color: transparent;
-                            border: 1px solid #e4e4e4;
-                            padding: 1px 3px;
-                            border-radius: var(--border-radius);
-                        }
-
-                        > input:focus {
-                            border: 1px solid #d5d5d5;
-                            background-color: #ffffff;
-                        }
                     }
 
                     > .delete-group-button {
@@ -828,18 +858,9 @@
                     padding: var(--tab-inner-padding);
                     border-radius: var(--border-radius);
 
-                    > * > * {
-                        pointer-events: none;
-                    }
-
                     > * {
                         border: 0 solid var(--tab-inner-border-color);
                         background-color: var(--tab-bg-color);
-                    }
-
-                    img {
-                        -moz-context-properties: fill;
-                        fill: var(--fill-color);
                     }
 
                     > .tab-icon,
@@ -952,11 +973,13 @@
                     // }
 
                     &.is-active {
-                        outline: 1px solid var(--outline-color);
-                        box-shadow: var(--tab-shadow);
+                        box-shadow: var(--tab-active-shadow);
+                        outline: var(--tab-active-border);
+                        outline-offset: -1px;
+                        -moz-outline-radius: var(--border-radius);
                     }
 
-                    &:not(.is-active):hover {
+                    &:not(.is-active):not(.drag-moving):hover {
                         outline: 1px solid var(--tab-hover-outline-color);
                         outline-offset: 1px;
                     }
@@ -973,8 +996,8 @@
                 }
 
                 &.loaded {
-                    border-color: var(--outline-color);
-                    box-shadow: var(--group-shadow);
+                    box-shadow: var(--group-active-shadow);
+                    border: var(--group-active-border);
                 }
 
                 &.new {
@@ -989,11 +1012,15 @@
 
                         > img {
                             width: 100px;
-                            -moz-context-properties: fill;
-                            fill: var(--fill-color);
                         }
                     }
                 }
+            }
+
+            .group,
+            .group .tab {
+                will-change: transform;
+                transition: transform 0.3s;
             }
         }
 
@@ -1009,36 +1036,25 @@
 
         /* Drag & Drop Styles */
 
-        .drag-over {
-            outline: 2px dashed rgba(0, 0, 0, 0.5) !important;
+        .grid .group.drag-over {
+            outline-offset: 3px;
         }
 
-        .group.drag-over {
-            outline-offset: 3px;
+        .grid .group .tab.drag-moving.drag-over,
+        .grid .group .tab.is-in-multiple-drop.drag-over {
+            outline-offset: 4px;
         }
 
         .drag-moving,
         .drag-tab .tab.is-in-multiple-drop {
             opacity: 0.4;
-            animation-name: in-out;
-            animation-duration: 0.5s;
-            animation-iteration-count: infinite;
-            animation-direction: alternate;
+            transform: scale(0.8);
         }
     }
 
     @keyframes spin {
         100% {
             transform: rotate(360deg);
-        }
-    }
-
-    @keyframes in-out {
-        from {
-            transform: scale(0.95);
-        }
-        to {
-            transform: scale(0.8);
         }
     }
 

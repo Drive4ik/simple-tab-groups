@@ -3,7 +3,6 @@
 
     import * as utils from '../js/utils';
     import storage from '../js/storage';
-    import * as constants from '../js/constants';
 
     import Vue from 'vue';
 
@@ -63,10 +62,12 @@
                 groupToRemove: null,
 
                 containers: [],
-                options: {},
+                options: BG.getOptions(),
                 groups: [],
 
                 unSyncTabs: [],
+
+                multipleMoveTabs: [],
             };
         },
         components: {
@@ -75,34 +76,15 @@
             'edit-group': editGroup,
             'context-menu': contextMenu,
         },
-        created() {
-            this
-                .$on('drag-move-group', function(from, to) {
-                    BG.moveGroup(from.data.item.id, to.data.itemIndex);
-                })
-                .$on('drag-move-tab', function(from, to) {
-                    let newTabIndex = undefined,
-                        groupTo = null;
+        async created() {
+            if (this.options.enableDarkTheme) {
+                document.documentElement.classList.add('dark-theme');
+            }
 
-                    if (to.data.isGroup) {
-                        groupTo = to.data.item;
-                    } else {
-                        groupTo = to.data.group;
-                        newTabIndex = to.data.itemIndex;
-                    }
-
-                    BG.moveTabToGroup(from.data.itemIndex, newTabIndex, from.data.group.id, groupTo.id, false);
-                })
-                .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
-                .$on('drag-over', (item, isOver) => item.isOver = isOver);
-        },
-        async mounted() {
             let currentWindow = await BG.getWindow();
             this.currentWindowId = currentWindow.id;
 
             this.containers = await utils.loadContainers();
-
-            this.options = await storage.get(constants.allOptionsKeys);
 
             this.loadGroups();
 
@@ -110,7 +92,24 @@
 
             this.setupListeners();
 
-            this.$refs.search.focus();
+            this
+                .$on('drag-move-group', function(from, to) {
+                    BG.moveGroup(from.data.item.id, this.groups.indexOf(to.data.item));
+                })
+                .$on('drag-move-tab', function(from, to) {
+                    let tabsData = this.getTabForMove(from.data.item);
+
+                    BG.moveTabs(tabsData, {
+                            newTabIndex: to.data.group.tabs.indexOf(to.data.item),
+                            groupId: to.data.group.id,
+                        }, false)
+                        .catch(utils.notify);
+                })
+                .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
+                .$on('drag-over', (item, isOver) => item.isOver = isOver);
+        },
+        async mounted() {
+            this.setFocus();
 
             this.$nextTick(function() {
                 let activeItemNode = document.querySelector('.is-active');
@@ -121,6 +120,14 @@
             });
         },
         watch: {
+            section() {
+                this.multipleMoveTabs = [];
+            },
+            groupToEdit(groupToEdit) {
+                if (!groupToEdit) {
+                    this.setFocus();
+                }
+            },
             search(search) {
                 if (search) {
                     this.showSectionSearch();
@@ -145,10 +152,7 @@
                     groups = [];
 
                 this.groups.forEach(function(group) {
-                    group.filteredTabsBySearch = group.tabs.filter(function(tab, tabIndex) {
-                        tab.index = tabIndex;
-                        return utils.mySearchFunc(searchStr, tab.title, this.extendedSearch) || utils.mySearchFunc(searchStr, tab.url, this.extendedSearch);
-                    }, this);
+                    group.filteredTabsBySearch = group.tabs.filter(tab => utils.mySearchFunc(searchStr, utils.getTabTitle(tab, true), this.extendedSearch));
 
                     if (group.filteredTabsBySearch.length || utils.mySearchFunc(searchStr, group.title, this.extendedSearch)) {
                         group.filteredTabsBySearch.sort(this.$_simpleSortTabs.bind(null, searchStr));
@@ -163,27 +167,33 @@
             lang: browser.i18n.getMessage,
             safeHtml: utils.safeHtml,
 
+            setFocus() {
+                this.$refs.search.focus();
+            },
+
             setupListeners() {
                 let listener = function(request, sender) {
                     if (!utils.isAllowSender(request, sender)) {
                         return;
                     }
 
-                    console.info('BG event:', request.action, utils.clone(request));
-
                     switch (request.action) {
                         case 'group-updated':
-                            let groupIndex = this.groups.findIndex(group => group.id === request.group.id);
+                            let group = this.groups.find(gr => gr.id === request.group.id);
 
                             if (request.group.tabs) {
-                                request.group.tabs = request.group.tabs.map(this.$_tabMap, this);
+                                group.tabs.forEach(function(tab) {
+                                    let multipleTabIndex = this.multipleMoveTabs.indexOf(tab);
 
-                                if (this.hoverItem && !this.isGroup(this.hoverItem) && this.hoverItem.id) {
-                                    this.hoverItem = request.group.tabs.find(tab => tab.id === this.hoverItem.id) || null;
-                                }
+                                    if (-1 !== multipleTabIndex) {
+                                        this.multipleMoveTabs.splice(multipleTabIndex, 1);
+                                    }
+                                }, this);
+
+                                request.group.tabs = request.group.tabs.map(this.$_tabMap, this);
                             }
 
-                            Object.assign(this.groups[groupIndex], request.group);
+                            Object.assign(group, request.group);
                             break;
                         case 'group-added':
                             this.groups.push(this.$_groupMap(request.group));
@@ -221,8 +231,8 @@
             },
 
             $_simpleSortTabs(searchStr, a, b) {
-                let aIncludes = (a.title || '').toLowerCase().includes(searchStr) || a.url.includes(searchStr),
-                    bIncludes = (b.title || '').toLowerCase().includes(searchStr) || b.url.includes(searchStr);
+                let aIncludes = utils.getTabTitle(a, true).toLowerCase().includes(searchStr),
+                    bIncludes = utils.getTabTitle(b, true).toLowerCase().includes(searchStr);
 
                 if (aIncludes && !bIncludes) { // move up
                     return -1;
@@ -291,6 +301,8 @@
                 if (this.hoverItem && this.isGroup(this.hoverItem)) {
                     this.hoverItem = this.groups.find(group => group.id === this.hoverItem.id) || null;
                 }
+
+                this.multipleMoveTabs = [];
             },
             async loadUnsyncedTabs() {
                 let unSyncTabs = await browser.tabs.query({
@@ -311,19 +323,16 @@
             },
 
             createNewGroup() {
-                BG.addGroup(undefined, undefined, undefined, undefined, this.nextGroupTitle);
+                BG.addGroup(undefined, undefined, this.nextGroupTitle);
             },
 
             addTab(cookieStoreId) {
                 BG.addTab(this.groupToShow.id, cookieStoreId);
             },
             removeTab(groupId, tabIndex) {
-                this.groups.some(function(group) {
-                    if (group.id === groupId) {
-                        group.tabs.splice(tabIndex, 1);
-                        return true;
-                    }
-                });
+                let group = this.groups.find(gr => gr.id === groupId);
+
+                group.tabs.splice(tabIndex, 1);
 
                 BG.removeTab(groupId, tabIndex);
             },
@@ -331,10 +340,25 @@
                 browser.tabs.remove(tab.id);
                 this.unSyncTabs.splice(this.unSyncTabs.indexOf(tab), 1);
             },
+
+            clickOnTab(event, tab, group) {
+                if (event.ctrlKey) {
+                    if (this.multipleMoveTabs.includes(tab)) {
+                        this.multipleMoveTabs.splice(this.multipleMoveTabs.indexOf(tab), 1);
+                    } else {
+                        this.multipleMoveTabs.push(tab);
+                    }
+                } else {
+                    this.loadGroup(group, group.tabs.indexOf(tab));
+                }
+            },
+
             async loadGroup(group, tabIndex = -1, closePopup = false) {
                 if (this.someGroupAreLoading) {
                     return;
                 }
+
+                this.multipleMoveTabs = [];
 
                 let isCurrentGroup = group === this.currentGroup;
 
@@ -351,15 +375,13 @@
                     group.tabs.forEach((tab, index) => tab.active = index === tabIndex);
                 }
 
-                let groupIndex = this.groups.findIndex(gr => gr.id === group.id);
-
                 if (closePopup) {
-                    BG.loadGroup(this.currentWindowId, groupIndex, tabIndex);
+                    BG.loadGroup(this.currentWindowId, group.id, tabIndex);
                     window.close();
                 } else {
                     this.someGroupAreLoading = true;
 
-                    await BG.loadGroup(this.currentWindowId, groupIndex, tabIndex);
+                    await BG.loadGroup(this.currentWindowId, group.id, tabIndex);
 
                     this.someGroupAreLoading = false;
 
@@ -390,7 +412,7 @@
                 this.loadGroups();
             },
             async unsyncHiddenTabsCreateNewGroup() {
-                await BG.addGroup(undefined, undefined, undefined, this.unSyncTabs);
+                await BG.addGroup(undefined, this.unSyncTabs);
 
                 this.unSyncTabs = [];
             },
@@ -414,10 +436,7 @@
                 if (group.windowId) {
                     BG.setFocusOnWindow(group.windowId);
                 } else {
-                    let win = await BG.createWindow(),
-                        groupIndex = this.groups.findIndex(gr => gr.id === group.id);
-
-                    BG.loadGroup(win.id, groupIndex);
+                    await BG.createWindow(undefined, group.id);
                 }
             },
 
@@ -439,21 +458,50 @@
 
                 this.showSectionDefault();
             },
-            async moveTabToGroup(oldTabIndex, oldGroupId, newGroupId, callLoadUnsyncedTabs) {
-                await BG.moveTabToGroup(oldTabIndex, undefined, oldGroupId, newGroupId);
+            getTabForMove(withTab) {
+                if (!this.multipleMoveTabs.includes(withTab)) {
+                    this.multipleMoveTabs.push(withTab);
+                }
 
-                if (callLoadUnsyncedTabs) {
+                let result = this.multipleMoveTabs
+                    .map(function(tab) {
+                        let tabData = {};
+
+                        if (tab.id) {
+                            tabData.tabId = tab.id;
+                        } else {
+                            let group = this.groups.find(gr => gr.tabs.includes(tab));
+
+                            tabData.tabIndex = group.tabs.indexOf(tab);
+                            tabData.groupId = group.id;
+                        }
+
+                        return tabData;
+                    }, this);
+
+                this.multipleMoveTabs = [];
+
+                return result;
+            },
+            async moveTab(tab, newGroup, loadUnsync) {
+                let tabsData = this.getTabForMove(tab);
+
+                try {
+                    await BG.moveTabs(tabsData, {
+                        groupId: newGroup.id,
+                    }, false);
+                } catch (e) {
+                    utils.notify(e);
+                }
+
+                if (loadUnsync) {
                     this.loadUnsyncedTabs();
                 }
             },
-            async moveTabToNewGroup(oldTabIndex, oldGroupId, callLoadUnsyncedTabs) {
-                let newGroup = await BG.addGroup(undefined, undefined, false);
+            async moveTabToNewGroup(tab, loadUnsync) {
+                let newGroup = await BG.addGroup();
 
-                await BG.moveTabToGroup(oldTabIndex, undefined, oldGroupId, newGroup.id);
-
-                if (callLoadUnsyncedTabs) {
-                    this.loadUnsyncedTabs();
-                }
+                await this.moveTab(tab, newGroup, loadUnsync);
             },
             setTabIconAsGroupIcon(tab) {
                 BG.updateGroup(this.groupToShow.id, {
@@ -470,7 +518,7 @@
                 if (group.tabs.length) {
                     title += ':\n' + group.tabs
                         .slice(0, 30)
-                        .map(tab => utils.sliceText(tab.title, 70))
+                        .map(tab => utils.sliceText(utils.getTabTitle(tab), 70))
                         .join('\n');
 
                     if (group.tabs.length > 30) {
@@ -574,13 +622,7 @@
                             return;
                         }
 
-                        let allItems = this.filteredGroupsBySearch.reduce(function(accum, group) {
-                            accum.push(group);
-
-                            group.filteredTabsBySearch.forEach(tab => accum.push(tab));
-
-                            return accum;
-                        }, []);
+                        let allItems = this.filteredGroupsBySearch.reduce((accum, group) => accum.concat([group]).concat(group.filteredTabsBySearch), []);
 
                         index = this.hoverItem ? allItems.indexOf(this.hoverItem) : -1;
 
@@ -604,26 +646,18 @@
                                     this.loadGroup(this.hoverItem, undefined, true);
                                 } else { // is tab
                                     // find group
-                                    let group = null;
-
-                                    for (let i = allItems.indexOf(this.hoverItem); i >= 0; i--) { // wheel up - find group
-                                        if (this.isGroup(allItems[i])) {
-                                            group = allItems[i];
-                                            break;
-                                        }
-                                    }
-
-                                    this.loadGroup(group, this.hoverItem.index, true);
+                                    let group = this.groups.find(gr => gr.tabs.includes(this.hoverItem));
+                                    this.loadGroup(group, group.tabs.indexOf(this.hoverItem), true);
                                 }
                             }
                         }
 
                         break;
                     case SECTION_GROUPS_LIST:
-                        index = this.hoverItem ? this.groups.indexOf(this.hoverItem) : -1;
+                        index = this.groups.indexOf(this.hoverItem);
 
                         if (-1 === index) {
-                            index = this.groups.findIndex(group => group === this.currentGroup);
+                            index = this.groups.indexOf(this.currentGroup);
                         }
 
                         if ('up' === arrow) {
@@ -648,7 +682,7 @@
 
                         break;
                     case SECTION_GROUP_TABS:
-                        index = this.hoverItem ? this.groupToShow.tabs.indexOf(this.hoverItem) : -1;
+                        index = this.groupToShow.tabs.indexOf(this.hoverItem);
 
                         if (-1 === index && this.groupToShow.windowId) {
                             index = this.groupToShow.tabs.findIndex(tab => tab.active);
@@ -667,10 +701,9 @@
                                 this.loadGroup(this.groupToShow, index, true);
                             }
                         } else if ('delete' === arrow) {
-                            if (this.hoverItem && !this.isGroup(this.hoverItem)) {
-                                let tabIndex = this.groupToShow.tabs.indexOf(this.hoverItem);
-                                await this.setHoverItemByKey('down', event);
-                                this.removeTab(this.groupToShow.id, tabIndex);
+                            if (this.hoverItem && this.groupToShow.tabs.includes(this.hoverItem)) {
+                                this.removeTab(this.groupToShow.id, index);
+                                this.hoverItem = null;
                             }
                         }
 
@@ -699,7 +732,7 @@
 <template>
     <div
         id="stg-popup"
-        :class="['is-flex is-column', {'edit-group-popup': !!groupToEdit}]"
+        :class="['is-flex is-column no-outline', {'edit-group-popup': !!groupToEdit}]"
         @contextmenu="['INPUT', 'TEXTAREA'].includes($event.target.nodeName) ? null : $event.preventDefault()"
         @wheel.ctrl.prevent
 
@@ -719,8 +752,16 @@
                 <div class="control is-expanded"
                     @keydown.arrow-right.stop @keyup.arrow-right.stop
                     @keydown.arrow-left.stop @keyup.arrow-left.stop
+                    @keydown.delete.stop @keyup.delete.stop
                     >
-                    <input id="search" v-model.trim="search" @input="$refs.search.value === '' ? showSectionDefault() : null" ref="search" type="text" class="input is-small no-shadow" autocomplete="off" :placeholder="lang('searchPlaceholder')" />
+                    <input
+                        type="text"
+                        class="input is-small search-input"
+                        ref="search"
+                        v-model.trim="search"
+                        @input="$refs.search.value === '' ? showSectionDefault() : null"
+                        autocomplete="off"
+                        :placeholder="lang('searchPlaceholder')" />
                 </div>
                 <div v-show="search" class="control">
                     <label class="button is-small" :title="lang('extendedTabSearch')">
@@ -752,21 +793,22 @@
                                     <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                                 </div>
                                 <div class="item-title" :title="group.title" v-text="group.title"></div>
-                                <div class="item-action hover is-unselectable" @click.stop="showSectionGroupTabs(group)">
+                                <div class="item-action bold-hover is-unselectable" @click.stop="showSectionGroupTabs(group)">
                                     <img class="size-16 rotate-180" src="/icons/arrow-left.svg" />
                                     <span class="tabs-text" v-text="lang('groupTabsCount', group.tabs.length)"></span>
                                 </div>
                             </div>
                         </div>
 
-                        <div v-for="tab in group.filteredTabsBySearch" :key="tab.index"
-                            @contextmenu="$refs.tabsContextMenu.open($event, {tab, group, tabIndex: tab.index})"
-                            @click="loadGroup(group, tab.index)"
+                        <div v-for="(tab, index) in group.filteredTabsBySearch" :key="index"
+                            @contextmenu="$refs.tabsContextMenu.open($event, {tab, group})"
+                            @click="clickOnTab($event, tab, group)"
                             @mousedown.middle.prevent
-                            @mouseup.middle.prevent="removeTab(group.id, tab.index)"
-                            :class="['item is-unselectable space-left', {
+                            @mouseup.middle.prevent="removeTab(group.id, group.tabs.indexOf(tab))"
+                            :class="['tab item is-unselectable space-left', {
                                 'is-active': group === currentGroup && tab.active,
                                 'is-hovered-item': tab === hoverItem,
+                                'is-multiple-tab-to-move': multipleMoveTabs.includes(tab),
                             }]"
                             :title="getTabTitle(tab, true)"
                             >
@@ -782,7 +824,7 @@
                                 </span>
                             </div>
                             <div class="item-action flex-on-hover">
-                                <span class="size-16 cursor-pointer" @click.stop="removeTab(group.id, tab.index)" :title="lang('deleteTab')">
+                                <span class="size-16 cursor-pointer" @click.stop="removeTab(group.id, group.tabs.indexOf(tab))" :title="lang('deleteTab')">
                                     <img src="/icons/close.svg" />
                                 </span>
                             </div>
@@ -801,7 +843,7 @@
             <div v-show="section === SECTION_GROUPS_LIST">
                 <div class="groups">
                     <div
-                        v-for="(group, groupIndex) in groups"
+                        v-for="group in groups"
                         :key="group.id"
                         :class="['group', {
                             'drag-moving': group.isMoving,
@@ -810,12 +852,12 @@
                         @contextmenu="$refs.groupContextMenu.open($event, {group})"
 
                         draggable="true"
-                        @dragstart="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
-                        @dragenter="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
-                        @dragover="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
-                        @dragleave="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
-                        @drop="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
-                        @dragend="dragHandle($event, 'group', ['group'], {itemIndex: groupIndex, item: group, isGroup: true})"
+                        @dragstart="dragHandle($event, 'group', ['group'], {item: group})"
+                        @dragenter="dragHandle($event, 'group', ['group'], {item: group})"
+                        @dragover="dragHandle($event, 'group', ['group'], {item: group})"
+                        @dragleave="dragHandle($event, 'group', ['group'], {item: group})"
+                        @drop="dragHandle($event, 'group', ['group'], {item: group})"
+                        @dragend="dragHandle($event, 'group', ['group'], {item: group})"
                         >
                         <div
                             :class="['item', {
@@ -829,7 +871,7 @@
                                 <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                             </div>
                             <div class="item-title" v-text="group.title"></div>
-                            <div class="item-action hover is-unselectable" :title="getFullGroupTitleWithTabs(group)" @click.stop="showSectionGroupTabs(group)">
+                            <div class="item-action bold-hover is-unselectable" :title="getFullGroupTitleWithTabs(group)" @click.stop="showSectionGroupTabs(group)">
                                 <img class="size-16 rotate-180" src="/icons/arrow-left.svg" />
                                 <span class="tabs-text" v-text="lang('groupTabsCount', group.tabs.length)"></span>
                             </div>
@@ -860,10 +902,12 @@
                     <div>
                         <div v-for="tab in unSyncTabs" :key="tab.id"
                             @contextmenu="$refs.tabsContextMenu.open($event, {tab})"
-                            @click="unsyncHiddenTabsShowTabIntoCurrentWindow(tab)"
+                            @click="$event.ctrlKey ? clickOnTab($event, tab) : unsyncHiddenTabsShowTabIntoCurrentWindow(tab)"
                             @mousedown.middle.prevent
                             @mouseup.middle.prevent="removeUnSyncTab(tab)"
-                            class="item is-unselectable"
+                            :class="['tab item is-unselectable', {
+                                'is-multiple-tab-to-move': multipleMoveTabs.includes(tab),
+                            }]"
                             :title="getTabTitle(tab, true)"
                             >
                             <div class="item-icon">
@@ -913,25 +957,26 @@
                     <div
                         v-for="(tab, tabIndex) in groupToShow.tabs"
                         :key="tabIndex"
-                        @contextmenu="$refs.tabsContextMenu.open($event, {tab, tabIndex, group: groupToShow})"
-                        @click="loadGroup(groupToShow, tabIndex)"
+                        @contextmenu="$refs.tabsContextMenu.open($event, {tab, group: groupToShow})"
+                        @click="clickOnTab($event, tab, groupToShow)"
                         @mousedown.middle.prevent
                         @mouseup.middle.prevent="removeTab(groupToShow.id, tabIndex)"
-                        :class="['item is-unselectable', {
+                        :class="['tab item is-unselectable', {
                             'is-active': groupToShow === currentGroup && tab.active,
                             'drag-moving': tab.isMoving,
                             'drag-over': tab.isOver,
                             'is-hovered-item': tab === hoverItem,
+                            'is-multiple-tab-to-move': multipleMoveTabs.includes(tab),
                         }]"
                         :title="getTabTitle(tab, true)"
 
                         draggable="true"
-                        @dragstart="dragHandle($event, 'tab', ['tab'], {itemIndex: tabIndex, item: tab, group: groupToShow})"
-                        @dragenter="dragHandle($event, 'tab', ['tab'], {itemIndex: tabIndex, item: tab, group: groupToShow})"
-                        @dragover="dragHandle($event, 'tab', ['tab'], {itemIndex: tabIndex, item: tab, group: groupToShow})"
-                        @dragleave="dragHandle($event, 'tab', ['tab'], {itemIndex: tabIndex, item: tab, group: groupToShow})"
-                        @drop="dragHandle($event, 'tab', ['tab'], {itemIndex: tabIndex, item: tab, group: groupToShow})"
-                        @dragend="dragHandle($event, 'tab', ['tab'], {itemIndex: tabIndex, item: tab, group: groupToShow})"
+                        @dragstart="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
+                        @dragenter="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
+                        @dragover="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
+                        @dragleave="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
+                        @drop="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
+                        @dragend="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
                         >
                         <div class="item-icon">
                             <img :src="tab.favIconUrlToDisplay" class="size-16" />
@@ -964,7 +1009,7 @@
                         <context-menu v-if="containers.length" ref="createNewTabContextMenu">
                             <ul class="is-unselectable">
                                 <li v-for="container in containers" :key="container.cookieStoreId" @click="addTab(container.cookieStoreId)">
-                                    <img :src="container.iconUrl" class="is-inline-block size-16 container-icon" :style="{fill: container.colorCode}" />
+                                    <img :src="container.iconUrl" class="is-inline-block size-16 fill-context" :style="{fill: container.colorCode}" />
                                     <span v-text="container.name"></span>
                                 </li>
                             </ul>
@@ -1037,15 +1082,14 @@
                     :key="group.id"
                     :class="{'is-disabled': menu.data.group ? menu.data.group.id === group.id : false}"
                     @click="menu.data.group
-                        ? (menu.data.group.id !== group.id && moveTabToGroup(menu.data.tabIndex, menu.data.group.id, group.id))
-                        : moveTabToGroup(menu.data.tab.id, undefined, group.id, true)
-                        "
+                        ? menu.data.group.id !== group.id && moveTab(menu.data.tab, group)
+                        : moveTab(menu.data.tab, group, true)"
                     >
                     <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                     <span v-text="group.title"></span>
                 </li>
 
-                <li @click="menu.data.group ? moveTabToNewGroup(menu.data.tabIndex, menu.data.group.id) : moveTabToNewGroup(menu.data.tab.id, undefined, true)">
+                <li @click="moveTabToNewGroup(menu.data.tab, !menu.data.group)">
                     <img src="/icons/group-new.svg" class="size-16" />
                     <span v-text="lang('createNewGroup')"></span>
                 </li>
@@ -1130,10 +1174,13 @@
         --max-popup-height: 600px;
         --min-popup-height: 200px;
 
-        --color-light-gray: #eceded;
-        --color-gray: #e3e3e3;
-        --color-dark-gray: #d4d4d4;
-        --color-dark-dark-gray: #bababa;
+        --item-background-color-active: var(--color-light-gray);
+        --item-background-color-hover: var(--color-gray);
+        --item-background-color-active-hover: var(--color-dark-gray);
+
+        --footer-background-color: var(--item-background-color-active);
+        --footer-background-hover-color: var(--item-background-color-hover);
+
     }
 
     html {
@@ -1143,6 +1190,15 @@
         max-width: var(--max-popup-width);
         // max-height: calc(var(--max-popup-height) - 10px);
         overflow-x: hidden;
+    }
+
+    html.dark-theme {
+        --item-background-color-active: #686869;
+        --item-background-color-hover: var(--input-background-color);
+        --item-background-color-active-hover: #4b4b4b;
+
+        --footer-background-color: var(--item-background-color-active-hover);
+        --footer-background-hover-color: var(--item-background-color-hover);
     }
 
     #stg-popup {
@@ -1165,10 +1221,10 @@
             align-items: center;
             justify-content: space-between;
             cursor: default;
-            background-color: var(--color-light-gray);
+            background-color: var(--footer-background-color);
 
             > :hover {
-                background-color: var(--color-gray);
+                background-color: var(--footer-background-hover-color);
             }
 
             .manage-groups span {
@@ -1178,7 +1234,7 @@
                 max-width: 165px;
             }
 
-            & > *:not(.is-vertical-separator) {
+            > *:not(.is-vertical-separator) {
                 padding: 0 20px;
             }
 
@@ -1196,11 +1252,11 @@
         }
 
         .drag-over {
-            outline: 2px dashed rgba(0, 0, 0, 0.5) !important;
             outline-offset: -3px;
         }
 
-        .drag-moving {
+        .drag-moving,
+        .drag-tab .is-multiple-tab-to-move {
             opacity: 0.4;
         }
     }
@@ -1208,11 +1264,6 @@
     /* END HELPERS */
     #search-wrapper {
         padding: var(--indent);
-    }
-
-    #search {
-        background: url('/icons/search.svg') no-repeat 4px center;
-        padding-left: calc(16px + (2 * 4px));
     }
 
     .item {
@@ -1233,22 +1284,33 @@
             padding-right: var(--indent);
         }
 
-        // &.is-hover,
-        &:not(.no-hover):not(.is-active):hover {
-            background-color: var(--color-light-gray);
+        &.is-active:before,
+        &.is-multiple-tab-to-move:before {
+            content: '';
+            position: absolute;
+            background-color: var(--in-content-border-focus);
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
         }
 
-        &.is-active,
+        &.is-active.is-multiple-tab-to-move:before {
+            width: 6px;
+        }
+
+        &:not(.no-hover):hover,
         &.is-hovered-item {
-            background-color: var(--color-gray);
+            background-color: var(--item-background-color-hover);
         }
 
-        .hover:hover {
-            background-color: var(--color-dark-gray);
+        .item-action.bold-hover:hover {
+            background-color: var(--item-background-color-active-hover);
         }
 
-        &:not(.no-hover):active {
-            background-color: var(--color-dark-gray) !important;
+        &:not(.no-hover):active,
+        &.is-active {
+            background-color: var(--item-background-color-active-hover);
         }
 
         .item-icon {
@@ -1275,7 +1337,6 @@
             align-self: stretch;
             padding-left: 5px;
             white-space: nowrap;
-            line-height: 1;
         }
 
         .item-action > :not(:first-child) {
@@ -1295,12 +1356,14 @@
         text-align: center;
     }
 
+    .group,
+    .tab {
+        position: relative;
+    }
+
     .group .tabs-text {
-        white-space: nowrap;
         overflow: hidden;
-        display: inline-block;
         text-overflow: ellipsis;
-        height: 16px;
     }
 
     .groups .item .item-action {

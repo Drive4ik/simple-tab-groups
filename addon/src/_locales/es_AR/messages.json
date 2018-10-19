@@ -57,21 +57,9 @@
         "message": "Cancelar",
         "description": "Cancel"
     },
-    "privateAndPinnedTabsAreNotSupported": {
-        "message": "Las pestañas privadas y fijadas no son soportadas",
-        "description": "Private and pinned tabs are not supported"
-    },
-    "thisTabIsNotSupported": {
-        "message": "Esta pestaña no es soportada",
-        "description": "This tab is not supported"
-    },
     "searchPlaceholder": {
         "message": "Buscar una pestaña...",
         "description": "Search placeholder"
-    },
-    "filterTabsPlaceholder": {
-        "message": "Filtrar pestañas (filtro múltiple utilizando *)",
-        "description": "Filter tabs (multiple filter with *)"
     },
     "invalidRegExpRuleTitle": {
         "message": "Regla '$regexp$' no es validad y sera omitida.",
@@ -146,10 +134,6 @@
     "importSettingsOldTabGroupsAddonDescription": {
         "message": "Cargar un archivo de copia de resguardo del viejo addon \"Tab Groups\"",
         "description": "Load a backup file old \"Tab Groups\" addon."
-    },
-    "importSettingsOldTabGroupsAddonButton": {
-        "message": "Importar la configuración desde el addon \"Tab Groups\" de Quicksaver",
-        "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
     },
     "openGroupAfterChange": {
         "message": "Abrir el grupo después de cambiar a él",

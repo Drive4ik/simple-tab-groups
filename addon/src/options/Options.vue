@@ -3,8 +3,10 @@
 
     import * as utils from '../js/utils';
     import storage from '../js/storage';
-    import {onlyBoolOptionsKeys, allOptionsKeys, groupIconViewTypes, DEFAULT_COOKIE_STORE_ID} from '../js/constants';
-    import {importFromFile, exportToFile, generateBackupFileName} from '../js/fileImportExport';
+    import * as constants from '../js/constants';
+    import * as file from '../js/file';
+
+    import popup from '../js/popup.vue';
 
     const BG = (function(bgWin) {
         return bgWin && bgWin.background && bgWin.background.inited ? bgWin.background : false;
@@ -12,13 +14,16 @@
 
     if (!BG) {
         setTimeout(() => window.location.reload(), 3000);
+        document.getElementById('stg-options').innerText = browser.i18n.getMessage('waitingToLoadAllTabs');
         throw Error('wait loading addon');
     }
 
     const SECTION_GENERAL = 'general',
         SECTION_HOTKEYS = 'hotkeys',
         SECTION_BACKUP = 'backup',
-        SECTION_DEFAULT = SECTION_GENERAL;
+        SECTION_DEFAULT = SECTION_GENERAL,
+        _funcKeys = [...Array(12).keys()].map(n => n + 1),
+        isFunctionKey = keyCode => _funcKeys.some(n => keyCode === KeyEvent[`DOM_VK_F${n}`]);
 
     export default {
         data() {
@@ -38,6 +43,7 @@
                     'add-new-group',
                     'delete-current-group',
                     'open-manage-groups',
+                    'move-active-tab-to-custom-group',
                 ],
 
                 openPopupCommand: {
@@ -48,7 +54,7 @@
                     key: '',
                 },
 
-                groupIconViewTypes: groupIconViewTypes,
+                groupIconViewTypes: constants.groupIconViewTypes,
 
                 includeTabThumbnailsIntoBackup: false,
                 includeTabFavIconsIntoBackup: true,
@@ -61,22 +67,27 @@
                 groups: [],
                 isMac: false,
 
+                showEnableDarkThemeNotification: false,
+
                 errorLogs: BG.getLogs(),
             };
         },
+        components: {
+            popup: popup,
+        },
         async mounted() {
-            let { os } = await browser.runtime.getPlatformInfo();
-            this.isMac = os === 'mac';
+            let platformInfo = await browser.runtime.getPlatformInfo();
+            this.isMac = platformInfo.os === 'mac';
 
             let data = await storage.get(null);
 
             this.calculateThumbnailsSize(data.thumbnails);
 
-            this.options = utils.extractKeys(data, allOptionsKeys);
+            this.options = utils.extractKeys(data, constants.allOptionsKeys);
             this.groups = Array.isArray(data.groups) ? data.groups : [];
 
-            onlyBoolOptionsKeys
-                .concat(['defaultGroupIconViewType'])
+            constants.onlyBoolOptionsKeys
+                .concat(['defaultGroupIconViewType', 'autoBackupIntervalKey'])
                 .forEach(function(option) {
                     this.$watch(`options.${option}`, function(newValue) {
                         this.saveOptions({
@@ -88,6 +99,28 @@
             this.initPopupHotkey();
         },
         watch: {
+            'options.autoBackupIntervalValue': function(value, oldValue) {
+                if (!value || null == oldValue) {
+                    return;
+                }
+
+                if (1 > value || 20 < value) {
+                    value = 1;
+                }
+
+                this.saveOptions({
+                    autoBackupIntervalValue: value,
+                });
+            },
+            'options.enableDarkTheme': function(enableDarkTheme, oldValue) {
+                if (null == oldValue) {
+                    return;
+                }
+
+                if (enableDarkTheme) {
+                    this.showEnableDarkThemeNotification = true;
+                }
+            },
             'options.hotkeys': {
                 handler(hotkeys, oldValue) {
                     if (!oldValue) {
@@ -95,7 +128,7 @@
                     }
 
                     let filteredHotkeys = hotkeys.filter(function(hotkey) {
-                        let ok = (hotkey.keyCode || hotkey.key) && hotkey.action/* && (hotkey.ctrlKey || hotkey.shiftKey || hotkey.altKey)*/;
+                        let ok = (hotkey.keyCode || hotkey.key) && hotkey.action && (hotkey.ctrlKey || hotkey.shiftKey || hotkey.altKey || isFunctionKey(hotkey.keyCode));
 
                         if (ok && 'load-custom-group' === hotkey.action && !this.groups.some(gr => gr.id === hotkey.groupId)) {
                             ok = false;
@@ -120,8 +153,10 @@
             lang: browser.i18n.getMessage,
             getHotkeyActionTitle: action => browser.i18n.getMessage('hotkeyActionTitle' + utils.capitalize(utils.toCamelCase(action))),
 
+            openBackupFolder: file.openBackupFolder,
+
             async saveOptions(options) {
-                await storage.set(options, true);
+                await storage.set(utils.clone(options));
                 await browser.runtime.sendMessage({
                     action: 'options-updated',
                     optionsUpdated: Object.keys(options),
@@ -210,7 +245,7 @@
 
             async importAddonSettings() {
                 try {
-                    let data = await importFromFile();
+                    let data = await file.load();
 
                     if ('object' !== utils.type(data) || !Array.isArray(data.groups)) {
                         throw 'Error: this is wrong backup!';
@@ -228,39 +263,18 @@
                 }
             },
 
-            async exportAddonSettings() {
-                let data = await storage.get(null);
-
-                if (!this.includeTabThumbnailsIntoBackup) {
-                    delete data.thumbnails;
-                }
-
-                data.groups.forEach(function(group) {
-                    delete group.windowId;
-
-                    group.tabs.forEach(function(tab) {
-                        delete tab.id;
-
-                        if (tab.cookieStoreId === DEFAULT_COOKIE_STORE_ID) {
-                            delete tab.cookieStoreId;
-                        }
-
-                        if (!this.includeTabFavIconsIntoBackup) {
-                            delete tab.favIconUrl;
-                        }
-                    }, this);
-                }, this);
-
-                exportToFile(data, generateBackupFileName());
+            exportAddonSettings() {
+                BG.createBackup(this.includeTabThumbnailsIntoBackup, this.includeTabFavIconsIntoBackup);
             },
 
             async importSettingsOldTabGroupsAddonButton() {
                 let oldOptions = null;
 
                 try {
-                    oldOptions = await importFromFile();
+                    oldOptions = await file.load();
                 } catch (e) {
-                    return utils.notify(e);
+                    utils.notify(e);
+                    return;
                 }
 
                 let data = await storage.get(['groups', 'lastCreatedGroupPosition']),
@@ -272,7 +286,8 @@
                     try {
                         oldGroups = JSON.parse(win.extData['tabview-group']);
                     } catch (e) {
-                        return utils.notify('Error: cannot parse backup file - ' + e);
+                        utils.notify('Error: cannot parse backup file - ' + e);
+                        return;
                     }
 
                     Object.keys(oldGroups).forEach(function(key) {
@@ -341,6 +356,147 @@
                 }
             },
 
+            async importSettingsPanoramaViewAddonButton() {
+                let panoramaOptions = null;
+
+                try {
+                    panoramaOptions = await file.load();
+
+                    if (!panoramaOptions || !panoramaOptions.file || 'panoramaView' !== panoramaOptions.file.type || !Array.isArray(panoramaOptions.windows)) {
+                        throw 'Error: this is wrong backup!';
+                    }
+
+                    if (1 !== panoramaOptions.file.version) {
+                        throw 'Error: Panorama View backup has unsupported version';
+                    }
+                } catch (e) {
+                    utils.notify(e);
+                    return;
+                }
+
+                let data = await storage.get(['groups', 'lastCreatedGroupPosition']),
+                    newGroups = {};
+
+                panoramaOptions.windows.forEach(function(win) {
+                    win.groups.forEach(function(group) {
+                        if (!newGroups[group.id]) {
+                            data.lastCreatedGroupPosition++;
+
+                            newGroups[group.id] = BG.createGroup(data.lastCreatedGroupPosition, undefined, group.name);
+                        }
+                    });
+
+                    win.tabs.forEach(function(tab) {
+                        if (!newGroups[tab.groupId]) {
+                            return;
+                        }
+
+                        if (!utils.isUrlAllowToCreate(tab.url)) {
+                            return;
+                        }
+
+                        let newTab = BG.mapTab(tab);
+
+                        if (tab.pinned) {
+                            if (!utils.isUrlEmpty(newTab.url)) {
+                                browser.tabs.create({
+                                    url: newTab.url,
+                                    pinned: true,
+                                });
+                            }
+                        } else {
+                            newGroups[tab.groupId].tabs.push(newTab);
+                        }
+                    });
+
+                });
+
+                let groups = Object.values(newGroups);
+
+                if (groups.length) {
+                    data.groups = data.groups.concat(groups);
+
+                    await storage.set(data);
+
+                    browser.runtime.reload(); // reload addon
+                } else {
+                    utils.notify('Nothing imported');
+                }
+            },
+
+            async importSettingsSyncTabGroupsAddonButton() {
+                let syncTabOptions = null;
+
+                try {
+                    syncTabOptions = await file.load();
+
+                    if (!syncTabOptions || !syncTabOptions.version || 'syncTabGroups' !== syncTabOptions.version[0] || !Array.isArray(syncTabOptions.groups)) {
+                        throw 'Error: this is wrong backup!';
+                    }
+
+                    if (1 !== syncTabOptions.version[1]) {
+                        throw 'Error: Sync Tab Groups backup has unsupported version';
+                    }
+                } catch (e) {
+                    utils.notify(e);
+                    return;
+                }
+
+                let data = await storage.get(['groups', 'lastCreatedGroupPosition']),
+                    newGroups = {};
+
+                syncTabOptions.groups.forEach(function(group) {
+                    if (group.incognito) {
+                        return;
+                    }
+
+                    if (!newGroups[group.id]) {
+                        data.lastCreatedGroupPosition++;
+
+                        newGroups[group.id] = BG.createGroup(data.lastCreatedGroupPosition, undefined, group.title);
+                        newGroups[group.id].position = group.position;
+                    }
+
+                    group.tabs.forEach(function(tab) {
+                        if (!utils.isUrlAllowToCreate(tab.url)) {
+                            return;
+                        }
+
+                        delete tab.id;
+
+                        let newTab = BG.mapTab(tab);
+
+                        if (tab.pinned) {
+                            if (!utils.isUrlEmpty(newTab.url)) {
+                                browser.tabs.create({
+                                    url: newTab.url,
+                                    pinned: true,
+                                });
+                            }
+                        } else {
+                            newGroups[group.id].tabs.push(newTab);
+                        }
+                    });
+                });
+
+                let groups = Object.values(newGroups)
+                    .sort((a, b) => utils.compareStrings(a.position, b.position))
+                    .map(function(group) {
+                        delete group.position;
+                        return group;
+                    });
+
+                if (groups.length) {
+                    data.groups = data.groups.concat(groups);
+
+                    await storage.set(data);
+
+                    browser.runtime.reload(); // reload addon
+                } else {
+                    utils.notify('Nothing imported');
+                }
+            },
+
             async saveErrorLogsIntoFile() {
                 let options = await storage.get('version'),
                     data = {
@@ -349,7 +505,7 @@
                     };
 
                 if (data.logs.length) {
-                    exportToFile(data, 'STG-error-logs.json');
+                    file.save(data, 'STG-error-logs.json');
                 } else {
                     utils.notify('No logs found');
                 }
@@ -380,28 +536,28 @@
 
 <template>
     <div id="stg-options">
-        <div class="tabs is-boxed">
+        <div class="tabs is-fullwidth">
             <ul>
                 <li :class="{'is-active': section === SECTION_GENERAL}" @click="section = SECTION_GENERAL">
                     <a>
-                        <span class="icon is-small">
-                            <img :src="'/icons/cog.svg'">
+                        <span class="icon">
+                            <img class="size-16" src="/icons/cog.svg">
                         </span>
                         <span v-text="lang('generalTitle')"></span>
                     </a>
                 </li>
                 <li :class="{'is-active': section === SECTION_HOTKEYS}" @click="section = SECTION_HOTKEYS">
                     <a>
-                        <span class="icon is-small">
-                            <img :src="'/icons/keyboard-o.svg'">
+                        <span class="icon">
+                            <img class="size-16" src="/icons/keyboard-o.svg">
                         </span>
                         <span v-text="lang('hotkeysTitle')"></span>
                     </a>
                 </li>
                 <li :class="{'is-active': section === SECTION_BACKUP}" @click="section = SECTION_BACKUP">
                     <a>
-                        <span class="icon is-small">
-                            <img :src="'/icons/cloud-upload.svg'">
+                        <span class="icon">
+                            <img class="size-16" src="/icons/cloud-upload.svg">
                         </span>
                         <span v-text="lang('exportAddonSettingsTitle')"></span>
                     </a>
@@ -426,6 +582,12 @@
                 <label class="checkbox" :disabled="options.closePopupAfterChangeGroup">
                     <input v-model="options.openGroupAfterChange" type="checkbox" :disabled="options.closePopupAfterChangeGroup"/>
                     <span v-text="lang('openGroupAfterChange')"></span>
+                </label>
+            </div>
+            <div class="field">
+                <label class="checkbox">
+                    <input v-model="options.createNewGroupWhenOpenNewWindow" type="checkbox" />
+                    <span v-text="lang('createNewGroupWhenOpenNewWindow')"></span>
                 </label>
             </div>
             <div class="field">
@@ -458,9 +620,9 @@
                     <span v-text="lang('createThumbnailsForTabs')"></span>
                 </label>
 
-                <div class="control h-margin-top-10">
+                <div class="control h-margin-top-10 is-flex is-align-items-center">
                     <span v-text="lang('tabsThumbnailsSize', thumbnailsSize)"></span>
-                    <button class="button is-warning is-small" @click="clearTabsThumbnails" v-text="lang('clearTabsThumbnails')"></button>
+                    <button class="button is-warning h-margin-left-10" @click="clearTabsThumbnails" v-text="lang('clearTabsThumbnails')"></button>
                 </div>
             </div>
 
@@ -482,11 +644,20 @@
                 </div>
             </div>
 
+            <hr>
+
+            <div class="field">
+                <label class="checkbox">
+                    <input v-model="options.enableDarkTheme" type="checkbox" />
+                    <span v-text="lang('enableDarkTheme')"></span>
+                </label>
+            </div>
+
             <hr v-if="errorLogs.length">
 
             <div v-if="errorLogs.length" class="field">
                 <div class="control">
-                    <button @click="saveErrorLogsIntoFile" class="button is-warning is-small" v-text="lang('saveErrorLogsIntoFile')"></button>
+                    <button @click="saveErrorLogsIntoFile" class="button is-warning" v-text="lang('saveErrorLogsIntoFile')"></button>
                 </div>
             </div>
         </div>
@@ -515,13 +686,13 @@
                         <span>Command</span>
                     </label>
                     <div class="control">
-                        <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(openPopupCommand, $event, false)" :value="openPopupCommand.key" autocomplete="off" class="input is-small" />
+                        <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(openPopupCommand, $event, false)" :value="openPopupCommand.key" autocomplete="off" class="input" />
                     </div>
                     <div class="is-flex">
-                        <span class="is-size-7" v-text="lang('openPopupHotkeyTitle')"></span>
+                        <span v-text="lang('openPopupHotkeyTitle')"></span>
                     </div>
                     <div class="delete-button">
-                        <button class="button is-danger is-outlined is-small" @click="resetPopupCommand">Reset</button>
+                        <button class="button is-danger is-outlined" @click="resetPopupCommand">Reset</button>
                     </div>
                 </div>
 
@@ -545,15 +716,15 @@
                         <span>Command</span>
                     </label>
                     <div class="control">
-                        <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(hotkey, $event, true)" :value="hotkey.key" autocomplete="off" class="input is-small" :placeholder="lang('hotkeyPlaceholder')" />
+                        <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(hotkey, $event, true)" :value="hotkey.key" autocomplete="off" class="input" :placeholder="lang('hotkeyPlaceholder')" />
                     </div>
-                    <div class="select is-small">
+                    <div class="select">
                         <select v-model="hotkey.action">
                             <option v-if="!hotkey.action" selected disabled value="" v-text="lang('selectAction')"></option>
                             <option v-for="action in hotkeyActions" :key="action" :value="action" v-text="getHotkeyActionTitle(action)"></option>
                         </select>
                     </div>
-                    <div v-if="'load-custom-group' === hotkey.action" class="select is-small custom-group">
+                    <div v-if="'load-custom-group' === hotkey.action" class="select custom-group">
                         <select v-model="hotkey.groupId">
                             <option v-if="!hotkey.groupId" selected disabled value="undefined" v-text="lang('selectGroup')"></option>
                             <option v-for="group in groups" :key="group.id" :value="group.id" v-text="group.title"></option>
@@ -570,7 +741,7 @@
                 <div class="control">
                     <button @click="options.hotkeys.push(createHotkey())" class="button">
                         <span class="icon">
-                            <img class="size-14" src="/icons/new.svg" />
+                            <img class="size-16" src="/icons/new.svg" />
                         </span>
                         <span v-text="lang('addHotKeyButton')"></span>
                     </button>
@@ -579,7 +750,7 @@
         </div>
 
         <div v-show="section === SECTION_BACKUP">
-            <div class="h-margin-bottom-20">
+            <div class="field">
                 <div class="has-text-weight-bold h-margin-bottom-5" v-text="lang('exportAddonSettingsTitle')"></div>
                 <div class="h-margin-bottom-5" v-html="lang('exportAddonSettingsDescription')"></div>
                 <div class="field">
@@ -594,14 +765,53 @@
                         <span v-text="lang('includeTabFavIconsIntoBackup')"></span>
                     </label>
                 </div>
-                <div class="control">
-                    <button @click="exportAddonSettings" class="button">
-                        <img class="size-14" src="/icons/download.svg" />
-                        <span class="h-margin-left-5" v-text="lang('exportAddonSettingsButton')"></span>
-                    </button>
+                <div class="field">
+                    <div class="control">
+                        <button @click="exportAddonSettings" class="button is-info">
+                            <img class="size-16" src="/icons/download.svg" />
+                            <span class="h-margin-left-5" v-text="lang('exportAddonSettingsButton')"></span>
+                        </button>
+                    </div>
                 </div>
             </div>
-            <div>
+
+            <hr>
+
+            <div class="field">
+                <div class="field">
+                    <label class="checkbox">
+                        <input v-model="options.autoBackupEnable" type="checkbox" />
+                        <span v-text="lang('autoBackupEnableTitle')"></span>
+                    </label>
+                </div>
+                <div v-if="options.autoBackupEnable" class="field is-flex is-align-items-center indent-children">
+                    <div class="h-margin-right-5" v-html="lang('autoBackupCreateEveryTitle')"></div>
+                    <div class="field has-addons">
+                        <div class="control">
+                            <input type="number" class="input backup-time-input" v-model.number="options.autoBackupIntervalValue" min="1" max="20" />
+                        </div>
+                        <div class="control">
+                            <div class="select">
+                                <select v-model="options.autoBackupIntervalKey">
+                                    <option value="hours" v-text="lang('autoBackupIntervalKeyHours')"></option>
+                                    <option value="days" v-text="lang('autoBackupIntervalKeyDays')"></option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div v-if="options.autoBackupEnable" class="field is-flex is-align-items-center indent-children">
+                    <span v-text="lang('autoBackupLastBackupTitle')"></span>
+                    <span v-text="new Date(options.autoBackupLastBackupTimeStamp * 1000).toLocaleString()"></span>
+                </div>
+                <div>
+                    <button class="button" @click="openBackupFolder" v-text="lang('openBackupFolder')"></button>
+                </div>
+            </div>
+
+            <hr>
+
+            <div class="field">
                 <div class="has-text-weight-bold h-margin-bottom-5" v-text="lang('importAddonSettingsTitle')"></div>
                 <div class="h-margin-bottom-5" v-html="lang('importAddonSettingsDescription')"></div>
                 <div class="has-text-danger has-text-weight-bold h-margin-bottom-5">
@@ -609,8 +819,8 @@
                     <span v-text="lang('importAddonSettingsWarning')"></span>
                 </div>
                 <div class="control">
-                    <button @click="importAddonSettings" class="button">
-                        <img class="size-14" src="/icons/upload.svg" />
+                    <button @click="importAddonSettings" class="button is-primary">
+                        <img class="size-16" src="/icons/upload.svg" />
                         <span class="h-margin-left-5" v-text="lang('importAddonSettingsButton')"></span>
                     </button>
                 </div>
@@ -620,64 +830,88 @@
 
             <div class="has-text-weight-bold h-margin-bottom-5" v-text="lang('importSettingsOldTabGroupsAddonTitle')"></div>
             <div class="h-margin-bottom-5" v-html="lang('importSettingsOldTabGroupsAddonDescription')"></div>
-            <div class="control">
-                <button @click="importSettingsOldTabGroupsAddonButton" class="button" v-text="lang('importSettingsOldTabGroupsAddonButton')"></button>
+            <div class="field">
+                <div class="control">
+                    <button @click="importSettingsOldTabGroupsAddonButton" class="button is-primary">
+                        <img class="size-16" src="/icons/old-tab-groups.svg" />
+                        <span class="h-margin-left-5" v-text="lang('browseFileTitle')"></span>
+                    </button>
+                </div>
             </div>
+
+            <hr>
+
+            <div class="has-text-weight-bold h-margin-bottom-5" v-text="lang('importSettingsPanoramaViewAddonTitle')"></div>
+            <div class="h-margin-bottom-5" v-html="lang('importSettingsPanoramaViewAddonDescription')"></div>
+            <div class="field">
+                <div class="control">
+                    <button @click="importSettingsPanoramaViewAddonButton" class="button is-primary">
+                        <img class="size-16" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAiklEQVR42mP4KO/o/UXJ/slXRfv/2PBnBfs3DFDgExj61i8o7D8I+waGPvb0DfFk+Kxo9xiXZhiGGQDTDMM+gSGPGAhpxmcACA8HA0ChjE8zciwAQ/4NsmYQn2HgAXLiQHcWuhw6BqvFGjB4Ag1D7TAwAJSryDUAnJlAWRLZEORYQE846Jq9/AI9AD3nkgARmnBEAAAAAElFTkSuQmCC" />
+                        <span class="h-margin-left-5" v-text="lang('browseFileTitle')"></span>
+                    </button>
+                </div>
+            </div>
+
+            <hr>
+
+            <div class="has-text-weight-bold h-margin-bottom-5" v-text="lang('importSettingsSyncTabGroupsAddonTitle')"></div>
+            <div class="h-margin-bottom-5" v-html="lang('importSettingsSyncTabGroupsAddonDescription')"></div>
+            <div class="field">
+                <div class="control">
+                    <button @click="importSettingsSyncTabGroupsAddonButton" class="button is-primary">
+                        <img class="size-16" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAC4ElEQVR42m1Tu09TcRQ+bVx0dyFYZGiqCelQaAwNVtMApe/29t375LYNCqSFxISBRBdD1MV/wsHBaDQScTYmYkV0MDGBQRExGAddhF65v+M55eXgTb6c331833deFxJ3zlxLP4YfuWeA0iIIjkfnp2CnlwCLd8/fBLrSUvJ2sVgUhD1Jkn7mcrkIMFl/A2gQOnHl+Ky9Btt878D4A+eaVI32qBVt26yOo6Zptq7rGI1GP0Nu6YC0ckw+jFoLRHXViYlF2EpMXvLrcvWPMa6joiiCRDCZTCJwqv/NoNURsM1VB6aewKY0ddGnlo1dTVdRlmWbRDAej9uQpTrZST9w1I/JQl0mgRYJPGKBkE8uaTuqpmC5XLYJIhaL7UH+uYMJlvpqHxpjeT8qL6BtvnRayYdcQsCvFg2rLJetQqHQLpVKFgkgRO7DhrIKOLHmwNpHQPMDYJVgvqP4lkAZxe7Bujld6spm8tuKqnATMZvN4vDwcAsat1RX8vq5+lkJZjwlaPjqp+a9+omFAYp9irM52DjdlG9c6OYxqqra6/f7m263u0ljvDo7O3sS5hpzrmxcrrtdfU2/d6ip5mu9/LEsyd3BwXCzz9PfHBq4PN/v718IBALzXq+34fF4Zo4E0pnURrU+jtONKbwyOYHlSmHbNM2uVCaxbpg66oaGFaVMna8gLRA3sINUKoWhUKgFPI5arWYZhtEmWFSfRep+mvEWpWwRqU1Ns/L5vEWbx++sdDrdieFwGIFHQo6CyDaBZ7xDJF8ikdhkcTrbRBaETuMymYwg9w6oiXtA4xAkgLSaNne3UqnssgAtySadkYj2IZlckdx5AwVvIQnYwHURUfB6krsgUqcEmvFXrpWIgu4FOR+RKTveQjEyMkKrLEm/+ccgAZtqRqrzFz3riUQiXyg7FrDZ+R8BJAGbRYLB4HfgX5LcPrHy2NgY1zbRGaMs65Qi8rPR0VEGMjhtgiDyNzJ0/QXvYtJ0HU94ewAAAABJRU5ErkJggg==" />
+                        <span class="h-margin-left-5" v-text="lang('browseFileTitle')"></span>
+                    </button>
+                </div>
+            </div>
+
         </div>
 
-    </div>
+        <popup
+            v-if="showEnableDarkThemeNotification"
+            :title="lang('enableDarkTheme')"
+            @close-popup="showEnableDarkThemeNotification = false"
+            :buttons="
+                [{
+                    event: 'close-popup',
+                    lang: 'ok',
+                    classList: 'is-success',
+                }]
+            ">
+            <span v-html="lang('enableDarkThemeNotification')"></span>
+        </popup>
 
+    </div>
 </template>
 
 <style lang="scss">
-    * {
-        font-size: 15px;
-    }
-
-    body {
-        background-color: #f9f9fa;
-        padding: 0 6px;
-    }
-
-    .tabs.is-boxed li.is-active a {
-        background-color: #f9f9fa;
-    }
-
     #stg-options {
-        min-height: 600px;
+        overflow-x: auto;
 
-        & > div {
-            max-width: 99%;
-        }
-    }
-
-    hr {
-        margin: 10px -4px;
-        color: transparent;
-        border-top: 1px solid #e3e3e3;
-    }
-
-    .hotkey {
-        margin-bottom: 10px;
-
-        & > :not(:last-child) {
-            margin-right: 10px;
-        }
-
-        & > :nth-child(4) {
+        .backup-time-input {
             width: 100px;
         }
 
-        & > .delete-button {
-            line-height: 0;
-        }
+        .hotkey {
+            margin-bottom: var(--indent);
 
-        & > .notify-message {
-            margin: 0;
+            > :not(:last-child) {
+                margin-right: var(--indent);
+            }
+
+            > :nth-child(4) {
+                width: 110px;
+                min-width: 110px;
+            }
+
+            > .delete-button {
+                line-height: 1;
+            }
+
+            > .notify-message {
+                margin: 0;
+            }
         }
     }
 
-    .browser-action-color-wrapper > .control:last-child {
-        min-width: 44px;
-    }
 </style>

@@ -42,6 +42,7 @@
 <style lang="scss">
     .modal-card-title {
         font-size: 1.2rem;
+        color: inherit;
     }
 
     .modal-card-head,
@@ -50,11 +51,25 @@
         padding: var(--indent);
     }
 
-    .modal-card-foot {
-        justify-content: flex-end;
-    }
-
     .modal-background {
         background-color: rgba(10, 10, 10, 0.6);
+    }
+
+    .modal-card-foot,
+    .modal-card-head {
+        background-color: var(--background-color-other);
+    }
+
+    .modal-card-body {
+        background-color: var(--background-color);
+    }
+
+    .modal-card-head {
+        border-bottom-color: var(--color-hr);
+    }
+
+    .modal-card-foot {
+        border-top-color: var(--color-hr);
+        justify-content: flex-end;
     }
 </style>

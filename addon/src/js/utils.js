@@ -16,11 +16,15 @@ function keyId({id}) {
     return id;
 }
 
+function unixNow() {
+    return Math.round(Date.now() / 1000);
+}
+
 function type(obj) {
     return Object.prototype.toString.call(obj).replace(/(^\[.+\ |\]$)/g, '').toLowerCase();
 }
 
-function clone(obj) {
+function clone(obj = null) {
     return JSON.parse(JSON.stringify(obj));
 }
 
@@ -211,7 +215,7 @@ function isTabVisible(tab) {
 }
 
 function isTabCanBeHidden(rawTab) {
-    return !isTabPinned(rawTab) && !rawTab.sharingState.camera && !rawTab.sharingState.microphone;
+    return !isTabPinned(rawTab) && !rawTab.sharingState.screen && !rawTab.sharingState.camera && !rawTab.sharingState.microphone;
 }
 
 function isTabCanNotBeHidden(rawTab) {
@@ -228,30 +232,22 @@ function getTabTitle(tab, withUrl) {
     return title;
 }
 
-function getNextIndex(currentIndex, count, textPosition = 'next') {
-    if (!count) {
+function getNextIndex(index, length, textPosition = 'next') {
+    if (!length || 0 > length) {
         return false;
     }
 
-    if (1 === count) {
+    if (1 === length) {
         return 0;
     }
 
-    if (0 > currentIndex) {
-        return 'next' === textPosition ? 0 : count - 1;
-    } else if (count - 1 < currentIndex) {
-        return 'next' === textPosition ? count - 1 : 0;
+    if ('next' === textPosition) {
+        return (index + 1) % length;
+    } else if ('prev' === textPosition) {
+        return 0 === index ? length - 1 : index - 1;
+    } else {
+        throw Error(`invalid textPosition: ${textPosition}`);
     }
-
-    let nextIndex = null;
-
-    if ('prev' === textPosition) {
-        nextIndex = currentIndex > 0 ? (currentIndex - 1) : (count - 1);
-    } else if ('next' === textPosition) {
-        nextIndex = currentIndex === count - 1 ? 0 : currentIndex + 1;
-    }
-
-    return nextIndex;
 }
 
 function toCamelCase(str) {
@@ -433,7 +429,7 @@ function isCanvasBlank(canvas, useTransparency) {
 }
 
 function makeSafeUrlForThumbnail(tabUrl) {
-    return (tabUrl || '').split('#', 1).shift();
+    return tabUrl ? tabUrl.split('#', 1).shift() : '';
 }
 
 // needle need to be "LowerCased"
@@ -458,6 +454,10 @@ function mySearchFunc(needle, haystack, extendedSearch = false) {
         });
 }
 
+function onlyUniqueFilter(value, index, self) {
+    return self.indexOf(value) === index;
+}
+
 function extractKeys(obj, keys, useClone = false) {
     let newObj = {};
 
@@ -466,13 +466,35 @@ function extractKeys(obj, keys, useClone = false) {
     return newObj;
 }
 
+function wait(ms = 200) {
+    return new Promise(resolve => setTimeout(resolve, ms, ms));
+}
+
+async function waitDownload(id, maxWaitSec = 5) {
+    let downloadObj = null;
+
+    for (let i = 0; i < maxWaitSec * 5; i++) {
+        [downloadObj] = await browser.downloads.search({id});
+
+        if (!downloadObj || 'in_progress' !== downloadObj.state) {
+            break;
+        }
+
+        await wait(200);
+    }
+
+    return downloadObj ? downloadObj.state : null;
+}
+
 export {
     keyId,
+    unixNow,
     type,
     clone,
     format,
     formatBytes,
     extractKeys,
+    onlyUniqueFilter,
 
     safeHtml,
     unSafeHtml,
@@ -521,4 +543,7 @@ export {
     makeSafeUrlForThumbnail,
 
     mySearchFunc,
+
+    wait,
+    waitDownload,
 };

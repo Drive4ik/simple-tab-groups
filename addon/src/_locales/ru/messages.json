@@ -57,21 +57,9 @@
         "message": "Отмена",
         "description": "Cancel"
     },
-    "privateAndPinnedTabsAreNotSupported": {
-        "message": "Приватные и закрепленные вкладки не поддерживаются",
-        "description": "Private and pinned tabs are not supported"
-    },
-    "thisTabIsNotSupported": {
-        "message": "Эта вкладка не поддерживается",
-        "description": "This tab is not supported"
-    },
     "searchPlaceholder": {
         "message": "Поиск",
         "description": "Search placeholder"
-    },
-    "filterTabsPlaceholder": {
-        "message": "Фильтр вкладок (множественный фильтр по *)",
-        "description": "Filter tabs (multiple filter with *)"
     },
     "invalidRegExpRuleTitle": {
         "message": "Ошибка в правиле \"$regexp$\". Это правило будет проигнорировано.",
@@ -108,7 +96,7 @@
         "description": "Show confirm dialog before group delete"
     },
     "exportAddonSettingsTitle": {
-        "message": "Резервное копирование Simple Tab Groups",
+        "message": "Резервное копирование",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
@@ -146,10 +134,6 @@
     "importSettingsOldTabGroupsAddonDescription": {
         "message": "Загрузка резервной копии от старого плагина \"Tab Groups\"",
         "description": "Load a backup file old \"Tab Groups\" addon."
-    },
-    "importSettingsOldTabGroupsAddonButton": {
-        "message": "Загрузить резервную копию \"Tab Groups\"",
-        "description": "Choose file"
     },
     "openGroupAfterChange": {
         "message": "Открыть группу после перехода на неё",
@@ -260,8 +244,8 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Захватывать и перемещать вкладки с контейнерами в эту группу (только для веб адресов, пустые вкладки не поддерживаются)",
-        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
+        "message": "Захватывать и перемещать вкладки с контейнерами в эту группу",
+        "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
         "message": "Регулярные выражения для захвата вкладок",
@@ -335,6 +319,10 @@
         "message": "Открыть \"Управление группами\"",
         "description": "Open manage groups"
     },
+    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
+        "message": "Переместить активную вкладку в другую группу",
+        "description": "Move active tab to custom group"
+    },
     "whatsWrongMessage": {
         "message": "Что-то не так... Пожалуйста свяжитесь с разработчиком по email с логом ошибок (есть кнопка внизу на странице настроек плагина)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
@@ -386,10 +374,6 @@
     "createThumbnailsForTabs": {
         "message": "Создавать эскизы вкладок (используется в \"Управление группами\")",
         "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
-    },
-    "thisTabCanNotBeHidden": {
-        "message": "Эта вкладка не может быть скрыта потому что в ней используется микрофон или камера",
-        "description": "This tab can not be hidden because it uses a microphone or camera"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Невозможно изменить группу, потому что на одной из вкладок используется микрофон или камера",
@@ -506,5 +490,109 @@
     "waitingForSessionRestoreNotification": {
         "message": "Ожидание восстановления сессии...",
         "description": "Waiting for session restore..."
+    },
+    "movingMultipleTabsText": {
+        "message": "Перемещение $count$ вкладок",
+        "description": "Перемещение $count$ вкладок",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "7"
+            }
+        }
+    },
+    "pinnedTabsAreNotSupported": {
+        "message": "Закреплённые вкладки не поддерживаются",
+        "description": "Pinned tabs are not supported"
+    },
+    "privateTabsAreNotSupported": {
+        "message": "Приватные вкладки не поддерживаются",
+        "description": "Private tabs are not supported"
+    },
+    "thisUrlsAreNotSupported": {
+        "message": "Эти адреса \"$urls$\" не поддерживаются",
+        "description": "This urls \"$urls$\" are not supported",
+        "placeholders": {
+            "urls": {
+                "content": "$1",
+                "example": "about:addons, file://..."
+            }
+        }
+    },
+    "thisTabsCanNotBeHidden": {
+        "message": "Эти вкладки не могут быть скрыты, потому что они закреплены, используют микрофон, камеру или экран совместного доступа: \"$titles$\"",
+        "description": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
+        "placeholders": {
+            "titles": {
+                "content": "$1",
+                "example": "some titles"
+            }
+        }
+    },
+    "moveMultipleTabsToGroupMessage": {
+        "message": "Перемещено $tabscount$ вкладок.\nНажмите здесь для открытия первой вкладки",
+        "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "autoBackupEnableTitle": {
+        "message": "Включить автоматическое резервное копирование",
+        "description": "Enable auto backup"
+    },
+    "autoBackupCreateEveryTitle": {
+        "message": "Создавать резервные копии каждый:",
+        "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyHours": {
+        "message": "час",
+        "description": "hour(s)"
+    },
+    "autoBackupIntervalKeyDays": {
+        "message": "день",
+        "description": "day(s)"
+    },
+    "autoBackupLastBackupTitle": {
+        "message": "Последнее резервное копирование:",
+        "description": "Last backup:"
+    },
+    "enableDarkTheme": {
+        "message": "Включить темную тему",
+        "description": "Enable dark theme"
+    },
+    "enableDarkThemeNotification": {
+        "message": "Для полной поддержки тёмной темы установите параметр<br><code>svg.context-properties.content.enabled</code> в <code>true</code> на странице<br><code>about:config</code><br><br><a href='https://support.mozilla.org/ru/kb/redaktor-nastroek-firefox#w_zajaoaii-aboutconfig'>Как это сделать?</a>",
+        "description": "Fully support the dark theme text"
+    },
+    "importSettingsPanoramaViewAddonTitle": {
+        "message": "Восстановление резервной копии от плагина photodiode \"Panorama View\"",
+        "description": "Restore photodiode's \"Panorama View\""
+    },
+    "importSettingsPanoramaViewAddonDescription": {
+        "message": "Загрузка резервной копии от плагина \"Panorama View\"",
+        "description": "Load a backup file from \"Panorama View\" addon."
+    },
+    "importSettingsSyncTabGroupsAddonTitle": {
+        "message": "Восстановление резервной копии от плагина Morikko \"Sync Tab Groups\"",
+        "description": "Restore Morikko's \"Sync Tab Groups\""
+    },
+    "importSettingsSyncTabGroupsAddonDescription": {
+        "message": "Загрузка резервной копии от плагина \"Sync Tab Groups\"",
+        "description": "Load a backup file from \"Sync Tab Groups\" addon."
+    },
+    "browseFileTitle": {
+        "message": "Обзор...",
+        "description": "Browse..."
+    },
+    "openBackupFolder": {
+        "message": "Открыть папку резервного копирования",
+        "description": "Open backup folder"
+    },
+    "createNewGroupWhenOpenNewWindow": {
+        "message": "Создавать новую группу при открытии нового окна",
+        "description": "Create a new group when opening a new window"
     }
 }

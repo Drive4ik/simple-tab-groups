@@ -57,21 +57,9 @@
         "message": "Abbrechen",
         "description": "Cancel"
     },
-    "privateAndPinnedTabsAreNotSupported": {
-        "message": "Private oder gepinnte Tabs werden nicht unterstützt",
-        "description": "Private and pinned tabs are not supported"
-    },
-    "thisTabIsNotSupported": {
-        "message": "Dieser Tab wird nicht unterstützt",
-        "description": "This tab is not supported"
-    },
     "searchPlaceholder": {
         "message": "Tab suchen",
         "description": "Search placeholder"
-    },
-    "filterTabsPlaceholder": {
-        "message": "Tabs filtern (mehrere Filter mit *)",
-        "description": "Filter tabs (multiple filter with *)"
     },
     "invalidRegExpRuleTitle": {
         "message": "Regel '$regexp$' ist nicht gültig und wird übersprungen.",
@@ -146,10 +134,6 @@
     "importSettingsOldTabGroupsAddonDescription": {
         "message": "Lade eine Backup-Datei des alten \"Tab Groups\"-Addon",
         "description": "Load a backup file old \"Tab Groups\" addon."
-    },
-    "importSettingsOldTabGroupsAddonButton": {
-        "message": "Importiere Einstellungen vonQuicksavers \"Tab Groups\"-Addon",
-        "description": "Import settings from Quicksaver's \"Tab Groups\" add-on"
     },
     "openGroupAfterChange": {
         "message": "Öffne Gruppe nach Änderungen an ihr",

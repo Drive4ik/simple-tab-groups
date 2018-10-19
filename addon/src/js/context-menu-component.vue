@@ -1,6 +1,6 @@
 <template>
     <div
-        class="v-context-menu"
+        class="v-context-menu no-outline"
         v-show="show"
         :style="style"
         tabindex="-1"
@@ -87,7 +87,7 @@
             padding: var(--top-bottom-indent-blocks) 0;
             margin: 0;
             font-size: 12px;
-            font-weight: 600;
+            font-weight: normal;
 
             li {
                 display: flex;
@@ -124,6 +124,22 @@
 
             hr {
                 margin: var(--top-bottom-indent-blocks) 0 var(--top-bottom-indent-blocks) calc(var(--left-right-indent-blocks) + 16px + var(--top-bottom-indent-blocks));
+            }
+        }
+    }
+
+    .dark-theme {
+        .v-context-menu {
+            background-color: var(--input-background-color);
+
+            li {
+                &.is-disabled:hover {
+                    background: #393939;
+                }
+
+                &:not(.is-disabled):hover {
+                    background: #5d5d5d;
+                }
             }
         }
     }

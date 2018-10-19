@@ -57,21 +57,9 @@
         "message": "Avbryt",
         "description": "Cancel"
     },
-    "privateAndPinnedTabsAreNotSupported": {
-        "message": "Privata och fästa flikar stöds ej",
-        "description": "Private and pinned tabs are not supported"
-    },
-    "thisTabIsNotSupported": {
-        "message": "Den här fliken stöds ej",
-        "description": "This tab is not supported"
-    },
     "searchPlaceholder": {
         "message": "Sök",
         "description": "Search placeholder"
-    },
-    "filterTabsPlaceholder": {
-        "message": "Filtrera flikar (särskilj flera filter med *)",
-        "description": "Filter tabs (multiple filter with *)"
     },
     "invalidRegExpRuleTitle": {
         "message": "Regeln '$regexp' är ogiltig och kommer inte att användas.",
@@ -146,10 +134,6 @@
     "importSettingsOldTabGroupsAddonDescription": {
         "message": "Återställ säkerhetskopia från en fil i \"Tab Groups\"-tilläggets format.",
         "description": "Load a backup file old \"Tab Groups\" addon."
-    },
-    "importSettingsOldTabGroupsAddonButton": {
-        "message": "Välj fil",
-        "description": "Choose file"
     },
     "openGroupAfterChange": {
         "message": "Öppna grupp efter byte",
@@ -260,8 +244,8 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Fånga och flytta flikar i behållare till den här gruppen (endast för web-URLs, tomma flikar stöds ej)",
-        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
+        "message": "Fånga och flytta flikar i behållare till den här gruppen",
+        "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
         "message": "Reguljärt uttryck för att fånga nya flikar",
@@ -376,10 +360,6 @@
     "createThumbnailsForTabs": {
         "message": "Skapa miniatyrbild för flikar (används i \"Gruppöversikt\"-vyn)",
         "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
-    },
-    "thisTabCanNotBeHidden": {
-        "message": "Den här fliken kan inte gömmas, eftersom den använder mikrofonen eller kameran",
-        "description": "This tab can not be hidden because it uses a microphone or camera"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Det är inte möjligt att byta grupp, eftersom en av de öppna flikarna använder mikrofonen eller kameran",

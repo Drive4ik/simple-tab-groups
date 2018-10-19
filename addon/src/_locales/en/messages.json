@@ -61,21 +61,9 @@
         "message": "Cancel",
         "description": "Cancel"
     },
-    "privateAndPinnedTabsAreNotSupported": {
-        "message": "Private and pinned tabs are not supported",
-        "description": "Private and pinned tabs are not supported"
-    },
-    "thisTabIsNotSupported": {
-        "message": "This tab is not supported",
-        "description": "This tab is not supported"
-    },
     "searchPlaceholder": {
         "message": "Search",
         "description": "Search placeholder"
-    },
-    "filterTabsPlaceholder": {
-        "message": "Filter tabs (multiple filters with *)",
-        "description": "Filter tabs (multiple filter with *)"
     },
     "invalidRegExpRuleTitle": {
         "message": "Rule '$regexp$' is not valid and it will be skipped.",
@@ -150,10 +138,6 @@
     "importSettingsOldTabGroupsAddonDescription": {
         "message": "Load a backup file from the old \"Tab Groups\" addon.",
         "description": "Load a backup file old \"Tab Groups\" addon."
-    },
-    "importSettingsOldTabGroupsAddonButton": {
-        "message": "Choose file",
-        "description": "Choose file"
     },
     "openGroupAfterChange": {
         "message": "Open group after changing to it",
@@ -264,8 +248,8 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Catch and move tabs with containers to this group (only for web URLs, empty tabs are not supported)",
-        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
+        "message": "Catch and move tabs with containers to this group",
+        "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
         "message": "Regular expressions for catch tabs",
@@ -339,6 +323,10 @@
         "message": "Open manage groups",
         "description": "Open manage groups"
     },
+    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
+        "message": "Move active tab to custom group",
+        "description": "Move active tab to custom group"
+    },
     "whatsWrongMessage": {
         "message": "What's wrong...\nPlease notify the developer by support email with last error logs (button exists at the bottom of the Options page)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
@@ -390,10 +378,6 @@
     "createThumbnailsForTabs": {
         "message": "Create thumbnails for tabs (used in the \"Manage groups\")",
         "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
-    },
-    "thisTabCanNotBeHidden": {
-        "message": "This tab can not be hidden because it uses a microphone or camera",
-        "description": "This tab can not be hidden because it uses a microphone or camera"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "It is not possible to change the group because one of the opened tabs share microphone or camera",
@@ -510,5 +494,109 @@
     "waitingForSessionRestoreNotification": {
         "message": "Waiting for session restore...",
         "description": "Waiting for session restore..."
+    },
+    "movingMultipleTabsText": {
+        "message": "Moving $count$ tabs",
+        "description": "Moving $count$ tabs",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "7"
+            }
+        }
+    },
+    "pinnedTabsAreNotSupported": {
+        "message": "Pinned tabs are not supported",
+        "description": "Pinned tabs are not supported"
+    },
+    "privateTabsAreNotSupported": {
+        "message": "Private tabs are not supported",
+        "description": "Private tabs are not supported"
+    },
+    "thisUrlsAreNotSupported": {
+        "message": "This urls \"$urls$\" are not supported",
+        "description": "This urls \"$urls$\" are not supported",
+        "placeholders": {
+            "urls": {
+                "content": "$1",
+                "example": "about:addons, file://..."
+            }
+        }
+    },
+    "thisTabsCanNotBeHidden": {
+        "message": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
+        "description": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
+        "placeholders": {
+            "titles": {
+                "content": "$1",
+                "example": "some titles"
+            }
+        }
+    },
+    "moveMultipleTabsToGroupMessage": {
+        "message": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
+        "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "autoBackupEnableTitle": {
+        "message": "Enable auto backup",
+        "description": "Enable auto backup"
+    },
+    "autoBackupCreateEveryTitle": {
+        "message": "Create backup every:",
+        "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyHours": {
+        "message": "hour(s)",
+        "description": "hour(s)"
+    },
+    "autoBackupIntervalKeyDays": {
+        "message": "day(s)",
+        "description": "day(s)"
+    },
+    "autoBackupLastBackupTitle": {
+        "message": "Last backup:",
+        "description": "Last backup:"
+    },
+    "enableDarkTheme": {
+        "message": "Enable dark theme",
+        "description": "Enable dark theme"
+    },
+    "enableDarkThemeNotification": {
+        "message": "To fully support the dark theme, enable the<br><code>svg.context-properties.content.enabled</code> parameter to <code>true</code> on the<br><code>about:config</code> page<br><br><a href='https://support.mozilla.org/kb/about-config-editor-firefox'>How to do it?</a>",
+        "description": "Fully support the dark theme text"
+    },
+    "importSettingsPanoramaViewAddonTitle": {
+        "message": "Restore photodiode's \"Panorama View\"",
+        "description": "Restore photodiode's \"Panorama View\""
+    },
+    "importSettingsPanoramaViewAddonDescription": {
+        "message": "Load a backup file from \"Panorama View\" addon.",
+        "description": "Load a backup file from \"Panorama View\" addon."
+    },
+    "importSettingsSyncTabGroupsAddonTitle": {
+        "message": "Restore Morikko's \"Sync Tab Groups\"",
+        "description": "Restore Morikko's \"Sync Tab Groups\""
+    },
+    "importSettingsSyncTabGroupsAddonDescription": {
+        "message": "Load a backup file from \"Sync Tab Groups\" addon.",
+        "description": "Load a backup file from \"Sync Tab Groups\" addon."
+    },
+    "browseFileTitle": {
+        "message": "Browse...",
+        "description": "Browse..."
+    },
+    "openBackupFolder": {
+        "message": "Open backup folder",
+        "description": "Open backup folder"
+    },
+    "createNewGroupWhenOpenNewWindow": {
+        "message": "Create a new group when opening a new window",
+        "description": "Create a new group when opening a new window"
     }
 }

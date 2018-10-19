@@ -57,21 +57,9 @@
         "message": "Anuluj",
         "description": "Cancel"
     },
-    "privateAndPinnedTabsAreNotSupported": {
-        "message": "Prywatne i przypięte zakładki nie są wspierane",
-        "description": "Private and pinned tabs are not supported"
-    },
-    "thisTabIsNotSupported": {
-        "message": "Ta zakładka nie jest wspierana",
-        "description": "This tab is not supported"
-    },
     "searchPlaceholder": {
         "message": "Wyszukaj zakładkę...",
         "description": "Search placeholder"
-    },
-    "filterTabsPlaceholder": {
-        "message": "Filtr zakładek (filtrowanie kilkukrotne z użyciem *)",
-        "description": "Filter tabs (multiple filter with *)"
     },
     "invalidRegExpRuleTitle": {
         "message": "Reguła '$regexp$' nie jest prawidłowa i zostanie pominięta.",
@@ -146,10 +134,6 @@
     "importSettingsOldTabGroupsAddonDescription": {
         "message": "Załaduj plik kopii zapasowej",
         "description": "Load a backup file old \"Tab Groups\" addon."
-    },
-    "importSettingsOldTabGroupsAddonButton": {
-        "message": "Importuj ustawienia z dodatku Quicksaver-a",
-        "description": "Choose file"
     },
     "openGroupAfterChange": {
         "message": "Otwórz grupę po jej zmianie",
@@ -260,8 +244,8 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Złap i przenieś zakładki z kontenerami do tej grupy (tylko dla adresów internetowych, puste karty nie są obsługiwane)",
-        "description": "Catch and move tabs with containers to this group (only for web urls, empty tabs are not supported)"
+        "message": "Złap i przenieś zakładki z kontenerami do tej grupy",
+        "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
         "message": "Szukaj kart za pomocą wyrażenia regularnego",
@@ -376,10 +360,6 @@
     "createThumbnailsForTabs": {
         "message": "Twórz miniatury dla kart (dostępne w opcji \"Zarządzaj grupami\")",
         "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
-    },
-    "thisTabCanNotBeHidden": {
-        "message": "Ta karta nie może być ukryta, ponieważ używa mikrofonu lub kamery",
-        "description": "This tab can not be hidden because it uses a microphone or camera"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Nie można zmienić grupy, ponieważ jedna z otwartych kart współdzieli mikrofon lub kamerę",
