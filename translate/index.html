@@ -136,7 +136,7 @@
                                                     v-if="!showOldValueForKey || showOldValueForKey !== key || (showOldValueForKey == key && !currentLocale[key])"
                                                     :class="['textarea', {
                                                         'is-info': locale[key] && (!currentLocale[key] || !currentLocale[key].message),
-                                                        'is-danger': !locale[key] && currentLocale[key] && currentLocale[key].message
+                                                        'is-danger': !locale[key]
                                                     }]"
                                                     v-model.trim="locale[key]"
                                                     :placeholder="val.description"
