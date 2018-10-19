@@ -1085,7 +1085,9 @@
                     v-for="group in groups"
                     :key="group.id"
                     :class="{'is-disabled': menu.data.group ? menu.data.group.id === group.id : false}"
-                    @click="moveTab(menu.data.tab, group, !menu.data.group)"
+                    @click="menu.data.group
+                        ? menu.data.group.id !== group.id && moveTab(menu.data.tab, group)
+                        : moveTab(menu.data.tab, group, true)"
                     >
                     <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                     <span v-text="group.title"></span>
