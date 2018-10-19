@@ -315,6 +315,10 @@
         "message": "Ouvrir \"Gérer les groupes\"",
         "description": "Open manage groups"
     },
+    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
+        "message": "Déplacer les onglets actifs dans un groupe personnalisé",
+        "description": "Move active tab to custom group"
+    },
     "whatsWrongMessage": {
         "message": "Un problème... ?\nPrenez contact avec le développeur par email avec le dernier log d'erreur (le bouton existe en bas des préférences)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
@@ -359,6 +363,14 @@
         "message": "Style d’icônes",
         "description": "Icon style"
     },
+    "discardTabsAfterHide": {
+        "message": "Décharger les onglet lorsqu'ils sont masqués (ceci libérera de la RAM)",
+        "description": "Discard tabs after hide (this will save the RAM)"
+    },
+    "createThumbnailsForTabs": {
+        "message": "Créer des captures pour les onglets (utilisé dans le \"manager d'onglets\")",
+        "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
+    },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Il n'est pas possible de changer de groupe car un des onglet ouvert partage le micro ou la caméra",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
@@ -378,6 +390,10 @@
     "actionHiddenUnSyncTabsCloseAll": {
         "message": "Fermet tout ces onglets",
         "description": "Close all of these tabs"
+    },
+    "thisTabWillCreateAsNew": {
+        "message": "Créer un nouvel onglet",
+        "description": "This tab will create as new"
     },
     "updateTabThumbnail": {
         "message": "Mettre à jour la capture de cet onglet",
@@ -399,6 +415,10 @@
         "message": "FireFox à planté et tout les groupes ont été perdus.\nSi vous avez une sauvegarde, vous pouvez effectuer une restauration à partir de celle-ci.",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
     },
+    "enterDefaultGroupIconViewTypeTitle": {
+        "message": "Style de l’icône pour les nouveaux groupes",
+        "description": "Icon style for a new group"
+    },
     "openGroupInNewWindow": {
         "message": "Ouvrir le groupe dans une nouvelle fenêtre",
         "description": "Open group in new window"
@@ -406,6 +426,14 @@
     "muteTabsWhenGroupCloseAndRestoreWhenOpen": {
         "message": "Rendre les onglets silencieux lorsqu'on ferme le groupe et les réactiver lorsqu'on l'ouvre à nouveau.",
         "description": "Mute tabs when group close and restore when open"
+    },
+    "tabMoving": {
+        "message": "Déplacement des onglets",
+        "description": "Tab moving"
+    },
+    "includeTabFavIconsIntoBackup": {
+        "message": "Inclure les icônes des favoris (fav-icons) dans la sauvegarder (ceci augmentera la taille du fichier de sauvegarde)",
+        "description": "Include tab fav-icons in backup (makes backup file size bigger)"
     },
     "tabsThumbnailsSize": {
         "message": "Taille des captures : $size$",
@@ -421,6 +449,24 @@
         "message": "Effacer les captures",
         "description": "Clear tabs thumbnails"
     },
+    "groupRemovedByExtension": {
+        "message": "Le groupe \"$group$\" à été retiré par l'extension : $extension$",
+        "description": "Group \"$group$\" removed by extension: $extension$",
+        "placeholders": {
+            "group": {
+                "content": "$1",
+                "example": "group title"
+            },
+            "extension": {
+                "content": "$2",
+                "example": "external extension title"
+            }
+        }
+    },
+    "clickHereToReloadAddon": {
+        "message": "Une erreur est survenue, cliquez-ici pour recharger l'addon STG",
+        "description": "Something went wrong, click here to reload STG addon"
+    },
     "extendedTabSearch": {
         "message": "Recherche étendue",
         "description": "Extended search"
@@ -428,5 +474,109 @@
     "waitingForSessionRestoreNotification": {
         "message": "En attente de la restauration de la session...",
         "description": "Waiting for session restore..."
+    },
+    "movingMultipleTabsText": {
+        "message": "Déplacement de $count$ onglets",
+        "description": "Moving $count$ tabs",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "7"
+            }
+        }
+    },
+    "pinnedTabsAreNotSupported": {
+        "message": "Les onglets épinglés ne sont pas supportés",
+        "description": "Pinned tabs are not supported"
+    },
+    "privateTabsAreNotSupported": {
+        "message": "Les ongles privés ne sont pas supportés",
+        "description": "Private tabs are not supported"
+    },
+    "thisUrlsAreNotSupported": {
+        "message": "Url \"$urls$\" non supportée(s)",
+        "description": "This urls \"$urls$\" are not supported",
+        "placeholders": {
+            "urls": {
+                "content": "$1",
+                "example": "about:addons, file://..."
+            }
+        }
+    },
+    "thisTabsCanNotBeHidden": {
+        "message": "Ces onglets ne peuvent être masquées car ils sont épinglés, utilisent le microphone on la caméra",
+        "description": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
+        "placeholders": {
+            "titles": {
+                "content": "$1",
+                "example": "some titles"
+            }
+        }
+    },
+    "moveMultipleTabsToGroupMessage": {
+        "message": "$tabscount$ onglets ont été déplacés.\nCliquez ici pour ouvrir le premier onglet.",
+        "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "autoBackupEnableTitle": {
+        "message": "Activer la sauvegarde automatique",
+        "description": "Enable auto backup"
+    },
+    "autoBackupCreateEveryTitle": {
+        "message": "Créer une sauvegarde tout les :",
+        "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyHours": {
+        "message": "heure(s)",
+        "description": "hour(s)"
+    },
+    "autoBackupIntervalKeyDays": {
+        "message": "jour(s)",
+        "description": "day(s)"
+    },
+    "autoBackupLastBackupTitle": {
+        "message": "Dernière sauvegarde",
+        "description": "Last backup:"
+    },
+    "enableDarkTheme": {
+        "message": "Activer le thème sombre",
+        "description": "Enable dark theme"
+    },
+    "enableDarkThemeNotification": {
+        "message": "Pour activer complétement le thème sombre, activez le parametre<br><code>svg.context-properties.content.enabled</code> en lui mettant la valeur <code>true</code> sur la page de configuration <br><code>about:config</code><br><br><a href='https://support.mozilla.org/kb/about-config-editor-firefox'>Comment faire ?</a>",
+        "description": "Fully support the dark theme text"
+    },
+    "importSettingsPanoramaViewAddonTitle": {
+        "message": "Restaurer \"Panorama View\" de photodiode",
+        "description": "Restore photodiode's \"Panorama View\""
+    },
+    "importSettingsPanoramaViewAddonDescription": {
+        "message": "Charger une sauvegarde depuis l'addon \"Panorama View\"",
+        "description": "Load a backup file from \"Panorama View\" addon."
+    },
+    "importSettingsSyncTabGroupsAddonTitle": {
+        "message": "Restaurer \"Sync Tab Groups\" de Morikko",
+        "description": "Restore Morikko's \"Sync Tab Groups\""
+    },
+    "importSettingsSyncTabGroupsAddonDescription": {
+        "message": "Charger une sauvegarde de l'addon \"Sync Tab Groups\"",
+        "description": "Load a backup file from \"Sync Tab Groups\" addon."
+    },
+    "browseFileTitle": {
+        "message": "Parcourir...",
+        "description": "Browse..."
+    },
+    "openBackupFolder": {
+        "message": "Ouvrir le dossier de sauvegarde",
+        "description": "Open backup folder"
+    },
+    "createNewGroupWhenOpenNewWindow": {
+        "message": "Créer un nouveau groupe lorsque vous ouvrez une nouvelle fenêtre",
+        "description": "Create a new group when opening a new window"
     }
 }
