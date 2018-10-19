@@ -22,7 +22,7 @@ input[type="checkbox"]:not(:disabled):hover {
 }
 
 input[type="checkbox"]:checked {
-    background-image: url("chrome://global/skin/icons/check.svg");
+    background-image: url('/icons/check.svg');
     -moz-context-properties: fill;
     fill: #2292d0;
 }
