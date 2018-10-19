@@ -157,12 +157,7 @@
                 let searchStr = this.search.toLowerCase();
 
                 return this.groups.map(function(group) {
-                    group.filteredTabs = group.tabs
-                        .filter(function(tab) {
-                            return utils.mySearchFunc(searchStr, tab.title, this.extendedSearch)
-                                || utils.mySearchFunc(searchStr, tab.url, this.extendedSearch);
-                        }, this);
-
+                    group.filteredTabs = group.tabs.filter(tab => utils.mySearchFunc(searchStr, utils.getTabTitle(tab, true), this.extendedSearch));
                     return group;
                 }, this);
             },

@@ -152,11 +152,7 @@
                     groups = [];
 
                 this.groups.forEach(function(group) {
-                    group.filteredTabsBySearch = group.tabs
-                        .filter(function(tab) {
-                            return utils.mySearchFunc(searchStr, tab.title, this.extendedSearch)
-                                || utils.mySearchFunc(searchStr, tab.url, this.extendedSearch);
-                        }, this);
+                    group.filteredTabsBySearch = group.tabs.filter(tab => utils.mySearchFunc(searchStr, utils.getTabTitle(tab, true), this.extendedSearch));
 
                     if (group.filteredTabsBySearch.length || utils.mySearchFunc(searchStr, group.title, this.extendedSearch)) {
                         group.filteredTabsBySearch.sort(this.$_simpleSortTabs.bind(null, searchStr));
@@ -235,8 +231,8 @@
             },
 
             $_simpleSortTabs(searchStr, a, b) {
-                let aIncludes = (a.title || '').toLowerCase().includes(searchStr) || (a.url || '').toLowerCase().includes(searchStr),
-                    bIncludes = (b.title || '').toLowerCase().includes(searchStr) || (b.url || '').toLowerCase().includes(searchStr);
+                let aIncludes = utils.getTabTitle(a, true).toLowerCase().includes(searchStr),
+                    bIncludes = utils.getTabTitle(b, true).toLowerCase().includes(searchStr);
 
                 if (aIncludes && !bIncludes) { // move up
                     return -1;
