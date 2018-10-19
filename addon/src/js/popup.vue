@@ -22,7 +22,7 @@
 </script>
 
 <template>
-    <div class="modal popup is-active">
+    <div class="modal popup is-active" @keydown.stop @keyup.stop>
         <div class="modal-background" @click="$emit('close-popup')"></div>
         <div class="modal-card">
             <header class="modal-card-head">
