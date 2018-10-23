@@ -108,7 +108,7 @@
         "description": "Create backup"
     },
     "includeTabThumbnailsIntoBackup": {
-        "message": "Inclure les icônes d'onglet dans la sauvegarde (le fichier de sauvegarde sera plus volumineux)",
+        "message": "Inclure les vignettes d'onglets dans la sauvegarde (agrandit la taille du fichier de sauvegarde)",
         "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
