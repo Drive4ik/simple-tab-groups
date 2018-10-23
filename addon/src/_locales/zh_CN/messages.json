@@ -319,6 +319,10 @@
         "message": "打开管理群组",
         "description": "Open manage groups"
     },
+    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
+        "message": "移动活动标签页到自定义群组",
+        "description": "Move active tab to custom group"
+    },
     "whatsWrongMessage": {
         "message": "出什么错了……\n请联系开发者，发送电子邮件，附上最新错误日志的JSON文件（在选项的底部有个保存日志的按钮）",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
@@ -364,7 +368,7 @@
         "description": "Icon style"
     },
     "discardTabsAfterHide": {
-        "message": "隐藏后丢弃图标（该操作节省内存）",
+        "message": "隐藏后丢弃标签页（该操作节省内存）",
         "description": "Discard tabs after hide (this will save the RAM)"
     },
     "createThumbnailsForTabs": {
@@ -486,5 +490,109 @@
     "waitingForSessionRestoreNotification": {
         "message": "正在等待会话恢复……",
         "description": "Waiting for session restore..."
+    },
+    "movingMultipleTabsText": {
+        "message": "正在移动$count$个标签页",
+        "description": "Moving $count$ tabs",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "7"
+            }
+        }
+    },
+    "pinnedTabsAreNotSupported": {
+        "message": "不支持固定标签页",
+        "description": "Pinned tabs are not supported"
+    },
+    "privateTabsAreNotSupported": {
+        "message": "不支持隐私标签页",
+        "description": "Private tabs are not supported"
+    },
+    "thisUrlsAreNotSupported": {
+        "message": "不支持地址”$urls$“",
+        "description": "This urls \"$urls$\" are not supported",
+        "placeholders": {
+            "urls": {
+                "content": "$1",
+                "example": "about:addons, file://..."
+            }
+        }
+    },
+    "thisTabsCanNotBeHidden": {
+        "message": "这些标签页无法隐藏，因为它们已被固定，或者正在使用麦克风或摄像头，或者正在共享屏幕：”$titles$“",
+        "description": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
+        "placeholders": {
+            "titles": {
+                "content": "$1",
+                "example": "some titles"
+            }
+        }
+    },
+    "moveMultipleTabsToGroupMessage": {
+        "message": "$tabscount$个标签页已被移动。点击此处打开第一个标签页",
+        "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "autoBackupEnableTitle": {
+        "message": "启用自动备份",
+        "description": "Enable auto backup"
+    },
+    "autoBackupCreateEveryTitle": {
+        "message": "创建备份每：",
+        "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyHours": {
+        "message": "小时",
+        "description": "hour(s)"
+    },
+    "autoBackupIntervalKeyDays": {
+        "message": "天",
+        "description": "day(s)"
+    },
+    "autoBackupLastBackupTitle": {
+        "message": "最后一次备份：",
+        "description": "Last backup:"
+    },
+    "enableDarkTheme": {
+        "message": "启用暗色主题",
+        "description": "Enable dark theme"
+    },
+    "enableDarkThemeNotification": {
+        "message": "要完整支持暗色主题，在<br><code>about:config</code> 页面修改<br><code>svg.context-properties.content.enabled</code> 参数为 <code>true</code><br><br><a href='https://support.mozilla.org/kb/about-config-editor-firefox'>怎么做？</a>",
+        "description": "Fully support the dark theme text"
+    },
+    "importSettingsPanoramaViewAddonTitle": {
+        "message": "恢复 photodiode 的 “Panorama View”",
+        "description": "Restore photodiode's \"Panorama View\""
+    },
+    "importSettingsPanoramaViewAddonDescription": {
+        "message": "加载扩展 “Panorama View”的备份文件",
+        "description": "Load a backup file from \"Panorama View\" addon."
+    },
+    "importSettingsSyncTabGroupsAddonTitle": {
+        "message": "恢复 Morikko 的 ”Sync Tab Groups“",
+        "description": "Restore Morikko's \"Sync Tab Groups\""
+    },
+    "importSettingsSyncTabGroupsAddonDescription": {
+        "message": "加载扩展 “Sync Tab Groups”的备份文件",
+        "description": "Load a backup file from \"Sync Tab Groups\" addon."
+    },
+    "browseFileTitle": {
+        "message": "浏览...",
+        "description": "Browse..."
+    },
+    "openBackupFolder": {
+        "message": "打开备份文件夹",
+        "description": "Open backup folder"
+    },
+    "createNewGroupWhenOpenNewWindow": {
+        "message": "打开新窗口时创建新群组",
+        "description": "Create a new group when opening a new window"
     }
 }
