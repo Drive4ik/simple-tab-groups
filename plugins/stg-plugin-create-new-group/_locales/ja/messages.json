@@ -1,6 +1,6 @@
 {
     "extensionDescription": {
-        "message": "Simple Tab Groups extention の新しいグループを作成する",
+        "message": "Simple Tab Groups の追加機能です。新しいグループを作成するボタンを追加します。",
         "description": "Extension description"
     },
     "needInstallSTGExtension": {

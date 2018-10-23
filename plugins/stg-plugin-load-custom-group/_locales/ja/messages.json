@@ -1,6 +1,6 @@
 {
     "extensionDescription": {
-        "message": "Simple Tab Groups extention のカスタムグループをロードする",
+        "message": "Simple Tab Groups の追加機能です。頻繁に使うグループをすぐに呼び出せるボタンを追加します。",
         "description": "Extension description"
     },
     "needInstallSTGExtension": {
@@ -14,9 +14,5 @@
     "needSelectGroup": {
         "message": "グループを選択してください",
         "description": "Please, select group"
-    },
-    "defaultBrowserActionTitle": {
-        "message": "グループのタイトルがここに表示されます - [STG plugin]",
-        "description": "Group title will be here - [STG plugin]"
     }
 }

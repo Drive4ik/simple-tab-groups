@@ -1,14 +1,14 @@
 {
     "extensionDescription": {
-        "message": "Simple Tab Groups extention の”グループの管理”を開く",
+        "message": "Simple Tab Groups の追加機能です。グループの管理ボタンを追加します。",
         "description": "Extension description"
     },
     "needInstallSTGExtension": {
-        "message": "Simple Tab Groups のエクステンションをインストールする必要があります。\nここをクリックして Simple Tab Groups のホームページを開いてください",
+        "message": "Simple Tab Groups のエクステンションをインストールする必要があります。\n\nここをクリックして Simple Tab Groups のホームページを開いてください",
         "description": "Need install Simple Tab Groups extention\n\nClick here to open Simple Tab Groups home page"
     },
     "defaultBrowserActionTitle": {
-        "message": "グループのタイトルがここに表示されます - [STG plugin]",
+        "message": "グループの管理 - [STG plugin]",
         "description": "Open Manage groups - [STG plugin]"
     }
 }
