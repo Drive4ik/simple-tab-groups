@@ -319,6 +319,10 @@
         "message": "Otwórz zarządzanie grupami",
         "description": "Open manage groups"
     },
+    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
+        "message": "Przenieś aktywną zakładkę do niestandardowej grupy.",
+        "description": "Move active tab to custom group"
+    },
     "whatsWrongMessage": {
         "message": "Co jest nie tak...\nProszę skontaktuj się z programistą, wysyłając e-maila z powiadomieniami o błędach (przycisk dostępny na dole strony z opcjami)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
@@ -329,7 +333,17 @@
     },
     "undoRemoveGroupItemTitle": {
         "message": "Cofnij usunięcie grupy \"$grouptitle$\"",
-        "description": "Undo remove group menu title",
+        "description": "Undelete a group menu title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "undoRemoveGroupNotification": {
+        "message": "Kliknij tutaj aby anulować skasowanie grupy \"$grouptitle$\"",
+        "description": "Click here to cancel the deletion of the group title",
         "placeholders": {
             "grouptitle": {
                 "content": "$1",
@@ -464,5 +478,121 @@
                 "example": "external extension title"
             }
         }
+    },
+    "clickHereToReloadAddon": {
+        "message": "Coś poszło nie tak, kliknij tutaj aby przeładować STG.",
+        "description": "Something went wrong, click here to reload STG addon"
+    },
+    "extendedTabSearch": {
+        "message": "Rozszerzone wyszukiwanie",
+        "description": "Extended search"
+    },
+    "waitingForSessionRestoreNotification": {
+        "message": "Oczekiwanie na przywrócenie sesji",
+        "description": "Waiting for session restore..."
+    },
+    "movingMultipleTabsText": {
+        "message": "Przenoszenie $count$ tabs",
+        "description": "Moving $count$ tabs",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "7"
+            }
+        }
+    },
+    "pinnedTabsAreNotSupported": {
+        "message": "Przypięte zakładki nie są wspierane",
+        "description": "Pinned tabs are not supported"
+    },
+    "privateTabsAreNotSupported": {
+        "message": "Prywatne zakładki nie są wspierane",
+        "description": "Private tabs are not supported"
+    },
+    "thisUrlsAreNotSupported": {
+        "message": "Następujące adresy nie są wspierane: $urls$",
+        "description": "This urls \"$urls$\" are not supported",
+        "placeholders": {
+            "urls": {
+                "content": "$1",
+                "example": "about:addons, file://..."
+            }
+        }
+    },
+    "thisTabsCanNotBeHidden": {
+        "message": "Te zakładki nie mogą zostać ukryte ponieważ są przypięte, korzystają z mikrofonu lub kamery albo współdzielonego ekranu: $titles$",
+        "description": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
+        "placeholders": {
+            "titles": {
+                "content": "$1",
+                "example": "some titles"
+            }
+        }
+    },
+    "moveMultipleTabsToGroupMessage": {
+        "message": "Przeniesionych zostało $tabscount$ zakładek. Kliknij tutaj aby przejść do pierwszej.",
+        "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "autoBackupEnableTitle": {
+        "message": "Włącz automatyczne kopie zapasowe",
+        "description": "Enable auto backup"
+    },
+    "autoBackupCreateEveryTitle": {
+        "message": "Utwórz kopie co:",
+        "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyHours": {
+        "message": "godzin(ę)",
+        "description": "hour(s)"
+    },
+    "autoBackupIntervalKeyDays": {
+        "message": "dzień(dni)",
+        "description": "day(s)"
+    },
+    "autoBackupLastBackupTitle": {
+        "message": "Ostatnia kopia zapasowa:",
+        "description": "Last backup:"
+    },
+    "enableDarkTheme": {
+        "message": "Włącz ciemny schemat",
+        "description": "Enable dark theme"
+    },
+    "enableDarkThemeNotification": {
+        "message": "Aby uzyskać pełne wsparcie ciemnego schematu, ustaw parametr<br><code>svg.context-properties.content.enabled</code>na <code>true</code> w <code>about:config</config>.<br><br><a href='https://support.mozilla.org/kb/about-config-editor-firefox'>Jak to zrobić?</a>",
+        "description": "Fully support the dark theme text"
+    },
+    "importSettingsPanoramaViewAddonTitle": {
+        "message": "Przywróć \"Panorama View\" od photodiody",
+        "description": "Restore photodiode's \"Panorama View\""
+    },
+    "importSettingsPanoramaViewAddonDescription": {
+        "message": "Wczytaj kopię z dodatku \"Panorama View\".",
+        "description": "Load a backup file from \"Panorama View\" addon."
+    },
+    "importSettingsSyncTabGroupsAddonTitle": {
+        "message": "Przywróć \"Sync Tab Groups\" od Morikko",
+        "description": "Restore Morikko's \"Sync Tab Groups\""
+    },
+    "importSettingsSyncTabGroupsAddonDescription": {
+        "message": "Wczytaj kopię z dodatku \"Sync Tab Groups\".",
+        "description": "Load a backup file from \"Sync Tab Groups\" addon."
+    },
+    "browseFileTitle": {
+        "message": "Przeglądaj...",
+        "description": "Browse..."
+    },
+    "openBackupFolder": {
+        "message": "Otwórz katalog kopii zapasowych",
+        "description": "Open backup folder"
+    },
+    "createNewGroupWhenOpenNewWindow": {
+        "message": "Utwórz nową grupę podczas otwierania nowego okna",
+        "description": "Create a new group when opening a new window"
     }
 }
