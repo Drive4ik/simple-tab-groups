@@ -319,6 +319,10 @@
         "message": "グループの管理を開く",
         "description": "Open manage groups"
     },
+    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
+        "message": "アクティブなタブをカスタムグループへ移動",
+        "description": "Move active tab to custom group"
+    },
     "whatsWrongMessage": {
         "message": "なにか問題が起きました...\n開発者にEメールでエラーログをお送りいただけますようご協力をお願いします。(Simple Tab Groups の設定画面の一番下にログを出力するためのボタンがあります)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
@@ -329,7 +333,17 @@
     },
     "undoRemoveGroupItemTitle": {
         "message": "グループ \"$grouptitle$\" の削除を取り消す",
-        "description": "Undo remove group menu title",
+        "description": "Undelete a group menu title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "undoRemoveGroupNotification": {
+        "message": "グループ \"$grouptitle$\" の削除を取り消すにはここをクリック",
+        "description": "Click here to cancel the deletion of the group title",
         "placeholders": {
             "grouptitle": {
                 "content": "$1",
@@ -468,5 +482,117 @@
     "clickHereToReloadAddon": {
         "message": "なんらかの問題が発生しました ここをクリックしてSTGアドオンを再起動してください",
         "description": "Something went wrong, click here to reload STG addon"
+    },
+    "extendedTabSearch": {
+        "message": "高度な検索",
+        "description": "Extended search"
+    },
+    "waitingForSessionRestoreNotification": {
+        "message": "セッションの回復中...",
+        "description": "Waiting for session restore..."
+    },
+    "movingMultipleTabsText": {
+        "message": "$count$ 個のタブを移動",
+        "description": "Moving $count$ tabs",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "7"
+            }
+        }
+    },
+    "pinnedTabsAreNotSupported": {
+        "message": "ピン留めされたタブはサポートされていません",
+        "description": "Pinned tabs are not supported"
+    },
+    "privateTabsAreNotSupported": {
+        "message": "プライベートタブはサポートされていません",
+        "description": "Private tabs are not supported"
+    },
+    "thisUrlsAreNotSupported": {
+        "message": "このURL\"$urls$\"はサポートされていません",
+        "description": "This urls \"$urls$\" are not supported",
+        "placeholders": {
+            "urls": {
+                "content": "$1",
+                "example": "about:addons, file://..."
+            }
+        }
+    },
+    "thisTabsCanNotBeHidden": {
+        "message": "これらのタブを隠すことはできません。タブが隠れているか、マイクやカメラを使用しているか、スクリーン\"$titles$\"を共有しています。",
+        "description": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
+        "placeholders": {
+            "titles": {
+                "content": "$1",
+                "example": "some titles"
+            }
+        }
+    },
+    "moveMultipleTabsToGroupMessage": {
+        "message": "$tabscount$このタブが移動しました。\nここをクリックして最初のタブをオープンしてください。",
+        "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "autoBackupEnableTitle": {
+        "message": "オートバックアップを有効にする",
+        "description": "Enable auto backup"
+    },
+    "autoBackupCreateEveryTitle": {
+        "message": "バックアップを作成する:",
+        "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyHours": {
+        "message": "時間毎",
+        "description": "hour(s)"
+    },
+    "autoBackupIntervalKeyDays": {
+        "message": "日毎",
+        "description": "day(s)"
+    },
+    "autoBackupLastBackupTitle": {
+        "message": "最新のバックアップ:",
+        "description": "Last backup:"
+    },
+    "enableDarkTheme": {
+        "message": "darkテーマを有効にする",
+        "description": "Enable dark theme"
+    },
+    "enableDarkThemeNotification": {
+        "message": "darkテーマをフルサポートにするためには<br><code>svg.context-properties.content.enabled</code> のパラメータを <code>true</code> へ変更してください<br><code>about:config</code> page<br><br><a href='https://support.mozilla.org/kb/about-config-editor-firefox'>How to do it?</a>",
+        "description": "Fully support the dark theme text"
+    },
+    "importSettingsPanoramaViewAddonTitle": {
+        "message": "\"Panorama View\"アドオンを復元する",
+        "description": "Restore photodiode's \"Panorama View\""
+    },
+    "importSettingsPanoramaViewAddonDescription": {
+        "message": "バックアップファイルをphotodiodeさん作成のアドオン\"Panorama View\"からロードします",
+        "description": "Load a backup file from \"Panorama View\" addon."
+    },
+    "importSettingsSyncTabGroupsAddonTitle": {
+        "message": "\"Sync Tab Groups\"アドオンを復元する",
+        "description": "Restore Morikko's \"Sync Tab Groups\""
+    },
+    "importSettingsSyncTabGroupsAddonDescription": {
+        "message": "バックアップファイルをMorikkoさん作成のアドオン\"Sync Tab Groups\"ロードします",
+        "description": "Load a backup file from \"Sync Tab Groups\" addon."
+    },
+    "browseFileTitle": {
+        "message": "ファイルを参照",
+        "description": "Browse..."
+    },
+    "openBackupFolder": {
+        "message": "バックアップフォルダーを開く",
+        "description": "Open backup folder"
+    },
+    "createNewGroupWhenOpenNewWindow": {
+        "message": "新しいウィンドウを開く際には新しいグループを作成する",
+        "description": "Create a new group when opening a new window"
     }
 }
