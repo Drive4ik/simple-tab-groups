@@ -1931,28 +1931,6 @@ async function runAction(data, externalExtId) {
             case 'are-you-here':
                 result.ok = true;
                 break;
-            case 'options-updated':
-                options = await storage.get(constants.allOptionsKeys);
-
-                if (data.optionsUpdated.includes('hotkeys')) {
-                    let tabs = await browser.tabs.query({
-                            discarded: false,
-                            windowType: 'normal',
-                        }),
-                        actionData = {
-                            action: 'update-hotkeys',
-                        };
-
-                    tabs
-                        .filter(utils.isTabNotIncognito)
-                        .forEach(tab => browser.tabs.sendMessage(tab.id, actionData));
-                }
-
-                if (data.optionsUpdated.some(key => key.startsWith('autoBackup'))) {
-                    resetAutoBackup();
-                }
-
-                break;
             case 'get-groups-list':
                 result.groupsList = _groups.map(_mapGroupForAnotherExtension);
                 result.ok = true;
@@ -2061,6 +2039,42 @@ async function runAction(data, externalExtId) {
     return result;
 }
 
+async function saveOptions(_options) {
+    _options = utils.clone(_options);
+
+    let optionsKeys = Object.keys(_options);
+
+    if (!optionsKeys.every(key => constants.allOptionsKeys.includes(key))) {
+        throw Error('some key in save options are not supported: ' + optionsKeys.join(', '));
+    }
+
+    Object.assign(options, _options);
+
+    await storage.set(_options);
+
+    if (optionsKeys.includes('hotkeys')) {
+        let tabs = await browser.tabs.query({
+                discarded: false,
+                windowType: 'normal',
+            }),
+            actionData = {
+                action: 'update-hotkeys',
+            };
+
+        tabs
+            .filter(utils.isTabNotIncognito)
+            .forEach(tab => browser.tabs.sendMessage(tab.id, actionData));
+    }
+
+    if (optionsKeys.some(key => key.startsWith('autoBackup'))) {
+        resetAutoBackup();
+    }
+
+    await browser.runtime.sendMessage({
+        action: 'options-updated',
+    });
+}
+
 let _autoBackupTimer = 0;
 async function resetAutoBackup() {
     if (_autoBackupTimer) {
@@ -2159,6 +2173,7 @@ window.background = {
     getGroups: () => utils.clone(_groups),
 
     getOptions: () => utils.clone(options),
+    saveOptions,
 
     createWindow,
     getWindow,

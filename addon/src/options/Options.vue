@@ -90,7 +90,7 @@
                 .concat(['defaultGroupIconViewType', 'autoBackupIntervalKey'])
                 .forEach(function(option) {
                     this.$watch(`options.${option}`, function(newValue) {
-                        this.saveOptions({
+                        BG.saveOptions({
                             [option]: newValue,
                         });
                     });
@@ -108,7 +108,7 @@
                     value = 1;
                 }
 
-                this.saveOptions({
+                BG.saveOptions({
                     autoBackupIntervalValue: value,
                 });
             },
@@ -137,7 +137,7 @@
                         return ok;
                     }, this);
 
-                    this.saveOptions({
+                    BG.saveOptions({
                         hotkeys: filteredHotkeys,
                     });
                 },
@@ -154,14 +154,6 @@
             getHotkeyActionTitle: action => browser.i18n.getMessage('hotkeyActionTitle' + utils.capitalize(utils.toCamelCase(action))),
 
             openBackupFolder: file.openBackupFolder,
-
-            async saveOptions(options) {
-                await storage.set(utils.clone(options));
-                await browser.runtime.sendMessage({
-                    action: 'options-updated',
-                    optionsUpdated: Object.keys(options),
-                });
-            },
 
             calculateThumbnailsSize(thumbnails = {}) {
                 this.thumbnailsSize = utils.formatBytes(Object.keys(thumbnails).length ? JSON.stringify(thumbnails).length : 0);
