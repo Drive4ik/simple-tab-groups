@@ -586,7 +586,7 @@ async function setMuteTabs(windowId, setMute) {
 }
 
 let _loadingGroupInWindow = {}; // windowId: true;
-async function loadGroup(windowId, groupId, activeTabIndex = -1) {
+async function loadGroup(windowId, groupId, activeTabIndex = -1, fixLastActiveTab = false) {
     if (!windowId || 1 > windowId) { // if click on notification after moving tab to window which is now closed :)
         throw Error('loadGroup: windowId not set');
     }
@@ -766,6 +766,22 @@ async function loadGroup(windowId, groupId, activeTabIndex = -1) {
 
                     return true;
                 });
+
+                if (fixLastActiveTab) {
+                    let oldTabIds = oldGroup.tabs.filter(utils.keyId).map(utils.keyId);
+
+                    if (oldTabIds.length && !oldGroup.tabs.some(tab => tab.active)) {
+                        Promise.all(oldTabIds.map(tabId => browser.tabs.get(tabId)))
+                            .then(function(tabs) {
+                                let tabsTime = tabs.map(tab => tab.lastAccessed),
+                                    lastAccessedTime = Math.max.apply(Math, tabsTime),
+                                    lastAccessedRawTab = tabs.find(tab => tab.lastAccessed === lastAccessedTime);
+
+                                oldGroup.tabs.forEach(tab => tab.active = tab.id === lastAccessedRawTab.id);
+                            });
+                    }
+                }
+
             }
 
             group.windowId = windowId;
@@ -984,7 +1000,7 @@ async function onUpdatedTab(tabId, changeInfo, rawTab) {
         utils.isTabIncognito(rawTab) ||
         'attention' in changeInfo || // not supported tab notification
         'isArticle' in changeInfo || // not supported reader mode now
-        'discarded' in changeInfo || // not supported discard tabs now
+        'discarded' in changeInfo || // exclude discard tabs
         (utils.isTabPinned(rawTab) && undefined === changeInfo.pinned)) { // pinned tabs are not supported
         return;
     }
@@ -1002,7 +1018,7 @@ async function onUpdatedTab(tabId, changeInfo, rawTab) {
             saveCurrentTabs(rawTab.windowId, 'onUpdatedTab tab make hidden');
         } else { // show tab
             if (group) {
-                loadGroup(rawTab.windowId, group.id, group.tabs.indexOf(tab));
+                loadGroup(rawTab.windowId, group.id, group.tabs.indexOf(tab), true);
             } else {
                 saveCurrentTabs(rawTab.windowId, 'onUpdatedTab tab make visible');
             }
