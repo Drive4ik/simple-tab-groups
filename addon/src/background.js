@@ -2143,6 +2143,10 @@ async function resetAutoBackup() {
 async function createBackup(includeTabThumbnails, includeTabFavIcons, isAutoBackup = false, overwrite = false) {
     let data = await storage.get(null);
 
+    if (isAutoBackup && !data.groups.length) {
+        return;
+    }
+
     if (!includeTabThumbnails) {
         delete data.thumbnails;
     }
