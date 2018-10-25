@@ -109,7 +109,7 @@
     },
     "includeTabThumbnailsIntoBackup": {
         "message": "備份分頁縮圖 (會讓備份檔變大)",
-        "description": "Include tab thumbnails into backup (make backup file size bigger)"
+        "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
         "message": "還原 Simple Tab Groups",
@@ -128,7 +128,7 @@
         "description": "Restore backup"
     },
     "importSettingsOldTabGroupsAddonTitle": {
-        "message": "還原 Quicksaver 的 Tab Groups",
+        "message": "從 Quicksaver 的 Tab Groups 還原",
         "description": "Restore Quicksaver's \"Tab Groups\""
     },
     "importSettingsOldTabGroupsAddonDescription": {
@@ -319,6 +319,10 @@
         "message": "開啟管理分頁群組",
         "description": "Open manage groups"
     },
+    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
+        "message": "移動活動分頁至自訂分頁群組",
+        "description": "Move active tab to custom group"
+    },
     "whatsWrongMessage": {
         "message": "出錯囉...\n請寄信聯絡開發者，並附上最近的錯誤記錄 (選項頁面最下面的按鈕)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
@@ -329,7 +333,17 @@
     },
     "undoRemoveGroupItemTitle": {
         "message": "復原刪除分頁群組 \"$grouptitle$\"",
-        "description": "Undo remove group menu title",
+        "description": "Undelete a group menu title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "undoRemoveGroupNotification": {
+        "message": "點選這裡還原被移除的分頁群組\"$grouptitle$\"",
+        "description": "Click here to cancel the deletion of the group title",
         "placeholders": {
             "grouptitle": {
                 "content": "$1",
@@ -420,5 +434,165 @@
     "openGroupInNewWindow": {
         "message": "在新視窗開啟分頁群組",
         "description": "Open group in new window"
+    },
+    "muteTabsWhenGroupCloseAndRestoreWhenOpen": {
+        "message": "當分頁群組關閉的時候靜音分頁，還原分頁時取消分頁靜音",
+        "description": "Mute tabs when group close and restore when open"
+    },
+    "showTabAfterMovingItIntoThisGroup": {
+        "message": "分頁自動移動到該分頁群組後，顯示此分頁",
+        "description": "Show the tab after auto-moving it into this group"
+    },
+    "tabMoving": {
+        "message": "正在移動分頁",
+        "description": "Tab moving"
+    },
+    "includeTabFavIconsIntoBackup": {
+        "message": "在備份中儲存分頁網站圖示（會讓備份檔變得更大）",
+        "description": "Include tab fav-icons in backup (makes backup file size bigger)"
+    },
+    "tabsThumbnailsSize": {
+        "message": "分頁縮圖大小：$size$",
+        "description": "Tabs thumbnails size: $size$",
+        "placeholders": {
+            "size": {
+                "content": "$1",
+                "example": "2 MB"
+            }
+        }
+    },
+    "clearTabsThumbnails": {
+        "message": "清除分頁縮圖",
+        "description": "Clear tabs thumbnails"
+    },
+    "groupRemovedByExtension": {
+        "message": "分頁群組\"$group$\" 被套件\"$extension$\"移除",
+        "description": "Group \"$group$\" removed by extension: $extension$",
+        "placeholders": {
+            "group": {
+                "content": "$1",
+                "example": "group title"
+            },
+            "extension": {
+                "content": "$2",
+                "example": "external extension title"
+            }
+        }
+    },
+    "clickHereToReloadAddon": {
+        "message": "出現錯誤，點選這裡重新載入 STG 套件",
+        "description": "Something went wrong, click here to reload STG addon"
+    },
+    "extendedTabSearch": {
+        "message": "套件搜尋",
+        "description": "Extended search"
+    },
+    "waitingForSessionRestoreNotification": {
+        "message": "正在等待瀏覽工作階段還原……",
+        "description": "Waiting for session restore..."
+    },
+    "movingMultipleTabsText": {
+        "message": "正在移動 $count$ 個分頁",
+        "description": "Moving $count$ tabs",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "7"
+            }
+        }
+    },
+    "pinnedTabsAreNotSupported": {
+        "message": "不支援固定分頁",
+        "description": "Pinned tabs are not supported"
+    },
+    "privateTabsAreNotSupported": {
+        "message": "不支援隱私分頁",
+        "description": "Private tabs are not supported"
+    },
+    "thisUrlsAreNotSupported": {
+        "message": "不支援位址”$urls$“",
+        "description": "This urls \"$urls$\" are not supported",
+        "placeholders": {
+            "urls": {
+                "content": "$1",
+                "example": "about:addons, file://..."
+            }
+        }
+    },
+    "thisTabsCanNotBeHidden": {
+        "message": "這些分頁無法隱藏，因為它們為固定分頁，也可能是您正在使用麥克風或攝影機，或是正在分享螢幕：”$titles$“",
+        "description": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
+        "placeholders": {
+            "titles": {
+                "content": "$1",
+                "example": "some titles"
+            }
+        }
+    },
+    "moveMultipleTabsToGroupMessage": {
+        "message": "$tabscount$ 個分頁已被移動。點選此處開啟第一個分頁",
+        "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "autoBackupEnableTitle": {
+        "message": "啟用自動備份",
+        "description": "Enable auto backup"
+    },
+    "autoBackupCreateEveryTitle": {
+        "message": "建立備份每：",
+        "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyHours": {
+        "message": "小時",
+        "description": "hour(s)"
+    },
+    "autoBackupIntervalKeyDays": {
+        "message": "天",
+        "description": "day(s)"
+    },
+    "autoBackupLastBackupTitle": {
+        "message": "最後一次備份：",
+        "description": "Last backup:"
+    },
+    "enableDarkTheme": {
+        "message": "啟用深色主題",
+        "description": "Enable dark theme"
+    },
+    "enableDarkThemeNotification": {
+        "message": "要完整支援深色主題，在<br><code>about:config</code> 頁面變更<br><code>svg.context-properties.content.enabled</code> 參數為 <code>true</code><br><br><a href='https://support.mozilla.org/kb/about-config-editor-firefox'>怎麼做？</a>",
+        "description": "Fully support the dark theme text"
+    },
+    "importSettingsPanoramaViewAddonTitle": {
+        "message": "從 photodiode 的 “Panorama View” 還原",
+        "description": "Restore photodiode's \"Panorama View\""
+    },
+    "importSettingsPanoramaViewAddonDescription": {
+        "message": "載入 “Panorama View”套件的備份檔。",
+        "description": "Load a backup file from \"Panorama View\" addon."
+    },
+    "importSettingsSyncTabGroupsAddonTitle": {
+        "message": "從 Morikko 的 ”Sync Tab Groups“ 還原",
+        "description": "Restore Morikko's \"Sync Tab Groups\""
+    },
+    "importSettingsSyncTabGroupsAddonDescription": {
+        "message": "載入 “Sync Tab Groups”套件的備份檔。",
+        "description": "Load a backup file from \"Sync Tab Groups\" addon."
+    },
+    "browseFileTitle": {
+        "message": "瀏覽...",
+        "description": "Browse..."
+    },
+    "openBackupFolder": {
+        "message": "開啟備份資料夾",
+        "description": "Open backup folder"
+    },
+    "createNewGroupWhenOpenNewWindow": {
+        "message": "開啟新視窗時建立新分頁群組",
+        "description": "Create a new group when opening a new window"
     }
 }
