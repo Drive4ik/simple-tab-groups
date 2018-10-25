@@ -1,6 +1,6 @@
 {
     "extensionDescription": {
-        "message": "Skapa, organisera och byt mellan flikgrupper. \nInspirerat av Quicksavers gamla \"Tab Groups\"-tillägget :)",
+        "message": "Skapa, organisera och byt mellan flikgrupper. \nInspirerat av Quicksavers gamla \"Tab Groups\"-tillägg :)",
         "description": "Description of the extension."
     },
     "openSettings": {
@@ -109,18 +109,18 @@
     },
     "includeTabThumbnailsIntoBackup": {
         "message": "Inkludera en miniatyrbild av varje flik i säkerhetskopian (gör säkerhetskopian större)",
-        "description": "Include tab thumbnails into backup (make backup file size bigger)"
+        "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
         "message": "Återställ Simple Tab Groups-data",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
-        "message": "Ladda säkerhetskopia från en fil som innehåller flikar och inställningar som du vill återtälla.",
+        "message": "Återställ flikar och inställningar från en fil som innehåller en säkerhetskopia.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
     "importAddonSettingsWarning": {
-        "message": "Återställ tilläggsinställningar tar bort ALLA existerande flikar och inställningar!",
+        "message": "Att återställa från en säkerhetkopia tar bort ALLA existerande flikar och skriver över alla inställningar!",
         "description": "Restore add-on settings will ERASE all existing settings and groups!"
     },
     "importAddonSettingsButton": {
@@ -240,7 +240,7 @@
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
-        "message": "Välj slumpmässig färg",
+        "message": "Slumpmässig färg",
         "description": "Set random color"
     },
     "catchTabContainers": {
@@ -319,6 +319,10 @@
         "message": "Visa Gruppöversikt",
         "description": "Open manage groups"
     },
+    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
+        "message": "Flytta nuvarande flik till en specifik grupp",
+        "description": "Move active tab to custom group"
+    },
     "whatsWrongMessage": {
         "message": "Någonting gick fel...\nVänligen kontakta utvecklaren per e-post (drive4ik@gmail.com) med senaste fellogg (hittas längst ner på inställningssidan)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
@@ -329,7 +333,17 @@
     },
     "undoRemoveGroupItemTitle": {
         "message": "Ångra borttagning av gruppen \"$grouptitle$\"",
-        "description": "Undo remove group menu title",
+        "description": "Undelete a group menu title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "undoRemoveGroupNotification": {
+        "message": "Klicka här för att återställa den borttagna flikgruppen \"$grouptitle$\"",
+        "description": "Click here to cancel the deletion of the group title",
         "placeholders": {
             "grouptitle": {
                 "content": "$1",
@@ -370,16 +384,16 @@
         "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
     },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
-        "message": "Move all these tabs into current group/window",
-        "description": "Move all of this tabs into current group/window"
+        "message": "Flytta alla dessa flikar till nuvarande flikgrupp/fönster",
+        "description": "Move all of these tabs into current group/window"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "Skapa en ny grupp med alla dessa flikar",
-        "description": "Create new group with all of this tabs"
+        "description": "Create new group with all of these tabs"
     },
     "actionHiddenUnSyncTabsCloseAll": {
         "message": "Stäng alla dessa flikar",
-        "description": "Close all of this tabs"
+        "description": "Close all of these tabs"
     },
     "thisTabWillCreateAsNew": {
         "message": "Den här fliken skapas som ny",
@@ -416,5 +430,169 @@
     "openPopupHotkeyTitle": {
         "message": "Öppna grupp-popup:en",
         "description": "Open the groups pop-up"
+    },
+    "openGroupInNewWindow": {
+        "message": "Öppna flikgrupp i ett nytt fönster",
+        "description": "Open group in new window"
+    },
+    "muteTabsWhenGroupCloseAndRestoreWhenOpen": {
+        "message": "Stäng av ljudet för alla flikar då flikgruppen göms och återställ då den öppnas igen",
+        "description": "Mute tabs when group close and restore when open"
+    },
+    "showTabAfterMovingItIntoThisGroup": {
+        "message": "Visa fliken efter att den automatiskt flyttats till den här gruppen",
+        "description": "Show the tab after auto-moving it into this group"
+    },
+    "tabMoving": {
+        "message": "Flikflytt",
+        "description": "Tab moving"
+    },
+    "includeTabFavIconsIntoBackup": {
+        "message": "Inkludera favoritikoner i säkerhetskopian (gör säkerhetskopian större)",
+        "description": "Include tab fav-icons in backup (makes backup file size bigger)"
+    },
+    "tabsThumbnailsSize": {
+        "message": "Storlek på alla miniatyrbilder: $size$",
+        "description": "Tabs thumbnails size: $size$",
+        "placeholders": {
+            "size": {
+                "content": "$1",
+                "example": "2 MB"
+            }
+        }
+    },
+    "clearTabsThumbnails": {
+        "message": "Ta bort alla miniatyrbilder för flikar",
+        "description": "Clear tabs thumbnails"
+    },
+    "groupRemovedByExtension": {
+        "message": "Grupp \"$group$\" togs bort av följande tillägg: $extension$",
+        "description": "Group \"$group$\" removed by extension: $extension$",
+        "placeholders": {
+            "group": {
+                "content": "$1",
+                "example": "group title"
+            },
+            "extension": {
+                "content": "$2",
+                "example": "external extension title"
+            }
+        }
+    },
+    "clickHereToReloadAddon": {
+        "message": "Någonting gick fel, klicka här för att ladda om Simple Tab Groups-tillägget",
+        "description": "Something went wrong, click here to reload STG addon"
+    },
+    "extendedTabSearch": {
+        "message": "Utökad sökning",
+        "description": "Extended search"
+    },
+    "waitingForSessionRestoreNotification": {
+        "message": "Väntar på återställning av sessionen...",
+        "description": "Waiting for session restore..."
+    },
+    "movingMultipleTabsText": {
+        "message": "Flyttar $count$ flikar",
+        "description": "Moving $count$ tabs",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "7"
+            }
+        }
+    },
+    "pinnedTabsAreNotSupported": {
+        "message": "Fästa flikar stöds ej",
+        "description": "Pinned tabs are not supported"
+    },
+    "privateTabsAreNotSupported": {
+        "message": "Privata flikar stöds ej",
+        "description": "Private tabs are not supported"
+    },
+    "thisUrlsAreNotSupported": {
+        "message": "Dessa URLs stöds ej: $urls$",
+        "description": "This urls \"$urls$\" are not supported",
+        "placeholders": {
+            "urls": {
+                "content": "$1",
+                "example": "about:addons, file://..."
+            }
+        }
+    },
+    "thisTabsCanNotBeHidden": {
+        "message": "Det är inte möjligt att gömma flikar som är fästa, använder mikrofonen eller använder kameran.\nFlikar: $title$",
+        "description": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
+        "placeholders": {
+            "titles": {
+                "content": "$1",
+                "example": "some titles"
+            }
+        }
+    },
+    "moveMultipleTabsToGroupMessage": {
+        "message": "$tabcount$ flikar har flyattats.\nKlicka här för att visa den första fliken",
+        "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "autoBackupEnableTitle": {
+        "message": "Aktivera automatisk säkerhetskopiering",
+        "description": "Enable auto backup"
+    },
+    "autoBackupCreateEveryTitle": {
+        "message": "Intervall för automatisk säkerhetskopia:",
+        "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyHours": {
+        "message": "timmar",
+        "description": "hour(s)"
+    },
+    "autoBackupIntervalKeyDays": {
+        "message": "dagar",
+        "description": "day(s)"
+    },
+    "autoBackupLastBackupTitle": {
+        "message": "Senaste säkerhetskopia:",
+        "description": "Last backup:"
+    },
+    "enableDarkTheme": {
+        "message": "Aktivera mörkt tema",
+        "description": "Enable dark theme"
+    },
+    "enableDarkThemeNotification": {
+        "message": "För att det mörka temat skall visas korrekt överallt, sätt <br><code>svg.context-properties.content.enabled</code>-inställningen till <code>true</code> på <code>about:config</code>-sidan<br><br>\nKlicka <a href='https://support.mozilla.org/kb/about-config-editor-firefox'>här</a> för ytterligare instruktioner.",
+        "description": "Fully support the dark theme text"
+    },
+    "importSettingsPanoramaViewAddonTitle": {
+        "message": "Importera flikar från photodiodes \"Panorama View\"-tillägg",
+        "description": "Restore photodiode's \"Panorama View\""
+    },
+    "importSettingsPanoramaViewAddonDescription": {
+        "message": "Återställ en säkerhetskopia från \"Panorama View\"-tillägget",
+        "description": "Load a backup file from \"Panorama View\" addon."
+    },
+    "importSettingsSyncTabGroupsAddonTitle": {
+        "message": "Importera flikar från Morikkos \"Sync Tab Groups\"",
+        "description": "Restore Morikko's \"Sync Tab Groups\""
+    },
+    "importSettingsSyncTabGroupsAddonDescription": {
+        "message": "Återställ en säkerhetskopia från \"Sync Tab Groups\"-tillägget",
+        "description": "Load a backup file from \"Sync Tab Groups\" addon."
+    },
+    "browseFileTitle": {
+        "message": "Bläddra..",
+        "description": "Browse..."
+    },
+    "openBackupFolder": {
+        "message": "Öppna mapp för säkerhetskopior",
+        "description": "Open backup folder"
+    },
+    "createNewGroupWhenOpenNewWindow": {
+        "message": "Skapa en ny grupp då ett nytt fönster öppnas",
+        "description": "Create a new group when opening a new window"
     }
 }
