@@ -768,18 +768,7 @@ async function loadGroup(windowId, groupId, activeTabIndex = -1, fixLastActiveTa
                 });
 
                 if (fixLastActiveTab) {
-                    let oldTabIds = oldGroup.tabs.filter(utils.keyId).map(utils.keyId);
-
-                    if (oldTabIds.length && !oldGroup.tabs.some(tab => tab.active)) {
-                        Promise.all(oldTabIds.map(tabId => browser.tabs.get(tabId)))
-                            .then(function(tabs) {
-                                let tabsTime = tabs.map(tab => tab.lastAccessed),
-                                    lastAccessedTime = Math.max.apply(Math, tabsTime),
-                                    lastAccessedRawTab = tabs.find(tab => tab.lastAccessed === lastAccessedTime);
-
-                                oldGroup.tabs.forEach(tab => tab.active = tab.id === lastAccessedRawTab.id);
-                            });
-                    }
+                    _fixLastActiveTab(oldGroup, undefined, true);
                 }
 
             }
@@ -807,6 +796,39 @@ async function loadGroup(windowId, groupId, activeTabIndex = -1, fixLastActiveTa
         throw String(e);
     } finally {
         _loadingGroupInWindow[windowId] = false;
+    }
+}
+
+async function _fixLastActiveTab(group, setPosition = 'last-active', breakIfHasActive = false) {
+    let tabIds = group.tabs.filter(utils.keyId).map(utils.keyId);
+
+    if (!tabIds.length || (breakIfHasActive && !group.tabs.some(tab => tab.active))) {
+        return;
+    }
+
+    let winTabs = await Promise.all(tabIds.map(tabId => browser.tabs.get(tabId))),
+        tabsTime = winTabs.map(tab => tab.lastAccessed),
+        lastAccessedTime = Math.max.apply(Math, tabsTime),
+        lastAccessedRawTab = null;
+
+    if ('prev-active' === setPosition) {
+        tabsTime = tabsTime.filter(time => time !== lastAccessedTime);
+
+        if (!tabsTime.length) {
+            return;
+        }
+
+        lastAccessedTime = Math.max.apply(Math, tabsTime);
+    }
+
+    lastAccessedRawTab = winTabs.find(tab => tab.lastAccessed === lastAccessedTime);
+
+    if (group.windowId) {
+        await browser.tabs.update(lastAccessedRawTab.id, {
+            active: true,
+        });
+    } else {
+        group.tabs.forEach(tab => tab.active = tab.id === lastAccessedRawTab.id);
     }
 }
 
@@ -959,6 +981,10 @@ async function onCreatedTab(tab) {
     //     return;
     // }
 
+    if (utils.isTabPinned(tab)) {
+        return;
+    }
+
     let group = _groups.find(gr => gr.windowId === tab.windowId);
 
     if (!group) {
@@ -979,6 +1005,13 @@ async function onCreatedTab(tab) {
                 undefined,
                 destGroup.showTabAfterMovingItIntoThisGroup
             )
+            .then(function() {
+                if (!tab.active) {
+                    return;
+                }
+
+                _fixLastActiveTab(group, 'prev-active');
+            })
             .catch(utils.notify);
             return;
         }
@@ -1066,6 +1099,13 @@ async function onUpdatedTab(tabId, changeInfo, rawTab) {
                 undefined,
                 destGroup.showTabAfterMovingItIntoThisGroup
             )
+            .then(function() {
+                if (!rawTab.active) {
+                    return;
+                }
+
+                _fixLastActiveTab(group, 'prev-active');
+            })
             .catch(utils.notify);
             return;
         }
