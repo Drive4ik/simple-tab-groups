@@ -80,7 +80,7 @@
         "description": "Free arrange"
     },
     "closePopupAfterChangeGroup": {
-        "message": "Fermer la popup après avoir changé de groupe",
+        "message": "Fermer la pop-up après avoir changé de groupe",
         "description": "Close popup after changing group"
     },
     "showNotificationAfterMoveTab": {
@@ -108,7 +108,7 @@
         "description": "Create backup"
     },
     "includeTabThumbnailsIntoBackup": {
-        "message": "Inclure les vignettes d'onglets dans la sauvegarde (agrandit la taille du fichier de sauvegarde)",
+        "message": "Inclure les vignettes d'onglets dans la sauvegarde (ceci augmentera la taille du fichier de sauvegarde)",
         "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
@@ -136,7 +136,7 @@
         "description": "Load a backup file old \"Tab Groups\" addon."
     },
     "openGroupAfterChange": {
-        "message": "Ouvrir le groupe après s'y être rendu",
+        "message": "Ouvrir le groupe dans la pop-up après s'y être rendu",
         "description": "Open group after changing to it"
     },
     "newGroupTitle": {
@@ -236,7 +236,7 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Désolé, vous ne pouvez pas charger d'icône personnalisée dans cette popup, mais vous pouvez charger une icône de groupe dans \"Gérer les groupes\".\nOuvrir \"Gérer les groupes\" ?",
+        "message": "Désolé, vous ne pouvez pas charger d'icône personnalisée dans cette pop-up, mais vous pouvez charger une icône de groupe dans \"Gérer les groupes\".\nOuvrir \"Gérer les groupes\" ?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -244,11 +244,11 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Déplacer les onglets contextuels vers ce groupe",
+        "message": "Capturer et déplacer les onglets contextuels vers ce groupe",
         "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
-        "message": "Expressions régulières pour trouver les onglets",
+        "message": "Expressions régulières pour capturer et déplacer les onglets vers ce groupe",
         "description": "Regular expressions for catch tabs"
     },
     "regexpForTabsPlaceholder": {
@@ -264,7 +264,7 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Ici vous pouvez ajouter des raccourcis.<br>Restrictions:<br>1. Ces raccourcis ne fonctionneront que sur des pages web (http:, https:). Sur des pages du navigateur (about:) - cela ne fonctionne pas, l'API WebExtensions ne l'autorise pas.<br>2. Certains raccourcis ne fonctionneront pas sur différentes dispositions de clavier. Par exemple, le raccourci <code>Ctrl + ~</code> créé dans la disposition US  ne fonctionnera pas sur la disposition RU, car la disposition russe a un autre code pour cette touche. Pour contourner ce problème, créez simplement un autre raccourci avec la disposition russe: <code>Ctrl + Ё</code>",
+        "message": "Ici vous pouvez ajouter des raccourcis.<br>Restrictions :<br>1. Ces raccourcis ne fonctionneront que sur des pages web (http:, https:). Sur des pages du navigateur (about:) - cela ne fonctionne pas, l'API WebExtensions ne l'autorise pas.<br>2. Certains raccourcis ne fonctionneront pas sur différentes dispositions de clavier. Par exemple, le raccourci <code>Ctrl + ~</code> créé dans la disposition US  ne fonctionnera pas sur la disposition RU, car la disposition russe a un autre code pour cette touche. Pour contourner ce problème, créez simplement un autre raccourci avec la disposition russe : <code>Ctrl + Ё</code>",
         "description": "Hotkeys description"
     },
     "addHotKeyButton": {
@@ -372,7 +372,7 @@
         "description": "Discard tabs after hide (this will save the RAM)"
     },
     "createThumbnailsForTabs": {
-        "message": "Créer des captures pour les onglets (utilisé dans \"Gérer les onglets\")",
+        "message": "Créer des captures pour les onglets (utilisé dans \"Gérer les groupes\")",
         "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
@@ -572,7 +572,7 @@
         "description": "Restore photodiode's \"Panorama View\""
     },
     "importSettingsPanoramaViewAddonDescription": {
-        "message": "Charger une sauvegarde depuis l'extension \"Panorama View\"",
+        "message": "Charger une sauvegarde de l'extension \"Panorama View\"",
         "description": "Load a backup file from \"Panorama View\" addon."
     },
     "importSettingsSyncTabGroupsAddonTitle": {
