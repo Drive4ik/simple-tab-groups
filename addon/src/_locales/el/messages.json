@@ -1,6 +1,6 @@
 {
     "extensionDescription": {
-        "message": "Δημιούργησε, τροποποίησε και γρήγορα άλλαξε tab groups. \nΕμπνευσμένο από το παλιόadd-on \"Tab Groups\" :)",
+        "message": "Δημιούργησε, τροποποίησε και γρήγορα άλλαξε tab groups. \nΕμπνευσμένο από το παλιό add-on \"Tab Groups\" :)",
         "description": "Description of the extension."
     },
     "openSettings": {
@@ -57,8 +57,12 @@
         "message": "Ακύρωση",
         "description": "Cancel"
     },
+    "searchPlaceholder": {
+        "message": "Αναζήτηση",
+        "description": "Search placeholder"
+    },
     "invalidRegExpRuleTitle": {
-        "message": "Ο κανόνας '$regexp$' είναι άκυρος και θα παραληφθεί.",
+        "message": "Ο κανόνας '$regexp$' είναι άκυρος και θα παραλειφθεί.",
         "description": "Invalid rule description",
         "placeholders": {
             "regexp": {
@@ -105,7 +109,7 @@
     },
     "includeTabThumbnailsIntoBackup": {
         "message": "Να συμπεριληφθούν οι μικρογραφίες των tab (thumbnails) στο backup (το αρχείο θα έχει μεγαλύτερο μέγεθος)",
-        "description": "Include tab thumbnails into backup (make backup file size bigger)"
+        "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
         "message": "Επαναφορά των Simple Tab Groups (από αντίγραφο ασφαλείας)",
@@ -135,6 +139,26 @@
         "message": "Άνοιγμα group όταν μετακινείστε σε αυτό",
         "description": "Open group after changing to it"
     },
+    "newGroupTitle": {
+        "message": "Group $id$",
+        "description": "group id",
+        "placeholders": {
+            "id": {
+                "content": "$1",
+                "example": "1"
+            }
+        }
+    },
+    "searchNotFoundTitle": {
+        "message": "Δεν βρέθηκαν αποτελέσματα για \"$search$\"",
+        "description": "No results found",
+        "placeholders": {
+            "search": {
+                "content": "$1",
+                "example": "mail"
+            }
+        }
+    },
     "sortGroupsAZ": {
         "message": "Κατάταξη groups [A-Ω]",
         "description": "Sort groups [A-Z]"
@@ -142,6 +166,10 @@
     "sortGroupsZA": {
         "message": "Κατάταξη groups [Ω-Α]",
         "description": "Sort groups [Z-A]"
+    },
+    "generalTitle": {
+        "message": "Γενικά",
+        "description": "General"
     },
     "groupSettings": {
         "message": "Ρυθμίσεις groups",
@@ -291,6 +319,10 @@
         "message": "Άνοιγμα Διαχείρισης groups",
         "description": "Open manage groups"
     },
+    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
+        "message": "Μεταφορά ενεργού tab σε custom group",
+        "description": "Move active tab to custom group"
+    },
     "whatsWrongMessage": {
         "message": "Κάτι δεν πήγε καλά...\nΠαρακαλώ επικοινωνείστε με τον δημιουργό στο support email με τα τελευταία αρχεία καταγραφής σφαλμάτων (υπάρχει σχετικό κουμπί στο τέλος των options)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
@@ -301,7 +333,17 @@
     },
     "undoRemoveGroupItemTitle": {
         "message": "Αναίρεση αφαίρεσης του group \"$grouptitle$\"",
-        "description": "Undo remove group menu title",
+        "description": "Undelete a group menu title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "undoRemoveGroupNotification": {
+        "message": "Κλικ εδώ για ακύρωση της διαγραφής του group \"$grouptitle$\"",
+        "description": "Click here to cancel the deletion of the group title",
         "placeholders": {
             "grouptitle": {
                 "content": "$1",
@@ -325,8 +367,232 @@
         "message": "Στυλ εικονιδίου",
         "description": "Icon style"
     },
+    "discardTabsAfterHide": {
+        "message": "Απόρριψη των tabs μετά την απόκρυψη (εξοικονόμηση μνήμης)",
+        "description": "Discard tabs after hide (this will save the RAM)"
+    },
+    "createThumbnailsForTabs": {
+        "message": "Δημιουργία εικονιδίων thumbnails για τα tabs (στην \"Διαχείριση groups\")",
+        "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
+    },
+    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
+        "message": "Δεν είναι δυνατόν να αλλάξετε το group, γιατί ένα από τα ανοικτά tabs χρησιμοποιούν το μικρόφωνο ή την camera",
+        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
+    },
+    "foundHiddenUnSyncTabsDescription": {
+        "message": "Υπάρχουν κρυμένα μη-συγχρονισμένα tabs. Κάντε click στο tab για να το εμφανίσετε στο τρέχον group/παράθυρο ή:",
+        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
+    },
+    "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
+        "message": "Μετακινείστε όλα αυτά τα tabs στο τρέχον group/παράθυρο",
+        "description": "Move all of these tabs into current group/window"
+    },
+    "actionHiddenUnSyncTabsCreateGroup": {
+        "message": "Δημιουργείστε group με όλα αυτά τα tabs",
+        "description": "Create new group with all of these tabs"
+    },
+    "actionHiddenUnSyncTabsCloseAll": {
+        "message": "Κλείστε όλα αυτά τα tabs",
+        "description": "Close all of these tabs"
+    },
+    "thisTabWillCreateAsNew": {
+        "message": "Αυτό το tab θα δημιουργηθεί σαν νέο",
+        "description": "This tab will create as new"
+    },
+    "updateTabThumbnail": {
+        "message": "Ανανέωση εικονιδίου γι αυτό το tab",
+        "description": "Update thumbnail for this tab"
+    },
+    "cantMakeThumbnailTabWasDiscarded": {
+        "message": "Δεν μπορείτε να δημιουργήσετε εικονίδιο για tab, εάν το tab δεν είναι φορτωμένο",
+        "description": "You can not make a thumbnail of a tab if the tab was not loaded"
+    },
+    "nowFoundWindowsAddonStoppedWorking": {
+        "message": "Σφάλμα: Δεν βρέθηκε κανένα κανονικό (όχι private/incognito/popup) παράθυρο. Το πρόσθετο σταμάτησε να λειτουργεί. Παρακαλώ επανεκινείστε τον φυλομετρητή.",
+        "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
+    },
+    "waitingToLoadAllTabs": {
+        "message": "Αναμονή για την φόρτωση όλων των tabs. \nΠαρακαλώ περιμένετε...",
+        "description": "Waiting for all tabs to load.\nPlease wait..."
+    },
+    "reloadAddon": {
+        "message": "Επαναφόρτωση προσθέτου",
+        "description": "Reload addon"
+    },
+    "ffFailedAndLostDataMessage": {
+        "message": "Το FF 'κράσαρε' και όλα τα groups έχουν χαθεί!\nΑν έχετε αντίγραφο ασφαλείας (backup), μπορείτε να επαναφέρετε τα groups  από αυτό",
+        "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
+    },
+    "enterDefaultGroupIconViewTypeTitle": {
+        "message": "Στυλ εικονιδίου για νέο group",
+        "description": "Icon style for a new group"
+    },
+    "openPopupHotkeyTitle": {
+        "message": "Άνοιγμα αναδυόμενου διαλόγου groups",
+        "description": "Open the groups pop-up"
+    },
     "openGroupInNewWindow": {
         "message": "Άνοιγμα ομάδας σε νέο παράθυρο",
         "description": "Open group in new window"
+    },
+    "muteTabsWhenGroupCloseAndRestoreWhenOpen": {
+        "message": "Σίγαση των tabs όταν το group κλείσει και επαναφορά όταν ανοίξει",
+        "description": "Mute tabs when group close and restore when open"
+    },
+    "showTabAfterMovingItIntoThisGroup": {
+        "message": "Εμφάνιση του tab μετά την αυτόματη μετακίνησή του στο group",
+        "description": "Show the tab after auto-moving it into this group"
+    },
+    "tabMoving": {
+        "message": "Μετακίνηση tab",
+        "description": "Tab moving"
+    },
+    "includeTabFavIconsIntoBackup": {
+        "message": "Να συμπεριληφθούν τα εικονίδια των tabs στο αντίγραφο ασφαλείας (θα έχει μεγαλύτερο μέγεθος)",
+        "description": "Include tab fav-icons in backup (makes backup file size bigger)"
+    },
+    "tabsThumbnailsSize": {
+        "message": "Μέγεθος εικονιδίων tabs: $size$",
+        "description": "Tabs thumbnails size: $size$",
+        "placeholders": {
+            "size": {
+                "content": "$1",
+                "example": "2 MB"
+            }
+        }
+    },
+    "clearTabsThumbnails": {
+        "message": "Καθαρισμός εικονιδίων tabs",
+        "description": "Clear tabs thumbnails"
+    },
+    "groupRemovedByExtension": {
+        "message": "Το group \"$group$\" αφαιρέθηκε από  το πρόσθετο: $extension$",
+        "description": "Group \"$group$\" removed by extension: $extension$",
+        "placeholders": {
+            "group": {
+                "content": "$1",
+                "example": "group title"
+            },
+            "extension": {
+                "content": "$2",
+                "example": "external extension title"
+            }
+        }
+    },
+    "clickHereToReloadAddon": {
+        "message": "Κάτι πήγε στραβά, κλικ εδώ για επαναφόρτωση του STG",
+        "description": "Something went wrong, click here to reload STG addon"
+    },
+    "extendedTabSearch": {
+        "message": "Εκτεταμένη αναζήτηση",
+        "description": "Extended search"
+    },
+    "waitingForSessionRestoreNotification": {
+        "message": "Αναμονή για επαναφορά του session...",
+        "description": "Waiting for session restore..."
+    },
+    "movingMultipleTabsText": {
+        "message": "Μετακίνηση $count$ tabs",
+        "description": "Moving $count$ tabs",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "7"
+            }
+        }
+    },
+    "pinnedTabsAreNotSupported": {
+        "message": "Δεν υποστηρίζονται καρφιτσωμένα (Pinned) tabs",
+        "description": "Pinned tabs are not supported"
+    },
+    "privateTabsAreNotSupported": {
+        "message": "Δεν υποστηρίζονται ιδιωτικά (Private) tabs",
+        "description": "Private tabs are not supported"
+    },
+    "thisUrlsAreNotSupported": {
+        "message": "Τέτοια urls ($urls$) δεν υποστηρίζονται",
+        "description": "This urls \"$urls$\" are not supported",
+        "placeholders": {
+            "urls": {
+                "content": "$1",
+                "example": "about:addons, file://..."
+            }
+        }
+    },
+    "thisTabsCanNotBeHidden": {
+        "message": "Αυτά τα tabs δεν μπορούν να κρυφτούν είτε γιατί είναι pinned, είτε γιατί χρησιμοποιούν μικρόφωνο, camera ή κοινόχρηστη οθόνη: \"$titles$\"",
+        "description": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
+        "placeholders": {
+            "titles": {
+                "content": "$1",
+                "example": "some titles"
+            }
+        }
+    },
+    "moveMultipleTabsToGroupMessage": {
+        "message": "$tabscount$ tabs μετακινήθηκαν.\nΚλικ εδώ για να ανοίξετε το πρώτο tab",
+        "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "autoBackupEnableTitle": {
+        "message": "Εναργοποίηση αυτόματου αντιγράφου backup",
+        "description": "Enable auto backup"
+    },
+    "autoBackupCreateEveryTitle": {
+        "message": "Δημιουργία backup κάθε:",
+        "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyHours": {
+        "message": "ώρα(ες)",
+        "description": "hour(s)"
+    },
+    "autoBackupIntervalKeyDays": {
+        "message": "ημέρα(ες)",
+        "description": "day(s)"
+    },
+    "autoBackupLastBackupTitle": {
+        "message": "Τελευταίο backup:",
+        "description": "Last backup:"
+    },
+    "enableDarkTheme": {
+        "message": "Ενεργοποίησηdark theme",
+        "description": "Enable dark theme"
+    },
+    "enableDarkThemeNotification": {
+        "message": "Για πλήρη υποστήριξη του dark theme, ενεργοποιείστε την<br><code>svg.context-properties.content.enabled</code> παράμετρο σε <code>true</code> στην <br><code>about:config</code> σελίδα <br><br><a href='https://support.mozilla.org/kb/about-config-editor-firefox'>How to do it?</a>",
+        "description": "Fully support the dark theme text"
+    },
+    "importSettingsPanoramaViewAddonTitle": {
+        "message": "Επαναφορά  \"Panorama View\" του photodiode",
+        "description": "Restore photodiode's \"Panorama View\""
+    },
+    "importSettingsPanoramaViewAddonDescription": {
+        "message": "Φόρτωση αντιγράφου  backup από \"Panorama View\"",
+        "description": "Load a backup file from \"Panorama View\" addon."
+    },
+    "importSettingsSyncTabGroupsAddonTitle": {
+        "message": "Επαναφορά \"Sync Tab Groups\" του Morikko",
+        "description": "Restore Morikko's \"Sync Tab Groups\""
+    },
+    "importSettingsSyncTabGroupsAddonDescription": {
+        "message": "Φόρτωση αντιγράφου  backup από \"Sync Tab Groups\"",
+        "description": "Load a backup file from \"Sync Tab Groups\" addon."
+    },
+    "browseFileTitle": {
+        "message": "Περιήγηση",
+        "description": "Browse..."
+    },
+    "openBackupFolder": {
+        "message": "Άνοιγμα",
+        "description": "Open backup folder"
+    },
+    "createNewGroupWhenOpenNewWindow": {
+        "message": "Δημιουργία νέου group όταν ανοίγει νέο παράθυρο",
+        "description": "Create a new group when opening a new window"
     }
 }
