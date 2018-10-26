@@ -1,4 +1,4 @@
-# ![](https://rawgit.com/Drive4ik/simple-tab-groups/master/addon/src/icons/icon.svg) Simple Tab Groups
+# [![](https://rawgit.com/Drive4ik/simple-tab-groups/master/addon/src/icons/icon.svg)](https://addons.mozilla.org/firefox/addon/simple-tab-groups/ "Simple Tab Groups addon page") Simple Tab Groups
 
 [![Mozilla Add-on](https://img.shields.io/amo/v/simple-tab-groups.svg)](https://addons.mozilla.org/firefox/addon/simple-tab-groups/) [![](https://img.shields.io/amo/d/simple-tab-groups.svg)](https://addons.mozilla.org/firefox/addon/simple-tab-groups/statistics/?last=365) [![](https://img.shields.io/amo/users/simple-tab-groups.svg)](https://addons.mozilla.org/firefox/addon/simple-tab-groups/statistics/usage/?last=365) [![](https://img.shields.io/amo/rating/simple-tab-groups.svg)](https://addons.mozilla.org/firefox/addon/simple-tab-groups/reviews/)
 
