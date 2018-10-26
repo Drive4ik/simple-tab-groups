@@ -54,18 +54,24 @@ This allows for easy switching between active and pre-loaded tabs across multipl
 
 **NEW** Allow import groups from addons "Panorama View" and "Sync Tab Groups".
 
-[Preview: how to configure the work with the plugin Gesturefy](https://user-images.githubusercontent.com/7843031/44263498-dffb1b00-a227-11e8-95c7-1b9474199ef0.png)
+### Work with Gesturefy addon
+[How to configure the work with the plugin Gesturefy](https://user-images.githubusercontent.com/7843031/44263498-dffb1b00-a227-11e8-95c7-1b9474199ef0.png)
+
+You have to copy and paste into Gesturefy addon
+
+`Add-on ID` : `simple-tab-groups@drive4ik`
+
+`Parse message` -> `On`
 
 Supported actions:
- * add-new-group
- * load-first-group
- * load-last-group
- * load-next-group
- * load-prev-group
- * load-custom-group
- * delete-current-group
- * open-manage-groups
- * move-active-tab-to-custom-group
+* `{"action":"add-new-group"}`
+* `{"action":"load-first-group"}`
+* `{"action":"load-last-group"}`
+* `{"action":"load-next-group"}`
+* `{"action":"load-prev-group"}`
+* `{"action":"delete-current-group"}`
+* `{"action":"open-manage-groups"}`
+* `{"action":"move-active-tab-to-custom-group"}`
 
 This extension may conflict with other programs similar in functionality.
 Conflicted addons:
