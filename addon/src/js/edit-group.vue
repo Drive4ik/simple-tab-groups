@@ -3,7 +3,7 @@
 
     import * as utils from './utils';
     import * as file from './file';
-    import { groupIconViewTypes } from './constants';
+    import * as constants from './constants';
     import Vue from 'vue';
 
     import popup from './popup.vue';
@@ -66,7 +66,7 @@
 
                 showMessageCantLoadFile: false,
 
-                groupIconViewTypes: groupIconViewTypes,
+                groupIconViewTypes: constants.groupIconViewTypes,
                 groupClone: new Vue({
                     data: utils.extractKeys(this.group, fieldsToEdit),
                     computed: {
@@ -107,7 +107,7 @@
                 this.groupClone.iconColor = utils.randomColor();
 
                 if (!this.groupClone.iconViewType) {
-                    this.groupClone.iconViewType = this.groupIconViewTypes[0];
+                    this.groupClone.iconViewType = constants.defaultGroupIconViewType;
                 }
             },
 
