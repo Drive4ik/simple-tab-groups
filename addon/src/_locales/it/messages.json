@@ -109,7 +109,7 @@
     },
     "includeTabThumbnailsIntoBackup": {
         "message": "Includi le anteprime delle tab all'interno del backup (la dimensione del file di backup diventerà maggiore)",
-        "description": "Include tab thumbnails into backup (make backup file size bigger)"
+        "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
         "message": "Ripristina i gruppi di Simple Tabs Groups",
@@ -166,6 +166,10 @@
     "sortGroupsZA": {
         "message": "Ordina i gruppi [Z-A]",
         "description": "Sort groups [Z-A]"
+    },
+    "generalTitle": {
+        "message": "Generale",
+        "description": "General"
     },
     "groupSettings": {
         "message": "Impostazioni dei gruppi",
@@ -239,6 +243,10 @@
         "message": "Imposta un colore casuale",
         "description": "Set random color"
     },
+    "catchTabContainers": {
+        "message": "Prendi le tab con i container e spostale in questo gruppo",
+        "description": "Catch and move tabs with containers to this group"
+    },
     "regexpForTabsTitle": {
         "message": "Espressione regolare per selezionare le tab",
         "description": "Regular expressions for catch tabs"
@@ -311,6 +319,10 @@
         "message": "Apri la gestione dei gruppi",
         "description": "Open manage groups"
     },
+    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
+        "message": "Sposta la tab attiva in un gruppo personalizzato",
+        "description": "Move active tab to custom group"
+    },
     "whatsWrongMessage": {
         "message": "Qualcosa è andato male...\nPer favore contatta la sviluppatore con una email contenente gli ultimi log degli errori (per ottenere il log cercare un tasto apposito in fondo alla pagina delle impostazioni)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
@@ -321,7 +333,7 @@
     },
     "undoRemoveGroupItemTitle": {
         "message": "Ripristina il gruppo \"$grouptitle$\" che è stato chiuso",
-        "description": "Undo remove group menu title",
+        "description": "Undelete a group menu title",
         "placeholders": {
             "grouptitle": {
                 "content": "$1",
@@ -329,8 +341,258 @@
             }
         }
     },
+    "undoRemoveGroupNotification": {
+        "message": "Clicca qui per annullare la cancellazione del gruppo $grouptitle$",
+        "description": "Click here to cancel the deletion of the group title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "isStickyGroupTitle": {
+        "message": "Gruppo fissato",
+        "description": "Sticky group"
+    },
+    "isStickyGroupHelp": {
+        "message": "Le tab di questo gruppo non verranno mai spostate automaticamente in un altro gruppo",
+        "description": "Tabs in this group will never be automatically moved to another group"
+    },
+    "useTabsFavIconsFromGoogleS2Converter": {
+        "message": "Mostra le icone dei siti per le tab usando Google S2 Converter",
+        "description": "Use tabs fav-icons from Google S2 Converter"
+    },
+    "iconStyle": {
+        "message": "Stile icona",
+        "description": "Icon style"
+    },
+    "discardTabsAfterHide": {
+        "message": "Riduci il consumo di RAM per le tab che sono state nascoste",
+        "description": "Discard tabs after hide (this will save the RAM)"
+    },
+    "createThumbnailsForTabs": {
+        "message": "Crea delle anteprime per le tab (verranno utilizzate in \"Gestione gruppi\")",
+        "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
+    },
+    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
+        "message": "Non è possibile cambiare il gruppo perché una delle tab aperte sta utilizzando il microfono o la fotocamera",
+        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
+    },
+    "foundHiddenUnSyncTabsDescription": {
+        "message": "Sono state trovate delle tab nascoste che non sono sincronizzate. Clicca qui per mostrarle all'interno del gruppo o della finestra corrente",
+        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
+    },
+    "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
+        "message": "Sposta tutte queste tab nel gruppo o nella finestra corrente",
+        "description": "Move all of these tabs into current group/window"
+    },
+    "actionHiddenUnSyncTabsCreateGroup": {
+        "message": "Crea un nuovo gruppo a partire da queste tab",
+        "description": "Create new group with all of these tabs"
+    },
+    "actionHiddenUnSyncTabsCloseAll": {
+        "message": "Chiudi tutte queste tab",
+        "description": "Close all of these tabs"
+    },
+    "thisTabWillCreateAsNew": {
+        "message": "Questa tab verrà creata ex novo",
+        "description": "This tab will create as new"
+    },
+    "updateTabThumbnail": {
+        "message": "Aggiorna l'anteprima per questa tab",
+        "description": "Update thumbnail for this tab"
+    },
+    "cantMakeThumbnailTabWasDiscarded": {
+        "message": "Non è possibile creare l'anteprima di una tab se non è stata caricata",
+        "description": "You can not make a thumbnail of a tab if the tab was not loaded"
+    },
+    "nowFoundWindowsAddonStoppedWorking": {
+        "message": "Errore: non è stato possibile trovare nessuna finestra privata, in incognito o pop-up.\nL'estensione ha smesso di funzionare correttamente. Per favore, riavviare il browser.",
+        "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
+    },
+    "waitingToLoadAllTabs": {
+        "message": "In attesa del caricamento di tutte le tab.\nAttendere prego...",
+        "description": "Waiting for all tabs to load.\nPlease wait..."
+    },
+    "reloadAddon": {
+        "message": "Ricarica l'estensione",
+        "description": "Reload addon"
+    },
+    "ffFailedAndLostDataMessage": {
+        "message": "Firefox ha smesso di funzionare correttamente e tutti i gruppi sono stati persi.\nSe hai a disposizione un backup è possibile recuperare i gruppi.",
+        "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
+    },
+    "enterDefaultGroupIconViewTypeTitle": {
+        "message": "Stile dell'icona per un nuovo gruppo",
+        "description": "Icon style for a new group"
+    },
+    "openPopupHotkeyTitle": {
+        "message": "Apri i gruppi usando finestre pop-up",
+        "description": "Open the groups pop-up"
+    },
     "openGroupInNewWindow": {
         "message": "Apri il gruppo in una nuova finestra",
         "description": "Open group in new window"
+    },
+    "muteTabsWhenGroupCloseAndRestoreWhenOpen": {
+        "message": "Silenzia le tab quando il gruppo viene chiuso e ripristina l'audio quando il gruppo viene riaperto",
+        "description": "Mute tabs when group close and restore when open"
+    },
+    "showTabAfterMovingItIntoThisGroup": {
+        "message": "Mostra la tab dopo che è stata spostata all'interno di questo gruppo",
+        "description": "Show the tab after auto-moving it into this group"
+    },
+    "tabMoving": {
+        "message": "Spostamento della tab",
+        "description": "Tab moving"
+    },
+    "includeTabFavIconsIntoBackup": {
+        "message": "Inserisci le icone dei siti per le tab all'interno dei backup (questa operazione renderà la dimensione dei backup maggiore)",
+        "description": "Include tab fav-icons in backup (makes backup file size bigger)"
+    },
+    "tabsThumbnailsSize": {
+        "message": "Dimensione dell'anteprima della tab: $size$",
+        "description": "Tabs thumbnails size: $size$",
+        "placeholders": {
+            "size": {
+                "content": "$1",
+                "example": "2 MB"
+            }
+        }
+    },
+    "clearTabsThumbnails": {
+        "message": "Elimina le anteprime delle tab",
+        "description": "Clear tabs thumbnails"
+    },
+    "groupRemovedByExtension": {
+        "message": "Il gruppo \"$group$\" è stato rimosso dall'estensione \"$extension$\"",
+        "description": "Group \"$group$\" removed by extension: $extension$",
+        "placeholders": {
+            "group": {
+                "content": "$1",
+                "example": "group title"
+            },
+            "extension": {
+                "content": "$2",
+                "example": "external extension title"
+            }
+        }
+    },
+    "clickHereToReloadAddon": {
+        "message": "Qualcosa non ha funzionato. Clicca qui per ricaricare l'estensione",
+        "description": "Something went wrong, click here to reload STG addon"
+    },
+    "extendedTabSearch": {
+        "message": "Ricerca estesa",
+        "description": "Extended search"
+    },
+    "waitingForSessionRestoreNotification": {
+        "message": "In attesa per il caricamento della sessione...",
+        "description": "Waiting for session restore..."
+    },
+    "movingMultipleTabsText": {
+        "message": "Spostamento di $count$ tab",
+        "description": "Moving $count$ tabs",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "7"
+            }
+        }
+    },
+    "pinnedTabsAreNotSupported": {
+        "message": "Le tab fissate non sono supportate",
+        "description": "Pinned tabs are not supported"
+    },
+    "privateTabsAreNotSupported": {
+        "message": "Le tab private non sono supportate",
+        "description": "Private tabs are not supported"
+    },
+    "thisUrlsAreNotSupported": {
+        "message": "Questo URL \"\"$urls$\" non è supportato",
+        "description": "This urls \"$urls$\" are not supported",
+        "placeholders": {
+            "urls": {
+                "content": "$1",
+                "example": "about:addons, file://..."
+            }
+        }
+    },
+    "thisTabsCanNotBeHidden": {
+        "message": "Queste tab non possono essere nascoste. Sono fissate, usano il microfono, usano la fotocamera oppure usano lo schermo condiviso. Lista delle tab:\n\"$titles$\"",
+        "description": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
+        "placeholders": {
+            "titles": {
+                "content": "$1",
+                "example": "some titles"
+            }
+        }
+    },
+    "moveMultipleTabsToGroupMessage": {
+        "message": "$tabscount$ tab sono state spostate. Clicca qui per aprire la prima tab.",
+        "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "autoBackupEnableTitle": {
+        "message": "Abilita il backup automatico.",
+        "description": "Enable auto backup"
+    },
+    "autoBackupCreateEveryTitle": {
+        "message": "Crea un backup ogni:",
+        "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyHours": {
+        "message": "ora/e",
+        "description": "hour(s)"
+    },
+    "autoBackupIntervalKeyDays": {
+        "message": "giorno/i",
+        "description": "day(s)"
+    },
+    "autoBackupLastBackupTitle": {
+        "message": "Ultimo backup:",
+        "description": "Last backup:"
+    },
+    "enableDarkTheme": {
+        "message": "Abilita il tema scuro",
+        "description": "Enable dark theme"
+    },
+    "enableDarkThemeNotification": {
+        "message": "Per abilitare completamente il tema scuro, modificare<br><code>svg.context-properties.content.enabled</code> in <code>true</code> all'inteno della pagina <br><code>about:config</code> <br><br><a href='https://support.mozilla.org/kb/about-config-editor-firefox'>Per maggiori informazioni, clicca qui</a>",
+        "description": "Fully support the dark theme text"
+    },
+    "importSettingsPanoramaViewAddonTitle": {
+        "message": "Ripristina sessione dall'estensione \"Panorama View\" di photodiode",
+        "description": "Restore photodiode's \"Panorama View\""
+    },
+    "importSettingsPanoramaViewAddonDescription": {
+        "message": "Carica un file di backup dell'estensione \"Panorama View\"",
+        "description": "Load a backup file from \"Panorama View\" addon."
+    },
+    "importSettingsSyncTabGroupsAddonTitle": {
+        "message": "Ripristina la sessione dall'estensione \"Sync Tab Groups\" di Morikko",
+        "description": "Restore Morikko's \"Sync Tab Groups\""
+    },
+    "importSettingsSyncTabGroupsAddonDescription": {
+        "message": "Carica un file di backup dell'estensione \"Sync Tab Groups\"",
+        "description": "Load a backup file from \"Sync Tab Groups\" addon."
+    },
+    "browseFileTitle": {
+        "message": "Cerca...",
+        "description": "Browse..."
+    },
+    "openBackupFolder": {
+        "message": "Apri cartella dei backup",
+        "description": "Open backup folder"
+    },
+    "createNewGroupWhenOpenNewWindow": {
+        "message": "Crea un nuovo gruppo quando viene aperta una nuova finestra",
+        "description": "Create a new group when opening a new window"
     }
 }
