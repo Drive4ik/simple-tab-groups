@@ -2607,14 +2607,13 @@ async function init() {
         loadingRawTabs[win.id] = win.tabs.filter(winTab => utils.isTabVisible(winTab) && winTab.status === 'loading');
     });
 
-    let startLoadingTabsTime = Date.now();
-
     // waiting all tabs to load
     await new Promise(function(resolve, reject) {
         let tryCount = 0,
             tryTime = 250, // ms
-            showNotificationMessageForLongTimeLoading = 90, // sec
-            fullStopAddonAfterLoadingWaitFor = 10; // min
+            showNotificationMessageForLongTimeLoading = 61, // sec
+            fullStopAddonAfterLoadingWaitFor = 3, // min
+            startLoadingTabsTime = Date.now();
 
         async function checkTabs() {
             let loadingTabs = await browser.tabs.query({
@@ -2624,9 +2623,11 @@ async function init() {
                 windowType: 'normal',
             });
 
+            loadingTabs = loadingTabs.filter(utils.isTabNotIncognito);
+
             if (loadingTabs.length) {
                 if (Date.now() - startLoadingTabsTime > fullStopAddonAfterLoadingWaitFor * 60 * 1000) { // after 10 min loading - stop loading
-                    reject(browser.i18n.getMessage('waitingToLoadAllTabs'));
+                    resolve(); // stop wait tab loading
                     return;
                 }
 
