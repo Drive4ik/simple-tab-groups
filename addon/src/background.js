@@ -2921,7 +2921,7 @@ init()
         });
 
         browser.browserAction.setIcon({
-            path: '/icons/exclamation-triangle.svg',
+            path: '/icons/exclamation-triangle-yellow.svg',
         });
 
         browser.browserAction.onClicked.addListener(() => browser.runtime.reload());
