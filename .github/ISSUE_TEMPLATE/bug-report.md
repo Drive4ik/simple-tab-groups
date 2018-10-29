@@ -22,6 +22,7 @@ If applicable, add screenshots to help explain your problem.
 
 **Desktop (please complete the following information):**
  - OS and version: [e.g. Windows]
+ - Firefox version: [e.g. 63]
  - Simple Tab Groups version: [e.g. 3.0.8]
 
 **Additional context**
