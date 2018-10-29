@@ -107,7 +107,7 @@
                 this.groupClone.iconColor = utils.randomColor();
 
                 if (!this.groupClone.iconViewType) {
-                    this.groupClone.iconViewType = constants.defaultGroupIconViewType;
+                    this.groupClone.iconViewType = BG.getOptions().defaultGroupIconViewType;
                 }
             },
 
