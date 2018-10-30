@@ -16,7 +16,7 @@
         "description": "Set tab icon as group icon"
     },
     "moveTabToGroupDisabledTitle": {
-        "message": "Přesuň panel do skupiny",
+        "message": "Přesunout panel do skupiny",
         "description": "Move tab to group title"
     },
     "moveTabToGroupMessage": {
@@ -108,8 +108,8 @@
         "description": "Create backup"
     },
     "includeTabThumbnailsIntoBackup": {
-        "message": "Zálohovat i náhledy panelů (zvětší velikost souboru)",
-        "description": "Include tab thumbnails into backup (make backup file size bigger)"
+        "message": "Zahrnout náhledy panelů do zálohy (zvětší velikost souboru)",
+        "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
         "message": "Obnovit Simple Tab Groups",
@@ -120,7 +120,7 @@
         "description": "Load a backup file containing the tab groups you want to restore."
     },
     "importAddonSettingsWarning": {
-        "message": "Nahrání zálohy doplňku VYMAŽE všechna současná nastavení a skupiny!",
+        "message": "Nahrání zálohy doplňku PŘEPÍŠE všechna současná nastavení a skupiny!",
         "description": "Restore add-on settings will ERASE all existing settings and groups!"
     },
     "importAddonSettingsButton": {
@@ -319,6 +319,10 @@
         "message": "Otevřít správu skupin",
         "description": "Open manage groups"
     },
+    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
+        "message": "Přesunout aktivní panel do jiné skupiny",
+        "description": "Move active tab to custom group"
+    },
     "whatsWrongMessage": {
         "message": "Co je špatně? \nProsím, kontaktujte vývojaře pomocí emailu s posledním chybovým protokolem (Tlačítko se nachází dole v možnostech)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
@@ -329,7 +333,17 @@
     },
     "undoRemoveGroupItemTitle": {
         "message": "Obnovit skupinu \"$grouptitle$\"",
-        "description": "Undo remove group menu title",
+        "description": "Undelete a group menu title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "undoRemoveGroupNotification": {
+        "message": "Klikněte zde pro obnovení skupiny \"$grouptitle$\"",
+        "description": "Click here to cancel the deletion of the group title",
         "placeholders": {
             "grouptitle": {
                 "content": "$1",
@@ -382,7 +396,7 @@
         "description": "Close all of these tabs"
     },
     "thisTabWillCreateAsNew": {
-        "message": "Tento panel bude vytvořen jako nový",
+        "message": "Tento panel bude otevřen jako nový",
         "description": "This tab will create as new"
     },
     "updateTabThumbnail": {
@@ -420,5 +434,165 @@
     "openGroupInNewWindow": {
         "message": "Otevřít skupinu v novém okně",
         "description": "Open group in new window"
+    },
+    "muteTabsWhenGroupCloseAndRestoreWhenOpen": {
+        "message": "Vypnout zvuk panelů, pokud je skupina zavřena",
+        "description": "Mute tabs when group close and restore when open"
+    },
+    "showTabAfterMovingItIntoThisGroup": {
+        "message": "Zobrazit panel po automatickém přesunu do této skupiny",
+        "description": "Show the tab after auto-moving it into this group"
+    },
+    "tabMoving": {
+        "message": "Přesun panelu",
+        "description": "Tab moving"
+    },
+    "includeTabFavIconsIntoBackup": {
+        "message": "Zahrnout fav-ikony do zálohy (Zvětší velikost souboru)",
+        "description": "Include tab fav-icons in backup (makes backup file size bigger)"
+    },
+    "tabsThumbnailsSize": {
+        "message": "Velikost náhledů panelů: $size$",
+        "description": "Tabs thumbnails size: $size$",
+        "placeholders": {
+            "size": {
+                "content": "$1",
+                "example": "2 MB"
+            }
+        }
+    },
+    "clearTabsThumbnails": {
+        "message": "Odstranit náhledy panelů",
+        "description": "Clear tabs thumbnails"
+    },
+    "groupRemovedByExtension": {
+        "message": "Skupina \"$group$\" odstraněna doplňkem: $extension$",
+        "description": "Group \"$group$\" removed by extension: $extension$",
+        "placeholders": {
+            "group": {
+                "content": "$1",
+                "example": "group title"
+            },
+            "extension": {
+                "content": "$2",
+                "example": "external extension title"
+            }
+        }
+    },
+    "clickHereToReloadAddon": {
+        "message": "Něco se pokazilo. Klikněte sem pro opětovné načtení STG doplňku.",
+        "description": "Something went wrong, click here to reload STG addon"
+    },
+    "extendedTabSearch": {
+        "message": "Rozšířené vyhledávání",
+        "description": "Extended search"
+    },
+    "waitingForSessionRestoreNotification": {
+        "message": "Čekání na obnovení relace",
+        "description": "Waiting for session restore..."
+    },
+    "movingMultipleTabsText": {
+        "message": "Přesun $count$ panelů",
+        "description": "Moving $count$ tabs",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "7"
+            }
+        }
+    },
+    "pinnedTabsAreNotSupported": {
+        "message": "Připnuté panely nejsou podporovány.",
+        "description": "Pinned tabs are not supported"
+    },
+    "privateTabsAreNotSupported": {
+        "message": "Anonymní panely nejsou podporovány.",
+        "description": "Private tabs are not supported"
+    },
+    "thisUrlsAreNotSupported": {
+        "message": "Tento typ adres (\"$urls$\") není podporován.",
+        "description": "This urls \"$urls$\" are not supported",
+        "placeholders": {
+            "urls": {
+                "content": "$1",
+                "example": "about:addons, file://..."
+            }
+        }
+    },
+    "thisTabsCanNotBeHidden": {
+        "message": "Tyto panely nemůžou být skryty z důvodu připnutí, používání mikrofonu, kamery nebo sdílení obrazovky: \"$titles$\"",
+        "description": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
+        "placeholders": {
+            "titles": {
+                "content": "$1",
+                "example": "some titles"
+            }
+        }
+    },
+    "moveMultipleTabsToGroupMessage": {
+        "message": "$tabscount$ panelů bylo přesunuto.\nKlikněte zde pro otevření prvního.",
+        "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "autoBackupEnableTitle": {
+        "message": "Povolit automatickou zálohu",
+        "description": "Enable auto backup"
+    },
+    "autoBackupCreateEveryTitle": {
+        "message": "Zálohovat jednou za",
+        "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyHours": {
+        "message": "hod.",
+        "description": "hour(s)"
+    },
+    "autoBackupIntervalKeyDays": {
+        "message": "den/dny",
+        "description": "day(s)"
+    },
+    "autoBackupLastBackupTitle": {
+        "message": "Poslední záloha:",
+        "description": "Last backup:"
+    },
+    "enableDarkTheme": {
+        "message": "Zapnout tmavé téma",
+        "description": "Enable dark theme"
+    },
+    "enableDarkThemeNotification": {
+        "message": "Pro plnou podporu tmavého tématu je potřeba přepnout parametr<br><code>svg.context-properties.content.enabled</code> na <code>true</code> na stránce<br><code>about:config</code>.<br><br><a href='https://support.mozilla.org/kb/about-config-editor-firefox'>Jak na to?</a>",
+        "description": "Fully support the dark theme text"
+    },
+    "importSettingsPanoramaViewAddonTitle": {
+        "message": "Obnovit zálohu \"Panorama View\" od Photodiode",
+        "description": "Restore photodiode's \"Panorama View\""
+    },
+    "importSettingsPanoramaViewAddonDescription": {
+        "message": "Načíst záložní soubor doplňku \"Panorama View\".",
+        "description": "Load a backup file from \"Panorama View\" addon."
+    },
+    "importSettingsSyncTabGroupsAddonTitle": {
+        "message": "Obnovit zálohu \"Sync Tab Groups\" od Morikko",
+        "description": "Restore Morikko's \"Sync Tab Groups\""
+    },
+    "importSettingsSyncTabGroupsAddonDescription": {
+        "message": "Načíst záložní soubor doplňku \"Sync Tab Groups\".",
+        "description": "Load a backup file from \"Sync Tab Groups\" addon."
+    },
+    "browseFileTitle": {
+        "message": "Procházet",
+        "description": "Browse..."
+    },
+    "openBackupFolder": {
+        "message": "Otevřít složku se zálohou",
+        "description": "Open backup folder"
+    },
+    "createNewGroupWhenOpenNewWindow": {
+        "message": "Vytvořit novou skupinu při otevření nového okna",
+        "description": "Create a new group when opening a new window"
     }
 }

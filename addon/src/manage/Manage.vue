@@ -33,21 +33,13 @@
         setTimeout(async function() {
             currentWindow = await BG.getWindow();
 
-            if (window.localStorage.manageGroupsWindowLeft != currentWindow.left) {
-                window.localStorage.manageGroupsWindowLeft = currentWindow.left;
-            }
+            ['left', 'top', 'width', 'height'].forEach(function(option) {
+                let capitalizedOption = utils.capitalize(option);
 
-            if (window.localStorage.manageGroupsWindowTop != currentWindow.top) {
-                window.localStorage.manageGroupsWindowTop = currentWindow.top;
-            }
-
-            if (window.localStorage.manageGroupsWindowWidth != currentWindow.width) {
-                window.localStorage.manageGroupsWindowWidth = currentWindow.width;
-            }
-
-            if (window.localStorage.manageGroupsWindowHeight != currentWindow.height) {
-                window.localStorage.manageGroupsWindowHeight = currentWindow.height;
-            }
+                if (window.localStorage['manageGroupsWindow' + capitalizedOption] != currentWindow[option]) {
+                    window.localStorage['manageGroupsWindow' + capitalizedOption] = currentWindow[option];
+                }
+            });
 
             setSaveWindowPositionTimer();
         }, 5000);
