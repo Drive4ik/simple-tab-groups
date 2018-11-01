@@ -7,21 +7,22 @@ import * as idb from 'idb-keyval';
 let myStore = new idb.Store('simple-tab-groups', 'my-store');
 
 export default {
-    get: function(data) {
-        return browser.storage.local.get(data)
-            .then(function(result) {
-                if (null === data) {
-                    result = Object.assign({}, utils.clone(DEFAULT_OPTIONS), result);
-                } else if ('string' === utils.type(data)) {
-                    if (undefined === result[data]) {
-                        result[data] = utils.clone(DEFAULT_OPTIONS[data]);
-                    }
-                } else if (Array.isArray(data)) {
-                    data.forEach(key => undefined === result[key] ? result[key] = utils.clone(DEFAULT_OPTIONS[key]) : null);
-                }
+    async get(data) {
+        let result = await browser.storage.local.get(data);
 
-                return result;
-            });
+        if (null === data) {
+            let options = utils.clone(DEFAULT_OPTIONS);
+            Object.assign(options, result);
+            result = options;
+        } else if ('string' === utils.type(data)) {
+            if (undefined === result[data]) {
+                result[data] = utils.clone(DEFAULT_OPTIONS[data]);
+            }
+        } else if (Array.isArray(data)) {
+            data.forEach(key => undefined === result[key] ? result[key] = utils.clone(DEFAULT_OPTIONS[key]) : null);
+        }
+
+        return result;
     },
     clear: browser.storage.local.clear,
     remove: browser.storage.local.remove,
