@@ -1,0 +1,78 @@
+
+#stg-move-tab-to-group-popup-wrapper {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    -moz-user-select: none;
+    z-index: 2147483647;
+
+    .stg-popup-has-text {
+        color: #000;
+        font-family: Arial, sans-serif;
+        font-size: 16px;
+        font-weight: normal;
+        line-height: 1.5;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .stg-popup-main {
+        background-color: #fbfbfb;
+        border-radius: 5px;
+        padding: 10px;
+        min-width: 600px;
+        max-width: 75vw;
+        white-space: nowrap;
+
+        .stg-popup-header {
+            color: initial;
+            text-align: center;
+            outline: none;
+        }
+
+        .stg-popup-groups-wrapper {
+            overflow-y: auto;
+            min-height: 150px;
+            max-height: calc(100vh - 100px);
+
+            .stg-popup-group {
+                display: flex;
+                align-items: center;
+                height: 30px;
+                margin-top: 4px;
+                padding: 2px 5px 2px;
+                border-radius: 3px;
+                cursor: default;
+                outline: none;
+                overflow: hidden;
+
+                &:not(.stg-popup-disabled):hover,
+                &:not(.stg-popup-disabled):focus {
+                    background-color: #91c9f7;
+                }
+
+                &.stg-popup-disabled {
+                    cursor: not-allowed;
+
+                    span {
+                        color: GrayText;
+                    }
+                }
+
+                img {
+                    width: 16px;
+                    height: 16px;
+                    margin-right: 5px;
+                    -moz-context-properties: fill;
+                    fill: #5d5d5d;
+                }
+            }
+        }
+    }
+}

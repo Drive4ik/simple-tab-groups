@@ -58,7 +58,7 @@ const config = {
                     },
                 },
             }),
-            new OptimizeCSSAssetsPlugin({})
+            new OptimizeCSSAssetsPlugin({}),
         ],
     },
     module: {
@@ -68,13 +68,23 @@ const config = {
                 loader: 'vue-loader',
             },
             {
-                test: /\.scss$/,
-                use: ['vue-style-loader', 'css-loader', 'sass-loader'],
+                test: /\.(scss|css)$/,
+                use: [
+                    MiniCssExtractPlugin.loader,
+                    {
+                        loader: 'css-loader',
+                        options: {
+                            minimize: {
+                                safe: true,
+                            },
+                        },
+                    },
+                    {
+                        loader: 'sass-loader',
+                        // options: {},
+                    },
+                ]
             },
-            {
-                test: /\.css$/,
-                use: [MiniCssExtractPlugin.loader, 'css-loader'],
-            }
         ],
     },
     plugins: [

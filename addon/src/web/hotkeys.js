@@ -1,6 +1,7 @@
 'use strict';
 
 import { DEFAULT_OPTIONS } from '../js/constants';
+import './move-tab-popup.scss';
 
 let hotkeys = [],
     foundHotKey = false,
@@ -101,70 +102,7 @@ function stopEvent(e) {
     e.stopImmediatePropagation();
 }
 
-const styles = {
-        text: {
-            color: '#000',
-            fontFamily: 'Arial, sans-serif',
-            fontSize: '16px',
-            fontWeight: 'normal',
-            lineHeight: '1.5',
-            MozUserSelect: 'none',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-        },
-        wrapper: {
-            position: 'fixed',
-            left: 0,
-            top: 0,
-            bottom: 0,
-            right: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 2147483647,
-        },
-        main: {
-            backgroundColor: '#fbfbfb',
-            borderRadius: '5px',
-            padding: '10px',
-            minWidth: '600px',
-            maxWidth: '75vw',
-            whiteSpace: 'nowrap',
-        },
-        header: {
-            color: 'initial',
-            textAlign: 'center',
-            outline: 'none',
-        },
-        groupsWrapper: {
-            overflowY: 'auto',
-            minHeight: '150px',
-            maxHeight: 'calc(100vh - 100px)',
-        },
-        groupNode: {
-            display: 'flex',
-            alignItems: 'center',
-            height: '30px',
-            marginTop: '4px',
-            padding: '2px 5px 2px',
-            borderRadius: '3px',
-            cursor: 'default',
-            outline: 'none',
-            overflow: 'hidden',
-        },
-        groupNodeFocusBackgroudColor: '#91c9f7',
-        imgNode: {
-            width: '16px',
-            height: '16px',
-            marginRight: '5px',
-            fill: '#5d5d5d',
-        },
-        titleNode: {
-            // color: 'initial',
-        },
-    },
-    popupId = 'stg-move-tab-to-group-popup-wrapper';
+const popupId = 'stg-move-tab-to-group-popup-wrapper';
 
 function showGroupsForMovingTab(data) {
     if (window.top !== window || document.getElementById(popupId)) {
@@ -180,15 +118,14 @@ function showGroupsForMovingTab(data) {
         onclick: closeGroupsPopup,
         onkeydown: (e) => KeyEvent.DOM_VK_ESCAPE === e.keyCode ? closeGroupsPopup() : null,
     });
-    Object.assign(wrapper.style, styles.wrapper);
     document.body.append(wrapper);
 
     let main = document.createElement('div');
-    Object.assign(main.style, styles.main);
+    main.classList.add('stg-popup-main');
     wrapper.append(main);
 
     let header = document.createElement('div');
-    Object.assign(header.style, styles.text, styles.header);
+    header.classList = 'stg-popup-has-text stg-popup-header';
     Object.assign(header, {
         tabIndex: '-1',
         innerText: browser.i18n.getMessage('moveTabToGroupDisabledTitle'),
@@ -208,7 +145,7 @@ function showGroupsForMovingTab(data) {
     main.append(header);
 
     let groupsWrapper = document.createElement('div');
-    Object.assign(groupsWrapper.style, styles.groupsWrapper);
+    groupsWrapper.classList.add('stg-popup-groups-wrapper');
     main.append(groupsWrapper);
 
     function checkUpDownKeys(e) {
@@ -226,29 +163,19 @@ function showGroupsForMovingTab(data) {
             imgNode = document.createElement('img'),
             titleNode = document.createElement('span');
 
-        Object.assign(groupNode.style, styles.groupNode);
-
-        Object.assign(imgNode.style, styles.imgNode);
+        groupNode.classList.add('stg-popup-group');
 
         imgNode.src = group.iconUrl;
-        imgNode.style.setProperty('-moz-context-properties', 'fill');
         groupNode.append(imgNode);
 
         titleNode.innerText = group.title;
-        Object.assign(titleNode.style, styles.text, styles.titleNode);
+        titleNode.classList.add('stg-popup-has-text');
         groupNode.append(titleNode);
 
         groupNode.tabIndex = tabIndex;
 
         if (isEnabled) {
-            groupNode.onfocus = groupNode.onmouseover = function() {
-                if (groupsWrapper.contains(document.activeElement) && document.activeElement.style.backgroundColor) {
-                    header.focus();
-                }
-
-                groupNode.style.backgroundColor = styles.groupNodeFocusBackgroudColor;
-            };
-            groupNode.onblur = groupNode.onmouseout = () => groupNode.style.backgroundColor = '';
+            groupNode.onmouseover = () => groupsWrapper.contains(document.activeElement) && header.focus();
 
             groupNode.onclick = function(groupId) {
                 browser.runtime.sendMessage(EXT_ID, {
@@ -275,11 +202,18 @@ function showGroupsForMovingTab(data) {
                 }
             };
         } else {
-            titleNode.style.color = 'GrayText';
-            groupNode.style.cursor = 'not-allowed';
-            groupNode.classList.add('disabled');
-            groupNode.onclick = e => e.stopPropagation();
-            groupNode.onfocus = () => lastVector ? setFocusToNextElement(groupNode, lastVector) : null;
+            groupNode.classList.add('stg-popup-disabled');
+            groupNode.onclick = function(e) {
+                e.stopPropagation();
+                header.focus();
+            };
+            groupNode.onfocus = function(e) {
+                stopEvent(e);
+
+                if (lastVector) {
+                    setFocusToNextElement(groupNode, lastVector);
+                }
+            };
         }
 
         return groupNode;
@@ -330,7 +264,15 @@ function showGroupsForMovingTab(data) {
         wrapper.style.transform = 'none';
         wrapper.style.opacity = '1';
         wrapper.style.visibility = 'visible';
-        setFocusToNextElement(groupsWrapper.lastElementChild, 'down');
+
+        let hoveredElements = document.querySelectorAll(':hover');
+
+        if (groupsWrapper.contains(hoveredElements[hoveredElements.length - 1])) {
+            header.focus();
+        } else {
+            setFocusToNextElement(groupsWrapper.lastElementChild, 'down');
+        }
+
     }, 0);
 
 }
