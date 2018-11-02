@@ -520,7 +520,7 @@
         }
     },
     "thisTabsCanNotBeHidden": {
-        "message": "Det är inte möjligt att gömma flikar som är fästa, använder mikrofonen eller använder kameran.\nFlikar: $title$",
+        "message": "Det är inte möjligt att gömma flikar som är fästa, använder mikrofonen eller använder kameran.\nFlikar: $titles$",
         "description": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
         "placeholders": {
             "titles": {
@@ -530,7 +530,7 @@
         }
     },
     "moveMultipleTabsToGroupMessage": {
-        "message": "$tabcount$ flikar har flyattats.\nKlicka här för att visa den första fliken",
+        "message": "$tabscount$ flikar har flyattats.\nKlicka här för att visa den första fliken",
         "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
         "placeholders": {
             "tabscount": {
