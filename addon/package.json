@@ -17,7 +17,7 @@
         "vue-swatches": "^1.0.2"
     },
     "devDependencies": {
-        "copy-webpack-plugin": "^4.5.4",
+        "copy-webpack-plugin": "^4.6.0",
         "cross-env": "^5.2.0",
         "css-loader": "^1.0.1",
         "fs-extra": "^7.0.0",
@@ -28,7 +28,7 @@
         "style-loader": "^0.23.1",
         "vue-loader": "^15.4.2",
         "vue-template-compiler": "^2.5.17",
-        "webpack": "^4.23.1",
+        "webpack": "^4.24.0",
         "webpack-cli": "^3.1.2",
         "webpack-shell-plugin": "^0.5.0",
         "zip-a-folder": "0.0.6"
