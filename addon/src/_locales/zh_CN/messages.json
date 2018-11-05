@@ -444,7 +444,7 @@
         "description": "Show the tab after auto-moving it into this group"
     },
     "tabMoving": {
-        "message": "标签页正在移动",
+        "message": "标签页移动",
         "description": "Tab moving"
     },
     "includeTabFavIconsIntoBackup": {
