@@ -802,7 +802,7 @@ async function loadGroup(windowId, groupId, activeTabIndex = -1, fixLastActiveTa
 async function _fixLastActiveTab(group, setPosition = 'last-active', breakIfHasActive = false) {
     let tabIds = group.tabs.filter(utils.keyId).map(utils.keyId);
 
-    if (!tabIds.length || (breakIfHasActive && !group.tabs.some(tab => tab.active))) {
+    if (!tabIds.length || (breakIfHasActive && group.tabs.some(tab => tab.active))) {
         return;
     }
 
