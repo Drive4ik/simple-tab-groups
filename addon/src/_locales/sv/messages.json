@@ -530,7 +530,7 @@
         }
     },
     "moveMultipleTabsToGroupMessage": {
-        "message": "$tabscount$ flikar har flyattats.\nKlicka här för att visa den första fliken",
+        "message": "$tabscount$ flikar har flyttats.\nKlicka här för att visa den första fliken",
         "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
         "placeholders": {
             "tabscount": {
