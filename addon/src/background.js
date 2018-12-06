@@ -605,6 +605,11 @@ async function loadGroup(windowId, groupId, activeTabIndex = -1, fixLastActiveTa
 
     console.log('loadGroup', { groupId: group.id, windowId, activeTabIndex });
 
+    // try to fix bug invalid tab id
+    function _fixTabsIds(tabs) {
+        return Promise.all(tabs.filter(utils.keyId).map(tab => browser.tabs.get(tab.id).catch(() => tab.id = null)));
+    }
+
     try {
         if (group.windowId) {
             if (-1 !== activeTabIndex) {
@@ -655,6 +660,8 @@ async function loadGroup(windowId, groupId, activeTabIndex = -1, fixLastActiveTa
             // hide tabs
             if (oldGroup) {
                 if (oldGroup.tabs.length) {
+                    await _fixTabsIds(oldGroup.tabs);
+
                     let oldTabIds = oldGroup.tabs.filter(utils.keyId).map(utils.keyId);
 
                     if (oldTabIds.length) {
@@ -703,6 +710,8 @@ async function loadGroup(windowId, groupId, activeTabIndex = -1, fixLastActiveTa
 
             // show tabs
             if (group.tabs.length) {
+                await _fixTabsIds(group.tabs);
+
                 let containers = await utils.loadContainers(),
                     hiddenTabsIds = group.tabs.filter(utils.keyId).map(utils.keyId);
 
