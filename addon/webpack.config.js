@@ -44,6 +44,10 @@ const config = {
     watchOptions: {
         ignored: /node_modules/,
     },
+    stats: {
+        // entrypoints: false,
+        children: false,
+    },
     devtool: false,
     optimization: {
         minimizer: [
@@ -73,11 +77,11 @@ const config = {
                     MiniCssExtractPlugin.loader,
                     {
                         loader: 'css-loader',
-                        options: {
-                            minimize: {
-                                safe: true,
-                            },
-                        },
+                        // options: {
+                        //     minimize: {
+                        //         safe: true,
+                        //     },
+                        // },
                     },
                     {
                         loader: 'sass-loader',
