@@ -677,7 +677,7 @@
                         <input v-model="openPopupCommand.metaKey" type="checkbox" />
                         <span>Command</span>
                     </label>
-                    <div class="control">
+                    <div class="control input-command">
                         <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(openPopupCommand, $event, false)" :value="openPopupCommand.key" autocomplete="off" class="input" />
                     </div>
                     <div class="is-flex">
@@ -895,7 +895,7 @@
                 margin-right: var(--indent);
             }
 
-            > :nth-child(4) {
+            > .input-command {
                 width: 110px;
                 min-width: 110px;
             }
