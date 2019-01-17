@@ -131,10 +131,10 @@ async function getHighlightedTabs(windowId = browser.windows.WINDOW_ID_CURRENT, 
     if (clickedTab) {
         if (!tabs.some(tab => tab.id === clickedTab.id)) { // if clicked tab not in selected tabs - add it
             tabs.push(clickedTab);
-        }
 
-        if (2 === tabs.length) {
-            tabs = tabs.filter(tab => tab.active ? (tab.id === clickedTab.id) : true); // exclude active tab if need to move another tab
+            if (2 === tabs.length) {
+                tabs = tabs.filter(tab => tab.active ? (tab.id === clickedTab.id) : true); // exclude active tab if need to move another tab
+            }
         }
     }
 
