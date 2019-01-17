@@ -13,7 +13,7 @@
     "dependencies": {
         "compare-versions": "^3.4.0",
         "idb-keyval": "^3.1.0",
-        "vue": "^2.5.21",
+        "vue": "^2.5.22",
         "vue-swatches": "^1.0.2"
     },
     "devDependencies": {
@@ -27,10 +27,10 @@
         "sass-loader": "^7.1.0",
         "style-loader": "^0.23.1",
         "uglifyjs-webpack-plugin": "^2.1.1",
-        "vue-loader": "^15.5.0",
-        "vue-template-compiler": "^2.5.21",
-        "webpack": "^4.28.3",
-        "webpack-cli": "^3.2.0",
+        "vue-loader": "^15.5.1",
+        "vue-template-compiler": "^2.5.22",
+        "webpack": "^4.28.4",
+        "webpack-cli": "^3.2.1",
         "webpack-shell-plugin": "^0.5.0",
         "zip-a-folder": "0.0.6"
     }
