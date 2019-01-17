@@ -476,7 +476,7 @@ async function waitDownload(id, maxWaitSec = 5) {
     for (let i = 0; i < maxWaitSec * 5; i++) {
         [downloadObj] = await browser.downloads.search({id});
 
-        if (!downloadObj || 'in_progress' !== downloadObj.state) {
+        if (downloadObj && 'in_progress' !== downloadObj.state) {
             break;
         }
 
