@@ -1384,6 +1384,8 @@ async function moveTabs(fromData, toData, showNotificationAfterMoveTab = true, s
 
             setGroupAsWorked(newGroup);
         }
+
+        toData.newTabIndex++;
     }
 
     let tabsWhichCantMove = {
@@ -1558,9 +1560,11 @@ async function moveTabs(fromData, toData, showNotificationAfterMoveTab = true, s
 
     saveGroupsToStorage();
 
+    let lastTabIndex = toData.newTabIndex - 1;
+
     if (showTabAfterMoving) {
         let winId = newGroup.windowId || lastFocusedNormalWindow.id;
-        await loadGroup(winId, newGroup.id, toData.newTabIndex);
+        await loadGroup(winId, newGroup.id, lastTabIndex);
 
         return;
     }
@@ -1574,19 +1578,19 @@ async function moveTabs(fromData, toData, showNotificationAfterMoveTab = true, s
     if (countMovedTabs > 1) {
         message = browser.i18n.getMessage('moveMultipleTabsToGroupMessage', countMovedTabs);
     } else {
-        let tabTitle = utils.sliceText(utils.getTabTitle(newGroup.tabs[toData.newTabIndex]), 50);
+        let tabTitle = utils.sliceText(utils.getTabTitle(newGroup.tabs[lastTabIndex]), 50);
         message = browser.i18n.getMessage('moveTabToGroupMessage', [newGroup.title, tabTitle]);
     }
 
     utils.notify(message)
-        .then(async function(newGroupId, newTabIndex) {
+        .then(async function(newGroupId, lastTabIndex) {
             let group = _groups.find(gr => gr.id === newGroupId);
 
-            if (group && group.tabs[newTabIndex]) {
+            if (group && group.tabs[lastTabIndex]) {
                 await setFocusOnWindow(lastFocusedNormalWindow.id);
-                loadGroup(lastFocusedNormalWindow.id, group.id, newTabIndex);
+                loadGroup(lastFocusedNormalWindow.id, group.id, lastTabIndex);
             }
-        }.bind(null, newGroup.id, toData.newTabIndex));
+        }.bind(null, newGroup.id, lastTabIndex));
 }
 
 let moveTabToGroupMenusIds = [];

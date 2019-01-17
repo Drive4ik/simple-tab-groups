@@ -97,7 +97,7 @@
                     BG.moveGroup(from.data.item.id, this.groups.indexOf(to.data.item));
                 })
                 .$on('drag-move-tab', function(from, to) {
-                    let tabsData = this.getTabForMove(from.data.item);
+                    let tabsData = this.getTabsForMove(from.data.item);
 
                     BG.moveTabs(tabsData, {
                             newTabIndex: to.data.group.tabs.indexOf(to.data.item),
@@ -458,7 +458,7 @@
 
                 this.showSectionDefault();
             },
-            getTabForMove(withTab) {
+            getTabsForMove(withTab) {
                 if (!this.multipleMoveTabs.includes(withTab)) {
                     this.multipleMoveTabs.push(withTab);
                 }
@@ -484,7 +484,7 @@
                 return result;
             },
             async moveTab(tab, newGroup, loadUnsync) {
-                let tabsData = this.getTabForMove(tab);
+                let tabsData = this.getTabsForMove(tab);
 
                 try {
                     await BG.moveTabs(tabsData, {
