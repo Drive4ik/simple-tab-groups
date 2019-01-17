@@ -238,7 +238,7 @@
 
                 this.multipleDropTabs = [];
 
-                return tabsToMove.reverse();
+                return tabsToMove;
             },
 
             $_groupMap(group) {
