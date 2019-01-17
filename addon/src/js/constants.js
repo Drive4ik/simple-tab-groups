@@ -102,6 +102,7 @@ const DEFAULT_OPTIONS = {
             key: '`',
             keyCode: 192,
             action: 'load-next-group',
+            groupId: 0,
         },
         {
             ctrlKey: true,
@@ -111,6 +112,7 @@ const DEFAULT_OPTIONS = {
             key: '`',
             keyCode: 192,
             action: 'load-prev-group',
+            groupId: 0,
         },
     ],
 };

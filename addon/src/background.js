@@ -2066,13 +2066,21 @@ async function runAction(data, externalExtId) {
                     break;
                 }
 
-                let activeGroup = _groups.find(group => group.windowId === activeTab.windowId);
+                if (data.groupId) {
+                    await moveTabs([{
+                        tabId: activeTab.id,
+                    }], {
+                        groupId: data.groupId,
+                    });
+                } else {
+                    let activeGroup = _groups.find(group => group.windowId === activeTab.windowId);
 
-                await browser.tabs.sendMessage(activeTab.id, {
-                    action: 'move-tab-to-custom-group',
-                    groups: _groups.map(_mapGroupForAnotherExtension),
-                    activeGroupId: activeGroup ? activeGroup.id : null,
-                });
+                    await browser.tabs.sendMessage(activeTab.id, {
+                        action: 'move-tab-to-custom-group',
+                        groups: _groups.map(_mapGroupForAnotherExtension),
+                        activeGroupId: activeGroup ? activeGroup.id : null,
+                    });
+                }
 
                 result.ok = true;
                 break;
@@ -2427,6 +2435,10 @@ async function runMigrateForData(data) {
                 delete tab.thumbnail;
             });
         });
+    }
+
+    if (ifVersionInDataLessThan('3.3.5')) {
+        data.hotkeys.forEach(hotkey => hotkey.groupId = hotkey.groupId || 0);
     }
 
     data.version = currentVersion;

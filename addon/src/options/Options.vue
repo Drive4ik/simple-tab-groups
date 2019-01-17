@@ -519,6 +519,7 @@
                     key: '',
                     keyCode: 0,
                     action: '',
+                    groupId: 0,
                 };
             },
 
@@ -716,9 +717,9 @@
                             <option v-for="action in hotkeyActions" :key="action" :value="action" v-text="getHotkeyActionTitle(action)"></option>
                         </select>
                     </div>
-                    <div v-if="'load-custom-group' === hotkey.action" class="select custom-group">
-                        <select v-model="hotkey.groupId">
-                            <option v-if="!hotkey.groupId" selected disabled value="undefined" v-text="lang('selectGroup')"></option>
+                    <div v-if="'load-custom-group' === hotkey.action || 'move-active-tab-to-custom-group' === hotkey.action" class="select custom-group">
+                        <select v-model.number="hotkey.groupId">
+                            <option :disabled="'load-custom-group' === hotkey.action" value="0" v-text="lang('selectGroup')"></option>
                             <option v-for="group in groups" :key="group.id" :value="group.id" v-text="group.title"></option>
                         </select>
                     </div>
