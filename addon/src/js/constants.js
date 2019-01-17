@@ -88,6 +88,8 @@ const DEFAULT_OPTIONS = {
     autoBackupLastBackupTimeStamp: 1,
     autoBackupIntervalKey: 'days', // days, hours
     autoBackupIntervalValue: 1,
+    autoBackupIncludeTabThumbnails: true,
+    autoBackupIncludeTabFavIcons: true,
 
     enableDarkTheme: false,
 

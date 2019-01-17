@@ -2183,7 +2183,7 @@ async function resetAutoBackup() {
     let timeToBackup = value * intervalSec + options.autoBackupLastBackupTimeStamp;
 
     if (now > timeToBackup) {
-        createBackup(true, true, true, overwrite);
+        createBackup(options.autoBackupIncludeTabThumbnails, options.autoBackupIncludeTabFavIcons, true, overwrite);
         timer = value * intervalSec;
     } else {
         timer = timeToBackup - now;

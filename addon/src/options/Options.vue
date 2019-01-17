@@ -707,7 +707,7 @@
                         <input v-model="hotkey.metaKey" type="checkbox" />
                         <span>Command</span>
                     </label>
-                    <div class="control">
+                    <div class="control input-command">
                         <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(hotkey, $event, true)" :value="hotkey.key" autocomplete="off" class="input" :placeholder="lang('hotkeyPlaceholder')" />
                     </div>
                     <div class="select">
@@ -776,27 +776,43 @@
                         <span v-text="lang('autoBackupEnableTitle')"></span>
                     </label>
                 </div>
-                <div v-if="options.autoBackupEnable" class="field is-flex is-align-items-center indent-children">
-                    <div class="h-margin-right-5" v-html="lang('autoBackupCreateEveryTitle')"></div>
-                    <div class="field has-addons">
-                        <div class="control">
-                            <input type="number" class="input backup-time-input" v-model.number="options.autoBackupIntervalValue" min="1" max="20" />
-                        </div>
-                        <div class="control">
-                            <div class="select">
-                                <select v-model="options.autoBackupIntervalKey">
-                                    <option value="hours" v-text="lang('autoBackupIntervalKeyHours')"></option>
-                                    <option value="days" v-text="lang('autoBackupIntervalKeyDays')"></option>
-                                </select>
+                <div v-if="options.autoBackupEnable" class="field">
+                    <div class="field">
+                        <label class="checkbox">
+                            <input v-model="options.autoBackupIncludeTabThumbnails" type="checkbox" />
+                            <span v-text="lang('includeTabThumbnailsIntoBackup')"></span>
+                        </label>
+                    </div>
+                    <div class="field">
+                        <label class="checkbox">
+                            <input v-model="options.autoBackupIncludeTabFavIcons" type="checkbox" />
+                            <span v-text="lang('includeTabFavIconsIntoBackup')"></span>
+                        </label>
+                    </div>
+
+                    <div class="field is-flex is-align-items-center indent-children">
+                        <div class="h-margin-right-5" v-html="lang('autoBackupCreateEveryTitle')"></div>
+                        <div class="field has-addons">
+                            <div class="control">
+                                <input type="number" class="input backup-time-input" v-model.number="options.autoBackupIntervalValue" min="1" max="20" />
+                            </div>
+                            <div class="control">
+                                <div class="select">
+                                    <select v-model="options.autoBackupIntervalKey">
+                                        <option value="hours" v-text="lang('autoBackupIntervalKeyHours')"></option>
+                                        <option value="days" v-text="lang('autoBackupIntervalKeyDays')"></option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>
+
+                    <div>
+                        <span v-text="lang('autoBackupLastBackupTitle')"></span>
+                        <span v-text="new Date(options.autoBackupLastBackupTimeStamp * 1000).toLocaleString()"></span>
+                    </div>
                 </div>
-                <div v-if="options.autoBackupEnable" class="field is-flex is-align-items-center indent-children">
-                    <span v-text="lang('autoBackupLastBackupTitle')"></span>
-                    <span v-text="new Date(options.autoBackupLastBackupTimeStamp * 1000).toLocaleString()"></span>
-                </div>
-                <div>
+                <div class="field">
                     <button class="button" @click="openBackupFolder" v-text="lang('openBackupFolder')"></button>
                 </div>
             </div>
