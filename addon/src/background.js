@@ -2185,6 +2185,7 @@ async function resetAutoBackup() {
             intervalSec = constants.DAY_SEC;
         }
     } else {
+        log('invalid autoBackupIntervalKey', options.autoBackupIntervalKey);
         return;
     }
 

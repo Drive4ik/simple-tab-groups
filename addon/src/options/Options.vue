@@ -810,7 +810,8 @@
 
                     <div>
                         <span v-text="lang('autoBackupLastBackupTitle')"></span>
-                        <span v-text="new Date(options.autoBackupLastBackupTimeStamp * 1000).toLocaleString()"></span>
+                        <span v-if="options.autoBackupLastBackupTimeStamp > 1" v-text="new Date(options.autoBackupLastBackupTimeStamp * 1000).toLocaleString()"></span>
+                        <span v-else>&mdash;</span>
                     </div>
                 </div>
                 <div class="field">
