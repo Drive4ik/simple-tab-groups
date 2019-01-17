@@ -878,7 +878,7 @@
 
 <style lang="scss">
     body {
-        background-color: #f9f9fa;
+        // background-color: #f9f9fa;
     }
 
     #stg-options {
