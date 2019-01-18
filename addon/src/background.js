@@ -1731,7 +1731,7 @@ function setBrowserActionData(currentGroup, windowId) {
 
     browser.browserAction.setTitle({
         windowId: windowId,
-        title: currentGroup.title + ' - ' + browser.i18n.getMessage('extensionName'),
+        title: utils.sliceText(currentGroup.title, 28) + ' - STG',
     });
 
     browser.browserAction.setIcon({
