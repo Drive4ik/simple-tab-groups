@@ -3,7 +3,7 @@ const webpack = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const WebpackShellPlugin = require('webpack-shell-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const { VueLoaderPlugin } = require('vue-loader');
 
@@ -51,11 +51,9 @@ const config = {
     devtool: false,
     optimization: {
         minimizer: [
-            new UglifyJsPlugin({
-                cache: true,
+            new TerserPlugin({
                 parallel: true,
-                sourceMap: false,
-                uglifyOptions: {
+                terserOptions: {
                     ecma: 8,
                     compress: {
                         drop_console: true,
