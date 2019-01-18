@@ -1168,7 +1168,7 @@
 
 <style lang="scss">
     :root {
-        --popup-width: 348px;
+        --popup-width: 420px;
         --max-popup-width: 100%;
 
         --max-popup-height: 600px;
