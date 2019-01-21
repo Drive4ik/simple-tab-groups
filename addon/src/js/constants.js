@@ -5,7 +5,6 @@ const PRIVATE_COOKIE_STORE_ID = 'firefox-private';
 const CONTEXT_MENU_PREFIX_GROUP = 'stg-move-group-id-';
 const CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP = 'stg-undo-remove-group-id-';
 const MANAGE_TABS_URL = '/manage/manage.html';
-const BACKUP_FOLDER = 'STG-backups/';
 
 const groupIconViewTypes = [
     'main-squares',
@@ -90,6 +89,7 @@ const DEFAULT_OPTIONS = {
     autoBackupIntervalValue: 1,
     autoBackupIncludeTabThumbnails: true,
     autoBackupIncludeTabFavIcons: true,
+    autoBackupFolderName: 'STG-backups',
 
     enableDarkTheme: false,
 
@@ -125,7 +125,8 @@ const allOptionsKeys = onlyBoolOptionsKeys
         'defaultGroupIconViewType',
         'autoBackupLastBackupTimeStamp',
         'autoBackupIntervalKey',
-        'autoBackupIntervalValue'
+        'autoBackupIntervalValue',
+        'autoBackupFolderName',
     ]);
 
 const HOUR_SEC = 60 * 60;
@@ -137,7 +138,6 @@ export {
     CONTEXT_MENU_PREFIX_GROUP,
     CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP,
     MANAGE_TABS_URL,
-    BACKUP_FOLDER,
     EXTENSIONS_WHITE_LIST,
     DEFAULT_OPTIONS,
     onlyBoolOptionsKeys,

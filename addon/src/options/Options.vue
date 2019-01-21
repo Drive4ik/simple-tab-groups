@@ -99,6 +99,21 @@
             this.initPopupHotkey();
         },
         watch: {
+            'options.autoBackupFolderName': function(value, oldValue) {
+                if (!value || null == oldValue) {
+                    return;
+                }
+
+                value = value.replace(/^\/+|\/+$/g, '');
+
+                if (!value.length || value.length > 200) {
+                    value = constants.DEFAULT_OPTIONS.autoBackupFolderName;
+                }
+
+                BG.saveOptions({
+                    autoBackupFolderName: value,
+                });
+            },
             'options.autoBackupIntervalValue': function(value, oldValue) {
                 if (!value || null == oldValue) {
                     return;
@@ -814,8 +829,13 @@
                         <span v-else>&mdash;</span>
                     </div>
                 </div>
-                <div class="field">
-                    <button class="button" @click="openBackupFolder" v-text="lang('openBackupFolder')"></button>
+                <div class="field is-grouped">
+                    <div class="control">
+                        <input type="text" v-model.trim="options.autoBackupFolderName" maxlength="200" class="input" />
+                    </div>
+                    <div class="control">
+                        <button class="button" @click="openBackupFolder" v-text="lang('openBackupFolder')"></button>
+                    </div>
                 </div>
             </div>
 

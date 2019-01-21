@@ -1,7 +1,7 @@
 'use strict';
 
 import * as utils from './utils';
-import * as constants from './constants';
+import storage from './storage';
 
 const BACKUP_FILE_EXT = '.json';
 
@@ -101,14 +101,16 @@ async function backup(data, isAutoBackup, overwrite) {
     let fileName = generateBackupFileName(!overwrite);
 
     if (isAutoBackup) {
-        fileName = constants.BACKUP_FOLDER + fileName;
+        let {autoBackupFolderName} = await storage.get('autoBackupFolderName');
+        fileName = autoBackupFolderName + '/' + fileName;
     }
 
     return save(data, fileName, !isAutoBackup, overwrite, isAutoBackup);
 }
 
 async function openBackupFolder() {
-    let id = await save('temp file', constants.BACKUP_FOLDER + 'tmp.tmp', false, true, false);
+    let {autoBackupFolderName} = await storage.get('autoBackupFolderName'),
+        id = await save('temp file', autoBackupFolderName + '/tmp.tmp', false, true, false);
 
     await browser.downloads.show(id);
     await utils.wait(150);
