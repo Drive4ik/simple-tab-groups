@@ -179,15 +179,24 @@
                             let group = this.groups.find(gr => gr.id === request.group.id);
 
                             if (request.group.tabs) {
-                                group.tabs.forEach(function(tab) {
-                                    let multipleTabIndex = this.multipleDropTabs.indexOf(tab);
-
-                                    if (-1 !== multipleTabIndex) {
-                                        this.multipleDropTabs.splice(multipleTabIndex, 1);
-                                    }
-                                }, this);
-
                                 request.group.tabs = request.group.tabs.map(this.$_tabMap, this);
+
+                                if (this.multipleDropTabs.length) {
+                                    // ищем новые замапеные вкладки и добавляем их в мультиселект
+                                    group.tabs.forEach(function(tab) {
+                                        let multipleTabIndex = this.multipleDropTabs.indexOf(tab);
+
+                                        if (-1 !== multipleTabIndex) {
+                                            let mappedTab = tab.id && request.group.tabs.find(t => t.id === tab.id);
+
+                                            if (mappedTab) {
+                                                this.multipleDropTabs.splice(multipleTabIndex, 1, mappedTab);
+                                            } else {
+                                                this.multipleDropTabs.splice(multipleTabIndex, 1);
+                                            }
+                                        }
+                                    }, this);
+                                }
                             }
 
                             Object.assign(group, request.group);

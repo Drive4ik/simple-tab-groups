@@ -182,15 +182,24 @@
                             let group = this.groups.find(gr => gr.id === request.group.id);
 
                             if (request.group.tabs) {
-                                group.tabs.forEach(function(tab) {
-                                    let multipleTabIndex = this.multipleMoveTabs.indexOf(tab);
-
-                                    if (-1 !== multipleTabIndex) {
-                                        this.multipleMoveTabs.splice(multipleTabIndex, 1);
-                                    }
-                                }, this);
-
                                 request.group.tabs = request.group.tabs.map(this.$_tabMap, this);
+
+                                if (this.multipleMoveTabs.length) {
+                                    // ищем новые замапеные вкладки и добавляем их в мультиселект
+                                    group.tabs.forEach(function(tab) {
+                                        let multipleTabIndex = this.multipleMoveTabs.indexOf(tab);
+
+                                        if (-1 !== multipleTabIndex) {
+                                            let mappedTab = request.group.tabs.find(t => t.id === tab.id);
+
+                                            if (mappedTab) {
+                                                this.multipleMoveTabs.splice(multipleTabIndex, 1, mappedTab);
+                                            } else {
+                                                this.multipleMoveTabs.splice(multipleTabIndex, 1);
+                                            }
+                                        }
+                                    }, this);
+                                }
                             }
 
                             Object.assign(group, request.group);
