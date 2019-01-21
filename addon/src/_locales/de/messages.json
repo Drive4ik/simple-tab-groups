@@ -403,10 +403,6 @@
         "message": "Update das Thumbnail des Tabs",
         "description": "Update thumbnail for this tab"
     },
-    "cantMakeThumbnailTabWasDiscarded": {
-        "message": "Du kannst kein Thumbnail eines Tabs erstellen, wenn der Tab nicht geladen wurde",
-        "description": "You can not make a thumbnail of a tab if the tab was not loaded"
-    },
     "nowFoundWindowsAddonStoppedWorking": {
         "message": "Error: es wurde keine normalen nicht privaten/incognito/popup Festern gefunden.\nAdd-on wurde gestoppt. Bitte den Browser neustarten.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."

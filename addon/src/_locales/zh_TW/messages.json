@@ -403,10 +403,6 @@
         "message": "更新此分頁之縮圖",
         "description": "Update thumbnail for this tab"
     },
-    "cantMakeThumbnailTabWasDiscarded": {
-        "message": "在未載入分頁的情況下，無法建立分頁縮圖",
-        "description": "You can not make a thumbnail of a tab if the tab was not loaded"
-    },
     "nowFoundWindowsAddonStoppedWorking": {
         "message": "錯誤：找不到任何正常的非隱私/匿名/彈出式視窗。\n套件停止運作，請重新啟動瀏覽器。",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."

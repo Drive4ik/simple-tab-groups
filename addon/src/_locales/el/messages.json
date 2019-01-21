@@ -403,10 +403,6 @@
         "message": "Ανανέωση εικονιδίου γι αυτό το tab",
         "description": "Update thumbnail for this tab"
     },
-    "cantMakeThumbnailTabWasDiscarded": {
-        "message": "Δεν μπορείτε να δημιουργήσετε εικονίδιο για tab, εάν το tab δεν είναι φορτωμένο",
-        "description": "You can not make a thumbnail of a tab if the tab was not loaded"
-    },
     "nowFoundWindowsAddonStoppedWorking": {
         "message": "Σφάλμα: Δεν βρέθηκε κανένα κανονικό (όχι private/incognito/popup) παράθυρο. Το πρόσθετο σταμάτησε να λειτουργεί. Παρακαλώ επανεκινείστε τον φυλομετρητή.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."

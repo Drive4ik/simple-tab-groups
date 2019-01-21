@@ -403,10 +403,6 @@
         "message": "Atualize a miniatura para essa aba",
         "description": "Update thumbnail for this tab"
     },
-    "cantMakeThumbnailTabWasDiscarded": {
-        "message": "Você não pode fazer uma miniatura de uma aba se a aba não foi carregada",
-        "description": "You can not make a thumbnail of a tab if the tab was not loaded"
-    },
     "nowFoundWindowsAddonStoppedWorking": {
         "message": "Error: não encontrado nenhuma janela normal não privado/incógnito/popup.\nExtensão parou de funcionar. Por favor, reinicie o navegador.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."

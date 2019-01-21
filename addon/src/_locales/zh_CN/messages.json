@@ -403,10 +403,6 @@
         "message": "更新该标签页的缩略图",
         "description": "Update thumbnail for this tab"
     },
-    "cantMakeThumbnailTabWasDiscarded": {
-        "message": "标签页未加载时无法创建它的缩略图",
-        "description": "You can not make a thumbnail of a tab if the tab was not loaded"
-    },
     "nowFoundWindowsAddonStoppedWorking": {
         "message": "错误：未找到正常的非隐私/匿名/弹出窗口。扩展停止工作，请重启浏览器。",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."

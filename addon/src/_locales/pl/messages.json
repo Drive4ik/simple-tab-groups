@@ -403,10 +403,6 @@
         "message": "Zaktualizuj miniaturę dla tej zakładki",
         "description": "Update thumbnail for this tab"
     },
-    "cantMakeThumbnailTabWasDiscarded": {
-        "message": "Nie można utworzyć miniatury dla karty, jeśli karta nie została załadowana",
-        "description": "You can not make a thumbnail of a tab if the tab was not loaded"
-    },
     "nowFoundWindowsAddonStoppedWorking": {
         "message": "Błąd: nie znaleziono żadnych okien typu nie prywatne, pop-up lub incognito\nDodatek przestał działać. Uruchom ponownie przeglądarkę.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."

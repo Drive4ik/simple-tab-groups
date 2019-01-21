@@ -842,7 +842,7 @@ async function _fixLastActiveTab(group, setPosition = 'last-active', breakIfHasA
 }
 
 async function updateTabThumbnail(tab, force = false) {
-    if (!options.createThumbnailsForTabs || !tab.url) {
+    if (!options.createThumbnailsForTabs || !tab.id || !tab.url) {
         return;
     }
 
@@ -852,39 +852,17 @@ async function updateTabThumbnail(tab, force = false) {
         return;
     }
 
-    let tabId = null;
+    let rawTab = await browser.tabs.get(tab.id);
 
-    if (tab.id) {
-        let rawTab = await browser.tabs.get(tab.id);
-
-        if (!rawTab.discarded) {
-            tabId = tab.id;
-        }
-    }
-
-    if (!tabId) {
-        let tabs = await browser.tabs.query({
-            url: tabUrl,
-            discarded: false,
-        });
-
-        if (tabs.length) {
-            tabId = tabs[0].id;
-        }
-    }
-
-    if (!tabId) {
-        if (force) {
-            utils.notify(browser.i18n.getMessage('cantMakeThumbnailTabWasDiscarded'), 10000, 'cantMakeThumbnailTabWasDiscarded');
-        }
-
+    if (rawTab.discarded) {
+        browser.tabs.reload(tab.id);
         return;
     }
 
     let thumbnail = null;
 
     try {
-        let thumbnailBase64 = await browser.tabs.captureTab(tabId);
+        let thumbnailBase64 = await browser.tabs.captureTab(tab.id);
 
         thumbnail = await new Promise(function(resolve, reject) {
             let img = new Image();

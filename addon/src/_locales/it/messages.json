@@ -403,10 +403,6 @@
         "message": "Aggiorna l'anteprima per questa tab",
         "description": "Update thumbnail for this tab"
     },
-    "cantMakeThumbnailTabWasDiscarded": {
-        "message": "Non è possibile creare l'anteprima di una tab se non è stata caricata",
-        "description": "You can not make a thumbnail of a tab if the tab was not loaded"
-    },
     "nowFoundWindowsAddonStoppedWorking": {
         "message": "Errore: non è stato possibile trovare nessuna finestra privata, in incognito o pop-up.\nL'estensione ha smesso di funzionare correttamente. Per favore, riavviare il browser.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."

@@ -403,10 +403,6 @@
         "message": "Uppdatera miniatyrbild för den här fliken",
         "description": "Update thumbnail for this tab"
     },
-    "cantMakeThumbnailTabWasDiscarded": {
-        "message": "Det går inte att skapa en miniatyrbild om inte fliken är laddad",
-        "description": "You can not make a thumbnail of a tab if the tab was not loaded"
-    },
     "nowFoundWindowsAddonStoppedWorking": {
         "message": "Fel: kunde inte hitta något vanligt icke-privat fönster.\nTillägget slutade fungera. Vänligen starta om Firefox.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."

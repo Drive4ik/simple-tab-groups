@@ -634,7 +634,7 @@
                     <img src="/icons/image.svg" class="size-16" />
                     <span v-text="lang('setTabIconAsGroupIcon')"></span>
                 </li>
-                <li v-if="options.createThumbnailsForTabs" @click="updateTabThumbnail(menu.data.tab)">
+                <li v-if="options.createThumbnailsForTabs && menu.data.tab.id" @click="updateTabThumbnail(menu.data.tab)">
                     <img src="/icons/image.svg" class="size-16" />
                     <span v-text="lang('updateTabThumbnail')"></span>
                 </li>

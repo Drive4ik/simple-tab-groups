@@ -403,10 +403,6 @@
         "message": "Aktualizovat náhled panelu",
         "description": "Update thumbnail for this tab"
     },
-    "cantMakeThumbnailTabWasDiscarded": {
-        "message": "Nelze vytvořit náhled panelu, pokud nebyl načten.",
-        "description": "You can not make a thumbnail of a tab if the tab was not loaded"
-    },
     "nowFoundWindowsAddonStoppedWorking": {
         "message": "Chyba: nenalezeno žádné normální okno, ale pouze anonymní nebo vyskakovací.\nDoplněk přestal fungovat. Prosím, restartujte prohlížeč.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."

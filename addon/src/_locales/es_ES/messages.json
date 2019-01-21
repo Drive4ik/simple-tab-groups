@@ -403,10 +403,6 @@
         "message": "Actualizar miniatura para esta pestaña",
         "description": "Update thumbnail for this tab"
     },
-    "cantMakeThumbnailTabWasDiscarded": {
-        "message": "No puede crear una miniatura de esta pestaña sin que esté cargada",
-        "description": "You can not make a thumbnail of a tab if the tab was not loaded"
-    },
     "nowFoundWindowsAddonStoppedWorking": {
         "message": "Error: no se consiguió ninguna pestaña regular diferente a una privada/incognito/pop-up. La extensión ha dejado de funcionar. Por favor, reinicie el navegador.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
