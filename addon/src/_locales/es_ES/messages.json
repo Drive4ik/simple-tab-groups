@@ -57,6 +57,10 @@
         "message": "Cancelar",
         "description": "Cancel"
     },
+    "searchPlaceholder": {
+        "message": "Buscar",
+        "description": "Search placeholder"
+    },
     "invalidRegExpRuleTitle": {
         "message": "La expresión '$regexp$' no es válida y será omitida.",
         "description": "Invalid rule description",
@@ -105,7 +109,7 @@
     },
     "includeTabThumbnailsIntoBackup": {
         "message": "Incluir miniaturas de las pestañas al exportar (aumentará el tamaño del archivo)",
-        "description": "Include tab thumbnails into backup (make backup file size bigger)"
+        "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
         "message": "Restaurar pestañas",
@@ -145,6 +149,16 @@
             }
         }
     },
+    "searchNotFoundTitle": {
+        "message": "No se encontraron resultados para \"$search$\"",
+        "description": "No results found",
+        "placeholders": {
+            "search": {
+                "content": "$1",
+                "example": "mail"
+            }
+        }
+    },
     "sortGroupsAZ": {
         "message": "Ordenar grupos [A-Z]",
         "description": "Sort groups [A-Z]"
@@ -152,6 +166,10 @@
     "sortGroupsZA": {
         "message": "Ordenar grupos [Z-A]",
         "description": "Sort groups [Z-A]"
+    },
+    "generalTitle": {
+        "message": "General",
+        "description": "General"
     },
     "groupSettings": {
         "message": "Configuración de grupo",
@@ -246,7 +264,7 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "¡Importante! La detección de atajos:<br>- Sólo funciona dentro de páginas bajo protocolo http/s: (otros como about: no están permitidos por WebExtensions)<br>- Dependerá de la distribución/idioma de tu teclado en el sistema operativo, no físicamente",
+        "message": "Aquí puede añadir atajos de teclado. <br>Restricciones:<br>1. Estos atajos solo funcionarán en páginas web (http:,https:), no en las páginas del mismo navegador (ej. about:), ya que el API WebExtensions no lo permite. <br>2. Algunos atajos no funcionarán con todos los perfiles de teclado, por ejemplo, un atajo <code>Ctrl + ~</code> creado con un teclado con perfil en Inglés no funcionará en un teclado con perfil en Ruso, ya que en Ruso este atajo tiene otro código. Para corregirlo, solo cree otro atajo con el perfil de teclado en Ruso: <code>Ctrl + Ë</code>",
         "description": "Hotkeys description"
     },
     "addHotKeyButton": {
@@ -301,6 +319,10 @@
         "message": "Abrir \"Gestión de grupos\"",
         "description": "Open manage groups"
     },
+    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
+        "message": "Mover pestaña activa a un grupo personalizado",
+        "description": "Move active tab to custom group"
+    },
     "whatsWrongMessage": {
         "message": "¡Ups! Se ha producido un error\nSi deseas enviarle un informe al desarrollador, puedes generarlo desde la página de configuración.",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
@@ -310,8 +332,18 @@
         "description": "Save last error logs into JSON file"
     },
     "undoRemoveGroupItemTitle": {
-        "message": "Deshacer eliminación del grupo $grouptitle$\"",
-        "description": "Undo remove group menu title",
+        "message": "Deshacer eliminación del grupo \"$grouptitle$\"",
+        "description": "Undelete a group menu title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "undoRemoveGroupNotification": {
+        "message": "Haga click aquí para cancelar la eliminación del grupo \"$grouptitle$\"",
+        "description": "Click here to cancel the deletion of the group title",
         "placeholders": {
             "grouptitle": {
                 "content": "$1",
@@ -334,5 +366,233 @@
     "iconStyle": {
         "message": "Estilo del icono",
         "description": "Icon style"
+    },
+    "discardTabsAfterHide": {
+        "message": "Descartar pestañas luego de ocultarlas (esto ahorrará memoria RAM)",
+        "description": "Discard tabs after hide (this will save the RAM)"
+    },
+    "createThumbnailsForTabs": {
+        "message": "Crear miniaturas para las pestañas (utilizado en \"Gestionar grupos\")",
+        "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
+    },
+    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
+        "message": "No es posible cambiar el grupo ya que una de las pestañas comparte el micrófono o la cámara.",
+        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
+    },
+    "foundHiddenUnSyncTabsDescription": {
+        "message": "Se encontraron pestañas ocultas no sincronizadas. Haga click en la misma para mostrarla en el grupo/ventana actual ó:",
+        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
+    },
+    "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
+        "message": "Mover todas estas pestañas al grupo/ventana actual",
+        "description": "Move all of these tabs into current group/window"
+    },
+    "actionHiddenUnSyncTabsCreateGroup": {
+        "message": "Crear un grupo nuevo con todas estas pestañas",
+        "description": "Create new group with all of these tabs"
+    },
+    "actionHiddenUnSyncTabsCloseAll": {
+        "message": "Cerrar todas estas pestañas",
+        "description": "Close all of these tabs"
+    },
+    "thisTabWillCreateAsNew": {
+        "message": "Esta pestaña se creará como nueva",
+        "description": "This tab will create as new"
+    },
+    "updateTabThumbnail": {
+        "message": "Actualizar miniatura para esta pestaña",
+        "description": "Update thumbnail for this tab"
+    },
+    "cantMakeThumbnailTabWasDiscarded": {
+        "message": "No puede crear una miniatura de esta pestaña sin que esté cargada",
+        "description": "You can not make a thumbnail of a tab if the tab was not loaded"
+    },
+    "nowFoundWindowsAddonStoppedWorking": {
+        "message": "Error: no se consiguió ninguna pestaña regular diferente a una privada/incognito/pop-up. La extensión ha dejado de funcionar. Por favor, reinicie el navegador.",
+        "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
+    },
+    "waitingToLoadAllTabs": {
+        "message": "Esperando a que carguen todas las pestañas.\nPor favor, espere...",
+        "description": "Waiting for all tabs to load.\nPlease wait..."
+    },
+    "reloadAddon": {
+        "message": "Recargar extensión",
+        "description": "Reload addon"
+    },
+    "ffFailedAndLostDataMessage": {
+        "message": "FF falló y todos los grupos se perdieron.\nSi tiene una copia de seguridad, puede restaurar los datos desde allí",
+        "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
+    },
+    "enterDefaultGroupIconViewTypeTitle": {
+        "message": "Estilo de ícono para un grupo nuevo",
+        "description": "Icon style for a new group"
+    },
+    "openPopupHotkeyTitle": {
+        "message": "Abrir el pop-up de los grupos",
+        "description": "Open the groups pop-up"
+    },
+    "openGroupInNewWindow": {
+        "message": "Abrir grupo en una nueva ventana",
+        "description": "Open group in new window"
+    },
+    "muteTabsWhenGroupCloseAndRestoreWhenOpen": {
+        "message": "Silenciar pestañas cuando se cierre el grupo y restaurar al abrir.",
+        "description": "Mute tabs when group close and restore when open"
+    },
+    "showTabAfterMovingItIntoThisGroup": {
+        "message": "Mostrar la pestaña una vez que se mueva automáticamente a este grupo",
+        "description": "Show the tab after auto-moving it into this group"
+    },
+    "tabMoving": {
+        "message": "Mudanza de pestañas",
+        "description": "Tab moving"
+    },
+    "includeTabFavIconsIntoBackup": {
+        "message": "Incluir los favicons en la copia de seguridad (causa que el archivo de respaldo sea más grande)",
+        "description": "Include tab fav-icons in backup (makes backup file size bigger)"
+    },
+    "tabsThumbnailsSize": {
+        "message": "Tamaño de la miniatura de las pestañas: $size$",
+        "description": "Tabs thumbnails size: $size$",
+        "placeholders": {
+            "size": {
+                "content": "$1",
+                "example": "2 MB"
+            }
+        }
+    },
+    "clearTabsThumbnails": {
+        "message": "Borrar todas las miniaturas de las pestañas",
+        "description": "Clear tabs thumbnails"
+    },
+    "groupRemovedByExtension": {
+        "message": "El grupo \"$group$\" fue eliminado por la extensión: $extension$",
+        "description": "Group \"$group$\" removed by extension: $extension$",
+        "placeholders": {
+            "group": {
+                "content": "$1",
+                "example": "group title"
+            },
+            "extension": {
+                "content": "$2",
+                "example": "external extension title"
+            }
+        }
+    },
+    "clickHereToReloadAddon": {
+        "message": "Algo salió mal, haga click aquí para recargar la extensión STG",
+        "description": "Something went wrong, click here to reload STG addon"
+    },
+    "extendedTabSearch": {
+        "message": "Búsqueda extendida",
+        "description": "Extended search"
+    },
+    "waitingForSessionRestoreNotification": {
+        "message": "Esperando que se restaure la sesión...",
+        "description": "Waiting for session restore..."
+    },
+    "movingMultipleTabsText": {
+        "message": "Moviendo $count$ pestañas",
+        "description": "Moving $count$ tabs",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "7"
+            }
+        }
+    },
+    "pinnedTabsAreNotSupported": {
+        "message": "No se soportan las pestañas marcadas como fijas",
+        "description": "Pinned tabs are not supported"
+    },
+    "privateTabsAreNotSupported": {
+        "message": "No se soportan las pestañas privadas",
+        "description": "Private tabs are not supported"
+    },
+    "thisUrlsAreNotSupported": {
+        "message": "Estas URLs \"$urls$\" no están soportadas",
+        "description": "This urls \"$urls$\" are not supported",
+        "placeholders": {
+            "urls": {
+                "content": "$1",
+                "example": "about:addons, file://..."
+            }
+        }
+    },
+    "thisTabsCanNotBeHidden": {
+        "message": "Estas pestañas no pueden ocultarse ya que están marcadas como fijas, utilizan un micrófo, cámara o pantalla compartidas: \"$titles$\"",
+        "description": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
+        "placeholders": {
+            "titles": {
+                "content": "$1",
+                "example": "some titles"
+            }
+        }
+    },
+    "moveMultipleTabsToGroupMessage": {
+        "message": "Se han movido $tabscount$ .\nHaga click aquí para abrir la primera pestaña",
+        "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "autoBackupEnableTitle": {
+        "message": "Habilitar copia de seguridad automática",
+        "description": "Enable auto backup"
+    },
+    "autoBackupCreateEveryTitle": {
+        "message": "Crear una copia de seguridad cada:",
+        "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyHours": {
+        "message": "hora(s)",
+        "description": "hour(s)"
+    },
+    "autoBackupIntervalKeyDays": {
+        "message": "día(s)",
+        "description": "day(s)"
+    },
+    "autoBackupLastBackupTitle": {
+        "message": "Última copia de seguridad:",
+        "description": "Last backup:"
+    },
+    "enableDarkTheme": {
+        "message": "Habilitar tema obscuro",
+        "description": "Enable dark theme"
+    },
+    "enableDarkThemeNotification": {
+        "message": "Para darle soporte adecuado al tema obscuro, habilite el parámetro <br><code>svg.context-properties.content.enabled</code> en la página <br><code>about:config</code><br><br><a href='https://support.mozilla.org/kb/about-config-editor-firefox'>¿Cómo hacerlo?</a>",
+        "description": "Fully support the dark theme text"
+    },
+    "importSettingsPanoramaViewAddonTitle": {
+        "message": "Restaurar \"Panorama View\" de photodiode",
+        "description": "Restore photodiode's \"Panorama View\""
+    },
+    "importSettingsPanoramaViewAddonDescription": {
+        "message": "Cargar una copia de seguridad de la extensión \"Panorama View\"",
+        "description": "Load a backup file from \"Panorama View\" addon."
+    },
+    "importSettingsSyncTabGroupsAddonTitle": {
+        "message": "Restaurar la extensión \"Sync Tab Groups\" de Morikko",
+        "description": "Restore Morikko's \"Sync Tab Groups\""
+    },
+    "importSettingsSyncTabGroupsAddonDescription": {
+        "message": "Cargar una copia de seguridad de la extensión \"Sync Tab Groups\"",
+        "description": "Load a backup file from \"Sync Tab Groups\" addon."
+    },
+    "browseFileTitle": {
+        "message": "Navegar...",
+        "description": "Browse..."
+    },
+    "openBackupFolder": {
+        "message": "Abrir carpeta de copia de seguridad",
+        "description": "Open backup folder"
+    },
+    "createNewGroupWhenOpenNewWindow": {
+        "message": "Crear un grupo nuevo cuando se abre una nueva ventana",
+        "description": "Create a new group when opening a new window"
     }
 }
