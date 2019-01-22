@@ -1716,6 +1716,8 @@ function setBrowserActionData(currentGroup, windowId) {
         windowId: windowId,
         path: utils.getGroupIconUrl(currentGroup),
     });
+
+    prependGroupTitleToWindowTitle(currentGroup);
 }
 
 function resetBrowserActionData(windowId) {
@@ -1737,6 +1739,12 @@ async function updateBrowserActionData(windowId) {
     }
 
     setBrowserActionData(_groups.find(gr => gr.windowId === windowId), windowId);
+}
+
+function prependGroupTitleToWindowTitle(group) {
+    group && group.windowId && browser.windows.update(group.windowId, {
+        titlePreface: options.prependGroupTitleToWindowTitle ? ('[' + utils.sliceText(group.title, 35) + '] ') : '',
+    });
 }
 
 async function onRemovedWindow(windowId) {
@@ -2122,6 +2130,10 @@ async function saveOptions(_options) {
 
     if (optionsKeys.some(key => key.startsWith('autoBackup'))) {
         resetAutoBackup();
+    }
+
+    if (optionsKeys.includes('prependGroupTitleToWindowTitle')) {
+        _groups.forEach(prependGroupTitleToWindowTitle);
     }
 
     await browser.runtime.sendMessage({

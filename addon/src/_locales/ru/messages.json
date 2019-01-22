@@ -590,5 +590,9 @@
     "createNewGroupWhenOpenNewWindow": {
         "message": "Создавать новую группу при открытии нового окна",
         "description": "Create a new group when opening a new window"
+    },
+    "prependGroupTitleToWindowTitle": {
+        "message": "Добавить заголовок группы к заголовку окна",
+        "description": "Prepend group title to window title"
     }
 }

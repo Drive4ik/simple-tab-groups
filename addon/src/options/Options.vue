@@ -138,7 +138,7 @@
             },
             'options.hotkeys': {
                 handler(hotkeys, oldValue) {
-                    if (!oldValue) {
+                    if (null == oldValue) {
                         return;
                     }
 
@@ -596,6 +596,12 @@
                 <label class="checkbox">
                     <input v-model="options.createNewGroupWhenOpenNewWindow" type="checkbox" />
                     <span v-text="lang('createNewGroupWhenOpenNewWindow')"></span>
+                </label>
+            </div>
+            <div class="field">
+                <label class="checkbox">
+                    <input v-model="options.prependGroupTitleToWindowTitle" type="checkbox" />
+                    <span v-text="lang('prependGroupTitleToWindowTitle')"></span>
                 </label>
             </div>
             <div class="field">
