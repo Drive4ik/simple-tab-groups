@@ -330,6 +330,14 @@
                 }
             },
 
+            openGroupInNewWindow(group, tabIndex) {
+                if (group.windowId) {
+                    BG.loadGroup(group.windowId, group.id, tabIndex);
+                } else {
+                    BG.createWindow(undefined, group.id, tabIndex);
+                }
+            },
+
             clickOnTab(event, tab, group) {
                 if (event.ctrlKey) {
                     if (this.multipleDropTabs.includes(tab)) {
@@ -400,7 +408,7 @@
                                 let multiTabsNode = document.getElementById('multipleTabsText');
                                 multiTabsNode.innerText = browser.i18n.getMessage('movingMultipleTabsText', this.multipleDropTabs.length);
 
-                                event.dataTransfer.setDragImage(multiTabsNode, multiTabsNode.clientWidth / 2, multiTabsNode.offsetHeight - 100);
+                                event.dataTransfer.setDragImage(multiTabsNode, 20, multiTabsNode.offsetHeight - 80);
                             }
                         }
                         break;
@@ -639,6 +647,10 @@
 
         <context-menu ref="tabsContextMenu">
             <ul slot-scope="menu" v-if="menu.data" class="is-unselectable">
+                <li @click="openGroupInNewWindow(menu.data.group, menu.data.group.tabs.indexOf(menu.data.tab))">
+                    <img src="/icons/window-new.svg" class="size-16" />
+                    <span v-text="lang('openGroupInNewWindow')"></span>
+                </li>
                 <li @click="setTabIconAsGroupIcon(menu.data.tab, menu.data.group)">
                     <img src="/icons/image.svg" class="size-16" />
                     <span v-text="lang('setTabIconAsGroupIcon')"></span>
@@ -707,15 +719,14 @@
 
         --group-active-shadow: 0 0 0 3.5px rgba(3, 102, 214, 0.3);
         --group-active-border: 1px solid #2188ff;
-        --group-bg-color: #fcfcfc;
+        --group-bg-color: #f5f5f5;
 
         --tab-active-shadow: var(--group-active-shadow);
         --tab-active-border: var(--group-active-border);
-        --tab-hover-outline-color: #cfcfcf;
+        // --tab-hover-outline-color: #cfcfcf;
 
         --tab-inner-padding: 3px;
         --tab-inner-border-color: #c6ced4;
-        --tab-bg-color: var(--group-bg-color);
         --tab-border-width: 1px;
         --tab-buttons-radius: 75%;
         --tab-buttons-size: 25px;
@@ -730,7 +741,6 @@
         --group-active-shadow: 0 0 0 3.5px rgba(255, 255, 255, 0.3);
         --group-active-border: 1px solid #e0e0e0;
 
-        --tab-bg-color: var(--group-bg-color);
         --tab-active-shadow: var(--group-active-shadow);
         --tab-active-border: var(--group-active-border);
     }
@@ -784,11 +794,12 @@
         font-size: 15px;
         font-weight: bold;
         background-color: #fff;
-        border-radius: 50%;
+        border-radius: 10px;
         left: -1000%;
         max-width: 450px;
-        padding: 100px;
+        padding: 15px;
         pointer-events: none;
+        box-shadow: 10px 5px rgba(0, 0, 0, 0.6);
     }
 
     #result {
@@ -861,7 +872,7 @@
 
                     > * {
                         border: 0 solid var(--tab-inner-border-color);
-                        background-color: var(--tab-bg-color);
+                        background-color: var(--group-bg-color);
                     }
 
                     > .tab-icon,
@@ -893,7 +904,7 @@
                     }
 
                     > .delete-tab-button {
-                        display: flex;
+                        display: none;
                         align-items: start;
                         justify-content: right;
                         top: var(--tab-inner-padding);
@@ -904,6 +915,10 @@
                         border-bottom-width: var(--tab-border-width);
                         border-left-width: var(--tab-border-width);
                         border-bottom-left-radius: var(--tab-buttons-radius);
+                    }
+
+                    &:hover > .delete-tab-button {
+                        display: flex;
                     }
 
                     > .container {
@@ -961,10 +976,13 @@
                         display: flex;
                         justify-content: center;
                         align-items: center;
+                        border-style: dashed;
+                        border-width: 2px;
 
                         > img {
                             width: 4em;
                             height: auto;
+                            opacity: 0.7;
                         }
                     }
 
@@ -980,10 +998,10 @@
                         -moz-outline-radius: var(--border-radius);
                     }
 
-                    &:not(.is-active):not(.drag-moving):hover {
-                        outline: 1px solid var(--tab-hover-outline-color);
-                        outline-offset: 1px;
-                    }
+                    // &:not(.is-active):not(.drag-moving):hover {
+                    //     outline: 1px solid var(--tab-hover-outline-color);
+                    //     outline-offset: 1px;
+                    // }
 
                     &.is-in-multiple-drop,
                     &.is-in-multiple-drop > * {
@@ -1006,6 +1024,9 @@
                     align-content: center;
                     justify-content: center;
                     min-height: 250px;
+                    border-style: dashed;
+                    border-width: 2px;
+                    background-color: transparent;
 
                     > .body {
                         display: block;
@@ -1013,6 +1034,7 @@
 
                         > img {
                             width: 100px;
+                            opacity: 0.7;
                         }
                     }
                 }
@@ -1020,8 +1042,8 @@
 
             .group,
             .group .tab {
-                will-change: transform;
-                transition: transform 0.3s;
+                will-change: opacity;
+                transition: opacity 0.3s;
             }
         }
 
@@ -1049,7 +1071,6 @@
         .drag-moving,
         .drag-tab .tab.is-in-multiple-drop {
             opacity: 0.4;
-            transform: scale(0.8);
         }
     }
 
