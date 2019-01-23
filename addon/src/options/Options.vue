@@ -104,7 +104,7 @@
                     return;
                 }
 
-                value = value.replace(/^[\/\.]+|[\/\.]+$/g, '');
+                value = value.replace(/[\<\>\:\"\/\\\|\?\*\x00-\x1F]|\.{2,}|^(?:aux|con|nul|prn|com\d|lpt\d)$/gi, '');
 
                 if (!value.length || value.length > 200) {
                     value = constants.DEFAULT_OPTIONS.autoBackupFolderName;
