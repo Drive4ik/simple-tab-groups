@@ -1363,7 +1363,6 @@ async function moveTabs(fromData, toData, showNotificationAfterMoveTab = true, s
             setGroupAsWorked(newGroup);
         }
 
-        toData.newTabIndex++;
     }
 
     let tabsWhichCantMove = {
@@ -1427,8 +1426,14 @@ async function moveTabs(fromData, toData, showNotificationAfterMoveTab = true, s
 
                     moveTabLocal(tabData, mapTab(newTab));
                 } else {
-                    console.error('moveTabs error: tab not found', tabData);
+                    log('moveTabs error: tab not found', tabData);
                 }
+            }
+
+            toData.newTabIndex++;
+
+            if (!pushToEnd) {
+                toData.newRealTabIndex++;
             }
         }
     } else {
@@ -1495,6 +1500,7 @@ async function moveTabs(fromData, toData, showNotificationAfterMoveTab = true, s
                 moveTabLocal(tabData);
             }
 
+            toData.newTabIndex++;
         }
     }
 
@@ -1538,7 +1544,7 @@ async function moveTabs(fromData, toData, showNotificationAfterMoveTab = true, s
 
     saveGroupsToStorage();
 
-    let lastTabIndex = toData.newTabIndex - 1;
+    let lastTabIndex = newGroup.tabs[toData.newTabIndex] ? toData.newTabIndex : toData.newTabIndex - 1;
 
     if (showTabAfterMoving) {
         let winId = newGroup.windowId || lastFocusedNormalWindow.id;

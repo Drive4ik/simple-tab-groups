@@ -345,6 +345,33 @@
                     } else {
                         this.multipleDropTabs.push(tab);
                     }
+                } else if (event.shiftKey) {
+                    if (this.multipleDropTabs.length) {
+                        let tabIndex = group.tabs.indexOf(tab),
+                            lastTabIndex = -1;
+
+                        this.multipleDropTabs.slice().reverse().some(function(t) {
+                            return -1 !== (lastTabIndex = group.tabs.indexOf(t));
+                        });
+
+                        if (-1 === lastTabIndex) {
+                            this.multipleDropTabs.push(tab);
+                        } else if (tabIndex !== lastTabIndex) {
+                            let multipleTabIndex = this.multipleDropTabs.indexOf(group.tabs[lastTabIndex]);
+
+                            for (let i = Math.min(tabIndex, lastTabIndex), maxIndex = Math.max(tabIndex, lastTabIndex); i <= maxIndex; i++) {
+                                if (!this.multipleDropTabs.includes(group.tabs[i])) {
+                                    if (tabIndex > lastTabIndex) {
+                                        this.multipleDropTabs.push(group.tabs[i]);
+                                    } else {
+                                        this.multipleDropTabs.splice(multipleTabIndex, 0, group.tabs[i]);
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        this.multipleDropTabs.push(tab);
+                    }
                 } else {
                     this.loadGroup(group, group.tabs.indexOf(tab));
                 }
@@ -460,7 +487,10 @@
     <!-- grid display -->
     <!-- free arrange -->
 
-    <div id="stg-manage" class="is-flex is-column" @contextmenu="['INPUT', 'TEXTAREA'].includes($event.target.nodeName) ? null : $event.preventDefault()">
+    <div id="stg-manage" class="is-flex is-column"
+        @contextmenu="['INPUT', 'TEXTAREA'].includes($event.target.nodeName) ? null : $event.preventDefault()"
+        @click="multipleDropTabs = []"
+        >
         <header class="is-flex is-align-items-center">
             <span class="page-title">
                 <span v-text="lang('extensionName')"></span> - <span v-text="lang('manageGroupsTitle')"></span>

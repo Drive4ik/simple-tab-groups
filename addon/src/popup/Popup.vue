@@ -357,6 +357,39 @@
                     } else {
                         this.multipleMoveTabs.push(tab);
                     }
+                } else if (event.shiftKey) {
+                    if (this.multipleMoveTabs.length) {
+                        if (!group) {
+                            group = {
+                                tabs: this.unSyncTabs,
+                            };
+                        }
+
+                        let tabIndex = group.tabs.indexOf(tab),
+                            lastTabIndex = -1;
+
+                        this.multipleMoveTabs.slice().reverse().some(function(t) {
+                            return -1 !== (lastTabIndex = group.tabs.indexOf(t));
+                        });
+
+                        if (-1 === lastTabIndex) {
+                            this.multipleMoveTabs.push(tab);
+                        } else if (tabIndex !== lastTabIndex) {
+                            let multipleTabIndex = this.multipleMoveTabs.indexOf(group.tabs[lastTabIndex]);
+
+                            for (let i = Math.min(tabIndex, lastTabIndex), maxIndex = Math.max(tabIndex, lastTabIndex); i <= maxIndex; i++) {
+                                if (!this.multipleMoveTabs.includes(group.tabs[i])) {
+                                    if (tabIndex > lastTabIndex) {
+                                        this.multipleMoveTabs.push(group.tabs[i]);
+                                    } else {
+                                        this.multipleMoveTabs.splice(multipleTabIndex, 0, group.tabs[i]);
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        this.multipleMoveTabs.push(tab);
+                    }
                 } else {
                     this.loadGroup(group, group.tabs.indexOf(tab));
                 }
@@ -743,6 +776,7 @@
         id="stg-popup"
         :class="['is-flex is-column no-outline', {'edit-group-popup': !!groupToEdit}]"
         @contextmenu="['INPUT', 'TEXTAREA'].includes($event.target.nodeName) ? null : $event.preventDefault()"
+        @click="multipleMoveTabs = []"
         @wheel.ctrl.prevent
 
         tabindex="-1"
@@ -811,7 +845,7 @@
 
                         <div v-for="(tab, index) in group.filteredTabsBySearch" :key="index"
                             @contextmenu="$refs.tabsContextMenu.open($event, {tab, group})"
-                            @click="clickOnTab($event, tab, group)"
+                            @click.stop="clickOnTab($event, tab, group)"
                             @mousedown.middle.prevent
                             @mouseup.middle.prevent="removeTab(group.id, group.tabs.indexOf(tab))"
                             :class="['tab item is-unselectable space-left', {
@@ -911,7 +945,7 @@
                     <div>
                         <div v-for="tab in unSyncTabs" :key="tab.id"
                             @contextmenu="$refs.tabsContextMenu.open($event, {tab})"
-                            @click="$event.ctrlKey ? clickOnTab($event, tab) : unsyncHiddenTabsShowTabIntoCurrentWindow(tab)"
+                            @click.stop="($event.ctrlKey || $event.shiftKey) ? clickOnTab($event, tab) : unsyncHiddenTabsShowTabIntoCurrentWindow(tab)"
                             @mousedown.middle.prevent
                             @mouseup.middle.prevent="removeUnSyncTab(tab)"
                             :class="['tab item is-unselectable', {
@@ -967,7 +1001,7 @@
                         v-for="(tab, tabIndex) in groupToShow.tabs"
                         :key="tabIndex"
                         @contextmenu="$refs.tabsContextMenu.open($event, {tab, group: groupToShow})"
-                        @click="clickOnTab($event, tab, groupToShow)"
+                        @click.stop="clickOnTab($event, tab, groupToShow)"
                         @mousedown.middle.prevent
                         @mouseup.middle.prevent="removeTab(groupToShow.id, tabIndex)"
                         :class="['tab item is-unselectable', {

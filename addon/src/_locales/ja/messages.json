@@ -1,6 +1,6 @@
 {
     "extensionDescription": {
-        "message": "タブのグループを作成/編集し、作成したグループ毎に切替えて表示することができます。\n\nこのアドオンは旧アドオンの”Tab Groups”にインスパイアされています。",
+        "message": "タブのグループを作成/編集し、作成したグループ毎に切替えて表示することができます。\n\nこのアドオンは旧アドオンの Tab Groups にインスパイアされています。",
         "description": "Description of the extension."
     },
     "openSettings": {
