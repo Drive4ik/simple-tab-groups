@@ -11,12 +11,10 @@ const bundles = [
     'options/options.js',
 ];
 
-const evalRegexForProduction = /;([a-z])=function\(\){return this}\(\);try{\1=\1\|\|Function\("return this"\)\(\)\|\|\(0,eval\)\("this"\)}catch\([a-z]\){"object"==typeof window&&\(\1=window\)}/g;
+const evalRegexForProduction = /;([a-z])=function\(\){return this}\(\);try{\1=\1\|\|new Function\("return this"\)\(\)}catch\([a-z]\){"object"==typeof window&&\(\1=window\)}/g;
 const evalRegexForDevelopment = /;\s*\/\/ This works in non-strict mode\s*([a-z])\s*=\s*\(\s*function\(\)\s*\{\s*return this;\s*}\)\(\);\s*try\s*{\s*\/\/\s*This works if eval is allowed(?:\s*|.+){1,14}/g;
 
 const removeEvals = (file) => {
-    console.info(`Removing eval() from ${file}`);
-
     return new Promise((resolve, reject) => {
         fs.readFile(file, 'utf8', (err, data) => {
             if (err) {
@@ -29,9 +27,11 @@ const removeEvals = (file) => {
             const regex = process.env.IS_PRODUCTION ? evalRegexForProduction : evalRegexForDevelopment;
 
             if (!regex.test(data)) {
-                reject(`No CSP specific code found in ${file}.`);
+                reject(`Error: no eval CSP specific code found in ${file}.`);
                 return;
             }
+
+            console.info(`Removing eval() from ${file}`);
 
             data = data.replace(regex, '=window;');
 
