@@ -1736,6 +1736,12 @@ function resetBrowserActionData(windowId) {
         windowId: windowId,
         path: manifest.browser_action.default_icon,
     });
+
+    if (options.prependGroupTitleToWindowTitle) {
+        browser.windows.update(windowId, {
+            titlePreface: '',
+        });
+    }
 }
 
 async function updateBrowserActionData(windowId) {
