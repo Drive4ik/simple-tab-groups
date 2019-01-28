@@ -2577,6 +2577,10 @@ async function init() {
         throw browser.i18n.getMessage('nowFoundWindowsAddonStoppedWorking');
     }
 
+    if (!data.thumbnails) {
+        data.thumbnails = {};
+    }
+
     // clear unused thumbnails
     let allSafedTabUrls = data.groups.reduce((acc, group) => acc.concat(group.tabs.map(tab => utils.makeSafeUrlForThumbnail(tab.url))), []);
     Object
