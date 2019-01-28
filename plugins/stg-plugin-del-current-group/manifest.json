@@ -3,7 +3,7 @@
 
     "applications": {
         "gecko": {
-            "id": "stg-plugin-delete-current-group@drive4ik",
+            "id": "stg-plugin-del-current-group@drive4ik",
             "strict_min_version": "61.0"
         }
     },

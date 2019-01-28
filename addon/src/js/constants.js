@@ -46,9 +46,9 @@ const EXTENSIONS_WHITE_LIST = {
             'open-manage-groups',
         ],
     },
-    'stg-plugin-delete-current-group@drive4ik': {
+    'stg-plugin-del-current-group@drive4ik': {
         title: '[STG plugin] Delete current group',
-        url: 'https://addons.mozilla.org/firefox/addon/stg-plugin-delete-current-group/',
+        url: 'https://addons.mozilla.org/firefox/addon/stg-plugin-del-current-group/',
         postActions: [],
         getActions: [
             'delete-current-group',
