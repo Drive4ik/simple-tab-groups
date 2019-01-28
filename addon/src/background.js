@@ -2044,7 +2044,10 @@ async function runAction(data, externalExtId) {
                     }
 
                     result.ok = true;
+                } else {
+                    throw Error('There is no group in the current window');
                 }
+
                 break;
             case 'open-manage-groups':
                 await openManageGroups();

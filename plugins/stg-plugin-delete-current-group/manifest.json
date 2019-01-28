@@ -1,0 +1,42 @@
+{
+    "manifest_version": 2,
+
+    "applications": {
+        "gecko": {
+            "id": "stg-plugin-delete-current-group@drive4ik",
+            "strict_min_version": "61.0"
+        }
+    },
+
+    "name": "__MSG_extensionName__",
+    "description": "__MSG_extensionDescription__",
+    "version": "1.0",
+    "author": "Drive4ik",
+    "homepage_url": "https://github.com/drive4ik/simple-tab-groups",
+
+    "icons": {
+        "96": "/icons/icon.svg"
+    },
+
+    "browser_action": {
+        "default_icon": "/icons/icon.svg",
+        "default_title": "__MSG_defaultBrowserActionTitle__",
+        "theme_icons": [{
+            "dark": "/icons/icon.svg#dark",
+            "light": "/icons/icon.svg#light",
+            "size": 32
+        }]
+    },
+
+    "permissions": [
+        "tabs",
+        "notifications"
+    ],
+
+    "background": {
+        "scripts": ["background.js"]
+    },
+
+    "default_locale": "en"
+
+}

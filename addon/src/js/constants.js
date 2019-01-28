@@ -46,6 +46,14 @@ const EXTENSIONS_WHITE_LIST = {
             'open-manage-groups',
         ],
     },
+    'stg-plugin-delete-current-group@drive4ik': {
+        title: '[STG plugin] Delete current group',
+        url: 'https://addons.mozilla.org/firefox/addon/stg-plugin-delete-current-group/',
+        postActions: [],
+        getActions: [
+            'delete-current-group',
+        ],
+    },
     '{506e023c-7f2b-40a3-8066-bc5deb40aebe}': {
         title: 'Gesturefy',
         url: 'https://addons.mozilla.org/firefox/addon/gesturefy/',
