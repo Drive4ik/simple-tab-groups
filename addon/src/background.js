@@ -385,7 +385,7 @@ async function removeGroup(groupId) {
 
                 if (otherWindow) {
                     await browser.tabs.remove(tempEmptyTab.id);
-                    await setFocusOnWindow(otherWindow.id);
+                    // await setFocusOnWindow(otherWindow.id);
                 }
             }
         }
