@@ -2,9 +2,16 @@
 
 const DEFAULT_COOKIE_STORE_ID = 'firefox-default';
 const PRIVATE_COOKIE_STORE_ID = 'firefox-private';
+const CONTEXT_MENU_PREFIX_OPEN_BOOKMARK_IN_GROUP = 'stg-open-bookmark-in-group-id-';
 const CONTEXT_MENU_PREFIX_GROUP = 'stg-move-group-id-';
 const CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP = 'stg-undo-remove-group-id-';
 const MANAGE_TABS_URL = '/manage/manage.html';
+
+const PERMISSIONS = {
+    BOOKMARKS: {
+        permissions: ['bookmarks'],
+    },
+};
 
 const groupIconViewTypes = [
     'main-squares',
@@ -144,6 +151,7 @@ const DAY_SEC = 24 * HOUR_SEC;
 export {
     DEFAULT_COOKIE_STORE_ID,
     PRIVATE_COOKIE_STORE_ID,
+    CONTEXT_MENU_PREFIX_OPEN_BOOKMARK_IN_GROUP,
     CONTEXT_MENU_PREFIX_GROUP,
     CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP,
     MANAGE_TABS_URL,
@@ -154,4 +162,5 @@ export {
     groupIconViewTypes,
     HOUR_SEC,
     DAY_SEC,
+    PERMISSIONS,
 };

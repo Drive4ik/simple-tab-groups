@@ -598,5 +598,17 @@
     "prependGroupTitleToWindowTitle": {
         "message": "Prepend group title to window title",
         "description": "Prepend group title to window title"
+    },
+    "allowAccessToBookmarks": {
+        "message": "Allow access to bookmarks",
+        "description": "Allow access to bookmarks"
+    },
+    "openBookmarkInGroup": {
+        "message": "Open bookmark in group",
+        "description": "Open bookmark in group"
+    },
+    "bookmarkNotAllowed": {
+        "message": "This bookmark is not allowed",
+        "description": "This bookmark is not allowed"
     }
 }

@@ -594,5 +594,17 @@
     "prependGroupTitleToWindowTitle": {
         "message": "Добавить заголовок группы к заголовку окна",
         "description": "Prepend group title to window title"
+    },
+    "allowAccessToBookmarks": {
+        "message": "Разрешить доступ к закладкам",
+        "description": "Allow access to bookmarks"
+    },
+    "openBookmarkInGroup": {
+        "message": "Открыть закладку в группе",
+        "description": "Open bookmark in group"
+    },
+    "bookmarkNotAllowed": {
+        "message": "Эта закладка не поддерживается",
+        "description": "This bookmark is not allowed"
     }
 }

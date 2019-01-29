@@ -67,6 +67,10 @@
                 groups: [],
                 isMac: false,
 
+                permissions: {
+                    bookmarks: false,
+                },
+
                 showEnableDarkThemeNotification: false,
 
                 errorLogs: BG.getLogs(),
@@ -85,6 +89,8 @@
 
             this.options = utils.extractKeys(data, constants.allOptionsKeys);
             this.groups = Array.isArray(data.groups) ? data.groups : [];
+
+            this.permissions.bookmarks = await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
 
             constants.onlyBoolOptionsKeys
                 .concat(['defaultGroupIconViewType', 'autoBackupIntervalKey'])
@@ -538,6 +544,16 @@
                 };
             },
 
+            async setPermissionsBookmarks(event) {
+                if (event.target.checked) {
+                    this.permissions.bookmarks = await browser.permissions.request(constants.PERMISSIONS.BOOKMARKS);
+                } else {
+                    await browser.permissions.remove(constants.PERMISSIONS.BOOKMARKS);
+                }
+
+                BG.updateMoveTabMenus();
+            },
+
         },
     }
 </script>
@@ -574,6 +590,12 @@
         </div>
 
         <div v-show="section === SECTION_GENERAL">
+            <div class="field">
+                <label class="checkbox">
+                    <input v-model="permissions.bookmarks" @click="setPermissionsBookmarks" type="checkbox" />
+                    <span v-text="lang('allowAccessToBookmarks')"></span>
+                </label>
+            </div>
             <div class="field">
                 <label class="checkbox">
                     <input v-model="options.discardTabsAfterHide" type="checkbox" />

@@ -32,6 +32,10 @@
         "unlimitedStorage"
     ],
 
+    "optional_permissions": [
+        "bookmarks"
+    ],
+
     "browser_action": {
         "default_icon": "/icons/icon.svg",
         "default_title": "__MSG_extensionName__",

@@ -495,22 +495,25 @@ async function saveCurrentTabs(windowId) {
     delete _savingTabsInWindow[windowId];
 }
 
-async function addTab(groupId, cookieStoreId) {
-    let group = _groups.find(gr => gr.id === groupId);
-
-    cookieStoreId = cookieStoreId || constants.DEFAULT_COOKIE_STORE_ID;
+async function addTab(groupId, cookieStoreId, url, title, active = false) {
+    let group = _groups.find(gr => gr.id === groupId),
+        tab = {
+            active: Boolean(active),
+            url: url,
+            title: title,
+            cookieStoreId: cookieStoreId || constants.DEFAULT_COOKIE_STORE_ID,
+        };
 
     if (group.windowId) {
-        await browser.tabs.create({
-            active: false,
-            cookieStoreId,
-            windowId: group.windowId,
-        });
+        tab.windowId = group.windowId;
+
+        return createTab(tab);
     } else {
-        group.tabs.push({
-            active: false,
-            cookieStoreId,
-        });
+        if (tab.active) {
+            group.tabs.forEach(t => t.active = false);
+        }
+
+        group.tabs.push(tab);
 
         sendMessage({
             action: 'group-updated',
@@ -521,6 +524,8 @@ async function addTab(groupId, cookieStoreId) {
         });
 
         saveGroupsToStorage();
+
+        return tab;
     }
 }
 
@@ -1606,7 +1611,8 @@ async function createMoveTabMenus(windowId) {
         windowId = win.id;
     }
 
-    let currentGroup = _groups.find(gr => gr.windowId === windowId);
+    let currentGroup = _groups.find(gr => gr.windowId === windowId),
+        hasBookmarksPermission = await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
 
     moveTabToGroupMenusIds.push(browser.menus.create({
         id: 'stg-set-tab-icon-as-group-icon',
@@ -1646,6 +1652,15 @@ async function createMoveTabMenus(windowId) {
         contexts: ['tab'],
     }));
 
+    if (hasBookmarksPermission && _groups.length) {
+        moveTabToGroupMenusIds.push(browser.menus.create({
+            id: 'stg-open-bookmark-in-group-helper',
+            title: browser.i18n.getMessage('openBookmarkInGroup') + ':',
+            enabled: false,
+            contexts: ['bookmark'],
+        }));
+    }
+
     moveTabToGroupMenusIds.push(browser.menus.create({
         id: 'stg-move-tab-helper',
         title: browser.i18n.getMessage('moveTabToGroupDisabledTitle') + ':',
@@ -1654,16 +1669,19 @@ async function createMoveTabMenus(windowId) {
     }));
 
     _groups.forEach(function(group) {
+        let groupIconUrl = utils.getGroupIconUrl(group);
+
         moveTabToGroupMenusIds.push(browser.menus.create({
             id: constants.CONTEXT_MENU_PREFIX_GROUP + group.id,
             title: group.title,
             enabled: currentGroup ? group.id !== currentGroup.id : true,
             icons: {
-                16: utils.getGroupIconUrl(group),
+                16: groupIconUrl,
             },
             contexts: ['tab'],
-            onclick: async function(destGroupId, info, tab) {
-                let tabsToMove = await getHighlightedTabs(tab.windowId, tab);
+            onclick: async function(info, tab) {
+                let setActive = 2 === info.button,
+                    tabsToMove = await getHighlightedTabs(tab.windowId, tab);
 
                 if (!tabsToMove.length) {
                     utils.notify(browser.i18n.getMessage('pinnedTabsAreNotSupported'));
@@ -1671,11 +1689,47 @@ async function createMoveTabMenus(windowId) {
                 }
 
                 moveTabs(tabsToMove, {
-                        groupId: destGroupId,
-                    })
+                        groupId: group.id,
+                    }, !setActive, setActive)
                     .catch(utils.notify);
-            }.bind(null, group.id),
+            },
         }));
+
+        if (hasBookmarksPermission) {
+            moveTabToGroupMenusIds.push(browser.menus.create({
+                id: constants.CONTEXT_MENU_PREFIX_OPEN_BOOKMARK_IN_GROUP + group.id,
+                title: group.title,
+                icons: {
+                    16: groupIconUrl,
+                },
+                contexts: ['bookmark'],
+                onclick: async function(info) {
+                    if (!info.bookmarkId) {
+                        utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'));
+                        return;
+                    }
+
+                    let [bookmark] = await browser.bookmarks.get(info.bookmarkId);
+
+                    if (bookmark.type !== 'bookmark' || !bookmark.url || !utils.isUrlAllowToCreate(bookmark.url)) {
+                        utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'));
+                        return;
+                    }
+
+                    let setActive = 2 === info.button,
+                        tab = await addTab(group.id, undefined, bookmark.url, bookmark.title, setActive);
+
+                    if (setActive) {
+                        if (group.windowId) {
+                            await setFocusOnWindow(group.windowId);
+                        } else {
+                            let win = await getWindow();
+                            await loadGroup(win.id, group.id);
+                        }
+                    }
+                },
+            }));
+        }
     });
 
     moveTabToGroupMenusIds.push(browser.menus.create({
