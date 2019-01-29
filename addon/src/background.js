@@ -1652,7 +1652,7 @@ async function createMoveTabMenus(windowId) {
         contexts: ['tab'],
     }));
 
-    if (hasBookmarksPermission && _groups.length) {
+    if (hasBookmarksPermission) {
         moveTabToGroupMenusIds.push(browser.menus.create({
             id: 'stg-open-bookmark-in-group-helper',
             title: browser.i18n.getMessage('openBookmarkInGroup') + ':',
@@ -1716,8 +1716,9 @@ async function createMoveTabMenus(windowId) {
                         return;
                     }
 
-                    let setActive = 2 === info.button,
-                        tab = await addTab(group.id, undefined, bookmark.url, bookmark.title, setActive);
+                    let setActive = 2 === info.button;
+
+                    await addTab(group.id, undefined, bookmark.url, bookmark.title, setActive);
 
                     if (setActive) {
                         if (group.windowId) {
@@ -1759,6 +1760,41 @@ async function createMoveTabMenus(windowId) {
                 .catch(utils.notify);
         },
     }));
+
+    if (hasBookmarksPermission) {
+        moveTabToGroupMenusIds.push(browser.menus.create({
+            id: 'stg-open-bookmark-in-new-group',
+            contexts: ['bookmark'],
+            title: browser.i18n.getMessage('createNewGroup'),
+            icons: {
+                16: '/icons/group-new.svg',
+            },
+            onclick: async function(info) {
+                if (!info.bookmarkId) {
+                    utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'));
+                    return;
+                }
+
+                let [bookmark] = await browser.bookmarks.get(info.bookmarkId);
+
+                if (bookmark.type !== 'bookmark' || !bookmark.url || !utils.isUrlAllowToCreate(bookmark.url)) {
+                    utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'));
+                    return;
+                }
+
+                let setActive = 2 === info.button,
+                    newGroup = await addGroup();
+
+                await addTab(newGroup.id, undefined, bookmark.url, bookmark.title, setActive);
+
+                if (setActive && !newGroup.windowId) {
+                    let win = await getWindow();
+                    await loadGroup(win.id, newGroup.id);
+                }
+            },
+        }));
+    }
+
 }
 
 function setBrowserActionData(currentGroup, windowId) {
