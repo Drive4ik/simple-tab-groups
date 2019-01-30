@@ -16,7 +16,7 @@
         "description": "Set tab icon as group icon"
     },
     "moveTabToGroupDisabledTitle": {
-        "message": "Transférer l'onglet dans un groupe",
+        "message": "Transférer l'onglet dans le groupe",
         "description": "Move tab to group title"
     },
     "moveTabToGroupMessage": {
@@ -590,5 +590,21 @@
     "createNewGroupWhenOpenNewWindow": {
         "message": "Créer un nouveau groupe lorsque vous ouvrez une nouvelle fenêtre",
         "description": "Create a new group when opening a new window"
+    },
+    "prependGroupTitleToWindowTitle": {
+        "message": "Ajouter le nom du groupe au nom de la fenêtre",
+        "description": "Prepend group title to window title"
+    },
+    "allowAccessToBookmarks": {
+        "message": "Autoriser les accès aux marques-pages",
+        "description": "Allow access to bookmarks"
+    },
+    "openBookmarkInGroup": {
+        "message": "Ouvrir le marque-page dans le groupe",
+        "description": "Open bookmark in group"
+    },
+    "bookmarkNotAllowed": {
+        "message": "Ce marque-page n'est pas autorisé",
+        "description": "This bookmark is not allowed"
     }
 }
