@@ -6,7 +6,7 @@
         tabindex="-1"
         @blur="close"
         @click="close"
-        @contextmenu.capture.prevent
+        @contextmenu.capture.prevent="close"
         >
         <slot :data="data"></slot>
     </div>

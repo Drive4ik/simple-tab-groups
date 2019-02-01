@@ -527,13 +527,13 @@
 
                 return result;
             },
-            async moveTab(tab, newGroup, loadUnsync) {
+            async moveTab(tab, newGroup, loadUnsync = false, showTabAfterMoving = false) {
                 let tabsData = this.getTabsForMove(tab);
 
                 try {
                     await BG.moveTabs(tabsData, {
                         groupId: newGroup.id,
-                    }, false);
+                    }, false, showTabAfterMoving);
                 } catch (e) {
                     utils.notify(e);
                 }
@@ -542,10 +542,10 @@
                     this.loadUnsyncedTabs();
                 }
             },
-            async moveTabToNewGroup(tab, loadUnsync) {
+            async moveTabToNewGroup(tab, loadUnsync, showTabAfterMoving) {
                 let newGroup = await BG.addGroup();
 
-                await this.moveTab(tab, newGroup, loadUnsync);
+                await this.moveTab(tab, newGroup, loadUnsync, showTabAfterMoving);
             },
             setTabIconAsGroupIcon(tab) {
                 BG.updateGroup(this.groupToShow.id, {
@@ -1129,12 +1129,17 @@
                     @click="menu.data.group
                         ? menu.data.group.id !== group.id && moveTab(menu.data.tab, group)
                         : moveTab(menu.data.tab, group, true)"
+                    @contextmenu="menu.data.group
+                        ? menu.data.group.id !== group.id && moveTab(menu.data.tab, group, undefined, true)
+                        : moveTab(menu.data.tab, group, true, true)"
                     >
                     <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                     <span v-text="group.title"></span>
                 </li>
 
-                <li @click="moveTabToNewGroup(menu.data.tab, !menu.data.group)">
+                <li
+                    @click="moveTabToNewGroup(menu.data.tab, !menu.data.group)"
+                    @contextmenu="moveTabToNewGroup(menu.data.tab, !menu.data.group, true)">
                     <img src="/icons/group-new.svg" class="size-16" />
                     <span v-text="lang('createNewGroup')"></span>
                 </li>
