@@ -112,11 +112,13 @@
             this.setFocus();
 
             this.$nextTick(function() {
-                let activeItemNode = document.querySelector('.is-active');
+                setTimeout(function() {
+                    let activeItemNode = document.querySelector('.is-active');
 
-                if (activeItemNode && !utils.isElementVisible(activeItemNode)) {
-                    activeItemNode.scrollIntoView(false);
-                }
+                    if (activeItemNode && !utils.isElementVisible(activeItemNode)) {
+                        activeItemNode.scrollIntoView(false);
+                    }
+                }, 0);
             });
         },
         watch: {
