@@ -479,7 +479,7 @@
                 if (group.windowId) {
                     BG.setFocusOnWindow(group.windowId);
                 } else {
-                    await BG.createWindow(undefined, group.id);
+                    BG.createWindow(undefined, group.id);
                 }
             },
 
@@ -544,7 +544,7 @@
             async moveTabToNewGroup(tab, loadUnsync, showTabAfterMoving) {
                 let newGroup = await BG.addGroup();
 
-                await this.moveTab(tab, newGroup, loadUnsync, showTabAfterMoving);
+                this.moveTab(tab, newGroup, loadUnsync, showTabAfterMoving);
             },
             setTabIconAsGroupIcon(tab) {
                 BG.updateGroup(this.groupToShow.id, {
@@ -1080,69 +1080,73 @@
         </footer>
 
         <context-menu ref="groupContextMenu">
-            <ul slot-scope="menu" class="is-unselectable">
-                <li @click="openGroupInNewWindow(menu.data.group)">
-                    <img src="/icons/window-new.svg" class="size-16" />
-                    <span v-text="lang('openGroupInNewWindow')"></span>
-                </li>
-                <li @click="sortGroups('asc')">
-                    <img src="/icons/sort-alpha-asc.svg" class="size-16" />
-                    <span v-text="lang('sortGroupsAZ')"></span>
-                </li>
-                <li @click="sortGroups('desc')">
-                    <img src="/icons/sort-alpha-desc.svg" class="size-16" />
-                    <span v-text="lang('sortGroupsZA')"></span>
-                </li>
+            <template v-slot="menu">
+                <ul class="is-unselectable">
+                    <li @click="openGroupInNewWindow(menu.data.group)">
+                        <img src="/icons/window-new.svg" class="size-16" />
+                        <span v-text="lang('openGroupInNewWindow')"></span>
+                    </li>
+                    <li @click="sortGroups('asc')">
+                        <img src="/icons/sort-alpha-asc.svg" class="size-16" />
+                        <span v-text="lang('sortGroupsAZ')"></span>
+                    </li>
+                    <li @click="sortGroups('desc')">
+                        <img src="/icons/sort-alpha-desc.svg" class="size-16" />
+                        <span v-text="lang('sortGroupsZA')"></span>
+                    </li>
 
-                <hr>
+                    <hr>
 
-                <li @click="openGroupSettings(menu.data.group)">
-                    <img src="/icons/settings.svg" class="size-16" />
-                    <span v-text="lang('groupSettings')"></span>
-                </li>
-                <li @click="removeGroup(menu.data.group)">
-                    <img src="/icons/group-delete.svg" class="size-16" />
-                    <span v-text="lang('deleteGroup')"></span>
-                </li>
-            </ul>
+                    <li @click="openGroupSettings(menu.data.group)">
+                        <img src="/icons/settings.svg" class="size-16" />
+                        <span v-text="lang('groupSettings')"></span>
+                    </li>
+                    <li @click="removeGroup(menu.data.group)">
+                        <img src="/icons/group-delete.svg" class="size-16" />
+                        <span v-text="lang('deleteGroup')"></span>
+                    </li>
+                </ul>
+            </template>
         </context-menu>
 
         <context-menu ref="tabsContextMenu">
-            <ul slot-scope="menu" v-if="menu.data" class="is-unselectable">
-                <li v-if="menu.data.group" @click="setTabIconAsGroupIcon(menu.data.tab)">
-                    <img src="/icons/image.svg" class="size-16" />
-                    <span v-text="lang('setTabIconAsGroupIcon')"></span>
-                </li>
+            <template v-slot="menu">
+                <ul v-if="menu.data" class="is-unselectable">
+                    <li v-if="menu.data.group" @click="setTabIconAsGroupIcon(menu.data.tab)">
+                        <img src="/icons/image.svg" class="size-16" />
+                        <span v-text="lang('setTabIconAsGroupIcon')"></span>
+                    </li>
 
-                <hr v-if="menu.data.group">
+                    <hr v-if="menu.data.group">
 
-                <li class="is-disabled">
-                    <img class="size-16" />
-                    <span v-text="lang('moveTabToGroupDisabledTitle') + ':'"></span>
-                </li>
+                    <li class="is-disabled">
+                        <img class="size-16" />
+                        <span v-text="lang('moveTabToGroupDisabledTitle') + ':'"></span>
+                    </li>
 
-                <li
-                    v-for="group in groups"
-                    :key="group.id"
-                    :class="{'is-disabled': menu.data.group ? menu.data.group.id === group.id : false}"
-                    @click="menu.data.group
-                        ? menu.data.group.id !== group.id && moveTab(menu.data.tab, group)
-                        : moveTab(menu.data.tab, group, true)"
-                    @contextmenu="menu.data.group
-                        ? menu.data.group.id !== group.id && moveTab(menu.data.tab, group, undefined, true)
-                        : moveTab(menu.data.tab, group, true, true)"
-                    >
-                    <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
-                    <span v-text="group.title"></span>
-                </li>
+                    <li
+                        v-for="group in groups"
+                        :key="group.id"
+                        :class="{'is-disabled': menu.data.group ? menu.data.group.id === group.id : false}"
+                        @click="menu.data.group
+                            ? menu.data.group.id !== group.id && moveTab(menu.data.tab, group)
+                            : moveTab(menu.data.tab, group, true)"
+                        @contextmenu="menu.data.group
+                            ? menu.data.group.id !== group.id && moveTab(menu.data.tab, group, undefined, true)
+                            : moveTab(menu.data.tab, group, true, true)"
+                        >
+                        <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
+                        <span v-text="group.title"></span>
+                    </li>
 
-                <li
-                    @click="moveTabToNewGroup(menu.data.tab, !menu.data.group)"
-                    @contextmenu="moveTabToNewGroup(menu.data.tab, !menu.data.group, true)">
-                    <img src="/icons/group-new.svg" class="size-16" />
-                    <span v-text="lang('createNewGroup')"></span>
-                </li>
-            </ul>
+                    <li
+                        @click="moveTabToNewGroup(menu.data.tab, !menu.data.group)"
+                        @contextmenu="moveTabToNewGroup(menu.data.tab, !menu.data.group, true)">
+                        <img src="/icons/group-new.svg" class="size-16" />
+                        <span v-text="lang('createNewGroup')"></span>
+                    </li>
+                </ul>
+            </template>
         </context-menu>
 
         <edit-group-popup

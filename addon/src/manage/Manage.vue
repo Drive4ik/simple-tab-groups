@@ -663,33 +663,37 @@
         <div id="multipleTabsText"></div>
 
         <context-menu ref="groupContextMenu">
-            <ul slot-scope="menu" class="is-unselectable">
-                <li @click="addTab(menu.data.group)">
-                    <img src="/icons/tab-new.svg" class="size-16" />
-                    <span v-text="lang('createNewTab')"></span>
-                </li>
-                <li v-for="container in containers" :key="container.cookieStoreId" @click="addTab(menu.data.group, container.cookieStoreId)">
-                    <img :src="container.iconUrl" class="is-inline-block size-16 fill-context" :style="{fill: container.colorCode}" />
-                    <span v-text="container.name"></span>
-                </li>
-            </ul>
+            <template v-slot="menu">
+                <ul class="is-unselectable">
+                    <li @click="addTab(menu.data.group)">
+                        <img src="/icons/tab-new.svg" class="size-16" />
+                        <span v-text="lang('createNewTab')"></span>
+                    </li>
+                    <li v-for="container in containers" :key="container.cookieStoreId" @click="addTab(menu.data.group, container.cookieStoreId)">
+                        <img :src="container.iconUrl" class="is-inline-block size-16 fill-context" :style="{fill: container.colorCode}" />
+                        <span v-text="container.name"></span>
+                    </li>
+                </ul>
+            </template>
         </context-menu>
 
         <context-menu ref="tabsContextMenu">
-            <ul slot-scope="menu" v-if="menu.data" class="is-unselectable">
-                <li @click="openGroupInNewWindow(menu.data.group, menu.data.group.tabs.indexOf(menu.data.tab))">
-                    <img src="/icons/window-new.svg" class="size-16" />
-                    <span v-text="lang('openGroupInNewWindow')"></span>
-                </li>
-                <li @click="setTabIconAsGroupIcon(menu.data.tab, menu.data.group)">
-                    <img src="/icons/image.svg" class="size-16" />
-                    <span v-text="lang('setTabIconAsGroupIcon')"></span>
-                </li>
-                <li v-if="options.createThumbnailsForTabs && menu.data.tab.id" @click="updateTabThumbnail(menu.data.tab)">
-                    <img src="/icons/image.svg" class="size-16" />
-                    <span v-text="lang('updateTabThumbnail')"></span>
-                </li>
-            </ul>
+            <template v-slot="menu">
+                <ul v-if="menu.data" class="is-unselectable">
+                    <li @click="openGroupInNewWindow(menu.data.group, menu.data.group.tabs.indexOf(menu.data.tab))">
+                        <img src="/icons/window-new.svg" class="size-16" />
+                        <span v-text="lang('openGroupInNewWindow')"></span>
+                    </li>
+                    <li @click="setTabIconAsGroupIcon(menu.data.tab, menu.data.group)">
+                        <img src="/icons/image.svg" class="size-16" />
+                        <span v-text="lang('setTabIconAsGroupIcon')"></span>
+                    </li>
+                    <li v-if="options.createThumbnailsForTabs && menu.data.tab.id" @click="updateTabThumbnail(menu.data.tab)">
+                        <img src="/icons/image.svg" class="size-16" />
+                        <span v-text="lang('updateTabThumbnail')"></span>
+                    </li>
+                </ul>
+            </template>
         </context-menu>
 
         <popup
