@@ -107,19 +107,18 @@
                 })
                 .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
                 .$on('drag-over', (item, isOver) => item.isOver = isOver);
+
+
+            this.$nextTick(function() {
+                let activeItemNode = document.querySelector('.is-active');
+
+                if (activeItemNode && !utils.isElementVisible(activeItemNode)) {
+                    activeItemNode.scrollIntoView(false);
+                }
+            });
         },
         async mounted() {
             this.setFocus();
-
-            this.$nextTick(function() {
-                setTimeout(function() {
-                    let activeItemNode = document.querySelector('.is-active');
-
-                    if (activeItemNode && !utils.isElementVisible(activeItemNode)) {
-                        activeItemNode.scrollIntoView(false);
-                    }
-                }, 0);
-            });
         },
         watch: {
             section() {
