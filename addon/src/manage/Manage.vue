@@ -27,23 +27,35 @@
     const VIEW_GRID = 'grid',
         VIEW_DEFAULT = VIEW_GRID;
 
-    let currentWindow = null;
+    let currentWindow = null,
+        windowPositionTimer = 0;
 
     function setSaveWindowPositionTimer() {
-        setTimeout(async function() {
+        if (windowPositionTimer) {
+            clearTimeout(windowPositionTimer);
+        }
+
+        windowPositionTimer = setTimeout(async function() {
             currentWindow = await BG.getWindow();
 
-            ['left', 'top', 'width', 'height'].forEach(function(option) {
+            ['width', 'height'].forEach(function(option) {
                 let capitalizedOption = utils.capitalize(option);
 
                 if (window.localStorage['manageGroupsWindow' + capitalizedOption] != currentWindow[option]) {
                     window.localStorage['manageGroupsWindow' + capitalizedOption] = currentWindow[option];
                 }
             });
-
-            setSaveWindowPositionTimer();
-        }, 5000);
+        }, 100);
     }
+
+    BG.getWindow().then(function(win) {
+        currentWindow = win;
+
+        if ('popup' === currentWindow.type) {
+            window.addEventListener('resize', setSaveWindowPositionTimer);
+        }
+    });
+
 
     export default {
         data() {
@@ -56,8 +68,6 @@
 
                 search: '',
                 extendedSearch: false,
-
-                currentWindowId: null,
 
                 groupToEdit: null,
                 groupToRemove: null,
@@ -111,10 +121,6 @@
                 .$on('drag-over', (item, isOver) => item.isOver = isOver);
         },
         async mounted() {
-            currentWindow = await BG.getWindow();
-
-            this.currentWindowId = currentWindow.id;
-
             this.containers = await utils.loadContainers();
 
             this.loadGroups();
@@ -126,10 +132,6 @@
             this.$nextTick(function() {
                 this.$refs.search.focus();
             });
-
-            if ('popup' === currentWindow.type) {
-                setSaveWindowPositionTimer();
-            }
         },
         watch: {
             'options.enableDarkTheme': function(enableDarkTheme) {
@@ -141,10 +143,6 @@
             },
         },
         computed: {
-            currentGroup() {
-                // TODO: if attach/detach manage group tab to other window - need update window id
-                return this.groups.find(group => group.windowId === this.currentWindowId);
-            },
             filteredGroups() {
                 let searchStr = this.search.toLowerCase();
 
@@ -321,11 +319,12 @@
             },
             loadGroup(group, tabIndex) {
                 // fix bug with browser.windows.getLastFocused({windowTypes: ['normal']}), maybe find exists bug??
-                let lastFocusedNormalWindow = BG.getLastFocusedNormalWindow();
+                let lastFocusedNormalWindow = BG.getLastFocusedNormalWindow(),
+                    isPopupWin = 'popup' === currentWindow.type;
 
-                BG.loadGroup(lastFocusedNormalWindow.id, group.id, tabIndex);
+                BG.loadGroup(lastFocusedNormalWindow.id, group.id, tabIndex, !isPopupWin);
 
-                if ('popup' === currentWindow.type) {
+                if (isPopupWin) {
                     browser.windows.remove(currentWindow.id); // close manage groups popop window
                 }
             },
@@ -1076,7 +1075,6 @@
 
             .group,
             .group .tab {
-                will-change: opacity;
                 transition: opacity 0.3s;
             }
         }

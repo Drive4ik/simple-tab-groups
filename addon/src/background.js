@@ -219,6 +219,8 @@ function createGroup(id, windowId, title) {
 async function addGroup(windowId, withTabs = [], title) {
     let { lastCreatedGroupPosition } = await storage.get('lastCreatedGroupPosition');
 
+    withTabs = utils.clone(withTabs); // clone need for fix bug: dead object after close tab which create object
+
     lastCreatedGroupPosition++;
 
     let newGroup = createGroup(lastCreatedGroupPosition, windowId, title);
@@ -238,7 +240,7 @@ async function addGroup(windowId, withTabs = [], title) {
 
         updateBrowserActionData(windowId);
     } else if (withTabs.length) {
-        newGroup.tabs = utils.clone(withTabs.map(mapTab)); // clone need for fix bug: dead object after close tab which create object
+        newGroup.tabs = withTabs.map(mapTab);
     }
 
     await storage.set({
@@ -294,7 +296,7 @@ async function updateGroup(groupId, updateData) {
 function sendMessage(data) {
     console.info('BG event:', data.action, utils.clone(data));
 
-    browser.runtime.sendMessage(data);
+    browser.runtime.sendMessage(data).catch(function() {});
 }
 
 function sendExternalMessage(data) {
@@ -304,7 +306,7 @@ function sendExternalMessage(data) {
         .forEach(function(exId) {
             if (constants.EXTENSIONS_WHITE_LIST[exId].postActions.includes(data.action)) {
                 data.isExternalMessage = true;
-                browser.runtime.sendMessage(exId, data);
+                browser.runtime.sendMessage(exId, data).catch(function() {});
             }
         });
 }
@@ -1270,7 +1272,10 @@ async function moveTabs(fromData, toData, showNotificationAfterMoveTab = true, s
     }
     /**/
 
-    console.info('moveTabs', utils.clone({fromData, toData, showNotificationAfterMoveTab, showTabAfterMoving}));
+    fromData = utils.clone(fromData);
+    toData = utils.clone(toData);
+
+    console.info('moveTabs', {fromData, toData, showNotificationAfterMoveTab, showTabAfterMoving});
 
     let newGroup = _groups.find(gr => gr.id === toData.groupId);
 
@@ -1594,7 +1599,7 @@ async function removeMoveTabMenus() {
         return;
     }
 
-    await Promise.all(moveTabToGroupMenusIds.map(id => browser.menus.remove(id)));
+    await Promise.all(moveTabToGroupMenusIds.map(id => browser.menus.remove(id).catch(function() {})));
 
     moveTabToGroupMenusIds = [];
 }
@@ -1986,8 +1991,6 @@ async function openManageGroups() {
         await createWindow({
             url: manageTabsPageUrl,
             type: 'popup',
-            left: Number(window.localStorage.manageGroupsWindowLeft) || 100,
-            top: Number(window.localStorage.manageGroupsWindowTop) || 100,
             width: Number(window.localStorage.manageGroupsWindowWidth) || 1000,
             height: Number(window.localStorage.manageGroupsWindowHeight) || 700,
         });
