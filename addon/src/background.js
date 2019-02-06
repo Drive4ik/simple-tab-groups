@@ -75,6 +75,12 @@ function setFocusOnWindow(windowId) {
     });
 }
 
+function setTabActive(tabId) {
+    return browser.tabs.update(tabId, {
+        active: true,
+    });
+}
+
 function _fixTabUrl(tab) {
     if (!tab.url || utils.isUrlEmpty(tab.url)) {
         tab.url = 'about:blank';
@@ -145,19 +151,14 @@ async function getHighlightedTabs(windowId = browser.windows.WINDOW_ID_CURRENT, 
     });
 }
 
-async function getTabs(windowId = browser.windows.WINDOW_ID_CURRENT, status = 'v') { // v: visible, h: hidden, null: all
+async function getTabs(windowId = browser.windows.WINDOW_ID_CURRENT) {
     let tabs = await browser.tabs.query({
         windowId: windowId,
+        hidden: false,
         pinned: false,
     });
 
-    if ('v' === status) {
-        return tabs.filter(utils.isTabVisible).map(_fixTabUrl);
-    } else if ('h' === status) {
-        return tabs.filter(utils.isTabHidden).map(_fixTabUrl);
-    } else if (!status) {
-        return tabs.map(_fixTabUrl);
-    }
+    return tabs.map(_fixTabUrl);
 }
 
 function getPinnedTabs(windowId = browser.windows.WINDOW_ID_CURRENT) {
@@ -342,12 +343,10 @@ async function createTempActiveTab(windowId = browser.windows.WINDOW_ID_CURRENT,
 
     if (pinnedTabs.length) {
         if (!pinnedTabs.some(tab => tab.active)) {
-            await browser.tabs.update(pinnedTabs[pinnedTabs.length - 1].id, {
-                active: true,
-            });
+            await setTabActive(pinnedTabs[pinnedTabs.length - 1].id);
         }
     } else {
-        return browser.tabs.create({
+        return createTab({
             url: 'about:blank',
             pinned: createPinnedTab,
             active: true,
@@ -542,7 +541,7 @@ async function removeTab(groupId, tabIndex) {
             let pinnedTabs = await getPinnedTabs(group.windowId);
 
             if (!pinnedTabs.length && 1 === group.tabs.length) {
-                await browser.tabs.create({
+                await createTab({
                     active: true,
                     windowId: group.windowId,
                 });
@@ -593,9 +592,13 @@ async function setMuteTabs(windowId, setMute) {
 }
 
 let _loadingGroupInWindow = {}; // windowId: true;
-async function loadGroup(windowId, groupId, activeTabIndex = -1, fixLastActiveTab = false) {
-    if (!windowId || 1 > windowId) { // if click on notification after moving tab to window which is now closed :)
-        throw Error('loadGroup: windowId not set');
+async function loadGroup(windowId = null, groupId, activeTabIndex = -1, fixLastActiveTab = false) {
+    if (null === windowId) { // load group into last focused window
+        windowId = await getLastFocusedNormalWindowId();
+
+        if (!windowId) {
+            throw Error('loadGroup: not found normal window');
+        }
     }
 
     let group = _groups.find(gr => gr.id === groupId);
@@ -620,9 +623,7 @@ async function loadGroup(windowId, groupId, activeTabIndex = -1, fixLastActiveTa
     try {
         if (group.windowId) {
             if (-1 !== activeTabIndex) {
-                await browser.tabs.update(group.tabs[activeTabIndex].id, {
-                    active: true,
-                });
+                await setTabActive(group.tabs[activeTabIndex].id);
             }
 
             await setFocusOnWindow(group.windowId);
@@ -759,9 +760,7 @@ async function loadGroup(windowId, groupId, activeTabIndex = -1, fixLastActiveTa
                     let isTabActive = -1 === activeTabIndex ? Boolean(tab.active) : tabIndex === activeTabIndex;
 
                     if (isTabActive) {
-                        browser.tabs.update(tab.id, {
-                            active: true,
-                        });
+                        setTabActive(tab.id);
                         return true;
                     }
                 });
@@ -840,9 +839,7 @@ async function _fixLastActiveTab(group, setPosition = 'last-active', breakIfHasA
     lastAccessedRawTab = winTabs.find(tab => tab.lastAccessed === lastAccessedTime);
 
     if (group.windowId) {
-        await browser.tabs.update(lastAccessedRawTab.id, {
-            active: true,
-        });
+        await setTabActive(lastAccessedRawTab.id);
     } else {
         group.tabs.forEach(tab => tab.active = tab.id === lastAccessedRawTab.id);
     }
@@ -1032,13 +1029,7 @@ async function onUpdatedTab(tabId, changeInfo, rawTab) {
         return;
     }
 
-    group = _groups.find(function(gr) {
-        tab = gr.tabs.find(t => t.id === tabId);
-
-        if (tab) {
-            return true;
-        }
-    });
+    group = _groups.find(gr => (tab = gr.tabs.find(t => t.id === tabId)));
 
     if ('hidden' in changeInfo) { // if other programm hide or show tabs
         if (changeInfo.hidden) {
@@ -1094,11 +1085,9 @@ async function onUpdatedTab(tabId, changeInfo, rawTab) {
                 destGroup.showTabAfterMovingItIntoThisGroup
             )
             .then(function() {
-                if (!rawTab.active) {
-                    return;
+                if (rawTab.active) {
+                    _fixLastActiveTab(group, 'prev-active');
                 }
-
-                _fixLastActiveTab(group, 'prev-active');
             })
             .catch(utils.notify);
             return;
@@ -1125,13 +1114,12 @@ async function onUpdatedTab(tabId, changeInfo, rawTab) {
 function onRemovedTab(tabId, { isWindowClosing, windowId }) {
     console.log('onRemovedTab', {tabId, args: { isWindowClosing, windowId }});
 
-    let group = _groups.find(gr => gr.tabs.some(tab => tab.id === tabId));
+    let tabIndex = -1,
+        group = _groups.find(gr => -1 !== (tabIndex = gr.tabs.findIndex(tab => tab.id === tabId)));
 
     if (!group) {
         return;
     }
-
-    let tabIndex = group.tabs.findIndex(tab => tab.id === tabId);
 
     if (isWindowClosing) {
         group.tabs[tabIndex].id = null;
@@ -1204,11 +1192,7 @@ function onDetachedTab(tabId, { oldWindowId }) { // notice: call before onAttach
 async function onCreatedWindow(win) {
     console.log('onCreatedWindow', win);
 
-    lastFocusedWinId = win.id;
-
     if (utils.isWindowAllow(win)) {
-        lastFocusedNormalWindow = win;
-
         if (options.createNewGroupWhenOpenNewWindow && _createNewGroupForNextWindow) {
             addGroup(win.id);
         } else {
@@ -1221,8 +1205,7 @@ async function onCreatedWindow(win) {
     }
 }
 
-let lastFocusedWinId = null,
-    lastFocusedNormalWindow = null; // fix bug with browser.windows.getLastFocused({windowTypes: ['normal']}), https://bugzilla.mozilla.org/show_bug.cgi?id=1419132
+let _lastFocusedWinId = null;
 
 async function onFocusChangedWindow(windowId) {
     console.log('onFocusChangedWindow', windowId);
@@ -1236,16 +1219,24 @@ async function onFocusChangedWindow(windowId) {
     if (!utils.isWindowAllow(win)) {
         browser.browserAction.disable();
         removeMoveTabMenus();
-    } else if (!lastFocusedWinId || lastFocusedWinId !== windowId) {
+    } else if (_lastFocusedWinId !== windowId) {
         browser.browserAction.enable();
         updateMoveTabMenus(windowId);
     }
 
-    if (utils.isWindowAllow(win)) {
-        lastFocusedNormalWindow = win;
-    }
+    _lastFocusedWinId = windowId;
+}
 
-    lastFocusedWinId = windowId;
+async function getLastFocusedNormalWindowId() {
+    let windows = await browser.windows.getAll({
+            windowTypes: ['normal'],
+        }),
+        filteredWindows = windows.filter(utils.isWindowAllow),
+        win = filteredWindows.find(win => win.focused) || filteredWindows.pop();
+
+    console.log('getLastFocusedNormalWindowId', win, filteredWindows);
+
+    return win ? win.id : null;
 }
 
 let isMovingTabs = false;
@@ -1487,13 +1478,9 @@ async function moveTabs(fromData, toData, showNotificationAfterMoveTab = true, s
                             activeIndex = winTabs.findIndex(t => t.id === tab.id);
 
                         if (-1 !== activeIndex && activeIndex - 1 >= 0) {
-                            await browser.tabs.update(winTabs[activeIndex - 1].id, {
-                                active: true,
-                            });
+                            await setTabActive(winTabs[activeIndex - 1].id);
                         } else if (-1 !== activeIndex && winTabs[activeIndex + 1]) {
-                            await browser.tabs.update(winTabs[activeIndex + 1].id, {
-                                active: true,
-                            });
+                            await setTabActive(winTabs[activeIndex + 1].id);
                         } else {
                             tempEmptyTab = await createTempActiveTab(tab.windowId);
                         }
@@ -1557,8 +1544,7 @@ async function moveTabs(fromData, toData, showNotificationAfterMoveTab = true, s
     let lastTabIndex = newGroup.tabs[toData.newTabIndex] ? toData.newTabIndex : toData.newTabIndex - 1;
 
     if (showTabAfterMoving) {
-        let winId = newGroup.windowId || lastFocusedNormalWindow.id;
-        await loadGroup(winId, newGroup.id, lastTabIndex);
+        await loadGroup(newGroup.windowId, newGroup.id, lastTabIndex);
 
         return;
     }
@@ -1581,8 +1567,11 @@ async function moveTabs(fromData, toData, showNotificationAfterMoveTab = true, s
             let group = _groups.find(gr => gr.id === newGroupId);
 
             if (group && group.tabs[lastTabIndex]) {
-                await setFocusOnWindow(lastFocusedNormalWindow.id);
-                loadGroup(lastFocusedNormalWindow.id, group.id, lastTabIndex);
+                let winId = await getLastFocusedNormalWindowId();
+                if (winId) {
+                    await setFocusOnWindow(winId);
+                    loadGroup(winId, group.id, lastTabIndex);
+                }
             }
         }.bind(null, newGroup.id, lastTabIndex));
 }
@@ -1874,16 +1863,6 @@ async function onRemovedWindow(windowId) {
 
         saveGroupsToStorage();
     }
-
-    if (lastFocusedNormalWindow && lastFocusedNormalWindow.id === windowId) {
-        let windows = await browser.windows.getAll({
-            windowTypes: ['normal'],
-        });
-
-        lastFocusedNormalWindow = windows.find(utils.isWindowAllow) || null;
-
-        lastFocusedWinId = (lastFocusedNormalWindow && lastFocusedNormalWindow.id) || windows[0].id;
-    }
 }
 
 function addEvents() {
@@ -1962,11 +1941,9 @@ async function openManageGroups() {
         });
 
         if (tabs.length) { // if manage tab is found
-            await browser.tabs.update(tabs[0].id, {
-                active: true,
-            });
+            await setTabActive(tabs[0].id);
         } else {
-            await browser.tabs.create({
+            await createTab({
                 active: true,
                 url: manageTabsPageUrl,
             });
@@ -2365,7 +2342,6 @@ window.background = {
 
     updateBrowserActionData,
     setFocusOnWindow,
-    getLastFocusedNormalWindow: () => utils.clone(lastFocusedNormalWindow),
 
     sortGroups,
     loadGroup,
@@ -2721,9 +2697,6 @@ async function init() {
 
     delete data.doRemoveSTGNewTabUrls;
 
-    lastFocusedNormalWindow = windows.find(win => win.focused) || windows[0];
-    lastFocusedWinId = lastFocusedNormalWindow && lastFocusedNormalWindow.id;
-
     let loadingRawTabs = {}; // window id : tabs that were in the loading state
 
     windows.forEach(function(win) {
@@ -2907,9 +2880,7 @@ async function init() {
 
             if (activeTab) {
                 if (win.tabs.some(winTab => winTab.id === activeTab.id && !winTab.active)) {
-                    await browser.tabs.update(activeTab.id, {
-                        active: true,
-                    });
+                    await setTabActive(activeTab.id);
                 }
             } else if (tabsToHide.some(tab => tab.active)) {
                 tmpTab = await createTempActiveTab(win.id, false);

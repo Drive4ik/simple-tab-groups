@@ -81,33 +81,15 @@
                 document.documentElement.classList.add('dark-theme');
             }
 
-            let currentWindow = await BG.getWindow();
-            this.currentWindowId = currentWindow.id;
+            BG.getWindow().then(win => this.currentWindowId = win.id);
 
             this.containers = await utils.loadContainers();
 
             this.loadGroups();
 
-            await this.loadUnsyncedTabs();
+            this.loadUnsyncedTabs();
 
             this.setupListeners();
-
-            this
-                .$on('drag-move-group', function(from, to) {
-                    BG.moveGroup(from.data.item.id, this.groups.indexOf(to.data.item));
-                })
-                .$on('drag-move-tab', function(from, to) {
-                    let tabsData = this.getTabsForMove(from.data.item);
-
-                    BG.moveTabs(tabsData, {
-                            newTabIndex: to.data.group.tabs.indexOf(to.data.item),
-                            groupId: to.data.group.id,
-                        }, false)
-                        .catch(utils.notify);
-                })
-                .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
-                .$on('drag-over', (item, isOver) => item.isOver = isOver);
-
 
             this.$nextTick(function() {
                 let activeItemNode = document.querySelector('.is-active');
@@ -173,6 +155,22 @@
             },
 
             setupListeners() {
+                this
+                    .$on('drag-move-group', function(from, to) {
+                        BG.moveGroup(from.data.item.id, this.groups.indexOf(to.data.item));
+                    })
+                    .$on('drag-move-tab', function(from, to) {
+                        let tabsData = this.getTabsForMove(from.data.item);
+
+                        BG.moveTabs(tabsData, {
+                                newTabIndex: to.data.group.tabs.indexOf(to.data.item),
+                                groupId: to.data.group.id,
+                            }, false)
+                            .catch(utils.notify);
+                    })
+                    .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
+                    .$on('drag-over', (item, isOver) => item.isOver = isOver);
+
                 let listener = function(request, sender) {
                     if (!utils.isAllowSender(request, sender)) {
                         return;

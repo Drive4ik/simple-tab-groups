@@ -27,7 +27,7 @@
     const VIEW_GRID = 'grid',
         VIEW_DEFAULT = VIEW_GRID;
 
-    let currentWindow = null,
+    let currentWindowPopupId = null,
         windowPositionTimer = 0;
 
     function setSaveWindowPositionTimer() {
@@ -36,22 +36,17 @@
         }
 
         windowPositionTimer = setTimeout(async function() {
-            currentWindow = await BG.getWindow();
-
-            ['width', 'height'].forEach(function(option) {
-                let capitalizedOption = utils.capitalize(option);
-
-                if (window.localStorage['manageGroupsWindow' + capitalizedOption] != currentWindow[option]) {
-                    window.localStorage['manageGroupsWindow' + capitalizedOption] = currentWindow[option];
+            ['Width', 'Height'].forEach(function(option) {
+                if (window.localStorage['manageGroupsWindow' + option] != window['inner' + option]) {
+                    window.localStorage['manageGroupsWindow' + option] = window['inner' + option];
                 }
             });
-        }, 100);
+        }, 200);
     }
 
     BG.getWindow().then(function(win) {
-        currentWindow = win;
-
-        if ('popup' === currentWindow.type) {
+        if ('popup' === win.type) {
+            currentWindowPopupId = win.id;
             window.addEventListener('resize', setSaveWindowPositionTimer);
         }
     });
@@ -99,26 +94,6 @@
             document.title = this.lang('manageGroupsTitle');
 
             this.loadOptions();
-
-            this
-                .$on('drag-move-group', function(from, to) {
-                    BG.moveGroup(from.data.item.id, this.groups.indexOf(to.data.item));
-                })
-                .$on('drag-move-tab', async function(from, to) {
-                    let tabsToMove = this.getDataForMultipleMove(),
-                        toData = {};
-
-                    if (this.isGroup(to.data.item)) {
-                        toData.groupId = to.data.item.id;
-                    } else {
-                        toData.groupId = to.data.group.id;
-                        toData.newTabIndex = to.data.group.tabs.indexOf(to.data.item);
-                    }
-
-                    BG.moveTabs(tabsToMove, toData, false).catch(utils.notify);
-                })
-                .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
-                .$on('drag-over', (item, isOver) => item.isOver = isOver);
         },
         async mounted() {
             this.containers = await utils.loadContainers();
@@ -161,6 +136,26 @@
             },
 
             setupListeners() {
+                this
+                    .$on('drag-move-group', function(from, to) {
+                        BG.moveGroup(from.data.item.id, this.groups.indexOf(to.data.item));
+                    })
+                    .$on('drag-move-tab', async function(from, to) {
+                        let tabsToMove = this.getDataForMultipleMove(),
+                            toData = {};
+
+                        if (this.isGroup(to.data.item)) {
+                            toData.groupId = to.data.item.id;
+                        } else {
+                            toData.groupId = to.data.group.id;
+                            toData.newTabIndex = to.data.group.tabs.indexOf(to.data.item);
+                        }
+
+                        BG.moveTabs(tabsToMove, toData, false).catch(utils.notify);
+                    })
+                    .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
+                    .$on('drag-over', (item, isOver) => item.isOver = isOver);
+
                 let listener = function(request, sender) {
                     if (!utils.isAllowSender(request, sender)) {
                         return;
@@ -317,15 +312,17 @@
             updateTabThumbnail(tab) {
                 BG.updateTabThumbnail(tab, true);
             },
-            loadGroup(group, tabIndex) {
-                // fix bug with browser.windows.getLastFocused({windowTypes: ['normal']}), maybe find exists bug??
-                let lastFocusedNormalWindow = BG.getLastFocusedNormalWindow(),
-                    isPopupWin = 'popup' === currentWindow.type;
+            async loadGroup(group, tabIndex) {
+                if (currentWindowPopupId) {
+                    await browser.windows.update(currentWindowPopupId, {
+                        state: 'minimized',
+                    });
+                }
 
-                BG.loadGroup(lastFocusedNormalWindow.id, group.id, tabIndex, !isPopupWin);
+                await BG.loadGroup(null, group.id, tabIndex, !currentWindowPopupId);
 
-                if (isPopupWin) {
-                    browser.windows.remove(currentWindow.id); // close manage groups popop window
+                if (currentWindowPopupId) {
+                    browser.windows.remove(currentWindowPopupId); // close manage groups popop window
                 }
             },
 
