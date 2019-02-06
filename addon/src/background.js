@@ -1662,6 +1662,13 @@ async function createMoveTabMenus(windowId) {
         contexts: ['tab'],
     }));
 
+    moveTabToGroupMenusIds.push(browser.menus.create({
+        id: 'stg-open-link-helper',
+        title: browser.i18n.getMessage('openLinkInGroupDisabledTitle') + ':',
+        enabled: false,
+        contexts: ['link'],
+    }));
+
     _groups.forEach(function(group) {
         let groupIconUrl = utils.getGroupIconUrl(group);
 
@@ -1686,6 +1693,32 @@ async function createMoveTabMenus(windowId) {
                         groupId: group.id,
                     }, !setActive, setActive)
                     .catch(utils.notify);
+            },
+        }));
+
+        moveTabToGroupMenusIds.push(browser.menus.create({
+            id: constants.CONTEXT_MENU_PREFIX_OPEN_LINK_IN_GROUP + group.id,
+            title: group.title,
+            icons: {
+                16: groupIconUrl,
+            },
+            contexts: ['link'],
+            onclick: async function(info) {
+                if (!utils.isUrlAllowToCreate(info.linkUrl)) {
+                    return;
+                }
+
+                let setActive = 2 === info.button;
+
+                await addTab(group.id, undefined, info.linkUrl, info.linkText, setActive);
+
+                if (setActive) {
+                    if (group.windowId) {
+                        setFocusOnWindow(group.windowId);
+                    } else {
+                        loadGroup(null, group.id);
+                    }
+                }
             },
         }));
 
@@ -1716,10 +1749,9 @@ async function createMoveTabMenus(windowId) {
 
                     if (setActive) {
                         if (group.windowId) {
-                            await setFocusOnWindow(group.windowId);
+                            setFocusOnWindow(group.windowId);
                         } else {
-                            let win = await getWindow();
-                            await loadGroup(win.id, group.id);
+                            loadGroup(null, group.id);
                         }
                     }
                 },
@@ -1755,6 +1787,29 @@ async function createMoveTabMenus(windowId) {
         },
     }));
 
+    moveTabToGroupMenusIds.push(browser.menus.create({
+        id: 'stg-open-link-in-new-group',
+        contexts: ['link'],
+        title: browser.i18n.getMessage('createNewGroup'),
+        icons: {
+            16: '/icons/group-new.svg',
+        },
+        onclick: async function(info) {
+            if (!utils.isUrlAllowToCreate(info.linkUrl)) {
+                return;
+            }
+
+            let setActive = 2 === info.button,
+                newGroup = await addGroup();
+
+            await addTab(newGroup.id, undefined, info.linkUrl, info.linkText, setActive);
+
+            if (setActive && !newGroup.windowId) {
+                loadGroup(null, newGroup.id);
+            }
+        },
+    }));
+
     if (hasBookmarksPermission) {
         moveTabToGroupMenusIds.push(browser.menus.create({
             id: 'stg-open-bookmark-in-new-group',
@@ -1782,8 +1837,7 @@ async function createMoveTabMenus(windowId) {
                 await addTab(newGroup.id, undefined, bookmark.url, bookmark.title, setActive);
 
                 if (setActive && !newGroup.windowId) {
-                    let win = await getWindow();
-                    await loadGroup(win.id, newGroup.id);
+                    loadGroup(null, newGroup.id);
                 }
             },
         }));
@@ -2566,7 +2620,6 @@ async function removeSTGNewTabUrls(windows) {
 // fix FF bug on browser.windows.getAll ... function not return all windows
 async function getAllWindows() {
     let allTabs = await browser.tabs.query({
-        pinned: false,
         windowType: 'normal',
     });
 
@@ -2581,7 +2634,9 @@ async function getAllWindows() {
                     return false;
                 }
 
-                win.tabs = allTabs.filter(tab => tab.windowId === win.id).map(_fixTabUrl);
+                win.tabs = allTabs
+                    .filter(tab => tab.windowId === win.id && utils.isTabNotPinned(tab))
+                    .map(_fixTabUrl);
                 win.session = await getSessionDataFromWindow(win.id);
 
                 return win;

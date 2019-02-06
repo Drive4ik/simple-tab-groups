@@ -3,6 +3,7 @@
 const DEFAULT_COOKIE_STORE_ID = 'firefox-default';
 const PRIVATE_COOKIE_STORE_ID = 'firefox-private';
 const CONTEXT_MENU_PREFIX_OPEN_BOOKMARK_IN_GROUP = 'stg-open-bookmark-in-group-id-';
+const CONTEXT_MENU_PREFIX_OPEN_LINK_IN_GROUP = 'stg-open-link-in-group-id-';
 const CONTEXT_MENU_PREFIX_GROUP = 'stg-move-group-id-';
 const CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP = 'stg-undo-remove-group-id-';
 const MANAGE_TABS_URL = '/manage/manage.html';
@@ -152,6 +153,7 @@ export {
     DEFAULT_COOKIE_STORE_ID,
     PRIVATE_COOKIE_STORE_ID,
     CONTEXT_MENU_PREFIX_OPEN_BOOKMARK_IN_GROUP,
+    CONTEXT_MENU_PREFIX_OPEN_LINK_IN_GROUP,
     CONTEXT_MENU_PREFIX_GROUP,
     CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP,
     MANAGE_TABS_URL,

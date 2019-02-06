@@ -606,5 +606,9 @@
     "bookmarkNotAllowed": {
         "message": "Эта закладка не поддерживается",
         "description": "This bookmark is not allowed"
+    },
+    "openLinkInGroupDisabledTitle": {
+        "message": "Открыть ссылку в группе",
+        "description": "Open link in group title"
     }
 }
