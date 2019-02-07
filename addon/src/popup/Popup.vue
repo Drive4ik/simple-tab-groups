@@ -16,7 +16,8 @@
     })(browser.extension.getBackgroundPage());
 
     if (!BG) {
-        window.close();
+        setTimeout(() => window.location.reload(), 700);
+        document.getElementById('stg-popup').innerText = browser.i18n.getMessage('waitingToLoadAllTabs');
         throw Error('background not inited');
     }
 
@@ -28,16 +29,19 @@
         'enter': KeyEvent.DOM_VK_RETURN,
         'tab': KeyEvent.DOM_VK_TAB,
         'delete': KeyEvent.DOM_VK_DELETE,
-    }
+    };
 
     const SECTION_SEARCH = 'search',
         SECTION_GROUPS_LIST = 'groupsList',
         SECTION_GROUP_TABS = 'groupTabs',
-        SECTION_DEFAULT = SECTION_GROUPS_LIST;
+        SECTION_DEFAULT = SECTION_GROUPS_LIST,
+        isSidebar = '#sidebar' === window.location.hash;
 
     export default {
         data() {
             return {
+                isSidebar: isSidebar,
+
                 SECTION_SEARCH,
                 SECTION_GROUPS_LIST,
                 SECTION_GROUP_TABS,
@@ -62,7 +66,7 @@
                 groupToRemove: null,
 
                 containers: [],
-                options: BG.getOptions(),
+                options: {},
                 groups: [],
 
                 unSyncTabs: [],
@@ -77,11 +81,9 @@
             'context-menu': contextMenu,
         },
         async created() {
-            if (this.options.enableDarkTheme) {
-                document.documentElement.classList.add('dark-theme');
-            }
-
             BG.getWindow().then(win => this.currentWindowId = win.id);
+
+            this.loadOptions();
 
             this.containers = await utils.loadContainers();
 
@@ -103,6 +105,13 @@
             this.setFocus();
         },
         watch: {
+            'options.enableDarkTheme': function(enableDarkTheme) {
+                if (enableDarkTheme) {
+                    document.documentElement.classList.add('dark-theme');
+                } else {
+                    document.documentElement.classList.remove('dark-theme');
+                }
+            },
             section() {
                 this.multipleMoveTabs = [];
             },
@@ -149,6 +158,10 @@
         methods: {
             lang: browser.i18n.getMessage,
             safeHtml: utils.safeHtml,
+
+            loadOptions() {
+                this.options = BG.getOptions();
+            },
 
             setFocus() {
                 this.$refs.search.focus();
@@ -212,6 +225,11 @@
                         case 'group-loaded':
                         case 'groups-updated':
                             this.loadGroups();
+                            break;
+                        case 'options-updated':
+                            if (isSidebar) {
+                                this.loadOptions();
+                            }
                             break;
                     }
 
@@ -314,13 +332,13 @@
             },
             async loadUnsyncedTabs() {
                 let unSyncTabs = await browser.tabs.query({
-                    pinned: false,
-                    hidden: true,
-                });
+                        pinned: false,
+                        hidden: true,
+                    }),
+                    allGroupTabIds = this.groups.reduce((acc, group) => group.tabs.reduce((a, t) => (t.id && a.push(t.id), a), acc), []);
 
                 this.unSyncTabs = unSyncTabs
-                    .filter(utils.isTabNotIncognito)
-                    .filter(unSyncTab => !this.groups.some(group => group.tabs.some(tab => tab.id === unSyncTab.id)))
+                    .filter(tab => utils.isTabNotIncognito(tab) && !allGroupTabIds.includes(tab.id))
                     .map(this.$_tabMap, this);
             },
 
@@ -394,6 +412,12 @@
                 }
             },
 
+            closeWindow() {
+                if (!isSidebar) {
+                    window.close();
+                }
+            },
+
             async loadGroup(group, tabIndex = -1, closePopup = false) {
                 if (this.someGroupAreLoading) {
                     return;
@@ -418,7 +442,7 @@
 
                 if (closePopup) {
                     BG.loadGroup(this.currentWindowId, group.id, tabIndex);
-                    window.close();
+                    this.closeWindow();
                 } else {
                     this.someGroupAreLoading = true;
 
@@ -428,7 +452,7 @@
 
                     if (this.options.closePopupAfterChangeGroup) {
                         if (!isCurrentGroup) {
-                            window.close();
+                            this.closeWindow();
                         }
                     } else {
                         if (this.options.openGroupAfterChange) {
@@ -524,8 +548,10 @@
 
                 return result;
             },
-            async moveTab(tab, newGroup, loadUnsync = false, showTabAfterMoving = false) {
-                let tabsData = this.getTabsForMove(tab);
+            async moveTab(tabsData, newGroup, loadUnsync = false, showTabAfterMoving = false) {
+                if (!Array.isArray(tabsData)) {
+                    tabsData = this.getTabsForMove(tabsData);
+                }
 
                 try {
                     await BG.moveTabs(tabsData, {
@@ -540,9 +566,10 @@
                 }
             },
             async moveTabToNewGroup(tab, loadUnsync, showTabAfterMoving) {
-                let newGroup = await BG.addGroup();
+                let tabsData = this.getTabsForMove(tab),
+                    newGroup = await BG.addGroup();
 
-                this.moveTab(tab, newGroup, loadUnsync, showTabAfterMoving);
+                this.moveTab(tabsData, newGroup, loadUnsync, showTabAfterMoving);
             },
             setTabIconAsGroupIcon(tab) {
                 BG.updateGroup(this.groupToShow.id, {
@@ -572,14 +599,14 @@
 
             openOptionsPage() {
                 browser.runtime.openOptionsPage();
-                window.close();
+                this.closeWindow();
             },
             reloadAddon() {
                 browser.runtime.reload();
             },
             openManageGroups() {
                 BG.openManageGroups();
-                window.close();
+                this.closeWindow();
             },
             sortGroups(vector) {
                 BG.sortGroups(vector);
@@ -773,7 +800,7 @@
 <template>
     <div
         id="stg-popup"
-        :class="['is-flex is-column no-outline', {'edit-group-popup': !!groupToEdit}]"
+        :class="['is-flex is-column no-outline', {'edit-group-popup': !!groupToEdit, 'is-sidebar': isSidebar}]"
         @contextmenu="['INPUT', 'TEXTAREA'].includes($event.target.nodeName) ? null : $event.preventDefault()"
         @click="multipleMoveTabs = []"
         @wheel.ctrl.prevent
@@ -1062,7 +1089,7 @@
             </div>
         </main>
 
-        <footer class="is-flex is-unselectable">
+        <footer v-if="!isSidebar" class="is-flex is-unselectable">
             <div class="is-flex is-align-items-center manage-groups is-full-height is-full-width" @click="openManageGroups" :title="lang('manageGroupsTitle')">
                 <img class="size-16" src="/icons/icon.svg" />
                 <span class="h-margin-left-10" v-text="lang('manageGroupsTitle')"></span>
@@ -1166,7 +1193,7 @@
                 ref="editGroup"
                 :group="groupToEdit"
                 :containers="containers"
-                :can-load-file="false"
+                :can-load-file="isSidebar"
                 @saved="groupToEdit = null"
                 @open-manage-groups="openManageGroups"/>
         </edit-group-popup>
@@ -1219,7 +1246,7 @@
 
 <style lang="scss">
     :root {
-        --popup-width: 420px;
+        --popup-width: 432px;
         --max-popup-width: 100%;
 
         --max-popup-height: 600px;
@@ -1253,6 +1280,15 @@
     }
 
     #stg-popup {
+        &.is-sidebar {
+            --max-popup-height: 100vh;
+            --min-popup-height: 100vh;
+
+            #result > * {
+                padding-bottom: var(--indent);
+            }
+        }
+
         width: var(--popup-width);
         min-height: var(--min-popup-height);
         max-height: var(--max-popup-height);

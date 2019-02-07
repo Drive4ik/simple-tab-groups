@@ -39,6 +39,8 @@
 
 <style lang="scss">
     #editGroupPopup {
+        display: flex;
+        flex-direction: column;
         position: fixed;
         padding-top: 4px;
         top: 0;
@@ -53,9 +55,8 @@
         }
 
         .body {
+            flex-grow: 1;
             padding: 0 var(--indent);
-            max-height: 500px;
-            height: 600px;
             overflow-y: auto;
         }
 

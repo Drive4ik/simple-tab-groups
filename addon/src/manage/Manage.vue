@@ -1054,8 +1054,7 @@
                     align-content: center;
                     justify-content: center;
                     min-height: 250px;
-                    border-style: dashed;
-                    border-width: 2px;
+                    border: 2px dashed var(--tab-inner-border-color);
                     background-color: transparent;
 
                     > .body {

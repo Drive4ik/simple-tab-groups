@@ -43,6 +43,14 @@
         "browser_style": false
     },
 
+    "sidebar_action": {
+        "default_icon": "/icons/icon.svg",
+        "default_title": "__MSG_extensionName__",
+        "default_panel": "popup/popup.html#sidebar",
+        "browser_style": false,
+        "open_at_install": true
+    },
+
     "content_scripts": [
         {
             "matches": ["<all_urls>"],
