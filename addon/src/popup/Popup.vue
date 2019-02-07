@@ -2,7 +2,6 @@
     'use strict';
 
     import * as utils from '../js/utils';
-    import storage from '../js/storage';
 
     import Vue from 'vue';
 
@@ -343,8 +342,7 @@
             },
 
             async showCreateGroupPopup() {
-                let { lastCreatedGroupPosition } = await storage.get('lastCreatedGroupPosition');
-                this.nextGroupTitle = browser.i18n.getMessage('newGroupTitle', lastCreatedGroupPosition + 1);
+                this.nextGroupTitle = await BG.getNextGroupTitle();
                 this.isShowingCreateGroupPopup = true;
             },
 

@@ -2,8 +2,6 @@
     'use strict';
 
     import * as utils from '../js/utils';
-    import storage from '../js/storage';
-    import * as constants from '../js/constants';
 
     import Vue from 'vue';
 

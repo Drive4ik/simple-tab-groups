@@ -2088,6 +2088,11 @@ function _mapGroupForAnotherExtension(group) {
     };
 }
 
+async function getNextGroupTitle() {
+    let { lastCreatedGroupPosition } = await storage.get('lastCreatedGroupPosition');
+    return utils.createGroupTitle(null, lastCreatedGroupPosition + 1);
+}
+
 async function runAction(data, externalExtId) {
     let result = {
         ok: false,
@@ -2397,6 +2402,7 @@ window.background = {
 
     sortGroups,
     loadGroup,
+    getNextGroupTitle,
 
     mapTab,
     getTabFavIconUrl,
