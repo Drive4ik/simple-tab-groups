@@ -997,11 +997,9 @@ async function onCreatedTab(tab) {
                 destGroup.showTabAfterMovingItIntoThisGroup
             )
             .then(function() {
-                if (!tab.active) {
-                    return;
+                if (tab.active) {
+                    _fixLastActiveTab(group, 'prev-active');
                 }
-
-                _fixLastActiveTab(group, 'prev-active');
             })
             .catch(utils.notify);
             return;
