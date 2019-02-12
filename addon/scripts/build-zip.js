@@ -41,7 +41,7 @@ function init() {
 
         fse.copySync(setPath('src'), setDevPath('src'));
         fse.copySync(setPath('scripts'), setDevPath('scripts'));
-        fse.copySync(setPath('../README.md'), setDevPath('README.md'));
+        fse.copySync(setPath('README.md'), setDevPath('README.md'));
         fse.copySync(setPath('package.json'), setDevPath('package.json'));
         fse.copySync(setPath('package-lock.json'), setDevPath('package-lock.json'));
         fse.copySync(setPath('webpack.config.js'), setDevPath('webpack.config.js'));
