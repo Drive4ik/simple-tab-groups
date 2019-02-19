@@ -686,32 +686,36 @@ async function loadGroup(windowId = null, groupId, activeTabIndex = -1, fixLastA
                 }
             } else {
                 if (winTabs.length) {
-                    let syncedTabs = [];
+                    if (group.tabs.length) {
+                        let syncedTabs = [];
 
-                    group.tabs
-                        .filter(tab => !tab.id)
-                        .forEach(function(tab) {
-                            let tabUrl = tab.url || 'about:blank',
-                                winTab = winTabs.find(function(t) {
-                                    if (!syncedTabs.includes(t.id)) {
-                                        return t.url === tabUrl;
-                                    }
-                                });
+                        group.tabs
+                            .filter(tab => !tab.id)
+                            .forEach(function(tab) {
+                                let tabUrl = tab.url || 'about:blank',
+                                    winTab = winTabs.find(function(t) {
+                                        if (!syncedTabs.includes(t.id)) {
+                                            return t.url === tabUrl;
+                                        }
+                                    });
 
-                            if (winTab) {
-                                tab.id = winTab.id;
-                                syncedTabs.push(winTab.id);
+                                if (winTab) {
+                                    tab.id = winTab.id;
+                                    syncedTabs.push(winTab.id);
+                                }
+                            });
+
+                        let tabsToHide = winTabs.filter(winTab => !group.tabs.some(tab => tab.id === winTab.id));
+
+                        if (tabsToHide.length) {
+                            if (1 === tabsToHide.length && utils.isUrlEmpty(tabsToHide[0].url)) {
+                                await browser.tabs.remove(tabsToHide[0].id);
+                            } else {
+                                await browser.tabs.hide(tabsToHide.map(utils.keyId));
                             }
-                        });
-
-                    let tabsToHide = winTabs.filter(winTab => !group.tabs.some(tab => tab.id === winTab.id));
-
-                    if (tabsToHide.length) {
-                        if (1 === tabsToHide.length && utils.isUrlEmpty(tabsToHide[0].url)) {
-                            await browser.tabs.remove(tabsToHide[0].id);
-                        } else {
-                            await browser.tabs.hide(tabsToHide.map(utils.keyId));
                         }
+                    } else {
+                        group.tabs = winTabs.map(mapTab);
                     }
                 }
             }
