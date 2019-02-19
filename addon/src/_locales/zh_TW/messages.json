@@ -590,5 +590,25 @@
     "createNewGroupWhenOpenNewWindow": {
         "message": "開啟新視窗時建立新分頁群組",
         "description": "Create a new group when opening a new window"
+    },
+    "prependGroupTitleToWindowTitle": {
+        "message": "於視窗名稱前顯示群組名稱",
+        "description": "Prepend group title to window title"
+    },
+    "allowAccessToBookmarks": {
+        "message": "允許存取書籤",
+        "description": "Allow access to bookmarks"
+    },
+    "openBookmarkInGroup": {
+        "message": "在分頁群組中開啟書籤項目",
+        "description": "Open bookmark in group"
+    },
+    "bookmarkNotAllowed": {
+        "message": "不允許存取此書籤",
+        "description": "This bookmark is not allowed"
+    },
+    "openLinkInGroupDisabledTitle": {
+        "message": "在分頁群組中開啟連結",
+        "description": "Open link in group title"
     }
 }

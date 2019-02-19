@@ -1,0 +1,22 @@
+{
+    "extensionDescription": {
+        "message": "建立、編輯、及快速切換分頁群組。\n靈感來自傳統套件 Tab Groups :)",
+        "description": "Extension description"
+    },
+    "needInstallSTGExtension": {
+        "message": "需要安裝 Simple Tab Groups 套件。\n點擊此處開啟 Simple Tab Groups 首頁。",
+        "description": "Need install Simple Tab Groups extention\n\nClick here to open Simple Tab Groups home page"
+    },
+    "openSettings": {
+        "message": "設定",
+        "description": "Settings context button title"
+    },
+    "needSelectGroup": {
+        "message": "請選擇分頁群組...",
+        "description": "Please, select group"
+    },
+    "defaultBrowserActionTitle": {
+        "message": "刪除正在使用中的分頁群組 - [STG plugin]",
+        "description": "Group title will be here - [STG plugin]"
+    }
+}
