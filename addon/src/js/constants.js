@@ -99,6 +99,7 @@ const DEFAULT_OPTIONS = {
     createThumbnailsForTabs: true,
 
     defaultGroupIconViewType: groupIconViewTypes[0],
+    defaultGroupIconColor: '',
 
     autoBackupEnable: true,
     autoBackupLastBackupTimeStamp: 1,
@@ -140,6 +141,7 @@ const allOptionsKeys = onlyBoolOptionsKeys
     .concat([
         'hotkeys',
         'defaultGroupIconViewType',
+        'defaultGroupIconColor',
         'autoBackupLastBackupTimeStamp',
         'autoBackupIntervalKey',
         'autoBackupIntervalValue',

@@ -204,7 +204,7 @@ function createGroup(id, windowId, title) {
     return {
         id: id,
         title: utils.createGroupTitle(title, id),
-        iconColor: utils.randomColor(),
+        iconColor: options.defaultGroupIconColor || utils.randomColor(),
         iconUrl: null,
         iconViewType: options.defaultGroupIconViewType,
         tabs: [],

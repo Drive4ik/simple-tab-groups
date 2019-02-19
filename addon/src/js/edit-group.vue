@@ -8,7 +8,7 @@
 
     import popup from './popup.vue';
     import swatches from 'vue-swatches';
-    import "vue-swatches/dist/vue-swatches.min.css";
+    import 'vue-swatches/dist/vue-swatches.min.css';
 
     const BG = (function(bgWin) {
         return bgWin && bgWin.background && bgWin.background.inited ? bgWin.background : false;

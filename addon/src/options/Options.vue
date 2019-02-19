@@ -7,6 +7,8 @@
     import * as file from '../js/file';
 
     import popup from '../js/popup.vue';
+    import swatches from 'vue-swatches';
+    import 'vue-swatches/dist/vue-swatches.min.css';
 
     const BG = (function(bgWin) {
         return bgWin && bgWin.background && bgWin.background.inited ? bgWin.background : false;
@@ -78,6 +80,7 @@
         },
         components: {
             popup: popup,
+            swatches: swatches,
         },
         async mounted() {
             let platformInfo = await browser.runtime.getPlatformInfo();
@@ -93,7 +96,7 @@
             this.permissions.bookmarks = await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
 
             constants.onlyBoolOptionsKeys
-                .concat(['defaultGroupIconViewType', 'autoBackupIntervalKey'])
+                .concat(['defaultGroupIconViewType', 'defaultGroupIconColor', 'autoBackupIntervalKey'])
                 .forEach(function(option) {
                     this.$watch(`options.${option}`, function(newValue) {
                         BG.saveOptions({
@@ -527,7 +530,7 @@
             getIconTypeUrl(iconType) {
                 return utils.getGroupIconUrl({
                     iconViewType: iconType,
-                    iconColor: 'hsl(200, 100%, 50%)',
+                    iconColor: this.options.defaultGroupIconColor || 'rgb(66, 134, 244)',
                 });
             },
 
@@ -667,6 +670,13 @@
             <div class="field">
                 <label class="label" v-text="lang('enterDefaultGroupIconViewTypeTitle')"></label>
                 <div class="field is-grouped">
+                    <div class="control">
+                        <swatches v-model.trim="options.defaultGroupIconColor" :title="lang('iconColor')" colors="text-advanced" popover-to="right" show-fallback :trigger-style="{
+                            width: '40px',
+                            height: '33px',
+                            borderRadius: '4px',
+                        }" />
+                    </div>
                     <div v-for="iconViewType in groupIconViewTypes" :key="iconViewType" class="control">
                         <button
                             @click="options.defaultGroupIconViewType = iconViewType"
@@ -945,6 +955,10 @@
 <style lang="scss">
     body {
         // background-color: #f9f9fa;
+    }
+
+    .vue-swatches__container {
+        transform: translate(2px, calc(-100% - 44px));
     }
 
     #stg-options {
