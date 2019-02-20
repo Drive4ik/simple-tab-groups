@@ -610,5 +610,13 @@
     "openLinkInGroupDisabledTitle": {
         "message": "Открыть ссылку в группе",
         "description": "Open link in group title"
+    },
+    "showContextMenuOnTabs": {
+        "message": "Показывать контекстное меню на вкладках",
+        "description": "Show context menu on tabs"
+    },
+    "showContextMenuOnLinks": {
+        "message": "Показывать контекстное меню на ссылках",
+        "description": "Show context menu on links"
     }
 }

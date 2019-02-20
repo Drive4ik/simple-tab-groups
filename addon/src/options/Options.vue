@@ -655,6 +655,18 @@
             </div>
             <div class="field">
                 <label class="checkbox">
+                    <input v-model="options.showContextMenuOnTabs" type="checkbox" />
+                    <span v-text="lang('showContextMenuOnTabs')"></span>
+                </label>
+            </div>
+            <div class="field">
+                <label class="checkbox">
+                    <input v-model="options.showContextMenuOnLinks" type="checkbox" />
+                    <span v-text="lang('showContextMenuOnLinks')"></span>
+                </label>
+            </div>
+            <div class="field">
+                <label class="checkbox">
                     <input type="checkbox" v-model="options.createThumbnailsForTabs" @change="!options.createThumbnailsForTabs && (includeTabThumbnailsIntoBackup = false) " />
                     <span v-text="lang('createThumbnailsForTabs')"></span>
                 </label>

@@ -97,6 +97,8 @@ const DEFAULT_OPTIONS = {
     showConfirmDialogBeforeGroupDelete: true,
     useTabsFavIconsFromGoogleS2Converter: false,
     createThumbnailsForTabs: true,
+    showContextMenuOnTabs: true,
+    showContextMenuOnLinks: true,
 
     defaultGroupIconViewType: groupIconViewTypes[0],
     defaultGroupIconColor: '',
