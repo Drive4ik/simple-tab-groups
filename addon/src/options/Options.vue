@@ -601,6 +601,18 @@
             </div>
             <div class="field">
                 <label class="checkbox">
+                    <input v-model="options.showContextMenuOnTabs" type="checkbox" />
+                    <span v-text="lang('showContextMenuOnTabs')"></span>
+                </label>
+            </div>
+            <div class="field">
+                <label class="checkbox">
+                    <input v-model="options.showContextMenuOnLinks" type="checkbox" />
+                    <span v-text="lang('showContextMenuOnLinks')"></span>
+                </label>
+            </div>
+            <div class="field">
+                <label class="checkbox">
                     <input v-model="options.discardTabsAfterHide" type="checkbox" />
                     <span v-text="lang('discardTabsAfterHide')"></span>
                 </label>
@@ -651,18 +663,6 @@
                 <label class="checkbox">
                     <input v-model="options.useTabsFavIconsFromGoogleS2Converter" type="checkbox" />
                     <span v-text="lang('useTabsFavIconsFromGoogleS2Converter')"></span>
-                </label>
-            </div>
-            <div class="field">
-                <label class="checkbox">
-                    <input v-model="options.showContextMenuOnTabs" type="checkbox" />
-                    <span v-text="lang('showContextMenuOnTabs')"></span>
-                </label>
-            </div>
-            <div class="field">
-                <label class="checkbox">
-                    <input v-model="options.showContextMenuOnLinks" type="checkbox" />
-                    <span v-text="lang('showContextMenuOnLinks')"></span>
                 </label>
             </div>
             <div class="field">
