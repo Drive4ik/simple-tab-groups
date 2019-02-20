@@ -2792,7 +2792,7 @@ async function init() {
             loadingTabs = loadingTabs.filter(utils.isTabNotIncognito);
 
             if (loadingTabs.length) {
-                if (Date.now() - startLoadingTabsTime > fullStopAddonAfterLoadingWaitFor * 60 * 1000) { // after 10 min loading - stop loading
+                if ((Date.now() - startLoadingTabsTime) > (fullStopAddonAfterLoadingWaitFor * 60 * 1000)) { // after 10 min loading - stop loading
                     resolve(); // stop wait tab loading
                     return;
                 }
