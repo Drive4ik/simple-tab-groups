@@ -1,0 +1,546 @@
+{
+    "extensionDescription": {
+        "message": "Създаване, промяна и бързо превключване между групи от раздели.\nВдъхновено от добавката Tab Groups :)",
+        "description": "Description of the extension."
+    },
+    "openSettings": {
+        "message": "Настройки",
+        "description": "Settings context button title"
+    },
+    "manageGroupsTitle": {
+        "message": "Управление на групи",
+        "description": "Manage groups"
+    },
+    "setTabIconAsGroupIcon": {
+        "message": "Пиктограмата на раздела като пиктограма на групата",
+        "description": "Set tab icon as group icon"
+    },
+    "moveTabToGroupDisabledTitle": {
+        "message": "Преместване в група",
+        "description": "Move tab to group title"
+    },
+    "moveTabToGroupMessage": {
+        "message": "Разделът „$tabtitle$“ е преместен в група „$grouptitle$“.\n\nПоказване на раздела.",
+        "description": "Tab moved popup title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            },
+            "tabtitle": {
+                "content": "$2",
+                "example": "tab title"
+            }
+        }
+    },
+    "warning": {
+        "message": "Внимание!",
+        "description": "Warning!"
+    },
+    "success": {
+        "message": "Успех!",
+        "description": "Success!"
+    },
+    "ok": {
+        "message": "Добре",
+        "description": "OK button"
+    },
+    "save": {
+        "message": "Запазване",
+        "description": "Save"
+    },
+    "delete": {
+        "message": "Изтриване",
+        "description": "Delete"
+    },
+    "cancel": {
+        "message": "Отказ",
+        "description": "Cancel"
+    },
+    "searchPlaceholder": {
+        "message": "Търсене",
+        "description": "Search placeholder"
+    },
+    "invalidRegExpRuleTitle": {
+        "message": "Правилото „$regexp$“ е грешно и ще бъде пропуснато.",
+        "description": "Invalid rule description",
+        "placeholders": {
+            "regexp": {
+                "content": "$1",
+                "example": "googlecom"
+            }
+        }
+    },
+    "manageGroupViewGrid": {
+        "message": "Решетка",
+        "description": "Grid display"
+    },
+    "manageGroupViewFreeArrange": {
+        "message": "Свободна подредба (в бъдещо издание)",
+        "description": "Free arrange"
+    },
+    "closePopupAfterChangeGroup": {
+        "message": "Затваряне на менюто при смяна на група",
+        "description": "Close popup after changing group"
+    },
+    "showNotificationAfterMoveTab": {
+        "message": "Известие при смяна на групата на раздел",
+        "description": "Show notification when tab is moved to another group"
+    },
+    "openManageGroupsInTab": {
+        "message": "Отваряне на „Управление на групи“ в нов раздел",
+        "description": "Open \"Manage Groups\" in new tab"
+    },
+    "showConfirmDialogBeforeGroupDelete": {
+        "message": "Потвърждаване при изтриване на група",
+        "description": "Show confirm dialog before group delete"
+    },
+    "exportAddonSettingsTitle": {
+        "message": "Резервно копие на групите",
+        "description": "Backup your Simple Tab Groups"
+    },
+    "exportAddonSettingsDescription": {
+        "message": "Изнесете групите от раздели в резервно копие, така че да ги възстановите по-късно при нужда.",
+        "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
+    },
+    "exportAddonSettingsButton": {
+        "message": "Създаване",
+        "description": "Create backup"
+    },
+    "includeTabThumbnailsIntoBackup": {
+        "message": "Добавяне на миниатюрите (увеличава размера на архива)",
+        "description": "Include tab thumbnails in backup (makes backup file size bigger)"
+    },
+    "importAddonSettingsTitle": {
+        "message": "Възстановяване на групи от резервно копие",
+        "description": "Restore Simple Tab Groups"
+    },
+    "importAddonSettingsDescription": {
+        "message": "Внасяне на резервно копие с групите, които да бъдат възстановени.",
+        "description": "Load a backup file containing the tab groups you want to restore."
+    },
+    "importAddonSettingsWarning": {
+        "message": "При възстановяване от резервно копие текущите групи и настройки ще бъдат ЗАЛИЧЕНИ!",
+        "description": "Restore add-on settings will ERASE all existing settings and groups!"
+    },
+    "importAddonSettingsButton": {
+        "message": "Възстановяване",
+        "description": "Restore backup"
+    },
+    "importSettingsOldTabGroupsAddonTitle": {
+        "message": "Възстановяване на „Tab Groups“ от Quicksaver",
+        "description": "Restore Quicksaver's \"Tab Groups\""
+    },
+    "importSettingsOldTabGroupsAddonDescription": {
+        "message": "Внасяне на резервно копие от старата добавка „Tab Groups“.",
+        "description": "Load a backup file old \"Tab Groups\" addon."
+    },
+    "openGroupAfterChange": {
+        "message": "Отваряне на групата след смяна",
+        "description": "Open group after changing to it"
+    },
+    "newGroupTitle": {
+        "message": "Група $id$",
+        "description": "group id",
+        "placeholders": {
+            "id": {
+                "content": "$1",
+                "example": "1"
+            }
+        }
+    },
+    "searchNotFoundTitle": {
+        "message": "Няма резултати за „$search$“",
+        "description": "No results found",
+        "placeholders": {
+            "search": {
+                "content": "$1",
+                "example": "mail"
+            }
+        }
+    },
+    "sortGroupsAZ": {
+        "message": "Подреждане [А-Я]",
+        "description": "Sort groups [A-Z]"
+    },
+    "sortGroupsZA": {
+        "message": "Подреждане [Я-А]",
+        "description": "Sort groups [Z-A]"
+    },
+    "generalTitle": {
+        "message": "Общи",
+        "description": "General"
+    },
+    "groupSettings": {
+        "message": "Настройки на група",
+        "description": "Group settings"
+    },
+    "deleteGroup": {
+        "message": "Изтриване на група",
+        "description": "Delete group"
+    },
+    "deleteGroupTitle": {
+        "message": "Изтриване на група?",
+        "description": "Delete group?"
+    },
+    "deleteGroupBody": {
+        "message": "Желаете ли групата „$name$“ да бъде изтрита?<br>При изтриване на групи разделите и прозорците в тях биват затворени.",
+        "description": "Delete group?",
+        "placeholders": {
+            "name": {
+                "content": "$1",
+                "example": "Group #4"
+            }
+        }
+    },
+    "groupTabsCount": {
+        "message": "$count$ раздела",
+        "description": "Group tabs count",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "deleteTab": {
+        "message": "Изтриване на раздела",
+        "description": "Delete tab"
+    },
+    "createNewTab": {
+        "message": "Нов раздел",
+        "description": "Open new tab"
+    },
+    "createNewGroup": {
+        "message": "Нова група",
+        "description": "Create new group"
+    },
+    "goBackButtonTitle": {
+        "message": "Назад",
+        "description": "Go back"
+    },
+    "goBackToGroupsButtonTitle": {
+        "message": "Назад към групите",
+        "description": "Go back to groups"
+    },
+    "title": {
+        "message": "Заглавие",
+        "description": "Title"
+    },
+    "iconColor": {
+        "message": "Цвят на пиктограмата",
+        "description": "Icon color"
+    },
+    "selectUserGroupIcon": {
+        "message": "Избиране на пиктограма",
+        "description": "Load icon"
+    },
+    "selectUserGroupIconWarnText": {
+        "message": "Извинете, но не може да избирате пиктограма в това меню, но може в прозореца за управление на групите.  Желаете ли прозореца за управление на групите да бъде отворен?",
+        "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
+    },
+    "setRandomColor": {
+        "message": "Произволен цвят",
+        "description": "Set random color"
+    },
+    "catchTabContainers": {
+        "message": "Улавяне и преместване на разделите в изолатори",
+        "description": "Catch and move tabs with containers to this group"
+    },
+    "regexpForTabsTitle": {
+        "message": "Регулярен израз за улавяне на раздели",
+        "description": "Regular expressions for catch tabs"
+    },
+    "regexpForTabsPlaceholder": {
+        "message": "Регулярни изрази",
+        "description": "Regular expressions"
+    },
+    "hotkeysTitle": {
+        "message": "Клавишни комбинации",
+        "description": "Hotkeys"
+    },
+    "addHotKeyButton": {
+        "message": "Нова комбинация",
+        "description": "Add hotkey"
+    },
+    "deleteHotKeyButton": {
+        "message": "Изтриване на комбинацията",
+        "description": "Delete hotkey"
+    },
+    "hotkeyPlaceholder": {
+        "message": "Натиснете комбинация",
+        "description": "Press key here"
+    },
+    "selectAction": {
+        "message": "Избиране",
+        "description": "Select action"
+    },
+    "selectGroup": {
+        "message": "Избор на група",
+        "description": "Select group"
+    },
+    "hotkeyActionTitleLoadNextGroup": {
+        "message": "Отваряне на следващата група",
+        "description": "Load next group"
+    },
+    "hotkeyActionTitleLoadPrevGroup": {
+        "message": "Отваряне на предишната група",
+        "description": "Load previous group"
+    },
+    "hotkeyActionTitleLoadFirstGroup": {
+        "message": "Отваряне на първата група",
+        "description": "Load first group"
+    },
+    "hotkeyActionTitleLoadLastGroup": {
+        "message": "Отваряне на последната група",
+        "description": "Load last group"
+    },
+    "hotkeyActionTitleLoadCustomGroup": {
+        "message": "Отваряне на определена група",
+        "description": "Load custom group"
+    },
+    "hotkeyActionTitleAddNewGroup": {
+        "message": "Нова група",
+        "description": "Add new group"
+    },
+    "hotkeyActionTitleDeleteCurrentGroup": {
+        "message": "Изтриване на текущата група",
+        "description": "Delete current group"
+    },
+    "hotkeyActionTitleOpenManageGroups": {
+        "message": "Отваряне на управлението на групи",
+        "description": "Open manage groups"
+    },
+    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
+        "message": "Местене на разделa в определена група",
+        "description": "Move active tab to custom group"
+    },
+    "saveErrorLogsIntoFile": {
+        "message": "Запазване на последните грешки във файл JSON",
+        "description": "Save last error logs into JSON file"
+    },
+    "undoRemoveGroupItemTitle": {
+        "message": "Възстановяване на група „$grouptitle$“",
+        "description": "Undelete a group menu title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "undoRemoveGroupNotification": {
+        "message": "Натиснете тук, за да спрете изтриването на група „$grouptitle$“",
+        "description": "Click here to cancel the deletion of the group title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "isStickyGroupHelp": {
+        "message": "Разделите в тази група никога няма да бъдат автоматично премествани в друга",
+        "description": "Tabs in this group will never be automatically moved to another group"
+    },
+    "useTabsFavIconsFromGoogleS2Converter": {
+        "message": "Използване на пиктограми от Google S2 Converter",
+        "description": "Use tabs fav-icons from Google S2 Converter"
+    },
+    "iconStyle": {
+        "message": "Пиктограма",
+        "description": "Icon style"
+    },
+    "createThumbnailsForTabs": {
+        "message": "Миниатюра на раздела (използвана в „Управление на групи“)",
+        "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
+    },
+    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
+        "message": "Групата не може да бъде променяна, защото един от отворените раздели използва микрофон или камера",
+        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
+    },
+    "foundHiddenUnSyncTabsDescription": {
+        "message": "Има скрити несинхронизирани раздели. Изберете раздела, за да бъде показан в текущата група/прозорец или",
+        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
+    },
+    "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
+        "message": "Преместване на разделите в текущата група/прозорец",
+        "description": "Move all of these tabs into current group/window"
+    },
+    "actionHiddenUnSyncTabsCreateGroup": {
+        "message": "Създаване на група с разделите",
+        "description": "Create new group with all of these tabs"
+    },
+    "actionHiddenUnSyncTabsCloseAll": {
+        "message": "Затваряне на разделите",
+        "description": "Close all of these tabs"
+    },
+    "thisTabWillCreateAsNew": {
+        "message": "Разделът ще бъде създаден",
+        "description": "This tab will create as new"
+    },
+    "updateTabThumbnail": {
+        "message": "Обновяване на миниатюрата на раздела",
+        "description": "Update thumbnail for this tab"
+    },
+    "waitingToLoadAllTabs": {
+        "message": "Изчакване на всички раздели да заредят.\nМоля, почакайте…",
+        "description": "Waiting for all tabs to load.\nPlease wait..."
+    },
+    "reloadAddon": {
+        "message": "Презареждане на добавката",
+        "description": "Reload addon"
+    },
+    "enterDefaultGroupIconViewTypeTitle": {
+        "message": "Пиктограма на нова група",
+        "description": "Icon style for a new group"
+    },
+    "openPopupHotkeyTitle": {
+        "message": "Отваряне на менюто с групите",
+        "description": "Open the groups pop-up"
+    },
+    "openGroupInNewWindow": {
+        "message": "Отваряне на групата в нов прозорец",
+        "description": "Open group in new window"
+    },
+    "showTabAfterMovingItIntoThisGroup": {
+        "message": "Показване на раздела след автоматично преместване в групата",
+        "description": "Show the tab after auto-moving it into this group"
+    },
+    "tabMoving": {
+        "message": "Преместване на раздели",
+        "description": "Tab moving"
+    },
+    "includeTabFavIconsIntoBackup": {
+        "message": "Включване на пиктограмите (увеличава размера на резервното копие)",
+        "description": "Include tab fav-icons in backup (makes backup file size bigger)"
+    },
+    "tabsThumbnailsSize": {
+        "message": "Заемано място от миниатюри: $size$",
+        "description": "Tabs thumbnails size: $size$",
+        "placeholders": {
+            "size": {
+                "content": "$1",
+                "example": "2 MB"
+            }
+        }
+    },
+    "clearTabsThumbnails": {
+        "message": "Изчистване",
+        "description": "Clear tabs thumbnails"
+    },
+    "groupRemovedByExtension": {
+        "message": "Групата „$group$“ е премахната от разширението „$extension$“",
+        "description": "Group \"$group$\" removed by extension: $extension$",
+        "placeholders": {
+            "group": {
+                "content": "$1",
+                "example": "group title"
+            },
+            "extension": {
+                "content": "$2",
+                "example": "external extension title"
+            }
+        }
+    },
+    "extendedTabSearch": {
+        "message": "Разширено търсене",
+        "description": "Extended search"
+    },
+    "movingMultipleTabsText": {
+        "message": "Преместване на $count$ раздела",
+        "description": "Moving $count$ tabs",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "7"
+            }
+        }
+    },
+    "pinnedTabsAreNotSupported": {
+        "message": "Закачени раздели не се поддържат",
+        "description": "Pinned tabs are not supported"
+    },
+    "privateTabsAreNotSupported": {
+        "message": "Разделите от поверителен прозорец не се поддържат",
+        "description": "Private tabs are not supported"
+    },
+    "thisUrlsAreNotSupported": {
+        "message": "Адресът „$urls$“ не се поддържа",
+        "description": "This urls \"$urls$\" are not supported",
+        "placeholders": {
+            "urls": {
+                "content": "$1",
+                "example": "about:addons, file://..."
+            }
+        }
+    },
+    "thisTabsCanNotBeHidden": {
+        "message": "Тези раздели не могат да бъдат скрити защото са закачени, използват микрофона, камерата или споделят екрана: „$titles$“",
+        "description": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
+        "placeholders": {
+            "titles": {
+                "content": "$1",
+                "example": "some titles"
+            }
+        }
+    },
+    "moveMultipleTabsToGroupMessage": {
+        "message": "$tabscount$ раздела са преместени.\nНатиснете тук, за да посетите първия",
+        "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "autoBackupEnableTitle": {
+        "message": "Автоматични резервни копия",
+        "description": "Enable auto backup"
+    },
+    "autoBackupCreateEveryTitle": {
+        "message": "На всеки",
+        "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyHours": {
+        "message": "час(а)",
+        "description": "hour(s)"
+    },
+    "autoBackupIntervalKeyDays": {
+        "message": "ден(а)",
+        "description": "day(s)"
+    },
+    "autoBackupLastBackupTitle": {
+        "message": "Последното копие е от",
+        "description": "Last backup:"
+    },
+    "enableDarkTheme": {
+        "message": "Тъмна тема",
+        "description": "Enable dark theme"
+    },
+    "enableDarkThemeNotification": {
+        "message": "За пълна поддръжка на тъмната тема трябва да зададете на свойството<br><code>svg.context-properties.content.enabled</code> стойност <code>true</code> в страницата на <br><code>about:config</code><br><br><a href='https://support.mozilla.org/kb/about-config-editor-firefox'>Как да го направя?</a>",
+        "description": "Fully support the dark theme text"
+    },
+    "browseFileTitle": {
+        "message": "Разглеждане…",
+        "description": "Browse..."
+    },
+    "openBackupFolder": {
+        "message": "Отваряне на папката",
+        "description": "Open backup folder"
+    },
+    "createNewGroupWhenOpenNewWindow": {
+        "message": "Създаване на група при отваряне на прозорец",
+        "description": "Create a new group when opening a new window"
+    },
+    "prependGroupTitleToWindowTitle": {
+        "message": "Добавяне на името на групата към името на прозореца",
+        "description": "Prepend group title to window title"
+    },
+    "allowAccessToBookmarks": {
+        "message": "Разрешаване на достъпа до отметките",
+        "description": "Allow access to bookmarks"
+    }
+}
