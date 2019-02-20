@@ -113,7 +113,7 @@ async function openBackupFolder() {
         id = await save('temp file', autoBackupFolderName + '/tmp.tmp', false, true, false);
 
     await browser.downloads.show(id);
-    await utils.wait(150);
+    await utils.wait(750);
     await browser.downloads.removeFile(id);
     await browser.downloads.erase({id});
 
