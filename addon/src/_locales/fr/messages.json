@@ -436,7 +436,7 @@
         "description": "Mute tabs when group close and restore when open"
     },
     "showTabAfterMovingItIntoThisGroup": {
-        "message": "Montrer l'onglet après l'avoir déplacé automatiquement vers ce groupe",
+        "message": "Afficher l'onglet après l'avoir déplacé automatiquement vers ce groupe",
         "description": "Show the tab after auto-moving it into this group"
     },
     "tabMoving": {
@@ -606,5 +606,17 @@
     "bookmarkNotAllowed": {
         "message": "Ce marque-page n'est pas autorisé",
         "description": "This bookmark is not allowed"
+    },
+    "openLinkInGroupDisabledTitle": {
+        "message": "Ouvrir le lien dans le groupe",
+        "description": "Open link in group title"
+    },
+    "showContextMenuOnTabs": {
+        "message": "Afficher le menu contextuel sur les onglets",
+        "description": "Show context menu on tabs"
+    },
+    "showContextMenuOnLinks": {
+        "message": "Afficher le menu contextuel sur les liens",
+        "description": "Show context menu on links"
     }
 }
