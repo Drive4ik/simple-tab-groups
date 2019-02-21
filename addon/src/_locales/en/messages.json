@@ -662,10 +662,10 @@
         "description": "Default bookmark folder location"
     },
     "groupExportedToBookmarks": {
-        "message": "Group '$groupname$' successfully exported to bookmarks",
-        "description": "Group '$groupname$' successfully exported to bookmarks",
+        "message": "Group '$grouptitle$' successfully exported to bookmarks",
+        "description": "Group '$grouptitle$' successfully exported to bookmarks",
         "placeholders": {
-            "groupname": {
+            "grouptitle": {
                 "content": "$1",
                 "example": "Group title"
             }
