@@ -73,6 +73,8 @@
                     bookmarks: false,
                 },
 
+                defaultBookmarksParents: [],
+
                 showEnableDarkThemeNotification: false,
 
                 errorLogs: BG.getLogs(),
@@ -95,8 +97,10 @@
 
             this.permissions.bookmarks = await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
 
+            this.loadBookmarksParents();
+
             constants.onlyBoolOptionsKeys
-                .concat(['defaultGroupIconViewType', 'defaultGroupIconColor', 'autoBackupIntervalKey'])
+                .concat(['defaultBookmarksParent', 'defaultGroupIconViewType', 'defaultGroupIconColor', 'autoBackupIntervalKey'])
                 .forEach(function(option) {
                     this.$watch(`options.${option}`, function(newValue) {
                         BG.saveOptions({
@@ -554,9 +558,22 @@
                     await browser.permissions.remove(constants.PERMISSIONS.BOOKMARKS);
                 }
 
+                this.loadBookmarksParents();
+
                 BG.updateMoveTabMenus();
             },
 
+            async loadBookmarksParents() {
+                if (this.defaultBookmarksParents.length) {
+                    return;
+                }
+
+                let hasBookmarksPermission = await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
+
+                if (hasBookmarksPermission) {
+                    this.defaultBookmarksParents = await browser.bookmarks.get(constants.defaultBookmarksParents);
+                }
+            },
         },
     }
 </script>
@@ -598,6 +615,25 @@
                     <input v-model="permissions.bookmarks" @click="setPermissionsBookmarks" type="checkbox" />
                     <span v-text="lang('allowAccessToBookmarks')"></span>
                 </label>
+            </div>
+            <div class="field h-margin-left-10">
+                <label class="checkbox" :disabled="!permissions.bookmarks">
+                    <input v-model="options.exportGroupToMainBookmarkFolder" type="checkbox" :disabled="!permissions.bookmarks"/>
+                    <span v-text="lang('exportGroupToMainBookmarkFolder')"></span>
+                </label>
+            </div>
+            <div class="field h-margin-left-10">
+                <label class="label" v-text="lang('defaultBookmarkFolderLocation')"></label>
+                <div class="control has-icons-left">
+                    <div class="select">
+                        <select v-model="options.defaultBookmarksParent" :disabled="!permissions.bookmarks">
+                            <option v-for="bookmark in defaultBookmarksParents" :key="bookmark.id" :value="bookmark.id" v-text="bookmark.title"></option>
+                        </select>
+                    </div>
+                    <div class="icon is-small is-left">
+                        <img class="size-16" src="/icons/bookmark.svg" />
+                    </div>
+                </div>
             </div>
             <div class="field">
                 <label class="checkbox">

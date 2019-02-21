@@ -178,6 +178,16 @@ function getSupportedExternalExtensionName(extId) {
     return constants.EXTENSIONS_WHITE_LIST[extId] ? constants.EXTENSIONS_WHITE_LIST[extId].title : 'Unknown';
 }
 
+function getFavIconFromUrl(url) {
+    let localUrls = ['moz-extension', 'about', 'data', 'view-source', 'javascript', 'chrome', 'file'];
+
+    if (!url || localUrls.some(localUrl => url.startsWith(localUrl))) {
+        return '';
+    }
+
+    return 'https://www.google.com/s2/favicons?domain_url=' + encodeURIComponent(url);
+}
+
 function isUrlEmpty(url) {
     return ['about:blank', 'about:newtab', 'about:home'].includes(url);
 }
@@ -506,6 +516,8 @@ export {
     loadContainers,
 
     notify,
+
+    getFavIconFromUrl,
 
     getSupportedExternalExtensionName,
 

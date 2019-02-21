@@ -622,5 +622,57 @@
     "showContextMenuOnLinks": {
         "message": "Show context menu on links",
         "description": "Show context menu on links"
+    },
+    "importBookmarkFolderAsNewGroup": {
+        "message": "Import bookmark folder as new group",
+        "description": "Import bookmark folder as new group"
+    },
+    "groupsCreatedCount": {
+        "message": "$groupscount$ groups created",
+        "description": "Groups created count",
+        "placeholders": {
+            "groupscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "noGroupsCreated": {
+        "message": "No groups created",
+        "description": "No groups created"
+    },
+    "noAccessToBookmarks": {
+        "message": "You do not have access to bookmarks. Enable it on in addon settings",
+        "description": "You do not have access to bookmarks. Enable it on in addon settings"
+    },
+    "exportGroupToMainBookmarkFolder": {
+        "message": "Export groups to main bookmark folder",
+        "description": "Export groups to main bookmark folder"
+    },
+    "exportGroupToBookmarks": {
+        "message": "Export group to bookmarks",
+        "description": "Export group to bookmarks"
+    },
+    "mainBookmarkFolderTitle": {
+        "message": "STG bookmarks",
+        "description": "Main bookmark folder title"
+    },
+    "defaultBookmarkFolderLocation": {
+        "message": "Default bookmark folder location",
+        "description": "Default bookmark folder location"
+    },
+    "groupExportedToBookmarks": {
+        "message": "Group '$groupname$' successfully exported to bookmarks",
+        "description": "Group '$groupname$' successfully exported to bookmarks",
+        "placeholders": {
+            "groupname": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "groupWithoutTabs": {
+        "message": "This group has no tabs",
+        "description": "This group has no tabs"
     }
 }

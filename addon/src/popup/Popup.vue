@@ -609,6 +609,9 @@
             sortGroups(vector) {
                 BG.sortGroups(vector);
             },
+            exportGroupToBookmarks(group) {
+                BG.exportGroupToBookmarks(group.id);
+            },
 
             // allowTypes: Array ['groups', 'tabs']
             dragHandle(event, itemType, allowTypes, data) {
@@ -1117,6 +1120,10 @@
                         <img src="/icons/sort-alpha-desc.svg" class="size-16" />
                         <span v-text="lang('sortGroupsZA')"></span>
                     </li>
+                    <li @click="exportGroupToBookmarks(menu.data.group)">
+                        <img src="/icons/bookmark.svg" class="size-16" />
+                        <span v-text="lang('exportGroupToBookmarks')"></span>
+                    </li>
 
                     <hr>
 
@@ -1135,13 +1142,6 @@
         <context-menu ref="tabsContextMenu">
             <template v-slot="menu">
                 <ul v-if="menu.data" class="is-unselectable">
-                    <li v-if="menu.data.group" @click="setTabIconAsGroupIcon(menu.data.tab)">
-                        <img src="/icons/image.svg" class="size-16" />
-                        <span v-text="lang('setTabIconAsGroupIcon')"></span>
-                    </li>
-
-                    <hr v-if="menu.data.group">
-
                     <li class="is-disabled">
                         <img class="size-16" />
                         <span v-text="lang('moveTabToGroupDisabledTitle') + ':'"></span>
@@ -1167,6 +1167,12 @@
                         @contextmenu="moveTabToNewGroup(menu.data.tab, !menu.data.group, true)">
                         <img src="/icons/group-new.svg" class="size-16" />
                         <span v-text="lang('createNewGroup')"></span>
+                    </li>
+                    <hr v-if="menu.data.group">
+
+                    <li v-if="menu.data.group" @click="setTabIconAsGroupIcon(menu.data.tab)">
+                        <img src="/icons/image.svg" class="size-16" />
+                        <span v-text="lang('setTabIconAsGroupIcon')"></span>
                     </li>
                 </ul>
             </template>

@@ -2,10 +2,6 @@
 
 const DEFAULT_COOKIE_STORE_ID = 'firefox-default';
 const PRIVATE_COOKIE_STORE_ID = 'firefox-private';
-const CONTEXT_MENU_PREFIX_OPEN_BOOKMARK_IN_GROUP = 'stg-open-bookmark-in-group-id-';
-const CONTEXT_MENU_PREFIX_OPEN_LINK_IN_GROUP = 'stg-open-link-in-group-id-';
-const CONTEXT_MENU_PREFIX_GROUP = 'stg-move-group-id-';
-const CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP = 'stg-undo-remove-group-id-';
 const MANAGE_TABS_URL = '/manage/manage.html';
 
 const PERMISSIONS = {
@@ -19,6 +15,12 @@ const groupIconViewTypes = [
     'circle',
     'squares',
     'old-tab-groups'
+];
+
+const defaultBookmarksParents = [
+    'toolbar_____',
+    'menu________',
+    'unfiled_____',
 ];
 
 const EXTENSIONS_WHITE_LIST = {
@@ -99,6 +101,8 @@ const DEFAULT_OPTIONS = {
     createThumbnailsForTabs: true,
     showContextMenuOnTabs: true,
     showContextMenuOnLinks: true,
+    exportGroupToMainBookmarkFolder: true,
+    defaultBookmarksParent: defaultBookmarksParents[0],
 
     defaultGroupIconViewType: groupIconViewTypes[0],
     defaultGroupIconColor: '',
@@ -142,6 +146,7 @@ const onlyBoolOptionsKeys = Object.keys(DEFAULT_OPTIONS).filter(key => 'boolean'
 const allOptionsKeys = onlyBoolOptionsKeys
     .concat([
         'hotkeys',
+        'defaultBookmarksParent',
         'defaultGroupIconViewType',
         'defaultGroupIconColor',
         'autoBackupLastBackupTimeStamp',
@@ -156,16 +161,13 @@ const DAY_SEC = 24 * HOUR_SEC;
 export {
     DEFAULT_COOKIE_STORE_ID,
     PRIVATE_COOKIE_STORE_ID,
-    CONTEXT_MENU_PREFIX_OPEN_BOOKMARK_IN_GROUP,
-    CONTEXT_MENU_PREFIX_OPEN_LINK_IN_GROUP,
-    CONTEXT_MENU_PREFIX_GROUP,
-    CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP,
     MANAGE_TABS_URL,
     EXTENSIONS_WHITE_LIST,
     DEFAULT_OPTIONS,
     onlyBoolOptionsKeys,
     allOptionsKeys,
     groupIconViewTypes,
+    defaultBookmarksParents,
     HOUR_SEC,
     DAY_SEC,
     PERMISSIONS,

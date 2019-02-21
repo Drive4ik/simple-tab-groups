@@ -618,5 +618,57 @@
     "showContextMenuOnLinks": {
         "message": "Показывать контекстное меню на ссылках",
         "description": "Show context menu on links"
+    },
+    "importBookmarkFolderAsNewGroup": {
+        "message": "Импорт папки закладок в новую группу",
+        "description": "Import bookmark folder as new group"
+    },
+    "groupsCreatedCount": {
+        "message": "$groupscount$ групп создано",
+        "description": "Groups created count",
+        "placeholders": {
+            "groupscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "noGroupsCreated": {
+        "message": "Группы не созданы",
+        "description": "No groups created"
+    },
+    "noAccessToBookmarks": {
+        "message": "У вас нет доступа к закладкам. Включить его в настройках аддона",
+        "description": "You do not have access to bookmarks. Enable it on in addon settings"
+    },
+    "exportGroupToMainBookmarkFolder": {
+        "message": "Экспорт групп в основную папку закладок",
+        "description": "Export groups to main bookmark folder"
+    },
+    "exportGroupToBookmarks": {
+        "message": "Экспорт группы в закладки",
+        "description": "Export group to bookmarks"
+    },
+    "mainBookmarkFolderTitle": {
+        "message": "STG закладки",
+        "description": "Main bookmark folder title"
+    },
+    "defaultBookmarkFolderLocation": {
+        "message": "Расположение папки закладок по умолчанию",
+        "description": "Default bookmark folder location"
+    },
+    "groupExportedToBookmarks": {
+        "message": "Группа '$groupname$' успешно экспортирована в закладки",
+        "description": "Group '$groupname$' successfully exported to bookmarks",
+        "placeholders": {
+            "groupname": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "groupWithoutTabs": {
+        "message": "В этой группе нет вкладок",
+        "description": "This group has no tabs"
     }
 }

@@ -182,22 +182,13 @@ function mapTab(tab) {
 }
 
 function getTabFavIconUrl(tab) {
-    let safedFavIconUrl = '',
-        localUrls = ['moz-extension', 'about', 'data', 'view-source', 'javascript', 'chrome', 'file'];
+    let safedFavIconUrl = '';
 
-    if (tab.url && localUrls.some(url => tab.url.startsWith(url))) {
-        safedFavIconUrl = tab.favIconUrl;
-    } else if (tab.url && options.useTabsFavIconsFromGoogleS2Converter) {
-        safedFavIconUrl = 'https://www.google.com/s2/favicons?domain_url=' + encodeURIComponent(tab.url);
-    } else {
-        safedFavIconUrl = tab.favIconUrl;
+    if (options.useTabsFavIconsFromGoogleS2Converter) {
+        safedFavIconUrl = utils.getFavIconFromUrl(tab.url);
     }
 
-    if (!safedFavIconUrl) {
-        safedFavIconUrl = '/icons/tab.svg';
-    }
-
-    return safedFavIconUrl;
+    return safedFavIconUrl || tab.favIconUrl || '/icons/tab.svg';
 }
 
 function createGroup(id, windowId, title) {
@@ -312,9 +303,11 @@ function sendExternalMessage(data) {
         });
 }
 
+const CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP = 'stg-undo-remove-group-id-';
+
 async function addUndoRemoveGroupItem(group) {
     let restoreGroup = function(group) {
-        browser.menus.remove(constants.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id);
+        browser.menus.remove(CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id);
 
         group.windowId = null;
         group.tabs.forEach(tab => tab.id = null);
@@ -326,7 +319,7 @@ async function addUndoRemoveGroupItem(group) {
     }.bind(null, group);
 
     browser.menus.create({
-        id: constants.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id,
+        id: CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id,
         title: browser.i18n.getMessage('undoRemoveGroupItemTitle', group.title),
         contexts: ['browser_action'],
         icons: {
@@ -1636,7 +1629,6 @@ async function createMoveTabMenus(windowId) {
         let groupIconUrl = utils.getGroupIconUrl(group);
 
         options.showContextMenuOnTabs && moveTabToGroupMenusIds.push(browser.menus.create({
-            id: constants.CONTEXT_MENU_PREFIX_GROUP + group.id,
             title: group.title,
             enabled: currentGroup ? group.id !== currentGroup.id : true,
             icons: {
@@ -1661,7 +1653,6 @@ async function createMoveTabMenus(windowId) {
         }));
 
         options.showContextMenuOnLinks && moveTabToGroupMenusIds.push(browser.menus.create({
-            id: constants.CONTEXT_MENU_PREFIX_OPEN_LINK_IN_GROUP + group.id,
             title: group.title,
             icons: {
                 16: groupIconUrl,
@@ -1688,7 +1679,6 @@ async function createMoveTabMenus(windowId) {
         }));
 
         hasBookmarksPermission && moveTabToGroupMenusIds.push(browser.menus.create({
-            id: constants.CONTEXT_MENU_PREFIX_OPEN_BOOKMARK_IN_GROUP + group.id,
             title: group.title,
             icons: {
                 16: groupIconUrl,
@@ -1724,7 +1714,6 @@ async function createMoveTabMenus(windowId) {
     });
 
     options.showContextMenuOnTabs && moveTabToGroupMenusIds.push(browser.menus.create({
-        id: 'stg-move-tab-new-group',
         title: browser.i18n.getMessage('createNewGroup'),
         icons: {
             16: '/icons/group-new.svg',
@@ -1753,14 +1742,12 @@ async function createMoveTabMenus(windowId) {
     }));
 
     options.showContextMenuOnTabs && moveTabToGroupMenusIds.push(browser.menus.create({
-        id: 'stg-separator-1',
         type: 'separator',
         parentId: 'stg-move-tab-parent',
         contexts: ['tab'],
     }));
 
     options.showContextMenuOnTabs && moveTabToGroupMenusIds.push(browser.menus.create({
-        id: 'stg-set-tab-icon-as-group-icon',
         title: browser.i18n.getMessage('setTabIconAsGroupIcon'),
         enabled: Boolean(currentGroup),
         icons: {
@@ -1793,7 +1780,6 @@ async function createMoveTabMenus(windowId) {
     }));
 
     options.showContextMenuOnLinks && moveTabToGroupMenusIds.push(browser.menus.create({
-        id: 'stg-open-link-in-new-group',
         title: browser.i18n.getMessage('createNewGroup'),
         icons: {
             16: '/icons/group-new.svg',
@@ -1817,7 +1803,6 @@ async function createMoveTabMenus(windowId) {
     }));
 
     hasBookmarksPermission && moveTabToGroupMenusIds.push(browser.menus.create({
-        id: 'stg-open-bookmark-in-new-group',
         title: browser.i18n.getMessage('createNewGroup'),
         icons: {
             16: '/icons/group-new.svg',
@@ -1848,6 +1833,127 @@ async function createMoveTabMenus(windowId) {
         },
     }));
 
+    hasBookmarksPermission && moveTabToGroupMenusIds.push(browser.menus.create({
+        type: 'separator',
+        parentId: 'stg-open-bookmark-in-group-parent',
+        contexts: ['bookmark'],
+    }));
+
+    hasBookmarksPermission && moveTabToGroupMenusIds.push(browser.menus.create({
+        title: browser.i18n.getMessage('importBookmarkFolderAsNewGroup'),
+        icons: {
+            16: '/icons/bookmark-o.svg',
+        },
+        parentId: 'stg-open-bookmark-in-group-parent',
+        contexts: ['bookmark'],
+        onclick: async function(info) {
+            if (!info.bookmarkId) {
+                utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'));
+                return;
+            }
+
+            let [folder] = await browser.bookmarks.getSubTree(info.bookmarkId),
+                groupsCreatedCount = 0;
+
+            if (folder.type !== 'folder') {
+                utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'));
+                return;
+            }
+
+            async function addBookmarkFolderAsGroup(folder) {
+                let bookmarksToAdd = [];
+
+                for (let bookmark of folder.children) {
+                    if (bookmark.type === 'folder') {
+                        await addBookmarkFolderAsGroup(bookmark);
+                    } else if (bookmark.url && utils.isUrlAllowToCreate(bookmark.url) && !utils.isUrlEmpty(bookmark.url)) {
+                        delete bookmark.id;
+                        bookmark.favIconUrl = utils.getFavIconFromUrl(bookmark.url) || '/icons/tab.svg';
+                        bookmarksToAdd.push(bookmark);
+                    }
+                }
+
+                if (bookmarksToAdd.length) {
+                    await addGroup(null, bookmarksToAdd, folder.title);
+                    groupsCreatedCount++;
+                }
+            }
+
+            await addBookmarkFolderAsGroup(folder);
+
+            if (groupsCreatedCount) {
+                utils.notify(browser.i18n.getMessage('groupsCreatedCount', groupsCreatedCount));
+            } else {
+                utils.notify(browser.i18n.getMessage('noGroupsCreated'));
+            }
+        },
+    }));
+}
+
+async function _getBookmarkFolderFromTitle(title, parentId = options.defaultBookmarksParent, removeChildrenBookmarks = false) {
+    let [bookmark] = await browser.bookmarks.search({
+        title,
+    });
+
+    if (bookmark) {
+        if (removeChildrenBookmarks) {
+            let children = await browser.bookmarks.getChildren(bookmark.id);
+
+            await Promise.all(children.map(b => b.type === 'bookmark' ? browser.bookmarks.remove(b.id) : true));
+        }
+    } else if (parentId) {
+        bookmark = await browser.bookmarks.create({
+            title,
+            parentId,
+        });
+    }
+
+    return bookmark;
+}
+
+async function exportGroupToBookmarks(groupId) {
+    let hasBookmarksPermission = await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
+
+    if (!hasBookmarksPermission) {
+        utils.notify(browser.i18n.getMessage('noAccessToBookmarks'))
+            .then(() => browser.runtime.openOptionsPage());
+        return;
+    }
+
+    let group = _groups.find(gr => gr.id === groupId);
+
+    if (!group) {
+        log('group not found in exportGroupToBookmarks', groupId);
+        return;
+    }
+
+    if (!group.tabs.length) {
+        utils.notify(browser.i18n.getMessage('groupWithoutTabs'));
+        return;
+    }
+
+    let groupBookmarkFolder = await _getBookmarkFolderFromTitle(group.title, false, true);
+
+    if (!groupBookmarkFolder) {
+        let rootFolder = {};
+
+        if (options.exportGroupToMainBookmarkFolder) {
+            rootFolder = await _getBookmarkFolderFromTitle(browser.i18n.getMessage('mainBookmarkFolderTitle'));
+        }
+
+        groupBookmarkFolder = await _getBookmarkFolderFromTitle(group.title, rootFolder.id);
+    }
+
+    for (let tab of group.tabs) {
+        await browser.bookmarks.create({
+            title: tab.title,
+            url: tab.url,
+            type: 'bookmark',
+            parentId: groupBookmarkFolder.id,
+        });
+    }
+
+    utils.notify(browser.i18n.getMessage('groupExportedToBookmarks', group.title));
 }
 
 function setBrowserActionData(currentGroup, windowId) {
@@ -2412,6 +2518,7 @@ window.background = {
     setFocusOnWindow,
 
     sortGroups,
+    exportGroupToBookmarks,
     loadGroup,
     getNextGroupTitle,
 
