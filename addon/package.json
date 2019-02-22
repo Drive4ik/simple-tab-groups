@@ -13,7 +13,7 @@
     "dependencies": {
         "compare-versions": "^3.4.0",
         "idb-keyval": "^3.1.0",
-        "vue": "^2.6.6",
+        "vue": "^2.6.7",
         "vue-swatches": "^1.0.3"
     },
     "devDependencies": {
@@ -28,7 +28,7 @@
         "style-loader": "^0.23.1",
         "terser-webpack-plugin": "^1.2.2",
         "vue-loader": "^15.6.4",
-        "vue-template-compiler": "^2.6.6",
+        "vue-template-compiler": "^2.6.7",
         "webpack": "^4.29.5",
         "webpack-cli": "^3.2.3",
         "webpack-shell-plugin": "^0.5.0",
