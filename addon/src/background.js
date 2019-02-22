@@ -1936,7 +1936,9 @@ async function exportGroupToBookmarks(groupId) {
     let groupBookmarkFolder = await _getBookmarkFolderFromTitle(group.title);
 
     if (!groupBookmarkFolder) {
-        let rootFolder = {};
+        let rootFolder = {
+            id: options.defaultBookmarksParent,
+        };
 
         if (options.exportGroupToMainBookmarkFolder) {
             rootFolder = await _getBookmarkFolderFromTitle(browser.i18n.getMessage('mainBookmarkFolderTitle'), options.defaultBookmarksParent);
