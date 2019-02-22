@@ -42,7 +42,8 @@ const config = {
         setImmediate: false,
     },
     watchOptions: {
-        // ignored: /node_modules/,
+        ignored: /node_modules/,
+        poll: true,
     },
     stats: {
         // entrypoints: false,

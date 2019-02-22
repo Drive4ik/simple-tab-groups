@@ -855,6 +855,7 @@
                             <div
                                 :class="['item', {
                                     'is-active': group === currentGroup,
+                                    'is-opened': group.windowId,
                                     'is-hovered-item': group === hoverItem,
                                 }]"
                                 @click="loadGroup(group)"
@@ -932,6 +933,7 @@
                         <div
                             :class="['item', {
                                 'is-active': group === currentGroup,
+                                'is-opened': group.windowId,
                                 'is-hovered-item': group === hoverItem,
                             }]"
                             @click="loadGroup(group)"
@@ -1159,7 +1161,7 @@
                             : moveTab(menu.data.tab, group, true, true)"
                         >
                         <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
-                        <span v-text="group.title"></span>
+                        <span v-text="(group.windowId ? '• ' : '') + group.title"></span>
                     </li>
 
                     <li
@@ -1376,6 +1378,7 @@
         }
 
         &.is-active:before,
+        &.is-opened:before,
         &.is-multiple-tab-to-move:before {
             content: '';
             position: absolute;

@@ -1607,6 +1607,10 @@ async function createMoveTabMenus(windowId) {
         return;
     }
 
+    let getGroupMenuTitle = function(group) {
+        return (group.windowId ? '• ' : '') + group.title;
+    };
+
     hasBookmarksPermission && moveTabToGroupMenusIds.push(browser.menus.create({
         id: 'stg-open-bookmark-in-group-parent',
         title: browser.i18n.getMessage('openBookmarkInGroup'),
@@ -1626,10 +1630,11 @@ async function createMoveTabMenus(windowId) {
     }));
 
     _groups.forEach(function(group) {
-        let groupIconUrl = utils.getGroupIconUrl(group);
+        let groupIconUrl = utils.getGroupIconUrl(group),
+            groupTitle = getGroupMenuTitle(group);
 
         options.showContextMenuOnTabs && moveTabToGroupMenusIds.push(browser.menus.create({
-            title: group.title,
+            title: groupTitle,
             enabled: currentGroup ? group.id !== currentGroup.id : true,
             icons: {
                 16: groupIconUrl,
@@ -1653,7 +1658,7 @@ async function createMoveTabMenus(windowId) {
         }));
 
         options.showContextMenuOnLinks && moveTabToGroupMenusIds.push(browser.menus.create({
-            title: group.title,
+            title: groupTitle,
             icons: {
                 16: groupIconUrl,
             },
@@ -1679,7 +1684,7 @@ async function createMoveTabMenus(windowId) {
         }));
 
         hasBookmarksPermission && moveTabToGroupMenusIds.push(browser.menus.create({
-            title: group.title,
+            title: groupTitle,
             icons: {
                 16: groupIconUrl,
             },
