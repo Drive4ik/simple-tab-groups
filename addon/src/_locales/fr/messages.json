@@ -618,5 +618,57 @@
     "showContextMenuOnLinks": {
         "message": "Afficher le menu contextuel sur les liens",
         "description": "Show context menu on links"
+    },
+    "importBookmarkFolderAsNewGroup": {
+        "message": "Importer le dossier de marque-pages comme un nouveau groupe",
+        "description": "Import bookmark folder as new group"
+    },
+    "groupsCreatedCount": {
+        "message": "$groupscount$ groupe(s) créé(s)",
+        "description": "Groups created count",
+        "placeholders": {
+            "groupscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "noGroupsCreated": {
+        "message": "Aucun groupe créé",
+        "description": "No groups created"
+    },
+    "noAccessToBookmarks": {
+        "message": "Vous n'avez pas accès aux marque-pages. Activez-le dans les préférences de l'extension",
+        "description": "You do not have access to bookmarks. Enable it on in addon settings"
+    },
+    "exportGroupToMainBookmarkFolder": {
+        "message": "Exporter les groupes dans le dossier principal de marque-pages",
+        "description": "Export groups to main bookmark folder"
+    },
+    "exportGroupToBookmarks": {
+        "message": "Exporter le groupe vers les marque-pages",
+        "description": "Export group to bookmarks"
+    },
+    "mainBookmarkFolderTitle": {
+        "message": "Marque-pages STG",
+        "description": "Main bookmark folder title"
+    },
+    "defaultBookmarkFolderLocation": {
+        "message": "Emplacement du dossier par défaut des marque-pages",
+        "description": "Default bookmark folder location"
+    },
+    "groupExportedToBookmarks": {
+        "message": "Le groupe '$grouptitle$' a été exporté vers les marque-pages avec succès",
+        "description": "Group '$grouptitle$' successfully exported to bookmarks",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "groupWithoutTabs": {
+        "message": "Ce groupe n'a pas d'onglet",
+        "description": "This group has no tabs"
     }
 }
