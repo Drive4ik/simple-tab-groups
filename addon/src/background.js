@@ -1891,23 +1891,22 @@ async function createMoveTabMenus(windowId) {
     }));
 }
 
-async function _getBookmarkFolderFromTitle(title, parentId = options.defaultBookmarksParent, removeChildrenBookmarks = false) {
+async function _getBookmarkFolderFromTitle(title, parentId) {
     let bookmarks = await browser.bookmarks.search({
             title,
         }),
         bookmark = bookmarks.find(b => b.type === 'folder');
 
-    if (bookmark) {
-        if (removeChildrenBookmarks) {
-            let children = await browser.bookmarks.getChildren(bookmark.id);
-
-            await Promise.all(children.map(b => b.type === 'bookmark' ? browser.bookmarks.remove(b.id) : true));
-        }
-    } else if (parentId) {
+    if (!bookmark && parentId) {
         bookmark = await browser.bookmarks.create({
             title,
             parentId,
+            type: 'folder',
         });
+    }
+
+    if (bookmark) {
+        bookmark.children = await browser.bookmarks.getChildren(bookmark.id);
     }
 
     return bookmark;
@@ -1934,23 +1933,35 @@ async function exportGroupToBookmarks(groupId) {
         return;
     }
 
-    let groupBookmarkFolder = await _getBookmarkFolderFromTitle(group.title, false, true);
+    let groupBookmarkFolder = await _getBookmarkFolderFromTitle(group.title);
 
     if (!groupBookmarkFolder) {
         let rootFolder = {};
 
         if (options.exportGroupToMainBookmarkFolder) {
-            rootFolder = await _getBookmarkFolderFromTitle(browser.i18n.getMessage('mainBookmarkFolderTitle'));
+            rootFolder = await _getBookmarkFolderFromTitle(browser.i18n.getMessage('mainBookmarkFolderTitle'), options.defaultBookmarksParent);
         }
 
         groupBookmarkFolder = await _getBookmarkFolderFromTitle(group.title, rootFolder.id);
     }
 
-    for (let tab of group.tabs) {
+    if (groupBookmarkFolder.children.length) {
+        await Promise.all(group.tabs.map(async function(tab) {
+            await Promise.all(
+                groupBookmarkFolder
+                .children
+                .filter(b => b.type === 'bookmark' && b.url === tab.url)
+                .map(b => browser.bookmarks.remove(b.id))
+            );
+        }));
+    }
+
+    for (let index in group.tabs) {
         await browser.bookmarks.create({
-            title: tab.title,
-            url: tab.url,
+            title: group.tabs[index].title,
+            url: group.tabs[index].url,
             type: 'bookmark',
+            index: Number(index),
             parentId: groupBookmarkFolder.id,
         });
     }
