@@ -1892,9 +1892,10 @@ async function createMoveTabMenus(windowId) {
 }
 
 async function _getBookmarkFolderFromTitle(title, parentId = options.defaultBookmarksParent, removeChildrenBookmarks = false) {
-    let [bookmark] = await browser.bookmarks.search({
-        title,
-    });
+    let bookmarks = await browser.bookmarks.search({
+            title,
+        }),
+        bookmark = bookmarks.find(b => b.type === 'folder');
 
     if (bookmark) {
         if (removeChildrenBookmarks) {
