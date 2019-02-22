@@ -1607,10 +1607,6 @@ async function createMoveTabMenus(windowId) {
         return;
     }
 
-    let getGroupMenuTitle = function(group) {
-        return (group.windowId ? '• ' : '') + group.title;
-    };
-
     hasBookmarksPermission && moveTabToGroupMenusIds.push(browser.menus.create({
         id: 'stg-open-bookmark-in-group-parent',
         title: browser.i18n.getMessage('openBookmarkInGroup'),
@@ -1631,7 +1627,7 @@ async function createMoveTabMenus(windowId) {
 
     _groups.forEach(function(group) {
         let groupIconUrl = utils.getGroupIconUrl(group),
-            groupTitle = getGroupMenuTitle(group);
+            groupTitle = (group.windowId ? '• ' : '') + group.title;
 
         options.showContextMenuOnTabs && moveTabToGroupMenusIds.push(browser.menus.create({
             title: groupTitle,

@@ -1170,6 +1170,7 @@
                         <img src="/icons/group-new.svg" class="size-16" />
                         <span v-text="lang('createNewGroup')"></span>
                     </li>
+
                     <hr v-if="menu.data.group">
 
                     <li v-if="menu.data.group" @click="setTabIconAsGroupIcon(menu.data.tab)">

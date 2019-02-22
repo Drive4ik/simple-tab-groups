@@ -1,6 +1,5 @@
 'use strict';
 
-import storage from './storage';
 import * as constants from './constants';
 import * as npmCompareVersions from 'compare-versions';
 
