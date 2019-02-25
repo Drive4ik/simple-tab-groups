@@ -1040,6 +1040,18 @@ async function onUpdatedTab(tabId, changeInfo, rawTab) {
         return;
     }
 
+    console.log('onUpdatedTab\n tabId:', tabId, JSON.stringify(changeInfo) + '\n', JSON.stringify({
+        status: rawTab.status,
+        url: rawTab.url,
+        title: rawTab.title,
+    }));
+
+    if ('pinned' in changeInfo) {
+        saveCurrentTabs(rawTab.windowId, 'onUpdatedTab change pinned tab');
+
+        return;
+    }
+
     if (!tab) {
         if ('favIconUrl' in changeInfo) {
             favIconUrl.favIconUrl = 'favIconUrl';
@@ -1050,18 +1062,6 @@ async function onUpdatedTab(tabId, changeInfo, rawTab) {
             url: rawTab.url,
             title: rawTab.title,
         }));
-        return;
-    }
-
-    console.log('onUpdatedTab\n tabId:', tabId, JSON.stringify(changeInfo) + '\n', JSON.stringify({
-        status: rawTab.status,
-        url: rawTab.url,
-        title: rawTab.title,
-    }));
-
-    if ('pinned' in changeInfo) {
-        saveCurrentTabs(rawTab.windowId, 'onUpdatedTab change pinned tab');
-
         return;
     }
 
