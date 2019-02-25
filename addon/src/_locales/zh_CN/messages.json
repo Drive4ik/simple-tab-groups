@@ -606,5 +606,69 @@
     "bookmarkNotAllowed": {
         "message": "不允许该书签",
         "description": "This bookmark is not allowed"
+    },
+    "openLinkInGroupDisabledTitle": {
+        "message": "在群组中打开链接",
+        "description": "Open link in group title"
+    },
+    "showContextMenuOnTabs": {
+        "message": "在标签页右键菜单中显示",
+        "description": "Show context menu on tabs"
+    },
+    "showContextMenuOnLinks": {
+        "message": "在链接右键菜单中显示",
+        "description": "Show context menu on links"
+    },
+    "importBookmarkFolderAsNewGroup": {
+        "message": "导入书签文件夹为新群组",
+        "description": "Import bookmark folder as new group"
+    },
+    "groupsCreatedCount": {
+        "message": "$groupscount$个群组已创建",
+        "description": "Groups created count",
+        "placeholders": {
+            "groupscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "noGroupsCreated": {
+        "message": "未创建群组",
+        "description": "No groups created"
+    },
+    "noAccessToBookmarks": {
+        "message": "无书签访问权限。请在扩展设置中启用",
+        "description": "You do not have access to bookmarks. Enable it on in addon settings"
+    },
+    "exportGroupToMainBookmarkFolder": {
+        "message": "导出群组到主书签文件夹",
+        "description": "Export groups to main bookmark folder"
+    },
+    "exportGroupToBookmarks": {
+        "message": "导出群组到书签",
+        "description": "Export group to bookmarks"
+    },
+    "mainBookmarkFolderTitle": {
+        "message": "STG书签",
+        "description": "Main bookmark folder title"
+    },
+    "defaultBookmarkFolderLocation": {
+        "message": "默认书签文件夹位置",
+        "description": "Default bookmark folder location"
+    },
+    "groupExportedToBookmarks": {
+        "message": "群组“$grouptitle$”已成功导出到书签",
+        "description": "Group '$grouptitle$' successfully exported to bookmarks",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "groupWithoutTabs": {
+        "message": "该群组没有标签页",
+        "description": "This group has no tabs"
     }
 }
