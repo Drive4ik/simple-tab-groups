@@ -1959,7 +1959,7 @@ async function exportGroupToBookmarks(groupId, showMessages = true) {
 
         groupBookmarkFolder = await _getBookmarkFolderFromTitle(group.title);
 
-        if (groupBookmarkFolder.children[0] && groupBookmarkFolder.children[0].type !== 'separator') {
+        if (groupBookmarkFolder.children.length && groupBookmarkFolder.children[0].type !== 'separator') {
             await browser.bookmarks.create({
                 type: 'separator',
                 index: 0,
@@ -2515,7 +2515,9 @@ async function createBackup(includeTabThumbnails, includeTabFavIcons, isAutoBack
 
         options.autoBackupLastBackupTimeStamp = data.autoBackupLastBackupTimeStamp;
 
-        await Promise.all(_groups.map(gr => exportGroupToBookmarks(gr.id, false)));
+        for (let group of _groups) {
+            await exportGroupToBookmarks(group.id, false);
+        }
     }
 }
 
