@@ -2906,7 +2906,6 @@ async function init() {
     // try simple sync groups and tabs
     let needFullSync = ! windows.every(function(win) {
         if (!win.session.groupId) {
-            log('not found win.session.groupId', null, false);
             return false;
         }
 
@@ -2914,14 +2913,12 @@ async function init() {
         let group = data.groups.find(gr => gr.id === win.session.groupId);
 
         if (!group) {
-            log('not found groupId', win.session.groupId, false);
             return false;
         }
 
         let visibleTabs = win.tabs.filter(utils.isTabVisible);
 
         if (visibleTabs.length !== group.tabs.length) {
-            log('tabs length not equal', [visibleTabs.length, group.tabs.length], false);
             return false;
         }
 
@@ -2937,8 +2934,6 @@ async function init() {
                 group.tabs[tabIndex].id = rawTab.id;
                 return true;
             }
-
-            log('tabs not equal', null, false);
         });
     });
 
