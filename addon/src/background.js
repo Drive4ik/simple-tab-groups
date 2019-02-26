@@ -1912,11 +1912,11 @@ async function _getBookmarkFolderFromTitle(title, parentId) {
     return bookmark;
 }
 
-async function exportGroupToBookmarks(groupId) {
+async function exportGroupToBookmarks(groupId, showMessages = true) {
     let hasBookmarksPermission = await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
 
     if (!hasBookmarksPermission) {
-        utils.notify(browser.i18n.getMessage('noAccessToBookmarks'))
+        showMessages && utils.notify(browser.i18n.getMessage('noAccessToBookmarks'))
             .then(() => browser.runtime.openOptionsPage());
         return;
     }
@@ -1929,7 +1929,7 @@ async function exportGroupToBookmarks(groupId) {
     }
 
     if (!group.tabs.length) {
-        utils.notify(browser.i18n.getMessage('groupWithoutTabs'));
+        showMessages && utils.notify(browser.i18n.getMessage('groupWithoutTabs'));
         return;
     }
 
@@ -1978,7 +1978,7 @@ async function exportGroupToBookmarks(groupId) {
         });
     }
 
-    utils.notify(browser.i18n.getMessage('groupExportedToBookmarks', group.title));
+    showMessages && utils.notify(browser.i18n.getMessage('groupExportedToBookmarks', group.title));
 }
 
 function setBrowserActionData(currentGroup, windowId) {
@@ -2345,7 +2345,7 @@ async function runAction(data, externalExtId) {
                         action: 'move-tab-to-custom-group',
                         groups: _groups.map(_mapGroupForAnotherExtension),
                         activeGroupId: activeGroup ? activeGroup.id : null,
-                    });
+                    }).catch(function() {});
                 }
 
                 result.ok = true;
@@ -2405,10 +2405,10 @@ async function saveOptions(_options) {
 
         tabs
             .filter(utils.isTabNotIncognito)
-            .forEach(tab => browser.tabs.sendMessage(tab.id, actionData));
+            .forEach(tab => browser.tabs.sendMessage(tab.id, actionData).catch(function() {}));
     }
 
-    if (optionsKeys.some(key => key.startsWith('autoBackup'))) {
+    if (optionsKeys.some(key => key === 'autoBackupEnable' || key === 'autoBackupIntervalKey' || key === 'autoBackupIntervalValue')) {
         resetAutoBackup();
     }
 
@@ -2416,13 +2416,13 @@ async function saveOptions(_options) {
         _groups.forEach(prependGroupTitleToWindowTitle);
     }
 
-    if (optionsKeys.includes('showContextMenuOnTabs') || optionsKeys.includes('showContextMenuOnLinks')) {
+    if (optionsKeys.some(key => key === 'showContextMenuOnTabs' || key === 'showContextMenuOnLinks')) {
         updateMoveTabMenus();
     }
 
     await browser.runtime.sendMessage({
         action: 'options-updated',
-    });
+    }).catch(function() {});
 }
 
 let _autoBackupTimer = 0;
@@ -2514,6 +2514,8 @@ async function createBackup(includeTabThumbnails, includeTabFavIcons, isAutoBack
         });
 
         options.autoBackupLastBackupTimeStamp = data.autoBackupLastBackupTimeStamp;
+
+        await Promise.all(_groups.map(gr => exportGroupToBookmarks(gr.id, false)));
     }
 }
 
@@ -3152,7 +3154,7 @@ async function init() {
             });
 
             if (isAllTabsFinded) {
-                syncedTabsIds = syncedTabsIds.concat(group.tabs.map(utils.keyId));
+                syncedTabsIds = syncedTabsIds.concat(tempSyncedTabIds);
 
                 if (!win.session.groupId) { // sync group with window if all tabs found but window was not synchronized
                     group.windowId = win.id;

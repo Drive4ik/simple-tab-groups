@@ -670,5 +670,9 @@
     "groupWithoutTabs": {
         "message": "В этой группе нет вкладок",
         "description": "This group has no tabs"
+    },
+    "autoBackupGroupsToBookmarks": {
+        "message": "Экспорт всех групп в закладки",
+        "description": "Auto backup all groups to bookmarks"
     }
 }

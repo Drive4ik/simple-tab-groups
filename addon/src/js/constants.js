@@ -113,6 +113,7 @@ const DEFAULT_OPTIONS = {
     autoBackupIntervalValue: 1,
     autoBackupIncludeTabThumbnails: true,
     autoBackupIncludeTabFavIcons: true,
+    autoBackupGroupsToBookmarks: true,
     autoBackupFolderName: 'STG-backups',
 
     enableDarkTheme: false,

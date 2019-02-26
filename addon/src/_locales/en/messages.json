@@ -674,5 +674,9 @@
     "groupWithoutTabs": {
         "message": "This group has no tabs",
         "description": "This group has no tabs"
+    },
+    "autoBackupGroupsToBookmarks": {
+        "message": "Auto backup all groups to bookmarks",
+        "description": "Auto backup all groups to bookmarks"
     }
 }

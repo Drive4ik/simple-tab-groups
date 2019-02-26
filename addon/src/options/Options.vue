@@ -891,6 +891,12 @@
                             <span v-text="lang('includeTabFavIconsIntoBackup')"></span>
                         </label>
                     </div>
+                    <div class="field">
+                        <label class="checkbox" :disabled="!permissions.bookmarks">
+                            <input v-model="options.autoBackupGroupsToBookmarks" type="checkbox" :disabled="!permissions.bookmarks" />
+                            <span v-text="lang('autoBackupGroupsToBookmarks')"></span>
+                        </label>
+                    </div>
 
                     <div class="field is-flex is-align-items-center indent-children">
                         <div class="h-margin-right-5" v-html="lang('autoBackupCreateEveryTitle')"></div>
