@@ -1867,7 +1867,7 @@ async function createMoveTabMenus(windowId) {
                 for (let bookmark of folder.children) {
                     if (bookmark.type === 'folder') {
                         await addBookmarkFolderAsGroup(bookmark);
-                    } else if (bookmark.url && utils.isUrlAllowToCreate(bookmark.url) && !utils.isUrlEmpty(bookmark.url)) {
+                    } else if (bookmark.type === 'bookmark' && bookmark.url && utils.isUrlAllowToCreate(bookmark.url) && !utils.isUrlEmpty(bookmark.url)) {
                         delete bookmark.id;
                         bookmark.favIconUrl = utils.getFavIconFromUrl(bookmark.url) || '/icons/tab.svg';
                         bookmarksToAdd.push(bookmark);
@@ -1956,6 +1956,16 @@ async function exportGroupToBookmarks(groupId) {
                 .map(b => browser.bookmarks.remove(b.id))
             );
         }));
+
+        groupBookmarkFolder = await _getBookmarkFolderFromTitle(group.title);
+
+        if (groupBookmarkFolder.children[0] && groupBookmarkFolder.children[0].type !== 'separator') {
+            await browser.bookmarks.create({
+                type: 'separator',
+                index: 0,
+                parentId: groupBookmarkFolder.id,
+            });
+        }
     }
 
     for (let index in group.tabs) {
