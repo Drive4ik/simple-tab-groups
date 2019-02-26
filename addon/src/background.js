@@ -2929,7 +2929,7 @@ async function init() {
         group.windowId = win.id;
 
         return visibleTabs.every(function(rawTab, tabIndex) {
-            if (rawTab.status === 'loading' && group.tabs[tabIndex].active) {
+            if (rawTab.status === 'loading' && rawTab.active === group.tabs[tabIndex].active) {
                 group.tabs[tabIndex].id = rawTab.id;
                 return true;
             }
