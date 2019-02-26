@@ -15,7 +15,7 @@
     })(browser.extension.getBackgroundPage());
 
     if (!BG) {
-        setTimeout(() => window.location.reload(), 3000);
+        setTimeout(() => window.location.reload(), 1000);
         document.getElementById('stg-options').innerText = browser.i18n.getMessage('waitingToLoadAllTabs');
         throw Error('wait loading addon');
     }

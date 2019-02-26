@@ -3,14 +3,14 @@
 
     "applications": {
         "gecko": {
-            "id": "simple-tab-groups@drive4ik",
+            "id": "simple-tab-groups-test@drive4ik",
             "strict_min_version": "63.0"
         }
     },
 
-    "name": "__MSG_extensionName__",
+    "name": "STG test",
     "description": "__MSG_extensionDescription__",
-    "version": "3.3.9.1",
+    "version": "3.3.12",
     "author": "Drive4ik",
     "homepage_url": "https://github.com/drive4ik/simple-tab-groups",
 
@@ -48,7 +48,7 @@
         "default_title": "__MSG_extensionName__",
         "default_panel": "popup/popup.html#sidebar",
         "browser_style": false,
-        "open_at_install": true
+        "open_at_install": false
     },
 
     "content_scripts": [
