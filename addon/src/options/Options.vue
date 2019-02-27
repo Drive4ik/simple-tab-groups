@@ -617,12 +617,6 @@
                 </label>
             </div>
             <div class="field h-margin-left-10">
-                <label class="checkbox" :disabled="!permissions.bookmarks">
-                    <input v-model="options.exportGroupToMainBookmarkFolder" type="checkbox" :disabled="!permissions.bookmarks"/>
-                    <span v-text="lang('exportGroupToMainBookmarkFolder', lang('mainBookmarkFolderTitle'))"></span>
-                </label>
-            </div>
-            <div class="field h-margin-left-10">
                 <label class="label" v-text="lang('defaultBookmarkFolderLocation')"></label>
                 <div class="control has-icons-left">
                     <div class="select">
@@ -634,6 +628,12 @@
                         <img class="size-16" src="/icons/bookmark.svg" />
                     </div>
                 </div>
+            </div>
+            <div class="field h-margin-left-10">
+                <label class="checkbox" :disabled="!permissions.bookmarks">
+                    <input v-model="options.exportGroupToMainBookmarkFolder" type="checkbox" :disabled="!permissions.bookmarks"/>
+                    <span v-text="lang('exportGroupToMainBookmarkFolder', lang('mainBookmarkFolderTitle'))"></span>
+                </label>
             </div>
             <div class="field">
                 <label class="checkbox">
