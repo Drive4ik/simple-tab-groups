@@ -48,7 +48,9 @@ async function saveGroupsToStorage(withMessage = false) {
             groups: _groups,
         });
 
-        storage.indexed.set('groups', _groups);
+        try {
+            storage.indexed.set('groups', _groups);
+        } catch (e) {}
     }, 500);
 }
 
@@ -2843,11 +2845,17 @@ async function init() {
 
             if (indexedGroups && Array.isArray(indexedGroups)) {
                 data.groups = indexedGroups;
-            } else {
-                throw 'groups are not an array';
+            } else if (!indexedGroups) {
+                throw '_no_groups_';
             }
         } catch (e) {
-            storage.indexed.remove('groups');
+            if (e === '_no_groups_') {
+                try {
+                    storage.indexed.remove('groups');
+                } catch (e) {}
+            } else {
+                log('error on browser indexed db', e);
+            }
         }
     }
 
