@@ -2515,8 +2515,10 @@ async function createBackup(includeTabThumbnails, includeTabFavIcons, isAutoBack
 
         options.autoBackupLastBackupTimeStamp = data.autoBackupLastBackupTimeStamp;
 
-        for (let group of _groups) {
-            await exportGroupToBookmarks(group.id, false);
+        if (options.autoBackupGroupsToBookmarks) {
+            for (let group of _groups) {
+                await exportGroupToBookmarks(group.id, false);
+            }
         }
     }
 }
