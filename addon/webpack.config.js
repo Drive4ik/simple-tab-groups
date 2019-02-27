@@ -1,4 +1,5 @@
 const path = require('path');
+const fse = require('fs-extra');
 const webpack = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const WebpackShellPlugin = require('webpack-shell-plugin');
@@ -111,6 +112,10 @@ const config = {
 // module.exports = config;
 module.exports = function(env, options) {
     let isProduction = options.mode === 'production';
+
+    if (isProduction) {
+        fse.removeSync(config.output.path);
+    }
 
     config.plugins.push(new webpack.DefinePlugin({
         IS_PRODUCTION: isProduction,
