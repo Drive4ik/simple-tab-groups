@@ -670,5 +670,9 @@
     "groupWithoutTabs": {
         "message": "该群组没有标签页",
         "description": "This group has no tabs"
+    },
+    "autoBackupGroupsToBookmarks": {
+        "message": "自动备份所有群组到书签",
+        "description": "Auto backup all groups to bookmarks"
     }
 }
