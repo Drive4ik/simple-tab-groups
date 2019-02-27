@@ -670,5 +670,9 @@
     "groupWithoutTabs": {
         "message": "Ce groupe n'a pas d'onglet",
         "description": "This group has no tabs"
+    },
+    "autoBackupGroupsToBookmarks": {
+        "message": "Sauvegarder automatiquement tous les groupes vers les marque-pages",
+        "description": "Auto backup all groups to bookmarks"
     }
 }
