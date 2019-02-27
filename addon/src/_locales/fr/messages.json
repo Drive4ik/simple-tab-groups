@@ -642,7 +642,7 @@
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
     "exportGroupToMainBookmarkFolder": {
-        "message": "Exporter les groupes dans le dossier principal de '$bookmarkfolder$'",
+        "message": "Exporter les groupes dans le dossier '$bookmarkfolder$'",
         "description": "Export groups to '$bookmarkfolder$' bookmark folder",
         "placeholders": {
             "bookmarkfolder": {
