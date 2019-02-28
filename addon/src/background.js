@@ -1959,9 +1959,9 @@ async function exportGroupToBookmarks(groupId, showMessages = true) {
             );
         }));
 
-        groupBookmarkFolder = await _getBookmarkFolderFromTitle(group.title);
+        let children = await browser.bookmarks.getChildren(groupBookmarkFolder.id);
 
-        if (groupBookmarkFolder.children.length && groupBookmarkFolder.children[0].type !== 'separator') {
+        if (children.length && children[0].type !== 'separator') {
             await browser.bookmarks.create({
                 type: 'separator',
                 index: 0,
