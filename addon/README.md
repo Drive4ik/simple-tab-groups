@@ -12,8 +12,17 @@ $ npm run build-zip
 ```
 
 If you need the build without minimization code you need to run the command
+
 ```bash
 $ npm install
 $ npm run build
+```
+This code will be located in the `dist` folder.
+
+If you need the build with minimization code (same as in XPI file) you need to run the command
+
+```bash
+$ npm install
+$ npm run build:prod
 ```
 This code will be located in the `dist` folder.
