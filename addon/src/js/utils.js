@@ -192,7 +192,7 @@ function isUrlEmpty(url) {
 }
 
 function isWindowAllow(win) {
-    return 'normal' === win.type && !win.incognito;
+    return win && 'normal' === win.type && !win.incognito;
 }
 
 function isUrlAllowToCreate(url) {

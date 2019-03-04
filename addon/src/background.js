@@ -2253,13 +2253,10 @@ async function runAction(data, externalExtId) {
         return currentWindow;
     }
 
-    async function getCurrentGroup() {
-        let currentWindow = await getCurrentWindow();
-
-        return _groups.find(gr => gr.windowId === currentWindow.id);
-    }
-
     try {
+        let currentWindow = await getCurrentWindow(),
+            currentGroup = _groups.find(gr => gr.windowId === currentWindow.id);
+
         switch (data.action) {
             case 'are-you-here':
                 result.ok = true;
@@ -2276,13 +2273,11 @@ async function runAction(data, externalExtId) {
                 break;
             case 'load-first-group':
                 if (_groups[0]) {
-                    let currentWindow = await getCurrentWindow();
                     result.ok = await loadGroup(currentWindow.id, _groups[0].id);
                 }
                 break;
             case 'load-last-group':
                 if (_groups.length > 0) {
-                    let currentWindow = await getCurrentWindow();
                     result.ok = await loadGroup(currentWindow.id, _groups[_groups.length - 1].id);
                 }
                 break;
@@ -2290,7 +2285,6 @@ async function runAction(data, externalExtId) {
                 let group = _groups.find(gr => gr.id === data.groupId);
 
                 if (group) {
-                    let currentWindow = await getCurrentWindow();
                     result.ok = await loadGroup(currentWindow.id, group.id);
                 } else {
                     throw Error(`Group id '${data.groupId}' type: '${typeof data.groupId}' not found. Need exists int group id.`);
@@ -2301,8 +2295,6 @@ async function runAction(data, externalExtId) {
                 result.ok = true;
                 break;
             case 'delete-current-group':
-                let currentGroup = await getCurrentGroup();
-
                 if (currentGroup) {
                     await removeGroup(currentGroup.id);
 
