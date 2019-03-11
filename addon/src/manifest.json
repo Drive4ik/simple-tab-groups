@@ -15,7 +15,7 @@
     "homepage_url": "https://github.com/drive4ik/simple-tab-groups",
 
     "icons": {
-        "96": "/icons/icon.svg"
+        "96": "icons/icon.svg"
     },
 
     "permissions": [
@@ -37,14 +37,14 @@
     ],
 
     "browser_action": {
-        "default_icon": "/icons/icon.svg",
+        "default_icon": "icons/icon.svg",
         "default_title": "__MSG_extensionName__",
         "default_popup": "popup/popup.html",
         "browser_style": false
     },
 
     "sidebar_action": {
-        "default_icon": "/icons/icon.svg",
+        "default_icon": "icons/icon.svg",
         "default_title": "__MSG_extensionName__",
         "default_panel": "popup/popup.html#sidebar",
         "browser_style": false,
@@ -54,8 +54,8 @@
     "content_scripts": [
         {
             "matches": ["<all_urls>"],
-            "js": ["/web/hotkeys.js"],
-            "css": ["/web/hotkeys.css"],
+            "js": ["web/hotkeys.js"],
+            "css": ["web/hotkeys.css"],
             "all_frames" : true,
             "match_about_blank": true,
             "run_at": "document_start"
@@ -74,6 +74,8 @@
     "content_security_policy": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data:; script-src 'self'",
 
     "default_locale": "en",
+
+    "incognito": "not_allowed",
 
     "commands": {
         "_execute_browser_action": {

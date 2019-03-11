@@ -80,13 +80,58 @@
                         },
                     },
                 }),
+
+                currentTabUrl: null,
             };
+        },
+        computed: {
+            currentDomainRegexp() {
+                if (this.currentTabUrl) {
+                    let currentDomainRegexp = this.currentTabUrl.hostname.replace(/\./g, '\\.');
+
+                    if (!this.groupClone.catchTabRules.includes(currentDomainRegexp)) {
+                        return currentDomainRegexp;
+                    }
+                }
+            },
+            currentDomainWithSubdomainsRegexp() {
+                if (this.currentTabUrl) {
+                    let parts = this.currentTabUrl.hostname.split('.');
+
+                    if (parts.length > 2) {
+                        if (parts.length === 3 && parts[0] === 'www') {
+                            return;
+                        }
+
+                        let currentDomainWithSubdomainsRegexp = ['.*'].concat(parts.slice(-2)).join('\\.');
+
+                        if (!this.groupClone.catchTabRules.includes(currentDomainWithSubdomainsRegexp)) {
+                            return currentDomainWithSubdomainsRegexp;
+                        }
+                    }
+                }
+            },
         },
         mounted() {
             this.setFocus();
+            this.loadCurrentTabUrl();
         },
         methods: {
             lang: browser.i18n.getMessage,
+
+            async loadCurrentTabUrl() {
+                let [currentTab] = await browser.tabs.query({
+                    active: true,
+                });
+
+                if (currentTab && currentTab.url.startsWith('http')) {
+                    this.currentTabUrl = new URL(currentTab.url);
+                }
+            },
+
+            addCurrentDomain(domainRegexpStr) {
+                this.groupClone.catchTabRules += (this.groupClone.catchTabRules.length ? '\n' : '') + domainRegexpStr;
+            },
 
             setFocus() {
                 this.$refs.groupTitle.focus();
@@ -273,7 +318,20 @@
                 </span>
             </label>
             <div class="control">
-                <textarea class="textarea" :rows="canLoadFile ? false : 3" @keydown.enter.stop v-model.trim="groupClone.catchTabRules" :placeholder="lang('regexpForTabsPlaceholder')"></textarea>
+                <textarea class="textarea" :rows="canLoadFile ? false : 2" @keydown.enter.stop v-model.trim="groupClone.catchTabRules" :placeholder="lang('regexpForTabsPlaceholder')"></textarea>
+            </div>
+        </div>
+
+        <div v-if="currentDomainRegexp || currentDomainWithSubdomainsRegexp" class="field is-grouped">
+            <div v-if="currentDomainRegexp" class="control">
+                <button class="button is-link is-small" @click="addCurrentDomain(currentDomainRegexp)">
+                    <span v-text="currentDomainRegexp"></span>
+                </button>
+            </div>
+            <div v-if="currentDomainWithSubdomainsRegexp" class="control">
+                <button class="button is-link is-small" @click="addCurrentDomain(currentDomainWithSubdomainsRegexp)">
+                    <span v-text="currentDomainWithSubdomainsRegexp"></span>
+                </button>
             </div>
         </div>
 
