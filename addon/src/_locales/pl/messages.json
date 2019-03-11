@@ -590,5 +590,95 @@
     "createNewGroupWhenOpenNewWindow": {
         "message": "Utwórz nową grupę podczas otwierania nowego okna",
         "description": "Create a new group when opening a new window"
+    },
+    "prependGroupTitleToWindowTitle": {
+        "message": "Przypnij nazwę grupy do nazwy okna przeglądarki",
+        "description": "Prepend group title to window title"
+    },
+    "allowAccessToBookmarks": {
+        "message": "Zezwalaj na dostęp do zakładek",
+        "description": "Allow access to bookmarks"
+    },
+    "openBookmarkInGroup": {
+        "message": "Otwórz zakładkę w grupie",
+        "description": "Open bookmark in group"
+    },
+    "bookmarkNotAllowed": {
+        "message": "Nie mogę otworzyć tej zakładki.",
+        "description": "This bookmark is not allowed"
+    },
+    "openLinkInGroupDisabledTitle": {
+        "message": "Otwórz link w grupie",
+        "description": "Open link in group title"
+    },
+    "showContextMenuOnTabs": {
+        "message": "Pokaż menu kontekstowe na zakładkach",
+        "description": "Show context menu on tabs"
+    },
+    "showContextMenuOnLinks": {
+        "message": "Pokaż menu kontekstowe na linkach",
+        "description": "Show context menu on links"
+    },
+    "importBookmarkFolderAsNewGroup": {
+        "message": "Importuj folder zakładek jako nową grupę",
+        "description": "Import bookmark folder as new group"
+    },
+    "groupsCreatedCount": {
+        "message": "Utworzono grupę $groupscount$",
+        "description": "Groups created count",
+        "placeholders": {
+            "groupscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "noGroupsCreated": {
+        "message": "Nie utworzono żadnej grupy",
+        "description": "No groups created"
+    },
+    "noAccessToBookmarks": {
+        "message": "Nie masz dostępu do zakładek. Włącz je w ustawieniach dodatku.",
+        "description": "You do not have access to bookmarks. Enable it on in addon settings"
+    },
+    "exportGroupToMainBookmarkFolder": {
+        "message": "Wyeksportuj grupę do folderu zakładek '$bookmarkfolder$'",
+        "description": "Export groups to '$bookmarkfolder$' bookmark folder",
+        "placeholders": {
+            "bookmarkfolder": {
+                "content": "$1",
+                "example": "'STG bookmarks' from key mainBookmarkFolderTitle"
+            }
+        }
+    },
+    "exportGroupToBookmarks": {
+        "message": "Eksportuj grupę do zakładek",
+        "description": "Export group to bookmarks"
+    },
+    "mainBookmarkFolderTitle": {
+        "message": "Zakładki STG",
+        "description": "Main bookmark folder title"
+    },
+    "defaultBookmarkFolderLocation": {
+        "message": "Domyślna lokalizacja folderu zakładek",
+        "description": "Default bookmark folder location"
+    },
+    "groupExportedToBookmarks": {
+        "message": "Pomyślnie wyeksportowano grupę $grouptitle$ do zakładek",
+        "description": "Group '$grouptitle$' successfully exported to bookmarks",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "groupWithoutTabs": {
+        "message": "Ta grupa nie zawiera żadnych kart",
+        "description": "This group has no tabs"
+    },
+    "autoBackupGroupsToBookmarks": {
+        "message": "Automatyczna kopia zapasowa wszystkich grup",
+        "description": "Auto backup all groups to bookmarks"
     }
 }
