@@ -1936,6 +1936,13 @@ async function exportGroupToBookmarks(groupId, showMessages = true) {
         return;
     }
 
+    let win = null;
+
+    if (showMessages) {
+        win = await getWindow();
+        setLoadingToBrowserAction(win.id);
+    }
+
     let rootFolder = {
         id: options.defaultBookmarksParent,
     };
@@ -1947,14 +1954,20 @@ async function exportGroupToBookmarks(groupId, showMessages = true) {
     let groupBookmarkFolder = await _getBookmarkFolderFromTitle(group.title, rootFolder.id);
 
     if (groupBookmarkFolder.children.length) {
-        await Promise.all(group.tabs.map(function(tab) {
-            return Promise.all(
-                groupBookmarkFolder
-                .children
-                .filter(b => b.type === 'bookmark' && b.url === tab.url)
-                .map(b => browser.bookmarks.remove(b.id).catch(noop))
-            );
-        }));
+        let bookmarksToRemove = [];
+
+        group.tabs.forEach(function(tab) {
+            groupBookmarkFolder.children = groupBookmarkFolder.children.filter(function(b) {
+                if (b.type === 'bookmark' && b.url === tab.url) {
+                    bookmarksToRemove.push(b);
+                    return false;
+                }
+
+                return b.type === 'bookmark';
+            });
+        });
+
+        await Promise.all(bookmarksToRemove.map(b => browser.bookmarks.remove(b.id).catch(noop)));
 
         let children = await browser.bookmarks.getChildren(groupBookmarkFolder.id);
 
@@ -1992,7 +2005,10 @@ async function exportGroupToBookmarks(groupId, showMessages = true) {
         });
     }
 
-    showMessages && utils.notify(browser.i18n.getMessage('groupExportedToBookmarks', group.title));
+    if (showMessages) {
+        updateBrowserActionData(win.id);
+        utils.notify(browser.i18n.getMessage('groupExportedToBookmarks', group.title));
+    }
 }
 
 function setBrowserActionData(currentGroup, windowId) {
