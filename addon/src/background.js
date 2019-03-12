@@ -3179,6 +3179,8 @@ async function init() {
 
                     await showHideAndSortTabsInWindow(win, group.tabs);
                 }
+
+                break;
             } else {
                 // if not found all tabs - clear tab ids
                 group.tabs.forEach(tab => tab.id = null);
