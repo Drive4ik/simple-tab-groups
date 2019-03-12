@@ -10,7 +10,8 @@ let errorLogs = [],
     _groups = [],
     _thumbnails = {},
     manifest = browser.runtime.getManifest(),
-    manageTabsPageUrl = browser.extension.getURL(constants.MANAGE_TABS_URL);
+    manageTabsPageUrl = browser.extension.getURL(constants.MANAGE_TABS_URL),
+    noop = function() {};
 
 function log(message = 'log', data = null, showNotification = true) {
     try {
@@ -55,7 +56,7 @@ async function saveGroupsToStorage(withMessage = false) {
 }
 
 async function getWindow(windowId = browser.windows.WINDOW_ID_CURRENT) {
-    return await browser.windows.get(windowId).catch(function() {});
+    return await browser.windows.get(windowId).catch(noop);
 }
 
 let _createNewGroupForNextWindow = true;
@@ -290,7 +291,7 @@ async function updateGroup(groupId, updateData) {
 function sendMessage(data) {
     console.info('BG event:', data.action, utils.clone(data));
 
-    browser.runtime.sendMessage(data).catch(function() {});
+    browser.runtime.sendMessage(data).catch(noop);
 }
 
 function sendExternalMessage(data) {
@@ -300,7 +301,7 @@ function sendExternalMessage(data) {
         .forEach(function(exId) {
             if (constants.EXTENSIONS_WHITE_LIST[exId].postActions.includes(data.action)) {
                 data.isExternalMessage = true;
-                browser.runtime.sendMessage(exId, data).catch(function() {});
+                browser.runtime.sendMessage(exId, data).catch(noop);
             }
         });
 }
@@ -1585,7 +1586,7 @@ async function removeMoveTabMenus() {
         return;
     }
 
-    await Promise.all(moveTabToGroupMenusIds.map(id => browser.menus.remove(id).catch(function() {})));
+    await Promise.all(moveTabToGroupMenusIds.map(id => browser.menus.remove(id).catch(noop)));
 
     moveTabToGroupMenusIds = [];
 }
@@ -1935,38 +1936,49 @@ async function exportGroupToBookmarks(groupId, showMessages = true) {
         return;
     }
 
-    let groupBookmarkFolder = await _getBookmarkFolderFromTitle(group.title);
+    let rootFolder = {
+        id: options.defaultBookmarksParent,
+    };
 
-    if (!groupBookmarkFolder) {
-        let rootFolder = {
-            id: options.defaultBookmarksParent,
-        };
-
-        if (options.exportGroupToMainBookmarkFolder) {
-            rootFolder = await _getBookmarkFolderFromTitle(browser.i18n.getMessage('mainBookmarkFolderTitle'), options.defaultBookmarksParent);
-        }
-
-        groupBookmarkFolder = await _getBookmarkFolderFromTitle(group.title, rootFolder.id);
+    if (options.exportGroupToMainBookmarkFolder) {
+        rootFolder = await _getBookmarkFolderFromTitle(browser.i18n.getMessage('mainBookmarkFolderTitle'), options.defaultBookmarksParent);
     }
 
+    let groupBookmarkFolder = await _getBookmarkFolderFromTitle(group.title, rootFolder.id);
+
     if (groupBookmarkFolder.children.length) {
-        await Promise.all(group.tabs.map(async function(tab) {
-            await Promise.all(
+        await Promise.all(group.tabs.map(function(tab) {
+            return Promise.all(
                 groupBookmarkFolder
                 .children
                 .filter(b => b.type === 'bookmark' && b.url === tab.url)
-                .map(b => browser.bookmarks.remove(b.id))
+                .map(b => browser.bookmarks.remove(b.id).catch(noop))
             );
         }));
 
         let children = await browser.bookmarks.getChildren(groupBookmarkFolder.id);
 
-        if (children.length && children[0].type !== 'separator') {
-            await browser.bookmarks.create({
-                type: 'separator',
-                index: 0,
-                parentId: groupBookmarkFolder.id,
+        if (children.length) {
+            if (children[0].type !== 'separator') {
+                await browser.bookmarks.create({
+                    type: 'separator',
+                    index: 0,
+                    parentId: groupBookmarkFolder.id,
+                });
+            }
+
+            // found and remove duplicated separators
+            let duplicatedSeparators = children.filter(function(separator, index) {
+                return separator.type === 'separator' && children[index - 1] && children[index - 1].type === 'separator';
             });
+
+            if (children[children.length - 1].type === 'separator' && !duplicatedSeparators.includes(children[children.length - 1])) {
+                duplicatedSeparators.push(children[children.length - 1]);
+            }
+
+            if (duplicatedSeparators.length) {
+                await Promise.all(duplicatedSeparators.map(sep => browser.bookmarks.remove(sep.id).catch(noop)));
+            }
         }
     }
 
@@ -2339,7 +2351,7 @@ async function runAction(data, externalExtId) {
                         action: 'move-tab-to-custom-group',
                         groups: _groups.map(_mapGroupForAnotherExtension),
                         activeGroupId: activeGroup ? activeGroup.id : null,
-                    }).catch(function() {});
+                    }).catch(noop);
                 }
 
                 result.ok = true;
@@ -2399,7 +2411,7 @@ async function saveOptions(_options) {
 
         tabs
             .filter(utils.isTabNotIncognito)
-            .forEach(tab => browser.tabs.sendMessage(tab.id, actionData).catch(function() {}));
+            .forEach(tab => browser.tabs.sendMessage(tab.id, actionData).catch(noop));
     }
 
     if (optionsKeys.some(key => key === 'autoBackupEnable' || key === 'autoBackupIntervalKey' || key === 'autoBackupIntervalValue')) {
@@ -2416,7 +2428,7 @@ async function saveOptions(_options) {
 
     await browser.runtime.sendMessage({
         action: 'options-updated',
-    }).catch(function() {});
+    }).catch(noop);
 }
 
 let _autoBackupTimer = 0;
