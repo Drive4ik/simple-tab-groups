@@ -1894,18 +1894,24 @@ async function createMoveTabMenus(windowId) {
     }));
 }
 
-async function _getBookmarkFolderFromTitle(title, parentId) {
+async function _getBookmarkFolderFromTitle(title, parentId, index) {
     let bookmarks = await browser.bookmarks.search({
             title,
         }),
-        bookmark = bookmarks.find(b => b.type === 'folder');
+        bookmark = bookmarks.find(b => b.type === 'folder' && b.parentId === parentId);
 
-    if (!bookmark && parentId) {
-        bookmark = await browser.bookmarks.create({
+    if (!bookmark) {
+        let bookmarkData = {
             title,
             parentId,
             type: 'folder',
-        });
+        };
+
+        if (index !== undefined) {
+            bookmarkData.index = index;
+        }
+
+        bookmark = await browser.bookmarks.create(bookmarkData);
     }
 
     if (bookmark) {
@@ -1951,7 +1957,8 @@ async function exportGroupToBookmarks(groupId, showMessages = true) {
         rootFolder = await _getBookmarkFolderFromTitle(browser.i18n.getMessage('mainBookmarkFolderTitle'), options.defaultBookmarksParent);
     }
 
-    let groupBookmarkFolder = await _getBookmarkFolderFromTitle(group.title, rootFolder.id);
+    let groupIndex = options.exportGroupToMainBookmarkFolder ? _groups.indexOf(group) : undefined,
+        groupBookmarkFolder = await _getBookmarkFolderFromTitle(group.title, rootFolder.id, groupIndex);
 
     if (groupBookmarkFolder.children.length) {
         let bookmarksToRemove = [];
