@@ -2629,10 +2629,6 @@ async function runMigrateForData(data) {
         return data;
     }
 
-    if (1 === utils.compareVersions(data.version, currentVersion)) {
-        throw 'Please, update addon to latest version';
-    }
-
     // start migration
     let keysToRemoveFromStorage = [];
 
@@ -2643,117 +2639,149 @@ async function runMigrateForData(data) {
         });
     }
 
-    function ifVersionInDataLessThan(version) {
-        return -1 === utils.compareVersions(data.version, version);
-    }
+    let migrations = [
+        {
+            version: '1.8.1',
+            migration() {
+                data.groups = data.groups.map(function(group) {
+                    group.windowId = data.windowsGroup[win.id] === group.id ? win.id : null;
 
-    if (ifVersionInDataLessThan('1.8.1')) {
-        data.groups = data.groups.map(function(group) {
-            group.windowId = data.windowsGroup[win.id] === group.id ? win.id : null;
+                    group.catchTabRules = group.moveNewTabsToThisGroupByRegExp || '';
+                    delete group.moveNewTabsToThisGroupByRegExp;
 
-            group.catchTabRules = group.moveNewTabsToThisGroupByRegExp || '';
-            delete group.moveNewTabsToThisGroupByRegExp;
+                    delete group.classList;
+                    delete group.colorCircleHtml;
+                    delete group.isExpanded;
 
-            delete group.classList;
-            delete group.colorCircleHtml;
-            delete group.isExpanded;
+                    if (group.iconColor === undefined || group.iconColor === 'undefined') { // fix missed group icons :)
+                        group.iconColor = utils.randomColor();
+                    }
 
-            if (group.iconColor === undefined || group.iconColor === 'undefined') { // fix missed group icons :)
-                group.iconColor = utils.randomColor();
-            }
+                    return group;
+                });
 
-            return group;
-        });
+                removeKeys('windowsGroup');
+            },
+        },
+        {
+            version: '2.2',
+            migration() {
+                if ('showGroupCircleInSearchedTab' in data) {
+                    data.showGroupIconWhenSearchATab = data.showGroupCircleInSearchedTab;
+                    removeKeys('showGroupCircleInSearchedTab');
+                }
+            },
+        },
+        {
+            version: '2.3',
+            migration() {
+                data.groups = data.groups.map(function(group) {
+                    group.tabs = group.tabs.filter(Boolean);
+                    return group;
+                });
 
-        removeKeys('windowsGroup');
-    }
+                removeKeys('enableKeyboardShortcutLoadNextPrevGroup', 'enableKeyboardShortcutLoadByIndexGroup');
+            },
+        },
+        {
+            version: '2.4',
+            migration() {
+                data.groups = data.groups.map(function(group) {
+                    if (!group.catchTabContainers) {
+                        group.catchTabContainers = [];
+                    }
 
-    if (ifVersionInDataLessThan('2.2')) {
-        if ('showGroupCircleInSearchedTab' in data) {
-            data.showGroupIconWhenSearchATab = data.showGroupCircleInSearchedTab;
-            removeKeys('showGroupCircleInSearchedTab');
-        }
-    }
+                    return group;
+                });
+            },
+        },
+        {
+            version: '2.4.5',
+            migration() {
+                data.groups = data.groups.map(function(group) {
+                    if (!group.iconColor.trim()) {
+                        group.iconColor = 'transparent';
+                    }
 
-    if (ifVersionInDataLessThan('2.3')) {
-        data.groups = data.groups.map(function(group) {
-            group.tabs = group.tabs.filter(Boolean);
-            return group;
-        });
+                    group.iconViewType = 'main-squares';
 
-        removeKeys('enableKeyboardShortcutLoadNextPrevGroup', 'enableKeyboardShortcutLoadByIndexGroup');
-    }
+                    return group;
+                });
+            },
+        },
+        {
+            version: '3.0',
+            migration() {
+                data.doRemoveSTGNewTabUrls = true;
 
-    if (ifVersionInDataLessThan('2.4')) {
-        data.groups = data.groups.map(function(group) {
-            if (!group.catchTabContainers) {
-                group.catchTabContainers = [];
-            }
+                removeKeys('enableFastGroupSwitching', 'enableFavIconsForNotLoadedTabs', 'createNewGroupAfterAttachTabToNewWindow');
+                removeKeys('individualWindowForEachGroup', 'openNewWindowWhenCreateNewGroup', 'showNotificationIfGroupsNotSyncedAtStartup');
+                removeKeys('showGroupIconWhenSearchATab', 'showUrlTooltipOnTabHover');
 
-            return group;
-        });
-    }
+                data.groups.forEach(group => group.title = utils.unSafeHtml(group.title));
+            },
+        },
+        {
+            version: '3.0.9',
+            migration() {
+                data.hotkeys.forEach(hotkey => 'metaKey' in hotkey ? null : hotkey.metaKey = false);
+                data.groups.forEach(group => delete group.isExpanded);
+            },
+        },
+        {
+            version: '3.0.10',
+            migration() {
+                data.hotkeys.forEach(function(hotkey) {
+                    if (hotkey.action.groupId) {
+                        hotkey.groupId = hotkey.action.groupId;
+                    }
 
-    if (ifVersionInDataLessThan('2.4.5')) {
-        data.groups = data.groups.map(function(group) {
-            if (!group.iconColor.trim()) {
-                group.iconColor = 'transparent';
-            }
+                    hotkey.action = hotkey.action.id;
+                });
 
-            group.iconViewType = 'main-squares';
-
-            return group;
-        });
-    }
-
-    if (ifVersionInDataLessThan('3.0')) {
-        data.doRemoveSTGNewTabUrls = true;
-
-        removeKeys('enableFastGroupSwitching', 'enableFavIconsForNotLoadedTabs', 'createNewGroupAfterAttachTabToNewWindow');
-        removeKeys('individualWindowForEachGroup', 'openNewWindowWhenCreateNewGroup', 'showNotificationIfGroupsNotSyncedAtStartup');
-        removeKeys('showGroupIconWhenSearchATab', 'showUrlTooltipOnTabHover');
-
-        data.groups.forEach(group => group.title = utils.unSafeHtml(group.title));
-    }
-
-    if (ifVersionInDataLessThan('3.0.9')) {
-        data.hotkeys.forEach(hotkey => 'metaKey' in hotkey ? null : hotkey.metaKey = false);
-        data.groups.forEach(group => delete group.isExpanded);
-    }
-
-    if (ifVersionInDataLessThan('3.0.10')) {
-        data.hotkeys.forEach(function(hotkey) {
-            if (hotkey.action.groupId) {
-                hotkey.groupId = hotkey.action.groupId;
-            }
-
-            hotkey.action = hotkey.action.id;
-        });
-
-        removeKeys('browserActionIconColor');
-    }
-
-    if (ifVersionInDataLessThan('3.1')) {
-        if (!data.thumbnails) {
-            data.thumbnails = {};
-        }
-
-        data.groups.forEach(function(group) {
-            group.muteTabsWhenGroupCloseAndRestoreWhenOpen = false;
-            group.showTabAfterMovingItIntoThisGroup = false;
-
-            group.tabs.forEach(function(tab) {
-                if (tab.thumbnail && tab.url && !data.thumbnails[tab.url]) {
-                    data.thumbnails[tab.url] = tab.thumbnail;
+                removeKeys('browserActionIconColor');
+            },
+        },
+        {
+            version: '3.1',
+            migration() {
+                if (!data.thumbnails) {
+                    data.thumbnails = {};
                 }
 
-                delete tab.thumbnail;
-            });
-        });
-    }
+                data.groups.forEach(function(group) {
+                    group.muteTabsWhenGroupCloseAndRestoreWhenOpen = false;
+                    group.showTabAfterMovingItIntoThisGroup = false;
 
-    if (ifVersionInDataLessThan('3.3.5')) {
-        data.hotkeys.forEach(hotkey => hotkey.groupId = hotkey.groupId || 0);
+                    group.tabs.forEach(function(tab) {
+                        if (tab.thumbnail && tab.url && !data.thumbnails[tab.url]) {
+                            data.thumbnails[tab.url] = tab.thumbnail;
+                        }
+
+                        delete tab.thumbnail;
+                    });
+                });
+            },
+        },
+        {
+            version: '3.3.5',
+            migration() {
+                data.hotkeys.forEach(hotkey => hotkey.groupId = hotkey.groupId || 0);
+            },
+        },
+    ];
+
+    // if data version < required latest migrate version then need migration
+    if (-1 === utils.compareVersions(data.version, migrations[migrations.length - 1].version)) {
+
+        for (let i = 0; i < migrations.length; i++) {
+            if (-1 === utils.compareVersions(data.version, migrations[i].version)) {
+                await migrations[i].migration();
+            }
+        }
+
+    } else if (1 === utils.compareVersions(data.version, currentVersion)) {
+        throw 'Please, update addon to latest version';
     }
 
     data.version = currentVersion;
