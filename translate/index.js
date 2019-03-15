@@ -10,7 +10,7 @@
     function notify(body, title = document.title) {
         new window.Notification(title, {
             body: body,
-            // icon: contentUrlPrefix + 'master/addon/icons/icon.svg',
+            // icon: contentUrlPrefix + 'master/addon/src/icons/icon.svg',
         });
     }
 

@@ -4,8 +4,8 @@
 <head>
     <title>Simple Tab Groups - translation utility</title>
     <meta charset="utf-8" />
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.0/css/bulma.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.2/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css">
     <style type="text/css">
     .textarea {
         resize: both;
@@ -35,7 +35,7 @@
                             </select>
                         </div>
                         <span class="icon is-left">
-                            <i class="fa fa-code-fork"></i>
+                            <i class="fa fa-code-branch"></i>
                         </span>
                     </div>
                 </div>
@@ -153,7 +153,7 @@
                                             <div class="control">
                                                 <button class="button" @click="showOldValueForKey = showOldValueForKey === key ? null : key">
                                                     <span class="icon">
-                                                        <i :class="['fa', showOldValueForKey === key ? 'fa-check-square-o' : 'fa-square-o']" aria-hidden="true"></i>
+                                                        <i :class="['far', showOldValueForKey === key ? 'fa-check-square' : 'fa-square']" aria-hidden="true"></i>
                                                     </span>
                                                     <span>Old value</span>
                                                 </button>
@@ -181,7 +181,7 @@
             </div>
         </div>
     </main>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.16/vue.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.9/vue.min.js"></script>
     <script type="text/javascript" src="./index.js"></script>
 </body>
 
