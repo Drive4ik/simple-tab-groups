@@ -232,7 +232,7 @@
         "description": "Icon color"
     },
     "selectUserGroupIcon": {
-        "message": "icon laden",
+        "message": "Icon laden",
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
@@ -352,7 +352,7 @@
         }
     },
     "isStickyGroupTitle": {
-        "message": "angeheftete Gruppe",
+        "message": "Аngeheftete Gruppe",
         "description": "Sticky group"
     },
     "isStickyGroupHelp": {
@@ -590,5 +590,95 @@
     "createNewGroupWhenOpenNewWindow": {
         "message": "Erstelle eine neue Gruppe, wenn ein neues Fenster geöffnet wird",
         "description": "Create a new group when opening a new window"
+    },
+    "prependGroupTitleToWindowTitle": {
+        "message": "Stelle Gruppentitel vor Fenstertitel",
+        "description": "Prepend group title to window title"
+    },
+    "allowAccessToBookmarks": {
+        "message": "Erlaube Zugriff auf Lesezeichen",
+        "description": "Allow access to bookmarks"
+    },
+    "openBookmarkInGroup": {
+        "message": "Öffne Lesezeichen in Gruppe",
+        "description": "Open bookmark in group"
+    },
+    "bookmarkNotAllowed": {
+        "message": "Dieses Lesezeichen ist nicht erlaubt",
+        "description": "This bookmark is not allowed"
+    },
+    "openLinkInGroupDisabledTitle": {
+        "message": "Öffne Link in Gruppe",
+        "description": "Open link in group title"
+    },
+    "showContextMenuOnTabs": {
+        "message": "Zeige kontextsensitives Menü in Tabs",
+        "description": "Show context menu on tabs"
+    },
+    "showContextMenuOnLinks": {
+        "message": "Zeige kontextsensitives Menü in Links",
+        "description": "Show context menu on links"
+    },
+    "importBookmarkFolderAsNewGroup": {
+        "message": "Importiere Lesezeichen-Ordner als neue Gruppe",
+        "description": "Import bookmark folder as new group"
+    },
+    "groupsCreatedCount": {
+        "message": "$groupscount$ Gruppen erzeugt",
+        "description": "Groups created count",
+        "placeholders": {
+            "groupscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "noGroupsCreated": {
+        "message": "Keine Gruppen erzeugt",
+        "description": "No groups created"
+    },
+    "noAccessToBookmarks": {
+        "message": "Sie haben keinen Zugriff auf die Lesezeichen. Bitte den Zugriff in den Addon-Einstellungen erlauben",
+        "description": "You do not have access to bookmarks. Enable it on in addon settings"
+    },
+    "exportGroupToMainBookmarkFolder": {
+        "message": "Exportiere Gruppen in den Lesezeichen-Ordner $bookmarkfolder$",
+        "description": "Export groups to '$bookmarkfolder$' bookmark folder",
+        "placeholders": {
+            "bookmarkfolder": {
+                "content": "$1",
+                "example": "'STG bookmarks' from key mainBookmarkFolderTitle"
+            }
+        }
+    },
+    "exportGroupToBookmarks": {
+        "message": "Exportiere Gruppen in Lesezeichen",
+        "description": "Export group to bookmarks"
+    },
+    "mainBookmarkFolderTitle": {
+        "message": "STG-Lesezeichen",
+        "description": "Main bookmark folder title"
+    },
+    "defaultBookmarkFolderLocation": {
+        "message": "Standard-Ort für Lesezeichen-Ordner",
+        "description": "Default bookmark folder location"
+    },
+    "groupExportedToBookmarks": {
+        "message": "Gruppe $grouptitle$ wurde erfolgreich als Lesezeichen exportiert",
+        "description": "Group '$grouptitle$' successfully exported to bookmarks",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "groupWithoutTabs": {
+        "message": "Diese Gruppe hat keine Tabs",
+        "description": "This group has no tabs"
+    },
+    "autoBackupGroupsToBookmarks": {
+        "message": "Automatisches Backup aller Gruppen zu Lesezeichen",
+        "description": "Auto backup all groups to bookmarks"
     }
 }
