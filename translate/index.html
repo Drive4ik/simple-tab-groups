@@ -165,7 +165,11 @@
                                     </div>
                                     <div class="column" v-if="val.placeholders">
                                         <div class="field" v-for="(tag, tagName) in val.placeholders">
-                                            Var: <span class="tag is-info is-medium" v-html="'$' + tagName + '$'"></span>
+                                            Var: <span :class="
+                                            [
+                                                'tag is-medium',
+                                                (locale[key] && locale[key].includes('$' + tagName + '$')) ? 'is-info' : 'is-danger'
+                                            ]" v-html="'$' + tagName + '$'"></span>
                                             Example: <span v-html="tag.example"></span>
                                         </div>
                                     </div>

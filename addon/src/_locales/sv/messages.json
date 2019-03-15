@@ -62,7 +62,7 @@
         "description": "Search placeholder"
     },
     "invalidRegExpRuleTitle": {
-        "message": "Regeln '$regexp' är ogiltig och kommer inte att användas.",
+        "message": "Regeln '$regexp$' är ogiltig och kommer inte att användas.",
         "description": "Invalid rule description",
         "placeholders": {
             "regexp": {
