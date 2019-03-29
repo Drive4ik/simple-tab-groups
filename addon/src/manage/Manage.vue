@@ -472,6 +472,11 @@
                 }
             },
 
+            async closeThisWindow() {
+                let tab = await browser.tabs.getCurrent();
+                browser.tabs.remove(tab.id);
+            },
+
         },
     }
 </script>
@@ -481,9 +486,10 @@
     <!-- grid display -->
     <!-- free arrange -->
 
-    <div id="stg-manage" class="is-flex is-column"
+    <div id="stg-manage" class="is-flex is-column" tabindex="-1"
         @contextmenu="['INPUT', 'TEXTAREA'].includes($event.target.nodeName) ? null : $event.preventDefault()"
         @click="multipleDropTabs = []"
+        @keydown.27="closeThisWindow"
         >
         <header class="is-flex is-align-items-center">
             <span class="page-title">
