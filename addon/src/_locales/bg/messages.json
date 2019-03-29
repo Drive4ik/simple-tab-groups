@@ -1,6 +1,6 @@
 {
     "extensionDescription": {
-        "message": "Създаване, промяна и бързо превключване между групи от раздели.\nВдъхновено от добавката Tab Groups :)",
+        "message": "Създаване, промяна и бързо превключване между групи от раздели.\nВдъхновено от добавката „Tab Groups“ :)",
         "description": "Description of the extension."
     },
     "openSettings": {
@@ -8,7 +8,7 @@
         "description": "Settings context button title"
     },
     "manageGroupsTitle": {
-        "message": "Управление на групи",
+        "message": "Управление на групите",
         "description": "Manage groups"
     },
     "setTabIconAsGroupIcon": {
@@ -16,11 +16,11 @@
         "description": "Set tab icon as group icon"
     },
     "moveTabToGroupDisabledTitle": {
-        "message": "Преместване в група",
+        "message": "Преместване в друга група",
         "description": "Move tab to group title"
     },
     "moveTabToGroupMessage": {
-        "message": "Разделът „$tabtitle$“ е преместен в група „$grouptitle$“.\n\nПоказване на раздела.",
+        "message": "Разделът „$tabtitle$“ е преместен в група „$grouptitle$“.\n\nОтваряне на раздела.",
         "description": "Tab moved popup title",
         "placeholders": {
             "grouptitle": {
@@ -84,11 +84,11 @@
         "description": "Close popup after changing group"
     },
     "showNotificationAfterMoveTab": {
-        "message": "Известие при смяна на групата на раздел",
+        "message": "Известие при автоматично преместване на раздел",
         "description": "Show notification when tab is moved to another group"
     },
     "openManageGroupsInTab": {
-        "message": "Отваряне на „Управление на групи“ в нов раздел",
+        "message": "Отваряне на „Управление на групите“ в нов раздел",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
@@ -96,11 +96,11 @@
         "description": "Show confirm dialog before group delete"
     },
     "exportAddonSettingsTitle": {
-        "message": "Резервно копие на групите",
+        "message": "Резервни копия",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
-        "message": "Изнесете групите от раздели в резервно копие, така че да ги възстановите по-късно при нужда.",
+        "message": "Създаване на резервни копия на групите от раздели, така че да бъдат възстановени при нужда.",
         "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
     },
     "exportAddonSettingsButton": {
@@ -108,7 +108,7 @@
         "description": "Create backup"
     },
     "includeTabThumbnailsIntoBackup": {
-        "message": "Добавяне на миниатюрите (увеличава размера на архива)",
+        "message": "Включване на миниатюрите (увеличава размера на резервното копие)",
         "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
@@ -120,7 +120,7 @@
         "description": "Load a backup file containing the tab groups you want to restore."
     },
     "importAddonSettingsWarning": {
-        "message": "При възстановяване от резервно копие текущите групи и настройки ще бъдат ЗАЛИЧЕНИ!",
+        "message": "При възстановяване от резервно копие всички текущи групи и настройки ще бъдат ЗАЛИЧЕНИ!",
         "description": "Restore add-on settings will ERASE all existing settings and groups!"
     },
     "importAddonSettingsButton": {
@@ -172,15 +172,15 @@
         "description": "General"
     },
     "groupSettings": {
-        "message": "Настройки на група",
+        "message": "Настройки на групата",
         "description": "Group settings"
     },
     "deleteGroup": {
-        "message": "Изтриване на група",
+        "message": "Изтриване на групата",
         "description": "Delete group"
     },
     "deleteGroupTitle": {
-        "message": "Изтриване на група?",
+        "message": "Изтриване на групата?",
         "description": "Delete group?"
     },
     "deleteGroupBody": {
@@ -220,7 +220,7 @@
         "description": "Go back"
     },
     "goBackToGroupsButtonTitle": {
-        "message": "Назад към групите",
+        "message": "Списък с групите",
         "description": "Go back to groups"
     },
     "title": {
@@ -244,7 +244,7 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Улавяне и преместване на разделите в изолатори",
+        "message": "Преместване в групата на разделите в изолатори",
         "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
@@ -339,8 +339,12 @@
             }
         }
     },
+    "isStickyGroupTitle": {
+        "message": "Магнитна група",
+        "description": "Sticky group"
+    },
     "isStickyGroupHelp": {
-        "message": "Разделите в тази група никога няма да бъдат автоматично премествани в друга",
+        "message": "Разделите от тази група няма да бъдат автоматично премествани в друга група",
         "description": "Tabs in this group will never be automatically moved to another group"
     },
     "useTabsFavIconsFromGoogleS2Converter": {
@@ -351,8 +355,12 @@
         "message": "Пиктограма",
         "description": "Icon style"
     },
+    "discardTabsAfterHide": {
+        "message": "Освобождаване на паметта от скритите раздели",
+        "description": "Discard tabs after hide (this will save the RAM)"
+    },
     "createThumbnailsForTabs": {
-        "message": "Миниатюра на раздела (използвана в „Управление на групи“)",
+        "message": "Миниатюра на раздела (използвана в „Управление на групите“)",
         "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
@@ -403,8 +411,12 @@
         "message": "Отваряне на групата в нов прозорец",
         "description": "Open group in new window"
     },
+    "muteTabsWhenGroupCloseAndRestoreWhenOpen": {
+        "message": "Заглушаване на разделите при затваряне на групата",
+        "description": "Mute tabs when group close and restore when open"
+    },
     "showTabAfterMovingItIntoThisGroup": {
-        "message": "Показване на раздела след автоматично преместване в групата",
+        "message": "Отваряне на раздела след автоматично преместване",
         "description": "Show the tab after auto-moving it into this group"
     },
     "tabMoving": {
@@ -442,6 +454,10 @@
                 "example": "external extension title"
             }
         }
+    },
+    "clickHereToReloadAddon": {
+        "message": "Грешка, натиснете тук за презареждане на добавката STG",
+        "description": "Something went wrong, click here to reload STG addon"
     },
     "extendedTabSearch": {
         "message": "Разширено търсене",
@@ -542,5 +558,39 @@
     "allowAccessToBookmarks": {
         "message": "Разрешаване на достъпа до отметките",
         "description": "Allow access to bookmarks"
+    },
+    "openLinkInGroupDisabledTitle": {
+        "message": "Отваряне в група",
+        "description": "Open link in group title"
+    },
+    "showContextMenuOnTabs": {
+        "message": "Контекстуално меню на разделите",
+        "description": "Show context menu on tabs"
+    },
+    "showContextMenuOnLinks": {
+        "message": "Контекстуално меню на препратките",
+        "description": "Show context menu on links"
+    },
+    "mainBookmarkFolderTitle": {
+        "message": "Отметки на STG",
+        "description": "Main bookmark folder title"
+    },
+    "groupExportedToBookmarks": {
+        "message": "Групата „$grouptitle$“ е успешно изнесена в отметките",
+        "description": "Group '$grouptitle$' successfully exported to bookmarks",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "groupWithoutTabs": {
+        "message": "В групата няма раздели",
+        "description": "This group has no tabs"
+    },
+    "autoBackupGroupsToBookmarks": {
+        "message": "Създаване на резервно копие на групите в отметките",
+        "description": "Auto backup all groups to bookmarks"
     }
 }
