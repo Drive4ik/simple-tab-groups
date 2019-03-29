@@ -48,10 +48,6 @@ async function saveGroupsToStorage(withMessage = false) {
         storage.set({
             groups: _groups,
         });
-
-        try {
-            storage.indexed.set('groups', _groups);
-        } catch (e) {}
     }, 500);
 }
 
@@ -2894,24 +2890,6 @@ async function init() {
         utils.notify(browser.i18n.getMessage('ffFailedAndLostDataMessage'));
 
         data.groups = [];
-
-        try {
-            let indexedGroups = await storage.indexed.get('groups');
-
-            if (indexedGroups && Array.isArray(indexedGroups)) {
-                data.groups = indexedGroups;
-            } else if (!indexedGroups) {
-                throw '_no_groups_';
-            }
-        } catch (e) {
-            if (e === '_no_groups_') {
-                try {
-                    storage.indexed.remove('groups');
-                } catch (e) {}
-            } else {
-                log('error on browser indexed db', e);
-            }
-        }
     }
 
     data = await runMigrateForData(data); // run migration for data

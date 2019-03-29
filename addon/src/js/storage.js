@@ -2,9 +2,6 @@
 
 import {DEFAULT_OPTIONS} from './constants';
 import * as utils from './utils';
-import * as idb from 'idb-keyval';
-
-let myStore = new idb.Store('simple-tab-groups', 'my-store');
 
 export default {
     async get(data) {
@@ -41,11 +38,5 @@ export default {
         }
 
         return browser.storage.local.set(data);
-    },
-    indexed: {
-        get: key => idb.get(key, myStore),
-        set: (key, val) => idb.set(key, val, myStore),
-        remove: key => idb.del(key, myStore),
-        clear: () => idb.clear(myStore),
     },
 }
