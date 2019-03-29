@@ -1888,6 +1888,15 @@ async function createMoveTabMenus(windowId) {
             }
         },
     }));
+
+    hasBookmarksPermission && moveTabToGroupMenusIds.push(browser.menus.create({
+        title: browser.i18n.getMessage('exportAllGroupsToBookmarks'),
+        icons: {
+            16: '/icons/bookmark.svg',
+        },
+        contexts: ['browser_action'],
+        onclick: () => exportAllGroupsToBookmarks(true),
+    }));
 }
 
 async function _getBookmarkFolderFromTitle(title, parentId, index) {
@@ -2541,10 +2550,18 @@ async function createBackup(includeTabThumbnails, includeTabFavIcons, isAutoBack
         options.autoBackupLastBackupTimeStamp = data.autoBackupLastBackupTimeStamp;
 
         if (options.autoBackupGroupsToBookmarks) {
-            for (let group of _groups) {
-                await exportGroupToBookmarks(group.id, false);
-            }
+            await exportAllGroupsToBookmarks();
         }
+    }
+}
+
+async function exportAllGroupsToBookmarks(showFinishMessage) {
+    for (let group of _groups) {
+        await exportGroupToBookmarks(group.id, false);
+    }
+
+    if (showFinishMessage) {
+        utils.notify(browser.i18n.getMessage('allGroupsExportedToBookmarks'));
     }
 }
 

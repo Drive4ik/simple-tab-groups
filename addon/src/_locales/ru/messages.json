@@ -680,5 +680,13 @@
     "autoBackupGroupsToBookmarks": {
         "message": "Экспорт всех групп в закладки",
         "description": "Auto backup all groups to bookmarks"
+    },
+    "exportAllGroupsToBookmarks": {
+        "message": "Экспорт всех групп в закладки",
+        "description": "Export all groups to bookmarks"
+    },
+    "allGroupsExportedToBookmarks": {
+        "message": "Все группы успешно экспортированы в закладки",
+        "description": "All groups successfully exported to bookmarks"
     }
 }
