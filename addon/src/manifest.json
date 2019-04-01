@@ -81,6 +81,14 @@
                 "default": "F8"
             },
             "description": "Open popup"
+        },
+        "_execute_sidebar_action": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+S",
+                "mac": "Command+Shift+S",
+                "linux": "F1"
+            },
+            "description": "Open sidebar"
         }
     }
 
