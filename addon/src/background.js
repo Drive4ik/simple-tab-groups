@@ -3011,7 +3011,12 @@ async function init() {
         });
 
         // waiting all tabs to load
-        await new Promise(function(resolve, reject) {
+        await new Promise(function(resolve) {
+            if (!data.groups.length) { // if no groups - not need to wait load tabs
+                resolve();
+                return;
+            }
+
             let tryCount = 0,
                 tryTime = 250, // ms
                 showNotificationMessageForLongTimeLoading = 61, // sec
