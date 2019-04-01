@@ -680,5 +680,13 @@
     "autoBackupGroupsToBookmarks": {
         "message": "Sauvegarder automatiquement tous les groupes vers les marque-pages",
         "description": "Auto backup all groups to bookmarks"
+    },
+    "exportAllGroupsToBookmarks": {
+        "message": "Exporter tous les groupes vers les marque-pages",
+        "description": "Export all groups to bookmarks"
+    },
+    "allGroupsExportedToBookmarks": {
+        "message": "Tous les groupes ont été exportés vers les marque-pages avec succès",
+        "description": "All groups successfully exported to bookmarks"
     }
 }
