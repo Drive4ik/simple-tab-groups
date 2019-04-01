@@ -590,5 +590,103 @@
     "createNewGroupWhenOpenNewWindow": {
         "message": "Vytvořit novou skupinu při otevření nového okna",
         "description": "Create a new group when opening a new window"
+    },
+    "prependGroupTitleToWindowTitle": {
+        "message": "Připojit název skupiny k názvu okna",
+        "description": "Prepend group title to window title"
+    },
+    "allowAccessToBookmarks": {
+        "message": "Povolit přístup k záložkám",
+        "description": "Allow access to bookmarks"
+    },
+    "openBookmarkInGroup": {
+        "message": "Otevřít záložku ve skupině",
+        "description": "Open bookmark in group"
+    },
+    "bookmarkNotAllowed": {
+        "message": "Tento typ záložky není podporován",
+        "description": "This bookmark is not allowed"
+    },
+    "openLinkInGroupDisabledTitle": {
+        "message": "Otevřít odkaz ve skupině",
+        "description": "Open link in group title"
+    },
+    "showContextMenuOnTabs": {
+        "message": "Zobrazit kontextovou nabídku doplňku u panelů",
+        "description": "Show context menu on tabs"
+    },
+    "showContextMenuOnLinks": {
+        "message": "Zobrazit kontextovou nabídku doplňku u odkazů",
+        "description": "Show context menu on links"
+    },
+    "importBookmarkFolderAsNewGroup": {
+        "message": "Importovat záložky ve složce do nové skupiny",
+        "description": "Import bookmark folder as new group"
+    },
+    "groupsCreatedCount": {
+        "message": "Vytvořeno skupin: $groupscount$",
+        "description": "Groups created count",
+        "placeholders": {
+            "groupscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "noGroupsCreated": {
+        "message": "Nebyla vytvořena žádná skupina",
+        "description": "No groups created"
+    },
+    "noAccessToBookmarks": {
+        "message": "Nemáte umožněn přístup do záložek. Povolte ho v nastavení doplňku.",
+        "description": "You do not have access to bookmarks. Enable it on in addon settings"
+    },
+    "exportGroupToMainBookmarkFolder": {
+        "message": "Exportovat skupiny do složky záložek: '$bookmarkfolder$'",
+        "description": "Export groups to '$bookmarkfolder$' bookmark folder",
+        "placeholders": {
+            "bookmarkfolder": {
+                "content": "$1",
+                "example": "'STG bookmarks' from key mainBookmarkFolderTitle"
+            }
+        }
+    },
+    "exportGroupToBookmarks": {
+        "message": "Exportovat skupinu do záložek",
+        "description": "Export group to bookmarks"
+    },
+    "mainBookmarkFolderTitle": {
+        "message": "STG záložky",
+        "description": "Main bookmark folder title"
+    },
+    "defaultBookmarkFolderLocation": {
+        "message": "Výchozí umístění složky záložek",
+        "description": "Default bookmark folder location"
+    },
+    "groupExportedToBookmarks": {
+        "message": "Skupina '$grouptitle$' úspěšně exportována do záložek",
+        "description": "Group '$grouptitle$' successfully exported to bookmarks",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "groupWithoutTabs": {
+        "message": "V této skupině se nenachází žádné panely",
+        "description": "This group has no tabs"
+    },
+    "autoBackupGroupsToBookmarks": {
+        "message": "Automaticky zálohovat skupiny do záložek",
+        "description": "Auto backup all groups to bookmarks"
+    },
+    "exportAllGroupsToBookmarks": {
+        "message": "Exportovat všechny skupiny do záložek",
+        "description": "Export all groups to bookmarks"
+    },
+    "allGroupsExportedToBookmarks": {
+        "message": "Všechny skupiny byly úspěšně exportovány do záložek",
+        "description": "All groups successfully exported to bookmarks"
     }
 }
