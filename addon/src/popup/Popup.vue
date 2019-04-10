@@ -794,6 +794,20 @@
                 });
             },
 
+            discardTab(tab) {
+                if (tab.id) {
+                    browser.tabs.discard(tab.id).catch(function() {});
+                }
+            },
+
+            discardGroup(group) {
+                let tabIds = group.tabs.filter(utils.keyId).map(utils.keyId);
+
+                if (tabIds.length) {
+                    browser.tabs.discard(tabIds).catch(function() {});
+                }
+            },
+
         },
     }
 </script>
@@ -1126,6 +1140,10 @@
                         <img src="/icons/bookmark.svg" class="size-16" />
                         <span v-text="lang('exportGroupToBookmarks')"></span>
                     </li>
+                    <li @click="discardGroup(menu.data.group)">
+                        <img src="/icons/snowflake.svg" class="size-16" />
+                        <span v-text="lang('discardGroupTitle')"></span>
+                    </li>
 
                     <hr>
 
@@ -1171,7 +1189,12 @@
                         <span v-text="lang('createNewGroup')"></span>
                     </li>
 
-                    <hr v-if="menu.data.group">
+                    <hr v-if="menu.data.group || menu.data.tab.id">
+
+                    <li v-if="menu.data.tab.id" @click="discardTab(menu.data.tab)">
+                        <img src="/icons/snowflake.svg" class="size-16" />
+                        <span v-text="lang('discardTabTitle')"></span>
+                    </li>
 
                     <li v-if="menu.data.group" @click="setTabIconAsGroupIcon(menu.data.tab)">
                         <img src="/icons/image.svg" class="size-16" />

@@ -688,5 +688,13 @@
     "allGroupsExportedToBookmarks": {
         "message": "Все группы успешно экспортированы в закладки",
         "description": "All groups successfully exported to bookmarks"
+    },
+    "discardTabTitle": {
+        "message": "Выгрузить вкладку",
+        "description": "Discard tab"
+    },
+    "discardGroupTitle": {
+        "message": "Выгрузить группу",
+        "description": "Discard group"
     }
 }

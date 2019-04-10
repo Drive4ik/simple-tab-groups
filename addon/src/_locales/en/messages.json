@@ -692,5 +692,13 @@
     "allGroupsExportedToBookmarks": {
         "message": "All groups successfully exported to bookmarks",
         "description": "All groups successfully exported to bookmarks"
+    },
+    "discardTabTitle": {
+        "message": "Discard tab",
+        "description": "Discard tab"
+    },
+    "discardGroupTitle": {
+        "message": "Discard group",
+        "description": "Discard group"
     }
 }
