@@ -2928,8 +2928,7 @@ async function init() {
     if (isRestoreSessionNow(windows)) {
         // waiting for session restore
         await new Promise(function(resolve) {
-            let tryCount = 0,
-                tryTime = 1000; // ms
+            let tryCount = 0;
 
             async function checkRestoreSession() {
                 let wins = await getAllWindows();
@@ -2945,14 +2944,16 @@ async function init() {
                         utils.notify(browser.i18n.getMessage('waitingForSessionRestoreNotification'), undefined, 'wait-session-restore-message');
                     }
 
-                    setTimeout(checkRestoreSession, tryTime);
+                    setTimeout(checkRestoreSession, 1000);
                 } else {
                     resolve();
                 }
             }
 
-            setTimeout(checkRestoreSession, tryTime);
+            checkRestoreSession();
         });
+
+        windows = await getAllWindows();
 
         browser.notifications.clear('wait-session-restore-message');
     }
