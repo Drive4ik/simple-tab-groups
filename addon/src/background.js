@@ -360,26 +360,24 @@ async function removeGroup(groupId) {
 
     addUndoRemoveGroupItem(group);
 
-    if (_groups.length) { // dont close tabs if remove last group
-        let tabsIdsToRemove = group.tabs.filter(utils.keyId).map(utils.keyId);
+    let tabsIdsToRemove = group.tabs.filter(utils.keyId).map(utils.keyId);
 
-        if (tabsIdsToRemove.length) {
-            let tempEmptyTab = null;
+    if (tabsIdsToRemove.length) {
+        let tempEmptyTab = null;
 
-            if (group.windowId) {
-                tempEmptyTab = await createTempActiveTab(group.windowId, false);
-            }
+        if (group.windowId) {
+            tempEmptyTab = await createTempActiveTab(group.windowId, false);
+        }
 
-            await browser.tabs.remove(tabsIdsToRemove);
+        await browser.tabs.remove(tabsIdsToRemove);
 
-            if (tempEmptyTab) {
-                let windows = await browser.windows.getAll({}),
-                    otherWindow = windows.find(win => win.id !== group.windowId);
+        if (tempEmptyTab) {
+            let windows = await browser.windows.getAll({}),
+                otherWindow = windows.find(win => win.id !== group.windowId);
 
-                if (otherWindow) {
-                    await browser.tabs.remove(tempEmptyTab.id);
-                    // await setFocusOnWindow(otherWindow.id);
-                }
+            if (otherWindow) {
+                await browser.tabs.remove(tempEmptyTab.id);
+                // await setFocusOnWindow(otherWindow.id);
             }
         }
     }
