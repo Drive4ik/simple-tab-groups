@@ -76,7 +76,7 @@
         "description": "Grid display"
     },
     "manageGroupViewFreeArrange": {
-        "message": "自由排布",
+        "message": "自由排布(在未来的版本中)",
         "description": "Free arrange"
     },
     "closePopupAfterChangeGroup": {
@@ -132,7 +132,7 @@
         "description": "Restore Quicksaver's \"Tab Groups\""
     },
     "importSettingsOldTabGroupsAddonDescription": {
-        "message": "加载老扩展“Tab Groups”的备份文件。",
+        "message": "加载旧式扩展“Tab Groups”的备份文件。",
         "description": "Load a backup file old \"Tab Groups\" addon."
     },
     "openGroupAfterChange": {
@@ -680,5 +680,21 @@
     "autoBackupGroupsToBookmarks": {
         "message": "自动备份所有群组到书签",
         "description": "Auto backup all groups to bookmarks"
+    },
+    "exportAllGroupsToBookmarks": {
+        "message": "导出所有群组到书签",
+        "description": "Export all groups to bookmarks"
+    },
+    "allGroupsExportedToBookmarks": {
+        "message": "所有群组已成功导出到书签",
+        "description": "All groups successfully exported to bookmarks"
+    },
+    "discardTabTitle": {
+        "message": "丢弃（休眠）标签页",
+        "description": "Discard tab"
+    },
+    "discardGroupTitle": {
+        "message": "丢弃（休眠）群组",
+        "description": "Discard group"
     }
 }
