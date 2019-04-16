@@ -109,7 +109,6 @@ Current list of functionality / development notes:
 Permissions used:
  * **tabs**: for tab handling
  * **tabHide**: for hide tabs
- * **<all_urls>(Access your data for all websites)**: for tab thumbnails
  * **contextualIdentities & cookies**: for work with Firefox Multi-Account Containers
  * **notifications**: for notification on move tab to group etc.
  * **menus**: for creating tabs context menus
@@ -117,6 +116,8 @@ Permissions used:
  * **downloads**: for create auto backups
  * **storage**: for saving groups localy
  * **unlimitedStorage**: for save tab thumbnails
+ * **(optional) <all_urls>(Access your data for all websites)**: for tab thumbnails
+ * **(optional) bookmarks**: access for create bookmarks
 
 ## License and Credits
 
