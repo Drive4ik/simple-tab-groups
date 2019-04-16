@@ -8,6 +8,9 @@ const PERMISSIONS = {
     BOOKMARKS: {
         permissions: ['bookmarks'],
     },
+    ALL_URLS: {
+        origins: ['<all_urls>'],
+    },
 };
 
 const groupIconViewTypes = [
@@ -98,7 +101,6 @@ const DEFAULT_OPTIONS = {
     openManageGroupsInTab: true,
     showConfirmDialogBeforeGroupDelete: true,
     useTabsFavIconsFromGoogleS2Converter: false,
-    createThumbnailsForTabs: true,
     showContextMenuOnTabs: true,
     showContextMenuOnLinks: true,
     exportGroupToMainBookmarkFolder: true,

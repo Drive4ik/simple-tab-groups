@@ -2,6 +2,7 @@
     'use strict';
 
     import * as utils from '../js/utils';
+    import * as constants from '../js/constants';
 
     import Vue from 'vue';
 
@@ -59,6 +60,8 @@
 
                 isLoaded: false,
 
+                hasThumbnailsPermission: false,
+
                 search: '',
                 extendedSearch: false,
 
@@ -88,8 +91,10 @@
         // directives: {
         //     dnd: dnd,
         // },
-        created() {
+        async created() {
             document.title = this.lang('manageGroupsTitle');
+
+            this.hasThumbnailsPermission = await browser.permissions.contains(constants.PERMISSIONS.ALL_URLS);
 
             this.loadOptions();
         },
@@ -688,7 +693,7 @@
                         <img src="/icons/image.svg" class="size-16" />
                         <span v-text="lang('setTabIconAsGroupIcon')"></span>
                     </li>
-                    <li v-if="options.createThumbnailsForTabs && menu.data.tab.id" @click="updateTabThumbnail(menu.data.tab)">
+                    <li v-if="hasThumbnailsPermission && menu.data.tab.id" @click="updateTabThumbnail(menu.data.tab)">
                         <img src="/icons/image.svg" class="size-16" />
                         <span v-text="lang('updateTabThumbnail')"></span>
                     </li>

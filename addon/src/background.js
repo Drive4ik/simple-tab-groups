@@ -840,7 +840,13 @@ async function _fixLastActiveTab(group, setPosition = 'last-active', breakIfHasA
 }
 
 async function updateTabThumbnail(tab, force = false) {
-    if (!options.createThumbnailsForTabs || !tab.id || !tab.url) {
+    if (!tab.id || !tab.url) {
+        return;
+    }
+
+    let hasThumbnailsPermission = await browser.permissions.contains(constants.PERMISSIONS.ALL_URLS);
+
+    if (!hasThumbnailsPermission) {
         return;
     }
 
@@ -2778,6 +2784,12 @@ async function runMigrateForData(data) {
             version: '3.3.5',
             migration() {
                 data.hotkeys.forEach(hotkey => hotkey.groupId = hotkey.groupId || 0);
+            },
+        },
+        {
+            version: '3.4.4',
+            migration() {
+                removeKeys('createThumbnailsForTabs');
             },
         },
     ];

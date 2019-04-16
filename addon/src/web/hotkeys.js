@@ -13,7 +13,7 @@ function changeHotkeysListener(request, sender) {
     }
 
     if (request.action === 'update-hotkeys') {
-        reloadHotKeys().then(init);
+        reloadHotKeys().then(init).catch(function() {});
     } else if (request.action === 'move-tab-to-custom-group') {
         showGroupsForMovingTab(request);
     }
@@ -31,7 +31,7 @@ async function reloadHotKeys() {
     }
 }
 
-reloadHotKeys().then(init);
+reloadHotKeys().then(init).catch(function() {});
 
 function init() {
     resetWindowEvents();

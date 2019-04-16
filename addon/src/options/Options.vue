@@ -71,6 +71,7 @@
 
                 permissions: {
                     bookmarks: false,
+                    allUrls: false,
                 },
 
                 defaultBookmarksParents: [],
@@ -96,6 +97,7 @@
             this.groups = Array.isArray(data.groups) ? data.groups : [];
 
             this.permissions.bookmarks = await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
+            this.permissions.allUrls = await browser.permissions.contains(constants.PERMISSIONS.ALL_URLS);
 
             this.loadBookmarksParents();
 
@@ -574,6 +576,14 @@
                     this.defaultBookmarksParents = await browser.bookmarks.get(constants.defaultBookmarksParents);
                 }
             },
+
+            async setPermissionsAllUrls(event) {
+                if (event.target.checked) {
+                    this.permissions.allUrls = await browser.permissions.request(constants.PERMISSIONS.ALL_URLS);
+                } else {
+                    await browser.permissions.remove(constants.PERMISSIONS.ALL_URLS);
+                }
+            },
         },
     }
 </script>
@@ -703,7 +713,7 @@
             </div>
             <div class="field">
                 <label class="checkbox">
-                    <input type="checkbox" v-model="options.createThumbnailsForTabs" @change="!options.createThumbnailsForTabs && (includeTabThumbnailsIntoBackup = false) " />
+                    <input type="checkbox" v-model="permissions.allUrls" @click="setPermissionsAllUrls" @change="!permissions.allUrls && (includeTabThumbnailsIntoBackup = false) " />
                     <span v-text="lang('createThumbnailsForTabs')"></span>
                 </label>
 
@@ -849,7 +859,7 @@
                 <div class="h-margin-bottom-5" v-html="lang('exportAddonSettingsDescription')"></div>
                 <div class="field">
                     <label class="checkbox">
-                        <input v-model="includeTabThumbnailsIntoBackup" :disabled="!options.createThumbnailsForTabs" type="checkbox" />
+                        <input v-model="includeTabThumbnailsIntoBackup" :disabled="!permissions.allUrls" type="checkbox" />
                         <span v-text="lang('includeTabThumbnailsIntoBackup')"></span>
                     </label>
                 </div>
@@ -881,7 +891,7 @@
                 <div v-if="options.autoBackupEnable" class="field">
                     <div class="field">
                         <label class="checkbox">
-                            <input v-model="options.autoBackupIncludeTabThumbnails" type="checkbox" />
+                            <input v-model="options.autoBackupIncludeTabThumbnails" :disabled="!permissions.allUrls" type="checkbox" />
                             <span v-text="lang('includeTabThumbnailsIntoBackup')"></span>
                         </label>
                     </div>
