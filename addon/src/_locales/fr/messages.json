@@ -684,5 +684,21 @@
     "allGroupsExportedToBookmarks": {
         "message": "Tous les groupes ont été exportés vers les marque-pages avec succès",
         "description": "All groups successfully exported to bookmarks"
+    },
+    "discardTabTitle": {
+        "message": "Décharger l'onglet de la mémoire",
+        "description": "Discard tab"
+    },
+    "discardGroupTitle": {
+        "message": "Décharger le groupe de la mémoire",
+        "description": "Discard group"
+    },
+    "autoBackupGroupsToFile": {
+        "message": "Sauvegarder automatiquement tous les groupes vers un fichier (dans le dossier des téléchargements)",
+        "description": "Auto backup all groups to file (into downloads folder)"
+    },
+    "folderNameTitle": {
+        "message": "Nom du dossier",
+        "description": "Folder name title"
     }
 }
