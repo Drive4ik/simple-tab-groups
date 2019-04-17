@@ -1963,7 +1963,7 @@ async function exportGroupToBookmarks(groupId, showMessages = true) {
     };
 
     if (options.exportGroupToMainBookmarkFolder) {
-        rootFolder = await _getBookmarkFolderFromTitle(browser.i18n.getMessage('mainBookmarkFolderTitle'), options.defaultBookmarksParent);
+        rootFolder = await _getBookmarkFolderFromTitle(options.autoBackupBookmarksFolderName, options.defaultBookmarksParent);
     }
 
     let groupIndex = options.exportGroupToMainBookmarkFolder ? _groups.indexOf(group) : undefined,
@@ -2542,20 +2542,22 @@ async function createBackup(includeTabThumbnails, includeTabFavIcons, isAutoBack
 
     if (isAutoBackup) {
         data.autoBackupLastBackupTimeStamp = utils.unixNow();
-    }
 
-    await file.backup(data, isAutoBackup, overwrite);
+        if (options.autoBackupGroupsToFile) {
+            await file.backup(data, true, overwrite);
+        }
 
-    if (isAutoBackup) {
+        if (options.autoBackupGroupsToBookmarks) {
+            await exportAllGroupsToBookmarks();
+        }
+
         await storage.set({
             autoBackupLastBackupTimeStamp: data.autoBackupLastBackupTimeStamp,
         });
 
         options.autoBackupLastBackupTimeStamp = data.autoBackupLastBackupTimeStamp;
-
-        if (options.autoBackupGroupsToBookmarks) {
-            await exportAllGroupsToBookmarks();
-        }
+    } else {
+        await file.backup(data, false, overwrite);
     }
 }
 

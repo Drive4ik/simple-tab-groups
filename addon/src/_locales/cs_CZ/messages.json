@@ -647,17 +647,13 @@
         "placeholders": {
             "bookmarkfolder": {
                 "content": "$1",
-                "example": "'STG bookmarks' from key mainBookmarkFolderTitle"
+                "example": "STG bookmarks"
             }
         }
     },
     "exportGroupToBookmarks": {
         "message": "Exportovat skupinu do záložek",
         "description": "Export group to bookmarks"
-    },
-    "mainBookmarkFolderTitle": {
-        "message": "STG záložky",
-        "description": "Main bookmark folder title"
     },
     "defaultBookmarkFolderLocation": {
         "message": "Výchozí umístění složky záložek",

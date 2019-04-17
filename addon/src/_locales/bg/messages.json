@@ -571,10 +571,6 @@
         "message": "Контекстуално меню на препратките",
         "description": "Show context menu on links"
     },
-    "mainBookmarkFolderTitle": {
-        "message": "Отметки на STG",
-        "description": "Main bookmark folder title"
-    },
     "groupExportedToBookmarks": {
         "message": "Групата „$grouptitle$“ е успешно изнесена в отметките",
         "description": "Group '$grouptitle$' successfully exported to bookmarks",

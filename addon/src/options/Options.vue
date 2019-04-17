@@ -25,7 +25,8 @@
         SECTION_BACKUP = 'backup',
         SECTION_DEFAULT = SECTION_GENERAL,
         _funcKeys = [...Array(12).keys()].map(n => n + 1),
-        isFunctionKey = keyCode => _funcKeys.some(n => keyCode === KeyEvent[`DOM_VK_F${n}`]);
+        isFunctionKey = keyCode => _funcKeys.some(n => keyCode === KeyEvent[`DOM_VK_F${n}`]),
+        folderNameRegExp = /[\<\>\:\"\/\\\|\?\*\x00-\x1F]|\.{2,}|^(?:aux|con|nul|prn|com\d|lpt\d)$/gi;
 
     export default {
         data() {
@@ -119,7 +120,7 @@
                     return;
                 }
 
-                value = value.replace(/[\<\>\:\"\/\\\|\?\*\x00-\x1F]|\.{2,}|^(?:aux|con|nul|prn|com\d|lpt\d)$/gi, '');
+                value = value.replace(folderNameRegExp, '');
 
                 if (!value.length || value.length > 200) {
                     value = constants.DEFAULT_OPTIONS.autoBackupFolderName;
@@ -128,6 +129,39 @@
                 BG.saveOptions({
                     autoBackupFolderName: value,
                 });
+            },
+            'options.autoBackupBookmarksFolderName': function(value, oldValue) {
+                if (!value || null == oldValue) {
+                    return;
+                }
+
+                value = value.replace(folderNameRegExp, '');
+
+                if (!value.length || value.length > 200) {
+                    value = constants.DEFAULT_OPTIONS.autoBackupBookmarksFolderName;
+                }
+
+                BG.saveOptions({
+                    autoBackupBookmarksFolderName: value,
+                });
+            },
+            'options.autoBackupGroupsToFile': function(value, oldValue) {
+                if (null == oldValue) {
+                    return;
+                }
+
+                if (!value && !this.options.autoBackupGroupsToBookmarks) {
+                    this.options.autoBackupGroupsToBookmarks = true;
+                }
+            },
+            'options.autoBackupGroupsToBookmarks': function(value, oldValue) {
+                if (null == oldValue) {
+                    return;
+                }
+
+                if (!value && !this.options.autoBackupGroupsToFile) {
+                    this.options.autoBackupGroupsToFile = true;
+                }
             },
             'options.autoBackupIntervalValue': function(value, oldValue) {
                 if (!value || null == oldValue) {
@@ -177,6 +211,12 @@
         computed: {
             ctrlCommandKey() {
                 return this.isMac ? 'MacCtrl' : 'Ctrl';
+            },
+            isDisabledAutoBackupGroupsToFile() {
+                if (!this.permissions.bookmarks) {
+                    this.options.autoBackupGroupsToFile = true;
+                    return true;
+                }
             },
         },
         methods: {
@@ -642,7 +682,7 @@
             <div class="field h-margin-left-10">
                 <label class="checkbox" :disabled="!permissions.bookmarks">
                     <input v-model="options.exportGroupToMainBookmarkFolder" type="checkbox" :disabled="!permissions.bookmarks"/>
-                    <span v-text="lang('exportGroupToMainBookmarkFolder', lang('mainBookmarkFolderTitle'))"></span>
+                    <span v-text="lang('exportGroupToMainBookmarkFolder', options.autoBackupBookmarksFolderName)"></span>
                 </label>
             </div>
             <div class="field">
@@ -858,7 +898,7 @@
                 <div class="has-text-weight-bold h-margin-bottom-5" v-text="lang('exportAddonSettingsTitle')"></div>
                 <div class="h-margin-bottom-5" v-html="lang('exportAddonSettingsDescription')"></div>
                 <div class="field">
-                    <label class="checkbox">
+                    <label class="checkbox" :disabled="!permissions.allUrls">
                         <input v-model="includeTabThumbnailsIntoBackup" :disabled="!permissions.allUrls" type="checkbox" />
                         <span v-text="lang('includeTabThumbnailsIntoBackup')"></span>
                     </label>
@@ -890,7 +930,7 @@
                 </div>
                 <div v-if="options.autoBackupEnable" class="field">
                     <div class="field">
-                        <label class="checkbox">
+                        <label class="checkbox" :disabled="!permissions.allUrls">
                             <input v-model="options.autoBackupIncludeTabThumbnails" :disabled="!permissions.allUrls" type="checkbox" />
                             <span v-text="lang('includeTabThumbnailsIntoBackup')"></span>
                         </label>
@@ -899,12 +939,6 @@
                         <label class="checkbox">
                             <input v-model="options.autoBackupIncludeTabFavIcons" type="checkbox" />
                             <span v-text="lang('includeTabFavIconsIntoBackup')"></span>
-                        </label>
-                    </div>
-                    <div class="field">
-                        <label class="checkbox" :disabled="!permissions.bookmarks">
-                            <input v-model="options.autoBackupGroupsToBookmarks" type="checkbox" :disabled="!permissions.bookmarks" />
-                            <span v-text="lang('autoBackupGroupsToBookmarks')"></span>
                         </label>
                     </div>
 
@@ -925,18 +959,49 @@
                         </div>
                     </div>
 
-                    <div>
+                    <div class="field">
                         <span v-text="lang('autoBackupLastBackupTitle')"></span>
                         <span v-if="options.autoBackupLastBackupTimeStamp > 1" v-text="new Date(options.autoBackupLastBackupTimeStamp * 1000).toLocaleString()"></span>
                         <span v-else>&mdash;</span>
                     </div>
-                </div>
-                <div class="field is-grouped">
-                    <div class="control">
-                        <input type="text" v-model.trim="options.autoBackupFolderName" maxlength="200" class="input" />
+
+                    <!-- files -->
+                    <div class="field">
+                        <label class="checkbox" :disabled="isDisabledAutoBackupGroupsToFile">
+                            <input v-model="options.autoBackupGroupsToFile" :disabled="isDisabledAutoBackupGroupsToFile" type="checkbox" />
+                            <span v-text="lang('autoBackupGroupsToFile')"></span>
+                        </label>
+                        <div class="field is-grouped is-align-items-center">
+                            <div class="control">
+                                <label class="field" v-text="lang('folderNameTitle') + ':'"></label>
+                            </div>
+                            <div class="control">
+                                <input type="text" v-model.trim="options.autoBackupFolderName" :disabled="!options.autoBackupGroupsToFile" maxlength="200" class="input" />
+                            </div>
+                            <div class="control">
+                                <button class="button" @click="openBackupFolder" v-text="lang('openBackupFolder')"></button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="control">
-                        <button class="button" @click="openBackupFolder" v-text="lang('openBackupFolder')"></button>
+
+                    <!-- bookmarks -->
+                    <div class="field">
+                        <label class="checkbox" :disabled="!permissions.bookmarks">
+                            <input v-if="permissions.bookmarks" v-model="options.autoBackupGroupsToBookmarks" type="checkbox" />
+                            <input v-else disabled="" type="checkbox" />
+                            <span v-text="lang('autoBackupGroupsToBookmarks')"></span>
+                        </label>
+                        <div class="field is-grouped is-align-items-center">
+                            <div class="control">
+                                <label class="field" v-text="lang('folderNameTitle') + ':'"></label>
+                            </div>
+                            <div class="control">
+                                <input type="text"
+                                v-model.trim="options.autoBackupBookmarksFolderName"
+                                :disabled="!options.autoBackupGroupsToBookmarks || !permissions.bookmarks"
+                                maxlength="200" class="input" />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

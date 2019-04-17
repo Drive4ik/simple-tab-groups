@@ -647,17 +647,13 @@
         "placeholders": {
             "bookmarkfolder": {
                 "content": "$1",
-                "example": "'STG bookmarks' from key mainBookmarkFolderTitle"
+                "example": "STG bookmarks"
             }
         }
     },
     "exportGroupToBookmarks": {
         "message": "Exporter le groupe vers les marque-pages",
         "description": "Export group to bookmarks"
-    },
-    "mainBookmarkFolderTitle": {
-        "message": "Marque-pages STG",
-        "description": "Main bookmark folder title"
     },
     "defaultBookmarkFolderLocation": {
         "message": "Emplacement du dossier par défaut des marque-pages",

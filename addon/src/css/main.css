@@ -296,13 +296,11 @@ hr {
     display: inline-flex;
 }
 
-.is-flex.is-align-items-center,
-.is-inline-flex.is-align-items-center {
+.is-align-items-center {
     align-items: center;
 }
 
-.is-flex.is-column,
-.is-inline-flex.is-column {
+.is-column {
     flex-direction: column;
 }
 

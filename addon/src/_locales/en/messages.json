@@ -651,17 +651,13 @@
         "placeholders": {
             "bookmarkfolder": {
                 "content": "$1",
-                "example": "'STG bookmarks' from key mainBookmarkFolderTitle"
+                "example": "STG bookmarks"
             }
         }
     },
     "exportGroupToBookmarks": {
         "message": "Export group to bookmarks",
         "description": "Export group to bookmarks"
-    },
-    "mainBookmarkFolderTitle": {
-        "message": "STG bookmarks",
-        "description": "Main bookmark folder title"
     },
     "defaultBookmarkFolderLocation": {
         "message": "Default bookmark folder location",
@@ -700,5 +696,13 @@
     "discardGroupTitle": {
         "message": "Discard group",
         "description": "Discard group"
+    },
+    "autoBackupGroupsToFile": {
+        "message": "Auto backup all groups to file (into downloads folder)",
+        "description": "Auto backup all groups to file (into downloads folder)"
+    },
+    "folderNameTitle": {
+        "message": "Folder name",
+        "description": "Folder name title"
     }
 }

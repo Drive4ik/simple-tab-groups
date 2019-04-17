@@ -647,17 +647,13 @@
         "placeholders": {
             "bookmarkfolder": {
                 "content": "$1",
-                "example": "'STG bookmarks' from key mainBookmarkFolderTitle"
+                "example": "STG bookmarks"
             }
         }
     },
     "exportGroupToBookmarks": {
         "message": "导出群组到书签",
         "description": "Export group to bookmarks"
-    },
-    "mainBookmarkFolderTitle": {
-        "message": "STG书签",
-        "description": "Main bookmark folder title"
     },
     "defaultBookmarkFolderLocation": {
         "message": "默认书签文件夹位置",

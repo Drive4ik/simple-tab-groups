@@ -647,17 +647,13 @@
         "placeholders": {
             "bookmarkfolder": {
                 "content": "$1",
-                "example": "'STG bookmarks' from key mainBookmarkFolderTitle"
+                "example": "STG bookmarks"
             }
         }
     },
     "exportGroupToBookmarks": {
         "message": "Экспорт группы в закладки",
         "description": "Export group to bookmarks"
-    },
-    "mainBookmarkFolderTitle": {
-        "message": "STG закладки",
-        "description": "Main bookmark folder title"
     },
     "defaultBookmarkFolderLocation": {
         "message": "Расположение папки закладок по умолчанию",
@@ -678,7 +674,7 @@
         "description": "This group has no tabs"
     },
     "autoBackupGroupsToBookmarks": {
-        "message": "Экспорт всех групп в закладки",
+        "message": "Автоматический экспорт всех групп в закладки",
         "description": "Auto backup all groups to bookmarks"
     },
     "exportAllGroupsToBookmarks": {
@@ -696,5 +692,13 @@
     "discardGroupTitle": {
         "message": "Выгрузить группу",
         "description": "Discard group"
+    },
+    "autoBackupGroupsToFile": {
+        "message": "Автоматический экспорт всех групп в файл (в папке загрузок)",
+        "description": "Auto backup all groups to file (into downloads folder)"
+    },
+    "folderNameTitle": {
+        "message": "Имя папки",
+        "description": "Folder name title"
     }
 }

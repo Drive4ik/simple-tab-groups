@@ -116,7 +116,9 @@ const DEFAULT_OPTIONS = {
     autoBackupIncludeTabThumbnails: true,
     autoBackupIncludeTabFavIcons: true,
     autoBackupGroupsToBookmarks: true,
+    autoBackupGroupsToFile: true,
     autoBackupFolderName: 'STG-backups',
+    autoBackupBookmarksFolderName: 'STG bookmarks',
 
     enableDarkTheme: false,
 
@@ -156,6 +158,7 @@ const allOptionsKeys = onlyBoolOptionsKeys
         'autoBackupIntervalKey',
         'autoBackupIntervalValue',
         'autoBackupFolderName',
+        'autoBackupBookmarksFolderName',
     ]);
 
 const HOUR_SEC = 60 * 60;
