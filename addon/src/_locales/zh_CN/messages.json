@@ -692,5 +692,13 @@
     "discardGroupTitle": {
         "message": "丢弃（休眠）群组",
         "description": "Discard group"
+    },
+    "autoBackupGroupsToFile": {
+        "message": "自动备份所有群组到文件（位于下载文件夹）",
+        "description": "Auto backup all groups to file (into downloads folder)"
+    },
+    "folderNameTitle": {
+        "message": "文件夹名称",
+        "description": "Folder name title"
     }
 }
