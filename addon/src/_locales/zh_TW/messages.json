@@ -136,7 +136,7 @@
         "description": "Load a backup file old \"Tab Groups\" addon."
     },
     "openGroupAfterChange": {
-        "message": "切換分頁群組後開啟該分頁群組",
+        "message": "切換分頁群組後開啟此分頁群組",
         "description": "Open group after changing to it"
     },
     "newGroupTitle": {
@@ -184,7 +184,7 @@
         "description": "Delete group?"
     },
     "deleteGroupBody": {
-        "message": "是否確定要刪除分頁群組 \"$name$\"？",
+        "message": "是否要刪除分頁群組 \"$name$\"？",
         "description": "Delete group?",
         "placeholders": {
             "name": {
@@ -244,7 +244,7 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "捕捉並將有內容的分頁移至此分頁群組",
+        "message": "捕捉並將有內容的分頁移到此分頁群組",
         "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
@@ -264,7 +264,7 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "可以在這裡新增快速鍵。<br>限制：<br>1. 這些快速鍵只適用於網頁 (http:, https:)，不適用於瀏覽器頁面 (about:)，因 WebExtension 的 API 不允許。<br>2. 有些快速鍵在不同的鍵盤配置可能無法運作。例如英文配置下設定的快速鍵 <code>Ctrl + ~</code> 在俄羅斯文配置下無法運作，因該按鍵在後者有不同的按鍵碼；在俄羅斯文配置下設定快速鍵 <code>Ctrl +Ё</code> 即可修復此問題。",
+        "message": "可以在這裡新增快速鍵。<br>限制：<br>1. 這些快速鍵只適用於網頁 (http:, https:)，不適用於瀏覽器頁面 (about:)，因 WebExtension 的 API 不允許。<br>2. 有些快速鍵在不同的鍵盤配置可能無法運作。例如英文配置下設定的快速鍵 <code>Ctrl + ~</code> 在俄羅斯文配置下無法運作，因為此按鍵在後者有不同的按鍵碼；在俄羅斯文配置下設定快速鍵 <code>Ctrl +Ё</code> 即可修復此問題。",
         "description": "Hotkeys description"
     },
     "addHotKeyButton": {
@@ -320,7 +320,7 @@
         "description": "Open manage groups"
     },
     "hotkeyActionTitleMoveActiveTabToCustomGroup": {
-        "message": "移動活動分頁至自訂分頁群組",
+        "message": "移動活動分頁到自訂分頁群組",
         "description": "Move active tab to custom group"
     },
     "whatsWrongMessage": {
@@ -342,7 +342,7 @@
         }
     },
     "undoRemoveGroupNotification": {
-        "message": "點選這裡還原被移除的分頁群組\"$grouptitle$\"",
+        "message": "點選此處還原被移除的分頁群組\"$grouptitle$\"",
         "description": "Click here to cancel the deletion of the group title",
         "placeholders": {
             "grouptitle": {
@@ -384,7 +384,7 @@
         "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
     },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
-        "message": "將所有分頁移動至目前群組/視窗",
+        "message": "將所有分頁移動到目前群組/視窗",
         "description": "Move all of these tabs into current group/window"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
@@ -436,7 +436,7 @@
         "description": "Mute tabs when group close and restore when open"
     },
     "showTabAfterMovingItIntoThisGroup": {
-        "message": "分頁自動移動到該分頁群組後，顯示此分頁",
+        "message": "分頁自動移動到此分頁群組後，顯示此分頁",
         "description": "Show the tab after auto-moving it into this group"
     },
     "tabMoving": {
@@ -596,7 +596,7 @@
         "description": "Prepend group title to window title"
     },
     "allowAccessToBookmarks": {
-        "message": "允許存取書籤",
+        "message": "允許套件存取書籤",
         "description": "Allow access to bookmarks"
     },
     "openBookmarkInGroup": {
@@ -610,5 +610,95 @@
     "openLinkInGroupDisabledTitle": {
         "message": "在分頁群組中開啟連結",
         "description": "Open link in group title"
+    },
+    "showContextMenuOnTabs": {
+        "message": "在分頁右鍵選單中顯示",
+        "description": "Show context menu on tabs"
+    },
+    "showContextMenuOnLinks": {
+        "message": "在鏈結右鍵選單中顯示",
+        "description": "Show context menu on links"
+    },
+    "importBookmarkFolderAsNewGroup": {
+        "message": "匯入書籤資料夾為新群組",
+        "description": "Import bookmark folder as new group"
+    },
+    "groupsCreatedCount": {
+        "message": "已建立 $groupscount$ 個群組",
+        "description": "Groups created count",
+        "placeholders": {
+            "groupscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "noGroupsCreated": {
+        "message": "未建立群組",
+        "description": "No groups created"
+    },
+    "noAccessToBookmarks": {
+        "message": "無書籤存取權限。請在套件設定中啟用",
+        "description": "You do not have access to bookmarks. Enable it on in addon settings"
+    },
+    "exportGroupToMainBookmarkFolder": {
+        "message": "匯出群組到書籤資料夾“$bookmarkfolder$”",
+        "description": "Export groups to '$bookmarkfolder$' bookmark folder",
+        "placeholders": {
+            "bookmarkfolder": {
+                "content": "$1",
+                "example": "STG bookmarks"
+            }
+        }
+    },
+    "exportGroupToBookmarks": {
+        "message": "匯出群組到書籤",
+        "description": "Export group to bookmarks"
+    },
+    "defaultBookmarkFolderLocation": {
+        "message": "預設書籤資料夾位置",
+        "description": "Default bookmark folder location"
+    },
+    "groupExportedToBookmarks": {
+        "message": "群組“$grouptitle$”已成功匯出到書籤",
+        "description": "Group '$grouptitle$' successfully exported to bookmarks",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "groupWithoutTabs": {
+        "message": "此群組沒有任何分頁",
+        "description": "This group has no tabs"
+    },
+    "autoBackupGroupsToBookmarks": {
+        "message": "自動備份所有群組到書籤",
+        "description": "Auto backup all groups to bookmarks"
+    },
+    "exportAllGroupsToBookmarks": {
+        "message": "匯出所有群組到書籤",
+        "description": "Export all groups to bookmarks"
+    },
+    "allGroupsExportedToBookmarks": {
+        "message": "所有群組已成功匯出到書籤",
+        "description": "All groups successfully exported to bookmarks"
+    },
+    "discardTabTitle": {
+        "message": "廢棄(休眠)分頁",
+        "description": "Discard tab"
+    },
+    "discardGroupTitle": {
+        "message": "廢棄(休眠)群組",
+        "description": "Discard group"
+    },
+    "autoBackupGroupsToFile": {
+        "message": "自動備份所有群組至檔案（位於下載資料夾）",
+        "description": "Auto backup all groups to file (into downloads folder)"
+    },
+    "folderNameTitle": {
+        "message": "資料夾名稱",
+        "description": "Folder name title"
     }
 }
