@@ -674,7 +674,31 @@
         "description": "This group has no tabs"
     },
     "autoBackupGroupsToBookmarks": {
-        "message": "Automatisches Backup aller Gruppen zu Lesezeichen",
+        "message": "Automatisches Backup aller Gruppen als Lesezeichen",
         "description": "Auto backup all groups to bookmarks"
+    },
+    "exportAllGroupsToBookmarks": {
+        "message": "Alle Gruppen als Lesezeichen exportieren",
+        "description": "Export all groups to bookmarks"
+    },
+    "allGroupsExportedToBookmarks": {
+        "message": "Alle Gruppen wurden erfolgreich als Lesezeichen exportieren",
+        "description": "All groups successfully exported to bookmarks"
+    },
+    "discardTabTitle": {
+        "message": "Tab verwerfen",
+        "description": "Discard tab"
+    },
+    "discardGroupTitle": {
+        "message": "Gruppe verwerfen",
+        "description": "Discard group"
+    },
+    "autoBackupGroupsToFile": {
+        "message": "Alle Gruppen automatisch als Datei sichern (im Ordner Downloads)",
+        "description": "Auto backup all groups to file (into downloads folder)"
+    },
+    "folderNameTitle": {
+        "message": "Ordnername",
+        "description": "Folder name title"
     }
 }
