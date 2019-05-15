@@ -676,5 +676,29 @@
     "autoBackupGroupsToBookmarks": {
         "message": "Automatyczna kopia zapasowa wszystkich grup",
         "description": "Auto backup all groups to bookmarks"
+    },
+    "exportAllGroupsToBookmarks": {
+        "message": "Eksportuj wszystkie grupy do zakładek",
+        "description": "Export all groups to bookmarks"
+    },
+    "allGroupsExportedToBookmarks": {
+        "message": "Wszystkie grupy zostały pomyślnie wyeksportowane do zakładek",
+        "description": "All groups successfully exported to bookmarks"
+    },
+    "discardTabTitle": {
+        "message": "Porzuć kartę",
+        "description": "Discard tab"
+    },
+    "discardGroupTitle": {
+        "message": "Porzuć grupę",
+        "description": "Discard group"
+    },
+    "autoBackupGroupsToFile": {
+        "message": "Automatyczna kopia zapasowa wszystkich grup do pliku (w folderze pobierania)",
+        "description": "Auto backup all groups to file (into downloads folder)"
+    },
+    "folderNameTitle": {
+        "message": "Nazwa folderu",
+        "description": "Folder name title"
     }
 }
