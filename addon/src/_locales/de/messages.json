@@ -16,11 +16,11 @@
         "description": "Set tab icon as group icon"
     },
     "moveTabToGroupDisabledTitle": {
-        "message": "Tab zu Gruppe bewegen",
+        "message": "Tab zur Gruppe verschieben",
         "description": "Move tab to group title"
     },
     "moveTabToGroupMessage": {
-        "message": "Tab \"$tabtitle$\" wurde zur Gruppe \"$grouptitle$\" bewegt.\n\nKlicke hier, um diesen Tab zu zeigen",
+        "message": "Tab \"$tabtitle$\" wurde zur Gruppe \"$grouptitle$\" verschoben.\n\nKlicke hier, um diesen Tab zu zeigen",
         "description": "Tab moved popup title",
         "placeholders": {
             "grouptitle": {
@@ -84,7 +84,7 @@
         "description": "Close popup after changing group"
     },
     "showNotificationAfterMoveTab": {
-        "message": "Zeige Benachrichtigung, wenn Tabs in eine andere Gruppe bewegt werden",
+        "message": "Zeige Benachrichtigung, wenn Tabs in eine andere Gruppe verschoben werden",
         "description": "Show notification when tab is moved to another group"
     },
     "openManageGroupsInTab": {
