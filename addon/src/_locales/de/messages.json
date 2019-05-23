@@ -1,6 +1,6 @@
 {
     "extensionDescription": {
-        "message": "Erzeuge, modifiziere und tausche schnell Tab-Gruppen. Inspiriert vom alten Addon Tab Groups :)",
+        "message": "Erzeuge, modifiziere und tausche schnell Tab-Gruppen. Inspiriert vom alten Add-on Tab Groups :)",
         "description": "Description of the extension."
     },
     "openSettings": {
@@ -20,7 +20,7 @@
         "description": "Move tab to group title"
     },
     "moveTabToGroupMessage": {
-        "message": "Tab \"$tabtitle$\" wurde zur Gruppe \"$grouptitle$\" bewegt.\n\nKlicke hier um diesen Tab zu zeigen",
+        "message": "Tab \"$tabtitle$\" wurde zur Gruppe \"$grouptitle$\" bewegt.\n\nKlicke hier, um diesen Tab zu zeigen",
         "description": "Tab moved popup title",
         "placeholders": {
             "grouptitle": {
@@ -88,7 +88,7 @@
         "description": "Show notification when tab is moved to another group"
     },
     "openManageGroupsInTab": {
-        "message": "Öffne \"Gruppen verwalten\" in neuen Tab",
+        "message": "Öffne \"Gruppen verwalten\" in neuem Tab",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
@@ -96,11 +96,11 @@
         "description": "Show confirm dialog before group delete"
     },
     "exportAddonSettingsTitle": {
-        "message": "Backup deiner Simple Tab Gruppen",
+        "message": "Backup deiner Simple-Tab-Gruppen",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
-        "message": "Exportiere zur Sicherheit deine Tab-Gruppen in eine Backup-Datei, so kannst du sie später wiederherstellen wenn notwendig.",
+        "message": "Exportiere zur Sicherheit deine Tab-Gruppen in eine Backup-Datei, um sie später wiederherstellen zu können.",
         "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
     },
     "exportAddonSettingsButton": {
@@ -108,11 +108,11 @@
         "description": "Create backup"
     },
     "includeTabThumbnailsIntoBackup": {
-        "message": "Tab-Vorschau bei Backup mitsichern (erzeugt größere Backup-Datei)",
+        "message": "Tab-Vorschaubilder bei Backup mitsichern (erzeugt größere Backup-Datei)",
         "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "Simple Tab Gruppen wiederherstellen",
+        "message": "Simple-Tab-Gruppen wiederherstellen",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
@@ -120,7 +120,7 @@
         "description": "Load a backup file containing the tab groups you want to restore."
     },
     "importAddonSettingsWarning": {
-        "message": "Addon-Einstellungen wiederherstellen wird alle existierenden Einstellungen und Gruppen LÖSCHEN!",
+        "message": "Das Wiederherstellen der Add-on-Einstellungen wird alle existierenden Einstellungen und Gruppen LÖSCHEN!",
         "description": "Restore add-on settings will ERASE all existing settings and groups!"
     },
     "importAddonSettingsButton": {
@@ -132,7 +132,7 @@
         "description": "Restore Quicksaver's \"Tab Groups\""
     },
     "importSettingsOldTabGroupsAddonDescription": {
-        "message": "Lade eine Backup-Datei des alten \"Tab Groups\"-Addon",
+        "message": "Lade eine Backup-Datei des alten \"Tab Groups\"-Add-on",
         "description": "Load a backup file old \"Tab Groups\" addon."
     },
     "openGroupAfterChange": {
@@ -150,7 +150,7 @@
         }
     },
     "searchNotFoundTitle": {
-        "message": "Suche in Tabs nach \"$search$\" nicht gefunden",
+        "message": "Keine Resultate für \"$search$\" gefunden",
         "description": "No results found",
         "placeholders": {
             "search": {
@@ -184,7 +184,7 @@
         "description": "Delete group?"
     },
     "deleteGroupBody": {
-        "message": "Willst du die Gruppe \"$name$\" löschen?<br>Entfernen der Gruppe schließt alle Tabs und das verbundene Fenster, wenn es jetzt geöffnet ist!",
+        "message": "Willst du die Gruppe \"$name$\" löschen?<br>Entfernen der Gruppe schließt alle deren Tabs und Fenster, sofern sie geöffnet waren!",
         "description": "Delete group?",
         "placeholders": {
             "name": {
@@ -228,7 +228,7 @@
         "description": "Title"
     },
     "iconColor": {
-        "message": "Iconfarbe",
+        "message": "Icon-Farbe",
         "description": "Icon color"
     },
     "selectUserGroupIcon": {
@@ -236,7 +236,7 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Entschuldigung, du kannst kein benutzerdefiniertes Icon in dieses Popup laden, aber du kannst ein benutzerdefiniertes Icon in \"Gruppen verwalten\" laden.\n\"Gruppen verwalten\" öffnen?",
+        "message": "Entschuldigung, du kannst in diesem Pop-up kein benutzerdefiniertes Icon laden. Stattdessen kannst du ein benutzerdefiniertes Icon in \"Gruppen verwalten\" laden.\n\"Gruppen verwalten\" öffnen?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -244,11 +244,11 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Fange und verschiebe Tabs mit Containern in diese Gruppe",
+        "message": "Verschiebe Tabs mit Containern automatisch in diese Gruppe",
         "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
-        "message": "Reguläre Ausdrücke zum Einfangen der Tabs",
+        "message": "Reguläre Ausdrücke zum automatischen Verschieben der Tabs",
         "description": "Regular expressions for catch tabs"
     },
     "regexpForTabsPlaceholder": {
@@ -256,7 +256,7 @@
         "description": "Regular expressions"
     },
     "regexpForTabsHelp": {
-        "message": "Trage Reguläre Ausdrücke für Web-Adressen hier ein. Übereinstimmende Tabs werden automatisch dieser Gruppe hinzugefügt.\nNutze pro Regel eine Zeile, es können so viele sein wie du willst.\nBeispiele:\ngithub\\.com/drive4ik/simple-tab-groups - fängt alle Seiten in der Add-on-Repository\nbugzilla\\.mozilla\\.org - fängt Firefox bug reports\n(facebook|twitter|youtube)\\.com - fängt alle deine Soial-Network-Seiten",
+        "message": "Trage Reguläre Ausdrücke für Web-Adressen hier ein. Übereinstimmende Tabs werden automatisch dieser Gruppe hinzugefügt.\nNutze pro Regel eine Zeile, es können so viele Regeln sein, wie du willst.\nBeispiele:\ngithub\\.com/drive4ik/simple-tab-groups – erfasst alle Seiten des GitHub-Repository dieses Add-ons\nbugzilla\\.mozilla\\.org – erfasst Firefox-Fehlerberichte\n(facebook|twitter|youtube)\\.com – erfasst drei populäre Social-Media-Seiten",
         "description": "Regular exceptions helper"
     },
     "hotkeysTitle": {
@@ -264,7 +264,7 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Hier kannst du Hot Keys hinzufügen.<br>Beschränkungen:<br>1. Diese Hotkeys funktionieren nur auf den Webseiten (http:, https:). Auf den Browserseiten (about:) - funktioniert es nicht, die WebExtensions API erlaubt dies nicht.<br>2. Einige Hotkeys funktionieren nicht in verschiedenen Tastatur-Layouts. Zum Beispiel, der Shortcut <code>Ctrl + ~</code> erzeugt im Englisch-Layout wird nicht im Russisch-Layout funktionieren, weil im Russisch-Layout diese Taste mit einem anderen Code belegt ist. Um dies zu beheben, erzeuge einen anderen Hotkey im Russisch-Layout: <code>Ctrl + Ё</code>",
+        "message": "Hier kannst du Hotkeys hinzufügen.<br>Beschränkungen:<br>1. Diese Hotkeys funktionieren nur auf regulären Webseiten (<code>http://</code>, <code>https://</code>). Auf den Browserseiten (<code>about:</code>) funktionieren sie nicht (die WebExtensions-API erlaubt dies nicht).<br>2. Einige Hotkeys funktionieren nicht in verschiedenen Tastatur-Layouts. Zum Beispiel der Shortcut <code>Ctrl + ~</code> erzeugt im Englisch-Layout wird nicht im Russisch-Layout funktionieren, weil im Russisch-Layout diese Taste mit einem anderen Code belegt ist. Um dies zu beheben, erzeuge einen anderen Hotkey im Russisch-Layout: <code>Ctrl + Ё</code>",
         "description": "Hotkeys description"
     },
     "addHotKeyButton": {
@@ -316,7 +316,7 @@
         "description": "Delete current group"
     },
     "hotkeyActionTitleOpenManageGroups": {
-        "message": "Öffne Gruppen verwalten",
+        "message": "Öffne \"Gruppen verwalten\"",
         "description": "Open manage groups"
     },
     "hotkeyActionTitleMoveActiveTabToCustomGroup": {
@@ -324,15 +324,15 @@
         "description": "Move active tab to custom group"
     },
     "whatsWrongMessage": {
-        "message": "Was ist los...\nBitte kontaktiere den Entwickler über die Support-Email mit den letzten Error-Logs (Knopf am Ende der Optionen)",
+        "message": "Was ist los...?\nBitte kontaktiere den Entwickler über die Support-Email mit den letzten Error-Logs (Schaltfäche am Ende der Optionen)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
     },
     "saveErrorLogsIntoFile": {
-        "message": "Sichere die letzten Error-Logs in einer JSON-Datei",
+        "message": "Sichere die letzten Error-Logs in eine JSON-Datei",
         "description": "Save last error logs into JSON file"
     },
     "undoRemoveGroupItemTitle": {
-        "message": "Löschen rückgängig machen Gruppe \"$grouptitle$\"",
+        "message": "Löschen der Gruppe \"$grouptitle$\" rückgängig machen",
         "description": "Undelete a group menu title",
         "placeholders": {
             "grouptitle": {
@@ -342,7 +342,7 @@
         }
     },
     "undoRemoveGroupNotification": {
-        "message": "Hier klicken um Löschen der Gruppe \"$grouptitle$\" abzubrechen",
+        "message": "Hier klicken, um Löschen der Gruppe \"$grouptitle$\" abzubrechen",
         "description": "Click here to cancel the deletion of the group title",
         "placeholders": {
             "grouptitle": {
@@ -360,39 +360,39 @@
         "description": "Tabs in this group will never be automatically moved to another group"
     },
     "useTabsFavIconsFromGoogleS2Converter": {
-        "message": "Benutze Tabs Favoriten-Icon aus Google S2 Converter",
+        "message": "Benutze Tabs-Favicons aus Google S2 Converter",
         "description": "Use tabs fav-icons from Google S2 Converter"
     },
     "iconStyle": {
-        "message": "Icon Style",
+        "message": "Icon-Stil",
         "description": "Icon style"
     },
     "discardTabsAfterHide": {
-        "message": "Verwerfe Tabs nach verstecken (schont RAM)",
+        "message": "Verwerfe Tabs nach verstecken (schont Arbeitsspeicher)",
         "description": "Discard tabs after hide (this will save the RAM)"
     },
     "createThumbnailsForTabs": {
-        "message": "Erstelle Thumbnails für Gruppen (benutzt in \"Gruppen verwalten\")",
+        "message": "Erstelle Vorschaubilder für Gruppen (benutzt in \"Gruppen verwalten\")",
         "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
-        "message": "Es ist nicht möglich die Gruppe zu ändern, da eine ihrer offenen Tabs auf das Mikrofon oder die Kamera zugreift",
+        "message": "Es ist nicht möglich die Gruppe zu ändern, da einer ihrer offenen Tabs auf das Mikrofon oder die Kamera zugreift",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
     },
     "foundHiddenUnSyncTabsDescription": {
-        "message": "Versteckte unsynchronisierte Tabs gefunden. Klicke auf den Tab um die aktuelle Gruppe/fenster anzuzeigen oder:",
+        "message": "Versteckte unsynchronisierte Tabs gefunden. Klicke auf den Tab, um ihn in der aktuellen Gruppe bzw. im aktuellen Fenster anzuzeigen, oder:",
         "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
     },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
-        "message": "Verschiebe alle diese Tabs in die derzeitige Gruppe/Fenster",
+        "message": "Verschiebe alle diese Tabs in die derzeitige Gruppe bzw. ins derzeitige Fenster",
         "description": "Move all of these tabs into current group/window"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
-        "message": "Erstelle eine neue Gruppe mit allen diesen Tabs",
+        "message": "Erstelle eine neue Gruppe mit all diesen Tabs",
         "description": "Create new group with all of these tabs"
     },
     "actionHiddenUnSyncTabsCloseAll": {
-        "message": "Schließe alle diese Tabs",
+        "message": "Schließe all diese Tabs",
         "description": "Close all of these tabs"
     },
     "thisTabWillCreateAsNew": {
@@ -400,15 +400,15 @@
         "description": "This tab will create as new"
     },
     "updateTabThumbnail": {
-        "message": "Update das Thumbnail des Tabs",
+        "message": "Update das Vorschaubild des Tabs",
         "description": "Update thumbnail for this tab"
     },
     "nowFoundWindowsAddonStoppedWorking": {
-        "message": "Error: es wurde keine normalen nicht privaten/incognito/popup Festern gefunden.\nAdd-on wurde gestoppt. Bitte den Browser neustarten.",
+        "message": "Fehler: es wurden keine normalen nicht privaten/Inkognito/Pop-up-Fenster gefunden.\nAdd-on wurde gestoppt. Bitte den Browser neustarten.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
     },
     "waitingToLoadAllTabs": {
-        "message": "Warte, bis alle tabs geladen wurden.\nBitte Warten...",
+        "message": "Warte, bis alle Tabs geladen wurden.\nBitte Warten...",
         "description": "Waiting for all tabs to load.\nPlease wait..."
     },
     "reloadAddon": {
@@ -416,11 +416,11 @@
         "description": "Reload addon"
     },
     "ffFailedAndLostDataMessage": {
-        "message": "FF hatte einen Fehler und alle Gruppen sind verloren gegangen.\nWenn Sie ein Backup haben, können Sie die Daten daraus wiederherstellen.",
+        "message": "Firefox hatte einen Fehler und alle Gruppen sind verloren gegangen.\nFalls du ein Backup hast, kannst du die Daten daraus wiederherstellen.",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
     },
     "enterDefaultGroupIconViewTypeTitle": {
-        "message": "Icon Style für eine neue Gruppe",
+        "message": "Icon-Stil für eine neue Gruppe",
         "description": "Icon style for a new group"
     },
     "openPopupHotkeyTitle": {
@@ -432,11 +432,11 @@
         "description": "Open group in new window"
     },
     "muteTabsWhenGroupCloseAndRestoreWhenOpen": {
-        "message": "Tabs stummschalten wenn Gruppe geschlossen wird und wiederherstellen wenn sie geöffnet wirdq",
+        "message": "Tabs stummschalten, wenn Gruppe geschlossen wird, und wiederherstellen, wenn sie geöffnet wird",
         "description": "Mute tabs when group close and restore when open"
     },
     "showTabAfterMovingItIntoThisGroup": {
-        "message": "Zeige Gruppe, nachdem sie automatisch in diese Gruppe verschoben wurde",
+        "message": "Zeige Tab, nachdem er automatisch in diese Gruppe verschoben wurde",
         "description": "Show the tab after auto-moving it into this group"
     },
     "tabMoving": {
@@ -444,11 +444,11 @@
         "description": "Tab moving"
     },
     "includeTabFavIconsIntoBackup": {
-        "message": "Favoriten-Icon in Backup einbeziehen (erhöht Größe der Backup Datei)",
+        "message": "Favoriten-Icons in Backup einbeziehen (erhöht Größe der Backup-Datei)",
         "description": "Include tab fav-icons in backup (makes backup file size bigger)"
     },
     "tabsThumbnailsSize": {
-        "message": "Tab Thumbnail Größe: $size$",
+        "message": "Größe der Tab-Vorschaubilder: $size$",
         "description": "Tabs thumbnails size: $size$",
         "placeholders": {
             "size": {
@@ -458,7 +458,7 @@
         }
     },
     "clearTabsThumbnails": {
-        "message": "Lösche Tab Thumnails",
+        "message": "Lösche Tab-Vorschaubilder",
         "description": "Clear tabs thumbnails"
     },
     "groupRemovedByExtension": {
@@ -476,7 +476,7 @@
         }
     },
     "clickHereToReloadAddon": {
-        "message": "Etwas ist schief gelaufen, hier klicken um STG Add-on neu zu laden",
+        "message": "Etwas ist schief gelaufen. Hier klicken, um Add-on neu zu laden",
         "description": "Something went wrong, click here to reload STG addon"
     },
     "extendedTabSearch": {
@@ -484,7 +484,7 @@
         "description": "Extended search"
     },
     "waitingForSessionRestoreNotification": {
-        "message": "Auf Session wiederherstellung warten...",
+        "message": "Auf Sitzungswiederherstellung warten...",
         "description": "Waiting for session restore..."
     },
     "movingMultipleTabsText": {
@@ -506,7 +506,7 @@
         "description": "Private tabs are not supported"
     },
     "thisUrlsAreNotSupported": {
-        "message": "Diese URLs \"$urls$\" werden nicht unterstützt",
+        "message": "Die URLs \"$urls$\" werden nicht unterstützt",
         "description": "This urls \"$urls$\" are not supported",
         "placeholders": {
             "urls": {
@@ -516,7 +516,7 @@
         }
     },
     "thisTabsCanNotBeHidden": {
-        "message": "Diese Tabs können nicht versteckt werden, da sie angepinnt sind, auf das Mikrofon oder die Kamera zugreifen oder den Bildschirm: \"$titles$\" teilen",
+        "message": "Diese Tabs können nicht versteckt werden, da sie angepinnt sind, auf das Mikrofon oder die Kamera zugreifen oder den Bildschirm \"$titles$\" teilen",
         "description": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
         "placeholders": {
             "titles": {
@@ -526,7 +526,7 @@
         }
     },
     "moveMultipleTabsToGroupMessage": {
-        "message": "$tabscount$ Tabs wurden entfernt.\nKlicke hier um den ersten Tab zu öffnen",
+        "message": "$tabscount$ Tabs wurden entfernt.\nKlicke hier, um den ersten Tab zu öffnen",
         "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
         "placeholders": {
             "tabscount": {
@@ -540,7 +540,7 @@
         "description": "Enable auto backup"
     },
     "autoBackupCreateEveryTitle": {
-        "message": "Erstellle Backup alle:",
+        "message": "Erstelle Backup alle:",
         "description": "Create backup every:"
     },
     "autoBackupIntervalKeyHours": {
@@ -560,15 +560,15 @@
         "description": "Enable dark theme"
     },
     "enableDarkThemeNotification": {
-        "message": "Um das dunkle Thema vollständig zu unterstützen, aktivierte den <br><code>svg.context-properties.content.enabled</code> Paramter zu <code>true</code>auf der <br><code>about:config</code>Seite <br><br><a href='https://support.mozilla.org/kb/about-config-editor-firefox'>How to do it?</a>",
+        "message": "Um das dunkle Thema vollständig zu unterstützen, setze den Parameter <br><code>svg.context-properties.content.enabled</code> auf <code>true</code> in den <br><code>about:config</code>-Einstellungen<br><br><a href='https://support.mozilla.org/kb/about-config-editor-firefox'>Wie geht das?</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {
-        "message": "Wiederherstellen von photodiode's \"Panorama View\"",
+        "message": "Wiederherstellen aus photodiodes \"Panorama View\"",
         "description": "Restore photodiode's \"Panorama View\""
     },
     "importSettingsPanoramaViewAddonDescription": {
-        "message": "Lade eine Backup Datei aus dem \"Panorama View\"  Add-on",
+        "message": "Lade eine Backup-Datei aus dem \"Panorama View\"-Add-on",
         "description": "Load a backup file from \"Panorama View\" addon."
     },
     "importSettingsSyncTabGroupsAddonTitle": {
@@ -576,7 +576,7 @@
         "description": "Restore Morikko's \"Sync Tab Groups\""
     },
     "importSettingsSyncTabGroupsAddonDescription": {
-        "message": "Lade eine Backup Datei aus dem \"Sync Tab Groups\" addon.",
+        "message": "Lade eine Backup-Datei aus dem \"Sync Tab Groups\"-Add-on.",
         "description": "Load a backup file from \"Sync Tab Groups\" addon."
     },
     "browseFileTitle": {
@@ -584,7 +584,7 @@
         "description": "Browse..."
     },
     "openBackupFolder": {
-        "message": "Öffne Backup Ordner",
+        "message": "Öffne Backup-Ordner",
         "description": "Open backup folder"
     },
     "createNewGroupWhenOpenNewWindow": {
@@ -592,7 +592,7 @@
         "description": "Create a new group when opening a new window"
     },
     "prependGroupTitleToWindowTitle": {
-        "message": "Stelle Gruppentitel vor Fenstertitel",
+        "message": "Setze Gruppentitel vor Fenstertitel",
         "description": "Prepend group title to window title"
     },
     "allowAccessToBookmarks": {
@@ -638,7 +638,7 @@
         "description": "No groups created"
     },
     "noAccessToBookmarks": {
-        "message": "Sie haben keinen Zugriff auf die Lesezeichen. Bitte den Zugriff in den Addon-Einstellungen erlauben",
+        "message": "Sie haben keinen Zugriff auf die Lesezeichen. Bitte den Zugriff in den Add-on-Einstellungen erlauben",
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
     "exportGroupToMainBookmarkFolder": {
@@ -656,7 +656,7 @@
         "description": "Export group to bookmarks"
     },
     "defaultBookmarkFolderLocation": {
-        "message": "Standard-Ort für Lesezeichen-Ordner",
+        "message": "Standard-Pfad für Lesezeichen-Ordner",
         "description": "Default bookmark folder location"
     },
     "groupExportedToBookmarks": {
@@ -682,7 +682,7 @@
         "description": "Export all groups to bookmarks"
     },
     "allGroupsExportedToBookmarks": {
-        "message": "Alle Gruppen wurden erfolgreich als Lesezeichen exportieren",
+        "message": "Alle Gruppen wurden erfolgreich als Lesezeichen exportiert",
         "description": "All groups successfully exported to bookmarks"
     },
     "discardTabTitle": {
