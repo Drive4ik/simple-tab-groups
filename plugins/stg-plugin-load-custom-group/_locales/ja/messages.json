@@ -14,5 +14,9 @@
     "needSelectGroup": {
         "message": "グループを選択してください",
         "description": "Please, select group"
+    },
+    "defaultBrowserActionTitle": {
+        "message": "グループのタイトルがここに表示されます - [STG plugin]",
+        "description": "Group title will be here - [STG plugin]"
     }
 }

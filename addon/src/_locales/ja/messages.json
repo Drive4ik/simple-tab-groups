@@ -590,5 +590,115 @@
     "createNewGroupWhenOpenNewWindow": {
         "message": "新しいウィンドウを開く際には新しいグループを作成する",
         "description": "Create a new group when opening a new window"
+    },
+    "prependGroupTitleToWindowTitle": {
+        "message": "ウィンドウのタイトルの前にグループのタイトルを追加して表示する",
+        "description": "Prepend group title to window title"
+    },
+    "allowAccessToBookmarks": {
+        "message": "ブックマークへのアクセスを許可する",
+        "description": "Allow access to bookmarks"
+    },
+    "openBookmarkInGroup": {
+        "message": "グループにブックマークを開く",
+        "description": "Open bookmark in group"
+    },
+    "bookmarkNotAllowed": {
+        "message": "このブックマークは許可されていません",
+        "description": "This bookmark is not allowed"
+    },
+    "openLinkInGroupDisabledTitle": {
+        "message": "グループにリンクを開く",
+        "description": "Open link in group title"
+    },
+    "showContextMenuOnTabs": {
+        "message": "タブにコンテキストメニューを表示する",
+        "description": "Show context menu on tabs"
+    },
+    "showContextMenuOnLinks": {
+        "message": "リンクにコンテキストメニューを表示する",
+        "description": "Show context menu on links"
+    },
+    "importBookmarkFolderAsNewGroup": {
+        "message": "新しいグループとしてブックマークのフォルダをインポートする",
+        "description": "Import bookmark folder as new group"
+    },
+    "groupsCreatedCount": {
+        "message": "$groupscount$ 個のグループを作成しました",
+        "description": "Groups created count",
+        "placeholders": {
+            "groupscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "noGroupsCreated": {
+        "message": "グループは１件も作成されませんでした",
+        "description": "No groups created"
+    },
+    "noAccessToBookmarks": {
+        "message": "ブックマークにアクセスできません。アドオン設定でアクセスを有効にしてください",
+        "description": "You do not have access to bookmarks. Enable it on in addon settings"
+    },
+    "exportGroupToMainBookmarkFolder": {
+        "message": "グループをブックマークのフォルダ '$bookmarkfolder$' へエクスポートします",
+        "description": "Export groups to '$bookmarkfolder$' bookmark folder",
+        "placeholders": {
+            "bookmarkfolder": {
+                "content": "$1",
+                "example": "STG bookmarks"
+            }
+        }
+    },
+    "exportGroupToBookmarks": {
+        "message": "グループをブックマークへエクスポートします",
+        "description": "Export group to bookmarks"
+    },
+    "defaultBookmarkFolderLocation": {
+        "message": "Default bookmark folder location",
+        "description": "Default bookmark folder location"
+    },
+    "groupExportedToBookmarks": {
+        "message": "グループ '$grouptitle$' はブックマークにエクスポートされました",
+        "description": "Group '$grouptitle$' successfully exported to bookmarks",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "groupWithoutTabs": {
+        "message": "このグループにはタブがありません",
+        "description": "This group has no tabs"
+    },
+    "autoBackupGroupsToBookmarks": {
+        "message": "全てのグループをブックマークへ自動でバックアップします",
+        "description": "Auto backup all groups to bookmarks"
+    },
+    "exportAllGroupsToBookmarks": {
+        "message": "全てのグループをブックマークへエクスポートする",
+        "description": "Export all groups to bookmarks"
+    },
+    "allGroupsExportedToBookmarks": {
+        "message": "全てのグループがブックマークにエクスポートされました",
+        "description": "All groups successfully exported to bookmarks"
+    },
+    "discardTabTitle": {
+        "message": "タブを削除する",
+        "description": "Discard tab"
+    },
+    "discardGroupTitle": {
+        "message": "タブを廃棄する",
+        "description": "Discard group"
+    },
+    "autoBackupGroupsToFile": {
+        "message": "全てのグループを（ダウンロードフォルダ内の）ファイルへ自動でバックアップします",
+        "description": "Auto backup all groups to file (into downloads folder)"
+    },
+    "folderNameTitle": {
+        "message": "フォルダー名",
+        "description": "Folder name title"
     }
 }
