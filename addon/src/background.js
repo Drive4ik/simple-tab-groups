@@ -2335,8 +2335,9 @@ async function runAction(data, externalExtId) {
                 }
                 break;
             case 'add-new-group':
-                await addGroup();
+                let newGroup = await addGroup();
                 result.ok = true;
+                result.group = _mapGroupForAnotherExtension(newGroup);
                 break;
             case 'delete-current-group':
                 if (currentGroup) {
