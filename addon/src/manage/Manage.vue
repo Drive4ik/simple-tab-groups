@@ -1,8 +1,8 @@
 <script>
     'use strict';
 
-    import * as utils from '../js/utils';
-    import * as constants from '../js/constants';
+    import utils from '../js/utils';
+    import constants from '../js/constants';
 
     import Vue from 'vue';
 
@@ -13,15 +13,15 @@
     // import { Drag, Drop } from 'vue-drag-drop';
     // import draggable from 'vuedraggable';
 
-    const BG = (function(bgWin) {
-        return bgWin && bgWin.background && bgWin.background.inited ? bgWin.background : false;
-    })(browser.extension.getBackgroundPage());
+    const {background: BG} = browser.extension.getBackgroundPage();
 
-    if (!BG) {
-        setTimeout(() => window.location.reload(), 1000);
-        document.getElementById('stg-manage').innerText = browser.i18n.getMessage('waitingToLoadAllTabs');
-        throw Error('wait loading addon');
-    }
+    window.addEventListener('error', utils.errorEventHandler);
+
+    // if (!BG) {
+    //     setTimeout(() => window.location.reload(), 1000);
+    //     document.getElementById('stg-manage').innerText = browser.i18n.getMessage('waitingToLoadAllTabs');
+    //     throw Error('wait loading addon');
+    // }
 
     const VIEW_GRID = 'grid',
         VIEW_DEFAULT = VIEW_GRID;
@@ -68,7 +68,7 @@
                 groupToEdit: null,
                 groupToRemove: null,
 
-                containers: [],
+                containers: BG.containers.getAll(),
                 options: {},
                 thumbnails: BG.getThumbnails(),
 
@@ -99,8 +99,6 @@
             this.loadOptions();
         },
         async mounted() {
-            this.containers = await utils.loadContainers();
-
             this.loadGroups();
 
             this.setupListeners();
@@ -159,7 +157,7 @@
                     .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
                     .$on('drag-over', (item, isOver) => item.isOver = isOver);
 
-                let listener = function(request, sender) {
+                browser.runtime.onMessage.addListener(function(request, sender) {
                     if (!utils.isAllowSender(request, sender)) {
                         return;
                     }
@@ -175,7 +173,7 @@
                             let group = this.groups.find(gr => gr.id === request.group.id);
 
                             if (request.group.tabs) {
-                                request.group.tabs = request.group.tabs.map(this.$_tabMap, this);
+                                request.group.tabs = request.group.tabs.map(this.mapTab, this);
 
                                 if (this.multipleDropTabs.length) {
                                     // ищем новые замапеные вкладки и добавляем их в мультиселект
@@ -198,12 +196,12 @@
                             Object.assign(group, request.group);
                             break;
                         case 'group-added':
-                            this.groups.push(this.$_groupMap(request.group));
+                            this.groups.push(this.mapGroup(request.group));
                             break;
                         case 'group-removed':
                             this.groups.splice(this.groups.findIndex(gr => gr.id === request.groupId), 1);
                             break;
-                        case 'group-loaded':
+                        // case 'group-loaded':
                         case 'groups-updated':
                             this.loadGroups();
                             break;
@@ -212,10 +210,7 @@
                             break;
                     }
 
-                }.bind(this);
-
-                browser.runtime.onMessage.addListener(listener);
-                window.addEventListener('unload', () => browser.runtime.onMessage.removeListener(listener));
+                }.bind(this));
             },
 
             getDataForMultipleMove() {
@@ -246,10 +241,10 @@
                 return tabsToMove;
             },
 
-            $_groupMap(group) {
+            mapGroup(group) {
                 let vm = this;
 
-                group.tabs = group.tabs.map(this.$_tabMap, this);
+                group.tabs = group.tabs.map(this.mapTab, this);
                 group.draggable = true;
                 group.isMoving = false;
                 group.isOver = false;
@@ -276,17 +271,9 @@
                 });
             },
 
-            $_tabMap(tab) {
-                let vm = this;
-
+            mapTab(tab) {
                 tab.favIconUrlToDisplay = BG.getTabFavIconUrl(tab);
-                tab.container = (function() {
-                    if (utils.isDefaultCookieStoreId(tab.cookieStoreId)) {
-                        return false;
-                    }
-
-                    return vm.containers.find(container => container.cookieStoreId === tab.cookieStoreId);
-                })();
+                tab.container = BG.containers.isDefault(tab.cookieStoreId) ? false : BG.containers.get(tab.cookieStoreId);
                 tab.isMoving = false;
                 tab.isOver = false;
 
@@ -296,7 +283,7 @@
             },
 
             loadGroups() {
-                this.groups = BG.getGroups().map(this.$_groupMap, this);
+                this.groups = BG.loadAllGroups().map(this.mapGroup, this);
                 this.multipleDropTabs = [];
             },
             addGroup() {
@@ -305,12 +292,14 @@
             addTab(group, cookieStoreId) {
                 BG.addTab(group.id, cookieStoreId);
             },
-            removeTab(group, tab) {
-                let tabIndex = group.tabs.indexOf(tab);
+            removeTab(tab) {
+                // let tabIndex = group.tabs.indexOf(tab);
 
-                group.tabs.splice(tabIndex, 1);
+                // group.tabs.splice(tabIndex, 1);
 
-                BG.removeTab(group.id, tabIndex);
+                let group = this.groups.find(gr => gr.id === tab.session.groupId);
+
+                BG.removeTab(tab, group.tabs.indexOf(tab));
             },
             updateTabThumbnail(tab) {
                 BG.updateTabThumbnail(tab, true);
@@ -322,7 +311,7 @@
                     });
                 }
 
-                await BG.loadGroup(null, group.id, tabIndex, !currentWindowPopupId);
+                await BG.loadGroup(null, group.id, tabIndex, !currentWindowPopupId); // TODO change active tab
 
                 if (currentWindowPopupId) {
                     browser.windows.remove(currentWindowPopupId); // close manage groups popop window
@@ -331,9 +320,9 @@
 
             openGroupInNewWindow(group, tabIndex) {
                 if (group.windowId) {
-                    BG.loadGroup(group.windowId, group.id, tabIndex);
+                    BG.loadGroup(group.windowId, group.id, tabIndex); // TODO change active tab
                 } else {
-                    BG.createWindow(undefined, group.id, tabIndex);
+                    BG.createWindow(undefined, group.id, tabIndex); // TODO change active tab
                 }
             },
 
@@ -619,7 +608,7 @@
                                 <div v-if="tab.favIconUrlToDisplay" class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <img class="size-16" :src="tab.favIconUrlToDisplay" />
                                 </div>
-                                <div class="delete-tab-button" @click.stop="removeTab(group, tab)" :title="lang('deleteTab')" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                <div class="delete-tab-button" @click.stop="removeTab(tab)" :title="lang('deleteTab')" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <img class="size-14" src="/icons/close.svg" />
                                 </div>
                                 <div v-if="tab.container" class="container" :title="tab.container.name" :style="{borderColor: tab.container.colorCode}">
@@ -633,7 +622,7 @@
                                 </div>
                                 <div
                                     @mousedown.middle.prevent
-                                    @mouseup.middle.prevent="removeTab(group, tab)"
+                                    @mouseup.middle.prevent="removeTab(tab)"
                                     class="tab-title text-ellipsis"
                                     v-text="getTabTitle(tab)"></div>
                             </div>
@@ -720,7 +709,6 @@
             <edit-group
                 ref="editGroup"
                 :group="groupToEdit"
-                :containers="containers"
                 @saved="groupToEdit = null" />
         </popup>
 

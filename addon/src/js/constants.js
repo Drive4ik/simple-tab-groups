@@ -148,23 +148,23 @@ const DEFAULT_OPTIONS = {
 
 const onlyBoolOptionsKeys = Object.keys(DEFAULT_OPTIONS).filter(key => 'boolean' === typeof DEFAULT_OPTIONS[key]);
 
-const allOptionsKeys = onlyBoolOptionsKeys
-    .concat([
-        'hotkeys',
-        'defaultBookmarksParent',
-        'defaultGroupIconViewType',
-        'defaultGroupIconColor',
-        'autoBackupLastBackupTimeStamp',
-        'autoBackupIntervalKey',
-        'autoBackupIntervalValue',
-        'autoBackupFolderName',
-        'autoBackupBookmarksFolderName',
-    ]);
+const allOptionsKeys = [
+    ...onlyBoolOptionsKeys,
+    'hotkeys',
+    'defaultBookmarksParent',
+    'defaultGroupIconViewType',
+    'defaultGroupIconColor',
+    'autoBackupLastBackupTimeStamp',
+    'autoBackupIntervalKey',
+    'autoBackupIntervalValue',
+    'autoBackupFolderName',
+    'autoBackupBookmarksFolderName',
+];
 
 const HOUR_SEC = 60 * 60;
 const DAY_SEC = 24 * HOUR_SEC;
 
-export {
+export default {
     DEFAULT_COOKIE_STORE_ID,
     PRIVATE_COOKIE_STORE_ID,
     MANAGE_TABS_URL,

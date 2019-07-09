@@ -1,7 +1,7 @@
 <script>
     'use strict';
 
-    import * as utils from '../js/utils';
+    import utils from '../js/utils';
 
     import Vue from 'vue';
 
@@ -10,15 +10,15 @@
     import editGroup from '../js/edit-group.vue';
     import contextMenu from '../js/context-menu-component.vue';
 
-    const BG = (function(bgWin) {
-        return bgWin && bgWin.background && bgWin.background.inited ? bgWin.background : false;
-    })(browser.extension.getBackgroundPage());
+    const {background: BG} = browser.extension.getBackgroundPage();
 
-    if (!BG) {
-        setTimeout(() => window.location.reload(), 700);
-        document.getElementById('stg-popup').innerText = browser.i18n.getMessage('waitingToLoadAllTabs');
-        throw Error('background not inited');
-    }
+    window.addEventListener('error', utils.errorEventHandler);
+
+    // if (!BG) {
+    //     setTimeout(() => window.location.reload(), 700);
+    //     document.getElementById('stg-popup').innerText = browser.i18n.getMessage('waitingToLoadAllTabs');
+    //     throw Error('background not inited');
+    // }
 
     Vue.config.keyCodes = {
         'arrow-left': KeyEvent.DOM_VK_LEFT,
@@ -59,12 +59,13 @@
                 extendedSearch: false,
 
                 currentWindowId: null,
+                currentWindowGroupId: null,
 
                 groupToShow: null,
                 groupToEdit: null,
                 groupToRemove: null,
 
-                containers: [],
+                containers: BG.containers.getAll(),
                 options: {},
                 groups: [],
 
@@ -80,11 +81,9 @@
             'context-menu': contextMenu,
         },
         async created() {
-            BG.getWindow().then(win => this.currentWindowId = win.id);
+            this.loadWindowsData();
 
             this.loadOptions();
-
-            this.containers = await utils.loadContainers();
 
             this.loadGroups();
 
@@ -132,7 +131,7 @@
         },
         computed: {
             currentGroup() {
-                return this.groups.find(group => group.windowId === this.currentWindowId);
+                return this.groups.find(group => group.id === this.currentWindowGroupId);
             },
             filteredGroupsBySearch() {
                 if (!this.search) {
@@ -157,6 +156,13 @@
         methods: {
             lang: browser.i18n.getMessage,
             safeHtml: utils.safeHtml,
+
+            async loadWindowsData() {
+                let win = await BG.getWindow();
+
+                this.currentWindowId = win.id;
+                this.currentWindowGroupId = win.session.groupId;
+            },
 
             loadOptions() {
                 this.options = BG.getOptions();
@@ -183,17 +189,56 @@
                     .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
                     .$on('drag-over', (item, isOver) => item.isOver = isOver);
 
-                let listener = function(request, sender) {
+                browser.runtime.onMessage.addListener(function(request, sender) {
                     if (!utils.isAllowSender(request, sender)) {
                         return;
                     }
 
+                    let group = null;
+
                     switch (request.action) {
+                        case 'tab-added':
+                            group = this.groups.find(gr => gr.id === request.tab.session.groupId);
+
+                            if (group) {
+                                group.tabs.push(this.mapTab(request.tab));
+                            } else {
+                                throw Error('group for new tab not found');
+                            }
+
+                            break;
+                        case 'tab-updated':
+                            let tab = null;
+
+                            this.groups.some(gr => tab = gr.tabs.find(t => t.id === request.tab.id));
+
+                            Object.assign(tab, request.tab);
+
+                            if (request.tab.url || request.tab.favIconUrl) {
+                                tab.favIconUrlToDisplay = BG.getTabFavIconUrl(tab);
+                            }
+                            break;
+                        case 'tab-removed':
+                            let tabIndex = -1;
+
+                            group = this.groups.find(gr => -1 !== (tabIndex = gr.tabs.findIndex(t => t.id === request.tabId)));
+
+                            if (group) {
+                                group.tabs.splice(tabIndex, 1);
+                            } else {
+                                tabIndex = this.unSyncTabs.findIndex(tab => tab.id === request.tabId);
+
+                                if (-1 !== tabIndex) {
+                                    this.unSyncTabs.splice(tabIndex, 1);
+                                }
+                            }
+
+                            break;
                         case 'group-updated':
-                            let group = this.groups.find(gr => gr.id === request.group.id);
+                            group = this.groups.find(gr => gr.id === request.group.id);
 
                             if (request.group.tabs) {
-                                request.group.tabs = request.group.tabs.map(this.$_tabMap, this);
+                                request.group.tabs = request.group.tabs.map(this.mapTab, this);
 
                                 if (this.multipleMoveTabs.length) {
                                     // ищем новые замапеные вкладки и добавляем их в мультиселект
@@ -216,12 +261,12 @@
                             Object.assign(group, request.group);
                             break;
                         case 'group-added':
-                            this.groups.push(this.$_groupMap(request.group));
+                            this.groups.push(this.mapGroup(request.group));
                             break;
                         case 'group-removed':
                             this.groups.splice(this.groups.findIndex(gr => gr.id === request.groupId), 1);
                             break;
-                        case 'group-loaded':
+                        // case 'group-loaded':
                         case 'groups-updated':
                             this.loadGroups();
                             break;
@@ -232,10 +277,7 @@
                             break;
                     }
 
-                }.bind(this);
-
-                browser.runtime.onMessage.addListener(listener);
-                window.addEventListener('unload', () => browser.runtime.onMessage.removeListener(listener));
+                }.bind(this));
             },
 
             showSectionGroupTabs(group) {
@@ -270,10 +312,10 @@
                 return 0; // stay
             },
 
-            $_groupMap(group) {
+            mapGroup(group) {
                 let vm = this;
 
-                group.tabs = group.tabs.map(this.$_tabMap, this);
+                group.tabs = group.tabs.map(this.mapTab, this);
                 group.isMoving = false;
                 group.isOver = false;
 
@@ -292,36 +334,32 @@
                 });
             },
 
-            $_tabMap(tab) {
-                let vm = this;
-
+            mapTab(tab) {
                 tab.favIconUrlToDisplay = BG.getTabFavIconUrl(tab);
-                tab.borderedStyle = (function() {
-                    if (utils.isDefaultCookieStoreId(tab.cookieStoreId)) {
-                        return false;
-                    }
-
-                    let container = vm.containers.find(container => container.cookieStoreId === tab.cookieStoreId);
-
-                    if (!container) {
-                        return false;
-                    }
-
-                    return {
-                        borderColor: container.colorCode,
-                    };
-                })();
+                tab.borderedStyle = BG.containers.isDefault(tab.cookieStoreId) ? false : {
+                    borderColor: BG.containers.get(tab.cookieStoreId, 'colorCode'),
+                };
 
                 tab.isMoving = false;
                 tab.isOver = false;
 
                 return new Vue({
                     data: tab,
+                    // computed: {
+                    //     favIconUrlToDisplay() {
+                    //         this.url;
+                    //         this.favIconUrl;
+
+                    //         return BG.getTabFavIconUrl(this);
+                    //     },
+                    // },
                 });
             },
 
-            loadGroups() {
-                this.groups = BG.getGroups().map(this.$_groupMap, this);
+            async loadGroups() {
+                let groups = await BG.loadAllGroups();
+
+                this.groups = utils.clone(groups).map(this.mapGroup, this);
 
                 if (this.hoverItem && this.isGroup(this.hoverItem)) {
                     this.hoverItem = this.groups.find(group => group.id === this.hoverItem.id) || null;
@@ -329,16 +367,19 @@
 
                 this.multipleMoveTabs = [];
             },
-            async loadUnsyncedTabs() {
-                let unSyncTabs = await browser.tabs.query({
-                        pinned: false,
-                        hidden: true,
-                    }),
-                    allGroupTabIds = this.groups.reduce((acc, group) => group.tabs.reduce((a, t) => (t.id && a.push(t.id), a), acc), []);
+            async loadUnsyncedTabs() { // TODO
+                let windows = await BG.loadAllWindows(true),
+                    unSyncTabs = [];
 
-                this.unSyncTabs = unSyncTabs
-                    .filter(tab => utils.isTabNotIncognito(tab) && !allGroupTabIds.includes(tab.id))
-                    .map(this.$_tabMap, this);
+                utils.clone(windows).forEach(function(win) {
+                    win.tabs.forEach(function(tab) {
+                        if (!tab.session.groupId) {
+                            unSyncTabs.push(this.mapTab(tab));
+                        }
+                    }, this);
+                }, this);
+
+                this.unSyncTabs = unSyncTabs;
             },
 
             async showCreateGroupPopup() {
@@ -353,12 +394,14 @@
             addTab(cookieStoreId) {
                 BG.addTab(this.groupToShow.id, cookieStoreId);
             },
-            removeTab(groupId, tabIndex) {
-                let group = this.groups.find(gr => gr.id === groupId);
+            removeTab(tab) {
+                // let group = this.groups.find(gr => gr.id === groupId);
 
-                group.tabs.splice(tabIndex, 1);
+                // group.tabs.splice(tabIndex, 1);
 
-                BG.removeTab(groupId, tabIndex);
+                let group = this.groups.find(gr => gr.id === tab.session.groupId);
+
+                BG.removeTab(tab, group.tabs.indexOf(tab));
             },
             removeUnSyncTab(tab) {
                 browser.tabs.remove(tab.id);
@@ -406,7 +449,7 @@
                         this.multipleMoveTabs.push(tab);
                     }
                 } else {
-                    this.loadGroup(group, group.tabs.indexOf(tab));
+                    this.loadGroup(group, tab);
                 }
             },
 
@@ -416,7 +459,7 @@
                 }
             },
 
-            async loadGroup(group, tabIndex = -1, closePopup = false) {
+            async loadGroup(group, tab, closePopup = false) {
                 if (this.someGroupAreLoading) {
                     return;
                 }
@@ -426,27 +469,36 @@
                 let isCurrentGroup = group === this.currentGroup;
 
                 if (isCurrentGroup) {
-                    if (-1 === tabIndex) { // open group
+                    if (!tab) { // open group
                         this.showSectionGroupTabs(group);
                         return;
                     }
 
-                    if (group.tabs[tabIndex].active) {
+                    if (tab.active) {
                         return;
                     }
 
-                    group.tabs.forEach((tab, index) => tab.active = index === tabIndex);
+                    // group.tabs.forEach((tab, index) => tab.active = index === tabIndex);
                 }
 
+                let tabId = tab && tab.id,
+                    tabIndex = tab && group.tabs.indexOf(tab);
+
                 if (closePopup) {
-                    BG.loadGroup(this.currentWindowId, group.id, tabIndex);
+                    BG.loadGroup(this.currentWindowId, group.id, tabId, tabIndex);
                     this.closeWindow();
                 } else {
                     this.someGroupAreLoading = true;
 
-                    await BG.loadGroup(this.currentWindowId, group.id, tabIndex);
+                    console.time('loadGroup');
+
+                    await BG.loadGroup(this.currentWindowId, group.id, tabId, tabIndex);
+
+                    console.timeEnd('loadGroup');
 
                     this.someGroupAreLoading = false;
+
+                    this.loadWindowsData();
 
                     if (this.options.closePopupAfterChangeGroup) {
                         if (!isCurrentGroup) {
@@ -691,7 +743,7 @@
                             return;
                         }
 
-                        let allItems = this.filteredGroupsBySearch.reduce((accum, group) => accum.concat([group]).concat(group.filteredTabsBySearch), []);
+                        let allItems = this.filteredGroupsBySearch.reduce((accum, group) => [...accum, group, group.filteredTabsBySearch], []);
 
                         index = this.hoverItem ? allItems.indexOf(this.hoverItem) : -1;
 
@@ -716,7 +768,7 @@
                                 } else { // is tab
                                     // find group
                                     let group = this.groups.find(gr => gr.tabs.includes(this.hoverItem));
-                                    this.loadGroup(group, group.tabs.indexOf(this.hoverItem), true);
+                                    this.loadGroup(group, this.hoverItem, true);
                                 }
                             }
                         }
@@ -767,11 +819,11 @@
                             this.showSectionDefault();
                         } else if ('enter' === arrow) {
                             if (this.hoverItem && -1 !== index) {
-                                this.loadGroup(this.groupToShow, index, true);
+                                this.loadGroup(this.groupToShow, this.hoverItem, true);
                             }
                         } else if ('delete' === arrow) {
                             if (this.hoverItem && this.groupToShow.tabs.includes(this.hoverItem)) {
-                                this.removeTab(this.groupToShow.id, index);
+                                this.removeTab(this.hoverItem);
                                 this.hoverItem = null;
                             }
                         }
@@ -889,7 +941,7 @@
                             @contextmenu="$refs.tabsContextMenu.open($event, {tab, group})"
                             @click.stop="clickOnTab($event, tab, group)"
                             @mousedown.middle.prevent
-                            @mouseup.middle.prevent="removeTab(group.id, group.tabs.indexOf(tab))"
+                            @mouseup.middle.prevent="removeTab(tab)"
                             :class="['tab item is-unselectable space-left', {
                                 'is-active': group === currentGroup && tab.active,
                                 'is-hovered-item': tab === hoverItem,
@@ -909,7 +961,7 @@
                                 </span>
                             </div>
                             <div class="item-action flex-on-hover">
-                                <span class="size-16 cursor-pointer" @click.stop="removeTab(group.id, group.tabs.indexOf(tab))" :title="lang('deleteTab')">
+                                <span class="size-16 cursor-pointer" @click.stop="removeTab(tab)" :title="lang('deleteTab')">
                                     <img src="/icons/close.svg" />
                                 </span>
                             </div>
@@ -1046,7 +1098,7 @@
                         @contextmenu="$refs.tabsContextMenu.open($event, {tab, group: groupToShow})"
                         @click.stop="clickOnTab($event, tab, groupToShow)"
                         @mousedown.middle.prevent
-                        @mouseup.middle.prevent="removeTab(groupToShow.id, tabIndex)"
+                        @mouseup.middle.prevent="removeTab(tab)"
                         :class="['tab item is-unselectable', {
                             'is-active': groupToShow === currentGroup && tab.active,
                             'drag-moving': tab.isMoving,
@@ -1076,7 +1128,7 @@
                             </span>
                         </div>
                         <div class="item-action flex-on-hover">
-                            <span class="size-16 cursor-pointer" @click.stop="removeTab(groupToShow.id, tabIndex)" :title="lang('deleteTab')">
+                            <span class="size-16 cursor-pointer" @click.stop="removeTab(tab)" :title="lang('deleteTab')">
                                 <img src="/icons/close.svg" />
                             </span>
                         </div>
@@ -1085,14 +1137,14 @@
                     <hr>
 
                     <div class="create-new-tab">
-                        <div class="item" @contextmenu="containers.length && $refs.createNewTabContextMenu.open($event)" @click="addTab()">
+                        <div class="item" @contextmenu="Object.keys(containers).length && $refs.createNewTabContextMenu.open($event)" @click="addTab()">
                             <div class="item-icon">
                                 <img class="size-16" src="/icons/tab-new.svg">
                             </div>
                             <div class="item-title" v-text="lang('createNewTab')"></div>
                         </div>
 
-                        <context-menu v-if="containers.length" ref="createNewTabContextMenu">
+                        <context-menu v-if="Object.keys(containers).length" ref="createNewTabContextMenu">
                             <ul class="is-unselectable">
                                 <li v-for="container in containers" :key="container.cookieStoreId" @click="addTab(container.cookieStoreId)">
                                     <img :src="container.iconUrl" class="is-inline-block size-16 fill-context" :style="{fill: container.colorCode}" />
@@ -1222,7 +1274,6 @@
             <edit-group
                 ref="editGroup"
                 :group="groupToEdit"
-                :containers="containers"
                 :can-load-file="isSidebar"
                 @saved="groupToEdit = null"
                 @open-manage-groups="openManageGroups"/>

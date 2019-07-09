@@ -1,18 +1,17 @@
 <script>
     'use strict';
 
-    import * as utils from './utils';
-    import * as file from './file';
-    import * as constants from './constants';
+    import file from './file';
+    import utils from './utils';
+    import constants from './constants';
+
     import Vue from 'vue';
 
     import popup from './popup.vue';
     import swatches from 'vue-swatches';
     import 'vue-swatches/dist/vue-swatches.min.css';
 
-    const BG = (function(bgWin) {
-        return bgWin && bgWin.background && bgWin.background.inited ? bgWin.background : false;
-    })(browser.extension.getBackgroundPage());
+    const {background: BG} = browser.extension.getBackgroundPage();
 
     const fieldsToEdit = [
         'id',
@@ -35,10 +34,6 @@
                 required: true,
                 type: Object,
             },
-            containers: {
-                required: true,
-                type: Array,
-            },
             canLoadFile: {
                 type: Boolean,
                 default: true,
@@ -50,18 +45,20 @@
         },
         data() {
             let vm = this,
+                containers = BG.containers.getAll(),
                 groups = BG.getGroups(),
                 disabledContainers = {};
 
-            this.containers.forEach(function(container) {
-                let groupWhichHasContainer = groups.find(group => group.id !== this.group.id && group.catchTabContainers.includes(container.cookieStoreId));
+            for (let cookieStoreId in containers) {
+                let groupWhichHasContainer = groups.find(group => group.id !== this.group.id && group.catchTabContainers.includes(cookieStoreId));
 
                 if (groupWhichHasContainer) {
-                    disabledContainers[container.cookieStoreId] = groupWhichHasContainer.title;
+                    disabledContainers[cookieStoreId] = groupWhichHasContainer.title;
                 }
-            }, this);
+            }
 
             return {
+                containers: containers,
                 disabledContainers: disabledContainers,
 
                 showMessageCantLoadFile: false,
@@ -103,7 +100,7 @@
                             return;
                         }
 
-                        let currentDomainWithSubdomainsRegexp = ['.*'].concat(parts.slice(-2)).join('\\.');
+                        let currentDomainWithSubdomainsRegexp = ['.*', ...parts.slice(-2)].join('\\.');
 
                         if (!this.groupClone.catchTabRules.includes(currentDomainWithSubdomainsRegexp)) {
                             return currentDomainWithSubdomainsRegexp;
@@ -288,7 +285,7 @@
             </div>
         </div>
 
-        <div v-if="containers.length" class="field containers-wrapper">
+        <div v-if="Object.keys(containers).length" class="field containers-wrapper">
             <label class="label">
                 <span v-text="lang('catchTabContainers')"></span>
             </label>

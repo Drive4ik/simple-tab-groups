@@ -1,22 +1,22 @@
 'use strict';
 
-import {DEFAULT_OPTIONS} from './constants';
-import * as utils from './utils';
+import utils from './utils';
+import constants from './constants';
 
 export default {
     async get(data) {
         let result = await browser.storage.local.get(data);
 
         if (null === data) {
-            let options = utils.clone(DEFAULT_OPTIONS);
+            let options = utils.clone(constants.DEFAULT_OPTIONS);
             Object.assign(options, result);
             result = options;
         } else if ('string' === utils.type(data)) {
             if (undefined === result[data]) {
-                result[data] = utils.clone(DEFAULT_OPTIONS[data]);
+                result[data] = utils.clone(constants.DEFAULT_OPTIONS[data]);
             }
         } else if (Array.isArray(data)) {
-            data.forEach(key => undefined === result[key] ? result[key] = utils.clone(DEFAULT_OPTIONS[key]) : null);
+            data.forEach(key => undefined === result[key] ? result[key] = utils.clone(constants.DEFAULT_OPTIONS[key]) : null);
         }
 
         return result;

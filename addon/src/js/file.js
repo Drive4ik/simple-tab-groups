@@ -1,6 +1,6 @@
 'use strict';
 
-import * as utils from './utils';
+import utils from './utils';
 import storage from './storage';
 
 const BACKUP_FILE_EXT = '.json';
@@ -135,7 +135,7 @@ function _intToStr(i) {
     return ('0' + i).substr(-2);
 }
 
-export {
+export default {
     load,
     save,
     backup,

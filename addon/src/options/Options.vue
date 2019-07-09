@@ -1,24 +1,24 @@
 <script>
     'use strict';
 
-    import * as utils from '../js/utils';
+    import utils from '../js/utils';
     import storage from '../js/storage';
-    import * as constants from '../js/constants';
-    import * as file from '../js/file';
+    import constants from '../js/constants';
+    import file from '../js/file';
 
     import popup from '../js/popup.vue';
     import swatches from 'vue-swatches';
     import 'vue-swatches/dist/vue-swatches.min.css';
 
-    const BG = (function(bgWin) {
-        return bgWin && bgWin.background && bgWin.background.inited ? bgWin.background : false;
-    })(browser.extension.getBackgroundPage());
+    const {background: BG} = browser.extension.getBackgroundPage();
 
-    if (!BG) {
-        setTimeout(() => window.location.reload(), 1000);
-        document.getElementById('stg-options').innerText = browser.i18n.getMessage('waitingToLoadAllTabs');
-        throw Error('wait loading addon');
-    }
+    window.addEventListener('error', utils.errorEventHandler);
+
+    // if (!BG) {
+    //     setTimeout(() => window.location.reload(), 1000);
+    //     document.getElementById('stg-options').innerText = browser.i18n.getMessage('waitingToLoadAllTabs');
+    //     throw Error('wait loading addon');
+    // }
 
     const SECTION_GENERAL = 'general',
         SECTION_HOTKEYS = 'hotkeys',
@@ -79,7 +79,7 @@
 
                 showEnableDarkThemeNotification: false,
 
-                errorLogs: BG.getLogs(),
+                errorLogs: utils.getErrorLogs(),
             };
         },
         components: {
@@ -102,8 +102,13 @@
 
             this.loadBookmarksParents();
 
-            constants.onlyBoolOptionsKeys
-                .concat(['defaultBookmarksParent', 'defaultGroupIconViewType', 'defaultGroupIconColor', 'autoBackupIntervalKey'])
+            [
+                ...constants.onlyBoolOptionsKeys,
+                'defaultBookmarksParent',
+                'defaultGroupIconViewType',
+                'defaultGroupIconColor',
+                'autoBackupIntervalKey'
+                ]
                 .forEach(function(option) {
                     this.$watch(`options.${option}`, function(newValue) {
                         BG.saveOptions({
@@ -306,23 +311,17 @@
             },
 
             async importAddonSettings() {
-                try {
-                    let data = await file.load();
+                let data = await file.load();
 
-                    if ('object' !== utils.type(data) || !Array.isArray(data.groups)) {
-                        throw 'Error: this is wrong backup!';
-                    }
-
-                    data = await BG.runMigrateForData(data);
-
-                    await storage.set(data);
-
-                    browser.runtime.reload(); // reload addon
-                } catch (e) {
-                    if (e) {
-                        utils.notify(e);
-                    }
+                if ('object' !== utils.type(data) || !Array.isArray(data.groups)) {
+                    throw Error('this is wrong backup!');
                 }
+
+                data = await BG.runMigrateForData(data);
+
+                await storage.set(data);
+
+                browser.runtime.reload(); // reload addon
             },
 
             exportAddonSettings() {
@@ -330,14 +329,7 @@
             },
 
             async importSettingsOldTabGroupsAddonButton() {
-                let oldOptions = null;
-
-                try {
-                    oldOptions = await file.load();
-                } catch (e) {
-                    utils.notify(e);
-                    return;
-                }
+                let oldOptions = await file.load();
 
                 let data = await storage.get(['groups', 'lastCreatedGroupPosition']),
                     newGroups = {};
@@ -390,12 +382,14 @@
                         }
 
                         if (newGroups[extData.groupID]) {
-                            newGroups[extData.groupID].tabs.push(BG.mapTab({
+                            // newGroups[extData.groupID].tabs.push(BG.mapTab({
+                            newGroups[extData.groupID].tabs.push({
                                 title: tabEntry.title,
                                 url: tabEntry.url,
                                 favIconUrl: oldTab.image || '',
                                 active: Boolean(extData.active),
-                            }));
+                            });
+                            // }));
                         }
                     });
                 });
@@ -408,7 +402,7 @@
                     });
 
                 if (groups.length) {
-                    data.groups = data.groups.concat(groups);
+                    data.groups.push.apply(data.groups, groups);
 
                     await storage.set(data);
 
@@ -419,21 +413,15 @@
             },
 
             async importSettingsPanoramaViewAddonButton() {
-                let panoramaOptions = null;
+                let panoramaOptions = await file.load();
 
-                try {
-                    panoramaOptions = await file.load();
 
-                    if (!panoramaOptions || !panoramaOptions.file || 'panoramaView' !== panoramaOptions.file.type || !Array.isArray(panoramaOptions.windows)) {
-                        throw 'Error: this is wrong backup!';
-                    }
+                if (!panoramaOptions || !panoramaOptions.file || 'panoramaView' !== panoramaOptions.file.type || !Array.isArray(panoramaOptions.windows)) {
+                    throw Error('this is wrong backup!');
+                }
 
-                    if (1 !== panoramaOptions.file.version) {
-                        throw 'Error: Panorama View backup has unsupported version';
-                    }
-                } catch (e) {
-                    utils.notify(e);
-                    return;
+                if (1 !== panoramaOptions.file.version) {
+                    throw Error('Panorama View backup has unsupported version');
                 }
 
                 let data = await storage.get(['groups', 'lastCreatedGroupPosition']),
@@ -444,7 +432,7 @@
                         if (!newGroups[group.id]) {
                             data.lastCreatedGroupPosition++;
 
-                            newGroups[group.id] = BG.createGroup(data.lastCreatedGroupPosition, undefined, group.name);
+                            newGroups[group.id] = BG.createGroup(data.lastCreatedGroupPosition, group.name);
                         }
                     });
 
@@ -457,7 +445,8 @@
                             return;
                         }
 
-                        let newTab = BG.mapTab(tab);
+                        // let newTab = BG.mapTab(tab);
+                        let newTab = tab;
 
                         if (tab.pinned) {
                             if (!utils.isUrlEmpty(newTab.url)) {
@@ -476,7 +465,7 @@
                 let groups = Object.values(newGroups);
 
                 if (groups.length) {
-                    data.groups = data.groups.concat(groups);
+                    data.groups.push.apply(data.groups, groups);
 
                     await storage.set(data);
 
@@ -487,21 +476,15 @@
             },
 
             async importSettingsSyncTabGroupsAddonButton() {
-                let syncTabOptions = null;
+                let syncTabOptions = await file.load();
 
-                try {
-                    syncTabOptions = await file.load();
 
-                    if (!syncTabOptions || !syncTabOptions.version || 'syncTabGroups' !== syncTabOptions.version[0] || !Array.isArray(syncTabOptions.groups)) {
-                        throw 'Error: this is wrong backup!';
-                    }
+                if (!syncTabOptions || !syncTabOptions.version || 'syncTabGroups' !== syncTabOptions.version[0] || !Array.isArray(syncTabOptions.groups)) {
+                    throw Error('this is wrong backup!');
+                }
 
-                    if (1 !== syncTabOptions.version[1]) {
-                        throw 'Error: Sync Tab Groups backup has unsupported version';
-                    }
-                } catch (e) {
-                    utils.notify(e);
-                    return;
+                if (1 !== syncTabOptions.version[1]) {
+                    throw Error('Sync Tab Groups backup has unsupported version');
                 }
 
                 let data = await storage.get(['groups', 'lastCreatedGroupPosition']),
@@ -515,7 +498,7 @@
                     if (!newGroups[group.id]) {
                         data.lastCreatedGroupPosition++;
 
-                        newGroups[group.id] = BG.createGroup(data.lastCreatedGroupPosition, undefined, group.title);
+                        newGroups[group.id] = BG.createGroup(data.lastCreatedGroupPosition, group.title);
                         newGroups[group.id].position = group.position;
                     }
 
@@ -526,7 +509,8 @@
 
                         delete tab.id;
 
-                        let newTab = BG.mapTab(tab);
+                        // let newTab = BG.mapTab(tab);
+                        let newTab = tab;
 
                         if (tab.pinned) {
                             if (!utils.isUrlEmpty(newTab.url)) {
@@ -549,7 +533,7 @@
                     });
 
                 if (groups.length) {
-                    data.groups = data.groups.concat(groups);
+                    data.groups.push.apply(data.groups, groups);
 
                     await storage.set(data);
 
@@ -563,7 +547,7 @@
                 let options = await storage.get('version'),
                     data = {
                         version: options.version,
-                        logs: BG.getLogs(),
+                        logs: utils.getErrorLogs(),
                     };
 
                 if (data.logs.length) {

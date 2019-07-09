@@ -4,15 +4,17 @@
     "applications": {
         "gecko": {
             "id": "simple-tab-groups@drive4ik",
-            "strict_min_version": "63.0"
+            "strict_min_version": "67.0"
         }
     },
 
     "name": "__MSG_extensionName__",
     "description": "__MSG_extensionDescription__",
-    "version": "3.4.4",
+    "version": "4.0",
     "author": "Drive4ik",
     "homepage_url": "https://github.com/drive4ik/simple-tab-groups",
+
+    "incognito": "not_allowed",
 
     "icons": {
         "96": "icons/icon.svg"

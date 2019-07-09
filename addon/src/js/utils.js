@@ -1,7 +1,9 @@
 'use strict';
 
-import * as constants from './constants';
+import constants from './constants';
 import * as npmCompareVersions from 'compare-versions';
+
+const addonUrlPrefix = browser.extension.getURL('');
 
 let tagsToReplace = {
     '<': '&lt;',
@@ -10,6 +12,64 @@ let tagsToReplace = {
     "'": '&#039;',
     '&': '&amp;',
 };
+
+function getErrorLogs() {
+    let logs = [];
+
+    try {
+        logs = JSON.parse(window.localStorage.errorLogs);
+    } catch (e) {}
+
+    return logs;
+}
+
+function _saveErrorLog(error) {
+    let logs = getErrorLogs();
+
+    logs.unshift(error);
+
+    window.localStorage.errorLogs = JSON.stringify(logs.slice(0, 30));
+}
+
+function errorEventMessage(message, data = null, showNotification = true) {
+    return JSON.stringify({
+        message,
+        data,
+        showNotification,
+    });
+}
+
+function errorEventHandler(event) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
+    let data = null;
+
+    console.debug('event.error.stack', event.error.stack);
+
+    try {
+        data = JSON.parse(event.error.message);
+    } catch (e) {
+        data = event.error;
+    }
+
+    let error = {
+        date: (new Date).toLocaleString(),
+        message: data.message,
+        data: data.data,
+        lineNumber: event.error.lineNumber,
+        stack: event.error.stack.split(addonUrlPrefix).join('').split('@').map(str => str.trim()),
+    };
+
+    _saveErrorLog(error);
+
+    if (false !== data.showNotification) {
+        notify(browser.i18n.getMessage('whatsWrongMessage'))
+            .then(() => browser.runtime.openOptionsPage());
+    }
+
+    console.error(`[STG] ${event.error.name}: ${error.message}`, error);
+}
 
 function keyId({id}) {
     return id;
@@ -113,13 +173,13 @@ function notify(message, timer = 20000, id) {
         id = String(Date.now());
     }
 
-    if ('error' === type(message)) {
-        let prefix = browser.extension.getURL('');
-        message.stack = message.stack.split('@').map(path => path.replace(prefix, '').trim()).filter(Boolean).join('\n');
-        message.fileName = message.fileName.replace(prefix, '');
-        message = message.toString() + `\n${message.fileName} ${message.lineNumber}:${message.columnNumber}\n${message.stack}`;
-        timer = 60000;
-    }
+    // if ('error' === type(message)) {
+    //     let prefix = browser.extension.getURL('');
+    //     message.stack = message.stack.split('@').map(path => path.replace(prefix, '').trim()).filter(Boolean).join('\n');
+    //     message.fileName = message.fileName.replace(prefix, '');
+    //     message = message.toString() + `\n${message.fileName} ${message.lineNumber}:${message.columnNumber}\n${message.stack}`;
+    //     timer = 60000;
+    // }
 
     // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/notifications/NotificationOptions
     // Only 'type', 'iconUrl', 'title', and 'message' are supported.
@@ -149,7 +209,7 @@ function notify(message, timer = 20000, id) {
 }
 
 function isAllowSender(request, sender) {
-    if (sender.id !== browser.runtime.getManifest().applications.gecko.id || !request || request.isExternalMessage || (sender.tab && isTabIncognito(sender.tab))) {
+    if (sender.id !== browser.runtime.id || !request || request.isExternalMessage || (sender.tab && isTabIncognito(sender.tab))) {
         return false;
     }
 
@@ -195,8 +255,10 @@ function isWindowAllow(win) {
     return win && 'normal' === win.type && !win.incognito;
 }
 
+const createTabUrlRegexp = /^((https?|ftp|moz-extension):|about:blank)/;
+
 function isUrlAllowToCreate(url) {
-    return url ? /^((https?|ftp|moz-extension):|about:blank)/.test(url) : true;
+    return url ? createTabUrlRegexp.test(url) : true;
 }
 
 function isTabIncognito(tab) {
@@ -223,12 +285,16 @@ function isTabVisible(tab) {
     return !isTabHidden(tab);
 }
 
-function isTabCanBeHidden(rawTab) {
-    return !isTabPinned(rawTab) && !rawTab.sharingState.screen && !rawTab.sharingState.camera && !rawTab.sharingState.microphone;
+function isTabCanBeHidden(tab) {
+    return !isTabPinned(tab) && tab.sharingState && !tab.sharingState.screen && !tab.sharingState.camera && !tab.sharingState.microphone;
 }
 
-function isTabCanNotBeHidden(rawTab) {
-    return !isTabCanBeHidden(rawTab);
+function isTabCanNotBeHidden(tab) {
+    return !isTabCanBeHidden(tab);
+}
+
+function isTabLoaded(tab) {
+    return 'complete' === tab.status;
 }
 
 function getTabTitle(tab, withUrl) {
@@ -273,6 +339,12 @@ function createGroupTitle(title, groupId) {
     return title || browser.i18n.getMessage('newGroupTitle', groupId);
 }
 
+function sortBy(key, numeric, reverse) {
+    return function(objA, objB) {
+        return reverse ? compareStrings(objB[key], objA[key], numeric) : compareStrings(objA[key], objB[key], numeric);
+    };
+}
+
 // -1 : a < b
 // 0 : a === b
 // 1 : a > b
@@ -297,31 +369,6 @@ function isElementVisible(element) {
     // Partially visible elements return true:
     // let isVisible = elemTop < window.innerHeight && elemBottom >= 0;
     // return isVisible;
-}
-
-function isDefaultCookieStoreId(cookieStoreId) {
-    return constants.DEFAULT_COOKIE_STORE_ID === cookieStoreId || !cookieStoreId || constants.PRIVATE_COOKIE_STORE_ID === cookieStoreId;
-}
-
-function normalizeCookieStoreId(cookieStoreId, containers) {
-    if (isDefaultCookieStoreId(cookieStoreId)) {
-        return constants.DEFAULT_COOKIE_STORE_ID;
-    }
-
-    let isContainerFound = containers.some(container => container.cookieStoreId === cookieStoreId);
-    return isContainerFound ? cookieStoreId : constants.DEFAULT_COOKIE_STORE_ID;
-}
-
-async function loadContainers() {
-    // CONTAINER PROPS:
-    // color: "blue"
-    // ​​colorCode: "#37adff"
-    // ​​cookieStoreId: "firefox-container-1"
-    // ​​icon: "fingerprint"
-    // ​​iconUrl: "resource://usercontext-content/fingerprint.svg"
-    // ​​name: "Personal"
-
-    return await browser.contextualIdentities.query({}).catch(function() {}) || [];
 }
 
 function randomColor() {
@@ -495,7 +542,11 @@ async function waitDownload(id, maxWaitSec = 5) {
     return downloadObj ? downloadObj.state : null;
 }
 
-export {
+export default {
+    errorEventMessage,
+    errorEventHandler,
+    getErrorLogs,
+
     keyId,
     unixNow,
     type,
@@ -509,10 +560,6 @@ export {
     unSafeHtml,
 
     sliceText,
-
-    isDefaultCookieStoreId,
-    normalizeCookieStoreId,
-    loadContainers,
 
     notify,
 
@@ -533,12 +580,14 @@ export {
     isTabVisible,
     isTabCanBeHidden,
     isTabCanNotBeHidden,
+    isTabLoaded,
 
     getTabTitle,
 
     getNextIndex,
     toCamelCase,
     capitalize,
+    sortBy,
     compareStrings,
     compareVersions,
 

@@ -1,43 +1,39 @@
 'use strict';
 
-import { DEFAULT_OPTIONS } from '../js/constants';
 import './move-tab-popup.scss';
 
 let hotkeys = [],
-    foundHotKey = false,
-    EXT_ID = browser.runtime.getManifest().applications.gecko.id;
+    foundHotKey = false;
+
+const popupId = 'stg-move-tab-to-group-popup-wrapper';
+
+browser.runtime.onMessage.addListener(changeHotkeysListener);
+
+init();
+
+async function init() {
+    let result = await browser.runtime.sendMessage({
+        action: 'get-hotkeys',
+    });
+
+    resetWindowEvents();
+
+    hotkeys = result.ok ? result.hotkeys : [];
+
+    if (hotkeys.length) {
+        addWindowEvents();
+    }
+}
 
 function changeHotkeysListener(request, sender) {
-    if (sender.id !== EXT_ID) {
+    if (sender.id !== browser.runtime.id) {
         return;
     }
 
     if (request.action === 'update-hotkeys') {
-        reloadHotKeys().then(init).catch(function() {});
+        init();
     } else if (request.action === 'move-tab-to-custom-group') {
         showGroupsForMovingTab(request);
-    }
-}
-
-browser.runtime.onMessage.addListener(changeHotkeysListener);
-
-async function reloadHotKeys() {
-    let options = await browser.storage.local.get('hotkeys');
-
-    if (options.hotkeys && Array.isArray(options.hotkeys)) {
-        hotkeys = options.hotkeys;
-    } else {
-        hotkeys = DEFAULT_OPTIONS.hotkeys;
-    }
-}
-
-reloadHotKeys().then(init).catch(function() {});
-
-function init() {
-    resetWindowEvents();
-
-    if (hotkeys.length) {
-        addWindowEvents();
     }
 }
 
@@ -101,8 +97,6 @@ function stopEvent(e) {
     e.stopPropagation();
     e.stopImmediatePropagation();
 }
-
-const popupId = 'stg-move-tab-to-group-popup-wrapper';
 
 function showGroupsForMovingTab(data) {
     if (window.top !== window || document.getElementById(popupId)) {
@@ -178,7 +172,7 @@ function showGroupsForMovingTab(data) {
             groupNode.onmouseover = () => groupsWrapper.contains(document.activeElement) && header.focus();
 
             groupNode.onclick = function(groupId) {
-                browser.runtime.sendMessage(EXT_ID, {
+                browser.runtime.sendMessage({
                     action: 'move-active-tab-to-group',
                     groupId: groupId,
                 });
