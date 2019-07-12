@@ -1,10 +1,10 @@
 <script>
     'use strict';
 
-    import utils from '../js/utils';
-
     import Vue from 'vue';
+    import VueLazyload from 'vue-lazyload';
 
+    import utils from '../js/utils';
     import popup from '../js/popup.vue';
     import editGroupPopup from './edit-group-popup.vue';
     import editGroup from '../js/edit-group.vue';
@@ -13,12 +13,9 @@
     const {background: BG} = browser.extension.getBackgroundPage();
 
     window.addEventListener('error', utils.errorEventHandler);
+    Vue.config.errorHandler = utils.errorEventHandler;
 
-    // if (!BG) {
-    //     setTimeout(() => window.location.reload(), 700);
-    //     document.getElementById('stg-popup').innerText = browser.i18n.getMessage('waitingToLoadAllTabs');
-    //     throw Error('background not inited');
-    // }
+    Vue.use(VueLazyload);
 
     Vue.config.keyCodes = {
         'arrow-left': KeyEvent.DOM_VK_LEFT,
@@ -87,7 +84,7 @@
 
             this.loadGroups();
 
-            this.loadUnsyncedTabs();
+            this.loadUnsyncedTabs(); // TODO remove ?
 
             this.setupListeners();
 
@@ -178,13 +175,9 @@
                         BG.moveGroup(from.data.item.id, this.groups.indexOf(to.data.item));
                     })
                     .$on('drag-move-tab', function(from, to) {
-                        let tabsData = this.getTabsForMove(from.data.item);
+                        let tabs = this.getTabsForMove(from.data.item);
 
-                        BG.moveTabs(tabsData, {
-                                newTabIndex: to.data.group.tabs.indexOf(to.data.item),
-                                groupId: to.data.group.id,
-                            }, false)
-                            .catch(utils.notify);
+                        BG.moveTabs(tabs, to.data.group.id, to.data.item.index, false);
                     })
                     .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
                     .$on('drag-over', (item, isOver) => item.isOver = isOver);
@@ -264,7 +257,12 @@
                             this.groups.push(this.mapGroup(request.group));
                             break;
                         case 'group-removed':
-                            this.groups.splice(this.groups.findIndex(gr => gr.id === request.groupId), 1);
+                            let groupIndex = this.groups.findIndex(gr => gr.id === request.groupId);
+
+                            if (-1 !== groupIndex) {
+                                this.groups.splice(groupIndex, 1);
+                            }
+
                             break;
                         // case 'group-loaded':
                         case 'groups-updated':
@@ -387,21 +385,15 @@
                 this.isShowingCreateGroupPopup = true;
             },
 
-            createNewGroup() {
-                BG.addGroup(undefined, undefined, this.nextGroupTitle);
+            async createNewGroup() {
+                await BG.addGroup(undefined, undefined, this.nextGroupTitle);
             },
 
-            addTab(cookieStoreId) {
-                BG.addTab(this.groupToShow.id, cookieStoreId);
+            async addTab(cookieStoreId) {
+                await BG.addTab(this.groupToShow.id, cookieStoreId);
             },
-            removeTab(tab) {
-                // let group = this.groups.find(gr => gr.id === groupId);
-
-                // group.tabs.splice(tabIndex, 1);
-
-                let group = this.groups.find(gr => gr.id === tab.session.groupId);
-
-                BG.removeTab(tab, group.tabs.indexOf(tab));
+            async removeTab(tab) {
+                await BG.removeTab(tab);
             },
             removeUnSyncTab(tab) {
                 browser.tabs.remove(tab.id);
@@ -490,11 +482,7 @@
                 } else {
                     this.someGroupAreLoading = true;
 
-                    console.time('loadGroup');
-
                     await BG.loadGroup(this.currentWindowId, group.id, tabId, tabIndex);
-
-                    console.timeEnd('loadGroup');
 
                     this.someGroupAreLoading = false;
 
@@ -565,11 +553,12 @@
                     this.onSubmitRemoveGroup(group);
                 }
             },
-            async onSubmitRemoveGroup(group) {
-                await BG.removeGroup(group.id);
+            onSubmitRemoveGroup(group) {
+                this.groups.splice(this.groups.indexOf(group), 1);
+
                 this.groupToRemove = null;
 
-                // this.groups.splice(this.groups.indexOf(group), 1);
+                BG.removeGroup(group.id);
 
                 this.showSectionDefault();
             },
@@ -578,48 +567,33 @@
                     this.multipleMoveTabs.push(withTab);
                 }
 
-                let result = this.multipleMoveTabs
+                let tabs = this.multipleMoveTabs
                     .map(function(tab) {
-                        let tabData = {};
-
-                        if (tab.id) {
-                            tabData.tabId = tab.id;
-                        } else {
-                            let group = this.groups.find(gr => gr.tabs.includes(tab));
-
-                            tabData.tabIndex = group.tabs.indexOf(tab);
-                            tabData.groupId = group.id;
-                        }
-
-                        return tabData;
-                    }, this);
+                        return {
+                            id: tab.id,
+                            title: tab.title,
+                            url: tab.url,
+                            hidden: tab.hidden,
+                            sharingState: utils.clone(tab.sharingState),
+                        };
+                    });
 
                 this.multipleMoveTabs = [];
 
-                return result;
+                return tabs;
             },
-            async moveTab(tabsData, newGroup, loadUnsync = false, showTabAfterMoving = false) {
-                if (!Array.isArray(tabsData)) {
-                    tabsData = this.getTabsForMove(tabsData);
-                }
-
-                try {
-                    await BG.moveTabs(tabsData, {
-                        groupId: newGroup.id,
-                    }, false, showTabAfterMoving);
-                } catch (e) {
-                    utils.notify(e);
-                }
+            async moveTabs(tabs, newGroup, loadUnsync = false, showTabAfterMoving = false) {
+                await BG.moveTabs(tabs, newGroup.id, undefined, undefined, showTabAfterMoving);
 
                 if (loadUnsync) {
                     this.loadUnsyncedTabs();
                 }
             },
             async moveTabToNewGroup(tab, loadUnsync, showTabAfterMoving) {
-                let tabsData = this.getTabsForMove(tab),
+                let tabs = this.getTabsForMove(tab),
                     newGroup = await BG.addGroup();
 
-                this.moveTab(tabsData, newGroup, loadUnsync, showTabAfterMoving);
+                this.moveTabs(tabs, newGroup, loadUnsync, showTabAfterMoving);
             },
             setTabIconAsGroupIcon(tab) {
                 BG.updateGroup(this.groupToShow.id, {
@@ -927,7 +901,7 @@
                                 @click="loadGroup(group)"
                                 >
                                 <div class="item-icon" :title="group.title">
-                                    <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
+                                    <img v-lazy="group.iconUrlToDisplay" class="is-inline-block size-16" />
                                 </div>
                                 <div class="item-title" :title="group.title" v-text="group.title"></div>
                                 <div class="item-action bold-hover is-unselectable" @click.stop="showSectionGroupTabs(group)">
@@ -950,7 +924,7 @@
                             :title="getTabTitle(tab, true)"
                             >
                             <div class="item-icon">
-                                <img :src="tab.favIconUrlToDisplay" class="size-16" />
+                                <img v-lazy="tab.favIconUrlToDisplay" class="size-16" />
                             </div>
                             <div class="item-title">
                                 <span :class="{bordered: !!tab.borderedStyle}" :style="tab.borderedStyle">
@@ -1006,7 +980,7 @@
                             :title="group.title"
                             >
                             <div class="item-icon">
-                                <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
+                                <img v-lazy="group.iconUrlToDisplay" class="is-inline-block size-16" />
                             </div>
                             <div class="item-title" v-text="group.title"></div>
                             <div class="item-action bold-hover is-unselectable" :title="getFullGroupTitleWithTabs(group)" @click.stop="showSectionGroupTabs(group)">
@@ -1049,7 +1023,7 @@
                             :title="getTabTitle(tab, true)"
                             >
                             <div class="item-icon">
-                                <img :src="tab.favIconUrlToDisplay" class="size-16" />
+                                <img v-lazy="tab.favIconUrlToDisplay" class="size-16" />
                             </div>
                             <div class="item-title">
                                 <span :class="{bordered: !!tab.borderedStyle}" :style="tab.borderedStyle" v-text="getTabTitle(tab)"></span>
@@ -1079,7 +1053,7 @@
 
                     <div class="group-info item no-hover">
                         <div class="item-icon">
-                            <img :src="groupToShow.iconUrlToDisplay" class="is-inline-block size-16" />
+                            <img v-lazy="groupToShow.iconUrlToDisplay" class="is-inline-block size-16" />
                         </div>
                         <div class="item-title" v-text="groupToShow.title"></div>
                         <div class="item-action is-unselectable">
@@ -1117,7 +1091,7 @@
                         @dragend="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
                         >
                         <div class="item-icon">
-                            <img :src="tab.favIconUrlToDisplay" class="size-16" />
+                            <img v-lazy="tab.favIconUrlToDisplay" class="size-16" />
                         </div>
                         <div class="item-title">
                             <span :class="{bordered: !!tab.borderedStyle}" :style="tab.borderedStyle">
@@ -1143,16 +1117,6 @@
                             </div>
                             <div class="item-title" v-text="lang('createNewTab')"></div>
                         </div>
-
-                        <context-menu v-if="Object.keys(containers).length" ref="createNewTabContextMenu">
-                            <ul class="is-unselectable">
-                                <li v-for="container in containers" :key="container.cookieStoreId" @click="addTab(container.cookieStoreId)">
-                                    <img :src="container.iconUrl" class="is-inline-block size-16 fill-context" :style="{fill: container.colorCode}" />
-                                    <span v-text="container.name"></span>
-                                </li>
-                            </ul>
-                        </context-menu>
-
                     </div>
                 </div>
             </div>
@@ -1172,6 +1136,15 @@
                 <img class="size-16" src="/icons/settings.svg" />
             </div>
         </footer>
+
+        <context-menu v-if="Object.keys(containers).length" ref="createNewTabContextMenu">
+            <ul class="is-unselectable">
+                <li v-for="container in containers" :key="container.cookieStoreId" @click="addTab(container.cookieStoreId)">
+                    <img :src="container.iconUrl" class="is-inline-block size-16 fill-context" :style="{fill: container.colorCode}" />
+                    <span v-text="container.name"></span>
+                </li>
+            </ul>
+        </context-menu>
 
         <context-menu ref="groupContextMenu">
             <template v-slot="menu">
@@ -1224,13 +1197,13 @@
                         :key="group.id"
                         :class="{'is-disabled': menu.data.group ? menu.data.group.id === group.id : false}"
                         @click="menu.data.group
-                            ? menu.data.group.id !== group.id && moveTab(menu.data.tab, group)
-                            : moveTab(menu.data.tab, group, true)"
+                            ? menu.data.group.id !== group.id && moveTabs(getTabsForMove(menu.data.tab), group)
+                            : moveTabs(getTabsForMove(menu.data.tab), group, true)"
                         @contextmenu="menu.data.group
-                            ? menu.data.group.id !== group.id && moveTab(menu.data.tab, group, undefined, true)
-                            : moveTab(menu.data.tab, group, true, true)"
+                            ? menu.data.group.id !== group.id && moveTabs(getTabsForMove(menu.data.tab), group, undefined, true)
+                            : moveTabs(getTabsForMove(menu.data.tab), group, true, true)"
                         >
-                        <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
+                        <img v-lazy="group.iconUrlToDisplay" class="is-inline-block size-16" />
                         <span v-text="(group.windowId ? '• ' : '') + group.title"></span>
                     </li>
 

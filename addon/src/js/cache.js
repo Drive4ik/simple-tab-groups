@@ -11,7 +11,7 @@ function setTab(tab, newSession) {
         throw Error('tab hasn\'t id');
     }
 
-    if (utils.isTabIncognito(tab)) {
+    if (utils.isTabIncognito(tab)) { // TMP
         throw Error('tab is incognito');
     }
 
@@ -19,7 +19,7 @@ function setTab(tab, newSession) {
         tab.session = {};
     }
 
-    tabs[tab.id] = tab;
+    return tabs[tab.id] = tab;
 }
 
 function updateTab(tabId, data) {
@@ -67,11 +67,6 @@ function getPinnedTabs(windowId) {
     return Object.values(tabs).filter(tab => tab.pinned && tab.windowId === windowId);
 }
 
-// function getTabSession(tabId) {
-//     return tabs[tabId].session;
-//     // return (tabs[tabId] && tabs[tabId].session) || {};
-// }
-
 async function loadTabSession(tab) {
     if (tabs[tab.id] && tabs[tab.id].session) {
         tab.session = tabs[tab.id].session;
@@ -92,11 +87,15 @@ function setWindow(win, newSession) {
         win.session = {};
     }
 
-    windows[win.id] = win;
+    return windows[win.id] = win;
 }
 
 function getWindow(windowId) {
     return windows[windowId];
+}
+
+function getWindows() {
+    return Object.values(windows);
 }
 
 function removeWindow(windowId) {
@@ -106,8 +105,6 @@ function removeWindow(windowId) {
 function getWindowsCount() {
     return Object.keys(windows).length;
 }
-
-// setInterval(() => console.debug(Object.values(tabs).slice(-7)), 5000);
 
 function setWindowGroup(windowId, groupId) {
     if (groupId) {
@@ -173,6 +170,7 @@ export default {
     // windows
     setWindow,
     getWindow,
+    getWindows,
     removeWindow,
 
     setWindowGroup,

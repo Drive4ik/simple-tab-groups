@@ -1,7 +1,6 @@
 'use strict';
 
 const DEFAULT_COOKIE_STORE_ID = 'firefox-default';
-const PRIVATE_COOKIE_STORE_ID = 'firefox-private';
 const MANAGE_TABS_URL = '/manage/manage.html';
 
 const PERMISSIONS = {
@@ -166,7 +165,6 @@ const DAY_SEC = 24 * HOUR_SEC;
 
 export default {
     DEFAULT_COOKIE_STORE_ID,
-    PRIVATE_COOKIE_STORE_ID,
     MANAGE_TABS_URL,
     EXTENSIONS_WHITE_LIST,
     DEFAULT_OPTIONS,

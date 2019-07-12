@@ -1,11 +1,10 @@
 <script>
     'use strict';
 
-    import utils from '../js/utils';
-    import constants from '../js/constants';
-
     import Vue from 'vue';
 
+    import utils from '../js/utils';
+    import constants from '../js/constants';
     import popup from '../js/popup.vue';
     import editGroup from '../js/edit-group.vue';
     import contextMenu from '../js/context-menu-component.vue';

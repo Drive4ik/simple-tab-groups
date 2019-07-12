@@ -25,7 +25,7 @@ async function init() {
 }
 
 function isDefault(cookieStoreId) {
-    return constants.DEFAULT_COOKIE_STORE_ID === cookieStoreId || constants.PRIVATE_COOKIE_STORE_ID === cookieStoreId || !cookieStoreId;
+    return constants.DEFAULT_COOKIE_STORE_ID === cookieStoreId || !cookieStoreId;
 }
 
 function get(cookieStoreId, key = null) {

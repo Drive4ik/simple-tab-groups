@@ -40,15 +40,21 @@ function errorEventMessage(message, data = null, showNotification = true) {
 }
 
 function errorEventHandler(event) {
-    event.preventDefault();
-    event.stopImmediatePropagation();
+    // console.debug('errorEventHandler: ', clone(event));
+
+    event.preventDefault && event.preventDefault();
+    event.stopImmediatePropagation && event.stopImmediatePropagation();
+
+    event.error = event.error || event;
 
     let data = null;
 
-    console.debug('event.error.stack', event.error.stack);
-
     try {
         data = JSON.parse(event.error.message);
+
+        if (Number.isFinite(data)) {
+            throw Error;
+        }
     } catch (e) {
         data = event.error;
     }
@@ -252,7 +258,7 @@ function isUrlEmpty(url) {
 }
 
 function isWindowAllow(win) {
-    return win && 'normal' === win.type && !win.incognito;
+    return browser.windows.WindowType.NORMAL === win.type && !win.incognito;
 }
 
 const createTabUrlRegexp = /^((https?|ftp|moz-extension):|about:blank)/;
@@ -277,14 +283,6 @@ function isTabNotPinned(tab) {
     return !isTabPinned(tab);
 }
 
-function isTabHidden(tab) {
-    return tab.hidden;
-}
-
-function isTabVisible(tab) {
-    return !isTabHidden(tab);
-}
-
 function isTabCanBeHidden(tab) {
     return !isTabPinned(tab) && tab.sharingState && !tab.sharingState.screen && !tab.sharingState.camera && !tab.sharingState.microphone;
 }
@@ -294,7 +292,7 @@ function isTabCanNotBeHidden(tab) {
 }
 
 function isTabLoaded(tab) {
-    return 'complete' === tab.status;
+    return browser.tabs.TabStatus.COMPLETE === tab.status;
 }
 
 function getTabTitle(tab, withUrl) {
@@ -576,8 +574,6 @@ export default {
     isTabNotIncognito,
     isTabPinned,
     isTabNotPinned,
-    isTabHidden,
-    isTabVisible,
     isTabCanBeHidden,
     isTabCanNotBeHidden,
     isTabLoaded,
