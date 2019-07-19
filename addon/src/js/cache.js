@@ -35,6 +35,7 @@ function removeTab(tabId) {
 }
 
 function setTabGroup(tabId, groupId) {
+    console.debug('setTabGroup', {tabId, groupId});
     if (groupId) {
         tabs[tabId].session.groupId = groupId
         return browser.sessions.setTabValue(tabId, 'groupId', groupId);
@@ -44,6 +45,7 @@ function setTabGroup(tabId, groupId) {
 }
 
 function removeTabGroup(tabId) {
+    console.debug('removeTabGroup', {tabId});
     tabs[tabId].session.groupId = null;
     return browser.sessions.removeTabValue(tabId, 'groupId');
 }
@@ -135,7 +137,7 @@ function getWindowId(groupId) {
 function getWindowSession(windowId) {
     return (windows[windowId] && windows[windowId].session) || {};
 }
-
+setInterval(() => console.debug('windows', windows), 3000);
 async function loadWindowSession(win) {
     if (windows[win.id] && windows[win.id].session) {
         win.session = windows[win.id].session;
@@ -172,6 +174,7 @@ export default {
     getWindow,
     getWindows,
     removeWindow,
+    getWindowsCount,
 
     setWindowGroup,
     removeWindowGroup,

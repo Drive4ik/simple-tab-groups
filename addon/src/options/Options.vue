@@ -10,7 +10,7 @@
     import swatches from 'vue-swatches';
     import 'vue-swatches/dist/vue-swatches.min.css';
 
-    const {background: BG} = browser.extension.getBackgroundPage();
+    const {BG} = browser.extension.getBackgroundPage();
 
     window.addEventListener('error', utils.errorEventHandler);
 

@@ -12,7 +12,7 @@
     // import { Drag, Drop } from 'vue-drag-drop';
     // import draggable from 'vuedraggable';
 
-    const {background: BG} = browser.extension.getBackgroundPage();
+    const {BG} = browser.extension.getBackgroundPage();
 
     window.addEventListener('error', utils.errorEventHandler);
 

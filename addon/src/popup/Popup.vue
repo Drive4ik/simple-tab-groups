@@ -5,12 +5,15 @@
     import VueLazyload from 'vue-lazyload';
 
     import utils from '../js/utils';
+    import Groups from '../js/groups';
+    import Tabs from '../js/tabs';
+    import Windows from '../js/windows';
     import popup from '../js/popup.vue';
     import editGroupPopup from './edit-group-popup.vue';
     import editGroup from '../js/edit-group.vue';
     import contextMenu from '../js/context-menu-component.vue';
 
-    const {background: BG} = browser.extension.getBackgroundPage();
+    const {BG} = browser.extension.getBackgroundPage();
 
     window.addEventListener('error', utils.errorEventHandler);
     Vue.config.errorHandler = utils.errorEventHandler;
@@ -155,7 +158,7 @@
             safeHtml: utils.safeHtml,
 
             async loadWindowsData() {
-                let win = await BG.getWindow();
+                let win = await Windows.get();
 
                 this.currentWindowId = win.id;
                 this.currentWindowGroupId = win.session.groupId;
@@ -171,13 +174,14 @@
 
             setupListeners() {
                 this
-                    .$on('drag-move-group', function(from, to) {
-                        BG.moveGroup(from.data.item.id, this.groups.indexOf(to.data.item));
+                    .$on('drag-move-group', async function(from, to) {
+                        await Groups.move(from.data.item.id, this.groups.indexOf(to.data.item));
+                        this.loadGroups();
                     })
                     .$on('drag-move-tab', function(from, to) {
                         let tabs = this.getTabsForMove(from.data.item);
 
-                        BG.moveTabs(tabs, to.data.group.id, to.data.item.index, false);
+                        Tabs.move(tabs, to.data.group.id, to.data.item.index, false);
                     })
                     .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
                     .$on('drag-over', (item, isOver) => item.isOver = isOver);
@@ -208,7 +212,7 @@
                             Object.assign(tab, request.tab);
 
                             if (request.tab.url || request.tab.favIconUrl) {
-                                tab.favIconUrlToDisplay = BG.getTabFavIconUrl(tab);
+                                tab.favIconUrlToDisplay = Tabs.getFavIconUrl(tab);
                             }
                             break;
                         case 'tab-removed':
@@ -267,6 +271,7 @@
                         // case 'group-loaded':
                         case 'groups-updated':
                             this.loadGroups();
+                            this.loadUnsyncedTabs();
                             break;
                         case 'options-updated':
                             if (isSidebar) {
@@ -333,7 +338,7 @@
             },
 
             mapTab(tab) {
-                tab.favIconUrlToDisplay = BG.getTabFavIconUrl(tab);
+                tab.favIconUrlToDisplay = Tabs.getFavIconUrl(tab);
                 tab.borderedStyle = BG.containers.isDefault(tab.cookieStoreId) ? false : {
                     borderColor: BG.containers.get(tab.cookieStoreId, 'colorCode'),
                 };
@@ -355,7 +360,7 @@
             },
 
             async loadGroups() {
-                let groups = await BG.loadAllGroups();
+                let groups = await Groups.load(null, true);
 
                 this.groups = utils.clone(groups).map(this.mapGroup, this);
 
@@ -366,7 +371,7 @@
                 this.multipleMoveTabs = [];
             },
             async loadUnsyncedTabs() { // TODO
-                let windows = await BG.loadAllWindows(true),
+                let windows = await Windows.load(true),
                     unSyncTabs = [];
 
                 utils.clone(windows).forEach(function(win) {
@@ -381,23 +386,23 @@
             },
 
             async showCreateGroupPopup() {
-                this.nextGroupTitle = await BG.getNextGroupTitle();
+                this.nextGroupTitle = await Groups.getNextTitle();
                 this.isShowingCreateGroupPopup = true;
             },
 
             async createNewGroup() {
-                await BG.addGroup(undefined, undefined, this.nextGroupTitle);
+                await Groups.add(undefined, undefined, this.nextGroupTitle);
             },
 
             async addTab(cookieStoreId) {
-                await BG.addTab(this.groupToShow.id, cookieStoreId);
+                await Tabs.add(this.groupToShow.id, cookieStoreId);
             },
             async removeTab(tab) {
-                await BG.removeTab(tab);
+                await Tabs.remove(tab);
             },
             removeUnSyncTab(tab) {
-                browser.tabs.remove(tab.id);
                 this.unSyncTabs.splice(this.unSyncTabs.indexOf(tab), 1);
+                Tabs.remove(tab);
             },
 
             clickOnTab(event, tab, group) {
@@ -441,7 +446,7 @@
                         this.multipleMoveTabs.push(tab);
                     }
                 } else {
-                    this.loadGroup(group, tab);
+                    this.applyGroup(group, tab);
                 }
             },
 
@@ -451,7 +456,7 @@
                 }
             },
 
-            async loadGroup(group, tab, closePopup = false) {
+            async applyGroup(group, tab, closePopup = false) {
                 if (this.someGroupAreLoading) {
                     return;
                 }
@@ -473,18 +478,19 @@
                     // group.tabs.forEach((tab, index) => tab.active = index === tabIndex);
                 }
 
-                let tabId = tab && tab.id,
-                    tabIndex = tab && group.tabs.indexOf(tab);
+                let tabId = tab && tab.id;
 
                 if (closePopup) {
-                    BG.loadGroup(this.currentWindowId, group.id, tabId, tabIndex);
+                    BG.applyGroup(this.currentWindowId, group.id, tabId);
                     this.closeWindow();
                 } else {
                     this.someGroupAreLoading = true;
 
-                    await BG.loadGroup(this.currentWindowId, group.id, tabId, tabIndex);
+                    await BG.applyGroup(this.currentWindowId, group.id, tabId);
 
                     this.someGroupAreLoading = false;
+
+                    this.currentWindowGroupId = group.id;
 
                     this.loadWindowsData();
 
@@ -515,7 +521,7 @@
                 this.loadGroups();
             },
             async unsyncHiddenTabsCreateNewGroup() {
-                await BG.addGroup(undefined, this.unSyncTabs);
+                await Groups.add(undefined, this.unSyncTabs);
 
                 this.unSyncTabs = [];
             },
@@ -536,10 +542,12 @@
             },
 
             async openGroupInNewWindow(group) {
-                if (group.windowId) {
-                    BG.setFocusOnWindow(group.windowId);
+                let windowId = BG.cache.getWindowId(group.id);
+
+                if (windowId) {
+                    Windows.setFocus(windowId);
                 } else {
-                    BG.createWindow(undefined, group.id);
+                    Windows.create(undefined, group.id);
                 }
             },
 
@@ -558,7 +566,7 @@
 
                 this.groupToRemove = null;
 
-                BG.removeGroup(group.id);
+                Groups.remove(group.id);
 
                 this.showSectionDefault();
             },
@@ -583,7 +591,7 @@
                 return tabs;
             },
             async moveTabs(tabs, newGroup, loadUnsync = false, showTabAfterMoving = false) {
-                await BG.moveTabs(tabs, newGroup.id, undefined, undefined, showTabAfterMoving);
+                await Tabs.move(tabs, newGroup.id, undefined, undefined, showTabAfterMoving);
 
                 if (loadUnsync) {
                     this.loadUnsyncedTabs();
@@ -591,14 +599,14 @@
             },
             async moveTabToNewGroup(tab, loadUnsync, showTabAfterMoving) {
                 let tabs = this.getTabsForMove(tab),
-                    newGroup = await BG.addGroup();
+                    newGroup = await Groups.add();
 
                 this.moveTabs(tabs, newGroup, loadUnsync, showTabAfterMoving);
             },
             setTabIconAsGroupIcon(tab) {
-                BG.updateGroup(this.groupToShow.id, {
+                Groups.update(this.groupToShow.id, {
                     iconViewType: null,
-                    iconUrl: BG.getTabFavIconUrl(tab),
+                    iconUrl: Tabs.getFavIconUrl(tab),
                 });
             },
 
@@ -633,7 +641,7 @@
                 this.closeWindow();
             },
             sortGroups(vector) {
-                BG.sortGroups(vector);
+                Groups.sort(vector);
             },
             exportGroupToBookmarks(group) {
                 BG.exportGroupToBookmarks(group.id);
@@ -738,11 +746,11 @@
 
                             if (this.hoverItem) {
                                 if (this.isGroup(this.hoverItem)) { // is group
-                                    this.loadGroup(this.hoverItem, undefined, true);
+                                    this.applyGroup(this.hoverItem, undefined, true);
                                 } else { // is tab
                                     // find group
                                     let group = this.groups.find(gr => gr.tabs.includes(this.hoverItem));
-                                    this.loadGroup(group, this.hoverItem, true);
+                                    this.applyGroup(group, this.hoverItem, true);
                                 }
                             }
                         }
@@ -768,7 +776,7 @@
                         } else if ('enter' === arrow) {
                             if (this.hoverItem) {
                                 if (this.isGroup(this.hoverItem)) {
-                                    this.loadGroup(this.hoverItem, undefined, true);
+                                    this.applyGroup(this.hoverItem, undefined, true);
                                 }
                             } else {
                                 this.$refs.search.focus();
@@ -793,7 +801,7 @@
                             this.showSectionDefault();
                         } else if ('enter' === arrow) {
                             if (this.hoverItem && -1 !== index) {
-                                this.loadGroup(this.groupToShow, this.hoverItem, true);
+                                this.applyGroup(this.groupToShow, this.hoverItem, true);
                             }
                         } else if ('delete' === arrow) {
                             if (this.hoverItem && this.groupToShow.tabs.includes(this.hoverItem)) {
@@ -898,7 +906,7 @@
                                     'is-opened': group.windowId,
                                     'is-hovered-item': group === hoverItem,
                                 }]"
-                                @click="loadGroup(group)"
+                                @click="applyGroup(group)"
                                 >
                                 <div class="item-icon" :title="group.title">
                                     <img v-lazy="group.iconUrlToDisplay" class="is-inline-block size-16" />
@@ -976,7 +984,7 @@
                                 'is-opened': group.windowId,
                                 'is-hovered-item': group === hoverItem,
                             }]"
-                            @click="loadGroup(group)"
+                            @click="applyGroup(group)"
                             :title="group.title"
                             >
                             <div class="item-icon">

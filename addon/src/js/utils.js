@@ -45,7 +45,9 @@ function errorEventHandler(event) {
     event.preventDefault && event.preventDefault();
     event.stopImmediatePropagation && event.stopImmediatePropagation();
 
-    event.error = event.error || event;
+    if (!event.error) {
+        event.error = event;
+    }
 
     let data = null;
 
@@ -379,62 +381,72 @@ function safeColor(color) {
     return div.style.backgroundColor;
 }
 
-function getGroupIconUrl(group = { iconViewType: 'main-squares' }) {
+function getGroupIconUrl(group = { iconViewType: 'main-squares' }, keyInObj = null) {
+    let result = null;
+
     if (group.iconUrl) {
-        return group.iconUrl;
+        result = group.iconUrl;
+    } else {
+        if (!group.iconColor) {
+            group.iconColor = 'transparent';
+        }
+
+        let stroke = 'transparent' === group.iconColor ? 'stroke="#606060" stroke-width="1"' : '';
+
+        let icons = {
+            'main-squares': `
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32">
+                    <g fill="context-fill" fill-opacity="context-fill-opacity">
+                        <rect height="8" width="8" y="0" x="0" />
+                        <rect height="8" width="8" y="0" x="12" />
+                        <rect height="8" width="8" y="12" x="24" />
+                        <rect height="8" width="8" y="12" x="0" />
+                        <rect height="8" width="8" y="12" x="12" />
+                        <rect height="8" width="8" y="0" x="24" />
+                        <rect height="8" width="8" y="24" x="0" />
+                        <rect height="8" width="8" y="24" x="12" />
+                        <rect height="8" width="8" y="24" x="24" />
+                        <path transform="rotate(-90, 18, 18)" d="m3.87079,31.999319l0,-28.125684l28.126548,28.125684l-28.126548,0z" fill="${group.iconColor}" />
+                    </g>
+                </svg>
+            `,
+            circle: `
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+                    <circle fill="${group.iconColor}" cx="8" cy="8" r="8" ${stroke} />
+                </svg>
+            `,
+            squares: `
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+                    <g fill="context-fill" fill-opacity="context-fill-opacity">
+                        <rect x="1" y="1" width="6" height="6" rx="1" ry="1"></rect>
+                        <rect x="9" y="1" width="6" height="6" rx="1" ry="1"></rect>
+                        <rect x="1" y="9" width="6" height="6" rx="1" ry="1"></rect>
+                        <rect x="9" y="9" width="6" height="6" rx="1" ry="1" fill="${group.iconColor}"></rect>
+                    </g>
+                </svg>
+            `,
+            'old-tab-groups': `
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+                    <g fill="context-fill" fill-opacity="context-fill-opacity">
+                        <rect width="9" height="6" x="1" y="1" rx="1"></rect>
+                        <rect width="4" height="6" x="11" y="1" rx="1"></rect>
+                        <rect width="5" height="7" x="1" y="8" rx="1"></rect>
+                        <rect width="8" height="7" x="7" y="8" rx="1" fill="${group.iconColor}"></rect>
+                    </g>
+                </svg>
+            `,
+        };
+
+        result = convertSvgToUrl(icons[group.iconViewType]);
     }
 
-    if (!group.iconColor) {
-        group.iconColor = 'transparent';
+    if (keyInObj) {
+        return {
+            [keyInObj]: result,
+        };
     }
 
-    let stroke = 'transparent' === group.iconColor ? 'stroke="#606060" stroke-width="1"' : '';
-
-    let icons = {
-        'main-squares': `
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32">
-                <g fill="context-fill" fill-opacity="context-fill-opacity">
-                    <rect height="8" width="8" y="0" x="0" />
-                    <rect height="8" width="8" y="0" x="12" />
-                    <rect height="8" width="8" y="12" x="24" />
-                    <rect height="8" width="8" y="12" x="0" />
-                    <rect height="8" width="8" y="12" x="12" />
-                    <rect height="8" width="8" y="0" x="24" />
-                    <rect height="8" width="8" y="24" x="0" />
-                    <rect height="8" width="8" y="24" x="12" />
-                    <rect height="8" width="8" y="24" x="24" />
-                    <path transform="rotate(-90, 18, 18)" d="m3.87079,31.999319l0,-28.125684l28.126548,28.125684l-28.126548,0z" fill="${group.iconColor}" />
-                </g>
-            </svg>
-        `,
-        circle: `
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                <circle fill="${group.iconColor}" cx="8" cy="8" r="8" ${stroke} />
-            </svg>
-        `,
-        squares: `
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                <g fill="context-fill" fill-opacity="context-fill-opacity">
-                    <rect x="1" y="1" width="6" height="6" rx="1" ry="1"></rect>
-                    <rect x="9" y="1" width="6" height="6" rx="1" ry="1"></rect>
-                    <rect x="1" y="9" width="6" height="6" rx="1" ry="1"></rect>
-                    <rect x="9" y="9" width="6" height="6" rx="1" ry="1" fill="${group.iconColor}"></rect>
-                </g>
-            </svg>
-        `,
-        'old-tab-groups': `
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                <g fill="context-fill" fill-opacity="context-fill-opacity">
-                    <rect width="9" height="6" x="1" y="1" rx="1"></rect>
-                    <rect width="4" height="6" x="11" y="1" rx="1"></rect>
-                    <rect width="5" height="7" x="1" y="8" rx="1"></rect>
-                    <rect width="8" height="7" x="7" y="8" rx="1" fill="${group.iconColor}"></rect>
-                </g>
-            </svg>
-        `,
-    };
-
-    return convertSvgToUrl(icons[group.iconViewType]);
+    return result;
 }
 
 function convertSvgToUrl(svg) {
@@ -530,7 +542,7 @@ async function waitDownload(id, maxWaitSec = 5) {
     for (let i = 0; i < maxWaitSec * 5; i++) {
         [downloadObj] = await browser.downloads.search({id});
 
-        if (downloadObj && 'in_progress' !== downloadObj.state) {
+        if (downloadObj && browser.downloads.State.IN_PROGRESS !== downloadObj.state) {
             break;
         }
 

@@ -9,16 +9,16 @@ const popupId = 'stg-move-tab-to-group-popup-wrapper';
 
 browser.runtime.onMessage.addListener(changeHotkeysListener);
 
-init();
-
-async function init() {
-    let result = await browser.runtime.sendMessage({
+browser.runtime.sendMessage({
         action: 'get-hotkeys',
-    });
+    })
+    .then(init)
+    .catch(function() {});
 
+function init(result) {
     resetWindowEvents();
 
-    hotkeys = result.ok ? result.hotkeys : [];
+    hotkeys = result.hotkeys;
 
     if (hotkeys.length) {
         addWindowEvents();
@@ -31,7 +31,7 @@ function changeHotkeysListener(request, sender) {
     }
 
     if (request.action === 'update-hotkeys') {
-        init();
+        init(request);
     } else if (request.action === 'move-tab-to-custom-group') {
         showGroupsForMovingTab(request);
     }
@@ -240,7 +240,7 @@ function showGroupsForMovingTab(data) {
     }
 
     data.groups.forEach(function(group, index) {
-        let groupNode = createGroupNode(group, index + 1, group.id !== data.activeGroupId);
+        let groupNode = createGroupNode(group, index + 1, group.id !== data.tabGroupId);
         groupsWrapper.append(groupNode);
     });
 
