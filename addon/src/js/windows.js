@@ -10,7 +10,7 @@ async function load(withTabs) {
     let [allTabs, allWindows] = await Promise.all([
             withTabs ? browser.tabs.query({
                 windowType: browser.windows.WindowType.NORMAL,
-            }) : true,
+            }) : false,
             browser.windows.getAll({
                 windowTypes: [browser.windows.WindowType.NORMAL],
             })

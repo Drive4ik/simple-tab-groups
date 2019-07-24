@@ -35,7 +35,7 @@ async function create(tab, hideTab = false) {
         delete tab.index;
     // }
 
-    if (!Number.isFinite(tab.windowId) || 1 > tab.windowId || !BG.cache.getWindow(tab.windowId)) {
+    if (!Number.isFinite(tab.windowId) || 1 > tab.windowId || !BG.cache.hasWindow(tab.windowId)) {
         delete tab.windowId;
     }
 
@@ -51,8 +51,6 @@ async function create(tab, hideTab = false) {
 
     let newTab = await browser.tabs.create(tab);
 
-    BG.cache.setTab(newTab);
-
     newTab = await BG.cache.loadTabSession(newTab);
 
     if (!newTab.pinned) {
@@ -63,6 +61,7 @@ async function create(tab, hideTab = false) {
 
         if (groupId && groupId !== newTab.session.groupId) {
             BG.cache.setTabGroup(newTab.id, groupId);
+            newTab.session.groupId = groupId;
         }
 
         if (newTab.session.groupId) {
@@ -83,11 +82,11 @@ async function setActive(tabId, tabs) {
         tabToActive = Array.isArray(tabs) ? tabs.find(tab => tab.id === tabId) : {
             id: tabId,
         };
-    } else if (Array.isArray(tabs)) { // find lastAccessed tab
+    } else if (Array.isArray(tabs) && tabs.length) { // find lastAccessed tab
         let lastAccessedTimes = tabs.map(tab => tab.lastAccessed),
-            maxLastAccessed = lastAccessedTimes.length ? Math.max(...lastAccessedTimes) : null;
+            maxLastAccessed = Math.max(...lastAccessedTimes);
 
-        tabToActive = maxLastAccessed ? tabs.find(tab => tab.lastAccessed === maxLastAccessed) : null;
+        tabToActive = tabs.find(tab => tab.lastAccessed === maxLastAccessed);
     }
 
     if (tabToActive) {
@@ -179,7 +178,7 @@ async function setMute(tabs, muted) {
 async function createTempActiveTab(windowId, createPinnedTab = true, canUseExistsEmptyTab) {
     const {BG} = browser.extension.getBackgroundPage();
 
-    let pinnedTabs = BG.cache.getPinnedTabs(windowId);
+    let pinnedTabs = await get(windowId, true, null);
 
     if (pinnedTabs.length) {
         if (!pinnedTabs.some(tab => tab.active)) {
@@ -224,15 +223,18 @@ async function remove({id, hidden, session}) {
     if (!hidden) {
         let groupWindowId = BG.cache.getWindowId(session.groupId);
 
-        if (groupWindowId && 1 === BG.cache.getTabs(session.groupId).length) {
-            // let pinnedTabs = await getTabs(groupWindowId, true);
-            let pinnedTabs = BG.cache.getPinnedTabs(groupWindowId);
+        if (groupWindowId) {
+            let [group] = await Groups.load(session.groupId, true);
 
-            if (!pinnedTabs.length) {
-                await create({
-                    active: true,
-                    windowId: groupWindowId,
-                });
+            if (1 === group.tabs.length) {
+                let pinnedTabs = await get(groupWindowId, true, null);
+
+                if (!pinnedTabs.length) {
+                    await create({
+                        active: true,
+                        windowId: groupWindowId,
+                    });
+                }
             }
         }
     }
@@ -240,26 +242,8 @@ async function remove({id, hidden, session}) {
     await browser.tabs.remove(id);
 }
 
-async function clearThumbnails() { // TODO
-    // await storage.set({
-    //     thumbnails: {},
-    // });
-
-    // _thumbnails = {};
-
-    // sendMessage({
-    //     action: 'thumbnails-updated',
-    // });
-}
-
-async function updateThumbnail(tab, force = false) { // TODO
-    return;
-
-
-
-    if (!utils.isTabLoaded(tab)) {
-        return;
-    }
+async function updateThumbnail(tabId, force) {
+    const {BG} = browser.extension.getBackgroundPage();
 
     let hasThumbnailsPermission = await browser.permissions.contains(constants.PERMISSIONS.ALL_URLS);
 
@@ -267,13 +251,17 @@ async function updateThumbnail(tab, force = false) { // TODO
         return;
     }
 
-    let tabUrl = utils.makeSafeUrlForThumbnail(tab.url);
+    let tab = await browser.tabs.get(tabId);
 
-    if (!force && _thumbnails[tabUrl]) {
+    if (!utils.isTabLoaded(tab)) {
         return;
     }
 
-    // let rawTab = await browser.tabs.get(tab.id);
+    tab = await BG.cache.loadTabSession(tab);
+
+    if (!force && tab.session.thumbnail) {
+        return;
+    }
 
     if (tab.discarded) {
         browser.tabs.reload(tab.id);
@@ -284,8 +272,7 @@ async function updateThumbnail(tab, force = false) { // TODO
 
     try {
         let thumbnailBase64 = await browser.tabs.captureTab(tab.id);
-        // browser.extension.extensionTypes.ImageFormat.JPEG
-        // browser.extension.extensionTypes.ImageFormat.PNG
+
         thumbnail = await new Promise(function(resolve, reject) {
             let img = new Image();
 
@@ -293,28 +280,18 @@ async function updateThumbnail(tab, force = false) { // TODO
                 resolve(utils.resizeImage(img, 192, Math.floor(img.width * 192 / img.height), false));
             };
 
-            img.onerror = reject;
+            img.onerror = img.onabort = reject;
 
             img.src = thumbnailBase64;
         });
-    } catch (e) {
+    } catch (e) {}
 
-    }
-
-    if (thumbnail) {
-        _thumbnails[tabUrl] = thumbnail;
-    } else {
-        delete _thumbnails[tabUrl];
-    }
+    BG.cache.setTabThumbnail(tab.id, thumbnail);
 
     BG.sendMessage({
         action: 'thumbnail-updated',
-        url: tabUrl,
+        tabId: tab.id,
         thumbnail: thumbnail,
-    });
-
-    await storage.set({
-        thumbnails: _thumbnails,
     });
 }
 
@@ -367,7 +344,7 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
 
         let tempTabs = await Promise.all(activeTabs.map(tab => createTempActiveTab(tab.windowId)));
 
-        BG.excludeTabsIds.push(...tabIds);
+        BG.addExcludeTabsIds(tabIds);
 
         tabs = await browser.tabs.move(tabIds, {
             index: newTabIndex,
@@ -388,7 +365,7 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
             }
         }
 
-        BG.excludeTabsIds = BG.excludeTabsIds.filter(tabId => !tabIds.includes(tabId));
+        BG.removeExcludeTabsIds(tabIds);
 
         tempTabs = tempTabs.filter(Boolean).map(utils.keyId);
 
@@ -415,11 +392,10 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
 
     if (showTabAfterMoving) {
         await BG.applyGroup(windowId, groupId, tabs[0].id);
-
         // return;
     }
 
-    if (!showNotificationAfterMoveTab || !options.showNotificationAfterMoveTab) {
+    if (!showNotificationAfterMoveTab || !BG.getOptions().showNotificationAfterMoveTab) {
         return;
     }
 
@@ -456,7 +432,6 @@ export default {
     createTempActiveTab,
     add,
     remove,
-    clearThumbnails,
     updateThumbnail,
     move,
 };

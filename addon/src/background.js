@@ -12,7 +12,7 @@ import Windows from './js/windows';
 
 let options = {},
     // _groups = [],
-    _thumbnails = {},
+    // _thumbnails = {},
     reCreateTabsOnRemoveWindow = [],
     menuIds = [],
 
@@ -69,7 +69,7 @@ async function applyGroupByPosition(textPosition, groups) {
     }
 
     let winId = await Windows.getLastFocusedNormalWindow(),
-        {groupId} = cache.getWindowSession(winId),
+        groupId = cache.getWindowGroup(winId),
         groupIndex = groupId ? groups.findIndex(group => group.id === groupId) : -1;
 
     if (-1 === groupIndex) {
@@ -114,7 +114,7 @@ async function applyGroup(windowId, groupId, activeTabId) {
             // magic
 
             let [groupToShow, groups] = await Groups.load(groupId, true),
-                {groupId: oldGroupId} = cache.getWindowSession(windowId),
+                oldGroupId = cache.getWindowGroup(windowId),
                 groupToHide = groups.find(gr => gr.id === oldGroupId);
 
             if (groupToHide && groupToHide.tabs.some(utils.isTabCanNotBeHidden)) {
@@ -191,27 +191,22 @@ async function applyGroup(windowId, groupId, activeTabId) {
 
             await cache.setWindowGroup(windowId, groupToShow.id);
 
-            // set group id for tabs which may has opened without groupId (new window without group)
+            // set group id for tabs which may has opened without groupId (new window without group, etc...)
             Tabs.get(windowId)
                 .then(function(tabs) {
-                    let hasNewTabs = false;
-
                     tabs.forEach(function(tab) {
                         if (tab.session.groupId !== groupToShow.id) {
-                            hasNewTabs = true;
                             cache.setTabGroup(tab.id, groupToShow.id);
                         }
-                    })
+                    });
 
-                    if (hasNewTabs) {
-                        sendMessage({
-                            action: 'group-updated',
-                            group: {
-                                id: groupToShow.id,
-                                tabs,
-                            },
-                        });
-                    }
+                    sendMessage({
+                        action: 'group-updated',
+                        group: {
+                            id: groupToShow.id,
+                            tabs,
+                        },
+                    });
                 });
 
             // sendMessage({ // TODO need this event ??
@@ -244,17 +239,7 @@ async function applyGroup(windowId, groupId, activeTabId) {
 async function onActivatedTab({ previousTabId, tabId, windowId }) {
     console.log('onActivatedTab', { previousTabId, tabId, windowId });
 
-    let activeTab = cache.updateTab(tabId, {
-        active: true,
-    });
-
-    if (previousTabId) {
-        cache.updateTab(previousTabId, {
-            active: false,
-        });
-    }
-
-    let {groupId} = cache.getWindowSession(windowId);
+    let groupId = cache.getWindowGroup(windowId);
 
     if (!groupId) {
         return;
@@ -278,7 +263,7 @@ async function onActivatedTab({ previousTabId, tabId, windowId }) {
         });
     }
 
-    Tabs.updateThumbnail(activeTab);
+    Tabs.updateThumbnail(tabId);
 }
 
 function _isCatchedUrl(url, catchTabRules) {
@@ -317,15 +302,13 @@ function _getCatchedGroupForTab(groups, tab, checkTabAsNew = false) {
 async function onCreatedTab(tab) {
     console.log('onCreatedTab', tab);
 
-    tab = cache.setTab(tab, true);
+    cache.setTab(tab);
 
     if (utils.isTabPinned(tab)) {
         return;
     }
 
-    // tab = await cache.loadTabSession(tab);
-
-    let {groupId} = cache.getWindowSession(tab.windowId),
+    let groupId = cache.getWindowGroup(tab.windowId),
         [group, groups] = await Groups.load(groupId || -1);
 
     if (!group) {
@@ -346,6 +329,8 @@ async function onCreatedTab(tab) {
 
     cache.setTabGroup(tab.id, group.id);
 
+    tab = await cache.loadTabSession(tab);
+
     sendMessage({
         action: 'tab-added',
         tab: tab,
@@ -354,20 +339,32 @@ async function onCreatedTab(tab) {
     // saveCurrentTabs(group.windowId, 'onCreatedTab');
 }
 
-async function onUpdatedTab(tabId, changeInfo, tab) {
-    console.log('onUpdatedTab', {changeInfo, tab})
+function addExcludeTabsIds(tabIds) {
+    excludeTabsIds.push(...tabIds);
+}
 
+function removeExcludeTabsIds(tabIds) {
+    excludeTabsIds = excludeTabsIds.filter(tabId => !tabIds.includes(tabId));
+}
+
+async function onUpdatedTab(tabId, changeInfo, tab) {
     if (excludeTabsIds.includes(tabId) || utils.isTabIncognito(tab) || 'isArticle' in changeInfo || 'attention' in changeInfo) {
+        console.log('onUpdatedTab 🛑 tabId: %s, changeInfo: %s', tabId, JSON.stringify(changeInfo));
         return;
     }
 
-    tab = cache.updateTab(tabId, changeInfo);
+    console.log('onUpdatedTab tabId: %s, changeInfo: %s', tabId, JSON.stringify(changeInfo));
+
+    cache.setTab({
+        id: tabId,
+        ...changeInfo,
+    });
 
     if (utils.isTabPinned(tab) && undefined === changeInfo.pinned) {
         return;
     }
 
-    let {groupId} = cache.getWindowSession(tab.windowId),
+    let groupId = cache.getWindowGroup(tab.windowId),
         [group, groups] = await Groups.load(groupId || -1);
 
     if ('pinned' in changeInfo || 'hidden' in changeInfo) {
@@ -385,15 +382,19 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
             if (false === changeInfo.pinned) {
                 await cache.setTabGroup(tabId, groupId);
             } else if (false === changeInfo.hidden) {
-                if (tab.session.groupId) {
-                    applyGroup(tab.windowId, tab.session.groupId, tabId);
+                let tabGroupId = cache.getTabSession(tabId, 'groupId');
+
+                if (tabGroupId) {
+                    applyGroup(tab.windowId, tabGroupId, tabId);
                     return;
                 } else {
-                    await cache.setTabGroup(tabId, groupId);
+                    cache.setTabGroup(tabId, groupId);
                 }
             }
 
             if (group) {
+                tab = await cache.loadTabSession(tab);
+
                 sendMessage({
                     action: 'tab-added',
                     tab: tab,
@@ -409,13 +410,6 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
         return;
     }
 
-
-    console.log('onUpdatedTab\n tabId:', tabId, JSON.stringify(changeInfo) + '\n', JSON.stringify({
-        status: tab.status,
-        url: tab.url,
-        title: tab.title,
-    }));
-
     sendMessage({
         action: 'tab-updated',
         tab: {
@@ -424,32 +418,9 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
         },
     });
 
-    // group = _groups.find(gr => (tab = gr.tabs.find(t => t.id === tabId)));
-
-    // if ('hidden' in changeInfo) { // if other programm hide or show tabs
-    //     if (changeInfo.hidden) {
-    //         cache.removeTabGroup(tabId);
-    //     } else { // show tab
-    //         // loadGroup(tab.windowId, group.id, group.tabs.indexOf(tab), true); // TODO
-    //         cache.setTabGroup(tabId, groupId);
-    //     }
-
-    //     return;
-    // }
-
-    // if ('pinned' in changeInfo) {
-    //     if (utils.isTabPinned(tab)) {
-    //         cache.removeTabGroup(tabId);
-    //     } else {
-    //         cache.setTabGroup(tabId, groupId);
-    //     }
-
-    //     // saveCurrentTabs(rawTab.windowId, 'onUpdatedTab change pinned tab');
-
-    //     return;
-    // }
-
-    Tabs.updateThumbnail(tab);
+    if (utils.isTabLoaded(tab)) {
+        Tabs.updateThumbnail(tab.id);
+    }
 
     if (!group.isSticky) {
         let destGroup = _getCatchedGroupForTab(groups, tab);
@@ -464,57 +435,43 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
 async function onRemovedTab(tabId, { isWindowClosing, windowId }) {
     console.log('onRemovedTab', {tabId, isWindowClosing, windowId});
 
-    let tab = cache.getTab(tabId);
-
-    if (!tab) {
+    if (!cache.hasTab(tabId)) {
         return;
     }
 
-    cache.removeTab(tabId);
-
-    if (isWindowClosing && !utils.isUrlEmpty(tab.url) && tab.session.groupId) {
-        // let [group] = await Groups.load(tab.session.groupId);
-
-        // if (group) {
-            // delete tab.index;
-
-            tab.groupId = tab.session.groupId;
-
-            if (!reCreateTabsOnRemoveWindow.length) {
-                cache.getWindows().forEach(win => win.id !== windowId && setBrowserAction(win.id, 'loading', undefined, false));
-            }
-
-            reCreateTabsOnRemoveWindow.push(tab);
-        // }
-    } else if (utils.isTabNotPinned(tab)) {
-        sendMessage({
-            action: 'tab-removed',
-            tabId: tabId,
-        });
+    if (isWindowClosing) {
+        reCreateTabsOnRemoveWindow.push(tabId);
+    } else {
+        cache.removeTab(tabId);
     }
+
+    sendMessage({
+        action: 'tab-removed',
+        tabId: tabId,
+    });
 }
 
 function onMovedTab(tabId, { windowId, fromIndex, toIndex }) {
     console.log('onMovedTab', {tabId, windowId, fromIndex, toIndex });
 
-    cache.updateTab(tabId, {
-        index: toIndex,
-    });
+    // cache.updateTab(tabId, {
+    //     index: toIndex,
+    // });
 }
 
 function onAttachedTab(tabId, { newWindowId, newPosition }) {
     console.log('onAttachedTab', { tabId, newWindowId, newPosition });
 
-    cache.updateTab(tabId, {
-        index: newPosition,
-        windowId: newWindowId,
-    });
+    // cache.updateTab(tabId, {
+    //     index: newPosition,
+    //     windowId: newWindowId,
+    // });
 
     if (excludeTabsIds.includes(tabId)) {
         return;
     }
 
-    let {groupId} = cache.getWindowSession(newWindowId);
+    let groupId = cache.getWindowGroup(newWindowId);
 
     cache.setTabGroup(tabId, groupId);
 }
@@ -527,8 +484,8 @@ async function onCreatedWindow(win) {
     console.log('onCreatedWindow', win);
 
     if (utils.isWindowAllow(win)) {
-        await cache.loadWindowSession(win);
-        await Tabs.get(win.id, null, null);
+        win = await cache.loadWindowSession(win);
+        // await Tabs.get(win.id, null, null);
 
         if (options.createNewGroupWhenOpenNewWindow && !win.session.groupId) {
             Groups.add(win.id);
@@ -564,10 +521,46 @@ async function onRemovedWindow(windowId) {
     cache.removeWindow(windowId);
 
     if (reCreateTabsOnRemoveWindow.length) {
-        createTabsSafe(reCreateTabsOnRemoveWindow, true);
+        let tabsToCreate = cache.getRemovedTabsForCreate(reCreateTabsOnRemoveWindow);
+
         reCreateTabsOnRemoveWindow = [];
-        cache.getWindows().forEach(win => updateBrowserActionData(null, win.id));
+
+        if (tabsToCreate.length) {
+            let windows = await Windows.load();
+            windows.forEach(win => win.id !== windowId && setBrowserAction(win.id, 'loading', undefined, false));
+            await createTabsSafe(tabsToCreate, true);
+            windows.forEach(win => win.id !== windowId && updateBrowserActionData(null, win.id));
+        }
     }
+}
+
+async function addUndoRemoveGroupItem(groupToRemove) {
+    let restoreGroup = async function(group) {
+        browser.menus.remove(Groups.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id);
+
+        let tabs = group.tabs,
+            groups = await Groups.load();
+
+        groups.push(group);
+
+        await Groups.save(groups, true);
+
+        updateMoveTabMenus();
+
+        if (tabs.length) {
+            createTabsSafe(tabs, true, group.id);
+        }
+    }.bind(null, utils.clone(groupToRemove));
+
+    browser.menus.create({
+        id: Groups.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + groupToRemove.id,
+        title: browser.i18n.getMessage('undoRemoveGroupItemTitle', groupToRemove.title),
+        contexts: [browser.menus.ContextType.BROWSER_ACTION],
+        icons: utils.getGroupIconUrl(groupToRemove, 16),
+        onclick: restoreGroup,
+    });
+
+    utils.notify(browser.i18n.getMessage('undoRemoveGroupNotification', groupToRemove.title)).then(restoreGroup);
 }
 
 async function updateMoveTabMenus(windowId) {
@@ -591,7 +584,7 @@ async function createMoveTabMenus(windowId) {
 
     windowId = windowId || await Windows.getLastFocusedNormalWindow();
 
-    let {groupId} = cache.getWindowSession(windowId),
+    let groupId = cache.getWindowGroup(windowId),
         [currentGroup, groups] = await Groups.load(groupId || -1);
 
     hasBookmarksPermission && menuIds.push(browser.menus.create({
@@ -733,7 +726,7 @@ async function createMoveTabMenus(windowId) {
         parentId: 'stg-move-tab-parent',
         contexts: [browser.menus.ContextType.TAB],
         onclick: function(info, tab) {
-            let {groupId} = cache.getWindowSession(tab.windowId);
+            let groupId = cache.getWindowGroup(tab.windowId);
 
             if (!groupId) {
                 return;
@@ -1045,7 +1038,7 @@ async function updateBrowserActionData(groupId, windowId) {
     if (groupId) {
         windowId = cache.getWindowId(groupId);
     } else if (windowId) {
-        groupId = cache.getWindowSession(windowId).groupId;
+        groupId = cache.getWindowGroup(windowId);
     }
 
     if (!windowId) {
@@ -1497,8 +1490,6 @@ window.BG = {
 
     containers,
 
-    excludeTabsIds,
-
     events: {
         onCreatedWindow,
     },
@@ -1507,6 +1498,11 @@ window.BG = {
     // getWindow,
 
     createTabsSafe,
+
+    addUndoRemoveGroupItem,
+
+    addExcludeTabsIds,
+    removeExcludeTabsIds,
 
     // getTabs,
     // moveTabs,
@@ -1882,10 +1878,10 @@ async function init() {
         data.groups = await Promise.all(data.groups.map(async function(group) {
             group.tabs = await Promise.all(group.tabs.map(async function(groupTab) {
                 for (let index in allTabs) {
-                    let winTab = allTabs[index];
+                    let winTab = allTabs[index],
+                        groupTabCookieStoreId = containers.get(groupTab.cookieStoreId, 'cookieStoreId');
 
-                    if (winTab.url === groupTab.url && !syncedTabs.includes(winTab) && winTab.cookieStoreId === containers.get(groupTab.cookieStoreId, 'cookieStoreId'))
-                    {
+                    if (winTab.url === groupTab.url && !syncedTabs.includes(winTab) && winTab.cookieStoreId === groupTabCookieStoreId) {
                         syncedTabs.push(winTab);
                         await cache.setTabGroup(winTab.id, group.id);
 
@@ -2005,6 +2001,7 @@ async function init() {
         }
     }));
 
+    // chrome://mozapps/
 
     // data.groups.forEach(group => group.tabs = []); // TMP for developing
 
@@ -2014,9 +2011,9 @@ async function init() {
 
     // _groups = data.groups;
 
-    _thumbnails = data.thumbnails;
+    // _thumbnails = data.thumbnails;
 
-    await storage.remove(['doRemoveSTGNewTabUrls', 'withoutSession']);
+    await storage.remove(['doRemoveSTGNewTabUrls', 'withoutSession', 'thumbnails']);
     // await storage.clear(); TODO
     await storage.set(data);
 

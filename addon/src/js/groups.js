@@ -5,6 +5,8 @@ import utils from './utils';
 import Tabs from './tabs';
 import Windows from './windows';
 
+const CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP = 'stg-undo-remove-group-id-';
+
 // if set groupId => return [group, groups]
 async function load(groupId = null, withTabs = false) {
     const {BG} = browser.extension.getBackgroundPage();
@@ -13,7 +15,7 @@ async function load(groupId = null, withTabs = false) {
             withTabs ? browser.tabs.query({
                 windowType: browser.windows.WindowType.NORMAL,
                 pinned: false,
-            }) : true,
+            }) : false,
             storage.get('groups')
         ]);
 
@@ -149,7 +151,7 @@ async function remove(groupId) {
     let [group, groups, index] = await load(groupId, true),
         groupWindowId = BG.cache.getWindowId(groupId);
 
-    addUndoRemoveGroupItem(group);
+    BG.addUndoRemoveGroupItem(group);
 
     groups.splice(index, 1);
 
@@ -161,7 +163,7 @@ async function remove(groupId) {
     }
 
     if (group.tabs.length) {
-        if (groupWindowId && BG.cache.getWindowsCount() === 1) {
+        if (groupWindowId) {
             await Tabs.createTempActiveTab(groupWindowId, false);
         }
 
@@ -170,7 +172,9 @@ async function remove(groupId) {
 
     BG.updateMoveTabMenus();
 
-    BG.updateBrowserActionData(groupId);
+    if (groupWindowId) {
+        BG.updateBrowserActionData(null, groupWindowId);
+    }
 
     BG.sendMessage({
         action: 'group-removed',
@@ -218,12 +222,12 @@ async function update(groupId, updateData) {
     BG.updateBrowserActionData(groupId);
 }
 
-async function move(groupId, position) {
+async function move(groupId, newGroupIndex) {
     const {BG} = browser.extension.getBackgroundPage();
 
     let [group, groups, groupIndex] = await load(groupId);
 
-    groups.splice(position, 0, groups.splice(groupIndex, 1)[0]);
+    groups.splice(newGroupIndex, 0, groups.splice(groupIndex, 1)[0]);
 
     await save(groups, true);
 
@@ -263,40 +267,9 @@ async function getNextTitle() {
     return utils.createGroupTitle(null, lastCreatedGroupPosition + 1);
 }
 
-const CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP = 'stg-undo-remove-group-id-';
-
-async function addUndoRemoveGroupItem(groupToRemove) {
-    const {BG} = browser.extension.getBackgroundPage();
-
-    let restoreGroup = async function(group) {
-        browser.menus.remove(CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id);
-
-        let tabs = group.tabs,
-            groups = await load();
-
-        groups.push(group);
-
-        await save(groups, true);
-
-        if (tabs.length) {
-            await BG.createTabsSafe(tabs, true, group.id);
-        }
-
-        BG.updateMoveTabMenus();
-    }.bind(null, utils.clone(groupToRemove));
-
-    browser.menus.create({
-        id: CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + groupToRemove.id,
-        title: browser.i18n.getMessage('undoRemoveGroupItemTitle', groupToRemove.title),
-        contexts: [browser.menus.ContextType.BROWSER_ACTION],
-        icons: utils.getGroupIconUrl(groupToRemove, 16),
-        onclick: restoreGroup,
-    });
-
-    utils.notify(browser.i18n.getMessage('undoRemoveGroupNotification', groupToRemove.title)).then(restoreGroup);
-}
-
 export default {
+    CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP,
+
     load,
     save,
     create,
@@ -307,5 +280,4 @@ export default {
     sort,
     mapGroupForExternalExtension,
     getNextTitle,
-    addUndoRemoveGroupItem,
 };

@@ -1,6 +1,7 @@
 'use strict';
 
 import constants from './constants';
+import utils from './utils';
 
 let containers = {};
 
@@ -34,11 +35,11 @@ function get(cookieStoreId, key = null) {
         name: 'default',
     };
 
-    return key ? result[key] : JSON.parse(JSON.stringify(result));
+    return key ? result[key] : {...result};
 }
 
 function getAll(asArray) {
-    return JSON.parse(JSON.stringify(asArray ? Object.values(containers) : containers));
+    return utils.clone(asArray ? Object.values(containers) : containers);
 }
 
 export default {

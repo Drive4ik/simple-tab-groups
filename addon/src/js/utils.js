@@ -66,7 +66,7 @@ function errorEventHandler(event) {
         message: data.message,
         data: data.data,
         lineNumber: event.error.lineNumber,
-        stack: event.error.stack.split(addonUrlPrefix).join('').split('@').map(str => str.trim()),
+        stack: event.error.stack.split(addonUrlPrefix).join('').split('@').map(str => str.trim().replace('\n', ' -> ')),
     };
 
     _saveErrorLog(error);
@@ -293,8 +293,12 @@ function isTabCanNotBeHidden(tab) {
     return !isTabCanBeHidden(tab);
 }
 
-function isTabLoaded(tab) {
-    return browser.tabs.TabStatus.COMPLETE === tab.status;
+function isTabLoaded({status}) {
+    return browser.tabs.TabStatus.COMPLETE === status;
+}
+
+function isTabLoading({status}) {
+    return browser.tabs.TabStatus.LOADING === status;
 }
 
 function getTabTitle(tab, withUrl) {
@@ -494,9 +498,9 @@ function isCanvasBlank(canvas, useTransparency) {
     return isEmpty;
 }
 
-function makeSafeUrlForThumbnail(tabUrl) {
-    return tabUrl ? tabUrl.split('#', 1).shift() : '';
-}
+// function makeSafeUrlForThumbnail(tabUrl) {
+//     return tabUrl ? tabUrl.split('#', 1).shift() : '';
+// }
 
 // needle need to be "LowerCased"
 function mySearchFunc(needle, haystack, extendedSearch = false) {
@@ -589,6 +593,7 @@ export default {
     isTabCanBeHidden,
     isTabCanNotBeHidden,
     isTabLoaded,
+    isTabLoading,
 
     getTabTitle,
 
@@ -608,7 +613,7 @@ export default {
 
     resizeImage,
 
-    makeSafeUrlForThumbnail,
+    // makeSafeUrlForThumbnail,
 
     mySearchFunc,
 

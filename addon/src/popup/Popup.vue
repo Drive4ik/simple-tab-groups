@@ -123,9 +123,9 @@
                     this.showSectionSearch();
                 }
             },
-            currentGroup(group) {
-                if (group && this.groupToShow && group.id === this.groupToShow.id && group._uid !== this.groupToShow._uid) {
-                    this.groupToShow = group;
+            groups(groups) {
+                if (this.groupToShow) {
+                    this.groupToShow = groups.find(gr => gr.id === this.groupToShow.id) || null;
                 }
             },
         },
@@ -174,9 +174,8 @@
 
             setupListeners() {
                 this
-                    .$on('drag-move-group', async function(from, to) {
-                        await Groups.move(from.data.item.id, this.groups.indexOf(to.data.item));
-                        this.loadGroups();
+                    .$on('drag-move-group', function(from, to) {
+                        Groups.move(from.data.item.id, this.groups.indexOf(to.data.item));
                     })
                     .$on('drag-move-tab', function(from, to) {
                         let tabs = this.getTabsForMove(from.data.item);
@@ -191,48 +190,52 @@
                         return;
                     }
 
-                    let group = null;
-
                     switch (request.action) {
                         case 'tab-added':
-                            group = this.groups.find(gr => gr.id === request.tab.session.groupId);
+                            {
+                                let group = this.groups.find(gr => gr.id === request.tab.session.groupId);
 
-                            if (group) {
-                                group.tabs.push(this.mapTab(request.tab));
-                            } else {
-                                throw Error('group for new tab not found');
+                                if (group) {
+                                    group.tabs.push(this.mapTab(request.tab));
+                                } else {
+                                    throw Error('group for new tab not found');
+                                }
                             }
 
                             break;
                         case 'tab-updated':
-                            let tab = null;
+                            {
+                                let tab = null;
 
-                            this.groups.some(gr => tab = gr.tabs.find(t => t.id === request.tab.id));
+                                this.groups.some(gr => tab = gr.tabs.find(t => t.id === request.tab.id));
 
-                            Object.assign(tab, request.tab);
+                                Object.assign(tab, request.tab);
 
-                            if (request.tab.url || request.tab.favIconUrl) {
-                                tab.favIconUrlToDisplay = Tabs.getFavIconUrl(tab);
+                                if (request.tab.url || request.tab.favIconUrl) {
+                                    tab.favIconUrlToDisplay = Tabs.getFavIconUrl(tab);
+                                }
                             }
+
                             break;
                         case 'tab-removed':
-                            let tabIndex = -1;
+                            {
+                                let tabIndex = -1,
+                                    group = this.groups.find(gr => -1 !== (tabIndex = gr.tabs.findIndex(t => t.id === request.tabId)));
 
-                            group = this.groups.find(gr => -1 !== (tabIndex = gr.tabs.findIndex(t => t.id === request.tabId)));
+                                if (group) {
+                                    group.tabs.splice(tabIndex, 1);
+                                } else {
+                                    tabIndex = this.unSyncTabs.findIndex(tab => tab.id === request.tabId);
 
-                            if (group) {
-                                group.tabs.splice(tabIndex, 1);
-                            } else {
-                                tabIndex = this.unSyncTabs.findIndex(tab => tab.id === request.tabId);
-
-                                if (-1 !== tabIndex) {
-                                    this.unSyncTabs.splice(tabIndex, 1);
+                                    if (-1 !== tabIndex) {
+                                        this.unSyncTabs.splice(tabIndex, 1);
+                                    }
                                 }
                             }
 
                             break;
                         case 'group-updated':
-                            group = this.groups.find(gr => gr.id === request.group.id);
+                            let group = this.groups.find(gr => gr.id === request.group.id);
 
                             if (request.group.tabs) {
                                 request.group.tabs = request.group.tabs.map(this.mapTab, this);
@@ -256,6 +259,7 @@
                             }
 
                             Object.assign(group, request.group);
+
                             break;
                         case 'group-added':
                             this.groups.push(this.mapGroup(request.group));
@@ -359,10 +363,12 @@
                 });
             },
 
+            getWindowId: BG.cache.getWindowId,
+
             async loadGroups() {
                 let groups = await Groups.load(null, true);
 
-                this.groups = utils.clone(groups).map(this.mapGroup, this);
+                this.groups = groups.map(this.mapGroup, this);
 
                 if (this.hoverItem && this.isGroup(this.hoverItem)) {
                     this.hoverItem = this.groups.find(group => group.id === this.hoverItem.id) || null;
@@ -370,19 +376,15 @@
 
                 this.multipleMoveTabs = [];
             },
-            async loadUnsyncedTabs() { // TODO
-                let windows = await Windows.load(true),
-                    unSyncTabs = [];
+            async loadUnsyncedTabs() {
+                let windows = await Windows.load(true);
 
-                utils.clone(windows).forEach(function(win) {
-                    win.tabs.forEach(function(tab) {
-                        if (!tab.session.groupId) {
-                            unSyncTabs.push(this.mapTab(tab));
-                        }
-                    }, this);
-                }, this);
+                let unSyncTabs = windows.reduce(function(acc, win) {
+                    win.tabs.forEach(tab => !tab.session.groupId && acc.push(tab));
+                    return acc;
+                }, []);
 
-                this.unSyncTabs = unSyncTabs;
+                this.unSyncTabs = unSyncTabs.map(this.mapTab, this);
             },
 
             async showCreateGroupPopup() {
@@ -474,8 +476,6 @@
                     if (tab.active) {
                         return;
                     }
-
-                    // group.tabs.forEach((tab, index) => tab.active = index === tabIndex);
                 }
 
                 let tabId = tab && tab.id;
@@ -489,8 +489,6 @@
                     await BG.applyGroup(this.currentWindowId, group.id, tabId);
 
                     this.someGroupAreLoading = false;
-
-                    this.currentWindowGroupId = group.id;
 
                     this.loadWindowsData();
 
@@ -531,23 +529,29 @@
                 this.unSyncTabs = [];
             },
             async unsyncHiddenTabsShowTabIntoCurrentWindow(tab) {
-                await browser.tabs.move(tab.id, {
-                    windowId: this.currentWindowId,
-                    index: -1,
-                });
+                if (tab.windowId !== this.currentWindowId) {
+                    await browser.tabs.move(tab.id, {
+                        windowId: this.currentWindowId,
+                        index: -1,
+                    });
+                }
 
-                await browser.tabs.show(tab.id);
+                if (tab.hidden) {
+                    await browser.tabs.show(tab.id);
+                }
 
-                this.unSyncTabs.splice(this.unSyncTabs.indexOf(tab), 1);
+                if (this.currentGroup) {
+                    this.unSyncTabs.splice(this.unSyncTabs.indexOf(tab), 1);
+                }
             },
 
-            async openGroupInNewWindow(group) {
-                let windowId = BG.cache.getWindowId(group.id);
+            async openGroupInNewWindow(groupId) {
+                let windowId = this.getWindowId(groupId);
 
                 if (windowId) {
                     Windows.setFocus(windowId);
                 } else {
-                    Windows.create(undefined, group.id);
+                    Windows.create(undefined, groupId);
                 }
             },
 
@@ -582,7 +586,7 @@
                             title: tab.title,
                             url: tab.url,
                             hidden: tab.hidden,
-                            sharingState: utils.clone(tab.sharingState),
+                            sharingState: {...tab.sharingState},
                         };
                     });
 
@@ -590,8 +594,8 @@
 
                 return tabs;
             },
-            async moveTabs(tabs, newGroup, loadUnsync = false, showTabAfterMoving = false) {
-                await Tabs.move(tabs, newGroup.id, undefined, undefined, showTabAfterMoving);
+            async moveTabs(tabs, group, loadUnsync = false, showTabAfterMoving) {
+                await Tabs.move(tabs, group.id, undefined, undefined, showTabAfterMoving);
 
                 if (loadUnsync) {
                     this.loadUnsyncedTabs();
@@ -599,7 +603,7 @@
             },
             async moveTabToNewGroup(tab, loadUnsync, showTabAfterMoving) {
                 let tabs = this.getTabsForMove(tab),
-                    newGroup = await Groups.add();
+                    newGroup = await Groups.add(); // TODO refactor
 
                 this.moveTabs(tabs, newGroup, loadUnsync, showTabAfterMoving);
             },
@@ -611,6 +615,7 @@
             },
 
             getTabTitle: utils.getTabTitle,
+            isTabLoading: utils.isTabLoading,
 
             getFullGroupTitleWithTabs(group) {
                 let title = group.title + ' (' + this.lang('groupTabsCount', group.tabs.length) + ')';
@@ -643,8 +648,8 @@
             sortGroups(vector) {
                 Groups.sort(vector);
             },
-            exportGroupToBookmarks(group) {
-                BG.exportGroupToBookmarks(group.id);
+            exportGroupToBookmarks(groupId) {
+                BG.exportGroupToBookmarks(groupId);
             },
 
             // allowTypes: Array ['groups', 'tabs']
@@ -787,7 +792,7 @@
                     case SECTION_GROUP_TABS:
                         index = this.groupToShow.tabs.indexOf(this.hoverItem);
 
-                        if (-1 === index && this.groupToShow.windowId) {
+                        if (-1 === index && this.getWindowId(this.groupToShow.id)) {
                             index = this.groupToShow.tabs.findIndex(tab => tab.active);
                         }
 
@@ -828,10 +833,8 @@
                 });
             },
 
-            discardTab(tab) {
-                if (tab.id) {
-                    browser.tabs.discard(tab.id).catch(function() {});
-                }
+            discardTab(tabId) {
+                browser.tabs.discard(tabId).catch(function() {});
             },
 
             discardGroup(group) {
@@ -903,7 +906,7 @@
                             <div
                                 :class="['item', {
                                     'is-active': group === currentGroup,
-                                    'is-opened': group.windowId,
+                                    'is-opened': getWindowId(group.id),
                                     'is-hovered-item': group === hoverItem,
                                 }]"
                                 @click="applyGroup(group)"
@@ -936,8 +939,8 @@
                             </div>
                             <div class="item-title">
                                 <span :class="{bordered: !!tab.borderedStyle}" :style="tab.borderedStyle">
-                                    <span v-if="!tab.id" :title="lang('thisTabWillCreateAsNew')">
-                                        <img src="/icons/refresh.svg" class="size-16 align-text-bottom" />
+                                    <span v-if="isTabLoading(tab)" :title="lang('thisTabWillCreateAsNew')">
+                                        <img src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
                                     </span>
                                     <span v-text="getTabTitle(tab)"></span>
                                 </span>
@@ -981,7 +984,7 @@
                         <div
                             :class="['item', {
                                 'is-active': group === currentGroup,
-                                'is-opened': group.windowId,
+                                'is-opened': getWindowId(group.id),
                                 'is-hovered-item': group === hoverItem,
                             }]"
                             @click="applyGroup(group)"
@@ -1157,7 +1160,7 @@
         <context-menu ref="groupContextMenu">
             <template v-slot="menu">
                 <ul class="is-unselectable">
-                    <li @click="openGroupInNewWindow(menu.data.group)">
+                    <li @click="openGroupInNewWindow(menu.data.group.id)">
                         <img src="/icons/window-new.svg" class="size-16" />
                         <span v-text="lang('openGroupInNewWindow')"></span>
                     </li>
@@ -1169,7 +1172,7 @@
                         <img src="/icons/sort-alpha-desc.svg" class="size-16" />
                         <span v-text="lang('sortGroupsZA')"></span>
                     </li>
-                    <li @click="exportGroupToBookmarks(menu.data.group)">
+                    <li @click="exportGroupToBookmarks(menu.data.group.id)">
                         <img src="/icons/bookmark.svg" class="size-16" />
                         <span v-text="lang('exportGroupToBookmarks')"></span>
                     </li>
@@ -1212,7 +1215,7 @@
                             : moveTabs(getTabsForMove(menu.data.tab), group, true, true)"
                         >
                         <img v-lazy="group.iconUrlToDisplay" class="is-inline-block size-16" />
-                        <span v-text="(group.windowId ? '• ' : '') + group.title"></span>
+                        <span v-text="(getWindowId(group.id) ? '• ' : '') + group.title"></span>
                     </li>
 
                     <li
@@ -1222,9 +1225,9 @@
                         <span v-text="lang('createNewGroup')"></span>
                     </li>
 
-                    <hr v-if="menu.data.group || menu.data.tab.id">
+                    <hr>
 
-                    <li v-if="menu.data.tab.id" @click="discardTab(menu.data.tab)">
+                    <li @click="discardTab(menu.data.tab.id)">
                         <img src="/icons/snowflake.svg" class="size-16" />
                         <span v-text="lang('discardTabTitle')"></span>
                     </li>
