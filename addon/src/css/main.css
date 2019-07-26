@@ -6,6 +6,7 @@
 
     --background-color: #ffffff;
     --text-color: inherit;
+    --discarded-text-color: #a0a0a0;
 
     --input-background-color: var(--background-color);
     --input-text-color: var(--text-color);
@@ -318,6 +319,10 @@ hr {
     align-self: flex-end;
 }
 
+.tab-discarded {
+    color: var(--discarded-text-color);
+}
+
 .spin {
     animation: spin 2s linear infinite;
 }
@@ -326,4 +331,14 @@ hr {
     100% {
         transform: rotate(360deg);
     }
+}
+
+/* loading icon */
+.loading-icon {
+    background-image: url('chrome://browser/skin/tabbrowser/loading.svg');
+    animation: tab-throbber-animation 1.05s steps(60) infinite;
+}
+
+@keyframes tab-throbber-animation {
+    100% { transform: translateX(-16px); }
 }

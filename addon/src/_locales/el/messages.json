@@ -395,10 +395,6 @@
         "message": "Κλείστε όλα αυτά τα tabs",
         "description": "Close all of these tabs"
     },
-    "thisTabWillCreateAsNew": {
-        "message": "Αυτό το tab θα δημιουργηθεί σαν νέο",
-        "description": "This tab will create as new"
-    },
     "updateTabThumbnail": {
         "message": "Ανανέωση εικονιδίου γι αυτό το tab",
         "description": "Update thumbnail for this tab"
@@ -423,10 +419,6 @@
         "message": "Στυλ εικονιδίου για νέο group",
         "description": "Icon style for a new group"
     },
-    "openPopupHotkeyTitle": {
-        "message": "Άνοιγμα αναδυόμενου διαλόγου groups",
-        "description": "Open the groups pop-up"
-    },
     "openGroupInNewWindow": {
         "message": "Άνοιγμα ομάδας σε νέο παράθυρο",
         "description": "Open group in new window"
@@ -446,20 +438,6 @@
     "includeTabFavIconsIntoBackup": {
         "message": "Να συμπεριληφθούν τα εικονίδια των tabs στο αντίγραφο ασφαλείας (θα έχει μεγαλύτερο μέγεθος)",
         "description": "Include tab fav-icons in backup (makes backup file size bigger)"
-    },
-    "tabsThumbnailsSize": {
-        "message": "Μέγεθος εικονιδίων tabs: $size$",
-        "description": "Tabs thumbnails size: $size$",
-        "placeholders": {
-            "size": {
-                "content": "$1",
-                "example": "2 MB"
-            }
-        }
-    },
-    "clearTabsThumbnails": {
-        "message": "Καθαρισμός εικονιδίων tabs",
-        "description": "Clear tabs thumbnails"
     },
     "groupRemovedByExtension": {
         "message": "Το group \"$group$\" αφαιρέθηκε από  το πρόσθετο: $extension$",

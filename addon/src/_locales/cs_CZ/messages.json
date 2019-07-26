@@ -395,10 +395,6 @@
         "message": "Zavřít všechny tyto panely",
         "description": "Close all of these tabs"
     },
-    "thisTabWillCreateAsNew": {
-        "message": "Tento panel bude otevřen jako nový",
-        "description": "This tab will create as new"
-    },
     "updateTabThumbnail": {
         "message": "Aktualizovat náhled panelu",
         "description": "Update thumbnail for this tab"
@@ -423,10 +419,6 @@
         "message": "Styl ikony pro nové skupiny",
         "description": "Icon style for a new group"
     },
-    "openPopupHotkeyTitle": {
-        "message": "Otevřít vyskakovací okno se skupinami",
-        "description": "Open the groups pop-up"
-    },
     "openGroupInNewWindow": {
         "message": "Otevřít skupinu v novém okně",
         "description": "Open group in new window"
@@ -446,20 +438,6 @@
     "includeTabFavIconsIntoBackup": {
         "message": "Zahrnout fav-ikony do zálohy (Zvětší velikost souboru)",
         "description": "Include tab fav-icons in backup (makes backup file size bigger)"
-    },
-    "tabsThumbnailsSize": {
-        "message": "Velikost náhledů panelů: $size$",
-        "description": "Tabs thumbnails size: $size$",
-        "placeholders": {
-            "size": {
-                "content": "$1",
-                "example": "2 MB"
-            }
-        }
-    },
-    "clearTabsThumbnails": {
-        "message": "Odstranit náhledy panelů",
-        "description": "Clear tabs thumbnails"
     },
     "groupRemovedByExtension": {
         "message": "Skupina \"$group$\" odstraněna doplňkem: $extension$",

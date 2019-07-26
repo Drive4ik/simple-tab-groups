@@ -395,10 +395,6 @@
         "message": "Закрыть все эти вкладки",
         "description": "Close all of these tabs"
     },
-    "thisTabWillCreateAsNew": {
-        "message": "Эта вкладка будет создана как новая",
-        "description": "This tab will create as new"
-    },
     "updateTabThumbnail": {
         "message": "Обновить эскиз для этой вкладки",
         "description": "Update thumbnail for this tab"
@@ -423,10 +419,6 @@
         "message": "Стиль значка для новой группы",
         "description": "Icon style for a new group"
     },
-    "openPopupHotkeyTitle": {
-        "message": "Открыть всплывающее окно групп",
-        "description": "Open the groups pop-up"
-    },
     "openGroupInNewWindow": {
         "message": "Открыть группу в новом окне",
         "description": "Open group in new window"
@@ -446,20 +438,6 @@
     "includeTabFavIconsIntoBackup": {
         "message": "Включить значки вкладок в резервную копию (размер файла резервной копии будет больше)",
         "description": "Include tab fav-icons in backup (makes backup file size bigger)"
-    },
-    "tabsThumbnailsSize": {
-        "message": "Размер миниатюр вкладок: $size$",
-        "description": "Tabs thumbnails size: $size$",
-        "placeholders": {
-            "size": {
-                "content": "$1",
-                "example": "2 MB"
-            }
-        }
-    },
-    "clearTabsThumbnails": {
-        "message": "Очистить миниатюры",
-        "description": "Clear tabs thumbnails"
     },
     "groupRemovedByExtension": {
         "message": "Группа \"$group$\" удалена расширением: $extension$",

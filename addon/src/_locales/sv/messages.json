@@ -395,10 +395,6 @@
         "message": "Stäng alla dessa flikar",
         "description": "Close all of these tabs"
     },
-    "thisTabWillCreateAsNew": {
-        "message": "Den här fliken skapas som ny",
-        "description": "This tab will create as new"
-    },
     "updateTabThumbnail": {
         "message": "Uppdatera miniatyrbild för den här fliken",
         "description": "Update thumbnail for this tab"
@@ -423,10 +419,6 @@
         "message": "Ikonstil för en ny grupp",
         "description": "Icon style for a new group"
     },
-    "openPopupHotkeyTitle": {
-        "message": "Öppna grupp-popup:en",
-        "description": "Open the groups pop-up"
-    },
     "openGroupInNewWindow": {
         "message": "Öppna flikgrupp i ett nytt fönster",
         "description": "Open group in new window"
@@ -446,20 +438,6 @@
     "includeTabFavIconsIntoBackup": {
         "message": "Inkludera favoritikoner i säkerhetskopian (gör säkerhetskopian större)",
         "description": "Include tab fav-icons in backup (makes backup file size bigger)"
-    },
-    "tabsThumbnailsSize": {
-        "message": "Storlek på alla miniatyrbilder: $size$",
-        "description": "Tabs thumbnails size: $size$",
-        "placeholders": {
-            "size": {
-                "content": "$1",
-                "example": "2 MB"
-            }
-        }
-    },
-    "clearTabsThumbnails": {
-        "message": "Ta bort alla miniatyrbilder för flikar",
-        "description": "Clear tabs thumbnails"
     },
     "groupRemovedByExtension": {
         "message": "Grupp \"$group$\" togs bort av följande tillägg: $extension$",

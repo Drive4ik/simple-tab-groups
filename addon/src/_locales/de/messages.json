@@ -395,10 +395,6 @@
         "message": "Schließe all diese Tabs",
         "description": "Close all of these tabs"
     },
-    "thisTabWillCreateAsNew": {
-        "message": "Dieser Tab wird als neu erstellt",
-        "description": "This tab will create as new"
-    },
     "updateTabThumbnail": {
         "message": "Update das Vorschaubild des Tabs",
         "description": "Update thumbnail for this tab"
@@ -423,10 +419,6 @@
         "message": "Icon-Stil für eine neue Gruppe",
         "description": "Icon style for a new group"
     },
-    "openPopupHotkeyTitle": {
-        "message": "Öffne Gruppen Pop-up",
-        "description": "Open the groups pop-up"
-    },
     "openGroupInNewWindow": {
         "message": "Öffne Gruppe in neuem Fenster",
         "description": "Open group in new window"
@@ -446,20 +438,6 @@
     "includeTabFavIconsIntoBackup": {
         "message": "Favoriten-Icons in Backup einbeziehen (erhöht Größe der Backup-Datei)",
         "description": "Include tab fav-icons in backup (makes backup file size bigger)"
-    },
-    "tabsThumbnailsSize": {
-        "message": "Größe der Tab-Vorschaubilder: $size$",
-        "description": "Tabs thumbnails size: $size$",
-        "placeholders": {
-            "size": {
-                "content": "$1",
-                "example": "2 MB"
-            }
-        }
-    },
-    "clearTabsThumbnails": {
-        "message": "Lösche Tab-Vorschaubilder",
-        "description": "Clear tabs thumbnails"
     },
     "groupRemovedByExtension": {
         "message": "Gruppe \"$group$\" gelöscht von der Erweiterung: $extension$",

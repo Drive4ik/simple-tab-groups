@@ -9,30 +9,18 @@
 
     import popup from './popup.vue';
     import swatches from 'vue-swatches';
+    import Groups from '../js/groups';
+    import Tabs from '../js/tabs';
     import 'vue-swatches/dist/vue-swatches.min.css';
 
     const {BG} = browser.extension.getBackgroundPage();
 
-    const fieldsToEdit = [
-        'id',
-        'title',
-        'iconColor',
-        'iconUrl',
-        'iconViewType',
-        'catchTabRules',
-        'catchTabContainers',
-        'muteTabsWhenGroupCloseAndRestoreWhenOpen',
-        'isSticky',
-        'showTabAfterMovingItIntoThisGroup',
-        'windowId'
-    ];
-
     export default {
         name: 'edit-group',
         props: {
-            group: {
+            groupId: {
                 required: true,
-                type: Object,
+                type: Number,
             },
             canLoadFile: {
                 type: Boolean,
@@ -44,39 +32,17 @@
             swatches: swatches,
         },
         data() {
-            let vm = this,
-                containers = BG.containers.getAll(),
-                groups = BG.getGroups(),
-                disabledContainers = {};
-
-            for (let cookieStoreId in containers) {
-                let groupWhichHasContainer = groups.find(group => group.id !== this.group.id && group.catchTabContainers.includes(cookieStoreId));
-
-                if (groupWhichHasContainer) {
-                    disabledContainers[cookieStoreId] = groupWhichHasContainer.title;
-                }
-            }
-
             return {
-                containers: containers,
-                disabledContainers: disabledContainers,
+                containers: BG.containers.getAll(),
+                disabledContainers: {},
 
                 showMessageCantLoadFile: false,
 
                 groupIconViewTypes: constants.groupIconViewTypes,
-                groupClone: new Vue({
-                    data: utils.extractKeys(this.group, fieldsToEdit),
-                    computed: {
-                        iconUrlToDisplay() {
-                            // watch variables
-                            this.iconUrl;
-                            this.iconColor;
-                            this.iconViewType;
 
-                            return utils.getGroupIconUrl(this);
-                        },
-                    },
-                }),
+                group: null,
+
+                changedKeys: [],
 
                 currentTabUrl: null,
             };
@@ -86,7 +52,7 @@
                 if (this.currentTabUrl) {
                     let currentDomainRegexp = this.currentTabUrl.hostname.replace(/\./g, '\\.');
 
-                    if (!this.groupClone.catchTabRules.includes(currentDomainRegexp)) {
+                    if (!this.group.catchTabRules.includes(currentDomainRegexp)) {
                         return currentDomainRegexp;
                     }
                 }
@@ -102,66 +68,102 @@
 
                         let currentDomainWithSubdomainsRegexp = ['.*', ...parts.slice(-2)].join('\\.');
 
-                        if (!this.groupClone.catchTabRules.includes(currentDomainWithSubdomainsRegexp)) {
+                        if (!this.group.catchTabRules.includes(currentDomainWithSubdomainsRegexp)) {
                             return currentDomainWithSubdomainsRegexp;
                         }
                     }
                 }
             },
         },
+        async created() {
+            let [group, groups] = await Groups.load(this.groupId),
+                groupKeys = Object.keys(group);
+
+            this.group = new Vue({
+                data: group,
+                computed: {
+                    iconUrlToDisplay() {
+                        return utils.getGroupIconUrl({
+                            iconUrl: this.iconUrl,
+                            iconColor: this.iconColor,
+                            iconViewType: this.iconViewType,
+                        });
+                    },
+                },
+            });
+
+            groupKeys.forEach(function(key) {
+                let unwatch = this.$watch(`group.${key}`, function() {
+                    this.changedKeys.push(key);
+                    unwatch();
+                }, {
+                    deep: true,
+                });
+            }, this);
+
+            for (let cookieStoreId in this.containers) {
+                let groupWhichHasContainer = groups.find(gr => gr.id !== this.groupId && gr.catchTabContainers.includes(cookieStoreId));
+
+                if (groupWhichHasContainer) {
+                    this.$set(this.disabledContainers, cookieStoreId, groupWhichHasContainer.title);
+                }
+            }
+
+            let currentTab = await Tabs.getActive();
+
+            if (currentTab && currentTab.url.startsWith('http')) {
+                this.currentTabUrl = new URL(currentTab.url);
+            }
+        },
         mounted() {
-            this.setFocus();
-            this.loadCurrentTabUrl();
+            if (this.group) {
+                this.setFocus();
+            } else {
+                let unwatch = this.$watch('group', function() {
+                    this.setFocus();
+                    unwatch();
+                });
+            }
         },
         methods: {
             lang: browser.i18n.getMessage,
 
-            async loadCurrentTabUrl() {
-                let [currentTab] = await browser.tabs.query({
-                    active: true,
-                });
-
-                if (currentTab && currentTab.url.startsWith('http')) {
-                    this.currentTabUrl = new URL(currentTab.url);
-                }
-            },
-
             addCurrentDomain(domainRegexpStr) {
-                this.groupClone.catchTabRules += (this.groupClone.catchTabRules.length ? '\n' : '') + domainRegexpStr;
+                this.group.catchTabRules += (this.group.catchTabRules.length ? '\n' : '') + domainRegexpStr;
             },
 
             setFocus() {
-                this.$refs.groupTitle.focus();
+                this.$nextTick(() => this.$refs.groupTitle.focus());
             },
 
             setIconView(groupIcon) {
-                this.groupClone.iconViewType = groupIcon;
-                this.groupClone.iconUrl = null;
+                this.group.iconViewType = groupIcon;
+                this.group.iconUrl = null;
             },
 
             setIconUrl(iconUrl) {
-                this.groupClone.iconViewType = null;
-                this.groupClone.iconUrl = iconUrl;
+                this.group.iconViewType = null;
+                this.group.iconUrl = iconUrl;
             },
 
             setRandomColor() {
-                this.groupClone.iconUrl = null;
-                this.groupClone.iconColor = utils.randomColor();
+                this.group.iconUrl = null;
+                this.group.iconColor = utils.randomColor();
 
-                if (!this.groupClone.iconViewType) {
-                    this.groupClone.iconViewType = BG.getOptions().defaultGroupIconViewType;
+                if (!this.group.iconViewType) {
+                    this.group.iconViewType = BG.getOptions().defaultGroupIconViewType;
                 }
             },
 
             getIconTypeUrl(iconType) {
                 return utils.getGroupIconUrl({
                     iconViewType: iconType,
-                    iconColor: this.groupClone.iconColor || 'rgb(66, 134, 244)',
+                    iconColor: this.group.iconColor || 'rgb(66, 134, 244)',
                 });
             },
 
             isDisabledContainer(container) {
-                return !this.groupClone.catchTabContainers.includes(container.cookieStoreId) && container.cookieStoreId in this.disabledContainers;
+                return !this.group.catchTabContainers.includes(container.cookieStoreId) && container.cookieStoreId in this.disabledContainers;
             },
 
             async selectUserGroupIcon() {
@@ -187,23 +189,30 @@
             },
 
             async saveGroup() {
-                let group = utils.clone(this.groupClone.$data);
+                if (this.changedKeys.length) {
+                    let group = {};
 
-                delete group.windowId;
+                    this.changedKeys.forEach(key => group[key] = this.group[key]);
 
-                group.title = utils.createGroupTitle(group.title, group.id);
-                group.catchTabRules
-                    .split(/\s*\n\s*/)
-                    .filter(Boolean)
-                    .forEach(function(regExpStr) {
-                        try {
-                            new RegExp(regExpStr);
-                        } catch (e) {
-                            utils.notify(browser.i18n.getMessage('invalidRegExpRuleTitle', regExpStr));
-                        }
-                    });
+                    if (this.changedKeys.includes('title')) {
+                        group.title = utils.createGroupTitle(group.title, this.groupId);
+                    }
 
-                BG.updateGroup(group.id, group);
+                    if (this.changedKeys.includes('catchTabRules')) {
+                        group.catchTabRules
+                            .split(/\s*\n\s*/)
+                            .filter(Boolean)
+                            .forEach(function(regExpStr) {
+                                try {
+                                    new RegExp(regExpStr);
+                                } catch (e) {
+                                    utils.notify(browser.i18n.getMessage('invalidRegExpRuleTitle', regExpStr));
+                                }
+                            });
+                    }
+
+                    await Groups.update(this.groupId, group);
+                }
 
                 this.$emit('saved');
             },
@@ -212,14 +221,14 @@
 </script>
 
 <template>
-    <div @keydown.enter.stop="saveGroup" tabindex="-1" class="no-outline">
+    <div v-if="group" @keydown.enter.stop="saveGroup" tabindex="-1" class="no-outline">
         <div class="field">
             <label class="label" v-text="lang('title')"></label>
             <div class="control has-icons-left">
-                <input ref="groupTitle" v-model.trim="groupClone.title" type="text" class="input" maxlength="120" :placeholder="lang('title')" />
+                <input ref="groupTitle" v-model.trim="group.title" type="text" class="input" maxlength="120" :placeholder="lang('title')" />
                 <span class="icon is-small is-left">
                     <figure class="image is-16x16 is-inline-block">
-                        <img :src="groupClone.iconUrlToDisplay" />
+                        <img :src="group.iconUrlToDisplay" />
                     </figure>
                 </span>
             </div>
@@ -229,14 +238,14 @@
             <label class="label" v-text="lang('iconStyle')"></label>
             <div class="field is-grouped cut-bottom-margin">
                 <div class="control">
-                    <swatches v-model.trim="groupClone.iconColor" :title="lang('iconColor')" colors="text-advanced" popover-to="right" show-fallback :trigger-style="{
+                    <swatches v-model.trim="group.iconColor" :title="lang('iconColor')" colors="text-advanced" popover-to="right" show-fallback :trigger-style="{
                         width: '35px',
                         height: '30px',
                         borderRadius: '4px',
                     }" />
                 </div>
                 <div v-for="iconViewType in groupIconViewTypes" :key="iconViewType" class="control">
-                    <button @click="setIconView(iconViewType)" :class="['button', {'is-focused': !groupClone.iconUrl && iconViewType === groupClone.iconViewType}]">
+                    <button @click="setIconView(iconViewType)" :class="['button', {'is-focused': !group.iconUrl && iconViewType === group.iconViewType}]">
                         <figure class="image is-16x16 is-inline-block">
                             <img :src="getIconTypeUrl(iconViewType)" />
                         </figure>
@@ -258,7 +267,7 @@
         <div class="field">
             <div class="control">
                 <label class="checkbox">
-                    <input type="checkbox" v-model="groupClone.muteTabsWhenGroupCloseAndRestoreWhenOpen" />
+                    <input type="checkbox" v-model="group.muteTabsWhenGroupCloseAndRestoreWhenOpen" />
                     <span v-text="lang('muteTabsWhenGroupCloseAndRestoreWhenOpen')"></span>
                 </label>
             </div>
@@ -270,7 +279,7 @@
             <label class="label" v-text="lang('tabMoving')"></label>
             <div class="control is-inline-flex indent-children">
                 <label class="checkbox">
-                    <input type="checkbox" v-model="groupClone.isSticky" />
+                    <input type="checkbox" v-model="group.isSticky" />
                     <span v-text="lang('isStickyGroupTitle')"></span>
                 </label>
                 <span class="cursor-help" :title="lang('isStickyGroupHelp')">
@@ -279,7 +288,7 @@
             </div>
             <div class="control">
                 <label class="checkbox">
-                    <input type="checkbox" v-model="groupClone.showTabAfterMovingItIntoThisGroup" />
+                    <input type="checkbox" v-model="group.showTabAfterMovingItIntoThisGroup" />
                     <span v-text="lang('showTabAfterMovingItIntoThisGroup')"></span>
                 </label>
             </div>
@@ -296,7 +305,7 @@
                             <input type="checkbox"
                                 :disabled="isDisabledContainer(container)"
                                 :value="container.cookieStoreId"
-                                v-model="groupClone.catchTabContainers"
+                                v-model="group.catchTabContainers"
                                 />
                             <img :src="container.iconUrl" class="size-16 fill-context" :style="{fill: container.colorCode}" />
                             <span class="word-break-all" v-text="container.name"></span>
@@ -315,7 +324,7 @@
                 </span>
             </label>
             <div class="control">
-                <textarea class="textarea" :rows="canLoadFile ? false : 2" @keydown.enter.stop v-model.trim="groupClone.catchTabRules" :placeholder="lang('regexpForTabsPlaceholder')"></textarea>
+                <textarea class="textarea reg-exp" :rows="canLoadFile ? false : 2" @keydown.enter.stop v-model.trim="group.catchTabRules" :placeholder="lang('regexpForTabsPlaceholder')"></textarea>
             </div>
         </div>
 
@@ -367,5 +376,9 @@
 
     .containers-wrapper .field {
         margin: 0;
+    }
+
+    .reg-exp {
+        font-family: Monaco, Consolas, Andale Mono, Lucida Console;
     }
 </style>

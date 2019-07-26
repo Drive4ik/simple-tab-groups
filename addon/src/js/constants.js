@@ -88,7 +88,6 @@ const DEFAULT_OPTIONS = {
     version: '1.0',
     groups: [],
     lastCreatedGroupPosition: 0,
-    thumbnails: {},
 
     // options
     discardTabsAfterHide: false,

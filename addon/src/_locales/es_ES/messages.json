@@ -395,10 +395,6 @@
         "message": "Cerrar todas estas pestañas",
         "description": "Close all of these tabs"
     },
-    "thisTabWillCreateAsNew": {
-        "message": "Esta pestaña se creará como nueva",
-        "description": "This tab will create as new"
-    },
     "updateTabThumbnail": {
         "message": "Actualizar miniatura para esta pestaña",
         "description": "Update thumbnail for this tab"
@@ -423,10 +419,6 @@
         "message": "Estilo de ícono para un grupo nuevo",
         "description": "Icon style for a new group"
     },
-    "openPopupHotkeyTitle": {
-        "message": "Abrir el pop-up de los grupos",
-        "description": "Open the groups pop-up"
-    },
     "openGroupInNewWindow": {
         "message": "Abrir grupo en una nueva ventana",
         "description": "Open group in new window"
@@ -446,20 +438,6 @@
     "includeTabFavIconsIntoBackup": {
         "message": "Incluir los favicons en la copia de seguridad (causa que el archivo de respaldo sea más grande)",
         "description": "Include tab fav-icons in backup (makes backup file size bigger)"
-    },
-    "tabsThumbnailsSize": {
-        "message": "Tamaño de la miniatura de las pestañas: $size$",
-        "description": "Tabs thumbnails size: $size$",
-        "placeholders": {
-            "size": {
-                "content": "$1",
-                "example": "2 MB"
-            }
-        }
-    },
-    "clearTabsThumbnails": {
-        "message": "Borrar todas las miniaturas de las pestañas",
-        "description": "Clear tabs thumbnails"
     },
     "groupRemovedByExtension": {
         "message": "El grupo \"$group$\" fue eliminado por la extensión: $extension$",

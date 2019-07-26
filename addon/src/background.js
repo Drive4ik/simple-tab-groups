@@ -46,12 +46,22 @@ async function createTabsSafe(tabs, hideTab, groupId, withRemoveEvents = true) {
 }
 
 function sendMessage(data) {
+    if (!window.BG.inited) {
+        console.warn('addon not yet loaded');
+        return;
+    }
+
     console.info('BG event:', data.action, utils.clone(data));
 
     browser.runtime.sendMessage(data).catch(noop);
 }
 
 function sendExternalMessage(data) {
+    if (!window.BG.inited) {
+        console.warn('addon not yet loaded');
+        return;
+    }
+
     console.info('BG event external:', data.action, utils.clone(data));
 
     Object.keys(constants.EXTENSIONS_WHITE_LIST)
@@ -882,7 +892,7 @@ async function _getBookmarkFolderFromTitle(title, parentId, index) {
             type: 'folder',
         };
 
-        if (index !== undefined) {
+        if (Number.isFinite(index)) {
             bookmarkData.index = index;
         }
 
@@ -906,7 +916,13 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
     }
 
     if (!group) {
-        throw Error('group has invalid type in exportGroupToBookmarks');
+        throw TypeError('group has invalid type in exportGroupToBookmarks');
+    }
+
+    if (Number.isFinite(group)) {
+        let [gr, groups, index] = await Groups.load(group, true);
+        group = gr;
+        groupIndex = index;
     }
 
     if (!group.tabs.length) {
@@ -914,11 +930,11 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
         return;
     }
 
-    let win = null;
-
     if (showMessages) {
-        win = await Windows.get();
-        setBrowserAction(win.id, 'loading');
+        let windowId = await Windows.getLastFocusedNormalWindow();
+        if (windowId) {
+            setBrowserAction(windowId, 'loading');
+        }
     }
 
     let rootFolder = {
@@ -937,17 +953,19 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
         let bookmarksToRemove = [];
 
         group.tabs.forEach(function(tab) {
-            groupBookmarkFolder.children = groupBookmarkFolder.children.filter(function(b) {
-                if (b.type === browser.menus.ContextType.BOOKMARK && b.url === tab.url) {
-                    bookmarksToRemove.push(b);
-                    return false;
-                }
+            groupBookmarkFolder.children = groupBookmarkFolder.children.filter(function(bookmark) {
+                if (bookmark.type === browser.menus.ContextType.BOOKMARK) {
+                    if (bookmark.url === tab.url) {
+                        bookmarksToRemove.push(bookmark);
+                        return false;
+                    }
 
-                return b.type === browser.menus.ContextType.BOOKMARK;
+                    return true;
+                }
             });
         });
 
-        await Promise.all(bookmarksToRemove.map(b => browser.bookmarks.remove(b.id).catch(noop)));
+        await Promise.all(bookmarksToRemove.map(bookmark => browser.bookmarks.remove(bookmark.id).catch(noop)));
 
         let children = await browser.bookmarks.getChildren(groupBookmarkFolder.id);
 
@@ -972,7 +990,7 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
             }
 
             if (duplicatedSeparators.length) {
-                await Promise.all(duplicatedSeparators.map(sep => browser.bookmarks.remove(sep.id).catch(noop)));
+                await Promise.all(duplicatedSeparators.map(separator => browser.bookmarks.remove(separator.id).catch(noop)));
             }
         }
     }
@@ -1409,11 +1427,19 @@ async function resetAutoBackup() {
 }
 
 async function createBackup(includeTabThumbnails, includeTabFavIcons, isAutoBackup = false, overwrite = false) {
-    let data = await storage.get(null);
+    let [data, groups] = await Promise.all([storage.get(null), Groups.load(null, true)]);
 
     if (isAutoBackup && !data.groups.length) {
         return;
     }
+
+    data.groups = groups.map(function(group) {
+        group.tabs = group.tabs.map(function({url, title, cookieStoreId, isInReaderMode}) {
+            return {url, title, cookieStoreId, isInReaderMode};
+        });
+
+        return group;
+    });
 
     if (!includeTabThumbnails) {
         delete data.thumbnails;
@@ -1482,9 +1508,6 @@ window.BG = {
     cache,
     openManageGroups,
 
-    // getGroups: () => utils.clone(_groups),
-    // Windows.load,
-
     getOptions: () => utils.clone(options),
     saveOptions,
 
@@ -1494,9 +1517,6 @@ window.BG = {
         onCreatedWindow,
     },
 
-    // createWindow,
-    // getWindow,
-
     createTabsSafe,
 
     addUndoRemoveGroupItem,
@@ -1504,59 +1524,22 @@ window.BG = {
     addExcludeTabsIds,
     removeExcludeTabsIds,
 
-    // getTabs,
-    // moveTabs,
-
     sendMessage,
     sendExternalMessage,
 
     setBrowserAction,
     updateBrowserActionData,
     updateMoveTabMenus,
-    // clearTabsThumbnails,
 
-    // setFocusOnWindow,
-
-    // sortGroups,
     exportGroupToBookmarks,
     applyGroup,
-    // getNextGroupTitle,
-
-    // getTabFavIconUrl,
-    // updateTabThumbnail,
-
-    // getThumbnails: () => utils.clone(_thumbnails),
-
-    // addTab,
-    // removeTab,
-
-    // createGroup,
-    // moveGroup,
-    // addGroup,
-    // updateGroup,
-    // removeGroup,
 
     runMigrateForData,
 
     createBackup,
 };
 
-function _resetGroupsIdsAndTabsIds(groups) {
-    return groups.map(function(group) {
-        delete group.windowId;
-        group.tabs = group.tabs.filter(Boolean).map(function(tab) {
-            tab.id = null;
-            return tab;
-        });
-
-        return group;
-    });
-}
-
 async function runMigrateForData(data) {
-    // reset tab ids
-    data.groups = _resetGroupsIdsAndTabsIds(data.groups);
-
     let currentVersion = manifest.version;
 
     if (data.version === currentVersion) {
@@ -1718,6 +1701,7 @@ async function runMigrateForData(data) {
             version: '4.0',
             migration() {
                 data.withoutSession = true;
+
                 data.groups.forEach(group => delete group.windowId);
             },
         },
@@ -1767,14 +1751,6 @@ async function removeSTGNewTabUrls(windows) {
     }));
 }
 
-// setInterval(async function() {
-//     console.time('loadAllGroups()');
-//     let groups = await loadAllGroups();
-//     console.timeEnd('loadAllGroups()');
-
-//     console.debug(groups);
-// }, 5000);
-
 // { reason: "update", previousVersion: "3.0.1", temporary: true }
 // { reason: "install", temporary: true }
 // browser.runtime.onInstalled.addListener(console.info.bind(null, 'onInstalled'));
@@ -1798,17 +1774,17 @@ async function init() {
         data.groups = [];
     }
 
+    await containers.init();
+
     data = await runMigrateForData(data); // run migration for data
 
-    constants.allOptionsKeys.forEach(key => options[key] = key in data ? data[key] : utils.clone(constants.DEFAULT_OPTIONS[key])); // reload options
+    options = utils.extractKeys(data, constants.allOptionsKeys, true);
 
     let windows = await Windows.load(true);
 
     if (!windows.length) {
         throw browser.i18n.getMessage('nowFoundWindowsAddonStoppedWorking');
     }
-
-    await containers.init();
 
     // clear unused thumbnails TODO
 /*    let allSafedTabUrls = data.groups.reduce((acc, group) => acc.concat(group.tabs.map(tab => utils.makeSafeUrlForThumbnail(tab.url))), []);
@@ -1821,24 +1797,23 @@ async function init() {
 
         window.BG.waitRestoreSession = true;
 
+        setBrowserAction(undefined, 'lang:waitingForSessionRestoreNotification', 'loading');
+
         await new Promise(function(resolve) {
             let tryCount = 0;
 
             async function checkRestoreSession() {
-                let wins = await Windows.load(true);
+                windows = await Windows.load(true);
 
-                if (isRestoreSessionNow(wins)) {
+                if (isRestoreSessionNow(windows)) {
                     tryCount++;
 
                     if (3 === tryCount) {
-                        setBrowserAction(undefined, 'lang:waitingForSessionRestoreNotification', 'loading');
-
                         utils.notify(browser.i18n.getMessage('waitingForSessionRestoreNotification'), undefined, 'wait-session-restore-message');
                     }
 
                     setTimeout(checkRestoreSession, 1000);
                 } else {
-                    windows = wins;
                     resolve();
                 }
             }
@@ -1846,12 +1821,12 @@ async function init() {
             checkRestoreSession();
         });
 
+        window.BG.waitRestoreSession = false;
+
         setBrowserAction(undefined, 'loading');
 
         browser.notifications.clear('wait-session-restore-message');
     }
-
-    window.BG.waitRestoreSession = false;
 
     if (windows.some(win => win.tabs.some(tab => isStgNewTabUrl(tab.url)))) {
         windows = await removeSTGNewTabUrls(windows);
@@ -2005,7 +1980,9 @@ async function init() {
 
     // data.groups.forEach(group => group.tabs = []); // TMP for developing
 
+    // TODO if mac -> setmetakey to false
 
+    // TODO нужно перепроверить при старте аддона все ли вкладки в нужном окне
 
     // OLD code ============================
 

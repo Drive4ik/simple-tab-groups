@@ -271,13 +271,16 @@ async function updateThumbnail(tabId, force) {
     let thumbnail = null;
 
     try {
-        let thumbnailBase64 = await browser.tabs.captureTab(tab.id);
+        let thumbnailBase64 = await browser.tabs.captureTab(tab.id, {
+            format: browser.extensionTypes.ImageFormat.JPEG,
+            quality: 25,
+        });
 
         thumbnail = await new Promise(function(resolve, reject) {
             let img = new Image();
 
             img.onload = function() {
-                resolve(utils.resizeImage(img, 192, Math.floor(img.width * 192 / img.height), false));
+                resolve(utils.resizeImage(img, 192, Math.floor(img.width * 192 / img.height), false, 'image/jpeg', 0.7));
             };
 
             img.onerror = img.onabort = reject;
@@ -411,7 +414,7 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
     utils.notify(message)
         .then(async function(groupId, tabId) {
             let [group] = await Groups.load(groupId),
-                tab = await browser.tabs.get(tabId).catch(noop);
+                tab = await browser.tabs.get(tabId).catch(function() {});
 
             if (group && tab) {
                 let winId = BG.cache.getWindowId(groupId) || await Windows.getLastFocusedNormalWindow();

@@ -210,7 +210,7 @@ function notify(message, timer = 20000, id) {
                 }
             }.bind(null, id);
 
-        setTimeout(() => !called && reject(), timer, id);
+        setTimeout(id => !called && reject(id), timer, id);
 
         browser.notifications.onClicked.addListener(listener);
     });
@@ -457,7 +457,7 @@ function convertSvgToUrl(svg) {
     return 'data:image/svg+xml;base64,' + b64EncodeUnicode(svg);
 }
 
-function resizeImage(img, height, width, useTransparency = true) { // img: new Image()
+function resizeImage(img, height, width, useTransparency = true, ...canvasParams) { // img: new Image()
     let canvas = document.createElement('canvas'),
         context = canvas.getContext('2d');
 
@@ -470,12 +470,12 @@ function resizeImage(img, height, width, useTransparency = true) { // img: new I
 
     context.drawImage(img, 0, 0, width, height);
 
-    return isCanvasBlank(canvas, useTransparency) ? null : canvas.toDataURL();
+    return isCanvasBlank(canvas, useTransparency, ...canvasParams) ? null : canvas.toDataURL(...canvasParams);
 }
 
-function isCanvasBlank(canvas, useTransparency) {
+function isCanvasBlank(canvas, useTransparency, ...canvasParams) {
     let blank = document.createElement('canvas'),
-        canvasDataUrl = canvas.toDataURL();
+        canvasDataUrl = canvas.toDataURL(...canvasParams);
 
     if (!useTransparency) {
         blank.mozOpaque = true;
@@ -484,7 +484,7 @@ function isCanvasBlank(canvas, useTransparency) {
     blank.width = canvas.width;
     blank.height = canvas.height;
 
-    let isEmpty = canvasDataUrl === blank.toDataURL();
+    let isEmpty = canvasDataUrl === blank.toDataURL(...canvasParams);
 
     if (!isEmpty) {
         let blankContext = blank.getContext('2d');
@@ -492,7 +492,7 @@ function isCanvasBlank(canvas, useTransparency) {
         blankContext.fillStyle = 'rgb(255, 255, 255)';
         blankContext.fillRect(0, 0, blank.width, blank.height);
 
-        isEmpty = canvasDataUrl === blank.toDataURL();
+        isEmpty = canvasDataUrl === blank.toDataURL(...canvasParams);
     }
 
     return isEmpty;

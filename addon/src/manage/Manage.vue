@@ -18,6 +18,8 @@
 
     const {BG} = browser.extension.getBackgroundPage();
 
+    document.title = browser.i18n.getMessage('manageGroupsTitle');
+
     window.addEventListener('error', utils.errorEventHandler);
     Vue.config.errorHandler = utils.errorEventHandler;
 
@@ -40,7 +42,6 @@
             });
         }
     });
-
 
     export default {
         data() {
@@ -82,14 +83,12 @@
         //     dnd: dnd,
         // },
         async created() {
-            document.title = this.lang('manageGroupsTitle');
-
             this.hasThumbnailsPermission = await browser.permissions.contains(constants.PERMISSIONS.ALL_URLS);
 
             this.loadOptions();
         },
         async mounted() {
-            this.loadGroups();
+            await this.loadGroups();
 
             this.setupListeners();
 
@@ -269,8 +268,6 @@
             },
 
             mapGroup(group) {
-                let vm = this;
-
                 group.tabs = group.tabs.map(this.mapTab, this);
                 group.draggable = true;
                 group.isMoving = false;
@@ -279,7 +276,7 @@
                 return new Vue({
                     data: group,
                     watch: {
-                        title: function(title) { // TODO ????
+                        title: function(title) {
                             Groups.update(this.id, {
                                 title: utils.createGroupTitle(title, this.id),
                             });
@@ -287,12 +284,11 @@
                     },
                     computed: {
                         iconUrlToDisplay() {
-                            // watch variables
-                            this.iconUrl;
-                            this.iconColor;
-                            this.iconViewType;
-
-                            return utils.getGroupIconUrl(this);
+                            return utils.getGroupIconUrl({
+                                iconUrl: this.iconUrl,
+                                iconColor: this.iconColor,
+                                iconViewType: this.iconViewType,
+                            });
                         },
                     },
                 });
@@ -420,6 +416,9 @@
                     iconViewType: null,
                     iconUrl: Tabs.getFavIconUrl(tab),
                 });
+            },
+            discardTab(tabId) {
+                browser.tabs.discard(tabId).catch(function() {});
             },
 
             getTabTitle: utils.getTabTitle,
@@ -649,7 +648,7 @@
                                 <div v-if="tab.container" class="container" :title="tab.container.name" :style="{borderColor: tab.container.colorCode}">
                                     <img class="size-16" :src="tab.container.iconUrl" :style="{fill: tab.container.colorCode}">
                                 </div>
-                                <div v-if="isTabLoading(tab)" class="refresh-icon" :title="lang('thisTabWillCreateAsNew')" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                <div v-if="isTabLoading(tab)" class="refresh-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <img class="spin size-16" src="/icons/refresh.svg"/>
                                 </div>
                                 <div class="screenshot" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
@@ -658,7 +657,7 @@
                                 <div
                                     @mousedown.middle.prevent
                                     @mouseup.middle.prevent="removeTab(tab)"
-                                    class="tab-title text-ellipsis"
+                                    :class="['tab-title text-ellipsis', {'tab-discarded': tab.discarded}]"
                                     v-text="getTabTitle(tab)"></div>
                             </div>
 
@@ -712,6 +711,10 @@
                     <li @click="openGroupInNewWindow(menu.data.group.id, menu.data.tab.id)">
                         <img src="/icons/window-new.svg" class="size-16" />
                         <span v-text="lang('openGroupInNewWindow')"></span>
+                    </li>
+                    <li @click="discardTab(menu.data.tab.id)">
+                        <img src="/icons/snowflake.svg" class="size-16" />
+                        <span v-text="lang('discardTabTitle')"></span>
                     </li>
                     <li @click="setTabIconAsGroupIcon(menu.data.tab, menu.data.group)">
                         <img src="/icons/image.svg" class="size-16" />

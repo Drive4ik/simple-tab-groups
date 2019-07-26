@@ -217,9 +217,9 @@ async function update(groupId, updateData) {
         });
 
         BG.updateMoveTabMenus();
-    }
 
-    BG.updateBrowserActionData(groupId);
+        BG.updateBrowserActionData(groupId);
+    }
 }
 
 async function move(groupId, newGroupIndex) {

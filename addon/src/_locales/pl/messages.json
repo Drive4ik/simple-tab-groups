@@ -395,10 +395,6 @@
         "message": "Zamknij wszystkie te karty",
         "description": "Close all of these tabs"
     },
-    "thisTabWillCreateAsNew": {
-        "message": "Ta zakładka zostanie utworzona jako nowa",
-        "description": "This tab will create as new"
-    },
     "updateTabThumbnail": {
         "message": "Zaktualizuj miniaturę dla tej zakładki",
         "description": "Update thumbnail for this tab"
@@ -423,10 +419,6 @@
         "message": "Styl ikon dla nowej grupy",
         "description": "Icon style for a new group"
     },
-    "openPopupHotkeyTitle": {
-        "message": "Otwórz okno popup z grupami",
-        "description": "Open the groups pop-up"
-    },
     "openGroupInNewWindow": {
         "message": "Otwórz grupę w nowym oknie",
         "description": "Open group in new window"
@@ -446,20 +438,6 @@
     "includeTabFavIconsIntoBackup": {
         "message": "Uwzględnij favikony kart w kopii (plik kopii będzie przez to większy)",
         "description": "Include tab fav-icons in backup (makes backup file size bigger)"
-    },
-    "tabsThumbnailsSize": {
-        "message": "Waga miniaturek kart: $size$",
-        "description": "Tabs thumbnails size: $size$",
-        "placeholders": {
-            "size": {
-                "content": "$1",
-                "example": "2 MB"
-            }
-        }
-    },
-    "clearTabsThumbnails": {
-        "message": "Usuń miniaturki kart",
-        "description": "Clear tabs thumbnails"
     },
     "groupRemovedByExtension": {
         "message": "Grupa \"$group$\" została usunięta przez rozszerzenie: $extension$",

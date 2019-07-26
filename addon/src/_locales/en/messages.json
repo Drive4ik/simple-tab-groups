@@ -399,10 +399,6 @@
         "message": "Close all of these tabs",
         "description": "Close all of these tabs"
     },
-    "thisTabWillCreateAsNew": {
-        "message": "This tab will create as new",
-        "description": "This tab will create as new"
-    },
     "updateTabThumbnail": {
         "message": "Update thumbnail for this tab",
         "description": "Update thumbnail for this tab"
@@ -427,10 +423,6 @@
         "message": "Icon style for a new group",
         "description": "Icon style for a new group"
     },
-    "openPopupHotkeyTitle": {
-        "message": "Open the groups pop-up",
-        "description": "Open the groups pop-up"
-    },
     "openGroupInNewWindow": {
         "message": "Open group in new window",
         "description": "Open group in new window"
@@ -450,20 +442,6 @@
     "includeTabFavIconsIntoBackup": {
         "message": "Include tab fav-icons in backup (makes backup file size bigger)",
         "description": "Include tab fav-icons in backup (makes backup file size bigger)"
-    },
-    "tabsThumbnailsSize": {
-        "message": "Tabs thumbnails size: $size$",
-        "description": "Tabs thumbnails size: $size$",
-        "placeholders": {
-            "size": {
-                "content": "$1",
-                "example": "2 MB"
-            }
-        }
-    },
-    "clearTabsThumbnails": {
-        "message": "Clear tabs thumbnails",
-        "description": "Clear tabs thumbnails"
     },
     "groupRemovedByExtension": {
         "message": "Group \"$group$\" removed by extension: $extension$",

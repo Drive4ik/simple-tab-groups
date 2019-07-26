@@ -395,10 +395,6 @@
         "message": "Fermer tous ces onglets",
         "description": "Close all of these tabs"
     },
-    "thisTabWillCreateAsNew": {
-        "message": "Créer un nouvel onglet",
-        "description": "This tab will create as new"
-    },
     "updateTabThumbnail": {
         "message": "Mettre à jour la capture de cet onglet",
         "description": "Update thumbnail for this tab"
@@ -423,10 +419,6 @@
         "message": "Style de l’icône pour les nouveaux groupes",
         "description": "Icon style for a new group"
     },
-    "openPopupHotkeyTitle": {
-        "message": "Ouvrir la pop-up des groupes",
-        "description": "Open the groups pop-up"
-    },
     "openGroupInNewWindow": {
         "message": "Ouvrir le groupe dans une nouvelle fenêtre",
         "description": "Open group in new window"
@@ -446,20 +438,6 @@
     "includeTabFavIconsIntoBackup": {
         "message": "Inclure les icônes des favoris (fav-icons) dans la sauvegarder (ceci augmentera la taille du fichier de sauvegarde)",
         "description": "Include tab fav-icons in backup (makes backup file size bigger)"
-    },
-    "tabsThumbnailsSize": {
-        "message": "Taille des captures : $size$",
-        "description": "Tabs thumbnails size: $size$",
-        "placeholders": {
-            "size": {
-                "content": "$1",
-                "example": "2 MB"
-            }
-        }
-    },
-    "clearTabsThumbnails": {
-        "message": "Effacer les captures",
-        "description": "Clear tabs thumbnails"
     },
     "groupRemovedByExtension": {
         "message": "Le groupe \"$group$\" a été supprimé par l'extension : $extension$",

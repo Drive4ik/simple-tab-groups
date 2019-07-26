@@ -395,10 +395,6 @@
         "message": "关闭这些标签",
         "description": "Close all of these tabs"
     },
-    "thisTabWillCreateAsNew": {
-        "message": "该标签页将会新建",
-        "description": "This tab will create as new"
-    },
     "updateTabThumbnail": {
         "message": "更新该标签页的缩略图",
         "description": "Update thumbnail for this tab"
@@ -423,10 +419,6 @@
         "message": "新群组的图标样式",
         "description": "Icon style for a new group"
     },
-    "openPopupHotkeyTitle": {
-        "message": "打开群组弹出框",
-        "description": "Open the groups pop-up"
-    },
     "openGroupInNewWindow": {
         "message": "在新窗口打开群组",
         "description": "Open group in new window"
@@ -446,20 +438,6 @@
     "includeTabFavIconsIntoBackup": {
         "message": "在备份中保存标签页网站图标（会让备份文件更大）",
         "description": "Include tab fav-icons in backup (makes backup file size bigger)"
-    },
-    "tabsThumbnailsSize": {
-        "message": "标签页缩略图大小：$size$",
-        "description": "Tabs thumbnails size: $size$",
-        "placeholders": {
-            "size": {
-                "content": "$1",
-                "example": "2 MB"
-            }
-        }
-    },
-    "clearTabsThumbnails": {
-        "message": "清除标签页缩略图",
-        "description": "Clear tabs thumbnails"
     },
     "groupRemovedByExtension": {
         "message": "群组\"$group$\" 被扩展\"$extension$\"移除",

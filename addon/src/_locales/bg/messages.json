@@ -383,10 +383,6 @@
         "message": "Затваряне на разделите",
         "description": "Close all of these tabs"
     },
-    "thisTabWillCreateAsNew": {
-        "message": "Разделът ще бъде създаден",
-        "description": "This tab will create as new"
-    },
     "updateTabThumbnail": {
         "message": "Обновяване на миниатюрата на раздела",
         "description": "Update thumbnail for this tab"
@@ -402,10 +398,6 @@
     "enterDefaultGroupIconViewTypeTitle": {
         "message": "Пиктограма на нова група",
         "description": "Icon style for a new group"
-    },
-    "openPopupHotkeyTitle": {
-        "message": "Отваряне на менюто с групите",
-        "description": "Open the groups pop-up"
     },
     "openGroupInNewWindow": {
         "message": "Отваряне на групата в нов прозорец",
@@ -426,20 +418,6 @@
     "includeTabFavIconsIntoBackup": {
         "message": "Включване на пиктограмите (увеличава размера на резервното копие)",
         "description": "Include tab fav-icons in backup (makes backup file size bigger)"
-    },
-    "tabsThumbnailsSize": {
-        "message": "Заемано място от миниатюри: $size$",
-        "description": "Tabs thumbnails size: $size$",
-        "placeholders": {
-            "size": {
-                "content": "$1",
-                "example": "2 MB"
-            }
-        }
-    },
-    "clearTabsThumbnails": {
-        "message": "Изчистване",
-        "description": "Clear tabs thumbnails"
     },
     "groupRemovedByExtension": {
         "message": "Групата „$group$“ е премахната от разширението „$extension$“",

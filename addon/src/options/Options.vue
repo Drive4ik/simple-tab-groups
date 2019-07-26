@@ -1,10 +1,15 @@
 <script>
     'use strict';
 
+    import Vue from 'vue';
+
     import utils from '../js/utils';
     import storage from '../js/storage';
     import constants from '../js/constants';
     import file from '../js/file';
+    import Groups from '../js/groups';
+    import Tabs from '../js/tabs';
+    import Windows from '../js/windows';
 
     import popup from '../js/popup.vue';
     import swatches from 'vue-swatches';
@@ -13,6 +18,7 @@
     const {BG} = browser.extension.getBackgroundPage();
 
     window.addEventListener('error', utils.errorEventHandler);
+    Vue.config.errorHandler = utils.errorEventHandler;
 
     // if (!BG) {
     //     setTimeout(() => window.location.reload(), 1000);
@@ -49,24 +55,12 @@
                     'move-active-tab-to-custom-group',
                 ],
 
-                openPopupCommand: {
-                    ctrlKey: false,
-                    shiftKey: false,
-                    altKey: false,
-                    metaKey: false,
-                    key: '',
-                },
-
                 groupIconViewTypes: constants.groupIconViewTypes,
 
                 includeTabThumbnailsIntoBackup: false,
                 includeTabFavIconsIntoBackup: true,
 
-                thumbnailsSize: '',
-
-                options: {
-                    empty: true,
-                },
+                options: {},
                 groups: [],
                 isMac: false,
 
@@ -87,15 +81,13 @@
             swatches: swatches,
         },
         async mounted() {
-            let platformInfo = await browser.runtime.getPlatformInfo();
-            this.isMac = platformInfo.os === 'mac';
+            let {os} = await browser.runtime.getPlatformInfo();
+            this.isMac = os === browser.runtime.PlatformOs.MAC;
 
             let data = await storage.get(null);
 
-            this.calculateThumbnailsSize(data.thumbnails);
-
             this.options = utils.extractKeys(data, constants.allOptionsKeys);
-            this.groups = Array.isArray(data.groups) ? data.groups : [];
+            this.groups = data.groups;
 
             this.permissions.bookmarks = await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
             this.permissions.allUrls = await browser.permissions.contains(constants.PERMISSIONS.ALL_URLS);
@@ -116,8 +108,6 @@
                         });
                     });
                 }, this);
-
-            this.initPopupHotkey();
         },
         watch: {
             'options.autoBackupFolderName': function(value, oldValue) {
@@ -197,13 +187,23 @@
                     }
 
                     let filteredHotkeys = hotkeys.filter(function(hotkey) {
-                        let ok = (hotkey.keyCode || hotkey.key) && hotkey.action && (hotkey.ctrlKey || hotkey.shiftKey || hotkey.altKey || isFunctionKey(hotkey.keyCode));
-
-                        if (ok && 'load-custom-group' === hotkey.action && !this.groups.some(gr => gr.id === hotkey.groupId)) {
-                            ok = false;
+                        if (!hotkey.action) {
+                            return false;
                         }
 
-                        return ok;
+                        if (!hotkey.keyCode && !hotkey.key) {
+                            return false;
+                        }
+
+                        if (!(hotkey.ctrlKey || hotkey.shiftKey || hotkey.altKey || hotkey.metaKey || isFunctionKey(hotkey.keyCode))) {
+                            return false;
+                        }
+
+                        if ('load-custom-group' === hotkey.action && !this.groups.some(gr => gr.id === hotkey.groupId)) {
+                            return false;
+                        }
+
+                        return true;
                     }, this);
 
                     BG.saveOptions({
@@ -214,14 +214,13 @@
             },
         },
         computed: {
-            ctrlCommandKey() {
-                return this.isMac ? 'MacCtrl' : 'Ctrl';
-            },
             isDisabledAutoBackupGroupsToFile() {
                 if (!this.permissions.bookmarks) {
                     this.options.autoBackupGroupsToFile = true;
                     return true;
                 }
+
+                return false;
             },
         },
         methods: {
@@ -229,72 +228,6 @@
             getHotkeyActionTitle: action => browser.i18n.getMessage('hotkeyActionTitle' + utils.capitalize(utils.toCamelCase(action))),
 
             openBackupFolder: file.openBackupFolder,
-
-            calculateThumbnailsSize(thumbnails = {}) {
-                this.thumbnailsSize = utils.formatBytes(Object.keys(thumbnails).length ? JSON.stringify(thumbnails).length : 0);
-            },
-
-            async clearTabsThumbnails() {
-                await BG.clearTabsThumbnails();
-                this.calculateThumbnailsSize();
-            },
-
-            resetPopupCommand() {
-                this.openPopupCommand.ctrlKey = false;
-                this.openPopupCommand.shiftKey = false;
-                this.openPopupCommand.altKey = false;
-                this.openPopupCommand.metaKey = false;
-                this.openPopupCommand.key = browser.runtime.getManifest().commands._execute_browser_action.suggested_key.default;
-
-                // browser.commands.reset('_execute_browser_action');
-            },
-
-            async initPopupHotkey() {
-                let commands = await browser.commands.getAll(),
-                    popupCommand = commands.find(command => command.name === '_execute_browser_action');
-
-                this.openPopupCommand.ctrlKey = popupCommand.shortcut.includes(this.ctrlCommandKey);
-                this.openPopupCommand.shiftKey = popupCommand.shortcut.includes('Shift');
-                this.openPopupCommand.altKey = popupCommand.shortcut.includes('Alt');
-                this.openPopupCommand.metaKey = this.isMac ? popupCommand.shortcut.includes('Command') : false;
-                this.openPopupCommand.key = popupCommand.shortcut.split('+').pop();
-
-                this.$watch('openPopupCommand', {
-                    async handler(openPopupCommand) {
-                        let shortcut = [];
-
-                        if (openPopupCommand.ctrlKey) {
-                            shortcut.push(this.ctrlCommandKey);
-                        }
-
-                        if (this.isMac && openPopupCommand.metaKey) {
-                            shortcut.push('Command');
-                        }
-
-                        if (openPopupCommand.shiftKey) {
-                            shortcut.push('Shift');
-                        }
-
-                        if (openPopupCommand.altKey) {
-                            shortcut.push('Alt');
-                        }
-
-                        let key = openPopupCommand.key.replace('Arrow', '');
-
-                        shortcut.push(key.length === 1 ? key.toUpperCase() : key);
-
-                        try {
-                            await browser.commands.update({
-                                name: '_execute_browser_action',
-                                shortcut: shortcut.join('+'),
-                            });
-                        } catch (e) {
-                            this.resetPopupCommand();
-                        }
-                    },
-                    deep: true,
-                });
-            },
 
             saveHotkeyKeyCodeAndStopEvent(hotkey, event, withKeyCode) {
                 event.preventDefault();
@@ -318,6 +251,68 @@
                 }
 
                 data = await BG.runMigrateForData(data);
+
+                let windows = await Windows.load(true),
+                    allTabs = windows.reduce(function(acc, win) {
+                        acc.push(...win.tabs);
+                        return acc;
+                    }, []),
+                    tabsToCreate = [],
+                    winTabsToSetGroupId = [],
+                    syncedTabsIds = [],
+                    tabsToClearSession = [];
+
+                data.groups.forEach(function(group) {
+
+                    group.tabs.forEach(function(groupTab) {
+                        if (!groupTab) {
+                            return;
+                        }
+
+                        groupTab.cookieStoreId = BG.containers.get(groupTab.cookieStoreId, 'cookieStoreId');
+
+                        let winTab = allTabs.find(({id, url, cookieStoreId}) => {
+                            return !syncedTabsIds.includes(id) && url === groupTab.url && cookieStoreId === groupTab.cookieStoreId;
+                        });
+
+                        if (winTab) {
+                            syncedTabsIds.includes(winTab.id);
+                            winTab.groupId = group.id;
+                            winTabsToSetGroupId.push(winTab);
+                        } else {
+                            tabsToCreate.push({
+                                url: groupTab.url,
+                                title: groupTab.title,
+                                cookieStoreId: groupTab.cookieStoreId,
+                                openInReaderMode: groupTab.isInReaderMode || false,
+                                groupId: group.id,
+                                // TODO add session data
+                            });
+                        }
+
+                    });
+
+                });
+
+                tabsToClearSession = allTabs.filter(({id}) => !syncedTabsIds.includes(id));
+
+                await Promise.all(tabsToClearSession.map(({id}) => BG.cache.removeTabGroup(id)));
+
+                await Promise.all(winTabsToSetGroupId.map(({id, groupId}) => BG.cache.setTabGroup(id, groupId)));
+
+                await BG.createTabsSafe(tabsToCreate);
+
+                for (win of windows) {
+                    if (win.session.groupId) {
+                        if (!data.groups.some(gr => gr.id === win.session.groupId)) {
+                            await BG.cache.removeWindowGroup(win.id);
+                        }
+                    }
+                }
+
+                if (!this.isMac) {
+                    data.hotkeys.forEach(hotkey => hotkey.metaKey = false);
+                }
 
                 await storage.set(data);
 
@@ -594,9 +589,9 @@
                     return;
                 }
 
-                let hasBookmarksPermission = await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
+                this.permissions.bookmarks = await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
 
-                if (hasBookmarksPermission) {
+                if (this.permissions.bookmarks) {
                     this.defaultBookmarksParents = await browser.bookmarks.get(constants.defaultBookmarksParents);
                 }
             },
@@ -740,11 +735,6 @@
                     <input type="checkbox" v-model="permissions.allUrls" @click="setPermissionsAllUrls" @change="!permissions.allUrls && (includeTabThumbnailsIntoBackup = false) " />
                     <span v-text="lang('createThumbnailsForTabs')"></span>
                 </label>
-
-                <div class="control h-margin-top-10 is-flex is-align-items-center">
-                    <span v-text="lang('tabsThumbnailsSize', thumbnailsSize)"></span>
-                    <button class="button is-warning h-margin-left-10" @click="clearTabsThumbnails" v-text="lang('clearTabsThumbnails')"></button>
-                </div>
             </div>
 
             <hr>
@@ -794,36 +784,6 @@
             <label class="has-text-weight-bold" v-text="lang('hotkeysTitle')"></label>
             <div class="h-margin-bottom-10" v-html="lang('hotkeysDescription')"></div>
             <div class="hotkeys">
-                <div class="hotkey is-flex is-align-items-center">
-                    <label class="checkbox">
-                        <input v-model="openPopupCommand.ctrlKey" type="checkbox" />
-                        <span v-if="isMac">Control</span>
-                        <span v-else>Ctrl</span>
-                    </label>
-                    <label class="checkbox">
-                        <input v-model="openPopupCommand.shiftKey" type="checkbox" />
-                        <span>Shift</span>
-                    </label>
-                    <label class="checkbox">
-                        <input v-model="openPopupCommand.altKey" type="checkbox" />
-                        <span v-if="isMac">Option</span>
-                        <span v-else>Alt</span>
-                    </label>
-                    <label v-if="isMac" class="checkbox">
-                        <input v-model="openPopupCommand.metaKey" type="checkbox" />
-                        <span>Command</span>
-                    </label>
-                    <div class="control input-command">
-                        <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(openPopupCommand, $event, false)" :value="openPopupCommand.key" autocomplete="off" class="input" />
-                    </div>
-                    <div class="is-flex">
-                        <span v-text="lang('openPopupHotkeyTitle')"></span>
-                    </div>
-                    <div class="delete-button">
-                        <button class="button is-danger is-outlined" @click="resetPopupCommand">Reset</button>
-                    </div>
-                </div>
-
                 <div v-for="(hotkey, hotkeyIndex) in options.hotkeys" :key="hotkeyIndex" class="hotkey is-flex is-align-items-center">
                     <label class="checkbox">
                         <input v-model="hotkey.ctrlKey" type="checkbox" />

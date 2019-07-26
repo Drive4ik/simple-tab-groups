@@ -209,10 +209,16 @@
 
                                 this.groups.some(gr => tab = gr.tabs.find(t => t.id === request.tab.id));
 
-                                Object.assign(tab, request.tab);
+                                if (!tab) {
+                                    tab = this.unSyncTabs.find(t => t.id === request.tab.id);
+                                }
 
-                                if (request.tab.url || request.tab.favIconUrl) {
-                                    tab.favIconUrlToDisplay = Tabs.getFavIconUrl(tab);
+                                if (tab) {
+                                    Object.assign(tab, request.tab);
+
+                                    if (request.tab.url || request.tab.favIconUrl) {
+                                        tab.favIconUrlToDisplay = Tabs.getFavIconUrl(tab);
+                                    }
                                 }
                             }
 
@@ -330,12 +336,11 @@
                     data: group,
                     computed: {
                         iconUrlToDisplay() {
-                            // watch variables
-                            this.iconUrl;
-                            this.iconColor;
-                            this.iconViewType;
-
-                            return utils.getGroupIconUrl(this);
+                            return utils.getGroupIconUrl({
+                                iconUrl: this.iconUrl,
+                                iconColor: this.iconColor,
+                                iconViewType: this.iconViewType,
+                            });
                         },
                     },
                 });
@@ -352,14 +357,6 @@
 
                 return new Vue({
                     data: tab,
-                    // computed: {
-                    //     favIconUrlToDisplay() {
-                    //         this.url;
-                    //         this.favIconUrl;
-
-                    //         return BG.getTabFavIconUrl(this);
-                    //     },
-                    // },
                 });
             },
 
@@ -529,19 +526,19 @@
                 this.unSyncTabs = [];
             },
             async unsyncHiddenTabsShowTabIntoCurrentWindow(tab) {
-                if (tab.windowId !== this.currentWindowId) {
-                    await browser.tabs.move(tab.id, {
-                        windowId: this.currentWindowId,
-                        index: -1,
-                    });
-                }
+                await browser.tabs.move(tab.id, {
+                    windowId: this.currentWindowId,
+                    index: -1,
+                });
 
                 if (tab.hidden) {
-                    await browser.tabs.show(tab.id);
+                    browser.tabs.show(tab.id);
                 }
 
                 if (this.currentGroup) {
                     this.unSyncTabs.splice(this.unSyncTabs.indexOf(tab), 1);
+                } else {
+                    this.loadUnsyncedTabs();
                 }
             },
 
@@ -603,7 +600,7 @@
             },
             async moveTabToNewGroup(tab, loadUnsync, showTabAfterMoving) {
                 let tabs = this.getTabsForMove(tab),
-                    newGroup = await Groups.add(); // TODO refactor
+                    newGroup = await Groups.add();
 
                 this.moveTabs(tabs, newGroup, loadUnsync, showTabAfterMoving);
             },
@@ -838,10 +835,8 @@
             },
 
             discardGroup(group) {
-                let tabIds = group.tabs.filter(utils.keyId).map(utils.keyId);
-
-                if (tabIds.length) {
-                    browser.tabs.discard(tabIds).catch(function() {});
+                if (group.tabs.length) {
+                    browser.tabs.discard(group.tabs.map(utils.keyId)).catch(function() {});
                 }
             },
 
@@ -939,10 +934,10 @@
                             </div>
                             <div class="item-title">
                                 <span :class="{bordered: !!tab.borderedStyle}" :style="tab.borderedStyle">
-                                    <span v-if="isTabLoading(tab)" :title="lang('thisTabWillCreateAsNew')">
+                                    <span v-if="isTabLoading(tab)">
                                         <img src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
                                     </span>
-                                    <span v-text="getTabTitle(tab)"></span>
+                                    <span :class="{'tab-discarded': tab.discarded}" v-text="getTabTitle(tab)"></span>
                                 </span>
                             </div>
                             <div class="item-action flex-on-hover">
@@ -1037,7 +1032,12 @@
                                 <img v-lazy="tab.favIconUrlToDisplay" class="size-16" />
                             </div>
                             <div class="item-title">
-                                <span :class="{bordered: !!tab.borderedStyle}" :style="tab.borderedStyle" v-text="getTabTitle(tab)"></span>
+                                <span :class="{bordered: !!tab.borderedStyle}" :style="tab.borderedStyle">
+                                    <span v-if="isTabLoading(tab)">
+                                        <img src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
+                                    </span>
+                                    <span :class="{'tab-discarded': tab.discarded}" v-text="getTabTitle(tab)"></span>
+                                </span>
                             </div>
                             <div class="item-action flex-on-hover">
                                 <span class="size-16 cursor-pointer" @click.stop="removeUnSyncTab(tab)" :title="lang('deleteTab')">
@@ -1106,10 +1106,10 @@
                         </div>
                         <div class="item-title">
                             <span :class="{bordered: !!tab.borderedStyle}" :style="tab.borderedStyle">
-                                <span v-if="!tab.id" :title="lang('thisTabWillCreateAsNew')">
-                                    <img src="/icons/refresh.svg" class="size-16 align-text-bottom" />
+                                <span v-if="isTabLoading(tab)">
+                                    <img src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
                                 </span>
-                                <span v-text="getTabTitle(tab)"></span>
+                                <span :class="{'tab-discarded': tab.discarded}" v-text="getTabTitle(tab)"></span>
                             </span>
                         </div>
                         <div class="item-action flex-on-hover">
@@ -1257,7 +1257,7 @@
             >
             <edit-group
                 ref="editGroup"
-                :group="groupToEdit"
+                :groupId="groupToEdit.id"
                 :can-load-file="isSidebar"
                 @saved="groupToEdit = null"
                 @open-manage-groups="openManageGroups"/>
