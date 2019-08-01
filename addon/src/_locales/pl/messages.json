@@ -359,10 +359,6 @@
         "message": "Karty w tej grupie nigdy nie zostaną automatycznie przeniesione do innej grupy",
         "description": "Tabs in this group will never be automatically moved to another group"
     },
-    "useTabsFavIconsFromGoogleS2Converter": {
-        "message": "Użyj favikonek z konwertera Google S2",
-        "description": "Use tabs fav-icons from Google S2 Converter"
-    },
     "iconStyle": {
         "message": "Styl ikony",
         "description": "Icon style"
@@ -402,14 +398,6 @@
     "nowFoundWindowsAddonStoppedWorking": {
         "message": "Błąd: nie znaleziono żadnych okien typu nie prywatne, pop-up lub incognito\nDodatek przestał działać. Uruchom ponownie przeglądarkę.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
-    },
-    "waitingToLoadAllTabs": {
-        "message": "Oczekiwanie na wczytanie wszystkich kart.\nProszę czekać...",
-        "description": "Waiting for all tabs to load.\nPlease wait..."
-    },
-    "reloadAddon": {
-        "message": "Załaduj ponownie dodatek",
-        "description": "Reload addon"
     },
     "ffFailedAndLostDataMessage": {
         "message": "Firefox uległ awarii i wszystkie grupy zostały utracone.\nJeśli masz kopię zapasową, możesz przywrócić z niej dane",

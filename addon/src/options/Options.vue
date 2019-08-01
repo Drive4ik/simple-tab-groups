@@ -20,11 +20,7 @@
     window.addEventListener('error', utils.errorEventHandler);
     Vue.config.errorHandler = utils.errorEventHandler;
 
-    // if (!BG) {
-    //     setTimeout(() => window.location.reload(), 1000);
-    //     document.getElementById('stg-options').innerText = browser.i18n.getMessage('waitingToLoadAllTabs');
-    //     throw Error('wait loading addon');
-    // }
+    browser.runtime.onMessage.addListener(({action}) => 'i-am-back' === action && window.location.reload());
 
     const SECTION_GENERAL = 'general',
         SECTION_HOTKEYS = 'hotkeys',
@@ -71,6 +67,8 @@
 
                 defaultBookmarksParents: [],
 
+                showLoadingMessage: false,
+
                 showEnableDarkThemeNotification: false,
 
                 errorLogs: utils.getErrorLogs(),
@@ -80,7 +78,7 @@
             popup: popup,
             swatches: swatches,
         },
-        async mounted() {
+        async created() {
             let {os} = await browser.runtime.getPlatformInfo();
             this.isMac = os === browser.runtime.PlatformOs.MAC;
 
@@ -247,72 +245,27 @@
                 let data = await file.load();
 
                 if ('object' !== utils.type(data) || !Array.isArray(data.groups)) {
-                    throw Error('this is wrong backup!');
+                    utils.notify('this is wrong backup!');
+                    return;
                 }
+
+                this.showLoadingMessage = true;
+
+                BG.events.removeEvents();
+
+                await BG.loadingBrowserAction();
 
                 data = await BG.runMigrateForData(data);
 
-                let windows = await Windows.load(true),
-                    allTabs = windows.reduce(function(acc, win) {
-                        acc.push(...win.tabs);
-                        return acc;
-                    }, []),
-                    tabsToCreate = [],
-                    winTabsToSetGroupId = [],
-                    syncedTabsIds = [],
-                    tabsToClearSession = [];
+                let windows = await Windows.load(true);
 
-                data.groups.forEach(function(group) {
-
-                    group.tabs.forEach(function(groupTab) {
-                        if (!groupTab) {
-                            return;
-                        }
-
-                        groupTab.cookieStoreId = BG.containers.get(groupTab.cookieStoreId, 'cookieStoreId');
-
-                        let winTab = allTabs.find(({id, url, cookieStoreId}) => {
-                            return !syncedTabsIds.includes(id) && url === groupTab.url && cookieStoreId === groupTab.cookieStoreId;
-                        });
-
-                        if (winTab) {
-                            syncedTabsIds.includes(winTab.id);
-                            winTab.groupId = group.id;
-                            winTabsToSetGroupId.push(winTab);
-                        } else {
-                            tabsToCreate.push({
-                                url: groupTab.url,
-                                title: groupTab.title,
-                                cookieStoreId: groupTab.cookieStoreId,
-                                openInReaderMode: groupTab.isInReaderMode || false,
-                                groupId: group.id,
-                                // TODO add session data
-                            });
-                        }
-
-                    });
-
-                });
-
-                tabsToClearSession = allTabs.filter(({id}) => !syncedTabsIds.includes(id));
-
-                await Promise.all(tabsToClearSession.map(({id}) => BG.cache.removeTabGroup(id)));
-
-                await Promise.all(winTabsToSetGroupId.map(({id, groupId}) => BG.cache.setTabGroup(id, groupId)));
-
-                await BG.createTabsSafe(tabsToCreate);
-
-                for (win of windows) {
-                    if (win.session.groupId) {
-                        if (!data.groups.some(gr => gr.id === win.session.groupId)) {
-                            await BG.cache.removeWindowGroup(win.id);
-                        }
-                    }
-                }
+                data.groups = await BG.syncTabs(data.groups, windows);
 
                 if (!this.isMac) {
                     data.hotkeys.forEach(hotkey => hotkey.metaKey = false);
                 }
+
+                data.isBackupRestoring = true;
 
                 await storage.set(data);
 
@@ -726,12 +679,6 @@
             </div>
             <div class="field">
                 <label class="checkbox">
-                    <input v-model="options.useTabsFavIconsFromGoogleS2Converter" type="checkbox" />
-                    <span v-text="lang('useTabsFavIconsFromGoogleS2Converter')"></span>
-                </label>
-            </div>
-            <div class="field">
-                <label class="checkbox">
                     <input type="checkbox" v-model="permissions.allUrls" @click="setPermissionsAllUrls" @change="!permissions.allUrls && (includeTabThumbnailsIntoBackup = false) " />
                     <span v-text="lang('createThumbnailsForTabs')"></span>
                 </label>
@@ -959,11 +906,13 @@
                     <span v-text="lang('warning')"></span>
                     <span v-text="lang('importAddonSettingsWarning')"></span>
                 </div>
-                <div class="control">
-                    <button @click="importAddonSettings" class="button is-primary">
-                        <img class="size-16" src="/icons/upload.svg" />
-                        <span class="h-margin-left-5" v-text="lang('importAddonSettingsButton')"></span>
-                    </button>
+                <div class="field is-grouped is-align-items-center">
+                    <div class="control">
+                        <button @click="importAddonSettings" class="button is-primary">
+                            <img class="size-16" src="/icons/upload.svg" />
+                            <span class="h-margin-left-5" v-text="lang('importAddonSettingsButton')"></span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -1020,6 +969,16 @@
                 }]
             ">
             <span v-html="lang('enableDarkThemeNotification')"></span>
+        </popup>
+
+        <popup v-if="showLoadingMessage" :buttons="
+                [{
+                    event: 'null',
+                    lang: 'ok',
+                    classList: 'is-success',
+                }]
+            ">
+            <span v-text="lang('loading')"></span>
         </popup>
 
     </div>

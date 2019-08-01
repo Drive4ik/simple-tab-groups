@@ -87,10 +87,57 @@
         "_execute_sidebar_action": {
             "suggested_key": {
                 "default": "Ctrl+Shift+S",
-                "mac": "Command+Shift+S",
-                "linux": "F1"
+                "mac": "Command+Shift+S"
             },
             "description": "Open sidebar"
+        },
+        "open-manage-groups": {
+            "suggested_key": {
+                "default": "F10"
+            },
+            "description": "Open manage groups"
+        },
+        "move-active-tab-to-custom-group": {
+            "suggested_key": {
+                "default": "Ctrl+F7",
+                "mac": "Command+F7"
+            },
+            "description": "Move active tab to custom group"
+        },
+        "load-next-group": {
+            "suggested_key": {
+                "default": "Ctrl+Period",
+                "mac": "Command+Period"
+            },
+            "description": "Load next group"
+        },
+        "load-prev-group": {
+            "suggested_key": {
+                "default": "Ctrl+Comma",
+                "mac": "Command+Comma"
+            },
+            "description": "Load previous group"
+        },
+        "load-first-group": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+Comma",
+                "mac": "Command+Shift+Comma"
+            },
+            "description": "Load first group"
+        },
+        "load-last-group": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+Period",
+                "mac": "Command+Shift+Period"
+            },
+            "description": "Load last group"
+        },
+        "add-new-group": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+L",
+                "mac": "Command+Shift+L"
+            },
+            "description": "Add new group"
         }
     }
 

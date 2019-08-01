@@ -359,10 +359,6 @@
         "message": "在该群组的标签页不会自动移到其他群组",
         "description": "Tabs in this group will never be automatically moved to another group"
     },
-    "useTabsFavIconsFromGoogleS2Converter": {
-        "message": "使用谷歌S2转换器生成的网站图标",
-        "description": "Use tabs fav-icons from Google S2 Converter"
-    },
     "iconStyle": {
         "message": "图标类型",
         "description": "Icon style"
@@ -402,14 +398,6 @@
     "nowFoundWindowsAddonStoppedWorking": {
         "message": "错误：未找到正常的非隐私/匿名/弹出窗口。扩展停止工作，请重启浏览器。",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
-    },
-    "waitingToLoadAllTabs": {
-        "message": "正在等待所有标签页加载完成。\n请稍等……",
-        "description": "Waiting for all tabs to load.\nPlease wait..."
-    },
-    "reloadAddon": {
-        "message": "重新加载扩展",
-        "description": "Reload addon"
     },
     "ffFailedAndLostDataMessage": {
         "message": "FF出错，所有标签页群组丢失。\n如果你创建了备份，可以从中恢复数据",

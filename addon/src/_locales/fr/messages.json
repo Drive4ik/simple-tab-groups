@@ -359,10 +359,6 @@
         "message": "Les onglets de ce groupe ne seront jamais déplacés vers un autre groupe",
         "description": "Tabs in this group will never be automatically moved to another group"
     },
-    "useTabsFavIconsFromGoogleS2Converter": {
-        "message": "Utiliser les icônes des favoris (fav-icons) depuis Google S2 Converter",
-        "description": "Use tabs fav-icons from Google S2 Converter"
-    },
     "iconStyle": {
         "message": "Style d’icônes",
         "description": "Icon style"
@@ -402,14 +398,6 @@
     "nowFoundWindowsAddonStoppedWorking": {
         "message": "Erreur : aucun onglet normal n'a été trouvé (ni privé, ni navigation privée, ni fenêtre pop-up). L'extension a cessé de fonctionner. Veuillez redémarrer le navigateur.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
-    },
-    "waitingToLoadAllTabs": {
-        "message": "En attente du chargement de tous les onglets.\nVeuillez patienter...",
-        "description": "Waiting for all tabs to load.\nPlease wait..."
-    },
-    "reloadAddon": {
-        "message": "Recharger le module complémentaire",
-        "description": "Reload addon"
     },
     "ffFailedAndLostDataMessage": {
         "message": "FireFox a planté et tous les groupes ont été perdus.\nSi vous avez une sauvegarde, vous pouvez effectuer une restauration à partir de celle-ci.",

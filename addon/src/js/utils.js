@@ -40,8 +40,6 @@ function errorEventMessage(message, data = null, showNotification = true) {
 }
 
 function errorEventHandler(event) {
-    // console.debug('errorEventHandler: ', clone(event));
-
     event.preventDefault && event.preventDefault();
     event.stopImmediatePropagation && event.stopImmediatePropagation();
 
@@ -245,14 +243,8 @@ function getSupportedExternalExtensionName(extId) {
     return constants.EXTENSIONS_WHITE_LIST[extId] ? constants.EXTENSIONS_WHITE_LIST[extId].title : 'Unknown';
 }
 
-function getFavIconFromUrl(url) {
-    let localUrls = ['moz-extension', 'about', 'data', 'view-source', 'javascript', 'chrome', 'file'];
-
-    if (!url || localUrls.some(localUrl => url.startsWith(localUrl))) {
-        return '';
-    }
-
-    return 'https://www.google.com/s2/favicons?domain_url=' + encodeURIComponent(url);
+function isBlockedFavIcon(favIconUrl) {
+    return favIconUrl.startsWith('chrome://mozapps/skin/');
 }
 
 function isUrlEmpty(url) {
@@ -308,7 +300,8 @@ function getTabTitle(tab, withUrl) {
         title += '\n' + tab.url;
     }
 
-    return title;
+    // return title;
+    return `${tab.id}: ${title}`;
 }
 
 function getNextIndex(index, length, textPosition = 'next') {
@@ -347,6 +340,17 @@ function sortBy(key, numeric, reverse) {
     return function(objA, objB) {
         return reverse ? compareStrings(objB[key], objA[key], numeric) : compareStrings(objA[key], objB[key], numeric);
     };
+}
+
+function scrollTo(node) {
+    if ('string' === type(node)) {
+        node = document.querySelector(node);
+    }
+
+    node && node.scrollIntoView({
+        block: 'center',
+        behavior: 'smooth',
+    });
 }
 
 // -1 : a < b
@@ -498,10 +502,6 @@ function isCanvasBlank(canvas, useTransparency, ...canvasParams) {
     return isEmpty;
 }
 
-// function makeSafeUrlForThumbnail(tabUrl) {
-//     return tabUrl ? tabUrl.split('#', 1).shift() : '';
-// }
-
 // needle need to be "LowerCased"
 function mySearchFunc(needle, haystack, extendedSearch = false) {
     haystack = 'string' === typeof haystack ? haystack.toLowerCase() : '';
@@ -577,7 +577,7 @@ export default {
 
     notify,
 
-    getFavIconFromUrl,
+    isBlockedFavIcon,
 
     getSupportedExternalExtensionName,
 
@@ -601,6 +601,7 @@ export default {
     toCamelCase,
     capitalize,
     sortBy,
+    scrollTo,
     compareStrings,
     compareVersions,
 
@@ -612,8 +613,6 @@ export default {
     randomColor,
 
     resizeImage,
-
-    // makeSafeUrlForThumbnail,
 
     mySearchFunc,
 

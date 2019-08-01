@@ -333,10 +333,6 @@
         "message": "Las pestañas en este grupo nunca seran movidas de forma automatica a otro grupo",
         "description": "Tabs in this group will never be automatically moved to another group"
     },
-    "useTabsFavIconsFromGoogleS2Converter": {
-        "message": "Usar en las pestañas los sfav-icons de Google S2 Converter",
-        "description": "Use tabs fav-icons from Google S2 Converter"
-    },
     "iconStyle": {
         "message": "Estilo del icono",
         "description": "Icon style"

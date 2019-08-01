@@ -359,10 +359,6 @@
         "message": "Вкладки в этой группе никогда не будут автоматически перемещены в другие группы посредством регулярных выражений",
         "description": "Tabs in this group will never be automatically moved to another group"
     },
-    "useTabsFavIconsFromGoogleS2Converter": {
-        "message": "Использовать Google S2 Converter для значков вкладок",
-        "description": "Use tabs fav-icons from Google S2 Converter"
-    },
     "iconStyle": {
         "message": "Стиль значка",
         "description": "Icon style"
@@ -402,14 +398,6 @@
     "nowFoundWindowsAddonStoppedWorking": {
         "message": "Ошибка: не найдено нормальных окон, только приватные или всплывающие. Дополнение прекращает работу.\nПожалуйста, перезагрузите браузер.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
-    },
-    "waitingToLoadAllTabs": {
-        "message": "Ожидание загрузки всех вкладок.\nПожалуйста подождите...",
-        "description": "Waiting for all tabs to load.\nPlease wait..."
-    },
-    "reloadAddon": {
-        "message": "Перезагрузка дополнения",
-        "description": "Reload addon"
     },
     "ffFailedAndLostDataMessage": {
         "message": "Firefox завершил свою работу с ошибкой и все группы были утеряны.\nЕсли у Вас имеется резервная копия, Вы можете восстановить данные из нее",
@@ -678,5 +666,13 @@
     "folderNameTitle": {
         "message": "Имя папки",
         "description": "Folder name title"
+    },
+    "backupSuccessfullyRestored": {
+        "message": "Резервное копирование успешно восстановлено!",
+        "description": "Backup successfully restored"
+    },
+    "loading": {
+        "message": "Загрузка, пожалуйста подождите...",
+        "description": "Loading, please wait..."
     }
 }

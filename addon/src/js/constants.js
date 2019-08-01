@@ -98,7 +98,6 @@ const DEFAULT_OPTIONS = {
     showNotificationAfterMoveTab: true,
     openManageGroupsInTab: true,
     showConfirmDialogBeforeGroupDelete: true,
-    useTabsFavIconsFromGoogleS2Converter: false,
     showContextMenuOnTabs: true,
     showContextMenuOnLinks: true,
     exportGroupToMainBookmarkFolder: true,

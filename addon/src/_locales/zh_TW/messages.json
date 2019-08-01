@@ -359,10 +359,6 @@
         "message": "讓分頁群組中的分頁不會被自動移到其他分頁群組",
         "description": "Tabs in this group will never be automatically moved to another group"
     },
-    "useTabsFavIconsFromGoogleS2Converter": {
-        "message": "使用 Google S2 Converter 生成的分頁圖示",
-        "description": "Use tabs fav-icons from Google S2 Converter"
-    },
     "iconStyle": {
         "message": "圖示樣式",
         "description": "Icon style"
@@ -402,14 +398,6 @@
     "nowFoundWindowsAddonStoppedWorking": {
         "message": "錯誤：找不到任何正常的非隱私/匿名/彈出式視窗。\n套件停止運作，請重新啟動瀏覽器。",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
-    },
-    "waitingToLoadAllTabs": {
-        "message": "等待所有分頁載入。\n請稍候...",
-        "description": "Waiting for all tabs to load.\nPlease wait..."
-    },
-    "reloadAddon": {
-        "message": "重新載入套件",
-        "description": "Reload addon"
     },
     "ffFailedAndLostDataMessage": {
         "message": "Firefox 發生了錯誤，將遺失所有分頁群組。\n若擁有備份檔，請從備份檔還原分頁群組資料。",

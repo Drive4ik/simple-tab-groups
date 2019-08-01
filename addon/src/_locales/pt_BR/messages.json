@@ -359,10 +359,6 @@
         "message": "Abas nesse grupo nunca vão ser automaticamente movidas para outro grupo",
         "description": "Tabs in this group will never be automatically moved to another group"
     },
-    "useTabsFavIconsFromGoogleS2Converter": {
-        "message": "Use abas fav-icons do Google S2 Converter",
-        "description": "Use tabs fav-icons from Google S2 Converter"
-    },
     "iconStyle": {
         "message": "Estilo do ícone",
         "description": "Icon style"
@@ -402,14 +398,6 @@
     "nowFoundWindowsAddonStoppedWorking": {
         "message": "Error: não encontrado nenhuma janela normal não privado/incógnito/popup.\nExtensão parou de funcionar. Por favor, reinicie o navegador.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
-    },
-    "waitingToLoadAllTabs": {
-        "message": "Aguardando todas as abas carregar.\nPor favor aguarde...",
-        "description": "Waiting for all tabs to load.\nPlease wait..."
-    },
-    "reloadAddon": {
-        "message": "Recarregar extensão",
-        "description": "Reload addon"
     },
     "ffFailedAndLostDataMessage": {
         "message": "FF falhou e todos os grupos foram perdidos.\nSe você tiver um backup, você pode restaurar os dados a partir dele",

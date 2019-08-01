@@ -173,7 +173,7 @@ function showGroupsForMovingTab(data) {
 
             groupNode.onclick = function(groupId) {
                 browser.runtime.sendMessage({
-                    action: 'move-active-tab-to-group',
+                    action: 'move-active-tab-to-custom-group',
                     groupId: groupId,
                 });
                 closeGroupsPopup();

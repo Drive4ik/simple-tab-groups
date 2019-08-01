@@ -85,19 +85,11 @@
 
             this.loadOptions();
 
-            this.loadGroups();
+            this.loadGroups().then(() => this.scrollIntoView());
 
             this.loadUnsyncedTabs(); // TODO remove ?
 
             this.setupListeners();
-
-            this.$nextTick(function() {
-                let activeItemNode = document.querySelector('.is-active');
-
-                if (activeItemNode && !utils.isElementVisible(activeItemNode)) {
-                    activeItemNode.scrollIntoView(false);
-                }
-            });
         },
         async mounted() {
             this.setFocus();
@@ -152,6 +144,11 @@
 
                 return groups;
             },
+            allTabs() {
+                let tabs = {};
+                this.groups.forEach(group => group.tabs.forEach(tab => tabs[tab.id] = tab));
+                return tabs;
+            }
         },
         methods: {
             lang: browser.i18n.getMessage,
@@ -170,6 +167,14 @@
 
             setFocus() {
                 this.$refs.search.focus();
+            },
+
+            scrollIntoView() {
+                this.$nextTick(function() {
+                    let activeItemNode = Array.from(document.querySelectorAll('.is-active')).find(el => el.offsetParent);
+
+                    utils.scrollTo(activeItemNode);
+                });
             },
 
             setupListeners() {
@@ -215,10 +220,6 @@
 
                                 if (tab) {
                                     Object.assign(tab, request.tab);
-
-                                    if (request.tab.url || request.tab.favIconUrl) {
-                                        tab.favIconUrlToDisplay = Tabs.getFavIconUrl(tab);
-                                    }
                                 }
                             }
 
@@ -278,10 +279,12 @@
                             }
 
                             break;
-                        // case 'group-loaded':
                         case 'groups-updated':
                             this.loadGroups();
                             this.loadUnsyncedTabs();
+                            break;
+                        case 'group-loaded':
+                            this.loadWindowsData();
                             break;
                         case 'options-updated':
                             if (isSidebar) {
@@ -297,6 +300,7 @@
                 this.groupToShow = group;
                 this.search = '';
                 this.section = SECTION_GROUP_TABS;
+                this.scrollIntoView();
             },
 
             showSectionSearch() {
@@ -347,7 +351,6 @@
             },
 
             mapTab(tab) {
-                tab.favIconUrlToDisplay = Tabs.getFavIconUrl(tab);
                 tab.borderedStyle = BG.containers.isDefault(tab.cookieStoreId) ? false : {
                     borderColor: BG.containers.get(tab.cookieStoreId, 'colorCode'),
                 };
@@ -393,14 +396,10 @@
                 await Groups.add(undefined, undefined, this.nextGroupTitle);
             },
 
-            async addTab(cookieStoreId) {
-                await Tabs.add(this.groupToShow.id, cookieStoreId);
+            addTab(cookieStoreId) {
+                Tabs.add(this.groupToShow.id, cookieStoreId);
             },
-            async removeTab(tab) {
-                await Tabs.remove(tab);
-            },
-            removeUnSyncTab(tab) {
-                this.unSyncTabs.splice(this.unSyncTabs.indexOf(tab), 1);
+            removeTab(tab) {
                 Tabs.remove(tab);
             },
 
@@ -487,8 +486,6 @@
 
                     this.someGroupAreLoading = false;
 
-                    this.loadWindowsData();
-
                     if (this.options.closePopupAfterChangeGroup) {
                         if (!isCurrentGroup) {
                             this.closeWindow();
@@ -512,11 +509,14 @@
 
                 await browser.tabs.show(hiddenTabsIds);
 
-                this.unSyncTabs = [];
+                if (this.currentGroup) {
+                    this.unSyncTabs = [];
+                }
+
                 this.loadGroups();
             },
             async unsyncHiddenTabsCreateNewGroup() {
-                await Groups.add(undefined, this.unSyncTabs);
+                await Groups.add(undefined, this.unSyncTabs.map(this.cloneTab));
 
                 this.unSyncTabs = [];
             },
@@ -576,20 +576,14 @@
                     this.multipleMoveTabs.push(withTab);
                 }
 
-                let tabs = this.multipleMoveTabs
-                    .map(function(tab) {
-                        return {
-                            id: tab.id,
-                            title: tab.title,
-                            url: tab.url,
-                            hidden: tab.hidden,
-                            sharingState: {...tab.sharingState},
-                        };
-                    });
+                let tabs = this.multipleMoveTabs.map(this.cloneTab);
 
                 this.multipleMoveTabs = [];
 
                 return tabs;
+            },
+            cloneTab({id, title, url, hidden, sharingState, windowId}) {
+                return {id, title, url, hidden, sharingState: {...sharingState}, windowId};
             },
             async moveTabs(tabs, group, loadUnsync = false, showTabAfterMoving) {
                 await Tabs.move(tabs, group.id, undefined, undefined, showTabAfterMoving);
@@ -604,10 +598,10 @@
 
                 this.moveTabs(tabs, newGroup, loadUnsync, showTabAfterMoving);
             },
-            setTabIconAsGroupIcon(tab) {
+            setTabIconAsGroupIcon({favIconUrl}) {
                 Groups.update(this.groupToShow.id, {
                     iconViewType: null,
-                    iconUrl: Tabs.getFavIconUrl(tab),
+                    iconUrl: favIconUrl,
                 });
             },
 
@@ -634,9 +628,6 @@
             openOptionsPage() {
                 browser.runtime.openOptionsPage();
                 this.closeWindow();
-            },
-            reloadAddon() {
-                browser.runtime.reload();
             },
             openManageGroups() {
                 BG.openManageGroups();
@@ -713,8 +704,6 @@
                     return;
                 }
 
-                let index = null;
-
                 this.$el.focus();
 
                 if ('up' === arrow || 'down' === arrow) {
@@ -723,111 +712,104 @@
 
                 switch (this.section) {
                     case SECTION_SEARCH:
-                        if (!this.filteredGroupsBySearch.length) {
-                            return;
-                        }
-
-                        let allItems = this.filteredGroupsBySearch.reduce((accum, group) => [...accum, group, group.filteredTabsBySearch], []);
-
-                        index = this.hoverItem ? allItems.indexOf(this.hoverItem) : -1;
-
-                        if ('up' === arrow) {
-                            index = utils.getNextIndex(index, allItems.length, 'prev');
-                            this.hoverItem = allItems[index] || null;
-                        } else if ('down' === arrow) {
-                            index = utils.getNextIndex(index, allItems.length, 'next');
-                            this.hoverItem = allItems[index] || null;
-                        } else if ('right' === arrow) {
-                            if (this.hoverItem && this.isGroup(this.hoverItem)) { // open group
-                                this.showSectionGroupTabs(this.hoverItem);
-                            }
-                        } else if ('enter' === arrow) {
-                            if (!this.hoverItem && allItems.length) {
-                                this.hoverItem = allItems[0];
+                        {
+                            if (!this.filteredGroupsBySearch.length) {
+                                return;
                             }
 
-                            if (this.hoverItem) {
-                                if (this.isGroup(this.hoverItem)) { // is group
-                                    this.applyGroup(this.hoverItem, undefined, true);
-                                } else { // is tab
-                                    // find group
-                                    let group = this.groups.find(gr => gr.tabs.includes(this.hoverItem));
-                                    this.applyGroup(group, this.hoverItem, true);
+                            let allItems = this.filteredGroupsBySearch.reduce((accum, group) => [...accum, group, ...group.filteredTabsBySearch], []),
+                                index = allItems.indexOf(this.hoverItem);
+
+                            if ('up' === arrow) {
+                                index = utils.getNextIndex(index, allItems.length, 'prev');
+                                this.hoverItem = allItems[index] || null;
+                            } else if ('down' === arrow) {
+                                index = utils.getNextIndex(index, allItems.length, 'next');
+                                this.hoverItem = allItems[index] || null;
+                            } else if ('right' === arrow) {
+                                if (this.hoverItem && this.isGroup(this.hoverItem)) { // open group
+                                    this.showSectionGroupTabs(this.hoverItem);
+                                }
+                            } else if ('enter' === arrow) {
+                                if (!this.hoverItem && allItems.length) {
+                                    this.hoverItem = allItems[0];
+                                }
+
+                                if (this.hoverItem) {
+                                    if (this.isGroup(this.hoverItem)) { // is group
+                                        this.applyGroup(this.hoverItem, undefined, true);
+                                    } else { // is tab
+                                        // find group
+                                        let group = this.groups.find(gr => gr.tabs.includes(this.hoverItem));
+                                        this.applyGroup(group, this.hoverItem, true);
+                                    }
                                 }
                             }
                         }
 
                         break;
                     case SECTION_GROUPS_LIST:
-                        index = this.groups.indexOf(this.hoverItem);
+                        {
+                            let index = this.groups.indexOf(this.hoverItem);
 
-                        if (-1 === index) {
-                            index = this.groups.indexOf(this.currentGroup);
-                        }
-
-                        if ('up' === arrow) {
-                            index = utils.getNextIndex(index, this.groups.length, 'prev');
-                            this.hoverItem = this.groups[index] || null;
-                        } else if ('down' === arrow) {
-                            index = utils.getNextIndex(index, this.groups.length, 'next');
-                            this.hoverItem = this.groups[index] || null;
-                        } else if ('right' === arrow) {
-                            if (this.hoverItem && this.isGroup(this.hoverItem)) {
-                                this.showSectionGroupTabs(this.hoverItem);
+                            if (-1 === index) {
+                                index = this.groups.indexOf(this.currentGroup);
                             }
-                        } else if ('enter' === arrow) {
-                            if (this.hoverItem) {
-                                if (this.isGroup(this.hoverItem)) {
-                                    this.applyGroup(this.hoverItem, undefined, true);
+
+                            if ('up' === arrow) {
+                                index = utils.getNextIndex(index, this.groups.length, 'prev');
+                                this.hoverItem = this.groups[index] || null;
+                            } else if ('down' === arrow) {
+                                index = utils.getNextIndex(index, this.groups.length, 'next');
+                                this.hoverItem = this.groups[index] || null;
+                            } else if ('right' === arrow) {
+                                if (this.hoverItem && this.isGroup(this.hoverItem)) {
+                                    this.showSectionGroupTabs(this.hoverItem);
                                 }
-                            } else {
-                                this.$refs.search.focus();
+                            } else if ('enter' === arrow) {
+                                if (this.hoverItem) {
+                                    if (this.isGroup(this.hoverItem)) {
+                                        this.applyGroup(this.hoverItem, undefined, true);
+                                    }
+                                } else {
+                                    this.$refs.search.focus();
+                                }
                             }
                         }
 
                         break;
                     case SECTION_GROUP_TABS:
-                        index = this.groupToShow.tabs.indexOf(this.hoverItem);
+                        {
+                            let index = this.groupToShow.tabs.indexOf(this.hoverItem);
 
-                        if (-1 === index && this.getWindowId(this.groupToShow.id)) {
-                            index = this.groupToShow.tabs.findIndex(tab => tab.active);
-                        }
-
-                        if ('up' === arrow) {
-                            index = utils.getNextIndex(index, this.groupToShow.tabs.length, 'prev');
-                            this.hoverItem = this.groupToShow.tabs[index] || null;
-                        } else if ('down' === arrow) {
-                            index = utils.getNextIndex(index, this.groupToShow.tabs.length, 'next');
-                            this.hoverItem = this.groupToShow.tabs[index] || null;
-                        } else if ('left' === arrow) {
-                            this.showSectionDefault();
-                        } else if ('enter' === arrow) {
-                            if (this.hoverItem && -1 !== index) {
-                                this.applyGroup(this.groupToShow, this.hoverItem, true);
+                            if (-1 === index && this.getWindowId(this.groupToShow.id)) {
+                                index = this.groupToShow.tabs.findIndex(tab => tab.active);
                             }
-                        } else if ('delete' === arrow) {
-                            if (this.hoverItem && this.groupToShow.tabs.includes(this.hoverItem)) {
-                                this.removeTab(this.hoverItem);
-                                this.hoverItem = null;
+
+                            if ('up' === arrow) {
+                                index = utils.getNextIndex(index, this.groupToShow.tabs.length, 'prev');
+                                this.hoverItem = this.groupToShow.tabs[index] || null;
+                            } else if ('down' === arrow) {
+                                index = utils.getNextIndex(index, this.groupToShow.tabs.length, 'next');
+                                this.hoverItem = this.groupToShow.tabs[index] || null;
+                            } else if ('left' === arrow) {
+                                this.showSectionDefault();
+                            } else if ('enter' === arrow) {
+                                if (this.hoverItem && -1 !== index) {
+                                    this.applyGroup(this.groupToShow, this.hoverItem, true);
+                                }
+                            } else if ('delete' === arrow) {
+                                if (this.hoverItem && this.groupToShow.tabs.includes(this.hoverItem)) {
+                                    this.removeTab(this.hoverItem);
+                                    this.hoverItem = null;
+                                }
                             }
                         }
 
                         break;
                 }
 
-                this.$nextTick(function() {
-                    let hoverItemNode = document.querySelector('.is-hovered-item');
-
-                    if (hoverItemNode && !utils.isElementVisible(hoverItemNode)) {
-                        let alignTo;
-
-                        if ('up' === arrow) {
-                            alignTo = false;
-                        }
-
-                        hoverItemNode.scrollIntoView(alignTo);
-                    }
-                });
+                this.$nextTick(() => utils.scrollTo('.is-hovered-item'));
             },
 
             discardTab(tabId) {
@@ -847,7 +829,7 @@
 <template>
     <div
         id="stg-popup"
-        :class="['is-flex is-column no-outline', {'edit-group-popup': !!groupToEdit, 'is-sidebar': isSidebar}]"
+        :class="['is-flex_ is-column_ no-outline', {'edit-group-popup': !!groupToEdit, 'is-sidebar': isSidebar}]"
         @contextmenu="['INPUT', 'TEXTAREA'].includes($event.target.nodeName) ? null : $event.preventDefault()"
         @click="multipleMoveTabs = []"
         @wheel.ctrl.prevent
@@ -930,7 +912,7 @@
                             :title="getTabTitle(tab, true)"
                             >
                             <div class="item-icon">
-                                <img v-lazy="tab.favIconUrlToDisplay" class="size-16" />
+                                <img v-lazy="tab.favIconUrl" class="size-16" />
                             </div>
                             <div class="item-title">
                                 <span :class="{bordered: !!tab.borderedStyle}" :style="tab.borderedStyle">
@@ -1022,14 +1004,14 @@
                             @contextmenu="$refs.tabsContextMenu.open($event, {tab})"
                             @click.stop="($event.ctrlKey || $event.shiftKey) ? clickOnTab($event, tab) : unsyncHiddenTabsShowTabIntoCurrentWindow(tab)"
                             @mousedown.middle.prevent
-                            @mouseup.middle.prevent="removeUnSyncTab(tab)"
+                            @mouseup.middle.prevent="removeTab(tab)"
                             :class="['tab item is-unselectable', {
                                 'is-multiple-tab-to-move': multipleMoveTabs.includes(tab),
                             }]"
                             :title="getTabTitle(tab, true)"
                             >
                             <div class="item-icon">
-                                <img v-lazy="tab.favIconUrlToDisplay" class="size-16" />
+                                <img v-lazy="tab.favIconUrl" class="size-16" />
                             </div>
                             <div class="item-title">
                                 <span :class="{bordered: !!tab.borderedStyle}" :style="tab.borderedStyle">
@@ -1040,7 +1022,7 @@
                                 </span>
                             </div>
                             <div class="item-action flex-on-hover">
-                                <span class="size-16 cursor-pointer" @click.stop="removeUnSyncTab(tab)" :title="lang('deleteTab')">
+                                <span class="size-16 cursor-pointer" @click.stop="removeTab(tab)" :title="lang('deleteTab')">
                                     <img src="/icons/close.svg" />
                                 </span>
                             </div>
@@ -1102,7 +1084,7 @@
                         @dragend="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
                         >
                         <div class="item-icon">
-                            <img v-lazy="tab.favIconUrlToDisplay" class="size-16" />
+                            <img v-lazy="tab.favIconUrl" class="size-16" />
                         </div>
                         <div class="item-title">
                             <span :class="{bordered: !!tab.borderedStyle}" :style="tab.borderedStyle">
@@ -1137,10 +1119,6 @@
             <div class="is-flex is-align-items-center manage-groups is-full-height is-full-width" @click="openManageGroups" :title="lang('manageGroupsTitle')">
                 <img class="size-16" src="/icons/icon.svg" />
                 <span class="h-margin-left-10" v-text="lang('manageGroupsTitle')"></span>
-            </div>
-            <div class="is-flex is-align-items-center is-vertical-separator"></div>
-            <div class="is-flex is-align-items-center is-full-height" @click="reloadAddon" :title="lang('reloadAddon')">
-                <img class="size-16" src="/icons/refresh.svg" />
             </div>
             <div class="is-flex is-align-items-center is-vertical-separator"></div>
             <div class="is-flex is-align-items-center is-full-height" @click="openOptionsPage" :title="lang('openSettings')">
@@ -1367,12 +1345,11 @@
         }
 
         > footer {
+            position: sticky;
+            bottom: 0;
             height: 45px;
-            min-height: 45px;
             margin-top: var(--indent);
             align-items: center;
-            justify-content: space-between;
-            cursor: default;
             background-color: var(--footer-background-color);
 
             > :hover {

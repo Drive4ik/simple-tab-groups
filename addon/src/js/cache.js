@@ -5,6 +5,7 @@ let tabs = {
         url: {},
         title: {},
         cookieStoreId: {},
+        removed: [],
     },
     windows = {
         session: {},
@@ -35,6 +36,7 @@ function hasTab(tabId) {
 }
 
 function removeTab(tabId) {
+    tabs.removed.push(tabId);
     delete tabs.session[tabId];
     delete tabs.url[tabId];
     delete tabs.title[tabId];
@@ -85,6 +87,28 @@ function removeTabThumbnail(tabId) {
     return browser.sessions.removeTabValue(tabId, 'thumbnail');
 }
 
+function setTabFavIcon(tabId, favIconUrl) {
+    if (favIconUrl && favIconUrl.startsWith('data')) {
+        if (tabs.session[tabId]) {
+            tabs.session[tabId].favIconUrl = favIconUrl;
+        } else {
+            tabs.session[tabId] = {favIconUrl};
+        }
+
+        return browser.sessions.setTabValue(tabId, 'favIconUrl', favIconUrl);
+    }
+
+    return removeTabFavIcon(tabId);
+}
+
+function removeTabFavIcon(tabId) {
+    if (tabs.session[tabId]) {
+        delete tabs.session[tabId].favIconUrl;
+    }
+
+    return browser.sessions.removeTabValue(tabId, 'favIconUrl');
+}
+
 function getTabSession(tabId, key = null) {
     let tabSession = tabs.session[tabId] || {};
 
@@ -97,16 +121,27 @@ async function loadTabSession(tab) {
     if (tabs.session[tab.id]) {
         tab.session = {...tabs.session[tab.id]};
     } else {
-        let [groupId, thumbnail] = await Promise.all([browser.sessions.getTabValue(tab.id, 'groupId'), browser.sessions.getTabValue(tab.id, 'thumbnail')]);
+        let [groupId, thumbnail, favIconUrl] = await Promise.all([
+            browser.sessions.getTabValue(tab.id, 'groupId'),
+            browser.sessions.getTabValue(tab.id, 'thumbnail'),
+            browser.sessions.getTabValue(tab.id, 'favIconUrl')
+        ]);
 
         if (tabs.session[tab.id]) {
-            groupId = tabs.session[tab.id].groupId || groupId;
-            thumbnail = tabs.session[tab.id].thumbnail || thumbnail;
+            groupId = tabs.session[tab.id].groupId = tabs.session[tab.id].groupId || groupId;
+            thumbnail = tabs.session[tab.id].thumbnail = tabs.session[tab.id].thumbnail || thumbnail;
+            favIconUrl = tabs.session[tab.id].favIconUrl = tabs.session[tab.id].favIconUrl || favIconUrl;
         } else {
-            tabs.session[tab.id] = {groupId, thumbnail};
+            tabs.session[tab.id] = {groupId, thumbnail, favIconUrl};
         }
 
-        tab.session = {groupId, thumbnail};
+        tab.session = {groupId, thumbnail, favIconUrl};
+    }
+
+    if (tab.session.favIconUrl) {
+        tab.favIconUrl = tab.session.favIconUrl;
+    } else if (!tab.favIconUrl || tab.favIconUrl.startsWith('chrome://mozapps/skin/')) {
+        tab.favIconUrl = '/icons/tab.svg';
     }
 
     return tab;
@@ -121,10 +156,10 @@ function getRemovedTabsForCreate(tabIds) {
             }
 
             let tab = {
-                groupId: tabs.session[tabId].groupId,
-                title: tabs.title[tabId],
                 url: tabs.url[tabId],
+                title: tabs.title[tabId],
                 cookieStoreId: tabs.cookieStoreId[tabId],
+                ...tabs.session[tabId],
             };
 
             removeTab(tabId);
@@ -132,6 +167,10 @@ function getRemovedTabsForCreate(tabIds) {
             return tab;
         })
         .filter(Boolean);
+}
+
+function filterRemovedTab({id}) {
+    return !tabs.removed.includes(id);
 }
 
 // WINDOWS
@@ -215,10 +254,14 @@ export default {
     setTabThumbnail,
     removeTabThumbnail,
 
+    setTabFavIcon,
+    removeTabFavIcon,
+
     getTabSession,
     loadTabSession,
 
     getRemovedTabsForCreate,
+    filterRemovedTab,
 
     // windows
     hasWindow,

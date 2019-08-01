@@ -359,10 +359,6 @@
         "message": "Flikar i den här gruppen flyttas aldrig automatiskt till andra grupper",
         "description": "Tabs in this group will never be automatically moved to another group"
     },
-    "useTabsFavIconsFromGoogleS2Converter": {
-        "message": "Använd favoritikoner för flikar från Google S2 Converter",
-        "description": "Use tabs fav-icons from Google S2 Converter"
-    },
     "iconStyle": {
         "message": "Ikonstil",
         "description": "Icon style"
@@ -402,14 +398,6 @@
     "nowFoundWindowsAddonStoppedWorking": {
         "message": "Fel: kunde inte hitta något vanligt icke-privat fönster.\nTillägget slutade fungera. Vänligen starta om Firefox.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
-    },
-    "waitingToLoadAllTabs": {
-        "message": "Väntar på att alla flikar skall laddas.\nVänligen vänta...",
-        "description": "Waiting for all tabs to load.\nPlease wait..."
-    },
-    "reloadAddon": {
-        "message": "Ladda om tillägg",
-        "description": "Reload addon"
     },
     "ffFailedAndLostDataMessage": {
         "message": "Firefox tappade bort alla flikgrupper.\nOm du har en säkerhetskopia kan du återställa data från den.",

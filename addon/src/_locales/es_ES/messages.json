@@ -359,10 +359,6 @@
         "message": "Las pestañas de este grupo no moverán automáticamente bajo ninguna condición",
         "description": "Tabs in this group will never be automatically moved to another group"
     },
-    "useTabsFavIconsFromGoogleS2Converter": {
-        "message": "Usar favicons de Google S2 Converter para las pestañas",
-        "description": "Use tabs fav-icons from Google S2 Converter"
-    },
     "iconStyle": {
         "message": "Estilo del icono",
         "description": "Icon style"
@@ -402,14 +398,6 @@
     "nowFoundWindowsAddonStoppedWorking": {
         "message": "Error: no se consiguió ninguna pestaña regular diferente a una privada/incognito/pop-up. La extensión ha dejado de funcionar. Por favor, reinicie el navegador.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
-    },
-    "waitingToLoadAllTabs": {
-        "message": "Esperando a que carguen todas las pestañas.\nPor favor, espere...",
-        "description": "Waiting for all tabs to load.\nPlease wait..."
-    },
-    "reloadAddon": {
-        "message": "Recargar extensión",
-        "description": "Reload addon"
     },
     "ffFailedAndLostDataMessage": {
         "message": "FF falló y todos los grupos se perdieron.\nSi tiene una copia de seguridad, puede restaurar los datos desde allí",

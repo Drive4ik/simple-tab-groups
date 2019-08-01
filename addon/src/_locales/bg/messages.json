@@ -347,10 +347,6 @@
         "message": "Разделите от тази група няма да бъдат автоматично премествани в друга група",
         "description": "Tabs in this group will never be automatically moved to another group"
     },
-    "useTabsFavIconsFromGoogleS2Converter": {
-        "message": "Използване на пиктограми от Google S2 Converter",
-        "description": "Use tabs fav-icons from Google S2 Converter"
-    },
     "iconStyle": {
         "message": "Пиктограма",
         "description": "Icon style"
@@ -386,14 +382,6 @@
     "updateTabThumbnail": {
         "message": "Обновяване на миниатюрата на раздела",
         "description": "Update thumbnail for this tab"
-    },
-    "waitingToLoadAllTabs": {
-        "message": "Изчакване на всички раздели да заредят.\nМоля, почакайте…",
-        "description": "Waiting for all tabs to load.\nPlease wait..."
-    },
-    "reloadAddon": {
-        "message": "Презареждане на добавката",
-        "description": "Reload addon"
     },
     "enterDefaultGroupIconViewTypeTitle": {
         "message": "Пиктограма на нова група",

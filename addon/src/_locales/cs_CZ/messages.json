@@ -359,10 +359,6 @@
         "message": "Panely z této skupiny nebudou nikdy automaticky přesunuty do jiné",
         "description": "Tabs in this group will never be automatically moved to another group"
     },
-    "useTabsFavIconsFromGoogleS2Converter": {
-        "message": "Použít favikonu z Google S2 Converter",
-        "description": "Use tabs fav-icons from Google S2 Converter"
-    },
     "iconStyle": {
         "message": "Styl ikony",
         "description": "Icon style"
@@ -402,14 +398,6 @@
     "nowFoundWindowsAddonStoppedWorking": {
         "message": "Chyba: nenalezeno žádné normální okno, ale pouze anonymní nebo vyskakovací.\nDoplněk přestal fungovat. Prosím, restartujte prohlížeč.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
-    },
-    "waitingToLoadAllTabs": {
-        "message": "Čeká se na načtení všech panelů.\nČekejte prosím...",
-        "description": "Waiting for all tabs to load.\nPlease wait..."
-    },
-    "reloadAddon": {
-        "message": "Znovu načíst doplněk",
-        "description": "Reload addon"
     },
     "ffFailedAndLostDataMessage": {
         "message": "FF spadl a došlo ke ztrátě všech skupin.\nPokud máte zálohu, obnovte ji.",

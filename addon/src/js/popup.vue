@@ -8,8 +8,8 @@
                 default: '',
             },
             buttons: {
-                required: true,
                 type: Array,
+                default: () => [],
             },
         },
         methods: {
@@ -43,6 +43,13 @@
     .modal-card-title {
         font-size: 1.2rem;
         color: inherit;
+    }
+
+    @media screen and (max-width: 769px) {
+        .modal-card,
+        .modal-content {
+            width: calc(100% - var(--indent) * 2);
+        }
     }
 
     .modal-card-head,

@@ -363,10 +363,6 @@
         "message": "Tabs in this group will never be automatically moved to another group",
         "description": "Tabs in this group will never be automatically moved to another group"
     },
-    "useTabsFavIconsFromGoogleS2Converter": {
-        "message": "Use tabs fav-icons from Google S2 Converter",
-        "description": "Use tabs fav-icons from Google S2 Converter"
-    },
     "iconStyle": {
         "message": "Icon style",
         "description": "Icon style"
@@ -406,14 +402,6 @@
     "nowFoundWindowsAddonStoppedWorking": {
         "message": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
-    },
-    "waitingToLoadAllTabs": {
-        "message": "Waiting for all tabs to load.\nPlease wait...",
-        "description": "Waiting for all tabs to load.\nPlease wait..."
-    },
-    "reloadAddon": {
-        "message": "Reload addon",
-        "description": "Reload addon"
     },
     "ffFailedAndLostDataMessage": {
         "message": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it",
@@ -682,5 +670,13 @@
     "folderNameTitle": {
         "message": "Folder name",
         "description": "Folder name title"
+    },
+    "backupSuccessfullyRestored": {
+        "message": "Backup successfully restored!",
+        "description": "Backup successfully restored"
+    },
+    "loading": {
+        "message": "Loading, please wait...",
+        "description": "Loading, please wait..."
     }
 }

@@ -24,7 +24,7 @@ async function load(groupId = null, withTabs = false) {
 
         groups.forEach(group => groupTabs[group.id] = []);
 
-        await Promise.all(allTabs.map(async function(tab) {
+        await Promise.all(allTabs.filter(BG.cache.filterRemovedTab).map(async function(tab) {
             tab = await BG.cache.loadTabSession(tab);
 
             if (tab.session.groupId) {
@@ -55,8 +55,6 @@ async function save(groups, withMessage = false) {
     if (!Array.isArray(groups)) {
         throw Error('groups has invalid type');
     }
-
-    groups.forEach(group => group.tabs = []);
 
     await storage.set({
         groups,
@@ -125,9 +123,7 @@ async function add(windowId, withTabs = [], title) {
     }
 
     if (withTabs.length) {
-        await Tabs.move(withTabs, newGroup.id, undefined, false);
-        // await Promise.all(withTabs.map(tab => cache.setTabGroup(tab.id, newGroup.id)));
-        // await createTabsSafe(withTabs, !windowId, newGroup.id);
+        newGroup.tabs = await Tabs.move(withTabs, newGroup.id, undefined, false);
     }
 
     BG.sendMessage({
@@ -197,6 +193,11 @@ async function update(groupId, updateData) {
     }
 
     updateData = utils.clone(updateData); // clone need for fix bug: dead object after close tab which create object
+
+    if (updateData.iconUrl && updateData.iconUrl.startsWith('chrome')) {
+        utils.notify('Icon not supported');
+        delete updateData.iconUrl;
+    }
 
     Object.assign(group, updateData);
 

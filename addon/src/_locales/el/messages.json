@@ -359,10 +359,6 @@
         "message": "Τα tab σε αυτό το group ποτέ δεν θα μετακινηθούν αυτόματα σε άλλο group",
         "description": "Tabs in this group will never be automatically moved to another group"
     },
-    "useTabsFavIconsFromGoogleS2Converter": {
-        "message": "Χρήση αγαπημένων εικονιδίων tabs  από Google S2 Converter",
-        "description": "Use tabs fav-icons from Google S2 Converter"
-    },
     "iconStyle": {
         "message": "Στυλ εικονιδίου",
         "description": "Icon style"
@@ -402,14 +398,6 @@
     "nowFoundWindowsAddonStoppedWorking": {
         "message": "Σφάλμα: Δεν βρέθηκε κανένα κανονικό (όχι private/incognito/popup) παράθυρο. Το πρόσθετο σταμάτησε να λειτουργεί. Παρακαλώ επανεκινείστε τον φυλομετρητή.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
-    },
-    "waitingToLoadAllTabs": {
-        "message": "Αναμονή για την φόρτωση όλων των tabs. \nΠαρακαλώ περιμένετε...",
-        "description": "Waiting for all tabs to load.\nPlease wait..."
-    },
-    "reloadAddon": {
-        "message": "Επαναφόρτωση προσθέτου",
-        "description": "Reload addon"
     },
     "ffFailedAndLostDataMessage": {
         "message": "Το FF 'κράσαρε' και όλα τα groups έχουν χαθεί!\nΑν έχετε αντίγραφο ασφαλείας (backup), μπορείτε να επαναφέρετε τα groups  από αυτό",

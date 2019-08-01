@@ -17,7 +17,7 @@ async function load(withTabs) {
         ]);
 
     if (withTabs) {
-        allTabs = await Promise.all(allTabs.map(BG.cache.loadTabSession));
+        allTabs = await Promise.all(allTabs.filter(BG.cache.filterRemovedTab).map(BG.cache.loadTabSession));
     }
 
     let windows = await Promise.all(allWindows.map(async function(win) {

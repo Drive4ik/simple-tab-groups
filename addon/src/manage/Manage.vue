@@ -165,10 +165,6 @@
                                 this.groups.some(gr => tab = gr.tabs.find(t => t.id === request.tab.id));
 
                                 Object.assign(tab, request.tab);
-
-                                if (request.tab.url || request.tab.favIconUrl) {
-                                    tab.favIconUrlToDisplay = Tabs.getFavIconUrl(tab);
-                                }
                             }
 
                             break;
@@ -238,7 +234,6 @@
                             }
 
                             break;
-                        // case 'group-loaded':
                         case 'groups-updated':
                             this.loadGroups();
                             break;
@@ -295,7 +290,6 @@
             },
 
             mapTab(tab) {
-                tab.favIconUrlToDisplay = Tabs.getFavIconUrl(tab);
                 tab.container = BG.containers.isDefault(tab.cookieStoreId) ? false : BG.containers.get(tab.cookieStoreId);
                 tab.isMoving = false;
                 tab.isOver = false;
@@ -318,12 +312,6 @@
                 Tabs.add(group.id, cookieStoreId);
             },
             removeTab(tab) {
-                // let tabIndex = group.tabs.indexOf(tab);
-
-                // group.tabs.splice(tabIndex, 1);
-
-                // let group = this.groups.find(gr => gr.id === tab.session.groupId);
-
                 Tabs.remove(tab);
             },
             updateTabThumbnail(tabId) {
@@ -411,10 +399,10 @@
 
                 Groups.remove(group.id);
             },
-            setTabIconAsGroupIcon(tab, group) {
+            setTabIconAsGroupIcon({favIconUrl}, group) {
                 Groups.update(group.id, {
                     iconViewType: null,
-                    iconUrl: Tabs.getFavIconUrl(tab),
+                    iconUrl: favIconUrl,
                 });
             },
             discardTab(tabId) {
@@ -639,8 +627,8 @@
                                 @drop="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
                                 @dragend="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
                                 >
-                                <div v-if="tab.favIconUrlToDisplay" class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                    <img class="size-16" v-lazy="tab.favIconUrlToDisplay" />
+                                <div v-if="tab.favIconUrl" class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                    <img class="size-16" v-lazy="tab.favIconUrl" />
                                 </div>
                                 <div class="delete-tab-button" @click.stop="removeTab(tab)" :title="lang('deleteTab')" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <img class="size-14" src="/icons/close.svg" />

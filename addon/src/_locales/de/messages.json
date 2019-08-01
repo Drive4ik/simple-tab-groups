@@ -359,10 +359,6 @@
         "message": "Tabs in dieser Gruppe werden niemals automatisch in eine andere Gruppe verschoben",
         "description": "Tabs in this group will never be automatically moved to another group"
     },
-    "useTabsFavIconsFromGoogleS2Converter": {
-        "message": "Benutze Tabs-Favicons aus Google S2 Converter",
-        "description": "Use tabs fav-icons from Google S2 Converter"
-    },
     "iconStyle": {
         "message": "Icon-Stil",
         "description": "Icon style"
@@ -402,14 +398,6 @@
     "nowFoundWindowsAddonStoppedWorking": {
         "message": "Fehler: es wurden keine normalen nicht privaten/Inkognito/Pop-up-Fenster gefunden.\nAdd-on wurde gestoppt. Bitte den Browser neustarten.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
-    },
-    "waitingToLoadAllTabs": {
-        "message": "Warte, bis alle Tabs geladen wurden.\nBitte Warten...",
-        "description": "Waiting for all tabs to load.\nPlease wait..."
-    },
-    "reloadAddon": {
-        "message": "Add-on neu laden",
-        "description": "Reload addon"
     },
     "ffFailedAndLostDataMessage": {
         "message": "Firefox hatte einen Fehler und alle Gruppen sind verloren gegangen.\nFalls du ein Backup hast, kannst du die Daten daraus wiederherstellen.",
