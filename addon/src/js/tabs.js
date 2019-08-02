@@ -23,7 +23,13 @@ async function create(tab) {
         tab.active = false;
     }
 
-    if (!tab.active && tab.url && !utils.isUrlEmpty(tab.url)) {
+    if (!tab.pinned) {
+        delete tab.pinned;
+    }
+
+    delete tab.discarded;
+
+    if (!tab.active && !tab.pinned && tab.url && !utils.isUrlEmpty(tab.url)) {
         tab.discarded = true;
     }
 
@@ -51,7 +57,7 @@ async function create(tab) {
 
     let newTab = await browser.tabs.create(tab);
 
-    if (groupId) {
+    if (groupId && !tab.pinned) {
         BG.cache.setTabGroup(newTab.id, groupId);
     }
 
@@ -103,22 +109,18 @@ async function setActive(tabId, tabs) {
 async function getActive(windowId = browser.windows.WINDOW_ID_CURRENT) {
     const {BG} = browser.extension.getBackgroundPage();
 
-    let [activeTab] = await browser.tabs.query({
+    let [activeTab] = await get(windowId, null, null, {
         active: true,
-        windowId: windowId,
     });
 
-    return activeTab ? BG.cache.loadTabSession(activeTab) : null;
+    return activeTab;
 }
 
 async function getHighlighted(windowId = browser.windows.WINDOW_ID_CURRENT, clickedTab = null) {
     const {BG} = browser.extension.getBackgroundPage();
 
-    let tabs = await browser.tabs.query({
-        pinned: false,
-        hidden: false,
+    let tabs = await get(windowId, false, false, {
         highlighted: true,
-        windowId: windowId,
     });
 
     if (clickedTab && !tabs.some(tab => tab.id === clickedTab.id)) { // if clicked tab not in selected tabs - add it
@@ -129,18 +131,23 @@ async function getHighlighted(windowId = browser.windows.WINDOW_ID_CURRENT, clic
         }
     }
 
-    // return Promise.all(tabs.map(BG.cache.loadTabSession));
-    return tabs.filter(BG.cache.filterRemovedTab);
+    return tabs;
 }
 
-async function get(windowId = browser.windows.WINDOW_ID_CURRENT, pinned = false, hidden = false) {
+async function get(windowId = browser.windows.WINDOW_ID_CURRENT, pinned = false, hidden = false, otherProps = {}) {
     const {BG} = browser.extension.getBackgroundPage();
 
     let query = {
         windowId,
         pinned,
         hidden,
+        windowType: browser.windows.WindowType.NORMAL,
+        ...otherProps,
     };
+
+    if (null === windowId) {
+        delete query.windowId;
+    }
 
     if (null === pinned) {
         delete query.pinned;
@@ -154,7 +161,7 @@ async function get(windowId = browser.windows.WINDOW_ID_CURRENT, pinned = false,
 
     tabs = tabs.filter(BG.cache.filterRemovedTab);
 
-    return pinned ? tabs : Promise.all(tabs.map(BG.cache.loadTabSession));
+    return query.pinned ? tabs : Promise.all(tabs.map(BG.cache.loadTabSession));
 }
 
 async function setMute(tabs, muted) {
@@ -242,9 +249,7 @@ async function updateThumbnail(tabId, force) {
         return;
     }
 
-    tab = await BG.cache.loadTabSession(tab);
-
-    if (!force && tab.session.thumbnail) {
+    if (!force && BG.cache.getTabSession(tab.id, 'thumbnail')) {
         return;
     }
 
@@ -327,21 +332,23 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
     if (tabs.length) {
         let windows = activeTabs.length ? await Windows.load(true) : [];
 
-        await Promise.all(activeTabs.map(function(tab) {
+        await Promise.all(activeTabs.map(async function(tab) {
             let winGroupId = BG.cache.getWindowGroup(tab.windowId);
 
             if (winGroupId) {
                 let groupTabs = groups.find(gr => gr.id === winGroupId).tabs.filter(t => t.id !== tab.id);
 
                 if (groupTabs.length) {
-                    return setActive(undefined, groupTabs);
+                    await setActive(undefined, groupTabs);
                 }
+
+                return;
             } else {
-                let win = windows.find(win => win.id === tab.windowId),
-                    winTabs = win.tabs.filter(t => !t.hidden && t.id !== tab.id);
+                let winTabs = windows.find(win => win.id === tab.windowId).tabs.filter(t => !t.hidden && t.id !== tab.id);
 
                 if (winTabs.length) {
-                    return setActive(undefined, winTabs);
+                    await setActive(undefined, winTabs);
+                    return;
                 }
             }
 
@@ -425,7 +432,7 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
     return tabs;
 }
 
-async function sendMessage(tabId, message) {
+function sendMessage(tabId, message) {
     return browser.tabs.sendMessage(tabId, message).catch(function() {});
 }
 

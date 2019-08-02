@@ -1,24 +1,19 @@
 'use strict';
 
 import utils from './utils';
+import Tabs from './tabs';
 
 // fix FF bug on browser.windows.getAll ... it's not return all windows
-// without pinned: false because need all windows, without normal tabs but with pinned tabs
+// without "pinned: false" because need all windows, without normal tabs but with pinned tabs
 async function load(withTabs) {
     const {BG} = browser.extension.getBackgroundPage();
 
     let [allTabs, allWindows] = await Promise.all([
-            withTabs ? browser.tabs.query({
-                windowType: browser.windows.WindowType.NORMAL,
-            }) : false,
+            withTabs ? Tabs.get(null, null, null) : false,
             browser.windows.getAll({
                 windowTypes: [browser.windows.WindowType.NORMAL],
             })
         ]);
-
-    if (withTabs) {
-        allTabs = await Promise.all(allTabs.filter(BG.cache.filterRemovedTab).map(BG.cache.loadTabSession));
-    }
 
     let windows = await Promise.all(allWindows.map(async function(win) {
         if (!utils.isWindowAllow(win)) {

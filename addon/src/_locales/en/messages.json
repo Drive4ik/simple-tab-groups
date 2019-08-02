@@ -678,5 +678,9 @@
     "loading": {
         "message": "Loading, please wait...",
         "description": "Loading, please wait..."
+    },
+    "showOtherTabs": {
+        "message": "Show other tabs",
+        "description": "Show other tabs"
     }
 }

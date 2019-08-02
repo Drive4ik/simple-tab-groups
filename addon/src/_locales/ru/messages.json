@@ -674,5 +674,9 @@
     "loading": {
         "message": "Загрузка, пожалуйста подождите...",
         "description": "Loading, please wait..."
+    },
+    "showOtherTabs": {
+        "message": "Показать другие вкладки",
+        "description": "Show other tabs"
     }
 }

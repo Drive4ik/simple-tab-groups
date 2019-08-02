@@ -540,7 +540,7 @@ function wait(ms = 200) {
     return new Promise(resolve => setTimeout(resolve, ms, ms));
 }
 
-async function waitDownload(id, maxWaitSec = 5) {
+async function waitDownload(id, maxWaitSec = 10) {
     let downloadObj = null;
 
     for (let i = 0; i < maxWaitSec * 5; i++) {

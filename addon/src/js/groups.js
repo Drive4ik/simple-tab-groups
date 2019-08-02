@@ -12,10 +12,7 @@ async function load(groupId = null, withTabs = false) {
     const {BG} = browser.extension.getBackgroundPage();
 
     let [allTabs, {groups}] = await Promise.all([
-            withTabs ? browser.tabs.query({
-                windowType: browser.windows.WindowType.NORMAL,
-                pinned: false,
-            }) : false,
+            withTabs ? Tabs.get(null, false, null) : false,
             storage.get('groups')
         ]);
 
@@ -24,20 +21,19 @@ async function load(groupId = null, withTabs = false) {
 
         groups.forEach(group => groupTabs[group.id] = []);
 
-        await Promise.all(allTabs.filter(BG.cache.filterRemovedTab).map(async function(tab) {
-            tab = await BG.cache.loadTabSession(tab);
-
+        await Promise.all(allTabs.map(async function(tab) {
             if (tab.session.groupId) {
                 if (groupTabs[tab.session.groupId]) {
                     groupTabs[tab.session.groupId].push(tab);
                 } else {
+                    delete tab.session.groupId;
                     BG.cache.removeTabGroup(tab.id);
                 }
             }
         }));
 
         groups = groups.map(function(group) {
-            group.tabs = groupTabs[group.id].sort(utils.sortBy('index')); // TODO check perfomance with sort
+            group.tabs = groupTabs[group.id].sort(utils.sortBy('index'));
             return group;
         });
     }

@@ -69,6 +69,7 @@
                 options: {},
                 groups: [],
 
+                showUnSyncTabs: false,
                 unSyncTabs: [],
 
                 multipleMoveTabs: [],
@@ -144,11 +145,6 @@
 
                 return groups;
             },
-            allTabs() {
-                let tabs = {};
-                this.groups.forEach(group => group.tabs.forEach(tab => tabs[tab.id] = tab));
-                return tabs;
-            }
         },
         methods: {
             lang: browser.i18n.getMessage,
@@ -991,7 +987,17 @@
                     </div>
                 </div>
 
-                <div v-show="unSyncTabs.length" class="not-sync-tabs">
+                <div v-if="unSyncTabs.length && !showUnSyncTabs">
+                    <hr>
+                    <div class="item" @click="showUnSyncTabs = true">
+                        <div class="item-icon">
+                            <img class="size-16" src="/icons/arrow-down.svg" />
+                        </div>
+                        <div class="item-title" v-text="lang('showOtherTabs')"></div>
+                    </div>
+                </div>
+
+                <div v-if="unSyncTabs.length && showUnSyncTabs" class="not-sync-tabs">
                     <hr>
                     <p class="h-margin-bottom-10">
                         <span v-text="lang('foundHiddenUnSyncTabsDescription')"></span><br>
@@ -1293,7 +1299,7 @@
         --max-popup-width: 100%;
 
         --max-popup-height: 600px;
-        --min-popup-height: 200px;
+        --min-popup-height: 145px;
 
         --item-background-color-active: var(--color-light-gray);
         --item-background-color-hover: var(--color-gray);

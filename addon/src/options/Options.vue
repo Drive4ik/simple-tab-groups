@@ -244,7 +244,7 @@
             async importAddonSettings() {
                 let data = await file.load();
 
-                if ('object' !== utils.type(data) || !Array.isArray(data.groups)) {
+                if ('object' !== utils.type(data) || !Array.isArray(data.groups) || !Number.isFinite(data.lastCreatedGroupPosition)) {
                     utils.notify('this is wrong backup!');
                     return;
                 }
@@ -256,6 +256,12 @@
                 await BG.loadingBrowserAction();
 
                 data = await BG.runMigrateForData(data);
+
+                if (data.pinnedTabs) {
+                    data.pinnedTabs.forEach(tab => tab.pinned = true);
+                    await BG.createTabsSafe(data.pinnedTabs, false, false, false);
+                    delete data.pinnedTabs;
+                }
 
                 let windows = await Windows.load(true);
 
@@ -279,11 +285,20 @@
             async importSettingsOldTabGroupsAddonButton() {
                 let oldOptions = await file.load();
 
-                let data = await storage.get(['groups', 'lastCreatedGroupPosition']),
-                    newGroups = {};
+                if (!oldOptions || !Array.isArray(oldOptions.windows) || !oldOptions.session) {
+                    utils.notify('This is not "Tab Groups" backup!');
+                    return;
+                }
+
+                this.showLoadingMessage = true;
+
+                let {lastCreatedGroupPosition} = await storage.get('lastCreatedGroupPosition'),
+                    newGroups = [],
+                    tabsToCreate = [];
 
                 oldOptions.windows.forEach(function(win) {
-                    let oldGroups = {};
+                    let oldGroups = {},
+                        groups = {};
 
                     try {
                         oldGroups = JSON.parse(win.extData['tabview-group']);
@@ -292,217 +307,160 @@
                         return;
                     }
 
-                    Object.keys(oldGroups).forEach(function(key) {
-                        let oldGroup = oldGroups[key];
+                    Object.values(oldGroups).forEach(function(oldGroup) {
+                        lastCreatedGroupPosition++;
 
-                        if (!newGroups[oldGroup.id]) {
-                            data.lastCreatedGroupPosition++;
-
-                            newGroups[oldGroup.id] = BG.createGroup(data.lastCreatedGroupPosition);
-                            newGroups[oldGroup.id].title = utils.createGroupTitle(oldGroup.title, oldGroup.id);
-                            newGroups[oldGroup.id].catchTabRules = (oldGroup.catchRules || '');
-                            newGroups[oldGroup.id].slot = oldGroup.slot;
-                        }
+                        groups[oldGroup.id] = Groups.create(lastCreatedGroupPosition, utils.createGroupTitle(oldGroup.title, oldGroup.id));
+                        groups[oldGroup.id].catchTabRules = oldGroup.catchRules || '';
                     });
 
                     win.tabs.forEach(function(oldTab) {
-                        let extData = {},
-                            tabEntry = oldTab.entries.pop();
+                        let tabData = {},
+                            tab = oldTab.entries.pop();
 
-                        if (!tabEntry.url || !utils.isUrlAllowToCreate(tabEntry.url)) {
+                        if (oldTab.pinned) {
+                            tabsToCreate.push({
+                                title: tab.title,
+                                url: tab.url,
+                                pinned: true,
+                            });
                             return;
                         }
 
-                        if (oldTab.pinned) {
-                            return browser.tabs.create({
-                                url: tabEntry.url,
-                                pinned: true,
-                            });
-                        }
-
                         try {
-                            extData = JSON.parse(oldTab.extData['tabview-tab'] || '{}');
-                            if (!extData || !extData.groupID) {
+                            tabData = JSON.parse(oldTab.extData['tabview-tab']);
+                            if (!tabData || !tabData.groupID) {
                                 return;
                             }
                         } catch (e) {
                             return utils.notify('Cannot parse groups: ' + e);
                         }
 
-                        if (newGroups[extData.groupID]) {
-                            // newGroups[extData.groupID].tabs.push(BG.mapTab({
-                            newGroups[extData.groupID].tabs.push({
-                                title: tabEntry.title,
-                                url: tabEntry.url,
-                                favIconUrl: oldTab.image || '',
-                                active: Boolean(extData.active),
+                        if (groups[tabData.groupID]) {
+                            tabsToCreate.push({
+                                title: tab.title,
+                                url: tab.url,
+                                groupId: groups[tabData.groupID].id,
                             });
-                            // }));
                         }
                     });
+
+                    newGroups.push(...Object.values(groups));
                 });
 
-                let groups = Object.values(newGroups)
-                    .sort((a, b) => utils.compareStrings(a.slot, b.slot))
-                    .map(function(group) {
-                        delete group.slot;
-                        return group;
-                    });
+                await this._saveImportedGroups(newGroups, tabsToCreate, lastCreatedGroupPosition);
 
-                if (groups.length) {
-                    data.groups.push.apply(data.groups, groups);
-
-                    await storage.set(data);
-
-                    browser.runtime.reload(); // reload addon
-                } else {
-                    utils.notify('Nothing imported');
-                }
+                this.showLoadingMessage = false;
             },
 
             async importSettingsPanoramaViewAddonButton() {
                 let panoramaOptions = await file.load();
 
-
                 if (!panoramaOptions || !panoramaOptions.file || 'panoramaView' !== panoramaOptions.file.type || !Array.isArray(panoramaOptions.windows)) {
-                    throw Error('this is wrong backup!');
+                    utils.notify('This is not "Panorama View" backup!');
+                    return;
                 }
 
                 if (1 !== panoramaOptions.file.version) {
-                    throw Error('Panorama View backup has unsupported version');
+                    utils.notify('"Panorama View" backup has unsupported version');
+                    return;
                 }
 
-                let data = await storage.get(['groups', 'lastCreatedGroupPosition']),
-                    newGroups = {};
+                this.showLoadingMessage = true;
+
+                let {lastCreatedGroupPosition} = await storage.get('lastCreatedGroupPosition'),
+                    newGroups = [],
+                    tabsToCreate = [];
 
                 panoramaOptions.windows.forEach(function(win) {
-                    win.groups.forEach(function(group) {
-                        if (!newGroups[group.id]) {
-                            data.lastCreatedGroupPosition++;
+                    let groups = {};
 
-                            newGroups[group.id] = BG.createGroup(data.lastCreatedGroupPosition, group.name);
-                        }
+                    win.groups.forEach(function(group) {
+                        lastCreatedGroupPosition++;
+
+                        groups[group.id] = Groups.create(lastCreatedGroupPosition, group.name);
                     });
 
                     win.tabs.forEach(function(tab) {
-                        if (!newGroups[tab.groupId]) {
+                        if (!groups[tab.groupId]) {
                             return;
                         }
 
-                        if (!utils.isUrlAllowToCreate(tab.url)) {
-                            return;
-                        }
+                        tab.groupId = groups[tab.groupId].id;
 
-                        // let newTab = BG.mapTab(tab);
-                        let newTab = tab;
-
-                        if (tab.pinned) {
-                            if (!utils.isUrlEmpty(newTab.url)) {
-                                browser.tabs.create({
-                                    url: newTab.url,
-                                    pinned: true,
-                                });
-                            }
-                        } else {
-                            newGroups[tab.groupId].tabs.push(newTab);
-                        }
+                        tabsToCreate.push(tab);
                     });
 
+                    newGroups.push(...Object.values(groups));
                 });
 
-                let groups = Object.values(newGroups);
+                await this._saveImportedGroups(newGroups, tabsToCreate, lastCreatedGroupPosition);
 
-                if (groups.length) {
-                    data.groups.push.apply(data.groups, groups);
-
-                    await storage.set(data);
-
-                    browser.runtime.reload(); // reload addon
-                } else {
-                    utils.notify('Nothing imported');
-                }
+                this.showLoadingMessage = false;
             },
 
             async importSettingsSyncTabGroupsAddonButton() {
                 let syncTabOptions = await file.load();
 
-
                 if (!syncTabOptions || !syncTabOptions.version || 'syncTabGroups' !== syncTabOptions.version[0] || !Array.isArray(syncTabOptions.groups)) {
-                    throw Error('this is wrong backup!');
+                    utils.notify('This is not "Sync Tab Groups" backup!');
+                    return;
                 }
 
                 if (1 !== syncTabOptions.version[1]) {
-                    throw Error('Sync Tab Groups backup has unsupported version');
+                    utils.notify('"Sync Tab Groups" backup has unsupported version');
+                    return;
                 }
 
-                let data = await storage.get(['groups', 'lastCreatedGroupPosition']),
-                    newGroups = {};
+                this.showLoadingMessage = true;
+
+                let {lastCreatedGroupPosition} = await storage.get('lastCreatedGroupPosition'),
+                    newGroups = [],
+                    tabsToCreate = [],
+                    groups = {};
 
                 syncTabOptions.groups.forEach(function(group) {
-                    if (group.incognito) {
-                        return;
-                    }
+                    lastCreatedGroupPosition++;
 
-                    if (!newGroups[group.id]) {
-                        data.lastCreatedGroupPosition++;
-
-                        newGroups[group.id] = BG.createGroup(data.lastCreatedGroupPosition, group.title);
-                        newGroups[group.id].position = group.position;
-                    }
+                    groups[group.id] = Groups.create(lastCreatedGroupPosition, group.title);
 
                     group.tabs.forEach(function(tab) {
-                        if (!utils.isUrlAllowToCreate(tab.url)) {
-                            return;
-                        }
-
-                        delete tab.id;
-
-                        // let newTab = BG.mapTab(tab);
-                        let newTab = tab;
-
-                        if (tab.pinned) {
-                            if (!utils.isUrlEmpty(newTab.url)) {
-                                browser.tabs.create({
-                                    url: newTab.url,
-                                    pinned: true,
-                                });
-                            }
-                        } else {
-                            newGroups[group.id].tabs.push(newTab);
-                        }
+                        tab.groupId = groups[group.id].id;
+                        tabsToCreate.push(tab);
                     });
                 });
 
-                let groups = Object.values(newGroups)
-                    .sort((a, b) => utils.compareStrings(a.position, b.position))
-                    .map(function(group) {
-                        delete group.position;
-                        return group;
-                    });
+                await this._saveImportedGroups(Object.values(groups), tabsToCreate, lastCreatedGroupPosition);
 
-                if (groups.length) {
-                    data.groups.push.apply(data.groups, groups);
+                this.showLoadingMessage = false;
+            },
 
-                    await storage.set(data);
+            async _saveImportedGroups(newGroups, tabsToCreate, lastCreatedGroupPosition) {
+                let groups = await Groups.load();
+                groups.push(...newGroups);
+                await Groups.save(groups);
 
-                    browser.runtime.reload(); // reload addon
-                } else {
-                    utils.notify('Nothing imported');
-                }
+                await storage.set({lastCreatedGroupPosition});
+
+                await BG.createTabsSafe(tabsToCreate
+                    .filter(tab => tab.url && !tab.url.startsWith('moz-extension') && utils.isUrlAllowToCreate(tab.url))
+                    .map(function(tab) {
+                        delete tab.active;
+                        delete tab.windowId;
+
+                        return tab;
+                    }), true);
+
+                utils.notify(browser.i18n.getMessage('backupSuccessfullyRestored'));
             },
 
             async saveErrorLogsIntoFile() {
-                let options = await storage.get('version'),
-                    data = {
-                        version: options.version,
-                        logs: utils.getErrorLogs(),
-                    };
+                let {version} = await storage.get('version');
 
-                if (data.logs.length) {
-                    file.save(data, 'STG-error-logs.json');
-                } else {
-                    utils.notify('No logs found');
-                }
+                file.save({
+                    version,
+                    logs: utils.getErrorLogs(),
+                }, 'STG-error-logs.json');
             },
 
             getIconTypeUrl(iconType) {
@@ -1020,6 +978,29 @@
                 margin: 0;
             }
         }
+    }
+
+    // bulma
+    .tabs a {
+        border-top-color: transparent;
+        border-top-style: solid;
+        border-top-width: 3px;
+        cursor: default;
+    }
+
+    .tabs ul,
+    .tabs li a {
+        border-bottom: none;
+    }
+
+    .tabs li.is-active a {
+        border-top-color: #0a84ff;
+        color: #0a84ff;
+    }
+
+    .tabs a:hover {
+        border-top-color: #a9a9ac;
+        background-color: #ededf0;
     }
 
 </style>

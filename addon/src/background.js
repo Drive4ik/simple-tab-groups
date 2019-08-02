@@ -35,9 +35,13 @@ async function createTabsSafe(tabs, hideTabs, groupId, withRemoveEvents = true) 
         return Tabs.create(tab);
     }));
 
-    if (hideTabs && result.length) {
-        await browser.tabs.hide(result.map(utils.keyId));
-        result.forEach(tab => tab.hidden = true);
+    if (hideTabs) {
+        let notPinnedTabs = result.filter(tab => !tab.pinned);
+
+        if (notPinnedTabs.length) {
+            await browser.tabs.hide(notPinnedTabs.map(utils.keyId));
+            notPinnedTabs.forEach(tab => tab.hidden = true);
+        }
     }
 
     if (withRemoveEvents) {
@@ -182,6 +186,7 @@ async function applyGroup(windowId, groupId, activeTabId) {
                 .then(function(tabs) {
                     tabs.forEach(function(tab) {
                         if (tab.session.groupId !== groupToShow.id) {
+                            tab.session.groupId = groupToShow.id;
                             cache.setTabGroup(tab.id, groupToShow.id);
                         }
                     });
@@ -379,7 +384,7 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
 
     if ('pinned' in changeInfo || 'hidden' in changeInfo) {
         if (changeInfo.pinned || changeInfo.hidden) {
-            await cache.removeTabGroup(tabId);
+            cache.removeTabGroup(tabId);
 
             if (group) {
                 sendMessage({
@@ -390,7 +395,7 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
         } else {
 
             if (false === changeInfo.pinned) {
-                await cache.setTabGroup(tabId, groupId);
+                cache.setTabGroup(tabId, groupId);
             } else if (false === changeInfo.hidden) {
                 let tabGroupId = cache.getTabSession(tabId, 'groupId');
 
@@ -403,7 +408,7 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
             }
 
             if (group) {
-                tab = await cache.loadTabSession(tab);
+                tab.session = cache.getTabSession(tab.id);
 
                 sendMessage({
                     action: 'tab-added',
@@ -1089,11 +1094,8 @@ function removeEvents() {
 
 async function openManageGroups() {
     if (options.openManageGroupsInTab) {
-        let tabs = await browser.tabs.query({
-            windowId: browser.windows.WINDOW_ID_CURRENT,
+        let tabs = await Tabs.get(undefined, null, null, {
             url: manageTabsPageUrl,
-            // pinned: false,
-            // hidden: false,
         });
 
         if (tabs.length) { // if manage tab is found
@@ -1316,9 +1318,8 @@ async function saveOptions(_options) {
     await storage.set(_options);
 
     if (optionsKeys.includes('hotkeys')) {
-        let tabs = await browser.tabs.query({
+        let tabs = await Tabs.get(null, null, null, {
                 discarded: false,
-                windowType: browser.windows.WindowType.NORMAL,
             }),
             actionData = {
                 action: 'update-hotkeys',
@@ -1401,6 +1402,11 @@ async function createBackup(includeTabThumbnails, includeTabFavIcons, isAutoBack
     if (isAutoBackup && !data.groups.length) {
         return;
     }
+
+    data.pinnedTabs = await Tabs.get(null, true, null);
+    data.pinnedTabs = data.pinnedTabs.map(function({url, title, cookieStoreId, isInReaderMode}) {
+        return {url, title, cookieStoreId, isInReaderMode};
+    });
 
     data.groups = groups.map(function(group) {
         group.tabs = group.tabs.map(function({url, title, cookieStoreId, isInReaderMode, session}) {
