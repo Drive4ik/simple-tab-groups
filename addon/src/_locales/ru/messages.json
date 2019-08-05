@@ -467,10 +467,6 @@
         "message": "Закреплённые вкладки не поддерживаются",
         "description": "Pinned tabs are not supported"
     },
-    "privateTabsAreNotSupported": {
-        "message": "Приватные вкладки не поддерживаются",
-        "description": "Private tabs are not supported"
-    },
     "thisUrlsAreNotSupported": {
         "message": "Эти адреса \"$urls$\" не поддерживаются",
         "description": "This urls \"$urls$\" are not supported",

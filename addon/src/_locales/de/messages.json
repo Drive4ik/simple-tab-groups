@@ -467,10 +467,6 @@
         "message": "Angepinnte Tabs werden nicht unterstützt",
         "description": "Pinned tabs are not supported"
     },
-    "privateTabsAreNotSupported": {
-        "message": "Private Tabs werden nicht unterstützt",
-        "description": "Private tabs are not supported"
-    },
     "thisUrlsAreNotSupported": {
         "message": "Die URLs \"$urls$\" werden nicht unterstützt",
         "description": "This urls \"$urls$\" are not supported",

@@ -467,10 +467,6 @@
         "message": "Les onglets épinglés ne sont pas supportés",
         "description": "Pinned tabs are not supported"
     },
-    "privateTabsAreNotSupported": {
-        "message": "Les ongles privés ne sont pas supportés",
-        "description": "Private tabs are not supported"
-    },
     "thisUrlsAreNotSupported": {
         "message": "Url \"$urls$\" non supportée(s)",
         "description": "This urls \"$urls$\" are not supported",

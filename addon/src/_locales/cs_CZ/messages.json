@@ -467,10 +467,6 @@
         "message": "Připnuté panely nejsou podporovány.",
         "description": "Pinned tabs are not supported"
     },
-    "privateTabsAreNotSupported": {
-        "message": "Anonymní panely nejsou podporovány.",
-        "description": "Private tabs are not supported"
-    },
     "thisUrlsAreNotSupported": {
         "message": "Tento typ adres (\"$urls$\") není podporován.",
         "description": "This urls \"$urls$\" are not supported",

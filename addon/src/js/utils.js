@@ -215,7 +215,7 @@ function notify(message, timer = 20000, id) {
 }
 
 function isAllowSender(request, sender) {
-    if (sender.id !== browser.runtime.id || !request || request.isExternalMessage || (sender.tab && isTabIncognito(sender.tab))) {
+    if (sender.id !== browser.runtime.id || !request || request.isExternalMessage) {
         return false;
     }
 
@@ -252,21 +252,13 @@ function isUrlEmpty(url) {
 }
 
 function isWindowAllow(win) {
-    return browser.windows.WindowType.NORMAL === win.type && !win.incognito;
+    return browser.windows.WindowType.NORMAL === win.type;
 }
 
 const createTabUrlRegexp = /^((https?|ftp|moz-extension):|about:blank)/;
 
 function isUrlAllowToCreate(url) {
     return url ? createTabUrlRegexp.test(url) : true;
-}
-
-function isTabIncognito(tab) {
-    return tab.incognito;
-}
-
-function isTabNotIncognito(tab) {
-    return !isTabIncognito(tab);
 }
 
 function isTabPinned(tab) {
@@ -293,15 +285,15 @@ function isTabLoading({status}) {
     return browser.tabs.TabStatus.LOADING === status;
 }
 
-function getTabTitle(tab, withUrl) {
+function getTabTitle(tab, withUrl = false, sliceLength = 0) {
     let title = tab.title || tab.url || 'about:blank';
 
     if (withUrl && tab.url && title !== tab.url) {
         title += '\n' + tab.url;
     }
 
-    // return title;
-    return `${tab.id}: ${title}`;
+    return sliceLength ? sliceText(title, sliceLength) : title;
+    // return `${tab.id}: ${title}`;
 }
 
 function getNextIndex(index, length, textPosition = 'next') {
@@ -389,7 +381,7 @@ function safeColor(color) {
     return div.style.backgroundColor;
 }
 
-function getGroupIconUrl(group = { iconViewType: 'main-squares' }, keyInObj = null) {
+function getGroupIconUrl(group = { iconViewType: constants.DEFAULT_OPTIONS.defaultGroupIconViewType }, keyInObj = null) {
     let result = null;
 
     if (group.iconUrl) {
@@ -586,8 +578,6 @@ export default {
     isUrlEmpty,
     isWindowAllow,
     isUrlAllowToCreate,
-    isTabIncognito,
-    isTabNotIncognito,
     isTabPinned,
     isTabNotPinned,
     isTabCanBeHidden,

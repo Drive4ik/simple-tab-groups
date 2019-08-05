@@ -467,10 +467,6 @@
         "message": "ピン留めされたタブはサポートされていません",
         "description": "Pinned tabs are not supported"
     },
-    "privateTabsAreNotSupported": {
-        "message": "プライベートタブはサポートされていません",
-        "description": "Private tabs are not supported"
-    },
     "thisUrlsAreNotSupported": {
         "message": "このURL\"$urls$\"はサポートされていません",
         "description": "This urls \"$urls$\" are not supported",

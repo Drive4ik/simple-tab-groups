@@ -467,10 +467,6 @@
         "message": "Abas pinadas não são suportadas",
         "description": "Pinned tabs are not supported"
     },
-    "privateTabsAreNotSupported": {
-        "message": "Abas privadas não são suportadas",
-        "description": "Private tabs are not supported"
-    },
     "thisUrlsAreNotSupported": {
         "message": "Esses endereços \"$urls$\" não são suportados",
         "description": "This urls \"$urls$\" are not supported",

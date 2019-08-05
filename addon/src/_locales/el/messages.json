@@ -467,10 +467,6 @@
         "message": "Δεν υποστηρίζονται καρφιτσωμένα (Pinned) tabs",
         "description": "Pinned tabs are not supported"
     },
-    "privateTabsAreNotSupported": {
-        "message": "Δεν υποστηρίζονται ιδιωτικά (Private) tabs",
-        "description": "Private tabs are not supported"
-    },
     "thisUrlsAreNotSupported": {
         "message": "Τέτοια urls ($urls$) δεν υποστηρίζονται",
         "description": "This urls \"$urls$\" are not supported",

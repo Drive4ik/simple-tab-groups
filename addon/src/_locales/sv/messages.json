@@ -467,10 +467,6 @@
         "message": "Fästa flikar stöds ej",
         "description": "Pinned tabs are not supported"
     },
-    "privateTabsAreNotSupported": {
-        "message": "Privata flikar stöds ej",
-        "description": "Private tabs are not supported"
-    },
     "thisUrlsAreNotSupported": {
         "message": "Dessa URLs stöds ej: $urls$",
         "description": "This urls \"$urls$\" are not supported",

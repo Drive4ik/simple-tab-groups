@@ -13,11 +13,7 @@ let tabs = {
     cache = {};
 
 // TABS
-function setTab({id, url, title, cookieStoreId, incognito}) {
-    if (incognito) { // TMP
-        throw Error('tab is incognito');
-    }
-
+function setTab({id, url, title, cookieStoreId}) {
     if (url) {
         tabs.url[id] = url;
     }

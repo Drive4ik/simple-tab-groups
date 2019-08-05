@@ -313,7 +313,7 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
         }
 
         if (utils.isTabCanNotBeHidden(tab)) {
-            let tabTitle = utils.sliceText(utils.getTabTitle(tab), 20);
+            let tabTitle = utils.getTabTitle(tab, false, 20);
 
             if (!tabsCantHide.includes(tabTitle)) {
                 tabsCantHide.push(tabTitle);
@@ -413,7 +413,7 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
     if (tabs.length > 1) {
         message = browser.i18n.getMessage('moveMultipleTabsToGroupMessage', tabs.length);
     } else {
-        let tabTitle = utils.sliceText(utils.getTabTitle(tabs[0]), 50);
+        let tabTitle = utils.getTabTitle(tabs[0], false, 50);
         message = browser.i18n.getMessage('moveTabToGroupMessage', [group.title, tabTitle]);
     }
 

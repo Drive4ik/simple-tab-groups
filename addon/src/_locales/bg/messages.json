@@ -443,10 +443,6 @@
         "message": "Закачени раздели не се поддържат",
         "description": "Pinned tabs are not supported"
     },
-    "privateTabsAreNotSupported": {
-        "message": "Разделите от поверителен прозорец не се поддържат",
-        "description": "Private tabs are not supported"
-    },
     "thisUrlsAreNotSupported": {
         "message": "Адресът „$urls$“ не се поддържа",
         "description": "This urls \"$urls$\" are not supported",

@@ -467,10 +467,6 @@
         "message": "No se soportan las pestañas marcadas como fijas",
         "description": "Pinned tabs are not supported"
     },
-    "privateTabsAreNotSupported": {
-        "message": "No se soportan las pestañas privadas",
-        "description": "Private tabs are not supported"
-    },
     "thisUrlsAreNotSupported": {
         "message": "Estas URLs \"$urls$\" no están soportadas",
         "description": "This urls \"$urls$\" are not supported",

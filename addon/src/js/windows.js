@@ -38,7 +38,7 @@ async function get(windowId = browser.windows.WINDOW_ID_CURRENT) {
     let win = await browser.windows.get(windowId);
 
     if (!utils.isWindowAllow(win)) {
-        throw Error('normal window not found! addon not worked in incognito mode');
+        throw Error('normal window not found!');
     }
 
     return BG.cache.loadWindowSession(win);
@@ -91,7 +91,7 @@ async function getLastFocusedNormalWindow(returnId = true) {
         win = filteredWindows.find(win => win.focused) || filteredWindows.pop();
 
     if (!win) {
-        throw Error('normal window not found! addon not worked in incognito mode');
+        throw Error('normal window not found!');
     }
 
     return returnId ? win.id : BG.cache.loadWindowSession(win);

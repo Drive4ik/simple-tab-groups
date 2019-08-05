@@ -363,17 +363,18 @@ function removeExcludeTabsIds(tabIds) {
 }
 
 async function onUpdatedTab(tabId, changeInfo, tab) {
-    if (excludeTabsIds.includes(tabId) || utils.isTabIncognito(tab) || 'isArticle' in changeInfo || 'attention' in changeInfo) {
-        console.log('onUpdatedTab 🛑 tabId: %s, changeInfo:', tabId, {...changeInfo});
+    if (excludeTabsIds.includes(tabId) || 'isArticle' in changeInfo || 'attention' in changeInfo || 'mutedInfo' in changeInfo || 'audible' in changeInfo) {
+        console.log('onUpdatedTab 🛑 tabId: %s, changeInfo:', tabId, changeInfo);
         return;
     }
 
-    console.log('onUpdatedTab tabId: %s, changeInfo:', tabId, {...changeInfo});
+    console.log('onUpdatedTab tabId: %s, changeInfo:', tabId, changeInfo);
 
-    cache.setTab({
-        id: tabId,
-        ...changeInfo,
-    });
+    // if (!('discarded' in changeInfo)) { // discarded not work when tab loading
+    //     changeInfo.discarded = false;
+    // }
+
+    cache.setTab(tab);
 
     if (utils.isTabPinned(tab) && undefined === changeInfo.pinned) {
         return;
@@ -491,7 +492,14 @@ async function onCreatedWindow(win) {
     if (utils.isWindowAllow(win)) {
         win = await cache.loadWindowSession(win);
 
-        if (options.createNewGroupWhenOpenNewWindow && !win.session.groupId) {
+        if (win.session.groupId) {
+            await cache.removeWindowGroup(win.id);
+
+            updateBrowserActionData(null, win.id);
+
+            let winTabs = await Tabs.get(win.id, null, null);
+            winTabs.forEach(tab => cache.removeTabGroup(tab.id));
+        } else if (options.createNewGroupWhenOpenNewWindow) {
             Groups.add(win.id);
         }
     }
@@ -1066,7 +1074,17 @@ function addEvents() {
     browser.tabs.onCreated.addListener(onCreatedTab);
     browser.tabs.onActivated.addListener(onActivatedTab);
     browser.tabs.onMoved.addListener(onMovedTab);
-    browser.tabs.onUpdated.addListener(onUpdatedTab);
+    browser.tabs.onUpdated.addListener(onUpdatedTab, {
+        // urls: ['<all_urls>'],
+        // properties: [
+        //     browser.tabs.UpdatePropertyName.DISCARDED, // not work if tab load
+        //     browser.tabs.UpdatePropertyName.FAVICONURL,
+        //     browser.tabs.UpdatePropertyName.HIDDEN,
+        //     browser.tabs.UpdatePropertyName.PINNED,
+        //     browser.tabs.UpdatePropertyName.TITLE,
+        //     browser.tabs.UpdatePropertyName.STATUS,
+        // ],
+    });
     browser.tabs.onRemoved.addListener(onRemovedTab);
 
     browser.tabs.onAttached.addListener(onAttachedTab);
@@ -1261,11 +1279,8 @@ async function runAction(data, externalExtId) {
                 if (utils.isTabPinned(activeTab)) {
                     utils.notify(browser.i18n.getMessage('pinnedTabsAreNotSupported'));
                     break;
-                } else if (utils.isTabIncognito(activeTab)) {
-                    utils.notify(browser.i18n.getMessage('privateTabsAreNotSupported'));
-                    break;
                 } else if (utils.isTabCanNotBeHidden(activeTab)) {
-                    utils.notify(browser.i18n.getMessage('thisTabsCanNotBeHidden', utils.sliceText(utils.getTabTitle(activeTab), 25)));
+                    utils.notify(browser.i18n.getMessage('thisTabsCanNotBeHidden', utils.getTabTitle(activeTab, false, 25)));
                     break;
                 }
 
@@ -1326,9 +1341,7 @@ async function saveOptions(_options) {
                 hotkeys: options.hotkeys,
             };
 
-        tabs
-            .filter(utils.isTabNotIncognito)
-            .forEach(tab => Tabs.sendMessage(tab.id, actionData));
+        tabs.forEach(tab => Tabs.sendMessage(tab.id, actionData));
     }
 
     if (optionsKeys.some(key => key === 'autoBackupEnable' || key === 'autoBackupIntervalKey' || key === 'autoBackupIntervalValue')) {
@@ -1837,7 +1850,8 @@ async function init() {
     let isAllowedIncognitoAccess = await browser.extension.isAllowedIncognitoAccess();
 
     if (isAllowedIncognitoAccess) {
-        throw 'no support incognito mode, please disable addon in incognito mode';
+        utils.notify('No support incognito mode, please disable incognito mode for addon');
+        throw '';
     }
 
     let data = await storage.get(null);
@@ -1857,7 +1871,8 @@ async function init() {
     let windows = await Windows.load(true);
 
     if (!windows.length) {
-        throw browser.i18n.getMessage('nowFoundWindowsAddonStoppedWorking');
+        utils.notify(browser.i18n.getMessage('nowFoundWindowsAddonStoppedWorking'));
+        throw '';
     }
 
     if (isRestoreSessionNow(windows)) {
@@ -2068,5 +2083,7 @@ init()
 
         browser.browserAction.onClicked.addListener(() => browser.runtime.reload());
 
-        utils.errorEventHandler(e);
+        if (e) {
+            utils.errorEventHandler(e);
+        }
     });

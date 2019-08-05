@@ -610,7 +610,7 @@
                 if (group.tabs.length) {
                     title += ':\n' + group.tabs
                         .slice(0, 30)
-                        .map(tab => utils.sliceText(utils.getTabTitle(tab), 70))
+                        .map(tab => utils.getTabTitle(tab, false, 70))
                         .join('\n');
 
                     if (group.tabs.length > 30) {

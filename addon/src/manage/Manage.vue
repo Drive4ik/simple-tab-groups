@@ -96,6 +96,8 @@
 
             this.$nextTick(function() {
                 this.$refs.search.focus();
+
+                this.groups.forEach(group => group.tabs.forEach(tab => !tab.session.thumbnail && !tab.discarded && utils.isTabLoaded(tab) && Tabs.updateThumbnail(tab.id)));
             });
         },
         watch: {
@@ -606,7 +608,7 @@
                         <div class="body">
                             <div
                                 v-for="tab in group.filteredTabs"
-                                :key="group.tabs.indexOf(tab)"
+                                :key="tab.id"
                                 :class="['tab', {
                                     'is-active': tab.active,
                                     'is-in-multiple-drop': multipleDropTabs.includes(tab),

@@ -471,10 +471,6 @@
         "message": "Pinned tabs are not supported",
         "description": "Pinned tabs are not supported"
     },
-    "privateTabsAreNotSupported": {
-        "message": "Private tabs are not supported",
-        "description": "Private tabs are not supported"
-    },
     "thisUrlsAreNotSupported": {
         "message": "This urls \"$urls$\" are not supported",
         "description": "This urls \"$urls$\" are not supported",

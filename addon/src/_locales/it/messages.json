@@ -467,10 +467,6 @@
         "message": "Le tab fissate non sono supportate",
         "description": "Pinned tabs are not supported"
     },
-    "privateTabsAreNotSupported": {
-        "message": "Le tab private non sono supportate",
-        "description": "Private tabs are not supported"
-    },
     "thisUrlsAreNotSupported": {
         "message": "Questo URL \"\"$urls$\" non è supportato",
         "description": "This urls \"$urls$\" are not supported",

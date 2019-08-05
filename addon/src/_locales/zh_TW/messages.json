@@ -467,10 +467,6 @@
         "message": "不支援固定分頁",
         "description": "Pinned tabs are not supported"
     },
-    "privateTabsAreNotSupported": {
-        "message": "不支援隱私分頁",
-        "description": "Private tabs are not supported"
-    },
     "thisUrlsAreNotSupported": {
         "message": "不支援位址”$urls$“",
         "description": "This urls \"$urls$\" are not supported",
