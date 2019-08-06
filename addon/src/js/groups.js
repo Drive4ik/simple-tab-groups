@@ -82,6 +82,7 @@ function create(id, title) {
         isSticky: false,
         muteTabsWhenGroupCloseAndRestoreWhenOpen: false,
         showTabAfterMovingItIntoThisGroup: false,
+        dontDiscardTabsAfterHideThisGroup: false,
     };
 }
 

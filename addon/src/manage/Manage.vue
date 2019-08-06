@@ -736,7 +736,7 @@
             >
             <edit-group
                 ref="editGroup"
-                :group="groupToEdit"
+                :groupId="groupToEdit.id"
                 @saved="groupToEdit = null" />
         </popup>
 

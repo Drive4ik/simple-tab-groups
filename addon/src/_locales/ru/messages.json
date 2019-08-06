@@ -670,5 +670,9 @@
     "showOtherTabs": {
         "message": "Показать другие вкладки",
         "description": "Show other tabs"
+    },
+    "dontDiscardTabsAfterHideThisGroup": {
+        "message": "Не выгружать из памяти вкладки группы после её закрытия",
+        "description": "Don't discard tabs into this group after hide"
     }
 }

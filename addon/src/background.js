@@ -206,7 +206,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
 
                     await browser.tabs.hide(tabIds);
 
-                    if (options.discardTabsAfterHide) {
+                    if (options.discardTabsAfterHide && !groupToHide.dontDiscardTabsAfterHideThisGroup) {
                         browser.tabs.discard(tabIds);
                     }
                 }
@@ -1766,7 +1766,10 @@ async function runMigrateForData(data) {
 
                 data.withoutSession = true;
 
-                data.groups.forEach(group => delete group.windowId);
+                data.groups.forEach(function(group) {
+                    delete group.windowId;
+                    group.dontDiscardTabsAfterHideThisGroup = false;
+                });
             },
         },
     ];

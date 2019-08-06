@@ -682,5 +682,9 @@
     "showOtherTabs": {
         "message": "Show other tabs",
         "description": "Show other tabs"
+    },
+    "dontDiscardTabsAfterHideThisGroup": {
+        "message": "Don't discard tabs into this group after hide",
+        "description": "Don't discard tabs into this group after hide"
     }
 }

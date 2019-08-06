@@ -271,6 +271,12 @@
                     <span v-text="lang('muteTabsWhenGroupCloseAndRestoreWhenOpen')"></span>
                 </label>
             </div>
+            <div class="control">
+                <label class="checkbox">
+                    <input type="checkbox" v-model="group.dontDiscardTabsAfterHideThisGroup" />
+                    <span v-text="lang('dontDiscardTabsAfterHideThisGroup')"></span>
+                </label>
+            </div>
         </div>
 
         <hr>
