@@ -118,6 +118,20 @@
             },
             "description": "Load previous group"
         },
+        "load-history-next-group": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+Period",
+                "mac": "Command+Shift+Period"
+            },
+            "description": "Load next group from history"
+        },
+        "load-history-prev-group": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+Comma",
+                "mac": "Command+Shift+Comma"
+            },
+            "description": "Load previous group from history"
+        },
         "load-first-group": {
             "suggested_key": {
                 "default": "Ctrl+Shift+Comma",

@@ -449,10 +449,6 @@
         "message": "Rozšířené vyhledávání",
         "description": "Extended search"
     },
-    "waitingForSessionRestoreNotification": {
-        "message": "Čekání na obnovení relace",
-        "description": "Waiting for session restore..."
-    },
     "movingMultipleTabsText": {
         "message": "Přesun $count$ panelů",
         "description": "Moving $count$ tabs",

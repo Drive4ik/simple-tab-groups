@@ -199,7 +199,7 @@
                                 if (group) {
                                     group.tabs.push(this.mapTab(request.tab));
                                 } else {
-                                    throw Error('group for new tab not found');
+                                    throw Error(utils.errorEventMessage('group for new tab not found', request));
                                 }
                             }
 

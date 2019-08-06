@@ -449,10 +449,6 @@
         "message": "套件搜尋",
         "description": "Extended search"
     },
-    "waitingForSessionRestoreNotification": {
-        "message": "正在等待瀏覽工作階段還原……",
-        "description": "Waiting for session restore..."
-    },
     "movingMultipleTabsText": {
         "message": "正在移動 $count$ 個分頁",
         "description": "Moving $count$ tabs",

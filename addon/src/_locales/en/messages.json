@@ -299,6 +299,14 @@
         "message": "Load previous group",
         "description": "Load previous group"
     },
+    "hotkeyActionTitleLoadHistoryNextGroup": {
+        "message": "Load next group from history",
+        "description": "Load next group from history"
+    },
+    "hotkeyActionTitleLoadHistoryPrevGroup": {
+        "message": "Load previous group from history",
+        "description": "Load previous group from history"
+    },
     "hotkeyActionTitleLoadFirstGroup": {
         "message": "Load first group",
         "description": "Load first group"
@@ -452,10 +460,6 @@
     "extendedTabSearch": {
         "message": "Extended search",
         "description": "Extended search"
-    },
-    "waitingForSessionRestoreNotification": {
-        "message": "Waiting for session restore...",
-        "description": "Waiting for session restore..."
     },
     "movingMultipleTabsText": {
         "message": "Moving $count$ tabs",

@@ -449,10 +449,6 @@
         "message": "Utökad sökning",
         "description": "Extended search"
     },
-    "waitingForSessionRestoreNotification": {
-        "message": "Väntar på återställning av sessionen...",
-        "description": "Waiting for session restore..."
-    },
     "movingMultipleTabsText": {
         "message": "Flyttar $count$ flikar",
         "description": "Moving $count$ tabs",

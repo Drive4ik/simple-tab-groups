@@ -7,7 +7,7 @@ import Windows from './windows';
 
 const CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP = 'stg-undo-remove-group-id-';
 
-// if set groupId => return [group, groups]
+// if set groupId => return [group, groups, groupIndex]
 async function load(groupId = null, withTabs = false) {
     const {BG} = browser.extension.getBackgroundPage();
 
@@ -68,19 +68,20 @@ async function save(groups, withMessage = false) {
 function create(id, title) {
     const {BG} = browser.extension.getBackgroundPage();
 
+    let {defaultGroupIconColor, defaultGroupIconViewType} = BG.getOptions();
+
     return {
         id: id,
         title: utils.createGroupTitle(title, id),
-        iconColor: BG.getOptions().defaultGroupIconColor || utils.randomColor(),
+        iconColor: defaultGroupIconColor || utils.randomColor(),
         iconUrl: null,
-        iconViewType: BG.getOptions().defaultGroupIconViewType,
+        iconViewType: defaultGroupIconViewType,
         tabs: [],
         catchTabRules: '',
         catchTabContainers: [],
         isSticky: false,
         muteTabsWhenGroupCloseAndRestoreWhenOpen: false,
         showTabAfterMovingItIntoThisGroup: false,
-        // windowId: windowId || null,
     };
 }
 

@@ -14,6 +14,35 @@ let options = {},
     reCreateTabsOnRemoveWindow = [],
     menuIds = [],
 
+    groupsHistory = (function() {
+        let index = -1,
+            groupIds = [];
+
+        return {
+            next(groups) {
+                groupIds = groupIds.filter(groupId => groups.some(group => group.id === groupId));
+
+                if (!groupIds[index + 1]) {
+                    return;
+                }
+
+                return groupIds[++index];
+            },
+            prev(groups) {
+                groupIds = groupIds.filter(groupId => groups.some(group => group.id === groupId));
+
+                if (!groupIds[index - 1]) {
+                    return;
+                }
+
+                return groupIds[--index];
+            },
+            add(groupId) {
+                index = groupIds.push(groupId) - 1;
+            },
+        };
+    })(),
+
     excludeTabsIds = [],
 
     manifest = browser.runtime.getManifest(),
@@ -80,7 +109,7 @@ function sendExternalMessage(data) {
 }
 
 let _loadingGroupInWindow = {}; // windowId: true;
-async function applyGroup(windowId, groupId, activeTabId) {
+async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = false) {
     windowId = windowId || await Windows.getLastFocusedNormalWindow();
 
     if (_loadingGroupInWindow[windowId]) {
@@ -94,6 +123,8 @@ async function applyGroup(windowId, groupId, activeTabId) {
     let groupWindowId = cache.getWindowId(groupId);
 
     console.time('load-group-' + groupId);
+
+    let result = null;
 
     try {
         if (groupWindowId) {
@@ -116,6 +147,10 @@ async function applyGroup(windowId, groupId, activeTabId) {
             if (groupToHide && groupToHide.tabs.some(utils.isTabCanNotBeHidden)) {
                 utils.notify(browser.i18n.getMessage('notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera'));
                 throw '';
+            }
+
+            if (!applyFromHistory) {
+                groupsHistory.add(groupId);
             }
 
             setBrowserAction(windowId, 'loading');
@@ -210,7 +245,11 @@ async function applyGroup(windowId, groupId, activeTabId) {
         sendMessage({
             action: 'group-loaded',
         });
+
+        result = true;
     } catch (e) {
+        result = false;
+
         if (e) {
             console.error('🛑 STOP applyGroup with error', e);
 
@@ -223,11 +262,13 @@ async function applyGroup(windowId, groupId, activeTabId) {
 
             utils.errorEventHandler(e);
         }
-    } finally {
-        delete _loadingGroupInWindow[windowId];
-
-        console.timeEnd('load-group-' + groupId);
     }
+
+    delete _loadingGroupInWindow[windowId];
+
+    console.timeEnd('load-group-' + groupId);
+
+    return result;
 }
 
 async function applyGroupByPosition(textPosition, groups) {
@@ -246,6 +287,21 @@ async function applyGroupByPosition(textPosition, groups) {
     let nextGroupIndex = utils.getNextIndex(groupIndex, groups.length, textPosition);
 
     return applyGroup(winId, groups[nextGroupIndex].id);
+}
+
+
+async function applyGroupByHistory(textPosition, groups) {
+    if (1 >= groups.length) {
+        return false;
+    }
+
+    let nextGroupId = 'next' === textPosition ? groupsHistory.next(groups) : groupsHistory.prev(groups);
+
+    if (!nextGroupId) {
+        return false;
+    }
+
+    return applyGroup(undefined, nextGroupId, undefined, true);
 }
 
 async function onActivatedTab({ previousTabId, tabId, windowId }) {
@@ -1228,6 +1284,12 @@ async function runAction(data, externalExtId) {
             case 'load-prev-group':
                 result.ok = await applyGroupByPosition('prev', groups);
                 break;
+            case 'load-history-next-group':
+                result.ok = await applyGroupByHistory('next', groups);
+                break;
+            case 'load-history-prev-group':
+                result.ok = await applyGroupByHistory('prev', groups);
+                break;
             case 'load-first-group':
                 if (groups[0]) {
                     await applyGroup(currentWindow.id, groups[0].id);
@@ -1498,8 +1560,6 @@ async function exportAllGroupsToBookmarks(showFinishMessage) {
 
 window.BG = {
     inited: false,
-
-    waitRestoreSession: false,
 
     cache,
     openManageGroups,
@@ -1842,10 +1902,6 @@ async function removeSTGNewTabUrls(windows) {
 // { reason: "install", temporary: true }
 // browser.runtime.onInstalled.addListener(console.info.bind(null, 'onInstalled'));
 
-function isRestoreSessionNow(windows) {
-    return 1 === windows.length && 1 === windows[0].tabs.length && 'about:sessionrestore' === windows[0].tabs[0].url;
-}
-
 async function init() {
     let isAllowedIncognitoAccess = await browser.extension.isAllowedIncognitoAccess();
 
@@ -1875,49 +1931,14 @@ async function init() {
         throw '';
     }
 
-    if (isRestoreSessionNow(windows)) {
-        // waiting for session restore
-
-        window.BG.waitRestoreSession = true;
-
-        setBrowserAction(undefined, 'lang:waitingForSessionRestoreNotification', 'loading');
-
-        await new Promise(function(resolve) {
-            let tryCount = 0;
-
-            async function checkRestoreSession() {
-                windows = await Windows.load(true);
-
-                if (isRestoreSessionNow(windows)) {
-                    tryCount++;
-
-                    if (3 === tryCount) {
-                        utils.notify(browser.i18n.getMessage('waitingForSessionRestoreNotification'), undefined, 'wait-session-restore-message');
-                    }
-
-                    setTimeout(checkRestoreSession, 1000);
-                } else {
-                    resolve();
-                }
-            }
-
-            checkRestoreSession();
-        });
-
-        window.BG.waitRestoreSession = false;
-
-        setBrowserAction(undefined, 'loading');
-
-        browser.notifications.clear('wait-session-restore-message');
-    }
-
     if (windows.some(win => win.tabs.some(tab => isStgNewTabUrl(tab.url)))) {
         windows = await removeSTGNewTabUrls(windows);
     }
 
-    if (data.withoutSession) { // if version < 4
-        delete data.withoutSession;
+    let withoutSession = data.withoutSession;
+    delete data.withoutSession;
 
+    if (withoutSession) { // if version < 4
         let tempTabs = await Promise.all(windows.map(win => Tabs.createTempActiveTab(win.id)));
 
         data.groups = await syncTabs(data.groups, windows, true);
@@ -2037,8 +2058,6 @@ async function init() {
         }
     }));
 
-    // OLD code ============================
-
     if (data.isBackupRestoring) {
         delete data.isBackupRestoring;
         await storage.remove('isBackupRestoring');
@@ -2049,11 +2068,24 @@ async function init() {
 
     resetAutoBackup();
 
-    windows.forEach(win => updateBrowserActionData(null, win.id));
+    windows.forEach(function(win) {
+        updateBrowserActionData(null, win.id);
+
+        if (win.session.groupId) {
+            groupsHistory.add(win.session.groupId);
+        }
+    });
 
     createMoveTabMenus();
 
     addEvents();
+
+    if (withoutSession) {
+        browser.tabs.create({
+            active: true,
+            url: '/help/welcome-v4.html',
+        });
+    }
 
     window.BG.inited = true;
 }

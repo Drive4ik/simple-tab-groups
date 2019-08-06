@@ -449,10 +449,6 @@
         "message": "高度な検索",
         "description": "Extended search"
     },
-    "waitingForSessionRestoreNotification": {
-        "message": "セッションの回復中...",
-        "description": "Waiting for session restore..."
-    },
     "movingMultipleTabsText": {
         "message": "$count$ 個のタブを移動",
         "description": "Moving $count$ tabs",

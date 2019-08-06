@@ -449,10 +449,6 @@
         "message": "扩展搜索",
         "description": "Extended search"
     },
-    "waitingForSessionRestoreNotification": {
-        "message": "正在等待会话恢复……",
-        "description": "Waiting for session restore..."
-    },
     "movingMultipleTabsText": {
         "message": "正在移动$count$个标签页",
         "description": "Moving $count$ tabs",

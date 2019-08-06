@@ -449,10 +449,6 @@
         "message": "Εκτεταμένη αναζήτηση",
         "description": "Extended search"
     },
-    "waitingForSessionRestoreNotification": {
-        "message": "Αναμονή για επαναφορά του session...",
-        "description": "Waiting for session restore..."
-    },
     "movingMultipleTabsText": {
         "message": "Μετακίνηση $count$ tabs",
         "description": "Moving $count$ tabs",

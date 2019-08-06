@@ -42,6 +42,8 @@
                 hotkeyActions: [
                     'load-next-group',
                     'load-prev-group',
+                    'load-history-next-group',
+                    'load-history-prev-group',
                     'load-first-group',
                     'load-last-group',
                     'load-custom-group',

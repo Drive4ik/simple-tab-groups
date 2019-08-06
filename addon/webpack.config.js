@@ -101,7 +101,7 @@ const config = {
             // chunkFilename: "[id].css"
         }),
 
-        new CopyWebpackPlugin(multipleCopy('icons', '_locales', 'css', 'popup/popup.html', 'manage/manage.html', 'options/options.html', 'manifest.json')),
+        new CopyWebpackPlugin(multipleCopy('icons', 'help', '_locales', 'css', 'popup/popup.html', 'manage/manage.html', 'options/options.html', 'manifest.json')),
 
         new WebpackShellPlugin({
             onBuildEnd: ['node scripts/remove-evals.js'],

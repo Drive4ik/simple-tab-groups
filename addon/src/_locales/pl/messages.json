@@ -449,10 +449,6 @@
         "message": "Rozszerzone wyszukiwanie",
         "description": "Extended search"
     },
-    "waitingForSessionRestoreNotification": {
-        "message": "Oczekiwanie na przywrócenie sesji",
-        "description": "Waiting for session restore..."
-    },
     "movingMultipleTabsText": {
         "message": "Przenoszenie $count$ tabs",
         "description": "Moving $count$ tabs",
