@@ -320,11 +320,19 @@
                         let tabData = {},
                             tab = oldTab.entries.pop();
 
+                        if (tab.url.startsWith('about:reader')) {
+                            tab.url = decodeURIComponent(tab.url.slice(17));
+                            tab.openInReaderMode = true;
+                        } else {
+                            tab.openInReaderMode = false;
+                        }
+
                         if (oldTab.pinned) {
                             tabsToCreate.push({
                                 title: tab.title,
                                 url: tab.url,
                                 pinned: true,
+                                openInReaderMode: tab.openInReaderMode,
                             });
                             return;
                         }
@@ -343,6 +351,7 @@
                                 title: tab.title,
                                 url: tab.url,
                                 groupId: groups[tabData.groupID].id,
+                                openInReaderMode: tab.openInReaderMode,
                             });
                         }
                     });
