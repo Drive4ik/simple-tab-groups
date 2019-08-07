@@ -1909,7 +1909,10 @@ async function init() {
     let isAllowedIncognitoAccess = await browser.extension.isAllowedIncognitoAccess();
 
     if (isAllowedIncognitoAccess) {
-        utils.notify('No support incognito mode, please disable incognito mode for addon');
+        browser.tabs.create({
+            active: true,
+            url: '/help/disable-incognito.html',
+        });
         throw '';
     }
 
