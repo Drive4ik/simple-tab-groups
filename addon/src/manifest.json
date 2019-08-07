@@ -103,52 +103,24 @@
             "description": "Move active tab to custom group"
         },
         "load-next-group": {
-            "suggested_key": {
-                "default": "Ctrl+Period",
-                "mac": "Command+Period"
-            },
             "description": "Load next group"
         },
         "load-prev-group": {
-            "suggested_key": {
-                "default": "Ctrl+Comma",
-                "mac": "Command+Comma"
-            },
             "description": "Load previous group"
         },
         "load-history-next-group": {
-            "suggested_key": {
-                "default": "Ctrl+Shift+Period",
-                "mac": "Command+Shift+Period"
-            },
             "description": "Load next group from history"
         },
         "load-history-prev-group": {
-            "suggested_key": {
-                "default": "Ctrl+Shift+Comma",
-                "mac": "Command+Shift+Comma"
-            },
             "description": "Load previous group from history"
         },
         "load-first-group": {
-            "suggested_key": {
-                "default": "Ctrl+Shift+Comma",
-                "mac": "Command+Shift+Comma"
-            },
             "description": "Load first group"
         },
         "load-last-group": {
-            "suggested_key": {
-                "default": "Ctrl+Shift+Period",
-                "mac": "Command+Shift+Period"
-            },
             "description": "Load last group"
         },
         "add-new-group": {
-            "suggested_key": {
-                "default": "Ctrl+Shift+L",
-                "mac": "Command+Shift+L"
-            },
             "description": "Add new group"
         }
     }
