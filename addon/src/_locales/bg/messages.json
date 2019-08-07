@@ -88,11 +88,11 @@
         "description": "Show notification when tab is moved to another group"
     },
     "openManageGroupsInTab": {
-        "message": "Отваряне на „Управление на групите“ в нов раздел",
+        "message": "Отваряне на „Управление на групите“ в раздел",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
-        "message": "Потвърждаване при изтриване на група",
+        "message": "Потвърждаване при изтриване на групи",
         "description": "Show confirm dialog before group delete"
     },
     "exportAddonSettingsTitle": {
@@ -100,7 +100,7 @@
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
-        "message": "Създаване на резервни копия на групите от раздели, така че да бъдат възстановени при нужда.",
+        "message": "Създаване на резервни копия на групите от раздели, за да бъдат възстановявани при нужда.",
         "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
     },
     "exportAddonSettingsButton": {
@@ -236,7 +236,7 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Извинете, но не може да избирате пиктограма в това меню, но може в прозореца за управление на групите.  Желаете ли прозореца за управление на групите да бъде отворен?",
+        "message": "Извинете, не може да избирате пиктограма от това меню, но може в прозореца за управление на групите.  Желаете ли прозореца за управление на групите да бъде отворен?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -244,7 +244,7 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Преместване в групата на разделите в изолатори",
+        "message": "Преместване в тази група на разделите в изолатори",
         "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
@@ -286,6 +286,14 @@
     "hotkeyActionTitleLoadPrevGroup": {
         "message": "Отваряне на предишната група",
         "description": "Load previous group"
+    },
+    "hotkeyActionTitleLoadHistoryNextGroup": {
+        "message": "Отваряне на следващата група от историята",
+        "description": "Load next group from history"
+    },
+    "hotkeyActionTitleLoadHistoryPrevGroup": {
+        "message": "Отваряне на предишната група от историята",
+        "description": "Load previous group from history"
     },
     "hotkeyActionTitleLoadFirstGroup": {
         "message": "Отваряне на първата група",
@@ -364,31 +372,35 @@
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
     },
     "foundHiddenUnSyncTabsDescription": {
-        "message": "Има скрити несинхронизирани раздели. Изберете раздела, за да бъде показан в текущата група/прозорец или",
+        "message": "Има скрити несинхронизирани раздели. Изберете раздела, за да бъде добавен в текущата група/прозорец или изберете",
         "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
     },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
-        "message": "Преместване на разделите в текущата група/прозорец",
+        "message": "Преместване на всички в текущата група/прозорец",
         "description": "Move all of these tabs into current group/window"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
-        "message": "Създаване на група с разделите",
+        "message": "Създаване на група с всички",
         "description": "Create new group with all of these tabs"
     },
     "actionHiddenUnSyncTabsCloseAll": {
-        "message": "Затваряне на разделите",
+        "message": "Затваряне на всички",
         "description": "Close all of these tabs"
     },
     "updateTabThumbnail": {
         "message": "Обновяване на миниатюрата на раздела",
         "description": "Update thumbnail for this tab"
     },
+    "ffFailedAndLostDataMessage": {
+        "message": "Firefox се срина и всички групи от раздели са загубени.\nАко имате резервно копие възстановете групите от него.",
+        "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
+    },
     "enterDefaultGroupIconViewTypeTitle": {
         "message": "Пиктограма на нова група",
         "description": "Icon style for a new group"
     },
     "openGroupInNewWindow": {
-        "message": "Отваряне на групата в нов прозорец",
+        "message": "Отваряне на групата в прозорец",
         "description": "Open group in new window"
     },
     "muteTabsWhenGroupCloseAndRestoreWhenOpen": {
@@ -422,7 +434,7 @@
         }
     },
     "clickHereToReloadAddon": {
-        "message": "Грешка, натиснете тук за презареждане на добавката STG",
+        "message": "Грешка, натиснете за презареждане на добавката STG",
         "description": "Something went wrong, click here to reload STG addon"
     },
     "extendedTabSearch": {
@@ -501,6 +513,22 @@
         "message": "За пълна поддръжка на тъмната тема трябва да зададете на свойството<br><code>svg.context-properties.content.enabled</code> стойност <code>true</code> в страницата на <br><code>about:config</code><br><br><a href='https://support.mozilla.org/kb/about-config-editor-firefox'>Как да го направя?</a>",
         "description": "Fully support the dark theme text"
     },
+    "importSettingsPanoramaViewAddonTitle": {
+        "message": "Възстановяване на „Panorama View“ от photodiode",
+        "description": "Restore photodiode's \"Panorama View\""
+    },
+    "importSettingsPanoramaViewAddonDescription": {
+        "message": "Внасяне на резервно копие от добавката „Panorama View“.",
+        "description": "Load a backup file from \"Panorama View\" addon."
+    },
+    "importSettingsSyncTabGroupsAddonTitle": {
+        "message": "Възстановяване на „Sync Tab Groups“ от Morikko",
+        "description": "Restore Morikko's \"Sync Tab Groups\""
+    },
+    "importSettingsSyncTabGroupsAddonDescription": {
+        "message": "Внасяне на резервно копие от добавката „Sync Tab Groups“.",
+        "description": "Load a backup file from \"Sync Tab Groups\" addon."
+    },
     "browseFileTitle": {
         "message": "Разглеждане…",
         "description": "Browse..."
@@ -521,6 +549,14 @@
         "message": "Разрешаване на достъпа до отметките",
         "description": "Allow access to bookmarks"
     },
+    "openBookmarkInGroup": {
+        "message": "Отваряне в група",
+        "description": "Open bookmark in group"
+    },
+    "bookmarkNotAllowed": {
+        "message": "Отметката е забранена",
+        "description": "This bookmark is not allowed"
+    },
     "openLinkInGroupDisabledTitle": {
         "message": "Отваряне в група",
         "description": "Open link in group title"
@@ -532,6 +568,46 @@
     "showContextMenuOnLinks": {
         "message": "Контекстуално меню на препратките",
         "description": "Show context menu on links"
+    },
+    "importBookmarkFolderAsNewGroup": {
+        "message": "Внасяне на папката с отметки като група",
+        "description": "Import bookmark folder as new group"
+    },
+    "groupsCreatedCount": {
+        "message": "Създадени са $groupscount$ групи",
+        "description": "Groups created count",
+        "placeholders": {
+            "groupscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "noGroupsCreated": {
+        "message": "Не са създадени групи",
+        "description": "No groups created"
+    },
+    "noAccessToBookmarks": {
+        "message": "Добавката няма достъп до отметките. Разрешете достъпа в настройките на добавката",
+        "description": "You do not have access to bookmarks. Enable it on in addon settings"
+    },
+    "exportGroupToMainBookmarkFolder": {
+        "message": "Изнасяне на групите в папка „$bookmarkfolder$“ в отметките",
+        "description": "Export groups to '$bookmarkfolder$' bookmark folder",
+        "placeholders": {
+            "bookmarkfolder": {
+                "content": "$1",
+                "example": "STG bookmarks"
+            }
+        }
+    },
+    "exportGroupToBookmarks": {
+        "message": "Изнасяне на групата в отметките",
+        "description": "Export group to bookmarks"
+    },
+    "defaultBookmarkFolderLocation": {
+        "message": "Папка от отметките по подразбиране",
+        "description": "Default bookmark folder location"
     },
     "groupExportedToBookmarks": {
         "message": "Групата „$grouptitle$“ е успешно изнесена в отметките",
@@ -550,5 +626,33 @@
     "autoBackupGroupsToBookmarks": {
         "message": "Създаване на резервно копие на групите в отметките",
         "description": "Auto backup all groups to bookmarks"
+    },
+    "exportAllGroupsToBookmarks": {
+        "message": "Изнасяне на групите в отметките",
+        "description": "Export all groups to bookmarks"
+    },
+    "allGroupsExportedToBookmarks": {
+        "message": "Всички групи са успешно изнесени в отметките",
+        "description": "All groups successfully exported to bookmarks"
+    },
+    "autoBackupGroupsToFile": {
+        "message": "Автоматични резервни копия на групите във файл (в папката за изтегляния)",
+        "description": "Auto backup all groups to file (into downloads folder)"
+    },
+    "folderNameTitle": {
+        "message": "Име на папката",
+        "description": "Folder name title"
+    },
+    "backupSuccessfullyRestored": {
+        "message": "Резервното копие е възстановено!",
+        "description": "Backup successfully restored"
+    },
+    "loading": {
+        "message": "Зареждане, моля изчакайте…",
+        "description": "Loading, please wait..."
+    },
+    "showOtherTabs": {
+        "message": "Показване на другите раздели",
+        "description": "Show other tabs"
     }
 }
