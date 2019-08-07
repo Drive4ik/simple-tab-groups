@@ -84,6 +84,30 @@ const EXTENSIONS_WHITE_LIST = {
             'move-active-tab-to-custom-group',
         ],
     },
+    'tridactyl.vim@cmcaine.co.uk': {
+        title: 'Tridactyl',
+        url: 'https://addons.mozilla.org/firefox/addon/tridactyl-vim/',
+        postActions: [
+            'i-am-back',
+            'group-added',
+            'group-updated',
+            'group-removed',
+        ],
+        getActions: [
+            'add-new-group',
+            'load-next-group',
+            'load-prev-group',
+            'load-history-next-group',
+            'load-history-prev-group',
+            'load-first-group',
+            'load-last-group',
+            'load-custom-group',
+            'get-groups-list',
+            'delete-current-group',
+            'open-manage-groups',
+            'move-active-tab-to-custom-group',
+        ],
+    },
 };
 
 const DEFAULT_OPTIONS = {
