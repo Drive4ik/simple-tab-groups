@@ -295,6 +295,14 @@
         "message": "Charger le groupe précédent",
         "description": "Load previous group"
     },
+    "hotkeyActionTitleLoadHistoryNextGroup": {
+        "message": "Charger le groupe suivant depuis l'historique",
+        "description": "Load next group from history"
+    },
+    "hotkeyActionTitleLoadHistoryPrevGroup": {
+        "message": "Charger le groupe précédent depuis l'historique",
+        "description": "Load previous group from history"
+    },
     "hotkeyActionTitleLoadFirstGroup": {
         "message": "Charger le premier groupe",
         "description": "Load first group"
@@ -364,7 +372,7 @@
         "description": "Icon style"
     },
     "discardTabsAfterHide": {
-        "message": "Décharger les onglet lorsqu'ils sont masqués (ceci libérera de la RAM)",
+        "message": "Décharger les onglets lorsqu'ils sont masqués (ceci libérera de la RAM)",
         "description": "Discard tabs after hide (this will save the RAM)"
     },
     "createThumbnailsForTabs": {
@@ -658,5 +666,21 @@
     "folderNameTitle": {
         "message": "Nom du dossier",
         "description": "Folder name title"
+    },
+    "backupSuccessfullyRestored": {
+        "message": "Sauvegarde correctement restaurée !",
+        "description": "Backup successfully restored"
+    },
+    "loading": {
+        "message": "Chargement, veuillez patienter…",
+        "description": "Loading, please wait..."
+    },
+    "showOtherTabs": {
+        "message": "Montrer d'autres onglets",
+        "description": "Show other tabs"
+    },
+    "dontDiscardTabsAfterHideThisGroup": {
+        "message": "Ne pas décharger les onglets de ce groupe lorsqu'ils sont masqués",
+        "description": "Don't discard tabs into this group after hide"
     }
 }
