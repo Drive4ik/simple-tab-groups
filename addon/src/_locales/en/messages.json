@@ -686,5 +686,9 @@
     "dontDiscardTabsAfterHideThisGroup": {
         "message": "Don't discard tabs into this group after hide",
         "description": "Don't discard tabs into this group after hide"
+    },
+    "showNotificationAfterGroupDelete": {
+        "message": "Show notification after group delete",
+        "description": "Show notification after group delete"
     }
 }

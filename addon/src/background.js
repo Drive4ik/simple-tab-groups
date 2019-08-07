@@ -640,7 +640,9 @@ async function addUndoRemoveGroupItem(groupToRemove) {
         onclick: restoreGroup,
     });
 
-    utils.notify(browser.i18n.getMessage('undoRemoveGroupNotification', groupToRemove.title)).then(restoreGroup);
+    if (options.showNotificationAfterGroupDelete) {
+        utils.notify(browser.i18n.getMessage('undoRemoveGroupNotification', groupToRemove.title)).then(restoreGroup);
+    }
 }
 
 async function updateMoveTabMenus(windowId) {

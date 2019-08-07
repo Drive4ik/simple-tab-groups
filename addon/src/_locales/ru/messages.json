@@ -674,5 +674,9 @@
     "dontDiscardTabsAfterHideThisGroup": {
         "message": "Не выгружать из памяти вкладки группы после её закрытия",
         "description": "Don't discard tabs into this group after hide"
+    },
+    "showNotificationAfterGroupDelete": {
+        "message": "Показать уведомление после удаления группы",
+        "description": "Show notification after group delete"
     }
 }

@@ -124,6 +124,7 @@ const DEFAULT_OPTIONS = {
     showNotificationAfterMoveTab: true,
     openManageGroupsInTab: true,
     showConfirmDialogBeforeGroupDelete: true,
+    showNotificationAfterGroupDelete: true,
     showContextMenuOnTabs: true,
     showContextMenuOnLinks: true,
     exportGroupToMainBookmarkFolder: true,

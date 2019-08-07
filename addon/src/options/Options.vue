@@ -648,6 +648,12 @@
             </div>
             <div class="field">
                 <label class="checkbox">
+                    <input v-model="options.showNotificationAfterGroupDelete" type="checkbox" />
+                    <span v-text="lang('showNotificationAfterGroupDelete')"></span>
+                </label>
+            </div>
+            <div class="field">
+                <label class="checkbox">
                     <input type="checkbox" v-model="permissions.allUrls" @click="setPermissionsAllUrls" @change="!permissions.allUrls && (includeTabThumbnailsIntoBackup = false) " />
                     <span v-text="lang('createThumbnailsForTabs')"></span>
                 </label>
