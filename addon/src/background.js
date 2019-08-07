@@ -667,6 +667,8 @@ async function createMoveTabMenus(windowId) {
     let groupId = cache.getWindowGroup(windowId),
         [currentGroup, groups] = await Groups.load(groupId || -1);
 
+    await removeMoveTabMenus();
+
     hasBookmarksPermission && menuIds.push(browser.menus.create({
         id: 'stg-open-bookmark-in-group-parent',
         title: browser.i18n.getMessage('openBookmarkInGroup'),
