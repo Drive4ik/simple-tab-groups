@@ -578,11 +578,11 @@
 
                 return tabs;
             },
-            cloneTab({id, title, url, hidden, sharingState, windowId}) {
-                return {id, title, url, hidden, sharingState: {...sharingState}, windowId};
+            cloneTab({id, title, url, active, hidden, sharingState, windowId}) {
+                return {id, title, url, active, hidden, sharingState: {...sharingState}, windowId};
             },
             async moveTabs(tabs, group, loadUnsync = false, showTabAfterMoving, discardTabs) {
-                await Tabs.move(tabs, group.id, undefined, undefined, showTabAfterMoving);
+                await Tabs.move(tabs, group.id, undefined, false, showTabAfterMoving);
 
                 if (discardTabs) {
                     Tabs.discard(tabs.map(utils.keyId));

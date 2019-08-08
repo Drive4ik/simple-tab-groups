@@ -335,26 +335,20 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
         let windows = activeTabs.length ? await Windows.load(true) : [];
 
         await Promise.all(activeTabs.map(async function(tab) {
-            let winGroupId = BG.cache.getWindowGroup(tab.windowId);
+            let winGroupId = BG.cache.getWindowGroup(tab.windowId),
+                tabsToActive = [];
 
             if (winGroupId) {
-                let groupTabs = groups.find(gr => gr.id === winGroupId).tabs.filter(t => t.id !== tab.id);
-
-                if (groupTabs.length) {
-                    await setActive(undefined, groupTabs);
-                }
-
-                return;
+                tabsToActive = groups.find(gr => gr.id === winGroupId).tabs.filter(t => t.id !== tab.id);
             } else {
-                let winTabs = windows.find(win => win.id === tab.windowId).tabs.filter(t => !t.hidden && t.id !== tab.id);
-
-                if (winTabs.length) {
-                    await setActive(undefined, winTabs);
-                    return;
-                }
+                tabsToActive = windows.find(win => win.id === tab.windowId).tabs.filter(t => !t.hidden && t.id !== tab.id);
             }
 
-            return createTempActiveTab(tab.windowId, false);
+            if (tabsToActive.length) {
+                await setActive(undefined, tabsToActive);
+            } else {
+                return createTempActiveTab(tab.windowId, false);
+            }
         }));
 
         let tabIds = tabs.map(utils.keyId);
