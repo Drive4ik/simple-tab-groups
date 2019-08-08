@@ -581,8 +581,12 @@
             cloneTab({id, title, url, hidden, sharingState, windowId}) {
                 return {id, title, url, hidden, sharingState: {...sharingState}, windowId};
             },
-            async moveTabs(tabs, group, loadUnsync = false, showTabAfterMoving) {
+            async moveTabs(tabs, group, loadUnsync = false, showTabAfterMoving, discardTabs) {
                 await Tabs.move(tabs, group.id, undefined, undefined, showTabAfterMoving);
+
+                if (discardTabs) {
+                    Tabs.discard(tabs.map(utils.keyId));
+                }
 
                 if (loadUnsync) {
                     this.loadUnsyncedTabs();
@@ -809,13 +813,11 @@
             },
 
             discardTab(tabId) {
-                browser.tabs.discard(tabId).catch(function() {});
+                Tabs.discard([tabId]);
             },
 
-            discardGroup(group) {
-                if (group.tabs.length) {
-                    browser.tabs.discard(group.tabs.map(utils.keyId)).catch(function() {});
-                }
+            discardGroup({tabs}) {
+                Tabs.discard(tabs.map(utils.keyId));
             },
 
         },
@@ -1192,8 +1194,8 @@
                         :key="group.id"
                         :class="{'is-disabled': menu.data.group ? menu.data.group.id === group.id : false}"
                         @click="menu.data.group
-                            ? menu.data.group.id !== group.id && moveTabs(getTabsForMove(menu.data.tab), group)
-                            : moveTabs(getTabsForMove(menu.data.tab), group, true)"
+                            ? menu.data.group.id !== group.id && moveTabs(getTabsForMove(menu.data.tab), group, undefined, undefined, $event.ctrlKey || $event.metaKey)
+                            : moveTabs(getTabsForMove(menu.data.tab), group, true, undefined, $event.ctrlKey || $event.metaKey)"
                         @contextmenu="menu.data.group
                             ? menu.data.group.id !== group.id && moveTabs(getTabsForMove(menu.data.tab), group, undefined, true)
                             : moveTabs(getTabsForMove(menu.data.tab), group, true, true)"

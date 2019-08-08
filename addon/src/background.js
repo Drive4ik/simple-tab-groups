@@ -207,7 +207,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                     await browser.tabs.hide(tabIds);
 
                     if (options.discardTabsAfterHide && !groupToHide.dontDiscardTabsAfterHideThisGroup) {
-                        browser.tabs.discard(tabIds);
+                        Tabs.discard(tabIds);
                     }
                 }
 
@@ -690,26 +690,30 @@ async function createMoveTabMenus(windowId) {
     }));
 
     groups.forEach(function(group) {
-        let groupIcons = utils.getGroupIconUrl(group, 16),
+        let groupIcon = utils.getGroupIconUrl(group, 16),
             groupTitle = (cache.getWindowId(group.id) ? '• ' : '') + group.title;
 
         options.showContextMenuOnTabs && menuIds.push(browser.menus.create({
             title: groupTitle,
             enabled: currentGroup ? group.id !== currentGroup.id : true,
-            icons: groupIcons,
+            icons: groupIcon,
             parentId: 'stg-move-tab-parent',
             contexts: [browser.menus.ContextType.TAB],
             onclick: async function(info, tab) {
                 let setActive = 2 === info.button,
                     tabsToMove = await Tabs.getHighlighted(tab.windowId, tab);
 
-                Tabs.move(tabsToMove, group.id, undefined, undefined, setActive);
+                await Tabs.move(tabsToMove, group.id, undefined, undefined, setActive);
+
+                if (!setActive && info.modifiers.includes('Ctrl')) {
+                    Tabs.discard(tabsToMove.map(utils.keyId));
+                }
             },
         }));
 
         options.showContextMenuOnLinks && menuIds.push(browser.menus.create({
             title: groupTitle,
-            icons: groupIcons,
+            icons: groupIcon,
             parentId: 'stg-open-link-parent',
             contexts: [browser.menus.ContextType.LINK],
             onclick: async function(info) {
@@ -728,7 +732,7 @@ async function createMoveTabMenus(windowId) {
 
         hasBookmarksPermission && menuIds.push(browser.menus.create({
             title: groupTitle,
-            icons: groupIcons,
+            icons: groupIcon,
             parentId: 'stg-open-bookmark-in-group-parent',
             contexts: [browser.menus.ContextType.BOOKMARK],
             onclick: async function(info) {

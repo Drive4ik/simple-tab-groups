@@ -408,7 +408,7 @@
                 });
             },
             discardTab(tabId) {
-                browser.tabs.discard(tabId).catch(function() {});
+                Tabs.discard([tabId]);
             },
 
             getTabTitle: utils.getTabTitle,

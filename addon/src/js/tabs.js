@@ -434,6 +434,12 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
     return tabs;
 }
 
+async function discard(tabIds = []) {
+    if (tabIds.length) {
+        return browser.tabs.discard(tabIds).catch(function() {});
+    }
+}
+
 function sendMessage(tabId, message) {
     return browser.tabs.sendMessage(tabId, message).catch(function() {});
 }
@@ -450,5 +456,6 @@ export default {
     remove,
     updateThumbnail,
     move,
+    discard,
     sendMessage,
 };
