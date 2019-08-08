@@ -433,6 +433,7 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
     cache.setTab(tab);
 
     if (utils.isTabPinned(tab) && undefined === changeInfo.pinned) {
+        console.log('onUpdatedTab 🛑 tabis pinned tabId: %s, changeInfo:', tabId, changeInfo);
         return;
     }
 
@@ -1313,11 +1314,31 @@ async function runAction(data, externalExtId) {
                 }
                 break;
             case 'load-custom-group':
-                if (groups.some(group => group.id === data.groupId)) {
-                    await applyGroup(currentWindow.id, data.groupId);
-                    result.ok = true;
+                if (Number.isFinite(data.groupId) && 0 < data.groupId) {
+                    if (groups.some(group => group.id === data.groupId)) {
+                        await applyGroup(currentWindow.id, data.groupId);
+                        result.ok = true;
+                    } else {
+                        result = await runAction({
+                            action: 'load-custom-group',
+                            groupId: 0,
+                        });
+                    }
+                } else if ('new' === data.groupId) {
+                    await Groups.add();
+                    result = await runAction({
+                        action: 'load-last-group',
+                    });
                 } else {
-                    throw Error(`Group id '${data.groupId}' type: '${typeof data.groupId}' not found. Need exists int group id.`);
+                    let activeTab = await Tabs.getActive();
+
+                    Tabs.sendMessage(activeTab.id, {
+                        action: 'load-custom-group',
+                        groups: groups.map(Groups.mapGroupForExternalExtension),
+                        disableGroupId: currentGroup && currentGroup.id,
+                    });
+
+                    result.ok = true;
                 }
                 break;
             case 'add-new-group':
@@ -1357,20 +1378,24 @@ async function runAction(data, externalExtId) {
                 if (Number.isFinite(data.groupId) && 0 < data.groupId) {
                     if (groups.some(group => group.id === data.groupId)) {
                         await Tabs.move([activeTab], data.groupId);
+                        result.ok = true;
                     } else {
-                        throw Error(`Group id ${typeof data.groupId} ${data.groupId} not found. Need exists int group id.`);
+                        result = await runAction({
+                            action: 'move-active-tab-to-custom-group',
+                            groupId: 0,
+                        });
                     }
                 } else if ('new' === data.groupId) {
                     await Groups.add(undefined, [activeTab]);
+                    result.ok = true;
                 } else {
                     Tabs.sendMessage(activeTab.id, {
-                        action: 'move-tab-to-custom-group',
+                        action: 'move-active-tab-to-custom-group',
                         groups: groups.map(Groups.mapGroupForExternalExtension),
-                        tabGroupId: activeTab.session.groupId,
+                        disableGroupId: activeTab.session.groupId,
                     });
+                    result.ok = true;
                 }
-
-                result.ok = true;
                 break;
             case 'get-hotkeys':
                 result.ok = true;

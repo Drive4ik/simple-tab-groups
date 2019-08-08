@@ -32,8 +32,8 @@ function changeHotkeysListener(request, sender) {
 
     if (request.action === 'update-hotkeys') {
         init(request);
-    } else if (request.action === 'move-tab-to-custom-group') {
-        showGroupsForMovingTab(request);
+    } else if (['move-active-tab-to-custom-group', 'load-custom-group'].includes(request.action)) {
+        showGroupsPopup(request);
     }
 }
 
@@ -98,7 +98,7 @@ function stopEvent(e) {
     e.stopImmediatePropagation();
 }
 
-function showGroupsForMovingTab(data) {
+function showGroupsPopup(data) {
     if (window.top !== window || document.getElementById(popupId)) {
         return;
     }
@@ -122,7 +122,7 @@ function showGroupsForMovingTab(data) {
     header.classList = 'stg-popup-has-text stg-popup-header';
     Object.assign(header, {
         tabIndex: '-1',
-        innerText: browser.i18n.getMessage('moveTabToGroupDisabledTitle'),
+        innerText: browser.i18n.getMessage('load-custom-group' === data.action ? 'hotkeyActionTitleLoadCustomGroup' : 'moveTabToGroupDisabledTitle'),
         onclick: e => e.stopPropagation(),
         onkeydown: function(e) {
             if (checkUpDownKeys(e)) {
@@ -171,13 +171,10 @@ function showGroupsForMovingTab(data) {
         if (isEnabled) {
             groupNode.onmouseover = () => groupsWrapper.contains(document.activeElement) && header.focus();
 
-            groupNode.onclick = function(groupId) {
-                browser.runtime.sendMessage({
-                    action: 'move-active-tab-to-custom-group',
-                    groupId: groupId,
-                });
+            groupNode.onclick = function(groupId, action) {
+                browser.runtime.sendMessage({groupId, action});
                 closeGroupsPopup();
-            }.bind(null, group.id);
+            }.bind(null, group.id, data.action);
 
             groupNode.onkeydown = function(e) {
                 if (checkUpDownKeys(e)) {
@@ -239,10 +236,7 @@ function showGroupsForMovingTab(data) {
         lastVector = null;
     }
 
-    data.groups.forEach(function(group, index) {
-        let groupNode = createGroupNode(group, index + 1, group.id !== data.tabGroupId);
-        groupsWrapper.append(groupNode);
-    });
+    data.groups.forEach((group, index) => groupsWrapper.append(createGroupNode(group, index + 1, group.id !== data.disableGroupId)));
 
     let newGroupNode = createGroupNode({
         id: 'new',

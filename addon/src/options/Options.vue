@@ -87,6 +87,12 @@
             this.options = utils.extractKeys(data, constants.allOptionsKeys);
             this.groups = data.groups;
 
+            this.options.hotkeys.forEach(function(hotkey) {
+                if ('load-custom-group' === hotkey.action && hotkey.groupId && !this.groups.some(gr => gr.id === hotkey.groupId)) {
+                    hotkey.groupId = 0;
+                }
+            }, this);
+
             this.permissions.bookmarks = await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
             this.permissions.allUrls = await browser.permissions.contains(constants.PERMISSIONS.ALL_URLS);
 
@@ -196,10 +202,6 @@
                         }
 
                         if (!(hotkey.ctrlKey || hotkey.shiftKey || hotkey.altKey || hotkey.metaKey || isFunctionKey(hotkey.keyCode))) {
-                            return false;
-                        }
-
-                        if ('load-custom-group' === hotkey.action && !this.groups.some(gr => gr.id === hotkey.groupId)) {
                             return false;
                         }
 
@@ -734,9 +736,9 @@
                             <option v-for="action in hotkeyActions" :key="action" :value="action" v-text="getHotkeyActionTitle(action)"></option>
                         </select>
                     </div>
-                    <div v-if="'load-custom-group' === hotkey.action || 'move-active-tab-to-custom-group' === hotkey.action" class="select custom-group">
+                    <div v-if="['load-custom-group', 'move-active-tab-to-custom-group'].includes(hotkey.action)" class="select custom-group">
                         <select v-model.number="hotkey.groupId">
-                            <option :disabled="'load-custom-group' === hotkey.action" value="0" v-text="lang('selectGroup')"></option>
+                            <option value="0" v-text="lang('selectGroup')"></option>
                             <option v-for="group in groups" :key="group.id" :value="group.id" v-text="group.title"></option>
                         </select>
                     </div>
