@@ -295,6 +295,8 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
     console.info('moveTabs', {groupId, newTabIndex, showNotificationAfterMoveTab, showTabAfterMoving, tabs});
     // console.info('moveTabs tabs 0', tabs[0]);
 
+    BG.addExcludeTabsIds(tabs.map(utils.keyId));
+
     let showPinnedMessage = false,
         tabsCantHide = [],
         groupWindowId = BG.cache.getWindowId(groupId),
@@ -357,8 +359,6 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
 
         let tabIds = tabs.map(utils.keyId);
 
-        BG.addExcludeTabsIds(tabIds);
-
         tabs = await browser.tabs.move(tabIds, {
             index: newTabIndex,
             windowId,
@@ -385,6 +385,8 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
         BG.sendMessage({
             action: 'groups-updated',
         });
+    } else {
+        BG.removeExcludeTabsIds(tabs.map(utils.keyId));
     }
 
     if (showPinnedMessage) {
