@@ -20,8 +20,6 @@
     window.addEventListener('error', utils.errorEventHandler);
     Vue.config.errorHandler = utils.errorEventHandler;
 
-    browser.runtime.onMessage.addListener(({action}) => 'i-am-back' === action && window.location.reload());
-
     const SECTION_GENERAL = 'general',
         SECTION_HOTKEYS = 'hotkeys',
         SECTION_BACKUP = 'backup',
@@ -108,6 +106,8 @@
                         });
                     });
                 }, this);
+
+            browser.runtime.onMessage.addListener(({action}) => 'i-am-back' === action && window.location.reload());
         },
         watch: {
             'options.autoBackupFolderName': function(value, oldValue) {

@@ -5,7 +5,7 @@ import * as npmCompareVersions from 'compare-versions';
 
 const addonUrlPrefix = browser.extension.getURL('');
 
-let tagsToReplace = {
+const tagsToReplace = {
     '<': '&lt;',
     '>': '&gt;',
     '"': '&quot;',
