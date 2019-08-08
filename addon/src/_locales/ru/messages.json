@@ -295,6 +295,14 @@
         "message": "Загрузить предыдущую группу",
         "description": "Load previous group"
     },
+    "hotkeyActionTitleLoadHistoryNextGroup": {
+        "message": "Загрузить следующую группу из истории",
+        "description": "Load next group from history"
+    },
+    "hotkeyActionTitleLoadHistoryPrevGroup": {
+        "message": "Загрузить предыдущую группу из истории",
+        "description": "Load previous group from history"
+    },
     "hotkeyActionTitleLoadFirstGroup": {
         "message": "Загрузить первую группу",
         "description": "Load first group"
