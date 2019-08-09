@@ -175,7 +175,11 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                 }
 
                 // set active tab
-                await Tabs.setActive(activeTabId, groupToShow.tabs);
+                let pinnedTabs = await Tabs.get(windowId, true);
+
+                if (!pinnedTabs.some(tab => tab.active) || activeTabId) {
+                    await Tabs.setActive(activeTabId, groupToShow.tabs);
+                }
             }
 
             await cache.setWindowGroup(windowId, groupToShow.id);
