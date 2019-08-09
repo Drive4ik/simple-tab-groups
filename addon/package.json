@@ -4,8 +4,8 @@
     "description": "Create, modify and quickly change tab groups. Inspired by the old add-on Tab Groups :)",
     "author": "Drive4ik <drive4ik@gmail.com>",
     "scripts": {
-        "build": "webpack --mode development --progress --hide-modules",
-        "build:prod": "cross-env IS_PRODUCTION=true webpack --mode production --progress --hide-modules",
+        "build": "webpack --mode development --hide-modules",
+        "build:prod": "cross-env IS_PRODUCTION=true webpack --mode production --hide-modules",
         "watch": "npm run build -- --watch",
         "watch:prod": "npm run build:prod -- --watch",
         "build-zip": "node scripts/build-zip.js && npm run build:prod && cross-env IS_PRODUCTION=true node scripts/build-zip.js"

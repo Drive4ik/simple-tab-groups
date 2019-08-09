@@ -389,7 +389,7 @@ async function onCreatedTab(tab) {
         throw Error(`onCreatedTab: group id not found: ${groupId}`);
     }
 
-    console.debug('created tab group id', group.id);
+    console.log('created tab group id', group.id);
 
     if (!group.isSticky) {
         let destGroup = _getCatchedGroupForTab(groups, tab, true);
@@ -769,7 +769,7 @@ async function createMoveTabMenus(windowId) {
         onclick: async function(info, tab) {
             let tabsToMove = await Tabs.getHighlighted(tab.windowId, tab);
 
-            Groups.add(null, tabsToMove);
+            Groups.add(undefined, tabsToMove);
         },
     }));
 
@@ -820,13 +820,8 @@ async function createMoveTabMenus(windowId) {
                 return;
             }
 
-            let setActive = 2 === info.button,
-                newGroup = await Groups.add(),
-                newTab = await Tabs.add(newGroup.id, undefined, info.linkUrl, info.linkText, setActive);
-
-            if (setActive) {
-                applyGroup(null, newGroup.id, newTab.id);
-            }
+            let newTab = await Tabs.add(undefined, undefined, info.linkUrl, info.linkText);
+            Groups.add(undefined, [newTab], undefined, 2 === info.button);
         },
     }));
 
@@ -850,13 +845,8 @@ async function createMoveTabMenus(windowId) {
                 return;
             }
 
-            let setActive = 2 === info.button,
-                newGroup = await Groups.add(),
-                newTab = await Tabs.add(newGroup.id, undefined, bookmark.url, bookmark.title, setActive);
-
-            if (setActive) {
-                applyGroup(null, newGroup.id, newTab.id);
-            }
+            let newTab = await Tabs.add(undefined, undefined, bookmark.url, bookmark.title);
+            Groups.add(undefined, [newTab], undefined, 2 === info.button);
         },
     }));
 

@@ -558,14 +558,18 @@
                     this.onSubmitRemoveGroup(group);
                 }
             },
-            onSubmitRemoveGroup(group) {
+            async onSubmitRemoveGroup(group) {
                 this.groups.splice(this.groups.indexOf(group), 1);
 
                 this.groupToRemove = null;
 
-                Groups.remove(group.id);
-
                 this.showSectionDefault();
+
+                await Groups.remove(group.id);
+
+                if (!this.currentGroup) {
+                    this.loadUnsyncedTabs();
+                }
             },
             getTabsForMove(withTab) {
                 if (!this.multipleMoveTabs.includes(withTab)) {
@@ -593,10 +597,11 @@
                 }
             },
             async moveTabToNewGroup(tab, loadUnsync, showTabAfterMoving) {
-                let tabs = this.getTabsForMove(tab),
-                    newGroup = await Groups.add();
+                await Groups.add(undefined, this.getTabsForMove(tab), undefined, showTabAfterMoving);
 
-                this.moveTabs(tabs, newGroup, loadUnsync, showTabAfterMoving);
+                if (loadUnsync) {
+                    this.loadUnsyncedTabs();
+                }
             },
             setTabIconAsGroupIcon({favIconUrl}) {
                 Groups.update(this.groupToShow.id, {
@@ -1301,7 +1306,7 @@
         --max-popup-width: 100%;
 
         --max-popup-height: 600px;
-        --min-popup-height: 145px;
+        --min-popup-height: 125px;
 
         --item-background-color-active: var(--color-light-gray);
         --item-background-color-hover: var(--color-gray);

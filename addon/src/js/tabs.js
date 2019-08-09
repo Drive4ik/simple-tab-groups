@@ -81,22 +81,21 @@ async function create(tab) {
     return newTab;
 }
 
-async function setActive(tabId, tabs) {
+async function setActive(tabId, tabs = []) {
     let tabToActive = null;
 
     if (tabId) {
-        tabToActive = Array.isArray(tabs) ? tabs.find(tab => tab.id === tabId) : {
+        tabToActive = tabs.find(tab => tab.id === tabId) || {
             id: tabId,
         };
-    } else if (Array.isArray(tabs) && tabs.length) { // find lastAccessed tab
-        let lastAccessedTimes = tabs.map(tab => tab.lastAccessed),
-            maxLastAccessed = Math.max(...lastAccessedTimes);
+    } else if (tabs.length) { // find lastAccessed tab
+        let maxLastAccessed = Math.max(...tabs.map(tab => tab.lastAccessed));
 
         tabToActive = tabs.find(tab => tab.lastAccessed === maxLastAccessed);
     }
 
     if (tabToActive) {
-        Array.isArray(tabs) && tabs.forEach(tab => tab.active = tab.id === tabToActive.id);
+        tabs.forEach(tab => tab.active = tab.id === tabToActive.id);
 
         await browser.tabs.update(tabToActive.id, {
             active: true,
@@ -334,20 +333,20 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
     if (tabs.length) {
         let windows = activeTabs.length ? await Windows.load(true) : [];
 
-        await Promise.all(activeTabs.map(async function(tab) {
-            let winGroupId = BG.cache.getWindowGroup(tab.windowId),
+        await Promise.all(activeTabs.map(async function(activeTab) {
+            let winGroupId = BG.cache.getWindowGroup(activeTab.windowId),
                 tabsToActive = [];
 
             if (winGroupId) {
-                tabsToActive = groups.find(gr => gr.id === winGroupId).tabs.filter(t => t.id !== tab.id);
+                tabsToActive = groups.find(gr => gr.id === winGroupId).tabs.filter(t => t.id !== activeTab.id);
             } else {
-                tabsToActive = windows.find(win => win.id === tab.windowId).tabs.filter(t => !t.hidden && t.id !== tab.id);
+                tabsToActive = windows.find(win => win.id === activeTab.windowId).tabs.filter(t => !t.hidden && t.id !== activeTab.id);
             }
 
             if (tabsToActive.length) {
                 await setActive(undefined, tabsToActive);
-            } else {
-                return createTempActiveTab(tab.windowId, false);
+            } else if (!winGroupId || activeTab.windowId !== windowId) {
+                await createTempActiveTab(activeTab.windowId, false);
             }
         }));
 

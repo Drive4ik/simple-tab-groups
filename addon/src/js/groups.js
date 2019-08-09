@@ -86,12 +86,12 @@ function create(id, title) {
     };
 }
 
-async function add(windowId, withTabs = [], title) {
+async function add(windowId, tabs = [], title, showTabsAfterMoving) {
     const {BG} = browser.extension.getBackgroundPage();
 
     let { lastCreatedGroupPosition } = await storage.get('lastCreatedGroupPosition');
 
-    withTabs = utils.clone(withTabs); // clone need for fix bug: dead object after close tab which create object
+    tabs = utils.clone(tabs); // clone need for fix bug: dead object after close tab which create object
 
     lastCreatedGroupPosition++;
 
@@ -107,34 +107,32 @@ async function add(windowId, withTabs = [], title) {
         lastCreatedGroupPosition,
     });
 
-    if (!withTabs.length && (1 === groups.length || windowId)) {
-        if (!windowId) {
-            windowId = await Windows.getLastFocusedNormalWindow();
-        }
-
-        withTabs = await Tabs.get(windowId);
-    }
-
     if (windowId) {
         await BG.cache.setWindowGroup(windowId, newGroup.id);
         BG.updateBrowserActionData(newGroup.id);
     }
 
-    if (withTabs.length) {
-        newGroup.tabs = await Tabs.move(withTabs, newGroup.id, undefined, false);
+    BG.updateMoveTabMenus(windowId);
+
+    if (windowId && !tabs.length) {
+        tabs = await Tabs.get(windowId);
     }
 
-    BG.sendMessage({
-        action: 'group-added',
-        group: newGroup,
-    });
+    if (tabs.length) {
+        newGroup.tabs = await Tabs.move(tabs, newGroup.id, undefined, false, showTabsAfterMoving);
+    }
+
+    if (!showTabsAfterMoving) {
+        BG.sendMessage({
+            action: 'group-added',
+            group: newGroup,
+        });
+    }
 
     BG.sendExternalMessage({
         action: 'group-added',
         group: mapGroupForExternalExtension(newGroup),
     });
-
-    BG.updateMoveTabMenus(windowId);
 
     return newGroup;
 }
