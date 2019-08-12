@@ -83,23 +83,12 @@
             "description": "Open popup"
         },
         "_execute_sidebar_action": {
-            "suggested_key": {
-                "default": "Ctrl+Shift+S",
-                "mac": "Command+Shift+S"
-            },
             "description": "Open sidebar"
         },
         "open-manage-groups": {
-            "suggested_key": {
-                "default": "F10"
-            },
             "description": "Open manage groups"
         },
         "move-active-tab-to-custom-group": {
-            "suggested_key": {
-                "default": "Ctrl+F7",
-                "mac": "Command+F7"
-            },
             "description": "Move active tab to custom group"
         },
         "load-next-group": {
