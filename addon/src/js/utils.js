@@ -371,8 +371,12 @@ function isElementVisible(element) {
     // return isVisible;
 }
 
+function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
 function randomColor() {
-    return 'hsla(' + (Math.random() * 360).toFixed(0) + ', 100%, 50%, 1)';
+    return 'hsla(' + getRandomInt(0, 360) + ', 100%, 50%, 1)';
 }
 
 function safeColor(color) {
@@ -600,6 +604,7 @@ export default {
     getGroupIconUrl,
 
     safeColor,
+    getRandomInt,
     randomColor,
 
     resizeImage,

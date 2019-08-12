@@ -1833,32 +1833,6 @@ async function syncTabs(groups, windows, hideAllTabs = false) {
 
     let syncedTabs = [];
 
-    groups = await Promise.all(groups.map(async function(group) {
-        group.tabs = await Promise.all(group.tabs.map(function(tab) {
-            tab.cookieStoreId = containers.get(tab.cookieStoreId, 'cookieStoreId');
-
-            let winTab = allTabs.find(t => !syncedTabs.includes(t.id) && t.url === tab.url && t.cookieStoreId === tab.cookieStoreId);
-
-            if (winTab) {
-                syncedTabs.push(winTab.id);
-                winTab.session.groupId = group.id;
-                cache.setTabGroup(winTab.id, group.id);
-
-                return winTab;
-            }
-
-            return Tabs.create({
-                title: tab.title,
-                url: tab.url,
-                favIconUrl: tab.favIconUrl,
-                cookieStoreId: tab.cookieStoreId,
-                groupId: group.id,
-            });
-        }));
-
-        return group;
-    }));
-/*
     for (let i in groups) {
         let group = groups[i],
             tabs = [];
@@ -1866,7 +1840,7 @@ async function syncTabs(groups, windows, hideAllTabs = false) {
         for (let ii in group.tabs) {
             let tab = group.tabs[ii];
 
-            tab.cookieStoreId = containers.get(tab.cookieStoreId, 'cookieStoreId');
+            tab.cookieStoreId = await containers.normalize(tab.cookieStoreId);
 
             let winTab = allTabs.find(winTab => !syncedTabs.includes(winTab.id) && winTab.url === tab.url && winTab.cookieStoreId === tab.cookieStoreId);
 
@@ -1890,7 +1864,6 @@ async function syncTabs(groups, windows, hideAllTabs = false) {
 
         group.tabs = await Promise.all(tabs);
     }
-*/
 
     // sort tabs
     for (let i in groups) {

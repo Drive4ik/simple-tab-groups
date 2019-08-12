@@ -3,7 +3,8 @@
 import constants from './constants';
 import utils from './utils';
 
-let containers = {};
+let containers = {},
+    mappedContainerCookieStoreId = {};
 
 async function init() {
     // CONTAINER PROPS:
@@ -29,6 +30,30 @@ function isDefault(cookieStoreId) {
     return constants.DEFAULT_COOKIE_STORE_ID === cookieStoreId || !cookieStoreId;
 }
 
+async function normalize(cookieStoreId) {
+    if (isDefault(cookieStoreId)) {
+        return constants.DEFAULT_COOKIE_STORE_ID;
+    }
+
+    if (containers[cookieStoreId]) {
+        return cookieStoreId;
+    }
+
+    if (!mappedContainerCookieStoreId[cookieStoreId]) {
+        let contextualIdentity = await browser.contextualIdentities.create({
+            name: cookieStoreId,
+            color: ['toolbar', 'blue', 'turquoise', 'green', 'yellow', 'orange', 'red', 'pink', 'purple'][utils.getRandomInt(0, 8)],
+            icon: 'circle',
+        });
+
+        containers[contextualIdentity.cookieStoreId] = contextualIdentity;
+
+        mappedContainerCookieStoreId[cookieStoreId] = contextualIdentity.cookieStoreId;
+    }
+
+    return mappedContainerCookieStoreId[cookieStoreId];
+}
+
 function get(cookieStoreId, key = null) {
     let result = containers[cookieStoreId] || {
         cookieStoreId: constants.DEFAULT_COOKIE_STORE_ID,
@@ -45,6 +70,7 @@ function getAll(asArray) {
 export default {
     init,
     isDefault,
+    normalize,
     get,
     getAll,
 };
