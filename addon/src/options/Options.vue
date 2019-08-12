@@ -272,7 +272,7 @@
                     let currentPinnedTabs = await Tabs.get(undefined, true, null);
                     data.pinnedTabs = data.pinnedTabs.filter(function(tab) {
                         tab.pinned = true;
-                        return !currentPinnedTabs.some(t => t.url === tab.url);
+                        return tab.url && !currentPinnedTabs.some(t => t.url === tab.url) && utils.isUrlAllowToCreate(tab.url);
                     });
                     await BG.createTabsSafe(data.pinnedTabs, false, false, false);
                     delete data.pinnedTabs;

@@ -296,6 +296,10 @@
                 tab.isMoving = false;
                 tab.isOver = false;
 
+                if (!tab.session) {
+                    tab.session = {};
+                }
+
                 return new Vue({
                     data: tab,
                 });

@@ -470,7 +470,7 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
             }
 
             if (group) {
-                tab.session = cache.getTabSession(tab.id);
+                tab = await cache.loadTabSession(tab);
 
                 sendMessage({
                     action: 'tab-added',
