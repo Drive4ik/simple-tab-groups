@@ -246,7 +246,14 @@
             },
 
             async importAddonSettings() {
-                let data = await file.load();
+                let data = null;
+
+                try {
+                    data = await file.load();
+                } catch (e) {
+                    utils.notify(String(e));
+                    return;
+                }
 
                 if ('object' !== utils.type(data) || !Array.isArray(data.groups) || !Number.isFinite(data.lastCreatedGroupPosition)) {
                     utils.notify('this is wrong backup!');
@@ -262,14 +269,18 @@
                 data = await BG.runMigrateForData(data);
 
                 if (data.pinnedTabs) {
-                    data.pinnedTabs.forEach(tab => tab.pinned = true);
+                    let currentPinnedTabs = await Tabs.get(undefined, true, null);
+                    data.pinnedTabs = data.pinnedTabs.filter(function(tab) {
+                        tab.pinned = true;
+                        return !currentPinnedTabs.some(t => t.url === tab.url);
+                    });
                     await BG.createTabsSafe(data.pinnedTabs, false, false, false);
                     delete data.pinnedTabs;
                 }
 
                 let windows = await Windows.load(true);
 
-                data.groups = await BG.syncTabs(data.groups, windows);
+                await BG.syncTabs(data.groups, windows);
 
                 if (!this.isMac) {
                     data.hotkeys.forEach(hotkey => hotkey.metaKey = false);
@@ -287,7 +298,14 @@
             },
 
             async importSettingsOldTabGroupsAddonButton() {
-                let oldOptions = await file.load();
+                let oldOptions = null;
+
+                try {
+                    oldOptions = await file.load();
+                } catch (e) {
+                    utils.notify(String(e));
+                    return;
+                }
 
                 if (!oldOptions || !Array.isArray(oldOptions.windows) || !oldOptions.session) {
                     utils.notify('This is not "Tab Groups" backup!');
@@ -367,7 +385,14 @@
             },
 
             async importSettingsPanoramaViewAddonButton() {
-                let panoramaOptions = await file.load();
+                let panoramaOptions = null;
+
+                try {
+                    panoramaOptions = await file.load();
+                } catch (e) {
+                    utils.notify(String(e));
+                    return;
+                }
 
                 if (!panoramaOptions || !panoramaOptions.file || 'panoramaView' !== panoramaOptions.file.type || !Array.isArray(panoramaOptions.windows)) {
                     utils.notify('This is not "Panorama View" backup!');
@@ -413,7 +438,14 @@
             },
 
             async importSettingsSyncTabGroupsAddonButton() {
-                let syncTabOptions = await file.load();
+                let syncTabOptions = null;
+
+                try {
+                    syncTabOptions = await file.load();
+                } catch (e) {
+                    utils.notify(String(e));
+                    return;
+                }
 
                 if (!syncTabOptions || !syncTabOptions.version || 'syncTabGroups' !== syncTabOptions.version[0] || !Array.isArray(syncTabOptions.groups)) {
                     utils.notify('This is not "Sync Tab Groups" backup!');
