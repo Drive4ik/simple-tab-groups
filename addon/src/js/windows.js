@@ -62,6 +62,13 @@ async function create(createData = {}, groupId, activeTabId) {
 
         if (groupId) {
             await BG.applyGroup(win.id, groupId, activeTabId);
+
+            let tabs = await Tabs.get(win.id);
+
+            if (tabs.length > 1 && utils.isUrlEmpty(tabs[0].url)) {
+                await Tabs.setActive(null, tabs.slice(1));
+                await Tabs.remove(tabs[0]);
+            }
         }
     }
 
