@@ -690,5 +690,9 @@
     "showNotificationAfterGroupDelete": {
         "message": "Show notification after group delete",
         "description": "Show notification after group delete"
+    },
+    "reloadTab": {
+        "message": "Reload tab",
+        "description": "Reload tab"
     }
 }

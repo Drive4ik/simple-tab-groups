@@ -825,6 +825,10 @@
                 Tabs.discard(tabs.map(utils.keyId));
             },
 
+            reloadTab(tabId, bypassCache) {
+                Tabs.reload(tabId, bypassCache);
+            },
+
         },
     }
 </script>
@@ -1189,6 +1193,21 @@
         <context-menu ref="tabsContextMenu">
             <template v-slot="menu">
                 <ul v-if="menu.data" class="is-unselectable">
+                    <li @click="reloadTab(menu.data.tab.id, $event.ctrlKey || $event.metaKey)">
+                        <img src="/icons/refresh.svg" class="size-16" />
+                        <span v-text="lang('reloadTab')"></span>
+                    </li>
+                    <li @click="discardTab(menu.data.tab.id)">
+                        <img src="/icons/snowflake.svg" class="size-16" />
+                        <span v-text="lang('discardTabTitle')"></span>
+                    </li>
+                    <li v-if="menu.data.group" @click="setTabIconAsGroupIcon(menu.data.tab)">
+                        <img src="/icons/image.svg" class="size-16" />
+                        <span v-text="lang('setTabIconAsGroupIcon')"></span>
+                    </li>
+
+                    <hr>
+
                     <li class="is-disabled">
                         <img class="size-16" />
                         <span v-text="lang('moveTabToGroupDisabledTitle') + ':'"></span>
@@ -1214,18 +1233,6 @@
                         @contextmenu="moveTabToNewGroup(menu.data.tab, !menu.data.group, true)">
                         <img src="/icons/group-new.svg" class="size-16" />
                         <span v-text="lang('createNewGroup')"></span>
-                    </li>
-
-                    <hr>
-
-                    <li @click="discardTab(menu.data.tab.id)">
-                        <img src="/icons/snowflake.svg" class="size-16" />
-                        <span v-text="lang('discardTabTitle')"></span>
-                    </li>
-
-                    <li v-if="menu.data.group" @click="setTabIconAsGroupIcon(menu.data.tab)">
-                        <img src="/icons/image.svg" class="size-16" />
-                        <span v-text="lang('setTabIconAsGroupIcon')"></span>
                     </li>
                 </ul>
             </template>

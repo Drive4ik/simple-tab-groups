@@ -437,6 +437,12 @@ function sendMessage(tabId, message) {
     return browser.tabs.sendMessage(tabId, message).catch(function() {});
 }
 
+function reload(tabId, bypassCache = false) {
+    return browser.tabs.reload(tabId, {
+        bypassCache: bypassCache,
+    });
+}
+
 export default {
     create,
     setActive,
@@ -451,4 +457,5 @@ export default {
     move,
     discard,
     sendMessage,
+    reload,
 };
