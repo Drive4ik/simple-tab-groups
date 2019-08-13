@@ -350,7 +350,7 @@
             },
 
             clickOnTab(event, tab, group) {
-                if (event.ctrlKey) {
+                if (event.ctrlKey || event.metaKey) {
                     if (this.multipleDropTabs.includes(tab)) {
                         this.multipleDropTabs.splice(this.multipleDropTabs.indexOf(tab), 1);
                     } else {
@@ -358,24 +358,25 @@
                     }
                 } else if (event.shiftKey) {
                     if (this.multipleDropTabs.length) {
-                        let tabIndex = group.tabs.indexOf(tab),
+                        let tabs = group.filteredTabs,
+                            tabIndex = tabs.indexOf(tab),
                             lastTabIndex = -1;
 
                         this.multipleDropTabs.slice().reverse().some(function(t) {
-                            return -1 !== (lastTabIndex = group.tabs.indexOf(t));
+                            return -1 !== (lastTabIndex = tabs.indexOf(t));
                         });
 
                         if (-1 === lastTabIndex) {
                             this.multipleDropTabs.push(tab);
                         } else if (tabIndex !== lastTabIndex) {
-                            let multipleTabIndex = this.multipleDropTabs.indexOf(group.tabs[lastTabIndex]);
+                            let multipleTabIndex = this.multipleDropTabs.indexOf(tabs[lastTabIndex]);
 
                             for (let i = Math.min(tabIndex, lastTabIndex), maxIndex = Math.max(tabIndex, lastTabIndex); i <= maxIndex; i++) {
-                                if (!this.multipleDropTabs.includes(group.tabs[i])) {
+                                if (!this.multipleDropTabs.includes(tabs[i])) {
                                     if (tabIndex > lastTabIndex) {
-                                        this.multipleDropTabs.push(group.tabs[i]);
+                                        this.multipleDropTabs.push(tabs[i]);
                                     } else {
-                                        this.multipleDropTabs.splice(multipleTabIndex, 0, group.tabs[i]);
+                                        this.multipleDropTabs.splice(multipleTabIndex, 0, tabs[i]);
                                     }
                                 }
                             }

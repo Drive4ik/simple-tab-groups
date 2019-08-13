@@ -400,7 +400,7 @@
             },
 
             clickOnTab(event, tab, group) {
-                if (event.ctrlKey) {
+                if (event.ctrlKey || event.metaKey) {
                     if (this.multipleMoveTabs.includes(tab)) {
                         this.multipleMoveTabs.splice(this.multipleMoveTabs.indexOf(tab), 1);
                     } else {
@@ -408,30 +408,32 @@
                     }
                 } else if (event.shiftKey) {
                     if (this.multipleMoveTabs.length) {
-                        if (!group) {
-                            group = {
-                                tabs: this.unSyncTabs,
-                            };
+                        let tabs = [];
+
+                        if (SECTION_SEARCH === this.section) {
+                            tabs = this.filteredGroupsBySearch.reduce((acc, group) => [...acc, ...group.filteredTabsBySearch], []);
+                        } else {
+                            tabs = group ? group.tabs : this.unSyncTabs;
                         }
 
-                        let tabIndex = group.tabs.indexOf(tab),
+                        let tabIndex = tabs.indexOf(tab),
                             lastTabIndex = -1;
 
                         this.multipleMoveTabs.slice().reverse().some(function(t) {
-                            return -1 !== (lastTabIndex = group.tabs.indexOf(t));
+                            return -1 !== (lastTabIndex = tabs.indexOf(t));
                         });
 
                         if (-1 === lastTabIndex) {
                             this.multipleMoveTabs.push(tab);
                         } else if (tabIndex !== lastTabIndex) {
-                            let multipleTabIndex = this.multipleMoveTabs.indexOf(group.tabs[lastTabIndex]);
+                            let multipleTabIndex = this.multipleMoveTabs.indexOf(tabs[lastTabIndex]);
 
                             for (let i = Math.min(tabIndex, lastTabIndex), maxIndex = Math.max(tabIndex, lastTabIndex); i <= maxIndex; i++) {
-                                if (!this.multipleMoveTabs.includes(group.tabs[i])) {
+                                if (!this.multipleMoveTabs.includes(tabs[i])) {
                                     if (tabIndex > lastTabIndex) {
-                                        this.multipleMoveTabs.push(group.tabs[i]);
+                                        this.multipleMoveTabs.push(tabs[i]);
                                     } else {
-                                        this.multipleMoveTabs.splice(multipleTabIndex, 0, group.tabs[i]);
+                                        this.multipleMoveTabs.splice(multipleTabIndex, 0, tabs[i]);
                                     }
                                 }
                             }
@@ -1019,7 +1021,7 @@
                     <div>
                         <div v-for="tab in unSyncTabs" :key="tab.id"
                             @contextmenu="$refs.tabsContextMenu.open($event, {tab})"
-                            @click.stop="($event.ctrlKey || $event.shiftKey) ? clickOnTab($event, tab) : unsyncHiddenTabsShowTabIntoCurrentWindow(tab)"
+                            @click.stop="($event.ctrlKey || $event.metaKey || $event.shiftKey) ? clickOnTab($event, tab) : unsyncHiddenTabsShowTabIntoCurrentWindow(tab)"
                             @mousedown.middle.prevent
                             @mouseup.middle.prevent="removeTab(tab)"
                             :class="['tab item is-unselectable', {
