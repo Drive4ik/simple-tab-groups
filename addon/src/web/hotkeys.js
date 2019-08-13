@@ -32,7 +32,7 @@ function changeHotkeysListener(request, sender) {
 
     if (request.action === 'update-hotkeys') {
         init(request);
-    } else if (['move-active-tab-to-custom-group', 'load-custom-group'].includes(request.action)) {
+    } else if ('show-groups-popup' === request.action) {
         showGroupsPopup(request);
     }
 }
@@ -122,7 +122,7 @@ function showGroupsPopup(data) {
     header.classList = 'stg-popup-has-text stg-popup-header';
     Object.assign(header, {
         tabIndex: '-1',
-        innerText: browser.i18n.getMessage('load-custom-group' === data.action ? 'hotkeyActionTitleLoadCustomGroup' : 'moveTabToGroupDisabledTitle'),
+        innerText: browser.i18n.getMessage(data.popupTitleLang),
         onclick: e => e.stopPropagation(),
         onkeydown: function(e) {
             if (checkUpDownKeys(e)) {
@@ -174,7 +174,7 @@ function showGroupsPopup(data) {
             groupNode.onclick = function(groupId, action) {
                 browser.runtime.sendMessage({groupId, action});
                 closeGroupsPopup();
-            }.bind(null, group.id, data.action);
+            }.bind(null, group.id, data.popupAction);
 
             groupNode.onkeydown = function(e) {
                 if (checkUpDownKeys(e)) {
@@ -238,15 +238,17 @@ function showGroupsPopup(data) {
 
     data.groups.forEach((group, index) => groupsWrapper.append(createGroupNode(group, index + 1, group.id !== data.disableGroupId)));
 
-    let newGroupNode = createGroupNode({
-        id: 'new',
-        title: browser.i18n.getMessage('createNewGroup'),
-        iconUrl: browser.extension.getURL('/icons/group-new.svg'),
-    }, groupsWrapper.children.length + 1, true);
+    if (false !== data.disableNewGroupItem) {
+        let newGroupNode = createGroupNode({
+            id: 'new',
+            title: browser.i18n.getMessage('createNewGroup'),
+            iconUrl: browser.extension.getURL('/icons/group-new.svg'),
+        }, groupsWrapper.children.length + 1, true);
 
-    // newGroupNode.style.justifyContent = 'center';
+        // newGroupNode.style.justifyContent = 'center';
 
-    groupsWrapper.append(newGroupNode);
+        groupsWrapper.append(newGroupNode);
+    }
 
     setTimeout(function() {
         wrapper.style.transform = 'none';

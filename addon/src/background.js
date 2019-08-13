@@ -1327,7 +1327,9 @@ async function runAction(data, externalExtId) {
                     let activeTab = await Tabs.getActive();
 
                     Tabs.sendMessage(activeTab.id, {
-                        action: 'load-custom-group',
+                        action: 'show-groups-popup',
+                        popupAction: 'load-custom-group',
+                        popupTitleLang: 'hotkeyActionTitleLoadCustomGroup',
                         groups: groups.map(Groups.mapGroupForExternalExtension),
                         disableGroupId: currentGroup && currentGroup.id,
                     });
@@ -1384,7 +1386,9 @@ async function runAction(data, externalExtId) {
                     result.ok = true;
                 } else {
                     Tabs.sendMessage(activeTab.id, {
-                        action: 'move-active-tab-to-custom-group',
+                        action: 'show-groups-popup',
+                        popupAction: 'move-active-tab-to-custom-group',
+                        popupTitleLang: 'moveTabToGroupDisabledTitle',
                         groups: groups.map(Groups.mapGroupForExternalExtension),
                         disableGroupId: activeTab.session.groupId,
                     });
