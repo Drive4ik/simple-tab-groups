@@ -502,7 +502,7 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
         },
     });
 
-    if (group && !group.isSticky) {
+    if (group && !group.isSticky && 'url' in changeInfo) {
         let destGroup = _getCatchedGroupForTab(groups, tab);
 
         if (destGroup && destGroup.id !== group.id) {
