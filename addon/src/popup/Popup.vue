@@ -544,7 +544,7 @@
                 if (windowId) {
                     Windows.setFocus(windowId);
                 } else {
-                    Windows.create(undefined, groupId);
+                    BG.Windows.create(undefined, groupId); // BG need because this popup will unload after win open and code not work
                 }
             },
 

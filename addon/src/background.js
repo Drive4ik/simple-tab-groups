@@ -1606,6 +1606,8 @@ window.BG = {
         onCreatedWindow,
     },
 
+    Windows,
+
     createTabsSafe,
 
     addUndoRemoveGroupItem,
