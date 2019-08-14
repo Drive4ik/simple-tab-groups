@@ -1642,6 +1642,7 @@ async function runMigrateForData(data) {
     }
 
     if (data.version === constants.DEFAULT_OPTIONS.version) {
+        data.showWelcomePage = true;
         data.version = currentVersion;
         return data;
     }
@@ -1932,7 +1933,12 @@ async function init() {
 
     await containers.init();
 
-    data = await runMigrateForData(data); // run migration for data
+    try {
+        data = await runMigrateForData(data); // run migration for data
+    } catch (e) {
+        utils.notify(String(e));
+        throw '';
+    }
 
     options = utils.extractKeys(data, constants.allOptionsKeys, true);
 
@@ -1947,8 +1953,10 @@ async function init() {
         windows = await removeSTGNewTabUrls(windows);
     }
 
-    let withoutSession = data.withoutSession;
+    let {withoutSession, showWelcomePage} = data;
+
     delete data.withoutSession;
+    delete data.showWelcomePage;
 
     if (withoutSession) { // if version < 4
         let tempTabs = await Promise.all(windows.map(win => Tabs.createTempActiveTab(win.id)));
@@ -2092,7 +2100,7 @@ async function init() {
 
     addEvents();
 
-    if (withoutSession) {
+    if (withoutSession || showWelcomePage) {
         browser.tabs.create({
             active: true,
             url: '/help/welcome-v4.html',

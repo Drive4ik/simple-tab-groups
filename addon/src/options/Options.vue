@@ -266,7 +266,13 @@
 
                 await BG.loadingBrowserAction();
 
-                data = await BG.runMigrateForData(data);
+                try {
+                    data = await BG.runMigrateForData(data); // run migration for data
+                    delete data.withoutSession;
+                } catch (e) {
+                    utils.notify(String(e));
+                    return;
+                }
 
                 if (data.pinnedTabs) {
                     let currentPinnedTabs = await Tabs.get(undefined, true, null);
