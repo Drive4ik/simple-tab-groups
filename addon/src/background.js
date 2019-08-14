@@ -1634,6 +1634,13 @@ window.BG = {
     createBackup,
 };
 
+function openHelp(page) {
+    return browser.tabs.create({
+        active: true,
+        url: `/help/${page}.html`,
+    });
+}
+
 async function runMigrateForData(data) {
     let currentVersion = manifest.version;
 
@@ -1642,7 +1649,6 @@ async function runMigrateForData(data) {
     }
 
     if (data.version === constants.DEFAULT_OPTIONS.version) {
-        data.showWelcomePage = true;
         data.version = currentVersion;
         return data;
     }
@@ -1910,16 +1916,27 @@ async function removeSTGNewTabUrls(windows) {
 
 // { reason: "update", previousVersion: "3.0.1", temporary: true }
 // { reason: "install", temporary: true }
-// browser.runtime.onInstalled.addListener(console.info.bind(null, 'onInstalled'));
+browser.runtime.onInstalled.addListener(function onInstalled({previousVersion, reason, temporary}) {
+    if (!window.BG.inited) {
+        setTimeout(onInstalled, 300, {previousVersion, reason, temporary});
+        return;
+    }
+
+    if (temporary) {
+        return;
+    }
+
+    if (browser.runtime.OnInstalledReason.INSTALL === reason ||
+        (browser.runtime.OnInstalledReason.UPDATE === reason && -1 === utils.compareVersions(previousVersion, '4.0'))) {
+        openHelp('welcome-v4');
+    }
+});
 
 async function init() {
     let isAllowedIncognitoAccess = await browser.extension.isAllowedIncognitoAccess();
 
     if (isAllowedIncognitoAccess) {
-        browser.tabs.create({
-            active: true,
-            url: '/help/disable-incognito.html',
-        });
+        openHelp('disable-incognito');
         throw '';
     }
 
@@ -1953,10 +1970,8 @@ async function init() {
         windows = await removeSTGNewTabUrls(windows);
     }
 
-    let {withoutSession, showWelcomePage} = data;
-
+    let withoutSession = data.withoutSession;
     delete data.withoutSession;
-    delete data.showWelcomePage;
 
     if (withoutSession) { // if version < 4
         let tempTabs = await Promise.all(windows.map(win => Tabs.createTempActiveTab(win.id)));
@@ -2099,13 +2114,6 @@ async function init() {
     createMoveTabMenus();
 
     addEvents();
-
-    if (withoutSession || showWelcomePage) {
-        browser.tabs.create({
-            active: true,
-            url: '/help/welcome-v4.html',
-        });
-    }
 
     window.BG.inited = true;
 }
