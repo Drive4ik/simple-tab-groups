@@ -1,6 +1,6 @@
 {
     "extensionDescription": {
-        "message": "Créer, modifier et changer rapidement de groupe d'onglets. \nInspiré par l'ancienne extension Tab Groups :)",
+        "message": "Pour créer et modifier des groupe d'onglets, puis passer rapidement d'un groupe à l'autre. \nInspiré par l'ancienne extension Tab Groups :)",
         "description": "Description of the extension."
     },
     "openSettings": {
@@ -682,5 +682,17 @@
     "dontDiscardTabsAfterHideThisGroup": {
         "message": "Ne pas décharger les onglets de ce groupe lorsqu'ils sont masqués",
         "description": "Don't discard tabs into this group after hide"
+    },
+    "showNotificationAfterGroupDelete": {
+        "message": "Afficher une notification après la suppression d'un groupe",
+        "description": "Show notification after group delete"
+    },
+    "reloadTab": {
+        "message": "Recharger l'onglet",
+        "description": "Reload tab"
+    },
+    "thisTabIsNotSupported": {
+        "message": "Cet onglet n'est pas supporté",
+        "description": "This tab is not supported"
     }
 }
