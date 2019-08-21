@@ -433,6 +433,20 @@ async function discard(tabIds = []) {
     }
 }
 
+const extensionsWebextensionsRestrictedDomains = ['accounts-static.cdn.mozilla.net','accounts.firefox.com','addons.cdn.mozilla.net','addons.mozilla.org','api.accounts.firefox.com','content.cdn.mozilla.net','discovery.addons.mozilla.org','install.mozilla.org','oauth.accounts.firefox.com','profile.accounts.firefox.com','support.mozilla.org','sync.services.mozilla.com'];
+
+function isCanSendMessage(tabUrl) {
+    if (tabUrl === 'about:blank') {
+        return true;
+    }
+
+    if (tabUrl.startsWith('moz-extension')) {
+        return false;
+    }
+
+    return /.*:\/\/.+/.test(tabUrl) && !extensionsWebextensionsRestrictedDomains.some(host => (new RegExp('^https?://' + host).test(tabUrl)));
+}
+
 function sendMessage(tabId, message) {
     return browser.tabs.sendMessage(tabId, message).catch(function() {});
 }
@@ -456,6 +470,7 @@ export default {
     updateThumbnail,
     move,
     discard,
+    isCanSendMessage,
     sendMessage,
     reload,
 };

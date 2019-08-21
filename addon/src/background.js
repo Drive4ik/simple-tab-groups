@@ -1326,6 +1326,11 @@ async function runAction(data, externalExtId) {
                 } else {
                     let activeTab = await Tabs.getActive();
 
+                    if (!Tabs.isCanSendMessage(activeTab.url)) {
+                        utils.notify(browser.i18n.getMessage('thisTabIsNotSupported'), 7000);
+                        break;
+                    }
+
                     Tabs.sendMessage(activeTab.id, {
                         action: 'show-groups-popup',
                         popupAction: 'load-custom-group',
@@ -1385,6 +1390,11 @@ async function runAction(data, externalExtId) {
                     await Groups.add(undefined, [activeTab]);
                     result.ok = true;
                 } else {
+                    if (!Tabs.isCanSendMessage(activeTab.url)) {
+                        utils.notify(browser.i18n.getMessage('thisTabIsNotSupported'), 7000);
+                        break;
+                    }
+
                     Tabs.sendMessage(activeTab.id, {
                         action: 'show-groups-popup',
                         popupAction: 'move-active-tab-to-custom-group',

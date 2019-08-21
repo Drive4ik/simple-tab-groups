@@ -690,5 +690,9 @@
     "reloadTab": {
         "message": "Обновить вкладку",
         "description": "Reload tab"
+    },
+    "thisTabIsNotSupported": {
+        "message": "Эта вкладка не поддерживается",
+        "description": "This tab is not supported"
     }
 }

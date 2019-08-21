@@ -694,5 +694,9 @@
     "reloadTab": {
         "message": "Reload tab",
         "description": "Reload tab"
+    },
+    "thisTabIsNotSupported": {
+        "message": "This tab is not supported",
+        "description": "This tab is not supported"
     }
 }
