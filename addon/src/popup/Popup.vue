@@ -898,7 +898,7 @@
                                 @click="applyGroup(group)"
                                 >
                                 <div class="item-icon" :title="group.title">
-                                    <img v-lazy="group.iconUrlToDisplay" class="is-inline-block size-16" />
+                                    <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                                 </div>
                                 <div class="item-title" :title="group.title" v-text="group.title"></div>
                                 <div class="item-action bold-hover is-unselectable" @click.stop="showSectionGroupTabs(group)">
@@ -977,7 +977,7 @@
                             :title="group.title"
                             >
                             <div class="item-icon">
-                                <img v-lazy="group.iconUrlToDisplay" class="is-inline-block size-16" />
+                                <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                             </div>
                             <div class="item-title" v-text="group.title"></div>
                             <div class="item-action bold-hover is-unselectable" :title="getFullGroupTitleWithTabs(group)" @click.stop="showSectionGroupTabs(group)">
@@ -1065,7 +1065,7 @@
 
                     <div class="group-info item no-hover">
                         <div class="item-icon">
-                            <img v-lazy="groupToShow.iconUrlToDisplay" class="is-inline-block size-16" />
+                            <img :src="groupToShow.iconUrlToDisplay" class="is-inline-block size-16" />
                         </div>
                         <div class="item-title" v-text="groupToShow.title"></div>
                         <div class="item-action is-unselectable">
@@ -1226,7 +1226,7 @@
                             ? menu.data.group.id !== group.id && moveTabs(getTabsForMove(menu.data.tab), group, undefined, true)
                             : moveTabs(getTabsForMove(menu.data.tab), group, true, true)"
                         >
-                        <img v-lazy="group.iconUrlToDisplay" class="is-inline-block size-16" />
+                        <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                         <span v-text="(getWindowId(group.id) ? '• ' : '') + group.title"></span>
                     </li>
 
