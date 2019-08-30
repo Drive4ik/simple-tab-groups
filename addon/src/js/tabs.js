@@ -396,7 +396,7 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
 
     if (showTabAfterMoving) {
         await BG.applyGroup(windowId, groupId, tabs[0].id);
-        // return;
+        showNotificationAfterMoveTab = false;
     }
 
     if (!showNotificationAfterMoveTab || !BG.getOptions().showNotificationAfterMoveTab) {
