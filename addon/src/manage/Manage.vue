@@ -8,6 +8,7 @@
     import Groups from '../js/groups';
     import Tabs from '../js/tabs';
     import Windows from '../js/windows';
+    import storage from '../js/storage';
     import popup from '../js/popup.vue';
     import editGroup from '../js/edit-group.vue';
     import contextMenu from '../js/context-menu-component.vue';
@@ -82,12 +83,16 @@
         // directives: {
         //     dnd: dnd,
         // },
-        async created() {
+        // async created() {
+        //     this.hasThumbnailsPermission = await browser.permissions.contains(constants.PERMISSIONS.ALL_URLS);
+
+        //     this.loadOptions();
+        // },
+        async mounted() {
             this.hasThumbnailsPermission = await browser.permissions.contains(constants.PERMISSIONS.ALL_URLS);
 
-            this.loadOptions();
-        },
-        async mounted() {
+            await this.loadOptions();
+
             await this.loadGroups();
 
             this.setupListeners();
@@ -123,8 +128,9 @@
             lang: browser.i18n.getMessage,
             safeHtml: utils.safeHtml,
 
-            loadOptions() {
-                this.options = BG.getOptions();
+            async loadOptions() {
+                let data = await storage.get(null);
+                this.options = utils.extractKeys(data, constants.allOptionsKeys);
             },
 
             setupListeners() {
