@@ -31,7 +31,7 @@
 
     let currentWindowPopupId = null;
 
-    browser.windows.getCurrent().then(function(win) {
+    BG.browser.windows.getCurrent().then(function(win) {
         if (browser.windows.WindowType.POPUP === win.type) {
             currentWindowPopupId = win.id;
             window.addEventListener('resize', function() {
@@ -89,7 +89,7 @@
         //     this.loadOptions();
         // },
         async mounted() {
-            this.hasThumbnailsPermission = await browser.permissions.contains(constants.PERMISSIONS.ALL_URLS);
+            this.hasThumbnailsPermission = await BG.browser.permissions.contains(constants.PERMISSIONS.ALL_URLS);
 
             await this.loadOptions();
 
@@ -331,7 +331,7 @@
             },
             async applyGroup(groupId, tabId) {
                 if (currentWindowPopupId) {
-                    await browser.windows.update(currentWindowPopupId, {
+                    await BG.browser.windows.update(currentWindowPopupId, {
                         state: browser.windows.WindowState.MINIMIZED,
                     });
                 }
@@ -339,7 +339,7 @@
                 await BG.applyGroup(null, groupId, tabId);
 
                 if (currentWindowPopupId) {
-                    browser.windows.remove(currentWindowPopupId); // close manage groups POPUP window
+                    BG.browser.windows.remove(currentWindowPopupId); // close manage groups POPUP window
                 }
             },
 
@@ -502,8 +502,8 @@
             },
 
             async closeThisWindow() {
-                let tab = await browser.tabs.getCurrent();
-                browser.tabs.remove(tab.id);
+                let tab = await BG.browser.tabs.getCurrent();
+                BG.browser.tabs.remove(tab.id);
             },
 
         },

@@ -10,7 +10,7 @@ async function load(withTabs) {
 
     let [allTabs, allWindows] = await Promise.all([
             withTabs ? Tabs.get(null, null, null) : false,
-            browser.windows.getAll({
+            BG.browser.windows.getAll({
                 windowTypes: [browser.windows.WindowType.NORMAL],
             })
         ]);
@@ -35,7 +35,7 @@ async function load(withTabs) {
 async function get(windowId = browser.windows.WINDOW_ID_CURRENT) {
     const {BG} = browser.extension.getBackgroundPage();
 
-    let win = await browser.windows.get(windowId);
+    let win = await BG.browser.windows.get(windowId);
 
     if (!utils.isWindowAllow(win)) {
         throw Error('normal window not found!');
@@ -48,13 +48,15 @@ async function create(createData = {}, groupId, activeTabId) {
     const {BG} = browser.extension.getBackgroundPage();
 
     if (groupId) {
-        browser.windows.onCreated.removeListener(BG.events.onCreatedWindow);
+        BG.canAddGroupToWindowAfterItCreated = false;
     }
 
-    let win = await browser.windows.create(createData);
+    let win = await BG.browser.windows.create(createData);
+
+    console.log('created window', win);
 
     if (groupId) {
-        browser.windows.onCreated.addListener(BG.events.onCreatedWindow);
+        BG.canAddGroupToWindowAfterItCreated = true;
     }
 
     if (utils.isWindowAllow(win)) {
@@ -62,6 +64,8 @@ async function create(createData = {}, groupId, activeTabId) {
 
         if (groupId) {
             await BG.applyGroup(win.id, groupId, activeTabId);
+
+            // browser.tabs.remove(win.tabs[0].id);
 
             let tabs = await Tabs.get(win.id);
 
@@ -76,7 +80,9 @@ async function create(createData = {}, groupId, activeTabId) {
 }
 
 function setFocus(windowId) {
-    return browser.windows.update(windowId, {
+    const {BG} = browser.extension.getBackgroundPage();
+
+    return BG.browser.windows.update(windowId, {
         focused: true,
     });
 }
@@ -84,14 +90,14 @@ function setFocus(windowId) {
 async function getLastFocusedNormalWindow(returnId = true) {
     const {BG} = browser.extension.getBackgroundPage();
 
-    let lastFocusedWindow = await browser.windows.getLastFocused();
+    let lastFocusedWindow = await BG.browser.windows.getLastFocused();
 
     if (utils.isWindowAllow(lastFocusedWindow)) {
         return returnId ? lastFocusedWindow.id : BG.cache.loadWindowSession(lastFocusedWindow);
     }
 
     // hard way (((
-    let windows = await browser.windows.getAll({
+    let windows = await BG.browser.windows.getAll({
             windowTypes: [browser.windows.WindowType.NORMAL],
         }),
         filteredWindows = windows.filter(utils.isWindowAllow).sort(utils.sortBy('id')),

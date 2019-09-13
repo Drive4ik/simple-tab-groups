@@ -71,6 +71,7 @@
 
                 showEnableDarkThemeNotification: false,
 
+                enableDebug: !!window.localStorage.enableDebug,
                 errorLogs: utils.getErrorLogs(),
             };
         },
@@ -79,6 +80,11 @@
             swatches: swatches,
         },
         async created() {
+            // if (!BG.inited) {
+            //     window.setTimeout(() => window.location.reload(), 500);
+            //     return;
+            // }
+
             let {os} = await browser.runtime.getPlatformInfo();
             this.isMac = os === browser.runtime.PlatformOs.MAC;
 
@@ -93,8 +99,8 @@
                 }
             }, this);
 
-            this.permissions.bookmarks = await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
-            this.permissions.allUrls = await browser.permissions.contains(constants.PERMISSIONS.ALL_URLS);
+            this.permissions.bookmarks = await BG.browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
+            this.permissions.allUrls = await BG.browser.permissions.contains(constants.PERMISSIONS.ALL_URLS);
 
             this.loadBookmarksParents();
 
@@ -178,6 +184,12 @@
                 });
             },
             'options.enableDarkTheme': function(enableDarkTheme, oldValue) {
+                if (enableDarkTheme) {
+                    document.documentElement.classList.add('dark-theme');
+                } else {
+                    document.documentElement.classList.remove('dark-theme');
+                }
+
                 if (null == oldValue) {
                     return;
                 }
@@ -213,6 +225,15 @@
                     });
                 },
                 deep: true,
+            },
+            enableDebug(enableDebug) {
+                if (enableDebug) {
+                    window.localStorage.enableDebug = 1;
+                } else {
+                    delete window.localStorage.enableDebug;
+                }
+
+                BG.console.restart();
             },
         },
         computed: {
@@ -506,10 +527,8 @@
             },
 
             async saveErrorLogsIntoFile() {
-                let {version} = await storage.get('version');
-
                 file.save({
-                    version,
+                    info: await utils.getInfo(),
                     logs: utils.getErrorLogs(),
                 }, 'STG-error-logs.json');
             },
@@ -536,9 +555,9 @@
 
             async setPermissionsBookmarks(event) {
                 if (event.target.checked) {
-                    this.permissions.bookmarks = await browser.permissions.request(constants.PERMISSIONS.BOOKMARKS);
+                    this.permissions.bookmarks = await BG.browser.permissions.request(constants.PERMISSIONS.BOOKMARKS);
                 } else {
-                    await browser.permissions.remove(constants.PERMISSIONS.BOOKMARKS);
+                    await BG.browser.permissions.remove(constants.PERMISSIONS.BOOKMARKS);
                 }
 
                 this.loadBookmarksParents();
@@ -551,18 +570,18 @@
                     return;
                 }
 
-                this.permissions.bookmarks = await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
+                this.permissions.bookmarks = await BG.browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
 
                 if (this.permissions.bookmarks) {
-                    this.defaultBookmarksParents = await browser.bookmarks.get(constants.defaultBookmarksParents);
+                    this.defaultBookmarksParents = await BG.browser.bookmarks.get(constants.defaultBookmarksParents);
                 }
             },
 
             async setPermissionsAllUrls(event) {
                 if (event.target.checked) {
-                    this.permissions.allUrls = await browser.permissions.request(constants.PERMISSIONS.ALL_URLS);
+                    this.permissions.allUrls = await BG.browser.permissions.request(constants.PERMISSIONS.ALL_URLS);
                 } else {
-                    await browser.permissions.remove(constants.PERMISSIONS.ALL_URLS);
+                    await BG.browser.permissions.remove(constants.PERMISSIONS.ALL_URLS);
                 }
             },
         },
@@ -702,6 +721,13 @@
             <hr>
 
             <div class="field">
+                <label class="checkbox">
+                    <input v-model="options.enableDarkTheme" type="checkbox" />
+                    <span v-text="lang('enableDarkTheme')"></span>
+                </label>
+            </div>
+
+            <div class="field">
                 <label class="label" v-text="lang('enterDefaultGroupIconViewTypeTitle')"></label>
                 <div class="field is-grouped">
                     <div class="control">
@@ -724,16 +750,16 @@
                 </div>
             </div>
 
-            <hr>
+            <hr/>
 
             <div class="field">
                 <label class="checkbox">
-                    <input v-model="options.enableDarkTheme" type="checkbox" />
-                    <span v-text="lang('enableDarkTheme')"></span>
+                    <input type="checkbox" v-model="enableDebug" />
+                    <span>Enable DEBUG</span>
                 </label>
+                <br>
+                <span>Please enable this checkbox only if you need to record bug and send logs to me, &lt;<a href="mailto:drive4ik@gmail.com">drive4ik@gmail.com</a>&gt;</span>
             </div>
-
-            <hr v-if="errorLogs.length">
 
             <div v-if="errorLogs.length" class="field">
                 <div class="control">
@@ -1058,6 +1084,27 @@
     .tabs a:hover {
         border-top-color: #a9a9ac;
         background-color: #ededf0;
+    }
+
+    html.dark-theme {
+        --background-color: #202023;
+
+        .tabs a {
+            color: #a6a5a5;
+
+            &:hover {
+                background-color: #2c2c2f;
+            }
+        }
+
+        .vue-swatches__trigger.vue-swatches--is-empty {
+            background-color: transparent !important;
+            border-color: var(--color-hr);
+        }
+
+        .delete-button:hover img {
+            fill: #0078d7;
+        }
     }
 
 </style>

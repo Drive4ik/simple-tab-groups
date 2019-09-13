@@ -11,7 +11,7 @@ const newTabKeys = ['active', 'cookieStoreId', /*'index', */'discarded', 'title'
 async function create(tab) {
     const {BG} = browser.extension.getBackgroundPage();
 
-    console.log('create tab', utils.clone(tab));
+    BG.console.log('create tab', tab);
 
     let {groupId, thumbnail, favIconUrl} = tab;
 
@@ -55,9 +55,11 @@ async function create(tab) {
 
     Object.keys(tab).forEach(key => !newTabKeys.includes(key) && (delete tab[key]));
 
-    let newTab = await browser.tabs.create(tab);
+    let newTab = await BG.browser.tabs.create(tab);
 
-    if (groupId && !tab.pinned) {
+    BG.console.log('tab created', {tab, newTab});
+
+    if (groupId && !newTab.pinned) {
         BG.cache.setTabGroup(newTab.id, groupId);
     }
 
@@ -97,7 +99,9 @@ async function setActive(tabId, tabs = []) {
     if (tabToActive) {
         tabs.forEach(tab => tab.active = tab.id === tabToActive.id);
 
-        await browser.tabs.update(tabToActive.id, {
+        const {BG} = browser.extension.getBackgroundPage();
+
+        await BG.browser.tabs.update(tabToActive.id, {
             active: true,
         });
     }
@@ -106,8 +110,6 @@ async function setActive(tabId, tabs = []) {
 }
 
 async function getActive(windowId = browser.windows.WINDOW_ID_CURRENT) {
-    const {BG} = browser.extension.getBackgroundPage();
-
     let [activeTab] = await get(windowId, null, null, {
         active: true,
     });
@@ -156,7 +158,7 @@ async function get(windowId = browser.windows.WINDOW_ID_CURRENT, pinned = false,
         delete query.hidden;
     }
 
-    let tabs = await browser.tabs.query(query);
+    let tabs = await BG.browser.tabs.query(query);
 
     tabs = tabs.filter(BG.cache.filterRemovedTab);
 
@@ -164,10 +166,12 @@ async function get(windowId = browser.windows.WINDOW_ID_CURRENT, pinned = false,
 }
 
 async function setMute(tabs, muted) {
+    const {BG} = browser.extension.getBackgroundPage();
+
     return Promise.all(
         tabs
         .filter(tab => muted ? tab.audible : tab.mutedInfo.muted)
-        .map(tab => browser.tabs.update(tab.id, {muted}))
+        .map(tab => BG.browser.tabs.update(tab.id, {muted}))
     );
 }
 
@@ -230,19 +234,19 @@ async function remove({id, hidden, session}) {
     //     }
     // }
 
-    await browser.tabs.remove(id);
+    await BG.browser.tabs.remove(id);
 }
 
 async function updateThumbnail(tabId, force) {
     const {BG} = browser.extension.getBackgroundPage();
 
-    let hasThumbnailsPermission = await browser.permissions.contains(constants.PERMISSIONS.ALL_URLS);
+    let hasThumbnailsPermission = await BG.browser.permissions.contains(constants.PERMISSIONS.ALL_URLS);
 
     if (!hasThumbnailsPermission) {
         return;
     }
 
-    let tab = await browser.tabs.get(tabId);
+    let tab = await BG.browser.tabs.get(tabId);
 
     if (!utils.isTabLoaded(tab)) {
         return;
@@ -253,14 +257,14 @@ async function updateThumbnail(tabId, force) {
     }
 
     if (tab.discarded) {
-        browser.tabs.reload(tab.id);
+        BG.browser.tabs.reload(tab.id);
         return;
     }
 
     let thumbnail = null;
 
     try {
-        let thumbnailBase64 = await browser.tabs.captureTab(tab.id, {
+        let thumbnailBase64 = await BG.browser.tabs.captureTab(tab.id, {
             format: browser.extensionTypes.ImageFormat.JPEG,
             quality: 25,
         });
@@ -291,7 +295,7 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
     // tabs = utils.clone(tabs);
     const {BG} = browser.extension.getBackgroundPage();
 
-    console.info('moveTabs', {groupId, newTabIndex, showNotificationAfterMoveTab, showTabAfterMoving, tabs});
+    BG.console.info('moveTabs', {groupId, newTabIndex, showNotificationAfterMoveTab, showTabAfterMoving, tabs});
     // console.info('moveTabs tabs 0', tabs[0]);
 
     BG.addExcludeTabsIds(tabs.map(utils.keyId));
@@ -352,7 +356,7 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
 
         let tabIds = tabs.map(utils.keyId);
 
-        tabs = await browser.tabs.move(tabIds, {
+        tabs = await moveNative(tabs, {
             index: newTabIndex,
             windowId,
         });
@@ -361,13 +365,13 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
             let tabsToShow = tabs.filter(tab => tab.hidden);
 
             if (tabsToShow.length) {
-                await browser.tabs.show(tabsToShow.map(utils.keyId));
+                await BG.browser.tabs.show(tabsToShow.map(utils.keyId));
             }
         } else {
             let tabsToHide = tabs.filter(tab => !tab.hidden);
 
             if (tabsToHide.length) {
-                await browser.tabs.hide(tabsToHide.map(utils.keyId));
+                await BG.browser.tabs.hide(tabsToHide.map(utils.keyId));
             }
         }
 
@@ -415,7 +419,7 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
     utils.notify(message)
         .then(async function(groupId, tabId) {
             let [group] = await Groups.load(groupId),
-                tab = await browser.tabs.get(tabId).catch(function() {});
+                tab = await BG.browser.tabs.get(tabId).catch(function() {});
 
             if (group && tab) {
                 let winId = BG.cache.getWindowId(groupId) || await Windows.getLastFocusedNormalWindow();
@@ -427,9 +431,28 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
     return tabs;
 }
 
+// temp fix bug https://bugzilla.mozilla.org/show_bug.cgi?id=1580879
+async function moveNative(tabs, options = {}) {
+    const {BG} = browser.extension.getBackgroundPage();
+
+    console.log('tabs before moving', tabs);
+
+    let result = await BG.browser.tabs.move(tabs.map(utils.keyId), options);
+
+    result.forEach(function(tab, index) {
+        if (tab.discarded && utils.isUrlEmpty(tab.url) && tab.url !== tabs[index].url) {
+            tab.url = tabs[index].url;
+            reload(tab.id, true);
+        }
+    });
+
+    return result;
+}
+
 async function discard(tabIds = []) {
     if (tabIds.length) {
-        return browser.tabs.discard(tabIds).catch(function() {});
+        const {BG} = browser.extension.getBackgroundPage();
+        return BG.browser.tabs.discard(tabIds).catch(function() {});
     }
 }
 
@@ -448,11 +471,15 @@ function isCanSendMessage(tabUrl) {
 }
 
 function sendMessage(tabId, message) {
-    return browser.tabs.sendMessage(tabId, message).catch(function() {});
+    const {BG} = browser.extension.getBackgroundPage();
+
+    return BG.browser.tabs.sendMessage(tabId, message).catch(function() {});
 }
 
 function reload(tabId, bypassCache = false) {
-    return browser.tabs.reload(tabId, {
+    const {BG} = browser.extension.getBackgroundPage();
+
+    return BG.browser.tabs.reload(tabId, {
         bypassCache: bypassCache,
     });
 }
@@ -469,6 +496,7 @@ export default {
     remove,
     updateThumbnail,
     move,
+    moveNative,
     discard,
     isCanSendMessage,
     sendMessage,

@@ -166,9 +166,9 @@ function showGroupsPopup(data) {
         titleNode.classList.add('stg-popup-has-text');
         groupNode.append(titleNode);
 
-        groupNode.tabIndex = tabIndex;
-
         if (isEnabled) {
+            groupNode.tabIndex = tabIndex;
+
             groupNode.onmouseover = () => groupsWrapper.contains(document.activeElement) && header.focus();
 
             groupNode.onclick = function(groupId, action) {

@@ -77,8 +77,10 @@ async function save(data, fileName = 'file-name', saveAs = true, overwrite = fal
     let blob = new Blob([body], {type}),
         url = URL.createObjectURL(blob);
 
+    const {BG} = browser.extension.getBackgroundPage();
+
     try {
-        let id = await browser.downloads.download({
+        let id = await BG.browser.downloads.download({
             filename: fileName,
             url: url,
             saveAs: saveAs,
@@ -88,7 +90,7 @@ async function save(data, fileName = 'file-name', saveAs = true, overwrite = fal
         let state = await utils.waitDownload(id);
 
         if (clearOnComplete && 'complete' === state) {
-            await browser.downloads.erase({id});
+            await BG.browser.downloads.erase({id});
         }
 
         return id;
@@ -109,13 +111,15 @@ async function backup(data, isAutoBackup, overwrite) {
 }
 
 async function openBackupFolder() {
+    const {BG} = browser.extension.getBackgroundPage();
+
     let {autoBackupFolderName} = await storage.get('autoBackupFolderName'),
         id = await save('temp file', autoBackupFolderName + '/tmp.tmp', false, true, false);
 
-    await browser.downloads.show(id);
+    await BG.browser.downloads.show(id);
     await utils.wait(750);
-    await browser.downloads.removeFile(id);
-    await browser.downloads.erase({id});
+    await BG.browser.downloads.removeFile(id);
+    await BG.browser.downloads.erase({id});
 
 }
 

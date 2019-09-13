@@ -13,6 +13,8 @@ const tagsToReplace = {
     '&': '&amp;',
 };
 
+const {version} = browser.runtime.getManifest();
+
 function getErrorLogs() {
     let logs = [];
 
@@ -20,15 +22,7 @@ function getErrorLogs() {
         logs = JSON.parse(window.localStorage.errorLogs);
     } catch (e) {}
 
-    return logs;
-}
-
-function _saveErrorLog(error) {
-    let logs = getErrorLogs();
-
-    logs.unshift(error);
-
-    window.localStorage.errorLogs = JSON.stringify(logs.slice(0, 30));
+    return logs || [];
 }
 
 function errorEventMessage(message, data = null, showNotification = true) {
@@ -60,6 +54,7 @@ function errorEventHandler(event) {
     }
 
     let error = {
+        version,
         date: (new Date).toLocaleString(),
         message: data.message,
         data: data.data,
@@ -67,7 +62,11 @@ function errorEventHandler(event) {
         stack: event.error.stack.split(addonUrlPrefix).join('').split('@').map(str => str.trim().replace('\n', ' -> ')),
     };
 
-    _saveErrorLog(error);
+    let logs = getErrorLogs();
+
+    logs.unshift(error);
+
+    window.localStorage.errorLogs = JSON.stringify(logs.slice(0, 30));
 
     if (false !== data.showNotification) {
         notify(browser.i18n.getMessage('whatsWrongMessage'))
@@ -75,6 +74,14 @@ function errorEventHandler(event) {
     }
 
     console.error(`[STG] ${event.error.name}: ${error.message}`, error);
+}
+
+async function getInfo() {
+    return {
+        version: browser.runtime.getManifest().version,
+        browserInfo: await browser.runtime.getBrowserInfo(),
+        platformInfo: await browser.runtime.getPlatformInfo(),
+    };
 }
 
 function keyId({id}) {
@@ -173,8 +180,10 @@ function sliceText(text, length = 50) {
 }
 
 function notify(message, timer = 20000, id) {
+    const {BG} = browser.extension.getBackgroundPage();
+
     if (id) {
-        browser.notifications.clear(id);
+        BG.browser.notifications.clear(id);
     } else {
         id = String(Date.now());
     }
@@ -189,14 +198,14 @@ function notify(message, timer = 20000, id) {
 
     // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/notifications/NotificationOptions
     // Only 'type', 'iconUrl', 'title', and 'message' are supported.
-    browser.notifications.create(id, {
+    BG.browser.notifications.create(id, {
         type: 'basic',
         iconUrl: '/icons/icon.svg',
         title: browser.i18n.getMessage('extensionName'),
         message: message,
     });
 
-    setTimeout(browser.notifications.clear, timer, id);
+    setTimeout(BG.browser.notifications.clear, timer, id);
 
     return new Promise(function(resolve, reject) {
         let called = false,
@@ -292,8 +301,11 @@ function getTabTitle(tab, withUrl = false, sliceLength = 0) {
         title += '\n' + tab.url;
     }
 
+    if (window.localStorage.enableDebug) {
+        title = `tab id: ${tab.id} ${title}`;
+    }
+
     return sliceLength ? sliceText(title, sliceLength) : title;
-    // return `${tab.id}: ${title}`;
 }
 
 function getNextIndex(index, length, textPosition = 'next') {
@@ -556,6 +568,8 @@ export default {
     errorEventMessage,
     errorEventHandler,
     getErrorLogs,
+
+    getInfo,
 
     keyId,
     unixNow,

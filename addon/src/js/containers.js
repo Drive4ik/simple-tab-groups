@@ -7,6 +7,8 @@ let containers = {},
     mappedContainerCookieStoreId = {};
 
 async function init() {
+    const {BG} = browser.extension.getBackgroundPage();
+
     // CONTAINER PROPS:
     // color: "blue"
     // ​​colorCode: "#37adff"
@@ -15,15 +17,15 @@ async function init() {
     // ​​iconUrl: "resource://usercontext-content/fingerprint.svg"
     // ​​name: "Personal"
 
-    let _containers = await browser.contextualIdentities.query({});
+    let _containers = await BG.browser.contextualIdentities.query({});
 
     _containers.forEach(container => containers[container.cookieStoreId] = container);
 
     let contextualIdentityHandler = changeInfo => containers[changeInfo.contextualIdentity.cookieStoreId] = changeInfo.contextualIdentity;
 
-    browser.contextualIdentities.onCreated.addListener(contextualIdentityHandler);
-    browser.contextualIdentities.onUpdated.addListener(contextualIdentityHandler);
-    browser.contextualIdentities.onRemoved.addListener(changeInfo => delete containers[changeInfo.contextualIdentity.cookieStoreId]);
+    BG.browser.contextualIdentities.onCreated.addListener(contextualIdentityHandler);
+    BG.browser.contextualIdentities.onUpdated.addListener(contextualIdentityHandler);
+    BG.browser.contextualIdentities.onRemoved.addListener(changeInfo => delete containers[changeInfo.contextualIdentity.cookieStoreId]);
 }
 
 function isDefault(cookieStoreId) {
@@ -40,7 +42,9 @@ async function normalize(cookieStoreId) {
     }
 
     if (!mappedContainerCookieStoreId[cookieStoreId]) {
-        let contextualIdentity = await browser.contextualIdentities.create({
+        const {BG} = browser.extension.getBackgroundPage();
+
+        let contextualIdentity = await BG.browser.contextualIdentities.create({
             name: cookieStoreId,
             color: ['toolbar', 'blue', 'turquoise', 'green', 'yellow', 'orange', 'red', 'pink', 'purple'][utils.getRandomInt(0, 8)],
             icon: 'circle',

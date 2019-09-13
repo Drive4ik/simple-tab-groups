@@ -47,7 +47,8 @@ function setTabGroup(tabId, groupId) {
             tabs.session[tabId] = {groupId};
         }
 
-        return browser.sessions.setTabValue(tabId, 'groupId', groupId);
+        const {BG} = browser.extension.getBackgroundPage();
+        return BG.browser.sessions.setTabValue(tabId, 'groupId', groupId);
     }
 
     return removeTabGroup(tabId);
@@ -58,7 +59,8 @@ function removeTabGroup(tabId) {
         delete tabs.session[tabId].groupId;
     }
 
-    return browser.sessions.removeTabValue(tabId, 'groupId');
+    const {BG} = browser.extension.getBackgroundPage();
+    return BG.browser.sessions.removeTabValue(tabId, 'groupId');
 }
 
 function setTabThumbnail(tabId, thumbnail) {
@@ -69,7 +71,8 @@ function setTabThumbnail(tabId, thumbnail) {
             tabs.session[tabId] = {thumbnail};
         }
 
-        return browser.sessions.setTabValue(tabId, 'thumbnail', thumbnail);
+        const {BG} = browser.extension.getBackgroundPage();
+        return BG.browser.sessions.setTabValue(tabId, 'thumbnail', thumbnail);
     }
 
     return removeTabThumbnail(tabId);
@@ -80,7 +83,8 @@ function removeTabThumbnail(tabId) {
         delete tabs.session[tabId].thumbnail;
     }
 
-    return browser.sessions.removeTabValue(tabId, 'thumbnail');
+    const {BG} = browser.extension.getBackgroundPage();
+    return BG.browser.sessions.removeTabValue(tabId, 'thumbnail');
 }
 
 function setTabFavIcon(tabId, favIconUrl) {
@@ -91,7 +95,8 @@ function setTabFavIcon(tabId, favIconUrl) {
             tabs.session[tabId] = {favIconUrl};
         }
 
-        return browser.sessions.setTabValue(tabId, 'favIconUrl', favIconUrl);
+        const {BG} = browser.extension.getBackgroundPage();
+        return BG.browser.sessions.setTabValue(tabId, 'favIconUrl', favIconUrl);
     }
 
     return removeTabFavIcon(tabId);
@@ -102,7 +107,8 @@ function removeTabFavIcon(tabId) {
         delete tabs.session[tabId].favIconUrl;
     }
 
-    return browser.sessions.removeTabValue(tabId, 'favIconUrl');
+    const {BG} = browser.extension.getBackgroundPage();
+    return BG.browser.sessions.removeTabValue(tabId, 'favIconUrl');
 }
 
 function getTabSession(tabId, key = null) {
@@ -117,10 +123,12 @@ async function loadTabSession(tab) {
     if (tabs.session[tab.id]) {
         tab.session = {...tabs.session[tab.id]};
     } else {
+        const {BG} = browser.extension.getBackgroundPage();
+
         let [groupId, thumbnail, favIconUrl] = await Promise.all([
-            browser.sessions.getTabValue(tab.id, 'groupId'),
-            browser.sessions.getTabValue(tab.id, 'thumbnail'),
-            browser.sessions.getTabValue(tab.id, 'favIconUrl')
+            BG.browser.sessions.getTabValue(tab.id, 'groupId'),
+            BG.browser.sessions.getTabValue(tab.id, 'thumbnail'),
+            BG.browser.sessions.getTabValue(tab.id, 'favIconUrl')
         ]);
 
         if (tabs.session[tab.id]) {
@@ -190,7 +198,8 @@ function setWindowGroup(windowId, groupId) {
             windows.session[windowId] = {groupId};
         }
 
-        return browser.sessions.setWindowValue(windowId, 'groupId', groupId);
+        const {BG} = browser.extension.getBackgroundPage();
+        return BG.browser.sessions.setWindowValue(windowId, 'groupId', groupId);
     }
 
     return removeWindowGroup(windowId);
@@ -201,7 +210,8 @@ function removeWindowGroup(windowId) {
         delete windows.session[windowId].groupId;
     }
 
-    return browser.sessions.removeWindowValue(windowId, 'groupId');
+    const {BG} = browser.extension.getBackgroundPage();
+    return BG.browser.sessions.removeWindowValue(windowId, 'groupId');
 }
 
 function getWindowId(groupId) {
@@ -224,7 +234,9 @@ async function loadWindowSession(win) {
     if (windows.session[win.id]) {
         win.session = {...windows.session[win.id]};
     } else {
-        let groupId = await browser.sessions.getWindowValue(win.id, 'groupId');
+        const {BG} = browser.extension.getBackgroundPage();
+
+        let groupId = await BG.browser.sessions.getWindowValue(win.id, 'groupId');
 
         if (windows.session[win.id]) {
             groupId = windows.session[win.id].groupId;

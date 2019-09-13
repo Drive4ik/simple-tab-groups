@@ -8,6 +8,7 @@
     import Groups from '../js/groups';
     import Tabs from '../js/tabs';
     import Windows from '../js/windows';
+    import file from '../js/file';
     import popup from '../js/popup.vue';
     import editGroupPopup from './edit-group-popup.vue';
     import editGroup from '../js/edit-group.vue';
@@ -73,6 +74,9 @@
                 unSyncTabs: [],
 
                 multipleMoveTabs: [],
+
+                enableDebug: !!window.localStorage.enableDebug,
+                enableLogging: !!window.localStorage.enableLogging,
             };
         },
         components: {
@@ -500,12 +504,12 @@
             async unsyncHiddenTabsMoveToCurrentGroup() {
                 let hiddenTabsIds = this.unSyncTabs.map(utils.keyId);
 
-                await browser.tabs.move(hiddenTabsIds, {
+                await Tabs.moveNative(this.unSyncTabs, {
                     windowId: this.currentWindowId,
                     index: -1,
                 });
 
-                await browser.tabs.show(hiddenTabsIds);
+                await BG.browser.tabs.show(hiddenTabsIds);
 
                 if (this.currentGroup) {
                     this.unSyncTabs = [];
@@ -519,18 +523,18 @@
                 this.unSyncTabs = [];
             },
             unsyncHiddenTabsCloseAll() {
-                browser.tabs.remove(this.unSyncTabs.map(utils.keyId));
+                BG.browser.tabs.remove(this.unSyncTabs.map(utils.keyId));
 
                 this.unSyncTabs = [];
             },
             async unsyncHiddenTabsShowTabIntoCurrentWindow(tab) {
-                await browser.tabs.move(tab.id, {
+                await Tabs.moveNative([tab], {
                     windowId: this.currentWindowId,
                     index: -1,
                 });
 
                 if (tab.hidden) {
-                    browser.tabs.show(tab.id);
+                    BG.browser.tabs.show(tab.id);
                 }
 
                 if (this.currentGroup) {
@@ -831,6 +835,21 @@
                 Tabs.reload(tabId, bypassCache);
             },
 
+            toggleLogging() {
+                this.enableLogging = !this.enableLogging;
+
+                if (this.enableLogging) {
+                    window.localStorage.enableLogging = 1;
+                } else {
+                    delete window.localStorage.enableLogging;
+                }
+
+                BG.console.restart();
+
+                if (!window.localStorage.enableLogging) {
+                    BG.saveConsoleLogs();
+                }
+            },
         },
     }
 </script>
@@ -1138,6 +1157,11 @@
             <div class="is-flex is-align-items-center manage-groups is-full-height is-full-width" @click="openManageGroups" :title="lang('manageGroupsTitle')">
                 <img class="size-16" src="/icons/icon.svg" />
                 <span class="h-margin-left-10" v-text="lang('manageGroupsTitle')"></span>
+            </div>
+            <div v-if="enableDebug" class="is-flex is-align-items-center is-vertical-separator"></div>
+            <div v-if="enableDebug" class="is-flex is-align-items-center is-full-height" @click="toggleLogging" :title="enableLogging ? 'Stop logging' : 'Start logging'">
+                <img v-if="enableLogging" class="size-16" src="/icons/stop-circle.svg" style="fill: red; margin-right: 5px;" />
+                <img class="size-16" src="/icons/bug.svg" />
             </div>
             <div class="is-flex is-align-items-center is-vertical-separator"></div>
             <div class="is-flex is-align-items-center is-full-height" @click="openOptionsPage" :title="lang('openSettings')">

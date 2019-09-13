@@ -70,8 +70,14 @@ html.dark-theme .button {
 }
 
 html.dark-theme .input,
-html.dark-theme .textarea {
+html.dark-theme .textarea,
+html.dark-theme .select select {
     background-color: var(--input-background-color);
+}
+
+html.dark-theme .select select {
+    color: #f7f9fa;
+    border-color: #4c4c4e;
 }
 
 html.dark-theme .button {
@@ -86,6 +92,19 @@ html.dark-theme .button:focus {
 
 html.dark-theme .button.is-focused:not(:active) {
     box-shadow: 0 0 0 .125em rgba(34, 109, 230, 0.74);
+}
+
+html.dark-theme code {
+    background-color: #404040;
+    color: #b1b1b1;
+}
+
+html.dark-theme .select:not(.is-multiple):not(.is-loading)::after {
+    border-color: var(--text-color);
+}
+
+html.dark-theme .select:not(.is-multiple):not(.is-loading):hover::after {
+    border-color: #3273dc;
 }
 
 .input::placeholder,

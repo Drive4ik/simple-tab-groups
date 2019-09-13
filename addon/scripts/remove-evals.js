@@ -22,16 +22,27 @@ const replaceEvalRegexp = {
         fr: 'svgContainer.innerHTML = "<svg>"',
         to: 'svgContainer.innerText = "<svg>"',
     }],
-    prod: [{
+    prod: [
+    /*{
         fr: /;([a-z])=function\(\){return this}\(\);try{\1=\1\|\|new Function\("return this"\)\(\)}catch\([a-z]\){"object"==typeof window&&\(\1=window\)}/g,
         to: '=window;',
+    },*/
+    {
+        fr: /;\s*\/\/ This works in non-strict mode\s*([a-z])\s*=\s*\(\s*function\(\)\s*\{\s*return this;\s*}\)\(\);\s*try\s*{\s*\/\/\s*This works if eval is allowed(?:\s*|.+){1,14}/g,
+        to: '=window;', // from DEV
     }, {
         fr: 'self.Math==Math?self:Function("return this")();',
         to: 'self.Math==Math?self:window;',
-    }, {
+    },
+    /*{
         fr: 'document.createElement("div")).innerHTML="<svg>"',
         to: 'document.createElement("div")).innerText="<svg>"',
-    }],
+    },*/
+    {
+        fr: 'svgContainer.innerHTML = "<svg>"', // from DEV
+        to: 'svgContainer.innerText = "<svg>"',
+    },
+    ],
 };
 
 function removeEvals(file) {

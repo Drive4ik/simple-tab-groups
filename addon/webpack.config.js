@@ -53,15 +53,14 @@ const config = {
     devtool: false,
     optimization: {
         minimizer: [
-            new TerserPlugin({
-                parallel: true,
-                terserOptions: {
-                    ecma: 8,
-                    compress: {
-                        drop_console: true,
-                    },
-                },
-            }),
+            // new TerserPlugin({
+            //     terserOptions: {
+            //         ecma: 8,
+            //         compress: {
+            //             drop_console: true,
+            //         },
+            //     },
+            // }),
             new OptimizeCSSAssetsPlugin({}),
         ],
     },
@@ -101,7 +100,7 @@ const config = {
             // chunkFilename: "[id].css"
         }),
 
-        new CopyWebpackPlugin(multipleCopy('icons', 'help', '_locales', 'css', 'popup/popup.html', 'manage/manage.html', 'options/options.html', 'manifest.json')),
+        new CopyWebpackPlugin(multipleCopy('icons', 'help', '_locales', 'css', 'js/console.js', 'popup/popup.html', 'manage/manage.html', 'options/options.html', 'manifest.json')),
 
         new WebpackShellPlugin({
             onBuildEnd: ['node scripts/remove-evals.js'],

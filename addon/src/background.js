@@ -10,6 +10,9 @@ import Groups from './js/groups';
 import Tabs from './js/tabs';
 import Windows from './js/windows';
 
+window.IS_PRODUCTION = IS_PRODUCTION;
+console.restart();
+
 let options = {},
     reCreateTabsOnRemoveWindow = [],
     menuIds = [],
@@ -162,7 +165,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                 let tabIds = groupToShow.tabs.map(utils.keyId);
 
                 if (!groupToShow.tabs.every(tab => tab.windowId === windowId)) {
-                    groupToShow.tabs = await browser.tabs.move(tabIds, {
+                    groupToShow.tabs = await Tabs.moveNative(groupToShow.tabs, {
                         index: -1,
                         windowId: windowId,
                     });
@@ -208,7 +211,9 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
 
                     let tabIds = groupToHide.tabs.map(utils.keyId);
 
-                    await browser.tabs.hide(tabIds);
+                    let hideTabsResult = await browser.tabs.hide(tabIds);
+
+                    console.assert(hideTabsResult.length === tabIds.length, 'some tabs not hide');
 
                     if (options.discardTabsAfterHide && !groupToHide.dontDiscardTabsAfterHideThisGroup) {
                         Tabs.discard(tabIds);
@@ -491,7 +496,7 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
             changeInfo.favIconUrl = '/icons/tab.svg';
         }
 
-        BG.cache.setTabFavIcon(tab.id, changeInfo.favIconUrl);
+        cache.setTabFavIcon(tab.id, changeInfo.favIconUrl);
     }
 
     sendMessage({
@@ -560,7 +565,7 @@ async function onCreatedWindow(win) {
 
             let winTabs = await Tabs.get(win.id, null, null);
             winTabs.forEach(tab => cache.removeTabGroup(tab.id));
-        } else if (options.createNewGroupWhenOpenNewWindow) {
+        } else if (options.createNewGroupWhenOpenNewWindow && window.BG.canAddGroupToWindowAfterItCreated) {
             Groups.add(win.id);
         }
     }
@@ -568,7 +573,7 @@ async function onCreatedWindow(win) {
 
 let _lastFocusedWinId = null;
 function onFocusChangedWindow(windowId) {
-    // console.log('onFocusChangedWindow', windowId);
+    console.log('onFocusChangedWindow', windowId);
 
     if (browser.windows.WINDOW_ID_NONE === windowId) {
         return;
@@ -1612,8 +1617,6 @@ window.BG = {
 
     events: {
         removeEvents,
-
-        onCreatedWindow,
     },
 
     Windows,
@@ -1642,6 +1645,48 @@ window.BG = {
     syncTabs,
 
     createBackup,
+
+    canAddGroupToWindowAfterItCreated: true,
+
+    browser,
+
+    console,
+    async saveConsoleLogs() {
+        let urls = {},
+            index = 1;
+
+        let logs = console.getLogs();
+
+        function normalize(obj) {
+            if (Array.isArray(obj)) {
+                return obj.map(normalize);
+            } else if ('object' === utils.type(obj)) {
+                for (let i in obj) {
+                    if (String(obj[i]).startsWith('data:image')) {
+                        obj[i] = 'some image url';
+                    } else if (['title', 'icon', 'icons', 'iconUrl', 'favIconUrl', 'thumbnail'].includes(i)) {
+                        obj[i] = 'some ' + i;
+                    } else if (String(obj[i]).startsWith('http')) {
+                        obj[i] = urls[obj[i]] || (urls[obj[i]] = 'URL_' + index++);
+                    } else {
+                        obj[i] = normalize(obj[i]);
+                    }
+                }
+
+                return obj;
+            } else if (String(obj).startsWith('data:image')) {
+                return 'some image url';
+            }
+
+            return obj;
+        }
+
+        file.save({
+            info: await utils.getInfo(),
+            logs: normalize(logs),
+            errorLogs: utils.getErrorLogs(),
+        }, 'STG-logs.json');
+    },
 };
 
 function openHelp(page) {
@@ -1893,7 +1938,7 @@ async function syncTabs(groups, windows, hideAllTabs = false) {
         let group = groups[i];
 
         if (group.tabs.length) {
-            group.tabs = await browser.tabs.move(group.tabs.map(utils.keyId), {
+            group.tabs = await Tabs.moveNative(group.tabs, {
                 index: -1,
                 windowId: cache.getWindowId(group.id) || group.tabs[0].windowId,
             });
@@ -1933,6 +1978,8 @@ browser.runtime.onInstalled.addListener(function onInstalled({previousVersion, r
     }
 
     if (temporary) {
+        window.IS_PRODUCTION = false;
+        console.restart();
         return;
     }
 
@@ -2027,7 +2074,7 @@ async function init() {
                                     moveTabsToWin[tabsWin.id] = [];
                                 }
 
-                                moveTabsToWin[tabsWin.id].push(tab.id);
+                                moveTabsToWin[tabsWin.id].push(tab);
 
                                 if (tab.hidden) {
                                     tabIdsToShow.push(tab.id);
@@ -2052,7 +2099,7 @@ async function init() {
             });
 
             for (let winId in moveTabsToWin) {
-                await browser.tabs.move(moveTabsToWin[winId], {
+                await Tabs.moveNative(moveTabsToWin[winId], {
                     index: -1,
                     windowId: Number(winId),
                 });
