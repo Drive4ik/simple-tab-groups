@@ -2086,6 +2086,10 @@ async function init() {
                             delete tab.session.groupId;
                             cache.removeTabGroup(tab.id);
                         }
+                    } else if (utils.isTabLoading(tab)) {
+                        cache.setTabGroup(tab.id, win.session.groupId);
+                        tab.session = cache.getTabSession(tab.id);
+                        return;
                     }
 
                     if (!tab.hidden) {
