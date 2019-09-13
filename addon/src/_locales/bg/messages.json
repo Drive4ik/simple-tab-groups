@@ -12,7 +12,7 @@
         "description": "Manage groups"
     },
     "setTabIconAsGroupIcon": {
-        "message": "Пиктограмата на раздела като пиктограма на групата",
+        "message": "Пиктограмата на раздела е пиктограма на групата",
         "description": "Set tab icon as group icon"
     },
     "moveTabToGroupDisabledTitle": {
@@ -108,7 +108,7 @@
         "description": "Create backup"
     },
     "includeTabThumbnailsIntoBackup": {
-        "message": "Включване на миниатюрите (увеличава размера на резервното копие)",
+        "message": "Миниатюри на разделите (увеличава размера на резервното копие)",
         "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
@@ -324,7 +324,7 @@
         "description": "Move active tab to custom group"
     },
     "saveErrorLogsIntoFile": {
-        "message": "Запазване на последните грешки във файл JSON",
+        "message": "Запазване на последните грешки във файл на JSON",
         "description": "Save last error logs into JSON file"
     },
     "undoRemoveGroupItemTitle": {
@@ -364,7 +364,7 @@
         "description": "Discard tabs after hide (this will save the RAM)"
     },
     "createThumbnailsForTabs": {
-        "message": "Миниатюра на раздела (използвана в „Управление на групите“)",
+        "message": "Миниатюри на разделите (използвана в „Управление на групите“)",
         "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
@@ -372,7 +372,7 @@
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
     },
     "foundHiddenUnSyncTabsDescription": {
-        "message": "Има скрити несинхронизирани раздели. Изберете раздела, за да бъде добавен в текущата група/прозорец или изберете",
+        "message": "Скрити несинхронизирани раздели. Изберете раздел, за да го добавите в текущата група/прозорец или изберете",
         "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
     },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
@@ -416,7 +416,7 @@
         "description": "Tab moving"
     },
     "includeTabFavIconsIntoBackup": {
-        "message": "Включване на пиктограмите (увеличава размера на резервното копие)",
+        "message": "Пиктограми на разделите (увеличава размера на резервното копие)",
         "description": "Include tab fav-icons in backup (makes backup file size bigger)"
     },
     "groupRemovedByExtension": {
@@ -466,7 +466,7 @@
         }
     },
     "thisTabsCanNotBeHidden": {
-        "message": "Тези раздели не могат да бъдат скрити защото са закачени, използват микрофона, камерата или споделят екрана: „$titles$“",
+        "message": "Следните раздели не могат да бъдат скрити защото са закачени, използват микрофона, камерата или споделят екрана: „$titles$“",
         "description": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
         "placeholders": {
             "titles": {
@@ -620,7 +620,7 @@
         }
     },
     "groupWithoutTabs": {
-        "message": "В групата няма раздели",
+        "message": "Групата не съдържа раздели",
         "description": "This group has no tabs"
     },
     "autoBackupGroupsToBookmarks": {
@@ -634,6 +634,14 @@
     "allGroupsExportedToBookmarks": {
         "message": "Всички групи са успешно изнесени в отметките",
         "description": "All groups successfully exported to bookmarks"
+    },
+    "discardTabTitle": {
+        "message": "Освобождаване на паметта от раздела",
+        "description": "Discard tab"
+    },
+    "discardGroupTitle": {
+        "message": "Освобождаване на паметта от разделите в групата",
+        "description": "Discard group"
     },
     "autoBackupGroupsToFile": {
         "message": "Автоматични резервни копия на групите във файл (в папката за изтегляния)",
@@ -654,5 +662,21 @@
     "showOtherTabs": {
         "message": "Показване на другите раздели",
         "description": "Show other tabs"
+    },
+    "dontDiscardTabsAfterHideThisGroup": {
+        "message": "Без освобождаване на паметта от разделите в групата след смяната ѝ",
+        "description": "Don't discard tabs into this group after hide"
+    },
+    "showNotificationAfterGroupDelete": {
+        "message": "Показване на известие след изтриване на група",
+        "description": "Show notification after group delete"
+    },
+    "reloadTab": {
+        "message": "Презареждане на раздела",
+        "description": "Reload tab"
+    },
+    "thisTabIsNotSupported": {
+        "message": "Този раздел не се поддържа",
+        "description": "This tab is not supported"
     }
 }
