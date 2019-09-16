@@ -190,7 +190,7 @@
                     .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
                     .$on('drag-over', (item, isOver) => item.isOver = isOver);
 
-                browser.runtime.onMessage.addListener(function(request, sender) {
+                browser.runtime.onMessage.addListener(async function(request, sender) {
                     if (!utils.isAllowSender(request, sender)) {
                         return;
                     }
@@ -201,7 +201,7 @@
                                 let group = this.groups.find(gr => gr.id === request.tab.session.groupId);
 
                                 if (group) {
-                                    group.tabs.push(this.mapTab(request.tab));
+                                    group.tabs = await this.loadGroupTabs(group.id);
                                 } else {
                                     throw Error(utils.errorEventMessage('group for new tab not found', request));
                                 }
@@ -364,6 +364,11 @@
             },
 
             getWindowId: BG.cache.getWindowId,
+
+            async loadGroupTabs(groupId) {
+                let [{tabs}] = await Groups.load(groupId, true);
+                return tabs.map(this.mapTab, this);
+            },
 
             async loadGroups() {
                 let groups = await Groups.load(null, true);

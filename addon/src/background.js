@@ -89,7 +89,7 @@ function sendMessage(data) {
         return;
     }
 
-    console.info('BG event:', data.action, utils.clone(data));
+    console.info('BG event:', data.action, data);
 
     browser.runtime.sendMessage(data).catch(noop);
 }
@@ -100,7 +100,7 @@ function sendExternalMessage(data) {
         return;
     }
 
-    console.info('BG event external:', data.action, utils.clone(data));
+    console.info('BG event external:', data.action, data);
 
     Object.keys(constants.EXTENSIONS_WHITE_LIST)
         .forEach(function(exId) {
@@ -532,8 +532,24 @@ async function onRemovedTab(tabId, { isWindowClosing, windowId }) {
     }
 }
 
-function onMovedTab(tabId, { windowId, fromIndex, toIndex }) {
+async function onMovedTab(tabId, { windowId, fromIndex, toIndex }) {
     console.log('onMovedTab', {tabId, windowId, fromIndex, toIndex });
+
+    let groupId = cache.getWindowGroup(windowId);
+
+    if (!groupId) {
+        return;
+    }
+
+    let [{tabs}] = await Groups.load(groupId, true);
+
+    sendMessage({
+        action: 'group-updated',
+        group: {
+            id: groupId,
+            tabs,
+        },
+    });
 }
 
 function onAttachedTab(tabId, { newWindowId, newPosition }) {
