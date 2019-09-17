@@ -90,9 +90,11 @@
 
             this.loadOptions();
 
-            this.loadGroups().then(() => this.scrollIntoView());
-
-            this.loadUnsyncedTabs(); // TODO remove ?
+            Promise.all([
+                    this.loadGroups().then(() => this.scrollIntoView()),
+                    this.loadUnsyncedTabs()
+                ])
+                .then(() => document.getElementById('loading').remove());
 
             this.setupListeners();
         },
@@ -1345,6 +1347,26 @@
         --footer-background-color: var(--item-background-color-active);
         --footer-background-hover-color: var(--item-background-color-hover);
 
+    }
+
+    #loading {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        height: 100vh;
+        width: 100vw;
+        background-color: #ffffff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1;
+        opacity: .9;
+
+        > img {
+            width: 30px;
+        }
     }
 
     html {
