@@ -115,7 +115,6 @@ Permissions used:
  * **sessions**: for save session data (last used group, etc)
  * **downloads**: for create auto backups
  * **storage**: for saving groups localy
- * **unlimitedStorage**: for save tab thumbnails
  * **(optional) <all_urls>(Access your data for all websites)**: for tab thumbnails
  * **(optional) bookmarks**: access for create bookmarks
 
