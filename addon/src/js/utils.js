@@ -310,10 +310,6 @@ function getGroupTitle({id, title, tabs}, args = '') {
         title = constants.ACTIVE_SYMBOL + ' ' + title;
     }
 
-    if (window.localStorage.enableDebug) {
-        title = `#${id} ${title}`;
-    }
-
     tabs = tabs.slice();
 
     if (withTabsCount) {
@@ -339,6 +335,10 @@ function getGroupTitle({id, title, tabs}, args = '') {
         }
     }
 
+    if (window.localStorage.enableDebug) {
+        title = `#${id} ${title}`;
+    }
+
     return title;
 }
 
@@ -349,12 +349,12 @@ function getTabTitle({id, title, url, discarded}, withUrl = false, sliceLength =
         title += '\n' + url;
     }
 
-    if (window.localStorage.enableDebug) {
-        title = `#${id} ${title}`;
-    }
-
     if (withTabActive && !discarded) {
         title = constants.ACTIVE_SYMBOL + ' ' + title;
+    }
+
+    if (window.localStorage.enableDebug) {
+        title = `#${id} ${title}`;
     }
 
     return sliceLength ? sliceText(title, sliceLength) : title;
