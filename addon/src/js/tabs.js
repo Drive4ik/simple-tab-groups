@@ -442,7 +442,7 @@ async function moveNative(tabs, options = {}) {
     result.forEach(function(tab, index) {
         if (tab.discarded && utils.isUrlEmpty(tab.url) && tab.url !== tabs[index].url) {
             tab.url = tabs[index].url;
-            reload(tab.id, true);
+            reload([tab.id], true);
         }
     });
 
