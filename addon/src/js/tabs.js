@@ -257,7 +257,7 @@ async function updateThumbnail(tabId, force) {
     }
 
     if (tab.discarded) {
-        BG.browser.tabs.reload(tab.id);
+        reload([tab.id]);
         return;
     }
 
@@ -476,12 +476,9 @@ function sendMessage(tabId, message) {
     return BG.browser.tabs.sendMessage(tabId, message).catch(function() {});
 }
 
-function reload(tabId, bypassCache = false) {
+async function reload(tabIds = [], bypassCache = false) {
     const {BG} = browser.extension.getBackgroundPage();
-
-    return BG.browser.tabs.reload(tabId, {
-        bypassCache: bypassCache,
-    });
+    await Promise.all(tabIds.map(tabId => BG.browser.tabs.reload(tabId, {bypassCache}).catch(function() {})));
 }
 
 export default {

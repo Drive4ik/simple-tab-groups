@@ -515,8 +515,14 @@
                 return utils.groupTabsCountMessage(tabs, true);
             },
 
-            reloadTab(tabId, bypassCache) {
-                Tabs.reload(tabId, bypassCache);
+            reloadTab(tab, bypassCache) {
+                let tabIds = this.multipleDropTabs.map(utils.keyId);
+
+                if (!tabIds.includes(tab.id)) {
+                    tabIds.push(tab.id);
+                }
+
+                Tabs.reload(tabIds, bypassCache);
             },
 
         },
@@ -722,7 +728,7 @@
         <context-menu ref="tabsContextMenu">
             <template v-slot="menu">
                 <ul v-if="menu.data" class="is-unselectable">
-                    <li @click="reloadTab(menu.data.tab.id, $event.ctrlKey || $event.metaKey)">
+                    <li @click="reloadTab(menu.data.tab, $event.ctrlKey || $event.metaKey)">
                         <img src="/icons/refresh.svg" class="size-16" />
                         <span v-text="lang('reloadTab')"></span>
                     </li>
