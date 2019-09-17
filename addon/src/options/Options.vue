@@ -677,6 +677,12 @@
             </div>
             <div class="field">
                 <label class="checkbox">
+                    <input v-model="options.showExtendGroupsPopupWithActiveTabs" type="checkbox" />
+                    <span v-text="lang('showExtendGroupsPopupWithActiveTabs')"></span>
+                </label>
+            </div>
+            <div class="field">
+                <label class="checkbox">
                     <input v-model="options.createNewGroupWhenOpenNewWindow" type="checkbox" />
                     <span v-text="lang('createNewGroupWhenOpenNewWindow')"></span>
                 </label>

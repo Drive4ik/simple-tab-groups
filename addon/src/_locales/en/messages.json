@@ -207,6 +207,20 @@
             }
         }
     },
+    "groupTabsCountActive": {
+        "message": "$active$/$count$ tabs active",
+        "description": "Group tabs count active",
+        "placeholders": {
+            "active": {
+                "content": "$1",
+                "example": "2"
+            },
+            "count": {
+                "content": "$2",
+                "example": "4"
+            }
+        }
+    },
     "deleteTab": {
         "message": "Delete tab",
         "description": "Delete tab"
@@ -698,5 +712,9 @@
     "thisTabIsNotSupported": {
         "message": "This tab is not supported",
         "description": "This tab is not supported"
+    },
+    "showExtendGroupsPopupWithActiveTabs": {
+        "message": "Show active tabs in groups popup",
+        "description": "Show active tabs in groups popup"
     }
 }

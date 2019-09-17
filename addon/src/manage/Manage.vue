@@ -511,6 +511,14 @@
                 BG.browser.tabs.remove(tab.id);
             },
 
+            groupTabsCountMessage(tabs) {
+                return utils.groupTabsCountMessage(tabs, true);
+            },
+
+            reloadTab(tabId, bypassCache) {
+                Tabs.reload(tabId, bypassCache);
+            },
+
         },
     }
 </script>
@@ -613,7 +621,7 @@
                                     maxlength="120"
                                     />
                             </div>
-                            <div class="tabs-count" v-text="lang('groupTabsCount', group.filteredTabs.length)"></div>
+                            <div class="tabs-count" v-text="groupTabsCountMessage(group.filteredTabs)"></div>
                             <div class="group-icon cursor-pointer is-unselectable" @click="openGroupSettings(group)" :title="lang('groupSettings')">
                                 <img class="size-16" src="/icons/settings.svg" />
                             </div>
@@ -714,11 +722,15 @@
         <context-menu ref="tabsContextMenu">
             <template v-slot="menu">
                 <ul v-if="menu.data" class="is-unselectable">
+                    <li @click="reloadTab(menu.data.tab.id, $event.ctrlKey || $event.metaKey)">
+                        <img src="/icons/refresh.svg" class="size-16" />
+                        <span v-text="lang('reloadTab')"></span>
+                    </li>
                     <li @click="openGroupInNewWindow(menu.data.group.id, menu.data.tab.id)">
                         <img src="/icons/window-new.svg" class="size-16" />
                         <span v-text="lang('openGroupInNewWindow')"></span>
                     </li>
-                    <li @click="discardTab(menu.data.tab.id)">
+                    <li v-if="!menu.data.tab.discarded" @click="discardTab(menu.data.tab.id)">
                         <img src="/icons/snowflake.svg" class="size-16" />
                         <span v-text="lang('discardTabTitle')"></span>
                     </li>

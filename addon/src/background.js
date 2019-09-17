@@ -717,7 +717,7 @@ async function createMoveTabMenus(windowId) {
 
     groups.forEach(function(group) {
         let groupIcon = utils.getGroupIconUrl(group, 16),
-            groupTitle = (cache.getWindowId(group.id) ? '• ' : '') + group.title;
+            groupTitle = utils.getGroupTitle(group, 'withActiveGroup');
 
         options.showContextMenuOnTabs && menuIds.push(browser.menus.create({
             title: groupTitle,

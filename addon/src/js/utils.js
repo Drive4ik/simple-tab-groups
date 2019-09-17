@@ -294,18 +294,83 @@ function isTabLoading({status}) {
     return browser.tabs.TabStatus.LOADING === status;
 }
 
-function getTabTitle(tab, withUrl = false, sliceLength = 0) {
-    let title = tab.title || tab.url || 'about:blank';
+function createGroupTitle(title, groupId) {
+    return title || browser.i18n.getMessage('newGroupTitle', groupId);
+}
 
-    if (withUrl && tab.url && title !== tab.url) {
-        title += '\n' + tab.url;
+function getGroupTitle({id, title, tabs}, args = '') {
+    const {BG} = browser.extension.getBackgroundPage();
+
+    let withActiveGroup = args.includes('withActiveGroup'),
+        withTabsCount = args.includes('withTabsCount'),
+        withActiveTab = args.includes('withActiveTab'),
+        withTabs = args.includes('withTabs');
+
+    if (withActiveGroup && BG.cache.getWindowId(id)) {
+        title = constants.ACTIVE_SYMBOL + ' ' + title;
     }
 
     if (window.localStorage.enableDebug) {
-        title = `tab id: ${tab.id} ${title}`;
+        title = `#${id} ${title}`;
+    }
+
+    tabs = tabs.slice();
+
+    if (withTabsCount) {
+        title += ' (' + groupTabsCountMessage(tabs) + ')';
+    }
+
+    if (withActiveTab && tabs.length) {
+        let activeTab = tabs.find(tab => tab.active) || tabs.sort(sortBy('lastAccessed')).pop();
+
+        if (activeTab) {
+            title += ' ' + (activeTab.discarded ? constants.DISCARDED_SYMBOL : constants.ACTIVE_SYMBOL) + ' ' + getTabTitle(activeTab);
+        }
+    }
+
+    if (withTabs && tabs.length) {
+        title += ':\n' + tabs
+            .slice(0, 30)
+            .map(tab => getTabTitle(tab, false, 70, true))
+            .join('\n');
+
+        if (tabs.length > 30) {
+            title += '\n...';
+        }
+    }
+
+    return title;
+}
+
+function getTabTitle({id, title, url, discarded}, withUrl = false, sliceLength = 0, withTabActive = false) {
+    title = title || url || 'about:blank';
+
+    if (withUrl && url && title !== url) {
+        title += '\n' + url;
+    }
+
+    if (window.localStorage.enableDebug) {
+        title = `#${id} ${title}`;
+    }
+
+    if (withTabActive && !discarded) {
+        title = constants.ACTIVE_SYMBOL + ' ' + title;
     }
 
     return sliceLength ? sliceText(title, sliceLength) : title;
+}
+
+function groupTabsCountMessage(tabs, withActiveTabs) {
+    const {BG} = browser.extension.getBackgroundPage();
+
+    let {showExtendGroupsPopupWithActiveTabs} = BG.getOptions();
+
+    if (withActiveTabs || showExtendGroupsPopupWithActiveTabs) {
+        let activeTabs = tabs.filter(tab => !tab.discarded).length;
+        return browser.i18n.getMessage('groupTabsCountActive', [activeTabs, tabs.length]);
+    } else {
+        return browser.i18n.getMessage('groupTabsCount', tabs.length);
+    }
 }
 
 function getNextIndex(index, length, textPosition = 'next') {
@@ -334,10 +399,6 @@ function toCamelCase(str) {
 
 function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-function createGroupTitle(title, groupId) {
-    return title || browser.i18n.getMessage('newGroupTitle', groupId);
 }
 
 function sortBy(key, numeric, reverse) {
@@ -603,7 +664,10 @@ export default {
     isTabLoaded,
     isTabLoading,
 
+    createGroupTitle,
+    getGroupTitle,
     getTabTitle,
+    groupTabsCountMessage,
 
     getNextIndex,
     toCamelCase,
@@ -613,7 +677,6 @@ export default {
     compareStrings,
     compareVersions,
 
-    createGroupTitle,
     isElementVisible,
     getGroupIconUrl,
 

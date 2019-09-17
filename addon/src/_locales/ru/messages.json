@@ -203,6 +203,20 @@
             }
         }
     },
+    "groupTabsCountActive": {
+        "message": "$active$/$count$ вк. активно",
+        "description": "Group tabs count active",
+        "placeholders": {
+            "active": {
+                "content": "$1",
+                "example": "2"
+            },
+            "count": {
+                "content": "$2",
+                "example": "4"
+            }
+        }
+    },
     "deleteTab": {
         "message": "Удалить вкладку",
         "description": "Delete tab"
@@ -694,5 +708,9 @@
     "thisTabIsNotSupported": {
         "message": "Эта вкладка не поддерживается",
         "description": "This tab is not supported"
+    },
+    "showExtendGroupsPopupWithActiveTabs": {
+        "message": "Показать активные вкладки во всплывающем окне групп",
+        "description": "Show active tabs in groups popup"
     }
 }
