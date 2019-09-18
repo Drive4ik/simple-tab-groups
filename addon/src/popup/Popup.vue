@@ -1374,6 +1374,7 @@
         width: var(--popup-width);
         min-height: var(--min-popup-height);
         max-width: var(--max-popup-width);
+        min-width: 200px;
         // max-height: calc(var(--max-popup-height) - 10px);
         overflow-x: hidden;
     }
@@ -1422,10 +1423,7 @@
             }
 
             .manage-groups span {
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                max-width: 165px;
+                flex-grow: 1;
             }
 
             > *:not(.is-vertical-separator) {

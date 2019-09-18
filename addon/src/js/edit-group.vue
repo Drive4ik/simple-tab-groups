@@ -236,7 +236,7 @@
 
         <div class="field">
             <label class="label" v-text="lang('iconStyle')"></label>
-            <div class="field is-grouped cut-bottom-margin">
+            <div class="field is-grouped icon-buttons">
                 <div class="control">
                     <swatches v-model.trim="group.iconColor" :title="lang('iconColor')" colors="text-advanced" popover-to="right" show-fallback :trigger-style="{
                         width: '35px',
@@ -372,8 +372,8 @@
         margin-top: 5px;
     }
 
-    .field.cut-bottom-margin {
-        margin-bottom: -.75em;
+    .icon-buttons {
+        flex-wrap: wrap;
     }
 
     .field.is-grouped > .control:not(:last-child) {
