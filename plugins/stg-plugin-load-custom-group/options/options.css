@@ -7,8 +7,7 @@ html {
 }
 
 body {
-    background-color: #f9f9fa;
-    padding: 0 6px;
+    padding-top: 10px;
 }
 
 #groups-select {
