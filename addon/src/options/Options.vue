@@ -26,7 +26,7 @@
         SECTION_DEFAULT = SECTION_GENERAL,
         _funcKeys = [...Array(12).keys()].map(n => n + 1),
         isFunctionKey = keyCode => _funcKeys.some(n => keyCode === KeyEvent[`DOM_VK_F${n}`]),
-        folderNameRegExp = /[\<\>\:\"\/\\\|\?\*\x00-\x1F]|\.{2,}|^(?:aux|con|nul|prn|com\d|lpt\d)$/gi;
+        folderNameRegExp = /[\.\<\>\:\"\/\\\|\?\*\x00-\x1F]|^(?:aux|con|nul|prn|com\d|lpt\d)$/gi;
 
     export default {
         data() {
