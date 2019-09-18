@@ -13,7 +13,7 @@
     "dependencies": {
         "compare-versions": "^3.5.1",
         "vue": "^2.6.10",
-        "vue-lazyload": "^1.3.2",
+        "vue-lazyload": "^1.3.3",
         "vue-swatches": "^1.0.4"
     },
     "devDependencies": {
