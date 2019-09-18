@@ -203,6 +203,20 @@
             }
         }
     },
+    "groupTabsCountActive": {
+        "message": "$active$/$count$ onglet(s) actif(s)",
+        "description": "Group tabs count active",
+        "placeholders": {
+            "active": {
+                "content": "$1",
+                "example": "2"
+            },
+            "count": {
+                "content": "$2",
+                "example": "4"
+            }
+        }
+    },
     "deleteTab": {
         "message": "Supprimer l'onglet",
         "description": "Delete tab"
@@ -694,5 +708,9 @@
     "thisTabIsNotSupported": {
         "message": "Cet onglet n'est pas supporté",
         "description": "This tab is not supported"
+    },
+    "showExtendGroupsPopupWithActiveTabs": {
+        "message": "Afficher les onglets actifs dans la pop-up des groupes",
+        "description": "Show active tabs in groups popup"
     }
 }
