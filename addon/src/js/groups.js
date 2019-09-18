@@ -159,7 +159,7 @@ async function remove(groupId) {
             await Tabs.createTempActiveTab(groupWindowId, false);
         }
 
-        await BG.browser.tabs.remove(group.tabs.map(utils.keyId));
+        await Tabs.remove(group.tabs.map(utils.keyId));
     }
 
     BG.updateMoveTabMenus();

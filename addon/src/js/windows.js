@@ -71,7 +71,7 @@ async function create(createData = {}, groupId, activeTabId) {
 
             if (tabs.length > 1 && utils.isUrlEmpty(tabs[0].url)) {
                 await Tabs.setActive(null, tabs.slice(1));
-                await Tabs.remove(tabs[0]);
+                await Tabs.remove(tabs[0].id);
             }
         }
     }

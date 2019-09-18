@@ -212,7 +212,8 @@ async function add(groupId, cookieStoreId, url, title, active = false) {
     return tab;
 }
 
-async function remove({id, hidden, session}) {
+// tabIds integer or integer array
+async function remove(tabIds) {
     const {BG} = browser.extension.getBackgroundPage();
 
     // if (!hidden) { // TODO что делать?
@@ -234,7 +235,7 @@ async function remove({id, hidden, session}) {
     //     }
     // }
 
-    await BG.browser.tabs.remove(id);
+    await BG.browser.tabs.remove(tabIds);
 }
 
 async function updateThumbnail(tabId, force) {

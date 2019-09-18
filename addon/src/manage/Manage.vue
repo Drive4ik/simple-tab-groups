@@ -328,11 +328,35 @@
             addTab(group, cookieStoreId) {
                 Tabs.add(group.id, cookieStoreId);
             },
-            removeTab(tab) {
-                Tabs.remove(tab);
+            removeTab({id}) {
+                let tabIds = this.multipleDropTabs.map(utils.keyId);
+
+                if (!tabIds.includes(id)) {
+                    tabIds.push(id);
+                }
+
+                Tabs.remove(tabIds);
             },
-            updateTabThumbnail(tabId) {
-                Tabs.updateThumbnail(tabId, true);
+            updateTabThumbnail({id}) {
+                Tabs.updateThumbnail(id, true);
+            },
+            discardTab({id}) {
+                let tabIds = this.multipleDropTabs.map(utils.keyId);
+
+                if (!tabIds.includes(id)) {
+                    tabIds.push(id);
+                }
+
+                Tabs.discard(tabIds);
+            },
+            reloadTab({id}, bypassCache) {
+                let tabIds = this.multipleDropTabs.map(utils.keyId);
+
+                if (!tabIds.includes(id)) {
+                    tabIds.push(id);
+                }
+
+                Tabs.reload(tabIds, bypassCache);
             },
             async applyGroup(groupId, tabId) {
                 if (currentWindowPopupId) {
@@ -423,9 +447,6 @@
                     iconUrl: favIconUrl,
                 });
             },
-            discardTab(tabId) {
-                Tabs.discard([tabId]);
-            },
 
             getTabTitle: utils.getTabTitle,
             isTabLoading: utils.isTabLoading,
@@ -508,21 +529,11 @@
 
             async closeThisWindow() {
                 let tab = await BG.browser.tabs.getCurrent();
-                BG.browser.tabs.remove(tab.id);
+                Tabs.remove(tab.id);
             },
 
             groupTabsCountMessage(tabs) {
                 return utils.groupTabsCountMessage(tabs, true);
-            },
-
-            reloadTab(tab, bypassCache) {
-                let tabIds = this.multipleDropTabs.map(utils.keyId);
-
-                if (!tabIds.includes(tab.id)) {
-                    tabIds.push(tab.id);
-                }
-
-                Tabs.reload(tabIds, bypassCache);
             },
 
         },
@@ -728,23 +739,27 @@
         <context-menu ref="tabsContextMenu">
             <template v-slot="menu">
                 <ul v-if="menu.data" class="is-unselectable">
-                    <li @click="reloadTab(menu.data.tab, $event.ctrlKey || $event.metaKey)">
-                        <img src="/icons/refresh.svg" class="size-16" />
-                        <span v-text="lang('reloadTab')"></span>
-                    </li>
                     <li @click="openGroupInNewWindow(menu.data.group.id, menu.data.tab.id)">
                         <img src="/icons/window-new.svg" class="size-16" />
                         <span v-text="lang('openGroupInNewWindow')"></span>
                     </li>
-                    <li v-if="!menu.data.tab.discarded" @click="discardTab(menu.data.tab.id)">
+                    <li @click="reloadTab(menu.data.tab, $event.ctrlKey || $event.metaKey)">
+                        <img src="/icons/refresh.svg" class="size-16" />
+                        <span v-text="lang('reloadTab')"></span>
+                    </li>
+                    <li v-if="!menu.data.tab.discarded" @click="discardTab(menu.data.tab)">
                         <img src="/icons/snowflake.svg" class="size-16" />
                         <span v-text="lang('discardTabTitle')"></span>
                     </li>
-                    <li @click="setTabIconAsGroupIcon(menu.data.tab, menu.data.group)">
+                    <li v-if="multipleDropTabs.length" @click="removeTab(menu.data.tab)">
+                        <img src="/icons/close.svg" class="size-16" />
+                        <span v-text="lang('deleteTab')"></span>
+                    </li>
+                    <li v-if="menu.data.group" @click="setTabIconAsGroupIcon(menu.data.tab, menu.data.group)">
                         <img src="/icons/image.svg" class="size-16" />
                         <span v-text="lang('setTabIconAsGroupIcon')"></span>
                     </li>
-                    <li v-if="hasThumbnailsPermission" @click="updateTabThumbnail(menu.data.tab.id)">
+                    <li v-if="hasThumbnailsPermission" @click="updateTabThumbnail(menu.data.tab)">
                         <img src="/icons/image.svg" class="size-16" />
                         <span v-text="lang('updateTabThumbnail')"></span>
                     </li>

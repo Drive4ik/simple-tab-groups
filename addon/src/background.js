@@ -221,7 +221,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                 }
 
                 if (tabsIdsToRemove.length) {
-                    browser.tabs.remove(tabsIdsToRemove);
+                    Tabs.remove(tabsIdsToRemove);
                 }
             }
 
@@ -2054,7 +2054,7 @@ async function init() {
         tempTabs = tempTabs.filter(Boolean);
 
         if (tempTabs.length) {
-            await browser.tabs.remove(tempTabs.map(utils.keyId));
+            await Tabs.remove(tempTabs.map(utils.keyId));
         }
 
         windows = await Windows.load(true);

@@ -73,7 +73,7 @@
                 showUnSyncTabs: false,
                 unSyncTabs: [],
 
-                multipleMoveTabs: [],
+                multipleTabs: [],
 
                 enableDebug: !!window.localStorage.enableDebug,
                 enableLogging: !!window.localStorage.enableLogging,
@@ -110,7 +110,7 @@
                 }
             },
             section() {
-                this.multipleMoveTabs = [];
+                this.multipleTabs = [];
             },
             groupToEdit(groupToEdit) {
                 if (!groupToEdit) {
@@ -249,18 +249,18 @@
                             if (request.group.tabs) {
                                 request.group.tabs = request.group.tabs.map(this.mapTab, this);
 
-                                if (this.multipleMoveTabs.length) {
+                                if (this.multipleTabs.length) {
                                     // ищем новые замапеные вкладки и добавляем их в мультиселект
                                     group.tabs.forEach(function(tab) {
-                                        let multipleTabIndex = this.multipleMoveTabs.indexOf(tab);
+                                        let multipleTabIndex = this.multipleTabs.indexOf(tab);
 
                                         if (-1 !== multipleTabIndex) {
                                             let mappedTab = request.group.tabs.find(t => t.id === tab.id);
 
                                             if (mappedTab) {
-                                                this.multipleMoveTabs.splice(multipleTabIndex, 1, mappedTab);
+                                                this.multipleTabs.splice(multipleTabIndex, 1, mappedTab);
                                             } else {
-                                                this.multipleMoveTabs.splice(multipleTabIndex, 1);
+                                                this.multipleTabs.splice(multipleTabIndex, 1);
                                             }
                                         }
                                     }, this);
@@ -381,7 +381,7 @@
                     this.hoverItem = this.groups.find(group => group.id === this.hoverItem.id) || null;
                 }
 
-                this.multipleMoveTabs = [];
+                this.multipleTabs = [];
             },
             async loadUnsyncedTabs() {
                 let windows = await Windows.load(true);
@@ -406,19 +406,49 @@
             addTab(cookieStoreId) {
                 Tabs.add(this.groupToShow.id, cookieStoreId);
             },
-            removeTab(tab) {
-                Tabs.remove(tab);
+            removeTab({id}) {
+                let tabIds = this.multipleTabs.map(utils.keyId);
+
+                if (!tabIds.includes(id)) {
+                    tabIds.push(id);
+                }
+
+                Tabs.remove(tabIds);
+            },
+
+            discardTab({id}) {
+                let tabIds = this.multipleTabs.map(utils.keyId);
+
+                if (!tabIds.includes(id)) {
+                    tabIds.push(id);
+                }
+
+                Tabs.discard(tabIds);
+            },
+
+            discardGroup({tabs}) {
+                Tabs.discard(tabs.map(utils.keyId));
+            },
+
+            reloadTab({id}, bypassCache) {
+                let tabIds = this.multipleTabs.map(utils.keyId);
+
+                if (!tabIds.includes(id)) {
+                    tabIds.push(id);
+                }
+
+                Tabs.reload(tabIds, bypassCache);
             },
 
             clickOnTab(event, tab, group) {
                 if (event.ctrlKey || event.metaKey) {
-                    if (this.multipleMoveTabs.includes(tab)) {
-                        this.multipleMoveTabs.splice(this.multipleMoveTabs.indexOf(tab), 1);
+                    if (this.multipleTabs.includes(tab)) {
+                        this.multipleTabs.splice(this.multipleTabs.indexOf(tab), 1);
                     } else {
-                        this.multipleMoveTabs.push(tab);
+                        this.multipleTabs.push(tab);
                     }
                 } else if (event.shiftKey) {
-                    if (this.multipleMoveTabs.length) {
+                    if (this.multipleTabs.length) {
                         let tabs = [];
 
                         if (SECTION_SEARCH === this.section) {
@@ -430,27 +460,27 @@
                         let tabIndex = tabs.indexOf(tab),
                             lastTabIndex = -1;
 
-                        this.multipleMoveTabs.slice().reverse().some(function(t) {
+                        this.multipleTabs.slice().reverse().some(function(t) {
                             return -1 !== (lastTabIndex = tabs.indexOf(t));
                         });
 
                         if (-1 === lastTabIndex) {
-                            this.multipleMoveTabs.push(tab);
+                            this.multipleTabs.push(tab);
                         } else if (tabIndex !== lastTabIndex) {
-                            let multipleTabIndex = this.multipleMoveTabs.indexOf(tabs[lastTabIndex]);
+                            let multipleTabIndex = this.multipleTabs.indexOf(tabs[lastTabIndex]);
 
                             for (let i = Math.min(tabIndex, lastTabIndex), maxIndex = Math.max(tabIndex, lastTabIndex); i <= maxIndex; i++) {
-                                if (!this.multipleMoveTabs.includes(tabs[i])) {
+                                if (!this.multipleTabs.includes(tabs[i])) {
                                     if (tabIndex > lastTabIndex) {
-                                        this.multipleMoveTabs.push(tabs[i]);
+                                        this.multipleTabs.push(tabs[i]);
                                     } else {
-                                        this.multipleMoveTabs.splice(multipleTabIndex, 0, tabs[i]);
+                                        this.multipleTabs.splice(multipleTabIndex, 0, tabs[i]);
                                     }
                                 }
                             }
                         }
                     } else {
-                        this.multipleMoveTabs.push(tab);
+                        this.multipleTabs.push(tab);
                     }
                 } else {
                     this.applyGroup(group, tab);
@@ -468,7 +498,7 @@
                     return;
                 }
 
-                this.multipleMoveTabs = [];
+                this.multipleTabs = [];
 
                 let isCurrentGroup = group === this.currentGroup;
 
@@ -530,7 +560,7 @@
                 this.unSyncTabs = [];
             },
             unsyncHiddenTabsCloseAll() {
-                BG.browser.tabs.remove(this.unSyncTabs.map(utils.keyId));
+                Tabs.remove(this.unSyncTabs.map(utils.keyId));
 
                 this.unSyncTabs = [];
             },
@@ -585,13 +615,13 @@
                 }
             },
             getTabsForMove(withTab) {
-                if (!this.multipleMoveTabs.includes(withTab)) {
-                    this.multipleMoveTabs.push(withTab);
+                if (!this.multipleTabs.includes(withTab)) {
+                    this.multipleTabs.push(withTab);
                 }
 
-                let tabs = this.multipleMoveTabs.map(this.cloneTab);
+                let tabs = this.multipleTabs.map(this.cloneTab);
 
-                this.multipleMoveTabs = [];
+                this.multipleTabs = [];
 
                 return tabs;
             },
@@ -815,24 +845,6 @@
                 this.$nextTick(() => utils.scrollTo('.is-hovered-item'));
             },
 
-            discardTab(tabId) {
-                Tabs.discard([tabId]);
-            },
-
-            discardGroup({tabs}) {
-                Tabs.discard(tabs.map(utils.keyId));
-            },
-
-            reloadTab(tab, bypassCache) {
-                let tabIds = this.multipleMoveTabs.map(utils.keyId);
-
-                if (!tabIds.includes(tab.id)) {
-                    tabIds.push(tab.id);
-                }
-
-                Tabs.reload(tabIds, bypassCache);
-            },
-
             toggleLogging() {
                 this.enableLogging = !this.enableLogging;
 
@@ -857,7 +869,7 @@
         id="stg-popup"
         :class="['is-flex_ is-column_ no-outline', {'edit-group-popup': !!groupToEdit, 'is-sidebar': isSidebar}]"
         @contextmenu="['INPUT', 'TEXTAREA'].includes($event.target.nodeName) ? null : $event.preventDefault()"
-        @click="multipleMoveTabs = []"
+        @click="multipleTabs = []"
         @wheel.ctrl.prevent
 
         tabindex="-1"
@@ -934,7 +946,7 @@
                             :class="['tab item is-unselectable space-left', {
                                 'is-active': group === currentGroup && tab.active,
                                 'is-hovered-item': tab === hoverItem,
-                                'is-multiple-tab-to-move': multipleMoveTabs.includes(tab),
+                                'is-multiple-tab-to-move': multipleTabs.includes(tab),
                             }]"
                             :title="getTabTitle(tab, true)"
                             >
@@ -1043,7 +1055,7 @@
                             @mousedown.middle.prevent
                             @mouseup.middle.prevent="removeTab(tab)"
                             :class="['tab item is-unselectable', {
-                                'is-multiple-tab-to-move': multipleMoveTabs.includes(tab),
+                                'is-multiple-tab-to-move': multipleTabs.includes(tab),
                             }]"
                             :title="getTabTitle(tab, true)"
                             >
@@ -1108,7 +1120,7 @@
                             'drag-moving': tab.isMoving,
                             'drag-over': tab.isOver,
                             'is-hovered-item': tab === hoverItem,
-                            'is-multiple-tab-to-move': multipleMoveTabs.includes(tab),
+                            'is-multiple-tab-to-move': multipleTabs.includes(tab),
                         }]"
                         :title="getTabTitle(tab, true)"
 
@@ -1222,9 +1234,13 @@
                         <img src="/icons/refresh.svg" class="size-16" />
                         <span v-text="lang('reloadTab')"></span>
                     </li>
-                    <li @click="discardTab(menu.data.tab.id)">
+                    <li v-if="!menu.data.tab.discarded" @click="discardTab(menu.data.tab)">
                         <img src="/icons/snowflake.svg" class="size-16" />
                         <span v-text="lang('discardTabTitle')"></span>
+                    </li>
+                    <li v-if="multipleTabs.length" @click="removeTab(menu.data.tab)">
+                        <img src="/icons/close.svg" class="size-16" />
+                        <span v-text="lang('deleteTab')"></span>
                     </li>
                     <li v-if="menu.data.group" @click="setTabIconAsGroupIcon(menu.data.tab)">
                         <img src="/icons/image.svg" class="size-16" />
