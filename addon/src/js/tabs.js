@@ -328,7 +328,7 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
             return false;
         }
 
-        if (tab.active) {
+        if (tab.active && BG.cache.getTabSession(tab.id, 'groupId') !== groupId) {
             activeTabs.push(tab);
         }
 
@@ -336,17 +336,19 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
     });
 
     if (tabs.length) {
-        let windows = activeTabs.length ? await Windows.load(true) : [];
+        let tabIds = tabs.map(utils.keyId);
 
         await Promise.all(activeTabs.map(async function(activeTab) {
             let winGroupId = BG.cache.getWindowGroup(activeTab.windowId),
                 tabsToActive = [];
 
             if (winGroupId) {
-                tabsToActive = groups.find(gr => gr.id === winGroupId).tabs.filter(t => t.id !== activeTab.id);
+                tabsToActive = groups.find(gr => gr.id === winGroupId).tabs;
             } else {
-                tabsToActive = windows.find(win => win.id === activeTab.windowId).tabs.filter(t => !t.hidden && t.id !== activeTab.id);
+                tabsToActive = await get(activeTab.windowId);
             }
+
+            tabsToActive = tabsToActive.filter(tab => tab.id !== activeTab.id && !tabIds.includes(tab.id));
 
             if (tabsToActive.length) {
                 await setActive(undefined, tabsToActive);
@@ -354,8 +356,6 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
                 await createTempActiveTab(activeTab.windowId, false);
             }
         }));
-
-        let tabIds = tabs.map(utils.keyId);
 
         tabs = await moveNative(tabs, {
             index: newTabIndex,
