@@ -104,8 +104,7 @@ function showGroupsPopup(data) {
     }
 
     let wrapper = document.createElement('div'),
-        closeGroupsPopup = wrapper.remove.bind(wrapper),
-        lastVector = null;
+        closeGroupsPopup = wrapper.remove.bind(wrapper);
 
     Object.assign(wrapper, {
         id: popupId,
@@ -198,42 +197,40 @@ function showGroupsPopup(data) {
                 e.stopPropagation();
                 header.focus();
             };
-            groupNode.onfocus = function(e) {
-                stopEvent(e);
-
-                if (lastVector) {
-                    setFocusToNextElement(groupNode, lastVector);
-                }
-            };
         }
 
         return groupNode;
     }
 
     function setFocusToNextElement(node, vector = 'down', eventToStop = false) {
-        lastVector = vector;
-
         if (eventToStop) {
             stopEvent(eventToStop);
         }
 
-        if (1 === groupsWrapper.children.length) {
-            groupsWrapper.firstElementChild.focus();
-        } else if ('down' === vector) {
-            if (node.nextElementSibling) {
-                node.nextElementSibling.focus();
+        let nodes = Array.from(groupsWrapper.children).filter(n => !n.classList.contains('stg-popup-disabled')),
+            nodeIndex = nodes.indexOf(node);
+
+        if ('down' === vector) {
+            nodeIndex++;
+
+            if (nodes[nodeIndex]) {
+                nodes[nodeIndex].focus();
             } else {
-                groupsWrapper.firstElementChild.focus();
+                nodes[0].focus();
             }
-        } else if ('up' === vector) {
-            if (node.previousElementSibling) {
-                node.previousElementSibling.focus();
+        } else {
+            if (-1 === nodeIndex) {
+                nodeIndex = nodes.length;
+            }
+
+            nodeIndex--;
+
+            if (nodes[nodeIndex]) {
+                nodes[nodeIndex].focus();
             } else {
-                groupsWrapper.lastElementChild.focus();
+                nodes[nodes.length - 1].focus();
             }
         }
-
-        lastVector = null;
     }
 
     data.groups.forEach((group, index) => groupsWrapper.append(createGroupNode(group, index + 1, group.id !== data.disableGroupId)));
