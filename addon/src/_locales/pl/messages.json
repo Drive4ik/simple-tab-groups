@@ -194,11 +194,25 @@
         }
     },
     "groupTabsCount": {
-        "message": "$count$ zakładek",
+        "message": "$count$ kart",
         "description": "Group tabs count",
         "placeholders": {
             "count": {
                 "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "groupTabsCountActive": {
+        "message": "$active$/$count$ aktywnych kart",
+        "description": "Group tabs count active",
+        "placeholders": {
+            "active": {
+                "content": "$1",
+                "example": "2"
+            },
+            "count": {
+                "content": "$2",
                 "example": "4"
             }
         }
@@ -294,6 +308,14 @@
     "hotkeyActionTitleLoadPrevGroup": {
         "message": "Załaduj poprzednią grupę",
         "description": "Load previous group"
+    },
+    "hotkeyActionTitleLoadHistoryNextGroup": {
+        "message": "Załaduj następną grupę z historii",
+        "description": "Load next group from history"
+    },
+    "hotkeyActionTitleLoadHistoryPrevGroup": {
+        "message": "Załaduj poprzednią grupę z historii",
+        "description": "Load previous group from history"
     },
     "hotkeyActionTitleLoadFirstGroup": {
         "message": "Załaduj pierwszą grupę",
@@ -658,5 +680,37 @@
     "folderNameTitle": {
         "message": "Nazwa folderu",
         "description": "Folder name title"
+    },
+    "backupSuccessfullyRestored": {
+        "message": "Kopia zapasowa odtworzona pomyślnie!",
+        "description": "Backup successfully restored"
+    },
+    "loading": {
+        "message": "Ładuję, proszę czekać...",
+        "description": "Loading, please wait..."
+    },
+    "showOtherTabs": {
+        "message": "Pokaż inne karty",
+        "description": "Show other tabs"
+    },
+    "dontDiscardTabsAfterHideThisGroup": {
+        "message": "Nie rozdzielaj kart między grupy po ukryciu",
+        "description": "Don't discard tabs into this group after hide"
+    },
+    "showNotificationAfterGroupDelete": {
+        "message": "Pokaż powiadomienie po usunięciu grupy",
+        "description": "Show notification after group delete"
+    },
+    "reloadTab": {
+        "message": "Przeładuj zakładkę",
+        "description": "Reload tab"
+    },
+    "thisTabIsNotSupported": {
+        "message": "Wybrana zakładka nie jest wspierana",
+        "description": "This tab is not supported"
+    },
+    "showExtendGroupsPopupWithActiveTabs": {
+        "message": "Pokaż aktywne karty w powiadomienia o grupach",
+        "description": "Show active tabs in groups popup"
     }
 }
