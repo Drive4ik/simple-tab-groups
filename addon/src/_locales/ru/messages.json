@@ -712,5 +712,9 @@
     "showExtendGroupsPopupWithActiveTabs": {
         "message": "Показать активные вкладки во всплывающем окне групп",
         "description": "Show active tabs in groups popup"
+    },
+    "reloadAllTabsInGroup": {
+        "message": "Обновить все вкладки в группе",
+        "description": "Reload all tabs in group"
     }
 }

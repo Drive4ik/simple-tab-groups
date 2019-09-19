@@ -716,5 +716,9 @@
     "showExtendGroupsPopupWithActiveTabs": {
         "message": "Show active tabs in groups popup",
         "description": "Show active tabs in groups popup"
+    },
+    "reloadAllTabsInGroup": {
+        "message": "Reload all tabs in group",
+        "description": "Reload all tabs in group"
     }
 }

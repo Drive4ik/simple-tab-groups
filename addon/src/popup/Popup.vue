@@ -440,6 +440,12 @@
                 Tabs.reload(tabIds, bypassCache);
             },
 
+            reloadAllTabsInGroup(group, bypassCache) {
+                if (group.tabs.length) {
+                    Tabs.reload(group.tabs.map(utils.keyId), bypassCache);
+                }
+            },
+
             clickOnTab(event, tab, group) {
                 if (event.ctrlKey || event.metaKey) {
                     if (this.multipleTabs.includes(tab)) {
@@ -1207,6 +1213,10 @@
                     <li @click="exportGroupToBookmarks(menu.data.group.id)">
                         <img src="/icons/bookmark.svg" class="size-16" />
                         <span v-text="lang('exportGroupToBookmarks')"></span>
+                    </li>
+                    <li @click="reloadAllTabsInGroup(menu.data.group, $event.ctrlKey || $event.metaKey)">
+                        <img src="/icons/refresh.svg" class="size-16" />
+                        <span v-text="lang('reloadAllTabsInGroup')"></span>
                     </li>
                     <li @click="discardGroup(menu.data.group)">
                         <img src="/icons/snowflake.svg" class="size-16" />
