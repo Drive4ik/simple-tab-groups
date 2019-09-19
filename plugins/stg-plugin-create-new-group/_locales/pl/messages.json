@@ -1,0 +1,14 @@
+{
+    "extensionDescription": {
+        "message": "Twórz, modyfikuj i szybko zmieniaj grupy zakładek.",
+        "description": "Extension description"
+    },
+    "needInstallSTGExtension": {
+        "message": "Zainstaluj dodatek Simple Tab Groups\nNaciśnij tu aby przejść do strony domowej Simple Tab Groups",
+        "description": "Need install Simple Tab Groups extention\n\nClick here to open home page Simple Tab Groups"
+    },
+    "createNewGroupTitle": {
+        "message": "Stwórz nową grupę [wtyczka STG]",
+        "description": "Create new group - [STG plugin]"
+    }
+}

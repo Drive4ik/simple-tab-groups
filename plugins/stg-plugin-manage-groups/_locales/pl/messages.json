@@ -1,0 +1,14 @@
+{
+    "extensionDescription": {
+        "message": "Otwórz menadżera grup rozszerzenia Simple Tab Groups",
+        "description": "Extension description"
+    },
+    "needInstallSTGExtension": {
+        "message": "Zainstaluj dodatek Simple Tab Groups\nNaciśnij tu aby przejść do strony domowej Simple Tab Groups",
+        "description": "Need install Simple Tab Groups extention\n\nClick here to open Simple Tab Groups home page"
+    },
+    "defaultBrowserActionTitle": {
+        "message": "Otwórz menadżera grup [wtyczka STG]",
+        "description": "Open Manage groups - [STG plugin]"
+    }
+}
