@@ -1894,6 +1894,13 @@ async function runMigrateForData(data) {
             }
         }
 
+    } else if (1 === utils.compareVersions(data.version, currentVersion)) {
+        let [currentMajor, currentMinor] = currentVersion.split('.'),
+            [dataMajor, dataMinor] = data.version.split('.');
+
+        if (dataMajor > currentMajor || (dataMajor == currentMajor && dataMinor > currentMinor)) {
+            throw 'Please, update addon to latest version';
+        }
     }
 
     data.version = currentVersion;
