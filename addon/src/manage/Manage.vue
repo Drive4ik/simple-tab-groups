@@ -528,7 +528,7 @@
             },
 
             async closeThisWindow() {
-                let tab = await BG.browser.tabs.getCurrent();
+                let tab = await Tabs.getActive();
                 Tabs.remove(tab.id);
             },
 
