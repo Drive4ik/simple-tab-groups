@@ -204,9 +204,9 @@
                 let locale = await this.importFromFile();
 
                 if (this.componentName !== locale.component) {
-                    this.$once('component-data-loaded', function() {
-                        this.setLocale(locale);
-                    });
+                    this.$once('component-data-loaded', () => this.setLocale(locale));
+                } else {
+                    this.setLocale(locale);
                 }
 
                 this.componentName = locale.component || '';
