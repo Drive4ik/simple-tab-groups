@@ -203,10 +203,14 @@
             async clickLoadLocaleFileButton() {
                 let locale = await this.importFromFile();
 
+                if (this.componentName !== locale.component) {
+                    this.$once('component-data-loaded', function() {
+                        this.setLocale(locale);
+                    });
+                }
+
                 this.componentName = locale.component || '';
                 this.componentLocale = '';
-
-                this.setLocale(locale);
 
                 if (!this.componentName) {
                     alert('Please, select component of this file');
