@@ -46,7 +46,7 @@
         return result;
     };
 
-    const excludeKeys = ['i18n', 'management', 'runtime', 'menus', 'extension', 'sidebarAction', 'browserAction', 'theme', 'commands', 'test'];
+    const excludeKeys = ['i18n', 'management', 'permissions', 'runtime', 'menus', 'extension', 'sidebarAction', 'browserAction', 'theme', 'commands', 'test'];
 
     function bindObj(obj, ...keys) {
         for (let k in obj) {

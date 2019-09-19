@@ -99,8 +99,8 @@
                 }
             }, this);
 
-            this.permissions.bookmarks = await BG.browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
-            this.permissions.allUrls = await BG.browser.permissions.contains(constants.PERMISSIONS.ALL_URLS);
+            this.permissions.bookmarks = await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
+            this.permissions.allUrls = await browser.permissions.contains(constants.PERMISSIONS.ALL_URLS);
 
             this.loadBookmarksParents();
 
@@ -555,9 +555,9 @@
 
             async setPermissionsBookmarks(event) {
                 if (event.target.checked) {
-                    this.permissions.bookmarks = await BG.browser.permissions.request(constants.PERMISSIONS.BOOKMARKS);
+                    this.permissions.bookmarks = await browser.permissions.request(constants.PERMISSIONS.BOOKMARKS);
                 } else {
-                    await BG.browser.permissions.remove(constants.PERMISSIONS.BOOKMARKS);
+                    await browser.permissions.remove(constants.PERMISSIONS.BOOKMARKS);
                 }
 
                 this.loadBookmarksParents();
@@ -570,7 +570,7 @@
                     return;
                 }
 
-                this.permissions.bookmarks = await BG.browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
+                this.permissions.bookmarks = await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
 
                 if (this.permissions.bookmarks) {
                     this.defaultBookmarksParents = await BG.browser.bookmarks.get(constants.defaultBookmarksParents);
@@ -579,9 +579,9 @@
 
             async setPermissionsAllUrls(event) {
                 if (event.target.checked) {
-                    this.permissions.allUrls = await BG.browser.permissions.request(constants.PERMISSIONS.ALL_URLS);
+                    this.permissions.allUrls = await browser.permissions.request(constants.PERMISSIONS.ALL_URLS);
                 } else {
-                    await BG.browser.permissions.remove(constants.PERMISSIONS.ALL_URLS);
+                    await browser.permissions.remove(constants.PERMISSIONS.ALL_URLS);
                 }
             },
         },

@@ -89,7 +89,7 @@
         //     this.loadOptions();
         // },
         async mounted() {
-            this.hasThumbnailsPermission = await BG.browser.permissions.contains(constants.PERMISSIONS.ALL_URLS);
+            this.hasThumbnailsPermission = await browser.permissions.contains(constants.PERMISSIONS.ALL_URLS);
 
             await this.loadOptions();
 
