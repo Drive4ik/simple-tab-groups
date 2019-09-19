@@ -1894,8 +1894,6 @@ async function runMigrateForData(data) {
             }
         }
 
-    } else if (1 === utils.compareVersions(data.version, currentVersion)) {
-        throw 'Please, update addon to latest version';
     }
 
     data.version = currentVersion;
