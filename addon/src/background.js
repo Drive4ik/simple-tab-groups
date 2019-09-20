@@ -316,7 +316,7 @@ async function applyGroupByHistory(textPosition, groups) {
 async function onActivatedTab({ previousTabId, tabId, windowId }) {
     console.log('onActivatedTab', { previousTabId, tabId, windowId });
 
-    let groupId = cache.getWindowGroup(windowId);
+    let groupId = cache.getTabSession(tabId, 'groupId');
 
     if (!groupId) {
         return;
@@ -446,7 +446,7 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
         return;
     }
 
-    let groupId = cache.getWindowGroup(tab.windowId),
+    let groupId = cache.getTabSession(tab.id, 'groupId'),
         [group, groups] = await Groups.load(groupId || -1);
 
     if ('pinned' in changeInfo || 'hidden' in changeInfo) {
@@ -535,7 +535,7 @@ async function onRemovedTab(tabId, { isWindowClosing, windowId }) {
 async function onMovedTab(tabId, { windowId, fromIndex, toIndex }) {
     console.log('onMovedTab', {tabId, windowId, fromIndex, toIndex });
 
-    let groupId = cache.getWindowGroup(windowId);
+    let groupId = cache.getTabSession(tabId, 'groupId');
 
     if (!groupId) {
         return;
@@ -824,7 +824,7 @@ async function createMoveTabMenus(windowId) {
         parentId: 'stg-move-tab-parent',
         contexts: [browser.menus.ContextType.TAB],
         onclick: function(info, tab) {
-            let groupId = cache.getWindowGroup(tab.windowId);
+            let groupId = cache.getTabSession(tab.id, 'groupId');
 
             if (!groupId) {
                 return;
