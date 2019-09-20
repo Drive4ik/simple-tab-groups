@@ -217,11 +217,21 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
 
                     if (options.discardTabsAfterHide && !groupToHide.dontDiscardTabsAfterHideThisGroup) {
                         Tabs.discard(tabIds);
+                        tabIds.forEach(function(tabId) {
+                            sendMessage({
+                                action: 'tab-updated',
+                                tab: {
+                                    id: tabId,
+                                    discarded: true,
+                                },
+                            });
+                        });
                     }
                 }
 
                 if (tabsIdsToRemove.length) {
                     Tabs.remove(tabsIdsToRemove);
+                    tabsIdsToRemove.forEach(tabId => onRemovedTab(tabId, {}));
                 }
             }
 
