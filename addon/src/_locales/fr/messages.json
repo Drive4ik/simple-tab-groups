@@ -72,7 +72,7 @@
         }
     },
     "manageGroupViewGrid": {
-        "message": "Vue en grille",
+        "message": "Affichage en grille",
         "description": "Grid display"
     },
     "manageGroupViewFreeArrange": {
@@ -712,5 +712,13 @@
     "showExtendGroupsPopupWithActiveTabs": {
         "message": "Afficher les onglets actifs dans la pop-up des groupes",
         "description": "Show active tabs in groups popup"
+    },
+    "reloadAllTabsInGroup": {
+        "message": "Recharger tous les onglets du groupe",
+        "description": "Reload all tabs in group"
+    },
+    "tabsInListView": {
+        "message": "Onglets en liste",
+        "description": "Tabs in list"
     }
 }
