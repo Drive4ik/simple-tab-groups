@@ -348,11 +348,11 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
                 tabsToActive = await get(activeTab.windowId);
             }
 
-            tabsToActive = tabsToActive.filter(tab => tab.id !== activeTab.id && !tabIds.includes(tab.id));
+            tabsToActive = tabsToActive.filter(tab => !tabIds.includes(tab.id));
 
             if (tabsToActive.length) {
                 await setActive(undefined, tabsToActive);
-            } else if (!winGroupId || activeTab.windowId !== windowId) {
+            } else if (winGroupId !== groupId) {
                 await createTempActiveTab(activeTab.windowId, false);
             }
         }));
@@ -438,14 +438,16 @@ async function moveNative(tabs, options = {}) {
 
     console.log('tabs before moving', tabs);
 
-    let result = await BG.browser.tabs.move(tabs.map(utils.keyId), options);
+    let result = await BG.browser.tabs.move(tabs.map(utils.keyId), options),
+        tabIdsToReload = [];
 
     result.forEach(function(tab, index) {
         if (tab.discarded && utils.isUrlEmpty(tab.url) && tab.url !== tabs[index].url) {
             tab.url = tabs[index].url;
-            reload([tab.id], true);
+            tabIdsToReload.push(tab.id);
         }
     });
+    reload(tabIdsToReload, true);
 
     return result;
 }
