@@ -123,6 +123,9 @@
                     return group;
                 }, this);
             },
+            isListView() {
+                return !this.hasThumbnailsPermission;
+            },
         },
         methods: {
             lang: browser.i18n.getMessage,
@@ -260,8 +263,10 @@
                             id: tab.id,
                             title: tab.title,
                             url: tab.url,
+                            active: tab.active,
                             hidden: tab.hidden,
                             sharingState: {...tab.sharingState},
+                            windowId: tab.windowId,
                         };
                     });
 
@@ -439,7 +444,7 @@
 
                 this.groupToRemove = null;
 
-                Groups.remove(group.id);
+                BG.Groups.remove(group.id);
             },
             setTabIconAsGroupIcon({favIconUrl}, group) {
                 Groups.update(group.id, {
@@ -527,6 +532,15 @@
                 }
             },
 
+            async setListView(event) {
+                if (event.target.checked) {
+                    browser.permissions.remove(constants.PERMISSIONS.ALL_URLS);
+                    this.hasThumbnailsPermission = false;
+                } else {
+                    this.hasThumbnailsPermission = await browser.permissions.request(constants.PERMISSIONS.ALL_URLS);
+                }
+            },
+
             async closeThisWindow() {
                 let tab = await Tabs.getActive();
                 Tabs.remove(tab.id);
@@ -555,6 +569,12 @@
                 <span v-text="lang('extensionName')"></span> - <span v-text="lang('manageGroupsTitle')"></span>
             </span>
             <span class="is-full-width">
+                <div>
+                    <label class="checkbox">
+                        <input type="checkbox" :checked="isListView" @click="setListView" />
+                        <span v-text="lang('tabsInListView')"></span>
+                    </label>
+                </div>
                 <div class="buttons has-addons">
                     <span class="button is-small is-primary" v-text="lang('manageGroupViewGrid')"></span>
                     <span class="button is-small" disabled v-text="lang('manageGroupViewFreeArrange')"></span>
@@ -646,16 +666,19 @@
                                 <img class="size-16" src="/icons/group-delete.svg" />
                             </div>
                         </div>
-                        <div class="body">
+                        <div :class="['body', {
+                                'in-list-view': isListView,
+                            }]">
                             <div
                                 v-for="tab in group.filteredTabs"
                                 :key="tab.id"
                                 :class="['tab', {
                                     'is-active': tab.active,
                                     'is-in-multiple-drop': multipleDropTabs.includes(tab),
-                                    'has-thumbnail': tab.session.thumbnail,
+                                    'has-thumbnail': !isListView && tab.session.thumbnail,
                                     'drag-moving': tab.isMoving,
                                     'drag-over': tab.isOver,
+                                    'in-list-view': isListView,
                                 }]"
                                 :title="getTabTitle(tab, true)"
                                 @contextmenu.stop.prevent="$refs.tabsContextMenu.open($event, {tab, group})"
@@ -673,27 +696,35 @@
                                 <div v-if="tab.favIconUrl" class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <img class="size-16" v-lazy="tab.favIconUrl" />
                                 </div>
-                                <div class="delete-tab-button" @click.stop="removeTab(tab)" :title="lang('deleteTab')" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                    <img class="size-14" src="/icons/close.svg" />
-                                </div>
-                                <div v-if="tab.container" class="container" :title="tab.container.name" :style="{borderColor: tab.container.colorCode}">
-                                    <img class="size-16" :src="tab.container.iconUrl" :style="{fill: tab.container.colorCode}">
-                                </div>
                                 <div v-if="isTabLoading(tab)" class="refresh-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <img class="spin size-16" src="/icons/refresh.svg"/>
                                 </div>
-                                <div class="screenshot" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                <div v-if="tab.container" class="cookie-container" :title="tab.container.name" :style="{borderColor: tab.container.colorCode}">
+                                    <img class="size-16" :src="tab.container.iconUrl" :style="{fill: tab.container.colorCode}">
+                                </div>
+                                <div v-if="hasThumbnailsPermission" class="screenshot" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <img v-if="tab.session.thumbnail" v-lazy="tab.session.thumbnail">
                                 </div>
                                 <div
                                     @mousedown.middle.prevent
                                     @mouseup.middle.prevent="removeTab(tab)"
-                                    :class="['tab-title text-ellipsis', {'tab-discarded': tab.discarded}]"
-                                    v-text="getTabTitle(tab)"></div>
+                                    class="tab-title text-ellipsis"
+                                    :style="{borderColor: tab.container.colorCode}"
+                                    v-text="getTabTitle(tab, false, 0, true)"></div>
+
+                                <div class="delete-tab-button" @click.stop="removeTab(tab)" :title="lang('deleteTab')" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                    <img class="size-14" src="/icons/close.svg" />
+                                </div>
                             </div>
 
-                            <div class="tab new" :title="lang('createNewTab')" @click="addTab(group)">
-                                <div class="screenshot">
+                            <div
+                                :class="['tab new', {
+                                    'in-list-view': isListView,
+                                }]"
+                                :title="lang('createNewTab')"
+                                @click="addTab(group)"
+                                >
+                                <div class="tab-icon">
                                     <img src="/icons/tab-new.svg">
                                 </div>
                                 <div class="tab-title text-ellipsis" v-text="lang('createNewTab')"></div>
@@ -847,6 +878,8 @@
 
         --tab-active-shadow: var(--group-active-shadow);
         --tab-active-border: var(--group-active-border);
+
+        --discarded-text-color: #979797;
     }
 
     .fade-enter-active, .fade-leave-active {
@@ -914,238 +947,316 @@
             grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
             /* grid-template-rows: minmax(auto, 600px) minmax(auto, 600px); */
             grid-gap: 10px;
+        }
 
-            .group {
+        .group {
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            max-height: 600px;
+            background-color: var(--group-bg-color);
+            border-radius: var(--border-radius);
+
+            &.drag-over {
+                outline-offset: 3px;
+            }
+
+            > .header {
                 display: flex;
-                flex-direction: column;
-                border: 1px solid rgba(0, 0, 0, 0.15);
-                max-height: 600px;
-                background-color: var(--group-bg-color);
-                border-radius: var(--border-radius);
+                align-items: center;
+                padding: var(--margin);
 
-                > .header {
+                > * {
                     display: flex;
-                    align-items: center;
-                    padding: var(--margin);
-
-                    > * {
-                        display: flex;
-                    }
-
-                    > .group-title {
-                        flex-grow: 1;
-                    }
-
-                    > .delete-group-button {
-                        line-height: 0;
-                    }
-
-                    > :not(:first-child) {
-                        padding-left: var(--margin);
-                    }
-
-                    > .group-icon > * {
-                        pointer-events: none;
-                    }
                 }
 
-                > .body {
-                    -moz-user-select: none;
-                    user-select: none;
+                > .group-title {
+                    flex-grow: 1;
+                }
 
-                    overflow-y: auto;
-                    padding: var(--margin);
+                > .delete-group-button {
+                    line-height: 0;
+                }
 
+                > :not(:first-child) {
+                    padding-left: var(--margin);
+                }
+
+                > .group-icon > * {
+                    pointer-events: none;
+                }
+            }
+
+            > .body {
+                -moz-user-select: none;
+                user-select: none;
+
+                overflow-y: auto;
+                padding: var(--margin);
+                min-height: 110px;
+                /* flex-grow: 1; */
+
+                &:not(.in-list-view) {
                     display: grid;
                     grid-gap: var(--margin);
                     /* grid-gap: 10px; */
                     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
                     grid-auto-rows: 100px;
-
-                    min-height: 110px;
-                    /* flex-grow: 1; */
                 }
 
-                .tab {
-                    position: relative;
-                    font-size: 12px;
-                    cursor: pointer;
-                    padding: var(--tab-inner-padding);
+                &.in-list-view {
+                    display: flex;
+                    flex-direction: column;
+                    margin-bottom: 30px;
+                }
+            }
+
+            .tab {
+                position: relative;
+                font-size: 12px;
+                cursor: pointer;
+            }
+
+            .tab:not(.in-list-view) {
+                padding: var(--tab-inner-padding);
+                border-radius: var(--border-radius);
+
+                > * {
+                    border: 0 solid var(--tab-inner-border-color);
+                    background-color: var(--group-bg-color);
+                }
+
+                > .tab-icon,
+                > .delete-tab-button,
+                > .cookie-container,
+                > .refresh-icon,
+                > .tab-title {
+                    position: absolute;
+                }
+
+                &:not(.has-thumbnail) > .tab-icon {
+                    width: 16px;
+                    height: 16px;
+                    top: calc((calc(100% - 1em - var(--tab-inner-padding)) / 2) - 8px);
+                    left: calc((100% / 2) - 8px);
+                }
+
+                &.has-thumbnail > .tab-icon {
+                    display: flex;
+                    align-items: start;
+                    justify-content: left;
+                    top: var(--tab-inner-padding);
+                    left: var(--tab-inner-padding);
+                    width: var(--tab-buttons-size);
+                    height: var(--tab-buttons-size);
+                    border-bottom-width: var(--tab-border-width);
+                    border-right-width: var(--tab-border-width);
+                    border-bottom-right-radius: var(--tab-buttons-radius);
+                }
+
+                > .delete-tab-button {
+                    display: none;
+                    align-items: start;
+                    justify-content: right;
+                    top: var(--tab-inner-padding);
+                    right: var(--tab-inner-padding);
+                    height: var(--tab-buttons-size);
+                    width: var(--tab-buttons-size);
+                    line-height: 0;
+                    border-bottom-width: var(--tab-border-width);
+                    border-left-width: var(--tab-border-width);
+                    border-bottom-left-radius: var(--tab-buttons-radius);
+                }
+
+                &:hover > .delete-tab-button {
+                    display: flex;
+                }
+
+                > .cookie-container {
+                    display: flex;
+                    align-items: end;
+                    justify-content: left;
+                    left: var(--tab-inner-padding);
+                    bottom: calc(1em + var(--tab-inner-padding) * 2);
+                    width: var(--tab-buttons-size);
+                    height: var(--tab-buttons-size);
+                    border-right-width: var(--tab-border-width);
+                    border-top-width: var(--tab-border-width);
+                    border-top-right-radius: var(--tab-buttons-radius);
+                }
+
+                > .refresh-icon {
+                    display: flex;
+                    align-items: end;
+                    justify-content: right;
+                    bottom: calc(1em + var(--tab-inner-padding) * 2);
+                    right: var(--tab-inner-padding);
+                    width: var(--tab-buttons-size);
+                    height: var(--tab-buttons-size);
+                    border-left-width: var(--tab-border-width);
+                    border-top-width: var(--tab-border-width);
+                    border-top-left-radius: var(--tab-buttons-radius);
+                }
+
+                > .tab-title {
+                    line-height: 1.3em;
+                    position: absolute;
+                    text-align: center;
+                    left: var(--tab-inner-padding);
+                    right: var(--tab-inner-padding);
+                    bottom: var(--tab-inner-padding);
+                }
+
+                > .screenshot {
+                    height: calc(100% - 1em - var(--tab-inner-padding) - 1px);
+                    overflow: hidden;
+                    border-width: var(--tab-border-width);
                     border-radius: var(--border-radius);
 
-                    > * {
-                        border: 0 solid var(--tab-inner-border-color);
-                        background-color: var(--group-bg-color);
-                    }
+                    > img {
+                        width: 100%;
+                        height: 100%;
 
-                    > .tab-icon,
-                    > .delete-tab-button,
-                    > .container,
-                    > .refresh-icon,
-                    > .tab-title {
-                        position: absolute;
-                    }
-
-                    &:not(.has-thumbnail) > .tab-icon {
-                        width: 16px;
-                        height: 16px;
-                        top: calc((calc(100% - 1em - var(--tab-inner-padding)) / 2) - 8px);
-                        left: calc((100% / 2) - 8px);
-                    }
-
-                    &.has-thumbnail > .tab-icon {
-                        display: flex;
-                        align-items: start;
-                        justify-content: left;
-                        top: var(--tab-inner-padding);
-                        left: var(--tab-inner-padding);
-                        width: var(--tab-buttons-size);
-                        height: var(--tab-buttons-size);
-                        border-bottom-width: var(--tab-border-width);
-                        border-right-width: var(--tab-border-width);
-                        border-bottom-right-radius: var(--tab-buttons-radius);
-                    }
-
-                    > .delete-tab-button {
-                        display: none;
-                        align-items: start;
-                        justify-content: right;
-                        top: var(--tab-inner-padding);
-                        right: var(--tab-inner-padding);
-                        height: var(--tab-buttons-size);
-                        width: var(--tab-buttons-size);
-                        line-height: 0;
-                        border-bottom-width: var(--tab-border-width);
-                        border-left-width: var(--tab-border-width);
-                        border-bottom-left-radius: var(--tab-buttons-radius);
-                    }
-
-                    &:hover > .delete-tab-button {
-                        display: flex;
-                    }
-
-                    > .container {
-                        display: flex;
-                        align-items: end;
-                        justify-content: left;
-                        left: var(--tab-inner-padding);
-                        bottom: calc(1em + var(--tab-inner-padding) * 2);
-                        width: var(--tab-buttons-size);
-                        height: var(--tab-buttons-size);
-                        border-right-width: var(--tab-border-width);
-                        border-top-width: var(--tab-border-width);
-                        border-top-right-radius: var(--tab-buttons-radius);
-                    }
-
-                    > .refresh-icon {
-                        display: flex;
-                        align-items: end;
-                        justify-content: right;
-                        bottom: calc(1em + var(--tab-inner-padding) * 2);
-                        right: var(--tab-inner-padding);
-                        width: var(--tab-buttons-size);
-                        height: var(--tab-buttons-size);
-                        border-left-width: var(--tab-border-width);
-                        border-top-width: var(--tab-border-width);
-                        border-top-left-radius: var(--tab-buttons-radius);
-                    }
-
-                    > .tab-title {
-                        line-height: 1.3em;
-                        position: absolute;
-                        text-align: center;
-                        left: var(--tab-inner-padding);
-                        right: var(--tab-inner-padding);
-                        bottom: var(--tab-inner-padding);
-                    }
-
-                    > .screenshot {
-                        height: calc(100% - 1em - var(--tab-inner-padding) - 1px);
-                        overflow: hidden;
-                        border-width: var(--tab-border-width);
-                        border-radius: var(--border-radius);
-
-                        > img {
-                            width: 100%;
-                            height: 100%;
-
-                            &[src=""] {
-                                display: none;
-                            }
+                        &[src=""] {
+                            display: none;
                         }
-                    }
-
-                    &.new > .screenshot {
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        border-style: dashed;
-                        border-width: 2px;
-
-                        > img {
-                            width: 4em;
-                            height: auto;
-                            opacity: 0.7;
-                        }
-                    }
-
-                    // &:hover,
-                    // &:hover > * {
-                    //     background-color: var(--active-tab-bg-color);
-                    // }
-
-                    &.is-active {
-                        box-shadow: var(--tab-active-shadow);
-                        outline: var(--tab-active-border);
-                        outline-offset: -1px;
-                        -moz-outline-radius: var(--border-radius);
-                    }
-
-                    // &:not(.is-active):not(.drag-moving):hover {
-                    //     outline: 1px solid var(--tab-hover-outline-color);
-                    //     outline-offset: 1px;
-                    // }
-
-                    &.is-in-multiple-drop,
-                    &.is-in-multiple-drop > * {
-                        --fill-color: var(--is-in-multiple-drop-text-color);
-                        background-color: var(--multiple-drag-tab-bg-color);
-                    }
-
-                    &.is-in-multiple-drop > .tab-title {
-                        color: var(--is-in-multiple-drop-text-color);
                     }
                 }
 
-                &.loaded {
-                    box-shadow: var(--group-active-shadow);
-                    border: var(--group-active-border);
-                }
-
-                &.new {
+                &.new > .screenshot {
                     display: flex;
-                    align-content: center;
                     justify-content: center;
-                    min-height: 250px;
-                    border: 2px dashed var(--tab-inner-border-color);
-                    background-color: transparent;
+                    align-items: center;
+                    border-style: dashed;
+                    border-width: 2px;
 
-                    > .body {
-                        display: block;
-                        text-align: center;
-
-                        > img {
-                            width: 100px;
-                            opacity: 0.7;
-                        }
+                    > img {
+                        width: 4em;
+                        height: auto;
+                        opacity: 0.7;
                     }
+                }
+
+                // &:hover,
+                // &:hover > * {
+                //     background-color: var(--active-tab-bg-color);
+                // }
+
+                &.is-active {
+                    box-shadow: var(--tab-active-shadow);
+                    outline: var(--tab-active-border);
+                    outline-offset: -1px;
+                    -moz-outline-radius: var(--border-radius);
+                }
+
+                // &:not(.is-active):not(.drag-moving):hover {
+                //     outline: 1px solid var(--tab-hover-outline-color);
+                //     outline-offset: 1px;
+                // }
+
+                &.is-in-multiple-drop,
+                &.is-in-multiple-drop > * {
+                    --fill-color: var(--is-in-multiple-drop-text-color);
+                    background-color: var(--multiple-drag-tab-bg-color);
+                }
+
+                &.drag-over {
+                    &.drag-moving,
+                    &.is-in-multiple-drop {
+                        outline-offset: 4px;
+                    }
+                }
+
+                &.is-in-multiple-drop > .tab-title {
+                    color: var(--is-in-multiple-drop-text-color);
                 }
             }
 
-            .group,
-            .group .tab {
-                transition: opacity 0.3s;
+            .tab.in-list-view {
+                display: flex;
+                align-items: center;
+                justify-content: left;
+                height: 27px;
+                padding: var(--tab-inner-padding);
+
+                &:hover {
+                    background-color: rgba(126, 126, 126, 0.3);
+                }
+
+                > .tab-icon {
+                    display: flex;
+                }
+
+                > .delete-tab-button {
+                    display: none;
+                    justify-content: right;
+                }
+
+                &:hover > .delete-tab-button {
+                    display: flex;
+                }
+
+                > .cookie-container {
+                    padding-left: var(--margin);
+                }
+
+                > .refresh-icon {
+                    display: flex;
+                    padding-left: var(--margin);
+                }
+
+                > .tab-title {
+                    flex-grow: 1;
+                    padding: 0 var(--margin);
+                    border-radius: var(--border-radius);
+                    border-bottom: 1px solid transparent;
+                }
+
+                &.is-active {
+                    outline: var(--tab-active-border);
+                    outline-offset: -1px;
+                    -moz-outline-radius: var(--border-radius);
+                }
+
+                &.is-in-multiple-drop,
+                &.is-in-multiple-drop > * {
+                    --fill-color: var(--is-in-multiple-drop-text-color);
+                    background-color: var(--multiple-drag-tab-bg-color);
+                }
+
+                &.is-in-multiple-drop > .tab-title {
+                    color: var(--is-in-multiple-drop-text-color);
+                }
             }
+
+            &.loaded {
+                box-shadow: var(--group-active-shadow);
+                border: var(--group-active-border);
+            }
+
+            &.new {
+                display: flex;
+                align-content: center;
+                justify-content: center;
+                min-height: 250px;
+                border: 2px dashed var(--tab-inner-border-color);
+                background-color: transparent;
+
+                > .body {
+                    display: block;
+                    text-align: center;
+
+                    > img {
+                        width: 100px;
+                        opacity: 0.7;
+                    }
+                }
+            }
+        }
+
+        .group,
+        .group .tab {
+            transition: opacity 0.3s;
         }
 
         .drag-tab .tab > *,
@@ -1159,15 +1270,6 @@
         }
 
         /* Drag & Drop Styles */
-
-        .grid .group.drag-over {
-            outline-offset: 3px;
-        }
-
-        .grid .group .tab.drag-moving.drag-over,
-        .grid .group .tab.is-in-multiple-drop.drag-over {
-            outline-offset: 4px;
-        }
 
         .drag-moving,
         .drag-tab .tab.is-in-multiple-drop {

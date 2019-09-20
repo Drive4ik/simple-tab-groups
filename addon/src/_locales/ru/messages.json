@@ -716,5 +716,9 @@
     "reloadAllTabsInGroup": {
         "message": "Обновить все вкладки в группе",
         "description": "Reload all tabs in group"
+    },
+    "tabsInListView": {
+        "message": "Вкладки списком",
+        "description": "Tabs in list"
     }
 }

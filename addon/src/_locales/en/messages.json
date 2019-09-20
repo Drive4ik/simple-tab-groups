@@ -720,5 +720,9 @@
     "reloadAllTabsInGroup": {
         "message": "Reload all tabs in group",
         "description": "Reload all tabs in group"
+    },
+    "tabsInListView": {
+        "message": "Tabs in list",
+        "description": "Tabs in list"
     }
 }

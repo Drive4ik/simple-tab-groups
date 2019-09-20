@@ -639,6 +639,7 @@ async function loadingBrowserAction(start = true, windowId) {
 async function addUndoRemoveGroupItem(groupToRemove) {
     let restoreGroup = async function(group) {
         browser.menus.remove(Groups.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id);
+        browser.notifications.clear(Groups.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id);
 
         let tabs = group.tabs,
             groups = await Groups.load();
@@ -652,7 +653,12 @@ async function addUndoRemoveGroupItem(groupToRemove) {
         if (tabs.length) {
             await loadingBrowserAction();
 
-            await createTabsSafe(tabs, true, group.id);
+            await createTabsSafe(tabs.map(function(tab) {
+                delete tab.active;
+                delete tab.windowId;
+
+                return tab;
+            }), true, group.id);
 
             loadingBrowserAction(false);
         }
@@ -667,7 +673,12 @@ async function addUndoRemoveGroupItem(groupToRemove) {
     });
 
     if (options.showNotificationAfterGroupDelete) {
-        utils.notify(browser.i18n.getMessage('undoRemoveGroupNotification', groupToRemove.title)).then(restoreGroup);
+        utils.notify(
+                browser.i18n.getMessage('undoRemoveGroupNotification', groupToRemove.title),
+                undefined,
+                Groups.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + groupToRemove.id
+            )
+            .then(restoreGroup);
     }
 }
 
@@ -1131,7 +1142,11 @@ async function updateBrowserActionData(groupId, windowId) {
         return;
     }
 
-    let [group] = await Groups.load(groupId || -1);
+    let group = null;
+
+    if (groupId) {
+        [group] = await Groups.load(groupId);
+    }
 
     if (group) {
         setBrowserAction(windowId, utils.sliceText(group.title, 28) + ' - STG', utils.getGroupIconUrl(group), true);
@@ -1635,6 +1650,7 @@ window.BG = {
         removeEvents,
     },
 
+    Groups,
     Windows,
 
     createTabsSafe,
