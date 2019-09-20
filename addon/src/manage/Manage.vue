@@ -257,18 +257,7 @@
             },
 
             getDataForMultipleMove() {
-                let tabsToMove = this.multipleDropTabs
-                    .map(function(tab) {
-                        return {
-                            id: tab.id,
-                            title: tab.title,
-                            url: tab.url,
-                            active: tab.active,
-                            hidden: tab.hidden,
-                            sharingState: {...tab.sharingState},
-                            windowId: tab.windowId,
-                        };
-                    });
+                let tabsToMove = this.multipleDropTabs.map(utils.cloneTab);
 
                 this.multipleDropTabs = [];
 

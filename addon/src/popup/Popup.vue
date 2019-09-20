@@ -561,7 +561,7 @@
                 this.loadGroups();
             },
             async unsyncHiddenTabsCreateNewGroup() {
-                await Groups.add(undefined, this.unSyncTabs.map(this.cloneTab));
+                await Groups.add(undefined, this.unSyncTabs.map(utils.cloneTab));
 
                 this.unSyncTabs = [];
             },
@@ -625,14 +625,11 @@
                     this.multipleTabs.push(withTab);
                 }
 
-                let tabs = this.multipleTabs.map(this.cloneTab);
+                let tabs = this.multipleTabs.map(utils.cloneTab);
 
                 this.multipleTabs = [];
 
                 return tabs;
-            },
-            cloneTab({id, title, url, active, hidden, sharingState, windowId}) {
-                return {id, title, url, active, hidden, sharingState: {...sharingState}, windowId};
             },
             async moveTabs(tabs, group, loadUnsync = false, showTabAfterMoving, discardTabs) {
                 await Tabs.move(tabs, group.id, undefined, false, showTabAfterMoving);

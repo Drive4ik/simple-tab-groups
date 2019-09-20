@@ -100,6 +100,10 @@ function clone(obj = null) {
     return JSON.parse(JSON.stringify(obj));
 }
 
+function cloneTab({id, title, url, active, hidden, sharingState, windowId}) {
+    return {id, title, url, active, hidden, sharingState: {...sharingState}, windowId};
+}
+
 function format(str, ...args) {
     if (!str) {
         return '';
@@ -636,6 +640,7 @@ export default {
     unixNow,
     type,
     clone,
+    cloneTab,
     format,
     formatBytes,
     extractKeys,
