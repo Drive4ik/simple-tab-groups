@@ -720,5 +720,19 @@
     "tabsInListView": {
         "message": "Вкладки списком",
         "description": "Tabs in list"
+    },
+    "tabsCreatedCount": {
+        "message": "Создано $tabscount$ вкладок",
+        "description": "Tabs created count",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "tabsNotCreated": {
+        "message": "Вкладки не созданы",
+        "description": "Tabs not created"
     }
 }

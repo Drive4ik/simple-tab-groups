@@ -156,7 +156,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                 groupsHistory.add(groupId);
             }
 
-            setBrowserAction(windowId, 'loading');
+            loadingBrowserAction(true, windowId);
 
             removeEvents();
 
@@ -793,18 +793,49 @@ async function createMoveTabMenus(windowId) {
                     return;
                 }
 
-                let [bookmark] = await browser.bookmarks.get(info.bookmarkId);
-
-                if (bookmark.type !== browser.menus.ContextType.BOOKMARK || !bookmark.url || !utils.isUrlAllowToCreate(bookmark.url)) {
-                    utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'));
-                    return;
-                }
+                await loadingBrowserAction();
 
                 let setActive = 2 === info.button,
-                    newTab = await Tabs.add(group.id, undefined, bookmark.url, bookmark.title, setActive);
+                    [bookmark] = await browser.bookmarks.getSubTree(info.bookmarkId),
+                    tabsToCreate = [];
 
-                if (setActive) {
-                    applyGroup(newTab.windowId, group.id, newTab.id);
+                if (bookmark.type === browser.menus.ContextType.BOOKMARK) {
+                    if (bookmark.url && utils.isUrlAllowToCreate(bookmark.url)) {
+                        tabsToCreate.push({
+                            title: bookmark.title,
+                            url: bookmark.url,
+                        });
+                    }
+                } else if (bookmark.type === 'folder') {
+                    await findBookmarks(bookmark);
+                }
+
+                async function findBookmarks(folder) {
+                    for (let b of folder.children) {
+                        if (b.type === 'folder') {
+                            await findBookmarks(b);
+                        } else if (b.type === browser.menus.ContextType.BOOKMARK && b.url && utils.isUrlAllowToCreate(b.url) && !utils.isUrlEmpty(b.url)) {
+                            tabsToCreate.push({
+                                title: b.title,
+                                url: b.url,
+                            });
+                        }
+                    }
+                }
+
+                if (tabsToCreate.length) {
+                    let tabs = await createTabsSafe(tabsToCreate, !cache.getWindowId(group.id), group.id);
+
+                    loadingBrowserAction(false);
+
+                    if (setActive) {
+                        applyGroup(undefined, group.id, tabs[0].id);
+                    } else {
+                        utils.notify(browser.i18n.getMessage('tabsCreatedCount', tabsToCreate.length));
+                    }
+                } else {
+                    loadingBrowserAction(false);
+                    utils.notify(browser.i18n.getMessage('tabsNotCreated'));
                 }
             },
         }));

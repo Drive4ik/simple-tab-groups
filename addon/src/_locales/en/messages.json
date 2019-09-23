@@ -724,5 +724,19 @@
     "tabsInListView": {
         "message": "Tabs in list",
         "description": "Tabs in list"
+    },
+    "tabsCreatedCount": {
+        "message": "$tabscount$ tabs created",
+        "description": "Tabs created count",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "tabsNotCreated": {
+        "message": "Tabs not created",
+        "description": "Tabs not created"
     }
 }
