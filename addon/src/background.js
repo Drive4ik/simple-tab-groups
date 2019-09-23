@@ -326,21 +326,19 @@ async function applyGroupByHistory(textPosition, groups) {
 async function onActivatedTab({ previousTabId, tabId, windowId }) {
     console.log('onActivatedTab', { previousTabId, tabId, windowId });
 
-    let groupId = cache.getTabSession(tabId, 'groupId');
+    if (cache.getTabSession(tabId, 'groupId')) {
+        sendMessage({
+            action: 'tab-updated',
+            tab: {
+                id: tabId,
+                active: true,
+            },
+        });
 
-    if (!groupId) {
-        return;
+        Tabs.updateThumbnail(tabId);
     }
 
-    sendMessage({
-        action: 'tab-updated',
-        tab: {
-            id: tabId,
-            active: true,
-        },
-    });
-
-    if (previousTabId) {
+    if (previousTabId && cache.getTabSession(previousTabId, 'groupId')) {
         sendMessage({
             action: 'tab-updated',
             tab: {
@@ -349,8 +347,6 @@ async function onActivatedTab({ previousTabId, tabId, windowId }) {
             },
         });
     }
-
-    Tabs.updateThumbnail(tabId);
 }
 
 function _isCatchedUrl(url, catchTabRules) {
@@ -456,8 +452,8 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
         return;
     }
 
-    let groupId = cache.getTabSession(tab.id, 'groupId'),
-        [group, groups] = await Groups.load(groupId || -1);
+    let winGroupId = cache.getWindowGroup(tab.windowId),
+        [group, groups] = await Groups.load(winGroupId || -1);
 
     if ('pinned' in changeInfo || 'hidden' in changeInfo) {
         if (changeInfo.pinned || changeInfo.hidden) {
@@ -472,7 +468,7 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
         } else {
 
             if (false === changeInfo.pinned) {
-                cache.setTabGroup(tabId, groupId);
+                cache.setTabGroup(tabId, winGroupId);
             } else if (false === changeInfo.hidden) {
                 let tabGroupId = cache.getTabSession(tabId, 'groupId');
 
@@ -480,7 +476,7 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
                     applyGroup(tab.windowId, tabGroupId, tabId);
                     return;
                 } else {
-                    cache.setTabGroup(tabId, groupId);
+                    cache.setTabGroup(tabId, winGroupId);
                 }
             }
 
@@ -542,6 +538,7 @@ async function onRemovedTab(tabId, { isWindowClosing, windowId }) {
     }
 }
 
+let _onMovedTabsTimers = {};
 async function onMovedTab(tabId, { windowId, fromIndex, toIndex }) {
     console.log('onMovedTab', {tabId, windowId, fromIndex, toIndex });
 
@@ -551,15 +548,23 @@ async function onMovedTab(tabId, { windowId, fromIndex, toIndex }) {
         return;
     }
 
-    let [{tabs}] = await Groups.load(groupId, true);
+    if (_onMovedTabsTimers[groupId]) {
+        clearTimeout(_onMovedTabsTimers[groupId]);
+    }
 
-    sendMessage({
-        action: 'group-updated',
-        group: {
-            id: groupId,
-            tabs,
-        },
-    });
+    _onMovedTabsTimers[groupId] = setTimeout(async function(groupId) {
+        delete _onMovedTabsTimers[groupId];
+
+        let [{tabs}] = await Groups.load(groupId, true);
+
+        sendMessage({
+            action: 'group-updated',
+            group: {
+                id: groupId,
+                tabs,
+            },
+        });
+    }, 200, groupId);
 }
 
 function onAttachedTab(tabId, { newWindowId, newPosition }) {
@@ -834,7 +839,7 @@ async function createMoveTabMenus(windowId) {
         parentId: 'stg-move-tab-parent',
         contexts: [browser.menus.ContextType.TAB],
         onclick: function(info, tab) {
-            let groupId = cache.getTabSession(tab.id, 'groupId');
+            let groupId = cache.getWindowGroup(tab.windowId);
 
             if (!groupId) {
                 return;

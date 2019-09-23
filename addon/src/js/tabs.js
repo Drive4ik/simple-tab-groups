@@ -339,7 +339,7 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
         let tabIds = tabs.map(utils.keyId);
 
         await Promise.all(activeTabs.map(async function(activeTab) {
-            let winGroupId = BG.cache.getTabSession(activeTab.id, 'groupId'),
+            let winGroupId = BG.cache.getWindowGroup(activeTab.windowId),
                 tabsToActive = [];
 
             if (winGroupId) {
