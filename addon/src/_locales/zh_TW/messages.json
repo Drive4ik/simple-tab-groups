@@ -203,6 +203,20 @@
             }
         }
     },
+    "groupTabsCountActive": {
+        "message": "$active$/$count$ 活化分頁",
+        "description": "Group tabs count active",
+        "placeholders": {
+            "active": {
+                "content": "$1",
+                "example": "2"
+            },
+            "count": {
+                "content": "$2",
+                "example": "4"
+            }
+        }
+    },
     "deleteTab": {
         "message": "刪除分頁",
         "description": "Delete tab"
@@ -294,6 +308,14 @@
     "hotkeyActionTitleLoadPrevGroup": {
         "message": "載入上一個分頁群組",
         "description": "Load previous group"
+    },
+    "hotkeyActionTitleLoadHistoryNextGroup": {
+        "message": "從歷史資料載入下一個群組",
+        "description": "Load next group from history"
+    },
+    "hotkeyActionTitleLoadHistoryPrevGroup": {
+        "message": "從歷史資料載入上一個群組",
+        "description": "Load previous group from history"
     },
     "hotkeyActionTitleLoadFirstGroup": {
         "message": "載入第一個分頁群組",
@@ -658,5 +680,45 @@
     "folderNameTitle": {
         "message": "資料夾名稱",
         "description": "Folder name title"
+    },
+    "backupSuccessfullyRestored": {
+        "message": "備份成功還原",
+        "description": "Backup successfully restored"
+    },
+    "loading": {
+        "message": "載入中，請稍後...",
+        "description": "Loading, please wait..."
+    },
+    "showOtherTabs": {
+        "message": "顯示其他分頁",
+        "description": "Show other tabs"
+    },
+    "dontDiscardTabsAfterHideThisGroup": {
+        "message": "背景群組不捨棄分頁",
+        "description": "Don't discard tabs into this group after hide"
+    },
+    "showNotificationAfterGroupDelete": {
+        "message": "群組刪除後顯示通知",
+        "description": "Show notification after group delete"
+    },
+    "reloadTab": {
+        "message": "新載入分頁",
+        "description": "Reload tab"
+    },
+    "thisTabIsNotSupported": {
+        "message": "此分頁不支援",
+        "description": "This tab is not supported"
+    },
+    "showExtendGroupsPopupWithActiveTabs": {
+        "message": "於群組小視窗顯示活動中分頁",
+        "description": "Show active tabs in groups popup"
+    },
+    "reloadAllTabsInGroup": {
+        "message": "重新載入全部分頁",
+        "description": "Reload all tabs in group"
+    },
+    "tabsInListView": {
+        "message": "分頁列表",
+        "description": "Tabs in list"
     }
 }
