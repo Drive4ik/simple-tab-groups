@@ -350,7 +350,7 @@
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
     },
     "saveErrorLogsIntoFile": {
-        "message": "將最近的錯誤記錄儲存為 JSON 檔案",
+        "message": "將最近的錯誤記錄儲存為 .JSON 檔案",
         "description": "Save last error logs into JSON file"
     },
     "undoRemoveGroupItemTitle": {
@@ -496,7 +496,7 @@
         }
     },
     "thisTabsCanNotBeHidden": {
-        "message": "這些分頁無法隱藏，因為它們為固定分頁，也可能是您正在使用麥克風或攝影機，或是正在分享螢幕：”$titles$“",
+        "message": "這”$titles$“分頁無法隱藏，因為它們為固定分頁，也可能是您正在使用麥克風或攝影機，或是正在分享螢幕",
         "description": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
         "placeholders": {
             "titles": {
@@ -622,7 +622,7 @@
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
     "exportGroupToMainBookmarkFolder": {
-        "message": "匯出群組到書籤資料夾“$bookmarkfolder$”",
+        "message": "匯出分頁群組到書籤資料夾“$bookmarkfolder$”",
         "description": "Export groups to '$bookmarkfolder$' bookmark folder",
         "placeholders": {
             "bookmarkfolder": {
@@ -632,7 +632,7 @@
         }
     },
     "exportGroupToBookmarks": {
-        "message": "匯出群組到書籤",
+        "message": "匯出分頁群組到書籤",
         "description": "Export group to bookmarks"
     },
     "defaultBookmarkFolderLocation": {
@@ -640,7 +640,7 @@
         "description": "Default bookmark folder location"
     },
     "groupExportedToBookmarks": {
-        "message": "群組“$grouptitle$”已成功匯出到書籤",
+        "message": "分頁群組“$grouptitle$”已成功匯出到書籤",
         "description": "Group '$grouptitle$' successfully exported to bookmarks",
         "placeholders": {
             "grouptitle": {
@@ -650,7 +650,7 @@
         }
     },
     "groupWithoutTabs": {
-        "message": "此群組沒有任何分頁",
+        "message": "此分頁群組沒有任何分頁",
         "description": "This group has no tabs"
     },
     "autoBackupGroupsToBookmarks": {
@@ -720,5 +720,19 @@
     "tabsInListView": {
         "message": "分頁列表",
         "description": "Tabs in list"
+    },
+    "tabsCreatedCount": {
+        "message": "已建立分頁數 $tabscount$",
+        "description": "Tabs created count",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "tabsNotCreated": {
+        "message": "未建立分頁",
+        "description": "Tabs not created"
     }
 }
