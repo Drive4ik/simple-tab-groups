@@ -734,5 +734,9 @@
     "tabsNotCreated": {
         "message": "Вкладки не созданы",
         "description": "Tabs not created"
+    },
+    "discardOtherGroups": {
+        "message": "Выгрузить другие группы",
+        "description": "Discard other groups"
     }
 }

@@ -430,6 +430,14 @@
                 Tabs.discard(tabs.map(utils.keyId));
             },
 
+            discardOtherGroups(groupExclude) {
+                let tabIds = this.groups.reduce((acc, gr) => [...acc, ...(gr.id === groupExclude.id ? [] : gr.tabs.map(utils.keyId))], []);
+
+                if (tabIds.length) {
+                    Tabs.discard(tabIds);
+                }
+            },
+
             reloadTab({id}, bypassCache) {
                 let tabIds = this.multipleTabs.map(utils.keyId);
 
@@ -1218,6 +1226,10 @@
                     <li @click="discardGroup(menu.data.group)">
                         <img src="/icons/snowflake.svg" class="size-16" />
                         <span v-text="lang('discardGroupTitle')"></span>
+                    </li>
+                    <li v-if="groups.length > 1" @click="discardOtherGroups(menu.data.group)">
+                        <img src="/icons/snowflake.svg" class="size-16" />
+                        <span v-text="lang('discardOtherGroups')"></span>
                     </li>
 
                     <hr>

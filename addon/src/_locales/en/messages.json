@@ -738,5 +738,9 @@
     "tabsNotCreated": {
         "message": "Tabs not created",
         "description": "Tabs not created"
+    },
+    "discardOtherGroups": {
+        "message": "Discard other groups",
+        "description": "Discard other groups"
     }
 }
