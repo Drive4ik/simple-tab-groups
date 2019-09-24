@@ -1,7 +1,6 @@
 'use strict';
 
 import constants from './constants';
-import storage from './storage';
 import utils from './utils';
 import Groups from './groups';
 import Windows from './windows';

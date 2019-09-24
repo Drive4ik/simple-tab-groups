@@ -1,6 +1,7 @@
 'use strict';
 
 import constants from './constants';
+import storage from './storage';
 import * as npmCompareVersions from 'compare-versions';
 
 const addonUrlPrefix = browser.extension.getURL('');
@@ -81,6 +82,7 @@ async function getInfo() {
         version: browser.runtime.getManifest().version,
         browserInfo: await browser.runtime.getBrowserInfo(),
         platformInfo: await browser.runtime.getPlatformInfo(),
+        options: await storage.get(constants.allOptionsKeys),
     };
 }
 
