@@ -80,10 +80,10 @@
             swatches: swatches,
         },
         async created() {
-            // if (!BG.inited) {
-            //     window.setTimeout(() => window.location.reload(), 500);
-            //     return;
-            // }
+            if (!BG.inited) {
+                window.setTimeout(() => window.location.reload(), 500);
+                return;
+            }
 
             let {os} = await browser.runtime.getPlatformInfo();
             this.isMac = os === browser.runtime.PlatformOs.MAC;

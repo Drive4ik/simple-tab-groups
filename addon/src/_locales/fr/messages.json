@@ -736,7 +736,7 @@
         "description": "Tabs not created"
     },
     "discardOtherGroups": {
-        "message": "Décharger d'autres groupes de la mémoire",
+        "message": "Décharger les autres groupes de la mémoire",
         "description": "Discard other groups"
     }
 }
