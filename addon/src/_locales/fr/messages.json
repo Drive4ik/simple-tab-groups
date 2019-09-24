@@ -720,5 +720,23 @@
     "tabsInListView": {
         "message": "Onglets en liste",
         "description": "Tabs in list"
+    },
+    "tabsCreatedCount": {
+        "message": "$tabscount$ onglet(s) créé(s)",
+        "description": "Tabs created count",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "tabsNotCreated": {
+        "message": "Onglet(s) non créé(s)",
+        "description": "Tabs not created"
+    },
+    "discardOtherGroups": {
+        "message": "Décharger d'autres groupes de la mémoire",
+        "description": "Discard other groups"
     }
 }
