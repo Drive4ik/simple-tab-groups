@@ -58,6 +58,8 @@
                 search: '',
                 extendedSearch: false,
 
+                currentWindowGroupId: null,
+
                 groupToEdit: null,
                 groupToRemove: null,
 
@@ -95,6 +97,9 @@
 
             await this.loadGroups();
 
+            let win = await Windows.get();
+            this.currentWindowGroupId = win.session.groupId;
+
             this.setupListeners();
 
             this.isLoaded = true;
@@ -125,6 +130,9 @@
             },
             isListView() {
                 return !this.hasThumbnailsPermission;
+            },
+            currentGroup() {
+                return this.groups.find(group => group.id === this.currentWindowGroupId);
             },
         },
         methods: {
@@ -340,6 +348,18 @@
                 if (!tabIds.includes(id)) {
                     tabIds.push(id);
                 }
+
+                Tabs.discard(tabIds);
+            },
+            discardGroup({tabs}) {
+                Tabs.discard(tabs.map(utils.keyId));
+            },
+            discardOtherGroups(groupExclude) {
+                let tabIds = this.groups.reduce(function(acc, gr) {
+                    let tabIds = (gr.id === groupExclude.id || BG.cache.getWindowId(gr.id)) ? [] : gr.tabs.map(utils.keyId);
+
+                    return [...acc, ...tabIds];
+                }, []);
 
                 Tabs.discard(tabIds);
             },
@@ -743,10 +763,18 @@
 
         <context-menu ref="groupContextMenu">
             <template v-slot="menu">
-                <ul class="is-unselectable">
+                <ul v-if="menu.data" class="is-unselectable">
                     <li @click="addTab(menu.data.group)">
                         <img src="/icons/tab-new.svg" class="size-16" />
                         <span v-text="lang('createNewTab')"></span>
+                    </li>
+                    <li v-if="menu.data.group !== currentGroup" @click="discardGroup(menu.data.group)">
+                        <img src="/icons/snowflake.svg" class="size-16" />
+                        <span v-text="lang('discardGroupTitle')"></span>
+                    </li>
+                    <li v-if="groups.length > 1" @click="discardOtherGroups(menu.data.group)">
+                        <img src="/icons/snowflake.svg" class="size-16" />
+                        <span v-text="lang('discardOtherGroups')"></span>
                     </li>
                     <li v-for="container in containers" :key="container.cookieStoreId" @click="addTab(menu.data.group, container.cookieStoreId)">
                         <img :src="container.iconUrl" class="is-inline-block size-16 fill-context" :style="{fill: container.colorCode}" />
@@ -775,13 +803,21 @@
                         <img src="/icons/close.svg" class="size-16" />
                         <span v-text="lang('deleteTab')"></span>
                     </li>
-                    <li v-if="menu.data.group" @click="setTabIconAsGroupIcon(menu.data.tab, menu.data.group)">
-                        <img src="/icons/image.svg" class="size-16" />
-                        <span v-text="lang('setTabIconAsGroupIcon')"></span>
-                    </li>
                     <li v-if="hasThumbnailsPermission" @click="updateTabThumbnail(menu.data.tab)">
                         <img src="/icons/image.svg" class="size-16" />
                         <span v-text="lang('updateTabThumbnail')"></span>
+                    </li>
+                    <li v-if="menu.data.group !== currentGroup" @click="discardGroup(menu.data.group)">
+                        <img src="/icons/snowflake.svg" class="size-16" />
+                        <span v-text="lang('discardGroupTitle')"></span>
+                    </li>
+                    <li v-if="groups.length > 1" @click="discardOtherGroups(menu.data.group)">
+                        <img src="/icons/snowflake.svg" class="size-16" />
+                        <span v-text="lang('discardOtherGroups')"></span>
+                    </li>
+                    <li v-if="menu.data.group" @click="setTabIconAsGroupIcon(menu.data.tab, menu.data.group)">
+                        <img src="/icons/image.svg" class="size-16" />
+                        <span v-text="lang('setTabIconAsGroupIcon')"></span>
                     </li>
                 </ul>
             </template>

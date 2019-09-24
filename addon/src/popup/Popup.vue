@@ -433,9 +433,7 @@
             discardOtherGroups(groupExclude) {
                 let tabIds = this.groups.reduce((acc, gr) => [...acc, ...(gr.id === groupExclude.id ? [] : gr.tabs.map(utils.keyId))], []);
 
-                if (tabIds.length) {
-                    Tabs.discard(tabIds);
-                }
+                Tabs.discard(tabIds);
             },
 
             reloadTab({id}, bypassCache) {
@@ -1202,7 +1200,7 @@
 
         <context-menu ref="groupContextMenu">
             <template v-slot="menu">
-                <ul class="is-unselectable">
+                <ul v-if="menu.data" class="is-unselectable">
                     <li @click="openGroupInNewWindow(menu.data.group.id)">
                         <img src="/icons/window-new.svg" class="size-16" />
                         <span v-text="lang('openGroupInNewWindow')"></span>
