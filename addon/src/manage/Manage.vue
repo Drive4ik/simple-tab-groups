@@ -733,7 +733,7 @@
                                 :title="lang('createNewTab')"
                                 @click="addTab(group)"
                                 >
-                                <div class="tab-icon">
+                                <div :class="hasThumbnailsPermission ? 'screenshot' : 'tab-icon'">
                                     <img src="/icons/tab-new.svg">
                                 </div>
                                 <div class="tab-title text-ellipsis" v-text="lang('createNewTab')"></div>
@@ -1060,6 +1060,7 @@
                 }
 
                 &:not(.has-thumbnail) > .tab-icon {
+                    display: flex;
                     width: 16px;
                     height: 16px;
                     top: calc((calc(100% - 1em - var(--tab-inner-padding)) / 2) - 8px);
@@ -1156,8 +1157,7 @@
                     border-width: 2px;
 
                     > img {
-                        width: 4em;
-                        height: auto;
+                        width: 16px;
                         opacity: 0.7;
                     }
                 }
