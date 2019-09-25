@@ -32,12 +32,12 @@ async function load(withTabs) {
     return windows.filter(Boolean).sort(utils.sortBy('id'));
 }
 
-async function get(windowId = browser.windows.WINDOW_ID_CURRENT) {
+async function get(windowId = browser.windows.WINDOW_ID_CURRENT, checkIsWindowAllow = true) {
     const {BG} = browser.extension.getBackgroundPage();
 
     let win = await BG.browser.windows.get(windowId);
 
-    if (!utils.isWindowAllow(win)) {
+    if (checkIsWindowAllow && !utils.isWindowAllow(win)) {
         throw Error('normal window not found!');
     }
 

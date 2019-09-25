@@ -97,7 +97,7 @@
 
             await this.loadGroups();
 
-            let win = await Windows.get();
+            let win = await Windows.get(undefined, false);
             this.currentWindowGroupId = win.session.groupId;
 
             this.setupListeners();
