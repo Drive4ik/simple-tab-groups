@@ -65,13 +65,12 @@ async function create(createData = {}, groupId, activeTabId) {
         if (groupId) {
             await BG.applyGroup(win.id, groupId, activeTabId);
 
-            // browser.tabs.remove(win.tabs[0].id);
+            let tabs = await Tabs.get(win.id),
+                emptyTab = win.tabs[0];
 
-            let tabs = await Tabs.get(win.id);
-
-            if (tabs.length > 1 && utils.isUrlEmpty(tabs[0].url)) {
-                await Tabs.setActive(null, tabs.slice(1));
-                await Tabs.remove(tabs[0].id);
+            if (tabs.length > 1) {
+                await Tabs.setActive(null, tabs.filter(t => t.id !== emptyTab.id));
+                await Tabs.remove(emptyTab.id);
             }
         }
     }
