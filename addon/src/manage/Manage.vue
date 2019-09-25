@@ -687,7 +687,6 @@
                                     'has-thumbnail': !isListView && tab.session.thumbnail,
                                     'drag-moving': tab.isMoving,
                                     'drag-over': tab.isOver,
-                                    'in-list-view': isListView,
                                 }]"
                                 :title="getTabTitle(tab, true)"
                                 @contextmenu.stop.prevent="$refs.tabsContextMenu.open($event, {tab, group})"
@@ -727,9 +726,7 @@
                             </div>
 
                             <div
-                                :class="['tab new', {
-                                    'in-list-view': isListView,
-                                }]"
+                                class="tab new"
                                 :title="lang('createNewTab')"
                                 @click="addTab(group)"
                                 >
@@ -795,17 +792,13 @@
                         <img src="/icons/refresh.svg" class="size-16" />
                         <span v-text="lang('reloadTab')"></span>
                     </li>
-                    <li v-if="!menu.data.tab.discarded" @click="discardTab(menu.data.tab)">
-                        <img src="/icons/snowflake.svg" class="size-16" />
-                        <span v-text="lang('discardTabTitle')"></span>
-                    </li>
                     <li v-if="multipleDropTabs.length" @click="removeTab(menu.data.tab)">
                         <img src="/icons/close.svg" class="size-16" />
                         <span v-text="lang('deleteTab')"></span>
                     </li>
-                    <li v-if="hasThumbnailsPermission" @click="updateTabThumbnail(menu.data.tab)">
-                        <img src="/icons/image.svg" class="size-16" />
-                        <span v-text="lang('updateTabThumbnail')"></span>
+                    <li v-if="!menu.data.tab.discarded" @click="discardTab(menu.data.tab)">
+                        <img src="/icons/snowflake.svg" class="size-16" />
+                        <span v-text="lang('discardTabTitle')"></span>
                     </li>
                     <li v-if="menu.data.group !== currentGroup" @click="discardGroup(menu.data.group)">
                         <img src="/icons/snowflake.svg" class="size-16" />
@@ -814,6 +807,10 @@
                     <li v-if="groups.length > 1" @click="discardOtherGroups(menu.data.group)">
                         <img src="/icons/snowflake.svg" class="size-16" />
                         <span v-text="lang('discardOtherGroups')"></span>
+                    </li>
+                    <li v-if="hasThumbnailsPermission" @click="updateTabThumbnail(menu.data.tab)">
+                        <img src="/icons/image.svg" class="size-16" />
+                        <span v-text="lang('updateTabThumbnail')"></span>
                     </li>
                     <li v-if="menu.data.group" @click="setTabIconAsGroupIcon(menu.data.tab, menu.data.group)">
                         <img src="/icons/image.svg" class="size-16" />
@@ -1042,7 +1039,7 @@
                 cursor: pointer;
             }
 
-            .tab:not(.in-list-view) {
+            > .body:not(.in-list-view) > .tab {
                 padding: var(--tab-inner-padding);
                 border-radius: var(--border-radius);
 
@@ -1154,7 +1151,7 @@
                     justify-content: center;
                     align-items: center;
                     border-style: dashed;
-                    border-width: 2px;
+                    border-width: var(--tab-border-width);
 
                     > img {
                         width: 16px;
@@ -1197,7 +1194,7 @@
                 }
             }
 
-            .tab.in-list-view {
+            > .body.in-list-view > .tab {
                 display: flex;
                 align-items: center;
                 justify-content: left;
