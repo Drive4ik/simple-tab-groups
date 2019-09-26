@@ -48,6 +48,13 @@ async function create(createData = {}, groupId, activeTabId) {
     const {BG} = browser.extension.getBackgroundPage();
 
     if (groupId) {
+        let groupWindowId = BG.cache.getWindowId(groupId);
+
+        if (groupWindowId) {
+            BG.applyGroup(groupWindowId, groupId, activeTabId);
+            return null;
+        }
+
         BG.canAddGroupToWindowAfterItCreated = false;
     }
 

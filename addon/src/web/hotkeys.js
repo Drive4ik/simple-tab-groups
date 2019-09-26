@@ -260,6 +260,6 @@ function showGroupsPopup(data) {
             setFocusToNextElement(groupsWrapper.lastElementChild, 'down');
         }
 
-    }, 0);
+    }, 50);
 
 }

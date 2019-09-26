@@ -539,15 +539,7 @@ async function onRemovedTab(tabId, { isWindowClosing, windowId }) {
 }
 
 let _onMovedTabsTimers = {};
-async function onMovedTab(tabId, { windowId, fromIndex, toIndex }) {
-    console.log('onMovedTab', {tabId, windowId, fromIndex, toIndex });
-
-    let groupId = cache.getTabSession(tabId, 'groupId');
-
-    if (!groupId) {
-        return;
-    }
-
+function updateGroupTabsEvent(groupId) {
     if (_onMovedTabsTimers[groupId]) {
         clearTimeout(_onMovedTabsTimers[groupId]);
     }
@@ -567,6 +559,16 @@ async function onMovedTab(tabId, { windowId, fromIndex, toIndex }) {
     }, 200, groupId);
 }
 
+async function onMovedTab(tabId, { windowId, fromIndex, toIndex }) {
+    console.log('onMovedTab', {tabId, windowId, fromIndex, toIndex });
+
+    let groupId = cache.getTabSession(tabId, 'groupId');
+
+    if (groupId) {
+        updateGroupTabsEvent(groupId);
+    }
+}
+
 function onAttachedTab(tabId, { newWindowId, newPosition }) {
     console.log('onAttachedTab', { tabId, newWindowId, newPosition });
 
@@ -577,6 +579,10 @@ function onAttachedTab(tabId, { newWindowId, newPosition }) {
     let groupId = cache.getWindowGroup(newWindowId);
 
     cache.setTabGroup(tabId, groupId);
+
+    if (groupId) {
+        updateGroupTabsEvent(groupId);
+    }
 }
 
 function onDetachedTab(tabId, { oldWindowId }) { // notice: call before onAttached

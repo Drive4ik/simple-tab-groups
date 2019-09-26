@@ -59,8 +59,7 @@
                 search: '',
                 extendedSearch: false,
 
-                currentWindowId: null,
-                currentWindowGroupId: null,
+                currentWindow: null,
 
                 groupToShow: null,
                 groupToEdit: null,
@@ -86,7 +85,7 @@
             'context-menu': contextMenu,
         },
         async created() {
-            this.loadWindowsData();
+            this.loadCurrentWindow();
 
             this.loadOptions();
 
@@ -130,7 +129,7 @@
         },
         computed: {
             currentGroup() {
-                return this.groups.find(group => group.id === this.currentWindowGroupId);
+                return this.currentWindow && this.groups.find(group => group.id === this.currentWindow.session.groupId);
             },
             filteredGroupsBySearch() {
                 if (!this.search) {
@@ -156,11 +155,8 @@
             lang: browser.i18n.getMessage,
             safeHtml: utils.safeHtml,
 
-            async loadWindowsData() {
-                let win = await Windows.get();
-
-                this.currentWindowId = win.id;
-                this.currentWindowGroupId = win.session.groupId;
+            async loadCurrentWindow() {
+                this.currentWindow = await Windows.get();
             },
 
             loadOptions() {
@@ -286,7 +282,7 @@
                             this.loadUnsyncedTabs();
                             break;
                         case 'group-loaded':
-                            this.loadWindowsData();
+                            this.loadCurrentWindow();
                             break;
                         case 'options-updated':
                             if (isSidebar) {
@@ -386,12 +382,12 @@
             async loadUnsyncedTabs() {
                 let windows = await Windows.load(true);
 
-                let unSyncTabs = windows.reduce(function(acc, win) {
-                    win.tabs.forEach(tab => !tab.session.groupId && acc.push(tab));
-                    return acc;
-                }, []);
-
-                this.unSyncTabs = unSyncTabs.map(this.mapTab, this);
+                this.unSyncTabs = windows
+                    .reduce(function(acc, win) {
+                        win.tabs.forEach(tab => !tab.session.groupId && acc.push(tab));
+                        return acc;
+                    }, [])
+                    .map(this.mapTab, this);
             },
 
             async showCreateGroupPopup() {
@@ -528,12 +524,12 @@
                 let tabId = tab && tab.id;
 
                 if (closePopup) {
-                    BG.applyGroup(this.currentWindowId, group.id, tabId);
+                    BG.applyGroup(this.currentWindow.id, group.id, tabId);
                     this.closeWindow();
                 } else {
                     this.someGroupAreLoading = true;
 
-                    await BG.applyGroup(this.currentWindowId, group.id, tabId);
+                    await BG.applyGroup(this.currentWindow.id, group.id, tabId);
 
                     this.someGroupAreLoading = false;
 
@@ -554,7 +550,7 @@
                 let hiddenTabsIds = this.unSyncTabs.map(utils.keyId);
 
                 await Tabs.moveNative(this.unSyncTabs, {
-                    windowId: this.currentWindowId,
+                    windowId: this.currentWindow.id,
                     index: -1,
                 });
 
@@ -578,7 +574,7 @@
             },
             async unsyncHiddenTabsShowTabIntoCurrentWindow(tab) {
                 await Tabs.moveNative([tab], {
-                    windowId: this.currentWindowId,
+                    windowId: this.currentWindow.id,
                     index: -1,
                 });
 
