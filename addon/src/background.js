@@ -1613,38 +1613,45 @@ async function createBackup(includeTabThumbnails, includeTabFavIcons, isAutoBack
     }
 
     data.pinnedTabs = await Tabs.get(null, true, null);
-    data.pinnedTabs = data.pinnedTabs.map(function({url, title, cookieStoreId, isInReaderMode}) {
-        return {url, title, cookieStoreId, isInReaderMode};
-    });
+    data.pinnedTabs = data.pinnedTabs
+        .map(function({url, title, cookieStoreId, isInReaderMode}) {
+            url = utils.normalizeUrl(url);
+            return {url, title, cookieStoreId, isInReaderMode};
+        })
+        .filter(tab => tab.url);
 
     data.groups = groups.map(function(group) {
-        group.tabs = group.tabs.map(function({url, title, cookieStoreId, isInReaderMode, session}) {
-            let tab = {url, title};
+        group.tabs = group.tabs
+            .map(function({url, title, cookieStoreId, isInReaderMode, session}) {
+                url = utils.normalizeUrl(url);
 
-            if (!containers.isDefault(cookieStoreId)) {
-                tab.cookieStoreId = cookieStoreId;
-            }
+                let tab = {url, title};
 
-            if (isInReaderMode) {
-                tab.isInReaderMode = true;
-            }
-
-            if (includeTabThumbnails || includeTabFavIcons) {
-                delete session.groupId;
-
-                if (!includeTabThumbnails) {
-                    delete session.thumbnail;
+                if (!containers.isDefault(cookieStoreId)) {
+                    tab.cookieStoreId = cookieStoreId;
                 }
 
-                if (!includeTabFavIcons) {
-                    delete session.favIconUrl;
+                if (isInReaderMode) {
+                    tab.isInReaderMode = true;
                 }
 
-                tab.session = session;
-            }
+                if (includeTabThumbnails || includeTabFavIcons) {
+                    delete session.groupId;
 
-            return tab;
-        });
+                    if (!includeTabThumbnails) {
+                        delete session.thumbnail;
+                    }
+
+                    if (!includeTabFavIcons) {
+                        delete session.favIconUrl;
+                    }
+
+                    tab.session = session;
+                }
+
+                return tab;
+            })
+            .filter(tab => tab.url);
 
         return group;
     });
@@ -2015,7 +2022,7 @@ async function syncTabs(groups, windows, hideAllTabs = false) {
                 tabs.push(
                     Tabs.create({
                         title: tab.title,
-                        url: tab.url,
+                        url: utils.normalizeUrl(tab.url),
                         favIconUrl: tab.favIconUrl,
                         cookieStoreId: tab.cookieStoreId,
                         groupId: group.id,
@@ -2050,12 +2057,14 @@ async function removeSTGNewTabUrls(windows) {
     return Promise.all(windows.map(async function(win) {
         await Promise.all(win.tabs.map(async function(winTab) {
             if (isStgNewTabUrl(winTab.url)) {
-                winTab.url = new URL(winTab.url).searchParams.get('url');
+                winTab.url = utils.normalizeUrl(winTab.url);
 
-                await browser.tabs.update(winTab.id, {
-                    url: winTab.url,
-                    loadReplace: true,
-                });
+                if (winTab.url) {
+                    await browser.tabs.update(winTab.id, {
+                        url: winTab.url,
+                        loadReplace: true,
+                    });
+                }
             }
         }));
 

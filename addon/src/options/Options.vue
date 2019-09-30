@@ -510,7 +510,11 @@
                 await storage.set({lastCreatedGroupPosition});
 
                 await BG.createTabsSafe(tabsToCreate
-                    .filter(tab => tab.url && !tab.url.startsWith('moz-extension') && utils.isUrlAllowToCreate(tab.url))
+                    .map(function(tab) {
+                        tab.url = utils.normalizeUrl(tab.url);
+                        return tab;
+                    })
+                    .filter(tab => tab.url && utils.isUrlAllowToCreate(tab.url))
                     .map(function(tab) {
                         delete tab.active;
                         delete tab.windowId;

@@ -276,6 +276,17 @@ function isUrlAllowToCreate(url) {
     return url ? createTabUrlRegexp.test(url) : true;
 }
 
+function normalizeUrl(url) {
+    if (url && url.startsWith('moz-extension')) {
+        let urlObj = new URL(url),
+            urlStr = urlObj.searchParams.get('url') || urlObj.searchParams.get('u');
+
+        return urlStr ? normalizeUrl(decodeURIComponent(urlStr)) : url;
+    }
+
+    return url || '';
+}
+
 function isTabPinned(tab) {
     return tab.pinned;
 }
@@ -664,6 +675,7 @@ export default {
     isUrlEmpty,
     isWindowAllow,
     isUrlAllowToCreate,
+    normalizeUrl,
     isTabPinned,
     isTabNotPinned,
     isTabCanBeHidden,
