@@ -1511,6 +1511,11 @@ async function runAction(data, externalExtId) {
 }
 
 async function saveOptions(_options) {
+    if (!window.BG.inited) {
+        console.error('background not yet inited');
+        return;
+    }
+
     _options = utils.clone(_options);
 
     let optionsKeys = Object.keys(_options);
