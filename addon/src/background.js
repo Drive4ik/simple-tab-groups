@@ -1277,23 +1277,18 @@ async function openManageGroups() {
             windowTypes: [browser.windows.WindowType.POPUP],
         });
 
-        let isFoundWindow = allWindows.some(function(win) {
-            if (browser.windows.WindowType.POPUP === win.type && 1 === win.tabs.length && manageTabsPageUrl === win.tabs[0].url) { // if manage popup is now open
-                Windows.setFocus(win.id);
-                return true;
-            }
-        });
+        let popupWindow = allWindows.find(win => browser.windows.WindowType.POPUP === win.type && 1 === win.tabs.length && manageTabsPageUrl === win.tabs[0].url);
 
-        if (isFoundWindow) {
-            return;
+        if (popupWindow) {
+            await Windows.setFocus(popupWindow.id);
+        } else {
+            await Windows.create({
+                url: manageTabsPageUrl,
+                type: browser.windows.CreateType.POPUP,
+                width: Number(window.localStorage.manageGroupsWindowWidth) || 1000,
+                height: Number(window.localStorage.manageGroupsWindowHeight) || 700,
+            });
         }
-
-        await Windows.create({
-            url: manageTabsPageUrl,
-            type: browser.windows.CreateType.POPUP,
-            width: Number(window.localStorage.manageGroupsWindowWidth) || 1000,
-            height: Number(window.localStorage.manageGroupsWindowHeight) || 700,
-        });
     }
 }
 
