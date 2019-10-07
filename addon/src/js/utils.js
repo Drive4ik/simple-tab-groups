@@ -208,7 +208,7 @@ function notify(message, timer = 20000, id) {
         type: 'basic',
         iconUrl: '/icons/icon.svg',
         title: browser.i18n.getMessage('extensionName'),
-        message: message,
+        message: String(message),
     });
 
     setTimeout(BG.browser.notifications.clear, timer, id);
