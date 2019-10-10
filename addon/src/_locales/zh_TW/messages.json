@@ -389,10 +389,6 @@
         "message": "隱藏後廢棄分頁 (這將能夠節省記憶體)",
         "description": "Discard tabs after hide (this will save the RAM)"
     },
-    "createThumbnailsForTabs": {
-        "message": "為分頁建立縮圖 (使用於「管理分頁群組」頁面)",
-        "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
-    },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "無法變更分頁群組，因為其中一個開啟的分頁正在分享麥克風或是攝影機。",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
@@ -716,10 +712,6 @@
     "reloadAllTabsInGroup": {
         "message": "重新載入全部分頁",
         "description": "Reload all tabs in group"
-    },
-    "tabsInListView": {
-        "message": "分頁列表",
-        "description": "Tabs in list"
     },
     "tabsCreatedCount": {
         "message": "已建立分頁數 $tabscount$",

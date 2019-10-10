@@ -367,10 +367,6 @@
         "message": "タブが隠れた後に破棄する（this will save the RAM）",
         "description": "Discard tabs after hide (this will save the RAM)"
     },
-    "createThumbnailsForTabs": {
-        "message": "タブのサムネイルを作成する（\"グループの管理\"で使用されます）",
-        "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
-    },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "開いているタブの中にマイクかカメラを使用しているものがあるためグループを変更することができません",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"

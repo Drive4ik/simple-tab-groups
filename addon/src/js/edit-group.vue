@@ -35,6 +35,7 @@
             return {
                 containers: BG.containers.getAll(),
                 disabledContainers: {},
+                disabledContainerGroupTabs: {},
 
                 showMessageCantLoadFile: false,
 
@@ -74,10 +75,12 @@
                     }
                 }
             },
+            hasContainers() {
+                return Object.keys(this.containers).length > 0;
+            },
         },
         async created() {
-            let [group, groups] = await Groups.load(this.groupId),
-                groupKeys = Object.keys(group);
+            let [group, groups] = await Groups.load(this.groupId);
 
             this.group = new Vue({
                 data: group,
@@ -92,21 +95,29 @@
                 },
             });
 
-            groupKeys.forEach(function(key) {
+            for (let key in group) {
                 let unwatch = this.$watch(`group.${key}`, function() {
                     this.changedKeys.push(key);
                     unwatch();
                 }, {
                     deep: true,
                 });
-            }, this);
+            });
 
             for (let cookieStoreId in this.containers) {
-                let groupWhichHasContainer = groups.find(gr => gr.id !== this.groupId && gr.catchTabContainers.includes(cookieStoreId));
+                groups.forEach(function(gr) {
+                    if (gr.id === this.groupId) {
+                        return;
+                    }
 
-                if (groupWhichHasContainer) {
-                    this.$set(this.disabledContainers, cookieStoreId, groupWhichHasContainer.title);
-                }
+                    if (gr.catchTabContainers.includes(cookieStoreId)) {
+                        this.$set(this.disabledContainers, cookieStoreId, gr.title);
+                    }
+
+                    if (gr.newTabContainer === cookieStoreId) {
+                        this.$set(this.disabledContainerGroupTabs, cookieStoreId, gr.title);
+                    }
+                }, this);
             }
 
             let currentTab = await Tabs.getActive();
@@ -162,8 +173,22 @@
                 });
             },
 
-            isDisabledContainer(container) {
-                return !this.group.catchTabContainers.includes(container.cookieStoreId) && container.cookieStoreId in this.disabledContainers;
+            isDisabledContainer({cookieStoreId}) {
+                return !this.group.catchTabContainers.includes(cookieStoreId) && cookieStoreId in this.disabledContainers;
+            },
+
+            isDisabledNewTabContainer({cookieStoreId}) {
+                return this.group.newTabContainer !== cookieStoreId && cookieStoreId in this.disabledContainerGroupTabs;
+            },
+
+            checkNewTabContainer(cookieStoreId, isChecked) {
+                if (isChecked) {
+                    if (!this.isDisabledNewTabContainer({cookieStoreId}) && !this.group.newTabContainer) {
+                        this.group.newTabContainer = cookieStoreId;
+                    }
+                } else if (this.group.newTabContainer === cookieStoreId) {
+                    this.group.newTabContainer = null;
+                }
             },
 
             async selectUserGroupIcon() {
@@ -221,7 +246,7 @@
 </script>
 
 <template>
-    <div v-if="group" @keydown.enter.stop="saveGroup" tabindex="-1" class="no-outline">
+    <div v-if="group" @keydown.enter.stop="saveGroup" tabindex="-1" class="no-outline edit-group">
         <div class="field">
             <label class="label" v-text="lang('title')"></label>
             <div class="control has-icons-left">
@@ -300,7 +325,7 @@
             </div>
         </div>
 
-        <div v-if="Object.keys(containers).length" class="field containers-wrapper">
+        <div v-if="hasContainers" class="field containers-wrapper">
             <label class="label">
                 <span v-text="lang('catchTabContainers')"></span>
             </label>
@@ -311,11 +336,42 @@
                             <input type="checkbox"
                                 :disabled="isDisabledContainer(container)"
                                 :value="container.cookieStoreId"
+                                @change="checkNewTabContainer(container.cookieStoreId, $event.target.checked)"
                                 v-model="group.catchTabContainers"
                                 />
                             <img :src="container.iconUrl" class="size-16 fill-context" :style="{fill: container.colorCode}" />
                             <span class="word-break-all" v-text="container.name"></span>
                             <i class="word-break-all" v-if="container.cookieStoreId in disabledContainers">({{ disabledContainers[container.cookieStoreId] }})</i>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="hasContainers" class="field containers-wrapper">
+            <label class="label">
+                <span v-text="lang('alwaysOpenTabsInContainer')"></span>
+            </label>
+            <div class="control">
+                <div class="field">
+                    <div class="control">
+                        <label class="radio indent-children">
+                            <input type="radio" :value="null" v-model="group.newTabContainer" />
+                            <span class="word-break-all" v-text="'Default'"></span>
+                        </label>
+                    </div>
+                </div>
+                <div v-for="container in containers" :key="container.cookieStoreId" class="field">
+                    <div class="control">
+                        <label class="radio indent-children" :disabled="isDisabledNewTabContainer(container)">
+                            <input type="radio"
+                                :disabled="isDisabledNewTabContainer(container)"
+                                :value="container.cookieStoreId"
+                                v-model="group.newTabContainer"
+                                />
+                            <img :src="container.iconUrl" class="size-16 fill-context" :style="{fill: container.colorCode}" />
+                            <span class="word-break-all" v-text="container.name"></span>
+                            <i class="word-break-all" v-if="container.cookieStoreId in disabledContainerGroupTabs">({{ disabledContainerGroupTabs[container.cookieStoreId] }})</i>
                         </label>
                     </div>
                 </div>
@@ -363,7 +419,6 @@
             ">
             <span v-text="lang('selectUserGroupIconWarnText')"></span>
         </popup>
-
     </div>
 </template>
 
@@ -372,19 +427,31 @@
         margin-top: 5px;
     }
 
-    .icon-buttons {
-        flex-wrap: wrap;
+    .edit-group {
+        .icon-buttons {
+            flex-wrap: wrap;
+        }
+
+        .field.is-grouped > .control:not(:last-child) {
+            margin-right: .68rem;
+        }
+
+        .containers-wrapper .field {
+            margin: 0;
+        }
+
+        .field > .control {
+            cursor: default;
+        }
+
+        .checkbox,
+        .radio {
+            display: flex;
+        }
+
+        .reg-exp {
+            font-family: Monaco, Consolas, Andale Mono, Lucida Console;
+        }
     }
 
-    .field.is-grouped > .control:not(:last-child) {
-        margin-right: .68rem;
-    }
-
-    .containers-wrapper .field {
-        margin: 0;
-    }
-
-    .reg-exp {
-        font-family: Monaco, Consolas, Andale Mono, Lucida Console;
-    }
 </style>

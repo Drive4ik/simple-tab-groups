@@ -79,6 +79,7 @@ function create(id, title) {
         tabs: [],
         catchTabRules: '',
         catchTabContainers: [],
+        newTabContainer: null,
         isSticky: false,
         muteTabsWhenGroupCloseAndRestoreWhenOpen: false,
         showTabAfterMovingItIntoThisGroup: false,

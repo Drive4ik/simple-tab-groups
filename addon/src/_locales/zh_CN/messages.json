@@ -367,10 +367,6 @@
         "message": "隐藏后丢弃标签页（该操作节省内存）",
         "description": "Discard tabs after hide (this will save the RAM)"
     },
-    "createThumbnailsForTabs": {
-        "message": "创建标签页的缩略图（在“管理群组”中使用）",
-        "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
-    },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "无法更改群组，因为在打开的标签页中，有一个共用了麦克风或摄像头",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"

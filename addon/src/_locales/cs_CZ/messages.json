@@ -367,10 +367,6 @@
         "message": "Zavřít panely skupiny po přepnutí na jinou (tím se sníží využití paměti RAM)",
         "description": "Discard tabs after hide (this will save the RAM)"
     },
-    "createThumbnailsForTabs": {
-        "message": "Vytvářet náhledy panelů (ve \"Správě skupin\")",
-        "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
-    },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Není možné změnit skupinu, protože jeden z otevřených panelů sdílí mikrofon nebo kameru",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"

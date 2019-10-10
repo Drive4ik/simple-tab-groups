@@ -367,10 +367,6 @@
         "message": "Riduci il consumo di RAM per le tab che sono state nascoste",
         "description": "Discard tabs after hide (this will save the RAM)"
     },
-    "createThumbnailsForTabs": {
-        "message": "Crea delle anteprime per le tab (verranno utilizzate in \"Gestione gruppi\")",
-        "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
-    },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Non è possibile cambiare il gruppo perché una delle tab aperte sta utilizzando il microfono o la fotocamera",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"

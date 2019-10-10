@@ -95,7 +95,7 @@ async function save(data, fileName = 'file-name', saveAs = true, overwrite = fal
 
         return id;
     } catch (e) {
-        utils.notify(String(e));
+        utils.notify(String(e), 7000);
     } finally {
         URL.revokeObjectURL(url);
     }

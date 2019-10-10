@@ -16,6 +16,11 @@
 
     const {BG} = browser.extension.getBackgroundPage();
 
+    if (!BG.inited) {
+        browser.runtime.onMessage.addListener(({action}) => 'i-am-back' === action && window.location.reload());
+        throw 'Background not inited, waiting...';
+    }
+
     window.addEventListener('error', utils.errorEventHandler);
     Vue.config.errorHandler = utils.errorEventHandler;
 
@@ -199,7 +204,8 @@
                                 let group = this.groups.find(gr => gr.id === request.tab.session.groupId);
 
                                 if (group) {
-                                    group.tabs = await this.loadGroupTabs(group.id);
+                                    group.tabs.push(this.mapTab(request.tab));
+                                    group.tabs.sort(utils.sortBy('index'));
                                 } else {
                                     throw Error(utils.errorEventMessage('group for new tab not found', request));
                                 }
@@ -290,7 +296,6 @@
                             }
                             break;
                     }
-
                 }.bind(this));
             },
 
@@ -362,11 +367,6 @@
             },
 
             getWindowId: BG.cache.getWindowId,
-
-            async loadGroupTabs(groupId) {
-                let [{tabs}] = await Groups.load(groupId, true);
-                return tabs.map(this.mapTab, this);
-            },
 
             async loadGroups() {
                 let groups = await Groups.load(null, true);

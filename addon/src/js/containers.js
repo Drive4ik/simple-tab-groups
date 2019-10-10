@@ -25,7 +25,10 @@ async function init() {
 
     BG.browser.contextualIdentities.onCreated.addListener(contextualIdentityHandler);
     BG.browser.contextualIdentities.onUpdated.addListener(contextualIdentityHandler);
-    BG.browser.contextualIdentities.onRemoved.addListener(changeInfo => delete containers[changeInfo.contextualIdentity.cookieStoreId]);
+    BG.browser.contextualIdentities.onRemoved.addListener(function(changeInfo) {
+        delete containers[changeInfo.contextualIdentity.cookieStoreId];
+        BG.normalizeContainersInGroups();
+    });
 }
 
 function isDefault(cookieStoreId) {

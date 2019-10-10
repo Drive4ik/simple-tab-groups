@@ -65,6 +65,8 @@
 
                 if (window.localStorage.enableDebug && window.localStorage.enableLogging) {
                     obj[k] = async function(key, ...args) {
+                        log('run ' + key, ...args);
+
                         let stack = getStack(new Error()),
                             now = Date.now(),
                             result = await browserFuncs[key](...args);

@@ -10,12 +10,12 @@
 
     "name": "__MSG_extensionName__",
     "description": "__MSG_extensionDescription__",
-    "version": "4.0.6.2",
+    "version": "4.1",
     "author": "Drive4ik",
     "homepage_url": "https://github.com/drive4ik/simple-tab-groups",
 
     "icons": {
-        "96": "icons/icon.svg"
+        "128": "icons/icon.svg"
     },
 
     "permissions": [
@@ -27,11 +27,13 @@
         "cookies",
         "sessions",
         "downloads",
+        "webRequest",
+        "webRequestBlocking",
+        "<all_urls>",
         "storage"
     ],
 
     "optional_permissions": [
-        "<all_urls>",
         "bookmarks"
     ],
 

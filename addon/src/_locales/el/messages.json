@@ -367,10 +367,6 @@
         "message": "Απόρριψη των tabs μετά την απόκρυψη (εξοικονόμηση μνήμης)",
         "description": "Discard tabs after hide (this will save the RAM)"
     },
-    "createThumbnailsForTabs": {
-        "message": "Δημιουργία εικονιδίων thumbnails για τα tabs (στην \"Διαχείριση groups\")",
-        "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
-    },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Δεν είναι δυνατόν να αλλάξετε το group, γιατί ένα από τα ανοικτά tabs χρησιμοποιούν το μικρόφωνο ή την camera",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"

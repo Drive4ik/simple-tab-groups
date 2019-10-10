@@ -8,7 +8,6 @@
     import Groups from '../js/groups';
     import Tabs from '../js/tabs';
     import Windows from '../js/windows';
-    import storage from '../js/storage';
     import popup from '../js/popup.vue';
     import editGroup from '../js/edit-group.vue';
     import contextMenu from '../js/context-menu-component.vue';
@@ -20,6 +19,11 @@
     const {BG} = browser.extension.getBackgroundPage();
 
     document.title = browser.i18n.getMessage('manageGroupsTitle');
+
+    if (!BG.inited) {
+        browser.runtime.onMessage.addListener(({action}) => 'i-am-back' === action && window.location.reload());
+        throw 'Background not inited, waiting...';
+    }
 
     window.addEventListener('error', utils.errorEventHandler);
     Vue.config.errorHandler = utils.errorEventHandler;
@@ -37,8 +41,6 @@
                 view: VIEW_DEFAULT,
 
                 isLoaded: false,
-
-                hasThumbnailsPermission: false,
 
                 search: '',
                 extendedSearch: false,
@@ -78,11 +80,9 @@
         //     this.loadOptions();
         // },
         async mounted() {
-            this.hasThumbnailsPermission = await browser.permissions.contains(constants.PERMISSIONS.ALL_URLS);
-
             await this.loadCurrentWindow();
 
-            await this.loadOptions();
+            this.loadOptions();
 
             await this.loadGroups();
 
@@ -106,6 +106,13 @@
                     document.documentElement.classList.remove('dark-theme');
                 }
             },
+            'options.showTabsWithThumbnailsInManageGroups': function(value, oldValue) {
+                if (undefined !== oldValue) {
+                    BG.saveOptions({
+                        showTabsWithThumbnailsInManageGroups: value,
+                    });
+                }
+            },
         },
         computed: {
             filteredGroups() {
@@ -120,9 +127,6 @@
                 let searchStr = this.search.toLowerCase();
 
                 return this.unSyncTabs.filter(tab => utils.mySearchFunc(searchStr, utils.getTabTitle(tab, true), this.extendedSearch));
-            },
-            isListView() {
-                return !this.hasThumbnailsPermission;
             },
             isCurrentWindowIsAllow() {
                 return this.currentWindow && utils.isWindowAllow(this.currentWindow);
@@ -139,9 +143,8 @@
             lang: browser.i18n.getMessage,
             safeHtml: utils.safeHtml,
 
-            async loadOptions() {
-                let data = await storage.get(null);
-                this.options = utils.extractKeys(data, constants.allOptionsKeys);
+            loadOptions() {
+                this.options = BG.getOptions();
             },
 
             async loadCurrentWindow() {
@@ -174,7 +177,8 @@
                                 let group = this.groups.find(gr => gr.id === request.tab.session.groupId);
 
                                 if (group) {
-                                    group.tabs = await this.loadGroupTabs(group.id);
+                                    group.tabs.push(this.mapTab(request.tab));
+                                    group.tabs.sort(utils.sortBy('index'));
                                 } else {
                                     this.loadUnsyncedTabs();
                                 }
@@ -344,11 +348,6 @@
                 return new Vue({
                     data: tab,
                 });
-            },
-
-            async loadGroupTabs(groupId) {
-                let [{tabs}] = await Groups.load(groupId, true);
-                return tabs.map(this.mapTab, this);
             },
 
             async loadGroups() {
@@ -589,15 +588,6 @@
                 }
             },
 
-            async setListView(event) {
-                if (event.target.checked) {
-                    browser.permissions.remove(constants.PERMISSIONS.ALL_URLS);
-                    this.hasThumbnailsPermission = false;
-                } else {
-                    this.hasThumbnailsPermission = await browser.permissions.request(constants.PERMISSIONS.ALL_URLS);
-                }
-            },
-
             async closeThisWindow() {
                 if (this.isCurrentWindowIsAllow) {
                     let tab = await Tabs.getActive();
@@ -632,8 +622,8 @@
             <span class="is-full-width">
                 <div>
                     <label class="checkbox">
-                        <input type="checkbox" :checked="isListView" @click="setListView" />
-                        <span v-text="lang('tabsInListView')"></span>
+                        <input v-model="options.showTabsWithThumbnailsInManageGroups" type="checkbox" />
+                        <span v-text="lang('showTabsWithThumbnailsInManageGroups')"></span>
                     </label>
                 </div>
                 <div class="buttons has-addons">
@@ -729,7 +719,7 @@
                             </div>
                         </div>
                         <div :class="['body', {
-                                'in-list-view': isListView,
+                                'in-list-view': !options.showTabsWithThumbnailsInManageGroups,
                             }]">
                             <div
                                 v-for="tab in group.filteredTabs"
@@ -737,7 +727,7 @@
                                 :class="['tab', {
                                     'is-active': tab.active,
                                     'is-in-multiple-drop': multipleTabs.includes(tab),
-                                    'has-thumbnail': !isListView && tab.session.thumbnail,
+                                    'has-thumbnail': options.showTabsWithThumbnailsInManageGroups && tab.session.thumbnail,
                                     'drag-moving': tab.isMoving,
                                     'drag-over': tab.isOver,
                                 }]"
@@ -763,7 +753,7 @@
                                 <div v-if="tab.container" class="cookie-container" :title="tab.container.name" :style="{borderColor: tab.container.colorCode}">
                                     <img class="size-16" :src="tab.container.iconUrl" :style="{fill: tab.container.colorCode}">
                                 </div>
-                                <div v-if="hasThumbnailsPermission" class="screenshot" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                <div v-if="options.showTabsWithThumbnailsInManageGroups" class="screenshot" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <img v-if="tab.session.thumbnail" v-lazy="tab.session.thumbnail">
                                 </div>
                                 <div
@@ -783,7 +773,7 @@
                                 :title="lang('createNewTab')"
                                 @click="addTab(group)"
                                 >
-                                <div :class="hasThumbnailsPermission ? 'screenshot' : 'tab-icon'">
+                                <div :class="options.showTabsWithThumbnailsInManageGroups ? 'screenshot' : 'tab-icon'">
                                     <img src="/icons/tab-new.svg">
                                 </div>
                                 <div class="tab-title text-ellipsis" v-text="lang('createNewTab')"></div>
@@ -800,14 +790,14 @@
                             <div class="tabs-count" v-text="groupTabsCountMessage(unSyncTabs)"></div>
                         </div>
                         <div :class="['body', {
-                                'in-list-view': isListView,
+                                'in-list-view': !options.showTabsWithThumbnailsInManageGroups,
                             }]">
                             <div
                                 v-for="tab in filteredUnSyncTabs"
                                 :key="tab.id"
                                 :class="['tab', {
                                     'is-in-multiple-drop': multipleTabs.includes(tab),
-                                    'has-thumbnail': !isListView && tab.session.thumbnail,
+                                    'has-thumbnail': options.showTabsWithThumbnailsInManageGroups && tab.session.thumbnail,
                                     'drag-moving': tab.isMoving,
                                 }]"
                                 :title="getTabTitle(tab, true)"
@@ -828,7 +818,7 @@
                                 <div v-if="tab.container" class="cookie-container" :title="tab.container.name" :style="{borderColor: tab.container.colorCode}">
                                     <img class="size-16" :src="tab.container.iconUrl" :style="{fill: tab.container.colorCode}">
                                 </div>
-                                <div v-if="hasThumbnailsPermission" class="screenshot" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                <div v-if="options.showTabsWithThumbnailsInManageGroups" class="screenshot" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <img v-if="tab.session.thumbnail" v-lazy="tab.session.thumbnail">
                                 </div>
                                 <div
@@ -915,7 +905,7 @@
                         <img src="/icons/snowflake.svg" class="size-16" />
                         <span v-text="lang('discardOtherGroups')"></span>
                     </li>
-                    <li v-if="hasThumbnailsPermission" @click="updateTabThumbnail(menu.data.tab)">
+                    <li v-if="options.showTabsWithThumbnailsInManageGroups" @click="updateTabThumbnail(menu.data.tab)">
                         <img src="/icons/image.svg" class="size-16" />
                         <span v-text="lang('updateTabThumbnail')"></span>
                     </li>

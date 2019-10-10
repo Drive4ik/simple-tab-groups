@@ -389,10 +389,6 @@
         "message": "Décharger les onglets lorsqu'ils sont masqués (ceci libérera de la RAM)",
         "description": "Discard tabs after hide (this will save the RAM)"
     },
-    "createThumbnailsForTabs": {
-        "message": "Créer des captures pour les onglets (utilisé dans \"Gérer les groupes\")",
-        "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
-    },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Il n'est pas possible de changer de groupe car un des onglets ouverts partage le micro ou la caméra",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
@@ -716,10 +712,6 @@
     "reloadAllTabsInGroup": {
         "message": "Recharger tous les onglets du groupe",
         "description": "Reload all tabs in group"
-    },
-    "tabsInListView": {
-        "message": "Onglets en liste",
-        "description": "Tabs in list"
     },
     "tabsCreatedCount": {
         "message": "$tabscount$ onglet(s) créé(s)",

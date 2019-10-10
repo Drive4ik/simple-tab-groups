@@ -3,9 +3,28 @@
 import utils from './utils';
 import constants from './constants';
 
+let errorCounter = 0;
+
 export default {
     async get(data) {
-        let result = await browser.storage.local.get(data);
+        let result = null;
+
+        try {
+            result = await browser.storage.local.get(data);
+
+            if (!result) {
+                throw Error('managed storage is not set, browser.storage.local.get result = undefined');
+            }
+        } catch (e) {
+            errorCounter++;
+
+            if (errorCounter > 20) {
+                throw e;
+            }
+
+            await utils.wait(200);
+            return this.get(data);
+        }
 
         if (null === data) {
             result = {...utils.clone(constants.DEFAULT_OPTIONS), ...result};

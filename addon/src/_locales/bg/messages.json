@@ -363,10 +363,6 @@
         "message": "Освобождаване на паметта от скритите раздели",
         "description": "Discard tabs after hide (this will save the RAM)"
     },
-    "createThumbnailsForTabs": {
-        "message": "Миниатюри на разделите (използвана в „Управление на групите“)",
-        "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
-    },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Групата не може да бъде променяна, защото един от отворените раздели използва микрофон или камера",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"

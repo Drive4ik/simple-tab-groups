@@ -367,10 +367,6 @@
         "message": "Descartar abas depois de desaparecer (isso vai economizar RAM)",
         "description": "Discard tabs after hide (this will save the RAM)"
     },
-    "createThumbnailsForTabs": {
-        "message": "Criar miniaturas para abas (usado em \"Gerenciar grupos\")",
-        "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
-    },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Não é possível mudar o grupo porque uma das abas abertas compartilha microfone ou câmera",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
