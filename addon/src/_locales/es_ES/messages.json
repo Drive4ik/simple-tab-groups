@@ -367,10 +367,6 @@
         "message": "Descartar pestañas luego de ocultarlas (esto ahorrará memoria RAM)",
         "description": "Discard tabs after hide (this will save the RAM)"
     },
-    "createThumbnailsForTabs": {
-        "message": "Crear miniaturas para las pestañas (utilizado en \"Gestionar grupos\")",
-        "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
-    },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "No es posible cambiar el grupo ya que una de las pestañas comparte el micrófono o la cámara.",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"

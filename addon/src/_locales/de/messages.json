@@ -367,10 +367,6 @@
         "message": "Verwerfe Tabs nach verstecken (schont Arbeitsspeicher)",
         "description": "Discard tabs after hide (this will save the RAM)"
     },
-    "createThumbnailsForTabs": {
-        "message": "Erstelle Vorschaubilder für Gruppen (benutzt in \"Gruppen verwalten\")",
-        "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
-    },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Es ist nicht möglich die Gruppe zu ändern, da einer ihrer offenen Tabs auf das Mikrofon oder die Kamera zugreift",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"

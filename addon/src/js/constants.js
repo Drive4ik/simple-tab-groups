@@ -4,13 +4,11 @@ const DEFAULT_COOKIE_STORE_ID = 'firefox-default';
 const MANAGE_TABS_URL = '/manage/manage.html';
 const ACTIVE_SYMBOL = '⚪';
 const DISCARDED_SYMBOL = '❄';
+const ALL_URLS_SCHEMA = '<all_urls>';
 
 const PERMISSIONS = {
     BOOKMARKS: {
         permissions: ['bookmarks'],
-    },
-    ALL_URLS: {
-        origins: ['<all_urls>'],
     },
 };
 
@@ -132,6 +130,7 @@ const DEFAULT_OPTIONS = {
     exportGroupToMainBookmarkFolder: true,
     defaultBookmarksParent: defaultBookmarksParents[0],
     showExtendGroupsPopupWithActiveTabs: false,
+    showTabsWithThumbnailsInManageGroups: false,
 
     defaultGroupIconViewType: groupIconViewTypes[0],
     defaultGroupIconColor: '',
@@ -196,6 +195,7 @@ export default {
     MANAGE_TABS_URL,
     ACTIVE_SYMBOL,
     DISCARDED_SYMBOL,
+    ALL_URLS_SCHEMA,
     EXTENSIONS_WHITE_LIST,
     DEFAULT_OPTIONS,
     onlyBoolOptionsKeys,

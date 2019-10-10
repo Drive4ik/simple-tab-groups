@@ -102,8 +102,8 @@ function clone(obj = null) {
     return JSON.parse(JSON.stringify(obj));
 }
 
-function cloneTab({id, title, url, active, hidden, sharingState, windowId}) {
-    return {id, title, url, active, hidden, sharingState: {...sharingState}, windowId};
+function cloneTab({id, title, url, active, hidden, sharingState, windowId, cookieStoreId}) {
+    return {id, title, url, active, hidden, sharingState: {...sharingState}, windowId, cookieStoreId};
 }
 
 function format(str, ...args) {
@@ -185,7 +185,7 @@ function sliceText(text, length = 50) {
     return (text && text.length > length) ? (text.slice(0, length - 3) + '...') : (text || '');
 }
 
-function notify(message, timer = 20000, id) {
+function notify(message, timer = 20000, id = null, catchReject = true, iconUrl = null) {
     const {BG} = browser.extension.getBackgroundPage();
 
     if (id) {
@@ -194,39 +194,34 @@ function notify(message, timer = 20000, id) {
         id = String(Date.now());
     }
 
-    // if ('error' === type(message)) {
-    //     let prefix = browser.extension.getURL('');
-    //     message.stack = message.stack.split('@').map(path => path.replace(prefix, '').trim()).filter(Boolean).join('\n');
-    //     message.fileName = message.fileName.replace(prefix, '');
-    //     message = message.toString() + `\n${message.fileName} ${message.lineNumber}:${message.columnNumber}\n${message.stack}`;
-    //     timer = 60000;
-    // }
-
     // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/notifications/NotificationOptions
     // Only 'type', 'iconUrl', 'title', and 'message' are supported.
     BG.browser.notifications.create(id, {
         type: 'basic',
-        iconUrl: '/icons/icon.svg',
+        iconUrl: iconUrl || '/icons/icon.svg',
         title: browser.i18n.getMessage('extensionName'),
         message: String(message),
     });
 
-    setTimeout(BG.browser.notifications.clear, timer, id);
+    let promise = new Promise(function(resolve, reject) {
+        let rejectTimer = null;
 
-    return new Promise(function(resolve, reject) {
-        let called = false,
-            listener = function(id, notificationId) {
-                if (id === notificationId) {
-                    browser.notifications.onClicked.removeListener(listener);
-                    called = true;
-                    resolve(id);
-                }
-            }.bind(null, id);
+        let listener = function() {
+            BG.browser.notifications.onClicked.removeListener(listener);
+            clearTimeout(rejectTimer);
+            resolve(id);
+        };
 
-        setTimeout(id => !called && reject(id), timer, id);
+        rejectTimer = setTimeout(function() {
+            BG.browser.notifications.onClicked.removeListener(listener);
+            BG.browser.notifications.clear(id);
+            reject(id);
+        }, timer);
 
         browser.notifications.onClicked.addListener(listener);
     });
+
+    return catchReject ? promise.catch(function() {}) : promise;
 }
 
 function isAllowSender(request, sender) {
@@ -258,8 +253,12 @@ function getSupportedExternalExtensionName(extId) {
     return constants.EXTENSIONS_WHITE_LIST[extId] ? constants.EXTENSIONS_WHITE_LIST[extId].title : 'Unknown';
 }
 
-function isBlockedFavIcon(favIconUrl) {
-    return favIconUrl.startsWith('chrome://mozapps/skin/');
+function normalizeFavIcon(favIconUrl) {
+    if (favIconUrl) {
+        return favIconUrl.startsWith('chrome://mozapps/skin/') ? '/icons/tab.svg' : favIconUrl;
+    }
+
+    return '/icons/tab.svg';
 }
 
 function isUrlEmpty(url) {
@@ -359,7 +358,7 @@ function getGroupTitle({id, title, tabs}, args = '') {
     return title;
 }
 
-function getTabTitle({id, title, url, discarded}, withUrl = false, sliceLength = 0, withTabActive = false) {
+function getTabTitle({id, index, title, url, discarded}, withUrl = false, sliceLength = 0, withTabActive = false) {
     title = title || url || 'about:blank';
 
     if (withUrl && url && title !== url) {
@@ -371,7 +370,7 @@ function getTabTitle({id, title, url, discarded}, withUrl = false, sliceLength =
     }
 
     if (window.localStorage.enableDebug) {
-        title = `#${id} ${title}`;
+        title = `#${id}:${index} ${title}`;
     }
 
     return sliceLength ? sliceText(title, sliceLength) : title;
@@ -489,18 +488,18 @@ function getGroupIconUrl(group = { iconViewType: constants.DEFAULT_OPTIONS.defau
 
         let icons = {
             'main-squares': `
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32">
+                <svg width="128" height="128" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
                     <g fill="context-fill" fill-opacity="context-fill-opacity">
-                        <rect height="8" width="8" y="0" x="0" />
-                        <rect height="8" width="8" y="0" x="12" />
-                        <rect height="8" width="8" y="12" x="24" />
-                        <rect height="8" width="8" y="12" x="0" />
-                        <rect height="8" width="8" y="12" x="12" />
-                        <rect height="8" width="8" y="0" x="24" />
-                        <rect height="8" width="8" y="24" x="0" />
-                        <rect height="8" width="8" y="24" x="12" />
-                        <rect height="8" width="8" y="24" x="24" />
-                        <path transform="rotate(-90, 18, 18)" d="m3.87079,31.999319l0,-28.125684l28.126548,28.125684l-28.126548,0z" fill="${group.iconColor}" />
+                        <rect height="32" width="32" />
+                        <rect height="32" width="32" x="48" />
+                        <rect height="32" width="32" x="96" y="48" />
+                        <rect height="32" width="32" y="48" />
+                        <rect height="32" width="32" x="48" y="48" />
+                        <rect height="32" width="32" x="96" />
+                        <rect height="32" width="32" y="96" />
+                        <rect height="32" width="32" x="48" y="96" />
+                        <rect height="32" width="32" x="96" y="96" />
+                        <path transform="rotate(-90, 73, 71)" fill="${group.iconColor}" d="m16.000351,126.001527l0,-110.000003l108.999285,110.000003l-108.999285,0z"/>
                     </g>
                 </svg>
             `,
@@ -666,7 +665,7 @@ export default {
 
     notify,
 
-    isBlockedFavIcon,
+    normalizeFavIcon,
 
     getSupportedExternalExtensionName,
 

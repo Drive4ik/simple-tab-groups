@@ -62,7 +62,6 @@
 
                 permissions: {
                     bookmarks: false,
-                    allUrls: false,
                 },
 
                 defaultBookmarksParents: [],
@@ -95,7 +94,6 @@
             }, this);
 
             this.permissions.bookmarks = await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
-            this.permissions.allUrls = await browser.permissions.contains(constants.PERMISSIONS.ALL_URLS);
 
             this.loadBookmarksParents();
 
@@ -291,12 +289,17 @@
                 }
 
                 if (data.pinnedTabs) {
-                    let currentPinnedTabs = await Tabs.get(undefined, true, null);
+                    let currentPinnedTabs = await Tabs.get(null, true, null);
+
                     data.pinnedTabs = data.pinnedTabs.filter(function(tab) {
                         tab.pinned = true;
                         return tab.url && !currentPinnedTabs.some(t => t.url === tab.url) && utils.isUrlAllowToCreate(tab.url);
                     });
-                    await BG.createTabsSafe(data.pinnedTabs, false, false, false);
+
+                    if (data.pinnedTabs) {
+                        await BG.createTabsSafe(data.pinnedTabs, false, false, false);
+                    }
+
                     delete data.pinnedTabs;
                 }
 
@@ -509,7 +512,7 @@
 
                 await storage.set({lastCreatedGroupPosition});
 
-                await BG.createTabsSafe(tabsToCreate
+                let tabs = tabsToCreate
                     .map(function(tab) {
                         tab.url = utils.normalizeUrl(tab.url);
                         return tab;
@@ -518,9 +521,12 @@
                     .map(function(tab) {
                         delete tab.active;
                         delete tab.windowId;
+                        delete tab.index;
 
                         return tab;
-                    }), true);
+                    });
+
+                await BG.createTabsSafe(tabs, true);
 
                 utils.notify(browser.i18n.getMessage('backupSuccessfullyRestored'));
             },
@@ -573,14 +579,6 @@
 
                 if (this.permissions.bookmarks) {
                     this.defaultBookmarksParents = await BG.browser.bookmarks.get(constants.defaultBookmarksParents);
-                }
-            },
-
-            async setPermissionsAllUrls(event) {
-                if (event.target.checked) {
-                    this.permissions.allUrls = await browser.permissions.request(constants.PERMISSIONS.ALL_URLS);
-                } else {
-                    await browser.permissions.remove(constants.PERMISSIONS.ALL_URLS);
                 }
             },
         },
@@ -718,8 +716,8 @@
             </div>
             <div class="field">
                 <label class="checkbox">
-                    <input type="checkbox" v-model="permissions.allUrls" @click="setPermissionsAllUrls" @change="!permissions.allUrls && (includeTabThumbnailsIntoBackup = false) " />
-                    <span v-text="lang('createThumbnailsForTabs')"></span>
+                    <input v-model="options.showTabsWithThumbnailsInManageGroups" type="checkbox" />
+                    <span v-text="lang('showTabsWithThumbnailsInManageGroups')"></span>
                 </label>
             </div>
 

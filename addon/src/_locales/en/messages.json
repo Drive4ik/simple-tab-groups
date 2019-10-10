@@ -393,10 +393,6 @@
         "message": "Discard tabs after hide (this will save the RAM)",
         "description": "Discard tabs after hide (this will save the RAM)"
     },
-    "createThumbnailsForTabs": {
-        "message": "Create thumbnails for tabs (used in the \"Manage groups\")",
-        "description": "Create thumbnails for tabs (used in the \"Manage groups\")"
-    },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "It is not possible to change the group because one of the opened tabs share microphone or camera",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
@@ -721,10 +717,6 @@
         "message": "Reload all tabs in group",
         "description": "Reload all tabs in group"
     },
-    "tabsInListView": {
-        "message": "Tabs in list",
-        "description": "Tabs in list"
-    },
     "tabsCreatedCount": {
         "message": "$tabscount$ tabs created",
         "description": "Tabs created count",
@@ -742,5 +734,13 @@
     "discardOtherGroups": {
         "message": "Discard other groups",
         "description": "Discard other groups"
+    },
+    "showTabsWithThumbnailsInManageGroups": {
+        "message": "Show tabs with thumbnails in \"Manage groups\" page",
+        "description": "Show tabs with thumbnails in \"Manage groups\" page"
+    },
+    "alwaysOpenTabsInContainer": {
+        "message": "Always open tabs in container",
+        "description": "Always open tabs in container"
     }
 }
