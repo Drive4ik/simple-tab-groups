@@ -203,6 +203,20 @@
             }
         }
     },
+    "groupTabsCountActive": {
+        "message": "$active$/$count$ Tabs aktiv",
+        "description": "Group tabs count active",
+        "placeholders": {
+            "active": {
+                "content": "$1",
+                "example": "2"
+            },
+            "count": {
+                "content": "$2",
+                "example": "4"
+            }
+        }
+    },
     "deleteTab": {
         "message": "Lösche Tab",
         "description": "Delete tab"
@@ -294,6 +308,14 @@
     "hotkeyActionTitleLoadPrevGroup": {
         "message": "Lade vorherige Gruppe",
         "description": "Load previous group"
+    },
+    "hotkeyActionTitleLoadHistoryNextGroup": {
+        "message": "Nächste Gruppe aus der History laden",
+        "description": "Load next group from history"
+    },
+    "hotkeyActionTitleLoadHistoryPrevGroup": {
+        "message": "Vorherige Gruppe aus der History laden",
+        "description": "Load previous group from history"
     },
     "hotkeyActionTitleLoadFirstGroup": {
         "message": "Lade erste Gruppe",
@@ -654,5 +676,59 @@
     "folderNameTitle": {
         "message": "Ordnername",
         "description": "Folder name title"
+    },
+    "backupSuccessfullyRestored": {
+        "message": "Backup erfolgreich wiederhergestellt!",
+        "description": "Backup successfully restored"
+    },
+    "loading": {
+        "message": "Lädt, bitte warten...",
+        "description": "Loading, please wait..."
+    },
+    "showOtherTabs": {
+        "message": "Andere Tabs anzeigen",
+        "description": "Show other tabs"
+    },
+    "dontDiscardTabsAfterHideThisGroup": {
+        "message": "Tabs in dieser Gruppe nicht verwerfen, nachdem Sie sie ausgeblendet haben",
+        "description": "Don't discard tabs into this group after hide"
+    },
+    "showNotificationAfterGroupDelete": {
+        "message": "Nachricht anzeigen, nachdem die Gruppe gelöscht wurde",
+        "description": "Show notification after group delete"
+    },
+    "reloadTab": {
+        "message": "Tab neu laden",
+        "description": "Reload tab"
+    },
+    "thisTabIsNotSupported": {
+        "message": "Dieser Tab wird nicht unterstützt",
+        "description": "This tab is not supported"
+    },
+    "showExtendGroupsPopupWithActiveTabs": {
+        "message": "Zeige aktive Tabs im Gruppen-Popup",
+        "description": "Show active tabs in groups popup"
+    },
+    "reloadAllTabsInGroup": {
+        "message": "Alle Tabs der Gruppe neu laden",
+        "description": "Reload all tabs in group"
+    },
+    "tabsCreatedCount": {
+        "message": "$tabscount$ Tabs erstellt",
+        "description": "Tabs created count",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "tabsNotCreated": {
+        "message": "Tabs nicht erstellt",
+        "description": "Tabs not created"
+    },
+    "discardOtherGroups": {
+        "message": "Andere Gruppen verwerfen",
+        "description": "Discard other groups"
     }
 }
