@@ -102,7 +102,7 @@
                 }, {
                     deep: true,
                 });
-            });
+            };
 
             for (let cookieStoreId in this.containers) {
                 groups.forEach(function(gr) {
