@@ -288,7 +288,13 @@
                             this.loadUnsyncedTabs();
                             break;
                         case 'group-loaded':
-                            this.loadCurrentWindow();
+                            await this.loadCurrentWindow();
+
+                            if (isSidebar && this.options.followToLoadedGroupInSideBar) {
+                                if (this.currentGroup && this.currentGroup.id === request.groupId && this.groupToShow !== this.currentGroup) {
+                                    this.showSectionGroupTabs(this.currentGroup);
+                                }
+                            }
                             break;
                         case 'options-updated':
                             if (isSidebar) {

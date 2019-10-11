@@ -681,6 +681,12 @@
             </div>
             <div class="field">
                 <label class="checkbox">
+                    <input v-model="options.followToLoadedGroupInSideBar" type="checkbox" />
+                    <span v-text="lang('followToLoadedGroupInSideBar')"></span>
+                </label>
+            </div>
+            <div class="field">
+                <label class="checkbox">
                     <input v-model="options.showExtendGroupsPopupWithActiveTabs" type="checkbox" />
                     <span v-text="lang('showExtendGroupsPopupWithActiveTabs')"></span>
                 </label>

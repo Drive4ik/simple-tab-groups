@@ -271,6 +271,8 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
 
         sendMessage({
             action: 'group-loaded',
+            groupId,
+            windowId,
         });
 
         result = true;

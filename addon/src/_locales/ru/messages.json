@@ -746,5 +746,9 @@
     "alwaysOpenTabsInContainer": {
         "message": "Всегда открывать вкладки в контейнере",
         "description": "Always open tabs in container"
+    },
+    "followToLoadedGroupInSideBar": {
+        "message": "Следовать за загруженной группой (в боковом меню)",
+        "description": "Follow to loaded group (in sidebar)"
     }
 }
