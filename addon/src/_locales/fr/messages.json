@@ -738,5 +738,13 @@
     "discardOtherGroups": {
         "message": "Décharger les autres groupes de la mémoire",
         "description": "Discard other groups"
+    },
+    "showTabsWithThumbnailsInManageGroups": {
+        "message": "Afficher les onglets avec des vignettes dans la page \"Gérer les groupes\"",
+        "description": "Show tabs with thumbnails in \"Manage groups\" page"
+    },
+    "alwaysOpenTabsInContainer": {
+        "message": "Toujours ouvrir les onglets dans un contexte",
+        "description": "Always open tabs in container"
     }
 }
