@@ -323,6 +323,10 @@
         "message": "移动活动标签页到自定义群组",
         "description": "Move active tab to custom group"
     },
+    "hotkeyActionTitleDiscardGroup": {
+        "message": "丢弃（休眠）群组",
+        "description": "Hotkey action Discard group"
+    },
     "whatsWrongMessage": {
         "message": "出什么错了……\n请联系开发者，发送电子邮件，附上最新错误日志的JSON文件（在选项的底部有个保存日志的按钮）",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"

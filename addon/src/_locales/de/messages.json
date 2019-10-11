@@ -345,6 +345,14 @@
         "message": "Verschiebe aktiven Tab in benutzerdefinierte Gruppe",
         "description": "Move active tab to custom group"
     },
+    "hotkeyActionTitleDiscardGroup": {
+        "message": "Gruppe verwerfen",
+        "description": "Hotkey action Discard group"
+    },
+    "hotkeyActionTitleDiscardOtherGroups": {
+        "message": "Andere Gruppen verwerfen",
+        "description": "Hotkey action Discard other groups"
+    },
     "whatsWrongMessage": {
         "message": "Was ist los...?\nBitte kontaktiere den Entwickler über die Support-Email mit den letzten Error-Logs (Schaltfäche am Ende der Optionen)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"

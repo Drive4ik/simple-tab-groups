@@ -345,6 +345,14 @@
         "message": "Déplacer les onglets actifs vers un groupe personnalisé",
         "description": "Move active tab to custom group"
     },
+    "hotkeyActionTitleDiscardGroup": {
+        "message": "Décharger le groupe de la mémoire",
+        "description": "Hotkey action Discard group"
+    },
+    "hotkeyActionTitleDiscardOtherGroups": {
+        "message": "Décharger les autres groupes de la mémoire",
+        "description": "Hotkey action Discard other groups"
+    },
     "whatsWrongMessage": {
         "message": "Un problème... ?\nPrenez contact avec le développeur par email avec le dernier log d'erreur (le bouton se trouve en bas des préférences)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"

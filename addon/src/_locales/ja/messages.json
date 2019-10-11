@@ -323,6 +323,10 @@
         "message": "アクティブなタブをカスタムグループへ移動",
         "description": "Move active tab to custom group"
     },
+    "hotkeyActionTitleDiscardGroup": {
+        "message": "タブを廃棄する",
+        "description": "Hotkey action Discard group"
+    },
     "whatsWrongMessage": {
         "message": "なにか問題が起きました...\n開発者にEメールでエラーログをお送りいただけますようご協力をお願いします。(Simple Tab Groups の設定画面の一番下にログを出力するためのボタンがあります)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"

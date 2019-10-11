@@ -323,6 +323,10 @@
         "message": "Местене на разделa в определена група",
         "description": "Move active tab to custom group"
     },
+    "hotkeyActionTitleDiscardGroup": {
+        "message": "Освобождаване на паметта от разделите в групата",
+        "description": "Hotkey action Discard group"
+    },
     "saveErrorLogsIntoFile": {
         "message": "Запазване на последните грешки във файл на JSON",
         "description": "Save last error logs into JSON file"

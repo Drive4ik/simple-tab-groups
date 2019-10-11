@@ -345,6 +345,10 @@
         "message": "移動活動分頁到自訂分頁群組",
         "description": "Move active tab to custom group"
     },
+    "hotkeyActionTitleDiscardGroup": {
+        "message": "廢棄(休眠)群組",
+        "description": "Hotkey action Discard group"
+    },
     "whatsWrongMessage": {
         "message": "出錯囉...\n請寄信聯絡開發者，並附上最近的錯誤記錄 (選項頁面最下面的按鈕)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"

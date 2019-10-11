@@ -345,6 +345,10 @@
         "message": "Przenieś aktywną zakładkę do niestandardowej grupy.",
         "description": "Move active tab to custom group"
     },
+    "hotkeyActionTitleDiscardGroup": {
+        "message": "Porzuć grupę",
+        "description": "Hotkey action Discard group"
+    },
     "whatsWrongMessage": {
         "message": "Co jest nie tak...\nProszę skontaktuj się z programistą, wysyłając e-maila z powiadomieniami o błędach (przycisk dostępny na dole strony z opcjami)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
