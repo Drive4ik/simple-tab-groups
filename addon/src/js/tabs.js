@@ -523,6 +523,9 @@ function isCanSendMessage(tabUrl) {
 function sendMessage(tabId, message) {
     const {BG} = browser.extension.getBackgroundPage();
 
+    let {enableDarkTheme} = BG.getOptions();
+    message.enableDarkTheme = enableDarkTheme;
+
     return BG.browser.tabs.sendMessage(tabId, message).catch(function() {});
 }
 

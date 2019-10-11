@@ -345,6 +345,14 @@
         "message": "Переместить активную вкладку в другую группу",
         "description": "Move active tab to custom group"
     },
+    "hotkeyActionTitleDiscardGroup": {
+        "message": "Выгрузить группу",
+        "description": "Hotkey action Discard group"
+    },
+    "hotkeyActionTitleDiscardOtherGroups": {
+        "message": "Выгрузить другие группы",
+        "description": "Hotkey action Discard other groups"
+    },
     "whatsWrongMessage": {
         "message": "Что-то не так... Пожалуйста свяжитесь с разработчиком по email с логом ошибок (есть кнопка внизу на странице настроек плагина)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"

@@ -18,7 +18,8 @@ export default {
         } catch (e) {
             errorCounter++;
 
-            if (errorCounter > 20) {
+            if (errorCounter > 100) {
+                console.error(e);
                 throw e;
             }
 

@@ -670,7 +670,6 @@ async function addUndoRemoveGroupItem(groupToRemove) {
             await createTabsSafe(tabs.map(function(tab) {
                 delete tab.active;
                 delete tab.windowId;
-                delete tab.index;
 
                 return tab;
             }), true, group.id);
@@ -1451,7 +1450,8 @@ async function runAction(data, externalExtId) {
 
     try {
         let currentWindow = await Windows.getLastFocusedNormalWindow(false),
-            [currentGroup, groups] = await Groups.load(currentWindow.session.groupId || -1);
+            loadCurrentGroupWithTabs = currentWindow.session.groupId ? ['discard-group', 'discard-other-groups'].includes(data.action) : false,
+            [currentGroup, groups] = await Groups.load(currentWindow.session.groupId || -1, loadCurrentGroupWithTabs);
 
         switch (data.action) {
             case 'are-you-here':
@@ -1493,16 +1493,14 @@ async function runAction(data, externalExtId) {
                         await applyGroup(currentWindow.id, data.groupId);
                         result.ok = true;
                     } else {
-                        result = await runAction({
-                            action: 'load-custom-group',
-                            groupId: 0,
-                        });
+                        data.groupId = 0;
+                        result = await runAction(data, externalExtId);
                     }
                 } else if ('new' === data.groupId) {
                     await Groups.add();
                     result = await runAction({
                         action: 'load-last-group',
-                    });
+                    }, externalExtId);
                 } else {
                     let activeTab = await Tabs.getActive();
 
@@ -1516,7 +1514,7 @@ async function runAction(data, externalExtId) {
                         popupAction: 'load-custom-group',
                         popupTitleLang: 'hotkeyActionTitleLoadCustomGroup',
                         groups: groups.map(Groups.mapGroupForExternalExtension),
-                        disableGroupId: currentGroup && currentGroup.id,
+                        disableGroupIds: currentGroup ? [currentGroup.id] : [],
                     });
 
                     result.ok = true;
@@ -1561,10 +1559,8 @@ async function runAction(data, externalExtId) {
                         await Tabs.move([activeTab], data.groupId);
                         result.ok = true;
                     } else {
-                        result = await runAction({
-                            action: 'move-active-tab-to-custom-group',
-                            groupId: 0,
-                        });
+                        data.groupId = 0;
+                        result = await runAction(data, externalExtId);
                     }
                 } else if ('new' === data.groupId) {
                     await Groups.add(undefined, [activeTab]);
@@ -1580,14 +1576,48 @@ async function runAction(data, externalExtId) {
                         popupAction: 'move-active-tab-to-custom-group',
                         popupTitleLang: 'moveTabToGroupDisabledTitle',
                         groups: groups.map(Groups.mapGroupForExternalExtension),
-                        disableGroupId: activeTab.session.groupId,
+                        disableGroupIds: [activeTab.session.groupId],
                     });
                     result.ok = true;
                 }
                 break;
-            case 'get-hotkeys':
+            case 'discard-group':
+                let groupToDiscard = groups.find(group => group.id === data.groupId);
+
+                if (groupToDiscard) {
+                    await Tabs.discard(groupToDiscard.tabs.map(utils.keyId));
+                    result.ok = true;
+                } else {
+                    let activeTab = await Tabs.getActive();
+
+                    if (!Tabs.isCanSendMessage(activeTab.url)) {
+                        utils.notify(browser.i18n.getMessage('thisTabIsNotSupported'), 7000);
+                        break;
+                    }
+
+                    Tabs.sendMessage(activeTab.id, {
+                        action: 'show-groups-popup',
+                        popupAction: 'discard-group',
+                        popupTitleLang: 'discardGroupTitle',
+                        groups: groups.map(Groups.mapGroupForExternalExtension),
+                        focusedGroupId: currentGroup ? currentGroup.id : null,
+                        disableNewGroupItem: true,
+                    });
+                    result.ok = true;
+                }
+                break;
+            case 'discard-other-groups':
+                if (!currentGroup) {
+                    currentGroup = {
+                        id: 0,
+                    };
+                }
+
+                let tabIds = groups.reduce((acc, gr) => [...acc, ...(gr.id === currentGroup.id ? [] : gr.tabs.map(utils.keyId))], []);
+
+                await Tabs.discard(tabIds);
+
                 result.ok = true;
-                result.hotkeys = options.hotkeys;
                 break;
             default:
                 throw Error(`Action '${data.action}' is wrong`);
@@ -1628,7 +1658,6 @@ async function saveOptions(_options) {
             }),
             actionData = {
                 action: 'update-hotkeys',
-                hotkeys: options.hotkeys,
             };
 
         tabs.forEach(tab => Tabs.sendMessage(tab.id, actionData));

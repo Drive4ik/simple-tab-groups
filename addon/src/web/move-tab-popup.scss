@@ -12,8 +12,22 @@
     -moz-user-select: none;
     z-index: 2147483647;
 
+    --text-color: #000;
+    --background-color: #fbfbfb;
+    --text-focus-color: #bababa;
+    --background-focus-color: #91c9f7;
+    --fill-icon-color: #5d5d5d;
+
+    &.dark-theme {
+        --text-color: #e0e0e0;
+        --background-color: #444444;
+        --text-focus-color: #575757;
+        --background-focus-color: rgba(126, 126, 126, 0.3);
+        --fill-icon-color: var(--text-color);
+    }
+
     .stg-popup-has-text {
-        color: #000;
+        color: var(--text-color) !important;
         font-family: Arial, sans-serif;
         font-size: 16px;
         font-weight: normal;
@@ -23,7 +37,7 @@
     }
 
     .stg-popup-main {
-        background-color: #fbfbfb;
+        background-color: var(--background-color) !important;
         border-radius: 5px;
         padding: 10px;
         min-width: 600px;
@@ -31,7 +45,6 @@
         white-space: nowrap;
 
         .stg-popup-header {
-            color: initial;
             text-align: center;
             outline: none;
         }
@@ -54,14 +67,15 @@
 
                 &:not(.stg-popup-disabled):hover,
                 &:not(.stg-popup-disabled):focus {
-                    background-color: #91c9f7;
+                    color: var(--text-focus-color) !important;
+                    background-color: var(--background-focus-color) !important;
                 }
 
                 &.stg-popup-disabled {
                     cursor: not-allowed;
 
                     span {
-                        color: GrayText;
+                        color: GrayText !important;
                     }
                 }
 
@@ -70,7 +84,7 @@
                     height: 16px;
                     margin-right: 5px;
                     -moz-context-properties: fill;
-                    fill: #5d5d5d;
+                    fill: var(--fill-icon-color) !important;
                 }
             }
         }

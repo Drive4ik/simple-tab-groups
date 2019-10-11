@@ -2,21 +2,36 @@
 
 import './move-tab-popup.scss';
 
-let hotkeys = [],
+let errorCounter = 0,
+    hotkeys = [],
     foundHotKey = false;
 
 const popupId = 'stg-move-tab-to-group-popup-wrapper';
 
 browser.runtime.onMessage.addListener(changeHotkeysListener);
 
-browser.runtime.sendMessage({
-        action: 'get-hotkeys',
-    })
-    .then(init)
-    .catch(function() {});
+init();
 
-function init(result) {
+async function init() {
     resetWindowEvents();
+
+    let result = null;
+
+    try {
+        result = await browser.storage.local.get({hotkeys});
+
+        if (!result) {
+            throw Error;
+        }
+    } catch (e) {
+        errorCounter++;
+
+        if (errorCounter < 100) {
+            setTimeout(init, 200);
+        }
+
+        return;
+    }
 
     hotkeys = result.hotkeys;
 
@@ -31,7 +46,7 @@ function changeHotkeysListener(request, sender) {
     }
 
     if (request.action === 'update-hotkeys') {
-        init(request);
+        init();
     } else if ('show-groups-popup' === request.action) {
         showGroupsPopup(request);
     }
@@ -106,6 +121,10 @@ function showGroupsPopup(data) {
     let wrapper = document.createElement('div'),
         closeGroupsPopup = wrapper.remove.bind(wrapper);
 
+    if (data.enableDarkTheme) {
+        wrapper.classList.add('dark-theme');
+    }
+
     Object.assign(wrapper, {
         id: popupId,
         onclick: closeGroupsPopup,
@@ -120,7 +139,7 @@ function showGroupsPopup(data) {
     let header = document.createElement('div');
     header.classList = 'stg-popup-has-text stg-popup-header';
     Object.assign(header, {
-        tabIndex: '-1',
+        tabIndex: -1,
         innerText: browser.i18n.getMessage(data.popupTitleLang),
         onclick: e => e.stopPropagation(),
         onkeydown: function(e) {
@@ -151,10 +170,12 @@ function showGroupsPopup(data) {
         }
     }
 
-    function createGroupNode(group, tabIndex, isEnabled) {
+    function createGroupNode(group, isEnabled) {
         let groupNode = document.createElement('div'),
             imgNode = document.createElement('img'),
             titleNode = document.createElement('span');
+
+        groupNode.dataset.groupId = group.id;
 
         groupNode.classList.add('stg-popup-group');
 
@@ -166,7 +187,7 @@ function showGroupsPopup(data) {
         groupNode.append(titleNode);
 
         if (isEnabled) {
-            groupNode.tabIndex = tabIndex;
+            groupNode.tabIndex = 0;
 
             groupNode.onmouseover = () => groupsWrapper.contains(document.activeElement) && header.focus();
 
@@ -192,6 +213,7 @@ function showGroupsPopup(data) {
                 }
             };
         } else {
+            groupNode.tabIndex = -1;
             groupNode.classList.add('stg-popup-disabled');
             groupNode.onclick = function(e) {
                 e.stopPropagation();
@@ -233,14 +255,18 @@ function showGroupsPopup(data) {
         }
     }
 
-    data.groups.forEach((group, index) => groupsWrapper.append(createGroupNode(group, index + 1, group.id !== data.disableGroupId)));
+    if (!Array.isArray(data.disableGroupIds)) {
+        data.disableGroupIds = [];
+    }
 
-    if (false !== data.disableNewGroupItem) {
+    data.groups.forEach(group => groupsWrapper.append(createGroupNode(group, !data.disableGroupIds.includes(group.id))));
+
+    if (true !== data.disableNewGroupItem) {
         let newGroupNode = createGroupNode({
             id: 'new',
             title: browser.i18n.getMessage('createNewGroup'),
             iconUrl: browser.extension.getURL('/icons/group-new.svg'),
-        }, groupsWrapper.children.length + 1, true);
+        }, true);
 
         // newGroupNode.style.justifyContent = 'center';
 
@@ -252,12 +278,21 @@ function showGroupsPopup(data) {
         wrapper.style.opacity = '1';
         wrapper.style.visibility = 'visible';
 
-        let hoveredElements = document.querySelectorAll(':hover');
-
-        if (groupsWrapper.contains(hoveredElements[hoveredElements.length - 1])) {
-            header.focus();
+        if (data.focusedGroupId) {
+            [...groupsWrapper.children].some(function(groupNode) {
+                if (data.focusedGroupId == groupNode.dataset.groupId) {
+                    groupNode.focus();
+                    return true;
+                }
+            });
         } else {
-            setFocusToNextElement(groupsWrapper.lastElementChild, 'down');
+            let hoveredElements = document.querySelectorAll(':hover');
+
+            if (groupsWrapper.contains(hoveredElements[hoveredElements.length - 1])) {
+                header.focus();
+            } else {
+                setFocusToNextElement(groupsWrapper.lastElementChild, 'down');
+            }
         }
 
     }, 50);
