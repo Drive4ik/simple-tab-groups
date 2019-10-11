@@ -119,7 +119,8 @@ Permissions used:
  * **sessions**: for save session data (last used group, etc)
  * **downloads**: for create auto backups
  * **storage**: for saving groups localy
- * **(optional) <all_urls>(Access your data for all websites)**: for tab thumbnails
+ * **<all_urls>(Access your data for all websites)**: for tab thumbnails and catch/move/reopen tabs in needed containers/groups
+ * **webRequest** & **webRequestBlocking**: for catch/move/reopen tabs in needed containers/groups</li>
  * **(optional) bookmarks**: access for create bookmarks
 
 ## License and Credits
