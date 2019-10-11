@@ -115,6 +115,12 @@
         },
         "add-new-group": {
             "description": "Add new group"
+        },
+        "discard-group": {
+            "description": "Discard group"
+        },
+        "discard-other-groups": {
+            "description": "Discard other groups"
         }
     }
 
