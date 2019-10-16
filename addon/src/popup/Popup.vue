@@ -174,6 +174,10 @@
                 this.$nextTick(function() {
                     let activeItemNode = Array.from(document.querySelectorAll('.is-active')).find(el => el.offsetParent);
 
+                    if (activeItemNode) {
+                        activeItemNode.focus();
+                    }
+
                     utils.scrollTo(activeItemNode);
                 });
             },
@@ -733,7 +737,7 @@
                 }
             },
 
-            scrollToActiveElement(event) {
+            scrollToActiveElement() {
                 this.$nextTick(() => utils.scrollTo(document.activeElement));
             },
 
