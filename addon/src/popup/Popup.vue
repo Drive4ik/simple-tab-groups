@@ -323,6 +323,7 @@
                 this.section = SECTION_DEFAULT;
                 this.groupToShow = null;
                 this.search = '';
+                this.scrollIntoView();
             },
 
             $_simpleSortTabs(searchStr, a, b) {
