@@ -4,8 +4,9 @@
         v-show="show"
         :style="style"
         tabindex="-1"
-        @blur="close"
+        @blur="onblur"
         @click="close"
+        @keydown.esc.stop="close"
         @contextmenu.capture.prevent="close"
         >
         <slot :data="data"></slot>
@@ -25,7 +26,7 @@
                 top: null,
                 left: null,
                 data: null,
-                show: false
+                show: false,
             };
         },
         computed: {
@@ -38,7 +39,7 @@
                     top: this.top + 'px',
                     left: this.left + 'px',
                 };
-            }
+            },
         },
         methods: {
             close() {
@@ -53,13 +54,33 @@
                 this.$nextTick(function() {
                     this.setMenu(event.clientY, event.clientX);
                     this.$el.focus();
+
+                    [...this.$el.firstElementChild.children]
+                        .filter(node => 'LI' === node.nodeName && !node.classList.contains('is-disabled'))
+                        .forEach(function(node) {
+                            node.tabIndex = 0;
+                            node.addEventListener('keyup', function(event) {
+                                if (KeyEvent.DOM_VK_RETURN === event.keyCode) {
+                                    event.stopPropagation();
+                                    event.stopImmediatePropagation();
+                                    node.click();
+                                }
+                            }, false);
+                            node.addEventListener('blur', this.onblur.bind(this), false);
+                        }, this);
                 });
             },
 
             setMenu(top, left) {
                 this.top = Math.min(top, window.innerHeight - this.$el.offsetHeight - this.minMargin);
                 this.left = Math.min(left, window.innerWidth - this.$el.offsetWidth - this.minMargin);
-            }
+            },
+
+            onblur(event) {
+                if (!this.$el.contains(event.relatedTarget)) {
+                    this.close();
+                }
+            },
         }
     }
 </script>
@@ -117,7 +138,8 @@
                     background: #e3e3e3;
                 }
 
-                &:not(.is-disabled):hover {
+                &:not(.is-disabled):hover,
+                &:not(.is-disabled):focus {
                     background: #91c9f7;
                 }
             }

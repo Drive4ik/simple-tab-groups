@@ -11,19 +11,31 @@
                 type: Array,
                 default: () => [],
             },
+            autofocusOnButton: {
+                type: Boolean,
+                default: true,
+            },
         },
         methods: {
             lang: browser.i18n.getMessage,
         },
         mounted() {
-            this.$nextTick(() => this.$emit('show-popup'));
+            this.$nextTick(function() {
+                this.$emit('show-popup');
+
+                if (this.autofocusOnButton) {
+                    let button = this.$el.querySelector('footer button');
+                    button && button.focus();
+                }
+
+            });
         },
     }
 </script>
 
 <template>
-    <div class="modal popup is-active" @keydown.stop @keyup.stop>
-        <div class="modal-background" @click="$emit('close-popup')"></div>
+    <div class="modal popup is-active" @keydown.esc.stop="$emit('close-popup')">
+        <div class="modal-background" @click="$emit('close-popup')" @keydown.enter="$emit('close-popup')" tabindex="0"></div>
         <div class="modal-card">
             <header class="modal-card-head">
                 <p class="modal-card-title" v-text="title"></p>

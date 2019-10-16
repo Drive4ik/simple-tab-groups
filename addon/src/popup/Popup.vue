@@ -56,8 +56,6 @@
                 dragData: null,
                 someGroupAreLoading: false,
 
-                hoverItem: null,
-
                 nextGroupTitle: '',
                 isShowingCreateGroupPopup: false,
 
@@ -378,10 +376,6 @@
                 let groups = await Groups.load(null, true);
 
                 this.groups = groups.map(this.mapGroup, this);
-
-                if (this.hoverItem && this.isGroup(this.hoverItem)) {
-                    this.hoverItem = this.groups.find(group => group.id === this.hoverItem.id) || null;
-                }
 
                 this.multipleTabs = [];
             },
@@ -739,121 +733,8 @@
                 }
             },
 
-            isGroup(obj) {
-                return 'tabs' in obj;
-            },
-
-            async setHoverItemByKey(arrow, event) {
-                if (this.groupToEdit || this.groupToRemove) {
-                    return;
-                }
-
-                this.$el.focus();
-
-                if ('up' === arrow || 'down' === arrow) {
-                    event.preventDefault();
-                }
-
-                switch (this.section) {
-                    case SECTION_SEARCH:
-                        {
-                            if (!this.filteredGroupsBySearch.length) {
-                                return;
-                            }
-
-                            let allItems = this.filteredGroupsBySearch.reduce((accum, group) => [...accum, group, ...group.filteredTabsBySearch], []),
-                                index = allItems.indexOf(this.hoverItem);
-
-                            if ('up' === arrow) {
-                                index = utils.getNextIndex(index, allItems.length, 'prev');
-                                this.hoverItem = allItems[index] || null;
-                            } else if ('down' === arrow) {
-                                index = utils.getNextIndex(index, allItems.length, 'next');
-                                this.hoverItem = allItems[index] || null;
-                            } else if ('right' === arrow) {
-                                if (this.hoverItem && this.isGroup(this.hoverItem)) { // open group
-                                    this.showSectionGroupTabs(this.hoverItem);
-                                }
-                            } else if ('enter' === arrow) {
-                                if (!this.hoverItem && allItems.length) {
-                                    this.hoverItem = allItems[0];
-                                }
-
-                                if (this.hoverItem) {
-                                    if (this.isGroup(this.hoverItem)) { // is group
-                                        this.applyGroup(this.hoverItem, undefined, true);
-                                    } else { // is tab
-                                        // find group
-                                        let group = this.groups.find(gr => gr.tabs.includes(this.hoverItem));
-                                        this.applyGroup(group, this.hoverItem, true);
-                                    }
-                                }
-                            }
-                        }
-
-                        break;
-                    case SECTION_GROUPS_LIST:
-                        {
-                            let index = this.groups.indexOf(this.hoverItem);
-
-                            if (-1 === index) {
-                                index = this.groups.indexOf(this.currentGroup);
-                            }
-
-                            if ('up' === arrow) {
-                                index = utils.getNextIndex(index, this.groups.length, 'prev');
-                                this.hoverItem = this.groups[index] || null;
-                            } else if ('down' === arrow) {
-                                index = utils.getNextIndex(index, this.groups.length, 'next');
-                                this.hoverItem = this.groups[index] || null;
-                            } else if ('right' === arrow) {
-                                if (this.hoverItem && this.isGroup(this.hoverItem)) {
-                                    this.showSectionGroupTabs(this.hoverItem);
-                                }
-                            } else if ('enter' === arrow) {
-                                if (this.hoverItem) {
-                                    if (this.isGroup(this.hoverItem)) {
-                                        this.applyGroup(this.hoverItem, undefined, true);
-                                    }
-                                } else {
-                                    this.$refs.search.focus();
-                                }
-                            }
-                        }
-
-                        break;
-                    case SECTION_GROUP_TABS:
-                        {
-                            let index = this.groupToShow.tabs.indexOf(this.hoverItem);
-
-                            if (-1 === index && this.getWindowId(this.groupToShow.id)) {
-                                index = this.groupToShow.tabs.findIndex(tab => tab.active);
-                            }
-
-                            if ('up' === arrow) {
-                                index = utils.getNextIndex(index, this.groupToShow.tabs.length, 'prev');
-                                this.hoverItem = this.groupToShow.tabs[index] || null;
-                            } else if ('down' === arrow) {
-                                index = utils.getNextIndex(index, this.groupToShow.tabs.length, 'next');
-                                this.hoverItem = this.groupToShow.tabs[index] || null;
-                            } else if ('left' === arrow) {
-                                this.showSectionDefault();
-                            } else if ('enter' === arrow) {
-                                if (this.hoverItem && -1 !== index) {
-                                    this.applyGroup(this.groupToShow, this.hoverItem, true);
-                                }
-                            } else if ('delete' === arrow) {
-                                if (this.hoverItem && this.groupToShow.tabs.includes(this.hoverItem)) {
-                                    this.removeTab(this.hoverItem);
-                                    this.hoverItem = null;
-                                }
-                            }
-                        }
-
-                        break;
-                }
-
-                this.$nextTick(() => utils.scrollTo('.is-hovered-item'));
+            scrollToActiveElement(event) {
+                this.$nextTick(() => utils.scrollTo(document.activeElement));
             },
 
             toggleLogging() {
@@ -884,23 +765,12 @@
         @wheel.ctrl.prevent
 
         tabindex="-1"
-        @mousemove="hoverItem = null"
-        @keyup.arrow-left="setHoverItemByKey('left', $event)"
-        @keydown.arrow-up="setHoverItemByKey('up', $event)"
-        @keyup.arrow-right="setHoverItemByKey('right', $event)"
-        @keydown.arrow-down="setHoverItemByKey('down', $event)"
-        @keydown.tab="setHoverItemByKey('down', $event)"
-        @keyup.enter="setHoverItemByKey('enter', $event)"
-        @keyup.delete="setHoverItemByKey('delete', $event)"
+        @keydown.tab="scrollToActiveElement"
 
         >
         <header id="search-wrapper">
             <div :class="['field', {'has-addons': search}]">
-                <div class="control is-expanded"
-                    @keydown.arrow-right.stop @keyup.arrow-right.stop
-                    @keydown.arrow-left.stop @keyup.arrow-left.stop
-                    @keydown.delete.stop @keyup.delete.stop
-                    >
+                <div class="control is-expanded">
                     <input
                         type="text"
                         class="input is-small search-input"
@@ -916,7 +786,7 @@
                     </label>
                 </div>
                 <div v-show="search" class="control">
-                    <label class="button is-small" @click="showSectionDefault(); $refs.search.focus();">
+                    <label class="button is-small" tabindex="0" @click="showSectionDefault(); $refs.search.focus();" @keyup.enter="showSectionDefault(); $refs.search.focus();">
                         <img class="size-12" src="/icons/close.svg" />
                     </label>
                 </div>
@@ -933,9 +803,11 @@
                                 :class="['item', {
                                     'is-active': group === currentGroup,
                                     'is-opened': getWindowId(group.id),
-                                    'is-hovered-item': group === hoverItem,
                                 }]"
                                 @click="applyGroup(group)"
+                                @keyup.enter="applyGroup(group)"
+                                @keydown.arrow-right="showSectionGroupTabs(group)"
+                                tabindex="0"
                                 :title="getGroupTitle(group, 'withTabsCount withTabs')"
                                 >
                                 <div class="item-icon">
@@ -952,11 +824,13 @@
                         <div v-for="(tab, index) in group.filteredTabsBySearch" :key="index"
                             @contextmenu="$refs.tabsContextMenu.open($event, {tab, group})"
                             @click.stop="clickOnTab($event, tab, group)"
+                            @keyup.enter="clickOnTab($event, tab, group)"
+                            @keyup.delete="removeTab(tab)"
+                            tabindex="0"
                             @mousedown.middle.prevent
                             @mouseup.middle.prevent="removeTab(tab)"
                             :class="['tab item is-unselectable space-left', {
                                 'is-active': group === currentGroup && tab.active,
-                                'is-hovered-item': tab === hoverItem,
                                 'is-multiple-tab-to-move': multipleTabs.includes(tab),
                             }]"
                             :title="getTabTitle(tab, true)"
@@ -998,7 +872,6 @@
                             'drag-moving': group.isMoving,
                             'drag-over': group.isOver,
                         }]"
-                        @contextmenu="$refs.groupContextMenu.open($event, {group})"
 
                         draggable="true"
                         @dragstart="dragHandle($event, 'group', ['group'], {item: group})"
@@ -1012,9 +885,12 @@
                             :class="['item', {
                                 'is-active': group === currentGroup,
                                 'is-opened': getWindowId(group.id),
-                                'is-hovered-item': group === hoverItem,
                             }]"
+                            @contextmenu="$refs.groupContextMenu.open($event, {group})"
                             @click="applyGroup(group)"
+                            @keyup.enter="applyGroup(group)"
+                            @keydown.arrow-right="showSectionGroupTabs(group)"
+                            tabindex="0"
                             :title="getGroupTitle(group, 'withTabsCount withTabs')"
                             >
                             <div class="item-icon">
@@ -1033,7 +909,7 @@
                 <hr>
 
                 <div class="create-new-group">
-                    <div class="item" @click="showCreateGroupPopup">
+                    <div class="item" tabindex="0" @click="showCreateGroupPopup" @keyup.enter="showCreateGroupPopup">
                         <div class="item-icon">
                             <img class="size-16" src="/icons/group-new.svg" />
                         </div>
@@ -1043,7 +919,7 @@
 
                 <div v-if="unSyncTabs.length && !showUnSyncTabs">
                     <hr>
-                    <div class="item" @click="showUnSyncTabs = true">
+                    <div class="item" tabindex="0" @click="showUnSyncTabs = true" @keyup.enter="showUnSyncTabs = true">
                         <div class="item-icon">
                             <img class="size-16" src="/icons/arrow-down.svg" />
                         </div>
@@ -1055,20 +931,23 @@
                     <hr>
                     <p class="h-margin-bottom-10">
                         <span v-text="lang('foundHiddenUnSyncTabsDescription')"></span><br>
-                        <a @click="unsyncHiddenTabsMoveToCurrentGroup" v-text="lang('actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup')"></a><br>
-                        <a @click="unsyncHiddenTabsCreateNewGroup" v-text="lang('actionHiddenUnSyncTabsCreateGroup')"></a><br>
-                        <a @click="unsyncHiddenTabsCloseAll" v-text="lang('actionHiddenUnSyncTabsCloseAll')"></a>
+                        <a tabindex="0" @click="unsyncHiddenTabsMoveToCurrentGroup" @keyup.enter="unsyncHiddenTabsMoveToCurrentGroup" v-text="lang('actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup')"></a><br>
+                        <a tabindex="0" @click="unsyncHiddenTabsCreateNewGroup" @keyup.enter="unsyncHiddenTabsCreateNewGroup" v-text="lang('actionHiddenUnSyncTabsCreateGroup')"></a><br>
+                        <a tabindex="0" @click="unsyncHiddenTabsCloseAll" @keyup.enter="unsyncHiddenTabsCloseAll" v-text="lang('actionHiddenUnSyncTabsCloseAll')"></a>
                     </p>
                     <div>
                         <div v-for="tab in unSyncTabs" :key="tab.id"
                             @contextmenu="$refs.tabsContextMenu.open($event, {tab})"
                             @click.stop="($event.ctrlKey || $event.metaKey || $event.shiftKey) ? clickOnTab($event, tab) : unsyncHiddenTabsShowTabIntoCurrentWindow(tab)"
+                            @keyup.enter="($event.ctrlKey || $event.metaKey || $event.shiftKey) ? clickOnTab($event, tab) : unsyncHiddenTabsShowTabIntoCurrentWindow(tab)"
+                            @keydown.delete="removeTab(tab)"
                             @mousedown.middle.prevent
                             @mouseup.middle.prevent="removeTab(tab)"
                             :class="['tab item is-unselectable', {
                                 'is-multiple-tab-to-move': multipleTabs.includes(tab),
                             }]"
                             :title="getTabTitle(tab, true)"
+                            tabindex="0"
                             >
                             <div class="item-icon">
                                 <img v-lazy="tab.favIconUrl" class="size-16" />
@@ -1095,7 +974,7 @@
             <!-- GROUP -->
             <div v-if="section === SECTION_GROUP_TABS">
                 <div class="tabs-list">
-                    <div class="item is-unselectable" @click="showSectionDefault">
+                    <div class="item is-unselectable" tabindex="0" @click="showSectionDefault" @keyup.enter="showSectionDefault">
                         <span class="item-icon">
                             <img class="size-16" src="/icons/arrow-left.svg" />
                         </span>
@@ -1110,10 +989,10 @@
                         </div>
                         <div class="item-title" v-text="getGroupTitle(groupToShow)"></div>
                         <div class="item-action is-unselectable">
-                            <span @click="openGroupSettings(groupToShow)" class="size-16 cursor-pointer" :title="lang('groupSettings')">
+                            <span tabindex="0" @click="openGroupSettings(groupToShow)" @keyup.enter="openGroupSettings(groupToShow)" class="size-16 cursor-pointer" :title="lang('groupSettings')">
                                 <img src="/icons/settings.svg" />
                             </span>
-                            <span @click="removeGroup(groupToShow)" class="size-16 cursor-pointer" :title="lang('deleteGroup')">
+                            <span tabindex="0" @click="removeGroup(groupToShow)" @keyup.enter="removeGroup(groupToShow)" class="size-16 cursor-pointer" :title="lang('deleteGroup')">
                                 <img src="/icons/group-delete.svg" />
                             </span>
                         </div>
@@ -1124,13 +1003,16 @@
                         :key="tabIndex"
                         @contextmenu="$refs.tabsContextMenu.open($event, {tab, group: groupToShow})"
                         @click.stop="clickOnTab($event, tab, groupToShow)"
+                        @keyup.enter="clickOnTab($event, tab, groupToShow)"
+                        @keydown.arrow-left="showSectionDefault"
+                        @keydown.delete="removeTab(tab)"
+                        tabindex="0"
                         @mousedown.middle.prevent
                         @mouseup.middle.prevent="removeTab(tab)"
                         :class="['tab item is-unselectable', {
                             'is-active': groupToShow === currentGroup && tab.active,
                             'drag-moving': tab.isMoving,
                             'drag-over': tab.isOver,
-                            'is-hovered-item': tab === hoverItem,
                             'is-multiple-tab-to-move': multipleTabs.includes(tab),
                         }]"
                         :title="getTabTitle(tab, true)"
@@ -1164,7 +1046,7 @@
                     <hr>
 
                     <div class="create-new-tab">
-                        <div class="item" @contextmenu="Object.keys(containers).length && $refs.createNewTabContextMenu.open($event)" @click="addTab()">
+                        <div class="item" tabindex="0" @contextmenu="Object.keys(containers).length && $refs.createNewTabContextMenu.open($event)" @click="addTab()" @keyup.enter="addTab()">
                             <div class="item-icon">
                                 <img class="size-16" src="/icons/tab-new.svg">
                             </div>
@@ -1176,17 +1058,17 @@
         </main>
 
         <footer v-if="!isSidebar" class="is-flex is-unselectable">
-            <div class="is-flex is-align-items-center manage-groups is-full-height is-full-width" @click="openManageGroups" :title="lang('manageGroupsTitle')">
+            <div tabindex="0" class="is-flex is-align-items-center manage-groups is-full-height is-full-width" @click="openManageGroups" @keyup.enter="openManageGroups" :title="lang('manageGroupsTitle')">
                 <img class="size-16" src="/icons/icon.svg" />
                 <span class="h-margin-left-10" v-text="lang('manageGroupsTitle')"></span>
             </div>
             <div v-if="enableDebug" class="is-flex is-align-items-center is-vertical-separator"></div>
-            <div v-if="enableDebug" class="is-flex is-align-items-center is-full-height" @click="toggleLogging" :title="enableLogging ? 'Stop logging' : 'Start logging'">
+            <div tabindex="0" v-if="enableDebug" class="is-flex is-align-items-center is-full-height" @click="toggleLogging" @keyup.enter="toggleLogging" :title="enableLogging ? 'Stop logging' : 'Start logging'">
                 <img v-if="enableLogging" class="size-16" src="/icons/stop-circle.svg" style="fill: red; margin-right: 5px;" />
                 <img class="size-16" src="/icons/bug.svg" />
             </div>
             <div class="is-flex is-align-items-center is-vertical-separator"></div>
-            <div class="is-flex is-align-items-center is-full-height" @click="openOptionsPage" :title="lang('openSettings')">
+            <div tabindex="0" class="is-flex is-align-items-center is-full-height" @click="openOptionsPage" @keyup.enter="openOptionsPage" :title="lang('openSettings')">
                 <img class="size-16" src="/icons/settings.svg" />
             </div>
         </footer>
@@ -1345,6 +1227,7 @@
             @create-group="createNewGroup(); isShowingCreateGroupPopup = false"
             @close-popup="isShowingCreateGroupPopup = false"
             @show-popup="$refs.nextGroupTitle.focus(); $refs.nextGroupTitle.select()"
+            :autofocus-on-button="false"
             :buttons="
                 [{
                     event: 'create-group',
@@ -1358,7 +1241,7 @@
             <div class="control is-expanded">
                 <input
                     ref="nextGroupTitle"
-                    @keydown.enter.stop="createNewGroup(); isShowingCreateGroupPopup = false"
+                    @keyup.enter.stop="createNewGroup(); isShowingCreateGroupPopup = false"
                     v-model.trim="nextGroupTitle"
                     type="text"
                     class="input" />
@@ -1528,7 +1411,7 @@
         }
 
         &:not(.no-hover):hover,
-        &.is-hovered-item {
+        &:focus {
             background-color: var(--item-background-color-hover);
         }
 
