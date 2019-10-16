@@ -596,24 +596,24 @@
     <div id="stg-options">
         <div class="tabs is-fullwidth">
             <ul>
-                <li :class="{'is-active': section === SECTION_GENERAL}" @click="section = SECTION_GENERAL">
-                    <a>
+                <li :class="{'is-active': section === SECTION_GENERAL}">
+                    <a @click="section = SECTION_GENERAL" @keydown.enter="section = SECTION_GENERAL" tabindex="0">
                         <span class="icon">
                             <img class="size-16" src="/icons/cog.svg">
                         </span>
                         <span v-text="lang('generalTitle')"></span>
                     </a>
                 </li>
-                <li :class="{'is-active': section === SECTION_HOTKEYS}" @click="section = SECTION_HOTKEYS">
-                    <a>
+                <li :class="{'is-active': section === SECTION_HOTKEYS}">
+                    <a @click="section = SECTION_HOTKEYS" @keydown.enter="section = SECTION_HOTKEYS" tabindex="0">
                         <span class="icon">
                             <img class="size-16" src="/icons/keyboard-o.svg">
                         </span>
                         <span v-text="lang('hotkeysTitle')"></span>
                     </a>
                 </li>
-                <li :class="{'is-active': section === SECTION_BACKUP}" @click="section = SECTION_BACKUP">
-                    <a>
+                <li :class="{'is-active': section === SECTION_BACKUP}">
+                    <a @click="section = SECTION_BACKUP" @keydown.enter="section = SECTION_BACKUP" tabindex="0">
                         <span class="icon">
                             <img class="size-16" src="/icons/cloud-upload.svg">
                         </span>
@@ -808,7 +808,7 @@
                         <span>Command</span>
                     </label>
                     <div class="control input-command">
-                        <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(hotkey, $event, true)" :value="hotkey.key" autocomplete="off" class="input" :placeholder="lang('hotkeyPlaceholder')" />
+                        <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(hotkey, $event, true)" :value="hotkey.key" autocomplete="off" class="input" :placeholder="lang('hotkeyPlaceholder')" tabindex="-1" />
                     </div>
                     <div class="select">
                         <select v-model="hotkey.action">
@@ -1052,6 +1052,7 @@
 
     #stg-options {
         overflow-x: auto;
+        padding-left: 1px;
 
         .backup-time-input {
             width: 100px;
@@ -1080,26 +1081,29 @@
     }
 
     // bulma
-    .tabs a {
-        border-top-color: transparent;
-        border-top-style: solid;
-        border-top-width: 3px;
-        cursor: default;
-    }
+    .tabs {
+        a {
+            border-top-color: transparent;
+            border-top-style: solid;
+            border-top-width: 2px;
+            cursor: default;
+        }
 
-    .tabs ul,
-    .tabs li a {
-        border-bottom: none;
-    }
+        ul,
+        li a {
+            border-bottom: none;
+        }
 
-    .tabs li.is-active a {
-        border-top-color: #0a84ff;
-        color: #0a84ff;
-    }
+        li.is-active a {
+            border-top-color: #0a84ff;
+            color: #0a84ff;
+        }
 
-    .tabs a:hover {
-        border-top-color: #a9a9ac;
-        background-color: #ededf0;
+        a:hover,
+        a:focus {
+            border-top-color: #a9a9ac;
+            background-color: #ededf0;
+        }
     }
 
     html.dark-theme {
@@ -1108,7 +1112,8 @@
         .tabs a {
             color: #a6a5a5;
 
-            &:hover {
+            &:hover,
+            &:focus {
                 background-color: #2c2c2f;
             }
         }

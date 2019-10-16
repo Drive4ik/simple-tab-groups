@@ -80,8 +80,12 @@ function errorEventHandler(event) {
 async function getInfo() {
     return {
         version: browser.runtime.getManifest().version,
+        upTime: Date.now() - browser.extension.getBackgroundPage().BG.startTime + 'ms',
         browserInfo: await browser.runtime.getBrowserInfo(),
         platformInfo: await browser.runtime.getPlatformInfo(),
+        permissions: {
+            bookmarks: await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS),
+        },
         options: await storage.get(constants.allOptionsKeys),
     };
 }

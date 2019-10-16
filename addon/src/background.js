@@ -1826,6 +1826,7 @@ async function exportAllGroupsToBookmarks(showFinishMessage) {
 
 window.BG = {
     inited: false,
+    startTime: Date.now(),
 
     cache,
     openManageGroups,
