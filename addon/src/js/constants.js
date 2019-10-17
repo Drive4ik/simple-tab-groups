@@ -137,7 +137,6 @@ const DEFAULT_OPTIONS = {
     defaultBookmarksParent: defaultBookmarksParents[0],
     showExtendGroupsPopupWithActiveTabs: false,
     showTabsWithThumbnailsInManageGroups: false,
-    followToLoadedGroupInSideBar: true,
 
     defaultGroupIconViewType: groupIconViewTypes[0],
     defaultGroupIconColor: '',

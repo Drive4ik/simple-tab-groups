@@ -750,9 +750,5 @@
     "alwaysOpenTabsInContainer": {
         "message": "Toujours ouvrir les onglets dans un contexte",
         "description": "Always open tabs in container"
-    },
-    "followToLoadedGroupInSideBar": {
-        "message": "Suivre le groupe actif dans la barre latérale",
-        "description": "Follow to loaded group (in sidebar)"
     }
 }

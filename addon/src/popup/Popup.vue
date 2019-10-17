@@ -292,7 +292,7 @@
                         case 'group-loaded':
                             await this.loadCurrentWindow();
 
-                            if (isSidebar && this.options.followToLoadedGroupInSideBar) {
+                            if (this.options.openGroupAfterChange) {
                                 if (this.currentGroup && this.currentGroup.id === request.groupId && this.groupToShow !== this.currentGroup) {
                                     this.showSectionGroupTabs(this.currentGroup);
                                 }
@@ -543,11 +543,7 @@
                             this.closeWindow();
                         }
                     } else {
-                        if (this.options.openGroupAfterChange) {
-                            this.showSectionGroupTabs(group);
-                        } else {
-                            this.loadUnsyncedTabs();
-                        }
+                        this.loadUnsyncedTabs();
                     }
                 }
             },

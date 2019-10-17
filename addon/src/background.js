@@ -2096,6 +2096,13 @@ async function runMigrateForData(data) {
                 }, this);
             },
         },
+        {
+            version: '4.1.1',
+            remove: ['followToLoadedGroupInSideBar'],
+            migration() {
+                data.openGroupAfterChange = data.followToLoadedGroupInSideBar;
+            },
+        },
     ];
 
     // start migration

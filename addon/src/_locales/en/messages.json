@@ -754,9 +754,5 @@
     "alwaysOpenTabsInContainer": {
         "message": "Always open tabs in container",
         "description": "Always open tabs in container"
-    },
-    "followToLoadedGroupInSideBar": {
-        "message": "Follow to loaded group (in sidebar)",
-        "description": "Follow to loaded group (in sidebar)"
     }
 }

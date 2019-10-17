@@ -689,16 +689,10 @@
                     <span v-text="lang('closePopupAfterChangeGroup')"></span>
                 </label>
             </div>
-            <div class="field h-margin-left-10">
-                <label class="checkbox" :disabled="options.closePopupAfterChangeGroup">
-                    <input v-model="options.openGroupAfterChange" type="checkbox" :disabled="options.closePopupAfterChangeGroup"/>
-                    <span v-text="lang('openGroupAfterChange')"></span>
-                </label>
-            </div>
             <div class="field">
                 <label class="checkbox">
-                    <input v-model="options.followToLoadedGroupInSideBar" type="checkbox" />
-                    <span v-text="lang('followToLoadedGroupInSideBar')"></span>
+                    <input v-model="options.openGroupAfterChange" type="checkbox" />
+                    <span v-text="lang('openGroupAfterChange')"></span>
                 </label>
             </div>
             <div class="field">
