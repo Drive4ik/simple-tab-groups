@@ -1271,7 +1271,7 @@ async function onBeforeTabRequest({tabId, url, originUrl}) {
     }
 
     if (tabGroup.newTabContainer && tabGroup.newTabContainer !== tab.cookieStoreId) {
-        if (originUrl && originUrl.startsWith('moz-extension') && !originUrl.startsWith(addonUrlPrefix) && !containers.isDefault(tab.cookieStoreId)) {
+        if (originUrl && originUrl.startsWith('moz-extension') && !originUrl.startsWith(addonUrlPrefix)) {
             console.log('onBeforeTabRequest 🛑 cancel by another addon', originUrl);
             return;
         }
