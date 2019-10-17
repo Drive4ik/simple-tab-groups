@@ -1452,7 +1452,7 @@ async function runAction(data, externalExtId) {
 
     try {
         let currentWindow = await Windows.getLastFocusedNormalWindow(false),
-            loadCurrentGroupWithTabs = currentWindow.session.groupId ? ['discard-group', 'discard-other-groups'].includes(data.action) : false,
+            loadCurrentGroupWithTabs = currentWindow.session.groupId ? ['discard-group', 'discard-other-groups', 'reload-all-tabs-in-current-group'].includes(data.action) : false,
             [currentGroup, groups] = await Groups.load(currentWindow.session.groupId || -1, loadCurrentGroupWithTabs);
 
         switch (data.action) {
@@ -1620,6 +1620,13 @@ async function runAction(data, externalExtId) {
                 await Tabs.discard(tabIds);
 
                 result.ok = true;
+                break;
+            case 'reload-all-tabs-in-current-group':
+                if (currentGroup) {
+                    await Tabs.reload(currentGroup.tabs.map(utils.keyId));
+                    result.ok = true;
+                }
+
                 break;
             default:
                 throw Error(`Action '${data.action}' is wrong`);

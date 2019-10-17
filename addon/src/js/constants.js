@@ -82,6 +82,9 @@ const EXTENSIONS_WHITE_LIST = {
             'delete-current-group',
             'open-manage-groups',
             'move-active-tab-to-custom-group',
+            'discard-group',
+            'discard-other-groups',
+            'reload-all-tabs-in-current-group',
         ],
     },
     'tridactyl.vim@cmcaine.co.uk': {
@@ -106,6 +109,9 @@ const EXTENSIONS_WHITE_LIST = {
             'delete-current-group',
             'open-manage-groups',
             'move-active-tab-to-custom-group',
+            'discard-group',
+            'discard-other-groups',
+            'reload-all-tabs-in-current-group',
         ],
     },
 };

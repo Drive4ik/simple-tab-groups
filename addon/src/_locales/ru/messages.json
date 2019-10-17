@@ -353,6 +353,10 @@
         "message": "Выгрузить другие группы",
         "description": "Hotkey action Discard other groups"
     },
+    "hotkeyActionTitleReloadAllTabsInCurrentGroup": {
+        "message": "Обновить все вкладки в текущей группе",
+        "description": "Reload all tabs in current group"
+    },
     "whatsWrongMessage": {
         "message": "Что-то не так... Пожалуйста свяжитесь с разработчиком по email с логом ошибок (есть кнопка внизу на странице настроек плагина)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"

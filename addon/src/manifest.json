@@ -121,6 +121,9 @@
         },
         "discard-other-groups": {
             "description": "Discard other groups"
+        },
+        "reload-all-tabs-in-current-group": {
+            "description": "Reload all tabs in current group"
         }
     }
 

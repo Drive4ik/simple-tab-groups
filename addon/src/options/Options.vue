@@ -51,6 +51,7 @@
                     'move-active-tab-to-custom-group',
                     'discard-group',
                     'discard-other-groups',
+                    'reload-all-tabs-in-current-group',
                 ],
 
                 actionsWithCustomGroup: [
