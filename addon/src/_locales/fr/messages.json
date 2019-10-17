@@ -353,6 +353,10 @@
         "message": "Décharger les autres groupes de la mémoire",
         "description": "Hotkey action Discard other groups"
     },
+    "hotkeyActionTitleReloadAllTabsInCurrentGroup": {
+        "message": "Recharger tous les onglets dans le groupe courant",
+        "description": "Reload all tabs in current group"
+    },
     "whatsWrongMessage": {
         "message": "Un problème... ?\nPrenez contact avec le développeur par email avec le dernier log d'erreur (le bouton se trouve en bas des préférences)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
