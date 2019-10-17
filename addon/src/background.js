@@ -1493,10 +1493,8 @@ async function runAction(data, externalExtId) {
                 break;
             case 'load-last-group':
                 if (groups.length > 0) {
-                    if (currentGroup.id !== groups[groups.length - 1].id) {
-                        await applyGroup(currentWindow.id, groups[groups.length - 1].id);
-                        result.ok = true;
-                    }
+                    await applyGroup(currentWindow.id, groups[groups.length - 1].id);
+                    result.ok = true;
                 }
                 break;
             case 'load-custom-group':
