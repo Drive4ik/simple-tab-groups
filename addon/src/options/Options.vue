@@ -234,6 +234,15 @@
                 },
                 deep: true,
             },
+            'options.showTabsWithThumbnailsInManageGroups': function(value, oldValue) {
+                if (null == oldValue) {
+                    return;
+                }
+
+                if (!value) {
+                    this.includeTabThumbnailsIntoBackup = this.options.autoBackupIncludeTabThumbnails = false;
+                }
+            },
             enableDebug(enableDebug) {
                 if (enableDebug) {
                     window.localStorage.enableDebug = 1;
@@ -853,8 +862,8 @@
                 <div class="has-text-weight-bold h-margin-bottom-5" v-text="lang('exportAddonSettingsTitle')"></div>
                 <div class="h-margin-bottom-5" v-html="lang('exportAddonSettingsDescription')"></div>
                 <div class="field">
-                    <label class="checkbox" :disabled="!permissions.allUrls">
-                        <input v-model="includeTabThumbnailsIntoBackup" :disabled="!permissions.allUrls" type="checkbox" />
+                    <label class="checkbox" :disabled="!options.showTabsWithThumbnailsInManageGroups">
+                        <input v-model="includeTabThumbnailsIntoBackup" :disabled="!options.showTabsWithThumbnailsInManageGroups" type="checkbox" />
                         <span v-text="lang('includeTabThumbnailsIntoBackup')"></span>
                     </label>
                 </div>
@@ -885,8 +894,8 @@
                 </div>
                 <div v-if="options.autoBackupEnable" class="field">
                     <div class="field">
-                        <label class="checkbox" :disabled="!permissions.allUrls">
-                            <input v-model="options.autoBackupIncludeTabThumbnails" :disabled="!permissions.allUrls" type="checkbox" />
+                        <label class="checkbox" :disabled="!options.showTabsWithThumbnailsInManageGroups">
+                            <input v-model="options.autoBackupIncludeTabThumbnails" :disabled="!options.showTabsWithThumbnailsInManageGroups" type="checkbox" />
                             <span v-text="lang('includeTabThumbnailsIntoBackup')"></span>
                         </label>
                     </div>
