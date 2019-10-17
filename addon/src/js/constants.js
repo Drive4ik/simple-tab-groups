@@ -150,7 +150,7 @@ const DEFAULT_OPTIONS = {
     autoBackupIncludeTabFavIcons: true,
     autoBackupGroupsToBookmarks: true,
     autoBackupGroupsToFile: true,
-    autoBackupFolderName: 'STG-backups',
+    autoBackupFolderName: '',
     autoBackupBookmarksFolderName: 'STG bookmarks',
 
     enableDarkTheme: false,

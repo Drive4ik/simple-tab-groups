@@ -105,7 +105,7 @@ async function backup(data, isAutoBackup, overwrite) {
     let fileName = generateBackupFileName(!overwrite);
 
     if (isAutoBackup) {
-        let {autoBackupFolderName} = await storage.get('autoBackupFolderName');
+        let autoBackupFolderName = await getAutoBackupFolderName();
         fileName = autoBackupFolderName + '/' + fileName;
     }
 
@@ -115,14 +115,28 @@ async function backup(data, isAutoBackup, overwrite) {
 async function openBackupFolder() {
     const {BG} = browser.extension.getBackgroundPage();
 
-    let {autoBackupFolderName} = await storage.get('autoBackupFolderName'),
+    let autoBackupFolderName = await getAutoBackupFolderName(),
         id = await save('temp file', autoBackupFolderName + '/tmp.tmp', false, true, false);
 
     await BG.browser.downloads.show(id);
     await utils.wait(750);
     await BG.browser.downloads.removeFile(id);
     await BG.browser.downloads.erase({id});
+}
 
+async function getAutoBackupFolderName() {
+    let {autoBackupFolderName} = await storage.get('autoBackupFolderName');
+
+    if (!autoBackupFolderName.length) {
+        let {buildID} = await browser.runtime.getBrowserInfo(),
+            {os} = await browser.runtime.getPlatformInfo();
+
+        autoBackupFolderName = `STG-backups-${os}-${buildID}`;
+
+        await storage.set({autoBackupFolderName});
+    }
+
+    return autoBackupFolderName;
 }
 
 function generateBackupFileName(withTime) {
@@ -132,9 +146,10 @@ function generateBackupFileName(withTime) {
         year = now.getFullYear(),
         hours = _intToStr(now.getHours()),
         min = _intToStr(now.getMinutes()),
-        time = withTime ? `~${hours}-${min}` : '';
+        time = withTime ? `~${hours}-${min}` : '',
+        {version} = browser.runtime.getManifest();
 
-    return `stg-backup-${year}-${month}-${day}${time}@drive4ik${BACKUP_FILE_EXT}`;
+    return `stg-backup-v${version}-${year}-${month}-${day}${time}@drive4ik${BACKUP_FILE_EXT}`;
 }
 
 function _intToStr(i) {
@@ -146,4 +161,5 @@ export default {
     save,
     backup,
     openBackupFolder,
+    getAutoBackupFolderName,
 };

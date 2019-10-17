@@ -93,7 +93,13 @@
 
             let data = await storage.get(null);
 
-            this.options = utils.extractKeys(data, constants.allOptionsKeys);
+            let options = utils.extractKeys(data, constants.allOptionsKeys);
+
+            if (!options.autoBackupFolderName.length) {
+                options.autoBackupFolderName = await file.getAutoBackupFolderName();
+            }
+
+            this.options = options;
             this.groups = data.groups;
 
             this.options.hotkeys.forEach(function(hotkey) {
@@ -125,14 +131,14 @@
         },
         watch: {
             'options.autoBackupFolderName': function(value, oldValue) {
-                if (!value || null == oldValue) {
+                if (null == oldValue) {
                     return;
                 }
 
                 value = value.replace(folderNameRegExp, '');
 
-                if (!value.length || value.length > 200) {
-                    value = constants.DEFAULT_OPTIONS.autoBackupFolderName;
+                if (value.length > 200) {
+                    value = '';
                 }
 
                 BG.saveOptions({
