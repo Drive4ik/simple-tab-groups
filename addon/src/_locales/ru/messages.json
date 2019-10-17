@@ -309,6 +309,14 @@
         "message": "Загрузить предыдущую группу",
         "description": "Load previous group"
     },
+    "hotkeyActionTitleLoadNextUnloadedGroup": {
+        "message": "Загрузить следующую не загруженную группу",
+        "description": "Load next unloaded group"
+    },
+    "hotkeyActionTitleLoadPrevUnloadedGroup": {
+        "message": "Загрузить предыдущую не загруженную группу",
+        "description": "Load previous unloaded group"
+    },
     "hotkeyActionTitleLoadHistoryNextGroup": {
         "message": "Загрузить следующую группу из истории",
         "description": "Load next group from history"

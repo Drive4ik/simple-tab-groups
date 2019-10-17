@@ -101,6 +101,12 @@
         "load-prev-group": {
             "description": "Load previous group"
         },
+        "load-next-unloaded-group": {
+            "description": "Load next unloaded group"
+        },
+        "load-prev-unloaded-group": {
+            "description": "Load previous unloaded group"
+        },
         "load-history-next-group": {
             "description": "Load next group from history"
         },

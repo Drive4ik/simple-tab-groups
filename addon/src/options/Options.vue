@@ -40,6 +40,8 @@
                 hotkeyActions: [
                     'load-next-group',
                     'load-prev-group',
+                    'load-next-unloaded-group',
+                    'load-prev-unloaded-group',
                     'load-history-next-group',
                     'load-history-prev-group',
                     'load-first-group',

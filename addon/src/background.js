@@ -300,22 +300,20 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
     return result;
 }
 
-async function applyGroupByPosition(textPosition, groups) {
+async function applyGroupByPosition(textPosition, groups, currentGroupId) {
     if (1 >= groups.length) {
         return false;
     }
 
-    let winId = await Windows.getLastFocusedNormalWindow(),
-        groupId = cache.getWindowGroup(winId),
-        groupIndex = groupId ? groups.findIndex(group => group.id === groupId) : -1;
+    let currentGroupIndex = groups.findIndex(group => group.id === currentGroupId);
 
-    if (-1 === groupIndex) {
-        return false;
+    if (-1 === currentGroupIndex) {
+        currentGroupIndex = 'next' === textPosition ? (groups.length - 1) : 0;
     }
 
-    let nextGroupIndex = utils.getNextIndex(groupIndex, groups.length, textPosition);
+    let nextGroupIndex = utils.getNextIndex(currentGroupIndex, groups.length, textPosition);
 
-    return applyGroup(winId, groups[nextGroupIndex].id);
+    return applyGroup(undefined, groups[nextGroupIndex].id);
 }
 
 
@@ -1455,6 +1453,12 @@ async function runAction(data, externalExtId) {
             loadCurrentGroupWithTabs = currentWindow.session.groupId ? ['discard-group', 'discard-other-groups', 'reload-all-tabs-in-current-group'].includes(data.action) : false,
             [currentGroup, groups] = await Groups.load(currentWindow.session.groupId || -1, loadCurrentGroupWithTabs);
 
+        if (!currentGroup) {
+            currentGroup = {
+                id: 0,
+            };
+        }
+
         switch (data.action) {
             case 'are-you-here':
                 result.ok = true;
@@ -1464,10 +1468,16 @@ async function runAction(data, externalExtId) {
                 result.ok = true;
                 break;
             case 'load-next-group':
-                result.ok = await applyGroupByPosition('next', groups);
+                result.ok = await applyGroupByPosition('next', groups, currentGroup.id);
                 break;
             case 'load-prev-group':
-                result.ok = await applyGroupByPosition('prev', groups);
+                result.ok = await applyGroupByPosition('prev', groups, currentGroup.id);
+                break;
+            case 'load-next-unloaded-group':
+                result.ok = await applyGroupByPosition('next', groups.filter(group => !cache.getWindowId(group.id) || group.id === currentGroup.id), currentGroup.id);
+                break;
+            case 'load-prev-unloaded-group':
+                result.ok = await applyGroupByPosition('prev', groups.filter(group => !cache.getWindowId(group.id) || group.id === currentGroup.id), currentGroup.id);
                 break;
             case 'load-history-next-group':
                 result.ok = await applyGroupByHistory('next', groups);
@@ -1483,7 +1493,7 @@ async function runAction(data, externalExtId) {
                 break;
             case 'load-last-group':
                 if (groups.length > 0) {
-                    if (!currentGroup || currentGroup.id !== groups[groups.length - 1].id) {
+                    if (currentGroup.id !== groups[groups.length - 1].id) {
                         await applyGroup(currentWindow.id, groups[groups.length - 1].id);
                         result.ok = true;
                     }
@@ -1516,7 +1526,7 @@ async function runAction(data, externalExtId) {
                         popupAction: 'load-custom-group',
                         popupTitleLang: 'hotkeyActionTitleLoadCustomGroup',
                         groups: groups.map(Groups.mapGroupForExternalExtension),
-                        disableGroupIds: currentGroup ? [currentGroup.id] : [],
+                        disableGroupIds: [currentGroup.id],
                     });
 
                     result.ok = true;
@@ -1528,7 +1538,7 @@ async function runAction(data, externalExtId) {
                 result.group = Groups.mapGroupForExternalExtension(newGroup);
                 break;
             case 'delete-current-group':
-                if (currentGroup) {
+                if (currentGroup.id) {
                     await Groups.remove(currentGroup.id);
 
                     if (externalExtId) {
@@ -1602,19 +1612,13 @@ async function runAction(data, externalExtId) {
                         popupAction: 'discard-group',
                         popupTitleLang: 'discardGroupTitle',
                         groups: groups.map(Groups.mapGroupForExternalExtension),
-                        focusedGroupId: currentGroup ? currentGroup.id : null,
+                        focusedGroupId: currentGroup.id,
                         disableNewGroupItem: true,
                     });
                     result.ok = true;
                 }
                 break;
             case 'discard-other-groups':
-                if (!currentGroup) {
-                    currentGroup = {
-                        id: 0,
-                    };
-                }
-
                 let tabIds = groups.reduce((acc, gr) => [...acc, ...(gr.id === currentGroup.id ? [] : gr.tabs.map(utils.keyId))], []);
 
                 await Tabs.discard(tabIds);
@@ -1622,7 +1626,7 @@ async function runAction(data, externalExtId) {
                 result.ok = true;
                 break;
             case 'reload-all-tabs-in-current-group':
-                if (currentGroup) {
+                if (currentGroup.id) {
                     await Tabs.reload(currentGroup.tabs.map(utils.keyId));
                     result.ok = true;
                 }
