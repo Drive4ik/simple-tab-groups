@@ -309,6 +309,14 @@
         "message": "Charger le groupe précédent",
         "description": "Load previous group"
     },
+    "hotkeyActionTitleLoadNextUnloadedGroup": {
+        "message": "Charger le groupe déchargé suivant",
+        "description": "Load next unloaded group"
+    },
+    "hotkeyActionTitleLoadPrevUnloadedGroup": {
+        "message": "Charger le groupe déchargé précédent",
+        "description": "Load previous unloaded group"
+    },
     "hotkeyActionTitleLoadHistoryNextGroup": {
         "message": "Charger le groupe suivant depuis l'historique",
         "description": "Load next group from history"
