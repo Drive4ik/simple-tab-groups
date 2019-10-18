@@ -8,28 +8,24 @@ import Tabs from './tabs';
 async function load(withTabs) {
     const {BG} = browser.extension.getBackgroundPage();
 
-    let [allTabs, allWindows] = await Promise.all([
+    let [tabs, windows] = await Promise.all([
             withTabs ? Tabs.get(null, null, null) : false,
             BG.browser.windows.getAll({
                 windowTypes: [browser.windows.WindowType.NORMAL],
             })
         ]);
 
-    let windows = await Promise.all(allWindows.map(async function(win) {
-        if (!utils.isWindowAllow(win)) {
-            return false;
-        }
+    windows = await Promise.all(windows.filter(utils.isWindowAllow).map(BG.cache.loadWindowSession));
 
-        win = await BG.cache.loadWindowSession(win);
+    return windows
+        .map(function(win) {
+            if (withTabs) {
+                win.tabs = tabs.filter(tab => tab.pinned ? false : tab.windowId === win.id);
+            }
 
-        if (withTabs) {
-            win.tabs = allTabs.filter(tab => tab.pinned ? false : tab.windowId === win.id);
-        }
-
-        return win;
-    }));
-
-    return windows.filter(Boolean).sort(utils.sortBy('id'));
+            return win;
+        })
+        .sort(utils.sortBy('id'));
 }
 
 async function get(windowId = browser.windows.WINDOW_ID_CURRENT, checkIsWindowAllow = true) {
@@ -103,17 +99,14 @@ async function getLastFocusedNormalWindow(returnId = true) {
     }
 
     // hard way (((
-    let windows = await BG.browser.windows.getAll({
-            windowTypes: [browser.windows.WindowType.NORMAL],
-        }),
-        filteredWindows = windows.filter(utils.isWindowAllow).sort(utils.sortBy('id')),
-        win = filteredWindows.find(win => win.focused) || filteredWindows.pop();
+    let windows = await load(),
+        win = windows.find(win => win.focused) || windows.pop();
 
     if (!win) {
         throw Error('normal window not found!');
     }
 
-    return returnId ? win.id : BG.cache.loadWindowSession(win);
+    return returnId ? win.id : win;
 }
 
 export default {

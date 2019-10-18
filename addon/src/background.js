@@ -2446,6 +2446,8 @@ async function init() {
 
     resetAutoBackup();
 
+    windows = await Windows.load();
+
     windows.forEach(function(win) {
         updateBrowserActionData(null, win.id);
 
