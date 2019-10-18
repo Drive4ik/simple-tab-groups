@@ -101,6 +101,8 @@
                 options.autoBackupFolderName = await file.getAutoBackupFolderName();
             }
 
+            this.permissions.bookmarks = await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
+
             this.options = options;
             this.groups = data.groups;
 
@@ -109,8 +111,6 @@
                     hotkey.groupId = 0;
                 }
             }, this);
-
-            this.permissions.bookmarks = await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
 
             this.loadBookmarksParents();
 
