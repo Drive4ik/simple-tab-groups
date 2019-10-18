@@ -363,10 +363,7 @@
             },
 
             mapTab(tab) {
-                tab.borderedStyle = BG.containers.isDefault(tab.cookieStoreId) ? false : {
-                    borderColor: BG.containers.get(tab.cookieStoreId, 'colorCode'),
-                };
-
+                tab.container = BG.containers.isDefault(tab.cookieStoreId) ? false : BG.containers.get(tab.cookieStoreId);
                 tab.isMoving = false;
                 tab.isOver = false;
 
@@ -402,6 +399,11 @@
 
             async createNewGroup() {
                 await Groups.add(undefined, undefined, this.nextGroupTitle);
+            },
+
+            async addTemporaryTab() {
+                let cookieStoreId = await BG.containers.createTemporaryContainer();
+                this.addTab(cookieStoreId);
             },
 
             addTab(cookieStoreId) {
@@ -840,9 +842,12 @@
                                 <img v-lazy="tab.favIconUrl" class="size-16" />
                             </div>
                             <div class="item-title">
-                                <span :class="{bordered: !!tab.borderedStyle}" :style="tab.borderedStyle">
+                                <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <span v-if="isTabLoading(tab)">
                                         <img src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
+                                    </span>
+                                    <span v-if="tab.container" :title="tab.container.name">
+                                        <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" />
                                     </span>
                                     <span :class="{'tab-discarded': tab.discarded}" v-text="getTabTitle(tab)"></span>
                                 </span>
@@ -954,9 +959,12 @@
                                 <img v-lazy="tab.favIconUrl" class="size-16" />
                             </div>
                             <div class="item-title">
-                                <span :class="{bordered: !!tab.borderedStyle}" :style="tab.borderedStyle">
+                                <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <span v-if="isTabLoading(tab)">
                                         <img src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
+                                    </span>
+                                    <span v-if="tab.container" :title="tab.container.name">
+                                        <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" />
                                     </span>
                                     <span :class="{'tab-discarded': tab.discarded}" v-text="getTabTitle(tab)"></span>
                                 </span>
@@ -1030,9 +1038,12 @@
                             <img v-lazy="tab.favIconUrl" class="size-16" />
                         </div>
                         <div class="item-title">
-                            <span :class="{bordered: !!tab.borderedStyle}" :style="tab.borderedStyle">
+                            <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                 <span v-if="isTabLoading(tab)">
                                     <img src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
+                                </span>
+                                <span v-if="tab.container" :title="tab.container.name">
+                                    <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" />
                                 </span>
                                 <span :class="{'tab-discarded': tab.discarded}" v-text="getTabTitle(tab)"></span>
                             </span>
@@ -1047,7 +1058,7 @@
                     <hr>
 
                     <div class="create-new-tab">
-                        <div class="item" tabindex="0" @contextmenu="Object.keys(containers).length && $refs.createNewTabContextMenu.open($event)" @click="addTab()" @keyup.enter="addTab()">
+                        <div class="item" tabindex="0" @contextmenu="$refs.createNewTabContextMenu.open($event)" @click="addTab()" @keyup.enter="addTab()">
                             <div class="item-icon">
                                 <img class="size-16" src="/icons/tab-new.svg">
                             </div>
@@ -1074,11 +1085,15 @@
             </div>
         </footer>
 
-        <context-menu v-if="Object.keys(containers).length" ref="createNewTabContextMenu">
+        <context-menu ref="createNewTabContextMenu">
             <ul class="is-unselectable">
                 <li v-for="container in containers" :key="container.cookieStoreId" @click="addTab(container.cookieStoreId)">
                     <img :src="container.iconUrl" class="is-inline-block size-16 fill-context" :style="{fill: container.colorCode}" />
                     <span v-text="container.name"></span>
+                </li>
+                <li @click="addTemporaryTab">
+                    <img src="resource://usercontext-content/chill.svg" class="is-inline-block size-16 fill-context" />
+                    <span v-text="lang('temporaryContainerTitle')"></span>
                 </li>
             </ul>
         </context-menu>

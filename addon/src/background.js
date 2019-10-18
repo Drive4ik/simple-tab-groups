@@ -500,6 +500,14 @@ function onUpdatedTab(tabId, changeInfo, tab) {
     }
 }
 
+async function checkTemporaryContainer(cookieStoreId, excludeTabId) {
+    let tabs = await Tabs.get(null, null, null, {cookieStoreId});
+
+    if (!tabs.filter(tab => tab.id !== excludeTabId).length) {
+        await containers.remove(cookieStoreId);
+    }
+}
+
 function onRemovedTab(tabId, {isWindowClosing, windowId}) {
     let excludeTab = excludeTabsIds.includes(tabId);
 
@@ -517,6 +525,12 @@ function onRemovedTab(tabId, {isWindowClosing, windowId}) {
     if (isWindowClosing) {
         reCreateTabsOnRemoveWindow.push(tabId);
     } else {
+        let tabCookieStoreId = cache.getTabCookieStoreId(tabId);
+
+        if (containers.isTemporary(tabCookieStoreId)) {
+            setTimeout(checkTemporaryContainer, 100, tabCookieStoreId, tabId);
+        }
+
         cache.removeTab(tabId);
     }
 }
@@ -1244,6 +1258,12 @@ async function onBeforeTabRequest({tabId, url, originUrl}) {
     let tab = await browser.tabs.get(tabId);
 
     if (utils.isTabPinned(tab)) {
+        console.log('onBeforeTabRequest 🛑 cancel, tab is pinned');
+        return;
+    }
+
+    if (containers.isTemporary(tab.cookieStoreId)) {
+        console.log('onBeforeTabRequest 🛑 cancel, container is temporary', tab.cookieStoreId);
         return;
     }
 

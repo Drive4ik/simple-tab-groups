@@ -369,7 +369,7 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
             let tabsIdsToRemove = [];
 
             tabs = await Promise.all(tabs.map(function(tab) {
-                if (tab.cookieStoreId !== group.newTabContainer) {
+                if (tab.cookieStoreId !== group.newTabContainer && !BG.containers.isTemporary(tab.cookieStoreId)) {
                     tabsIdsToRemove.push(tab.id);
 
                     tab.cookieStoreId = group.newTabContainer;

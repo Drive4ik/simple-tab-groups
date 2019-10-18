@@ -25,7 +25,7 @@ const defaultBookmarksParents = [
     'unfiled_____',
 ];
 
-const EXTENSIONS_WHITE_LIST = {
+const EXTENSIONS_WHITE_LIST = Object.freeze({
     'stg-plugin-create-new-group@drive4ik': {
         title: '[STG plugin] Create new group',
         url: 'https://addons.mozilla.org/firefox/addon/stg-plugin-create-new-group/',
@@ -118,9 +118,9 @@ const EXTENSIONS_WHITE_LIST = {
             'reload-all-tabs-in-current-group',
         ],
     },
-};
+});
 
-const DEFAULT_OPTIONS = {
+const DEFAULT_OPTIONS = Object.freeze({
     version: '1.0',
     groups: [],
     lastCreatedGroupPosition: 0,
@@ -180,7 +180,7 @@ const DEFAULT_OPTIONS = {
             groupId: 0,
         },
     ],
-};
+});
 
 const onlyBoolOptionsKeys = Object.keys(DEFAULT_OPTIONS).filter(key => 'boolean' === typeof DEFAULT_OPTIONS[key]);
 

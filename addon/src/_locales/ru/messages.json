@@ -758,5 +758,29 @@
     "alwaysOpenTabsInContainer": {
         "message": "Всегда открывать вкладки в контейнере",
         "description": "Always open tabs in container"
+    },
+    "temporaryContainerTitle": {
+        "message": "⌚Временный контейнер",
+        "description": "⌚Temporary Container"
+    },
+    "thisContainerIsNotTemporary": {
+        "message": "Этот контейнер '$containerName$' больше не является временным",
+        "description": "This container '$containerName$' is no longer temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "my container"
+            }
+        }
+    },
+    "thisContainerNowIsTemporary": {
+        "message": "Этот контейнер '$containerName$' теперь стал временным",
+        "description": "This container '$containerName$' has now become temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "⌚Temporary Container 5"
+            }
+        }
     }
 }

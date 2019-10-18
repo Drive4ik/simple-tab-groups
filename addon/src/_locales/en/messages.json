@@ -762,5 +762,29 @@
     "alwaysOpenTabsInContainer": {
         "message": "Always open tabs in container",
         "description": "Always open tabs in container"
+    },
+    "temporaryContainerTitle": {
+        "message": "⌚Temporary Container",
+        "description": "⌚Temporary Container"
+    },
+    "thisContainerIsNotTemporary": {
+        "message": "This container '$containerName$' is no longer temporary",
+        "description": "This container '$containerName$' is no longer temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "my container"
+            }
+        }
+    },
+    "thisContainerNowIsTemporary": {
+        "message": "This container '$containerName$' has now become temporary",
+        "description": "This container '$containerName$' has now become temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "⌚Temporary Container 5"
+            }
+        }
     }
 }

@@ -151,6 +151,10 @@ async function loadTabSession(tab) {
     return tab;
 }
 
+function getTabCookieStoreId(tabId) {
+    return tabs.cookieStoreId[tabId];
+}
+
 function getRemovedTabsForCreate(tabIds) {
     return tabIds
         .map(function(tabId) {
@@ -268,6 +272,7 @@ export default {
     getTabSession,
     loadTabSession,
 
+    getTabCookieStoreId,
     getRemovedTabsForCreate,
     filterRemovedTab,
 
