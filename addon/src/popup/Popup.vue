@@ -8,7 +8,6 @@
     import Groups from '../js/groups';
     import Tabs from '../js/tabs';
     import Windows from '../js/windows';
-    import file from '../js/file';
     import popup from '../js/popup.vue';
     import editGroupPopup from './edit-group-popup.vue';
     import editGroup from '../js/edit-group.vue';
@@ -536,15 +535,19 @@
                 } else {
                     this.someGroupAreLoading = true;
 
-                    await BG.applyGroup(this.currentWindow.id, group.id, tabId);
-
-                    this.someGroupAreLoading = false;
+                    let loadGroupPromise = BG.applyGroup(this.currentWindow.id, group.id, tabId);
 
                     if (this.options.closePopupAfterChangeGroup) {
                         if (!isCurrentGroup) {
                             this.closeWindow();
                         }
+
+                        this.someGroupAreLoading = false;
                     } else {
+                        await loadGroupPromise;
+
+                        this.someGroupAreLoading = false;
+
                         this.loadUnsyncedTabs();
                     }
                 }
@@ -762,7 +765,7 @@
 <template>
     <div
         id="stg-popup"
-        :class="['is-flex_ is-column_ no-outline', {'edit-group-popup': !!groupToEdit, 'is-sidebar': isSidebar}]"
+        :class="['no-outline', {'edit-group-popup': !!groupToEdit, 'is-sidebar': isSidebar}]"
         @contextmenu="['INPUT', 'TEXTAREA'].includes($event.target.nodeName) ? null : $event.preventDefault()"
         @click="multipleTabs = []"
         @wheel.ctrl.prevent
