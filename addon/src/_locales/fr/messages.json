@@ -758,5 +758,29 @@
     "alwaysOpenTabsInContainer": {
         "message": "Toujours ouvrir les onglets dans un contexte",
         "description": "Always open tabs in container"
+    },
+    "temporaryContainerTitle": {
+        "message": "⌚ Contexte temporaire",
+        "description": "⌚Temporary Container"
+    },
+    "thisContainerIsNotTemporary": {
+        "message": "Ce contexte '$containerName$' n'est plus temporaire",
+        "description": "This container '$containerName$' is no longer temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "my container"
+            }
+        }
+    },
+    "thisContainerNowIsTemporary": {
+        "message": "Ce contexte '$containerName$' est maintenant temporaire",
+        "description": "This container '$containerName$' has now become temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "⌚Temporary Container 5"
+            }
+        }
     }
 }
