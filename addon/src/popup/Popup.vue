@@ -92,7 +92,7 @@
             this.loadOptions();
 
             Promise.all([
-                    this.loadGroups().then(() => this.scrollIntoView()),
+                    this.loadGroups().then(() => this.setFocus()),
                     this.loadUnsyncedTabs()
                 ])
                 .then(() => document.getElementById('loading').remove());
