@@ -33,6 +33,7 @@
         'enter': KeyEvent.DOM_VK_RETURN,
         'tab': KeyEvent.DOM_VK_TAB,
         'delete': KeyEvent.DOM_VK_DELETE,
+        'f3': KeyEvent.DOM_VK_F3,
     };
 
     const SECTION_SEARCH = 'search',
@@ -769,6 +770,7 @@
 
         tabindex="-1"
         @keydown.tab="scrollToActiveElement"
+        @keydown.f3.stop.prevent="setFocus"
 
         >
         <header id="search-wrapper">
