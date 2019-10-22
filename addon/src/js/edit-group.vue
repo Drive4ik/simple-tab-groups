@@ -34,6 +34,7 @@
         data() {
             return {
                 containers: BG.containers.getAll(),
+                TEMPORARY_CONTAINER: BG.containers.TEMPORARY_CONTAINER,
                 disabledContainers: {},
                 disabledContainerGroupTabs: {},
 
@@ -348,7 +349,7 @@
             </div>
         </div>
 
-        <div v-if="hasContainers" class="field containers-wrapper">
+        <div class="field containers-wrapper">
             <label class="label">
                 <span v-text="lang('alwaysOpenTabsInContainer')"></span>
             </label>
@@ -372,6 +373,15 @@
                             <img :src="container.iconUrl" class="size-16 fill-context" :style="{fill: container.colorCode}" />
                             <span class="word-break-all" v-text="container.name"></span>
                             <i class="word-break-all" v-if="container.cookieStoreId in disabledContainerGroupTabs">({{ disabledContainerGroupTabs[container.cookieStoreId] }})</i>
+                        </label>
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="control">
+                        <label class="radio indent-children">
+                            <input type="radio" :value="TEMPORARY_CONTAINER" v-model="group.newTabContainer" />
+                            <img src="resource://usercontext-content/chill.svg" class="size-16 fill-context" />
+                            <span class="word-break-all" v-text="lang('temporaryContainerTitle')"></span>
                         </label>
                     </div>
                 </div>

@@ -50,6 +50,10 @@ async function create(tab, group = null) {
 
     if (group && group.newTabContainer) {
         tab.cookieStoreId = group.newTabContainer;
+    }
+
+    if (BG.containers.TEMPORARY_CONTAINER === tab.cookieStoreId) {
+        tab.cookieStoreId = await BG.containers.createTemporaryContainer();
     } else if ('cookieStoreId' in tab) {
         tab.cookieStoreId = BG.containers.get(tab.cookieStoreId, 'cookieStoreId');
     }
@@ -61,6 +65,8 @@ async function create(tab, group = null) {
     Object.keys(tab).forEach(key => !newTabKeys.includes(key) && (delete tab[key]));
 
     let newTab = await BG.browser.tabs.create(tab);
+
+    BG.cache.setTab(newTab);
 
     if (groupId && !newTab.pinned) {
         BG.cache.setTabGroup(newTab.id, groupId);

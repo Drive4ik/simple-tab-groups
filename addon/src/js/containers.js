@@ -9,6 +9,8 @@ const temporaryContainerOptions = Object.freeze({
     icon: 'chill',
 });
 
+const TEMPORARY_CONTAINER = 'temporary-container';
+
 let containers = {},
     mappedContainerCookieStoreId = {};
 
@@ -144,4 +146,5 @@ export default {
     normalize,
     get,
     getAll,
+    TEMPORARY_CONTAINER,
 };

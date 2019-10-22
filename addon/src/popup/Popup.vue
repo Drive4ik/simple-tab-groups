@@ -46,6 +46,8 @@
             return {
                 isSidebar: isSidebar,
 
+                TEMPORARY_CONTAINER: BG.containers.TEMPORARY_CONTAINER,
+
                 SECTION_SEARCH,
                 SECTION_GROUPS_LIST,
                 SECTION_GROUP_TABS,
@@ -398,11 +400,6 @@
 
             async createNewGroup() {
                 await Groups.add(undefined, undefined, this.nextGroupTitle);
-            },
-
-            async addTemporaryTab() {
-                let cookieStoreId = await BG.containers.createTemporaryContainer();
-                this.addTab(cookieStoreId);
             },
 
             addTab(cookieStoreId) {
@@ -1094,7 +1091,7 @@
                     <img :src="container.iconUrl" class="is-inline-block size-16 fill-context" :style="{fill: container.colorCode}" />
                     <span v-text="container.name"></span>
                 </li>
-                <li @click="addTemporaryTab">
+                <li @click="addTab(TEMPORARY_CONTAINER)">
                     <img src="resource://usercontext-content/chill.svg" class="is-inline-block size-16 fill-context" />
                     <span v-text="lang('temporaryContainerTitle')"></span>
                 </li>

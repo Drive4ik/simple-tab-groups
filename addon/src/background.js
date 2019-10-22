@@ -1280,7 +1280,7 @@ async function onBeforeTabRequest({tabId, url, originUrl}) {
         return;
     }
 
-    if (!tabGroup.isSticky) {
+    if (!tabGroup.isSticky && tabGroup.newTabContainer !== containers.TEMPORARY_CONTAINER) {
         let destGroup = _getCatchedGroupForTab(groups, tab);
 
         if (destGroup && destGroup.id !== tabGroup.id) {
@@ -2242,11 +2242,18 @@ async function normalizeContainersInGroups(groups = null) {
         allContainers = containers.getAll();
 
     _groups.forEach(function(group) {
-        group.newTabContainer = group.newTabContainer ? containers.get(group.newTabContainer, 'cookieStoreId') : null;
+        if (group.newTabContainer && group.newTabContainer !== containers.TEMPORARY_CONTAINER) {
+            group.newTabContainer = containers.get(group.newTabContainer, 'cookieStoreId');
+        }
+
+        if (containers.isDefault(group.newTabContainer)) {
+            group.newTabContainer = null;
+        }
+
         group.catchTabContainers = group.catchTabContainers.filter(cookieStoreId => allContainers[cookieStoreId]);
     });
 
-    return groups ? _groups : await Groups.save(_groups);
+    return groups ? _groups : Groups.save(_groups);
 }
 
 // { reason: "update", previousVersion: "3.0.1", temporary: true }

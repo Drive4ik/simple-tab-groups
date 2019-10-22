@@ -38,6 +38,8 @@
             return {
                 VIEW_GRID,
 
+                TEMPORARY_CONTAINER: BG.containers.TEMPORARY_CONTAINER,
+
                 view: VIEW_DEFAULT,
 
                 isLoaded: false,
@@ -368,11 +370,6 @@
             },
             addGroup() {
                 Groups.add();
-            },
-
-            async addTemporaryTab(group) {
-                let cookieStoreId = await BG.containers.createTemporaryContainer();
-                this.addTab(group, cookieStoreId);
             },
 
             addTab(group, cookieStoreId) {
@@ -880,7 +877,7 @@
                         <img :src="container.iconUrl" class="is-inline-block size-16 fill-context" :style="{fill: container.colorCode}" />
                         <span v-text="container.name"></span>
                     </li>
-                    <li @click="addTemporaryTab(menu.data.group)">
+                    <li @click="addTab(menu.data.group, TEMPORARY_CONTAINER)">
                         <img src="resource://usercontext-content/chill.svg" class="is-inline-block size-16 fill-context" />
                         <span v-text="lang('temporaryContainerTitle')"></span>
                     </li>
