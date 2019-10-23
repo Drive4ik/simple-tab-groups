@@ -42,6 +42,8 @@
         SECTION_DEFAULT = SECTION_GROUPS_LIST,
         isSidebar = '#sidebar' === window.location.hash;
 
+    let loadPromise = null;
+
     export default {
         data() {
             return {
@@ -89,21 +91,19 @@
             'edit-group': editGroup,
             'context-menu': contextMenu,
         },
-        async created() {
-            this.loadCurrentWindow();
-
+        created() {
             this.loadOptions();
 
-            Promise.all([
-                    this.loadGroups().then(() => this.setFocus()),
-                    this.loadUnsyncedTabs()
-                ])
-                .then(() => document.getElementById('loading').remove());
-
-            this.setupListeners();
+            loadPromise = Promise.all([this.loadCurrentWindow(), this.loadGroups(), this.loadUnsyncedTabs()]);
         },
         async mounted() {
-            this.setFocus();
+            await loadPromise;
+
+            this.$nextTick(function() {
+                document.getElementById('loading').remove();
+                this.setFocusOnSearch();
+                this.setupListeners();
+            });
         },
         watch: {
             'options.enableDarkTheme': function(enableDarkTheme) {
@@ -118,11 +118,11 @@
             },
             groupToEdit(groupToEdit) {
                 if (!groupToEdit) {
-                    this.setFocus();
+                    this.setFocusOnSearch();
                 }
             },
             search(search) {
-                if (search) {
+                if (search.length) {
                     this.showSectionSearch();
                 }
             },
@@ -168,19 +168,27 @@
                 this.options = BG.getOptions();
             },
 
-            setFocus() {
+            setFocusOnSearch() {
                 this.$refs.search.focus();
             },
 
-            scrollIntoView() {
+            setFocusOnActive() {
                 this.$nextTick(function() {
-                    let activeItemNode = Array.from(document.querySelectorAll('.is-active')).find(el => el.offsetParent);
+                    let activeItemNode = document.querySelector('.is-active');
+
+                    if (!activeItemNode && this.groupToShow) {
+                        let activeTab = utils.getGroupLastActiveTab(this.groupToShow);
+
+                        if (activeTab) {
+                            activeItemNode = document.querySelector(`[data-tab-id="${activeTab.id}"]`);
+                        }
+                    }
 
                     if (activeItemNode) {
                         activeItemNode.focus();
+                    } else {
+                        this.setFocusOnSearch();
                     }
-
-                    utils.scrollTo(activeItemNode);
                 });
             },
 
@@ -313,7 +321,7 @@
                 this.groupToShow = group;
                 this.search = '';
                 this.section = SECTION_GROUP_TABS;
-                this.scrollIntoView();
+                this.setFocusOnActive();
             },
 
             showSectionSearch() {
@@ -325,7 +333,7 @@
                 this.section = SECTION_DEFAULT;
                 this.groupToShow = null;
                 this.search = '';
-                this.scrollIntoView();
+                this.setFocusOnSearch();
             },
 
             $_simpleSortTabs(searchStr, a, b) {
@@ -741,6 +749,34 @@
                 this.$nextTick(() => utils.scrollTo(document.activeElement));
             },
 
+            goToElementSibling(event) {
+                let element = null;
+
+                if (KeyEvent.DOM_VK_UP === event.keyCode) {
+                    element = event.target.previousElementSibling || (event.target.parentNode.previousElementSibling && event.target.parentNode.previousElementSibling.lastElementChild);
+                } else if (KeyEvent.DOM_VK_DOWN === event.keyCode) {
+                    element = event.target.nextElementSibling || (event.target.parentNode.nextElementSibling && event.target.parentNode.nextElementSibling.firstElementChild);
+                }
+
+                if (element) {
+                    event.preventDefault();
+                    element.focus();
+                }
+            },
+
+            goToFirstMainElement(event) {
+                let element = null;
+
+                if (KeyEvent.DOM_VK_DOWN === event.keyCode) {
+                    element = document.querySelector('#result .group, #result .tab');
+                }
+
+                if (element) {
+                    event.preventDefault();
+                    element.focus();
+                }
+            },
+
             toggleLogging() {
                 this.enableLogging = !this.enableLogging;
 
@@ -769,8 +805,8 @@
         @wheel.ctrl.prevent
 
         tabindex="-1"
-        @keydown.tab="scrollToActiveElement"
-        @keydown.f3.stop.prevent="setFocus"
+        @focus.capture="scrollToActiveElement"
+        @keydown.f3.stop.prevent="setFocusOnSearch"
 
         >
         <header id="search-wrapper">
@@ -783,6 +819,7 @@
                         v-model.trim="search"
                         @input="$refs.search.value === '' ? showSectionDefault() : null"
                         autocomplete="off"
+                        @keydown.arrow-down="goToFirstMainElement"
                         :placeholder="lang('searchPlaceholder')" />
                 </div>
                 <div v-show="search" class="control">
@@ -790,31 +827,29 @@
                         <input type="checkbox" v-model="extendedSearch" />
                     </label>
                 </div>
-                <div v-show="search" class="control">
-                    <label class="button is-small" tabindex="0" @click="showSectionDefault(); $refs.search.focus();" @keyup.enter="showSectionDefault(); $refs.search.focus();">
-                        <img class="size-12" src="/icons/close.svg" />
-                    </label>
-                </div>
             </div>
         </header>
 
         <main id="result" :class="['is-full-width', dragData ? 'drag-' + dragData.itemType : false]">
             <!-- SEARCH TABS -->
-            <div v-show="section === SECTION_SEARCH">
+            <div v-if="section === SECTION_SEARCH">
                 <div v-if="filteredGroupsBySearch.length">
                     <div v-for="group in filteredGroupsBySearch" :key="group.id">
-                        <div class="group" @contextmenu="$refs.groupContextMenu.open($event, {group})">
-                            <div
-                                :class="['item', {
-                                    'is-active': group === currentGroup,
-                                    'is-opened': getWindowId(group.id),
-                                }]"
-                                @click="applyGroup(group)"
-                                @keyup.enter="applyGroup(group)"
-                                @keydown.arrow-right="showSectionGroupTabs(group)"
-                                tabindex="0"
-                                :title="getGroupTitle(group, 'withTabsCount withTabs')"
-                                >
+                        <div
+                            :class="['group item', {
+                                'is-active': group === currentGroup,
+                                'is-opened': getWindowId(group.id),
+                            }]"
+                            @contextmenu="$refs.groupContextMenu.open($event, {group})"
+
+                            @click="applyGroup(group)"
+                            @keyup.enter="applyGroup(group)"
+                            @keydown.arrow-right="showSectionGroupTabs(group)"
+                            @keydown.arrow-up="goToElementSibling"
+                            @keydown.arrow-down="goToElementSibling"
+                            tabindex="0"
+                            :title="getGroupTitle(group, 'withTabsCount withTabs')"
+                            >
                                 <div class="item-icon">
                                     <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                                 </div>
@@ -823,7 +858,6 @@
                                     <img class="size-16 rotate-180" src="/icons/arrow-left.svg" />
                                     <span class="tabs-text" v-text="groupTabsCountMessage(group.tabs)"></span>
                                 </div>
-                            </div>
                         </div>
 
                         <div v-for="(tab, index) in group.filteredTabsBySearch" :key="index"
@@ -831,6 +865,8 @@
                             @click.stop="clickOnTab($event, tab, group)"
                             @keyup.enter="clickOnTab($event, tab, group)"
                             @keyup.delete="removeTab(tab)"
+                            @keydown.arrow-up="goToElementSibling"
+                            @keydown.arrow-down="goToElementSibling"
                             tabindex="0"
                             @mousedown.middle.prevent
                             @mouseup.middle.prevent="removeTab(tab)"
@@ -871,14 +907,16 @@
             </div>
 
             <!-- GROUPS LIST -->
-            <div v-show="section === SECTION_GROUPS_LIST">
+            <div v-if="section === SECTION_GROUPS_LIST">
                 <div class="groups">
                     <div
                         v-for="group in groups"
                         :key="group.id"
-                        :class="['group', {
+                        :class="['group item', {
                             'drag-moving': group.isMoving,
                             'drag-over': group.isOver,
+                            'is-active': group === currentGroup,
+                            'is-opened': getWindowId(group.id),
                         }]"
 
                         draggable="true"
@@ -888,19 +926,16 @@
                         @dragleave="dragHandle($event, 'group', ['group'], {item: group})"
                         @drop="dragHandle($event, 'group', ['group'], {item: group})"
                         @dragend="dragHandle($event, 'group', ['group'], {item: group})"
+
+                        @contextmenu="$refs.groupContextMenu.open($event, {group})"
+                        @click="applyGroup(group)"
+                        @keyup.enter="applyGroup(group)"
+                        @keydown.arrow-right="showSectionGroupTabs(group)"
+                        @keydown.arrow-up="goToElementSibling"
+                        @keydown.arrow-down="goToElementSibling"
+                        tabindex="0"
+                        :title="getGroupTitle(group, 'withTabsCount withTabs')"
                         >
-                        <div
-                            :class="['item', {
-                                'is-active': group === currentGroup,
-                                'is-opened': getWindowId(group.id),
-                            }]"
-                            @contextmenu="$refs.groupContextMenu.open($event, {group})"
-                            @click="applyGroup(group)"
-                            @keyup.enter="applyGroup(group)"
-                            @keydown.arrow-right="showSectionGroupTabs(group)"
-                            tabindex="0"
-                            :title="getGroupTitle(group, 'withTabsCount withTabs')"
-                            >
                             <div class="item-icon">
                                 <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                             </div>
@@ -909,7 +944,6 @@
                                 <img class="size-16 rotate-180" src="/icons/arrow-left.svg" />
                                 <span class="tabs-text" v-text="groupTabsCountMessage(group.tabs)"></span>
                             </div>
-                        </div>
                     </div>
 
                 </div>
@@ -983,89 +1017,90 @@
             </div>
 
             <!-- GROUP -->
-            <div v-if="section === SECTION_GROUP_TABS">
-                <div class="tabs-list">
-                    <div class="item is-unselectable" tabindex="0" @click="showSectionDefault" @keyup.enter="showSectionDefault">
-                        <span class="item-icon">
-                            <img class="size-16" src="/icons/arrow-left.svg" />
+            <div v-if="section === SECTION_GROUP_TABS" class="tabs-list">
+                <div class="item is-unselectable" tabindex="0" @click="showSectionDefault" @keyup.enter="showSectionDefault">
+                    <span class="item-icon">
+                        <img class="size-16" src="/icons/arrow-left.svg" />
+                    </span>
+                    <span class="item-title" v-text="lang('goBackToGroupsButtonTitle')"></span>
+                </div>
+
+                <hr>
+
+                <div class="group-info item no-hover">
+                    <div class="item-icon">
+                        <img :src="groupToShow.iconUrlToDisplay" class="is-inline-block size-16" />
+                    </div>
+                    <div class="item-title" v-text="getGroupTitle(groupToShow)"></div>
+                    <div class="item-action is-unselectable">
+                        <span tabindex="0" @click="openGroupSettings(groupToShow)" @keyup.enter="openGroupSettings(groupToShow)" class="size-16 cursor-pointer" :title="lang('groupSettings')">
+                            <img src="/icons/settings.svg" />
                         </span>
-                        <span class="item-title" v-text="lang('goBackToGroupsButtonTitle')"></span>
+                        <span tabindex="0" @click="removeGroup(groupToShow)" @keyup.enter="removeGroup(groupToShow)" class="size-16 cursor-pointer" :title="lang('deleteGroup')">
+                            <img src="/icons/group-delete.svg" />
+                        </span>
                     </div>
+                </div>
 
-                    <hr>
+                <div
+                    v-for="(tab, tabIndex) in groupToShow.tabs"
+                    :key="tabIndex"
+                    :data-tab-id="tab.id"
+                    @contextmenu="$refs.tabsContextMenu.open($event, {tab, group: groupToShow})"
+                    @click.stop="clickOnTab($event, tab, groupToShow)"
+                    @keyup.enter="clickOnTab($event, tab, groupToShow)"
+                    @keydown.arrow-left="showSectionDefault"
+                    @keydown.arrow-up="goToElementSibling"
+                    @keydown.arrow-down="goToElementSibling"
+                    @keydown.delete="removeTab(tab)"
+                    tabindex="0"
+                    @mousedown.middle.prevent
+                    @mouseup.middle.prevent="removeTab(tab)"
+                    :class="['tab item is-unselectable', {
+                        'is-active': groupToShow === currentGroup && tab.active,
+                        'drag-moving': tab.isMoving,
+                        'drag-over': tab.isOver,
+                        'is-multiple-tab-to-move': multipleTabs.includes(tab),
+                    }]"
+                    :title="getTabTitle(tab, true)"
 
-                    <div class="group-info item no-hover">
+                    draggable="true"
+                    @dragstart="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
+                    @dragenter="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
+                    @dragover="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
+                    @dragleave="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
+                    @drop="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
+                    @dragend="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
+                    >
+                    <div class="item-icon">
+                        <img v-lazy="tab.favIconUrl" class="size-16" />
+                    </div>
+                    <div class="item-title">
+                        <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                            <span v-if="isTabLoading(tab)">
+                                <img src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
+                            </span>
+                            <span v-if="tab.container" :title="tab.container.name">
+                                <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" />
+                            </span>
+                            <span :class="{'tab-discarded': tab.discarded}" v-text="getTabTitle(tab)"></span>
+                        </span>
+                    </div>
+                    <div class="item-action flex-on-hover">
+                        <span class="size-16 cursor-pointer" @click.stop="removeTab(tab)" :title="lang('deleteTab')">
+                            <img src="/icons/close.svg" />
+                        </span>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="create-new-tab">
+                    <div class="item" tabindex="0" @contextmenu="$refs.createNewTabContextMenu.open($event)" @click="addTab()" @keyup.enter="addTab()">
                         <div class="item-icon">
-                            <img :src="groupToShow.iconUrlToDisplay" class="is-inline-block size-16" />
+                            <img class="size-16" src="/icons/tab-new.svg">
                         </div>
-                        <div class="item-title" v-text="getGroupTitle(groupToShow)"></div>
-                        <div class="item-action is-unselectable">
-                            <span tabindex="0" @click="openGroupSettings(groupToShow)" @keyup.enter="openGroupSettings(groupToShow)" class="size-16 cursor-pointer" :title="lang('groupSettings')">
-                                <img src="/icons/settings.svg" />
-                            </span>
-                            <span tabindex="0" @click="removeGroup(groupToShow)" @keyup.enter="removeGroup(groupToShow)" class="size-16 cursor-pointer" :title="lang('deleteGroup')">
-                                <img src="/icons/group-delete.svg" />
-                            </span>
-                        </div>
-                    </div>
-
-                    <div
-                        v-for="(tab, tabIndex) in groupToShow.tabs"
-                        :key="tabIndex"
-                        @contextmenu="$refs.tabsContextMenu.open($event, {tab, group: groupToShow})"
-                        @click.stop="clickOnTab($event, tab, groupToShow)"
-                        @keyup.enter="clickOnTab($event, tab, groupToShow)"
-                        @keydown.arrow-left="showSectionDefault"
-                        @keydown.delete="removeTab(tab)"
-                        tabindex="0"
-                        @mousedown.middle.prevent
-                        @mouseup.middle.prevent="removeTab(tab)"
-                        :class="['tab item is-unselectable', {
-                            'is-active': groupToShow === currentGroup && tab.active,
-                            'drag-moving': tab.isMoving,
-                            'drag-over': tab.isOver,
-                            'is-multiple-tab-to-move': multipleTabs.includes(tab),
-                        }]"
-                        :title="getTabTitle(tab, true)"
-
-                        draggable="true"
-                        @dragstart="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
-                        @dragenter="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
-                        @dragover="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
-                        @dragleave="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
-                        @drop="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
-                        @dragend="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
-                        >
-                        <div class="item-icon">
-                            <img v-lazy="tab.favIconUrl" class="size-16" />
-                        </div>
-                        <div class="item-title">
-                            <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                <span v-if="isTabLoading(tab)">
-                                    <img src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
-                                </span>
-                                <span v-if="tab.container" :title="tab.container.name">
-                                    <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" />
-                                </span>
-                                <span :class="{'tab-discarded': tab.discarded}" v-text="getTabTitle(tab)"></span>
-                            </span>
-                        </div>
-                        <div class="item-action flex-on-hover">
-                            <span class="size-16 cursor-pointer" @click.stop="removeTab(tab)" :title="lang('deleteTab')">
-                                <img src="/icons/close.svg" />
-                            </span>
-                        </div>
-                    </div>
-
-                    <hr>
-
-                    <div class="create-new-tab">
-                        <div class="item" tabindex="0" @contextmenu="$refs.createNewTabContextMenu.open($event)" @click="addTab()" @keyup.enter="addTab()">
-                            <div class="item-icon">
-                                <img class="size-16" src="/icons/tab-new.svg">
-                            </div>
-                            <div class="item-title" v-text="lang('createNewTab')"></div>
-                        </div>
+                        <div class="item-title" v-text="lang('createNewTab')"></div>
                     </div>
                 </div>
             </div>

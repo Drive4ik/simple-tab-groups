@@ -651,11 +651,6 @@
                             <input type="checkbox" v-model="extendedSearch" />
                         </label>
                     </div>
-                    <div v-show="search" class="control" @click="search = ''; $refs.search.focus();">
-                        <label class="button is-small">
-                            <img class="size-12" src="/icons/close.svg" />
-                        </label>
-                    </div>
                 </div>
             </span>
         </header>

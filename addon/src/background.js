@@ -1062,10 +1062,7 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
     }
 
     if (showMessages) {
-        let windowId = await Windows.getLastFocusedNormalWindow();
-        if (windowId) {
-            setBrowserAction(windowId, 'loading');
-        }
+        loadingBrowserAction(true);
     }
 
     let rootFolder = {
@@ -1137,7 +1134,7 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
     }
 
     if (showMessages) {
-        updateBrowserActionData(group.id);
+        loadingBrowserAction(false);
         utils.notify(browser.i18n.getMessage('groupExportedToBookmarks', group.title));
     }
 

@@ -318,6 +318,10 @@ function createGroupTitle(title, groupId) {
     return title || browser.i18n.getMessage('newGroupTitle', groupId);
 }
 
+function getGroupLastActiveTab({tabs}) {
+    return tabs.find(tab => tab.active) || tabs.slice().sort(sortBy('lastAccessed')).pop();
+}
+
 function getGroupTitle({id, title, tabs}, args = '') {
     const {BG} = browser.extension.getBackgroundPage();
 
@@ -337,7 +341,7 @@ function getGroupTitle({id, title, tabs}, args = '') {
     }
 
     if (withActiveTab && tabs.length) {
-        let activeTab = tabs.find(tab => tab.active) || tabs.sort(sortBy('lastAccessed')).pop();
+        let activeTab = getGroupLastActiveTab({tabs});
 
         if (activeTab) {
             title += ' ' + (activeTab.discarded ? constants.DISCARDED_SYMBOL : constants.ACTIVE_SYMBOL) + ' ' + getTabTitle(activeTab);
@@ -687,6 +691,7 @@ export default {
     isTabLoading,
 
     createGroupTitle,
+    getGroupLastActiveTab,
     getGroupTitle,
     getTabTitle,
     groupTabsCountMessage,
