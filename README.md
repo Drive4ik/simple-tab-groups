@@ -65,17 +65,22 @@ You have to copy and paste into Gesturefy addon
 `Parse message` -> `On`
 
 Supported actions:
-*`{"action":"add-new-group"}`
-*`{"action":"load-next-group"}`
-*`{"action":"load-prev-group"}`
-*`{"action":"load-history-next-group"}`
-*`{"action":"load-history-prev-group"}`
-*`{"action":"load-first-group"}`
-*`{"action":"load-last-group"}`
-*`{"action":"load-custom-group"}`
-*`{"action":"delete-current-group"}`
-*`{"action":"open-manage-groups"}`
-*`{"action":"move-active-tab-to-custom-group"}`
+* `{"action":"add-new-group"}`
+* `{"action":"load-next-group"}`
+* `{"action":"load-prev-group"}`
+* `{"action":"load-next-unloaded-group"}`
+* `{"action":"load-prev-unloaded-group"}`
+* `{"action":"load-history-next-group"}`
+* `{"action":"load-history-prev-group"}`
+* `{"action":"load-first-group"}`
+* `{"action":"load-last-group"}`
+* `{"action":"load-custom-group"}`
+* `{"action":"delete-current-group"}`
+* `{"action":"open-manage-groups"}`
+* `{"action":"move-active-tab-to-custom-group"}`
+* `{"action":"discard-group"}`
+* `{"action":"discard-other-groups"}`
+* `{"action":"reload-all-tabs-in-current-group"}`
 
 
 This extension may conflict with other programs similar in functionality.
