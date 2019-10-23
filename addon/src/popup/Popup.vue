@@ -746,7 +746,17 @@
             },
 
             scrollToActiveElement() {
-                this.$nextTick(() => utils.scrollTo(document.activeElement));
+                this.$nextTick(function() {
+                    if (this.groupToEdit) {
+                        return;
+                    }
+
+                    if (!document.activeElement || '-1' === document.activeElement.tabIndex) {
+                        return;
+                    }
+
+                    utils.scrollTo(document.activeElement);
+                });
             },
 
             goToElementSibling(event) {
