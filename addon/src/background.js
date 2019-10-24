@@ -761,7 +761,6 @@ async function createMoveTabMenus(windowId) {
 
         options.showContextMenuOnTabs && menuIds.push(browser.menus.create({
             title: groupTitle,
-            enabled: currentGroup ? group.id !== currentGroup.id : true,
             icons: groupIcon,
             parentId: 'stg-move-tab-parent',
             contexts: [browser.menus.ContextType.TAB],
@@ -1603,7 +1602,7 @@ async function runAction(data, externalExtId) {
                         popupAction: 'move-active-tab-to-custom-group',
                         popupTitleLang: 'moveTabToGroupDisabledTitle',
                         groups: groups.map(Groups.mapGroupForExternalExtension),
-                        disableGroupIds: [activeTab.session.groupId],
+                        focusedGroupId: activeTab.session.groupId,
                     });
                     result.ok = true;
                 }

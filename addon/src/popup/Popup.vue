@@ -414,22 +414,14 @@
             addTab(cookieStoreId) {
                 Tabs.add(this.groupToShow.id, cookieStoreId);
             },
-            removeTab({id}) {
-                let tabIds = this.multipleTabs.map(utils.keyId);
-
-                if (!tabIds.includes(id)) {
-                    tabIds.push(id);
-                }
+            removeTab(tab) {
+                let tabIds = this.getTabsForMove(tab, utils.keyId);
 
                 Tabs.remove(tabIds);
             },
 
-            discardTab({id}) {
-                let tabIds = this.multipleTabs.map(utils.keyId);
-
-                if (!tabIds.includes(id)) {
-                    tabIds.push(id);
-                }
+            discardTab(tab) {
+                let tabIds = this.getTabsForMove(tab, utils.keyId);
 
                 Tabs.discard(tabIds);
             },
@@ -444,12 +436,8 @@
                 Tabs.discard(tabIds);
             },
 
-            reloadTab({id}, bypassCache) {
-                let tabIds = this.multipleTabs.map(utils.keyId);
-
-                if (!tabIds.includes(id)) {
-                    tabIds.push(id);
-                }
+            reloadTab(tab, bypassCache) {
+                let tabIds = this.getTabsForMove(tab, utils.keyId);
 
                 Tabs.reload(tabIds, bypassCache);
             },
@@ -634,18 +622,20 @@
                     this.loadUnsyncedTabs();
                 }
             },
-            getTabsForMove(withTab) {
-                if (!this.multipleTabs.includes(withTab)) {
+            getTabsForMove(withTab, mapFunc = utils.cloneTab) {
+                if (withTab && !this.multipleTabs.includes(withTab)) {
                     this.multipleTabs.push(withTab);
                 }
 
-                let tabs = this.multipleTabs.map(utils.cloneTab);
+                let tabs = this.multipleTabs.map(mapFunc);
 
                 this.multipleTabs = [];
 
                 return tabs;
             },
-            async moveTabs(tabs, group, loadUnsync = false, showTabAfterMoving, discardTabs) {
+            async moveTabs(tab, group, loadUnsync = false, showTabAfterMoving, discardTabs) {
+                let tabs = this.getTabsForMove(tab);
+
                 await Tabs.move(tabs, group.id, undefined, false, showTabAfterMoving);
 
                 if (discardTabs) {
@@ -1221,13 +1211,8 @@
                     <li
                         v-for="group in groups"
                         :key="group.id"
-                        :class="{'is-disabled': menu.data.group ? menu.data.group.id === group.id : false}"
-                        @click="menu.data.group
-                            ? menu.data.group.id !== group.id && moveTabs(getTabsForMove(menu.data.tab), group, undefined, undefined, $event.ctrlKey || $event.metaKey)
-                            : moveTabs(getTabsForMove(menu.data.tab), group, true, undefined, $event.ctrlKey || $event.metaKey)"
-                        @contextmenu="menu.data.group
-                            ? menu.data.group.id !== group.id && moveTabs(getTabsForMove(menu.data.tab), group, undefined, true)
-                            : moveTabs(getTabsForMove(menu.data.tab), group, true, true)"
+                        @click="moveTabs(menu.data.tab, group, !menu.data.group, undefined, $event.ctrlKey || $event.metaKey)"
+                        @contextmenu="moveTabs(menu.data.tab, group, !menu.data.group, true)"
                         >
                         <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                         <span v-text="getGroupTitle(group, 'withActiveGroup')"></span>

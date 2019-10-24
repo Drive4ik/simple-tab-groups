@@ -159,11 +159,15 @@
                         Groups.move(from.data.item.id, this.groups.indexOf(to.data.item));
                     })
                     .$on('drag-move-tab', function(from, to) {
-                        let tabsToMove = this.getDataForMultipleMove(),
-                            groupId = this.isGroup(to.data.item) ? to.data.item.id : to.data.group.id,
-                            index = this.isGroup(to.data.item) ? -1 : to.data.item.index;
+                        if ('new-group' === to.data.item.id) {
+                            this.moveTabToNewGroup(null, true);
+                        } else {
+                            let tabsToMove = this.getTabsForMove(),
+                                groupId = this.isGroup(to.data.item) ? to.data.item.id : to.data.group.id,
+                                index = this.isGroup(to.data.item) ? -1 : to.data.item.index;
 
-                        Tabs.move(tabsToMove, groupId, index, false);
+                            Tabs.move(tabsToMove, groupId, index, false);
+                        }
                     })
                     .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
                     .$on('drag-over', (item, isOver) => item.isOver = isOver);
@@ -303,12 +307,36 @@
                 }
             },
 
-            getDataForMultipleMove() {
-                let tabsToMove = this.multipleTabs.map(utils.cloneTab);
+            getTabsForMove(withTab, mapFunc = utils.cloneTab) {
+                if (withTab && !this.multipleTabs.includes(withTab)) {
+                    this.multipleTabs.push(withTab);
+                }
+
+                let tabs = this.multipleTabs.map(mapFunc);
 
                 this.multipleTabs = [];
 
-                return tabsToMove;
+                return tabs;
+            },
+            async moveTabs(tab, group, loadUnsync = false, showTabAfterMoving, discardTabs) {
+                let tabs = this.getTabsForMove(tab);
+
+                await Tabs.move(tabs, group.id, undefined, false, showTabAfterMoving);
+
+                if (discardTabs) {
+                    Tabs.discard(tabs.map(utils.keyId));
+                }
+
+                if (loadUnsync) {
+                    this.loadUnsyncedTabs();
+                }
+            },
+            async moveTabToNewGroup(tab, loadUnsync, showTabAfterMoving) {
+                await Groups.add(undefined, this.getTabsForMove(tab), undefined, showTabAfterMoving);
+
+                if (loadUnsync) {
+                    this.loadUnsyncedTabs();
+                }
             },
 
             mapGroup(group) {
@@ -375,24 +403,16 @@
             addTab(group, cookieStoreId) {
                 Tabs.add(group.id, cookieStoreId);
             },
-            removeTab({id}) {
-                let tabIds = this.multipleTabs.map(utils.keyId);
-
-                if (!tabIds.includes(id)) {
-                    tabIds.push(id);
-                }
+            removeTab(tab) {
+                let tabIds = this.getTabsForMove(tab, utils.keyId);
 
                 Tabs.remove(tabIds);
             },
             updateTabThumbnail({id}) {
                 Tabs.updateThumbnail(id, true);
             },
-            discardTab({id}) {
-                let tabIds = this.multipleTabs.map(utils.keyId);
-
-                if (!tabIds.includes(id)) {
-                    tabIds.push(id);
-                }
+            discardTab(tab) {
+                let tabIds = this.getTabsForMove(tab, utils.keyId);
 
                 Tabs.discard(tabIds);
             },
@@ -408,12 +428,8 @@
 
                 Tabs.discard(tabIds);
             },
-            reloadTab({id}, bypassCache) {
-                let tabIds = this.multipleTabs.map(utils.keyId);
-
-                if (!tabIds.includes(id)) {
-                    tabIds.push(id);
-                }
+            reloadTab(tab, bypassCache) {
+                let tabIds = this.getTabsForMove(tab, utils.keyId);
 
                 Tabs.reload(tabIds, bypassCache);
             },
@@ -513,6 +529,7 @@
             },
 
             getTabTitle: utils.getTabTitle,
+            getGroupTitle: utils.getGroupTitle,
             isTabLoading: utils.isTabLoading,
 
             isGroup(obj) {
@@ -833,7 +850,14 @@
                         </div>
                     </div>
 
-                    <div class="group new cursor-pointer" @click="addGroup">
+                    <div class="group new cursor-pointer"
+                        @click="addGroup"
+
+                        draggable="true"
+                        @dragover="dragHandle($event, 'tab', ['tab'])"
+                        @drop="dragHandle($event, 'tab', ['tab'], {item: {id: 'new-group'}})"
+
+                        >
                         <div class="body">
                             <img src="/icons/group-new.svg">
                             <div class="h-margin-top-10" v-text="lang('createNewGroup')"></div>
@@ -914,6 +938,30 @@
                     <li v-if="menu.data.group" @click="setTabIconAsGroupIcon(menu.data.tab, menu.data.group)">
                         <img src="/icons/image.svg" class="size-16" />
                         <span v-text="lang('setTabIconAsGroupIcon')"></span>
+                    </li>
+
+                    <hr>
+
+                    <li class="is-disabled">
+                        <img class="size-16" />
+                        <span v-text="lang('moveTabToGroupDisabledTitle') + ':'"></span>
+                    </li>
+
+                    <li
+                        v-for="group in groups"
+                        :key="group.id"
+                        @click="moveTabs(menu.data.tab, group, !menu.data.group, undefined, $event.ctrlKey || $event.metaKey)"
+                        @contextmenu="moveTabs(menu.data.tab, group, !menu.data.group, true)"
+                        >
+                        <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
+                        <span v-text="getGroupTitle(group, 'withActiveGroup')"></span>
+                    </li>
+
+                    <li
+                        @click="moveTabToNewGroup(menu.data.tab, !menu.data.group)"
+                        @contextmenu="moveTabToNewGroup(menu.data.tab, !menu.data.group, true)">
+                        <img src="/icons/group-new.svg" class="size-16" />
+                        <span v-text="lang('createNewGroup')"></span>
                     </li>
                 </ul>
             </template>
