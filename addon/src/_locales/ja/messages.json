@@ -119,10 +119,6 @@
         "message": "復元するバックアップファイルをロードしてください",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsWarning": {
-        "message": "復元を行うと現在のタブグループと設定がすべて削除されます！",
-        "description": "Restore add-on settings will ERASE all existing settings and groups!"
-    },
     "importAddonSettingsButton": {
         "message": "バックアップの復元",
         "description": "Restore backup"

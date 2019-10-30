@@ -119,10 +119,6 @@
         "message": "Załaduj plik kopii zapasowej zawierający grupy kart, które chcesz przywrócić.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsWarning": {
-        "message": "Przywrócenie ustawień dodatkowych usunie wszystkie istniejące ustawienia i grupy!",
-        "description": "Restore add-on settings will ERASE all existing settings and groups!"
-    },
     "importAddonSettingsButton": {
         "message": "Przywróć kopię",
         "description": "Restore backup"

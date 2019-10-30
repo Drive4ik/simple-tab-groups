@@ -54,25 +54,14 @@ let options = {},
 
 window.addEventListener('error', utils.errorEventHandler);
 
-async function createTabsSafe(tabs, hideTabs, groupId, withRemoveEvents = true) {
+async function createTabsSafe(tabs, hideTabs, withRemoveEvents = true) {
     if (withRemoveEvents) {
         removeEvents();
     }
 
-    let group = null;
-
-    if (groupId) {
-        [group] = await Groups.load(groupId);
-    }
-
     let result = await Promise.all(tabs.map(function(tab) {
-        if (groupId) {
-            tab.groupId = groupId;
-        }
-
         delete tab.index;
-
-        return Tabs.create(tab, group);
+        return Tabs.create(tab);
     }));
 
     if (hideTabs) {
@@ -684,9 +673,10 @@ async function addUndoRemoveGroupItem(groupToRemove) {
             await createTabsSafe(tabs.map(function(tab) {
                 delete tab.active;
                 delete tab.windowId;
+                tab.group = group;
 
                 return tab;
-            }), true, group.id);
+            }), true);
 
             loadingBrowserAction(false);
         }
@@ -757,7 +747,7 @@ async function createMoveTabMenus(windowId) {
 
     groups.forEach(function(group) {
         let groupIcon = utils.getGroupIconUrl(group, 16),
-            groupTitle = utils.getGroupTitle(group, 'withActiveGroup');
+            groupTitle = utils.getGroupTitle(group, 'withActiveGroup withContainer');
 
         options.showContextMenuOnTabs && menuIds.push(browser.menus.create({
             title: groupTitle,
@@ -813,10 +803,11 @@ async function createMoveTabMenus(windowId) {
                     tabsToCreate = [];
 
                 if (bookmark.type === browser.menus.ContextType.BOOKMARK) {
-                    if (bookmark.url && utils.isUrlAllowToCreate(bookmark.url)) {
+                    if (utils.isUrlAllowToCreate(bookmark.url)) {
                         tabsToCreate.push({
                             title: bookmark.title,
                             url: bookmark.url,
+                            group,
                         });
                     }
                 } else if (bookmark.type === 'folder') {
@@ -827,28 +818,29 @@ async function createMoveTabMenus(windowId) {
                     for (let b of folder.children) {
                         if (b.type === 'folder') {
                             await findBookmarks(b);
-                        } else if (b.type === browser.menus.ContextType.BOOKMARK && b.url && utils.isUrlAllowToCreate(b.url) && !utils.isUrlEmpty(b.url)) {
+                        } else if (b.type === browser.menus.ContextType.BOOKMARK && utils.isUrlAllowToCreate(b.url)) {
                             tabsToCreate.push({
                                 title: b.title,
                                 url: b.url,
+                                group,
                             });
                         }
                     }
                 }
 
                 if (tabsToCreate.length) {
-                    let tabs = await createTabsSafe(tabsToCreate, !cache.getWindowId(group.id), group.id);
+                    let tabs = await createTabsSafe(tabsToCreate, !cache.getWindowId(group.id));
 
                     loadingBrowserAction(false);
 
                     if (setActive) {
                         applyGroup(undefined, group.id, tabs[0].id);
                     } else {
-                        utils.notify(browser.i18n.getMessage('tabsCreatedCount', tabsToCreate.length));
+                        utils.notify(browser.i18n.getMessage('tabsCreatedCount', tabsToCreate.length), 7000);
                     }
                 } else {
                     loadingBrowserAction(false);
-                    utils.notify(browser.i18n.getMessage('tabsNotCreated'));
+                    utils.notify(browser.i18n.getMessage('tabsNotCreated'), 7000);
                 }
             },
         }));
@@ -927,7 +919,7 @@ async function createMoveTabMenus(windowId) {
 
             let [bookmark] = await browser.bookmarks.get(info.bookmarkId);
 
-            if (bookmark.type !== browser.menus.ContextType.BOOKMARK || !bookmark.url || !utils.isUrlAllowToCreate(bookmark.url)) {
+            if (bookmark.type !== browser.menus.ContextType.BOOKMARK || !utils.isUrlAllowToCreate(bookmark.url)) {
                 utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'));
                 return;
             }
@@ -970,7 +962,7 @@ async function createMoveTabMenus(windowId) {
                 for (let bookmark of folder.children) {
                     if (bookmark.type === 'folder') {
                         await addBookmarkFolderAsGroup(bookmark);
-                    } else if (bookmark.type === browser.menus.ContextType.BOOKMARK && bookmark.url && utils.isUrlAllowToCreate(bookmark.url) && !utils.isUrlEmpty(bookmark.url)) {
+                    } else if (bookmark.type === browser.menus.ContextType.BOOKMARK && utils.isUrlAllowToCreate(bookmark.url)) {
                         tabsToCreate.push({
                             title: bookmark.title,
                             url: bookmark.url,
@@ -992,9 +984,9 @@ async function createMoveTabMenus(windowId) {
             loadingBrowserAction(false);
 
             if (groupsCreatedCount) {
-                utils.notify(browser.i18n.getMessage('groupsCreatedCount', groupsCreatedCount));
+                utils.notify(browser.i18n.getMessage('groupsCreatedCount', groupsCreatedCount), 7000);
             } else {
-                utils.notify(browser.i18n.getMessage('noGroupsCreated'));
+                utils.notify(browser.i18n.getMessage('noGroupsCreated'), 7000);
             }
         },
     }));
@@ -1134,7 +1126,7 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
 
     if (showMessages) {
         loadingBrowserAction(false);
-        utils.notify(browser.i18n.getMessage('groupExportedToBookmarks', group.title));
+        utils.notify(browser.i18n.getMessage('groupExportedToBookmarks', group.title), 7000);
     }
 
     return true;
@@ -1299,11 +1291,11 @@ async function onBeforeTabRequest({tabId, url, originUrl}) {
         let newTab = await Tabs.create({
             url: tab.url,
             cookieStoreId: tabGroup.newTabContainer,
-            groupId: tabGroup.id,
+            group: tabGroup,
             active: tab.active,
             index: tab.index,
             windowId: tabWindowId || tab.windowId,
-        }, tabGroup);
+        });
 
         if (!tabWindowId || tab.hidden) {
             addExcludeTabsIds([newTab.id]);
@@ -1690,7 +1682,7 @@ async function saveOptions(_options) {
         tabs.forEach(tab => Tabs.sendMessage(tab.id, actionData));
     }
 
-    if (optionsKeys.some(key => key === 'autoBackupEnable' || key === 'autoBackupIntervalKey' || key === 'autoBackupIntervalValue')) {
+    if (optionsKeys.some(key => ['autoBackupEnable', 'autoBackupIntervalKey', 'autoBackupIntervalValue'].includes(key))) {
         resetAutoBackup();
     }
 
@@ -1698,7 +1690,7 @@ async function saveOptions(_options) {
         Groups.load().then(groups => groups.forEach(group => updateBrowserActionData(group.id)));
     }
 
-    if (optionsKeys.some(key => key === 'showContextMenuOnTabs' || key === 'showContextMenuOnLinks')) {
+    if (optionsKeys.some(key => ['showContextMenuOnTabs', 'showContextMenuOnLinks'].includes(key))) {
         updateMoveTabMenus();
     }
 
@@ -1770,6 +1762,12 @@ async function createBackup(includeTabThumbnails, includeTabFavIcons, isAutoBack
         })
         .filter(tab => tab.url);
 
+    if (!data.pinnedTabs.length) {
+        delete data.pinnedTabs;
+    }
+
+    let containersToExport = [];
+
     data.groups = groups.map(function(group) {
         group.tabs = group.tabs
             .map(function({url, title, cookieStoreId, isInReaderMode, session}) {
@@ -1779,6 +1777,10 @@ async function createBackup(includeTabThumbnails, includeTabFavIcons, isAutoBack
 
                 if (!containers.isDefault(cookieStoreId)) {
                     tab.cookieStoreId = cookieStoreId;
+
+                    if (!containersToExport.includes(tab.cookieStoreId)) {
+                        containersToExport.push(tab.cookieStoreId);
+                    }
                 }
 
                 if (isInReaderMode) {
@@ -1803,26 +1805,168 @@ async function createBackup(includeTabThumbnails, includeTabFavIcons, isAutoBack
             })
             .filter(tab => tab.url);
 
+        containersToExport.push(...group.catchTabContainers, group.newTabContainer);
+
         return group;
+    });
+
+    let allContainers = containers.getAll();
+
+    data.containers = {};
+
+    containersToExport.filter(Boolean).forEach(function(cookieStoreId) {
+        if (cookieStoreId !== containers.TEMPORARY_CONTAINER && !data.containers[cookieStoreId]) {
+            data.containers[cookieStoreId] = allContainers[cookieStoreId];
+        }
     });
 
     if (isAutoBackup) {
         data.autoBackupLastBackupTimeStamp = options.autoBackupLastBackupTimeStamp = utils.unixNow();
 
         if (options.autoBackupGroupsToFile) {
-            await file.backup(data, true, overwrite);
+            file.backup(data, true, overwrite);
         }
 
         if (options.autoBackupGroupsToBookmarks) {
-            await exportAllGroupsToBookmarks();
+            exportAllGroupsToBookmarks();
         }
 
-        await storage.set({
+        storage.set({
             autoBackupLastBackupTimeStamp: data.autoBackupLastBackupTimeStamp,
         });
     } else {
         await file.backup(data, false, overwrite);
     }
+}
+
+async function restoreBackup(data) {
+    removeEvents();
+
+    await loadingBrowserAction();
+
+    let {os} = await browser.runtime.getPlatformInfo(),
+        isMac = os === browser.runtime.PlatformOs.MAC;
+
+    let currentData = await storage.get(null),
+        lastCreatedGroupPosition = Math.max(currentData.lastCreatedGroupPosition, data.lastCreatedGroupPosition || 0),
+        containersToCreate = {};
+
+    currentData.groups = await Groups.load(null, true);
+
+    data.groups = data.groups.map(function(group) {
+        let newGroup = Groups.create(++lastCreatedGroupPosition, group.title);
+
+        if (group.id && data.hotkeys) {
+            data.hotkeys.forEach(hotkey => hotkey.groupId === group.id ? (hotkey.groupId = newGroup.id) : null);
+        }
+
+        delete group.id;
+        delete group.title;
+
+        newGroup = {
+            ...newGroup,
+            ...group,
+        };
+
+        newGroup.tabs = group.tabs
+            .map(function(tab) {
+                delete tab.active;
+                delete tab.windowId;
+                delete tab.index;
+                delete tab.pinned;
+
+                tab.group = newGroup;
+                tab.url = utils.normalizeUrl(tab.url);
+
+                if (data.containers && data.containers[tab.cookieStoreId] && !containersToCreate[tab.cookieStoreId]) {
+                    containersToCreate[tab.cookieStoreId] = data.containers[tab.cookieStoreId];
+                }
+
+                return tab;
+            })
+            .filter(tab => utils.isUrlAllowToCreate(tab.url));
+
+        if ('string' === typeof group.catchTabRules && group.catchTabRules.length) {
+            newGroup.catchTabRules = group.catchTabRules;
+        }
+
+        return newGroup;
+    });
+
+    if (data.hotkeys && !isMac) {
+        data.hotkeys.forEach(hotkey => hotkey.metaKey = false);
+    }
+
+    data = {
+        ...currentData,
+        ...data,
+        lastCreatedGroupPosition,
+        groups: [...currentData.groups, ...data.groups],
+        hotkeys: [...currentData.hotkeys, ...(data.hotkeys || [])],
+    };
+
+    for (let cookieStoreId in containersToCreate) {
+        let newCookieStoreId = await containers.normalize(cookieStoreId, containersToCreate[cookieStoreId]);
+
+        if (newCookieStoreId !== cookieStoreId && !containers.isDefault(newCookieStoreId)) {
+            data.groups.forEach(function(group) {
+                if (group.newTabContainer === cookieStoreId) {
+                    group.newTabContainer = newCookieStoreId;
+                }
+
+                group.catchTabContainers = group.catchTabContainers.map(csId => csId === cookieStoreId ? newCookieStoreId : csId);
+            });
+        }
+    }
+
+    delete data.containers;
+
+    let windows = await Windows.load(true);
+
+    await syncTabs(data.groups, windows);
+
+    if (data.pinnedTabs) {
+        let currentPinnedTabs = await Tabs.get(null, true, null);
+
+        data.pinnedTabs = data.pinnedTabs.filter(function(tab) {
+            delete tab.active;
+            delete tab.windowId;
+            delete tab.index;
+
+            tab.pinned = true;
+
+            return !currentPinnedTabs.some(t => t.url === tab.url) && utils.isUrlAllowToCreate(tab.url);
+        });
+
+        if (data.pinnedTabs.length) {
+            await createTabsSafe(data.pinnedTabs, false, false);
+        }
+
+        delete data.pinnedTabs;
+    }
+
+    data.isBackupRestoring = true;
+
+    await storage.set(data);
+
+    browser.runtime.reload(); // reload addon
+}
+
+async function clearAddon() {
+    loadingBrowserAction();
+
+    removeEvents();
+
+    let [tabs, windows] = await Promise.all([Tabs.get(null, null, null), Windows.load()]);
+
+    await Promise.all(tabs.map(tab => cache.removeTabSession(tab.id)));
+    await Promise.all(windows.map(win => cache.removeWindowSession(win.id)));
+
+    await storage.clear();
+
+    window.localStorage.clear();
+
+    browser.runtime.reload(); // reload addon
 }
 
 async function exportAllGroupsToBookmarks(showFinishMessage) {
@@ -1862,10 +2006,6 @@ window.BG = {
     containers,
     normalizeContainersInGroups,
 
-    events: {
-        removeEvents,
-    },
-
     Groups,
     Windows,
 
@@ -1890,9 +2030,9 @@ window.BG = {
 
     runMigrateForData,
 
-    syncTabs,
-
     createBackup,
+    restoreBackup,
+    clearAddon,
 
     canAddGroupToWindowAfterItCreated: true,
 
@@ -2166,31 +2306,37 @@ async function syncTabs(groups, windows, hideAllTabs = false) {
         await browser.tabs.hide(allTabs.map(utils.keyId));
     }
 
-    let syncedTabs = [];
-
     for (let group of groups) {
         let tabs = [];
 
         for (let tab of group.tabs) {
             tab.cookieStoreId = await containers.normalize(tab.cookieStoreId);
+            tab.url = utils.normalizeUrl(tab.url);
 
-            let winTab = allTabs.find(winTab => !syncedTabs.includes(winTab.id) && winTab.url === tab.url && winTab.cookieStoreId === tab.cookieStoreId);
+            let winTabIndex = allTabs.findIndex(winTab => winTab.url === tab.url && winTab.cookieStoreId === tab.cookieStoreId);
 
-            if (winTab) {
-                syncedTabs.push(winTab.id);
-                winTab.session.groupId = group.id;
-                cache.setTabGroup(winTab.id, group.id);
+            if (winTabIndex !== -1) {
+                let [winTab] = allTabs.splice(winTabIndex, 1);
+
+                if (winTab.session.groupId !== group.id) {
+                    winTab.session.groupId = group.id;
+                    await cache.setTabGroup(winTab.id, group.id);
+                }
+
                 tabs.push(winTab);
             } else {
-                tabs.push(
-                    Tabs.create({
-                        title: tab.title,
-                        url: utils.normalizeUrl(tab.url),
-                        favIconUrl: tab.favIconUrl,
-                        cookieStoreId: tab.cookieStoreId,
-                        groupId: group.id,
-                    }, group)
-                );
+                if (utils.isUrlAllowToCreate(tab.url)) {
+                    tabs.push(
+                        Tabs.create({
+                            title: tab.title,
+                            url: tab.url,
+                            favIconUrl: tab.favIconUrl,
+                            thumbnail: tab.session && tab.session.thumbnail,
+                            cookieStoreId: tab.cookieStoreId,
+                            group,
+                        })
+                    );
+                }
             }
         }
 

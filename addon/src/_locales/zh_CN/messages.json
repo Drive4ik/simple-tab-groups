@@ -119,10 +119,6 @@
         "message": "加载一个备份文件，以恢复你的标签页群组。",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsWarning": {
-        "message": "从备份文件还原，会*清除*所有当前的设置和群组！",
-        "description": "Restore add-on settings will ERASE all existing settings and groups!"
-    },
     "importAddonSettingsButton": {
         "message": "恢复备份",
         "description": "Restore backup"

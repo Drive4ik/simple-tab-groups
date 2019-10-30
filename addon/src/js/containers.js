@@ -92,7 +92,7 @@ function remove(cookieStoreId) {
     return BG.browser.contextualIdentities.remove(cookieStoreId);
 }
 
-async function normalize(cookieStoreId) {
+async function normalize(cookieStoreId, containerData) {
     if (isDefault(cookieStoreId)) {
         return constants.DEFAULT_COOKIE_STORE_ID;
     }
@@ -102,17 +102,46 @@ async function normalize(cookieStoreId) {
     }
 
     if (!mappedContainerCookieStoreId[cookieStoreId]) {
-        mappedContainerCookieStoreId[cookieStoreId] = await createTemporaryContainer();
+        if (containerData) {
+            for (let csId in containers) {
+                if (!isTemporary(csId) && containerData.name === containers[csId].name) {
+                    mappedContainerCookieStoreId[cookieStoreId] = csId;
+                    break;
+                }
+            }
+
+            if (!mappedContainerCookieStoreId[cookieStoreId]) {
+                const {BG} = browser.extension.getBackgroundPage();
+                let {cookieStoreId: csId} = await BG.browser.contextualIdentities.create({
+                    name: containerData.name,
+                    color: containerData.color,
+                    icon: containerData.icon,
+                });
+                mappedContainerCookieStoreId[cookieStoreId] = csId;
+            }
+        } else {
+            mappedContainerCookieStoreId[cookieStoreId] = await createTemporaryContainer();
+        }
     }
 
     return mappedContainerCookieStoreId[cookieStoreId];
 }
 
 function get(cookieStoreId, key = null) {
-    let result = containers[cookieStoreId] || {
-        cookieStoreId: constants.DEFAULT_COOKIE_STORE_ID,
-        name: 'default',
-    };
+    let result = null;
+
+    if (containers[cookieStoreId]) {
+        result = containers[cookieStoreId];
+    } else if (containers[mappedContainerCookieStoreId[cookieStoreId]]) {
+        result = containers[mappedContainerCookieStoreId[cookieStoreId]];
+    } else if (cookieStoreId === TEMPORARY_CONTAINER) {
+        result = temporaryContainerOptions;
+    } else {
+        result = {
+            cookieStoreId: constants.DEFAULT_COOKIE_STORE_ID,
+            name: 'default',
+        };
+    }
 
     return key ? result[key] : {...result};
 }

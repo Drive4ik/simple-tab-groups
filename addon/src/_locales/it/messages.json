@@ -119,10 +119,6 @@
         "message": "Carica un file di backup contenente i gruppi di tab che si vogliono ripristinare.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsWarning": {
-        "message": "Ripristinare le impostazioni dell'estensione CANCELLERÀ tutte le impostazioni correnti e tutti i gruppi!",
-        "description": "Restore add-on settings will ERASE all existing settings and groups!"
-    },
     "importAddonSettingsButton": {
         "message": "Ripristina da backup",
         "description": "Restore backup"

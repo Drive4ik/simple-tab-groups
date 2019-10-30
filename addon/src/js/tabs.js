@@ -7,14 +7,14 @@ import Windows from './windows';
 
 const newTabKeys = ['active', 'cookieStoreId', 'index', 'discarded', 'title', 'openInReaderMode', 'pinned', 'url', 'windowId'];
 
-async function create(tab, group = null) {
+async function create(tab) {
     const {BG} = browser.extension.getBackgroundPage();
 
     BG.console.log('create tab', tab);
 
-    let {groupId, thumbnail, favIconUrl} = tab;
+    let {group, thumbnail, favIconUrl} = tab;
 
-    if (!tab.url || !utils.isUrlAllowToCreate(tab.url)) {
+    if (!utils.isUrlAllowToCreate(tab.url)) {
         delete tab.url;
     }
 
@@ -26,10 +26,10 @@ async function create(tab, group = null) {
         delete tab.pinned;
     }
 
-    delete tab.discarded;
-
-    if (!tab.active && !tab.pinned && tab.url && !utils.isUrlEmpty(tab.url)) {
+    if (!tab.active && !tab.pinned && tab.url) {
         tab.discarded = true;
+    } else {
+        delete tab.discarded;
     }
 
     if (tab.active || !tab.discarded) {
@@ -42,10 +42,6 @@ async function create(tab, group = null) {
 
     if (!Number.isFinite(tab.windowId) || 1 > tab.windowId || !BG.cache.hasWindow(tab.windowId)) {
         delete tab.windowId;
-    }
-
-    if (groupId && !group) {
-        [group] = await Groups.load(groupId);
     }
 
     if (group && group.newTabContainer) {
@@ -68,8 +64,8 @@ async function create(tab, group = null) {
 
     BG.cache.setTab(newTab);
 
-    if (groupId && !newTab.pinned) {
-        BG.cache.setTabGroup(newTab.id, groupId);
+    if (group && !newTab.pinned) {
+        BG.cache.setTabGroup(newTab.id, group.id);
     }
 
     if (thumbnail) {
@@ -208,12 +204,13 @@ async function add(groupId, cookieStoreId, url, title, active = false) {
     const {BG} = browser.extension.getBackgroundPage();
 
     let windowId = BG.cache.getWindowId(groupId),
+        [group] = await Groups.load(groupId),
         [tab] = await BG.createTabsSafe([{
             url,
             title,
             active,
             cookieStoreId,
-            groupId,
+            group,
             windowId,
         }], !windowId);
 
@@ -492,14 +489,15 @@ async function moveNative(tabs, options = {}) {
     console.log('tabs before moving', tabs);
 
     let result = await BG.browser.tabs.move(tabs.map(utils.keyId), options),
-        tabIdsToReload = [];
+        tabIdsToReload = result.reduce(function(acc, tab, index) {
+            if (tab.url !== tabs[index].url) {
+                tab.url = tabs[index].url;
+                acc.push(tab.id);
+            }
 
-    result.forEach(function(tab, index) {
-        if (tab.discarded && utils.isUrlEmpty(tab.url) && tab.url !== tabs[index].url) {
-            tab.url = tabs[index].url;
-            tabIdsToReload.push(tab.id);
-        }
-    });
+            return acc;
+        }, []);
+
     reload(tabIdsToReload, true);
 
     return result;

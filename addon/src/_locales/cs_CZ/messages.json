@@ -119,10 +119,6 @@
         "message": "Načíst záložní soubor obsahující skupiny panelů, které chcete obnovit.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsWarning": {
-        "message": "Nahrání zálohy doplňku PŘEPÍŠE všechna současná nastavení a skupiny!",
-        "description": "Restore add-on settings will ERASE all existing settings and groups!"
-    },
     "importAddonSettingsButton": {
         "message": "Obnovit zálohu",
         "description": "Restore backup"

@@ -1,6 +1,7 @@
 'use strict';
 
 import constants from './constants';
+import containers from './containers';
 import storage from './storage';
 import * as npmCompareVersions from 'compare-versions';
 
@@ -265,18 +266,25 @@ function normalizeFavIcon(favIconUrl) {
     return '/icons/tab.svg';
 }
 
-function isUrlEmpty(url) {
-    return ['about:blank', 'about:newtab', 'about:home'].includes(url);
-}
-
 function isWindowAllow(win) {
     return browser.windows.WindowType.NORMAL === win.type;
 }
 
-const createTabUrlRegexp = /^((https?|ftp|moz-extension):|about:blank)/;
+const createTabUrlRegexp = /^((https?|ftp|moz-extension):|about:blank)/,
+    emptyUrlsArray = ['about:blank', 'about:newtab', 'about:home'];
 
-function isUrlAllowToCreate(url) {
-    return url ? createTabUrlRegexp.test(url) : true;
+function isUrlEmpty(url) {
+    return emptyUrlsArray.includes(url);
+}
+
+function isUrlAllowToCreate(url, falseIfEmpty = true) {
+    let result = createTabUrlRegexp.test(url);
+
+    if (result && falseIfEmpty && isUrlEmpty(url)) {
+        return false;
+    }
+
+    return result;
 }
 
 function normalizeUrl(url) {
@@ -322,21 +330,26 @@ function getGroupLastActiveTab({tabs}) {
     return tabs.find(tab => tab.active) || tabs.slice().sort(sortBy('lastAccessed')).pop();
 }
 
-function getGroupTitle({id, title, tabs}, args = '') {
+function getGroupTitle({id, title, tabs, newTabContainer}, args = '') {
     const {BG} = browser.extension.getBackgroundPage();
 
     let withActiveGroup = args.includes('withActiveGroup'),
-        withTabsCount = args.includes('withTabsCount'),
+        withCountTabs = args.includes('withCountTabs'),
         withActiveTab = args.includes('withActiveTab'),
+        withContainer = args.includes('withContainer'),
         withTabs = args.includes('withTabs');
 
     if (withActiveGroup && BG.cache.getWindowId(id)) {
         title = constants.ACTIVE_SYMBOL + ' ' + title;
     }
 
+    if (withContainer && newTabContainer) {
+        title = '[' + containers.get(newTabContainer, 'name') + '] ' + title;
+    }
+
     tabs = tabs.slice();
 
-    if (withTabsCount) {
+    if (withCountTabs) {
         title += ' (' + groupTabsCountMessage(tabs) + ')';
     }
 
@@ -679,8 +692,8 @@ export default {
 
     isAllowSender,
     isAllowExternalRequestAndSender,
-    isUrlEmpty,
     isWindowAllow,
+    isUrlEmpty,
     isUrlAllowToCreate,
     normalizeUrl,
     isTabPinned,

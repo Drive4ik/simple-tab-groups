@@ -119,10 +119,6 @@
         "message": "載入備份檔並還原分頁群組",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsWarning": {
-        "message": "還原套件設定將會刪除目前所有設定及分頁群組。",
-        "description": "Restore add-on settings will ERASE all existing settings and groups!"
-    },
     "importAddonSettingsButton": {
         "message": "還原備份",
         "description": "Restore backup"

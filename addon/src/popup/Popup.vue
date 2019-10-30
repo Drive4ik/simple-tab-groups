@@ -735,18 +735,20 @@
                 }
             },
 
-            scrollToActiveElement() {
-                this.$nextTick(function() {
-                    if (this.groupToEdit) {
-                        return;
-                    }
+            scrollToActiveElement(event) {
+                if (-1 == event.target.tabIndex) {
+                    return;
+                }
 
-                    if (!document.activeElement || '-1' === document.activeElement.tabIndex) {
-                        return;
-                    }
+                setTimeout(() => {
+                    this.$nextTick(() => {
+                        if (this.groupToEdit || this.dragData) {
+                            return;
+                        }
 
-                    utils.scrollTo(document.activeElement);
-                });
+                        utils.scrollTo(document.activeElement);
+                    });
+                }, 150);
             },
 
             goToElementSibling(event) {
@@ -792,6 +794,21 @@
                     BG.saveConsoleLogs();
                 }
             },
+
+            mainContextMenu(event) {
+                if (['INPUT', 'TEXTAREA'].includes(event.target.nodeName)) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                if (event.target.tabIndex > -1) {
+                    event.target.classList.add('is-context-active');
+                } else {
+                    let parent = event.target.closest('[tabindex="0"]');
+                    parent && parent.classList.add('is-context-active');
+                }
+            },
         },
     }
 </script>
@@ -800,7 +817,7 @@
     <div
         id="stg-popup"
         :class="['no-outline', {'edit-group-popup': !!groupToEdit, 'is-sidebar': isSidebar}]"
-        @contextmenu="['INPUT', 'TEXTAREA'].includes($event.target.nodeName) ? null : $event.preventDefault()"
+        @contextmenu="mainContextMenu"
         @click="multipleTabs = []"
         @wheel.ctrl.prevent
 
@@ -848,12 +865,27 @@
                             @keydown.arrow-up="goToElementSibling"
                             @keydown.arrow-down="goToElementSibling"
                             tabindex="0"
-                            :title="getGroupTitle(group, 'withTabsCount withTabs')"
+                            :title="getGroupTitle(group, 'withCountTabs withTabs')"
                             >
                                 <div class="item-icon">
                                     <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                                 </div>
-                                <div class="item-title" v-text="getGroupTitle(group, options.showExtendGroupsPopupWithActiveTabs ? 'withActiveTab' : '')"></div>
+                                <div class="item-title">
+                                    <template v-if="group.newTabContainer">
+                                        <img
+                                            v-if="TEMPORARY_CONTAINER === group.newTabContainer"
+                                            src="resource://usercontext-content/chill.svg"
+                                            class="size-16 fill-context"
+                                            />
+                                        <img
+                                            v-else
+                                            :src="containers[group.newTabContainer].iconUrl"
+                                            :style="{fill: containers[group.newTabContainer].colorCode}"
+                                            class="size-16 fill-context"
+                                            />
+                                    </template>
+                                    <span v-text="getGroupTitle(group, options.showExtendGroupsPopupWithActiveTabs ? 'withActiveTab' : '')"></span>
+                                </div>
                                 <div class="item-action bold-hover is-unselectable" @click.stop="showSectionGroupTabs(group)">
                                     <img class="size-16 rotate-180" src="/icons/arrow-left.svg" />
                                     <span class="tabs-text" v-text="groupTabsCountMessage(group.tabs)"></span>
@@ -934,12 +966,27 @@
                         @keydown.arrow-up="goToElementSibling"
                         @keydown.arrow-down="goToElementSibling"
                         tabindex="0"
-                        :title="getGroupTitle(group, 'withTabsCount withTabs')"
+                        :title="getGroupTitle(group, 'withCountTabs withTabs')"
                         >
                             <div class="item-icon">
                                 <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                             </div>
-                            <div class="item-title" v-text="getGroupTitle(group, options.showExtendGroupsPopupWithActiveTabs ? 'withActiveTab' : '')"></div>
+                            <div class="item-title">
+                                <template v-if="group.newTabContainer">
+                                    <img
+                                        v-if="TEMPORARY_CONTAINER === group.newTabContainer"
+                                        src="resource://usercontext-content/chill.svg"
+                                        class="size-16 fill-context"
+                                        />
+                                    <img
+                                        v-else
+                                        :src="containers[group.newTabContainer].iconUrl"
+                                        :style="{fill: containers[group.newTabContainer].colorCode}"
+                                        class="size-16 fill-context"
+                                        />
+                                </template>
+                                <span v-text="getGroupTitle(group, options.showExtendGroupsPopupWithActiveTabs ? 'withActiveTab' : '')"></span>
+                            </div>
                             <div class="item-action bold-hover is-unselectable" @click.stop="showSectionGroupTabs(group)">
                                 <img class="size-16 rotate-180" src="/icons/arrow-left.svg" />
                                 <span class="tabs-text" v-text="groupTabsCountMessage(group.tabs)"></span>
@@ -1031,7 +1078,24 @@
                     <div class="item-icon">
                         <img :src="groupToShow.iconUrlToDisplay" class="is-inline-block size-16" />
                     </div>
-                    <div class="item-title" v-text="getGroupTitle(groupToShow)"></div>
+                    <div class="item-title">
+                        <template v-if="groupToShow.newTabContainer">
+                            <img
+                                v-if="TEMPORARY_CONTAINER === groupToShow.newTabContainer"
+                                src="resource://usercontext-content/chill.svg"
+                                :title="lang('temporaryContainerTitle')"
+                                class="size-16 fill-context"
+                                />
+                            <img
+                                v-else
+                                :src="containers[groupToShow.newTabContainer].iconUrl"
+                                :style="{fill: containers[groupToShow.newTabContainer].colorCode}"
+                                :title="containers[groupToShow.newTabContainer].name"
+                                class="size-16 fill-context"
+                                />
+                        </template>
+                        <span v-text="getGroupTitle(groupToShow)"></span>
+                    </div>
                     <div class="item-action is-unselectable">
                         <span tabindex="0" @click="openGroupSettings(groupToShow)" @keyup.enter="openGroupSettings(groupToShow)" class="size-16 cursor-pointer" :title="lang('groupSettings')">
                             <img src="/icons/settings.svg" />
@@ -1459,7 +1523,8 @@
         }
 
         &:not(.no-hover):hover,
-        &:focus {
+        &:focus,
+        &.is-context-active {
             background-color: var(--item-background-color-hover);
         }
 
@@ -1488,6 +1553,10 @@
             padding-left: 5px;
             padding-right: 5px;
             cursor: default;
+
+            img {
+                vertical-align: text-bottom;
+            }
         }
 
         .item-action {
@@ -1534,7 +1603,7 @@
         display: inline-block;
         border-bottom-right-radius: 5px;
         border-bottom-left-radius: 5px;
-        border-bottom-width: 2px;
+        border-bottom-width: 1px;
         border-bottom-style: solid;
         max-width: 100%;
         overflow: hidden;

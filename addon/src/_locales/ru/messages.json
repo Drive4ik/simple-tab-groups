@@ -119,10 +119,6 @@
         "message": "Загрузите файл резервной копии для того чтобы восстановить вкладки и настройки.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsWarning": {
-        "message": "Восстановление данных приведет к УДАЛЕНИЮ всех текущих вкладок, групп и настроек!",
-        "description": "Restore add-on settings will ERASE all existing settings and groups!"
-    },
     "importAddonSettingsButton": {
         "message": "Восстановить бекап",
         "description": "Restore backup"
@@ -782,5 +778,33 @@
                 "example": "⌚Temporary Container 5"
             }
         }
+    },
+    "importAddonSettings": {
+        "message": "Импорт настроек аддона",
+        "description": "Import addon settings"
+    },
+    "importGroups": {
+        "message": "Импорт групп",
+        "description": "Import groups"
+    },
+    "pinnedTabs": {
+        "message": "Закреплённые вкладки",
+        "description": "Pinned tabs"
+    },
+    "eraseAddonSettingsWarningTitle": {
+        "message": "Это действие <b>ПОЛНОСТЬЮ УДАЛИТ</b> все существующие настройки и группы!<br>Вкладки не будут затронуты.",
+        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+    },
+    "clear": {
+        "message": "Очистить",
+        "description": "Clear"
+    },
+    "deleteAllAddonDataAndSettings": {
+        "message": "Очистка настроек аддона",
+        "description": "Delete all addon data and settings"
+    },
+    "warningAllDataWillRemove": {
+        "message": "Внимание! Удаление ВСЕХ настроек аддона! Вы точно уверены?",
+        "description": "Warning! Removing ALL addon data! Are you really sure?"
     }
 }

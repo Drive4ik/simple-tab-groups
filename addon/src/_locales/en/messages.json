@@ -123,10 +123,6 @@
         "message": "Load a backup file containing the tab groups you want to restore.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsWarning": {
-        "message": "Restoring from backup will ERASE all existing settings and groups!",
-        "description": "Restore add-on settings will ERASE all existing settings and groups!"
-    },
     "importAddonSettingsButton": {
         "message": "Restore backup",
         "description": "Restore backup"
@@ -786,5 +782,33 @@
                 "example": "⌚Temporary Container 5"
             }
         }
+    },
+    "importAddonSettings": {
+        "message": "Import addon settings",
+        "description": "Import addon settings"
+    },
+    "importGroups": {
+        "message": "Import groups",
+        "description": "Import groups"
+    },
+    "pinnedTabs": {
+        "message": "Pinned tabs",
+        "description": "Pinned tabs"
+    },
+    "eraseAddonSettingsWarningTitle": {
+        "message": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected.",
+        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+    },
+    "clear": {
+        "message": "Clear",
+        "description": "Clear"
+    },
+    "deleteAllAddonDataAndSettings": {
+        "message": "Delete all addon data and settings",
+        "description": "Delete all addon data and settings"
+    },
+    "warningAllDataWillRemove": {
+        "message": "Warning! Removing ALL addon data! Are you really sure?",
+        "description": "Warning! Removing ALL addon data! Are you really sure?"
     }
 }

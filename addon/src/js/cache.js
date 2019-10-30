@@ -151,6 +151,10 @@ async function loadTabSession(tab) {
     return tab;
 }
 
+function removeTabSession(tabId) {
+    return Promise.all([removeTabGroup(tabId), removeTabThumbnail(tabId), removeTabFavIcon(tabId)]);
+}
+
 function getTabCookieStoreId(tabId) {
     return tabs.cookieStoreId[tabId];
 }
@@ -254,6 +258,10 @@ async function loadWindowSession(win) {
     return win;
 }
 
+function removeWindowSession(windowId) {
+    return removeWindowGroup(windowId);
+}
+
 export default {
     // tabs
     setTab,
@@ -271,6 +279,7 @@ export default {
 
     getTabSession,
     loadTabSession,
+    removeTabSession,
 
     getTabCookieStoreId,
     getRemovedTabsForCreate,
@@ -289,4 +298,5 @@ export default {
     getWindowGroup,
 
     loadWindowSession,
+    removeWindowSession,
 };

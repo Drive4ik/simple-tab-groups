@@ -45,6 +45,7 @@
             close() {
                 this.top = this.left = this.data = null;
                 this.show = false;
+                document.querySelectorAll('.is-context-active').forEach(node => node.classList.remove('is-context-active'));
             },
 
             open(event, data = null) {

@@ -115,10 +115,6 @@
         "message": "Laadt een reservekopie van de tabgroepen die je wilt herstellen.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsWarning": {
-        "message": "Add-on instellingen herstellen zal de huidige instellingen en groepen VERWIJDEREN!",
-        "description": "Restore add-on settings will ERASE all existing settings and groups!"
-    },
     "importAddonSettingsButton": {
         "message": "Reservekopie herstellen",
         "description": "Restore backup"

@@ -119,10 +119,6 @@
         "message": "Återställ flikar och inställningar från en fil som innehåller en säkerhetskopia.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsWarning": {
-        "message": "Att återställa från en säkerhetkopia tar bort ALLA existerande flikar och skriver över alla inställningar!",
-        "description": "Restore add-on settings will ERASE all existing settings and groups!"
-    },
     "importAddonSettingsButton": {
         "message": "Återställ från säkerhetskopia",
         "description": "Restore backup"

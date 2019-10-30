@@ -119,10 +119,6 @@
         "message": "Φόρτωμα αντιγράφου ασφαλείας που περιέχει τα tab groups που θέλετε να επαναφέρετε.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsWarning": {
-        "message": "Η επαναφορά των ρυθμίσεων του πρόσθετου ΘΑ ΔΙΑΓΡΑΨΕΙ όλες τις υπάρχουσες ρυθμίσεις και groups!",
-        "description": "Restore add-on settings will ERASE all existing settings and groups!"
-    },
     "importAddonSettingsButton": {
         "message": "Επαναφορά από backup",
         "description": "Restore backup"

@@ -119,10 +119,6 @@
         "message": "Charger un fichier de sauvegarde contenant les groupes d'onglets que vous souhaitez restaurer.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsWarning": {
-        "message": "Restaurer les préférences de l'extension à partir de la sauvegarde SUPPRIMERA toutes les préférences et groupes existants !",
-        "description": "Restore add-on settings will ERASE all existing settings and groups!"
-    },
     "importAddonSettingsButton": {
         "message": "Restaurer une sauvegarde",
         "description": "Restore backup"

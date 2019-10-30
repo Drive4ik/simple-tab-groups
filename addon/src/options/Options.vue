@@ -13,6 +13,7 @@
 
     import popup from '../js/popup.vue';
     import swatches from 'vue-swatches';
+    import manageAddonBackup from './manage-addon-backup';
     import 'vue-swatches/dist/vue-swatches.min.css';
 
     const {BG} = browser.extension.getBackgroundPage();
@@ -71,6 +72,9 @@
                 groups: [],
                 isMac: false,
 
+                manageAddonSettings: null,
+                manageAddonSettingsDisableEmptyGroups: true,
+
                 permissions: {
                     bookmarks: false,
                 },
@@ -78,6 +82,8 @@
                 defaultBookmarksParents: [],
 
                 showLoadingMessage: false,
+
+                showClearAddonConfirmPopup: false,
 
                 showEnableDarkThemeNotification: false,
 
@@ -88,6 +94,7 @@
         components: {
             popup: popup,
             swatches: swatches,
+            'manage-addon-backup': manageAddonBackup,
         },
         async created() {
             let {os} = await browser.runtime.getPlatformInfo();
@@ -300,12 +307,6 @@
                     return;
                 }
 
-                this.showLoadingMessage = true;
-
-                BG.events.removeEvents();
-
-                await BG.loadingBrowserAction();
-
                 try {
                     data = await BG.runMigrateForData(data); // run migration for data
                     delete data.withoutSession;
@@ -314,34 +315,16 @@
                     return;
                 }
 
-                if (data.pinnedTabs) {
-                    let currentPinnedTabs = await Tabs.get(null, true, null);
+                this.manageAddonSettingsDisableEmptyGroups = false;
+                this.manageAddonSettings = data;
+            },
 
-                    data.pinnedTabs = data.pinnedTabs.filter(function(tab) {
-                        tab.pinned = true;
-                        return tab.url && !currentPinnedTabs.some(t => t.url === tab.url) && utils.isUrlAllowToCreate(tab.url);
-                    });
+            saveManagedAddonSettings(data) {
+                this.manageAddonSettings = null;
 
-                    if (data.pinnedTabs) {
-                        await BG.createTabsSafe(data.pinnedTabs, false, false, false);
-                    }
+                this.showLoadingMessage = true;
 
-                    delete data.pinnedTabs;
-                }
-
-                let windows = await Windows.load(true);
-
-                await BG.syncTabs(data.groups, windows);
-
-                if (!this.isMac) {
-                    data.hotkeys.forEach(hotkey => hotkey.metaKey = false);
-                }
-
-                data.isBackupRestoring = true;
-
-                await storage.set(data);
-
-                browser.runtime.reload(); // reload addon
+                BG.restoreBackup(data);
             },
 
             exportAddonSettings() {
@@ -363,11 +346,10 @@
                     return;
                 }
 
-                this.showLoadingMessage = true;
-
-                let {lastCreatedGroupPosition} = await storage.get('lastCreatedGroupPosition'),
-                    newGroups = [],
-                    tabsToCreate = [];
+                let data = {
+                    groups: [],
+                    pinnedTabs: [],
+                };
 
                 oldOptions.windows.forEach(function(win) {
                     let oldGroups = {},
@@ -381,10 +363,11 @@
                     }
 
                     Object.values(oldGroups).forEach(function(oldGroup) {
-                        lastCreatedGroupPosition++;
-
-                        groups[oldGroup.id] = Groups.create(lastCreatedGroupPosition, utils.createGroupTitle(oldGroup.title, oldGroup.id));
-                        groups[oldGroup.id].catchTabRules = oldGroup.catchRules || '';
+                        groups[oldGroup.id] = {
+                            title: oldGroup.title,
+                            tabs: [],
+                            catchTabRules: oldGroup.catchRules || '',
+                        };
                     });
 
                     win.tabs.forEach(function(oldTab) {
@@ -399,7 +382,7 @@
                         }
 
                         if (oldTab.pinned) {
-                            tabsToCreate.push({
+                            data.pinnedTabs.push({
                                 title: tab.title,
                                 url: tab.url,
                                 pinned: true,
@@ -418,7 +401,7 @@
                         }
 
                         if (groups[tabData.groupID]) {
-                            tabsToCreate.push({
+                            groups[tabData.groupID].tabs.push({
                                 title: tab.title,
                                 url: tab.url,
                                 groupId: groups[tabData.groupID].id,
@@ -427,12 +410,11 @@
                         }
                     });
 
-                    newGroups.push(...Object.values(groups));
+                    data.groups.push(...Object.values(groups));
                 });
 
-                await this._saveImportedGroups(newGroups, tabsToCreate, lastCreatedGroupPosition);
-
-                this.showLoadingMessage = false;
+                this.manageAddonSettingsDisableEmptyGroups = true;
+                this.manageAddonSettings = data;
             },
 
             async importSettingsPanoramaViewAddonButton() {
@@ -455,37 +437,32 @@
                     return;
                 }
 
-                this.showLoadingMessage = true;
-
-                let {lastCreatedGroupPosition} = await storage.get('lastCreatedGroupPosition'),
-                    newGroups = [],
-                    tabsToCreate = [];
+                let data = {
+                    groups: [],
+                    pinnedTabs: [],
+                };
 
                 panoramaOptions.windows.forEach(function(win) {
                     let groups = {};
 
                     win.groups.forEach(function(group) {
-                        lastCreatedGroupPosition++;
-
-                        groups[group.id] = Groups.create(lastCreatedGroupPosition, group.name);
+                        groups[group.id] = {
+                            title: group.name,
+                            tabs: [],
+                        };
                     });
 
                     win.tabs.forEach(function(tab) {
-                        if (!groups[tab.groupId]) {
-                            return;
+                        if (groups[tab.groupId]) {
+                            groups[tab.groupId].tabs.push(tab);
                         }
-
-                        tab.groupId = groups[tab.groupId].id;
-
-                        tabsToCreate.push(tab);
                     });
 
-                    newGroups.push(...Object.values(groups));
+                    data.groups.push(...Object.values(groups));
                 });
 
-                await this._saveImportedGroups(newGroups, tabsToCreate, lastCreatedGroupPosition);
-
-                this.showLoadingMessage = false;
+                this.manageAddonSettingsDisableEmptyGroups = true;
+                this.manageAddonSettings = data;
             },
 
             async importSettingsSyncTabGroupsAddonButton() {
@@ -508,52 +485,28 @@
                     return;
                 }
 
-                this.showLoadingMessage = true;
-
-                let {lastCreatedGroupPosition} = await storage.get('lastCreatedGroupPosition'),
-                    newGroups = [],
-                    tabsToCreate = [],
-                    groups = {};
+                let data = {
+                    groups: [],
+                    pinnedTabs: [],
+                };
 
                 syncTabOptions.groups.forEach(function(group) {
-                    lastCreatedGroupPosition++;
-
-                    groups[group.id] = Groups.create(lastCreatedGroupPosition, group.title);
-
-                    group.tabs.forEach(function(tab) {
-                        tab.groupId = groups[group.id].id;
-                        tabsToCreate.push(tab);
+                    data.groups.push({
+                        title: group.title,
+                        tabs: group.tabs.filter(tab => !tab.pinned).map(utils.cloneTab),
                     });
+
+                    data.pinnedTabs.push(...group.tabs.filter(tab => tab.pinned).map(utils.cloneTab));
                 });
 
-                await this._saveImportedGroups(Object.values(groups), tabsToCreate, lastCreatedGroupPosition);
-
-                this.showLoadingMessage = false;
+                this.manageAddonSettingsDisableEmptyGroups = true;
+                this.manageAddonSettings = data;
             },
 
-            async _saveImportedGroups(newGroups, tabsToCreate, lastCreatedGroupPosition) {
-                let groups = await Groups.load();
-                groups.push(...newGroups);
-                await Groups.save(groups);
-
-                await storage.set({lastCreatedGroupPosition});
-
-                let tabs = tabsToCreate
-                    .map(function(tab) {
-                        tab.url = utils.normalizeUrl(tab.url);
-                        return tab;
-                    })
-                    .filter(tab => tab.url && utils.isUrlAllowToCreate(tab.url))
-                    .map(function(tab) {
-                        delete tab.active;
-                        delete tab.windowId;
-
-                        return tab;
-                    });
-
-                await BG.createTabsSafe(tabs, true);
-
-                utils.notify(browser.i18n.getMessage('backupSuccessfullyRestored'));
+            runClearAddonConfirm() {
+                this.showClearAddonConfirmPopup = false;
+                this.showLoadingMessage = true;
+                BG.clearAddon();
             },
 
             async saveErrorLogsIntoFile() {
@@ -971,10 +924,6 @@
             <div class="field">
                 <div class="has-text-weight-bold h-margin-bottom-5" v-text="lang('importAddonSettingsTitle')"></div>
                 <div class="h-margin-bottom-5" v-html="lang('importAddonSettingsDescription')"></div>
-                <div class="has-text-danger has-text-weight-bold h-margin-bottom-5">
-                    <span v-text="lang('warning')"></span>
-                    <span v-text="lang('importAddonSettingsWarning')"></span>
-                </div>
                 <div class="field is-grouped is-align-items-center">
                     <div class="control">
                         <button @click="importAddonSettings" class="button is-primary">
@@ -1024,6 +973,24 @@
                 </div>
             </div>
 
+            <hr>
+
+            <div class="field">
+                <div class="has-text-weight-bold h-margin-bottom-5" v-text="lang('deleteAllAddonDataAndSettings')"></div>
+                <div class="has-text-danger has-text-weight-bold h-margin-bottom-5">
+                    <span v-text="lang('warning')"></span>
+                    <span v-html="lang('eraseAddonSettingsWarningTitle')"></span>
+                </div>
+                <div class="field is-grouped is-align-items-center">
+                    <div class="control">
+                        <button @click="showClearAddonConfirmPopup = true" class="button is-primary">
+                            <img class="size-16" src="/icons/close.svg" />
+                            <span class="h-margin-left-5" v-text="lang('clear')"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <popup
@@ -1048,6 +1015,45 @@
                 }]
             ">
             <span v-text="lang('loading')"></span>
+        </popup>
+
+        <popup v-if="showClearAddonConfirmPopup"
+            :title="lang('deleteAllAddonDataAndSettings')"
+            @clear="runClearAddonConfirm"
+            @close-popup="showClearAddonConfirmPopup = false"
+            :buttons="
+                [{
+                    event: 'clear',
+                    lang: 'ok',
+                    classList: 'is-danger',
+                }, {
+                    event: 'close-popup',
+                    lang: 'cancel',
+                }]
+            ">
+            <span v-text="lang('warningAllDataWillRemove')"></span>
+        </popup>
+
+        <popup
+            v-if="manageAddonSettings"
+            :title="lang('importAddonSettingsTitle')"
+            @close-popup="manageAddonSettings = null"
+            @save="() => saveManagedAddonSettings($refs.manageAddonBackup.getData())"
+            :buttons="
+                [{
+                    event: 'save',
+                    lang: 'ok',
+                    classList: 'is-primary',
+                }, {
+                    event: 'close-popup',
+                    lang: 'cancel',
+                }]
+            ">
+            <manage-addon-backup
+                :data="manageAddonSettings"
+                :disable-empty-groups="manageAddonSettingsDisableEmptyGroups"
+                ref="manageAddonBackup"
+                ></manage-addon-backup>
         </popup>
 
     </div>

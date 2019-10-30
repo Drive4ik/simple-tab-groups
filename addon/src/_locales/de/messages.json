@@ -119,10 +119,6 @@
         "message": "Lädt eine Backup-Datei mit den Tab-Gruppen, welche du wiederherstellen willst.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsWarning": {
-        "message": "Das Wiederherstellen der Add-on-Einstellungen wird alle existierenden Einstellungen und Gruppen LÖSCHEN!",
-        "description": "Restore add-on settings will ERASE all existing settings and groups!"
-    },
     "importAddonSettingsButton": {
         "message": "Backup wiederherstellen",
         "description": "Restore backup"

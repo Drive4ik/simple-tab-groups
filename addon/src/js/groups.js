@@ -208,7 +208,7 @@ async function update(groupId, updateData) {
         },
     });
 
-    if (['title', 'iconUrl', 'iconColor', 'iconViewType'].some(key => key in updateData)) {
+    if (['title', 'iconUrl', 'iconColor', 'iconViewType', 'newTabContainer'].some(key => key in updateData)) {
         BG.sendExternalMessage({
             action: 'group-updated',
             group: mapGroupForExternalExtension(group),

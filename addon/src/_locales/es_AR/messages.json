@@ -119,10 +119,6 @@
         "message": "Cargar el grupo de pestañas desde un archivo de resguardo que quieras restaurar.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsWarning": {
-        "message": "Restaurar la configuración de add-on BORRARA todas las configuraciones existentes y grupos!",
-        "description": "Restore add-on settings will ERASE all existing settings and groups!"
-    },
     "importAddonSettingsButton": {
         "message": "Restaurar copia de resguardo",
         "description": "Restore backup"

@@ -146,10 +146,9 @@ function generateBackupFileName(withTime) {
         year = now.getFullYear(),
         hours = _intToStr(now.getHours()),
         min = _intToStr(now.getMinutes()),
-        time = withTime ? `~${hours}-${min}` : '',
-        {version} = browser.runtime.getManifest();
+        time = withTime ? `~${hours}-${min}` : '';
 
-    return `stg-backup-v${version}-${year}-${month}-${day}${time}@drive4ik${BACKUP_FILE_EXT}`;
+    return `stg-backup-${year}-${month}-${day}${time}@drive4ik${BACKUP_FILE_EXT}`;
 }
 
 function _intToStr(i) {

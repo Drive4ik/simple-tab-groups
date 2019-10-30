@@ -119,10 +119,6 @@
         "message": "Внасяне на резервно копие с групите, които да бъдат възстановени.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsWarning": {
-        "message": "При възстановяване от резервно копие всички текущи групи и настройки ще бъдат ЗАЛИЧЕНИ!",
-        "description": "Restore add-on settings will ERASE all existing settings and groups!"
-    },
     "importAddonSettingsButton": {
         "message": "Възстановяване",
         "description": "Restore backup"

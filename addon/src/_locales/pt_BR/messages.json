@@ -119,10 +119,6 @@
         "message": "Abrir um arquivo de backup contendo os grupos de aba que você quer restaurar.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsWarning": {
-        "message": "Restaurar configurações da extenção vai APAGAR todas as configurações e grupos!",
-        "description": "Restore add-on settings will ERASE all existing settings and groups!"
-    },
     "importAddonSettingsButton": {
         "message": "Restaurar backup",
         "description": "Restore backup"
