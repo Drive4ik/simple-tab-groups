@@ -614,7 +614,9 @@
 
                 this.groupToRemove = null;
 
-                this.showSectionDefault();
+                if (this.groupToShow) {
+                    this.showSectionDefault();
+                }
 
                 await Groups.remove(group.id);
 

@@ -1848,8 +1848,7 @@ async function restoreBackup(data) {
         isMac = os === browser.runtime.PlatformOs.MAC;
 
     let currentData = await storage.get(null),
-        lastCreatedGroupPosition = Math.max(currentData.lastCreatedGroupPosition, data.lastCreatedGroupPosition || 0),
-        containersToCreate = {};
+        lastCreatedGroupPosition = Math.max(currentData.lastCreatedGroupPosition, data.lastCreatedGroupPosition || 0);
 
     currentData.groups = await Groups.load(null, true);
 
@@ -1878,10 +1877,6 @@ async function restoreBackup(data) {
                 tab.group = newGroup;
                 tab.url = utils.normalizeUrl(tab.url);
 
-                if (data.containers && data.containers[tab.cookieStoreId] && !containersToCreate[tab.cookieStoreId]) {
-                    containersToCreate[tab.cookieStoreId] = data.containers[tab.cookieStoreId];
-                }
-
                 return tab;
             })
             .filter(tab => utils.isUrlAllowToCreate(tab.url));
@@ -1905,17 +1900,19 @@ async function restoreBackup(data) {
         hotkeys: [...currentData.hotkeys, ...(data.hotkeys || [])],
     };
 
-    for (let cookieStoreId in containersToCreate) {
-        let newCookieStoreId = await containers.normalize(cookieStoreId, containersToCreate[cookieStoreId]);
+    if (data.containers) {
+        for (let cookieStoreId in data.containers) {
+            let newCookieStoreId = await containers.normalize(cookieStoreId, data.containers[cookieStoreId]);
 
-        if (newCookieStoreId !== cookieStoreId && !containers.isDefault(newCookieStoreId)) {
-            data.groups.forEach(function(group) {
-                if (group.newTabContainer === cookieStoreId) {
-                    group.newTabContainer = newCookieStoreId;
-                }
+            if (newCookieStoreId !== cookieStoreId) {
+                data.groups.forEach(function(group) {
+                    if (group.newTabContainer === cookieStoreId) {
+                        group.newTabContainer = newCookieStoreId;
+                    }
 
-                group.catchTabContainers = group.catchTabContainers.map(csId => csId === cookieStoreId ? newCookieStoreId : csId);
-            });
+                    group.catchTabContainers = group.catchTabContainers.map(csId => csId === cookieStoreId ? newCookieStoreId : csId);
+                });
+            }
         }
     }
 
@@ -1963,6 +1960,10 @@ async function clearAddon() {
     await Promise.all(windows.map(win => cache.removeWindowSession(win.id)));
 
     await storage.clear();
+
+    if (tabs.length) {
+        await browser.tabs.show(tabs.map(utils.keyId));
+    }
 
     window.localStorage.clear();
 
