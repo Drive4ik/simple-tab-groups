@@ -778,5 +778,33 @@
                 "example": "⌚Temporary Container 5"
             }
         }
+    },
+    "importAddonSettings": {
+        "message": "Importer les paramètres de l'extension",
+        "description": "Import addon settings"
+    },
+    "importGroups": {
+        "message": "Importer les groupes",
+        "description": "Import groups"
+    },
+    "pinnedTabs": {
+        "message": "Onglets épinglés",
+        "description": "Pinned tabs"
+    },
+    "eraseAddonSettingsWarningTitle": {
+        "message": "Cette action va <b>EFFACER TOTALEMENT</b> tous les paramètres et les groupes existants !<br>Les onglets ne seront pas affectés.",
+        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+    },
+    "clear": {
+        "message": "Effacer",
+        "description": "Clear"
+    },
+    "deleteAllAddonDataAndSettings": {
+        "message": "Supprimer tous les paramètres et les données de l'extension",
+        "description": "Delete all addon data and settings"
+    },
+    "warningAllDataWillRemove": {
+        "message": "Attention ! Cela va supprimer TOUTES les données de l'extension ! Êtes-vous vraiment certain ?",
+        "description": "Warning! Removing ALL addon data! Are you really sure?"
     }
 }
