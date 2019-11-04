@@ -46,14 +46,19 @@
 
             getData() {
                 let result = {
-                    ...this.data,
                     groups: this.groups,
                 };
 
+                if (this.data.containers) {
+                    result.containers = this.data.containers;
+                }
+
+                if (this.data.lastCreatedGroupPosition) {
+                    result.lastCreatedGroupPosition = this.data.lastCreatedGroupPosition;
+                }
+
                 if (this.showPinnedTabs && this.includePinnedTabs && this.data.pinnedTabs && this.data.pinnedTabs.length) {
                     result.pinnedTabs = this.data.pinnedTabs;
-                } else {
-                    delete result.pinnedTabs;
                 }
 
                 if (this.showGeneral && this.includeGeneral) {
@@ -62,18 +67,10 @@
                             result[key] = this.data[key];
                         }
                     }
-                } else {
-                    for (let key in this.data) {
-                        if (key !== 'hotkeys' && constants.allOptionsKeys.includes(key)) {
-                            delete result[key];
-                        }
-                    }
                 }
 
                 if (this.showHotkeys && this.includeHotkeys) {
                     result.hotkeys = this.data.hotkeys;
-                } else {
-                    delete result.hotkeys;
                 }
 
                 return utils.clone(result);
@@ -117,10 +114,12 @@
             <div class="control" v-for="group in data.groups" :key="group.id">
                 <label class="checkbox" :disabled="disabledGroups.includes(group)">
                     <input type="checkbox" v-model="groups" :value="group" :disabled="disabledGroups.includes(group)" />
-                    <figure class="image is-16x16 is-inline-block">
-                        <img :src="getGroupIconUrl(group)" />
-                    </figure>
-                    &nbsp;
+                    <template v-if="group.iconUrl || group.iconColor">
+                        <figure class="image is-16x16 is-inline-block">
+                            <img :src="getGroupIconUrl(group)" />
+                        </figure>
+                        &nbsp;
+                    </template>
                     <template v-if="group.newTabContainer">
                         <figure v-if="TEMPORARY_CONTAINER === group.newTabContainer" class="image is-16x16 is-inline-block">
                             <img

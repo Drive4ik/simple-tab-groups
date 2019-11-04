@@ -362,11 +362,11 @@
                         return;
                     }
 
-                    Object.values(oldGroups).forEach(function(oldGroup) {
-                        groups[oldGroup.id] = {
-                            title: oldGroup.title,
+                    Object.values(oldGroups).forEach(function({id, title, catchRules}) {
+                        groups[id] = {
+                            title: title || id,
                             tabs: [],
-                            catchTabRules: oldGroup.catchRules || '',
+                            catchTabRules: catchRules || '',
                         };
                     });
 
@@ -379,6 +379,12 @@
                             tab.openInReaderMode = true;
                         } else {
                             tab.openInReaderMode = false;
+                        }
+
+                        tab.url = utils.normalizeUrl(tab.url);
+
+                        if (!utils.isUrlAllowToCreate(tab.url)) {
+                            return;
                         }
 
                         if (oldTab.pinned) {
@@ -445,15 +451,15 @@
                 panoramaOptions.windows.forEach(function(win) {
                     let groups = {};
 
-                    win.groups.forEach(function(group) {
-                        groups[group.id] = {
-                            title: group.name,
+                    win.groups.forEach(function({id, name}) {
+                        groups[id] = {
+                            title: name || id,
                             tabs: [],
                         };
                     });
 
                     win.tabs.forEach(function(tab) {
-                        if (groups[tab.groupId]) {
+                        if (groups[tab.groupId] && utils.isUrlAllowToCreate(utils.normalizeUrl(tab.url))) {
                             groups[tab.groupId].tabs.push(tab);
                         }
                     });
@@ -490,13 +496,15 @@
                     pinnedTabs: [],
                 };
 
-                syncTabOptions.groups.forEach(function(group) {
+                syncTabOptions.groups.forEach(function({id, title, tabs}) {
+                    tabs = tabs.filter(tab => utils.isUrlAllowToCreate(utils.normalizeUrl(tab.url)));
+
                     data.groups.push({
-                        title: group.title,
-                        tabs: group.tabs.filter(tab => !tab.pinned).map(utils.cloneTab),
+                        title: title || id,
+                        tabs: tabs.filter(tab => !tab.pinned).map(utils.cloneTab),
                     });
 
-                    data.pinnedTabs.push(...group.tabs.filter(tab => tab.pinned).map(utils.cloneTab));
+                    data.pinnedTabs.push(...tabs.filter(tab => tab.pinned).map(utils.cloneTab));
                 });
 
                 this.manageAddonSettingsDisableEmptyGroups = true;

@@ -1316,7 +1316,7 @@ function addEvents() {
     browser.tabs.onActivated.addListener(onActivatedTab);
     browser.tabs.onMoved.addListener(onMovedTab);
     browser.tabs.onUpdated.addListener(onUpdatedTab, {
-        urls: [constants.ALL_URLS_SCHEMA],
+        urls: ['<all_urls>'],
         properties: [
             browser.tabs.UpdatePropertyName.DISCARDED, // not work if tab load
             browser.tabs.UpdatePropertyName.FAVICONURL,
@@ -1337,7 +1337,7 @@ function addEvents() {
 
     browser.webRequest.onBeforeRequest.addListener(onBeforeTabRequest,
         {
-            urls: [constants.ALL_URLS_SCHEMA],
+            urls: ['<all_urls>'],
             types: ['main_frame'],
         },
         ['blocking']
@@ -1760,7 +1760,7 @@ async function createBackup(includeTabThumbnails, includeTabFavIcons, isAutoBack
             url = utils.normalizeUrl(url);
             return {url, title, cookieStoreId, isInReaderMode};
         })
-        .filter(tab => tab.url);
+        .filter(tab => utils.isUrlAllowToCreate(tab.url));
 
     if (!data.pinnedTabs.length) {
         delete data.pinnedTabs;

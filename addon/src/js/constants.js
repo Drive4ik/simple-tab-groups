@@ -4,7 +4,6 @@ const DEFAULT_COOKIE_STORE_ID = 'firefox-default';
 const MANAGE_TABS_URL = '/manage/manage.html';
 const ACTIVE_SYMBOL = '⚪';
 const DISCARDED_SYMBOL = '❄';
-const ALL_URLS_SCHEMA = '<all_urls>';
 
 const PERMISSIONS = {
     BOOKMARKS: {
@@ -205,7 +204,6 @@ export default {
     MANAGE_TABS_URL,
     ACTIVE_SYMBOL,
     DISCARDED_SYMBOL,
-    ALL_URLS_SCHEMA,
     EXTENSIONS_WHITE_LIST,
     DEFAULT_OPTIONS,
     onlyBoolOptionsKeys,
