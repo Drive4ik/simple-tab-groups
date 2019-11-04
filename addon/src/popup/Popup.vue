@@ -757,25 +757,21 @@
                 let element = null;
 
                 if (KeyEvent.DOM_VK_UP === event.keyCode) {
-                    element = event.target.previousElementSibling || (event.target.parentNode.previousElementSibling && event.target.parentNode.previousElementSibling.lastElementChild);
+                    element = event.target.previousElementSibling;
+
+                    if (!element || -1 === element.tabIndex) {
+                        element = [...document.querySelectorAll('#result .group, #result .tab')].pop();
+                    }
+
                 } else if (KeyEvent.DOM_VK_DOWN === event.keyCode) {
-                    element = event.target.nextElementSibling || (event.target.parentNode.nextElementSibling && event.target.parentNode.nextElementSibling.firstElementChild);
+                    element = event.target.nextElementSibling;
+
+                    if (!element || -1 === element.tabIndex) {
+                        element = document.querySelector('#result .group, #result .tab');
+                    }
                 }
 
-                if (element) {
-                    event.preventDefault();
-                    element.focus();
-                }
-            },
-
-            goToFirstMainElement(event) {
-                let element = null;
-
-                if (KeyEvent.DOM_VK_DOWN === event.keyCode) {
-                    element = document.querySelector('#result .group, #result .tab');
-                }
-
-                if (element) {
+                if (element && -1 !== element.tabIndex) {
                     event.preventDefault();
                     element.focus();
                 }
@@ -838,7 +834,8 @@
                         v-model.trim="search"
                         @input="$refs.search.value === '' ? showSectionDefault() : null"
                         autocomplete="off"
-                        @keydown.arrow-down="goToFirstMainElement"
+                        @keydown.arrow-down="goToElementSibling"
+                        @keydown.arrow-up="goToElementSibling"
                         :placeholder="lang('searchPlaceholder')" />
                 </div>
                 <div v-show="search" class="control">
