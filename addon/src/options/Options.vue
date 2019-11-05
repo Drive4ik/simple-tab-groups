@@ -761,56 +761,59 @@
             <label class="has-text-weight-bold" v-text="lang('hotkeysTitle')"></label>
             <div class="h-margin-bottom-10" v-html="lang('hotkeysDescription')"></div>
             <div class="hotkeys">
-                <div v-for="(hotkey, hotkeyIndex) in options.hotkeys" :key="hotkeyIndex" class="hotkey is-flex is-align-items-center">
-                    <label class="checkbox">
-                        <input v-model="hotkey.ctrlKey" type="checkbox" />
-                        <span v-if="isMac">Control</span>
-                        <span v-else>Ctrl</span>
-                    </label>
-                    <label class="checkbox">
-                        <input v-model="hotkey.shiftKey" type="checkbox" />
-                        <span>Shift</span>
-                    </label>
-                    <label class="checkbox">
-                        <input v-model="hotkey.altKey" type="checkbox" />
-                        <span v-if="isMac">Option</span>
-                        <span v-else>Alt</span>
-                    </label>
-                    <label v-if="isMac" class="checkbox">
-                        <input v-model="hotkey.metaKey" type="checkbox" />
-                        <span>Command</span>
-                    </label>
-                    <div class="control input-command">
-                        <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(hotkey, $event, true)" :value="hotkey.key" autocomplete="off" class="input" :placeholder="lang('hotkeyPlaceholder')" tabindex="-1" />
+                <div v-for="(hotkey, hotkeyIndex) in options.hotkeys" :key="hotkeyIndex" class="field">
+                    <div class="is-flex is-align-items-center">
+                        <label class="checkbox">
+                            <input v-model="hotkey.ctrlKey" type="checkbox" />
+                            <span v-if="isMac">Control</span>
+                            <span v-else>Ctrl</span>
+                        </label>
+                        <label class="checkbox">
+                            <input v-model="hotkey.shiftKey" type="checkbox" />
+                            <span>Shift</span>
+                        </label>
+                        <label class="checkbox">
+                            <input v-model="hotkey.altKey" type="checkbox" />
+                            <span v-if="isMac">Option</span>
+                            <span v-else>Alt</span>
+                        </label>
+                        <label v-if="isMac" class="checkbox">
+                            <input v-model="hotkey.metaKey" type="checkbox" />
+                            <span>Command</span>
+                        </label>
+                        <div class="control input-command">
+                            <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(hotkey, $event, true)" :value="hotkey.key" autocomplete="off" class="input" :placeholder="lang('hotkeyPlaceholder')" tabindex="-1" />
+                        </div>
+                        <div class="select">
+                            <select v-model="hotkey.action">
+                                <option v-if="!hotkey.action" selected disabled value="" v-text="lang('selectAction')"></option>
+                                <option v-for="action in hotkeyActions" :key="action" :value="action" v-text="getHotkeyActionTitle(action)"></option>
+                            </select>
+                        </div>
+                        <div class="delete-button">
+                            <span @click="options.hotkeys.splice(hotkeyIndex, 1)" class="cursor-pointer" :title="lang('deleteHotKeyButton')">
+                                <img class="size-16" src="/icons/delete.svg" />
+                            </span>
+                        </div>
                     </div>
-                    <div class="select">
-                        <select v-model="hotkey.action">
-                            <option v-if="!hotkey.action" selected disabled value="" v-text="lang('selectAction')"></option>
-                            <option v-for="action in hotkeyActions" :key="action" :value="action" v-text="getHotkeyActionTitle(action)"></option>
-                        </select>
-                    </div>
-                    <div v-if="actionsWithCustomGroup.includes(hotkey.action)" class="select custom-group">
-                        <select v-model.number="hotkey.groupId">
-                            <option value="0" v-text="lang('selectGroup')"></option>
-                            <option v-for="group in groups" :key="group.id" :value="group.id" v-text="group.title"></option>
-                        </select>
-                    </div>
-                    <div class="delete-button">
-                        <span @click="options.hotkeys.splice(hotkeyIndex, 1)" class="cursor-pointer" :title="lang('deleteHotKeyButton')">
-                            <img class="size-16" src="/icons/delete.svg" />
-                        </span>
+
+                    <div v-if="actionsWithCustomGroup.includes(hotkey.action)" class="is-flex is-align-items-center custom-group">
+                        <div class="select">
+                            <select v-model.number="hotkey.groupId">
+                                <option :value="0" v-text="lang('selectGroup')"></option>
+                                <option v-for="group in groups" :key="group.id" :value="group.id" v-text="group.title"></option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div>
-                <div class="control">
-                    <button @click="options.hotkeys.push(createHotkey())" class="button">
-                        <span class="icon">
-                            <img class="size-16" src="/icons/new.svg" />
-                        </span>
-                        <span v-text="lang('addHotKeyButton')"></span>
-                    </button>
-                </div>
+            <div class="control h-margin-top-10">
+                <button @click="options.hotkeys.push(createHotkey())" class="button">
+                    <span class="icon">
+                        <img class="size-16" src="/icons/new.svg" />
+                    </span>
+                    <span v-text="lang('addHotKeyButton')"></span>
+                </button>
             </div>
         </div>
 
@@ -1084,24 +1087,28 @@
             width: 100px;
         }
 
-        .hotkey {
-            margin-bottom: var(--indent);
+        .hotkeys > .field {
+            &:not(:last-child) {
+                border-bottom: 1px solid rgba(10, 132, 255, 0.6);
+                padding-bottom: .75rem;
+            }
 
-            > :not(:last-child) {
+            > * > :not(:last-child) {
                 margin-right: var(--indent);
             }
 
-            > .input-command {
-                width: 110px;
-                min-width: 110px;
+            select {
+                width: 100%;
             }
 
-            > .delete-button {
+            .custom-group {
+                justify-content: end;
+                margin-right: calc(16px + var(--indent));
+                margin-top: .75rem;
+            }
+
+            .delete-button {
                 line-height: 1;
-            }
-
-            > .notify-message {
-                margin: 0;
             }
         }
     }
