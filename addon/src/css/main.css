@@ -213,6 +213,10 @@ hr {
 }
 
 /*BULMA REWRITE*/
+.modal-card-title {
+    max-width: 97%;
+}
+
 .checkbox {
     -moz-user-select: none;
     user-select: none;

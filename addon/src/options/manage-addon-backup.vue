@@ -86,6 +86,10 @@
                 <label class="checkbox">
                     <input type="checkbox" v-model="includePinnedTabs" />
                     <span v-text="lang('pinnedTabs')"></span>
+                    &nbsp;
+                    <small class="is-italic">
+                        (<span v-text="lang('groupTabsCount', data.pinnedTabs.length)"></span>)
+                    </small>
                 </label>
             </div>
             <hr>
@@ -136,7 +140,7 @@
                         </figure>
                         &nbsp;
                     </template>
-                    <span v-text="group.title"></span>
+                    <span class="group-title" v-text="group.title"></span>
                     &nbsp;
                     <small class="is-italic">
                         (<span v-text="lang('groupTabsCount', group.tabs.length)"></span>)
@@ -149,8 +153,14 @@
 </template>
 
 <style lang="scss">
-    // #manageAddonBackup {
+    #manageAddonBackup {
+        .image.is-16x16 {
+            min-width: 16px;
+        }
 
-    // }
+        .group-title {
+            word-wrap: anywhere;
+        }
+    }
 
 </style>

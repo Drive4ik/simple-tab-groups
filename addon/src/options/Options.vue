@@ -73,6 +73,7 @@
                 isMac: false,
 
                 manageAddonSettings: null,
+                manageAddonSettingsTitle: '',
                 manageAddonSettingsDisableEmptyGroups: true,
 
                 permissions: {
@@ -292,6 +293,24 @@
                 }
             },
 
+            setManageAddonSettings(data, popupTitle, disableEmptyGroups = false) {
+                this.manageAddonSettingsTitle = popupTitle;
+                this.manageAddonSettingsDisableEmptyGroups = disableEmptyGroups;
+                this.manageAddonSettings = data;
+            },
+
+            saveManagedAddonSettings(data) {
+                this.manageAddonSettings = null;
+
+                this.showLoadingMessage = true;
+
+                BG.restoreBackup(data);
+            },
+
+            exportAddonSettings() {
+                BG.createBackup(this.includeTabThumbnailsIntoBackup, this.includeTabFavIconsIntoBackup);
+            },
+
             async importAddonSettings() {
                 let data = null;
 
@@ -315,20 +334,7 @@
                     return;
                 }
 
-                this.manageAddonSettingsDisableEmptyGroups = false;
-                this.manageAddonSettings = data;
-            },
-
-            saveManagedAddonSettings(data) {
-                this.manageAddonSettings = null;
-
-                this.showLoadingMessage = true;
-
-                BG.restoreBackup(data);
-            },
-
-            exportAddonSettings() {
-                BG.createBackup(this.includeTabThumbnailsIntoBackup, this.includeTabFavIconsIntoBackup);
+                this.setManageAddonSettings(data, 'importAddonSettingsTitle');
             },
 
             async importSettingsOldTabGroupsAddonButton() {
@@ -419,8 +425,7 @@
                     data.groups.push(...Object.values(groups));
                 });
 
-                this.manageAddonSettingsDisableEmptyGroups = true;
-                this.manageAddonSettings = data;
+                this.setManageAddonSettings(data, 'importSettingsOldTabGroupsAddonTitle');
             },
 
             async importSettingsPanoramaViewAddonButton() {
@@ -459,16 +464,19 @@
                     });
 
                     win.tabs.forEach(function(tab) {
-                        if (groups[tab.groupId] && utils.isUrlAllowToCreate(utils.normalizeUrl(tab.url))) {
-                            groups[tab.groupId].tabs.push(tab);
+                        if (utils.isUrlAllowToCreate(utils.normalizeUrl(tab.url))) {
+                            if (tab.pinned) {
+                                data.pinnedTabs.push(utils.cloneTab(tab));
+                            } else if (groups[tab.groupId]) {
+                                groups[tab.groupId].tabs.push(utils.cloneTab(tab));
+                            }
                         }
                     });
 
                     data.groups.push(...Object.values(groups));
                 });
 
-                this.manageAddonSettingsDisableEmptyGroups = true;
-                this.manageAddonSettings = data;
+                this.setManageAddonSettings(data, 'importSettingsPanoramaViewAddonTitle', true);
             },
 
             async importSettingsSyncTabGroupsAddonButton() {
@@ -507,8 +515,7 @@
                     data.pinnedTabs.push(...tabs.filter(tab => tab.pinned).map(utils.cloneTab));
                 });
 
-                this.manageAddonSettingsDisableEmptyGroups = true;
-                this.manageAddonSettings = data;
+                this.setManageAddonSettings(data, 'importSettingsSyncTabGroupsAddonTitle', true);
             },
 
             runClearAddonConfirm() {
@@ -566,6 +573,10 @@
                 if (this.permissions.bookmarks) {
                     this.defaultBookmarksParents = await BG.browser.bookmarks.get(constants.defaultBookmarksParents);
                 }
+            },
+
+            getGroupIconUrl(group) {
+                return utils.getGroupIconUrl(group);
             },
         },
     }
@@ -798,11 +809,16 @@
                     </div>
 
                     <div v-if="actionsWithCustomGroup.includes(hotkey.action)" class="is-flex is-align-items-center custom-group">
-                        <div class="select">
-                            <select v-model.number="hotkey.groupId">
-                                <option :value="0" v-text="lang('selectGroup')"></option>
-                                <option v-for="group in groups" :key="group.id" :value="group.id" v-text="group.title"></option>
-                            </select>
+                        <div :class="['control', {'has-icons-left': groups.some(gr => gr.id === hotkey.groupId)}]">
+                            <div class="select">
+                                <select v-model.number="hotkey.groupId">
+                                    <option :value="0" v-text="lang('selectGroup')"></option>
+                                    <option v-for="group in groups" :key="group.id" :value="group.id" v-text="group.title"></option>
+                                </select>
+                            </div>
+                            <span class="icon is-left" v-if="groups.some(gr => gr.id === hotkey.groupId)">
+                                <img class="size-16" :src="getGroupIconUrl(groups.find(gr => gr.id === hotkey.groupId))">
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -1047,7 +1063,7 @@
 
         <popup
             v-if="manageAddonSettings"
-            :title="lang('importAddonSettingsTitle')"
+            :title="lang(manageAddonSettingsTitle)"
             @close-popup="manageAddonSettings = null"
             @save="() => saveManagedAddonSettings($refs.manageAddonBackup.getData())"
             :buttons="
@@ -1097,7 +1113,7 @@
                 margin-right: var(--indent);
             }
 
-            .select {
+            > :not(.custom-group) .select {
                 flex-grow: 1;
 
                 select {
