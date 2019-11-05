@@ -1097,8 +1097,12 @@
                 margin-right: var(--indent);
             }
 
-            select {
-                width: 100%;
+            .select {
+                flex-grow: 1;
+
+                select {
+                    width: 100%;
+                }
             }
 
             .custom-group {
