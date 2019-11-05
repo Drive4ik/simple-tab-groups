@@ -714,6 +714,21 @@
                                     <img v-lazy="group.iconUrlToDisplay" />
                                 </figure>
                             </div>
+                            <div class="group-icon" v-if="group.newTabContainer">
+                                <figure class="image is-16x16">
+                                    <img
+                                        v-if="TEMPORARY_CONTAINER === group.newTabContainer"
+                                        src="resource://usercontext-content/chill.svg"
+                                        class="size-16 fill-context"
+                                        />
+                                    <img
+                                        v-else
+                                        :src="containers[group.newTabContainer].iconUrl"
+                                        :style="{fill: containers[group.newTabContainer].colorCode}"
+                                        class="size-16 fill-context"
+                                        />
+                                </figure>
+                            </div>
                             <div class="group-title">
                                 <input
                                     type="text"
