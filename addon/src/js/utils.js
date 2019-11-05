@@ -323,7 +323,7 @@ function isTabLoading({status}) {
 }
 
 function createGroupTitle(title, groupId) {
-    return title || browser.i18n.getMessage('newGroupTitle', groupId);
+    return String(title || browser.i18n.getMessage('newGroupTitle', groupId));
 }
 
 function getGroupLastActiveTab({tabs}) {

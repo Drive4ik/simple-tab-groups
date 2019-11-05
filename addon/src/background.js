@@ -747,7 +747,7 @@ async function createMoveTabMenus(windowId) {
 
     groups.forEach(function(group) {
         let groupIcon = utils.getGroupIconUrl(group, 16),
-            groupTitle = utils.getGroupTitle(group, 'withActiveGroup withContainer');
+            groupTitle = String(utils.getGroupTitle(group, 'withActiveGroup withContainer'));
 
         options.showContextMenuOnTabs && menuIds.push(browser.menus.create({
             title: groupTitle,
@@ -854,9 +854,10 @@ async function createMoveTabMenus(windowId) {
         parentId: 'stg-move-tab-parent',
         contexts: [browser.menus.ContextType.TAB],
         onclick: async function(info, tab) {
-            let tabsToMove = await Tabs.getHighlighted(tab.windowId, tab);
+            let setActive = 2 === info.button,
+                tabsToMove = await Tabs.getHighlighted(tab.windowId, tab);
 
-            Groups.add(undefined, tabsToMove);
+            Groups.add(undefined, tabsToMove, undefined, setActive);
         },
     }));
 
