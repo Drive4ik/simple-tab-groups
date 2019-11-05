@@ -2519,7 +2519,7 @@ async function init() {
                             delete tab.session.groupId;
                             cache.removeTabGroup(tab.id);
                         }
-                    } else if (utils.isTabLoading(tab)) {
+                    } else if (utils.isTabLoading(tab) || (tab.url.startsWith('file:///') && !tab.hidden)) {
                         cache.setTabGroup(tab.id, win.session.groupId);
                         tab.session = cache.getTabSession(tab.id);
                         return;
