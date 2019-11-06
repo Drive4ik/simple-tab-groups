@@ -131,7 +131,7 @@
                                 class="size-16 fill-context"
                                 />
                         </figure>
-                        <figure v-else class="image is-16x16 is-inline-block">
+                        <figure v-if="TEMPORARY_CONTAINER !== group.newTabContainer && data.containers && data.containers[group.newTabContainer]" class="image is-16x16 is-inline-block">
                             <img
                                 :src="data.containers[group.newTabContainer].iconUrl"
                                 :style="{fill: data.containers[group.newTabContainer].colorCode}"
