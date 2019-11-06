@@ -490,7 +490,7 @@ async function moveNative(tabs, options = {}) {
 
     let result = await BG.browser.tabs.move(tabs.map(utils.keyId), options),
         tabIdsToReload = result.reduce(function(acc, tab, index) {
-            if (tab.url !== tabs[index].url) {
+            if (tab.discarded && tab.url !== tabs[index].url) {
                 tab.url = tabs[index].url;
                 acc.push(tab.id);
             }
