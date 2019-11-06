@@ -635,7 +635,8 @@
             </div>
             <div class="field h-margin-left-10">
                 <label class="checkbox" :disabled="!permissions.bookmarks">
-                    <input v-model="options.exportGroupToMainBookmarkFolder" type="checkbox" :disabled="!permissions.bookmarks"/>
+                    <input v-if="permissions.bookmarks" v-model="options.exportGroupToMainBookmarkFolder" type="checkbox" />
+                    <input v-else disabled="" type="checkbox" />
                     <span v-text="lang('exportGroupToMainBookmarkFolder', options.autoBackupBookmarksFolderName)"></span>
                 </label>
             </div>
