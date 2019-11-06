@@ -753,27 +753,37 @@
                 }, 150);
             },
 
-            goToElementSibling(event) {
-                let element = null;
+            focusToNextElement(event) {
+                event.preventDefault();
+
+                let nodes = [...document.querySelectorAll('#result .group, #result .tab')],
+                    focusedNodeIndex = nodes.findIndex(node => node === document.activeElement),
+                    activeNodeIndex = nodes.findIndex(node => node.classList.contains('is-active')),
+                    nextIndex = -1,
+                    textPosition = null;
 
                 if (KeyEvent.DOM_VK_UP === event.keyCode) {
-                    element = event.target.previousElementSibling;
-
-                    if (!element || -1 === element.tabIndex) {
-                        element = [...document.querySelectorAll('#result .group, #result .tab')].pop();
-                    }
-
+                    textPosition = 'prev';
                 } else if (KeyEvent.DOM_VK_DOWN === event.keyCode) {
-                    element = event.target.nextElementSibling;
-
-                    if (!element || -1 === element.tabIndex) {
-                        element = document.querySelector('#result .group, #result .tab');
-                    }
+                    textPosition = 'next';
                 }
 
-                if (element && -1 !== element.tabIndex) {
-                    event.preventDefault();
-                    element.focus();
+                if (!textPosition) {
+                    throw Error('wrong key for this func');
+                }
+
+                if (-1 !== focusedNodeIndex) {
+                    nextIndex = utils.getNextIndex(focusedNodeIndex, nodes.length, textPosition);
+                } else if (-1 !== activeNodeIndex) {
+                    nextIndex = utils.getNextIndex(activeNodeIndex, nodes.length, textPosition);
+                }
+
+                if (false === nextIndex || -1 === nextIndex) {
+                    nextIndex = 'next' === textPosition ? 0 : (nodes.length - 1);
+                }
+
+                if (nodes[nextIndex]) {
+                    nodes[nextIndex].focus();
                 }
             },
 
@@ -834,8 +844,8 @@
                         v-model.trim="search"
                         @input="$refs.search.value === '' ? showSectionDefault() : null"
                         autocomplete="off"
-                        @keydown.arrow-down="goToElementSibling"
-                        @keydown.arrow-up="goToElementSibling"
+                        @keydown.arrow-down="focusToNextElement"
+                        @keydown.arrow-up="focusToNextElement"
                         :placeholder="lang('searchPlaceholder')" />
                 </div>
                 <div v-show="search" class="control">
@@ -861,8 +871,8 @@
                             @click="applyGroup(group)"
                             @keyup.enter="applyGroup(group)"
                             @keydown.arrow-right="showSectionGroupTabs(group)"
-                            @keydown.arrow-up="goToElementSibling"
-                            @keydown.arrow-down="goToElementSibling"
+                            @keydown.arrow-up="focusToNextElement"
+                            @keydown.arrow-down="focusToNextElement"
                             tabindex="0"
                             :title="getGroupTitle(group, 'withCountTabs withTabs')"
                             >
@@ -896,8 +906,8 @@
                             @click.stop="clickOnTab($event, tab, group)"
                             @keyup.enter="clickOnTab($event, tab, group)"
                             @keyup.delete="removeTab(tab)"
-                            @keydown.arrow-up="goToElementSibling"
-                            @keydown.arrow-down="goToElementSibling"
+                            @keydown.arrow-up="focusToNextElement"
+                            @keydown.arrow-down="focusToNextElement"
                             tabindex="0"
                             @mousedown.middle.prevent
                             @mouseup.middle.prevent="removeTab(tab)"
@@ -962,8 +972,8 @@
                         @click="applyGroup(group)"
                         @keyup.enter="applyGroup(group)"
                         @keydown.arrow-right="showSectionGroupTabs(group)"
-                        @keydown.arrow-up="goToElementSibling"
-                        @keydown.arrow-down="goToElementSibling"
+                        @keydown.arrow-up="focusToNextElement"
+                        @keydown.arrow-down="focusToNextElement"
                         tabindex="0"
                         :title="getGroupTitle(group, 'withCountTabs withTabs')"
                         >
@@ -1113,8 +1123,8 @@
                     @click.stop="clickOnTab($event, tab, groupToShow)"
                     @keyup.enter="clickOnTab($event, tab, groupToShow)"
                     @keydown.arrow-left="showSectionDefault"
-                    @keydown.arrow-up="goToElementSibling"
-                    @keydown.arrow-down="goToElementSibling"
+                    @keydown.arrow-up="focusToNextElement"
+                    @keydown.arrow-down="focusToNextElement"
                     @keydown.delete="removeTab(tab)"
                     tabindex="0"
                     @mousedown.middle.prevent
