@@ -1,0 +1,18 @@
+{
+    "extensionDescription": {
+        "message": "Загрузка определенной группы в расширении Simple Tab Groups",
+        "description": "Extension description"
+    },
+    "needInstallSTGExtension": {
+        "message": "Необходимо установить расширение Simple Tab Groups или измените контейнер в настройках аддона\n\nНажмите здесь чтобы открыть домашнюю страницу Simple Tab Groups",
+        "description": "Need install Simple Tab Groups extention or change container in addon settings\n\nClick here to open Simple Tab Groups home page"
+    },
+    "temporaryContainerTitle": {
+        "message": "⌚Временный контейнер",
+        "description": "⌚Temporary Container"
+    },
+    "selectContainer": {
+        "message": "Выберите контейнер",
+        "description": "Select container"
+    }
+}
