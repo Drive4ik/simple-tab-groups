@@ -488,15 +488,25 @@ async function moveNative(tabs, options = {}) {
 
     console.log('tabs before moving', tabs);
 
-    let result = await BG.browser.tabs.move(tabs.map(utils.keyId), options),
-        tabIdsToReload = result.reduce(function(acc, tab, index) {
-            if (tab.discarded && tab.url !== tabs[index].url) {
-                tab.url = tabs[index].url;
-                acc.push(tab.id);
-            }
+    // fix bug "Error: An unexpected error occurred"
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1595583
+    let tabsToReload = tabs.filter(tab => tab.url && tab.discarded && !utils.isUrlEmpty(tab.url) && tab.url.startsWith('about:'));
+    console.debug('tabsToReload', tabsToReload);
+    if (tabsToReload.length) {
+        await reload(tabsToReload.map(utils.keyId));
+        await utils.wait(100);
+    }
 
-            return acc;
-        }, []);
+    let result = await BG.browser.tabs.move(tabs.map(utils.keyId), options);
+
+    let tabIdsToReload = result.reduce(function(acc, tab, index) {
+        if (tab.url && tab.discarded && tab.url !== tabs[index].url) {
+            tab.url = tabs[index].url;
+            acc.push(tab.id);
+        }
+
+        return acc;
+    }, []);
 
     reload(tabIdsToReload, true);
 

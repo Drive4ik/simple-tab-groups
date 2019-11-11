@@ -72,7 +72,7 @@ function errorEventHandler(event) {
 
     if (false !== data.showNotification) {
         notify(browser.i18n.getMessage('whatsWrongMessage'))
-            .then(() => browser.runtime.openOptionsPage());
+            .then(() => browser.runtime.openOptionsPage(), undefined, undefined, false);
     }
 
     console.error(`[STG] ${event.error.name}: ${error.message}`, error);
@@ -107,8 +107,8 @@ function clone(obj = null) {
     return JSON.parse(JSON.stringify(obj));
 }
 
-function cloneTab({id, title, url, active, hidden, sharingState, windowId, cookieStoreId}) {
-    return {id, title, url, active, hidden, sharingState: {...sharingState}, windowId, cookieStoreId};
+function cloneTab({id, title, discarded, url, active, hidden, sharingState, windowId, cookieStoreId}) {
+    return {id, title, discarded, url, active, hidden, sharingState: {...sharingState}, windowId, cookieStoreId};
 }
 
 function format(str, ...args) {
