@@ -10,7 +10,7 @@ const newTabKeys = ['active', 'cookieStoreId', 'index', 'discarded', 'title', 'o
 async function create(tab) {
     const {BG} = browser.extension.getBackgroundPage();
 
-    BG.console.log('create tab', tab);
+    BG.console.log('create tab', utils.clone(tab));
 
     let {group, thumbnail, favIconUrl} = tab;
 

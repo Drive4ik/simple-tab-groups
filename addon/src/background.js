@@ -630,9 +630,13 @@ async function onRemovedWindow(windowId) {
         reCreateTabsOnRemoveWindow = [];
 
         if (tabsToCreate.length) {
-            let windows = await Windows.load();
+            let [windows, groups] = await Promise.all([Windows.load(), Groups.load()]);
+
             windows.forEach(win => win.id !== windowId && loadingBrowserAction(true, win.id));
+
+            tabsToCreate.forEach(tab => tab.group = groups.find(group => group.id === tab.groupId));
             await createTabsSafe(tabsToCreate, true);
+
             windows.forEach(win => win.id !== windowId && loadingBrowserAction(false, win.id));
         }
     }
