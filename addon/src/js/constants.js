@@ -65,6 +65,14 @@ const EXTENSIONS_WHITE_LIST = Object.freeze({
             'delete-current-group',
         ],
     },
+    'stg-plugin-create-new-tab@drive4ik': {
+        title: '[STG plugin] Create new tab',
+        url: 'https://addons.mozilla.org/firefox/addon/stg-plugin-create-new-tab/',
+        postActions: [],
+        getActions: [
+            'create-new-tab',
+        ],
+    },
     '{506e023c-7f2b-40a3-8066-bc5deb40aebe}': {
         title: 'Gesturefy',
         url: 'https://addons.mozilla.org/firefox/addon/gesturefy/',

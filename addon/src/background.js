@@ -1312,6 +1312,9 @@ async function onBeforeTabRequest({tabId, url, originUrl}) {
     }
 }
 
+// wait for reload addon if found update
+browser.runtime.onUpdateAvailable.addListener(noop);
+
 function addEvents() {
     browser.tabs.onCreated.addListener(onCreatedTab);
     browser.tabs.onActivated.addListener(onActivatedTab);
@@ -1637,6 +1640,16 @@ async function runAction(data, externalExtId) {
                     await Tabs.reload(currentGroup.tabs.map(utils.keyId));
                     result.ok = true;
                 }
+
+                break;
+            case 'create-new-tab':
+                await Tabs.create({
+                    active: true,
+                    cookieStoreId: data.cookieStoreId,
+                    group: currentGroup,
+                });
+
+                result.ok = true;
 
                 break;
             default:
