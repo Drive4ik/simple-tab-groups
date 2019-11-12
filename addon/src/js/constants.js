@@ -94,6 +94,7 @@ const EXTENSIONS_WHITE_LIST = Object.freeze({
             'discard-group',
             'discard-other-groups',
             'reload-all-tabs-in-current-group',
+            'create-new-tab',
         ],
     },
     'tridactyl.vim@cmcaine.co.uk': {
@@ -123,6 +124,7 @@ const EXTENSIONS_WHITE_LIST = Object.freeze({
             'discard-group',
             'discard-other-groups',
             'reload-all-tabs-in-current-group',
+            'create-new-tab',
         ],
     },
 });

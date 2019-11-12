@@ -50,6 +50,7 @@ This allows for easy switching between active and pre-loaded tabs across multipl
  * [Load custom group](https://addons.mozilla.org/firefox/addon/stg-plugin-load-custom-group/)
  * [Open Manage groups](https://addons.mozilla.org/firefox/addon/stg-plugin-open-manage-groups/)
  * [Delete current group](https://addons.mozilla.org/firefox/addon/stg-plugin-del-current-group/)
+ * [Create new tab](https://addons.mozilla.org/firefox/addon/stg-plugin-create-new-tab/)
 
 **NEW** Allow support message actions from Gesturify addon.
 
@@ -81,6 +82,7 @@ Supported actions:
 * `{"action":"discard-group"}`
 * `{"action":"discard-other-groups"}`
 * `{"action":"reload-all-tabs-in-current-group"}`
+* `{"action":"create-new-tab","cookieStoreId":"temporary-container"}`
 
 
 This extension may conflict with other programs similar in functionality.
