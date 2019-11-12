@@ -45,7 +45,9 @@ async function create(tab) {
     }
 
     if (group && group.newTabContainer) {
-        tab.cookieStoreId = group.newTabContainer;
+        if (tab.cookieStoreId !== BG.containers.TEMPORARY_CONTAINER) {
+            tab.cookieStoreId = group.newTabContainer;
+        }
     }
 
     if (BG.containers.TEMPORARY_CONTAINER === tab.cookieStoreId) {

@@ -214,6 +214,12 @@
 
                                 if (group) {
                                     group.tabs.splice(tabIndex, 1);
+
+                                    tabIndex = this.unSyncTabs.findIndex(tab => tab.id === request.tabId);
+
+                                    if (-1 !== tabIndex) {
+                                        this.unSyncTabs.splice(tabIndex, 1);
+                                    }
                                 } else {
                                     tabIndex = this.unSyncTabs.findIndex(tab => tab.id === request.tabId);
 
