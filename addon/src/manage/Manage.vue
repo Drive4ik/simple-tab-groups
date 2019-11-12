@@ -652,7 +652,7 @@
                         <span v-text="lang('showTabsWithThumbnailsInManageGroups')"></span>
                     </label>
                 </div>
-                <div class="buttons has-addons">
+                <div class="buttons has-addons" style="display: none;">
                     <span class="button is-small is-primary" v-text="lang('manageGroupViewGrid')"></span>
                     <span class="button is-small" disabled v-text="lang('manageGroupViewFreeArrange')"></span>
                 </div>
