@@ -103,8 +103,24 @@ function type(obj) {
     return Object.prototype.toString.call(obj).replace(/(^\[.+\ |\]$)/g, '').toLowerCase();
 }
 
+function getCircularReplacer() {
+    const seen = new WeakSet();
+
+    return (key, value) => {
+        if (typeof value === 'object' && value !== null) {
+            if (seen.has(value)) {
+                return;
+            }
+
+            seen.add(value);
+        }
+
+        return value;
+    };
+}
+
 function clone(obj = null) {
-    return JSON.parse(JSON.stringify(obj));
+    return JSON.parse(JSON.stringify(obj, getCircularReplacer()));
 }
 
 function cloneTab({id, title, discarded, url, active, hidden, sharingState, windowId, cookieStoreId}) {
