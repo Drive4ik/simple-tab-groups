@@ -806,5 +806,9 @@
     "warningAllDataWillRemove": {
         "message": "Внимание! Удаление ВСЕХ настроек аддона! Вы точно уверены?",
         "description": "Warning! Removing ALL addon data! Are you really sure?"
+    },
+    "ifNotDefaultContainerReOpenInNew": {
+        "message": "Если контейнер вкладки отличается от выбранного - изменить контейнер",
+        "description": "If the container is different from the selected one - change the container"
     }
 }

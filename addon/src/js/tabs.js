@@ -374,24 +374,30 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
             let tabsIdsToRemove = [];
 
             tabs = await Promise.all(tabs.map(function(tab) {
-                if (tab.cookieStoreId !== group.newTabContainer && !BG.containers.isTemporary(tab.cookieStoreId) && !tab.url.startsWith('moz-extension')) {
-                    tabsIdsToRemove.push(tab.id);
-
-                    tab.cookieStoreId = group.newTabContainer;
-                    tab.groupId = groupId;
-                    tab.windowId = windowId;
-
-                    tab.thumbnail = BG.cache.getTabSession(tab.id, 'thumbnail');
-                    tab.favIconUrl = BG.cache.getTabSession(tab.id, 'favIconUrl');
-
-                    delete tab.active;
-                    delete tab.index;
-                    delete tab.windowId;
-
-                    return create(tab);
+                if (
+                    tab.cookieStoreId === group.newTabContainer ||
+                    BG.containers.isTemporary(tab.cookieStoreId) ||
+                    tab.url.startsWith('moz-extension') ||
+                    (tab.url.startsWith('about:') && !utils.isUrlEmpty(tab.url)) ||
+                    (!BG.containers.isDefault(tab.cookieStoreId) && !group.ifNotDefaultContainerReOpenInNew)
+                ) {
+                    return tab;
                 }
 
-                return tab;
+                tabsIdsToRemove.push(tab.id);
+
+                tab.cookieStoreId = group.newTabContainer;
+                tab.groupId = groupId;
+                tab.windowId = windowId;
+
+                tab.thumbnail = BG.cache.getTabSession(tab.id, 'thumbnail');
+                tab.favIconUrl = BG.cache.getTabSession(tab.id, 'favIconUrl');
+
+                delete tab.active;
+                delete tab.index;
+                delete tab.windowId;
+
+                return create(tab);
             }));
 
             if (tabsIdsToRemove.length) {

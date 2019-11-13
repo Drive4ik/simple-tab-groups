@@ -810,5 +810,9 @@
     "warningAllDataWillRemove": {
         "message": "Warning! Removing ALL addon data! Are you really sure?",
         "description": "Warning! Removing ALL addon data! Are you really sure?"
+    },
+    "ifNotDefaultContainerReOpenInNew": {
+        "message": "If the container is different from the selected one - change the container",
+        "description": "If the container is different from the selected one - change the container"
     }
 }

@@ -1,10 +1,14 @@
 
 (function() {
     let keys = Object.keys(console),
-        noop = function() {},
+        noop = function() {
+            console.lastUsage = Date.now();
+        },
         logs = [],
         _console = {},
         browserFuncs = {};
+
+    noop();
 
     const addonUrlPrefix = browser.extension.getURL('');
 
@@ -15,6 +19,8 @@
     keys.forEach(key => _console[key] = console[key].bind(console));
 
     function log(key, ...args) {
+        noop();
+
         if (window.localStorage.enableLogging) {
             let stack = Array.isArray(this) ? this : getStack(new Error());
 

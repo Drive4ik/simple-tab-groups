@@ -80,6 +80,7 @@ function create(id, title) {
         catchTabRules: '',
         catchTabContainers: [],
         newTabContainer: null,
+        ifNotDefaultContainerReOpenInNew: true,
         isSticky: false,
         muteTabsWhenGroupCloseAndRestoreWhenOpen: false,
         showTabAfterMovingItIntoThisGroup: false,

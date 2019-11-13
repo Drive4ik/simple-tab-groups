@@ -1283,41 +1283,53 @@ async function onBeforeTabRequest({tabId, url, originUrl}) {
         }
     }
 
-    if (tabGroup.newTabContainer && tabGroup.newTabContainer !== tab.cookieStoreId) {
-        if (originUrl && originUrl.startsWith('moz-extension') && !originUrl.startsWith(addonUrlPrefix)) {
-            console.log('onBeforeTabRequest 🛑 cancel by another addon', originUrl);
-            return;
-        }
-
-        console.log('onBeforeTabRequest create tab', tab);
-
-        let tabWindowId = cache.getWindowId(tabGroup.id);
-
-        let newTab = await Tabs.create({
-            url: tab.url,
-            cookieStoreId: tabGroup.newTabContainer,
-            group: tabGroup,
-            active: tab.active,
-            index: tab.index,
-            windowId: tabWindowId || tab.windowId,
-        });
-
-        if (!tabWindowId || tab.hidden) {
-            addExcludeTabsIds([newTab.id]);
-            await browser.tabs.hide(newTab.id);
-            removeExcludeTabsIds([newTab.id]);
-        }
-
-        Tabs.remove(tab.id);
-
-        return {
-            cancel: true,
-        };
+    if (
+        !tabGroup.newTabContainer ||
+        tabGroup.newTabContainer === tab.cookieStoreId ||
+        (!containers.isDefault(tab.cookieStoreId) && !tabGroup.ifNotDefaultContainerReOpenInNew)
+    ) {
+        return;
     }
+
+    if (originUrl && originUrl.startsWith('moz-extension') && !originUrl.startsWith(addonUrlPrefix)) {
+        console.log('onBeforeTabRequest 🛑 cancel by another addon', originUrl);
+        return;
+    }
+
+    console.log('onBeforeTabRequest create tab', tab);
+
+    let groupWindowId = cache.getWindowId(tabGroup.id);
+
+    let newTab = await Tabs.create({
+        url: tab.url,
+        cookieStoreId: tabGroup.newTabContainer,
+        group: tabGroup,
+        active: tab.active,
+        index: tab.index,
+        windowId: groupWindowId || tab.windowId,
+    });
+
+    if (!groupWindowId || tab.hidden) {
+        addExcludeTabsIds([newTab.id]);
+        await browser.tabs.hide(newTab.id);
+        removeExcludeTabsIds([newTab.id]);
+    }
+
+    Tabs.remove(tab.id);
+
+    return {
+        cancel: true,
+    };
 }
 
 // wait for reload addon if found update
-browser.runtime.onUpdateAvailable.addListener(noop);
+browser.runtime.onUpdateAvailable.addListener(function() {
+    setInterval(function() {
+        if (console.lastUsage < (Date.now() - 1000 * 60)) {
+            browser.runtime.reload();
+        }
+    }, 1000);
+});
 
 function addEvents() {
     browser.tabs.onCreated.addListener(onCreatedTab);
@@ -2278,6 +2290,12 @@ async function runMigrateForData(data) {
             remove: ['followToLoadedGroupInSideBar'],
             migration() {
                 data.openGroupAfterChange = data.followToLoadedGroupInSideBar;
+            },
+        },
+        {
+            version: '4.3.5',
+            migration() {
+                data.groups.forEach(group => group.ifNotDefaultContainerReOpenInNew = true);
             },
         },
     ];

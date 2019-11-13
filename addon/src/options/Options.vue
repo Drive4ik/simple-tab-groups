@@ -840,7 +840,8 @@
                 <div class="h-margin-bottom-5" v-html="lang('exportAddonSettingsDescription')"></div>
                 <div class="field">
                     <label class="checkbox" :disabled="!options.showTabsWithThumbnailsInManageGroups">
-                        <input v-model="includeTabThumbnailsIntoBackup" :disabled="!options.showTabsWithThumbnailsInManageGroups" type="checkbox" />
+                        <input v-if="options.showTabsWithThumbnailsInManageGroups" v-model="includeTabThumbnailsIntoBackup" type="checkbox" />
+                        <input v-else disabled="" type="checkbox" />
                         <span v-text="lang('includeTabThumbnailsIntoBackup')"></span>
                     </label>
                 </div>
@@ -872,7 +873,8 @@
                 <div v-if="options.autoBackupEnable" class="field">
                     <div class="field">
                         <label class="checkbox" :disabled="!options.showTabsWithThumbnailsInManageGroups">
-                            <input v-model="options.autoBackupIncludeTabThumbnails" :disabled="!options.showTabsWithThumbnailsInManageGroups" type="checkbox" />
+                            <input v-if="options.showTabsWithThumbnailsInManageGroups" v-model="options.autoBackupIncludeTabThumbnails" type="checkbox" />
+                            <input v-else disabled="" type="checkbox" />
                             <span v-text="lang('includeTabThumbnailsIntoBackup')"></span>
                         </label>
                     </div>

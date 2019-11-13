@@ -358,7 +358,7 @@
                     <div class="control">
                         <label class="radio indent-children">
                             <input type="radio" :value="null" v-model="group.newTabContainer" />
-                            <span class="word-break-all" v-text="'Default'"></span>
+                            <span>Default</span>
                         </label>
                     </div>
                 </div>
@@ -381,7 +381,15 @@
                         <label class="radio indent-children">
                             <input type="radio" :value="TEMPORARY_CONTAINER" v-model="group.newTabContainer" />
                             <img src="resource://usercontext-content/chill.svg" class="size-16 fill-context" />
-                            <span class="word-break-all" v-text="lang('temporaryContainerTitle')"></span>
+                            <span v-text="lang('temporaryContainerTitle')"></span>
+                        </label>
+                    </div>
+                </div>
+                <div v-if="group.newTabContainer" class="field h-margin-top-10">
+                    <div class="control">
+                        <label class="checkbox indent-children">
+                            <input type="checkbox" v-model="group.ifNotDefaultContainerReOpenInNew" />
+                            <span v-text="lang('ifNotDefaultContainerReOpenInNew')"></span>
                         </label>
                     </div>
                 </div>
@@ -438,6 +446,10 @@
     }
 
     .edit-group {
+        .word-break-all {
+            word-break: break-word;
+        }
+
         .icon-buttons {
             flex-wrap: wrap;
         }
@@ -446,7 +458,7 @@
             margin-right: .68rem;
         }
 
-        .containers-wrapper .field {
+        .containers-wrapper .field:not(:last-child) {
             margin: 0;
         }
 
