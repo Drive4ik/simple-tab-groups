@@ -1288,7 +1288,7 @@
                         @contextmenu="moveTabs(menu.data.tab, group, !menu.data.group, true)"
                         >
                         <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
-                        <span v-text="getGroupTitle(group, 'withActiveGroup')"></span>
+                        <span v-text="getGroupTitle(group, 'withActiveGroup withContainer')"></span>
                     </li>
 
                     <li

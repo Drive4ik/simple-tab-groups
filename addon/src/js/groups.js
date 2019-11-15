@@ -256,7 +256,7 @@ async function sort(vector = 'asc') {
 function mapGroupForExternalExtension(group) {
     return {
         id: group.id,
-        title: utils.getGroupTitle(group, 'withActiveGroup'),
+        title: utils.getGroupTitle(group, 'withActiveGroup withContainer'),
         iconUrl: utils.getGroupIconUrl(group),
     };
 }
