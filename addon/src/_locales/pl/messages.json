@@ -254,7 +254,7 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Złap i przenieś zakładki z kontenerami do tej grupy",
+        "message": "Złap i przenieś zakładki z zasobnikami do tej grupy",
         "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
@@ -305,6 +305,14 @@
         "message": "Załaduj poprzednią grupę",
         "description": "Load previous group"
     },
+    "hotkeyActionTitleLoadNextUnloadedGroup": {
+        "message": "Załaduj kolejną niewczytaną grupę",
+        "description": "Load next unloaded group"
+    },
+    "hotkeyActionTitleLoadPrevUnloadedGroup": {
+        "message": "Załaduj poprzednią niewczytaną grupę",
+        "description": "Load previous unloaded group"
+    },
     "hotkeyActionTitleLoadHistoryNextGroup": {
         "message": "Załaduj następną grupę z historii",
         "description": "Load next group from history"
@@ -344,6 +352,14 @@
     "hotkeyActionTitleDiscardGroup": {
         "message": "Porzuć grupę",
         "description": "Hotkey action Discard group"
+    },
+    "hotkeyActionTitleDiscardOtherGroups": {
+        "message": "Odrzuć pozostałe hrupy",
+        "description": "Hotkey action Discard other groups"
+    },
+    "hotkeyActionTitleReloadAllTabsInCurrentGroup": {
+        "message": "Przeładuj wszystkie karty w bieżącej grupie",
+        "description": "Reload all tabs in current group"
     },
     "whatsWrongMessage": {
         "message": "Co jest nie tak...\nProszę skontaktuj się z programistą, wysyłając e-maila z powiadomieniami o błędach (przycisk dostępny na dole strony z opcjami)",
@@ -708,5 +724,91 @@
     "showExtendGroupsPopupWithActiveTabs": {
         "message": "Pokaż aktywne karty w powiadomienia o grupach",
         "description": "Show active tabs in groups popup"
+    },
+    "reloadAllTabsInGroup": {
+        "message": "Przeładuj wszystkie karty w grupie",
+        "description": "Reload all tabs in group"
+    },
+    "tabsCreatedCount": {
+        "message": "$tabscount$ karty stworzono",
+        "description": "Tabs created count",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "tabsNotCreated": {
+        "message": "Kart nie stworzono",
+        "description": "Tabs not created"
+    },
+    "discardOtherGroups": {
+        "message": "Odrzuć pozostałe grupy",
+        "description": "Discard other groups"
+    },
+    "showTabsWithThumbnailsInManageGroups": {
+        "message": "Pokaż karty wraz z miniaturkami na stronie \"Zarządzanie grupami\"",
+        "description": "Show tabs with thumbnails in \"Manage groups\" page"
+    },
+    "alwaysOpenTabsInContainer": {
+        "message": "Zawsze otwieraj karty w zasobniku",
+        "description": "Always open tabs in container"
+    },
+    "temporaryContainerTitle": {
+        "message": "Zasobnik tymczasowy",
+        "description": "⌚Temporary Container"
+    },
+    "thisContainerIsNotTemporary": {
+        "message": "Zasobnik '$containerName$' przestał być tymczasowym",
+        "description": "This container '$containerName$' is no longer temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "my container"
+            }
+        }
+    },
+    "thisContainerNowIsTemporary": {
+        "message": "Zasobnik '$containerName$' stał się tymczasowym",
+        "description": "This container '$containerName$' has now become temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "⌚Temporary Container 5"
+            }
+        }
+    },
+    "importAddonSettings": {
+        "message": "Importuj ustawienia dodatku",
+        "description": "Import addon settings"
+    },
+    "importGroups": {
+        "message": "Importuj grupy",
+        "description": "Import groups"
+    },
+    "pinnedTabs": {
+        "message": "Przypięte karty",
+        "description": "Pinned tabs"
+    },
+    "eraseAddonSettingsWarningTitle": {
+        "message": "Akcja <b>USUNIE</b> wszystkie grupy oraz ustawienia.<br>Karty pozostaną bez zmian.",
+        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+    },
+    "clear": {
+        "message": "Wyczyść",
+        "description": "Clear"
+    },
+    "deleteAllAddonDataAndSettings": {
+        "message": "Usuń wszystkie dane i ustawienia dodatku",
+        "description": "Delete all addon data and settings"
+    },
+    "warningAllDataWillRemove": {
+        "message": "Uwaga! Czy usunąć WSZYSTKIE dane w ramach dodatku? Jesteś pewny?",
+        "description": "Warning! Removing ALL addon data! Are you really sure?"
+    },
+    "ifNotDefaultContainerReOpenInNew": {
+        "message": "Jeśli zasobnik jest inny niż poprzednio wybrany, to zmień zasobnik",
+        "description": "If the container is different from the selected one - change the container"
     }
 }
