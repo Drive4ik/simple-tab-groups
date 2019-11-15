@@ -11,23 +11,29 @@
                 type: Array,
                 default: () => [],
             },
-            autofocusOnButton: {
-                type: Boolean,
-                default: true,
-            },
         },
         methods: {
             lang: browser.i18n.getMessage,
         },
         mounted() {
             this.$nextTick(function() {
-                this.$emit('show-popup');
+                if (this.buttons.length) {
+                    let focusedButtonIndex = this.buttons.findIndex(button => 'focused' in button);
 
-                if (this.autofocusOnButton) {
-                    let button = this.$el.querySelector('footer button');
-                    button && button.focus();
+                    if (-1 === focusedButtonIndex) {
+                        focusedButtonIndex = 1;
+                    } else if (this.buttons[focusedButtonIndex].focused) {
+                        focusedButtonIndex++;
+                    } else {
+                        focusedButtonIndex = 0;
+                    }
+
+                    if (focusedButtonIndex) {
+                        this.$el.querySelector(`footer button:nth-child(${focusedButtonIndex})`).focus();
+                    }
                 }
 
+                this.$emit('show-popup');
             });
         },
     }

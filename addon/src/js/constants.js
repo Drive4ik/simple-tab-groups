@@ -1,6 +1,5 @@
 'use strict';
 
-const DEFAULT_COOKIE_STORE_ID = 'firefox-default';
 const MANAGE_TABS_URL = '/manage/manage.html';
 const ACTIVE_SYMBOL = '⚪';
 const DISCARDED_SYMBOL = '❄';
@@ -210,7 +209,6 @@ const HOUR_SEC = 60 * 60;
 const DAY_SEC = 24 * HOUR_SEC;
 
 export default {
-    DEFAULT_COOKIE_STORE_ID,
     MANAGE_TABS_URL,
     ACTIVE_SYMBOL,
     DISCARDED_SYMBOL,

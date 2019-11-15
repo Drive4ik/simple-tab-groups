@@ -30,6 +30,10 @@
 
     Vue.use(VueLazyload);
 
+    Vue.config.keyCodes = {
+        'f3': KeyEvent.DOM_VK_F3,
+    };
+
     const VIEW_GRID = 'grid',
         VIEW_DEFAULT = VIEW_GRID;
 
@@ -95,7 +99,7 @@
             this.isLoaded = true;
 
             this.$nextTick(function() {
-                this.$refs.search.focus();
+                this.setFocusOnSearch();
 
                 this.groups.forEach(group => group.tabs.forEach(tab => !tab.session.thumbnail && !tab.discarded && utils.isTabLoaded(tab) && Tabs.updateThumbnail(tab.id)));
             });
@@ -144,6 +148,10 @@
         methods: {
             lang: browser.i18n.getMessage,
             safeHtml: utils.safeHtml,
+
+            setFocusOnSearch() {
+                this.$nextTick(() => this.$refs.search.focus());
+            },
 
             loadOptions() {
                 this.options = BG.getOptions();
@@ -640,6 +648,7 @@
         @contextmenu="['INPUT', 'TEXTAREA'].includes($event.target.nodeName) ? null : $event.preventDefault()"
         @click="multipleTabs = []"
         @keydown.esc="closeThisWindow"
+        @keydown.f3.stop.prevent="setFocusOnSearch"
         >
         <header class="is-flex is-align-items-center">
             <span class="page-title">
@@ -1023,6 +1032,7 @@
                 }, {
                     event: 'close-popup',
                     lang: 'cancel',
+                    focused: true,
                 }]
             ">
             <span v-html="lang('deleteGroupBody', safeHtml(groupToRemove.title))"></span>
@@ -1084,19 +1094,21 @@
     }
 
     #stg-manage {
-        height: 100vh;
-        /* width: 100vw; */
+        padding: var(--indent) var(--indent) calc(var(--indent) * 10);
 
         > header {
-            padding: 10px 10px 0 10px;
-
             > :not(:first-child) {
                 margin-left: 20px;
             }
 
             .page-title {
                 font-size: 20px;
+                line-height: 1;
             }
+        }
+
+        > main {
+            margin-top: var(--indent);
         }
     }
 
@@ -1129,8 +1141,6 @@
     }
 
     #result {
-        padding: 10px 10px 100px 10px;
-
         // GRID VIEW
         .grid {
             display: grid;

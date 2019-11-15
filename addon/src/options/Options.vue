@@ -25,8 +25,7 @@
         SECTION_HOTKEYS = 'hotkeys',
         SECTION_BACKUP = 'backup',
         SECTION_DEFAULT = SECTION_GENERAL,
-        _funcKeys = [...Array(12).keys()].map(n => n + 1),
-        isFunctionKey = keyCode => _funcKeys.some(n => keyCode === KeyEvent[`DOM_VK_F${n}`]),
+        funcKeys = [...Array(12).keys()].map(n => KeyEvent[`DOM_VK_F${n + 1}`]),
         folderNameRegExp = /[\.\<\>\:\"\/\\\|\?\*\x00-\x1F]|^(?:aux|con|nul|prn|com\d|lpt\d)$/gi;
 
     export default {
@@ -231,7 +230,7 @@
                             return false;
                         }
 
-                        if (!(hotkey.ctrlKey || hotkey.shiftKey || hotkey.altKey || hotkey.metaKey || isFunctionKey(hotkey.keyCode))) {
+                        if (!(hotkey.ctrlKey || hotkey.shiftKey || hotkey.altKey || hotkey.metaKey || funcKeys.includes(hotkey.keyCode))) {
                             return false;
                         }
 
@@ -1013,8 +1012,8 @@
                 </div>
                 <div class="field is-grouped is-align-items-center">
                     <div class="control">
-                        <button @click="showClearAddonConfirmPopup = true" class="button is-primary">
-                            <img class="size-16" src="/icons/close.svg" />
+                        <button @click="showClearAddonConfirmPopup = true" class="button is-danger">
+                            <img class="size-16" src="/icons/close.svg" style="fill: #ffffff" />
                             <span class="h-margin-left-5" v-text="lang('clear')"></span>
                         </button>
                     </div>
@@ -1059,6 +1058,7 @@
                 }, {
                     event: 'close-popup',
                     lang: 'cancel',
+                    focused: true,
                 }]
             ">
             <span v-text="lang('warningAllDataWillRemove')"></span>
@@ -1128,6 +1128,10 @@
                 justify-content: end;
                 margin-right: calc(16px + var(--indent));
                 margin-top: .75rem;
+
+                > .control {
+                    max-width: 100%;
+                }
             }
 
             .delete-button {

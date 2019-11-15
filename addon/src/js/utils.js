@@ -360,7 +360,7 @@ function getGroupTitle({id, title, tabs, newTabContainer}, args = '') {
     }
 
     if (withContainer && newTabContainer) {
-        title = '[' + containers.get(newTabContainer, 'name') + '] ' + title;
+        title = '[' + BG.containers.get(newTabContainer, 'name') + '] ' + title;
     }
 
     tabs = tabs.slice();

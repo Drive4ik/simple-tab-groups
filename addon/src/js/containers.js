@@ -1,6 +1,5 @@
 'use strict';
 
-import constants from './constants';
 import utils from './utils';
 
 const temporaryContainerOptions = Object.freeze({
@@ -10,6 +9,7 @@ const temporaryContainerOptions = Object.freeze({
 });
 
 const TEMPORARY_CONTAINER = 'temporary-container';
+const DEFAULT_COOKIE_STORE_ID = 'firefox-default';
 
 let containers = {},
     mappedContainerCookieStoreId = {};
@@ -59,7 +59,7 @@ async function init() {
 }
 
 function isDefault(cookieStoreId) {
-    return constants.DEFAULT_COOKIE_STORE_ID === cookieStoreId || !cookieStoreId;
+    return DEFAULT_COOKIE_STORE_ID === cookieStoreId || !cookieStoreId;
 }
 
 function isTemporary(cookieStoreId, contextualIdentity) {
@@ -94,7 +94,7 @@ function remove(cookieStoreId) {
 
 async function normalize(cookieStoreId, containerData) {
     if (isDefault(cookieStoreId)) {
-        return constants.DEFAULT_COOKIE_STORE_ID;
+        return DEFAULT_COOKIE_STORE_ID;
     }
 
     if (containers[cookieStoreId]) {
@@ -138,7 +138,7 @@ function get(cookieStoreId, key = null) {
         result = temporaryContainerOptions;
     } else {
         result = {
-            cookieStoreId: constants.DEFAULT_COOKIE_STORE_ID,
+            cookieStoreId: DEFAULT_COOKIE_STORE_ID,
             name: 'default',
         };
     }

@@ -1194,7 +1194,7 @@ async function updateBrowserActionData(groupId, windowId) {
     }
 
     if (group) {
-        setBrowserAction(windowId, utils.sliceText(group.title, 28) + ' - STG', utils.getGroupIconUrl(group), true);
+        setBrowserAction(windowId, utils.sliceText(utils.getGroupTitle(group, 'withContainer'), 43) + ' - STG', utils.getGroupIconUrl(group), true);
         prependWindowTitle(windowId, group.title);
     } else {
         setBrowserAction(windowId, undefined, undefined, true);

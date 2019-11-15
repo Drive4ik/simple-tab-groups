@@ -874,7 +874,7 @@
                             @keydown.arrow-up="focusToNextElement"
                             @keydown.arrow-down="focusToNextElement"
                             tabindex="0"
-                            :title="getGroupTitle(group, 'withCountTabs withTabs')"
+                            :title="getGroupTitle(group, 'withCountTabs withTabs withContainer')"
                             >
                                 <div class="item-icon">
                                     <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
@@ -975,7 +975,7 @@
                         @keydown.arrow-up="focusToNextElement"
                         @keydown.arrow-down="focusToNextElement"
                         tabindex="0"
-                        :title="getGroupTitle(group, 'withCountTabs withTabs')"
+                        :title="getGroupTitle(group, 'withCountTabs withTabs withContainer')"
                         >
                             <div class="item-icon">
                                 <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
@@ -1337,6 +1337,7 @@
                 }, {
                     event: 'close-popup',
                     lang: 'cancel',
+                    focused: true,
                 }]
             ">
             <span v-html="lang('deleteGroupBody', safeHtml(groupToRemove.title))"></span>
@@ -1348,12 +1349,12 @@
             @create-group="createNewGroup(); isShowingCreateGroupPopup = false"
             @close-popup="isShowingCreateGroupPopup = false"
             @show-popup="$refs.nextGroupTitle.focus(); $refs.nextGroupTitle.select()"
-            :autofocus-on-button="false"
             :buttons="
                 [{
                     event: 'create-group',
                     classList: 'is-success',
                     lang: 'ok',
+                    focused: false,
                 }, {
                     event: 'close-popup',
                     lang: 'cancel',
