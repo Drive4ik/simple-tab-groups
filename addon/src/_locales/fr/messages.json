@@ -806,5 +806,9 @@
     "warningAllDataWillRemove": {
         "message": "Attention ! Cela va supprimer TOUTES les données de l'extension ! Êtes-vous vraiment certain ?",
         "description": "Warning! Removing ALL addon data! Are you really sure?"
+    },
+    "ifNotDefaultContainerReOpenInNew": {
+        "message": "Si le contexte de l'onglet est différent de celui sélectionné ci-dessus, changer le contexte",
+        "description": "If the container is different from the selected one - change the container"
     }
 }
