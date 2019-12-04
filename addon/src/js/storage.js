@@ -46,6 +46,35 @@ export default {
             data.groups.forEach(group => group.tabs = []);
         }
 
-        return browser.storage.local.set(data);
+        try {
+            await browser.storage.local.set(data);
+        } catch (e) {
+            console.error(e);
+
+            let message = null,
+                {os} = await browser.runtime.getPlatformInfo();
+
+            if (e && e.message) {
+                message = e.message;
+            }
+
+            if (message === 'An unexpected error occurred' && os === 'linux') {
+                let existData = await this.get(null);
+
+                let newData = {
+                    ...existData,
+                    ...data,
+                };
+
+                await browser.storage.local.clear();
+
+                await browser.storage.local.set(newData);
+            } else {
+                throw e;
+            }
+
+        }
+
+        // return browser.storage.local.set(data);
     },
 }
