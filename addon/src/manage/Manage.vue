@@ -1379,6 +1379,15 @@
                 height: 27px;
                 padding: var(--tab-inner-padding);
 
+                &.new {
+                    justify-content: center;
+                    border: var(--tab-border-width) dashed var(--tab-inner-border-color);
+
+                    > .tab-title {
+                        flex-grow: 0;
+                    }
+                }
+
                 &:hover {
                     background-color: rgba(126, 126, 126, 0.3);
                 }
