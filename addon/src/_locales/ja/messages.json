@@ -199,6 +199,20 @@
             }
         }
     },
+    "groupTabsCountActive": {
+        "message": "$active$/$count$ tabs active",
+        "description": "Group tabs count active",
+        "placeholders": {
+            "active": {
+                "content": "$1",
+                "example": "2"
+            },
+            "count": {
+                "content": "$2",
+                "example": "4"
+            }
+        }
+    },
     "deleteTab": {
         "message": "タブを削除",
         "description": "Delete tab"
@@ -291,6 +305,22 @@
         "message": "前のグループをロード",
         "description": "Load previous group"
     },
+    "hotkeyActionTitleLoadNextUnloadedGroup": {
+        "message": "次の未ロードのグループをロードする",
+        "description": "Load next unloaded group"
+    },
+    "hotkeyActionTitleLoadPrevUnloadedGroup": {
+        "message": "前の未ロードのグループをロードする",
+        "description": "Load previous unloaded group"
+    },
+    "hotkeyActionTitleLoadHistoryNextGroup": {
+        "message": "履歴から次のグループをロードする",
+        "description": "Load next group from history"
+    },
+    "hotkeyActionTitleLoadHistoryPrevGroup": {
+        "message": "履歴から前のグループをロードする",
+        "description": "Load previous group from history"
+    },
     "hotkeyActionTitleLoadFirstGroup": {
         "message": "最初のグループをロード",
         "description": "Load first group"
@@ -320,8 +350,16 @@
         "description": "Move active tab to custom group"
     },
     "hotkeyActionTitleDiscardGroup": {
-        "message": "タブを廃棄する",
+        "message": "グループを削除する",
         "description": "Hotkey action Discard group"
+    },
+    "hotkeyActionTitleDiscardOtherGroups": {
+        "message": "他のグループを削除する",
+        "description": "Hotkey action Discard other groups"
+    },
+    "hotkeyActionTitleReloadAllTabsInCurrentGroup": {
+        "message": "現在のグループの全てのタブをリロードする",
+        "description": "Reload all tabs in current group"
     },
     "whatsWrongMessage": {
         "message": "なにか問題が起きました...\n開発者にEメールでエラーログをお送りいただけますようご協力をお願いします。(Simple Tab Groups の設定画面の一番下にログを出力するためのボタンがあります)",
@@ -364,7 +402,7 @@
         "description": "Icon style"
     },
     "discardTabsAfterHide": {
-        "message": "タブが隠れた後に破棄する（this will save the RAM）",
+        "message": "タブが隠れた後に破棄する（メモリを節約します）",
         "description": "Discard tabs after hide (this will save the RAM)"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
@@ -644,7 +682,7 @@
         "description": "Discard tab"
     },
     "discardGroupTitle": {
-        "message": "タブを廃棄する",
+        "message": "タブを削除する",
         "description": "Discard group"
     },
     "autoBackupGroupsToFile": {
@@ -654,5 +692,123 @@
     "folderNameTitle": {
         "message": "フォルダー名",
         "description": "Folder name title"
+    },
+    "backupSuccessfullyRestored": {
+        "message": "バックアップの保存に成功しました",
+        "description": "Backup successfully restored"
+    },
+    "loading": {
+        "message": "ロード中、しばらくお待ちください…",
+        "description": "Loading, please wait..."
+    },
+    "showOtherTabs": {
+        "message": "他のタブを表示",
+        "description": "Show other tabs"
+    },
+    "dontDiscardTabsAfterHideThisGroup": {
+        "message": "このグループでは非表示にしたタブを破棄しない",
+        "description": "Don't discard tabs into this group after hide"
+    },
+    "showNotificationAfterGroupDelete": {
+        "message": "グループを削除した際に、通知を表示する",
+        "description": "Show notification after group delete"
+    },
+    "reloadTab": {
+        "message": "タブをリロード",
+        "description": "Reload tab"
+    },
+    "thisTabIsNotSupported": {
+        "message": "このタブはサポートされていません",
+        "description": "This tab is not supported"
+    },
+    "showExtendGroupsPopupWithActiveTabs": {
+        "message": "グループのポップアップにアクティブなタブを表示する",
+        "description": "Show active tabs in groups popup"
+    },
+    "reloadAllTabsInGroup": {
+        "message": "グループ内の全てのタブをリロード",
+        "description": "Reload all tabs in group"
+    },
+    "tabsCreatedCount": {
+        "message": "$tabscount$個のタブが作成されました",
+        "description": "Tabs created count",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "tabsNotCreated": {
+        "message": "タブは１件も作成されませんでした",
+        "description": "Tabs not created"
+    },
+    "discardOtherGroups": {
+        "message": "他のグループを削除する",
+        "description": "Discard other groups"
+    },
+    "showTabsWithThumbnailsInManageGroups": {
+        "message": "\"グループの管理\"ページでタブのサムネイルを表示する",
+        "description": "Show tabs with thumbnails in \"Manage groups\" page"
+    },
+    "alwaysOpenTabsInContainer": {
+        "message": "常にContainerでタブを開く",
+        "description": "Always open tabs in container"
+    },
+    "temporaryContainerTitle": {
+        "message": "⌚一時的なContainer",
+        "description": "⌚Temporary Container"
+    },
+    "thisContainerIsNotTemporary": {
+        "message": "'$containerName$'は一時的なContainerではなくなりました",
+        "description": "This container '$containerName$' is no longer temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "my container"
+            }
+        }
+    },
+    "thisContainerNowIsTemporary": {
+        "message": "'$containerName$'は一時的なContainerになりました",
+        "description": "This container '$containerName$' has now become temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "⌚Temporary Container 5"
+            }
+        }
+    },
+    "importAddonSettings": {
+        "message": "アドオンの設定をインポートする",
+        "description": "Import addon settings"
+    },
+    "importGroups": {
+        "message": "グループをインポートする",
+        "description": "Import groups"
+    },
+    "pinnedTabs": {
+        "message": "ピン留めされたタブ",
+        "description": "Pinned tabs"
+    },
+    "eraseAddonSettingsWarningTitle": {
+        "message": "全ての設定とグループを <b>完全消去</b> します。<br>タブは影響を受けません",
+        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+    },
+    "clear": {
+        "message": "クリア",
+        "description": "Clear"
+    },
+    "deleteAllAddonDataAndSettings": {
+        "message": "アドオンの全てのデータと設定を削除",
+        "description": "Delete all addon data and settings"
+    },
+    "warningAllDataWillRemove": {
+        "message": "警告 アドオンの全てのデータを削除します よろしいですか？",
+        "description": "Warning! Removing ALL addon data! Are you really sure?"
+    },
+    "ifNotDefaultContainerReOpenInNew": {
+        "message": "Containerが違った場合、Containerを変える",
+        "description": "If the container is different from the selected one - change the container"
     }
 }
