@@ -92,7 +92,7 @@
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
-        "message": "Потвърждаване при изтриване на групи",
+        "message": "Потвърждаване при изтриване на група",
         "description": "Show confirm dialog before group delete"
     },
     "exportAddonSettingsTitle": {
@@ -100,7 +100,7 @@
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
-        "message": "Създаване на резервни копия на групите от раздели, за да бъдат възстановявани при нужда.",
+        "message": "Създайте резервни копия на групите от раздели, така че да ги възстановите при нужда.",
         "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
     },
     "exportAddonSettingsButton": {
@@ -116,7 +116,7 @@
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
-        "message": "Внасяне на резервно копие с групите, които да бъдат възстановени.",
+        "message": "Внесете резервно копие на групите, които да бъдат възстановени.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
     "importAddonSettingsButton": {
@@ -128,7 +128,7 @@
         "description": "Restore Quicksaver's \"Tab Groups\""
     },
     "importSettingsOldTabGroupsAddonDescription": {
-        "message": "Внасяне на резервно копие от старата добавка „Tab Groups“.",
+        "message": "Внесете резервно копие от старата добавка „Tab Groups“.",
         "description": "Load a backup file old \"Tab Groups\" addon."
     },
     "openGroupAfterChange": {
@@ -180,7 +180,7 @@
         "description": "Delete group?"
     },
     "deleteGroupBody": {
-        "message": "Желаете ли групата „$name$“ да бъде изтрита?<br>При изтриване на групи разделите и прозорците в тях биват затворени.",
+        "message": "Желаете ли групата „$name$“ да бъде изтрита?<br>При изтриване на група разделите и прозорците в нея биват затваряни.",
         "description": "Delete group?",
         "placeholders": {
             "name": {
@@ -199,8 +199,22 @@
             }
         }
     },
+    "groupTabsCountActive": {
+        "message": "$active$/$count$ отворени раздела",
+        "description": "Group tabs count active",
+        "placeholders": {
+            "active": {
+                "content": "$1",
+                "example": "2"
+            },
+            "count": {
+                "content": "$2",
+                "example": "4"
+            }
+        }
+    },
     "deleteTab": {
-        "message": "Изтриване на раздела",
+        "message": "Изтриване на раздел",
         "description": "Delete tab"
     },
     "createNewTab": {
@@ -216,7 +230,7 @@
         "description": "Go back"
     },
     "goBackToGroupsButtonTitle": {
-        "message": "Списък с групите",
+        "message": "Списък с групи",
         "description": "Go back to groups"
     },
     "title": {
@@ -240,7 +254,7 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Преместване в тази група на разделите в изолатори",
+        "message": "Преместване на разделите от групата в изолатори",
         "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
@@ -250,6 +264,10 @@
     "regexpForTabsPlaceholder": {
         "message": "Регулярни изрази",
         "description": "Regular expressions"
+    },
+    "regexpForTabsHelp": {
+        "message": "Въведете регулярни изрази за адреси от мрежата. При съвпадение разделът автоматично ще бъде премесен в тази група.\nЕдно правило на ред, но може да има неограничен брой правила.\nПримери:\ngithub\\.com/drive4ik/simple-tab-groups - прехваща страниците от хранилището на добавката\nbugzilla\\.mozilla\\.org - прехваща страници от дефектите на Firefox\n(facebook|twitter|youtube)\\.com - прехваща страници от социалните мрежи",
+        "description": "Regular exceptions helper"
     },
     "hotkeysTitle": {
         "message": "Клавишни комбинации",
@@ -282,6 +300,14 @@
     "hotkeyActionTitleLoadPrevGroup": {
         "message": "Отваряне на предишната група",
         "description": "Load previous group"
+    },
+    "hotkeyActionTitleLoadNextUnloadedGroup": {
+        "message": "Отваряне на следващата неотваряна група",
+        "description": "Load next unloaded group"
+    },
+    "hotkeyActionTitleLoadPrevUnloadedGroup": {
+        "message": "Отваряне на предишната неотваряна група",
+        "description": "Load previous unloaded group"
     },
     "hotkeyActionTitleLoadHistoryNextGroup": {
         "message": "Отваряне на следващата група от историята",
@@ -316,12 +342,24 @@
         "description": "Open manage groups"
     },
     "hotkeyActionTitleMoveActiveTabToCustomGroup": {
-        "message": "Местене на разделa в определена група",
+        "message": "Преместване на раздела в определена група",
         "description": "Move active tab to custom group"
     },
     "hotkeyActionTitleDiscardGroup": {
-        "message": "Освобождаване на паметта от разделите в групата",
+        "message": "Освобождаване на памет от разделите в групата",
         "description": "Hotkey action Discard group"
+    },
+    "hotkeyActionTitleDiscardOtherGroups": {
+        "message": "Освобождаване на памет от разделите в другите групи",
+        "description": "Hotkey action Discard other groups"
+    },
+    "hotkeyActionTitleReloadAllTabsInCurrentGroup": {
+        "message": "Презареждане на разделите в групата",
+        "description": "Reload all tabs in current group"
+    },
+    "whatsWrongMessage": {
+        "message": "Какво се случи?\nИзпратете съобщение на разработчика на електронния адрес за поддръжка с журнала. В настройките на добавката най-долу има бутон.",
+        "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
     },
     "saveErrorLogsIntoFile": {
         "message": "Запазване на последните грешки във файл на JSON",
@@ -360,7 +398,7 @@
         "description": "Icon style"
     },
     "discardTabsAfterHide": {
-        "message": "Освобождаване на паметта от скритите раздели",
+        "message": "Освобождаване на памет от скритите раздели",
         "description": "Discard tabs after hide (this will save the RAM)"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
@@ -386,6 +424,10 @@
     "updateTabThumbnail": {
         "message": "Обновяване на миниатюрата на раздела",
         "description": "Update thumbnail for this tab"
+    },
+    "nowFoundWindowsAddonStoppedWorking": {
+        "message": "Грешка: не са намерени обикновени или поверителни прозорци.\nДобавката е спряла да работи. Рестартирайте мрежовия четец.",
+        "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
     },
     "ffFailedAndLostDataMessage": {
         "message": "Firefox се срина и всички групи от раздели са загубени.\nАко имате резервно копие възстановете групите от него.",
@@ -514,7 +556,7 @@
         "description": "Restore photodiode's \"Panorama View\""
     },
     "importSettingsPanoramaViewAddonDescription": {
-        "message": "Внасяне на резервно копие от добавката „Panorama View“.",
+        "message": "Внесете резервно копие от добавката „Panorama View“.",
         "description": "Load a backup file from \"Panorama View\" addon."
     },
     "importSettingsSyncTabGroupsAddonTitle": {
@@ -522,7 +564,7 @@
         "description": "Restore Morikko's \"Sync Tab Groups\""
     },
     "importSettingsSyncTabGroupsAddonDescription": {
-        "message": "Внасяне на резервно копие от добавката „Sync Tab Groups“.",
+        "message": "Внесете резервно копие от добавката „Sync Tab Groups“.",
         "description": "Load a backup file from \"Sync Tab Groups\" addon."
     },
     "browseFileTitle": {
@@ -632,11 +674,11 @@
         "description": "All groups successfully exported to bookmarks"
     },
     "discardTabTitle": {
-        "message": "Освобождаване на паметта от раздела",
+        "message": "Освобождаване на памет от раздела",
         "description": "Discard tab"
     },
     "discardGroupTitle": {
-        "message": "Освобождаване на паметта от разделите в групата",
+        "message": "Освобождаване на памет от разделите в групата",
         "description": "Discard group"
     },
     "autoBackupGroupsToFile": {
@@ -660,7 +702,7 @@
         "description": "Show other tabs"
     },
     "dontDiscardTabsAfterHideThisGroup": {
-        "message": "Без освобождаване на паметта от разделите в групата след смяната ѝ",
+        "message": "Без освобождаване на памет от разделите в групата след смяната ѝ",
         "description": "Don't discard tabs into this group after hide"
     },
     "showNotificationAfterGroupDelete": {
@@ -674,5 +716,91 @@
     "thisTabIsNotSupported": {
         "message": "Този раздел не се поддържа",
         "description": "This tab is not supported"
+    },
+    "showExtendGroupsPopupWithActiveTabs": {
+        "message": "Показване на броя отворени раздели в менюто",
+        "description": "Show active tabs in groups popup"
+    },
+    "reloadAllTabsInGroup": {
+        "message": "Презареждане на разделите в групата",
+        "description": "Reload all tabs in group"
+    },
+    "tabsCreatedCount": {
+        "message": "$tabscount$ раздела създадени",
+        "description": "Tabs created count",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "tabsNotCreated": {
+        "message": "Не са създадени раздели",
+        "description": "Tabs not created"
+    },
+    "discardOtherGroups": {
+        "message": "Освобождаване на памет от разделите в другите групи",
+        "description": "Discard other groups"
+    },
+    "alwaysOpenTabsInContainer": {
+        "message": "Новите разделите се отварят в изолатор",
+        "description": "Always open tabs in container"
+    },
+    "temporaryContainerTitle": {
+        "message": "⌚Временен изолатор",
+        "description": "⌚Temporary Container"
+    },
+    "thisContainerIsNotTemporary": {
+        "message": "Изолаторът „$containerName$“ вече не е временен",
+        "description": "This container '$containerName$' is no longer temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "my container"
+            }
+        }
+    },
+    "thisContainerNowIsTemporary": {
+        "message": "Изолаторът „$containerName$“ вече е временен",
+        "description": "This container '$containerName$' has now become temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "⌚Temporary Container 5"
+            }
+        }
+    },
+    "importAddonSettings": {
+        "message": "Внасяне на настройки",
+        "description": "Import addon settings"
+    },
+    "importGroups": {
+        "message": "Внасяне на групи",
+        "description": "Import groups"
+    },
+    "pinnedTabs": {
+        "message": "Закачени раздели",
+        "description": "Pinned tabs"
+    },
+    "eraseAddonSettingsWarningTitle": {
+        "message": "Това действие ще <b>ЗАЛИЧИ НАПЪЛНО</b> текущите групи и настройки на добавката!<br>Разделите ще останат непокътнати.",
+        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+    },
+    "clear": {
+        "message": "Изчистване",
+        "description": "Clear"
+    },
+    "deleteAllAddonDataAndSettings": {
+        "message": "Изтриване на данните и настройките на добавката",
+        "description": "Delete all addon data and settings"
+    },
+    "warningAllDataWillRemove": {
+        "message": "Внимание! ВСИЧКИ данни на добавката ще бъдат заличени. Сигурни ли сте?",
+        "description": "Warning! Removing ALL addon data! Are you really sure?"
+    },
+    "ifNotDefaultContainerReOpenInNew": {
+        "message": "Ако текущия изолатор е различен от избрания, тогава да бъде подменен",
+        "description": "If the container is different from the selected one - change the container"
     }
 }
