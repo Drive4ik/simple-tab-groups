@@ -62,7 +62,7 @@ async function load(accept = BACKUP_FILE_EXT, readAs = 'json') { // readAs: json
     return result;
 }
 
-async function save(data, fileName = 'file-name', saveAs = true, overwrite = false, clearOnComplete = false) { // data : Object/Array/Text
+async function save(data, fileName = 'file-name', saveAs = true, overwrite = false, clearOnComplete = false, tryCount = 0) { // data : Object/Array/Text
     let body = null,
         type = null;
 
@@ -89,8 +89,14 @@ async function save(data, fileName = 'file-name', saveAs = true, overwrite = fal
 
         let state = await utils.waitDownload(id);
 
-        if (clearOnComplete && 'complete' === state) {
+        if (browser.downloads.State.COMPLETE === state) {
+            if (clearOnComplete) {
+                await BG.browser.downloads.erase({id});
+            }
+        } else if ((browser.downloads.State.INTERRUPTED === state || !state) && tryCount < 5) {
             await BG.browser.downloads.erase({id});
+            URL.revokeObjectURL(url);
+            return save(data, fileName, saveAs, overwrite, clearOnComplete, tryCount + 1);
         }
 
         return id;
@@ -146,7 +152,7 @@ function generateBackupFileName(withTime) {
         year = now.getFullYear(),
         hours = _intToStr(now.getHours()),
         min = _intToStr(now.getMinutes()),
-        time = withTime ? `~${hours}-${min}` : '';
+        time = withTime ? `-${hours}-${min}` : '';
 
     return `stg-backup-${year}-${month}-${day}${time}@drive4ik${BACKUP_FILE_EXT}`;
 }
