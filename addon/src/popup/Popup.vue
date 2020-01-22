@@ -103,6 +103,10 @@
                 document.getElementById('loading').remove();
                 this.setFocusOnSearch();
                 this.setupListeners();
+
+                if (this.options.openGroupAfterChange && isSidebar && this.currentGroup) {
+                    this.showSectionGroupTabs(this.currentGroup);
+                }
             });
         },
         watch: {
