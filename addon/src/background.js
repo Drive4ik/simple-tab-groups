@@ -408,6 +408,16 @@ function removeExcludeTabsIds(tabIds) {
 function onUpdatedTab(tabId, changeInfo, tab) {
     let excludeTab = excludeTabsIds.includes(tab.id);
 
+    if (!excludeTab && [ // browser.tabs.onUpdated.addListener filter changed props of tabs not working... :(
+            browser.tabs.UpdatePropertyName.ATTENTION,
+            browser.tabs.UpdatePropertyName.AUDIBLE,
+            browser.tabs.UpdatePropertyName.ISARTICLE,
+            browser.tabs.UpdatePropertyName.MUTEDINFO,
+            browser.tabs.UpdatePropertyName.SHARINGSTATE,
+        ].some(key => key in changeInfo)) {
+        excludeTab = true;
+    }
+
     console.log('onUpdatedTab %s tabId: %s, changeInfo:', (excludeTab ? '🛑' : ''), tab.id, changeInfo);
 
     if (excludeTab) {
@@ -425,11 +435,11 @@ function onUpdatedTab(tabId, changeInfo, tab) {
     }
 
     cache.setTab(tab);
-
+/*
     if (undefined === changeInfo.discarded) { // discarded not work when tab loading
         changeInfo.discarded = false;
     }
-
+*/
     let tabGroupId = cache.getTabSession(tab.id, 'groupId'),
         winGroupId = cache.getWindowGroup(tab.windowId);
 
@@ -1337,15 +1347,15 @@ function addEvents() {
     browser.tabs.onActivated.addListener(onActivatedTab);
     browser.tabs.onMoved.addListener(onMovedTab);
     browser.tabs.onUpdated.addListener(onUpdatedTab, {
-        urls: ['<all_urls>'],
-        properties: [
-            browser.tabs.UpdatePropertyName.DISCARDED, // not work if tab load
-            browser.tabs.UpdatePropertyName.FAVICONURL,
-            browser.tabs.UpdatePropertyName.HIDDEN,
-            browser.tabs.UpdatePropertyName.PINNED,
-            browser.tabs.UpdatePropertyName.TITLE,
-            browser.tabs.UpdatePropertyName.STATUS,
-        ],
+        // urls: ['<all_urls>'],
+        // properties: [
+        //     browser.tabs.UpdatePropertyName.DISCARDED, // not work if tab load
+        //     browser.tabs.UpdatePropertyName.FAVICONURL,
+        //     browser.tabs.UpdatePropertyName.HIDDEN,
+        //     browser.tabs.UpdatePropertyName.PINNED,
+        //     browser.tabs.UpdatePropertyName.TITLE,
+        //     browser.tabs.UpdatePropertyName.STATUS,
+        // ],
     });
     browser.tabs.onRemoved.addListener(onRemovedTab);
 
