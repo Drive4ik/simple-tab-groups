@@ -34,7 +34,7 @@ async function get(windowId = browser.windows.WINDOW_ID_CURRENT, checkIsWindowAl
     let win = await BG.browser.windows.get(windowId);
 
     if (checkIsWindowAllow && !utils.isWindowAllow(win)) {
-        throw Error('normal window not found!');
+        throw Error(`[Windows.get] normal window not found! windowId: ${windowId}, win: ` + utils.stringify(win));
     }
 
     return BG.cache.loadWindowSession(win);
@@ -103,7 +103,7 @@ async function getLastFocusedNormalWindow(returnId = true) {
         win = windows.find(win => win.focused) || windows.pop();
 
     if (!win) {
-        throw Error('normal window not found!');
+        throw Error('[Windows.getLastFocusedNormalWindow] normal window not found! lastFocusedWindow: ' + utils.stringify(lastFocusedWindow));
     }
 
     return returnId ? win.id : win;

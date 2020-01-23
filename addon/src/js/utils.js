@@ -119,8 +119,12 @@ function getCircularReplacer() {
     };
 }
 
+function stringify(obj = null) {
+    return JSON.stringify(obj, getCircularReplacer());
+}
+
 function clone(obj = null) {
-    return JSON.parse(JSON.stringify(obj, getCircularReplacer()));
+    return JSON.parse(stringify(obj));
 }
 
 function cloneTab({id, title, discarded, url, active, hidden, sharingState, windowId, cookieStoreId}) {
@@ -688,6 +692,7 @@ export default {
     keyId,
     unixNow,
     type,
+    stringify,
     clone,
     cloneTab,
     format,

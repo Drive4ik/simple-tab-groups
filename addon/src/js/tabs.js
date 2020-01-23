@@ -499,7 +499,7 @@ async function moveNative(tabs, options = {}) {
     // fix bug "Error: An unexpected error occurred"
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1595583
     let tabsToReload = tabs.filter(tab => tab.url && tab.discarded && !utils.isUrlEmpty(tab.url) && tab.url.startsWith('about:'));
-    console.debug('tabsToReload', tabsToReload);
+    console.log('tabsToReload', tabsToReload);
     if (tabsToReload.length) {
         await reload(tabsToReload.map(utils.keyId));
         await utils.wait(100);
@@ -516,6 +516,7 @@ async function moveNative(tabs, options = {}) {
         return acc;
     }, []);
 
+    console.log('tabIdsToReload', tabIdsToReload);
     reload(tabIdsToReload, true);
 
     return result;

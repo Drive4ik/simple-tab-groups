@@ -556,15 +556,17 @@ function updateGroupTabsEvent(groupId) {
 }
 
 async function onMovedTab(tabId, { windowId, fromIndex, toIndex }) {
-    console.log('onMovedTab', {tabId, windowId, fromIndex, toIndex });
-
     let groupId = cache.getTabSession(tabId, 'groupId');
 
-    console.log('onMovedTab groupId', groupId);
+    console.log('onMovedTab', {tabId, windowId, fromIndex, toIndex, groupId});
 
     if (groupId) {
         updateGroupTabsEvent(groupId);
     }
+}
+
+function onDetachedTab(tabId, { oldWindowId }) { // notice: call before onAttached
+    console.log('onDetachedTab', { tabId, oldWindowId });
 }
 
 function onAttachedTab(tabId, { newWindowId, newPosition }) {
@@ -583,10 +585,6 @@ function onAttachedTab(tabId, { newWindowId, newPosition }) {
     if (groupId) {
         updateGroupTabsEvent(groupId);
     }
-}
-
-function onDetachedTab(tabId, { oldWindowId }) { // notice: call before onAttached
-    console.log('onDetachedTab', { tabId, oldWindowId });
 }
 
 async function onCreatedWindow(win) {
