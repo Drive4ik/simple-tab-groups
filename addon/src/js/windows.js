@@ -63,19 +63,18 @@ async function create(createData = {}, groupId, activeTabId) {
     }
 
     if (utils.isWindowAllow(win)) {
-        win = await BG.cache.loadWindowSession(win);
-
         if (groupId) {
             await BG.applyGroup(win.id, groupId, activeTabId);
 
             let tabs = await Tabs.get(win.id),
-                emptyTab = win.tabs[0];
+                [emptyTab] = win.tabs;
 
             if (tabs.length > 1) {
-                await Tabs.setActive(null, tabs.filter(t => t.id !== emptyTab.id));
                 await Tabs.remove(emptyTab.id);
             }
         }
+
+        win = await BG.cache.loadWindowSession(win);
     }
 
     return win;

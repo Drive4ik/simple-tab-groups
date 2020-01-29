@@ -594,13 +594,7 @@
             },
 
             async openGroupInNewWindow(groupId) {
-                let windowId = this.getWindowId(groupId);
-
-                if (windowId) {
-                    Windows.setFocus(windowId);
-                } else {
-                    BG.Windows.create(undefined, groupId); // BG need because this popup will unload after win open and code not work
-                }
+                BG.Windows.create(undefined, groupId); // BG need because this popup will unload after win open and code not work
             },
 
             openGroupSettings(group) {
