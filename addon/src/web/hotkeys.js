@@ -191,8 +191,23 @@ function showGroupsPopup(data) {
 
             groupNode.onmouseover = () => groupsWrapper.contains(document.activeElement) && header.focus();
 
-            groupNode.onclick = function(groupId, action) {
-                browser.runtime.sendMessage({groupId, action});
+            groupNode.onclick = async function(groupId, action) {
+                let title = null;
+
+                if ('new' === groupId) {
+                    let {lastCreatedGroupPosition} = await browser.storage.local.get('lastCreatedGroupPosition');
+
+                    title = prompt(
+                        browser.i18n.getMessage('createNewGroup'),
+                        browser.i18n.getMessage('newGroupTitle', lastCreatedGroupPosition + 1)
+                    );
+
+                    if (title === null || !title.length) {
+                        return;
+                    }
+                }
+
+                browser.runtime.sendMessage({groupId, action, title});
                 closeGroupsPopup();
             }.bind(null, group.id, data.popupAction);
 

@@ -1544,7 +1544,7 @@ async function runAction(data, externalExtId) {
                         result = await runAction(data, externalExtId);
                     }
                 } else if ('new' === data.groupId) {
-                    await Groups.add();
+                    await Groups.add(undefined, undefined, data.title);
                     result = await runAction({
                         action: 'load-last-group',
                     }, externalExtId);
@@ -1610,7 +1610,7 @@ async function runAction(data, externalExtId) {
                         result = await runAction(data, externalExtId);
                     }
                 } else if ('new' === data.groupId) {
-                    await Groups.add(undefined, [activeTab]);
+                    await Groups.add(undefined, [activeTab], data.title);
                     result.ok = true;
                 } else {
                     if (!Tabs.isCanSendMessage(activeTab.url)) {
