@@ -791,6 +791,17 @@
                 }
             },
 
+            selectFirstItemOnSearch() {
+                if (!this.filteredGroupsBySearch.length) {
+                    return;
+                }
+
+                let [group] = this.filteredGroupsBySearch,
+                    [tab] = group.filteredTabsBySearch;
+
+                this.applyGroup(group, tab, true);
+            },
+
             toggleLogging() {
                 this.enableLogging = !this.enableLogging;
 
@@ -848,6 +859,7 @@
                         v-model.trim="search"
                         @input="$refs.search.value === '' ? showSectionDefault() : null"
                         autocomplete="off"
+                        @keyup.enter="selectFirstItemOnSearch"
                         @keydown.arrow-down="focusToNextElement"
                         @keydown.arrow-up="focusToNextElement"
                         :placeholder="lang('searchPlaceholder')" />
