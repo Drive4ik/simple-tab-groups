@@ -204,8 +204,8 @@
                 img.addEventListener('load', function() {
                     let resizedIconUrl = iconUrl;
 
-                    if (img.height > 16 || img.width > 16) {
-                        resizedIconUrl = utils.resizeImage(img, 16, 16);
+                    if (img.height > 64 || img.width > 64) {
+                        resizedIconUrl = utils.resizeImage(img, 64, 64);
                     }
 
                     this.setIconUrl(resizedIconUrl);
