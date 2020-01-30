@@ -179,8 +179,20 @@ function showGroupsPopup(data) {
 
         groupNode.classList.add('stg-popup-group');
 
-        imgNode.src = group.iconUrl;
+        imgNode.src = group.iconUrl.startsWith('/icons') ? browser.extension.getURL(group.iconUrl) : group.iconUrl;
+        imgNode.classList = 'group-icon';
         groupNode.append(imgNode);
+
+        if (group.contextualIdentity) {
+            let containerImgNode = document.createElement('img');
+
+            containerImgNode.classList = 'container-icon';
+            containerImgNode.title = group.contextualIdentity.name;
+            containerImgNode.src = group.contextualIdentity.iconUrl;
+            containerImgNode.style.fill = group.contextualIdentity.colorCode;
+
+            groupNode.append(containerImgNode);
+        }
 
         titleNode.innerText = group.title;
         titleNode.classList.add('stg-popup-has-text');

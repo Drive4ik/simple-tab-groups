@@ -50,7 +50,7 @@ async function create(tab) {
         }
     }
 
-    if (BG.containers.TEMPORARY_CONTAINER === tab.cookieStoreId) {
+    if (tab.cookieStoreId === BG.containers.TEMPORARY_CONTAINER) {
         tab.cookieStoreId = await BG.containers.createTemporaryContainer();
     } else if ('cookieStoreId' in tab) {
         tab.cookieStoreId = BG.containers.get(tab.cookieStoreId, 'cookieStoreId');
@@ -386,18 +386,15 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
 
                 tabsIdsToRemove.push(tab.id);
 
-                tab.cookieStoreId = group.newTabContainer;
-                tab.groupId = groupId;
-                tab.windowId = windowId;
-
-                tab.thumbnail = BG.cache.getTabSession(tab.id, 'thumbnail');
-                tab.favIconUrl = BG.cache.getTabSession(tab.id, 'favIconUrl');
-
-                delete tab.active;
-                delete tab.index;
-                delete tab.windowId;
-
-                return create(tab);
+                return create({
+                    url: tab.url,
+                    title: tab.title,
+                    isInReaderMode: tab.isInReaderMode,
+                    group,
+                    windowId,
+                    thumbnail: BG.cache.getTabSession(tab.id, 'thumbnail'),
+                    favIconUrl: BG.cache.getTabSession(tab.id, 'favIconUrl'),
+                });
             }));
 
             if (tabsIdsToRemove.length) {
@@ -431,9 +428,9 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
             }
         }
 
-        BG.removeExcludeTabsIds(tabIds);
-
         await Promise.all(tabs.map(tab => BG.cache.setTabGroup(tab.id, groupId)));
+
+        BG.removeExcludeTabsIds(tabIds);
 
         BG.sendMessage({
             action: 'groups-updated',

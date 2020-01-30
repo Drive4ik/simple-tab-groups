@@ -2,14 +2,17 @@
 
 import utils from './utils';
 
-const temporaryContainerOptions = Object.freeze({
-    name: browser.i18n.getMessage('temporaryContainerTitle'),
-    color: 'toolbar',
-    icon: 'chill',
-});
-
 const TEMPORARY_CONTAINER = 'temporary-container';
 const DEFAULT_COOKIE_STORE_ID = 'firefox-default';
+
+const temporaryContainerOptions = Object.freeze({
+    color: 'toolbar',
+    colorCode: false,
+    cookieStoreId: TEMPORARY_CONTAINER,
+    icon: 'chill',
+    iconUrl: 'resource://usercontext-content/chill.svg',
+    name: browser.i18n.getMessage('temporaryContainerTitle'),
+});
 
 let containers = {},
     mappedContainerCookieStoreId = {};
@@ -17,16 +20,18 @@ let containers = {},
 async function init() {
     const {BG} = browser.extension.getBackgroundPage();
 
-    containers = {};
+    containers = {
+        [TEMPORARY_CONTAINER]: temporaryContainerOptions,
+    };
     mappedContainerCookieStoreId = {};
 
     // CONTAINER PROPS:
     // color: "blue"
-    // ​​colorCode: "#37adff"
-    // ​​cookieStoreId: "firefox-container-1"
-    // ​​icon: "fingerprint"
-    // ​​iconUrl: "resource://usercontext-content/fingerprint.svg"
-    // ​​name: "Personal"
+    // colorCode: "#37adff"
+    // cookieStoreId: "firefox-container-1"
+    // icon: "fingerprint"
+    // iconUrl: "resource://usercontext-content/fingerprint.svg"
+    // name: "Personal"
 
     let _containers = await BG.browser.contextualIdentities.query({});
 
@@ -77,6 +82,10 @@ function isDefault(cookieStoreId) {
 }
 
 function isTemporary(cookieStoreId, contextualIdentity) {
+    if (cookieStoreId === TEMPORARY_CONTAINER) {
+        return true;
+    }
+
     if (!contextualIdentity) {
         contextualIdentity = containers[cookieStoreId];
     }
@@ -91,7 +100,11 @@ function isTemporary(cookieStoreId, contextualIdentity) {
 async function createTemporaryContainer() {
     const {BG} = browser.extension.getBackgroundPage();
 
-    let {cookieStoreId} = await BG.browser.contextualIdentities.create(temporaryContainerOptions);
+    let {cookieStoreId} = await BG.browser.contextualIdentities.create({
+        name: temporaryContainerOptions.name,
+        color: temporaryContainerOptions.color,
+        icon: temporaryContainerOptions.icon,
+    });
 
     BG.browser.contextualIdentities.update(cookieStoreId, {
         name: temporaryContainerOptions.name + ' ' + /\d+$/.exec(cookieStoreId)[0],
@@ -148,8 +161,6 @@ function get(cookieStoreId, key = null) {
         result = containers[cookieStoreId];
     } else if (containers[mappedContainerCookieStoreId[cookieStoreId]]) {
         result = containers[mappedContainerCookieStoreId[cookieStoreId]];
-    } else if (cookieStoreId === TEMPORARY_CONTAINER) {
-        result = temporaryContainerOptions;
     } else {
         result = {
             cookieStoreId: DEFAULT_COOKIE_STORE_ID,
@@ -160,22 +171,17 @@ function get(cookieStoreId, key = null) {
     return key ? result[key] : {...result};
 }
 
-function getAll(temporary = false) {
+function getAll() {
     let _containers = utils.clone(containers);
 
-    if (null !== temporary) {
-        for (let cookieStoreId in _containers) {
-            if (temporary) { // if true - return only temporary
-                if (!isTemporary(cookieStoreId)) {
-                    delete _containers[cookieStoreId];
-                }
-            } else { // if false - return only NOT temporary
-                if (isTemporary(cookieStoreId)) {
-                    delete _containers[cookieStoreId];
-                }
-            }
+    for (let cookieStoreId in _containers) {
+        if (isTemporary(cookieStoreId)) {
+            delete _containers[cookieStoreId];
         }
     }
+
+    // add temporary container to end of obj
+    _containers[TEMPORARY_CONTAINER] = utils.clone(temporaryContainerOptions);
 
     return _containers;
 }

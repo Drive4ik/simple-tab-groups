@@ -513,6 +513,7 @@ function onRemovedTab(tabId, {isWindowClosing, windowId}) {
     console.log('onRemovedTab', (excludeTab && '🛑'), {tabId, isWindowClosing, windowId});
 
     if (excludeTab) {
+        cache.removeTab(tabId);
         return;
     }
 
@@ -633,7 +634,7 @@ async function onRemovedWindow(windowId) {
     cache.removeWindow(windowId);
 
     if (reCreateTabsOnRemoveWindow.length) {
-        let tabsToCreate = cache.getRemovedTabsForCreate(reCreateTabsOnRemoveWindow);
+        let tabsToCreate = cache.getTabsSessionAndRemove(reCreateTabsOnRemoveWindow);
 
         reCreateTabsOnRemoveWindow = [];
 
@@ -1310,7 +1311,6 @@ async function onBeforeTabRequest({tabId, url, originUrl}) {
 
     let newTab = await Tabs.create({
         url: tab.url,
-        cookieStoreId: tabGroup.newTabContainer,
         group: tabGroup,
         active: tab.active,
         index: tab.index,
@@ -1667,11 +1667,10 @@ async function runAction(data, externalExtId) {
                 }
 
                 break;
-            case 'create-new-tab':
+            case 'create-new-tab': // TODO change to create temp tab
                 await Tabs.create({
                     active: true,
                     cookieStoreId: data.cookieStoreId,
-                    group: currentGroup,
                 });
 
                 result.ok = true;

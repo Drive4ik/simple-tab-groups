@@ -256,8 +256,9 @@ async function sort(vector = 'asc') {
 function mapGroupForExternalExtension(group) {
     return {
         id: group.id,
-        title: utils.getGroupTitle(group, 'withActiveGroup withContainer'),
+        title: utils.getGroupTitle(group, 'withActiveGroup'),
         iconUrl: utils.getGroupIconUrl(group),
+        contextualIdentity: group.newTabContainer ? browser.extension.getBackgroundPage().BG.containers.get(group.newTabContainer) : null,
     };
 }
 

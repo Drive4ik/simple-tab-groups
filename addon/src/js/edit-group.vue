@@ -36,7 +36,6 @@
                 containers: BG.containers.getAll(),
                 TEMPORARY_CONTAINER: BG.containers.TEMPORARY_CONTAINER,
                 disabledContainers: {},
-                disabledContainerGroupTabs: {},
 
                 showMessageCantLoadFile: false,
 
@@ -77,7 +76,7 @@
                 }
             },
             hasContainers() {
-                return Object.keys(this.containers).length > 0;
+                return Object.keys(this.containers).some(cookieStoreId => cookieStoreId !== BG.containers.TEMPORARY_CONTAINER);
             },
         },
         async created() {
@@ -113,10 +112,6 @@
 
                     if (gr.catchTabContainers.includes(cookieStoreId)) {
                         this.$set(this.disabledContainers, cookieStoreId, gr.title);
-                    }
-
-                    if (gr.newTabContainer === cookieStoreId) {
-                        this.$set(this.disabledContainerGroupTabs, cookieStoreId, gr.title);
                     }
                 }, this);
             }
@@ -176,20 +171,6 @@
 
             isDisabledContainer({cookieStoreId}) {
                 return !this.group.catchTabContainers.includes(cookieStoreId) && cookieStoreId in this.disabledContainers;
-            },
-
-            isDisabledNewTabContainer({cookieStoreId}) {
-                return this.group.newTabContainer !== cookieStoreId && cookieStoreId in this.disabledContainerGroupTabs;
-            },
-
-            checkNewTabContainer(cookieStoreId, isChecked) {
-                if (isChecked) {
-                    if (!this.isDisabledNewTabContainer({cookieStoreId}) && !this.group.newTabContainer) {
-                        this.group.newTabContainer = cookieStoreId;
-                    }
-                } else if (this.group.newTabContainer === cookieStoreId) {
-                    this.group.newTabContainer = null;
-                }
             },
 
             async selectUserGroupIcon() {
@@ -305,6 +286,37 @@
             </div>
         </div>
 
+        <div class="field containers-wrapper">
+            <label class="label" v-text="lang('alwaysOpenTabsInContainer')"></label>
+            <div class="control">
+                <div class="field">
+                    <div class="control">
+                        <label class="radio indent-children">
+                            <input type="radio" :value="null" v-model="group.newTabContainer" />
+                            <span>Default</span>
+                        </label>
+                    </div>
+                </div>
+                <div v-for="container in containers" :key="container.cookieStoreId" class="field">
+                    <div class="control">
+                        <label class="radio indent-children">
+                            <input type="radio" :value="container.cookieStoreId" v-model="group.newTabContainer" />
+                            <img :src="container.iconUrl" class="size-16 fill-context" :style="{fill: container.colorCode}" />
+                            <span class="word-break-all" v-text="container.name"></span>
+                        </label>
+                    </div>
+                </div>
+                <div v-if="group.newTabContainer" class="field h-margin-top-10">
+                    <div class="control">
+                        <label class="checkbox indent-children">
+                            <input type="checkbox" v-model="group.ifNotDefaultContainerReOpenInNew" />
+                            <span v-text="lang('ifNotDefaultContainerReOpenInNew')"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <hr>
 
         <div class="field">
@@ -327,69 +339,24 @@
         </div>
 
         <div v-if="hasContainers" class="field containers-wrapper">
-            <label class="label">
-                <span v-text="lang('catchTabContainers')"></span>
-            </label>
+            <label class="label" v-text="lang('catchTabContainers')"></label>
             <div class="control">
-                <div v-for="container in containers" :key="container.cookieStoreId" class="field">
+                <div
+                    v-for="container in containers"
+                    v-if="container.cookieStoreId !== TEMPORARY_CONTAINER"
+                    :key="container.cookieStoreId"
+                    class="field"
+                    >
                     <div class="control">
                         <label class="checkbox indent-children" :disabled="isDisabledContainer(container)">
                             <input type="checkbox"
                                 :disabled="isDisabledContainer(container)"
                                 :value="container.cookieStoreId"
-                                @change="checkNewTabContainer(container.cookieStoreId, $event.target.checked)"
                                 v-model="group.catchTabContainers"
                                 />
                             <img :src="container.iconUrl" class="size-16 fill-context" :style="{fill: container.colorCode}" />
                             <span class="word-break-all" v-text="container.name"></span>
                             <i class="word-break-all" v-if="container.cookieStoreId in disabledContainers">({{ disabledContainers[container.cookieStoreId] }})</i>
-                        </label>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="field containers-wrapper">
-            <label class="label">
-                <span v-text="lang('alwaysOpenTabsInContainer')"></span>
-            </label>
-            <div class="control">
-                <div class="field">
-                    <div class="control">
-                        <label class="radio indent-children">
-                            <input type="radio" :value="null" v-model="group.newTabContainer" />
-                            <span>Default</span>
-                        </label>
-                    </div>
-                </div>
-                <div v-for="container in containers" :key="container.cookieStoreId" class="field">
-                    <div class="control">
-                        <label class="radio indent-children" :disabled="isDisabledNewTabContainer(container)">
-                            <input type="radio"
-                                :disabled="isDisabledNewTabContainer(container)"
-                                :value="container.cookieStoreId"
-                                v-model="group.newTabContainer"
-                                />
-                            <img :src="container.iconUrl" class="size-16 fill-context" :style="{fill: container.colorCode}" />
-                            <span class="word-break-all" v-text="container.name"></span>
-                            <i class="word-break-all" v-if="container.cookieStoreId in disabledContainerGroupTabs">({{ disabledContainerGroupTabs[container.cookieStoreId] }})</i>
-                        </label>
-                    </div>
-                </div>
-                <div class="field">
-                    <div class="control">
-                        <label class="radio indent-children">
-                            <input type="radio" :value="TEMPORARY_CONTAINER" v-model="group.newTabContainer" />
-                            <img src="resource://usercontext-content/chill.svg" class="size-16 fill-context" />
-                            <span v-text="lang('temporaryContainerTitle')"></span>
-                        </label>
-                    </div>
-                </div>
-                <div v-if="group.newTabContainer" class="field h-margin-top-10">
-                    <div class="control">
-                        <label class="checkbox indent-children">
-                            <input type="checkbox" v-model="group.ifNotDefaultContainerReOpenInNew" />
-                            <span v-text="lang('ifNotDefaultContainerReOpenInNew')"></span>
                         </label>
                     </div>
                 </div>

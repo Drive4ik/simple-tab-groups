@@ -51,6 +51,10 @@ function removeTab(tabId) {
 function setTabGroup(tabId, groupId) {
     if (groupId) {
         if (tabs.session[tabId]) {
+            if (tabs.session[tabId].groupId === groupId) {
+                return;
+            }
+
             tabs.session[tabId].groupId = groupId;
         } else {
             tabs.session[tabId] = {groupId};
@@ -75,6 +79,10 @@ function removeTabGroup(tabId) {
 function setTabThumbnail(tabId, thumbnail) {
     if (thumbnail) {
         if (tabs.session[tabId]) {
+            if (tabs.session[tabId].thumbnail === thumbnail) {
+                return;
+            }
+
             tabs.session[tabId].thumbnail = thumbnail;
         } else {
             tabs.session[tabId] = {thumbnail};
@@ -99,6 +107,10 @@ function removeTabThumbnail(tabId) {
 function setTabFavIcon(tabId, favIconUrl) {
     if (favIconUrl && favIconUrl.startsWith('data')) {
         if (tabs.session[tabId]) {
+            if (tabs.session[tabId].favIconUrl === favIconUrl) {
+                return;
+            }
+
             tabs.session[tabId].favIconUrl = favIconUrl;
         } else {
             tabs.session[tabId] = {favIconUrl};
@@ -168,7 +180,7 @@ function getTabCookieStoreId(tabId) {
     return tabs.cookieStoreId[tabId];
 }
 
-function getRemovedTabsForCreate(tabIds) {
+function getTabsSessionAndRemove(tabIds) {
     return tabIds
         .map(function(tabId) {
             if (!tabs.session[tabId] || !tabs.session[tabId].groupId || !tabs.url[tabId]) {
@@ -210,6 +222,10 @@ function getWindowsCount() {
 function setWindowGroup(windowId, groupId) {
     if (groupId) {
         if (windows.session[windowId]) {
+            if (windows.session[windowId].groupId === groupId) {
+                return;
+            }
+
             windows.session[windowId].groupId = groupId;
         } else {
             windows.session[windowId] = {groupId};
@@ -293,7 +309,7 @@ export default {
     removeTabSession,
 
     getTabCookieStoreId,
-    getRemovedTabsForCreate,
+    getTabsSessionAndRemove,
     filterRemovedTab,
 
     // windows

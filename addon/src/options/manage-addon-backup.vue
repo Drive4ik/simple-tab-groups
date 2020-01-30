@@ -3,7 +3,8 @@
 
     import utils from '../js/utils';
     import constants from '../js/constants';
-    import containers from '../js/containers';
+
+    const {BG} = browser.extension.getBackgroundPage();
 
     export default {
         props: {
@@ -33,7 +34,8 @@
         },
         data() {
             return {
-                TEMPORARY_CONTAINER: containers.TEMPORARY_CONTAINER,
+                TEMPORARY_CONTAINER: BG.containers.TEMPORARY_CONTAINER,
+                allContainers: BG.containers.getAll(),
 
                 clearAddonData: this.allowClearAddonData ? true : false,
 
@@ -145,7 +147,7 @@
                     <template v-if="group.newTabContainer">
                         <figure v-if="TEMPORARY_CONTAINER === group.newTabContainer" class="image is-16x16 is-inline-block">
                             <img
-                                src="resource://usercontext-content/chill.svg"
+                                :src="allContainers[TEMPORARY_CONTAINER].iconUrl"
                                 class="size-16 fill-context"
                                 />
                         </figure>

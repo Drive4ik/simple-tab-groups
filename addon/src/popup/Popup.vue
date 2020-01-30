@@ -893,12 +893,6 @@
                                 <div class="item-title">
                                     <template v-if="group.newTabContainer">
                                         <img
-                                            v-if="TEMPORARY_CONTAINER === group.newTabContainer"
-                                            src="resource://usercontext-content/chill.svg"
-                                            class="size-16 fill-context"
-                                            />
-                                        <img
-                                            v-else
                                             :src="containers[group.newTabContainer].iconUrl"
                                             :style="{fill: containers[group.newTabContainer].colorCode}"
                                             class="size-16 fill-context"
@@ -994,12 +988,6 @@
                             <div class="item-title">
                                 <template v-if="group.newTabContainer">
                                     <img
-                                        v-if="TEMPORARY_CONTAINER === group.newTabContainer"
-                                        src="resource://usercontext-content/chill.svg"
-                                        class="size-16 fill-context"
-                                        />
-                                    <img
-                                        v-else
                                         :src="containers[group.newTabContainer].iconUrl"
                                         :style="{fill: containers[group.newTabContainer].colorCode}"
                                         class="size-16 fill-context"
@@ -1101,13 +1089,6 @@
                     <div class="item-title">
                         <template v-if="groupToShow.newTabContainer">
                             <img
-                                v-if="TEMPORARY_CONTAINER === groupToShow.newTabContainer"
-                                src="resource://usercontext-content/chill.svg"
-                                :title="lang('temporaryContainerTitle')"
-                                class="size-16 fill-context"
-                                />
-                            <img
-                                v-else
                                 :src="containers[groupToShow.newTabContainer].iconUrl"
                                 :style="{fill: containers[groupToShow.newTabContainer].colorCode}"
                                 :title="containers[groupToShow.newTabContainer].name"
@@ -1211,10 +1192,6 @@
                 <li v-for="container in containers" :key="container.cookieStoreId" @click="addTab(container.cookieStoreId)">
                     <img :src="container.iconUrl" class="is-inline-block size-16 fill-context" :style="{fill: container.colorCode}" />
                     <span v-text="container.name"></span>
-                </li>
-                <li @click="addTab(TEMPORARY_CONTAINER)">
-                    <img src="resource://usercontext-content/chill.svg" class="is-inline-block size-16 fill-context" />
-                    <span v-text="lang('temporaryContainerTitle')"></span>
                 </li>
             </ul>
         </context-menu>

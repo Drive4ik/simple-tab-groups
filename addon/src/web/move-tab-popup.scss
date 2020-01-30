@@ -16,14 +16,14 @@
     --background-color: #fbfbfb;
     --text-focus-color: #bababa;
     --background-focus-color: #91c9f7;
-    --fill-icon-color: #5d5d5d;
+    --fill-group-icon-color: #5d5d5d;
 
     &.dark-theme {
         --text-color: #e0e0e0;
         --background-color: #444444;
         --text-focus-color: #575757;
         --background-focus-color: rgba(159, 159, 159, 0.3);
-        --fill-icon-color: var(--text-color);
+        --fill-group-icon-color: var(--text-color);
     }
 
     .stg-popup-has-text {
@@ -82,9 +82,12 @@
                 img {
                     width: 16px;
                     height: 16px;
-                    margin-right: 5px;
+                    margin-right: .5em;
                     -moz-context-properties: fill;
-                    fill: var(--fill-icon-color) !important;
+                }
+
+                img.group-icon {
+                    fill: var(--fill-group-icon-color) !important;
                 }
             }
         }

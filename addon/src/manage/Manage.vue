@@ -42,8 +42,6 @@
             return {
                 VIEW_GRID,
 
-                TEMPORARY_CONTAINER: BG.containers.TEMPORARY_CONTAINER,
-
                 view: VIEW_DEFAULT,
 
                 isLoaded: false,
@@ -732,12 +730,6 @@
                             <div class="group-icon" v-if="group.newTabContainer">
                                 <figure class="image is-16x16">
                                     <img
-                                        v-if="TEMPORARY_CONTAINER === group.newTabContainer"
-                                        src="resource://usercontext-content/chill.svg"
-                                        class="size-16 fill-context"
-                                        />
-                                    <img
-                                        v-else
                                         :src="containers[group.newTabContainer].iconUrl"
                                         :style="{fill: containers[group.newTabContainer].colorCode}"
                                         class="size-16 fill-context"
@@ -922,13 +914,12 @@
                         <img src="/icons/snowflake.svg" class="size-16" />
                         <span v-text="lang('discardOtherGroups')"></span>
                     </li>
+
+                    <hr>
+
                     <li v-for="container in containers" :key="container.cookieStoreId" @click="addTab(menu.data.group, container.cookieStoreId)">
                         <img :src="container.iconUrl" class="is-inline-block size-16 fill-context" :style="{fill: container.colorCode}" />
                         <span v-text="container.name"></span>
-                    </li>
-                    <li @click="addTab(menu.data.group, TEMPORARY_CONTAINER)">
-                        <img src="resource://usercontext-content/chill.svg" class="is-inline-block size-16 fill-context" />
-                        <span v-text="lang('temporaryContainerTitle')"></span>
                     </li>
                 </ul>
             </template>
