@@ -1878,13 +1878,21 @@ async function createBackup(includeTabThumbnails, includeTabFavIcons, isAutoBack
     }
 }
 
-async function restoreBackup(data) {
+async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
     removeEvents();
 
     await loadingBrowserAction();
 
     let {os} = await browser.runtime.getPlatformInfo(),
         isMac = os === browser.runtime.PlatformOs.MAC;
+
+    if (true === clearAddonDataBeforeRestore) {
+        await clearAddon(false);
+
+        await utils.wait(1000);
+
+        await containers.init();
+    }
 
     let currentData = await storage.get(null),
         lastCreatedGroupPosition = Math.max(currentData.lastCreatedGroupPosition, data.lastCreatedGroupPosition || 0);
@@ -1988,8 +1996,10 @@ async function restoreBackup(data) {
     browser.runtime.reload(); // reload addon
 }
 
-async function clearAddon() {
-    loadingBrowserAction();
+async function clearAddon(reloadAddonOnFinish = true) {
+    if (reloadAddonOnFinish) {
+        await loadingBrowserAction();
+    }
 
     removeEvents();
 
@@ -2000,13 +2010,17 @@ async function clearAddon() {
 
     await storage.clear();
 
+    cache.clear();
+
     if (tabs.length) {
         await browser.tabs.show(tabs.map(utils.keyId));
     }
 
     window.localStorage.clear();
 
-    browser.runtime.reload(); // reload addon
+    if (reloadAddonOnFinish) {
+        browser.runtime.reload(); // reload addon
+    }
 }
 
 async function exportAllGroupsToBookmarks(showFinishMessage) {

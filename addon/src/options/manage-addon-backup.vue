@@ -15,6 +15,10 @@
                 required: true,
                 type: Boolean,
             },
+            allowClearAddonData: {
+                required: true,
+                type: Boolean,
+            },
         },
         computed: {
             showPinnedTabs() {
@@ -30,6 +34,8 @@
         data() {
             return {
                 TEMPORARY_CONTAINER: containers.TEMPORARY_CONTAINER,
+
+                clearAddonData: this.allowClearAddonData ? true : false,
 
                 includePinnedTabs: true,
                 includeGeneral: true,
@@ -81,6 +87,18 @@
 
 <template>
     <div id="manageAddonBackup">
+        <div v-if="allowClearAddonData" class="field">
+            <div class="control">
+                <label class="checkbox">
+                    <input type="checkbox" v-model="clearAddonData" />
+                    <span class="has-text-weight-bold" v-text="lang('deleteAllAddonDataAndSettingsCheckbox')"></span>
+                </label>
+                <br>
+                <span class="has-text-danger has-text-weight-bold" v-html="lang('eraseAddonSettingsWarningTitle')"></span>
+            </div>
+            <hr>
+        </div>
+
         <div v-if="showPinnedTabs" class="field">
             <div class="control">
                 <label class="checkbox">

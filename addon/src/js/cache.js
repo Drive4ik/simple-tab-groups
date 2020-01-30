@@ -9,8 +9,17 @@ let tabs = {
     },
     windows = {
         session: {},
-    },
-    cache = {};
+    };
+
+function clear() {
+    tabs.session = {};
+    tabs.url = {};
+    tabs.title = {};
+    tabs.cookieStoreId = {};
+    tabs.removed = [];
+
+    windows.session = {};
+}
 
 // TABS
 function setTab({id, url, title, cookieStoreId}) {
@@ -263,6 +272,8 @@ function removeWindowSession(windowId) {
 }
 
 export default {
+    clear,
+
     // tabs
     setTab,
     hasTab,

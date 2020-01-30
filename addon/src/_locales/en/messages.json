@@ -814,5 +814,9 @@
     "ifNotDefaultContainerReOpenInNew": {
         "message": "If the container is different from the selected one - change the container",
         "description": "If the container is different from the selected one - change the container"
+    },
+    "deleteAllAddonDataAndSettingsCheckbox": {
+        "message": "Delete all addon data and settings before restoring backup",
+        "description": "Delete all addon data and settings before restoring backup"
     }
 }

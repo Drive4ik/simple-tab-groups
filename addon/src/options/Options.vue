@@ -73,7 +73,8 @@
 
                 manageAddonSettings: null,
                 manageAddonSettingsTitle: '',
-                manageAddonSettingsDisableEmptyGroups: true,
+                manageAddonSettingsDisableEmptyGroups: false,
+                manageAddonSettingsAllowClearAddonDataBeforeRestore: false,
 
                 permissions: {
                     bookmarks: false,
@@ -292,18 +293,25 @@
                 }
             },
 
-            setManageAddonSettings(data, popupTitle, disableEmptyGroups = false) {
+            setManageAddonSettings(data, popupTitle, disableEmptyGroups = false, allowClearAddonDataBeforeRestore = false) {
                 this.manageAddonSettingsTitle = popupTitle;
                 this.manageAddonSettingsDisableEmptyGroups = disableEmptyGroups;
+                this.manageAddonSettingsAllowClearAddonDataBeforeRestore = allowClearAddonDataBeforeRestore;
                 this.manageAddonSettings = data;
             },
 
-            saveManagedAddonSettings(data) {
+            saveManagedAddonSettings(data, clearAddonDataBeforeRestore) {
+                let clearAddonData = false;
+
+                if (this.manageAddonSettingsAllowClearAddonDataBeforeRestore && clearAddonDataBeforeRestore) {
+                    clearAddonData = true;
+                }
+
                 this.manageAddonSettings = null;
 
                 this.showLoadingMessage = true;
 
-                BG.restoreBackup(data);
+                BG.restoreBackup(data, clearAddonData);
             },
 
             exportAddonSettings() {
@@ -333,7 +341,7 @@
                     return;
                 }
 
-                this.setManageAddonSettings(data, 'importAddonSettingsTitle');
+                this.setManageAddonSettings(data, 'importAddonSettingsTitle', false, true);
             },
 
             async importSettingsOldTabGroupsAddonButton() {
@@ -1068,7 +1076,7 @@
             v-if="manageAddonSettings"
             :title="lang(manageAddonSettingsTitle)"
             @close-popup="manageAddonSettings = null"
-            @save="() => saveManagedAddonSettings($refs.manageAddonBackup.getData())"
+            @save="() => saveManagedAddonSettings($refs.manageAddonBackup.getData(), $refs.manageAddonBackup.clearAddonData)"
             :buttons="
                 [{
                     event: 'save',
@@ -1082,6 +1090,7 @@
             <manage-addon-backup
                 :data="manageAddonSettings"
                 :disable-empty-groups="manageAddonSettingsDisableEmptyGroups"
+                :allow-clear-addon-data="manageAddonSettingsAllowClearAddonDataBeforeRestore"
                 ref="manageAddonBackup"
                 ></manage-addon-backup>
         </popup>

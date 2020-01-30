@@ -17,6 +17,9 @@ let containers = {},
 async function init() {
     const {BG} = browser.extension.getBackgroundPage();
 
+    containers = {};
+    mappedContainerCookieStoreId = {};
+
     // CONTAINER PROPS:
     // color: "blue"
     // ​​colorCode: "#37adff"
@@ -29,34 +32,45 @@ async function init() {
 
     _containers.forEach(container => containers[container.cookieStoreId] = container);
 
-    BG.browser.contextualIdentities.onCreated.addListener(function({contextualIdentity}) {
-        containers[contextualIdentity.cookieStoreId] = contextualIdentity;
-    });
+    BG.browser.contextualIdentities.onCreated.removeListener(onCreated);
+    BG.browser.contextualIdentities.onUpdated.removeListener(onUpdated);
+    BG.browser.contextualIdentities.onRemoved.removeListener(onRemoved);
 
-    BG.browser.contextualIdentities.onUpdated.addListener(function({contextualIdentity}) {
-        let {cookieStoreId} = contextualIdentity;
+    BG.browser.contextualIdentities.onCreated.addListener(onCreated);
+    BG.browser.contextualIdentities.onUpdated.addListener(onUpdated);
+    BG.browser.contextualIdentities.onRemoved.addListener(onRemoved);
+}
 
-        if (
-            containers[cookieStoreId].name !== contextualIdentity.name &&
-            containers[cookieStoreId].name !== temporaryContainerOptions.name
-        ) {
-            if (isTemporary(cookieStoreId) && !isTemporary(null, contextualIdentity)) {
-                utils.notify(browser.i18n.getMessage('thisContainerIsNotTemporary', contextualIdentity.name));
-            }
+function onCreated({contextualIdentity}) {
+    containers[contextualIdentity.cookieStoreId] = contextualIdentity;
+}
 
-            if (!isTemporary(cookieStoreId) && isTemporary(null, contextualIdentity)) {
-                utils.notify(browser.i18n.getMessage('thisContainerNowIsTemporary', contextualIdentity.name));
-            }
+function onUpdated({contextualIdentity}) {
+    let {cookieStoreId} = contextualIdentity;
+
+    if (
+        containers[cookieStoreId].name !== contextualIdentity.name &&
+        containers[cookieStoreId].name !== temporaryContainerOptions.name
+    ) {
+        if (isTemporary(cookieStoreId) && !isTemporary(null, contextualIdentity)) {
+            utils.notify(browser.i18n.getMessage('thisContainerIsNotTemporary', contextualIdentity.name));
         }
 
-        containers[cookieStoreId] = contextualIdentity;
-    });
+        if (!isTemporary(cookieStoreId) && isTemporary(null, contextualIdentity)) {
+            utils.notify(browser.i18n.getMessage('thisContainerNowIsTemporary', contextualIdentity.name));
+        }
+    }
 
-    BG.browser.contextualIdentities.onRemoved.addListener(function({contextualIdentity}) {
-        delete containers[contextualIdentity.cookieStoreId];
-        BG.normalizeContainersInGroups();
-    });
+    containers[cookieStoreId] = contextualIdentity;
 }
+
+function onRemoved({contextualIdentity}) {
+    const {BG} = browser.extension.getBackgroundPage();
+
+    delete containers[contextualIdentity.cookieStoreId];
+    BG.normalizeContainersInGroups();
+}
+
 
 function isDefault(cookieStoreId) {
     return DEFAULT_COOKIE_STORE_ID === cookieStoreId || !cookieStoreId;
