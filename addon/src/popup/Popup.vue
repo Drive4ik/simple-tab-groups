@@ -666,6 +666,7 @@
             groupTabsCountMessage: utils.groupTabsCountMessage,
 
             openOptionsPage() {
+                delete window.localStorage.optionsSection;
                 browser.runtime.openOptionsPage();
                 this.closeWindow();
             },
