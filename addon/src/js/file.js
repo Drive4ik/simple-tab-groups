@@ -3,9 +3,7 @@
 import utils from './utils';
 import storage from './storage';
 
-const BACKUP_FILE_EXT = '.json';
-
-async function load(accept = BACKUP_FILE_EXT, readAs = 'json') { // readAs: json, text, url
+async function load(accept = '.json', readAs = 'json') { // readAs: json, text, url
     if (!['json', 'text', 'url'].includes(readAs)) {
         throw Error('wrong readAs parameter');
     }
@@ -108,7 +106,7 @@ async function save(data, fileName = 'file-name', saveAs = true, overwrite = fal
 }
 
 async function backup(data, isAutoBackup, overwrite) {
-    let fileName = generateBackupFileName(!overwrite);
+    let fileName = await generateBackupFileName(!overwrite);
 
     if (isAutoBackup) {
         let autoBackupFolderName = await getAutoBackupFolderName();
@@ -133,28 +131,31 @@ async function openBackupFolder() {
 async function getAutoBackupFolderName() {
     let {autoBackupFolderName} = await storage.get('autoBackupFolderName');
 
-    if (!autoBackupFolderName.length) {
-        let {buildID} = await browser.runtime.getBrowserInfo(),
-            {os} = await browser.runtime.getPlatformInfo();
+    if (!autoBackupFolderName.length || /^STG\-backups\-FF\-[a-z\d\.]+$/.test(autoBackupFolderName)) {
+        let {version} = await browser.runtime.getBrowserInfo(),
+            newAutoBackupFolderName = `STG-backups-FF-${version}`;
 
-        autoBackupFolderName = `STG-backups-${os}-${buildID}`;
+        if (autoBackupFolderName !== newAutoBackupFolderName) {
+            autoBackupFolderName = newAutoBackupFolderName;
 
-        await storage.set({autoBackupFolderName});
+            await storage.set({autoBackupFolderName});
+        }
     }
 
     return autoBackupFolderName;
 }
 
-function generateBackupFileName(withTime) {
+async function generateBackupFileName(withTime) {
     let now = new Date(),
         day = _intToStr(now.getDate()),
         month = _intToStr(now.getMonth() + 1),
         year = now.getFullYear(),
         hours = _intToStr(now.getHours()),
         min = _intToStr(now.getMinutes()),
-        time = withTime ? `-${hours}-${min}` : '';
+        {os} = await browser.runtime.getPlatformInfo(),
+        time = withTime ? `~${hours}-${min}` : '';
 
-    return `stg-backup-${year}-${month}-${day}${time}@drive4ik${BACKUP_FILE_EXT}`;
+    return `stg-backup-${os}-${year}-${month}-${day}${time}@drive4ik.json`;
 }
 
 function _intToStr(i) {

@@ -26,7 +26,7 @@
         SECTION_BACKUP = 'backup',
         SECTION_DEFAULT = SECTION_GENERAL,
         funcKeys = [...Array(12).keys()].map(n => KeyEvent[`DOM_VK_F${n + 1}`]),
-        folderNameRegExp = /[\.\<\>\:\"\/\\\|\?\*\x00-\x1F]|^(?:aux|con|nul|prn|com\d|lpt\d)$/gi;
+        folderNameRegExp = /[\<\>\:\"\/\\\|\?\*\x00-\x1F]|^(?:aux|con|nul|prn|com\d|lpt\d)$|^\.+|\.+$/gi;
 
     export default {
         data() {
@@ -105,9 +105,7 @@
 
             let options = utils.extractKeys(data, constants.allOptionsKeys);
 
-            if (!options.autoBackupFolderName.length) {
-                options.autoBackupFolderName = await file.getAutoBackupFolderName();
-            }
+            options.autoBackupFolderName = await file.getAutoBackupFolderName();
 
             this.permissions.bookmarks = await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
 
