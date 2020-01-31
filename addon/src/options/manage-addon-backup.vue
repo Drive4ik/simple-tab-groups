@@ -93,7 +93,7 @@
             <div class="control">
                 <label class="checkbox">
                     <input type="checkbox" v-model="clearAddonData" />
-                    <span class="has-text-weight-bold" v-text="lang('deleteAllAddonDataAndSettingsCheckbox')"></span>
+                    <span class="has-text-weight-bold" v-text="lang('deleteAllAddonDataAndSettingsBeforeRestoringBackup')"></span>
                 </label>
                 <br>
                 <span class="has-text-danger has-text-weight-bold" v-html="lang('eraseAddonSettingsWarningTitle')"></span>

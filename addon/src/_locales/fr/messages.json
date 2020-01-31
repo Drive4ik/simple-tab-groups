@@ -810,5 +810,9 @@
     "ifNotDefaultContainerReOpenInNew": {
         "message": "Si le contexte de l'onglet est différent de celui sélectionné ci-dessus, changer le contexte",
         "description": "If the container is different from the selected one - change the container"
+    },
+    "deleteAllAddonDataAndSettingsBeforeRestoringBackup": {
+        "message": "Supprimer toutes les données et les paramètres de l'application avant de restaurer la sauvegarde",
+        "description": "Delete all addon data and settings before restoring backup"
     }
 }

@@ -811,7 +811,7 @@
         "message": "Если контейнер вкладки отличается от выбранного - изменить контейнер",
         "description": "If the container is different from the selected one - change the container"
     },
-    "deleteAllAddonDataAndSettingsCheckbox": {
+    "deleteAllAddonDataAndSettingsBeforeRestoringBackup": {
         "message": "Очистка настроек аддона перед восстановлением бекапа",
         "description": "Delete all addon data and settings before restoring backup"
     }
