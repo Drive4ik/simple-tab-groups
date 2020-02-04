@@ -814,5 +814,21 @@
     "deleteAllAddonDataAndSettingsBeforeRestoringBackup": {
         "message": "Очистка настроек аддона перед восстановлением бекапа",
         "description": "Delete all addon data and settings before restoring backup"
+    },
+    "helpPageWelcomeV4Title": {
+        "message": "Добро пожаловать в Simple Tab Groups v4",
+        "description": "Welcome to Simple Tab Groups v4"
+    },
+    "helpPageWelcomeV4Description": {
+        "message": "Пожалуйста, включите опцию \"Восстанавливать предыдущую сессию\" в настройках браузера. <br>Это необходимо для поддержания связи между группой и вкладкой, иначе вкладки с прошлой сессии не будут открываться при запуске браузера и будут потеряны из дополнения - аддон перестанет правильно работать.",
+        "description": "Please enable \"Restore previous session\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
+    },
+    "helpPageDisableIncognitoTitle": {
+        "message": "Добро пожаловать в Simple Tab Groups v4",
+        "description": "Welcome to Simple Tab Groups v4"
+    },
+    "helpPageDisableIncognitoDescription": {
+        "message": "Пожалуйста, отключите опцию \"Запуск в приватных окнах\":",
+        "description": "Please disable add-on access to private mode in windows:"
     }
 }

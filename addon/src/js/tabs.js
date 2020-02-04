@@ -95,6 +95,19 @@ async function create(tab) {
     return newTab;
 }
 
+async function createUrlOnce(url, windowId) {
+    let [tab] = await get(windowId, null, null, {url});
+
+    if (tab) {
+        return setActive(tab.id);
+    } else {
+        return create({
+            active: true,
+            url,
+        });
+    }
+}
+
 async function setActive(tabId, tabs = []) {
     let tabToActive = null;
 
@@ -472,17 +485,16 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
         iconUrl = utils.normalizeFavIcon(tabs[0].favIconUrl);
     }
 
-    utils.notify(message, undefined, undefined, false, iconUrl)
-        .then(async function(groupId, tabId) {
-            let [group] = await Groups.load(groupId),
-                tab = await BG.browser.tabs.get(tabId).catch(function() {});
+    utils.notify(message, undefined, undefined, iconUrl, async function(groupId, tabId) {
+        let [group] = await Groups.load(groupId),
+            tab = await BG.browser.tabs.get(tabId).catch(function() {});
 
-            if (group && tab) {
-                let winId = BG.cache.getWindowId(groupId) || await Windows.getLastFocusedNormalWindow();
+        if (group && tab) {
+            let winId = BG.cache.getWindowId(groupId) || await Windows.getLastFocusedNormalWindow();
 
-                BG.applyGroup(winId, groupId, tabId);
-            }
-        }.bind(null, groupId, tabs[0].id), function() {});
+            BG.applyGroup(winId, groupId, tabId);
+        }
+    }.bind(null, groupId, tabs[0].id));
 
     return tabs;
 }
@@ -556,6 +568,7 @@ async function reload(tabIds = [], bypassCache = false) {
 
 export default {
     create,
+    createUrlOnce,
     setActive,
     getActive,
     getHighlighted,

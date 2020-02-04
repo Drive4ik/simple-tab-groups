@@ -65,10 +65,20 @@ async function createTabsSafe(tabs, hideTabs, withRemoveEvents = true) {
     }));
 
     if (hideTabs) {
-        let notPinnedTabs = result.filter(tab => !tab.pinned);
+        let notPinnedTabs = result.filter(tab => !tab.pinned),
+            notPinnedTabsIds = notPinnedTabs.map(utils.keyId);
 
         if (notPinnedTabs.length) {
-            await browser.tabs.hide(notPinnedTabs.map(utils.keyId));
+            if (!withRemoveEvents) {
+                addExcludeTabsIds(notPinnedTabsIds);
+            }
+
+            await browser.tabs.hide(notPinnedTabsIds);
+
+            if (!withRemoveEvents) {
+                removeExcludeTabsIds(notPinnedTabsIds);
+            }
+
             notPinnedTabs.forEach(tab => tab.hidden = true);
         }
     }
@@ -602,14 +612,16 @@ async function onCreatedWindow(win) {
             let winTabs = await Tabs.get(win.id, null, null);
             winTabs.forEach(tab => cache.removeTabGroup(tab.id));
         } else if (options.createNewGroupWhenOpenNewWindow && window.BG.canAddGroupToWindowAfterItCreated) {
-            Groups.add(win.id);
+            await Groups.add(win.id);
         }
+
+        await tryRestoreMissedTabs(false);
     } else {
         let winTabs = await Tabs.get(win.id, null, null, {
             windowType: null,
         });
 
-        winTabs.forEach(tab => excludeTabsIds.push(tab.id));
+        addExcludeTabsIds(winTabs.map(utils.keyId));
     }
 }
 
@@ -634,19 +646,41 @@ async function onRemovedWindow(windowId) {
     cache.removeWindow(windowId);
 
     if (reCreateTabsOnRemoveWindow.length) {
-        let tabsToCreate = cache.getTabsSessionAndRemove(reCreateTabsOnRemoveWindow);
+        let tabsToRestore = cache.getTabsSessionAndRemove(reCreateTabsOnRemoveWindow);
 
         reCreateTabsOnRemoveWindow = [];
 
-        if (tabsToCreate.length) {
-            let [windows, groups] = await Promise.all([Windows.load(), Groups.load()]);
+        if (tabsToRestore.length) {
+            await storage.set({tabsToRestore});
 
-            windows.forEach(win => win.id !== windowId && loadingBrowserAction(true, win.id));
+            let windows = await Windows.load(true);
 
-            tabsToCreate.forEach(tab => tab.group = groups.find(group => group.id === tab.groupId));
-            await createTabsSafe(tabsToCreate, true);
+            windows = windows.filter(function(win) {
+                if (win.id === windowId) { // just in case
+                    return false;
+                }
 
-            windows.forEach(win => win.id !== windowId && loadingBrowserAction(false, win.id));
+                // exclude wrong popup window type and tab with extension url
+                if (win.tabs.length === 1 && win.tabs[0].url.startsWith('moz-extension')) {
+                    return false;
+                }
+
+                return true;
+            });
+
+            if (windows.length) {
+                windows.forEach(win => loadingBrowserAction(true, win.id));
+
+                try {
+                    await tryRestoreMissedTabs(true);
+
+                    windows.forEach(win => loadingBrowserAction(false, win.id));
+                } catch (e) {
+                    console.error('error create tabs: %s, tabsToRestore: %s', e, utils.stringify(tabsToRestore));
+                    await utils.wait(500);
+                    browser.runtime.reload();
+                }
+            }
         }
     }
 }
@@ -708,9 +742,9 @@ async function addUndoRemoveGroupItem(groupToRemove) {
                 browser.i18n.getMessage('undoRemoveGroupNotification', groupToRemove.title),
                 undefined,
                 Groups.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + groupToRemove.id,
-                false
-            )
-            .then(restoreGroup, noop);
+                undefined,
+                restoreGroup
+            );
     }
 }
 
@@ -1046,8 +1080,7 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
     let hasBookmarksPermission = await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
 
     if (!hasBookmarksPermission) {
-        showMessages && utils.notify(browser.i18n.getMessage('noAccessToBookmarks'), undefined, undefined, false)
-            .then(() => browser.runtime.openOptionsPage(), noop);
+        showMessages && utils.notify(browser.i18n.getMessage('noAccessToBookmarks'), undefined, undefined, undefined, () => browser.runtime.openOptionsPage());
         return;
     }
 
@@ -1392,18 +1425,7 @@ function removeEvents() {
 
 async function openManageGroups() {
     if (options.openManageGroupsInTab) {
-        let tabs = await Tabs.get(undefined, null, null, {
-            url: manageTabsPageUrl,
-        });
-
-        if (tabs.length) { // if manage tab is found
-            await Tabs.setActive(tabs[0].id);
-        } else {
-            await Tabs.create({
-                active: true,
-                url: manageTabsPageUrl,
-            });
-        }
+        await Tabs.createUrlOnce(manageTabsPageUrl);
     } else {
         let allWindows = await browser.windows.getAll({
             populate: true,
@@ -2131,10 +2153,8 @@ window.BG = {
 };
 
 function openHelp(page) {
-    return browser.tabs.create({
-        active: true,
-        url: `/help/${page}.html`,
-    });
+    let url = browser.extension.getURL(`/help/${page}.html`);
+    return Tabs.createUrlOnce(url);
 }
 
 async function runMigrateForData(data) {
@@ -2438,6 +2458,47 @@ async function removeSTGNewTabUrls(windows) {
     }));
 }
 
+async function tryRestoreMissedTabs(withRemoveEvents = false) {
+    // try to restore missed tabs
+    let {tabsToRestore} = await storage.get('tabsToRestore');
+
+    if (!tabsToRestore) {
+        return;
+    }
+
+    if (tabsToRestore.length) {
+        let groups = await Groups.load(null, true),
+            foundTabIds = [];
+
+        tabsToRestore = tabsToRestore
+            .map(function(tab) {
+                let group = groups.find(group => group.id === tab.groupId);
+
+                if (group) {
+                    let groupTab = group.tabs.find(t => !foundTabIds.includes(t.id) && t.url === tab.url && t.cookieStoreId === tab.cookieStoreId);
+
+                    if (groupTab) {
+                        foundTabIds.push(groupTab.id);
+                        return false;
+                    } else {
+                        tab.group = group;
+                    }
+                }
+
+                delete tab.groupId;
+
+                return tab;
+            })
+            .filter(Boolean);
+
+        if (tabsToRestore.length) {
+            await createTabsSafe(tabsToRestore, true, withRemoveEvents);
+        }
+    }
+
+    await storage.remove('tabsToRestore');
+}
+
 async function normalizeContainersInGroups(groups = null) {
     let _groups = groups ? groups : await Groups.load(),
         allContainers = containers.getAll();
@@ -2663,6 +2724,8 @@ async function init() {
             groupsHistory.add(win.session.groupId);
         }
     });
+
+    await tryRestoreMissedTabs(false);
 
     createMoveTabMenus();
 

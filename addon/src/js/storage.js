@@ -19,6 +19,7 @@ export default {
             errorCounter++;
 
             if (errorCounter > 100) {
+                errorCounter = 0;
                 console.error(e);
                 throw e;
             }
@@ -39,8 +40,6 @@ export default {
 
         return result;
     },
-    clear: browser.storage.local.clear,
-    remove: browser.storage.local.remove,
     async set(data) {
         if (data.groups) {
             data.groups.forEach(group => group.tabs = []);
@@ -49,6 +48,8 @@ export default {
         try {
             await browser.storage.local.set(data);
         } catch (e) {
+            // https://bugzilla.mozilla.org/show_bug.cgi?id=1601365
+
             console.error(e);
 
             let message = null,
@@ -77,4 +78,6 @@ export default {
 
         // return browser.storage.local.set(data);
     },
+    remove: browser.storage.local.remove,
+    clear: browser.storage.local.clear,
 }

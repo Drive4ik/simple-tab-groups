@@ -28,7 +28,7 @@ function getErrorLogs() {
 }
 
 function errorEventMessage(message, data = null, showNotification = true) {
-    return JSON.stringify({
+    return stringify({
         message,
         data,
         showNotification,
@@ -68,11 +68,10 @@ function errorEventHandler(event) {
 
     logs.unshift(error);
 
-    window.localStorage.errorLogs = JSON.stringify(logs.slice(0, 30));
+    window.localStorage.errorLogs = stringify(logs.slice(0, 30));
 
     if (false !== data.showNotification) {
-        notify(browser.i18n.getMessage('whatsWrongMessage'))
-            .then(() => browser.runtime.openOptionsPage(), undefined, undefined, false);
+        notify(browser.i18n.getMessage('whatsWrongMessage'), undefined, undefined, undefined, () => browser.runtime.openOptionsPage());
     }
 
     console.error(`[STG] ${event.error.name}: ${error.message}`, error);
@@ -210,43 +209,55 @@ function sliceText(text, length = 50) {
     return (text && text.length > length) ? (text.slice(0, length - 3) + '...') : (text || '');
 }
 
-function notify(message, timer = 20000, id = null, catchReject = true, iconUrl = null) {
+async function notify(message, timer = 20000, id = null, iconUrl = null, onClick = null, onClose = null) {
     const {BG} = browser.extension.getBackgroundPage();
 
     if (id) {
-        BG.browser.notifications.clear(id);
+        await BG.browser.notifications.clear(id);
     } else {
         id = String(Date.now());
     }
 
     // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/notifications/NotificationOptions
     // Only 'type', 'iconUrl', 'title', and 'message' are supported.
-    BG.browser.notifications.create(id, {
+    await BG.browser.notifications.create(id, {
         type: 'basic',
         iconUrl: iconUrl || '/icons/icon.svg',
         title: browser.i18n.getMessage('extensionName'),
         message: String(message),
     });
 
-    let promise = new Promise(function(resolve, reject) {
-        let rejectTimer = null;
+    let rejectTimer = null,
+        listener = function(id, calledId) {
+            if (id !== calledId) {
+                return;
+            }
 
-        let listener = function() {
             BG.browser.notifications.onClicked.removeListener(listener);
+            BG.browser.notifications.onClosed.removeListener(onClosedListener);
+
             clearTimeout(rejectTimer);
-            resolve(id);
-        };
+            onClick && onClick(id);
+        }.bind(null, id),
+        onClosedListener = function(id, calledId) {
+            if (id !== calledId) {
+                return;
+            }
 
-        rejectTimer = setTimeout(function() {
             BG.browser.notifications.onClicked.removeListener(listener);
+            BG.browser.notifications.onClosed.removeListener(onClosedListener);
             BG.browser.notifications.clear(id);
-            reject(id);
-        }, timer);
 
-        browser.notifications.onClicked.addListener(listener);
-    });
+            clearTimeout(rejectTimer);
+            onClose && onClose(id);
+        }.bind(null, id);
 
-    return catchReject ? promise.catch(function() {}) : promise;
+    rejectTimer = setTimeout(onClosedListener, timer, id);
+
+    browser.notifications.onClicked.addListener(listener);
+    browser.notifications.onClosed.addListener(onClosedListener);
+
+    return id;
 }
 
 function isAllowSender(request, sender) {
