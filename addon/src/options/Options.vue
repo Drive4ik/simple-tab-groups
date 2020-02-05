@@ -647,6 +647,13 @@
                     <span v-text="lang('exportGroupToMainBookmarkFolder', options.autoBackupBookmarksFolderName)"></span>
                 </label>
             </div>
+            <div class="field h-margin-left-10">
+                <label class="checkbox" :disabled="!permissions.bookmarks">
+                    <input v-if="permissions.bookmarks" v-model="options.leaveBookmarksOfClosedTabs" type="checkbox" />
+                    <input v-else disabled="" type="checkbox" />
+                    <span v-text="lang('leaveBookmarksOfClosedTabs')"></span>
+                </label>
+            </div>
             <div class="field">
                 <label class="checkbox">
                     <input v-model="options.showContextMenuOnTabs" type="checkbox" />
@@ -1166,7 +1173,7 @@
         a {
             border-top-color: transparent;
             border-top-style: solid;
-            border-top-width: 2px;
+            border-top-width: 3px;
             cursor: default;
         }
 

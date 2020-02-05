@@ -830,5 +830,9 @@
     "helpPageDisableIncognitoDescription": {
         "message": "Пожалуйста, отключите опцию \"Запуск в приватных окнах\":",
         "description": "Please disable add-on access to private mode in windows:"
+    },
+    "leaveBookmarksOfClosedTabs": {
+        "message": "Оставить закладки закрытых вкладок (закладки будет разделять разделитель)",
+        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
     }
 }

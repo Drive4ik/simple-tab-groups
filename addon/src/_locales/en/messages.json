@@ -834,5 +834,9 @@
     "helpPageDisableIncognitoDescription": {
         "message": "Please disable add-on access to private mode in windows:",
         "description": "Please disable add-on access to private mode in windows:"
+    },
+    "leaveBookmarksOfClosedTabs": {
+        "message": "Leave bookmarks of closed tabs (bookmarks will separate the separator)",
+        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
     }
 }

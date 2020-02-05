@@ -849,7 +849,7 @@ async function createMoveTabMenus(windowId) {
                     [bookmark] = await browser.bookmarks.getSubTree(info.bookmarkId),
                     tabsToCreate = [];
 
-                if (bookmark.type === browser.menus.ContextType.BOOKMARK) {
+                if (bookmark.type === browser.bookmarks.BookmarkTreeNodeType.BOOKMARK) {
                     if (utils.isUrlAllowToCreate(bookmark.url)) {
                         tabsToCreate.push({
                             title: bookmark.title,
@@ -857,15 +857,15 @@ async function createMoveTabMenus(windowId) {
                             group,
                         });
                     }
-                } else if (bookmark.type === 'folder') {
+                } else if (bookmark.type === browser.bookmarks.BookmarkTreeNodeType.FOLDER) {
                     await findBookmarks(bookmark);
                 }
 
                 async function findBookmarks(folder) {
                     for (let b of folder.children) {
-                        if (b.type === 'folder') {
+                        if (b.type === browser.bookmarks.BookmarkTreeNodeType.FOLDER) {
                             await findBookmarks(b);
-                        } else if (b.type === browser.menus.ContextType.BOOKMARK && utils.isUrlAllowToCreate(b.url)) {
+                        } else if (b.type === browser.bookmarks.BookmarkTreeNodeType.BOOKMARK && utils.isUrlAllowToCreate(b.url)) {
                             tabsToCreate.push({
                                 title: b.title,
                                 url: b.url,
@@ -967,7 +967,7 @@ async function createMoveTabMenus(windowId) {
 
             let [bookmark] = await browser.bookmarks.get(info.bookmarkId);
 
-            if (bookmark.type !== browser.menus.ContextType.BOOKMARK || !utils.isUrlAllowToCreate(bookmark.url)) {
+            if (bookmark.type !== browser.bookmarks.BookmarkTreeNodeType.BOOKMARK || !utils.isUrlAllowToCreate(bookmark.url)) {
                 utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'));
                 return;
             }
@@ -999,7 +999,7 @@ async function createMoveTabMenus(windowId) {
             let [folder] = await browser.bookmarks.getSubTree(info.bookmarkId),
                 groupsCreatedCount = 0;
 
-            if (folder.type !== 'folder') {
+            if (folder.type !== browser.bookmarks.BookmarkTreeNodeType.FOLDER) {
                 utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'));
                 return;
             }
@@ -1008,9 +1008,9 @@ async function createMoveTabMenus(windowId) {
                 let tabsToCreate = [];
 
                 for (let bookmark of folder.children) {
-                    if (bookmark.type === 'folder') {
+                    if (bookmark.type === browser.bookmarks.BookmarkTreeNodeType.FOLDER) {
                         await addBookmarkFolderAsGroup(bookmark);
-                    } else if (bookmark.type === browser.menus.ContextType.BOOKMARK && utils.isUrlAllowToCreate(bookmark.url)) {
+                    } else if (bookmark.type === browser.bookmarks.BookmarkTreeNodeType.BOOKMARK && utils.isUrlAllowToCreate(bookmark.url)) {
                         tabsToCreate.push({
                             title: bookmark.title,
                             url: bookmark.url,
@@ -1053,13 +1053,13 @@ async function _getBookmarkFolderFromTitle(title, parentId, index) {
     let bookmarks = await browser.bookmarks.search({
             title,
         }),
-        bookmark = bookmarks.find(b => b.type === 'folder' && b.parentId === parentId);
+        bookmark = bookmarks.find(b => b.type === browser.bookmarks.BookmarkTreeNodeType.FOLDER && b.parentId === parentId);
 
     if (!bookmark) {
         let bookmarkData = {
             title,
             parentId,
-            type: 'folder',
+            type: browser.bookmarks.BookmarkTreeNodeType.FOLDER,
         };
 
         if (Number.isFinite(index)) {
@@ -1118,27 +1118,31 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
     if (groupBookmarkFolder.children.length) {
         let bookmarksToRemove = [];
 
-        group.tabs.forEach(function(tab) {
-            groupBookmarkFolder.children = groupBookmarkFolder.children.filter(function(bookmark) {
-                if (bookmark.type === browser.menus.ContextType.BOOKMARK) {
-                    if (bookmark.url === tab.url) {
-                        bookmarksToRemove.push(bookmark);
-                        return false;
-                    }
+        if (options.leaveBookmarksOfClosedTabs) {
+            group.tabs.forEach(function(tab) {
+                groupBookmarkFolder.children = groupBookmarkFolder.children.filter(function(bookmark) {
+                    if (bookmark.type === browser.bookmarks.BookmarkTreeNodeType.BOOKMARK) {
+                        if (bookmark.url === tab.url) {
+                            bookmarksToRemove.push(bookmark);
+                            return false;
+                        }
 
-                    return true;
-                }
+                        return true;
+                    }
+                });
             });
-        });
+        } else {
+            bookmarksToRemove = groupBookmarkFolder.children.filter(bookmark => bookmark.type !== browser.bookmarks.BookmarkTreeNodeType.FOLDER);
+        }
 
         await Promise.all(bookmarksToRemove.map(bookmark => browser.bookmarks.remove(bookmark.id).catch(noop)));
 
         let children = await browser.bookmarks.getChildren(groupBookmarkFolder.id);
 
         if (children.length) {
-            if (children[0].type !== browser.menus.ItemType.SEPARATOR) {
+            if (children[0].type !== browser.bookmarks.BookmarkTreeNodeType.SEPARATOR) {
                 await browser.bookmarks.create({
-                    type: browser.menus.ItemType.SEPARATOR,
+                    type: browser.bookmarks.BookmarkTreeNodeType.SEPARATOR,
                     index: 0,
                     parentId: groupBookmarkFolder.id,
                 });
@@ -1146,12 +1150,12 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
 
             // found and remove duplicated separators
             let duplicatedSeparators = children.filter(function(separator, index) {
-                return separator.type === browser.menus.ItemType.SEPARATOR &&
+                return separator.type === browser.bookmarks.BookmarkTreeNodeType.SEPARATOR &&
                     children[index - 1] &&
-                    children[index - 1].type === browser.menus.ItemType.SEPARATOR;
+                    children[index - 1].type === browser.bookmarks.BookmarkTreeNodeType.SEPARATOR;
             });
 
-            if (children[children.length - 1].type === browser.menus.ItemType.SEPARATOR && !duplicatedSeparators.includes(children[children.length - 1])) {
+            if (children[children.length - 1].type === browser.bookmarks.BookmarkTreeNodeType.SEPARATOR && !duplicatedSeparators.includes(children[children.length - 1])) {
                 duplicatedSeparators.push(children[children.length - 1]);
             }
 
@@ -1165,7 +1169,7 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
         await browser.bookmarks.create({
             title: group.tabs[index].title,
             url: group.tabs[index].url,
-            type: browser.menus.ContextType.BOOKMARK,
+            type: browser.bookmarks.BookmarkTreeNodeType.BOOKMARK,
             index: Number(index),
             parentId: groupBookmarkFolder.id,
         });
