@@ -199,6 +199,20 @@
             }
         }
     },
+    "groupTabsCountActive": {
+        "message": "$active$/$count$ aktivních panelů",
+        "description": "Group tabs count active",
+        "placeholders": {
+            "active": {
+                "content": "$1",
+                "example": "2"
+            },
+            "count": {
+                "content": "$2",
+                "example": "4"
+            }
+        }
+    },
     "deleteTab": {
         "message": "Zavřít panel",
         "description": "Delete tab"
@@ -291,6 +305,22 @@
         "message": "Načíst předchozí skupinu",
         "description": "Load previous group"
     },
+    "hotkeyActionTitleLoadNextUnloadedGroup": {
+        "message": "Načíst další nenačtenou skupinu",
+        "description": "Load next unloaded group"
+    },
+    "hotkeyActionTitleLoadPrevUnloadedGroup": {
+        "message": "Načíst předchozí nenačtenou skupinu",
+        "description": "Load previous unloaded group"
+    },
+    "hotkeyActionTitleLoadHistoryNextGroup": {
+        "message": "Načíst následující skupinu z historie",
+        "description": "Load next group from history"
+    },
+    "hotkeyActionTitleLoadHistoryPrevGroup": {
+        "message": "Načíst předchozí skupinu z historie",
+        "description": "Load previous group from history"
+    },
     "hotkeyActionTitleLoadFirstGroup": {
         "message": "Načíst první skupinu",
         "description": "Load first group"
@@ -318,6 +348,18 @@
     "hotkeyActionTitleMoveActiveTabToCustomGroup": {
         "message": "Přesunout aktivní panel do jiné skupiny",
         "description": "Move active tab to custom group"
+    },
+    "hotkeyActionTitleDiscardGroup": {
+        "message": "Uvolnit skupinu z paměti",
+        "description": "Hotkey action Discard group"
+    },
+    "hotkeyActionTitleDiscardOtherGroups": {
+        "message": "Uvolnit ostatní skupiny z paměti",
+        "description": "Hotkey action Discard other groups"
+    },
+    "hotkeyActionTitleReloadAllTabsInCurrentGroup": {
+        "message": "Znovu načíst všechny panely v aktivní skupině",
+        "description": "Reload all tabs in current group"
     },
     "whatsWrongMessage": {
         "message": "Co je špatně? \nProsím, kontaktujte vývojaře pomocí emailu s posledním chybovým protokolem (Tlačítko se nachází dole v možnostech)",
@@ -360,7 +402,7 @@
         "description": "Icon style"
     },
     "discardTabsAfterHide": {
-        "message": "Zavřít panely skupiny po přepnutí na jinou (tím se sníží využití paměti RAM)",
+        "message": "Uvolnit panely z paměti po přepnutí na jinou skupinu (tím se sníží využití paměti RAM)",
         "description": "Discard tabs after hide (this will save the RAM)"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
@@ -404,7 +446,7 @@
         "description": "Open group in new window"
     },
     "muteTabsWhenGroupCloseAndRestoreWhenOpen": {
-        "message": "Vypnout zvuk panelů, pokud je skupina zavřena",
+        "message": "Ztlumit panely, pokud je skupina neaktivní",
         "description": "Mute tabs when group close and restore when open"
     },
     "showTabAfterMovingItIntoThisGroup": {
@@ -634,5 +676,139 @@
     "allGroupsExportedToBookmarks": {
         "message": "Všechny skupiny byly úspěšně exportovány do záložek",
         "description": "All groups successfully exported to bookmarks"
+    },
+    "discardTabTitle": {
+        "message": "Uvolnit panel z paměti",
+        "description": "Discard tab"
+    },
+    "discardGroupTitle": {
+        "message": "Uvolnit skupinu z paměti",
+        "description": "Discard group"
+    },
+    "autoBackupGroupsToFile": {
+        "message": "Automaticky zálohovat všechny skupiny do souboru (do stažených souborů)",
+        "description": "Auto backup all groups to file (into downloads folder)"
+    },
+    "folderNameTitle": {
+        "message": "Název složky",
+        "description": "Folder name title"
+    },
+    "backupSuccessfullyRestored": {
+        "message": "Záloha úspěšně obnovena!",
+        "description": "Backup successfully restored"
+    },
+    "loading": {
+        "message": "Načítání, čekejte prosím...",
+        "description": "Loading, please wait..."
+    },
+    "showOtherTabs": {
+        "message": "Ukázat ostatní panely",
+        "description": "Show other tabs"
+    },
+    "dontDiscardTabsAfterHideThisGroup": {
+        "message": "Po přepnutí na jinou skupinu neuvolňovat tuto skupinu z paměti",
+        "description": "Don't discard tabs into this group after hide"
+    },
+    "showNotificationAfterGroupDelete": {
+        "message": "Ukázat upozornění po smazání skupiny",
+        "description": "Show notification after group delete"
+    },
+    "reloadTab": {
+        "message": "Obnovit panel",
+        "description": "Reload tab"
+    },
+    "thisTabIsNotSupported": {
+        "message": "Tento panel není podporován",
+        "description": "This tab is not supported"
+    },
+    "showExtendGroupsPopupWithActiveTabs": {
+        "message": "Ukázat aktivní panely ve vyskakovacím okně doplňku",
+        "description": "Show active tabs in groups popup"
+    },
+    "reloadAllTabsInGroup": {
+        "message": "Znovu načíst všechny panely ve skupině",
+        "description": "Reload all tabs in group"
+    },
+    "tabsCreatedCount": {
+        "message": "$tabscount$ panelů vytvořeno",
+        "description": "Tabs created count",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "tabsNotCreated": {
+        "message": "Panely nevytvořeny",
+        "description": "Tabs not created"
+    },
+    "discardOtherGroups": {
+        "message": "Uvolnit ostatní skupiny z paměti",
+        "description": "Discard other groups"
+    },
+    "showTabsWithThumbnailsInManageGroups": {
+        "message": "Ukázat náhledy panelů ve \"Správě skupin\"",
+        "description": "Show tabs with thumbnails in \"Manage groups\" page"
+    },
+    "alwaysOpenTabsInContainer": {
+        "message": "Vždy otvírat panely v kontejneru",
+        "description": "Always open tabs in container"
+    },
+    "temporaryContainerTitle": {
+        "message": "⌚Dočasný kontejner",
+        "description": "⌚Temporary Container"
+    },
+    "thisContainerIsNotTemporary": {
+        "message": "Kontejner '$containerName$' již není dočasný",
+        "description": "This container '$containerName$' is no longer temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "my container"
+            }
+        }
+    },
+    "thisContainerNowIsTemporary": {
+        "message": "Kontejner '$containerName$' se stal dočasným",
+        "description": "This container '$containerName$' has now become temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "⌚Temporary Container 5"
+            }
+        }
+    },
+    "importAddonSettings": {
+        "message": "Nahrát nastavení doplňku",
+        "description": "Import addon settings"
+    },
+    "importGroups": {
+        "message": "Nahrát skupiny",
+        "description": "Import groups"
+    },
+    "pinnedTabs": {
+        "message": "Připnuté panely",
+        "description": "Pinned tabs"
+    },
+    "eraseAddonSettingsWarningTitle": {
+        "message": "Tato akce <b>ZCELA VYMAŽE</b> všechna stávající nastavení a skupiny.<br>Panely nebudou ovlivněny.",
+        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+    },
+    "clear": {
+        "message": "Vymazat",
+        "description": "Clear"
+    },
+    "deleteAllAddonDataAndSettings": {
+        "message": "Vymazat všechna data a nastavení doplňku",
+        "description": "Delete all addon data and settings"
+    },
+    "warningAllDataWillRemove": {
+        "message": "Pozor! Odstraňujete všechna data doplňku. Jste si jisti?",
+        "description": "Warning! Removing ALL addon data! Are you really sure?"
+    },
+    "ifNotDefaultContainerReOpenInNew": {
+        "message": "Změnit kontejner, pokud je panel otevřen v jiném než nastaveném.",
+        "description": "If the container is different from the selected one - change the container"
     }
 }
