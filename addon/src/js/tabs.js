@@ -261,9 +261,9 @@ async function remove(tabIds) {
 async function updateThumbnail(tabId, force) {
     const {BG} = browser.extension.getBackgroundPage();
 
-    let {showTabsWithThumbnailsInManageGroups} = BG.getOptions();
+    let permissionAllUrls = await browser.permissions.contains(constants.PERMISSIONS.ALL_URLS);
 
-    if (!showTabsWithThumbnailsInManageGroups) {
+    if (!permissionAllUrls) {
         return;
     }
 

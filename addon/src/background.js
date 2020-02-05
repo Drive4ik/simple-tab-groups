@@ -1818,6 +1818,10 @@ async function createBackup(includeTabThumbnails, includeTabFavIcons, isAutoBack
         return;
     }
 
+    if (includeTabThumbnails) {
+        includeTabThumbnails = await browser.permissions.request(constants.PERMISSIONS.ALL_URLS);
+    }
+
     data.pinnedTabs = await Tabs.get(null, true, null);
     data.pinnedTabs = data.pinnedTabs
         .map(function({url, title, cookieStoreId, isInReaderMode}) {
@@ -2342,6 +2346,13 @@ async function runMigrateForData(data) {
             version: '4.3.5',
             migration() {
                 data.groups.forEach(group => group.ifNotDefaultContainerReOpenInNew = true);
+            },
+        },
+        {
+            version: '4.4',
+            remove: ['showTabsWithThumbnailsInManageGroups'],
+            migration() {
+                //
             },
         },
     ];
