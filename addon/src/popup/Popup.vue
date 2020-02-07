@@ -80,9 +80,6 @@
                 unSyncTabs: [],
 
                 multipleTabs: [],
-
-                enableDebug: !!window.localStorage.enableDebug,
-                enableLogging: !!window.localStorage.enableLogging,
             };
         },
         components: {
@@ -797,22 +794,6 @@
                 this.applyGroup(group, tab, true);
             },
 
-            toggleLogging() {
-                this.enableLogging = !this.enableLogging;
-
-                if (this.enableLogging) {
-                    window.localStorage.enableLogging = 1;
-                } else {
-                    delete window.localStorage.enableLogging;
-                }
-
-                BG.console.restart();
-
-                if (!window.localStorage.enableLogging) {
-                    BG.saveConsoleLogs();
-                }
-            },
-
             mainContextMenu(event) {
                 if (['INPUT', 'TEXTAREA'].includes(event.target.nodeName)) {
                     return;
@@ -1175,11 +1156,6 @@
             <div tabindex="0" class="is-flex is-align-items-center manage-groups is-full-height is-full-width" @click="openManageGroups" @keyup.enter="openManageGroups" :title="lang('manageGroupsTitle')">
                 <img class="size-16" src="/icons/icon.svg" />
                 <span class="h-margin-left-10" v-text="lang('manageGroupsTitle')"></span>
-            </div>
-            <div v-if="enableDebug" class="is-flex is-align-items-center is-vertical-separator"></div>
-            <div tabindex="0" v-if="enableDebug" class="is-flex is-align-items-center is-full-height" @click="toggleLogging" @keyup.enter="toggleLogging" :title="enableLogging ? 'Stop logging' : 'Start logging'">
-                <img v-if="enableLogging" class="size-16" src="/icons/stop-circle.svg" style="fill: red; margin-right: 5px;" />
-                <img class="size-16" src="/icons/bug.svg" />
             </div>
             <div class="is-flex is-align-items-center is-vertical-separator"></div>
             <div tabindex="0" class="is-flex is-align-items-center is-full-height" @click="openOptionsPage" @keyup.enter="openOptionsPage" :title="lang('openSettings')">

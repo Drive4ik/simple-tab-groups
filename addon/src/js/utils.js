@@ -1,7 +1,6 @@
 'use strict';
 
 import constants from './constants';
-import containers from './containers';
 import storage from './storage';
 import * as npmCompareVersions from 'compare-versions';
 
@@ -15,18 +14,6 @@ const tagsToReplace = {
     '&': '&amp;',
 };
 
-const {version} = browser.runtime.getManifest();
-
-function getErrorLogs() {
-    let logs = [];
-
-    try {
-        logs = JSON.parse(window.localStorage.errorLogs);
-    } catch (e) {}
-
-    return logs || [];
-}
-
 function errorEventMessage(message, data = null, showNotification = true) {
     return stringify({
         message,
@@ -39,54 +26,68 @@ function errorEventHandler(event) {
     event.preventDefault && event.preventDefault();
     event.stopImmediatePropagation && event.stopImmediatePropagation();
 
-    if (!event.error) {
-        event.error = event;
-    }
-
-    let data = null;
+    let nativeError = event.error || event,
+        data = null;
 
     try {
-        data = JSON.parse(event.error.message);
+        data = JSON.parse(nativeError.message);
 
         if (Number.isFinite(data)) {
             throw Error;
         }
     } catch (e) {
-        data = event.error;
+        data = nativeError;
     }
 
-    let error = {
-        version,
+    let errorData = {
         date: (new Date).toLocaleString(),
         message: data.message,
         data: data.data,
-        lineNumber: event.error.lineNumber,
-        stack: event.error.stack.split(addonUrlPrefix).join('').split('@').map(str => str.trim().replace('\n', ' -> ')),
+        lineNumber: nativeError.lineNumber,
+        stack: nativeError.stack.split(addonUrlPrefix).join('').split('@').map(str => str.trim().replace('\n', ' <- ')),
     };
 
-    let logs = getErrorLogs();
+    const {BG} = browser.extension.getBackgroundPage();
 
-    logs.unshift(error);
-
-    window.localStorage.errorLogs = stringify(logs.slice(0, 30));
+    BG.console.logError(clone(errorData));
 
     if (false !== data.showNotification) {
         notify(browser.i18n.getMessage('whatsWrongMessage'), undefined, undefined, undefined, () => browser.runtime.openOptionsPage());
     }
 
-    console.error(`[STG] ${event.error.name}: ${error.message}`, error);
+    return errorData;
 }
 
 async function getInfo() {
+    const {BG} = browser.extension.getBackgroundPage(),
+        {version} = browser.runtime.getManifest();
+
+    let [
+        browserInfo,
+        platformInfo,
+        permissionBookmarks,
+        permissionAllUrls,
+        options,
+    ] = await Promise.all([
+        browser.runtime.getBrowserInfo(),
+        browser.runtime.getPlatformInfo(),
+        browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS),
+        browser.permissions.contains(constants.PERMISSIONS.ALL_URLS),
+        storage.get(constants.allOptionsKeys),
+    ]);
+
     return {
-        version: browser.runtime.getManifest().version,
-        upTime: Date.now() - browser.extension.getBackgroundPage().BG.startTime + 'ms',
-        browserInfo: await browser.runtime.getBrowserInfo(),
-        platformInfo: await browser.runtime.getPlatformInfo(),
-        permissions: {
-            bookmarks: await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS),
+        version: version,
+        upTime: (unixNow() - BG.startTime) + ' sec',
+        browserAndOS: {
+            ...platformInfo,
+            ...browserInfo,
         },
-        options: await storage.get(constants.allOptionsKeys),
+        permissions: {
+            bookmarks: permissionBookmarks,
+            allUrls: permissionAllUrls,
+        },
+        options: options,
     };
 }
 
@@ -297,8 +298,8 @@ function normalizeFavIcon(favIconUrl) {
     return '/icons/tab.svg';
 }
 
-function isWindowAllow(win) {
-    return browser.windows.WindowType.NORMAL === win.type;
+function isWindowAllow({type}) {
+    return browser.windows.WindowType.NORMAL === type;
 }
 
 const createTabUrlRegexp = /^((https?|ftp|moz-extension):|about:blank)/,
@@ -696,7 +697,6 @@ async function waitDownload(id, maxWaitSec = 10) {
 export default {
     errorEventMessage,
     errorEventHandler,
-    getErrorLogs,
 
     getInfo,
 

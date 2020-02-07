@@ -834,5 +834,21 @@
     "leaveBookmarksOfClosedTabs": {
         "message": "Оставить закладки закрытых вкладок (закладки будет разделять разделитель)",
         "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+    },
+    "enableDebugTitle": {
+        "message": "Включить логирование (DEBUG)",
+        "description": "Enable DEBUG"
+    },
+    "loggingIsEnabledTitle": {
+        "message": "логирование включено",
+        "description": "logging is enabled"
+    },
+    "loggingIsAutoEnabledTitle": {
+        "message": "логирование было автоматически включено из-за ошибки в аддоне",
+        "description": "logging was auto-enabled due to an error in addon"
+    },
+    "loggingDescription": {
+        "message": "Пожалуйста, включите этот флажок, только если вам нужно записать ошибку и отправить мне логи. Включение этого флажка приведет к заметному замедлению аддона, так как все действия аддона логируются. При воспроизведении ошибки отключите этот флажок, и аддон предложит сохранить файл журнала логов. Эта опция может быть включена сама по себе, если происходит ошибка в аддоне. Вам необходимо отключить флажок DEBUG и сохранить файл журнала.<br>\nПожалуйста, пришлите мне этот файл по электронной почте: <a href=\"mailto:drive4ik@gmail.com\">drive4ik@gmail.com</a><br>\n<span class=\"has-text-danger\">Внимание! В этом лог-файле нет личных данных, паролей, закладок и т.д.!</span><br>\nЭто необходимо, чтобы иметь возможность воспроизвести проблему и попытаться ее исправить.<br>\nС наилучшими пожеланиями",
+        "description": "logging description"
     }
 }

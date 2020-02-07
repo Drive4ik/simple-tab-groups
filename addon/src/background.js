@@ -11,6 +11,10 @@ import Tabs from './js/tabs';
 import Windows from './js/windows';
 
 window.IS_PRODUCTION = IS_PRODUCTION;
+
+if (2 == window.localStorage.enableDebug) { // if debug was auto-enabled - disable on next start addon/browser
+    delete window.localStorage.enableDebug;
+}
 console.restart();
 
 const addonUrlPrefix = browser.extension.getURL('');
@@ -278,8 +282,10 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
     } catch (e) {
         result = false;
 
+        console.error('🛑 ERROR applyGroup', e);
+
         if (e) {
-            console.error('🛑 STOP applyGroup with error', e);
+            utils.errorEventHandler(e);
 
             updateBrowserActionData(null, windowId);
 
@@ -287,8 +293,6 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                 removeEvents();
                 addEvents();
             }
-
-            utils.errorEventHandler(e);
         }
     }
 
@@ -2078,7 +2082,7 @@ async function exportAllGroupsToBookmarks(showFinishMessage) {
 
 window.BG = {
     inited: false,
-    startTime: Date.now(),
+    startTime: utils.unixNow(),
 
     cache,
     openManageGroups,
@@ -2132,31 +2136,30 @@ window.BG = {
             if (Array.isArray(obj)) {
                 return obj.map(normalize);
             } else if ('object' === utils.type(obj)) {
-                for (let i in obj) {
-                    if (String(obj[i]).startsWith('data:image')) {
-                        obj[i] = 'some image url';
-                    } else if (['title', 'icon', 'icons', 'iconUrl', 'favIconUrl', 'thumbnail'].includes(i)) {
-                        obj[i] = 'some ' + i;
-                    } else if (String(obj[i]).startsWith('http')) {
-                        obj[i] = urls[obj[i]] || (urls[obj[i]] = 'URL_' + index++);
+                for (let key in obj) {
+                    if (['title', 'icon', 'icons', 'iconUrl', 'favIconUrl', 'thumbnail'].includes(key)) {
+                        obj[key] = obj[key] ? ('some ' + key) : obj[key];
                     } else {
-                        obj[i] = normalize(obj[i]);
+                        obj[key] = normalize(obj[key]);
                     }
                 }
 
                 return obj;
             } else if (String(obj).startsWith('data:image')) {
-                return 'some image url';
+                return 'some data:image';
+            } else if (String(obj).startsWith('http')) {
+                return urls[obj] || (urls[obj] = 'URL_' + index++);
             }
 
             return obj;
         }
 
-        file.save({
+        logs = normalize(logs);
+
+        return file.save({
             info: await utils.getInfo(),
-            logs: normalize(logs),
-            errorLogs: utils.getErrorLogs(),
-        }, 'STG-logs.json');
+            logs: logs,
+        }, 'STG-debug-logs.json');
     },
 };
 
@@ -2352,7 +2355,12 @@ async function runMigrateForData(data) {
             version: '4.4',
             remove: ['showTabsWithThumbnailsInManageGroups'],
             migration() {
-                //
+                window.localStorage.clear();
+
+                // remove duplicated hotkeys
+                data.hotkeys = data.hotkeys.filter(function(hotkey, index, self) {
+                    return self.findIndex(h => Object.keys(hotkey).every(key => hotkey[key] === h[key])) === index;
+                });
             },
         },
     ];

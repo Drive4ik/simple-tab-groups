@@ -88,8 +88,7 @@
 
                 showEnableDarkThemeNotification: false,
 
-                enableDebug: !!window.localStorage.enableDebug,
-                errorLogs: utils.getErrorLogs(),
+                enableDebug: window.localStorage.enableDebug || false,
             };
         },
         components: {
@@ -254,6 +253,10 @@
                 }
 
                 BG.console.restart();
+
+                if (!window.localStorage.enableDebug) {
+                    BG.saveConsoleLogs();
+                }
             },
         },
         computed: {
@@ -524,13 +527,6 @@
                 BG.clearAddon();
             },
 
-            async saveErrorLogsIntoFile() {
-                file.save({
-                    info: await utils.getInfo(),
-                    logs: utils.getErrorLogs(),
-                }, 'STG-error-logs.json');
-            },
-
             getIconTypeUrl(iconType) {
                 return utils.getGroupIconUrl({
                     iconViewType: iconType,
@@ -768,20 +764,20 @@
 
             <hr/>
 
-            <div class="field">
-                <label class="checkbox">
-                    <input type="checkbox" v-model="enableDebug" />
-                    <span>Enable DEBUG</span>
-                </label>
-                <br>
-                <span>Please enable this checkbox only if you need to record bug and send logs to me, &lt;<a href="mailto:drive4ik@gmail.com">drive4ik@gmail.com</a>&gt;</span>
-            </div>
-
-            <div v-if="errorLogs.length" class="field">
+            <div class="field is-grouped is-grouped-multiline">
                 <div class="control">
-                    <button @click="saveErrorLogsIntoFile" class="button is-warning" v-text="lang('saveErrorLogsIntoFile')"></button>
+                    <label class="checkbox">
+                        <input type="checkbox" v-model="enableDebug" />
+                        <span v-text="lang('enableDebugTitle')"></span>
+                    </label>
+                </div>
+                <div v-if="enableDebug" class="control">
+                    <img class="size-16 debug-record" src="resource://usercontext-content/circle.svg">
+                    <span v-text="enableDebug === '2' ? lang('loggingIsAutoEnabledTitle') : lang('loggingIsEnabledTitle')"></span>
                 </div>
             </div>
+
+            <div class="field" v-html="lang('loggingDescription')"></div>
         </div>
 
         <div v-show="section === SECTION_HOTKEYS">
@@ -1166,6 +1162,23 @@
             .delete-button {
                 line-height: 1;
             }
+        }
+    }
+
+    .debug-record {
+        fill: red;
+        animation: blink 1s ease-out infinite;
+    }
+
+    @keyframes blink {
+        0% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0;
+        }
+        100% {
+            opacity: 1;
         }
     }
 

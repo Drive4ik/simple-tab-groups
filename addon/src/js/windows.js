@@ -91,7 +91,7 @@ function setFocus(windowId) {
 async function getLastFocusedNormalWindow(returnId = true) {
     const {BG} = browser.extension.getBackgroundPage();
 
-    let lastFocusedWindow = await BG.browser.windows.getLastFocused();
+    let lastFocusedWindow = await BG.browser.windows.getLastFocused().catch(utils.errorEventHandler);
 
     if (utils.isWindowAllow(lastFocusedWindow)) {
         return returnId ? lastFocusedWindow.id : BG.cache.loadWindowSession(lastFocusedWindow);

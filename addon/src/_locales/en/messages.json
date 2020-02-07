@@ -838,5 +838,21 @@
     "leaveBookmarksOfClosedTabs": {
         "message": "Leave bookmarks of closed tabs (bookmarks will separate the separator)",
         "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+    },
+    "enableDebugTitle": {
+        "message": "Enable DEBUG",
+        "description": "Enable DEBUG"
+    },
+    "loggingIsEnabledTitle": {
+        "message": "logging is enabled",
+        "description": "logging is enabled"
+    },
+    "loggingIsAutoEnabledTitle": {
+        "message": "logging was auto-enabled due to an error in addon",
+        "description": "logging was auto-enabled due to an error in addon"
+    },
+    "loggingDescription": {
+        "message": "Please enable this checkbox only if you need to record bug and send logs to me. Enabling this checkbox will lead to a noticeable slowdown of the addon, as all addon actions are logged. When you reproduce the error, turn off this checkbox, and the addon will offer to save the log file. This option can be enabled by itself if an error occurs. You need to disable the DEBUG checkbox and save the log file.<br>\nPlease send this log file to me by email: <a href=\"mailto:drive4ik@gmail.com\">drive4ik@gmail.com</a><br>\n<span class=\"has-text-danger\">Attention! There are no personal data, passwords, bookmarks etc., in this log file!</span><br>\nThis is necessary to be able to reproduce the problem and try to fix it.<br>\nBest regards",
+        "description": "logging description"
     }
 }
