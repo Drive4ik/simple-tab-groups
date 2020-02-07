@@ -2415,15 +2415,32 @@ async function syncTabs(groups, windows, hideAllTabs = false) {
             tab.cookieStoreId = await containers.normalize(tab.cookieStoreId);
             tab.url = utils.normalizeUrl(tab.url);
 
+            if (!tab.session) {
+                tab.session = {};
+            }
+
             let winTabIndex = allTabs.findIndex(winTab => winTab.url === tab.url && winTab.cookieStoreId === tab.cookieStoreId);
 
             if (winTabIndex !== -1) {
-                let [winTab] = allTabs.splice(winTabIndex, 1);
+                let [winTab] = allTabs.splice(winTabIndex, 1),
+                    cachePromises = [];
 
                 if (winTab.session.groupId !== group.id) {
                     winTab.session.groupId = group.id;
-                    await cache.setTabGroup(winTab.id, group.id);
+                    cachePromises.push(cache.setTabGroup(winTab.id, group.id));
                 }
+
+                if (tab.session.favIconUrl && winTab.session.favIconUrl !== tab.session.favIconUrl) {
+                    winTab.session.favIconUrl = tab.session.favIconUrl;
+                    cachePromises.push(cache.setTabFavIcon(winTab.id, tab.session.favIconUrl));
+                }
+
+                if (tab.session.thumbnail && winTab.session.thumbnail !== tab.session.thumbnail) {
+                    winTab.session.thumbnail = tab.session.thumbnail;
+                    cachePromises.push(cache.setTabThumbnail(winTab.id, tab.session.thumbnail));
+                }
+
+                await Promise.all(cachePromises);
 
                 tabs.push(winTab);
             } else {
@@ -2432,8 +2449,8 @@ async function syncTabs(groups, windows, hideAllTabs = false) {
                         Tabs.create({
                             title: tab.title,
                             url: tab.url,
-                            favIconUrl: tab.favIconUrl,
-                            thumbnail: tab.session && tab.session.thumbnail,
+                            favIconUrl: tab.favIconUrl || tab.session.favIconUrl,
+                            thumbnail: tab.session.thumbnail,
                             cookieStoreId: tab.cookieStoreId,
                             group,
                         })

@@ -131,7 +131,12 @@ async function normalize(cookieStoreId, containerData) {
     if (!mappedContainerCookieStoreId[cookieStoreId]) {
         if (containerData) {
             for (let csId in containers) {
-                if (!isTemporary(csId) && containerData.name === containers[csId].name) {
+                if (
+                    !isTemporary(csId) &&
+                    containerData.name === containers[csId].name &&
+                    containerData.color === containers[csId].color &&
+                    containerData.icon === containers[csId].icon
+                ) {
                     mappedContainerCookieStoreId[cookieStoreId] = csId;
                     break;
                 }
