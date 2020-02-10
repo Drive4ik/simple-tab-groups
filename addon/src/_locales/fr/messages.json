@@ -834,5 +834,21 @@
     "leaveBookmarksOfClosedTabs": {
         "message": "Conserver les marque-pages des onglets fermés (mais ils seront séparés des autres marque-pages)",
         "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+    },
+    "enableDebugTitle": {
+        "message": "Activer le mode DEBUG",
+        "description": "Enable DEBUG"
+    },
+    "loggingIsEnabledTitle": {
+        "message": "la journalisation est activée",
+        "description": "logging is enabled"
+    },
+    "loggingIsAutoEnabledTitle": {
+        "message": "la journalisation a été activée automatiquement en raison d'une erreur dans l'extension",
+        "description": "logging was auto-enabled due to an error in addon"
+    },
+    "loggingDescription": {
+        "message": "Veuillez cocher cette case uniquement si vous devez enregistrer le bug et m'envoyer les fichiers journaux. L'activation de cette case entraînera un ralentissement notable de l'extension, car toutes les actions de l'extension sont enregistrées. Lorsque vous aurez reproduit l'erreur, décochez cette case, et l'extension vous proposera d'enregistrer le fichier journal. Cette option pourra aussi s'activer d'elle-même si une erreur se produit ; vous devrez alors décocher la case DEBUG et enregistrer le fichier journal.<br> Veuillez m'envoyer ce fichier journal par courrier électronique : <a href=\"mailto:drive4ik@gmail.com\">drive4ik@gmail.com</a><br> <span class=\"has-text-danger\">Attention : il n'y a pas de données personnelles, de mots de passe, de signets etc. dans ce fichier journal !</span><br> Ceci est nécessaire pour pouvoir reproduire le problème et essayer de le résoudre.<br> Cordialement",
+        "description": "logging description"
     }
 }
