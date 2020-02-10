@@ -101,7 +101,7 @@
                 this.setFocusOnSearch();
                 this.setupListeners();
 
-                if (this.options.openGroupAfterChange && isSidebar && this.currentGroup) {
+                if (this.options.openGroupAfterChange && this.currentGroup) {
                     this.showSectionGroupTabs(this.currentGroup);
                 }
             });
