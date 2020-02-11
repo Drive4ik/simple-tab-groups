@@ -1823,7 +1823,7 @@ async function createBackup(includeTabThumbnails, includeTabFavIcons, isAutoBack
     }
 
     if (includeTabThumbnails) {
-        includeTabThumbnails = await browser.permissions.request(constants.PERMISSIONS.ALL_URLS);
+        includeTabThumbnails = options.showTabsWithThumbnailsInManageGroups;
     }
 
     data.pinnedTabs = await Tabs.get(null, true, null);
@@ -2353,7 +2353,6 @@ async function runMigrateForData(data) {
         },
         {
             version: '4.4',
-            remove: ['showTabsWithThumbnailsInManageGroups'],
             migration() {
                 window.localStorage.clear();
             },

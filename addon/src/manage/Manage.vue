@@ -61,8 +61,6 @@
 
                 unSyncTabs: [],
 
-                hasPermissionAllUrls: false,
-
                 dragData: null,
                 multipleTabs: [],
             };
@@ -80,12 +78,43 @@
         // directives: {
         //     dnd: dnd,
         // },
+        // async created() {
+        //     this.hasThumbnailsPermission = await browser.permissions.contains(constants.PERMISSIONS.ALL_URLS);
+
+        //     this.loadOptions();
+        // },
+        async mounted() {
+            await this.loadCurrentWindow();
+
+            this.loadOptions();
+
+            await this.loadGroups();
+
+            await this.loadUnsyncedTabs();
+
+            this.setupListeners();
+
+            this.isLoaded = true;
+
+            this.$nextTick(function() {
+                this.setFocusOnSearch();
+
+                this.groups.forEach(group => group.tabs.forEach(tab => !tab.session.thumbnail && !tab.discarded && utils.isTabLoaded(tab) && Tabs.updateThumbnail(tab.id)));
+            });
+        },
         watch: {
             'options.enableDarkTheme': function(enableDarkTheme) {
                 if (enableDarkTheme) {
                     document.documentElement.classList.add('dark-theme');
                 } else {
                     document.documentElement.classList.remove('dark-theme');
+                }
+            },
+            'options.showTabsWithThumbnailsInManageGroups': function(value, oldValue) {
+                if (undefined !== oldValue) {
+                    BG.saveOptions({
+                        showTabsWithThumbnailsInManageGroups: value,
+                    });
                 }
             },
         },
@@ -113,28 +142,6 @@
 
                 return this.groups.find(group => group.id === this.currentWindow.session.groupId);
             },
-        },
-        async created() {
-            this.hasPermissionAllUrls = await browser.permissions.contains(constants.PERMISSIONS.ALL_URLS);
-
-            this.loadOptions();
-        },
-        async mounted() {
-            await this.loadCurrentWindow();
-
-            await this.loadGroups();
-
-            await this.loadUnsyncedTabs();
-
-            this.setupListeners();
-
-            this.isLoaded = true;
-
-            this.$nextTick(function() {
-                this.setFocusOnSearch();
-
-                this.groups.forEach(group => group.tabs.forEach(tab => !tab.session.thumbnail && !tab.discarded && utils.isTabLoaded(tab) && Tabs.updateThumbnail(tab.id)));
-            });
         },
         methods: {
             lang: browser.i18n.getMessage,
@@ -626,13 +633,6 @@
                 return utils.groupTabsCountMessage(tabs, true);
             },
 
-            async setPermissionsAllUrls(event) {
-                if (event.target.checked) {
-                    this.hasPermissionAllUrls = await browser.permissions.request(constants.PERMISSIONS.ALL_URLS);
-                } else {
-                    browser.permissions.remove(constants.PERMISSIONS.ALL_URLS);
-                }
-            },
         },
     }
 </script>
@@ -655,7 +655,7 @@
             <span class="is-full-width">
                 <div>
                     <label class="checkbox">
-                        <input v-model="hasPermissionAllUrls" @click="setPermissionsAllUrls" type="checkbox" />
+                        <input v-model="options.showTabsWithThumbnailsInManageGroups" type="checkbox" />
                         <span v-text="lang('showTabsWithThumbnailsInManageGroups')"></span>
                     </label>
                 </div>
@@ -756,7 +756,7 @@
                             </div>
                         </div>
                         <div :class="['body', {
-                                'in-list-view': !hasPermissionAllUrls,
+                                'in-list-view': !options.showTabsWithThumbnailsInManageGroups,
                             }]">
                             <div
                                 v-for="tab in group.filteredTabs"
@@ -764,7 +764,7 @@
                                 :class="['tab', {
                                     'is-active': tab.active,
                                     'is-in-multiple-drop': multipleTabs.includes(tab),
-                                    'has-thumbnail': hasPermissionAllUrls && tab.session.thumbnail,
+                                    'has-thumbnail': options.showTabsWithThumbnailsInManageGroups && tab.session.thumbnail,
                                     'drag-moving': tab.isMoving,
                                     'drag-over': tab.isOver,
                                 }]"
@@ -790,7 +790,7 @@
                                 <div v-if="tab.container" class="cookie-container" :title="tab.container.name" :style="{borderColor: tab.container.colorCode}">
                                     <img class="size-16" :src="tab.container.iconUrl" :style="{fill: tab.container.colorCode}">
                                 </div>
-                                <div v-if="hasPermissionAllUrls" class="screenshot" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                <div v-if="options.showTabsWithThumbnailsInManageGroups" class="screenshot" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <img v-if="tab.session.thumbnail" v-lazy="tab.session.thumbnail">
                                 </div>
                                 <div
@@ -810,7 +810,7 @@
                                 :title="lang('createNewTab')"
                                 @click="addTab(group)"
                                 >
-                                <div :class="hasPermissionAllUrls ? 'screenshot' : 'tab-icon'">
+                                <div :class="options.showTabsWithThumbnailsInManageGroups ? 'screenshot' : 'tab-icon'">
                                     <img src="/icons/tab-new.svg">
                                 </div>
                                 <div class="tab-title text-ellipsis" v-text="lang('createNewTab')"></div>
@@ -827,14 +827,14 @@
                             <div class="tabs-count" v-text="groupTabsCountMessage(unSyncTabs)"></div>
                         </div>
                         <div :class="['body', {
-                                'in-list-view': !hasPermissionAllUrls,
+                                'in-list-view': !options.showTabsWithThumbnailsInManageGroups,
                             }]">
                             <div
                                 v-for="tab in filteredUnSyncTabs"
                                 :key="tab.id"
                                 :class="['tab', {
                                     'is-in-multiple-drop': multipleTabs.includes(tab),
-                                    'has-thumbnail': hasPermissionAllUrls && tab.session.thumbnail,
+                                    'has-thumbnail': options.showTabsWithThumbnailsInManageGroups && tab.session.thumbnail,
                                     'drag-moving': tab.isMoving,
                                 }]"
                                 :title="getTabTitle(tab, true)"
@@ -855,7 +855,7 @@
                                 <div v-if="tab.container" class="cookie-container" :title="tab.container.name" :style="{borderColor: tab.container.colorCode}">
                                     <img class="size-16" :src="tab.container.iconUrl" :style="{fill: tab.container.colorCode}">
                                 </div>
-                                <div v-if="hasPermissionAllUrls" class="screenshot" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                <div v-if="options.showTabsWithThumbnailsInManageGroups" class="screenshot" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <img v-if="tab.session.thumbnail" v-lazy="tab.session.thumbnail">
                                 </div>
                                 <div
@@ -952,7 +952,7 @@
                         <img src="/icons/snowflake.svg" class="size-16" />
                         <span v-text="lang('discardOtherGroups')"></span>
                     </li>
-                    <li v-if="hasPermissionAllUrls" @click="updateTabThumbnail(menu.data.tab)">
+                    <li v-if="options.showTabsWithThumbnailsInManageGroups" @click="updateTabThumbnail(menu.data.tab)">
                         <img src="/icons/image.svg" class="size-16" />
                         <span v-text="lang('updateTabThumbnail')"></span>
                     </li>

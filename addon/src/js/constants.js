@@ -8,9 +8,6 @@ const PERMISSIONS = {
     BOOKMARKS: {
         permissions: ['bookmarks'],
     },
-    ALL_URLS: {
-        origins: ['<all_urls>'],
-    },
 };
 
 const groupIconViewTypes = [
@@ -152,6 +149,7 @@ const DEFAULT_OPTIONS = Object.freeze({
     defaultBookmarksParent: defaultBookmarksParents[0],
     leaveBookmarksOfClosedTabs: true,
     showExtendGroupsPopupWithActiveTabs: false,
+    showTabsWithThumbnailsInManageGroups: false,
 
     defaultGroupIconViewType: groupIconViewTypes[0],
     defaultGroupIconColor: '',

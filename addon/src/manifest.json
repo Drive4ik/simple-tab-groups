@@ -29,11 +29,11 @@
         "downloads",
         "webRequest",
         "webRequestBlocking",
+        "<all_urls>",
         "storage"
     ],
 
     "optional_permissions": [
-        "<all_urls>",
         "bookmarks"
     ],
 

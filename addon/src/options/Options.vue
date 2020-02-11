@@ -77,7 +77,6 @@
 
                 permissions: {
                     bookmarks: false,
-                    allUrls: false,
                 },
 
                 defaultBookmarksParents: [],
@@ -107,7 +106,6 @@
             options.autoBackupFolderName = await file.getAutoBackupFolderName();
 
             this.permissions.bookmarks = await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
-            this.permissions.allUrls = await browser.permissions.contains(constants.PERMISSIONS.ALL_URLS);
 
             this.options = options;
             this.groups = data.groups;
@@ -244,6 +242,15 @@
                     });
                 },
                 deep: true,
+            },
+            'options.showTabsWithThumbnailsInManageGroups': function(value, oldValue) {
+                if (null == oldValue) {
+                    return;
+                }
+
+                if (!value) {
+                    this.includeTabThumbnailsIntoBackup = this.options.autoBackupIncludeTabThumbnails = false;
+                }
             },
             enableDebug(enableDebug) {
                 if (enableDebug) {
@@ -559,14 +566,6 @@
                 BG.updateMoveTabMenus();
             },
 
-            async setPermissionsAllUrls(event) {
-                if (event.target.checked) {
-                    this.permissions.allUrls = await browser.permissions.request(constants.PERMISSIONS.ALL_URLS);
-                } else {
-                    browser.permissions.remove(constants.PERMISSIONS.ALL_URLS);
-                }
-            },
-
             async loadBookmarksParents() {
                 if (this.defaultBookmarksParents.length) {
                     return;
@@ -725,7 +724,7 @@
             </div>
             <div class="field">
                 <label class="checkbox">
-                    <input v-model="permissions.allUrls" @click="setPermissionsAllUrls" type="checkbox" />
+                    <input v-model="options.showTabsWithThumbnailsInManageGroups" type="checkbox" />
                     <span v-text="lang('showTabsWithThumbnailsInManageGroups')"></span>
                 </label>
             </div>
@@ -850,8 +849,8 @@
                 <div class="has-text-weight-bold h-margin-bottom-5" v-text="lang('exportAddonSettingsTitle')"></div>
                 <div class="h-margin-bottom-5" v-html="lang('exportAddonSettingsDescription')"></div>
                 <div class="field">
-                    <label class="checkbox" :disabled="!permissions.allUrls">
-                        <input v-if="permissions.allUrls" v-model="includeTabThumbnailsIntoBackup" type="checkbox" />
+                    <label class="checkbox" :disabled="!options.showTabsWithThumbnailsInManageGroups">
+                        <input v-if="options.showTabsWithThumbnailsInManageGroups" v-model="includeTabThumbnailsIntoBackup" type="checkbox" />
                         <input v-else disabled="" type="checkbox" />
                         <span v-text="lang('includeTabThumbnailsIntoBackup')"></span>
                     </label>
@@ -885,8 +884,8 @@
                 </div>
                 <div v-if="options.autoBackupEnable" class="field">
                     <div class="field">
-                        <label class="checkbox" :disabled="!permissions.allUrls">
-                            <input v-if="permissions.allUrls" v-model="options.autoBackupIncludeTabThumbnails" type="checkbox" />
+                        <label class="checkbox" :disabled="!options.showTabsWithThumbnailsInManageGroups">
+                            <input v-if="options.showTabsWithThumbnailsInManageGroups" v-model="options.autoBackupIncludeTabThumbnails" type="checkbox" />
                             <input v-else disabled="" type="checkbox" />
                             <span v-text="lang('includeTabThumbnailsIntoBackup')"></span>
                         </label>
