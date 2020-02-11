@@ -4,6 +4,7 @@ const MANAGE_TABS_URL = '/manage/manage.html';
 const ACTIVE_SYMBOL = '⚪';
 const DISCARDED_SYMBOL = '❄';
 
+// permission "<all_urls>" need for tab thumbnails and webRequestBlocking
 const PERMISSIONS = {
     BOOKMARKS: {
         permissions: ['bookmarks'],
