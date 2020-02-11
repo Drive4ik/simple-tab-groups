@@ -2082,7 +2082,7 @@ async function exportAllGroupsToBookmarks(showFinishMessage) {
 
 window.BG = {
     inited: false,
-    startTime: utils.unixNow(),
+    startTime: Date.now(),
 
     cache,
     openManageGroups,
@@ -2356,11 +2356,6 @@ async function runMigrateForData(data) {
             remove: ['showTabsWithThumbnailsInManageGroups'],
             migration() {
                 window.localStorage.clear();
-
-                // remove duplicated hotkeys
-                data.hotkeys = data.hotkeys.filter(function(hotkey, index, self) {
-                    return self.findIndex(h => Object.keys(hotkey).every(key => hotkey[key] === h[key])) === index;
-                });
             },
         },
     ];
@@ -2618,10 +2613,7 @@ async function init() {
         windows = await removeSTGNewTabUrls(windows);
     }
 
-    let withoutSession = data.withoutSession;
-    delete data.withoutSession;
-
-    if (withoutSession) { // if version < 4
+    if (data.withoutSession) { // if version < 4
         let tempTabs = await Promise.all(windows.map(win => Tabs.createTempActiveTab(win.id)));
 
         data.groups = await syncTabs(data.groups, windows, true);
@@ -2635,6 +2627,8 @@ async function init() {
         windows = await Windows.load(true);
     }
 
+    delete data.withoutSession;
+
     await Promise.all(windows.map(async function(win) {
         if (win.session.groupId && !data.groups.some(group => group.id === win.session.groupId)) {
             delete win.session.groupId;
@@ -2643,15 +2637,14 @@ async function init() {
 
         if (win.session.groupId) {
             let showedTabs = [],
-                tabIdsToShow = [],
-                tabIdsToHide = [],
-                tabToHideIsActive = false,
+                tabsToShow = [],
+                tabsToHide = [],
                 moveTabsToWin = {};
 
             win.tabs.forEach(function(tab) {
                 if (tab.session.groupId === win.session.groupId) {
                     if (tab.hidden) {
-                        tabIdsToShow.push(tab.id);
+                        tabsToShow.push(tab);
                     }
 
                     showedTabs.push(tab);
@@ -2668,7 +2661,7 @@ async function init() {
                                 moveTabsToWin[tabsWin.id].push(tab);
 
                                 if (tab.hidden) {
-                                    tabIdsToShow.push(tab.id);
+                                    tabsToShow.push(tab);
                                 }
 
                                 return;
@@ -2677,18 +2670,16 @@ async function init() {
                             delete tab.session.groupId;
                             cache.removeTabGroup(tab.id);
                         }
-                    } else if (utils.isTabLoading(tab) || (tab.url.startsWith('file:///') && !tab.hidden)) {
-                        cache.setTabGroup(tab.id, win.session.groupId);
-                        tab.session = cache.getTabSession(tab.id);
-                        return;
+                    } else if (!tab.hidden) {
+                        if (utils.isTabLoading(tab) || tab.url.startsWith('file:') || tab.lastAccessed > window.BG.startTime) {
+                            cache.setTabGroup(tab.id, win.session.groupId);
+                            tab.session = cache.getTabSession(tab.id);
+                            return;
+                        }
                     }
 
                     if (!tab.hidden) {
-                        if (tab.active) {
-                            tabToHideIsActive = true;
-                        }
-
-                        tabIdsToHide.push(tab.id);
+                        tabsToHide.push(tab);
                     }
                 }
             });
@@ -2700,12 +2691,12 @@ async function init() {
                 });
             }
 
-            if (tabIdsToShow.length) {
-                await browser.tabs.show(tabIdsToShow);
+            if (tabsToShow.length) {
+                await browser.tabs.show(tabsToShow.map(utils.keyId));
             }
 
-            if (tabIdsToHide.length) {
-                if (tabToHideIsActive) {
+            if (tabsToHide.length) {
+                if (tabsToHide.some(tab => tab.active)) {
                     if (showedTabs.length) {
                         await Tabs.setActive(undefined, showedTabs);
                     } else {
@@ -2713,7 +2704,7 @@ async function init() {
                     }
                 }
 
-                await browser.tabs.hide(tabIdsToHide);
+                await browser.tabs.hide(tabsToHide.map(utils.keyId));
             }
         } else {
             let tabsToHide = [];

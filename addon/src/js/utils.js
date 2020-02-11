@@ -78,7 +78,7 @@ async function getInfo() {
 
     return {
         version: version,
-        upTime: (unixNow() - BG.startTime) + ' sec',
+        upTime: (Math.ceil((Date.now() - BG.startTime) / 1000)) + ' sec',
         browserAndOS: {
             ...platformInfo,
             ...browserInfo,

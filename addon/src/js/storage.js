@@ -45,6 +45,13 @@ export default {
             data.groups.forEach(group => group.tabs = []);
         }
 
+        if (data.hotkeys) {
+            // remove duplicated hotkeys
+            data.hotkeys = data.hotkeys.filter(function(hotkey, index, self) {
+                return self.findIndex(h => Object.keys(hotkey).every(key => hotkey[key] === h[key])) === index;
+            });
+        }
+
         try {
             await browser.storage.local.set(data);
         } catch (e) {
