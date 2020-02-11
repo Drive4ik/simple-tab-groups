@@ -1823,7 +1823,7 @@ async function createBackup(includeTabThumbnails, includeTabFavIcons, isAutoBack
     }
 
     if (includeTabThumbnails) {
-        includeTabThumbnails = await browser.permissions.contains(constants.PERMISSIONS.ALL_URLS);
+        includeTabThumbnails = await browser.permissions.request(constants.PERMISSIONS.ALL_URLS);
     }
 
     data.pinnedTabs = await Tabs.get(null, true, null);
