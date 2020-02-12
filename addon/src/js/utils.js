@@ -240,7 +240,7 @@ async function notify(message, timer = 20000, id = null, iconUrl = null, onClick
             clearTimeout(rejectTimer);
             onClick && onClick(id);
         }.bind(null, id),
-        onClosedListener = function(id, calledId) {
+        onClosedListener = function(id, calledId, calledBy) {
             if (id !== calledId) {
                 return;
             }
@@ -249,11 +249,13 @@ async function notify(message, timer = 20000, id = null, iconUrl = null, onClick
             BG.browser.notifications.onClosed.removeListener(onClosedListener);
             BG.browser.notifications.clear(id);
 
-            clearTimeout(rejectTimer);
-            onClose && onClose(id);
+            if (calledBy !== 'timeout') {
+                clearTimeout(rejectTimer);
+                onClose && onClose(id);
+            }
         }.bind(null, id);
 
-    rejectTimer = setTimeout(onClosedListener, timer, id);
+    rejectTimer = setTimeout(onClosedListener, timer, id, 'timeout');
 
     browser.notifications.onClicked.addListener(listener);
     browser.notifications.onClosed.addListener(onClosedListener);

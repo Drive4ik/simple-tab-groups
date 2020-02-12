@@ -213,6 +213,7 @@ async function update(groupId, updateData) {
         BG.sendExternalMessage({
             action: 'group-updated',
             group: mapGroupForExternalExtension(group),
+            windowId: BG.cache.getWindowId(groupId),
         });
 
         BG.updateMoveTabMenus();
@@ -254,11 +255,13 @@ async function sort(vector = 'asc') {
 }
 
 function mapGroupForExternalExtension(group) {
+    const {BG} = browser.extension.getBackgroundPage();
+
     return {
         id: group.id,
         title: utils.getGroupTitle(group, 'withActiveGroup'),
         iconUrl: utils.getGroupIconUrl(group),
-        contextualIdentity: group.newTabContainer ? browser.extension.getBackgroundPage().BG.containers.get(group.newTabContainer) : null,
+        contextualIdentity: group.newTabContainer ? BG.containers.get(group.newTabContainer) : null,
     };
 }
 

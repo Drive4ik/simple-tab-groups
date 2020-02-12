@@ -1,18 +1,14 @@
 {
     "extensionDescription": {
-        "message": "Twórz, modyfikuj i szybko zmieniaj grupy zakładek.",
+        "message": "Utwórz nową zakładkę w kontenerze na podstawie grupy w rozszerzeniu Simple Tab Groups v4.4",
         "description": "Extension description"
     },
     "needInstallSTGExtension": {
         "message": "Zainstaluj dodatek Simple Tab Groups\nNaciśnij tu aby przejść do strony domowej Simple Tab Groups",
         "description": "Need install Simple Tab Groups extention or change container in addon settings\n\nClick here to open Simple Tab Groups home page"
     },
-    "temporaryContainerTitle": {
-        "message": "Tymczasowy zasobnik",
-        "description": "⌚Temporary Container"
-    },
-    "selectContainer": {
-        "message": "Wybierz zasobnik",
-        "description": "Select container"
+    "newTabTitle": {
+        "message": "Otwórz nową zakładkę",
+        "description": "Open a new tab"
     }
 }

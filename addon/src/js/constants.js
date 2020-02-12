@@ -68,9 +68,15 @@ const EXTENSIONS_WHITE_LIST = Object.freeze({
     'stg-plugin-create-new-tab@drive4ik': {
         title: '[STG plugin] Create new tab',
         url: 'https://addons.mozilla.org/firefox/addon/stg-plugin-create-new-tab/',
-        postActions: [],
+        postActions: [
+            'i-am-back',
+            'group-loaded',
+            'group-updated',
+            'group-removed',
+        ],
         getActions: [
-            'create-new-tab',
+            'create-temp-tab',
+            'get-current-group',
         ],
     },
     '{506e023c-7f2b-40a3-8066-bc5deb40aebe}': {
@@ -94,7 +100,7 @@ const EXTENSIONS_WHITE_LIST = Object.freeze({
             'discard-group',
             'discard-other-groups',
             'reload-all-tabs-in-current-group',
-            'create-new-tab',
+            'create-temp-tab',
         ],
     },
     'tridactyl.vim@cmcaine.co.uk': {
@@ -124,7 +130,7 @@ const EXTENSIONS_WHITE_LIST = Object.freeze({
             'discard-group',
             'discard-other-groups',
             'reload-all-tabs-in-current-group',
-            'create-new-tab',
+            'create-temp-tab',
         ],
     },
 });

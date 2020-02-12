@@ -278,6 +278,15 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
             windowId,
         });
 
+        Groups.load(groupId)
+            .then(function([group]) {
+                sendExternalMessage({
+                    action: 'group-loaded',
+                    group: Groups.mapGroupForExternalExtension(group),
+                    windowId: windowId,
+                });
+            });
+
         result = true;
     } catch (e) {
         result = false;
@@ -1697,13 +1706,31 @@ async function runAction(data, externalExtId) {
                 }
 
                 break;
-            case 'create-new-tab': // TODO change to create temp tab
+            case 'create-temp-tab':
                 await Tabs.create({
-                    active: true,
-                    cookieStoreId: data.cookieStoreId,
+                    active: 'active' in data ? Boolean(data.active) : true,
+                    cookieStoreId: containers.TEMPORARY_CONTAINER,
                 });
 
                 result.ok = true;
+
+                break;
+            case 'get-current-group':
+                if (data.windowId) {
+                    let groupId = cache.getWindowGroup(data.windowId);
+
+                    if (groupId) {
+                        let [group] = await Groups.load(groupId);
+
+                        result.group = Groups.mapGroupForExternalExtension(group);
+                    } else {
+                        result.group = null;
+                    }
+
+                    result.ok = true;
+                } else {
+                    throw 'windowId is required';
+                }
 
                 break;
             default:

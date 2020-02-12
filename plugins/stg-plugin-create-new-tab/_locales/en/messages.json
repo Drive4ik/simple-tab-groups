@@ -4,19 +4,15 @@
         "description": "Name of the extension"
     },
     "extensionDescription": {
-        "message": "Create new tab (can do it in temporary container) in Simple Tab Groups v4.3.3 extention",
+        "message": "Create a new tab in the container based on the group in the Simple Tab Groups v4.4 extension",
         "description": "Extension description"
     },
     "needInstallSTGExtension": {
         "message": "Need install Simple Tab Groups extention or change container in addon settings\n\nClick here to open Simple Tab Groups home page",
         "description": "Need install Simple Tab Groups extention or change container in addon settings\n\nClick here to open Simple Tab Groups home page"
     },
-    "temporaryContainerTitle": {
-        "message": "⌚Temporary Container",
-        "description": "⌚Temporary Container"
-    },
-    "selectContainer": {
-        "message": "Select container",
-        "description": "Select container"
+    "newTabTitle": {
+        "message": "Open a new tab",
+        "description": "Open a new tab"
     }
 }
