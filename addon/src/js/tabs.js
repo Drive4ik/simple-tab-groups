@@ -22,7 +22,7 @@ async function createNative({url, active, pinned, title, index, windowId, isInRe
         tab.pinned = true;
     }
 
-    if (!tab.active && !tab.pinned && !utils.isUrlEmpty(tab.url)) {
+    if (!tab.active && !tab.pinned && tab.url && !utils.isUrlEmpty(tab.url)) {
         tab.discarded = true;
     }
 
