@@ -184,15 +184,15 @@
                     }
 
                     switch (request.action) {
-                        case 'tab-added':
+                        case 'tabs-added':
                             {
-                                let group = this.groups.find(gr => gr.id === request.tab.session.groupId);
+                                let group = this.groups.find(gr => gr.id === request.groupId);
 
                                 if (group) {
-                                    group.tabs.push(this.mapTab(request.tab));
+                                    group.tabs.push(...request.tabs.map(this.mapTab));
                                     group.tabs.sort(utils.sortBy('index'));
                                 } else {
-                                    this.loadUnsyncedTabs();
+                                    throw Error(utils.errorEventMessage('group for new tabs not found', request)); //this.loadUnsyncedTabs();
                                 }
                             }
 
@@ -213,28 +213,13 @@
                             }
 
                             break;
-                        case 'tab-removed':
+                        case 'tabs-removed':
                             {
-                                let tabIndex = -1,
-                                    group = this.groups.find(gr => -1 !== (tabIndex = gr.tabs.findIndex(t => t.id === request.tabId)));
+                                this.groups
+                                    .filter(group => !group.isArchive)
+                                    .forEach(group => group.tabs = group.tabs.filter(tab => !request.tabIds.includes(tab.id)));
 
-                                if (group) {
-                                    group.tabs.splice(tabIndex, 1);
-
-                                    tabIndex = this.unSyncTabs.findIndex(tab => tab.id === request.tabId);
-
-                                    if (-1 !== tabIndex) {
-                                        this.unSyncTabs.splice(tabIndex, 1);
-                                    }
-                                } else {
-                                    tabIndex = this.unSyncTabs.findIndex(tab => tab.id === request.tabId);
-
-                                    if (-1 === tabIndex) {
-                                        this.loadUnsyncedTabs();
-                                    } else {
-                                        this.unSyncTabs.splice(tabIndex, 1);
-                                    }
-                                }
+                                this.unSyncTabs = this.unSyncTabs.filter(tab => !request.tabIds.includes(tab.id));
                             }
 
                             break;
@@ -292,6 +277,7 @@
                         case 'groups-updated':
                             this.loadGroups();
                             this.loadUnsyncedTabs();
+                            this.loadCurrentWindow();
                             break;
                         case 'group-loaded':
                             this.loadCurrentWindow();
@@ -380,12 +366,14 @@
 
             mapTab(tab) {
                 tab.container = BG.containers.isDefault(tab.cookieStoreId) ? false : BG.containers.get(tab.cookieStoreId);
+
+                if (!tab.id) {
+                    tab.favIconUrl = utils.normalizeFavIcon((tab.session && tab.session.favIconUrl) || tab.favIconUrl);
+                    return Object.freeze(tab);
+                }
+
                 tab.isMoving = false;
                 tab.isOver = false;
-
-                if (!tab.session) {
-                    tab.session = {};
-                }
 
                 return new Vue({
                     data: tab,
@@ -433,9 +421,9 @@
             },
             discardOtherGroups(groupExclude) {
                 let tabIds = this.groups.reduce(function(acc, gr) {
-                    let tabIds = (gr.id === groupExclude.id || BG.cache.getWindowId(gr.id)) ? [] : gr.tabs.map(utils.keyId);
+                    let groupTabIds = (gr.id === groupExclude.id || gr.isArchive || BG.cache.getWindowId(gr.id)) ? [] : gr.tabs.map(utils.keyId);
 
-                    return [...acc, ...tabIds];
+                    return [...acc, ...groupTabIds];
                 }, []);
 
                 Tabs.discard(tabIds);
@@ -710,7 +698,7 @@
                             'drag-over': group.isOver,
                             'loaded': getWindowId(group.id),
                         }]"
-                        @contextmenu="'INPUT' !== $event.target.nodeName && $refs.groupContextMenu.open($event, {group})"
+                        @contextmenu="'INPUT' !== $event.target.nodeName && !group.isArchive && $refs.groupContextMenu.open($event, {group})"
 
                         :draggable="String(group.draggable)"
                         @dragstart="dragHandle($event, 'group', ['group'], {item: group})"
@@ -732,8 +720,13 @@
                                     <img
                                         :src="containers[group.newTabContainer].iconUrl"
                                         :style="{fill: containers[group.newTabContainer].colorCode}"
-                                        class="size-16 fill-context"
+                                        class="size-16"
                                         />
+                                </figure>
+                            </div>
+                            <div class="group-icon" v-if="group.isArchive">
+                                <figure class="image is-16x16">
+                                    <img src="/icons/archive.svg" class="size-16"/>
                                 </figure>
                             </div>
                             <div class="group-title">
@@ -759,8 +752,8 @@
                                 'in-list-view': !options.showTabsWithThumbnailsInManageGroups,
                             }]">
                             <div
-                                v-for="tab in group.filteredTabs"
-                                :key="tab.id"
+                                v-for="(tab, index) in group.filteredTabs"
+                                :key="index"
                                 :class="['tab', {
                                     'is-active': tab.active,
                                     'is-in-multiple-drop': multipleTabs.includes(tab),
@@ -769,11 +762,11 @@
                                     'drag-over': tab.isOver,
                                 }]"
                                 :title="getTabTitle(tab, true)"
-                                @contextmenu.stop.prevent="$refs.tabsContextMenu.open($event, {tab, group})"
+                                @contextmenu.stop.prevent="!group.isArchive && $refs.tabsContextMenu.open($event, {tab, group})"
 
-                                @click.stop="clickOnTab($event, tab, group)"
+                                @click.stop="!group.isArchive && clickOnTab($event, tab, group)"
 
-                                draggable="true"
+                                :draggable="String(!group.isArchive)"
                                 @dragstart="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
                                 @dragenter="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
                                 @dragover="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
@@ -795,17 +788,18 @@
                                 </div>
                                 <div
                                     @mousedown.middle.prevent
-                                    @mouseup.middle.prevent="removeTab(tab)"
+                                    @mouseup.middle.prevent="!group.isArchive && removeTab(tab)"
                                     class="tab-title text-ellipsis"
                                     :style="{borderColor: tab.container.colorCode}"
                                     v-text="getTabTitle(tab, false, 0, true)"></div>
 
-                                <div class="delete-tab-button" @click.stop="removeTab(tab)" :title="lang('deleteTab')" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                <div v-if="!group.isArchive" class="delete-tab-button" @click.stop="removeTab(tab)" :title="lang('deleteTab')" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <img class="size-14" src="/icons/close.svg" />
                                 </div>
                             </div>
 
                             <div
+                                v-if="!group.isArchive"
                                 class="tab new"
                                 :title="lang('createNewTab')"
                                 @click="addTab(group)"
@@ -918,7 +912,7 @@
                     <hr>
 
                     <li v-for="container in containers" :key="container.cookieStoreId" @click="addTab(menu.data.group, container.cookieStoreId)">
-                        <img :src="container.iconUrl" class="is-inline-block size-16 fill-context" :style="{fill: container.colorCode}" />
+                        <img :src="container.iconUrl" class="is-inline-block size-16" :style="{fill: container.colorCode}" />
                         <span v-text="container.name"></span>
                     </li>
                 </ul>
@@ -971,11 +965,12 @@
                     <li
                         v-for="group in groups"
                         :key="group.id"
-                        @click="moveTabs(menu.data.tab, group, !menu.data.group, undefined, $event.ctrlKey || $event.metaKey)"
-                        @contextmenu="moveTabs(menu.data.tab, group, !menu.data.group, true)"
+                        :class="{'is-disabled': group.isArchive}"
+                        @click="!group.isArchive && moveTabs(menu.data.tab, group, !menu.data.group, undefined, $event.ctrlKey || $event.metaKey)"
+                        @contextmenu="!group.isArchive && moveTabs(menu.data.tab, group, !menu.data.group, true)"
                         >
                         <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
-                        <span v-text="getGroupTitle(group, 'withActiveGroup')"></span>
+                        <span v-text="getGroupTitle(group, 'withActiveGroup withContainer')"></span>
                     </li>
 
                     <li

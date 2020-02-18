@@ -86,7 +86,8 @@
                     -moz-context-properties: fill;
                 }
 
-                img.group-icon {
+                img.group-icon,
+                img.archive-icon {
                     fill: var(--fill-group-icon-color) !important;
                 }
             }

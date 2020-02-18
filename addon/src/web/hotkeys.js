@@ -194,6 +194,15 @@ function showGroupsPopup(data) {
             groupNode.append(containerImgNode);
         }
 
+        if (group.isArchive) {
+            let archiveImgNode = document.createElement('img');
+
+            archiveImgNode.classList = 'archive-icon';
+            archiveImgNode.src = browser.extension.getURL('/icons/archive.svg');
+
+            groupNode.append(archiveImgNode);
+        }
+
         titleNode.innerText = group.title;
         titleNode.classList.add('stg-popup-has-text');
         groupNode.append(titleNode);

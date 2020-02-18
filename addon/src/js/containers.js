@@ -101,13 +101,14 @@ async function createTemporaryContainer() {
     const {BG} = browser.extension.getBackgroundPage();
 
     let {cookieStoreId} = await BG.browser.contextualIdentities.create({
-        name: temporaryContainerOptions.name,
-        color: temporaryContainerOptions.color,
-        icon: temporaryContainerOptions.icon,
-    });
+            name: temporaryContainerOptions.name,
+            color: temporaryContainerOptions.color,
+            icon: temporaryContainerOptions.icon,
+        }),
+        [containerId] = /\d+$/.exec(cookieStoreId);
 
     BG.browser.contextualIdentities.update(cookieStoreId, {
-        name: temporaryContainerOptions.name + ' ' + /\d+$/.exec(cookieStoreId)[0],
+        name: temporaryContainerOptions.name + ' ' + containerId,
     });
 
     return cookieStoreId;

@@ -33,7 +33,10 @@ async function load(groupId = null, withTabs = false) {
         }));
 
         groups = groups.map(function(group) {
-            group.tabs = groupTabs[group.id].sort(utils.sortBy('index'));
+            if (!group.isArchive) {
+                group.tabs = groupTabs[group.id].sort(utils.sortBy('index'));
+            }
+
             return group;
         });
     }
@@ -77,6 +80,7 @@ function create(id, title) {
         iconUrl: null,
         iconViewType: defaultGroupIconViewType,
         tabs: [],
+        isArchive: false,
         catchTabRules: '',
         catchTabContainers: [],
         newTabContainer: null,
@@ -133,7 +137,7 @@ async function add(windowId, tabs = [], title, showTabsAfterMoving) {
 
     BG.sendExternalMessage({
         action: 'group-added',
-        group: mapGroupForExternalExtension(newGroup),
+        group: mapForExternalExtension(newGroup),
     });
 
     return newGroup;
@@ -142,8 +146,7 @@ async function add(windowId, tabs = [], title, showTabsAfterMoving) {
 async function remove(groupId) {
     const {BG} = browser.extension.getBackgroundPage();
 
-    let [group, groups, index] = await load(groupId, true),
-        groupWindowId = BG.cache.getWindowId(groupId);
+    let [group, groups, index] = await load(groupId, true);
 
     BG.addUndoRemoveGroupItem(group);
 
@@ -151,23 +154,27 @@ async function remove(groupId) {
 
     await save(groups);
 
-    if (groupWindowId) {
-        BG.setBrowserAction(groupWindowId, 'loading');
-        await BG.cache.removeWindowGroup(groupWindowId);
-    }
+    if (!group.isArchive) {
+        let groupWindowId = BG.cache.getWindowId(groupId);
 
-    if (group.tabs.length) {
         if (groupWindowId) {
-            await Tabs.createTempActiveTab(groupWindowId, false);
+            BG.setBrowserAction(groupWindowId, 'loading');
+            await BG.cache.removeWindowSession(groupWindowId);
         }
 
-        await Tabs.remove(group.tabs.map(utils.keyId));
-    }
+        if (group.tabs.length) {
+            if (groupWindowId) {
+                await Tabs.createTempActiveTab(groupWindowId, false);
+            }
 
-    BG.updateMoveTabMenus();
+            await Tabs.remove(group.tabs.map(utils.keyId));
+        }
 
-    if (groupWindowId) {
-        BG.updateBrowserActionData(null, groupWindowId);
+        BG.updateMoveTabMenus();
+
+        if (groupWindowId) {
+            BG.updateBrowserActionData(null, groupWindowId);
+        }
     }
 
     BG.sendMessage({
@@ -212,7 +219,7 @@ async function update(groupId, updateData) {
     if (['title', 'iconUrl', 'iconColor', 'iconViewType', 'newTabContainer'].some(key => key in updateData)) {
         BG.sendExternalMessage({
             action: 'group-updated',
-            group: mapGroupForExternalExtension(group),
+            group: mapForExternalExtension(group),
             windowId: BG.cache.getWindowId(groupId),
         });
 
@@ -254,15 +261,64 @@ async function sort(vector = 'asc') {
     BG.updateMoveTabMenus();
 }
 
-function mapGroupForExternalExtension(group) {
+async function archiveToggle(groupId) {
+    const {BG} = browser.extension.getBackgroundPage();
+
+    await BG.loadingBrowserAction();
+
+    let [group, groups] = await load(groupId, true);
+
+    if (group.isArchive) {
+        group.isArchive = false;
+
+        let groupNewTabParams = newTabParams(group);
+
+        await BG.createTabsSafe(group.tabs.map(tab => Object.assign(tab, groupNewTabParams)), {
+            hideTabs: true,
+            sendMessageEachTab: false,
+        });
+    } else {
+        group.isArchive = true;
+
+        let tabIds = group.tabs.map(utils.keyId);
+
+        group.tabs = Tabs.prepareForSave(group.tabs, false, true, true);
+
+        let groupWindowId = BG.cache.getWindowId(group.id);
+
+        if (groupWindowId) {
+            await BG.cache.removeWindowSession(groupWindowId);
+            await Tabs.createTempActiveTab(groupWindowId, false);
+        }
+
+        if (tabIds.length) {
+            BG.addExcludeTabsIds(tabIds);
+            await Tabs.remove(tabIds);
+            BG.removeExcludeTabsIds(tabIds);
+        }
+    }
+
+    await save(groups, true);
+
+    BG.loadingBrowserAction(false);
+
+    BG.updateMoveTabMenus();
+}
+
+function mapForExternalExtension(group) {
     const {BG} = browser.extension.getBackgroundPage();
 
     return {
         id: group.id,
-        title: utils.getGroupTitle(group, 'withActiveGroup'),
+        title: utils.getGroupTitle(group, group.isArchive ? '' : 'withActiveGroup'),
+        isArchive: group.isArchive,
         iconUrl: utils.getGroupIconUrl(group),
         contextualIdentity: group.newTabContainer ? BG.containers.get(group.newTabContainer) : null,
     };
+}
+
+function newTabParams({id, newTabContainer, ifNotDefaultContainerReOpenInNew}) {
+    return {groupId: id, newTabContainer, ifNotDefaultContainerReOpenInNew};
 }
 
 async function getNextTitle() {
@@ -281,6 +337,8 @@ export default {
     update,
     move,
     sort,
-    mapGroupForExternalExtension,
+    archiveToggle,
+    mapForExternalExtension,
+    newTabParams,
     getNextTitle,
 };

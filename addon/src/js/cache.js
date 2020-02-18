@@ -172,6 +172,34 @@ async function loadTabSession(tab) {
     return tab;
 }
 
+async function setTabSession(tab) {
+    let {groupId, favIconUrl, thumbnail} = tab,
+        promises = [];
+
+    if (groupId) {
+        if (tab.pinned) {
+            console.error('[STG] Error: tab is pinned and can\'t set group id');
+        } else {
+            promises.push(setTabGroup(tab.id, groupId));
+        }
+    }
+
+    if (favIconUrl) {
+        promises.push(setTabFavIcon(tab.id, favIconUrl));
+    }
+
+    if (thumbnail) {
+        promises.push(setTabThumbnail(tab.id, thumbnail));
+    }
+
+    await Promise.all(promises);
+
+    delete tab.groupId;
+    delete tab.thumbnail;
+
+    return loadTabSession(tab);
+}
+
 function removeTabSession(tabId) {
     return Promise.all([removeTabGroup(tabId), removeTabThumbnail(tabId), removeTabFavIcon(tabId)]);
 }
@@ -306,6 +334,7 @@ export default {
 
     getTabSession,
     loadTabSession,
+    setTabSession,
     removeTabSession,
 
     getTabCookieStoreId,

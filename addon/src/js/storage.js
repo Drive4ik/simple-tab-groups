@@ -42,7 +42,7 @@ export default {
     },
     async set(data) {
         if (data.groups) {
-            data.groups.forEach(group => group.tabs = []);
+            data.groups.forEach(group => !group.isArchive && (group.tabs = []));
         }
 
         if (data.hotkeys) {

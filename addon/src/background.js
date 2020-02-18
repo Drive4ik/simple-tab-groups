@@ -58,18 +58,31 @@ let options = {},
 
 window.addEventListener('error', utils.errorEventHandler);
 
-async function createTabsSafe(tabs, hideTabs, withRemoveEvents = true) {
+async function createTabsSafe(tabs, {
+        hideTabs = false,
+        withRemoveEvents = true,
+        sendMessageEachTab = true,
+        removeTabKeys = ['index'],
+    } = {}) {
+
     if (withRemoveEvents) {
         removeEvents();
     }
 
-    let result = await Promise.all(tabs.map(function(tab) {
-        delete tab.index;
-        return Tabs.create(tab);
+    if (!removeTabKeys.includes('index')) {
+        removeTabKeys.push('index');
+    }
+
+    let newTabs = await Promise.all(tabs.map(function(tab) {
+        removeTabKeys.forEach(key => delete tab[key]);
+
+        return Tabs.createNative(tab);
     }));
 
+    newTabs = await Promise.all(newTabs.map(cache.setTabSession));
+
     if (hideTabs) {
-        let notPinnedTabs = result.filter(tab => !tab.pinned),
+        let notPinnedTabs = newTabs.filter(tab => !tab.pinned),
             notPinnedTabsIds = notPinnedTabs.map(utils.keyId);
 
         if (notPinnedTabs.length) {
@@ -91,7 +104,29 @@ async function createTabsSafe(tabs, hideTabs, withRemoveEvents = true) {
         addEvents();
     }
 
-    return result;
+    if (sendMessageEachTab) {
+        let groupTabs = {};
+
+        newTabs.forEach(function(tab) {
+            if (tab.session.groupId) {
+                if (!groupTabs[tab.session.groupId]) {
+                    groupTabs[tab.session.groupId] = [];
+                }
+
+                groupTabs[tab.session.groupId].push(tab);
+            }
+        });
+
+        for (let groupId in groupTabs) {
+            sendMessage({
+                action: 'tabs-added',
+                groupId: Number(groupId),
+                tabs: groupTabs[groupId],
+            });
+        }
+    }
+
+    return newTabs;
 }
 
 function sendMessage(data) {
@@ -282,7 +317,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
             .then(function([group]) {
                 sendExternalMessage({
                     action: 'group-loaded',
-                    group: Groups.mapGroupForExternalExtension(group),
+                    group: Groups.mapForExternalExtension(group),
                     windowId: windowId,
                 });
             });
@@ -477,8 +512,8 @@ function onUpdatedTab(tabId, changeInfo, tab) {
                 cache.removeTabGroup(tab.id);
 
                 sendMessage({
-                    action: 'tab-removed',
-                    tabId: tab.id,
+                    action: 'tabs-removed',
+                    tabIds: [tab.id],
                 });
             }
         } else {
@@ -498,8 +533,9 @@ function onUpdatedTab(tabId, changeInfo, tab) {
                 tab.session = cache.getTabSession(tab.id);
 
                 sendMessage({
-                    action: 'tab-added',
-                    tab: tab,
+                    action: 'tabs-added',
+                    groupId: winGroupId,
+                    tabs: [tab],
                 });
             }
         }
@@ -530,6 +566,24 @@ async function checkTemporaryContainer(cookieStoreId, excludeTabId) {
     }
 }
 
+let lazyRemoveTabIds = [],
+    lazyRemoveTabTimer = 0;
+
+function lazyRemoveTabEvent(tabId) {
+    clearTimeout(lazyRemoveTabTimer);
+
+    lazyRemoveTabIds.push(tabId);
+
+    lazyRemoveTabTimer = window.setTimeout(function() {
+        sendMessage({
+            action: 'tabs-removed',
+            tabIds: lazyRemoveTabIds,
+        });
+
+        lazyRemoveTabIds = [];
+    }, 100);
+}
+
 function onRemovedTab(tabId, {isWindowClosing, windowId}) {
     let excludeTab = excludeTabsIds.includes(tabId);
 
@@ -540,10 +594,7 @@ function onRemovedTab(tabId, {isWindowClosing, windowId}) {
         return;
     }
 
-    sendMessage({
-        action: 'tab-removed',
-        tabId: tabId,
-    });
+    lazyRemoveTabEvent(tabId);
 
     if (isWindowClosing) {
         reCreateTabsOnRemoveWindow.push(tabId);
@@ -618,7 +669,7 @@ async function onCreatedWindow(win) {
         win = await cache.loadWindowSession(win);
 
         if (win.session.groupId) {
-            await cache.removeWindowGroup(win.id);
+            await cache.removeWindowSession(win.id);
 
             updateBrowserActionData(null, win.id);
 
@@ -723,23 +774,28 @@ async function addUndoRemoveGroupItem(groupToRemove) {
 
         groups.push(group);
 
-        await Groups.save(groups, true);
+        await Groups.save(groups);
 
         updateMoveTabMenus();
 
-        if (tabs.length) {
+        if (tabs.length && !group.isArchive) {
+            let newTabParams = Groups.newTabParams(group);
+
             await loadingBrowserAction();
 
-            await createTabsSafe(tabs.map(function(tab) {
-                delete tab.active;
-                delete tab.windowId;
-                tab.group = group;
+            await createTabsSafe(tabs.map(tab => Object.assign(tab, newTabParams)), {
+                hideTabs: true,
+                sendMessageEachTab: false,
+                removeTabKeys: ['active', 'windowId'],
+            });
 
-                return tab;
-            }), true);
-
-            loadingBrowserAction(false);
+            await loadingBrowserAction(false);
         }
+
+        sendMessage({
+            action: 'groups-updated',
+        });
+
     }.bind(null, utils.clone(groupToRemove));
 
     browser.menus.create({
@@ -810,6 +866,7 @@ async function createMoveTabMenus(windowId) {
             groupTitle = String(utils.getGroupTitle(group, 'withActiveGroup withContainer'));
 
         options.showContextMenuOnTabs && menuIds.push(browser.menus.create({
+            enabled: !group.isArchive,
             title: groupTitle,
             icons: groupIcon,
             parentId: 'stg-move-tab-parent',
@@ -827,6 +884,7 @@ async function createMoveTabMenus(windowId) {
         }));
 
         options.showContextMenuOnLinks && menuIds.push(browser.menus.create({
+            enabled: !group.isArchive,
             title: groupTitle,
             icons: groupIcon,
             parentId: 'stg-open-link-parent',
@@ -846,6 +904,7 @@ async function createMoveTabMenus(windowId) {
         }));
 
         hasBookmarksPermission && menuIds.push(browser.menus.create({
+            enabled: !group.isArchive,
             title: groupTitle,
             icons: groupIcon,
             parentId: 'stg-open-bookmark-in-group-parent',
@@ -860,41 +919,40 @@ async function createMoveTabMenus(windowId) {
 
                 let setActive = 2 === info.button,
                     [bookmark] = await browser.bookmarks.getSubTree(info.bookmarkId),
-                    tabsToCreate = [];
+                    tabsToCreate = [],
+                    newTabParams = Groups.newTabParams(group),
+                    groupWindowId = cache.getWindowId(group.id);
 
                 if (bookmark.type === browser.bookmarks.BookmarkTreeNodeType.BOOKMARK) {
-                    if (utils.isUrlAllowToCreate(bookmark.url)) {
-                        tabsToCreate.push({
-                            title: bookmark.title,
-                            url: bookmark.url,
-                            group,
-                        });
-                    }
-                } else if (bookmark.type === browser.bookmarks.BookmarkTreeNodeType.FOLDER) {
-                    await findBookmarks(bookmark);
+                    bookmark.children = [bookmark];
                 }
+
+                await findBookmarks(bookmark);
 
                 async function findBookmarks(folder) {
                     for (let b of folder.children) {
                         if (b.type === browser.bookmarks.BookmarkTreeNodeType.FOLDER) {
                             await findBookmarks(b);
-                        } else if (b.type === browser.bookmarks.BookmarkTreeNodeType.BOOKMARK && utils.isUrlAllowToCreate(b.url)) {
+                        } else if (b.type === browser.bookmarks.BookmarkTreeNodeType.BOOKMARK) {
                             tabsToCreate.push({
                                 title: b.title,
                                 url: b.url,
-                                group,
+                                windowId: groupWindowId,
+                                ...newTabParams,
                             });
                         }
                     }
                 }
 
                 if (tabsToCreate.length) {
-                    let tabs = await createTabsSafe(tabsToCreate, !cache.getWindowId(group.id));
+                    let [firstTab] = await createTabsSafe(tabsToCreate, {
+                        hideTabs: !groupWindowId,
+                    });
 
                     loadingBrowserAction(false);
 
                     if (setActive) {
-                        applyGroup(undefined, group.id, tabs[0].id);
+                        applyGroup(undefined, group.id, firstTab.id);
                     } else {
                         utils.notify(browser.i18n.getMessage('tabsCreatedCount', tabsToCreate.length), 7000);
                     }
@@ -1023,7 +1081,7 @@ async function createMoveTabMenus(windowId) {
                 for (let bookmark of folder.children) {
                     if (bookmark.type === browser.bookmarks.BookmarkTreeNodeType.FOLDER) {
                         await addBookmarkFolderAsGroup(bookmark);
-                    } else if (bookmark.type === browser.bookmarks.BookmarkTreeNodeType.BOOKMARK && utils.isUrlAllowToCreate(bookmark.url)) {
+                    } else if (bookmark.type === browser.bookmarks.BookmarkTreeNodeType.BOOKMARK) {
                         tabsToCreate.push({
                             title: bookmark.title,
                             url: bookmark.url,
@@ -1032,7 +1090,9 @@ async function createMoveTabMenus(windowId) {
                 }
 
                 if (tabsToCreate.length) {
-                    let tabs = await createTabsSafe(tabsToCreate, true);
+                    let tabs = await createTabsSafe(tabsToCreate, {
+                        hideTabs: true,
+                    });
                     await Groups.add(undefined, tabs, folder.title);
                     groupsCreatedCount++;
                 }
@@ -1332,6 +1392,8 @@ async function onBeforeTabRequest({tabId, url, originUrl}) {
         return;
     }
 
+    groups = groups.filter(group => !group.isArchive);
+
     if (!tabGroup.isSticky && tabGroup.newTabContainer !== containers.TEMPORARY_CONTAINER) {
         let destGroup = _getCatchedGroupForTab(groups, tab);
 
@@ -1361,10 +1423,10 @@ async function onBeforeTabRequest({tabId, url, originUrl}) {
 
     let newTab = await Tabs.create({
         url: tab.url,
-        group: tabGroup,
         active: tab.active,
         index: tab.index,
         windowId: groupWindowId || tab.windowId,
+        ...Groups.newTabParams(tabGroup),
     });
 
     if (!groupWindowId || tab.hidden) {
@@ -1417,9 +1479,9 @@ function addEvents() {
     browser.webRequest.onBeforeRequest.addListener(onBeforeTabRequest,
         {
             urls: ['<all_urls>'],
-            types: ['main_frame'],
+            types: [browser.webRequest.ResourceType.MAIN_FRAME],
         },
-        ['blocking']
+        [browser.webRequest.OnBeforeRequestOptions.BLOCKING]
     );
 }
 
@@ -1527,7 +1589,8 @@ async function runAction(data, externalExtId) {
     try {
         let currentWindow = await Windows.getLastFocusedNormalWindow(false),
             loadCurrentGroupWithTabs = currentWindow.session.groupId ? ['discard-group', 'discard-other-groups', 'reload-all-tabs-in-current-group'].includes(data.action) : false,
-            [currentGroup, groups] = await Groups.load(currentWindow.session.groupId || -1, loadCurrentGroupWithTabs);
+            [currentGroup, groups] = await Groups.load(currentWindow.session.groupId || -1, loadCurrentGroupWithTabs),
+            notArchivedGroups = groups.filter(group => !group.isArchive);
 
         if (!currentGroup) {
             currentGroup = {
@@ -1540,42 +1603,42 @@ async function runAction(data, externalExtId) {
                 result.ok = true;
                 break;
             case 'get-groups-list':
-                result.groupsList = groups.map(Groups.mapGroupForExternalExtension);
+                result.groupsList = groups.map(Groups.mapForExternalExtension);
                 result.ok = true;
                 break;
             case 'load-next-group':
-                result.ok = await applyGroupByPosition('next', groups, currentGroup.id);
+                result.ok = await applyGroupByPosition('next', notArchivedGroups, currentGroup.id);
                 break;
             case 'load-prev-group':
-                result.ok = await applyGroupByPosition('prev', groups, currentGroup.id);
+                result.ok = await applyGroupByPosition('prev', notArchivedGroups, currentGroup.id);
                 break;
             case 'load-next-unloaded-group':
-                result.ok = await applyGroupByPosition('next', groups.filter(group => !cache.getWindowId(group.id) || group.id === currentGroup.id), currentGroup.id);
+                result.ok = await applyGroupByPosition('next', notArchivedGroups.filter(group => !cache.getWindowId(group.id) || group.id === currentGroup.id), currentGroup.id);
                 break;
             case 'load-prev-unloaded-group':
-                result.ok = await applyGroupByPosition('prev', groups.filter(group => !cache.getWindowId(group.id) || group.id === currentGroup.id), currentGroup.id);
+                result.ok = await applyGroupByPosition('prev', notArchivedGroups.filter(group => !cache.getWindowId(group.id) || group.id === currentGroup.id), currentGroup.id);
                 break;
             case 'load-history-next-group':
-                result.ok = await applyGroupByHistory('next', groups);
+                result.ok = await applyGroupByHistory('next', notArchivedGroups);
                 break;
             case 'load-history-prev-group':
-                result.ok = await applyGroupByHistory('prev', groups);
+                result.ok = await applyGroupByHistory('prev', notArchivedGroups);
                 break;
             case 'load-first-group':
-                if (groups[0]) {
-                    await applyGroup(currentWindow.id, groups[0].id);
+                if (notArchivedGroups[0]) {
+                    await applyGroup(currentWindow.id, notArchivedGroups[0].id);
                     result.ok = true;
                 }
                 break;
             case 'load-last-group':
-                if (groups.length > 0) {
-                    await applyGroup(currentWindow.id, groups[groups.length - 1].id);
+                if (notArchivedGroups.length > 0) {
+                    await applyGroup(currentWindow.id, notArchivedGroups[notArchivedGroups.length - 1].id);
                     result.ok = true;
                 }
                 break;
             case 'load-custom-group':
                 if (Number.isFinite(data.groupId) && 0 < data.groupId) {
-                    if (groups.some(group => group.id === data.groupId)) {
+                    if (notArchivedGroups.some(group => group.id === data.groupId)) {
                         await applyGroup(currentWindow.id, data.groupId);
                         result.ok = true;
                     } else {
@@ -1599,8 +1662,8 @@ async function runAction(data, externalExtId) {
                         action: 'show-groups-popup',
                         popupAction: 'load-custom-group',
                         popupTitleLang: 'hotkeyActionTitleLoadCustomGroup',
-                        groups: groups.map(Groups.mapGroupForExternalExtension),
-                        disableGroupIds: [currentGroup.id],
+                        groups: groups.map(Groups.mapForExternalExtension),
+                        disableGroupIds: [currentGroup.id, ...groups.filter(group => group.isArchive).map(utils.keyId)],
                     });
 
                     result.ok = true;
@@ -1609,7 +1672,7 @@ async function runAction(data, externalExtId) {
             case 'add-new-group':
                 let newGroup = await Groups.add();
                 result.ok = true;
-                result.group = Groups.mapGroupForExternalExtension(newGroup);
+                result.group = Groups.mapForExternalExtension(newGroup);
                 break;
             case 'delete-current-group':
                 if (currentGroup.id) {
@@ -1641,7 +1704,7 @@ async function runAction(data, externalExtId) {
                 }
 
                 if (Number.isFinite(data.groupId) && 0 < data.groupId) {
-                    if (groups.some(group => group.id === data.groupId)) {
+                    if (notArchivedGroups.some(group => group.id === data.groupId)) {
                         await Tabs.move([activeTab], data.groupId);
                         result.ok = true;
                     } else {
@@ -1661,14 +1724,15 @@ async function runAction(data, externalExtId) {
                         action: 'show-groups-popup',
                         popupAction: 'move-active-tab-to-custom-group',
                         popupTitleLang: 'moveTabToGroupDisabledTitle',
-                        groups: groups.map(Groups.mapGroupForExternalExtension),
+                        groups: groups.map(Groups.mapForExternalExtension),
+                        disableGroupIds: groups.filter(group => group.isArchive).map(utils.keyId),
                         focusedGroupId: activeTab.session.groupId,
                     });
                     result.ok = true;
                 }
                 break;
             case 'discard-group':
-                let groupToDiscard = groups.find(group => group.id === data.groupId);
+                let groupToDiscard = notArchivedGroups.find(group => group.id === data.groupId);
 
                 if (groupToDiscard) {
                     await Tabs.discard(groupToDiscard.tabs.map(utils.keyId));
@@ -1685,15 +1749,16 @@ async function runAction(data, externalExtId) {
                         action: 'show-groups-popup',
                         popupAction: 'discard-group',
                         popupTitleLang: 'discardGroupTitle',
-                        groups: groups.map(Groups.mapGroupForExternalExtension),
+                        groups: groups.map(Groups.mapForExternalExtension),
                         focusedGroupId: currentGroup.id,
+                        disableGroupIds: groups.filter(group => group.isArchive).map(utils.keyId),
                         disableNewGroupItem: true,
                     });
                     result.ok = true;
                 }
                 break;
             case 'discard-other-groups':
-                let tabIds = groups.reduce((acc, gr) => [...acc, ...(gr.id === currentGroup.id ? [] : gr.tabs.map(utils.keyId))], []);
+                let tabIds = notArchivedGroups.reduce((acc, gr) => [...acc, ...(gr.id === currentGroup.id ? [] : gr.tabs.map(utils.keyId))], []);
 
                 await Tabs.discard(tabIds);
 
@@ -1707,8 +1772,8 @@ async function runAction(data, externalExtId) {
 
                 break;
             case 'create-temp-tab':
-                await Tabs.create({
-                    active: 'active' in data ? Boolean(data.active) : true,
+                await Tabs.createNative({
+                    active: data.active,
                     cookieStoreId: containers.TEMPORARY_CONTAINER,
                 });
 
@@ -1722,7 +1787,7 @@ async function runAction(data, externalExtId) {
                     if (groupId) {
                         let [group] = await Groups.load(groupId);
 
-                        result.group = Groups.mapGroupForExternalExtension(group);
+                        result.group = Groups.mapForExternalExtension(group);
                     } else {
                         result.group = null;
                     }
@@ -1853,56 +1918,22 @@ async function createBackup(includeTabThumbnails, includeTabFavIcons, isAutoBack
         includeTabThumbnails = options.showTabsWithThumbnailsInManageGroups;
     }
 
-    data.pinnedTabs = await Tabs.get(null, true, null);
-    data.pinnedTabs = data.pinnedTabs
-        .map(function({url, title, cookieStoreId, isInReaderMode}) {
-            url = utils.normalizeUrl(url);
-            return {url, title, cookieStoreId, isInReaderMode};
-        })
-        .filter(tab => utils.isUrlAllowToCreate(tab.url));
+    let pinnedTabs = await Tabs.get(null, true, null);
 
-    if (!data.pinnedTabs.length) {
-        delete data.pinnedTabs;
+    if (pinnedTabs.length) {
+        data.pinnedTabs = Tabs.prepareForSave(pinnedTabs);
     }
 
     let containersToExport = [];
 
     data.groups = groups.map(function(group) {
-        group.tabs = group.tabs
-            .map(function({url, title, cookieStoreId, isInReaderMode, session}) {
-                url = utils.normalizeUrl(url);
+        group.tabs = Tabs.prepareForSave(group.tabs, false, includeTabFavIcons, includeTabThumbnails);
 
-                let tab = {url, title};
-
-                if (!containers.isDefault(cookieStoreId)) {
-                    tab.cookieStoreId = cookieStoreId;
-
-                    if (!containersToExport.includes(tab.cookieStoreId)) {
-                        containersToExport.push(tab.cookieStoreId);
-                    }
-                }
-
-                if (isInReaderMode) {
-                    tab.isInReaderMode = true;
-                }
-
-                if (includeTabThumbnails || includeTabFavIcons) {
-                    delete session.groupId;
-
-                    if (!includeTabThumbnails) {
-                        delete session.thumbnail;
-                    }
-
-                    if (!includeTabFavIcons) {
-                        delete session.favIconUrl;
-                    }
-
-                    tab.session = session;
-                }
-
-                return tab;
-            })
-            .filter(tab => tab.url);
+        group.tabs.forEach(function({cookieStoreId}) {
+            if (!containers.isDefault(cookieStoreId) && !containersToExport.includes(cookieStoreId)) {
+                containersToExport.push(cookieStoreId);
+            }
+        });
 
         containersToExport.push(...group.catchTabContainers, group.newTabContainer);
 
@@ -1959,12 +1990,16 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
 
     currentData.groups = await Groups.load(null, true);
 
+    if (!Array.isArray(data.hotkeys)) {
+        data.hotkeys = [];
+    } else if (!isMac) {
+        data.hotkeys.forEach(hotkey => hotkey.metaKey = false);
+    }
+
     data.groups = data.groups.map(function(group) {
         let newGroup = Groups.create(++lastCreatedGroupPosition, group.title);
 
-        if (group.id && data.hotkeys) {
-            data.hotkeys.forEach(hotkey => hotkey.groupId === group.id ? (hotkey.groupId = newGroup.id) : null);
-        }
+        data.hotkeys.forEach(hotkey => hotkey.groupId === group.id ? (hotkey.groupId = newGroup.id) : null);
 
         delete group.id;
         delete group.title;
@@ -1974,6 +2009,8 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
             ...group,
         };
 
+        let newTabParams = Groups.newTabParams(newGroup);
+
         newGroup.tabs = group.tabs
             .map(function(tab) {
                 delete tab.active;
@@ -1981,12 +2018,12 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
                 delete tab.index;
                 delete tab.pinned;
 
-                tab.group = newGroup;
+                Object.assign(tab, newTabParams);
+
                 tab.url = utils.normalizeUrl(tab.url);
 
                 return tab;
-            })
-            .filter(tab => utils.isUrlAllowToCreate(tab.url));
+            });
 
         if ('string' === typeof group.catchTabRules && group.catchTabRules.length) {
             newGroup.catchTabRules = group.catchTabRules;
@@ -1995,16 +2032,12 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         return newGroup;
     });
 
-    if (data.hotkeys && !isMac) {
-        data.hotkeys.forEach(hotkey => hotkey.metaKey = false);
-    }
-
     data = {
         ...currentData,
         ...data,
         lastCreatedGroupPosition,
         groups: [...currentData.groups, ...data.groups],
-        hotkeys: [...currentData.hotkeys, ...(data.hotkeys || [])],
+        hotkeys: [...currentData.hotkeys, ...data.hotkeys],
     };
 
     if (data.containers) {
@@ -2029,25 +2062,23 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
 
     await syncTabs(data.groups, windows);
 
-    if (data.pinnedTabs) {
+    if (Array.isArray(data.pinnedTabs)) {
         let currentPinnedTabs = await Tabs.get(null, true, null);
 
         data.pinnedTabs = data.pinnedTabs.filter(function(tab) {
-            delete tab.active;
-            delete tab.windowId;
-            delete tab.index;
-
             tab.pinned = true;
-
-            return !currentPinnedTabs.some(t => t.url === tab.url) && utils.isUrlAllowToCreate(tab.url);
+            return !currentPinnedTabs.some(t => t.url === tab.url);
         });
 
         if (data.pinnedTabs.length) {
-            await createTabsSafe(data.pinnedTabs, false, false);
+            await createTabsSafe(data.pinnedTabs, {
+                withRemoveEvents: false,
+                removeTabKeys: ['active', 'windowId'],
+            });
         }
-
-        delete data.pinnedTabs;
     }
+
+    delete data.pinnedTabs;
 
     data.isBackupRestoring = true;
 
@@ -2382,6 +2413,8 @@ async function runMigrateForData(data) {
             version: '4.4',
             migration() {
                 window.localStorage.clear();
+
+                data.groups.forEach(group => group.isArchive = false);
             },
         },
     ];
@@ -2430,53 +2463,42 @@ async function syncTabs(groups, windows, hideAllTabs = false) {
     }
 
     for (let group of groups) {
-        let tabs = [];
+        if (group.isArchive) {
+            continue;
+        }
+
+        let tabs = [],
+            newTabParams = Groups.newTabParams(group);
 
         for (let tab of group.tabs) {
             tab.cookieStoreId = await containers.normalize(tab.cookieStoreId);
             tab.url = utils.normalizeUrl(tab.url);
 
-            if (!tab.session) {
-                tab.session = {};
+            if (tab.session) {
+                tab.session.groupId = group.id;
+            } else {
+                tab.session = {
+                    groupId: group.id,
+                };
             }
 
             let winTabIndex = allTabs.findIndex(winTab => winTab.url === tab.url && winTab.cookieStoreId === tab.cookieStoreId);
 
             if (winTabIndex !== -1) {
-                let [winTab] = allTabs.splice(winTabIndex, 1),
-                    cachePromises = [];
+                let [winTab] = allTabs.splice(winTabIndex, 1);
 
-                if (winTab.session.groupId !== group.id) {
-                    winTab.session.groupId = group.id;
-                    cachePromises.push(cache.setTabGroup(winTab.id, group.id));
-                }
+                Object.assign(winTab, tab.session);
 
-                if (tab.session.favIconUrl && winTab.session.favIconUrl !== tab.session.favIconUrl) {
-                    winTab.session.favIconUrl = tab.session.favIconUrl;
-                    cachePromises.push(cache.setTabFavIcon(winTab.id, tab.session.favIconUrl));
-                }
-
-                if (tab.session.thumbnail && winTab.session.thumbnail !== tab.session.thumbnail) {
-                    winTab.session.thumbnail = tab.session.thumbnail;
-                    cachePromises.push(cache.setTabThumbnail(winTab.id, tab.session.thumbnail));
-                }
-
-                await Promise.all(cachePromises);
-
-                tabs.push(winTab);
+                tabs.push(cache.setTabSession(winTab));
             } else {
-                if (utils.isUrlAllowToCreate(tab.url)) {
-                    tabs.push(
-                        Tabs.create({
-                            title: tab.title,
-                            url: tab.url,
-                            favIconUrl: tab.favIconUrl || tab.session.favIconUrl,
-                            thumbnail: tab.session.thumbnail,
-                            cookieStoreId: tab.cookieStoreId,
-                            group,
-                        })
-                    );
-                }
+                tabs.push(Tabs.create({
+                    title: tab.title,
+                    url: tab.url,
+                    cookieStoreId: tab.cookieStoreId,
+                    favIconUrl: tab.favIconUrl,
+                    session: tab.session,
+                    ...newTabParams,
+                }, false));
             }
         }
 
@@ -2485,6 +2507,10 @@ async function syncTabs(groups, windows, hideAllTabs = false) {
 
     // sort tabs
     for (let group of groups) {
+        if (group.isArchive) {
+            continue;
+        }
+
         if (group.tabs.length) {
             group.tabs = await Tabs.moveNative(group.tabs, {
                 index: -1,
@@ -2529,31 +2555,37 @@ async function tryRestoreMissedTabs(withRemoveEvents = false) {
 
     if (tabsToRestore.length) {
         let groups = await Groups.load(null, true),
+            groupsObj = {},
             foundTabIds = [];
+
+        groups.forEach(function(group) {
+            groupsObj[group.id] = {
+                tabs: group.tabs,
+                newTabParams: Groups.newTabParams(group),
+            };
+        });
 
         tabsToRestore = tabsToRestore
             .map(function(tab) {
-                let group = groups.find(group => group.id === tab.groupId);
+                if (groupsObj[tab.groupId]) {
+                    let winTab = groupsObj[tab.groupId].tabs.find(function(t) {
+                        return !foundTabIds.includes(t.id) && t.url === tab.url && t.cookieStoreId === tab.cookieStoreId;
+                    });
 
-                if (group) {
-                    let groupTab = group.tabs.find(t => !foundTabIds.includes(t.id) && t.url === tab.url && t.cookieStoreId === tab.cookieStoreId);
-
-                    if (groupTab) {
-                        foundTabIds.push(groupTab.id);
-                        return false;
+                    if (winTab) {
+                        foundTabIds.push(winTab.id);
                     } else {
-                        tab.group = group;
+                        return Object.assign(tab, groupsObj[tab.groupId].newTabParams);
                     }
                 }
-
-                delete tab.groupId;
-
-                return tab;
             })
             .filter(Boolean);
 
         if (tabsToRestore.length) {
-            await createTabsSafe(tabsToRestore, true, withRemoveEvents);
+            await createTabsSafe(tabsToRestore, {
+                hideTabs: true,
+                withRemoveEvents: withRemoveEvents,
+            });
         }
     }
 
@@ -2658,7 +2690,7 @@ async function init() {
     await Promise.all(windows.map(async function(win) {
         if (win.session.groupId && !data.groups.some(group => group.id === win.session.groupId)) {
             delete win.session.groupId;
-            await cache.removeWindowGroup(win.id);
+            await cache.removeWindowSession(win.id);
         }
 
         if (win.session.groupId) {

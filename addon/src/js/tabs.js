@@ -5,48 +5,50 @@ import utils from './utils';
 import Groups from './groups';
 import Windows from './windows';
 
-const newTabKeys = ['active', 'cookieStoreId', 'index', 'discarded', 'title', 'openInReaderMode', 'pinned', 'url', 'windowId'];
-
-async function create(tab) {
+async function createNative({url, active, pinned, title, index, windowId, isInReaderMode, openInReaderMode, cookieStoreId, newTabContainer, ifNotDefaultContainerReOpenInNew, groupId, favIconUrl, thumbnail, session}) {
     const {BG} = browser.extension.getBackgroundPage();
 
-    BG.console.log('create tab', utils.clone(tab));
+    let tab = {};
 
-    let {group, thumbnail, favIconUrl} = tab;
-
-    if (!utils.isUrlAllowToCreate(tab.url)) {
-        delete tab.url;
+    if (utils.isUrlAllowToCreate(url)) {
+        tab.url = url;
     }
 
-    if (!tab.active) {
-        tab.active = false;
+    if (active) {
+        tab.active = true;
     }
 
-    if (!tab.pinned) {
-        delete tab.pinned;
+    if (pinned) {
+        tab.pinned = true;
     }
 
-    if (!tab.active && !tab.pinned && tab.url) {
+    if (!tab.active && !tab.pinned && !utils.isUrlEmpty(tab.url)) {
         tab.discarded = true;
-    } else {
-        delete tab.discarded;
     }
 
-    if (tab.active || !tab.discarded) {
-        delete tab.title;
+    if (tab.discarded && typeof title === 'string' && title.length) {
+        tab.title = title;
     }
 
-    if (!Number.isFinite(tab.index) || 0 > tab.index) {
-        delete tab.index;
+    if (Number.isFinite(index) && index >= 0) {
+        tab.index = index;
     }
 
-    if (!Number.isFinite(tab.windowId) || 1 > tab.windowId || !BG.cache.hasWindow(tab.windowId)) {
-        delete tab.windowId;
+    if (Number.isFinite(windowId) && windowId >= 1 && BG.cache.hasWindow(windowId)) {
+        tab.windowId = windowId;
     }
 
-    if (group && group.newTabContainer) {
-        if (tab.cookieStoreId !== BG.containers.TEMPORARY_CONTAINER) {
-            tab.cookieStoreId = group.newTabContainer;
+    if (isInReaderMode || openInReaderMode) {
+        tab.openInReaderMode = true;
+    }
+
+    if (typeof cookieStoreId === 'string') {
+        tab.cookieStoreId = cookieStoreId;
+    }
+
+    if (newTabContainer) {
+        if (tab.cookieStoreId !== BG.containers.TEMPORARY_CONTAINER && ifNotDefaultContainerReOpenInNew) {
+            tab.cookieStoreId = newTabContainer;
         }
     }
 
@@ -56,39 +58,43 @@ async function create(tab) {
         tab.cookieStoreId = BG.containers.get(tab.cookieStoreId, 'cookieStoreId');
     }
 
-    if (tab.isInReaderMode) {
-        tab.openInReaderMode = true;
-    }
-
-    Object.keys(tab).forEach(key => !newTabKeys.includes(key) && (delete tab[key]));
-
     let newTab = await BG.browser.tabs.create(tab);
 
     BG.cache.setTab(newTab);
 
-    if (group && !newTab.pinned) {
-        BG.cache.setTabGroup(newTab.id, group.id);
+    if (groupId) {
+        newTab.groupId = groupId;
+    } else if (session && session.groupId) {
+        newTab.groupId = session.groupId;
+    }
+
+    if (session && session.favIconUrl) {
+        newTab.favIconUrl = session.favIconUrl;
+    } else if (favIconUrl) {
+        newTab.favIconUrl = favIconUrl;
     }
 
     if (thumbnail) {
-        BG.cache.setTabThumbnail(newTab.id, thumbnail);
+        newTab.thumbnail = thumbnail;
+    } else if (session && session.thumbnail) {
+        newTab.thumbnail = session.thumbnail;
     }
 
-    if (favIconUrl) {
-        newTab.favIconUrl = utils.normalizeFavIcon(favIconUrl);
-        BG.cache.setTabFavIcon(newTab.id, newTab.favIconUrl);
-    } else if (!newTab.favIconUrl) {
-        newTab.favIconUrl = utils.normalizeFavIcon();
-    }
+    return newTab;
+}
 
-    newTab.session = BG.cache.getTabSession(newTab.id);
+async function create(tab, sendMessage = true) {
+    const {BG} = browser.extension.getBackgroundPage();
 
-    BG.console.log('tab created', {tab, newTab});
+    let newTab = await createNative(tab);
 
-    if (newTab.session.groupId) {
+    newTab = await BG.cache.setTabSession(newTab);
+
+    if (newTab.session.groupId && sendMessage === true) {
         BG.sendMessage({
-            action: 'tab-added',
-            tab: newTab,
+            action: 'tabs-added',
+            groupId: newTab.session.groupId,
+            tabs: [newTab],
         });
     }
 
@@ -101,9 +107,10 @@ async function createUrlOnce(url, windowId) {
     if (tab) {
         return setActive(tab.id);
     } else {
-        return create({
+        return createNative({
             active: true,
-            url,
+            url: url,
+            windowId: windowId,
         });
     }
 }
@@ -201,12 +208,12 @@ async function createTempActiveTab(windowId, createPinnedTab = true, newTabUrl) 
 
     if (pinnedTabs.length) {
         if (!pinnedTabs.some(tab => tab.active)) {
-            await setActive(pinnedTabs.sort(utils.sortBy('lastAccessed')).pop().id);
+            await setActive(utils.getLastActiveTab(pinnedTabs).id);
         }
     } else {
         newTabUrl = createPinnedTab ? (newTabUrl || 'about:blank') : (newTabUrl || 'about:newtab');
 
-        return create({
+        return createNative({
             url: newTabUrl,
             pinned: createPinnedTab,
             active: true,
@@ -225,9 +232,12 @@ async function add(groupId, cookieStoreId, url, title, active = false) {
             title,
             active,
             cookieStoreId,
-            group,
             windowId,
-        }], !windowId);
+            ...Groups.newTabParams(group),
+        }], {
+            hideTabs: !windowId,
+            withRemoveEvents: false,
+        });
 
     return tab;
 }
@@ -384,7 +394,8 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
         }));
 
         if (group.newTabContainer) {
-            let tabsIdsToRemove = [];
+            let tabsIdsToRemove = [],
+                newTabParams = Groups.newTabParams(group);
 
             tabs = await Promise.all(tabs.map(function(tab) {
                 if (
@@ -402,21 +413,25 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
                 return create({
                     url: tab.url,
                     title: tab.title,
-                    isInReaderMode: tab.isInReaderMode,
-                    group,
-                    windowId,
+                    openInReaderMode: tab.isInReaderMode,
+                    windowId: windowId,
                     thumbnail: BG.cache.getTabSession(tab.id, 'thumbnail'),
                     favIconUrl: BG.cache.getTabSession(tab.id, 'favIconUrl'),
+                    ...newTabParams,
                 });
             }));
 
             if (tabsIdsToRemove.length) {
-                tabs.forEach(function(tab) {
-                    if (!tabIds.includes(tab.id)) {
-                        tabIds.push(tab.id);
-                        BG.addExcludeTabsIds([tab.id]);
+                let tabIdsToExclude = [];
+
+                tabs.forEach(function({id}) {
+                    if (!tabIds.includes(id)) {
+                        tabIds.push(id);
+                        tabIdsToExclude.push(id);
                     }
                 });
+
+                BG.addExcludeTabsIds(tabIdsToExclude);
 
                 await remove(tabsIdsToRemove);
             }
@@ -464,8 +479,10 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
         return [];
     }
 
+    let [firstTab] = tabs;
+
     if (showTabAfterMoving) {
-        await BG.applyGroup(windowId, groupId, tabs[0].id);
+        await BG.applyGroup(windowId, groupId, firstTab.id);
         showNotificationAfterMoveTab = false;
     }
 
@@ -480,9 +497,9 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
         message = browser.i18n.getMessage('moveMultipleTabsToGroupMessage', tabs.length);
         iconUrl = utils.getGroupIconUrl(group);
     } else {
-        let tabTitle = utils.getTabTitle(tabs[0], false, 50);
+        let tabTitle = utils.getTabTitle(firstTab, false, 50);
         message = browser.i18n.getMessage('moveTabToGroupMessage', [group.title, tabTitle]);
-        iconUrl = utils.normalizeFavIcon(tabs[0].favIconUrl);
+        iconUrl = utils.normalizeFavIcon(firstTab.favIconUrl);
     }
 
     utils.notify(message, undefined, undefined, iconUrl, async function(groupId, tabId) {
@@ -494,7 +511,7 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
 
             BG.applyGroup(winId, groupId, tabId);
         }
-    }.bind(null, groupId, tabs[0].id));
+    }.bind(null, groupId, firstTab.id));
 
     return tabs;
 }
@@ -566,7 +583,51 @@ async function reload(tabIds = [], bypassCache = false) {
     await Promise.all(tabIds.map(tabId => BG.browser.tabs.reload(tabId, {bypassCache}).catch(function() {})));
 }
 
+function prepareForSave(tabs, includeGroupId = false, includeFavIcon = false, includeThumbnail = false) {
+    const {BG} = browser.extension.getBackgroundPage();
+
+    return tabs.map(function({url, title, cookieStoreId, favIconUrl, isInReaderMode, openInReaderMode, session}) {
+        let tab = {
+            url: utils.normalizeUrl(url),
+            title: title,
+        };
+
+        if (!BG.containers.isDefault(cookieStoreId)) {
+            tab.cookieStoreId = cookieStoreId;
+        }
+
+        if (isInReaderMode || openInReaderMode) {
+            tab.openInReaderMode = true;
+        }
+
+        if (includeGroupId && session && session.groupId) {
+            tab.session = {
+                groupId: session.groupId,
+            };
+        }
+
+        if (includeFavIcon && session && (session.favIconUrl || favIconUrl)) {
+            if (!tab.session) {
+                tab.session = {};
+            }
+
+            tab.session.favIconUrl = session.favIconUrl || favIconUrl;
+        }
+
+        if (includeThumbnail && session && session.thumbnail) {
+            if (!tab.session) {
+                tab.session = {};
+            }
+
+            tab.session.thumbnail = session.thumbnail;
+        }
+
+        return tab;
+    });
+}
+
 export default {
+    createNative,
     create,
     createUrlOnce,
     setActive,
@@ -584,4 +645,5 @@ export default {
     isCanSendMessage,
     sendMessage,
     reload,
+    prepareForSave,
 };

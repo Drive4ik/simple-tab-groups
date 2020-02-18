@@ -66,13 +66,11 @@ async function getInfo() {
         browserInfo,
         platformInfo,
         permissionBookmarks,
-        permissionAllUrls,
         options,
     ] = await Promise.all([
         browser.runtime.getBrowserInfo(),
         browser.runtime.getPlatformInfo(),
         browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS),
-        browser.permissions.contains(constants.PERMISSIONS.ALL_URLS),
         storage.get(constants.allOptionsKeys),
     ]);
 
@@ -85,7 +83,6 @@ async function getInfo() {
         },
         permissions: {
             bookmarks: permissionBookmarks,
-            allUrls: permissionAllUrls,
         },
         options: options,
     };
@@ -311,14 +308,8 @@ function isUrlEmpty(url) {
     return emptyUrlsArray.includes(url);
 }
 
-function isUrlAllowToCreate(url, falseIfEmpty = true) {
-    let result = createTabUrlRegexp.test(url);
-
-    if (result && falseIfEmpty && isUrlEmpty(url)) {
-        return false;
-    }
-
-    return result;
+function isUrlAllowToCreate(url) {
+    return createTabUrlRegexp.test(url);
 }
 
 function normalizeUrl(url) {
@@ -360,11 +351,11 @@ function createGroupTitle(title, groupId) {
     return String(title || browser.i18n.getMessage('newGroupTitle', groupId));
 }
 
-function getGroupLastActiveTab({tabs}) {
+function getLastActiveTab(tabs) {
     return tabs.find(tab => tab.active) || tabs.slice().sort(sortBy('lastAccessed')).pop();
 }
 
-function getGroupTitle({id, title, tabs, newTabContainer}, args = '') {
+function getGroupTitle({id, title, isArchive, tabs, newTabContainer}, args = '') {
     const {BG} = browser.extension.getBackgroundPage();
 
     let withActiveGroup = args.includes('withActiveGroup'),
@@ -373,8 +364,12 @@ function getGroupTitle({id, title, tabs, newTabContainer}, args = '') {
         withContainer = args.includes('withContainer'),
         withTabs = args.includes('withTabs');
 
-    if (withActiveGroup && BG.cache.getWindowId(id)) {
-        title = constants.ACTIVE_SYMBOL + ' ' + title;
+    if (withActiveGroup) {
+        if (BG.cache.getWindowId(id)) {
+            title = constants.ACTIVE_SYMBOL + ' ' + title;
+        } else if (isArchive) {
+            title = constants.DISCARDED_SYMBOL + ' ' + title;
+        }
     }
 
     if (withContainer && newTabContainer) {
@@ -387,8 +382,8 @@ function getGroupTitle({id, title, tabs, newTabContainer}, args = '') {
         title += ' (' + groupTabsCountMessage(tabs) + ')';
     }
 
-    if (withActiveTab && tabs.length) {
-        let activeTab = getGroupLastActiveTab({tabs});
+    if (withActiveTab && tabs.length && !isArchive) {
+        let activeTab = getLastActiveTab(tabs);
 
         if (activeTab) {
             title += ' ' + (activeTab.discarded ? constants.DISCARDED_SYMBOL : constants.ACTIVE_SYMBOL) + ' ' + getTabTitle(activeTab);
@@ -420,7 +415,7 @@ function getTabTitle({id, index, title, url, discarded}, withUrl = false, sliceL
         title += '\n' + url;
     }
 
-    if (withTabActive && !discarded) {
+    if (withTabActive && !discarded && id) {
         title = constants.ACTIVE_SYMBOL + ' ' + title;
     }
 
@@ -437,7 +432,7 @@ function groupTabsCountMessage(tabs, withActiveTabs) {
     let {showExtendGroupsPopupWithActiveTabs} = BG.getOptions();
 
     if (withActiveTabs || showExtendGroupsPopupWithActiveTabs) {
-        let activeTabs = tabs.filter(tab => !tab.discarded).length;
+        let activeTabs = tabs.filter(tab => !tab.discarded && tab.id).length;
         return browser.i18n.getMessage('groupTabsCountActive', [activeTabs, tabs.length]);
     } else {
         return browser.i18n.getMessage('groupTabsCount', tabs.length);
@@ -738,7 +733,7 @@ export default {
     isTabLoading,
 
     createGroupTitle,
-    getGroupLastActiveTab,
+    getLastActiveTab,
     getGroupTitle,
     getTabTitle,
     groupTabsCountMessage,
