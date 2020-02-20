@@ -124,10 +124,6 @@ function clone(obj = null) {
     return JSON.parse(stringify(obj));
 }
 
-function cloneTab({id, title, discarded, url, active, hidden, sharingState, windowId, cookieStoreId}) {
-    return {id, title, discarded, url, active, hidden, sharingState: {...sharingState}, windowId, cookieStoreId};
-}
-
 function format(str, ...args) {
     if (!str) {
         return '';
@@ -419,7 +415,7 @@ function getTabTitle({id, index, title, url, discarded}, withUrl = false, sliceL
         title = constants.ACTIVE_SYMBOL + ' ' + title;
     }
 
-    if (window.localStorage.enableDebug) {
+    if (window.localStorage.enableDebug && id) {
         title = `#${id}:${index} ${title}`;
     }
 
@@ -702,7 +698,6 @@ export default {
     type,
     stringify,
     clone,
-    cloneTab,
     format,
     formatBytes,
     extractKeys,

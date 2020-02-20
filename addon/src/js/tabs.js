@@ -5,7 +5,7 @@ import utils from './utils';
 import Groups from './groups';
 import Windows from './windows';
 
-async function createNative({url, active, pinned, title, index, windowId, isInReaderMode, openInReaderMode, cookieStoreId, newTabContainer, ifNotDefaultContainerReOpenInNew, groupId, favIconUrl, thumbnail, session}) {
+async function createNative({url, active, pinned, title, index, windowId, isInReaderMode, openInReaderMode, cookieStoreId, newTabContainer, ifNotDefaultContainerReOpenInNew, groupId, favIconUrl, thumbnail}) {
     const {BG} = browser.extension.getBackgroundPage();
 
     let tab = {};
@@ -14,9 +14,7 @@ async function createNative({url, active, pinned, title, index, windowId, isInRe
         tab.url = url;
     }
 
-    if (active) {
-        tab.active = true;
-    }
+    tab.active = !!active;
 
     if (pinned) {
         tab.pinned = true;
@@ -34,7 +32,13 @@ async function createNative({url, active, pinned, title, index, windowId, isInRe
         tab.index = index;
     }
 
-    if (Number.isFinite(windowId) && windowId >= 1 && BG.cache.hasWindow(windowId)) {
+    let groupWindowId = BG.cache.getWindowId(groupId);
+
+    if (groupWindowId) {
+        windowId = groupWindowId;
+    }
+
+    if (Number.isFinite(windowId) && windowId >= 1) {
         tab.windowId = windowId;
     }
 
@@ -62,25 +66,7 @@ async function createNative({url, active, pinned, title, index, windowId, isInRe
 
     BG.cache.setTab(newTab);
 
-    if (groupId) {
-        newTab.groupId = groupId;
-    } else if (session && session.groupId) {
-        newTab.groupId = session.groupId;
-    }
-
-    if (session && session.favIconUrl) {
-        newTab.favIconUrl = session.favIconUrl;
-    } else if (favIconUrl) {
-        newTab.favIconUrl = favIconUrl;
-    }
-
-    if (thumbnail) {
-        newTab.thumbnail = thumbnail;
-    } else if (session && session.thumbnail) {
-        newTab.thumbnail = session.thumbnail;
-    }
-
-    return newTab;
+    return BG.cache.applySession(newTab, {groupId, favIconUrl, thumbnail});
 }
 
 async function create(tab, sendMessage = true) {
@@ -90,10 +76,10 @@ async function create(tab, sendMessage = true) {
 
     newTab = await BG.cache.setTabSession(newTab);
 
-    if (newTab.session.groupId && sendMessage === true) {
+    if (newTab.groupId && sendMessage === true) {
         BG.sendMessage({
             action: 'tabs-added',
-            groupId: newTab.session.groupId,
+            groupId: newTab.groupId,
             tabs: [newTab],
         });
     }
@@ -149,22 +135,22 @@ async function getActive(windowId = browser.windows.WINDOW_ID_CURRENT) {
     return activeTab;
 }
 
-async function getHighlighted(windowId = browser.windows.WINDOW_ID_CURRENT, clickedTab = null) {
+async function getHighlightedIds(windowId = browser.windows.WINDOW_ID_CURRENT, clickedTabId = null) {
     const {BG} = browser.extension.getBackgroundPage();
 
     let tabs = await get(windowId, false, false, {
         highlighted: true,
     });
 
-    if (clickedTab && !tabs.some(tab => tab.id === clickedTab.id)) { // if clicked tab not in selected tabs - add it
-        tabs.push(clickedTab);
+    if (clickedTabId && !tabs.includes(clickedTabId)) { // if clicked tab not in selected tabs - add it
+        tabs.push(clickedTabId);
 
         if (2 === tabs.length) {
-            tabs = tabs.filter(tab => tab.active ? (tab.id === clickedTab.id) : true); // exclude active tab if need to move another tab
+            tabs = tabs.filter(tab => tab.active ? (tab.id === clickedTabId) : true); // exclude active tab if need to move another tab
         }
     }
 
-    return tabs;
+    return tabs.map(utils.keyId);
 }
 
 async function get(windowId = browser.windows.WINDOW_ID_CURRENT, pinned = false, hidden = false, otherProps = {}) {
@@ -191,6 +177,12 @@ async function get(windowId = browser.windows.WINDOW_ID_CURRENT, pinned = false,
     return query.pinned ? tabs : Promise.all(tabs.map(BG.cache.loadTabSession));
 }
 
+function getList(tabIds) {
+    const {BG} = browser.extension.getBackgroundPage();
+
+    return Promise.all(tabIds.map(tabId => BG.browser.tabs.get(tabId).then(BG.cache.loadTabSession)));
+}
+
 async function setMute(tabs, muted) {
     const {BG} = browser.extension.getBackgroundPage();
 
@@ -202,8 +194,6 @@ async function setMute(tabs, muted) {
 }
 
 async function createTempActiveTab(windowId, createPinnedTab = true, newTabUrl) {
-    const {BG} = browser.extension.getBackgroundPage();
-
     let pinnedTabs = await get(windowId, true, null);
 
     if (pinnedTabs.length) {
@@ -211,10 +201,8 @@ async function createTempActiveTab(windowId, createPinnedTab = true, newTabUrl) 
             await setActive(utils.getLastActiveTab(pinnedTabs).id);
         }
     } else {
-        newTabUrl = createPinnedTab ? (newTabUrl || 'about:blank') : (newTabUrl || 'about:newtab');
-
         return createNative({
-            url: newTabUrl,
+            url: createPinnedTab ? (newTabUrl || 'about:blank') : (newTabUrl || 'about:newtab'),
             pinned: createPinnedTab,
             active: true,
             windowId: windowId,
@@ -222,20 +210,16 @@ async function createTempActiveTab(windowId, createPinnedTab = true, newTabUrl) 
     }
 }
 
-async function add(groupId, cookieStoreId, url, title, active = false) {
+async function add(groupId, cookieStoreId, url, title) {
     const {BG} = browser.extension.getBackgroundPage();
 
-    let windowId = BG.cache.getWindowId(groupId),
-        [group] = await Groups.load(groupId),
+    let [group] = await Groups.load(groupId),
         [tab] = await BG.createTabsSafe([{
             url,
             title,
-            active,
             cookieStoreId,
-            windowId,
-            ...Groups.newTabParams(group),
+            ...Groups.getNewTabParams(group),
         }], {
-            hideTabs: !windowId,
             withRemoveEvents: false,
         });
 
@@ -328,14 +312,14 @@ async function updateThumbnail(tabId, force) {
     });
 }
 
-async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTab = true, showTabAfterMoving = false) {
-    // tabs = utils.clone(tabs);
+async function move(tabIds, groupId, newTabIndex = -1, showNotificationAfterMoveTab = true, showTabAfterMoving = false) {
     const {BG} = browser.extension.getBackgroundPage();
 
-    BG.console.info('moveTabs', {groupId, newTabIndex, showNotificationAfterMoveTab, showTabAfterMoving, tabs});
-    // console.info('moveTabs tabs 0', tabs[0]);
+    tabIds = tabIds.slice();
 
-    BG.addExcludeTabsIds(tabs.map(utils.keyId));
+    BG.console.info('moveTabs', {groupId, newTabIndex, showNotificationAfterMoveTab, showTabAfterMoving, tabIds});
+
+    BG.addExcludeTabsIds(tabIds);
 
     let showPinnedMessage = false,
         tabsCantHide = [],
@@ -347,6 +331,8 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
     if (!windowId) {
         windowId = group.tabs.length ? group.tabs[0].windowId : await Windows.getLastFocusedNormalWindow();
     }
+
+    let tabs = await getList(tabIds);
 
     tabs = tabs.filter(function(tab) {
         if (tab.pinned) {
@@ -372,8 +358,6 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
     });
 
     if (tabs.length) {
-        let tabIds = tabs.map(utils.keyId);
-
         await Promise.all(activeTabs.map(async function(activeTab) {
             let winGroupId = BG.cache.getWindowGroup(activeTab.windowId),
                 tabsToActive = [];
@@ -395,7 +379,7 @@ async function move(tabs, groupId, newTabIndex = -1, showNotificationAfterMoveTa
 
         if (group.newTabContainer) {
             let tabsIdsToRemove = [],
-                newTabParams = Groups.newTabParams(group);
+                newTabParams = Groups.getNewTabParams(group);
 
             tabs = await Promise.all(tabs.map(function(tab) {
                 if (
@@ -586,7 +570,7 @@ async function reload(tabIds = [], bypassCache = false) {
 function prepareForSave(tabs, includeGroupId = false, includeFavIcon = false, includeThumbnail = false) {
     const {BG} = browser.extension.getBackgroundPage();
 
-    return tabs.map(function({url, title, cookieStoreId, favIconUrl, isInReaderMode, openInReaderMode, session}) {
+    return tabs.map(function({url, title, cookieStoreId, favIconUrl, isInReaderMode, openInReaderMode, groupId, thumbnail}) {
         let tab = {
             url: utils.normalizeUrl(url),
             title: title,
@@ -600,26 +584,16 @@ function prepareForSave(tabs, includeGroupId = false, includeFavIcon = false, in
             tab.openInReaderMode = true;
         }
 
-        if (includeGroupId && session && session.groupId) {
-            tab.session = {
-                groupId: session.groupId,
-            };
+        if (includeGroupId && groupId) {
+            tab.groupId = groupId;
         }
 
-        if (includeFavIcon && session && (session.favIconUrl || favIconUrl)) {
-            if (!tab.session) {
-                tab.session = {};
-            }
-
-            tab.session.favIconUrl = session.favIconUrl || favIconUrl;
+        if (includeFavIcon && favIconUrl) {
+            tab.favIconUrl = favIconUrl;
         }
 
-        if (includeThumbnail && session && session.thumbnail) {
-            if (!tab.session) {
-                tab.session = {};
-            }
-
-            tab.session.thumbnail = session.thumbnail;
+        if (includeThumbnail && thumbnail) {
+            tab.thumbnail = thumbnail;
         }
 
         return tab;
@@ -632,8 +606,9 @@ export default {
     createUrlOnce,
     setActive,
     getActive,
-    getHighlighted,
+    getHighlightedIds,
     get,
+    getList,
     setMute,
     createTempActiveTab,
     add,

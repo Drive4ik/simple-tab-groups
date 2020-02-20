@@ -50,6 +50,7 @@
         SECTION_GROUPS_LIST = 'groupsList',
         SECTION_GROUP_TABS = 'groupTabs',
         SECTION_DEFAULT = SECTION_GROUPS_LIST,
+        availableTabKeys = ['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId'],
         isSidebar = '#sidebar' === window.location.hash;
 
     let loadPromise = null;
@@ -89,7 +90,7 @@
                 showUnSyncTabs: false,
                 unSyncTabs: [],
 
-                multipleTabs: [],
+                multipleTabIds: [],
             };
         },
         components: {
@@ -125,7 +126,7 @@
                 }
             },
             section() {
-                this.multipleTabs = [];
+                this.multipleTabIds = [];
             },
             groupToEdit(groupToEdit) {
                 if (!groupToEdit) {
@@ -145,7 +146,7 @@
         },
         computed: {
             currentGroup() {
-                return this.currentWindow && this.groups.find(group => group.id === this.currentWindow.session.groupId);
+                return this.currentWindow && this.groups.find(group => group.id === this.currentWindow.groupId);
             },
             filteredGroupsBySearch() {
                 if (!this.search) {
@@ -209,9 +210,9 @@
                         Groups.move(from.data.item.id, this.groups.indexOf(to.data.item));
                     })
                     .$on('drag-move-tab', function(from, to) {
-                        let tabs = this.getTabsForMove(from.data.item);
+                        let tabIds = this.getTabIdsForMove(from.data.item.id);
 
-                        Tabs.move(tabs, to.data.group.id, to.data.item.index, false);
+                        Tabs.move(tabIds, to.data.group.id, to.data.item.index, false);
                     })
                     .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
                     .$on('drag-over', (item, isOver) => item.isOver = isOver);
@@ -258,6 +259,8 @@
                                     .forEach(group => group.tabs = group.tabs.filter(tab => !request.tabIds.includes(tab.id)));
 
                                 this.unSyncTabs = this.unSyncTabs.filter(tab => !request.tabIds.includes(tab.id));
+
+                                this.multipleTabIds = this.multipleTabIds.filter(tabId => !request.tabIds.includes(tabId));
                             }
 
                             break;
@@ -266,23 +269,6 @@
 
                             if (request.group.tabs) {
                                 request.group.tabs = request.group.tabs.map(this.mapTab, this);
-
-                                if (this.multipleTabs.length) {
-                                    // ищем новые замапеные вкладки и добавляем их в мультиселект
-                                    group.tabs.forEach(function(tab) {
-                                        let multipleTabIndex = this.multipleTabs.indexOf(tab);
-
-                                        if (-1 !== multipleTabIndex) {
-                                            let mappedTab = request.group.tabs.find(t => t.id === tab.id);
-
-                                            if (mappedTab) {
-                                                this.multipleTabs.splice(multipleTabIndex, 1, mappedTab);
-                                            } else {
-                                                this.multipleTabs.splice(multipleTabIndex, 1);
-                                            }
-                                        }
-                                    }, this);
-                                }
                             }
 
                             Object.assign(group, request.group);
@@ -314,9 +300,10 @@
                             }
                             break;
                         case 'options-updated':
-                            if (isSidebar) {
-                                this.loadOptions();
-                            }
+                            this.loadOptions();
+                            break;
+                        case 'containers-updated':
+                            this.containers = BG.containers.getAll();
                             break;
                     }
                 }.bind(this));
@@ -357,7 +344,12 @@
             },
 
             mapGroup(group) {
-                group.tabs = group.tabs.map(this.mapTab, this);
+                if (group.isArchive) {
+                    group.tabs = Object.freeze(group.tabs);
+                } else {
+                    group.tabs = group.tabs.map(this.mapTab, this);
+                }
+
                 group.isMoving = false;
                 group.isOver = false;
 
@@ -376,12 +368,9 @@
             },
 
             mapTab(tab) {
-                tab.container = BG.containers.isDefault(tab.cookieStoreId) ? false : BG.containers.get(tab.cookieStoreId);
+                Object.keys(tab).forEach(key => !availableTabKeys.includes(key) && delete tab[key]);
 
-                if (!tab.id) {
-                    tab.favIconUrl = utils.normalizeFavIcon((tab.session && tab.session.favIconUrl) || tab.favIconUrl);
-                    return Object.freeze(tab);
-                }
+                tab.container = BG.containers.isDefault(tab.cookieStoreId) ? false : BG.containers.get(tab.cookieStoreId);
 
                 tab.isMoving = false;
                 tab.isOver = false;
@@ -398,14 +387,14 @@
 
                 this.groups = groups.map(this.mapGroup, this);
 
-                this.multipleTabs = [];
+                this.multipleTabIds = [];
             },
             async loadUnsyncedTabs() {
                 let windows = await Windows.load(true);
 
                 this.unSyncTabs = windows
                     .reduce(function(acc, win) {
-                        win.tabs.forEach(tab => !tab.session.groupId && acc.push(tab));
+                        win.tabs.forEach(tab => !tab.groupId && acc.push(tab));
                         return acc;
                     }, [])
                     .map(this.mapTab, this);
@@ -424,15 +413,11 @@
                 Tabs.add(this.groupToShow.id, cookieStoreId);
             },
             removeTab(tab) {
-                let tabIds = this.getTabsForMove(tab, utils.keyId);
-
-                Tabs.remove(tabIds);
+                Tabs.remove(this.getTabIdsForMove(tab.id));
             },
 
             discardTab(tab) {
-                let tabIds = this.getTabsForMove(tab, utils.keyId);
-
-                Tabs.discard(tabIds);
+                Tabs.discard(this.getTabIdsForMove(tab.id));
             },
 
             discardGroup({tabs}) {
@@ -456,9 +441,7 @@
             },
 
             reloadTab(tab, bypassCache) {
-                let tabIds = this.getTabsForMove(tab, utils.keyId);
-
-                Tabs.reload(tabIds, bypassCache);
+                Tabs.reload(this.getTabIdsForMove(tab.id), bypassCache);
             },
 
             reloadAllTabsInGroup(group, bypassCache) {
@@ -469,13 +452,13 @@
 
             clickOnTab(event, tab, group) {
                 if (event.ctrlKey || event.metaKey) {
-                    if (this.multipleTabs.includes(tab)) {
-                        this.multipleTabs.splice(this.multipleTabs.indexOf(tab), 1);
+                    if (this.multipleTabIds.includes(tab.id)) {
+                        this.multipleTabIds.splice(this.multipleTabIds.indexOf(tab.id), 1);
                     } else {
-                        this.multipleTabs.push(tab);
+                        this.multipleTabIds.push(tab.id);
                     }
                 } else if (event.shiftKey) {
-                    if (this.multipleTabs.length) {
+                    if (this.multipleTabIds.length) {
                         let tabs = [];
 
                         if (SECTION_SEARCH === this.section) {
@@ -484,30 +467,31 @@
                             tabs = group ? group.tabs : this.unSyncTabs;
                         }
 
-                        let tabIndex = tabs.indexOf(tab),
+                        let tabIds = tabs.map(utils.keyId),
+                            tabIndex = tabIds.indexOf(tab.id),
                             lastTabIndex = -1;
 
-                        this.multipleTabs.slice().reverse().some(function(t) {
-                            return -1 !== (lastTabIndex = tabs.indexOf(t));
+                        this.multipleTabIds.slice().reverse().some(function(tabId) {
+                            return -1 !== (lastTabIndex = tabIds.indexOf(tabId));
                         });
 
                         if (-1 === lastTabIndex) {
-                            this.multipleTabs.push(tab);
+                            this.multipleTabIds.push(tab.id);
                         } else if (tabIndex !== lastTabIndex) {
-                            let multipleTabIndex = this.multipleTabs.indexOf(tabs[lastTabIndex]);
+                            let multipleTabIndex = this.multipleTabIds.indexOf(tabIds[lastTabIndex]);
 
                             for (let i = Math.min(tabIndex, lastTabIndex), maxIndex = Math.max(tabIndex, lastTabIndex); i <= maxIndex; i++) {
-                                if (!this.multipleTabs.includes(tabs[i])) {
+                                if (!this.multipleTabIds.includes(tabIds[i])) {
                                     if (tabIndex > lastTabIndex) {
-                                        this.multipleTabs.push(tabs[i]);
+                                        this.multipleTabIds.push(tabIds[i]);
                                     } else {
-                                        this.multipleTabs.splice(multipleTabIndex, 0, tabs[i]);
+                                        this.multipleTabIds.splice(multipleTabIndex, 0, tabIds[i]);
                                     }
                                 }
                             }
                         }
                     } else {
-                        this.multipleTabs.push(tab);
+                        this.multipleTabIds.push(tab.id);
                     }
                 } else {
                     this.applyGroup(group, tab);
@@ -525,7 +509,7 @@
                     return;
                 }
 
-                this.multipleTabs = [];
+                this.multipleTabIds = [];
 
                 let isCurrentGroup = group === this.currentGroup;
 
@@ -582,7 +566,7 @@
                 this.loadGroups();
             },
             async unsyncHiddenTabsCreateNewGroup() {
-                await Groups.add(undefined, this.unSyncTabs.map(utils.cloneTab));
+                await Groups.add(undefined, this.unSyncTabs.map(utils.keyId));
 
                 this.unSyncTabs = [];
             },
@@ -637,32 +621,32 @@
                     this.loadUnsyncedTabs();
                 }
             },
-            getTabsForMove(withTab, mapFunc = utils.cloneTab) {
-                if (withTab && !this.multipleTabs.includes(withTab)) {
-                    this.multipleTabs.push(withTab);
+            getTabIdsForMove(tabId) {
+                if (tabId && !this.multipleTabIds.includes(tabId)) {
+                    this.multipleTabIds.push(tabId);
                 }
 
-                let tabs = this.multipleTabs.map(mapFunc);
+                let tabs = this.multipleTabIds;
 
-                this.multipleTabs = [];
+                this.multipleTabIds = [];
 
                 return tabs;
             },
-            async moveTabs(tab, group, loadUnsync = false, showTabAfterMoving, discardTabs) {
-                let tabs = this.getTabsForMove(tab);
+            async moveTabs(tabId, groupId, loadUnsync = false, showTabAfterMoving, discardTabs) {
+                let tabIds = this.getTabIdsForMove(tabId);
 
-                await Tabs.move(tabs, group.id, undefined, false, showTabAfterMoving);
+                await Tabs.move(tabIds, groupId, undefined, false, showTabAfterMoving);
 
                 if (discardTabs) {
-                    Tabs.discard(tabs.map(utils.keyId));
+                    Tabs.discard(tabIds);
                 }
 
                 if (loadUnsync) {
                     this.loadUnsyncedTabs();
                 }
             },
-            async moveTabToNewGroup(tab, loadUnsync, showTabAfterMoving) {
-                await Groups.add(undefined, this.getTabsForMove(tab), undefined, showTabAfterMoving);
+            async moveTabToNewGroup(tabId, loadUnsync, showTabAfterMoving) {
+                await Groups.add(undefined, this.getTabIdsForMove(tabId), undefined, showTabAfterMoving);
 
                 if (loadUnsync) {
                     this.loadUnsyncedTabs();
@@ -837,7 +821,7 @@
         id="stg-popup"
         :class="['no-outline', {'edit-group-popup': !!groupToEdit, 'is-sidebar': isSidebar}]"
         @contextmenu="mainContextMenu"
-        @click="multipleTabs = []"
+        @click="multipleTabIds = []"
         @wheel.ctrl.prevent
 
         tabindex="-1"
@@ -923,9 +907,11 @@
                                         <span v-if="isTabLoading(tab)">
                                             <img src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
                                         </span>
-                                        <span v-if="tab.container" :title="tab.container.name">
-                                            <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" />
-                                        </span>
+                                        <template v-if="tab.container">
+                                            <span :title="tab.container.name">
+                                                <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" />
+                                            </span>
+                                        </template>
                                         <span class="tab-discarded" v-text="getTabTitle(tab)"></span>
                                     </span>
                                 </div>
@@ -945,7 +931,7 @@
                                 @mouseup.middle.prevent="removeTab(tab)"
                                 :class="['tab item is-unselectable space-left', {
                                     'is-active': group === currentGroup && tab.active,
-                                    'is-multiple-tab-to-move': multipleTabs.includes(tab),
+                                    'is-multiple-tab-to-move': multipleTabIds.includes(tab.id),
                                 }]"
                                 :title="getTabTitle(tab, true)"
                                 >
@@ -957,9 +943,11 @@
                                         <span v-if="isTabLoading(tab)">
                                             <img src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
                                         </span>
-                                        <span v-if="tab.container" :title="tab.container.name">
-                                            <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" />
-                                        </span>
+                                        <template v-if="tab.container">
+                                            <span :title="tab.container.name">
+                                                <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" />
+                                            </span>
+                                        </template>
                                         <span :class="{'tab-discarded': tab.discarded}" v-text="getTabTitle(tab)"></span>
                                     </span>
                                 </div>
@@ -1072,7 +1060,7 @@
                             @mousedown.middle.prevent
                             @mouseup.middle.prevent="removeTab(tab)"
                             :class="['tab item is-unselectable', {
-                                'is-multiple-tab-to-move': multipleTabs.includes(tab),
+                                'is-multiple-tab-to-move': multipleTabIds.includes(tab.id),
                             }]"
                             :title="getTabTitle(tab, true)"
                             tabindex="0"
@@ -1085,9 +1073,11 @@
                                     <span v-if="isTabLoading(tab)">
                                         <img src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
                                     </span>
-                                    <span v-if="tab.container" :title="tab.container.name">
-                                        <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" />
-                                    </span>
+                                    <template v-if="tab.container">
+                                        <span :title="tab.container.name">
+                                            <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" />
+                                        </span>
+                                    </template>
                                     <span :class="{'tab-discarded': tab.discarded}" v-text="getTabTitle(tab)"></span>
                                 </span>
                             </div>
@@ -1157,9 +1147,11 @@
                                 <span v-if="isTabLoading(tab)">
                                     <img src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
                                 </span>
-                                <span v-if="tab.container" :title="tab.container.name">
-                                    <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" />
-                                </span>
+                                <template v-if="tab.container">
+                                    <span :title="tab.container.name">
+                                        <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" />
+                                    </span>
+                                </template>
                                 <span class="tab-discarded" v-text="getTabTitle(tab)"></span>
                             </span>
                         </div>
@@ -1185,7 +1177,7 @@
                             'is-active': groupToShow === currentGroup && tab.active,
                             'drag-moving': tab.isMoving,
                             'drag-over': tab.isOver,
-                            'is-multiple-tab-to-move': multipleTabs.includes(tab),
+                            'is-multiple-tab-to-move': multipleTabIds.includes(tab.id),
                         }]"
                         :title="getTabTitle(tab, true)"
 
@@ -1205,9 +1197,11 @@
                                 <span v-if="isTabLoading(tab)">
                                     <img src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
                                 </span>
-                                <span v-if="tab.container" :title="tab.container.name">
-                                    <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" />
-                                </span>
+                                <template v-if="tab.container">
+                                    <span :title="tab.container.name">
+                                        <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" />
+                                    </span>
+                                </template>
                                 <span :class="{'tab-discarded': tab.discarded}" v-text="getTabTitle(tab)"></span>
                             </span>
                         </div>
@@ -1314,7 +1308,7 @@
                         <img src="/icons/snowflake.svg" class="size-16" />
                         <span v-text="lang('discardTabTitle')"></span>
                     </li>
-                    <li v-if="multipleTabs.length" @click="removeTab(menu.data.tab)">
+                    <li v-if="multipleTabIds.length" @click="removeTab(menu.data.tab)">
                         <img src="/icons/close.svg" class="size-16" />
                         <span v-text="lang('deleteTab')"></span>
                     </li>
@@ -1334,16 +1328,16 @@
                         v-for="group in groups"
                         :key="group.id"
                         :class="{'is-disabled': group.isArchive}"
-                        @click="!group.isArchive && moveTabs(menu.data.tab, group, !menu.data.group, undefined, $event.ctrlKey || $event.metaKey)"
-                        @contextmenu="!group.isArchive && moveTabs(menu.data.tab, group, !menu.data.group, true)"
+                        @click="!group.isArchive && moveTabs(menu.data.tab.id, group.id, !menu.data.group, undefined, $event.ctrlKey || $event.metaKey)"
+                        @contextmenu="!group.isArchive && moveTabs(menu.data.tab.id, group.id, !menu.data.group, true)"
                         >
                         <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                         <span v-text="getGroupTitle(group, 'withActiveGroup withContainer')"></span>
                     </li>
 
                     <li
-                        @click="moveTabToNewGroup(menu.data.tab, !menu.data.group)"
-                        @contextmenu="moveTabToNewGroup(menu.data.tab, !menu.data.group, true)">
+                        @click="moveTabToNewGroup(menu.data.tab.id, !menu.data.group)"
+                        @contextmenu="moveTabToNewGroup(menu.data.tab.id, !menu.data.group, true)">
                         <img src="/icons/group-new.svg" class="size-16" />
                         <span v-text="lang('createNewGroup')"></span>
                     </li>

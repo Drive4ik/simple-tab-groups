@@ -473,12 +473,14 @@
                         };
                     });
 
-                    win.tabs.forEach(function(tab) {
-                        if (utils.isUrlAllowToCreate(utils.normalizeUrl(tab.url))) {
-                            if (tab.pinned) {
-                                data.pinnedTabs.push(utils.cloneTab(tab));
-                            } else if (groups[tab.groupId]) {
-                                groups[tab.groupId].tabs.push(utils.cloneTab(tab));
+                    win.tabs.forEach(function({url, title, pinned, groupId}) {
+                        url = utils.normalizeUrl(url);
+
+                        if (utils.isUrlAllowToCreate(url)) {
+                            if (pinned) {
+                                data.pinnedTabs.push({url, title, pinned});
+                            } else if (groups[groupId]) {
+                                groups[groupId].tabs.push({url, title});
                             }
                         }
                     });
@@ -515,14 +517,22 @@
                 };
 
                 syncTabOptions.groups.forEach(function({id, title, tabs}) {
-                    tabs = tabs.filter(tab => utils.isUrlAllowToCreate(utils.normalizeUrl(tab.url)));
+                    tabs = tabs
+                        .map(function({url, title, favIconUrl, pinned, isInReaderMode}) {
+                            url = utils.normalizeUrl(url);
+
+                            if (utils.isUrlAllowToCreate(url)) {
+                                return {url, title, favIconUrl, pinned, isInReaderMode};
+                            }
+                        })
+                        .filter(Boolean);
 
                     data.groups.push({
                         title: title || id,
-                        tabs: tabs.filter(tab => !tab.pinned).map(utils.cloneTab),
+                        tabs: tabs.filter(tab => !tab.pinned),
                     });
 
-                    data.pinnedTabs.push(...tabs.filter(tab => tab.pinned).map(utils.cloneTab));
+                    data.pinnedTabs.push(...tabs.filter(tab => tab.pinned));
                 });
 
                 this.setManageAddonSettings(data, 'importSettingsSyncTabGroupsAddonTitle', true);

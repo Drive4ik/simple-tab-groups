@@ -858,5 +858,9 @@
     "unArchiveGroup": {
         "message": "Разархивировать",
         "description": "Unarchive"
+    },
+    "updateAddonToLatestVersion": {
+        "message": "Пожалуйста, обновите аддон до последней версии",
+        "description": "Please, update addon to latest version"
     }
 }

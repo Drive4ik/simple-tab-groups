@@ -48,6 +48,12 @@ async function init() {
 
 function onCreated({contextualIdentity}) {
     containers[contextualIdentity.cookieStoreId] = contextualIdentity;
+
+    const {BG} = browser.extension.getBackgroundPage();
+
+    BG.sendMessage({
+        action: 'containers-updated',
+    });
 }
 
 function onUpdated({contextualIdentity}) {
@@ -67,13 +73,24 @@ function onUpdated({contextualIdentity}) {
     }
 
     containers[cookieStoreId] = contextualIdentity;
+
+    const {BG} = browser.extension.getBackgroundPage();
+
+    BG.sendMessage({
+        action: 'containers-updated',
+    });
 }
 
-function onRemoved({contextualIdentity}) {
+async function onRemoved({contextualIdentity}) {
     const {BG} = browser.extension.getBackgroundPage();
 
     delete containers[contextualIdentity.cookieStoreId];
-    BG.normalizeContainersInGroups();
+
+    await BG.normalizeContainersInGroups();
+
+    BG.sendMessage({
+        action: 'containers-updated',
+    });
 }
 
 

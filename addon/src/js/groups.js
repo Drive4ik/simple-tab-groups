@@ -22,12 +22,12 @@ async function load(groupId = null, withTabs = false) {
         groups.forEach(group => groupTabs[group.id] = []);
 
         await Promise.all(allTabs.map(async function(tab) {
-            if (tab.session.groupId) {
-                if (groupTabs[tab.session.groupId]) {
-                    groupTabs[tab.session.groupId].push(tab);
+            if (tab.groupId) {
+                if (groupTabs[tab.groupId]) {
+                    groupTabs[tab.groupId].push(tab);
                 } else {
-                    delete tab.session.groupId;
-                    BG.cache.removeTabGroup(tab.id);
+                    delete tab.groupId;
+                    await BG.cache.removeTabGroup(tab.id);
                 }
             }
         }));
@@ -92,12 +92,12 @@ function create(id, title) {
     };
 }
 
-async function add(windowId, tabs = [], title, showTabsAfterMoving) {
+async function add(windowId, tabIds = [], title, showTabsAfterMoving) {
     const {BG} = browser.extension.getBackgroundPage();
 
-    let { lastCreatedGroupPosition } = await storage.get('lastCreatedGroupPosition');
+    tabIds = tabIds.slice();
 
-    tabs = utils.clone(tabs); // clone need for fix bug: dead object after close tab which create object
+    let {lastCreatedGroupPosition} = await storage.get('lastCreatedGroupPosition');
 
     lastCreatedGroupPosition++;
 
@@ -118,14 +118,15 @@ async function add(windowId, tabs = [], title, showTabsAfterMoving) {
         BG.updateBrowserActionData(newGroup.id);
     }
 
-    BG.updateMoveTabMenus(windowId);
+    BG.updateMoveTabMenus();
 
-    if (windowId && !tabs.length) {
-        tabs = await Tabs.get(windowId);
+    if (windowId && !tabIds.length) {
+        let tabs = await Tabs.get(windowId);
+        tabIds = tabs.map(utils.keyId);
     }
 
-    if (tabs.length) {
-        newGroup.tabs = await Tabs.move(tabs, newGroup.id, undefined, false, showTabsAfterMoving);
+    if (tabIds.length) {
+        newGroup.tabs = await Tabs.move(tabIds, newGroup.id, undefined, false, showTabsAfterMoving);
     }
 
     if (!showTabsAfterMoving) {
@@ -199,7 +200,7 @@ async function update(groupId, updateData) {
 
     updateData = utils.clone(updateData); // clone need for fix bug: dead object after close tab which create object
 
-    if (updateData.iconUrl && updateData.iconUrl.startsWith('chrome')) {
+    if (updateData.iconUrl && updateData.iconUrl.startsWith('chrome:')) {
         utils.notify('Icon not supported');
         delete updateData.iconUrl;
     }
@@ -271,10 +272,7 @@ async function archiveToggle(groupId) {
     if (group.isArchive) {
         group.isArchive = false;
 
-        let groupNewTabParams = newTabParams(group);
-
-        await BG.createTabsSafe(group.tabs.map(tab => Object.assign(tab, groupNewTabParams)), {
-            hideTabs: true,
+        await BG.createTabsSafe(setNewTabsParams(group.tabs, group), {
             sendMessageEachTab: false,
         });
     } else {
@@ -317,12 +315,18 @@ function mapForExternalExtension(group) {
     };
 }
 
-function newTabParams({id, newTabContainer, ifNotDefaultContainerReOpenInNew}) {
+function getNewTabParams({id, newTabContainer, ifNotDefaultContainerReOpenInNew}) {
     return {groupId: id, newTabContainer, ifNotDefaultContainerReOpenInNew};
 }
 
+function setNewTabsParams(tabs, group) {
+    let newTabParams = getNewTabParams(group);
+
+    return tabs.map(tab => Object.assign(tab, newTabParams));
+}
+
 async function getNextTitle() {
-    let { lastCreatedGroupPosition } = await storage.get('lastCreatedGroupPosition');
+    let {lastCreatedGroupPosition} = await storage.get('lastCreatedGroupPosition');
     return utils.createGroupTitle(null, lastCreatedGroupPosition + 1);
 }
 
@@ -339,6 +343,7 @@ export default {
     sort,
     archiveToggle,
     mapForExternalExtension,
-    newTabParams,
+    getNewTabParams,
+    setNewTabsParams,
     getNextTitle,
 };
