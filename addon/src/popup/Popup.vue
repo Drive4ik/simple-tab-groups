@@ -582,7 +582,7 @@
                 });
 
                 if (tab.hidden) {
-                    BG.browser.tabs.show(tab.id);
+                    browser.tabs.show(tab.id);
                 }
 
                 if (this.currentGroup) {
@@ -592,7 +592,7 @@
                 }
             },
 
-            async openGroupInNewWindow({id}) {
+            openGroupInNewWindow({id}) {
                 BG.Windows.create(undefined, id); // BG need because this popup will unload after win open and code not work
             },
 

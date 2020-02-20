@@ -597,6 +597,10 @@
 
 <template>
     <div id="stg-options">
+        <div id="logging-notification" v-if="enableDebug === '2'">
+            <span v-html="lang('loggingIsAutoEnabledTitle')"></span>
+        </div>
+
         <div class="tabs is-fullwidth">
             <ul>
                 <li :class="{'is-active': section === SECTION_GENERAL}">
@@ -1126,10 +1130,19 @@
 <style lang="scss">
     body {
         // background-color: #f9f9fa;
+        transition: background-color ease .2s;
     }
 
     .vue-swatches__container {
         transform: translate(2px, calc(-100% - 44px));
+    }
+
+    #logging-notification {
+        display: flex;
+        height: 30px;
+        background-color: #fdcbcb;
+        align-items: center;
+        justify-content: center;
     }
 
     #stg-options {

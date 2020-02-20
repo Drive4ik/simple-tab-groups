@@ -33,7 +33,7 @@ let options = {},
 
         return {
             next(groups) {
-                groupIds = groupIds.filter(groupId => groups.some(group => group.id === groupId));
+                groupIds = groupIds.filter(groupId => groups.some(group => !group.isArchive && group.id === groupId));
 
                 if (!groupIds[index + 1]) {
                     return;
@@ -42,7 +42,7 @@ let options = {},
                 return groupIds[++index];
             },
             prev(groups) {
-                groupIds = groupIds.filter(groupId => groups.some(group => group.id === groupId));
+                groupIds = groupIds.filter(groupId => groups.some(group => !group.isArchive && group.id === groupId));
 
                 if (!groupIds[index - 1]) {
                     return;
@@ -2473,10 +2473,9 @@ async function syncTabs(groups, windows, hideAllTabs = false) {
             newTabParams = Groups.getNewTabParams(group);
 
         for (let tab of group.tabs) {
-            tab.cookieStoreId = await containers.normalize(tab.cookieStoreId);
-            tab.url = utils.normalizeUrl(tab.url);
-
             tab.groupId = group.id;
+
+            tab.cookieStoreId = await containers.normalize(tab.cookieStoreId);
 
             let winTabIndex = allTabs.findIndex(winTab => winTab.url === tab.url && winTab.cookieStoreId === tab.cookieStoreId);
 
