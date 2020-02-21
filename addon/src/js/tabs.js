@@ -541,16 +541,16 @@ async function discard(tabIds = []) {
 
 const extensionsWebextensionsRestrictedDomains = ['accounts-static.cdn.mozilla.net','accounts.firefox.com','addons.cdn.mozilla.net','addons.mozilla.org','api.accounts.firefox.com','content.cdn.mozilla.net','discovery.addons.mozilla.org','install.mozilla.org','oauth.accounts.firefox.com','profile.accounts.firefox.com','support.mozilla.org','sync.services.mozilla.com'];
 
-function isCanSendMessage(tabUrl) {
-    if (tabUrl === 'about:blank') {
+function isCanSendMessage({url}) {
+    if (url === 'about:blank') {
         return true;
     }
 
-    if (tabUrl.startsWith('moz-extension')) {
+    if (url.startsWith('moz-extension')) {
         return false;
     }
 
-    return /.*:\/\/.+/.test(tabUrl) && !extensionsWebextensionsRestrictedDomains.some(host => (new RegExp('^https?://' + host).test(tabUrl)));
+    return /.*:\/\/.+/.test(url) && !extensionsWebextensionsRestrictedDomains.some(host => (new RegExp('^https?://' + host).test(url)));
 }
 
 function sendMessage(tabId, message) {

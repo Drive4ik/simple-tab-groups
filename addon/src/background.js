@@ -1647,9 +1647,8 @@ async function runAction(data, externalExtId) {
                         let groupToLoad = groups.find(group => group.id === data.groupId);
 
                         if (groupToLoad.isArchive) {
-                            utils.notify(browser.i18n.getMessage('groupIsArchived', groupToLoad.title));
-                            delete data.groupId;
-                            result = await runAction(data, externalExtId);
+                            result.error = browser.i18n.getMessage('groupIsArchived', groupToLoad.title);
+                            utils.notify(result.error, 7000);
                         } else {
                             result.ok = await applyGroup(currentWindow.id, data.groupId);
                         }
@@ -1665,20 +1664,20 @@ async function runAction(data, externalExtId) {
                 } else {
                     let activeTab = await Tabs.getActive();
 
-                    if (!Tabs.isCanSendMessage(activeTab.url)) {
-                        utils.notify(browser.i18n.getMessage('thisTabIsNotSupported'), 7000);
-                        break;
+                    if (Tabs.isCanSendMessage(activeTab)) {
+                        Tabs.sendMessage(activeTab.id, {
+                            action: 'show-groups-popup',
+                            popupAction: 'load-custom-group',
+                            popupTitleLang: 'hotkeyActionTitleLoadCustomGroup',
+                            groups: groups.map(Groups.mapForExternalExtension),
+                            disableGroupIds: [currentGroup.id, ...groups.filter(group => group.isArchive).map(utils.keyId)],
+                        });
+
+                        result.ok = true;
+                    } else {
+                        result.error = browser.i18n.getMessage('thisTabIsNotSupported');
+                        utils.notify(result.error, 7000);
                     }
-
-                    Tabs.sendMessage(activeTab.id, {
-                        action: 'show-groups-popup',
-                        popupAction: 'load-custom-group',
-                        popupTitleLang: 'hotkeyActionTitleLoadCustomGroup',
-                        groups: groups.map(Groups.mapForExternalExtension),
-                        disableGroupIds: [currentGroup.id, ...groups.filter(group => group.isArchive).map(utils.keyId)],
-                    });
-
-                    result.ok = true;
                 }
                 break;
             case 'add-new-group':
@@ -1708,47 +1707,47 @@ async function runAction(data, externalExtId) {
                 let activeTab = await Tabs.getActive();
 
                 if (utils.isTabPinned(activeTab)) {
-                    utils.notify(browser.i18n.getMessage('pinnedTabsAreNotSupported'));
-                    break;
+                    result.error = browser.i18n.getMessage('pinnedTabsAreNotSupported');
+                    utils.notify(result.error, 7000);
                 } else if (utils.isTabCanNotBeHidden(activeTab)) {
-                    utils.notify(browser.i18n.getMessage('thisTabsCanNotBeHidden', utils.getTabTitle(activeTab, false, 25)));
-                    break;
-                }
-
-                if (Number.isFinite(data.groupId) && 0 < data.groupId) {
-                    if (groups.some(group => group.id === data.groupId)) {
-                        let groupMoveTo = groups.find(group => group.id === data.groupId);
-
-                        if (groupMoveTo.isArchive) {
-                            utils.notify(browser.i18n.getMessage('groupIsArchived', groupMoveTo.title));
-                            delete data.groupId;
-                            result = await runAction(data, externalExtId);
-                        } else {
-                            await Tabs.move([activeTab.id], data.groupId);
-                            result.ok = true;
-                        }
-                    } else {
-                        data.groupId = 0;
-                        result = await runAction(data, externalExtId);
-                    }
-                } else if ('new' === data.groupId) {
-                    await Groups.add(undefined, [activeTab.id], data.title);
-                    result.ok = true;
+                    result.error = browser.i18n.getMessage('thisTabsCanNotBeHidden', utils.getTabTitle(activeTab, false, 25));
+                    utils.notify(result.error, 7000);
                 } else {
-                    if (!Tabs.isCanSendMessage(activeTab.url)) {
-                        utils.notify(browser.i18n.getMessage('thisTabIsNotSupported'), 7000);
-                        break;
-                    }
+                    if (Number.isFinite(data.groupId) && 0 < data.groupId) {
+                        if (groups.some(group => group.id === data.groupId)) {
+                            let groupMoveTo = groups.find(group => group.id === data.groupId);
 
-                    Tabs.sendMessage(activeTab.id, {
-                        action: 'show-groups-popup',
-                        popupAction: 'move-active-tab-to-custom-group',
-                        popupTitleLang: 'moveTabToGroupDisabledTitle',
-                        groups: groups.map(Groups.mapForExternalExtension),
-                        disableGroupIds: groups.filter(group => group.isArchive).map(utils.keyId),
-                        focusedGroupId: activeTab.groupId,
-                    });
-                    result.ok = true;
+                            if (groupMoveTo.isArchive) {
+                                result.error = browser.i18n.getMessage('groupIsArchived', groupMoveTo.title);
+                                utils.notify(result.error, 7000);
+                            } else {
+                                await Tabs.move([activeTab.id], data.groupId);
+                                result.ok = true;
+                            }
+                        } else {
+                            data.groupId = 0;
+                            result = await runAction(data, externalExtId);
+                        }
+                    } else if ('new' === data.groupId) {
+                        await Groups.add(undefined, [activeTab.id], data.title);
+                        result.ok = true;
+                    } else {
+                        if (Tabs.isCanSendMessage(activeTab)) {
+                            Tabs.sendMessage(activeTab.id, {
+                                action: 'show-groups-popup',
+                                popupAction: 'move-active-tab-to-custom-group',
+                                popupTitleLang: 'moveTabToGroupDisabledTitle',
+                                groups: groups.map(Groups.mapForExternalExtension),
+                                disableGroupIds: groups.filter(group => group.isArchive).map(utils.keyId),
+                                focusedGroupId: activeTab.groupId,
+                            });
+
+                            result.ok = true;
+                        } else {
+                            result.error = browser.i18n.getMessage('thisTabIsNotSupported');
+                            utils.notify(result.error, 7000);
+                        }
+                    }
                 }
                 break;
             case 'discard-group':
@@ -1756,9 +1755,8 @@ async function runAction(data, externalExtId) {
 
                 if (groupToDiscard) {
                     if (groupToDiscard.isArchive) {
-                        utils.notify(browser.i18n.getMessage('groupIsArchived', groupToDiscard.title));
-                        delete data.groupId;
-                        result = await runAction(data, externalExtId);
+                        result.error = browser.i18n.getMessage('groupIsArchived', groupToDiscard.title);
+                        utils.notify(result.error, 7000);
                     } else {
                         await Tabs.discard(groupToDiscard.tabs.map(utils.keyId));
                         result.ok = true;
@@ -1766,21 +1764,22 @@ async function runAction(data, externalExtId) {
                 } else {
                     let activeTab = await Tabs.getActive();
 
-                    if (!Tabs.isCanSendMessage(activeTab.url)) {
-                        utils.notify(browser.i18n.getMessage('thisTabIsNotSupported'), 7000);
-                        break;
-                    }
+                    if (Tabs.isCanSendMessage(activeTab)) {
+                        Tabs.sendMessage(activeTab.id, {
+                            action: 'show-groups-popup',
+                            popupAction: 'discard-group',
+                            popupTitleLang: 'discardGroupTitle',
+                            groups: groups.map(Groups.mapForExternalExtension),
+                            focusedGroupId: currentGroup.id,
+                            disableGroupIds: groups.filter(group => group.isArchive).map(utils.keyId),
+                            disableNewGroupItem: true,
+                        });
 
-                    Tabs.sendMessage(activeTab.id, {
-                        action: 'show-groups-popup',
-                        popupAction: 'discard-group',
-                        popupTitleLang: 'discardGroupTitle',
-                        groups: groups.map(Groups.mapForExternalExtension),
-                        focusedGroupId: currentGroup.id,
-                        disableGroupIds: groups.filter(group => group.isArchive).map(utils.keyId),
-                        disableNewGroupItem: true,
-                    });
-                    result.ok = true;
+                        result.ok = true;
+                    } else {
+                        result.error = browser.i18n.getMessage('thisTabIsNotSupported');
+                        utils.notify(result.error, 7000);
+                    }
                 }
                 break;
             case 'discard-other-groups':
