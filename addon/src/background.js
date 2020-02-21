@@ -1614,12 +1614,16 @@ async function runAction(data, externalExtId) {
                 result.ok = await applyGroupByPosition('prev', notArchivedGroups, currentGroup.id);
                 break;
             case 'load-next-unloaded-group':
-                let unloadedGroups = notArchivedGroups.filter(group => !cache.getWindowId(group.id) || group.id === currentGroup.id);
-                result.ok = await applyGroupByPosition('next', unloadedGroups, currentGroup.id);
+                {
+                    let unloadedGroups = notArchivedGroups.filter(group => !cache.getWindowId(group.id) || group.id === currentGroup.id);
+                    result.ok = await applyGroupByPosition('next', unloadedGroups, currentGroup.id);
+                }
                 break;
             case 'load-prev-unloaded-group':
-                let unloadedGroups = notArchivedGroups.filter(group => !cache.getWindowId(group.id) || group.id === currentGroup.id);
-                result.ok = await applyGroupByPosition('prev', unloadedGroups, currentGroup.id);
+                {
+                    let unloadedGroups = notArchivedGroups.filter(group => !cache.getWindowId(group.id) || group.id === currentGroup.id);
+                    result.ok = await applyGroupByPosition('prev', unloadedGroups, currentGroup.id);
+                }
                 break;
             case 'load-history-next-group':
                 result.ok = await applyGroupByHistory('next', notArchivedGroups);
@@ -1629,12 +1633,12 @@ async function runAction(data, externalExtId) {
                 break;
             case 'load-first-group':
                 if (notArchivedGroups.length) {
-                    result.ok = await applyGroup(currentWindow.id, notArchivedGroups[0].id);
+                    result.ok = await applyGroup(currentWindow.id, notArchivedGroups.shift().id);
                 }
                 break;
             case 'load-last-group':
                 if (notArchivedGroups.length) {
-                    result.ok = await applyGroup(currentWindow.id, notArchivedGroups[notArchivedGroups.length - 1].id);
+                    result.ok = await applyGroup(currentWindow.id, notArchivedGroups.pop().id);
                 }
                 break;
             case 'load-custom-group':
