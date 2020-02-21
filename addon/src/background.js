@@ -129,7 +129,7 @@ function sendMessage(data) {
         return;
     }
 
-    console.info('BG event:', data.action, data);
+    console.info('BG event [%s]', data.action, data);
 
     browser.runtime.sendMessage(data).catch(noop);
 }
@@ -140,12 +140,11 @@ function sendExternalMessage(data) {
         return;
     }
 
-    console.info('BG event external:', data.action, data);
+    console.info('BG event external [%s]', data.action, data);
 
     Object.keys(constants.EXTENSIONS_WHITE_LIST)
         .forEach(function(exId) {
             if (constants.EXTENSIONS_WHITE_LIST[exId].postActions.includes(data.action)) {
-                data.isExternalMessage = true;
                 browser.runtime.sendMessage(exId, data).catch(noop);
             }
         });
@@ -1526,46 +1525,34 @@ async function openManageGroups() {
     }
 }
 
-browser.runtime.onMessage.addListener(function(request, sender) {
-    if (!utils.isAllowSender(request, sender)) {
-        return {
-            unsubscribe: true,
-        };
-    }
+browser.runtime.onMessage.addListener(request => runAction(request));
 
-    if (request.action) {
-        return runAction(request);
-    }
-});
-
-browser.runtime.onMessageExternal.addListener(function(request, sender, sendResponse) {
+browser.runtime.onMessageExternal.addListener(async function(request, sender) {
     let extensionRules = {};
 
     if (!window.BG.inited) {
-        sendResponse({
+        return {
             ok: false,
             error: '[STG] I am not yet loaded',
-        });
-        return;
+        };
     }
 
     if (!utils.isAllowExternalRequestAndSender(request, sender, extensionRules)) {
-        sendResponse({
+        return {
             ok: false,
             error: '[STG] Your extension/action does not in white list. If you want to add your extension/action to white list - please contact with me.',
             yourExtentionRules: extensionRules,
-        });
-        return;
+        };
     }
 
-    if (request.action) {
-        sendResponse(runAction(request, sender.id));
-    } else {
-        sendResponse({
+    if (!request.action) {
+        return {
             ok: false,
             error: 'unknown action',
-        });
+        };
     }
+
+    return runAction(request, sender.id);
 });
 
 browser.commands.onCommand.addListener(function(command) {
@@ -1580,11 +1567,11 @@ async function runAction(data, externalExtId) {
     };
 
     if (!data.action) {
-        result.error = '[STG] Action or it\'s id is empty';
+        result.error = '[STG] "action" is empty';
         return result;
     }
 
-    console.info('runAction data.action:', data.action);
+    console.info('runAction data:', data);
 
     try {
         let currentWindow = await Windows.getLastFocusedNormalWindow(false),

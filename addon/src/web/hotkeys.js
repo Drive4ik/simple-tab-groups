@@ -94,13 +94,7 @@ function checkKey(e) {
                     action: hotkey.action,
                     groupId: hotkey.groupId,
                 })
-                .then(function(response) {
-                    foundHotKey = false;
-
-                    if (response && response.unsubscribe) {
-                        unsubscribeFromAllEvents();
-                    }
-                });
+                .then(() => foundHotKey = false);
 
             return true;
         }

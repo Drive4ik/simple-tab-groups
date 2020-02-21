@@ -256,14 +256,6 @@ async function notify(message, timer = 20000, id = null, iconUrl = null, onClick
     return id;
 }
 
-function isAllowSender(request, sender) {
-    if (sender.id !== browser.runtime.id || !request || request.isExternalMessage) {
-        return false;
-    }
-
-    return true;
-}
-
 function isAllowExternalRequestAndSender(request, sender, extensionRules = {}) {
     let extension = constants.EXTENSIONS_WHITE_LIST[sender.id];
 
@@ -375,7 +367,7 @@ function getGroupTitle({id, title, isArchive, tabs, newTabContainer}, args = '')
     tabs = tabs.slice();
 
     if (withCountTabs) {
-        title += ' (' + groupTabsCountMessage(tabs) + ')';
+        title += ' (' + groupTabsCountMessage(tabs, isArchive) + ')';
     }
 
     if (withActiveTab && tabs.length && !isArchive) {
@@ -422,12 +414,12 @@ function getTabTitle({id, index, title, url, discarded}, withUrl = false, sliceL
     return sliceLength ? sliceText(title, sliceLength) : title;
 }
 
-function groupTabsCountMessage(tabs, withActiveTabs) {
+function groupTabsCountMessage(tabs, groupIsArchived, withActiveTabs = false) {
     const {BG} = browser.extension.getBackgroundPage();
 
     let {showExtendGroupsPopupWithActiveTabs} = BG.getOptions();
 
-    if (withActiveTabs || showExtendGroupsPopupWithActiveTabs) {
+    if (!groupIsArchived && (withActiveTabs || showExtendGroupsPopupWithActiveTabs)) {
         let activeTabs = tabs.filter(tab => !tab.discarded && tab.id).length;
         return browser.i18n.getMessage('groupTabsCountActive', [activeTabs, tabs.length]);
     } else {
@@ -714,7 +706,6 @@ export default {
 
     getSupportedExternalExtensionName,
 
-    isAllowSender,
     isAllowExternalRequestAndSender,
     isWindowAllow,
     isUrlEmpty,

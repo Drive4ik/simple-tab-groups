@@ -171,7 +171,7 @@
                         } else {
                             let tabIds = this.getTabIdsForMove(),
                                 groupId = this.isGroup(to.data.item) ? to.data.item.id : to.data.group.id,
-                                index = this.isGroup(to.data.item) ? -1 : to.data.item.index;
+                                index = this.isGroup(to.data.item) ? undefined : to.data.item.index;
 
                             Tabs.move(tabIds, groupId, index, false);
                         }
@@ -179,10 +179,7 @@
                     .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
                     .$on('drag-over', (item, isOver) => item.isOver = isOver);
 
-                browser.runtime.onMessage.addListener(async function(request, sender) {
-                    if (!utils.isAllowSender(request, sender)) {
-                        return;
-                    }
+                browser.runtime.onMessage.addListener(async function(request) {
 
                     switch (request.action) {
                         case 'tabs-added':
@@ -603,8 +600,8 @@
                 }
             },
 
-            groupTabsCountMessage(tabs) {
-                return utils.groupTabsCountMessage(tabs, true);
+            groupTabsCountMessage(tabs, groupIsArchived) {
+                return utils.groupTabsCountMessage(tabs, groupIsArchived, true);
             },
 
         },
@@ -726,7 +723,7 @@
                                     maxlength="120"
                                     />
                             </div>
-                            <div class="tabs-count" v-text="groupTabsCountMessage(group.filteredTabs)"></div>
+                            <div class="tabs-count" v-text="groupTabsCountMessage(group.filteredTabs, group.isArchive)"></div>
                             <div class="group-icon cursor-pointer is-unselectable" @click="openGroupSettings(group)" :title="lang('groupSettings')">
                                 <img class="size-16" src="/icons/settings.svg" />
                             </div>

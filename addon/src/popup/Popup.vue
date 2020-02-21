@@ -217,10 +217,7 @@
                     .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
                     .$on('drag-over', (item, isOver) => item.isOver = isOver);
 
-                browser.runtime.onMessage.addListener(async function(request, sender) {
-                    if (!utils.isAllowSender(request, sender)) {
-                        return;
-                    }
+                browser.runtime.onMessage.addListener(async function(request) {
 
                     switch (request.action) {
                         case 'tabs-added':
@@ -890,7 +887,7 @@
                                 </div>
                                 <div class="item-action bold-hover is-unselectable" @click.stop="showSectionGroupTabs(group)">
                                     <img class="size-16 rotate-180" src="/icons/arrow-left.svg" />
-                                    <span class="tabs-text" v-text="groupTabsCountMessage(group.tabs)"></span>
+                                    <span class="tabs-text" v-text="groupTabsCountMessage(group.tabs, group.isArchive)"></span>
                                 </div>
                         </div>
 
@@ -1016,7 +1013,7 @@
                             </div>
                             <div class="item-action bold-hover is-unselectable" @click.stop="showSectionGroupTabs(group)">
                                 <img class="size-16 rotate-180" src="/icons/arrow-left.svg" />
-                                <span class="tabs-text" v-text="groupTabsCountMessage(group.tabs)"></span>
+                                <span class="tabs-text" v-text="groupTabsCountMessage(group.tabs, group.isArchive)"></span>
                             </div>
                     </div>
 
