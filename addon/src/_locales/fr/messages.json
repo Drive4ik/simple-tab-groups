@@ -859,6 +859,16 @@
         "message": "Désarchiver",
         "description": "Unarchive"
     },
+    "groupIsArchived": {
+        "message": "Incapable de mener à bien l'action, le groupe \"$grouptitle$\" se trouve dans les archives",
+        "description": "Unable to complete the action, the group is in the archive",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
     "updateAddonToLatestVersion": {
         "message": "Veuillez mettre à jour l'extension",
         "description": "Please, update addon to latest version"

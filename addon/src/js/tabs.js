@@ -101,7 +101,7 @@ async function createUrlOnce(url, windowId) {
     }
 }
 
-async function setActive(tabId, tabs = []) {
+async function setActive(tabId = null, tabs = []) {
     let tabToActive = null;
 
     if (tabId) {

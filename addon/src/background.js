@@ -33,7 +33,7 @@ let options = {},
 
         return {
             next(groups) {
-                groupIds = groupIds.filter(groupId => groups.some(group => !group.isArchive && group.id === groupId));
+                groupIds = groupIds.filter(groupId => groups.some(group => group.id === groupId));
 
                 if (!groupIds[index + 1]) {
                     return;
@@ -42,7 +42,7 @@ let options = {},
                 return groupIds[++index];
             },
             prev(groups) {
-                groupIds = groupIds.filter(groupId => groups.some(group => !group.isArchive && group.id === groupId));
+                groupIds = groupIds.filter(groupId => groups.some(group => group.id === groupId));
 
                 if (!groupIds[index - 1]) {
                     return;
@@ -187,13 +187,14 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                 throw Error(utils.errorEventMessage('applyGroup: groupToShow not found', {groupId, activeTabId}));
             }
 
-            if (groupToHide && groupToHide.tabs.some(utils.isTabCanNotBeHidden)) {
-                utils.notify(browser.i18n.getMessage('notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera'));
+            if (groupToShow.isArchive) {
+                utils.notify(browser.i18n.getMessage('groupIsArchived', groupToShow.title));
                 throw '';
             }
 
-            if (!applyFromHistory) {
-                groupsHistory.add(groupId);
+            if (groupToHide && groupToHide.tabs.some(utils.isTabCanNotBeHidden)) {
+                utils.notify(browser.i18n.getMessage('notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera'));
+                throw '';
             }
 
             loadingBrowserAction(true, windowId);
@@ -218,14 +219,18 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                 }
 
                 // set active tab
-                let pinnedTabs = await Tabs.get(windowId, true);
+                if (activeTabId) {
+                    await Tabs.setActive(activeTabId);
+                } else {
+                    let pinnedTabs = await Tabs.get(windowId, true);
 
-                if (!pinnedTabs.some(tab => tab.active) || activeTabId) {
-                    await Tabs.setActive(activeTabId, groupToShow.tabs);
+                    if (!pinnedTabs.some(tab => tab.active)) {
+                        await Tabs.setActive(undefined, groupToShow.tabs);
+                    }
                 }
             }
 
-            await cache.setWindowGroup(windowId, groupToShow.id);
+            cache.setWindowGroup(windowId, groupToShow.id);
 
             // hide tabs
             if (groupToHide && groupToHide.tabs.length) {
@@ -278,25 +283,34 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
             // set group id for tabs which may has opened without groupId (new window without group, etc...)
             Tabs.get(windowId)
                 .then(function(tabs) {
+                    let sendGroupUpdateMessage = false;
+
                     tabs.forEach(function(tab) {
                         if (tab.groupId !== groupToShow.id) {
                             tab.groupId = groupToShow.id;
                             cache.setTabGroup(tab.id, groupToShow.id);
+                            sendGroupUpdateMessage = true;
                         }
                     });
 
-                    sendMessage({
-                        action: 'group-updated',
-                        group: {
-                            id: groupToShow.id,
-                            tabs,
-                        },
-                    });
+                    if (sendGroupUpdateMessage) {
+                        sendMessage({
+                            action: 'group-updated',
+                            group: {
+                                id: groupToShow.id,
+                                tabs,
+                            },
+                        });
+                    }
                 });
 
             updateMoveTabMenus();
 
             updateBrowserActionData(groupToShow.id);
+
+            if (!applyFromHistory) {
+                groupsHistory.add(groupId);
+            }
 
             addEvents();
         }
@@ -307,14 +321,11 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
             windowId,
         });
 
-        Groups.load(groupId)
-            .then(function([group]) {
-                sendExternalMessage({
-                    action: 'group-loaded',
-                    group: Groups.mapForExternalExtension(group),
-                    windowId: windowId,
-                });
-            });
+        sendExternalMessage({
+            action: 'group-loaded',
+            groupId,
+            windowId,
+        });
 
         result = true;
     } catch (e) {
@@ -1577,7 +1588,8 @@ async function runAction(data, externalExtId) {
 
     try {
         let currentWindow = await Windows.getLastFocusedNormalWindow(false),
-            loadCurrentGroupWithTabs = currentWindow.groupId ? ['discard-group', 'discard-other-groups', 'reload-all-tabs-in-current-group'].includes(data.action) : false,
+            actionWithTabs = ['discard-group', 'discard-other-groups', 'reload-all-tabs-in-current-group'],
+            loadCurrentGroupWithTabs = currentWindow.groupId ? actionWithTabs.includes(data.action) : false,
             [currentGroup, groups] = await Groups.load(currentWindow.groupId || -1, loadCurrentGroupWithTabs),
             notArchivedGroups = groups.filter(group => !group.isArchive);
 
@@ -1602,10 +1614,12 @@ async function runAction(data, externalExtId) {
                 result.ok = await applyGroupByPosition('prev', notArchivedGroups, currentGroup.id);
                 break;
             case 'load-next-unloaded-group':
-                result.ok = await applyGroupByPosition('next', notArchivedGroups.filter(group => !cache.getWindowId(group.id) || group.id === currentGroup.id), currentGroup.id);
+                let unloadedGroups = notArchivedGroups.filter(group => !cache.getWindowId(group.id) || group.id === currentGroup.id);
+                result.ok = await applyGroupByPosition('next', unloadedGroups, currentGroup.id);
                 break;
             case 'load-prev-unloaded-group':
-                result.ok = await applyGroupByPosition('prev', notArchivedGroups.filter(group => !cache.getWindowId(group.id) || group.id === currentGroup.id), currentGroup.id);
+                let unloadedGroups = notArchivedGroups.filter(group => !cache.getWindowId(group.id) || group.id === currentGroup.id);
+                result.ok = await applyGroupByPosition('prev', unloadedGroups, currentGroup.id);
                 break;
             case 'load-history-next-group':
                 result.ok = await applyGroupByHistory('next', notArchivedGroups);
@@ -1614,22 +1628,27 @@ async function runAction(data, externalExtId) {
                 result.ok = await applyGroupByHistory('prev', notArchivedGroups);
                 break;
             case 'load-first-group':
-                if (notArchivedGroups[0]) {
-                    await applyGroup(currentWindow.id, notArchivedGroups[0].id);
-                    result.ok = true;
+                if (notArchivedGroups.length) {
+                    result.ok = await applyGroup(currentWindow.id, notArchivedGroups[0].id);
                 }
                 break;
             case 'load-last-group':
-                if (notArchivedGroups.length > 0) {
-                    await applyGroup(currentWindow.id, notArchivedGroups[notArchivedGroups.length - 1].id);
-                    result.ok = true;
+                if (notArchivedGroups.length) {
+                    result.ok = await applyGroup(currentWindow.id, notArchivedGroups[notArchivedGroups.length - 1].id);
                 }
                 break;
             case 'load-custom-group':
                 if (Number.isFinite(data.groupId) && 0 < data.groupId) {
-                    if (notArchivedGroups.some(group => group.id === data.groupId)) {
-                        await applyGroup(currentWindow.id, data.groupId);
-                        result.ok = true;
+                    if (groups.some(group => group.id === data.groupId)) {
+                        let groupToLoad = groups.find(group => group.id === data.groupId);
+
+                        if (groupToLoad.isArchive) {
+                            utils.notify(browser.i18n.getMessage('groupIsArchived', groupToLoad.title));
+                            delete data.groupId;
+                            result = await runAction(data, externalExtId);
+                        } else {
+                            result.ok = await applyGroup(currentWindow.id, data.groupId);
+                        }
                     } else {
                         data.groupId = 0;
                         result = await runAction(data, externalExtId);
@@ -1693,9 +1712,17 @@ async function runAction(data, externalExtId) {
                 }
 
                 if (Number.isFinite(data.groupId) && 0 < data.groupId) {
-                    if (notArchivedGroups.some(group => group.id === data.groupId)) {
-                        await Tabs.move([activeTab.id], data.groupId);
-                        result.ok = true;
+                    if (groups.some(group => group.id === data.groupId)) {
+                        let groupMoveTo = groups.find(group => group.id === data.groupId);
+
+                        if (groupMoveTo.isArchive) {
+                            utils.notify(browser.i18n.getMessage('groupIsArchived', groupMoveTo.title));
+                            delete data.groupId;
+                            result = await runAction(data, externalExtId);
+                        } else {
+                            await Tabs.move([activeTab.id], data.groupId);
+                            result.ok = true;
+                        }
                     } else {
                         data.groupId = 0;
                         result = await runAction(data, externalExtId);
@@ -1721,11 +1748,17 @@ async function runAction(data, externalExtId) {
                 }
                 break;
             case 'discard-group':
-                let groupToDiscard = notArchivedGroups.find(group => group.id === data.groupId);
+                let groupToDiscard = groups.find(group => group.id === data.groupId);
 
                 if (groupToDiscard) {
-                    await Tabs.discard(groupToDiscard.tabs.map(utils.keyId));
-                    result.ok = true;
+                    if (groupToDiscard.isArchive) {
+                        utils.notify(browser.i18n.getMessage('groupIsArchived', groupToDiscard.title));
+                        delete data.groupId;
+                        result = await runAction(data, externalExtId);
+                    } else {
+                        await Tabs.discard(groupToDiscard.tabs.map(utils.keyId));
+                        result.ok = true;
+                    }
                 } else {
                     let activeTab = await Tabs.getActive();
 
