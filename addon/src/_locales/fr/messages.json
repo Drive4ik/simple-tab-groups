@@ -860,7 +860,7 @@
         "description": "Unarchive"
     },
     "updateAddonToLatestVersion": {
-        "message": "Proszę zaktualizować l'extension do najnowszej wersji",
+        "message": "Veuillez mettre à jour l'extension",
         "description": "Please, update addon to latest version"
     }
 }
