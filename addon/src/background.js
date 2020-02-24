@@ -1388,6 +1388,8 @@ async function onBeforeTabRequest({tabId, url, originUrl}) {
         return;
     }
 
+    let oldUrl = tab.url;
+
     tab.url = url;
 
     cache.applyTabSession(tab);
@@ -1427,14 +1429,27 @@ async function onBeforeTabRequest({tabId, url, originUrl}) {
 
     console.log('onBeforeTabRequest create tab', tab);
 
-    Tabs.create({
+    Tabs.remove(tab.id);
+
+    let newTabPromise = Tabs.create({
         url: tab.url,
+        title: utils.isUrlEmpty(oldUrl) ? null : tab.title,
+        favIconUrl: tab.favIconUrl,
+        cookieStoreId: tab.cookieStoreId,
+        thumbnail: tab.thumbnail,
         active: tab.active,
         index: tab.index,
+        windowId: tab.windowId,
         ...Groups.getNewTabParams(tabGroup),
     });
 
-    Tabs.remove(tab.id);
+    if (tab.hidden) {
+        newTabPromise.then(async function({id}) {
+            addExcludeTabsIds([id]);
+            await browser.tabs.hide(id);
+            removeExcludeTabsIds([id]);
+        });
+    }
 
     return {
         cancel: true,

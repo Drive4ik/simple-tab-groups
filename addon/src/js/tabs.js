@@ -588,7 +588,7 @@ function prepareForSave(tabs, includeGroupId = false, includeFavIcon = false, in
             tab.groupId = groupId;
         }
 
-        if (includeFavIcon && favIconUrl) {
+        if (includeFavIcon && favIconUrl && favIconUrl.startsWith('data:')) {
             tab.favIconUrl = favIconUrl;
         }
 
