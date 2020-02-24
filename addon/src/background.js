@@ -1331,9 +1331,9 @@ async function updateBrowserActionData(groupId, windowId) {
 }
 
 function prependWindowTitle(windowId, title) {
-    if (windowId) {
+    if (options.prependGroupTitleToWindowTitle && windowId) {
         browser.windows.update(windowId, {
-            titlePreface: options.prependGroupTitleToWindowTitle && title ? ('[' + utils.sliceText(title, 35) + '] ') : '',
+            titlePreface: title ? ('[' + utils.sliceText(title, 35) + '] ') : '',
         });
     }
 }
@@ -1874,7 +1874,17 @@ async function saveOptions(_options) {
     }
 
     if (optionsKeys.includes('prependGroupTitleToWindowTitle')) {
-        Groups.load().then(groups => groups.forEach(group => updateBrowserActionData(group.id)));
+        Windows.load().then(function(windows) {
+            windows.forEach(function({id}) {
+                if (options.prependGroupTitleToWindowTitle) {
+                    updateBrowserActionData(null, id);
+                } else {
+                    browser.windows.update(id, {
+                        titlePreface: '',
+                    });
+                }
+            });
+        });
     }
 
     if (optionsKeys.some(key => ['showContextMenuOnTabs', 'showContextMenuOnLinks'].includes(key))) {
