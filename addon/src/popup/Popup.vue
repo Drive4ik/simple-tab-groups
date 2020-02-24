@@ -50,7 +50,7 @@
         SECTION_GROUPS_LIST = 'groupsList',
         SECTION_GROUP_TABS = 'groupTabs',
         SECTION_DEFAULT = SECTION_GROUPS_LIST,
-        availableTabKeys = ['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId'],
+        availableTabKeys = ['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'lastAccessed'],
         isSidebar = '#sidebar' === window.location.hash;
 
     let loadPromise = null;

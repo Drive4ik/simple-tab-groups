@@ -220,12 +220,22 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                 // set active tab
                 if (activeTabId) {
                     await Tabs.setActive(activeTabId);
-                } else {
-                    let pinnedTabs = await Tabs.get(windowId, true);
-
-                    if (!pinnedTabs.some(tab => tab.active)) {
-                        await Tabs.setActive(undefined, groupToShow.tabs);
-                    }
+                    sendMessage({
+                        action: 'tab-updated',
+                        tab: {
+                            id: activeTabId,
+                            discarded: false,
+                        },
+                    });
+                } else if (groupToHide && groupToHide.tabs.some(tab => tab.active)) {
+                    let tabToActive = await Tabs.setActive(undefined, groupToShow.tabs);
+                    sendMessage({
+                        action: 'tab-updated',
+                        tab: {
+                            id: tabToActive.id,
+                            discarded: false,
+                        },
+                    });
                 }
             }
 
@@ -280,28 +290,28 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
             }
 
             // set group id for tabs which may has opened without groupId (new window without group, etc...)
-            Tabs.get(windowId)
-                .then(function(tabs) {
-                    let sendGroupUpdateMessage = false;
+            if (!groupToHide) {
+                let sendGroupUpdateMessage = false,
+                    tabs = await Tabs.get(windowId);
 
-                    tabs.forEach(function(tab) {
-                        if (tab.groupId !== groupToShow.id) {
-                            tab.groupId = groupToShow.id;
-                            cache.setTabGroup(tab.id, groupToShow.id);
-                            sendGroupUpdateMessage = true;
-                        }
-                    });
-
-                    if (sendGroupUpdateMessage) {
-                        sendMessage({
-                            action: 'group-updated',
-                            group: {
-                                id: groupToShow.id,
-                                tabs,
-                            },
-                        });
+                tabs.forEach(function(tab) {
+                    if (tab.groupId !== groupToShow.id) {
+                        tab.groupId = groupToShow.id;
+                        cache.setTabGroup(tab.id, groupToShow.id);
+                        sendGroupUpdateMessage = true;
                     }
                 });
+
+                if (sendGroupUpdateMessage) {
+                    sendMessage({
+                        action: 'group-updated',
+                        group: {
+                            id: groupToShow.id,
+                            tabs,
+                        },
+                    });
+                }
+            }
 
             updateMoveTabMenus();
 
