@@ -135,18 +135,18 @@ async function getActive(windowId = browser.windows.WINDOW_ID_CURRENT) {
     return activeTab;
 }
 
-async function getHighlightedIds(windowId = browser.windows.WINDOW_ID_CURRENT, clickedTabId = null) {
+async function getHighlightedIds(windowId = browser.windows.WINDOW_ID_CURRENT, clickedTab = null) {
     const {BG} = browser.extension.getBackgroundPage();
 
     let tabs = await get(windowId, false, false, {
         highlighted: true,
     });
 
-    if (clickedTabId && !tabs.includes(clickedTabId)) { // if clicked tab not in selected tabs - add it
-        tabs.push(clickedTabId);
+    if (clickedTab && !tabs.some(tab => tab.id === clickedTab.id)) { // if clicked tab not in selected tabs - add it
+        tabs.push(clickedTab);
 
         if (2 === tabs.length) {
-            tabs = tabs.filter(tab => tab.active ? (tab.id === clickedTabId) : true); // exclude active tab if need to move another tab
+            tabs = tabs.filter(tab => tab.active ? (tab.id === clickedTab.id) : true); // exclude active tab if need to move another tab
         }
     }
 

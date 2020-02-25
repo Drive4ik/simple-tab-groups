@@ -50,8 +50,110 @@
         SECTION_GROUPS_LIST = 'groupsList',
         SECTION_GROUP_TABS = 'groupTabs',
         SECTION_DEFAULT = SECTION_GROUPS_LIST,
-        availableTabKeys = ['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'lastAccessed'],
-        isSidebar = '#sidebar' === window.location.hash;
+        availableTabKeys = ['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'lastAccessed', 'groupId'],
+        excludedUpdateTabKeys = [
+            browser.tabs.UpdatePropertyName.ATTENTION,
+            browser.tabs.UpdatePropertyName.AUDIBLE,
+            browser.tabs.UpdatePropertyName.ISARTICLE,
+            browser.tabs.UpdatePropertyName.MUTEDINFO,
+            browser.tabs.UpdatePropertyName.SHARINGSTATE,
+        ],
+        isSidebar = '#sidebar' === window.location.hash,
+        allTabs = {};
+
+    function mapTab(tab) {
+        Object.keys(tab).forEach(key => !availableTabKeys.includes(key) && delete tab[key]);
+
+        tab.container = BG.containers.isDefault(tab.cookieStoreId) ? false : BG.containers.get(tab.cookieStoreId);
+
+        tab.isMoving = false;
+        tab.isOver = false;
+
+        return allTabs[tab.id] = new Vue({
+            data: tab,
+        });
+    }
+
+    let lazyUpdateSessionTabIds = [],
+        lazyUpdateSessionTabIdsTimer = 0;
+
+    function lazyUpdateTabSession(tabId) {
+        clearTimeout(lazyUpdateSessionTabIdsTimer);
+
+        lazyUpdateSessionTabIds.push(tabId);
+
+        lazyUpdateSessionTabIdsTimer = setTimeout(function(tabIds) {
+            lazyUpdateSessionTabIds = [];
+
+            tabIds.forEach(applyTabSession);
+        }, 50, lazyUpdateSessionTabIds);
+    }
+
+    function applyTabSession(tabId) {
+        /*allTabs[tabId] && */BG.cache.applyTabSession(allTabs[tabId]);
+    }
+
+    browser.tabs.onCreated.addListener(function(tab) {
+        console.debug('[POPUP] browser.tabs.onCreated');
+
+        mapTab(tab);
+    });
+
+    browser.tabs.onActivated.addListener(function({previousTabId, tabId, windowId}) {
+        console.debug('[POPUP] browser.tabs.onActivated');
+
+        if (allTabs[tabId]) {
+            allTabs[tabId].active = true;
+        }
+
+        if (previousTabId && allTabs[previousTabId]) {
+            allTabs[previousTabId].active = false;
+        }
+    });
+
+    browser.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+        console.debug('[POPUP] browser.tabs.onUpdated');
+
+        if (excludedUpdateTabKeys.some(key => key in changeInfo)) {
+            return;
+        }
+
+        let tabGroupId = BG.cache.getTabSession(tab.id, 'groupId'),
+            winGroupId = BG.cache.getWindowGroup(tab.windowId);
+
+        if (changeInfo.favIconUrl) {
+            changeInfo.favIconUrl = utils.normalizeFavIcon(changeInfo.favIconUrl);
+        }
+
+        if ('pinned' in changeInfo || 'hidden' in changeInfo) {
+            if (changeInfo.pinned || changeInfo.hidden) {
+                if (tabGroupId) {
+                    lazyUpdateTabSession(tab.id);
+                }
+            } else {
+
+                if (false === changeInfo.pinned) {
+                    lazyUpdateTabSession(tab.id);
+                } else if (false === changeInfo.hidden) {
+                    if (!tabGroupId) {
+                        lazyUpdateTabSession(tab.id);
+                    }
+                }
+            }
+
+            return;
+        }
+
+        if (tabGroupId || winGroupId) {
+            Object.assign(allTabs[tab.id], changeInfo);
+        }
+    });
+
+    browser.tabs.onRemoved.addListener(function(tabId, {isWindowClosing, windowId}) {
+        console.debug('[POPUP] browser.tabs.onRemoved');
+
+        delete allTabs[tabId];
+    });
 
     let loadPromise = null;
 
@@ -205,6 +307,8 @@
             },
 
             setupListeners() {
+                let vm = this;
+
                 this
                     .$on('drag-move-group', function(from, to) {
                         Groups.move(from.data.item.id, this.groups.indexOf(to.data.item));
@@ -220,12 +324,12 @@
                 browser.runtime.onMessage.addListener(async function(request) {
 
                     switch (request.action) {
-                        case 'tabs-added':
+                        /*case 'tabs-added':
                             {
                                 let group = this.groups.find(gr => gr.id === request.groupId);
 
                                 if (group) {
-                                    group.tabs.push(...request.tabs.map(this.mapTab));
+                                    group.tabs.push(...request.tabs.map(this.mapTab, this));
                                     group.tabs.sort(utils.sortBy('index'));
                                 } else {
                                     throw Error(utils.errorEventMessage('group for new tabs not found', request));
@@ -260,12 +364,12 @@
                                 this.multipleTabIds = this.multipleTabIds.filter(tabId => !request.tabIds.includes(tabId));
                             }
 
-                            break;
+                            break;*/
                         case 'group-updated':
                             let group = this.groups.find(gr => gr.id === request.group.id);
 
                             if (request.group.tabs) {
-                                request.group.tabs = request.group.tabs.map(this.mapTab, this);
+                                request.group.tabs = request.group.tabs.map(mapTab);
                             }
 
                             Object.assign(group, request.group);
@@ -344,7 +448,7 @@
                 if (group.isArchive) {
                     group.tabs = Object.freeze(group.tabs);
                 } else {
-                    group.tabs = group.tabs.map(this.mapTab, this);
+                    group.tabs = group.tabs.map(mapTab);
                 }
 
                 group.isMoving = false;
@@ -363,7 +467,7 @@
                     },
                 });
             },
-
+/*
             mapTab(tab) {
                 Object.keys(tab).forEach(key => !availableTabKeys.includes(key) && delete tab[key]);
 
@@ -372,11 +476,11 @@
                 tab.isMoving = false;
                 tab.isOver = false;
 
-                return new Vue({
+                return allTabs[tab.id] = new Vue({
                     data: tab,
                 });
             },
-
+*/
             getWindowId: BG.cache.getWindowId,
 
             async loadGroups() {
@@ -394,7 +498,7 @@
                         win.tabs.forEach(tab => !tab.groupId && acc.push(tab));
                         return acc;
                     }, [])
-                    .map(this.mapTab, this);
+                    .map(mapTab);
             },
 
             async showCreateGroupPopup() {

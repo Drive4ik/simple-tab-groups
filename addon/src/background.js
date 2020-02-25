@@ -469,9 +469,8 @@ async function onCreatedTab(tab) {
 
     let groupId = cache.getWindowGroup(tab.windowId);
 
-    cache.setTabGroup(tab.id, groupId);
-
     if (groupId) {
+        cache.setTabGroup(tab.id, groupId);
         updateGroupTabsEvent(groupId);
     }
 }
@@ -887,7 +886,7 @@ async function createMoveTabMenus() {
             contexts: [browser.menus.ContextType.TAB],
             onclick: async function(info, tab) {
                 let setActive = 2 === info.button,
-                    tabIds = await Tabs.getHighlightedIds(tab.windowId, tab.id);
+                    tabIds = await Tabs.getHighlightedIds(tab.windowId, tab);
 
                 await Tabs.move(tabIds, group.id, undefined, undefined, setActive);
 
@@ -981,7 +980,7 @@ async function createMoveTabMenus() {
         contexts: [browser.menus.ContextType.TAB],
         onclick: async function(info, tab) {
             let setActive = 2 === info.button,
-                tabIds = await Tabs.getHighlightedIds(tab.windowId, tab.id);
+                tabIds = await Tabs.getHighlightedIds(tab.windowId, tab);
 
             Groups.add(undefined, tabIds, undefined, setActive);
         },
