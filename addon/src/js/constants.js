@@ -143,7 +143,7 @@ const DEFAULT_OPTIONS = Object.freeze({
     // options
     discardTabsAfterHide: false,
     closePopupAfterChangeGroup: true,
-    openGroupAfterChange: true,
+    openGroupAfterChange: false,
     prependGroupTitleToWindowTitle: false,
     createNewGroupWhenOpenNewWindow: false,
     showNotificationAfterMoveTab: true,
