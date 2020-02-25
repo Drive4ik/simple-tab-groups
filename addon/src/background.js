@@ -237,6 +237,17 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                         },
                     });
                 }
+            } else {
+                let pinnedTabs = await Tabs.get(windowId, true),
+                    activeTab = await Tabs.setActive(undefined, pinnedTabs);
+
+                if (!activeTab) {
+                    await Tabs.create({
+                        active: true,
+                        windowId,
+                        ...Groups.getNewTabParams(groupToShow),
+                    });
+                }
             }
 
             cache.setWindowGroup(windowId, groupToShow.id);
@@ -257,10 +268,6 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                 if (groupToHide.tabs.length) {
                     if (groupToHide.muteTabsWhenGroupCloseAndRestoreWhenOpen) {
                         Tabs.setMute(groupToHide.tabs, true);
-                    }
-
-                    if (!groupToShow.tabs.length) {
-                        await Tabs.createTempActiveTab(windowId, false);
                     }
 
                     let tabIds = groupToHide.tabs.map(utils.keyId);
