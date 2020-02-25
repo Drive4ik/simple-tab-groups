@@ -1467,7 +1467,7 @@ async function onBeforeTabRequest({tabId, url, originUrl}) {
 // wait for reload addon if found update
 browser.runtime.onUpdateAvailable.addListener(function() {
     let interval = setInterval(function() {
-        if (console.lastUsage < (Date.now() - 1000 * 30)) {
+        if (console.lastUsage < (Date.now() - 1000 * 10)) {
             clearInterval(interval);
             browser.runtime.reload();
         }
