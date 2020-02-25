@@ -734,15 +734,7 @@ async function onRemovedWindow(windowId) {
         reCreateTabsOnRemoveWindow = [];
 
         if (tabsToRestore.length) {
-            tabsToRestore.forEach(tab => containers.isDefault(tab.cookieStoreId) ? (delete tab.cookieStoreId) : null);
-
-            let data = await storage.get({
-                tabsToRestore: [],
-            });
-
-            await storage.set({
-                tabsToRestore: [...data.tabsToRestore, ...tabsToRestore],
-            });
+            await storage.set({tabsToRestore});
 
             let windows = await Windows.load(true);
 
@@ -2630,6 +2622,10 @@ async function tryRestoreMissedTabs(withRemoveEvents = false) {
             .map(function(tab) {
                 if (groupsObj[tab.groupId]) {
                     let winTab = groupsObj[tab.groupId].tabs.find(function(t) {
+                        if (utils.isTabLoading(t) && utils.isUrlEmpty(t.url)) {
+                            return true;
+                        }
+
                         return !foundTabIds.includes(t.id) && t.url === tab.url && t.cookieStoreId === tab.cookieStoreId;
                     });
 
