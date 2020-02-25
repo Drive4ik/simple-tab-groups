@@ -29,6 +29,10 @@ function errorEventHandler(event) {
     let nativeError = event.error || event,
         data = null;
 
+    if (undefined === nativeError || !String(nativeError.name).toLowerCase().includes('error')) {
+        nativeError = Error(nativeError);
+    }
+
     try {
         data = JSON.parse(nativeError.message);
 
