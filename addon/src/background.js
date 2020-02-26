@@ -2802,8 +2802,8 @@ async function init() {
                         }
                     } else if (!tab.hidden) {
                         if (utils.isTabLoading(tab) || tab.url.startsWith('file:') || tab.lastAccessed > window.BG.startTime) {
+                            tab.groupId = win.groupId;
                             cache.setTabGroup(tab.id, win.groupId);
-                            cache.applyTabSession(tab);
                             return;
                         }
                     }
