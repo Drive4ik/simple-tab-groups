@@ -173,7 +173,7 @@
             safeHtml: utils.safeHtml,
 
             async loadCurrentWindow() {
-                this.currentWindow = await Windows.get();
+                this.currentWindow = await Windows.get(undefined, false);
             },
 
             loadOptions() {
