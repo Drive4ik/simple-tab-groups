@@ -1,6 +1,6 @@
 {
     "extensionDescription": {
-        "message": "Pour créer et modifier des groupe d'onglets, puis passer rapidement d'un groupe à l'autre. \nInspiré par l'ancienne extension Tab Groups :)",
+        "message": "Pour créer et modifier des groupe d'onglets, puis passer rapidement d'un groupe à l'autre",
         "description": "Description of the extension."
     },
     "openSettings": {

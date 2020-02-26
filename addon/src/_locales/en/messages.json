@@ -4,7 +4,7 @@
         "description": "Name of the extension."
     },
     "extensionDescription": {
-        "message": "Create, modify and quickly change tab groups. \nInspired by the old add-on Tab Groups :)",
+        "message": "Create, modify and quickly change tab groups",
         "description": "Description of the extension."
     },
     "openSettings": {
