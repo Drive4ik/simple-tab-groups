@@ -74,6 +74,10 @@
                 nextGroupTitle: '',
                 isShowingCreateGroupPopup: false,
 
+                groupIdToRename: null,
+                renameGroupTitle: '',
+                isShowingRenameGroupPopup: false,
+
                 search: '',
                 extendedSearch: false,
 
@@ -404,6 +408,28 @@
 
             createNewGroup() {
                 Groups.add(undefined, undefined, this.nextGroupTitle);
+            },
+
+            showRenameGroupPopup({id, title}) {
+                this.groupIdToRename = id;
+                this.renameGroupTitle = title;
+                this.isShowingRenameGroupPopup = true;
+            },
+
+            renameSelectedGroup() {
+                if (this.renameGroupTitle.length) {
+                    Groups.update(this.groupIdToRename, {
+                        title: this.renameGroupTitle,
+                    });
+                }
+            },
+
+            tryRenameGroup() {
+                if (this.groupToShow) {
+                    this.showRenameGroupPopup(this.groupToShow);
+                } else if (this.currentGroup) {
+                    this.showRenameGroupPopup(this.currentGroup);
+                }
             },
 
             addTab(cookieStoreId) {
@@ -824,6 +850,7 @@
         tabindex="-1"
         @focus.capture="scrollToActiveElement"
         @keydown.f3.stop.prevent="setFocusOnSearch"
+        @keydown.f2="tryRenameGroup"
 
         >
         <header id="search-wrapper">
@@ -866,6 +893,7 @@
                             @keydown.arrow-right="showSectionGroupTabs(group)"
                             @keydown.arrow-up="focusToNextElement"
                             @keydown.arrow-down="focusToNextElement"
+                            @keydown.f2.stop="showRenameGroupPopup(group)"
                             tabindex="0"
                             :title="getGroupTitle(group, 'withCountTabs withTabs withContainer')"
                             >
@@ -992,6 +1020,7 @@
                         @keydown.arrow-right="showSectionGroupTabs(group)"
                         @keydown.arrow-up="focusToNextElement"
                         @keydown.arrow-down="focusToNextElement"
+                        @keydown.f2.stop="showRenameGroupPopup(group)"
                         tabindex="0"
                         :title="getGroupTitle(group, 'withCountTabs withTabs withContainer')"
                         >
@@ -1406,6 +1435,33 @@
                     ref="nextGroupTitle"
                     @keyup.enter.stop="createNewGroup(); isShowingCreateGroupPopup = false"
                     v-model.trim="nextGroupTitle"
+                    type="text"
+                    class="input" />
+            </div>
+        </popup>
+
+        <popup
+            v-if="isShowingRenameGroupPopup"
+            :title="lang('renameGroupTitle')"
+            @rename-group="renameSelectedGroup(); isShowingRenameGroupPopup = false"
+            @close-popup="isShowingRenameGroupPopup = false"
+            @show-popup="$refs.renameGroupTitle.focus(); $refs.renameGroupTitle.select()"
+            :buttons="
+                [{
+                    event: 'rename-group',
+                    classList: 'is-success',
+                    lang: 'ok',
+                    focused: false,
+                }, {
+                    event: 'close-popup',
+                    lang: 'cancel',
+                }]
+            ">
+            <div class="control is-expanded">
+                <input
+                    ref="renameGroupTitle"
+                    @keyup.enter.stop="renameSelectedGroup(); isShowingRenameGroupPopup = false"
+                    v-model.trim="renameGroupTitle"
                     type="text"
                     class="input" />
             </div>

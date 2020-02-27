@@ -720,7 +720,6 @@
                                     @blur="group.draggable = true"
                                     v-model.lazy.trim="group.title"
                                     :placeholder="lang('title')"
-                                    maxlength="120"
                                     />
                             </div>
                             <div class="tabs-count" v-text="groupTabsCountMessage(group.filteredTabs, group.isArchive)"></div>

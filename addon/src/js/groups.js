@@ -205,6 +205,10 @@ async function update(groupId, updateData) {
         delete updateData.iconUrl;
     }
 
+    if (updateData.title) {
+        updateData.title = updateData.title.slice(0, 256);
+    }
+
     Object.assign(group, updateData);
 
     await save(groups);

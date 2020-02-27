@@ -872,5 +872,9 @@
     "updateAddonToLatestVersion": {
         "message": "Пожалуйста, обновите аддон до последней версии",
         "description": "Please, update addon to latest version"
+    },
+    "renameGroupTitle": {
+        "message": "Переименовать группу",
+        "description": "Rename group"
     }
 }

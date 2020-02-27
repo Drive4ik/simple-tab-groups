@@ -228,11 +228,11 @@
 </script>
 
 <template>
-    <div v-if="group" @keydown.enter.stop="saveGroup" tabindex="-1" class="no-outline edit-group">
+    <div v-if="group" @keydown.enter.stop="saveGroup" @keydown.f2.stop @keydown.f3.stop tabindex="-1" class="no-outline edit-group">
         <div class="field">
             <label class="label" v-text="lang('title')"></label>
             <div class="control has-icons-left">
-                <input ref="groupTitle" v-model.trim="group.title" type="text" class="input" maxlength="120" :placeholder="lang('title')" />
+                <input ref="groupTitle" v-model.trim="group.title" type="text" class="input" :placeholder="lang('title')" />
                 <span class="icon is-small is-left">
                     <figure class="image is-16x16 is-inline-block">
                         <img :src="group.iconUrlToDisplay" />
