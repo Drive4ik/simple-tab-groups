@@ -2475,6 +2475,12 @@ async function runMigrateForData(data) {
                 });
             },
         },
+        {
+            version: '4.4.2.5',
+            migration() {
+                data.openGroupAfterChange = false;
+            },
+        },
     ];
 
     // start migration
