@@ -85,6 +85,7 @@ const EXTENSIONS_WHITE_LIST = Object.freeze({
         postActions: [],
         getActions: [
             'add-new-group',
+            'rename-group',
             'load-next-group',
             'load-prev-group',
             'load-next-unloaded-group',
@@ -114,6 +115,7 @@ const EXTENSIONS_WHITE_LIST = Object.freeze({
         ],
         getActions: [
             'add-new-group',
+            'rename-group',
             'load-next-group',
             'load-prev-group',
             'load-next-unloaded-group',

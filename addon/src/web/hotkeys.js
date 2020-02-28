@@ -43,13 +43,13 @@ async function init() {
     }
 }
 
-function changeHotkeysListener(request, sender) {
+function changeHotkeysListener(request) {
     if (request.action === 'update-hotkeys') {
         init();
-    } else if ('show-groups-popup' === request.action) {
+    } else if (request.action === 'show-groups-popup') {
         showGroupsPopup(request);
-    } else if ('show-new-group-name-prompt' === request.action) {
-        return showNewGroupNamePrompt(request);
+    } else if (request.action === 'show-prompt') {
+        return showPrompt(request);
     }
 }
 
@@ -135,7 +135,7 @@ function showGroupsPopup(data) {
     header.classList = 'stg-popup-has-text stg-popup-header';
     Object.assign(header, {
         tabIndex: -1,
-        innerText: browser.i18n.getMessage(data.popupTitleLang),
+        innerText: data.popupTitle,
         onclick: e => e.stopPropagation(),
         onkeydown: function(e) {
             if (checkUpDownKeys(e)) {
@@ -316,23 +316,17 @@ function showGroupsPopup(data) {
 
 let promptNowShowing = false;
 
-async function showNewGroupNamePrompt() {
-    if (promptNowShowing) {
+async function showPrompt({promptTitle, value}) {
+    if (window.top !== window || promptNowShowing) {
         console.warn('[STG] prompt now showing');
         return;
     }
 
     promptNowShowing = true;
 
-    let title = null,
-        {lastCreatedGroupPosition} = await browser.storage.local.get('lastCreatedGroupPosition');
-
-    title = prompt(
-        browser.i18n.getMessage('createNewGroup'),
-        browser.i18n.getMessage('newGroupTitle', lastCreatedGroupPosition + 1)
-    );
+    let newValue = prompt(promptTitle, value || '');
 
     promptNowShowing = false;
 
-    return title;
+    return newValue;
 }

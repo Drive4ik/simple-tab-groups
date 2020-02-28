@@ -47,6 +47,7 @@
                     'load-last-group',
                     'load-custom-group',
                     'add-new-group',
+                    'rename-group',
                     'delete-current-group',
                     'open-manage-groups',
                     'move-active-tab-to-custom-group',
@@ -59,6 +60,7 @@
                     'load-custom-group',
                     'move-active-tab-to-custom-group',
                     'discard-group',
+                    'rename-group',
                 ],
 
                 groupIconViewTypes: constants.groupIconViewTypes,

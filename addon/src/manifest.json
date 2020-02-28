@@ -122,6 +122,9 @@
         "add-new-group": {
             "description": "Add new group"
         },
+        "rename-group": {
+            "description": "Rename group"
+        },
         "discard-group": {
             "description": "Discard group"
         },

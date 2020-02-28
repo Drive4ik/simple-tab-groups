@@ -1442,7 +1442,7 @@
 
         <popup
             v-if="isShowingRenameGroupPopup"
-            :title="lang('renameGroupTitle')"
+            :title="lang('hotkeyActionTitleRenameGroup')"
             @rename-group="renameSelectedGroup(); isShowingRenameGroupPopup = false"
             @close-popup="isShowingRenameGroupPopup = false"
             @show-popup="$refs.renameGroupTitle.focus(); $refs.renameGroupTitle.select()"

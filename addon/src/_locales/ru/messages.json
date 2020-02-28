@@ -873,8 +873,12 @@
         "message": "Пожалуйста, обновите аддон до последней версии",
         "description": "Please, update addon to latest version"
     },
-    "renameGroupTitle": {
+    "hotkeyActionTitleRenameGroup": {
         "message": "Переименовать группу",
         "description": "Rename group"
+    },
+    "noGroupsAvailable": {
+        "message": "У вас нет групп",
+        "description": "You have no groups"
     }
 }

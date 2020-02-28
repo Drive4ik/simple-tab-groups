@@ -1688,7 +1688,7 @@ async function runAction(data, externalExtId) {
                         Tabs.sendMessage(activeTab.id, {
                             action: 'show-groups-popup',
                             popupAction: 'load-custom-group',
-                            popupTitleLang: 'hotkeyActionTitleLoadCustomGroup',
+                            popupTitle: browser.i18n.getMessage('hotkeyActionTitleLoadCustomGroup'),
                             groups: groups.map(Groups.mapForExternalExtension),
                             disableGroupIds: [currentGroup.id, ...groups.filter(group => group.isArchive).map(utils.keyId)],
                         });
@@ -1701,7 +1701,7 @@ async function runAction(data, externalExtId) {
                 }
                 break;
             case 'add-new-group':
-                if (typeof data.title === 'string' && data.title.length) {
+                if (data.title && typeof data.title === 'string') {
                     // only this addon can move tabs to new group
                     let tabIds = (!externalExtId && Array.isArray(data.tabIds)) ? data.tabIds : [],
                         newGroup = await Groups.add(undefined, tabIds, data.title);
@@ -1712,9 +1712,12 @@ async function runAction(data, externalExtId) {
                     let activeTab = await Tabs.getActive();
 
                     if (Tabs.isCanSendMessage(activeTab)) {
-                        let title = await Tabs.sendMessage(activeTab.id, {
-                            action: 'show-new-group-name-prompt',
-                        });
+                        let {lastCreatedGroupPosition} = await storage.get('lastCreatedGroupPosition'),
+                            title = await Tabs.sendMessage(activeTab.id, {
+                                action: 'show-prompt',
+                                promptTitle: browser.i18n.getMessage('createNewGroup'),
+                                value: browser.i18n.getMessage('newGroupTitle', lastCreatedGroupPosition + 1),
+                            });
 
                         if (title) {
                             result = await runAction({
@@ -1729,6 +1732,69 @@ async function runAction(data, externalExtId) {
                         result.error = browser.i18n.getMessage('thisTabIsNotSupported');
                         utils.notify(result.error, 7000, 'thisTabIsNotSupported', undefined, openNotSupportedUrlHelper);
                     }
+                }
+                break;
+            case 'rename-group':
+                if (!groups.length) {
+                    result.error = browser.i18n.getMessage('noGroupsAvailable');
+                    utils.notify(result.error, 7000, 'noGroupsAvailable');
+                } else if (!data.groupId) {
+                    let activeTab = await Tabs.getActive();
+
+                    if (Tabs.isCanSendMessage(activeTab)) {
+                        Tabs.sendMessage(activeTab.id, {
+                            action: 'show-groups-popup',
+                            popupAction: 'rename-group',
+                            popupTitle: browser.i18n.getMessage('hotkeyActionTitleRenameGroup'),
+                            groups: groups.map(Groups.mapForExternalExtension),
+                            focusedGroupId: currentGroup.id,
+                            disableNewGroupItem: true,
+                        });
+
+                        result.ok = true;
+                    } else {
+                        result.error = browser.i18n.getMessage('thisTabIsNotSupported');
+                        utils.notify(result.error, 7000, 'thisTabIsNotSupported', undefined, openNotSupportedUrlHelper);
+                    }
+                } else if (data.groupId && !data.title) {
+                    let groupToRename = groups.find(group => group.id === data.groupId);
+
+                    if (groupToRename) {
+                        let activeTab = await Tabs.getActive();
+
+                        if (Tabs.isCanSendMessage(activeTab)) {
+                            let title = await Tabs.sendMessage(activeTab.id, {
+                                action: 'show-prompt',
+                                promptTitle: browser.i18n.getMessage('hotkeyActionTitleRenameGroup'),
+                                value: groupToRename.title,
+                            });
+
+                            if (title) {
+                                data.title = title;
+                                result = await runAction(data, externalExtId);
+                            } else {
+                                result.error = 'title in empty - skip rename group';
+                            }
+                        } else {
+                            result.error = browser.i18n.getMessage('thisTabIsNotSupported');
+                            utils.notify(result.error, 7000, 'thisTabIsNotSupported', undefined, openNotSupportedUrlHelper);
+                        }
+                    } else {
+                        result = await runAction('rename-group', externalExtId);
+                    }
+                } else if (data.groupId && data.title && typeof data.title === 'string') {
+                    let groupToRename = groups.find(group => group.id === data.groupId);
+
+                    if (groupToRename) {
+                        Groups.update(groupToRename.id, {
+                            title: data.title,
+                        });
+                        result.ok = true;
+                    } else {
+                        result = await runAction('rename-group', externalExtId);
+                    }
+                } else {
+                    result = await runAction('rename-group', externalExtId);
                 }
                 break;
             case 'delete-current-group':
@@ -1787,7 +1853,7 @@ async function runAction(data, externalExtId) {
                             Tabs.sendMessage(activeTab.id, {
                                 action: 'show-groups-popup',
                                 popupAction: 'move-active-tab-to-custom-group',
-                                popupTitleLang: 'moveTabToGroupDisabledTitle',
+                                popupTitle: browser.i18n.getMessage('moveTabToGroupDisabledTitle'),
                                 groups: groups.map(Groups.mapForExternalExtension),
                                 disableGroupIds: groups.filter(group => group.isArchive).map(utils.keyId),
                                 focusedGroupId: activeTab.groupId,
@@ -1819,7 +1885,7 @@ async function runAction(data, externalExtId) {
                         Tabs.sendMessage(activeTab.id, {
                             action: 'show-groups-popup',
                             popupAction: 'discard-group',
-                            popupTitleLang: 'discardGroupTitle',
+                            popupTitle: browser.i18n.getMessage('discardGroupTitle'),
                             groups: groups.map(Groups.mapForExternalExtension),
                             focusedGroupId: currentGroup.id,
                             disableGroupIds: groups.filter(group => group.isArchive).map(utils.keyId),
