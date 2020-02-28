@@ -1548,6 +1548,12 @@ async function openManageGroups() {
     }
 }
 
+function openNotSupportedUrlHelper() {
+    Tabs.createUrlOnce('https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/Content_scripts');
+}
+
+browser.commands.onCommand.addListener(command => runAction(command));
+
 browser.runtime.onMessage.addListener(request => runAction(request));
 
 browser.runtime.onMessageExternal.addListener(async function(request, sender) {
@@ -1578,23 +1584,23 @@ browser.runtime.onMessageExternal.addListener(async function(request, sender) {
     return runAction(request, sender.id);
 });
 
-browser.commands.onCommand.addListener(function(command) {
-    runAction({
-        action: command,
-    });
-});
-
 async function runAction(data, externalExtId) {
     let result = {
         ok: false,
     };
+
+    if (typeof data === 'string' && data.length) {
+        data = {
+            action: data,
+        };
+    }
 
     if (!data.action) {
         result.error = '[STG] "action" is empty';
         return result;
     }
 
-    console.info('runAction data:', data);
+    console.info('runAction', {data, externalExtId});
 
     try {
         let currentWindow = await Windows.getLastFocusedNormalWindow(false),
@@ -1658,19 +1664,23 @@ async function runAction(data, externalExtId) {
 
                         if (groupToLoad.isArchive) {
                             result.error = browser.i18n.getMessage('groupIsArchived', groupToLoad.title);
-                            utils.notify(result.error, 7000);
+                            utils.notify(result.error, 7000, 'groupIsArchived');
                         } else {
                             result.ok = await applyGroup(currentWindow.id, data.groupId);
                         }
                     } else {
-                        data.groupId = 0;
+                        delete data.groupId;
                         result = await runAction(data, externalExtId);
                     }
                 } else if ('new' === data.groupId) {
-                    await Groups.add(undefined, undefined, data.title);
-                    result = await runAction({
-                        action: 'load-last-group',
+                    let {ok, group} = await runAction({
+                        action: 'add-new-group',
+                        title: data.title,
                     }, externalExtId);
+
+                    if (ok) {
+                        result.ok = await applyGroup(currentWindow.id, group.id);
+                    }
                 } else {
                     let activeTab = await Tabs.getActive();
 
@@ -1686,14 +1696,40 @@ async function runAction(data, externalExtId) {
                         result.ok = true;
                     } else {
                         result.error = browser.i18n.getMessage('thisTabIsNotSupported');
-                        utils.notify(result.error, 7000);
+                        utils.notify(result.error, 7000, 'thisTabIsNotSupported', undefined, openNotSupportedUrlHelper);
                     }
                 }
                 break;
             case 'add-new-group':
-                let newGroup = await Groups.add();
-                result.ok = true;
-                result.group = Groups.mapForExternalExtension(newGroup);
+                if (typeof data.title === 'string' && data.title.length) {
+                    // only this addon can move tabs to new group
+                    let tabIds = (!externalExtId && Array.isArray(data.tabIds)) ? data.tabIds : [],
+                        newGroup = await Groups.add(undefined, tabIds, data.title);
+
+                    result.ok = true;
+                    result.group = Groups.mapForExternalExtension(newGroup);
+                } else {
+                    let activeTab = await Tabs.getActive();
+
+                    if (Tabs.isCanSendMessage(activeTab)) {
+                        let title = await Tabs.sendMessage(activeTab.id, {
+                            action: 'show-new-group-name-prompt',
+                        });
+
+                        if (title) {
+                            result = await runAction({
+                                action: 'add-new-group',
+                                title: title,
+                                tabIds: data.tabIds,
+                            }, externalExtId);
+                        } else {
+                            result.error = 'title in empty - skip create group';
+                        }
+                    } else {
+                        result.error = browser.i18n.getMessage('thisTabIsNotSupported');
+                        utils.notify(result.error, 7000, 'thisTabIsNotSupported', undefined, openNotSupportedUrlHelper);
+                    }
+                }
                 break;
             case 'delete-current-group':
                 if (currentGroup.id) {
@@ -1718,10 +1754,10 @@ async function runAction(data, externalExtId) {
 
                 if (utils.isTabPinned(activeTab)) {
                     result.error = browser.i18n.getMessage('pinnedTabsAreNotSupported');
-                    utils.notify(result.error, 7000);
+                    utils.notify(result.error, 7000, 'pinnedTabsAreNotSupported');
                 } else if (utils.isTabCanNotBeHidden(activeTab)) {
                     result.error = browser.i18n.getMessage('thisTabsCanNotBeHidden', utils.getTabTitle(activeTab, false, 25));
-                    utils.notify(result.error, 7000);
+                    utils.notify(result.error, 7000, 'thisTabsCanNotBeHidden');
                 } else {
                     if (Number.isFinite(data.groupId) && 0 < data.groupId) {
                         if (groups.some(group => group.id === data.groupId)) {
@@ -1729,18 +1765,23 @@ async function runAction(data, externalExtId) {
 
                             if (groupMoveTo.isArchive) {
                                 result.error = browser.i18n.getMessage('groupIsArchived', groupMoveTo.title);
-                                utils.notify(result.error, 7000);
+                                utils.notify(result.error, 7000, 'groupIsArchived');
                             } else {
                                 await Tabs.move([activeTab.id], data.groupId);
                                 result.ok = true;
                             }
                         } else {
-                            data.groupId = 0;
+                            delete data.groupId;
                             result = await runAction(data, externalExtId);
                         }
                     } else if ('new' === data.groupId) {
-                        await Groups.add(undefined, [activeTab.id], data.title);
-                        result.ok = true;
+                        let {ok} = await runAction({
+                            action: 'add-new-group',
+                            title: data.title,
+                            tabIds: [activeTab.id],
+                        }, externalExtId);
+
+                        result.ok = ok;
                     } else {
                         if (Tabs.isCanSendMessage(activeTab)) {
                             Tabs.sendMessage(activeTab.id, {
@@ -1755,7 +1796,7 @@ async function runAction(data, externalExtId) {
                             result.ok = true;
                         } else {
                             result.error = browser.i18n.getMessage('thisTabIsNotSupported');
-                            utils.notify(result.error, 7000);
+                            utils.notify(result.error, 7000, 'thisTabIsNotSupported', undefined, openNotSupportedUrlHelper);
                         }
                     }
                 }
@@ -1766,7 +1807,7 @@ async function runAction(data, externalExtId) {
                 if (groupToDiscard) {
                     if (groupToDiscard.isArchive) {
                         result.error = browser.i18n.getMessage('groupIsArchived', groupToDiscard.title);
-                        utils.notify(result.error, 7000);
+                        utils.notify(result.error, 7000, 'groupIsArchived');
                     } else {
                         await Tabs.discard(groupToDiscard.tabs.map(utils.keyId));
                         result.ok = true;
@@ -1788,7 +1829,7 @@ async function runAction(data, externalExtId) {
                         result.ok = true;
                     } else {
                         result.error = browser.i18n.getMessage('thisTabIsNotSupported');
-                        utils.notify(result.error, 7000);
+                        utils.notify(result.error, 7000, 'thisTabIsNotSupported', undefined, openNotSupportedUrlHelper);
                     }
                 }
                 break;

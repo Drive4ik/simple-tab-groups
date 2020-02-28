@@ -101,6 +101,10 @@ async function add(windowId, tabIds = [], title, showTabsAfterMoving) {
 
     lastCreatedGroupPosition++;
 
+    if (title && title.length) {
+        title = title.slice(0, 256);
+    }
+
     let newGroup = create(lastCreatedGroupPosition, title);
 
     let groups = await load();

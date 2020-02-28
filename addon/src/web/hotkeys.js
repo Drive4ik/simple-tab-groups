@@ -28,6 +28,9 @@ async function init() {
 
         if (errorCounter < 100) {
             setTimeout(init, 200);
+        } else {
+            console.error('[STG] can\'t load hotkeys from storage');
+            errorCounter = 0;
         }
 
         return;
@@ -41,14 +44,12 @@ async function init() {
 }
 
 function changeHotkeysListener(request, sender) {
-    if (sender.id !== browser.runtime.id) {
-        return;
-    }
-
     if (request.action === 'update-hotkeys') {
         init();
     } else if ('show-groups-popup' === request.action) {
         showGroupsPopup(request);
+    } else if ('show-new-group-name-prompt' === request.action) {
+        return showNewGroupNamePrompt(request);
     }
 }
 
@@ -206,25 +207,10 @@ function showGroupsPopup(data) {
 
             groupNode.onmouseover = () => groupsWrapper.contains(document.activeElement) && header.focus();
 
-            groupNode.onclick = async function(groupId, action) {
-                let title = null;
-
-                if ('new' === groupId) {
-                    let {lastCreatedGroupPosition} = await browser.storage.local.get('lastCreatedGroupPosition');
-
-                    title = prompt(
-                        browser.i18n.getMessage('createNewGroup'),
-                        browser.i18n.getMessage('newGroupTitle', lastCreatedGroupPosition + 1)
-                    );
-
-                    if (title === null || !title.length) {
-                        return;
-                    }
-                }
-
-                browser.runtime.sendMessage({groupId, action, title});
+            groupNode.onclick = function(action, groupId) {
+                browser.runtime.sendMessage({action, groupId});
                 closeGroupsPopup();
-            }.bind(null, group.id, data.popupAction);
+            }.bind(null, data.popupAction, group.id);
 
             groupNode.onkeydown = function(e) {
                 if (checkUpDownKeys(e)) {
@@ -326,5 +312,27 @@ function showGroupsPopup(data) {
         }
 
     }, 50);
+}
 
+let promptNowShowing = false;
+
+async function showNewGroupNamePrompt() {
+    if (promptNowShowing) {
+        console.warn('[STG] prompt now showing');
+        return;
+    }
+
+    promptNowShowing = true;
+
+    let title = null,
+        {lastCreatedGroupPosition} = await browser.storage.local.get('lastCreatedGroupPosition');
+
+    title = prompt(
+        browser.i18n.getMessage('createNewGroup'),
+        browser.i18n.getMessage('newGroupTitle', lastCreatedGroupPosition + 1)
+    );
+
+    promptNowShowing = false;
+
+    return title;
 }
