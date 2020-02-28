@@ -880,5 +880,23 @@
     "noGroupsAvailable": {
         "message": "У вас нет групп",
         "description": "You have no groups"
+    },
+    "alwaysAskNewGroupName": {
+        "message": "Всегда спрашивать новое имя группы",
+        "description": "Always ask for a new group name"
+    },
+    "impossibleToAskUserAboutAction": {
+        "message": "На странице \"$page$\" нельзя спросить о \"$action$\"\n\nНажмите здесь для информации",
+        "description": "On page \"$page$\" it is impossible to ask about \"$action$\"",
+        "placeholders": {
+            "page": {
+                "content": "$1",
+                "example": "Add-ons for Firefox"
+            },
+            "action": {
+                "content": "$2",
+                "example": "some action"
+            }
+        }
     }
 }

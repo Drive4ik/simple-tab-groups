@@ -982,7 +982,12 @@ async function createMoveTabMenus() {
             let setActive = 2 === info.button,
                 tabIds = await Tabs.getHighlightedIds(tab.windowId, tab);
 
-            Groups.add(undefined, tabIds, undefined, setActive);
+            runAction({
+                action: 'add-new-group',
+                proposalTitle: tab.title,
+                tabIds: tabIds,
+                showTabsAfterMoving: setActive,
+            });
         },
     }));
 
@@ -1026,11 +1031,17 @@ async function createMoveTabMenus() {
             }
 
             let setActive = 2 === info.button,
-                newGroup = await Groups.add(),
-                newTab = await Tabs.add(newGroup.id, undefined, info.linkUrl, info.linkText);
+                {ok, group} = await runAction({
+                    action: 'add-new-group',
+                    proposalTitle: info.linkText,
+                });
 
-            if (setActive) {
-                applyGroup(undefined, newGroup.id, newTab.id);
+            if (ok && group) {
+                let newTab = await Tabs.add(group.id, undefined, info.linkUrl, info.linkText);
+
+                if (setActive) {
+                    applyGroup(undefined, group.id, newTab.id);
+                }
             }
         },
     }));
@@ -1056,11 +1067,17 @@ async function createMoveTabMenus() {
             }
 
             let setActive = 2 === info.button,
-                newGroup = await Groups.add(),
-                newTab = await Tabs.add(newGroup.id, undefined, bookmark.url, bookmark.title);
+                {ok, group} = await runAction({
+                    action: 'add-new-group',
+                    proposalTitle: bookmark.title,
+                });
 
-            if (setActive) {
-                applyGroup(undefined, newGroup.id, newTab.id);
+            if (ok && group) {
+                let newTab = await Tabs.add(group.id, undefined, bookmark.url, bookmark.title);
+
+                if (setActive) {
+                    applyGroup(undefined, group.id, newTab.id);
+                }
             }
         },
     }));
@@ -1675,7 +1692,7 @@ async function runAction(data, externalExtId) {
                 } else if ('new' === data.groupId) {
                     let {ok, group} = await runAction({
                         action: 'add-new-group',
-                        title: data.title,
+                        proposalTitle: data.title,
                     }, externalExtId);
 
                     if (ok) {
@@ -1695,42 +1712,51 @@ async function runAction(data, externalExtId) {
 
                         result.ok = true;
                     } else {
-                        result.error = browser.i18n.getMessage('thisTabIsNotSupported');
-                        utils.notify(result.error, 7000, 'thisTabIsNotSupported', undefined, openNotSupportedUrlHelper);
+                        result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleLoadCustomGroup')]);
+                        utils.notify(result.error, 15000, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
                     }
                 }
                 break;
             case 'add-new-group':
-                if (data.title && typeof data.title === 'string') {
+                if (!options.alwaysAskNewGroupName || data.title) {
                     // only this addon can move tabs to new group
-                    let tabIds = (!externalExtId && Array.isArray(data.tabIds)) ? data.tabIds : [],
-                        newGroup = await Groups.add(undefined, tabIds, data.title);
+                    let newGroup = await Groups.add(undefined, (!externalExtId && data.tabIds), data.title, data.showTabsAfterMoving);
 
                     result.ok = true;
                     result.group = Groups.mapForExternalExtension(newGroup);
                 } else {
-                    let activeTab = await Tabs.getActive();
+                    let activeTab = await Tabs.getActive(),
+                        {lastCreatedGroupPosition} = await storage.get('lastCreatedGroupPosition');
 
                     if (Tabs.isCanSendMessage(activeTab)) {
-                        let {lastCreatedGroupPosition} = await storage.get('lastCreatedGroupPosition'),
-                            title = await Tabs.sendMessage(activeTab.id, {
-                                action: 'show-prompt',
-                                promptTitle: browser.i18n.getMessage('createNewGroup'),
-                                value: browser.i18n.getMessage('newGroupTitle', lastCreatedGroupPosition + 1),
-                            });
+                        let title = await Tabs.sendMessage(activeTab.id, {
+                            action: 'show-prompt',
+                            promptTitle: browser.i18n.getMessage('createNewGroup'),
+                            value: data.proposalTitle || browser.i18n.getMessage('newGroupTitle', lastCreatedGroupPosition + 1),
+                        });
 
                         if (title) {
                             result = await runAction({
                                 action: 'add-new-group',
                                 title: title,
                                 tabIds: data.tabIds,
+                                showTabsAfterMoving: data.showTabsAfterMoving,
                             }, externalExtId);
                         } else {
                             result.error = 'title in empty - skip create group';
                         }
                     } else {
-                        result.error = browser.i18n.getMessage('thisTabIsNotSupported');
-                        utils.notify(result.error, 7000, 'thisTabIsNotSupported', undefined, openNotSupportedUrlHelper);
+                        result = await runAction({
+                            action: 'add-new-group',
+                            title: data.proposalTitle || browser.i18n.getMessage('newGroupTitle', lastCreatedGroupPosition + 1),
+                            tabIds: data.tabIds,
+                            showTabsAfterMoving: data.showTabsAfterMoving,
+                        }, externalExtId);
+
+                        if (options.alwaysAskNewGroupName) {
+                            result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('createNewGroup')]);
+                            utils.notify(result.error, 15000, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
+                        }
                     }
                 }
                 break;
@@ -1753,8 +1779,8 @@ async function runAction(data, externalExtId) {
 
                         result.ok = true;
                     } else {
-                        result.error = browser.i18n.getMessage('thisTabIsNotSupported');
-                        utils.notify(result.error, 7000, 'thisTabIsNotSupported', undefined, openNotSupportedUrlHelper);
+                        result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleRenameGroup')]);
+                        utils.notify(result.error, 15000, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
                     }
                 } else if (data.groupId && !data.title) {
                     let groupToRename = groups.find(group => group.id === data.groupId);
@@ -1776,8 +1802,8 @@ async function runAction(data, externalExtId) {
                                 result.error = 'title in empty - skip rename group';
                             }
                         } else {
-                            result.error = browser.i18n.getMessage('thisTabIsNotSupported');
-                            utils.notify(result.error, 7000, 'thisTabIsNotSupported', undefined, openNotSupportedUrlHelper);
+                            result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleRenameGroup')]);
+                            utils.notify(result.error, 15000, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
                         }
                     } else {
                         result = await runAction('rename-group', externalExtId);
@@ -1844,6 +1870,7 @@ async function runAction(data, externalExtId) {
                         let {ok} = await runAction({
                             action: 'add-new-group',
                             title: data.title,
+                            proposalTitle: activeTab.title,
                             tabIds: [activeTab.id],
                         }, externalExtId);
 
@@ -1861,8 +1888,8 @@ async function runAction(data, externalExtId) {
 
                             result.ok = true;
                         } else {
-                            result.error = browser.i18n.getMessage('thisTabIsNotSupported');
-                            utils.notify(result.error, 7000, 'thisTabIsNotSupported', undefined, openNotSupportedUrlHelper);
+                            result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('moveTabToGroupDisabledTitle')]);
+                            utils.notify(result.error, 15000, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
                         }
                     }
                 }
@@ -1894,8 +1921,8 @@ async function runAction(data, externalExtId) {
 
                         result.ok = true;
                     } else {
-                        result.error = browser.i18n.getMessage('thisTabIsNotSupported');
-                        utils.notify(result.error, 7000, 'thisTabIsNotSupported', undefined, openNotSupportedUrlHelper);
+                        result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('discardGroupTitle')]);
+                        utils.notify(result.error, 15000, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
                     }
                 }
                 break;

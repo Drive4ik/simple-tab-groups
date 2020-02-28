@@ -710,6 +710,12 @@
             </div>
             <div class="field">
                 <label class="checkbox">
+                    <input v-model="options.alwaysAskNewGroupName" type="checkbox" />
+                    <span v-text="lang('alwaysAskNewGroupName')"></span>
+                </label>
+            </div>
+            <div class="field">
+                <label class="checkbox">
                     <input v-model="options.prependGroupTitleToWindowTitle" type="checkbox" />
                     <span v-text="lang('prependGroupTitleToWindowTitle')"></span>
                 </label>

@@ -92,18 +92,16 @@ function create(id, title) {
     };
 }
 
-async function add(windowId, tabIds = [], title, showTabsAfterMoving) {
+async function add(windowId, tabIds = [], title = null, showTabsAfterMoving) {
     const {BG} = browser.extension.getBackgroundPage();
 
-    tabIds = tabIds.slice();
+    tabIds = Array.isArray(tabIds) ? tabIds.slice() : [];
+
+    title = (typeof title === 'string' && title) ? title.slice(0, 256) : null;
 
     let {lastCreatedGroupPosition} = await storage.get('lastCreatedGroupPosition');
 
     lastCreatedGroupPosition++;
-
-    if (title && title.length) {
-        title = title.slice(0, 256);
-    }
 
     let newGroup = create(lastCreatedGroupPosition, title);
 

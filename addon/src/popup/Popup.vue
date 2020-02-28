@@ -68,15 +68,13 @@
 
                 section: SECTION_DEFAULT,
 
+                showPromptPopup: false,
+                promptTitle: null,
+                promptValue: '',
+                promptResolveFunc: null,
+
                 dragData: null,
                 someGroupAreLoading: false,
-
-                nextGroupTitle: '',
-                isShowingCreateGroupPopup: false,
-
-                groupIdToRename: null,
-                renameGroupTitle: '',
-                isShowingRenameGroupPopup: false,
 
                 search: '',
                 extendedSearch: false,
@@ -401,34 +399,54 @@
                     .map(this.mapTab, this);
             },
 
-            async showCreateGroupPopup() {
-                this.nextGroupTitle = await Groups.getNextTitle();
-                this.isShowingCreateGroupPopup = true;
+            showPrompt(title, value) {
+                return new Promise(resolve => {
+                    this.promptTitle = title;
+                    this.promptValue = value;
+
+                    this.promptResolveFunc = ok => {
+                        this.showPromptPopup = false;
+
+                        if (ok && this.promptValue.length) {
+                            resolve(this.promptValue);
+                        } else {
+                            resolve(false);
+                        }
+                    };
+
+                    this.showPromptPopup = true;
+                });
             },
 
-            createNewGroup() {
-                Groups.add(undefined, undefined, this.nextGroupTitle);
+            async createNewGroup(tabIds, showTabAfterMoving, proposalTitle) {
+                let newGroupTitle = '';
+
+                if (this.options.alwaysAskNewGroupName) {
+                    newGroupTitle = await Groups.getNextTitle();
+
+                    newGroupTitle = await this.showPrompt(this.lang('createNewGroup'), proposalTitle || newGroupTitle);
+
+                    if (newGroupTitle === false) {
+                        return;
+                    }
+                }
+
+                Groups.add(undefined, tabIds, newGroupTitle, showTabAfterMoving);
             },
 
-            showRenameGroupPopup({id, title}) {
-                this.groupIdToRename = id;
-                this.renameGroupTitle = title;
-                this.isShowingRenameGroupPopup = true;
-            },
+            async renameGroup({id, title}) {
+                title = await this.showPrompt(this.lang('hotkeyActionTitleRenameGroup'), title);
 
-            renameSelectedGroup() {
-                if (this.renameGroupTitle.length) {
-                    Groups.update(this.groupIdToRename, {
-                        title: this.renameGroupTitle,
-                    });
+                if (title) {
+                    Groups.update(id, {title});
                 }
             },
 
             tryRenameGroup() {
                 if (this.groupToShow) {
-                    this.showRenameGroupPopup(this.groupToShow);
+                    this.renameGroup(this.groupToShow);
                 } else if (this.currentGroup) {
-                    this.showRenameGroupPopup(this.currentGroup);
+                    this.renameGroup(this.currentGroup);
                 }
             },
 
@@ -589,7 +607,7 @@
                 this.loadGroups();
             },
             async unsyncHiddenTabsCreateNewGroup() {
-                await Groups.add(undefined, this.unSyncTabs.map(utils.keyId));
+                await this.createNewGroup(this.unSyncTabs.map(utils.keyId), undefined, this.unSyncTabs[0].title);
 
                 this.unSyncTabs = [];
             },
@@ -669,7 +687,7 @@
                 }
             },
             async moveTabToNewGroup(tabId, loadUnsync, showTabAfterMoving) {
-                await Groups.add(undefined, this.getTabIdsForMove(tabId), undefined, showTabAfterMoving);
+                await this.createNewGroup(this.getTabIdsForMove(tabId), showTabAfterMoving);
 
                 if (loadUnsync) {
                     this.loadUnsyncedTabs();
@@ -893,7 +911,7 @@
                             @keydown.arrow-right="showSectionGroupTabs(group)"
                             @keydown.arrow-up="focusToNextElement"
                             @keydown.arrow-down="focusToNextElement"
-                            @keydown.f2.stop="showRenameGroupPopup(group)"
+                            @keydown.f2.stop="renameGroup(group)"
                             tabindex="0"
                             :title="getGroupTitle(group, 'withCountTabs withTabs withContainer')"
                             >
@@ -1020,7 +1038,7 @@
                         @keydown.arrow-right="showSectionGroupTabs(group)"
                         @keydown.arrow-up="focusToNextElement"
                         @keydown.arrow-down="focusToNextElement"
-                        @keydown.f2.stop="showRenameGroupPopup(group)"
+                        @keydown.f2.stop="renameGroup(group)"
                         tabindex="0"
                         :title="getGroupTitle(group, 'withCountTabs withTabs withContainer')"
                         >
@@ -1051,7 +1069,7 @@
                 <hr>
 
                 <div class="create-new-group">
-                    <div class="item" tabindex="0" @click="showCreateGroupPopup" @keyup.enter="showCreateGroupPopup">
+                    <div class="item" tabindex="0" @click="createNewGroup()" @keyup.enter="createNewGroup()">
                         <div class="item-icon">
                             <img class="size-16" src="/icons/group-new.svg" />
                         </div>
@@ -1414,14 +1432,14 @@
         </popup>
 
         <popup
-            v-if="isShowingCreateGroupPopup"
-            :title="lang('createNewGroup')"
-            @create-group="createNewGroup(); isShowingCreateGroupPopup = false"
-            @close-popup="isShowingCreateGroupPopup = false"
-            @show-popup="$refs.nextGroupTitle.focus(); $refs.nextGroupTitle.select()"
+            v-if="showPromptPopup"
+            :title="promptTitle"
+            @resolve="promptResolveFunc(true)"
+            @close-popup="promptResolveFunc(false)"
+            @show-popup="$refs.promptInput.focus(); $refs.promptInput.select()"
             :buttons="
                 [{
-                    event: 'create-group',
+                    event: 'resolve',
                     classList: 'is-success',
                     lang: 'ok',
                     focused: false,
@@ -1431,41 +1449,10 @@
                 }]
             ">
             <div class="control is-expanded">
-                <input
-                    ref="nextGroupTitle"
-                    @keyup.enter.stop="createNewGroup(); isShowingCreateGroupPopup = false"
-                    v-model.trim="nextGroupTitle"
-                    type="text"
-                    class="input" />
+                <input v-model.trim="promptValue" type="text" class="input" ref="promptInput" @keyup.enter.stop="promptResolveFunc(true)" />
             </div>
         </popup>
 
-        <popup
-            v-if="isShowingRenameGroupPopup"
-            :title="lang('hotkeyActionTitleRenameGroup')"
-            @rename-group="renameSelectedGroup(); isShowingRenameGroupPopup = false"
-            @close-popup="isShowingRenameGroupPopup = false"
-            @show-popup="$refs.renameGroupTitle.focus(); $refs.renameGroupTitle.select()"
-            :buttons="
-                [{
-                    event: 'rename-group',
-                    classList: 'is-success',
-                    lang: 'ok',
-                    focused: false,
-                }, {
-                    event: 'close-popup',
-                    lang: 'cancel',
-                }]
-            ">
-            <div class="control is-expanded">
-                <input
-                    ref="renameGroupTitle"
-                    @keyup.enter.stop="renameSelectedGroup(); isShowingRenameGroupPopup = false"
-                    v-model.trim="renameGroupTitle"
-                    type="text"
-                    class="input" />
-            </div>
-        </popup>
     </div>
 </template>
 
