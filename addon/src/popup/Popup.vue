@@ -400,6 +400,10 @@
             },
 
             showPrompt(title, value) {
+                if (this.showPromptPopup) {
+                    return Promise.resolve(false);
+                }
+
                 return new Promise(resolve => {
                     this.promptTitle = title;
                     this.promptValue = value;
