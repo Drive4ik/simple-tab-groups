@@ -131,7 +131,11 @@ async function openBackupFolder() {
 async function getAutoBackupFolderName() {
     let {autoBackupFolderName} = await storage.get('autoBackupFolderName');
 
-    if (!autoBackupFolderName.length || /^STG\-backups\-FF\-[a-z\d\.]+$/.test(autoBackupFolderName)) {
+    if (
+        !autoBackupFolderName.length ||
+        /^STG\-backups\-FF\-[a-z\d\.]+$/.test(autoBackupFolderName) ||
+        /^STG\-backups\-(win|linux|mac|openbsd)\-\d+$/.test(autoBackupFolderName)
+        ) {
         let {version} = await browser.runtime.getBrowserInfo(),
             newAutoBackupFolderName = `STG-backups-FF-${version}`;
 
