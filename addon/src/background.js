@@ -1395,7 +1395,7 @@ function addTabToLazyMove(tabId, groupId, showTabAfterMovingItIntoThisGroup) {
 async function onBeforeTabRequest({tabId, url, originUrl}) {
     let excludeTab = excludeTabsIds.includes(tabId) || tabId < 1;
 
-    console.log('onBeforeTabRequest %s tabId: %s, url: %s', (excludeTab ? '🛑' : ''), tabId, url);
+    console.log('onBeforeTabRequest %s tabId: %s, url: %s, originUrl: %s', (excludeTab ? '🛑' : ''), tabId, url, originUrl);
 
     if (excludeTab) {
         return;
