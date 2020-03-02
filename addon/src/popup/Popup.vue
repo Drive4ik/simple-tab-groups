@@ -4,10 +4,10 @@
     import Vue from 'vue';
     import VueLazyload from 'vue-lazyload';
 
-    import utils from '../js/utils';
-    import Groups from '../js/groups';
-    import Tabs from '../js/tabs';
-    import Windows from '../js/windows';
+    // import utils from '../js/utils';
+    // import Groups from '../js/groups';
+    // import Tabs from '../js/tabs';
+    // import Windows from '../js/windows';
     import popup from '../js/popup.vue';
     import editGroupPopup from './edit-group-popup.vue';
     import editGroup from '../js/edit-group.vue';
@@ -20,8 +20,8 @@
         throw 'Background not inited, waiting...';
     }
 
-    window.addEventListener('error', utils.errorEventHandler);
-    Vue.config.errorHandler = utils.errorEventHandler;
+    window.addEventListener('error', BG.utils.errorEventHandler);
+    Vue.config.errorHandler = BG.utils.errorEventHandler;
 
     Vue.use(VueLazyload);
 
@@ -159,9 +159,9 @@
                     groups = [];
 
                 this.groups.forEach(function(group) {
-                    group.filteredTabsBySearch = group.tabs.filter(tab => utils.mySearchFunc(searchStr, utils.getTabTitle(tab, true), this.extendedSearch));
+                    group.filteredTabsBySearch = group.tabs.filter(tab => BG.utils.mySearchFunc(searchStr, BG.utils.getTabTitle(tab, true), this.extendedSearch));
 
-                    if (group.filteredTabsBySearch.length || utils.mySearchFunc(searchStr, group.title, this.extendedSearch)) {
+                    if (group.filteredTabsBySearch.length || BG.utils.mySearchFunc(searchStr, group.title, this.extendedSearch)) {
                         group.filteredTabsBySearch.sort(this.$_simpleSortTabs.bind(null, searchStr));
                         groups.push(group);
                     }
@@ -172,10 +172,10 @@
         },
         methods: {
             lang: browser.i18n.getMessage,
-            safeHtml: utils.safeHtml,
+            safeHtml: BG.utils.safeHtml,
 
             async loadCurrentWindow() {
-                this.currentWindow = await Windows.get(undefined, false);
+                this.currentWindow = await BG.Windows.get(undefined, false);
             },
 
             loadOptions() {
@@ -191,7 +191,7 @@
                     let activeItemNode = document.querySelector('.is-active');
 
                     if (!activeItemNode && this.groupToShow) {
-                        let activeTab = utils.getLastActiveTab(this.groupToShow.tabs);
+                        let activeTab = BG.utils.getLastActiveTab(this.groupToShow.tabs);
 
                         if (activeTab) {
                             activeItemNode = document.querySelector(`[data-tab-id="${activeTab.id}"]`);
@@ -209,12 +209,12 @@
             setupListeners() {
                 this
                     .$on('drag-move-group', function(from, to) {
-                        Groups.move(from.data.item.id, this.groups.indexOf(to.data.item));
+                        BG.Groups.move(from.data.item.id, this.groups.indexOf(to.data.item));
                     })
                     .$on('drag-move-tab', function(from, to) {
                         let tabIds = this.getTabIdsForMove(from.data.item.id);
 
-                        Tabs.move(tabIds, to.data.group.id, to.data.item.index, false);
+                        BG.Tabs.move(tabIds, to.data.group.id, to.data.item.index, false);
                     })
                     .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
                     .$on('drag-over', (item, isOver) => item.isOver = isOver);
@@ -228,9 +228,9 @@
 
                                 if (group) {
                                     group.tabs.push(...request.tabs.map(this.mapTab));
-                                    group.tabs.sort(utils.sortBy('index'));
+                                    group.tabs.sort(BG.utils.sortBy('index'));
                                 } else {
-                                    throw Error(utils.errorEventMessage('group for new tabs not found', request));
+                                    throw Error(BG.utils.errorEventMessage('group for new tabs not found', request));
                                 }
                             }
 
@@ -328,8 +328,8 @@
             },
 
             $_simpleSortTabs(searchStr, a, b) {
-                let aIncludes = utils.getTabTitle(a, true).toLowerCase().includes(searchStr),
-                    bIncludes = utils.getTabTitle(b, true).toLowerCase().includes(searchStr);
+                let aIncludes = BG.utils.getTabTitle(a, true).toLowerCase().includes(searchStr),
+                    bIncludes = BG.utils.getTabTitle(b, true).toLowerCase().includes(searchStr);
 
                 if (aIncludes && !bIncludes) { // move up
                     return -1;
@@ -356,7 +356,7 @@
                     data: group,
                     computed: {
                         iconUrlToDisplay() {
-                            return utils.getGroupIconUrl({
+                            return BG.utils.getGroupIconUrl({
                                 iconUrl: this.iconUrl,
                                 iconColor: this.iconColor,
                                 iconViewType: this.iconViewType,
@@ -382,14 +382,14 @@
             getWindowId: BG.cache.getWindowId,
 
             async loadGroups() {
-                let groups = await Groups.load(null, true);
+                let groups = await BG.Groups.load(null, true);
 
                 this.groups = groups.map(this.mapGroup, this);
 
                 this.multipleTabIds = [];
             },
             async loadUnsyncedTabs() {
-                let windows = await Windows.load(true);
+                let windows = await BG.Windows.load(true);
 
                 this.unSyncTabs = windows
                     .reduce(function(acc, win) {
@@ -422,7 +422,7 @@
                 let newGroupTitle = '';
 
                 if (this.options.alwaysAskNewGroupName) {
-                    newGroupTitle = await Groups.getNextTitle();
+                    newGroupTitle = await BG.Groups.getNextTitle();
 
                     newGroupTitle = await this.showPrompt(this.lang('createNewGroup'), proposalTitle || newGroupTitle);
 
@@ -431,14 +431,14 @@
                     }
                 }
 
-                Groups.add(undefined, tabIds, newGroupTitle, showTabAfterMoving);
+                BG.Groups.add(undefined, tabIds, newGroupTitle, showTabAfterMoving);
             },
 
             async renameGroup({id, title}) {
                 title = await this.showPrompt(this.lang('hotkeyActionTitleRenameGroup'), title);
 
                 if (title) {
-                    Groups.update(id, {title});
+                    BG.Groups.update(id, {title});
                 }
             },
 
@@ -451,28 +451,28 @@
             },
 
             addTab(cookieStoreId) {
-                Tabs.add(this.groupToShow.id, cookieStoreId);
+                BG.Tabs.add(this.groupToShow.id, cookieStoreId);
             },
             removeTab(tab) {
-                Tabs.remove(this.getTabIdsForMove(tab.id));
+                BG.Tabs.remove(this.getTabIdsForMove(tab.id));
             },
 
             discardTab(tab) {
-                Tabs.discard(this.getTabIdsForMove(tab.id));
+                BG.Tabs.discard(this.getTabIdsForMove(tab.id));
             },
 
             discardGroup({tabs}) {
-                Tabs.discard(tabs.map(utils.keyId));
+                BG.Tabs.discard(tabs.map(BG.utils.keyId));
             },
 
             discardOtherGroups(groupExclude) {
                 let tabIds = this.groups.reduce(function(acc, gr) {
-                    let groupTabIds = (gr.id === groupExclude.id || gr.isArchive || BG.cache.getWindowId(gr.id)) ? [] : gr.tabs.map(utils.keyId);
+                    let groupTabIds = (gr.id === groupExclude.id || gr.isArchive || BG.cache.getWindowId(gr.id)) ? [] : gr.tabs.map(BG.utils.keyId);
 
                     return [...acc, ...groupTabIds];
                 }, []);
 
-                Tabs.discard(tabIds);
+                BG.Tabs.discard(tabIds);
             },
 
             async toggleArchiveGroup({id}) {
@@ -482,12 +482,12 @@
             },
 
             reloadTab(tab, bypassCache) {
-                Tabs.reload(this.getTabIdsForMove(tab.id), bypassCache);
+                BG.Tabs.reload(this.getTabIdsForMove(tab.id), bypassCache);
             },
 
             reloadAllTabsInGroup(group, bypassCache) {
                 if (group.tabs.length) {
-                    Tabs.reload(group.tabs.map(utils.keyId), bypassCache);
+                    BG.Tabs.reload(group.tabs.map(BG.utils.keyId), bypassCache);
                 }
             },
 
@@ -508,7 +508,7 @@
                             tabs = group ? group.tabs : this.unSyncTabs;
                         }
 
-                        let tabIds = tabs.map(utils.keyId),
+                        let tabIds = tabs.map(BG.utils.keyId),
                             tabIndex = tabIds.indexOf(tab.id),
                             lastTabIndex = -1;
 
@@ -591,9 +591,9 @@
                 }
             },
             async unsyncHiddenTabsMoveToCurrentGroup() {
-                let hiddenTabsIds = this.unSyncTabs.map(utils.keyId);
+                let hiddenTabsIds = this.unSyncTabs.map(BG.utils.keyId);
 
-                await Tabs.moveNative(this.unSyncTabs, {
+                await BG.Tabs.moveNative(this.unSyncTabs, {
                     windowId: this.currentWindow.id,
                     index: -1,
                 });
@@ -607,17 +607,17 @@
                 this.loadGroups();
             },
             async unsyncHiddenTabsCreateNewGroup() {
-                await this.createNewGroup(this.unSyncTabs.map(utils.keyId), undefined, this.unSyncTabs[0].title);
+                await this.createNewGroup(this.unSyncTabs.map(BG.utils.keyId), undefined, this.unSyncTabs[0].title);
 
                 this.unSyncTabs = [];
             },
             unsyncHiddenTabsCloseAll() {
-                Tabs.remove(this.unSyncTabs.map(utils.keyId));
+                BG.Tabs.remove(this.unSyncTabs.map(BG.utils.keyId));
 
                 this.unSyncTabs = [];
             },
             async unsyncHiddenTabsShowTabIntoCurrentWindow(tab) {
-                await Tabs.moveNative([tab], {
+                await BG.Tabs.moveNative([tab], {
                     windowId: this.currentWindow.id,
                     index: -1,
                 });
@@ -656,7 +656,7 @@
                     this.showSectionDefault();
                 }
 
-                await Groups.remove(group.id);
+                await BG.Groups.remove(group.id);
 
                 if (!this.currentGroup) {
                     this.loadUnsyncedTabs();
@@ -676,10 +676,10 @@
             async moveTabs(tabId, groupId, loadUnsync = false, showTabAfterMoving, discardTabs) {
                 let tabIds = this.getTabIdsForMove(tabId);
 
-                await Tabs.move(tabIds, groupId, undefined, false, showTabAfterMoving);
+                await BG.Tabs.move(tabIds, groupId, undefined, false, showTabAfterMoving);
 
                 if (discardTabs) {
-                    Tabs.discard(tabIds);
+                    BG.Tabs.discard(tabIds);
                 }
 
                 if (loadUnsync) {
@@ -694,16 +694,16 @@
                 }
             },
             setTabIconAsGroupIcon({favIconUrl}) {
-                Groups.update(this.groupToShow.id, {
+                BG.Groups.update(this.groupToShow.id, {
                     iconViewType: null,
                     iconUrl: favIconUrl,
                 });
             },
 
-            getTabTitle: utils.getTabTitle,
-            isTabLoading: utils.isTabLoading,
-            getGroupTitle: utils.getGroupTitle,
-            groupTabsCountMessage: utils.groupTabsCountMessage,
+            getTabTitle: BG.utils.getTabTitle,
+            isTabLoading: BG.utils.isTabLoading,
+            getGroupTitle: BG.utils.getGroupTitle,
+            groupTabsCountMessage: BG.utils.groupTabsCountMessage,
 
             openOptionsPage() {
                 delete window.localStorage.optionsSection;
@@ -715,7 +715,7 @@
                 this.closeWindow();
             },
             sortGroups(vector) {
-                Groups.sort(vector);
+                BG.Groups.sort(vector);
             },
             exportGroupToBookmarks({id}) {
                 BG.exportGroupToBookmarks(id);
@@ -787,7 +787,7 @@
                             return;
                         }
 
-                        utils.scrollTo(document.activeElement);
+                        BG.utils.scrollTo(document.activeElement);
                     });
                 }, 150);
             },
@@ -812,9 +812,9 @@
                 }
 
                 if (-1 !== focusedNodeIndex) {
-                    nextIndex = utils.getNextIndex(focusedNodeIndex, nodes.length, textPosition);
+                    nextIndex = BG.utils.getNextIndex(focusedNodeIndex, nodes.length, textPosition);
                 } else if (-1 !== activeNodeIndex) {
-                    nextIndex = utils.getNextIndex(activeNodeIndex, nodes.length, textPosition);
+                    nextIndex = BG.utils.getNextIndex(activeNodeIndex, nodes.length, textPosition);
                 }
 
                 if (false === nextIndex || -1 === nextIndex) {
