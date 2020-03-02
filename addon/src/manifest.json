@@ -30,7 +30,8 @@
         "webRequest",
         "webRequestBlocking",
         "<all_urls>",
-        "storage"
+        "storage",
+        "unlimitedStorage"
     ],
 
     "optional_permissions": [
