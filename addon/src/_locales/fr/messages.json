@@ -860,7 +860,7 @@
         "description": "Unarchive"
     },
     "groupIsArchived": {
-        "message": "Incapable de mener à bien l'action, le groupe \"$grouptitle$\" se trouve dans les archives",
+        "message": "Impossible de mener à bien l'action, le groupe \"$grouptitle$\" se trouve dans les archives",
         "description": "Unable to complete the action, the group is in the archive",
         "placeholders": {
             "grouptitle": {
@@ -872,5 +872,31 @@
     "updateAddonToLatestVersion": {
         "message": "Veuillez mettre à jour l'extension",
         "description": "Please, update addon to latest version"
+    },
+    "hotkeyActionTitleRenameGroup": {
+        "message": "Renommer le groupe",
+        "description": "Rename group"
+    },
+    "noGroupsAvailable": {
+        "message": "Vous n'avez aucun groupe",
+        "description": "You have no groups"
+    },
+    "alwaysAskNewGroupName": {
+        "message": "Toujours demander un nom pour un nouveau groupe",
+        "description": "Always ask for a new group name"
+    },
+    "impossibleToAskUserAboutAction": {
+        "message": "Sur la page \"$page$\", il n'est pas possible d'exécuter \"$action$\"\n\nCliquer ici pour info",
+        "description": "On page \"$page$\" it is impossible to ask about \"$action$\"",
+        "placeholders": {
+            "page": {
+                "content": "$1",
+                "example": "Add-ons for Firefox"
+            },
+            "action": {
+                "content": "$2",
+                "example": "some action"
+            }
+        }
     }
 }
