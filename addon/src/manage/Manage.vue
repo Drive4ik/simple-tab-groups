@@ -105,7 +105,13 @@
             this.$nextTick(function() {
                 this.setFocusOnSearch();
 
-                this.groups.forEach(group => group.tabs.forEach(tab => !tab.thumbnail && !tab.discarded && BG.utils.isTabLoaded(tab) && BG.Tabs.updateThumbnail(tab.id)));
+                if (this.options.showTabsWithThumbnailsInManageGroups) {
+                    this.groups.forEach(function(group) {
+                        if (!group.isArchive) {
+                            group.tabs.forEach(tab => !tab.thumbnail && !tab.discarded && BG.utils.isTabLoaded(tab) && BG.Tabs.updateThumbnail(tab.id))
+                        }
+                    });
+                }
             });
         },
         watch: {
@@ -714,6 +720,7 @@
                         v-for="group in filteredGroups"
                         :key="group.id"
                         :class="['group', {
+                            'is-archive': group.isArchive,
                             'drag-moving': group.isMoving,
                             'drag-over': group.isOver,
                             'loaded': getWindowId(group.id),
@@ -1245,6 +1252,9 @@
             .tab {
                 position: relative;
                 font-size: 12px;
+            }
+
+            &:not(.is-archive) .tab {
                 cursor: pointer;
             }
 
