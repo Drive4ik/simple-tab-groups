@@ -45,6 +45,11 @@
 
                 view: VIEW_DEFAULT,
 
+                showPromptPopup: false,
+                promptTitle: null,
+                promptValue: '',
+                promptResolveFunc: null,
+
                 isLoaded: false,
 
                 search: '',
@@ -316,11 +321,43 @@
                 }
             },
             async moveTabToNewGroup(tabId, loadUnsync, showTabAfterMoving) {
-                await Groups.add(undefined, this.getTabIdsForMove(tabId), undefined, showTabAfterMoving);
+                let newGroupTitle = '',
+                    tabIds = this.getTabIdsForMove(tabId);
+
+                if (this.options.alwaysAskNewGroupName) {
+                    newGroupTitle = await Groups.getNextTitle();
+
+                    newGroupTitle = await this.showPrompt(this.lang('createNewGroup'), newGroupTitle);
+
+                    if (!newGroupTitle) {
+                        return;
+                    }
+                }
+
+                await Groups.add(undefined, tabIds, newGroupTitle, showTabAfterMoving);
 
                 if (loadUnsync) {
                     this.loadUnsyncedTabs();
                 }
+            },
+
+            showPrompt(title, value) {
+                return new Promise(resolve => {
+                    this.promptTitle = title;
+                    this.promptValue = value;
+
+                    this.promptResolveFunc = ok => {
+                        this.showPromptPopup = false;
+
+                        if (ok && this.promptValue.length) {
+                            resolve(this.promptValue);
+                        } else {
+                            resolve(false);
+                        }
+                    };
+
+                    this.showPromptPopup = true;
+                });
             },
 
             mapGroup(group) {
@@ -1008,6 +1045,28 @@
                 }]
             ">
             <span v-html="lang('deleteGroupBody', safeHtml(groupToRemove.title))"></span>
+        </popup>
+
+        <popup
+            v-if="showPromptPopup"
+            :title="promptTitle"
+            @resolve="promptResolveFunc(true)"
+            @close-popup="promptResolveFunc(false)"
+            @show-popup="$refs.promptInput.focus(); $refs.promptInput.select()"
+            :buttons="
+                [{
+                    event: 'resolve',
+                    classList: 'is-success',
+                    lang: 'ok',
+                    focused: false,
+                }, {
+                    event: 'close-popup',
+                    lang: 'cancel',
+                }]
+            ">
+            <div class="control is-expanded">
+                <input v-model.trim="promptValue" type="text" class="input" ref="promptInput" @keyup.enter.stop="promptResolveFunc(true)" />
+            </div>
         </popup>
 
 

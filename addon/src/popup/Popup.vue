@@ -426,7 +426,7 @@
 
                     newGroupTitle = await this.showPrompt(this.lang('createNewGroup'), proposalTitle || newGroupTitle);
 
-                    if (newGroupTitle === false) {
+                    if (!newGroupTitle) {
                         return;
                     }
                 }
