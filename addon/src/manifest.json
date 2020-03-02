@@ -81,58 +81,58 @@
             "suggested_key": {
                 "default": "F8"
             },
-            "description": "Open popup"
+            "description": "__MSG_openPopupTitle__"
         },
         "_execute_sidebar_action": {
-            "description": "Open sidebar"
+            "description": "__MSG_openSidebarTitle__"
         },
         "open-manage-groups": {
-            "description": "Open manage groups"
+            "description": "__MSG_hotkeyActionTitleOpenManageGroups__"
         },
         "move-active-tab-to-custom-group": {
-            "description": "Move active tab to custom group"
+            "description": "__MSG_hotkeyActionTitleMoveActiveTabToCustomGroup__"
         },
         "load-custom-group": {
-            "description": "Load custom group"
+            "description": "__MSG_hotkeyActionTitleLoadCustomGroup__"
         },
         "load-next-group": {
-            "description": "Load next group"
+            "description": "__MSG_hotkeyActionTitleLoadNextGroup__"
         },
         "load-prev-group": {
-            "description": "Load previous group"
+            "description": "__MSG_hotkeyActionTitleLoadPrevGroup__"
         },
         "load-next-unloaded-group": {
-            "description": "Load next unloaded group"
+            "description": "__MSG_hotkeyActionTitleLoadNextUnloadedGroup__"
         },
         "load-prev-unloaded-group": {
-            "description": "Load previous unloaded group"
+            "description": "__MSG_hotkeyActionTitleLoadPrevUnloadedGroup__"
         },
         "load-history-next-group": {
-            "description": "Load next group from history"
+            "description": "__MSG_hotkeyActionTitleLoadHistoryNextGroup__"
         },
         "load-history-prev-group": {
-            "description": "Load previous group from history"
+            "description": "__MSG_hotkeyActionTitleLoadHistoryPrevGroup__"
         },
         "load-first-group": {
-            "description": "Load first group"
+            "description": "__MSG_hotkeyActionTitleLoadFirstGroup__"
         },
         "load-last-group": {
-            "description": "Load last group"
+            "description": "__MSG_hotkeyActionTitleLoadLastGroup__"
         },
         "add-new-group": {
-            "description": "Add new group"
+            "description": "__MSG_hotkeyActionTitleAddNewGroup__"
         },
         "rename-group": {
-            "description": "Rename group"
+            "description": "__MSG_hotkeyActionTitleRenameGroup__"
         },
         "discard-group": {
-            "description": "Discard group"
+            "description": "__MSG_hotkeyActionTitleDiscardGroup__"
         },
         "discard-other-groups": {
-            "description": "Discard other groups"
+            "description": "__MSG_hotkeyActionTitleDiscardOtherGroups__"
         },
         "reload-all-tabs-in-current-group": {
-            "description": "Reload all tabs in current group"
+            "description": "__MSG_hotkeyActionTitleReloadAllTabsInCurrentGroup__"
         }
     }
 

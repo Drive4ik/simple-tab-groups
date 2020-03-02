@@ -898,5 +898,13 @@
                 "example": "some action"
             }
         }
+    },
+    "openPopupTitle": {
+        "message": "Открыть всплывающее окно",
+        "description": "Open popup"
+    },
+    "openSidebarTitle": {
+        "message": "Открыть боковую панель",
+        "description": "Open sidebar"
     }
 }

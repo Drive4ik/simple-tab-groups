@@ -902,5 +902,13 @@
                 "example": "some action"
             }
         }
+    },
+    "openPopupTitle": {
+        "message": "Open popup",
+        "description": "Open popup"
+    },
+    "openSidebarTitle": {
+        "message": "Open sidebar",
+        "description": "Open sidebar"
     }
 }
