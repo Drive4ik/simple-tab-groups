@@ -109,7 +109,7 @@ function stopEvent(e) {
 }
 
 function showGroupsPopup(data) {
-    if (window.top !== window || document.getElementById(popupId)) {
+    if (document.getElementById(popupId)) {
         return;
     }
 
@@ -317,7 +317,7 @@ function showGroupsPopup(data) {
 let promptNowShowing = false;
 
 async function showPrompt({promptTitle, value}) {
-    if (window.top !== window || promptNowShowing) {
+    if (promptNowShowing) {
         console.warn('[STG] prompt now showing');
         return;
     }
