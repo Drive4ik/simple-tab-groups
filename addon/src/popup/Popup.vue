@@ -868,7 +868,7 @@
         tabindex="-1"
         @focus.capture="scrollToActiveElement"
         @keydown.f3.stop.prevent="setFocusOnSearch"
-        @keydown.f2="tryRenameGroup"
+        @keydown.f2.stop.prevent="tryRenameGroup"
 
         >
         <header id="search-wrapper">
