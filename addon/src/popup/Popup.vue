@@ -1322,6 +1322,10 @@
                         <img src="/icons/snowflake.svg" class="size-16" />
                         <span v-text="lang('discardOtherGroups')"></span>
                     </li>
+                    <li @click="renameGroup(menu.data.group)">
+                        <img src="/icons/edit.svg" class="size-16" />
+                        <span v-text="lang('hotkeyActionTitleRenameGroup') + ' (F2)'"></span>
+                    </li>
 
                     <hr>
 
