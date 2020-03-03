@@ -2662,6 +2662,8 @@ async function runMigrateForData(data) {
 async function syncTabs(groups, windows, hideAllTabs = false) {
     let allTabs = windows.reduce((acc, win) => [...acc, ...win.tabs], []);
 
+    allTabs.forEach(winTab => winTab.url = utils.normalizeUrl(winTab.url));
+
     if (hideAllTabs && allTabs.length) {
         await browser.tabs.hide(allTabs.map(utils.keyId));
     }
@@ -2766,6 +2768,8 @@ async function tryRestoreMissedTabs(withRemoveEvents = false) {
         tabsToRestore = tabsToRestore
             .map(function(tab) {
                 if (groupsObj[tab.groupId]) {
+                    tab.url = utils.normalizeUrl(tab.url);
+
                     let winTab = groupsObj[tab.groupId].tabs.find(function(t) {
                         if (utils.isTabLoading(t) && utils.isUrlEmpty(t.url)) {
                             return true;
