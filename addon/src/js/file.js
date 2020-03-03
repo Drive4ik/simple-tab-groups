@@ -77,6 +77,8 @@ async function save(data, fileName = 'file-name', saveAs = true, overwrite = fal
 
     const {BG} = browser.extension.getBackgroundPage();
 
+    console.log('start save file', {fileName, saveAs, overwrite, clearOnComplete, tryCount});
+
     try {
         let id = await BG.browser.downloads.download({
             filename: fileName,
@@ -94,7 +96,6 @@ async function save(data, fileName = 'file-name', saveAs = true, overwrite = fal
 
         if (error) {
             error = `Error save file:\n${fileName}\nerror: ${error}`;
-            console.error(error);
         }
 
         if (browser.downloads.State.COMPLETE === state) {
@@ -108,10 +109,10 @@ async function save(data, fileName = 'file-name', saveAs = true, overwrite = fal
         } else {
             throw error;
         }
-
-        return id;
     } catch (e) {
-        utils.notify(String(e), 10000);
+        e = String(e);
+        console.error(e);
+        utils.notify(e, 10000);
     } finally {
         URL.revokeObjectURL(url);
     }
