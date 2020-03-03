@@ -69,7 +69,7 @@ async function save(data, fileName = 'file-name', saveAs = true, overwrite = fal
         body = data;
     } else {
         type = 'application/json';
-        body = JSON.stringify(data, null, 4);
+        body = utils.stringify(data, 4);
     }
 
     let blob = new Blob([body], {type}),
@@ -82,24 +82,36 @@ async function save(data, fileName = 'file-name', saveAs = true, overwrite = fal
             filename: fileName,
             url: url,
             saveAs: saveAs,
-            conflictAction: overwrite ? 'overwrite' : 'uniquify',
+            conflictAction: overwrite ? browser.downloads.FilenameConflictAction.OVERWRITE : browser.downloads.FilenameConflictAction.UNIQUIFY,
         });
 
-        let state = await utils.waitDownload(id);
+        let {state, error} = await utils.waitDownload(id);
+
+        if (!state) {
+            state = browser.downloads.State.INTERRUPTED;
+            error = `Download ID not found, id: ${id}`;
+        }
+
+        if (error) {
+            error = `Error save file:\n${fileName}\nerror: ${error}`;
+            console.error(error);
+        }
 
         if (browser.downloads.State.COMPLETE === state) {
             if (clearOnComplete) {
                 await BG.browser.downloads.erase({id});
             }
-        } else if ((browser.downloads.State.INTERRUPTED === state || !state) && tryCount < 5) {
+        } else if (browser.downloads.State.INTERRUPTED === state && !saveAs && tryCount < 5) {
             await BG.browser.downloads.erase({id});
             URL.revokeObjectURL(url);
             return save(data, fileName, saveAs, overwrite, clearOnComplete, tryCount + 1);
+        } else {
+            throw error;
         }
 
         return id;
     } catch (e) {
-        utils.notify(String(e), 7000);
+        utils.notify(String(e), 10000);
     } finally {
         URL.revokeObjectURL(url);
     }

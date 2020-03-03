@@ -120,8 +120,8 @@ function getCircularReplacer() {
     };
 }
 
-function stringify(obj = null) {
-    return JSON.stringify(obj, getCircularReplacer());
+function stringify(obj = null, space = null) {
+    return JSON.stringify(obj, getCircularReplacer(), space);
 }
 
 function clone(obj = null) {
@@ -680,7 +680,7 @@ async function waitDownload(id, maxWaitSec = 10) {
         await wait(200);
     }
 
-    return downloadObj ? downloadObj.state : null;
+    return downloadObj || {};
 }
 
 export default {
