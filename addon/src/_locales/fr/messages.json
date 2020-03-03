@@ -886,7 +886,7 @@
         "description": "Always ask for a new group name"
     },
     "impossibleToAskUserAboutAction": {
-        "message": "Sur la page \"$page$\", il n'est pas possible d'exécuter \"$action$\"\n\nCliquer ici pour info",
+        "message": "Sur la page \"$page$\", il n'est pas possible d'exécuter \"$action$\"\n\nCliquer ici pour plus d'informations",
         "description": "On page \"$page$\" it is impossible to ask about \"$action$\"",
         "placeholders": {
             "page": {
@@ -898,5 +898,13 @@
                 "example": "some action"
             }
         }
+    },
+    "openPopupTitle": {
+        "message": "Ouvrir la pop-up",
+        "description": "Open popup"
+    },
+    "openSidebarTitle": {
+        "message": "Ouvrir la barre latérale",
+        "description": "Open sidebar"
     }
 }
