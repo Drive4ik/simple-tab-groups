@@ -90,7 +90,7 @@
     console.restart = function() {
         keys.forEach(key => console[key] = window.localStorage.enableDebug ? log.bind(null, `console.${key}`) : (window.IS_PRODUCTION ? checkTime : _console[key]));
 
-        bindObj(browser);
+        bindBrowser(browser);
     };
 
     console.getLogs = function() {
@@ -101,14 +101,14 @@
 
     const excludeKeys = ['i18n', 'management', 'permissions', 'runtime', 'menus', 'extension', 'sidebarAction', 'browserAction', 'theme', 'commands', 'test'];
 
-    function bindObj(obj, ...keys) {
+    function bindBrowser(obj, ...keys) {
         for (let k in obj) {
             if (k.includes('Listener') || excludeKeys.includes(k) || k.startsWith('on')) {
                 continue;
             }
 
             if (!Array.isArray(obj[k]) && 'object' === typeof obj[k]) {
-                bindObj(obj[k], ...keys, k);
+                bindBrowser(obj[k], ...keys, k);
             } else if ('function' === typeof obj[k]) {
                 let key = [...keys, k].join('.');
 
