@@ -504,7 +504,6 @@ async function move(tabIds, groupId, newTabIndex = -1, showNotificationAfterMove
     return tabs;
 }
 
-// temp fix bug https://bugzilla.mozilla.org/show_bug.cgi?id=1580879
 async function moveNative(tabs, options = {}) {
     const {BG} = browser.extension.getBackgroundPage();
 
@@ -513,14 +512,17 @@ async function moveNative(tabs, options = {}) {
     // fix bug "Error: An unexpected error occurred"
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1595583
     let tabsToReload = tabs.filter(tab => tab.url && tab.discarded && !utils.isUrlEmpty(tab.url) && tab.url.startsWith('about:'));
-    console.log('tabsToReload', tabsToReload);
+
     if (tabsToReload.length) {
+        console.log('tabsToReload by bug 1595583', tabsToReload);
         await reload(tabsToReload.map(utils.keyId));
         await utils.wait(100);
     }
 
     let result = await BG.browser.tabs.move(tabs.map(utils.keyId), options);
-
+/*
+    // temp fix bug https://bugzilla.mozilla.org/show_bug.cgi?id=1580879
+    // after FF 73 bug not replicated
     let tabIdsToReload = result.reduce(function(acc, tab, index) {
         if (tab.url && tab.discarded && tab.url !== tabs[index].url) {
             tab.url = tabs[index].url;
@@ -532,7 +534,7 @@ async function moveNative(tabs, options = {}) {
 
     console.log('tabIdsToReload', tabIdsToReload);
     reload(tabIdsToReload, true);
-
+*/
     return result;
 }
 
