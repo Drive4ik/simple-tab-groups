@@ -3008,14 +3008,14 @@ async function init() {
 
     options = utils.extractKeys(data, constants.allOptionsKeys, true);
 
+    await storage.set(data);
+
     let windows = await Windows.load(true);
 
     if (!windows.length) {
         utils.notify(browser.i18n.getMessage('notFoundWindowsAddonStoppedWorking'));
         throw '';
     }
-
-    await storage.set(data);
 
     await initializeGroupWindows(windows, data.groups.map(utils.keyId));
 
