@@ -2255,7 +2255,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
 
     delete data.pinnedTabs;
 
-    data.isBackupRestoring = true;
+    window.localStorage.isBackupRestoring = 1;
 
     await storage.set(data);
 
@@ -2874,6 +2874,111 @@ browser.runtime.onInstalled.addListener(function onInstalled({previousVersion, r
     }
 });
 
+async function initializeGroupWindows(windows, currentGroupIds) {
+    let tabsToShow = [],
+        tabsToHide = [],
+        moveTabsToWin = {};
+
+    windows.forEach(function(win) {
+        let otherWindows = windows.filter(w => w.id !== win.id),
+            duplicateGroupWindows = otherWindows.filter(w => w.groupId && w.groupId === win.groupId);
+
+        if (win.groupId && (!currentGroupIds.includes(win.groupId) || duplicateGroupWindows.length)) {
+            duplicateGroupWindows.push(win);
+
+            duplicateGroupWindows.forEach(function(w) {
+                delete w.groupId;
+                cache.removeWindowSession(w.id);
+            });
+        }
+
+        win.tabs.forEach(function(tab) {
+            if (tab.groupId && !currentGroupIds.includes(tab.groupId)) {
+                delete tab.groupId;
+                cache.removeTabGroup(tab.id);
+            }
+
+            if (tab.groupId) {
+                // TODO create bug in bugzilla: if set tab session, disable addon, move tab to other window, enable addon - session will empty
+                let tabWin = otherWindows.find(w => w.groupId === tab.groupId);
+
+                if (tabWin) {
+                    if (moveTabsToWin[tabWin.id]) {
+                        moveTabsToWin[tabWin.id].push(tab);
+                    } else {
+                        moveTabsToWin[tabWin.id] = [tab];
+                    }
+
+                    if (tab.hidden) {
+                        tabsToShow.push(tab);
+                    }
+                } else {
+                    if (win.groupId === tab.groupId) {
+                        if (tab.hidden) {
+                            tabsToShow.push(tab);
+                        }
+                    } else {
+                        if (!tab.hidden) {
+                            tabsToHide.push(tab);
+                        }
+                    }
+                }
+            } else if (win.groupId) {
+                if (!tab.hidden) {
+                    tabsToHide.push(tab);
+                }
+            } else {
+                if (tab.hidden) {
+                    tabsToShow.push(tab);
+                }
+            }
+        });
+    });
+
+    for (let windowId in moveTabsToWin) {
+        windowId = Number(windowId);
+
+        await Tabs.moveNative(moveTabsToWin[windowId], {
+            index: -1,
+            windowId: windowId,
+        });
+
+        moveTabsToWin[windowId].forEach(tab => tab.windowId = windowId);
+
+        console.log('[initializeGroupWindows] moveTabsToWin length', moveTabsToWin[windowId].length);
+    }
+
+    if (tabsToShow.length) {
+        await browser.tabs.show(tabsToShow.map(utils.keyId));
+
+        tabsToShow.forEach(tab => tab.hidden = false);
+
+        console.log('[initializeGroupWindows] tabsToShow length', tabsToShow.length);
+    }
+
+    if (tabsToHide.length) {
+        let activeTabsToHide = tabsToHide.filter(tab => tab.active);
+
+        for (let tabToHide of activeTabsToHide) {
+            let visibleTabs = windows.reduce(function(acc, win) {
+                acc.push(...win.tabs.filter(tab => tabToHide.windowId === tab.windowId && !tab.hidden && !tabsToHide.includes(tab)));
+
+                return acc;
+            }, []);
+
+            if (visibleTabs.length) {
+                await Tabs.setActive(undefined, visibleTabs);
+            } else {
+                await Tabs.createTempActiveTab(tabToHide.windowId, false);
+            }
+        }
+
+        await browser.tabs.hide(tabsToHide.map(utils.keyId));
+
+        console.log('[initializeGroupWindows] tabsToHide length', tabsToHide.length);
+    }
+}
+
 async function init() {
     let isAllowedIncognitoAccess = await browser.extension.isAllowedIncognitoAccess();
 
@@ -2899,7 +3004,7 @@ async function init() {
         throw '';
     }
 
-    data.groups = await normalizeContainersInGroups(data.groups);
+    await normalizeContainersInGroups(data.groups);
 
     options = utils.extractKeys(data, constants.allOptionsKeys, true);
 
@@ -2910,124 +3015,14 @@ async function init() {
         throw '';
     }
 
-    await Promise.all(windows.map(async function(win) {
-        if (win.groupId && !data.groups.some(group => group.id === win.groupId)) {
-            delete win.groupId;
-            await cache.removeWindowSession(win.id);
-        }
-
-        if (win.groupId) {
-            let showedTabs = [],
-                tabsToShow = [],
-                tabsToHide = [],
-                moveTabsToWin = {};
-
-            win.tabs.forEach(function(tab) {
-                if (tab.groupId === win.groupId) {
-                    if (tab.hidden) {
-                        tabsToShow.push(tab);
-                    }
-
-                    showedTabs.push(tab);
-                } else {
-                    if (tab.groupId) {
-                        if (data.groups.some(group => group.id === tab.groupId)) {
-                            let tabsWin = windows.find(w => w.groupId === tab.groupId);
-
-                            if (tabsWin) {
-                                if (moveTabsToWin[tabsWin.id]) {
-                                    moveTabsToWin[tabsWin.id].push(tab);
-                                } else {
-                                    moveTabsToWin[tabsWin.id] = [tab];
-                                }
-
-                                if (tab.hidden) {
-                                    tabsToShow.push(tab);
-                                }
-
-                                return;
-                            }
-                        } else {
-                            delete tab.groupId;
-                            cache.removeTabGroup(tab.id);
-                        }
-                    } else if (!tab.hidden) {
-                        if (utils.isTabLoading(tab) || tab.url.startsWith('file:') || tab.lastAccessed > window.BG.startTime) {
-                            tab.groupId = win.groupId;
-                            cache.setTabGroup(tab.id, win.groupId);
-                            return;
-                        }
-                    }
-
-                    if (!tab.hidden) {
-                        tabsToHide.push(tab);
-                    }
-                }
-            });
-
-            for (let winId in moveTabsToWin) {
-                await Tabs.moveNative(moveTabsToWin[winId], {
-                    index: -1,
-                    windowId: Number(winId),
-                });
-            }
-
-            if (tabsToShow.length) {
-                await browser.tabs.show(tabsToShow.map(utils.keyId));
-            }
-
-            if (tabsToHide.length) {
-                if (tabsToHide.some(tab => tab.active)) {
-                    if (showedTabs.length) {
-                        await Tabs.setActive(undefined, showedTabs);
-                    } else {
-                        await Tabs.createTempActiveTab(win.id, false);
-                    }
-                }
-
-                await browser.tabs.hide(tabsToHide.map(utils.keyId));
-            }
-        } else {
-            let tabsToHide = [];
-
-            win.tabs.forEach(function(tab) {
-                if (tab.groupId) {
-                    if (data.groups.some(group => tab.groupId === group.id)) {
-                        tabsToHide.push(tab);
-                    } else {
-                        delete tab.groupId;
-                        cache.removeTabGroup(tab.id);
-                    }
-                }
-            });
-
-            if (tabsToHide.length) {
-                if (tabsToHide.some(tab => tab.active)) {
-                    let visibleTabs = win.tabs.filter(tab => !tab.hidden && !tab.groupId);
-
-                    if (visibleTabs.length) {
-                        await Tabs.setActive(null, visibleTabs);
-                    } else {
-                        await Tabs.createTempActiveTab(win.id, false);
-                    }
-                }
-
-                await browser.tabs.hide(tabsToHide.map(utils.keyId));
-            }
-        }
-    }));
-
-    if (data.isBackupRestoring) {
-        delete data.isBackupRestoring;
-        await storage.remove('isBackupRestoring');
-        utils.notify(browser.i18n.getMessage('backupSuccessfullyRestored'));
-    }
-
     await storage.set(data);
 
-    resetAutoBackup();
+    await initializeGroupWindows(windows, data.groups.map(utils.keyId));
 
-    windows = await Windows.load();
+    if (window.localStorage.isBackupRestoring) {
+        delete window.localStorage.isBackupRestoring;
+        utils.notify(browser.i18n.getMessage('backupSuccessfullyRestored'));
+    }
 
     windows.forEach(function(win) {
         updateBrowserActionData(null, win.id);
@@ -3038,6 +3033,8 @@ async function init() {
     });
 
     await tryRestoreMissedTabs(false);
+
+    resetAutoBackup();
 
     createMoveTabMenus();
 
