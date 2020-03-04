@@ -315,6 +315,11 @@ function normalizeUrl(url) {
     return url || '';
 }
 
+function normalizeTabUrl(tab) {
+    tab.url = normalizeUrl(tab.url);
+    return tab;
+}
+
 function isTabPinned(tab) {
     return tab.pinned;
 }
@@ -715,6 +720,7 @@ export default {
     isUrlEmpty,
     isUrlAllowToCreate,
     normalizeUrl,
+    normalizeTabUrl,
     isTabPinned,
     isTabNotPinned,
     isTabCanBeHidden,

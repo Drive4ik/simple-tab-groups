@@ -83,7 +83,9 @@
                     width: 16px;
                     min-width: 16px;
                     height: 16px;
-                    margin-right: .5em;
+                    min-height: 16px;
+                    margin: 0 .5em 0 0 !important;
+                    position: relative !important;
                     -moz-context-properties: fill;
                 }
 

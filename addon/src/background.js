@@ -1401,7 +1401,7 @@ async function onBeforeTabRequest({tabId, url, originUrl}) {
         return;
     }
 
-    let tab = await browser.tabs.get(tabId);
+    let tab = await Tabs.getOne(tabId);
 
     if (utils.isTabPinned(tab)) {
         console.log('onBeforeTabRequest 🛑 cancel, tab is pinned');
@@ -2089,7 +2089,8 @@ async function resetAutoBackup() {
 async function createBackup(includeTabThumbnails, includeTabFavIcons, isAutoBackup = false, overwrite = false) {
     let [data, groups] = await Promise.all([storage.get(null), Groups.load(null, true)]);
 
-    if (isAutoBackup && !data.groups.length) {
+    if (isAutoBackup && (!groups.length || groups.every(gr => !gr.tabs.length))) {
+        console.warn('skip create auto backup, groups are empty');
         return;
     }
 
@@ -2491,8 +2492,24 @@ async function runMigrateForData(data) {
         {
             version: '3.0',
             remove: ['enableFastGroupSwitching', 'enableFavIconsForNotLoadedTabs', 'createNewGroupAfterAttachTabToNewWindow', 'individualWindowForEachGroup', 'openNewWindowWhenCreateNewGroup', 'showNotificationIfGroupsNotSyncedAtStartup', 'showGroupIconWhenSearchATab', 'showUrlTooltipOnTabHover'],
-            migration() {
+            async migration() {
                 data.groups.forEach(group => group.title = utils.unSafeHtml(group.title));
+
+                let tabs = await browser.tabs.query({
+                    url: 'moz-extension://*/stg-newtab/newtab.html*',
+                });
+
+                if (tabs.length) {
+                    for (let tab of tabs) {
+                        await Tabs.createNative(utils.normalizeTabUrl(tab));
+                    }
+
+                    await utils.wait(1000);
+
+                    await browser.tabs.remove(tabs.map(tab => tab.id));
+
+                    await utils.wait(1000);
+                }
             },
         },
         {
@@ -2552,13 +2569,43 @@ async function runMigrateForData(data) {
         {
             version: '4.0',
             remove: ['useTabsFavIconsFromGoogleS2Converter', 'doRemoveSTGNewTabUrls', 'thumbnails'],
-            migration() {
-                data.withoutSession = true;
-
+            async migration() {
                 data.groups.forEach(function(group) {
                     delete group.windowId;
                     group.dontDiscardTabsAfterHideThisGroup = false;
                 });
+
+                let windows = await Windows.load(true);
+
+                if (!windows.length) {
+                    throw browser.i18n.getMessage('nowFoundWindowsAddonStoppedWorking');
+                }
+
+                let notifId = await utils.notify(browser.i18n.getMessage('loading'));
+
+                await Promise.all(windows.map(win => Tabs.createTempActiveTab(win.id, false, 'about:blank')));
+
+                data.groups.forEach(function(group) {
+                    group.tabs.forEach(function(tab) {
+                        if (tab.session) {
+                            if (tab.session.favIconUrl) {
+                                tab.favIconUrl = tab.session.favIconUrl;
+                            }
+
+                            if (tab.session.thumbnail) {
+                                tab.thumbnail = tab.session.thumbnail;
+                            }
+                        }
+
+                        delete tab.session;
+                    });
+                });
+
+                data.groups = await syncTabs(data.groups, windows, true);
+
+                browser.notifications.clear(notifId);
+
+                await utils.wait(1000);
             },
         },
         {
@@ -2662,8 +2709,6 @@ async function runMigrateForData(data) {
 async function syncTabs(groups, windows, hideAllTabs = false) {
     let allTabs = windows.reduce((acc, win) => [...acc, ...win.tabs], []);
 
-    allTabs.forEach(winTab => winTab.url = utils.normalizeUrl(winTab.url));
-
     if (hideAllTabs && allTabs.length) {
         await browser.tabs.hide(allTabs.map(utils.keyId));
     }
@@ -2720,29 +2765,6 @@ async function syncTabs(groups, windows, hideAllTabs = false) {
     return groups;
 }
 
-function isStgNewTabUrl(url) {
-    return url.startsWith('moz-extension') && url.includes('/stg-newtab/newtab.html');
-}
-
-async function removeSTGNewTabUrls(windows) {
-    return Promise.all(windows.map(async function(win) {
-        await Promise.all(win.tabs.map(async function(winTab) {
-            if (isStgNewTabUrl(winTab.url)) {
-                winTab.url = utils.normalizeUrl(winTab.url);
-
-                if (winTab.url) {
-                    await browser.tabs.update(winTab.id, {
-                        url: winTab.url,
-                        loadReplace: true,
-                    });
-                }
-            }
-        }));
-
-        return win;
-    }));
-}
-
 async function tryRestoreMissedTabs(withRemoveEvents = false) {
     // try to restore missed tabs
     let {tabsToRestore} = await storage.get('tabsToRestore');
@@ -2766,10 +2788,9 @@ async function tryRestoreMissedTabs(withRemoveEvents = false) {
         });
 
         tabsToRestore = tabsToRestore
+            .map(utils.normalizeTabUrl)
             .map(function(tab) {
                 if (groupsObj[tab.groupId]) {
-                    tab.url = utils.normalizeUrl(tab.url);
-
                     let winTab = groupsObj[tab.groupId].tabs.find(function(t) {
                         if (utils.isTabLoading(t) && utils.isUrlEmpty(t.url)) {
                             return true;
@@ -2889,26 +2910,6 @@ async function init() {
         throw '';
     }
 
-    if (windows.some(win => win.tabs.some(tab => isStgNewTabUrl(tab.url)))) {
-        windows = await removeSTGNewTabUrls(windows);
-    }
-
-    if (data.withoutSession) { // if version < 4
-        let tempTabs = await Promise.all(windows.map(win => Tabs.createTempActiveTab(win.id)));
-
-        data.groups = await syncTabs(data.groups, windows, true);
-
-        tempTabs = tempTabs.filter(Boolean);
-
-        if (tempTabs.length) {
-            await Tabs.remove(tempTabs.map(utils.keyId));
-        }
-
-        windows = await Windows.load(true);
-    }
-
-    delete data.withoutSession;
-
     await Promise.all(windows.map(async function(win) {
         if (win.groupId && !data.groups.some(group => group.id === win.groupId)) {
             delete win.groupId;
@@ -2934,11 +2935,11 @@ async function init() {
                             let tabsWin = windows.find(w => w.groupId === tab.groupId);
 
                             if (tabsWin) {
-                                if (!moveTabsToWin[tabsWin.id]) {
-                                    moveTabsToWin[tabsWin.id] = [];
+                                if (moveTabsToWin[tabsWin.id]) {
+                                    moveTabsToWin[tabsWin.id].push(tab);
+                                } else {
+                                    moveTabsToWin[tabsWin.id] = [tab];
                                 }
-
-                                moveTabsToWin[tabsWin.id].push(tab);
 
                                 if (tab.hidden) {
                                     tabsToShow.push(tab);
