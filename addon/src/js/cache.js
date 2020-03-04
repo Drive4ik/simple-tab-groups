@@ -144,10 +144,6 @@ async function loadTabSession(tab) {
 
     applyTabSession(tab);
 
-    if (!tab.favIconUrl || tab.favIconUrl.startsWith('chrome://mozapps/skin/')) {
-        tab.favIconUrl = '/icons/tab.svg';
-    }
-
     return tab;
 }
 
@@ -164,7 +160,7 @@ async function setTabSession(tab) {
 }
 
 function applyTabSession(tab) {
-    return applySession(tab, tabs[tab.id]);
+    return applySession(tab, tabs[tab.id] || {});
 }
 
 function removeTabSession(tabId) {

@@ -522,7 +522,6 @@ function onUpdatedTab(tabId, changeInfo, tab) {
         winGroupId = cache.getWindowGroup(tab.windowId);
 
     if (changeInfo.favIconUrl && (tabGroupId || winGroupId)) {
-        changeInfo.favIconUrl = utils.normalizeFavIcon(changeInfo.favIconUrl);
         cache.setTabFavIcon(tab.id, changeInfo.favIconUrl);
     }
 
@@ -1012,9 +1011,13 @@ async function createMoveTabMenus() {
                 return;
             }
 
-            let iconUrl = utils.normalizeFavIcon(cache.getTabSession(tab.id, 'favIconUrl'));
+            cache.applyTabSession(tab);
 
-            Groups.update(groupId, {iconUrl});
+            tab = utils.normalizeTabFavIcon(tab);
+
+            Groups.update(groupId, {
+                iconUrl: tab.favIconUrl,
+            });
         }
     }));
 

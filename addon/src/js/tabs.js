@@ -487,7 +487,8 @@ async function move(tabIds, groupId, newTabIndex = -1, showNotificationAfterMove
     } else {
         let tabTitle = utils.getTabTitle(firstTab, false, 50);
         message = browser.i18n.getMessage('moveTabToGroupMessage', [group.title, tabTitle]);
-        iconUrl = utils.normalizeFavIcon(firstTab.favIconUrl);
+        firstTab = utils.normalizeTabFavIcon(firstTab);
+        iconUrl = firstTab.favIconUrl;
     }
 
     utils.notify(message, undefined, undefined, iconUrl, async function(groupId, tabId) {

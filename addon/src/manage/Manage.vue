@@ -372,7 +372,7 @@
 
             mapGroup(group) {
                 if (group.isArchive) {
-                    group.tabs = Object.freeze(group.tabs);
+                    group.tabs = Object.freeze(group.tabs.map(BG.utils.normalizeTabFavIcon));
                 } else {
                     group.tabs = group.tabs.map(this.mapTab, this);
                 }
@@ -404,6 +404,8 @@
 
             mapTab(tab) {
                 Object.keys(tab).forEach(key => !availableTabKeys.includes(key) && delete tab[key]);
+
+                tab = BG.utils.normalizeTabFavIcon(tab);
 
                 tab.container = BG.containers.isDefault(tab.cookieStoreId) ? false : BG.containers.get(tab.cookieStoreId);
 
