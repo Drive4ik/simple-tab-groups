@@ -429,7 +429,7 @@
         "message": "このタブのサムネイルを更新する",
         "description": "Update thumbnail for this tab"
     },
-    "nowFoundWindowsAddonStoppedWorking": {
+    "notFoundWindowsAddonStoppedWorking": {
         "message": "エラー：not found any normal not private/incognito/popup windows.\nアドオンは動作を停止しました。ブラウザを再起動してください。",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
     },

@@ -429,7 +429,7 @@
         "message": "Mettre à jour la capture de cet onglet",
         "description": "Update thumbnail for this tab"
     },
-    "nowFoundWindowsAddonStoppedWorking": {
+    "notFoundWindowsAddonStoppedWorking": {
         "message": "Erreur : aucun onglet normal n'a été trouvé (ni privé, ni navigation privée, ni fenêtre pop-up). L'extension a cessé de fonctionner. Veuillez redémarrer le navigateur.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
     },

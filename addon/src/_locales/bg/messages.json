@@ -429,7 +429,7 @@
         "message": "Обновяване на миниатюрата на раздела",
         "description": "Update thumbnail for this tab"
     },
-    "nowFoundWindowsAddonStoppedWorking": {
+    "notFoundWindowsAddonStoppedWorking": {
         "message": "Грешка: не са намерени обикновени или поверителни прозорци.\nДобавката е спряла да работи. Рестартирайте мрежовия четец.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
     },

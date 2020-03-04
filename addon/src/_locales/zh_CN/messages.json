@@ -391,7 +391,7 @@
         "message": "更新该标签页的缩略图",
         "description": "Update thumbnail for this tab"
     },
-    "nowFoundWindowsAddonStoppedWorking": {
+    "notFoundWindowsAddonStoppedWorking": {
         "message": "错误：未找到正常的非隐私/匿名/弹出窗口。扩展停止工作，请重启浏览器。",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
     },

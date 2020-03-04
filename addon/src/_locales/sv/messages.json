@@ -387,7 +387,7 @@
         "message": "Uppdatera miniatyrbild för den här fliken",
         "description": "Update thumbnail for this tab"
     },
-    "nowFoundWindowsAddonStoppedWorking": {
+    "notFoundWindowsAddonStoppedWorking": {
         "message": "Fel: kunde inte hitta något vanligt icke-privat fönster.\nTillägget slutade fungera. Vänligen starta om Firefox.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
     },

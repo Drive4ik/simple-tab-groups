@@ -429,7 +429,7 @@
         "message": "Обновить эскиз для этой вкладки",
         "description": "Update thumbnail for this tab"
     },
-    "nowFoundWindowsAddonStoppedWorking": {
+    "notFoundWindowsAddonStoppedWorking": {
         "message": "Ошибка: не найдено нормальных окон, только приватные или всплывающие. Дополнение прекращает работу.\nПожалуйста, перезагрузите браузер.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
     },

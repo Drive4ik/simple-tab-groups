@@ -387,7 +387,7 @@
         "message": "Atualize a miniatura para essa aba",
         "description": "Update thumbnail for this tab"
     },
-    "nowFoundWindowsAddonStoppedWorking": {
+    "notFoundWindowsAddonStoppedWorking": {
         "message": "Error: não encontrado nenhuma janela normal não privado/incógnito/popup.\nExtensão parou de funcionar. Por favor, reinicie o navegador.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
     },

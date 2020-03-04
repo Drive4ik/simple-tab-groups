@@ -429,7 +429,7 @@
         "message": "Aktualizovat náhled panelu",
         "description": "Update thumbnail for this tab"
     },
-    "nowFoundWindowsAddonStoppedWorking": {
+    "notFoundWindowsAddonStoppedWorking": {
         "message": "Chyba: nenalezeno žádné normální okno, ale pouze anonymní nebo vyskakovací.\nDoplněk přestal fungovat. Prosím, restartujte prohlížeč.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
     },

@@ -387,7 +387,7 @@
         "message": "Ανανέωση εικονιδίου γι αυτό το tab",
         "description": "Update thumbnail for this tab"
     },
-    "nowFoundWindowsAddonStoppedWorking": {
+    "notFoundWindowsAddonStoppedWorking": {
         "message": "Σφάλμα: Δεν βρέθηκε κανένα κανονικό (όχι private/incognito/popup) παράθυρο. Το πρόσθετο σταμάτησε να λειτουργεί. Παρακαλώ επανεκινείστε τον φυλομετρητή.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
     },

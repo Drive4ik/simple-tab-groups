@@ -433,7 +433,7 @@
         "message": "Update thumbnail for this tab",
         "description": "Update thumbnail for this tab"
     },
-    "nowFoundWindowsAddonStoppedWorking": {
+    "notFoundWindowsAddonStoppedWorking": {
         "message": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
     },

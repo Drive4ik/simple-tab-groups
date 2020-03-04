@@ -413,7 +413,7 @@
         "message": "更新此分頁之縮圖",
         "description": "Update thumbnail for this tab"
     },
-    "nowFoundWindowsAddonStoppedWorking": {
+    "notFoundWindowsAddonStoppedWorking": {
         "message": "錯誤：找不到任何正常的非隱私/匿名/彈出式視窗。\n套件停止運作，請重新啟動瀏覽器。",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
     },

@@ -2578,7 +2578,7 @@ async function runMigrateForData(data) {
                 let windows = await Windows.load(true);
 
                 if (!windows.length) {
-                    throw browser.i18n.getMessage('nowFoundWindowsAddonStoppedWorking');
+                    throw browser.i18n.getMessage('notFoundWindowsAddonStoppedWorking');
                 }
 
                 let notifId = await utils.notify(browser.i18n.getMessage('loading'));
@@ -3011,7 +3011,7 @@ async function init() {
     let windows = await Windows.load(true);
 
     if (!windows.length) {
-        utils.notify(browser.i18n.getMessage('nowFoundWindowsAddonStoppedWorking'));
+        utils.notify(browser.i18n.getMessage('notFoundWindowsAddonStoppedWorking'));
         throw '';
     }
 

@@ -429,7 +429,7 @@
         "message": "Zaktualizuj miniaturę dla tej zakładki",
         "description": "Update thumbnail for this tab"
     },
-    "nowFoundWindowsAddonStoppedWorking": {
+    "notFoundWindowsAddonStoppedWorking": {
         "message": "Błąd: nie znaleziono żadnych okien typu nie prywatne, pop-up lub incognito\nDodatek przestał działać. Uruchom ponownie przeglądarkę.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
     },

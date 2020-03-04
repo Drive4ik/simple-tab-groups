@@ -417,7 +417,7 @@
         "message": "Update das Vorschaubild des Tabs",
         "description": "Update thumbnail for this tab"
     },
-    "nowFoundWindowsAddonStoppedWorking": {
+    "notFoundWindowsAddonStoppedWorking": {
         "message": "Fehler: es wurden keine normalen nicht privaten/Inkognito/Pop-up-Fenster gefunden.\nAdd-on wurde gestoppt. Bitte den Browser neustarten.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
     },

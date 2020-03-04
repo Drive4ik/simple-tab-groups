@@ -387,7 +387,7 @@
         "message": "Actualizar miniatura para esta pestaña",
         "description": "Update thumbnail for this tab"
     },
-    "nowFoundWindowsAddonStoppedWorking": {
+    "notFoundWindowsAddonStoppedWorking": {
         "message": "Error: no se consiguió ninguna pestaña regular diferente a una privada/incognito/pop-up. La extensión ha dejado de funcionar. Por favor, reinicie el navegador.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
     },
