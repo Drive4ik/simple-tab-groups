@@ -45,13 +45,10 @@
 
         args = clone(args);
 
-        let stack = Array.isArray(this) ? clone(this) : getStack(new Error()),
-            date = new Date;
-
         logs.push({
             key,
-            time: `${date.toLocaleString()} (${date.getMilliseconds()} ms)`,
-            stack,
+            time: (new Date).toISOString(),
+            stack: Array.isArray(this) ? clone(this) : getStack(new Error()),
             args,
         });
 

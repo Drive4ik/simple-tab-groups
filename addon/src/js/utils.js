@@ -44,7 +44,7 @@ function errorEventHandler(event) {
     }
 
     let errorData = {
-        date: (new Date).toLocaleString(),
+        time: (new Date).toISOString(),
         message: data.message,
         data: data.data,
         lineNumber: nativeError.lineNumber,
@@ -89,6 +89,7 @@ async function getInfo() {
             bookmarks: permissionBookmarks,
         },
         options: options,
+        UUID: browser.extension.getURL(''),
     };
 }
 
