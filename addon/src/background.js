@@ -2325,20 +2325,14 @@ window.BG = {
     cache,
     openManageGroups,
 
-    constants,
-
     getOptions: () => utils.clone(options),
     saveOptions,
 
     containers,
     normalizeContainersInGroups,
 
-    utils,
     Groups,
-    Tabs,
     Windows,
-
-    file,
 
     createTabsSafe,
 

@@ -4,14 +4,14 @@
     import Vue from 'vue';
     import VueLazyload from 'vue-lazyload';
 
-    // import utils from '../js/utils';
-    // import Groups from '../js/groups';
-    // import Tabs from '../js/tabs';
-    // import Windows from '../js/windows';
+    import utils from '../js/utils';
+    import Groups from '../js/groups';
+    import Tabs from '../js/tabs';
+    import Windows from '../js/windows';
     import popup from '../js/popup.vue';
     import editGroup from '../js/edit-group.vue';
     import contextMenu from '../js/context-menu-component.vue';
-    // import constants from '../js/constants';
+    import constants from '../js/constants';
     // import dnd from '../js/dnd';
     // import { Drag, Drop } from 'vue-drag-drop';
     // import draggable from 'vuedraggable';
@@ -25,8 +25,8 @@
         throw 'Background not inited, waiting...';
     }
 
-    window.addEventListener('error', BG.utils.errorEventHandler);
-    Vue.config.errorHandler = BG.utils.errorEventHandler;
+    window.addEventListener('error', utils.errorEventHandler);
+    Vue.config.errorHandler = utils.errorEventHandler;
 
     Vue.use(VueLazyload);
 
@@ -108,7 +108,11 @@
                 if (this.options.showTabsWithThumbnailsInManageGroups) {
                     this.groups.forEach(function(group) {
                         if (!group.isArchive) {
-                            group.tabs.forEach(tab => !tab.thumbnail && !tab.discarded && BG.utils.isTabLoaded(tab) && BG.Tabs.updateThumbnail(tab.id))
+                            group.tabs.forEach(function(tab) {
+                                if (!tab.thumbnail && !tab.discarded && utils.isTabLoaded(tab)) {
+                                    Tabs.updateThumbnail(tab.id);
+                                }
+                            });
                         }
                     });
                 }
@@ -135,17 +139,17 @@
                 let searchStr = this.search.toLowerCase();
 
                 return this.groups.map(function(group) {
-                    group.filteredTabs = group.tabs.filter(tab => BG.utils.mySearchFunc(searchStr, BG.utils.getTabTitle(tab, true), this.extendedSearch));
+                    group.filteredTabs = group.tabs.filter(tab => utils.mySearchFunc(searchStr, utils.getTabTitle(tab, true), this.extendedSearch));
                     return group;
                 }, this);
             },
             filteredUnSyncTabs() {
                 let searchStr = this.search.toLowerCase();
 
-                return this.unSyncTabs.filter(tab => BG.utils.mySearchFunc(searchStr, BG.utils.getTabTitle(tab, true), this.extendedSearch));
+                return this.unSyncTabs.filter(tab => utils.mySearchFunc(searchStr, utils.getTabTitle(tab, true), this.extendedSearch));
             },
             isCurrentWindowIsAllow() {
-                return this.currentWindow && BG.utils.isWindowAllow(this.currentWindow);
+                return this.currentWindow && utils.isWindowAllow(this.currentWindow);
             },
             currentGroup() {
                 if (!this.isCurrentWindowIsAllow) {
@@ -157,7 +161,7 @@
         },
         methods: {
             lang: browser.i18n.getMessage,
-            safeHtml: BG.utils.safeHtml,
+            safeHtml: utils.safeHtml,
 
             setFocusOnSearch() {
                 this.$nextTick(() => this.$refs.search.focus());
@@ -168,13 +172,13 @@
             },
 
             async loadCurrentWindow() {
-                this.currentWindow = await BG.Windows.get(undefined, false);
+                this.currentWindow = await Windows.get(undefined, false);
             },
 
             setupListeners() {
                 this
                     .$on('drag-move-group', function(from, to) {
-                        BG.Groups.move(from.data.item.id, this.groups.indexOf(to.data.item));
+                        Groups.move(from.data.item.id, this.groups.indexOf(to.data.item));
                     })
                     .$on('drag-move-tab', function(from, to) {
                         if ('new-group' === to.data.item.id) {
@@ -184,7 +188,7 @@
                                 groupId = this.isGroup(to.data.item) ? to.data.item.id : to.data.group.id,
                                 index = this.isGroup(to.data.item) ? undefined : to.data.item.index;
 
-                            BG.Tabs.move(tabIds, groupId, index, false);
+                            Tabs.move(tabIds, groupId, index, false);
                         }
                     })
                     .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
@@ -199,9 +203,9 @@
 
                                 if (group) {
                                     group.tabs.push(...request.tabs.map(this.mapTab));
-                                    group.tabs.sort(BG.utils.sortBy('index'));
+                                    group.tabs.sort(utils.sortBy('index'));
                                 } else {
-                                    throw Error(BG.utils.errorEventMessage('group for new tabs not found', request)); //this.loadUnsyncedTabs();
+                                    throw Error(utils.errorEventMessage('group for new tabs not found', request)); //this.loadUnsyncedTabs();
                                 }
                             }
 
@@ -316,10 +320,10 @@
             async moveTabs(tabId, groupId, loadUnsync = false, showTabAfterMoving, discardTabs) {
                 let tabIds = this.getTabIdsForMove(tabId);
 
-                await BG.Tabs.move(tabIds, groupId, undefined, false, showTabAfterMoving);
+                await Tabs.move(tabIds, groupId, undefined, false, showTabAfterMoving);
 
                 if (discardTabs) {
-                    BG.Tabs.discard(tabIds);
+                    Tabs.discard(tabIds);
                 }
 
                 if (loadUnsync) {
@@ -331,7 +335,7 @@
                     tabIds = this.getTabIdsForMove(tabId);
 
                 if (this.options.alwaysAskNewGroupName) {
-                    newGroupTitle = await BG.Groups.getNextTitle();
+                    newGroupTitle = await Groups.getNextTitle();
 
                     newGroupTitle = await this.showPrompt(this.lang('createNewGroup'), newGroupTitle);
 
@@ -340,7 +344,7 @@
                     }
                 }
 
-                await BG.Groups.add(undefined, tabIds, newGroupTitle, showTabAfterMoving);
+                await Groups.add(undefined, tabIds, newGroupTitle, showTabAfterMoving);
 
                 if (loadUnsync) {
                     this.loadUnsyncedTabs();
@@ -372,7 +376,7 @@
 
             mapGroup(group) {
                 if (group.isArchive) {
-                    group.tabs = Object.freeze(group.tabs.map(BG.utils.normalizeTabFavIcon));
+                    group.tabs = Object.freeze(group.tabs.map(utils.normalizeTabFavIcon));
                 } else {
                     group.tabs = group.tabs.map(this.mapTab, this);
                 }
@@ -385,14 +389,14 @@
                     data: group,
                     watch: {
                         title: function(title) {
-                            BG.Groups.update(this.id, {
-                                title: BG.utils.createGroupTitle(title, this.id),
+                            Groups.update(this.id, {
+                                title: utils.createGroupTitle(title, this.id),
                             });
                         },
                     },
                     computed: {
                         iconUrlToDisplay() {
-                            return BG.utils.getGroupIconUrl({
+                            return utils.getGroupIconUrl({
                                 iconUrl: this.iconUrl,
                                 iconColor: this.iconColor,
                                 iconViewType: this.iconViewType,
@@ -405,7 +409,7 @@
             mapTab(tab) {
                 Object.keys(tab).forEach(key => !availableTabKeys.includes(key) && delete tab[key]);
 
-                tab = BG.utils.normalizeTabFavIcon(tab);
+                tab = utils.normalizeTabFavIcon(tab);
 
                 tab.container = BG.containers.isDefault(tab.cookieStoreId) ? false : BG.containers.get(tab.cookieStoreId);
 
@@ -418,14 +422,14 @@
             },
 
             async loadGroups() {
-                let groups = await BG.Groups.load(null, true);
+                let groups = await Groups.load(null, true);
 
                 this.groups = groups.map(this.mapGroup, this);
 
                 this.multipleTabIds = [];
             },
             async loadUnsyncedTabs() {
-                let windows = await BG.Windows.load(true);
+                let windows = await Windows.load(true);
 
                 this.unSyncTabs = windows
                     .reduce(function(acc, win) {
@@ -435,35 +439,35 @@
                     .map(this.mapTab, this);
             },
             addGroup() {
-                BG.Groups.add();
+                Groups.add();
             },
 
             addTab(group, cookieStoreId) {
-                BG.Tabs.add(group.id, cookieStoreId);
+                Tabs.add(group.id, cookieStoreId);
             },
             removeTab(tab) {
-                BG.Tabs.remove(this.getTabIdsForMove(tab.id));
+                Tabs.remove(this.getTabIdsForMove(tab.id));
             },
             updateTabThumbnail({id}) {
-                BG.Tabs.updateThumbnail(id, true);
+                Tabs.updateThumbnail(id, true);
             },
             discardTab(tab) {
-                BG.Tabs.discard(this.getTabIdsForMove(tab.id));
+                Tabs.discard(this.getTabIdsForMove(tab.id));
             },
             discardGroup({tabs}) {
-                BG.Tabs.discard(tabs.map(BG.utils.keyId));
+                Tabs.discard(tabs.map(utils.keyId));
             },
             discardOtherGroups(groupExclude) {
                 let tabIds = this.groups.reduce(function(acc, gr) {
-                    let groupTabIds = (gr.id === groupExclude.id || gr.isArchive || BG.cache.getWindowId(gr.id)) ? [] : gr.tabs.map(BG.utils.keyId);
+                    let groupTabIds = (gr.id === groupExclude.id || gr.isArchive || BG.cache.getWindowId(gr.id)) ? [] : gr.tabs.map(utils.keyId);
 
                     return [...acc, ...groupTabIds];
                 }, []);
 
-                BG.Tabs.discard(tabIds);
+                Tabs.discard(tabIds);
             },
             reloadTab(tab, bypassCache) {
-                BG.Tabs.reload(this.getTabIdsForMove(tab.id), bypassCache);
+                Tabs.reload(this.getTabIdsForMove(tab.id), bypassCache);
             },
             async applyGroup(groupId, tabId, openInNewWindow = false) {
                 if (!this.isCurrentWindowIsAllow) {
@@ -494,7 +498,7 @@
                     }
                 } else if (event.shiftKey) {
                     if (this.multipleTabIds.length) {
-                        let tabIds = group ? group.filteredTabs.map(BG.utils.keyId) : this.filteredUnSyncTabs.map(BG.utils.keyId),
+                        let tabIds = group ? group.filteredTabs.map(utils.keyId) : this.filteredUnSyncTabs.map(utils.keyId),
                             tabIndex = tabIds.indexOf(tab),
                             lastTabIndex = -1;
 
@@ -523,14 +527,12 @@
                 } else if (group) {
                     this.applyGroup(group.id, tab.id);
                 } else if (this.isCurrentWindowIsAllow) {
-                    await BG.Tabs.moveNative([tab], {
+                    await Tabs.moveNative([tab], {
                         windowId: this.currentWindow.id,
                         index: -1,
                     });
 
-                    if (tab.hidden) {
-                        await BG.browser.tabs.show(tab.id);
-                    }
+                    await browser.tabs.show(tab.id);
 
                     this.loadUnsyncedTabs();
                 }
@@ -554,22 +556,22 @@
                 BG.Groups.remove(group.id);
             },
             setTabIconAsGroupIcon({favIconUrl}, group) {
-                BG.Groups.update(group.id, {
+                Groups.update(group.id, {
                     iconViewType: null,
                     iconUrl: favIconUrl,
                 });
             },
 
-            getTabTitle: BG.utils.getTabTitle,
-            getGroupTitle: BG.utils.getGroupTitle,
-            isTabLoading: BG.utils.isTabLoading,
+            getTabTitle: utils.getTabTitle,
+            getGroupTitle: utils.getGroupTitle,
+            isTabLoading: utils.isTabLoading,
 
             isGroup(obj) {
                 return 'tabs' in obj;
             },
 
             sortGroups(vector) {
-                BG.Groups.sort(vector);
+                Groups.sort(vector);
             },
 
             // allowTypes: Array ['groups', 'tabs']
@@ -642,15 +644,15 @@
 
             async closeThisWindow() {
                 if (this.isCurrentWindowIsAllow) {
-                    let tab = await BG.Tabs.getActive();
-                    BG.Tabs.remove(tab.id);
+                    let tab = await Tabs.getActive();
+                    Tabs.remove(tab.id);
                 } else {
                     BG.browser.windows.remove(this.currentWindow.id); // close manage groups POPUP window
                 }
             },
 
             groupTabsCountMessage(tabs, groupIsArchived) {
-                return BG.utils.groupTabsCountMessage(tabs, groupIsArchived, true);
+                return utils.groupTabsCountMessage(tabs, groupIsArchived, true);
             },
 
         },

@@ -1,16 +1,16 @@
 <script>
     'use strict';
 
-    // import file from './file';
-    // import utils from './utils';
-    // import constants from './constants';
+    import file from './file';
+    import utils from './utils';
+    import constants from './constants';
 
     import Vue from 'vue';
 
     import popup from './popup.vue';
     import swatches from 'vue-swatches';
-    // import Groups from '../js/groups';
-    // import Tabs from '../js/tabs';
+    import Groups from '../js/groups';
+    import Tabs from '../js/tabs';
     import 'vue-swatches/dist/vue-swatches.min.css';
 
     const {BG} = browser.extension.getBackgroundPage();
@@ -39,7 +39,7 @@
 
                 showMessageCantLoadFile: false,
 
-                groupIconViewTypes: BG.constants.groupIconViewTypes,
+                groupIconViewTypes: constants.groupIconViewTypes,
 
                 group: null,
 
@@ -80,13 +80,13 @@
             },
         },
         async created() {
-            let [group, groups] = await BG.Groups.load(this.groupId);
+            let [group, groups] = await Groups.load(this.groupId);
 
             this.group = new Vue({
                 data: group,
                 computed: {
                     iconUrlToDisplay() {
-                        return BG.utils.getGroupIconUrl({
+                        return utils.getGroupIconUrl({
                             iconUrl: this.iconUrl,
                             iconColor: this.iconColor,
                             iconViewType: this.iconViewType,
@@ -116,7 +116,7 @@
                 }, this);
             }
 
-            let currentTab = await BG.Tabs.getActive();
+            let currentTab = await Tabs.getActive();
 
             if (currentTab && currentTab.url.startsWith('http')) {
                 this.currentTabUrl = new URL(currentTab.url);
@@ -155,7 +155,7 @@
 
             setRandomColor() {
                 this.group.iconUrl = null;
-                this.group.iconColor = BG.utils.randomColor();
+                this.group.iconColor = utils.randomColor();
 
                 if (!this.group.iconViewType) {
                     this.group.iconViewType = BG.getOptions().defaultGroupIconViewType;
@@ -163,7 +163,7 @@
             },
 
             getIconTypeUrl(iconType) {
-                return BG.utils.getGroupIconUrl({
+                return utils.getGroupIconUrl({
                     iconViewType: iconType,
                     iconColor: this.group.iconColor || 'rgb(66, 134, 244)',
                 });
@@ -179,14 +179,14 @@
                     return;
                 }
 
-                let iconUrl = await BG.file.load('.ico,.png,.jpg,.svg', 'url'),
+                let iconUrl = await file.load('.ico,.png,.jpg,.svg', 'url'),
                     img = new Image();
 
                 img.addEventListener('load', function() {
                     let resizedIconUrl = iconUrl;
 
                     if (img.height > 64 || img.width > 64) {
-                        resizedIconUrl = BG.utils.resizeImage(img, 64, 64);
+                        resizedIconUrl = utils.resizeImage(img, 64, 64);
                     }
 
                     this.setIconUrl(resizedIconUrl);
@@ -202,7 +202,7 @@
                     this.changedKeys.forEach(key => group[key] = this.group[key]);
 
                     if (this.changedKeys.includes('title')) {
-                        group.title = BG.utils.createGroupTitle(group.title, this.groupId);
+                        group.title = utils.createGroupTitle(group.title, this.groupId);
                     }
 
                     if (this.changedKeys.includes('catchTabRules')) {
@@ -213,12 +213,12 @@
                                 try {
                                     new RegExp(regExpStr);
                                 } catch (e) {
-                                    BG.utils.notify(browser.i18n.getMessage('invalidRegExpRuleTitle', regExpStr));
+                                    utils.notify(browser.i18n.getMessage('invalidRegExpRuleTitle', regExpStr));
                                 }
                             });
                     }
 
-                    await BG.Groups.update(this.groupId, group);
+                    await Groups.update(this.groupId, group);
                 }
 
                 this.$emit('saved');
