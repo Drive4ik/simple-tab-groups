@@ -109,6 +109,8 @@ async function save(data, fileName = 'file-name', saveAs = true, overwrite = fal
         } else {
             throw error;
         }
+
+        return id;
     } catch (e) {
         e = String(e);
         console.error(e);
