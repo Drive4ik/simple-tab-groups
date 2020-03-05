@@ -1,6 +1,5 @@
 'use strict';
 
-import constants from './constants';
 import storage from './storage';
 import * as npmCompareVersions from 'compare-versions';
 
@@ -74,8 +73,8 @@ async function getInfo() {
     ] = await Promise.all([
         browser.runtime.getBrowserInfo(),
         browser.runtime.getPlatformInfo(),
-        browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS),
-        storage.get(constants.allOptionsKeys),
+        browser.permissions.contains(PERMISSIONS.BOOKMARKS),
+        storage.get(ALL_OPTIONS_KEYS),
     ]);
 
     return {
@@ -262,7 +261,7 @@ async function notify(message, timer = 20000, id = null, iconUrl = null, onClick
 }
 
 function isAllowExternalRequestAndSender(request, sender, extensionRules = {}) {
-    let extension = constants.EXTENSIONS_WHITE_LIST[sender.id];
+    let extension = EXTENSIONS_WHITE_LIST[sender.id];
 
     if (!extension) {
         return false;
@@ -279,7 +278,7 @@ function isAllowExternalRequestAndSender(request, sender, extensionRules = {}) {
 }
 
 function getSupportedExternalExtensionName(extId) {
-    return constants.EXTENSIONS_WHITE_LIST[extId] ? constants.EXTENSIONS_WHITE_LIST[extId].title : 'Unknown';
+    return EXTENSIONS_WHITE_LIST[extId] ? EXTENSIONS_WHITE_LIST[extId].title : 'Unknown';
 }
 
 function normalizeTabFavIcon(tab) {
@@ -366,9 +365,9 @@ function getGroupTitle({id, title, isArchive, tabs, newTabContainer}, args = '')
 
     if (withActiveGroup) {
         if (BG.cache.getWindowId(id)) {
-            title = constants.ACTIVE_SYMBOL + ' ' + title;
+            title = ACTIVE_SYMBOL + ' ' + title;
         } else if (isArchive) {
-            title = constants.DISCARDED_SYMBOL + ' ' + title;
+            title = DISCARDED_SYMBOL + ' ' + title;
         }
     }
 
@@ -386,7 +385,7 @@ function getGroupTitle({id, title, isArchive, tabs, newTabContainer}, args = '')
         let activeTab = getLastActiveTab(tabs);
 
         if (activeTab) {
-            title += ' ' + (activeTab.discarded ? constants.DISCARDED_SYMBOL : constants.ACTIVE_SYMBOL) + ' ' + getTabTitle(activeTab);
+            title += ' ' + (activeTab.discarded ? DISCARDED_SYMBOL : ACTIVE_SYMBOL) + ' ' + getTabTitle(activeTab);
         }
     }
 
@@ -416,7 +415,7 @@ function getTabTitle({id, index, title, url, discarded}, withUrl = false, sliceL
     }
 
     if (withTabActive && !discarded && id) {
-        title = constants.ACTIVE_SYMBOL + ' ' + title;
+        title = ACTIVE_SYMBOL + ' ' + title;
     }
 
     if (window.localStorage.enableDebug && id) {
@@ -524,7 +523,7 @@ function safeColor(color) {
     return div.style.backgroundColor;
 }
 
-function getGroupIconUrl(group = { iconViewType: constants.DEFAULT_OPTIONS.defaultGroupIconViewType }, keyInObj = null) {
+function getGroupIconUrl(group = { iconViewType: DEFAULT_OPTIONS.defaultGroupIconViewType }, keyInObj = null) {
     let result = null;
 
     if (group.iconUrl) {

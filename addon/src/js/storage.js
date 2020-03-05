@@ -1,7 +1,6 @@
 'use strict';
 
 import utils from './utils';
-import constants from './constants';
 
 let errorCounter = 0;
 
@@ -29,13 +28,13 @@ export default {
         }
 
         if (null === data) {
-            result = {...utils.clone(constants.DEFAULT_OPTIONS), ...result};
+            result = {...utils.clone(DEFAULT_OPTIONS), ...result};
         } else if ('string' === utils.type(data)) {
             if (undefined === result[data]) {
-                result[data] = utils.clone(constants.DEFAULT_OPTIONS[data]);
+                result[data] = utils.clone(DEFAULT_OPTIONS[data]);
             }
         } else if (Array.isArray(data)) {
-            data.forEach(key => undefined === result[key] ? result[key] = utils.clone(constants.DEFAULT_OPTIONS[key]) : null);
+            data.forEach(key => undefined === result[key] ? result[key] = utils.clone(DEFAULT_OPTIONS[key]) : null);
         }
 
         return result;

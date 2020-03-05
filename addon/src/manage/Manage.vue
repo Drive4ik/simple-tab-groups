@@ -11,7 +11,7 @@
     import popup from '../js/popup.vue';
     import editGroup from '../js/edit-group.vue';
     import contextMenu from '../js/context-menu-component.vue';
-    import constants from '../js/constants';
+
     // import dnd from '../js/dnd';
     // import { Drag, Drop } from 'vue-drag-drop';
     // import draggable from 'vuedraggable';
@@ -85,8 +85,6 @@
         //     dnd: dnd,
         // },
         // async created() {
-        //     this.hasThumbnailsPermission = await browser.permissions.contains(constants.PERMISSIONS.ALL_URLS);
-
         //     this.loadOptions();
         // },
         async mounted() {

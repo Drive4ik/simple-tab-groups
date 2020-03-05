@@ -5,7 +5,6 @@
 
     import utils from '../js/utils';
     import storage from '../js/storage';
-    import constants from '../js/constants';
     import file from '../js/file';
     import Groups from '../js/groups';
     import Tabs from '../js/tabs';
@@ -63,7 +62,7 @@
                     'rename-group',
                 ],
 
-                groupIconViewTypes: constants.groupIconViewTypes,
+                GROUP_ICON_VIEW_TYPES: GROUP_ICON_VIEW_TYPES,
 
                 includeTabThumbnailsIntoBackup: false,
                 includeTabFavIconsIntoBackup: true,
@@ -103,11 +102,11 @@
 
             let data = await storage.get(null);
 
-            let options = utils.extractKeys(data, constants.allOptionsKeys);
+            let options = utils.extractKeys(data, ALL_OPTIONS_KEYS);
 
             options.autoBackupFolderName = await file.getAutoBackupFolderName();
 
-            this.permissions.bookmarks = await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
+            this.permissions.bookmarks = await browser.permissions.contains(PERMISSIONS.BOOKMARKS);
 
             this.options = options;
             this.groups = data.groups;
@@ -121,7 +120,7 @@
             this.loadBookmarksParents();
 
             [
-                ...constants.onlyBoolOptionsKeys,
+                ...ONLY_BOOL_OPTION_KEYS,
                 'defaultBookmarksParent',
                 'defaultGroupIconViewType',
                 'defaultGroupIconColor',
@@ -164,7 +163,7 @@
                 value = value.replace(folderNameRegExp, '').trim();
 
                 if (!value.length || value.length > 200) {
-                    value = constants.DEFAULT_OPTIONS.autoBackupBookmarksFolderName;
+                    value = DEFAULT_OPTIONS.autoBackupBookmarksFolderName;
                 }
 
                 BG.saveOptions({
@@ -568,9 +567,9 @@
 
             async setPermissionsBookmarks(event) {
                 if (event.target.checked) {
-                    this.permissions.bookmarks = await browser.permissions.request(constants.PERMISSIONS.BOOKMARKS);
+                    this.permissions.bookmarks = await browser.permissions.request(PERMISSIONS.BOOKMARKS);
                 } else {
-                    await browser.permissions.remove(constants.PERMISSIONS.BOOKMARKS);
+                    await browser.permissions.remove(PERMISSIONS.BOOKMARKS);
                 }
 
                 this.loadBookmarksParents();
@@ -583,10 +582,10 @@
                     return;
                 }
 
-                this.permissions.bookmarks = await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
+                this.permissions.bookmarks = await browser.permissions.contains(PERMISSIONS.BOOKMARKS);
 
                 if (this.permissions.bookmarks) {
-                    this.defaultBookmarksParents = await BG.browser.bookmarks.get(constants.defaultBookmarksParents);
+                    this.defaultBookmarksParents = await BG.browser.bookmarks.get(DEFAULT_BOOKMARKS_PARENTS);
                 }
             },
 
@@ -770,7 +769,7 @@
                             borderRadius: '4px',
                         }" />
                     </div>
-                    <div v-for="iconViewType in groupIconViewTypes" :key="iconViewType" class="control">
+                    <div v-for="iconViewType in GROUP_ICON_VIEW_TYPES" :key="iconViewType" class="control">
                         <button
                             @click="options.defaultGroupIconViewType = iconViewType"
                             :class="['button', {'is-focused': options.defaultGroupIconViewType === iconViewType}]"

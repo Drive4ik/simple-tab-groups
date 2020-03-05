@@ -2,7 +2,6 @@
     'use strict';
 
     import utils from '../js/utils';
-    import constants from '../js/constants';
 
     const {BG} = browser.extension.getBackgroundPage();
 
@@ -26,7 +25,7 @@
                 return this.data.pinnedTabs && this.data.pinnedTabs.length > 0;
             },
             showGeneral() {
-                return Object.keys(this.data).some(key => key !== 'hotkeys' && constants.allOptionsKeys.includes(key));
+                return Object.keys(this.data).some(key => key !== 'hotkeys' && ALL_OPTIONS_KEYS.includes(key));
             },
             showHotkeys() {
                 return this.data.hotkeys && this.data.hotkeys.length > 0;
@@ -71,7 +70,7 @@
 
                 if (this.showGeneral && this.includeGeneral) {
                     for (let key in this.data) {
-                        if (key !== 'hotkeys' && constants.allOptionsKeys.includes(key)) {
+                        if (key !== 'hotkeys' && ALL_OPTIONS_KEYS.includes(key)) {
                             result[key] = this.data[key];
                         }
                     }

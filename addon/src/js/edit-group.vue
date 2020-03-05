@@ -3,7 +3,6 @@
 
     import file from './file';
     import utils from './utils';
-    import constants from './constants';
 
     import Vue from 'vue';
 
@@ -39,7 +38,7 @@
 
                 showMessageCantLoadFile: false,
 
-                groupIconViewTypes: constants.groupIconViewTypes,
+                GROUP_ICON_VIEW_TYPES: GROUP_ICON_VIEW_TYPES,
 
                 group: null,
 
@@ -251,7 +250,7 @@
                         borderRadius: '4px',
                     }" />
                 </div>
-                <div v-for="iconViewType in groupIconViewTypes" :key="iconViewType" class="control">
+                <div v-for="iconViewType in GROUP_ICON_VIEW_TYPES" :key="iconViewType" class="control">
                     <button @click="setIconView(iconViewType)" :class="['button', {'is-focused': !group.iconUrl && iconViewType === group.iconViewType}]">
                         <figure class="image is-16x16 is-inline-block">
                             <img :src="getIconTypeUrl(iconViewType)" />

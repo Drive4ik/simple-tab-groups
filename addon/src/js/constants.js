@@ -5,24 +5,24 @@ const ACTIVE_SYMBOL = '⚪';
 const DISCARDED_SYMBOL = '❄';
 
 // permission "<all_urls>" need for tab thumbnails and webRequestBlocking
-const PERMISSIONS = {
+const PERMISSIONS = Object.freeze({
     BOOKMARKS: {
         permissions: ['bookmarks'],
     },
-};
+});
 
-const groupIconViewTypes = [
+const GROUP_ICON_VIEW_TYPES = Object.freeze([
     'main-squares',
     'circle',
     'squares',
     'old-tab-groups'
-];
+]);
 
-const defaultBookmarksParents = [
+const DEFAULT_BOOKMARKS_PARENTS = Object.freeze([
     'toolbar_____',
     'menu________',
     'unfiled_____',
-];
+]);
 
 const EXTENSIONS_WHITE_LIST = Object.freeze({
     'stg-plugin-create-new-group@drive4ik': {
@@ -156,12 +156,12 @@ const DEFAULT_OPTIONS = Object.freeze({
     showContextMenuOnTabs: true,
     showContextMenuOnLinks: true,
     exportGroupToMainBookmarkFolder: true,
-    defaultBookmarksParent: defaultBookmarksParents[0],
+    defaultBookmarksParent: DEFAULT_BOOKMARKS_PARENTS[0],
     leaveBookmarksOfClosedTabs: true,
     showExtendGroupsPopupWithActiveTabs: false,
     showTabsWithThumbnailsInManageGroups: false,
 
-    defaultGroupIconViewType: groupIconViewTypes[0],
+    defaultGroupIconViewType: GROUP_ICON_VIEW_TYPES[0],
     defaultGroupIconColor: '',
 
     autoBackupEnable: true,
@@ -201,10 +201,10 @@ const DEFAULT_OPTIONS = Object.freeze({
     ],
 });
 
-const onlyBoolOptionsKeys = Object.keys(DEFAULT_OPTIONS).filter(key => 'boolean' === typeof DEFAULT_OPTIONS[key]);
+const ONLY_BOOL_OPTION_KEYS = Object.freeze(Object.keys(DEFAULT_OPTIONS).filter(key => 'boolean' === typeof DEFAULT_OPTIONS[key]));
 
-const allOptionsKeys = [
-    ...onlyBoolOptionsKeys,
+const ALL_OPTIONS_KEYS = Object.freeze([
+    ...ONLY_BOOL_OPTION_KEYS,
     'hotkeys',
     'defaultBookmarksParent',
     'defaultGroupIconViewType',
@@ -214,22 +214,7 @@ const allOptionsKeys = [
     'autoBackupIntervalValue',
     'autoBackupFolderName',
     'autoBackupBookmarksFolderName',
-];
+]);
 
 const HOUR_SEC = 60 * 60;
 const DAY_SEC = 24 * HOUR_SEC;
-
-export default {
-    MANAGE_TABS_URL,
-    ACTIVE_SYMBOL,
-    DISCARDED_SYMBOL,
-    EXTENSIONS_WHITE_LIST,
-    DEFAULT_OPTIONS,
-    onlyBoolOptionsKeys,
-    allOptionsKeys,
-    groupIconViewTypes,
-    defaultBookmarksParents,
-    HOUR_SEC,
-    DAY_SEC,
-    PERMISSIONS,
-};

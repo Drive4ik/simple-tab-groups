@@ -1,6 +1,5 @@
 'use strict';
 
-import constants from './js/constants';
 import containers from './js/containers';
 import utils from './js/utils';
 import storage from './js/storage';
@@ -18,7 +17,7 @@ if (2 == window.localStorage.enableDebug) { // if debug was auto-enabled - disab
 console.restart();
 
 const addonUrlPrefix = browser.extension.getURL('');
-const manageTabsPageUrl = browser.extension.getURL(constants.MANAGE_TABS_URL);
+const manageTabsPageUrl = browser.extension.getURL(MANAGE_TABS_URL);
 const manifest = browser.runtime.getManifest();
 const noop = function() {};
 
@@ -142,9 +141,9 @@ function sendExternalMessage(data) {
 
     console.info('BG event external [%s]', data.action, data);
 
-    Object.keys(constants.EXTENSIONS_WHITE_LIST)
+    Object.keys(EXTENSIONS_WHITE_LIST)
         .forEach(function(exId) {
-            if (constants.EXTENSIONS_WHITE_LIST[exId].postActions.includes(data.action)) {
+            if (EXTENSIONS_WHITE_LIST[exId].postActions.includes(data.action)) {
                 browser.runtime.sendMessage(exId, data).catch(noop);
             }
         });
@@ -842,7 +841,7 @@ async function removeMoveTabMenus() {
 }
 
 async function createMoveTabMenus() {
-    let hasBookmarksPermission = await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
+    let hasBookmarksPermission = await browser.permissions.contains(PERMISSIONS.BOOKMARKS);
 
     if (!options.showContextMenuOnTabs && !options.showContextMenuOnLinks && !hasBookmarksPermission) {
         return;
@@ -1187,7 +1186,7 @@ async function _getBookmarkFolderFromTitle(title, parentId, index) {
 }
 
 async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
-    let hasBookmarksPermission = await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
+    let hasBookmarksPermission = await browser.permissions.contains(PERMISSIONS.BOOKMARKS);
 
     if (!hasBookmarksPermission) {
         showMessages && utils.notify(browser.i18n.getMessage('noAccessToBookmarks'), undefined, undefined, undefined, () => browser.runtime.openOptionsPage());
@@ -1995,7 +1994,7 @@ async function saveOptions(_options) {
 
     let optionsKeys = Object.keys(_options);
 
-    if (!optionsKeys.every(key => constants.allOptionsKeys.includes(key))) {
+    if (!optionsKeys.every(key => ALL_OPTIONS_KEYS.includes(key))) {
         throw Error('some key in save options are not supported: ' + optionsKeys.join(', '));
     }
 
@@ -2064,14 +2063,14 @@ async function resetAutoBackup() {
         overwrite = false;
 
     if ('hours' === options.autoBackupIntervalKey) {
-        intervalSec = constants.HOUR_SEC;
+        intervalSec = HOUR_SEC;
     } else if ('days' === options.autoBackupIntervalKey) {
         if (1 === value) {
             // if backup will create every day - overwrite backups every 2 hours in order to keep as recent changes as possible
             overwrite = true;
-            intervalSec = constants.HOUR_SEC * 2;
+            intervalSec = HOUR_SEC * 2;
         } else {
-            intervalSec = constants.DAY_SEC;
+            intervalSec = DAY_SEC;
         }
     } else {
         throw Error(utils.errorEventMessage('invalid autoBackupIntervalKey', options));
@@ -2295,7 +2294,7 @@ async function clearAddon(reloadAddonOnFinish = true) {
 }
 
 async function exportAllGroupsToBookmarks(showFinishMessage) {
-    let hasBookmarksPermission = await browser.permissions.contains(constants.PERMISSIONS.BOOKMARKS);
+    let hasBookmarksPermission = await browser.permissions.contains(PERMISSIONS.BOOKMARKS);
 
     if (!hasBookmarksPermission) {
         return;
@@ -2413,7 +2412,7 @@ async function runMigrateForData(data) {
         return data;
     }
 
-    if (data.version === constants.DEFAULT_OPTIONS.version) {
+    if (data.version === DEFAULT_OPTIONS.version) {
         data.version = currentVersion;
         return data;
     }
@@ -3003,7 +3002,7 @@ async function init() {
 
     await normalizeContainersInGroups(data.groups);
 
-    options = utils.extractKeys(data, constants.allOptionsKeys, true);
+    options = utils.extractKeys(data, ALL_OPTIONS_KEYS, true);
 
     await storage.set(data);
 
