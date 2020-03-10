@@ -124,7 +124,7 @@ function getTabSession(tabId, key = null) {
         return tabs[tabId] ? tabs[tabId][key] : null;
     }
 
-    return tabs[tabId] ? applySession({}, tabs[tabId]) : {};
+    return tabs[tabId] ? {...tabs[tabId]} : {};
 }
 
 async function loadTabSession(tab) {

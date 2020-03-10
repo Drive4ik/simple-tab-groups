@@ -582,7 +582,7 @@ async function checkTemporaryContainer(cookieStoreId, excludeTabId) {
     let tabs = await Tabs.get(null, null, null, {cookieStoreId});
 
     if (!tabs.filter(tab => tab.id !== excludeTabId).length) {
-        await containers.remove(cookieStoreId);
+        containers.remove(cookieStoreId);
     }
 }
 
@@ -609,6 +609,12 @@ function onRemovedTab(tabId, {isWindowClosing, windowId}) {
 
     console.log('onRemovedTab', (excludeTab && '🛑'), {tabId, isWindowClosing, windowId});
 
+    let {cookieStoreId} = cache.getTabSession(tabId);
+
+    if (containers.isTemporary(cookieStoreId)) {
+        setTimeout(checkTemporaryContainer, 300, cookieStoreId, tabId);
+    }
+
     if (excludeTab) {
         cache.removeTab(tabId);
         return;
@@ -619,12 +625,6 @@ function onRemovedTab(tabId, {isWindowClosing, windowId}) {
     if (isWindowClosing) {
         reCreateTabsOnRemoveWindow.push(tabId);
     } else {
-        let {cookieStoreId} = cache.getTabSession(tabId);
-
-        if (containers.isTemporary(cookieStoreId)) {
-            setTimeout(checkTemporaryContainer, 100, cookieStoreId, tabId);
-        }
-
         cache.removeTab(tabId);
     }
 }
