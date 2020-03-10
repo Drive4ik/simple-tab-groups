@@ -807,7 +807,7 @@
         "message": "Внимание! Удаление ВСЕХ настроек аддона! Вы точно уверены?",
         "description": "Warning! Removing ALL addon data! Are you really sure?"
     },
-    "ifNotDefaultContainerReOpenInNew": {
+    "ifDifferentContainerReOpen": {
         "message": "Если контейнер вкладки отличается от выбранного - изменить контейнер",
         "description": "If the container is different from the selected one - change the container"
     },
@@ -906,5 +906,69 @@
     "openSidebarTitle": {
         "message": "Открыть боковую панель",
         "description": "Open sidebar"
+    },
+    "helpPageOpenInContainerTitle": {
+        "message": "Не удается открыть URL в контейнере",
+        "description": "Can't open URL in container"
+    },
+    "helpPageOpenInContainerMainTitle": {
+        "message": "Не удается открыть URL-адрес в контейнере <container-name>$containerName$</container-name>",
+        "description": "Can't open the URL into Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerSubTitle": {
+        "message": "аддон не может открыть URL:",
+        "description": "addon can't open URL:"
+    },
+    "helpPageOpenInContainerDesc1": {
+        "message": "Группе <strong>$groupTitle$</strong> назначено открывать вкладки в контейнере <container-name>$containerName$</container-name>.",
+        "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
+        "placeholders": {
+            "groupTitle": {
+                "content": "$1",
+                "example": "Group 1"
+            },
+            "containerName": {
+                "content": "$2",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerDesc2": {
+        "message": "Еще один аддон, который имеет UUID:",
+        "description": "Another addon, which has UUID:"
+    },
+    "helpPageOpenInContainerDesc3": {
+        "message": "пытается открыть этот URL в контейнере <container-name>$containerName$</container-name>. Переместите вкладку в другую группу или запретите аддону <strong>$uuid$</strong> выполнять это действие.",
+        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon '757eaba7-0b3d-478b-ace2-cbe0a16eed47' to perform this action.",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Business"
+            },
+            "uuid": {
+                "content": "$2",
+                "example": "757eaba7-0b3d-478b-ace2-cbe0a16eed47"
+            }
+        }
+    },
+    "helpPageOpenInContainerDesc4": {
+        "message": "Вы можете найти этот аддон по UUID на странице:",
+        "description": "You can find out the addon by UUID on the page:"
+    },
+    "helpPageOpenInContainerOpenInContainer": {
+        "message": "Открыть в контейнере <container-name>$containerName$</container-name>",
+        "description": "Open in Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
     }
 }

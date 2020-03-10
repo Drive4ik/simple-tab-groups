@@ -290,7 +290,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                 }
 
                 if (tabsIdsToRemove.length) {
-                    Tabs.remove(tabsIdsToRemove);
+                    browser.tabs.remove(tabsIdsToRemove);
                     tabsIdsToRemove.forEach(tabId => onRemovedTab(tabId, {}));
                 }
             }
@@ -522,6 +522,10 @@ function onUpdatedTab(tabId, changeInfo, tab) {
 
     if (changeInfo.favIconUrl && (tabGroupId || winGroupId)) {
         cache.setTabFavIcon(tab.id, changeInfo.favIconUrl);
+    }
+
+    if (changeInfo.url) {
+        utils.normalizeTabUrl(changeInfo);
     }
 
     if ('pinned' in changeInfo || 'hidden' in changeInfo) {
@@ -1394,25 +1398,36 @@ function addTabToLazyMove(tabId, groupId, showTabAfterMovingItIntoThisGroup) {
     }, 100);
 }
 
-async function onBeforeTabRequest({tabId, url, originUrl}) {
-    let excludeTab = excludeTabsIds.includes(tabId) || tabId < 1;
+let canceledRequests = {};
+async function onBeforeTabRequest({tabId, url, originUrl, requestId, frameId}) {
+    if (frameId !== 0 || tabId === -1) {
+        return {};
+    }
 
-    console.log('onBeforeTabRequest %s tabId: %s, url: %s, originUrl: %s', (excludeTab ? '🛑' : ''), tabId, url, originUrl);
+    if (canceledRequests[requestId]) {
+        return {
+            cancel: true,
+        };
+    }
+
+    let excludeTab = excludeTabsIds.includes(tabId);
+
+    console.log('onBeforeTabRequest %s tabId: %s, url: %s, originUrl is STG: %s', (excludeTab ? '🛑' : ''), tabId, url, originUrl && originUrl.startsWith(addonUrlPrefix));
 
     if (excludeTab) {
-        return;
+        return {};
     }
 
     let tab = await Tabs.getOne(tabId);
 
     if (utils.isTabPinned(tab)) {
         console.log('onBeforeTabRequest 🛑 cancel, tab is pinned');
-        return;
+        return {};
     }
 
     if (containers.isTemporary(tab.cookieStoreId)) {
         console.log('onBeforeTabRequest 🛑 cancel, container is temporary', tab.cookieStoreId);
-        return;
+        return {};
     }
 
     let oldUrl = tab.url;
@@ -1426,49 +1441,69 @@ async function onBeforeTabRequest({tabId, url, originUrl}) {
     let [tabGroup, groups] = await Groups.load(tab.groupId || -1);
 
     if (!tabGroup) {
-        return;
+        return {};
     }
 
-    groups = groups.filter(group => !group.isArchive);
-
     if (!tabGroup.isSticky && tabGroup.newTabContainer !== containers.TEMPORARY_CONTAINER) {
+        groups = groups.filter(group => !group.isArchive);
+
         let destGroup = _getCatchedGroupForTab(groups, tab);
 
         if (destGroup && destGroup.id !== tabGroup.id) {
             console.log('onBeforeTabRequest move tab from groupId %d -> %d', tabGroup.id, destGroup.id);
             addTabToLazyMove(tab.id, destGroup.id, destGroup.showTabAfterMovingItIntoThisGroup);
-            return;
+            return {};
         }
     }
 
-    if (
-        !tabGroup.newTabContainer ||
-        tabGroup.newTabContainer === tab.cookieStoreId ||
-        (!containers.isDefault(tab.cookieStoreId) && !tabGroup.ifNotDefaultContainerReOpenInNew)
-    ) {
-        return;
+    if (!tabGroup.newTabContainer || tabGroup.newTabContainer === tab.cookieStoreId) {
+        return {};
     }
 
-    if (originUrl && originUrl.startsWith('moz-extension') && !originUrl.startsWith(addonUrlPrefix)) {
-        console.log('onBeforeTabRequest 🛑 cancel by another addon', originUrl);
-        return;
-    }
-
-    console.log('onBeforeTabRequest create tab', tab);
-
-    Tabs.remove(tab.id);
-
-    let newTabPromise = Tabs.create({
+    let newTabParams = {
         url: tab.url,
-        title: utils.isUrlEmpty(oldUrl) ? null : tab.title,
-        favIconUrl: tab.favIconUrl,
-        cookieStoreId: tab.cookieStoreId,
-        thumbnail: tab.thumbnail,
-        active: tab.active,
+        title: utils.isUrlEmpty(oldUrl) ? tab.url : tab.title,
         index: tab.index,
+        active: tab.active,
         windowId: tab.windowId,
+        openerTabId: tab.openerTabId,
+        favIconUrl: tab.favIconUrl,
+        thumbnail: tab.thumbnail,
         ...Groups.getNewTabParams(tabGroup),
-    });
+    };
+
+    if (tabGroup.ifDifferentContainerReOpen) {
+        if (originUrl && originUrl.startsWith(addonUrlPrefix)) {
+            originUrl = null;
+        }
+
+        if (originUrl && originUrl.startsWith('moz-extension')) {
+            if (tab.hidden) {
+                //
+            } else {
+                let [, uuid] = /moz-extension:\/\/([a-f\-\d]+)\//.exec(originUrl);
+
+                newTabParams.url = utils.setUrlSearchParams(browser.extension.getURL('/help/open-in-container.html'), {
+                    url: tab.url,
+                    currentCookieStoreId: tabGroup.newTabContainer,
+                    anotherCookieStoreId: tab.cookieStoreId,
+                    uuid: uuid,
+                    groupId: tabGroup.id,
+                });
+
+                newTabParams.active = true;
+            }
+        }
+    } else {
+        if (!containers.isDefault(tab.cookieStoreId)) {
+            return {};
+        }
+    }
+
+    canceledRequests[requestId] = true;
+    setTimeout(() => delete canceledRequests[requestId], 2000);
+
+    let newTabPromise = Tabs.create(newTabParams);
 
     if (tab.hidden) {
         newTabPromise.then(async function({id}) {
@@ -1477,6 +1512,8 @@ async function onBeforeTabRequest({tabId, url, originUrl}) {
             removeExcludeTabsIds([id]);
         });
     }
+
+    browser.tabs.remove(tab.id);
 
     return {
         cancel: true,
@@ -2662,6 +2699,15 @@ async function runMigrateForData(data) {
             version: '4.4.2.5',
             migration() {
                 data.openGroupAfterChange = false;
+            },
+        },
+        {
+            version: '4.5',
+            migration() {
+                data.groups.forEach(function(group) {
+                    group.ifDifferentContainerReOpen = group.ifNotDefaultContainerReOpenInNew;
+                    delete group.ifNotDefaultContainerReOpenInNew;
+                });
             },
         },
     ];

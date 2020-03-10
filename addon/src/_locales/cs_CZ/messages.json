@@ -807,7 +807,7 @@
         "message": "Pozor! Odstraňujete všechna data doplňku. Jste si jisti?",
         "description": "Warning! Removing ALL addon data! Are you really sure?"
     },
-    "ifNotDefaultContainerReOpenInNew": {
+    "ifDifferentContainerReOpen": {
         "message": "Změnit kontejner, pokud je panel otevřen v jiném než nastaveném.",
         "description": "If the container is different from the selected one - change the container"
     }

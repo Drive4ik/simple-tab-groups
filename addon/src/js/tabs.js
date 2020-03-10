@@ -4,7 +4,7 @@ import utils from './utils';
 import Groups from './groups';
 import Windows from './windows';
 
-async function createNative({url, active, pinned, title, index, windowId, isInReaderMode, openInReaderMode, cookieStoreId, newTabContainer, ifNotDefaultContainerReOpenInNew, groupId, favIconUrl, thumbnail}) {
+async function createNative({url, active, pinned, title, index, windowId, isInReaderMode, openInReaderMode, openerTabId, cookieStoreId, newTabContainer, ifDifferentContainerReOpen, groupId, favIconUrl, thumbnail}) {
     const {BG} = browser.extension.getBackgroundPage();
 
     let tab = {};
@@ -41,6 +41,10 @@ async function createNative({url, active, pinned, title, index, windowId, isInRe
         tab.windowId = windowId;
     }
 
+    if (Number.isFinite(openerTabId) && openerTabId >= 1) {
+        tab.openerTabId = openerTabId;
+    }
+
     if (isInReaderMode || openInReaderMode) {
         tab.openInReaderMode = true;
     }
@@ -50,8 +54,12 @@ async function createNative({url, active, pinned, title, index, windowId, isInRe
     }
 
     if (newTabContainer) {
-        if (tab.cookieStoreId !== BG.containers.TEMPORARY_CONTAINER && ifNotDefaultContainerReOpenInNew) {
+        if (ifDifferentContainerReOpen) {
             tab.cookieStoreId = newTabContainer;
+        } else {
+            if (BG.containers.isDefault(tab.cookieStoreId)) {
+                tab.cookieStoreId = newTabContainer;
+            }
         }
     }
 
@@ -394,7 +402,7 @@ async function move(tabIds, groupId, newTabIndex = -1, showNotificationAfterMove
                     BG.containers.isTemporary(tab.cookieStoreId) ||
                     tab.url.startsWith('moz-extension') ||
                     (tab.url.startsWith('about:') && !utils.isUrlEmpty(tab.url)) ||
-                    (!BG.containers.isDefault(tab.cookieStoreId) && !group.ifNotDefaultContainerReOpenInNew)
+                    (!group.ifDifferentContainerReOpen && !BG.containers.isDefault(tab.cookieStoreId))
                 ) {
                     return tab;
                 }

@@ -309,9 +309,9 @@ function isUrlAllowToCreate(url) {
 function normalizeUrl(url) {
     if (url && url.startsWith('moz-extension')) {
         let urlObj = new URL(url),
-            urlStr = urlObj.searchParams.get('url') || urlObj.searchParams.get('u');
+            urlStr = urlObj.searchParams.get('url') || urlObj.searchParams.get('u') || urlObj.searchParams.get('go');
 
-        return urlStr ? normalizeUrl(decodeURIComponent(urlStr)) : url;
+        return urlStr ? normalizeUrl(urlStr) : url;
     }
 
     return url || '';
@@ -320,6 +320,16 @@ function normalizeUrl(url) {
 function normalizeTabUrl(tab) {
     tab.url = normalizeUrl(tab.url);
     return tab;
+}
+
+function setUrlSearchParams(url, params = {}) {
+    let urlObj = new URL(url);
+
+    for (let i in params) {
+        urlObj.searchParams.set(i, params[i]);
+    }
+
+    return urlObj.href;
 }
 
 function isTabPinned(tab) {
@@ -723,6 +733,7 @@ export default {
     isUrlAllowToCreate,
     normalizeUrl,
     normalizeTabUrl,
+    setUrlSearchParams,
     isTabPinned,
     isTabNotPinned,
     isTabCanBeHidden,

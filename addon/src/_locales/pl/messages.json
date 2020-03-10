@@ -807,7 +807,7 @@
         "message": "Uwaga! Czy usunąć WSZYSTKIE dane w ramach dodatku? Jesteś pewny?",
         "description": "Warning! Removing ALL addon data! Are you really sure?"
     },
-    "ifNotDefaultContainerReOpenInNew": {
+    "ifDifferentContainerReOpen": {
         "message": "Jeśli zasobnik jest inny niż poprzednio wybrany, to zmień zasobnik",
         "description": "If the container is different from the selected one - change the container"
     }

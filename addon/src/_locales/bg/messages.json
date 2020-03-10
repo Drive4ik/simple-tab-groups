@@ -807,7 +807,7 @@
         "message": "Внимание! ВСИЧКИ данни на добавката ще бъдат заличени. Сигурни ли сте?",
         "description": "Warning! Removing ALL addon data! Are you really sure?"
     },
-    "ifNotDefaultContainerReOpenInNew": {
+    "ifDifferentContainerReOpen": {
         "message": "Ако текущия изолатор е различен от избрания, тогава да бъде подменен",
         "description": "If the container is different from the selected one - change the container"
     },

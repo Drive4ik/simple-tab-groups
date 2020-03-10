@@ -84,7 +84,7 @@ function create(id, title) {
         catchTabRules: '',
         catchTabContainers: [],
         newTabContainer: null,
-        ifNotDefaultContainerReOpenInNew: true,
+        ifDifferentContainerReOpen: true,
         isSticky: false,
         muteTabsWhenGroupCloseAndRestoreWhenOpen: false,
         showTabAfterMovingItIntoThisGroup: false,
@@ -321,8 +321,8 @@ function mapForExternalExtension(group) {
     };
 }
 
-function getNewTabParams({id, newTabContainer, ifNotDefaultContainerReOpenInNew}) {
-    return {groupId: id, newTabContainer, ifNotDefaultContainerReOpenInNew};
+function getNewTabParams({id, newTabContainer, ifDifferentContainerReOpen}) {
+    return {groupId: id, newTabContainer, ifDifferentContainerReOpen};
 }
 
 function setNewTabsParams(tabs, group) {

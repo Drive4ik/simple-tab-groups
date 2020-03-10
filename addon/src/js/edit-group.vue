@@ -308,8 +308,8 @@
                 <div v-if="group.newTabContainer" class="field h-margin-top-10">
                     <div class="control">
                         <label class="checkbox indent-children">
-                            <input type="checkbox" v-model="group.ifNotDefaultContainerReOpenInNew" />
-                            <span v-text="lang('ifNotDefaultContainerReOpenInNew')"></span>
+                            <input type="checkbox" v-model="group.ifDifferentContainerReOpen" />
+                            <span v-text="lang('ifDifferentContainerReOpen')"></span>
                         </label>
                     </div>
                 </div>

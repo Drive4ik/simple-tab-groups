@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title i18n_="helpPageOpenInContainerTitle">Can't open URL in container</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="/icons/container.svg"/>
+    <link rel="stylesheet" type="text/css" href="css-help-pages.css">
+    <link xmlns="http://www.w3.org/1999/xhtml" rel="stylesheet" href="chrome://browser/skin/aboutNetError.css" type="text/css" media="all" />
+
+    <style type="text/css">
+        /* General Rules and Resets */
+        .title {
+            background-image: none;
+        }
+
+        main {
+            background: url(/icons/icon.svg) no-repeat 0px 10px;
+            background-size: 128px;
+            margin-inline-start: -150px;
+            padding-inline-start: 170px;
+            max-width: 700px;
+        }
+
+        container-name {
+            font-weight: bold;
+            text-transform: capitalize;
+        }
+
+        @media only screen and (max-width: 1300px) {
+            main {
+                background: none;
+            }
+
+            /* for a mid sized window we have enough for this but not our image */
+            .title {
+                background-image: url("chrome://global/skin/icons/info.svg");
+            }
+        }
+
+        html {
+            box-sizing: border-box;
+            font: message-box;
+        }
+
+        .block-content {
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+            word-break: break-word;
+            background: #efedf0; /* Grey 20 */
+            border-radius: 2px;
+            line-height: 1.5;
+            padding-block-end: 0.5rem;
+            padding-block-start: 0.5rem;
+            padding-inline-end: 0.5rem;
+            padding-inline-start: 0.5rem;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .block-content {
+                background: #38383d; /* Grey 70 */
+                color: #eee; /* White 20 */
+            }
+        }
+
+        .block-content img {
+            block-size: 16px;
+            inline-size: 16px;
+            margin-inline-end: 6px;
+            position: relative;
+            pointer-events: none;
+        }
+
+        .button-container > button {
+            min-inline-size: 240px;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <div class="title">
+            <h1 id="helpPageOpenInContainerMainTitle" class="title-text">
+                Can't open the URL into <container-name>Personal</container-name> container
+            </h1>
+        </div>
+        <div>
+            <p><strong i18n="extensionName"></strong> <span i18n="helpPageOpenInContainerSubTitle">addon can't open URL:</span></p>
+            <div id="redirect-url" class="block-content">https://google.com</div>
+            <p id="helpPageOpenInContainerDesc1">Group <strong>Group 1</strong> was assigned to open tabs in <container-name>Personal</container-name> container.</p>
+            <p i18n="helpPageOpenInContainerDesc2">Another addon who has UUID:</p>
+            <div id="addon-known-content" class="block-content">ff06d2f8-3660-43ed-becb-ad1c458ae76d</div>
+            <p id="helpPageOpenInContainerDesc3">tries to open this URL in <container-name>Personal2</container-name> container. Move the tab to another group or forbid the addon <strong>ff06d2f8-3660-43ed-becb-ad1c458ae76d</strong> to perform this action.</p>
+            <p i18n="helpPageOpenInContainerDesc4">You can find out the addon by UUID on the page:</p>
+            <div class="block-content">about:debugging#/runtime/this-firefox</div>
+            <br />
+            <br />
+            <div class="button-container">
+                <button id="deny" class="button">Open in <container-name>Personal</container-name> container</button>
+                <button id="confirm" class="button primary" autofocus>Open in <container-name>Personal</container-name> container</button>
+            </div>
+        </div>
+    </main>
+    <script type="module" src="translate-help-pages.js"></script>
+    <script type="module" src="open-in-container.js"></script>
+</body>
+
+</html>

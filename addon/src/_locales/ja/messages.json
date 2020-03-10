@@ -807,7 +807,7 @@
         "message": "警告 アドオンの全てのデータを削除します よろしいですか？",
         "description": "Warning! Removing ALL addon data! Are you really sure?"
     },
-    "ifNotDefaultContainerReOpenInNew": {
+    "ifDifferentContainerReOpen": {
         "message": "Containerが違った場合、Containerを変える",
         "description": "If the container is different from the selected one - change the container"
     }
