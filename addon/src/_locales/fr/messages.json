@@ -962,5 +962,21 @@
                 "example": "Personal"
             }
         }
+    },
+    "reverseTabsOnCreate": {
+        "message": "Inverser les onglets à la création, si la préférence <code>browser.tabs.insertAfterCurrent</code> est <code>true</code>",
+        "description": "Reverse tabs on create, if you have the browser.tabs.insertAfterCurrent preference is true"
+    },
+    "groupNotLoaded": {
+        "message": "Groupe non chargé",
+        "description": "Group not loaded"
+    },
+    "groupNotFound": {
+        "message": "Groupe non trouvé",
+        "description": "Group not found"
+    },
+    "unloadGroup": {
+        "message": "Décharger le groupe",
+        "description": "Unload the group"
     }
 }
