@@ -681,10 +681,6 @@
         "message": "Освобождаване на памет от раздела",
         "description": "Discard tab"
     },
-    "discardGroupTitle": {
-        "message": "Освобождаване на памет от разделите в групата",
-        "description": "Discard group"
-    },
     "autoBackupGroupsToFile": {
         "message": "Автоматични резервни копия на групите във файл (в папката за изтегляния)",
         "description": "Auto backup all groups to file (into downloads folder)"
@@ -742,10 +738,6 @@
     "tabsNotCreated": {
         "message": "Не са създадени раздели",
         "description": "Tabs not created"
-    },
-    "discardOtherGroups": {
-        "message": "Освобождаване на памет от разделите в другите групи",
-        "description": "Discard other groups"
     },
     "showTabsWithThumbnailsInManageGroups": {
         "message": "Представяне на сайтовете с миниатюри в страницата „Управление на групите“",

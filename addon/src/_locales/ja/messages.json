@@ -681,10 +681,6 @@
         "message": "タブを削除する",
         "description": "Discard tab"
     },
-    "discardGroupTitle": {
-        "message": "タブを削除する",
-        "description": "Discard group"
-    },
     "autoBackupGroupsToFile": {
         "message": "全てのグループを（ダウンロードフォルダ内の）ファイルへ自動でバックアップします",
         "description": "Auto backup all groups to file (into downloads folder)"
@@ -742,10 +738,6 @@
     "tabsNotCreated": {
         "message": "タブは１件も作成されませんでした",
         "description": "Tabs not created"
-    },
-    "discardOtherGroups": {
-        "message": "他のグループを削除する",
-        "description": "Discard other groups"
     },
     "showTabsWithThumbnailsInManageGroups": {
         "message": "\"グループの管理\"ページでタブのサムネイルを表示する",

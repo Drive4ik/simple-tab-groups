@@ -681,10 +681,6 @@
         "message": "Décharger l'onglet de la mémoire",
         "description": "Discard tab"
     },
-    "discardGroupTitle": {
-        "message": "Décharger le groupe de la mémoire",
-        "description": "Discard group"
-    },
     "autoBackupGroupsToFile": {
         "message": "Sauvegarder automatiquement tous les groupes vers un fichier (dans le dossier des téléchargements)",
         "description": "Auto backup all groups to file (into downloads folder)"
@@ -742,10 +738,6 @@
     "tabsNotCreated": {
         "message": "Onglet(s) non créé(s)",
         "description": "Tabs not created"
-    },
-    "discardOtherGroups": {
-        "message": "Décharger les autres groupes de la mémoire",
-        "description": "Discard other groups"
     },
     "showTabsWithThumbnailsInManageGroups": {
         "message": "Afficher les onglets avec des vignettes dans la page \"Gérer les groupes\"",

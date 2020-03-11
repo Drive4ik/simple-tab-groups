@@ -665,10 +665,6 @@
         "message": "廢棄(休眠)分頁",
         "description": "Discard tab"
     },
-    "discardGroupTitle": {
-        "message": "廢棄(休眠)群組",
-        "description": "Discard group"
-    },
     "autoBackupGroupsToFile": {
         "message": "自動備份所有群組至檔案（位於下載資料夾）",
         "description": "Auto backup all groups to file (into downloads folder)"

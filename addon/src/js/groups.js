@@ -268,6 +268,71 @@ async function sort(vector = 'asc') {
     BG.updateMoveTabMenus();
 }
 
+async function unload(groupId) {
+    const {BG} = browser.extension.getBackgroundPage();
+
+    if (!groupId) {
+        utils.notify(browser.i18n.getMessage('groupNotFound'), 7000, 'groupNotFound');
+        return false;
+    }
+
+    let windowId = BG.cache.getWindowId(groupId);
+
+    if (!windowId) {
+        utils.notify(browser.i18n.getMessage('groupNotLoaded'), 7000, 'groupNotLoaded');
+        return false;
+    }
+
+    let [group] = await load(groupId, true);
+
+    if (!group) {
+        utils.notify(browser.i18n.getMessage('groupNotFound'), 7000, 'groupNotFound');
+        return false;
+    }
+
+    if (group.isArchive) {
+        utils.notify(browser.i18n.getMessage('groupIsArchived', group.title), 7000, 'groupIsArchived');
+        return false;
+    }
+
+    if (group.tabs.some(utils.isTabCanNotBeHidden)) {
+        utils.notify(browser.i18n.getMessage('notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera'));
+        return false;
+    }
+
+    await BG.cache.removeWindowSession(windowId);
+
+    await Tabs.createTempActiveTab(windowId, false);
+
+    if (group.tabs.length) {
+        let tabIds = group.tabs.map(utils.keyId);
+
+        BG.addExcludeTabsIds(tabIds);
+        await BG.browser.tabs.hide(tabIds);
+        BG.removeExcludeTabsIds(tabIds);
+
+        let {discardTabsAfterHide} = BG.getOptions();
+
+        if (discardTabsAfterHide && !group.dontDiscardTabsAfterHideThisGroup) {
+            await Tabs.discard(tabIds);
+        }
+    }
+
+    BG.sendMessage({
+        action: 'group-unloaded',
+        groupId,
+        windowId,
+    });
+
+    BG.sendExternalMessage({
+        action: 'group-unloaded',
+        groupId,
+        windowId,
+    });
+
+    return true;
+}
+
 async function archiveToggle(groupId) {
     const {BG} = browser.extension.getBackgroundPage();
 
@@ -347,6 +412,7 @@ export default {
     update,
     move,
     sort,
+    unload,
     archiveToggle,
     mapForExternalExtension,
     getNewTabParams,

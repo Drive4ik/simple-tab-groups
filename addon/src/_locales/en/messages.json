@@ -685,10 +685,6 @@
         "message": "Discard tab",
         "description": "Discard tab"
     },
-    "discardGroupTitle": {
-        "message": "Discard group",
-        "description": "Discard group"
-    },
     "autoBackupGroupsToFile": {
         "message": "Auto backup all groups to file (into downloads folder)",
         "description": "Auto backup all groups to file (into downloads folder)"
@@ -746,10 +742,6 @@
     "tabsNotCreated": {
         "message": "Tabs not created",
         "description": "Tabs not created"
-    },
-    "discardOtherGroups": {
-        "message": "Discard other groups",
-        "description": "Discard other groups"
     },
     "showTabsWithThumbnailsInManageGroups": {
         "message": "Show tabs with thumbnails in \"Manage groups\" page",
@@ -978,5 +970,17 @@
     "reverseTabsOnCreate": {
         "message": "Reverse tabs on create, if you have the <code>browser.tabs.insertAfterCurrent</code> preference is <code>true</code>",
         "description": "Reverse tabs on create, if you have the browser.tabs.insertAfterCurrent preference is true"
+    },
+    "groupNotLoaded": {
+        "message": "Group not loaded",
+        "description": "Group not loaded"
+    },
+    "groupNotFound": {
+        "message": "Group not found",
+        "description": "Group not found"
+    },
+    "unloadGroup": {
+        "message": "Unload the group",
+        "description": "Unload the group"
     }
 }

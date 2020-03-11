@@ -298,6 +298,10 @@
                                 }
                             }
                             break;
+                        case 'group-unloaded':
+                            this.loadGroups();
+                            this.loadCurrentWindow();
+                            break;
                         case 'options-updated':
                             this.loadOptions();
                             break;
@@ -479,6 +483,12 @@
                 }, []);
 
                 Tabs.discard(tabIds);
+            },
+
+            async unloadGroup({id}) {
+                fullLoading(true);
+                await BG.Groups.unload(id);
+                fullLoading(false);
             },
 
             async toggleArchiveGroup({id}) {
@@ -1320,11 +1330,11 @@
                     </li>
                     <li :class="{'is-disabled': menu.data.group.isArchive}" @click="!menu.data.group.isArchive && discardGroup(menu.data.group)">
                         <img src="/icons/snowflake.svg" class="size-16" />
-                        <span v-text="lang('discardGroupTitle')"></span>
+                        <span v-text="lang('hotkeyActionTitleDiscardGroup')"></span>
                     </li>
                     <li v-if="groups.length > 1" @click="discardOtherGroups(menu.data.group)">
                         <img src="/icons/snowflake.svg" class="size-16" />
-                        <span v-text="lang('discardOtherGroups')"></span>
+                        <span v-text="lang('hotkeyActionTitleDiscardOtherGroups')"></span>
                     </li>
                     <li @click="renameGroup(menu.data.group)">
                         <img src="/icons/edit.svg" class="size-16" />
@@ -1333,6 +1343,10 @@
 
                     <hr>
 
+                    <li :class="{'is-disabled': !getWindowId(menu.data.group.id)}" @click="getWindowId(menu.data.group.id) && unloadGroup(menu.data.group)">
+                        <img src="/icons/upload.svg" class="size-16" />
+                        <span v-text="lang('unloadGroup')"></span>
+                    </li>
                     <li @click="toggleArchiveGroup(menu.data.group)">
                         <img :src="'/icons/' + (menu.data.group.isArchive ? 'unarchive' : 'archive') + '.svg'" class="size-16" />
                         <span v-text="lang(menu.data.group.isArchive ? 'unArchiveGroup' : 'archiveGroup')"></span>

@@ -669,10 +669,6 @@
         "message": "Tab verwerfen",
         "description": "Discard tab"
     },
-    "discardGroupTitle": {
-        "message": "Gruppe verwerfen",
-        "description": "Discard group"
-    },
     "autoBackupGroupsToFile": {
         "message": "Alle Gruppen automatisch als Datei sichern (im Ordner Downloads)",
         "description": "Auto backup all groups to file (into downloads folder)"
@@ -730,9 +726,5 @@
     "tabsNotCreated": {
         "message": "Tabs nicht erstellt",
         "description": "Tabs not created"
-    },
-    "discardOtherGroups": {
-        "message": "Andere Gruppen verwerfen",
-        "description": "Discard other groups"
     }
 }

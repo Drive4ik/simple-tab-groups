@@ -279,16 +279,19 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
 
                     console.assert(hideTabsResult.length === tabIds.length, 'some tabs not hide');
 
+                    groupToHide.tabs.forEach(tab => tab.hidden = true);
+
                     if (options.discardTabsAfterHide && !groupToHide.dontDiscardTabsAfterHideThisGroup) {
                         Tabs.discard(tabIds);
-                        tabIds.forEach(function(tabId) {
-                            sendMessage({
-                                action: 'tab-updated',
-                                tab: {
-                                    id: tabId,
-                                    discarded: true,
-                                },
-                            });
+
+                        groupToHide.tabs.forEach(tab => tab.discarded = true);
+
+                        sendMessage({
+                            action: 'group-updated',
+                            group: {
+                                id: groupToHide.id,
+                                tabs: groupToHide.tabs,
+                            },
                         });
                     }
                 }
@@ -1760,6 +1763,9 @@ async function runAction(data, externalExtId) {
                     }
                 }
                 break;
+            case 'unload-group':
+                result.ok = await Groups.unload(currentGroup.id);
+                break;
             case 'add-new-group':
                 if (!options.alwaysAskNewGroupName || data.title) {
                     // only this addon can move tabs to new group
@@ -1955,7 +1961,7 @@ async function runAction(data, externalExtId) {
                         Tabs.sendMessage(activeTab.id, {
                             action: 'show-groups-popup',
                             popupAction: 'discard-group',
-                            popupTitle: browser.i18n.getMessage('discardGroupTitle'),
+                            popupTitle: browser.i18n.getMessage('hotkeyActionTitleDiscardGroup'),
                             groups: groups.map(Groups.mapForExternalExtension),
                             focusedGroupId: currentGroup.id,
                             disableGroupIds: groups.filter(group => group.isArchive).map(utils.keyId),
@@ -1964,7 +1970,7 @@ async function runAction(data, externalExtId) {
 
                         result.ok = true;
                     } else {
-                        result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('discardGroupTitle')]);
+                        result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleDiscardGroup')]);
                         utils.notify(result.error, 15000, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
                     }
                 }

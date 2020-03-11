@@ -681,10 +681,6 @@
         "message": "Porzuć kartę",
         "description": "Discard tab"
     },
-    "discardGroupTitle": {
-        "message": "Porzuć grupę",
-        "description": "Discard group"
-    },
     "autoBackupGroupsToFile": {
         "message": "Automatyczna kopia zapasowa wszystkich grup do pliku (w folderze pobierania)",
         "description": "Auto backup all groups to file (into downloads folder)"
@@ -742,10 +738,6 @@
     "tabsNotCreated": {
         "message": "Kart nie stworzono",
         "description": "Tabs not created"
-    },
-    "discardOtherGroups": {
-        "message": "Odrzuć pozostałe grupy",
-        "description": "Discard other groups"
     },
     "showTabsWithThumbnailsInManageGroups": {
         "message": "Pokaż karty wraz z miniaturkami na stronie \"Zarządzanie grupami\"",

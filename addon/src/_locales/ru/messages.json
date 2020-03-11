@@ -350,11 +350,11 @@
         "description": "Move active tab to custom group"
     },
     "hotkeyActionTitleDiscardGroup": {
-        "message": "Выгрузить группу",
+        "message": "Выгрузить группу из памяти",
         "description": "Hotkey action Discard group"
     },
     "hotkeyActionTitleDiscardOtherGroups": {
-        "message": "Выгрузить другие группы",
+        "message": "Выгрузить другие группы из памяти",
         "description": "Hotkey action Discard other groups"
     },
     "hotkeyActionTitleReloadAllTabsInCurrentGroup": {
@@ -678,12 +678,8 @@
         "description": "All groups successfully exported to bookmarks"
     },
     "discardTabTitle": {
-        "message": "Выгрузить вкладку",
+        "message": "Выгрузить вкладку из памяти",
         "description": "Discard tab"
-    },
-    "discardGroupTitle": {
-        "message": "Выгрузить группу",
-        "description": "Discard group"
     },
     "autoBackupGroupsToFile": {
         "message": "Автоматический экспорт всех групп в файл (в папке загрузок)",
@@ -742,10 +738,6 @@
     "tabsNotCreated": {
         "message": "Вкладки не созданы",
         "description": "Tabs not created"
-    },
-    "discardOtherGroups": {
-        "message": "Выгрузить другие группы",
-        "description": "Discard other groups"
     },
     "showTabsWithThumbnailsInManageGroups": {
         "message": "Показывать вкладки с миниатюрами на странице \"Управление группами\"",
@@ -974,5 +966,17 @@
     "reverseTabsOnCreate": {
         "message": "Обратные вкладки при создании, если у вас параметр <code>browser.tabs.insertAfterCurrent</code> установлен в <code>true</code>",
         "description": "Reverse tabs on create, if you have the browser.tabs.insertAfterCurrent preference is true"
+    },
+    "groupNotLoaded": {
+        "message": "Группа не загружена",
+        "description": "Group not loaded"
+    },
+    "groupNotFound": {
+        "message": "Группа не найдена",
+        "description": "Group not found"
+    },
+    "unloadGroup": {
+        "message": "Выгрузить группу",
+        "description": "Unload the group"
     }
 }

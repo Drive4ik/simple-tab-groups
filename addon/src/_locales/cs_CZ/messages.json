@@ -681,10 +681,6 @@
         "message": "Uvolnit panel z paměti",
         "description": "Discard tab"
     },
-    "discardGroupTitle": {
-        "message": "Uvolnit skupinu z paměti",
-        "description": "Discard group"
-    },
     "autoBackupGroupsToFile": {
         "message": "Automaticky zálohovat všechny skupiny do souboru (do stažených souborů)",
         "description": "Auto backup all groups to file (into downloads folder)"
@@ -742,10 +738,6 @@
     "tabsNotCreated": {
         "message": "Panely nevytvořeny",
         "description": "Tabs not created"
-    },
-    "discardOtherGroups": {
-        "message": "Uvolnit ostatní skupiny z paměti",
-        "description": "Discard other groups"
     },
     "showTabsWithThumbnailsInManageGroups": {
         "message": "Ukázat náhledy panelů ve \"Správě skupin\"",

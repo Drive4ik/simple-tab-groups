@@ -278,6 +278,10 @@
                         case 'group-loaded':
                             this.loadCurrentWindow();
                             break;
+                        case 'group-unloaded':
+                            this.loadGroups();
+                            this.loadCurrentWindow();
+                            break;
                         case 'options-updated':
                             this.loadOptions();
                             break;
@@ -938,11 +942,11 @@
                     </li>
                     <li v-if="menu.data.group !== currentGroup" @click="discardGroup(menu.data.group)">
                         <img src="/icons/snowflake.svg" class="size-16" />
-                        <span v-text="lang('discardGroupTitle')"></span>
+                        <span v-text="lang('hotkeyActionTitleDiscardGroup')"></span>
                     </li>
                     <li v-if="groups.length > 1" @click="discardOtherGroups(menu.data.group)">
                         <img src="/icons/snowflake.svg" class="size-16" />
-                        <span v-text="lang('discardOtherGroups')"></span>
+                        <span v-text="lang('hotkeyActionTitleDiscardOtherGroups')"></span>
                     </li>
 
                     <hr>
@@ -976,11 +980,11 @@
                     </li>
                     <li v-if="menu.data.group && menu.data.group !== currentGroup" @click="discardGroup(menu.data.group)">
                         <img src="/icons/snowflake.svg" class="size-16" />
-                        <span v-text="lang('discardGroupTitle')"></span>
+                        <span v-text="lang('hotkeyActionTitleDiscardGroup')"></span>
                     </li>
                     <li v-if="menu.data.group && groups.length > 1" @click="discardOtherGroups(menu.data.group)">
                         <img src="/icons/snowflake.svg" class="size-16" />
-                        <span v-text="lang('discardOtherGroups')"></span>
+                        <span v-text="lang('hotkeyActionTitleDiscardOtherGroups')"></span>
                     </li>
                     <li v-if="options.showTabsWithThumbnailsInManageGroups" @click="updateTabThumbnail(menu.data.tab)">
                         <img src="/icons/image.svg" class="size-16" />

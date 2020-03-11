@@ -131,6 +131,9 @@
         "discard-other-groups": {
             "description": "__MSG_hotkeyActionTitleDiscardOtherGroups__"
         },
+        "unload-group": {
+            "description": "__MSG_unloadGroup__"
+        },
         "reload-all-tabs-in-current-group": {
             "description": "__MSG_hotkeyActionTitleReloadAllTabsInCurrentGroup__"
         }
