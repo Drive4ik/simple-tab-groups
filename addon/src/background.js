@@ -489,7 +489,7 @@ function removeExcludeTabsIds(tabIds) {
     excludeTabsIds = excludeTabsIds.filter(tabId => !tabIds.includes(tabId));
 }
 
-function onUpdatedTab(tabId, changeInfo, tab) {
+async function onUpdatedTab(tabId, changeInfo, tab) {
     let excludeTab = excludeTabsIds.includes(tab.id);
 
     if (!excludeTab && [ // browser.tabs.onUpdated.addListener filter changed props of tabs not working... :(
@@ -551,6 +551,18 @@ function onUpdatedTab(tabId, changeInfo, tab) {
                 cache.setTabGroup(tab.id, winGroupId);
             } else if (false === changeInfo.hidden) {
                 if (tabGroupId) {
+                    if (winGroupId) {
+                        let [winGroup] = await Groups.load(winGroupId, true);
+
+                        if (!winGroup.tabs.length) {
+                            await Tabs.createTempActiveTab(tab.windowId, false);
+                            addExcludeTabsIds([tab.id]);
+                            await browser.tabs.hide(tab.id);
+                            removeExcludeTabsIds([tab.id]);
+                            return;
+                        }
+                    }
+
                     applyGroup(tab.windowId, tabGroupId, tab.id);
                     return;
                 } else {

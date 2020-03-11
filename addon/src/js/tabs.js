@@ -245,25 +245,6 @@ async function add(groupId, cookieStoreId, url, title) {
 async function remove(tabIds) {
     const {BG} = browser.extension.getBackgroundPage();
 
-    // if (!hidden) { // TODO что делать?
-    //     let groupWindowId = BG.cache.getWindowId(session.groupId);
-
-    //     if (groupWindowId) {
-    //         let [group] = await Groups.load(session.groupId, true);
-
-    //         if (1 === group.tabs.length) {
-    //             let pinnedTabs = await get(groupWindowId, true, null);
-
-    //             if (!pinnedTabs.length) {
-    //                 await create({
-    //                     active: true,
-    //                     windowId: groupWindowId,
-    //                 });
-    //             }
-    //         }
-    //     }
-    // }
-
     await BG.browser.tabs.remove(tabIds);
 }
 
