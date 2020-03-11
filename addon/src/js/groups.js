@@ -300,6 +300,8 @@ async function unload(groupId) {
         return false;
     }
 
+    await BG.loadingBrowserAction(true, windowId);
+
     await BG.cache.removeWindowSession(windowId);
 
     await Tabs.createTempActiveTab(windowId, false);
@@ -317,6 +319,10 @@ async function unload(groupId) {
             await Tabs.discard(tabIds);
         }
     }
+
+    BG.updateBrowserActionData(null, windowId);
+
+    BG.updateMoveTabMenus();
 
     BG.sendMessage({
         action: 'group-unloaded',
