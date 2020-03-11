@@ -906,5 +906,69 @@
     "openSidebarTitle": {
         "message": "Ouvrir la barre latérale",
         "description": "Open sidebar"
+    },
+    "helpPageOpenInContainerTitle": {
+        "message": "Impossible d'ouvrir l'URL dans le contexte",
+        "description": "Can't open URL in container"
+    },
+    "helpPageOpenInContainerMainTitle": {
+        "message": "Impossible d'ouvrir l'URL dans le contexte <container-name>$containerName$</container-name>",
+        "description": "Can't open the URL into Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerSubTitle": {
+        "message": "l'extension ne peut pas ouvrir l'URL :",
+        "description": "addon can't open URL:"
+    },
+    "helpPageOpenInContainerDesc1": {
+        "message": "Le groupe <strong>$groupTitle$</strong> a été défini pour ouvrir les onglets dans le contexte <container-name>$containerName$</container-name>.",
+        "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
+        "placeholders": {
+            "groupTitle": {
+                "content": "$1",
+                "example": "Group 1"
+            },
+            "containerName": {
+                "content": "$2",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerDesc2": {
+        "message": "Une autre extension, qui porte l'UUID",
+        "description": "Another addon, which has UUID:"
+    },
+    "helpPageOpenInContainerDesc3": {
+        "message": ", tente d'ouvrir cette URL dans le contexte <container-name>$containerName$</container-name>. Déplacez l'onglet dans un autre groupe ou interdisez à l'extension <strong>$uuid$</strong> de procéder à cette action.",
+        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon '757eaba7-0b3d-478b-ace2-cbe0a16eed47' to perform this action.",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Business"
+            },
+            "uuid": {
+                "content": "$2",
+                "example": "757eaba7-0b3d-478b-ace2-cbe0a16eed47"
+            }
+        }
+    },
+    "helpPageOpenInContainerDesc4": {
+        "message": "Vous pouvez retrouver l'extension à partir de son UUID dans la page :",
+        "description": "You can find out the addon by UUID on the page:"
+    },
+    "helpPageOpenInContainerOpenInContainer": {
+        "message": "Ouvrir dans le contexte <container-name>$containerName$</container-name>",
+        "description": "Open in Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
     }
 }
