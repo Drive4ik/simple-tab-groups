@@ -274,7 +274,7 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Тук се добавят клавишни комбинации.<br>Ограничения:<br>1. Тези клавишни комбинации ще работят само в страници от интернет (http:, https:), а не в служебните (about:) страници на четеца, защото ППИ на WebExtensions не го позволява.<br>2. Някои комбинации няма да работят с всички клавиатурни подредби. Например, комбинацията <code>Ctrl + ~</code>, създадена с актива английска подредба няма да работи ако в момента е активна българската, защото в българската подредба този клавиш има друг код. За да заобиколите този недостатък просто същата комбинация с активна българска подредба: <code>Ctrl + Ю</code>.",
+        "message": "Тук се добавят клавишни комбинации.<br>Ограничения:<br>1. Тези клавишни комбинации ще работят само в страници от интернет (http:, https:), а не в служебните (about:) страници на четеца, защото ППИ на WebExtensions не го позволява.<br>2. Някои комбинации няма да работят с всички клавиатурни подредби. Например, комбинацията <code>Ctrl + ~</code>, създадена с актива английска подредба няма да работи ако в момента е активна българската, защото в българската подредба този клавиш има друг код. За да заобиколите този недостатък просто създайте същата комбинация докато е активна българска клавиатурна подредба: <code>Ctrl + Ю</code>.",
         "description": "Hotkeys description"
     },
     "addHotKeyButton": {
@@ -362,7 +362,7 @@
         "description": "Reload all tabs in current group"
     },
     "whatsWrongMessage": {
-        "message": "Какво се случи?\nИзпратете съобщение на разработчика на електронния адрес за поддръжка с журнала. В настройките на добавката най-долу има бутон.",
+        "message": "Какво се случи?\nИзпратете съобщение на разработчика на електронния адрес за поддръжка като прикачите журнала. В настройките на добавката най-долу има отметка.",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
     },
     "saveErrorLogsIntoFile": {
@@ -430,7 +430,7 @@
         "description": "Update thumbnail for this tab"
     },
     "notFoundWindowsAddonStoppedWorking": {
-        "message": "Грешка: не са намерени обикновени или поверителни прозорци.\nДобавката е спряла да работи. Рестартирайте мрежовия четец.",
+        "message": "Грешка: не са намерени обикновени или поверителни/инкогнито/изскачащи прозорци.\nДобавката е спряла да работи. Рестартирайте мрежовия четец.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
     },
     "ffFailedAndLostDataMessage": {
@@ -844,7 +844,7 @@
         "description": "logging was auto-enabled due to an error in addon"
     },
     "loggingDescription": {
-        "message": "Моля, сложете отметка в полето само ако трябва пресъздадете грешка и да изпратите журнала на автора. Отмятането на това поле ще доведе до чувствително намаляване на производителността на добавката, тъй като всички нейни действия се отразяват в журнала. След като успешно пресъздадете грешката махнете отметката и добавката ще ви предложи да запазите журнала във файл. В случай на грешка добавката сама може да отметне това поле. В този случай трябва да махнете отметката и пак да запазите журнала във файл.<br>Моля, изпратете този файл по имейл на <a href=\"mailto:drive4ik@gmail.com\">drive4ik@gmail.com</a><br><span class=\"has-text-danger\">Внимание! Журналът не съдържа лична информация като пароли, отметки и т.н.</span><br>Той е необходим за пресъздаване на проблема и неговото отстраняване от автора.<br>Поздрави!",
+        "message": "Моля, отметнете полето само ако трябва да пресъздадете грешка и да изпратите журнала на автора. Отмятането на това поле ще доведе до чувствително намаляване на производителността на добавката, тъй като всички нейни действия се отразяват в журнала. След като успешно пресъздадете грешката махнете отметката и добавката ще ви предложи да запазите журнала във файл. В случай на грешка добавката сама може да отметне това поле. В този случай трябва да махнете отметката и пак да запазите журнала във файл.<br>Моля, изпратете този файл по имейл на <a href=\"mailto:drive4ik@gmail.com\">drive4ik@gmail.com</a><br><span class=\"has-text-danger\">Внимание! Журналът не съдържа лична информация като пароли, отметки и т.н.</span><br>Той е необходим за пресъздаване на проблема и неговото отстраняване от автора.<br>Поздрави!",
         "description": "logging description"
     },
     "archiveGroup": {
@@ -856,7 +856,7 @@
         "description": "Unarchive"
     },
     "groupIsArchived": {
-        "message": "Действието не може да бъде изпълнете, защото групата „$grouptitle$“ е архивирана.",
+        "message": "Действието не може да бъде изпълнено, защото групата „$grouptitle$“ е архивирана.",
         "description": "Unable to complete the action, the group is in the archive",
         "placeholders": {
             "grouptitle": {
@@ -866,7 +866,105 @@
         }
     },
     "updateAddonToLatestVersion": {
-        "message": "Моля, обновете добавката до последното издание.",
+        "message": "Моля, обновете добавката до последното ѝ издание.",
         "description": "Please, update addon to latest version"
+    },
+    "hotkeyActionTitleRenameGroup": {
+        "message": "Преименуване на група",
+        "description": "Rename group"
+    },
+    "noGroupsAvailable": {
+        "message": "Няма групи",
+        "description": "You have no groups"
+    },
+    "alwaysAskNewGroupName": {
+        "message": "Питане за име при създаване на група",
+        "description": "Always ask for a new group name"
+    },
+    "impossibleToAskUserAboutAction": {
+        "message": "Невъзможно е да бъде питано за „$action$“ на страница „$page$“\n\nНаучете повече",
+        "description": "On page \"$page$\" it is impossible to ask about \"$action$\"",
+        "placeholders": {
+            "page": {
+                "content": "$1",
+                "example": "Add-ons for Firefox"
+            },
+            "action": {
+                "content": "$2",
+                "example": "some action"
+            }
+        }
+    },
+    "openPopupTitle": {
+        "message": "Отваря изскачащия прозорец",
+        "description": "Open popup"
+    },
+    "openSidebarTitle": {
+        "message": "Отваря страничната лента",
+        "description": "Open sidebar"
+    },
+    "helpPageOpenInContainerTitle": {
+        "message": "Адресът не може да бъде отворен в изолатор",
+        "description": "Can't open URL in container"
+    },
+    "helpPageOpenInContainerMainTitle": {
+        "message": "Адресът не може да бъде отворен в изолатор <container-name>$containerName$</container-name>",
+        "description": "Can't open the URL into Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerSubTitle": {
+        "message": "добавката не може да отвори адрес:",
+        "description": "addon can't open URL:"
+    },
+    "helpPageOpenInContainerDesc1": {
+        "message": "Групата <strong>$groupTitle$</strong> е настроена да отваря раздели в изолатор <container-name>$containerName$</container-name>",
+        "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
+        "placeholders": {
+            "groupTitle": {
+                "content": "$1",
+                "example": "Group 1"
+            },
+            "containerName": {
+                "content": "$2",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerDesc2": {
+        "message": "Друга добавка с UUID:",
+        "description": "Another addon, which has UUID:"
+    },
+    "helpPageOpenInContainerDesc3": {
+        "message": "опитва да да отвори същия адрес в изолатор <container-name>$containerName$</container-name>. Или преместете раздела в друга група, или забранете на добавката <strong>$uuid$</strong> да извършва това действие.",
+        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon '757eaba7-0b3d-478b-ace2-cbe0a16eed47' to perform this action.",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Business"
+            },
+            "uuid": {
+                "content": "$2",
+                "example": "757eaba7-0b3d-478b-ace2-cbe0a16eed47"
+            }
+        }
+    },
+    "helpPageOpenInContainerDesc4": {
+        "message": "Можете да видите добавките и техните UUID на:",
+        "description": "You can find out the addon by UUID on the page:"
+    },
+    "helpPageOpenInContainerOpenInContainer": {
+        "message": "Отваря в изолатор <container-name>$containerName$</container-name>",
+        "description": "Open in Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
     }
 }
