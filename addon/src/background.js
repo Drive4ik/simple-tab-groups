@@ -3076,6 +3076,8 @@ async function init() {
 
     await tryRestoreMissedTabs(false);
 
+    containers.removeUnusedTemporaryContainers(windows);
+
     resetAutoBackup();
 
     createMoveTabMenus();

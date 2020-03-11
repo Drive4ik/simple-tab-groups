@@ -209,6 +209,17 @@ function getAll() {
     return _containers;
 }
 
+function removeUnusedTemporaryContainers(windows) {
+    let tabContainers = windows.reduce(function(acc, win) {
+        win.tabs.forEach(tab => acc.includes(tab.cookieStoreId) ? null : acc.push(tab.cookieStoreId));
+        return acc;
+    }, []);
+
+    Object.keys(containers)
+        .filter(cookieStoreId => isTemporary(cookieStoreId) && !tabContainers.includes(cookieStoreId))
+        .forEach(cookieStoreId => remove(cookieStoreId).catch(function() {}));
+}
+
 export default {
     init,
     isDefault,
@@ -218,5 +229,6 @@ export default {
     normalize,
     get,
     getAll,
+    removeUnusedTemporaryContainers,
     TEMPORARY_CONTAINER,
 };
