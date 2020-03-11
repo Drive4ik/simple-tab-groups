@@ -160,6 +160,7 @@ const DEFAULT_OPTIONS = Object.freeze({
     leaveBookmarksOfClosedTabs: true,
     showExtendGroupsPopupWithActiveTabs: false,
     showTabsWithThumbnailsInManageGroups: false,
+    reverseTabsOnCreate: false,
 
     defaultGroupIconViewType: GROUP_ICON_VIEW_TYPES[0],
     defaultGroupIconColor: '',

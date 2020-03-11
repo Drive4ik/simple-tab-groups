@@ -685,6 +685,12 @@
             </div>
             <div class="field">
                 <label class="checkbox">
+                    <input v-model="options.reverseTabsOnCreate" type="checkbox" />
+                    <span v-html="lang('reverseTabsOnCreate')"></span>
+                </label>
+            </div>
+            <div class="field">
+                <label class="checkbox">
                     <input v-model="options.closePopupAfterChangeGroup" type="checkbox" />
                     <span v-text="lang('closePopupAfterChangeGroup')"></span>
                 </label>

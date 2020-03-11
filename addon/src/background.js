@@ -9,6 +9,8 @@ import Groups from './js/groups';
 import Tabs from './js/tabs';
 import Windows from './js/windows';
 
+window.addEventListener('error', utils.errorEventHandler);
+
 window.IS_PRODUCTION = IS_PRODUCTION;
 
 if (2 == window.localStorage.enableDebug) { // if debug was auto-enabled - disable on next start addon/browser
@@ -55,8 +57,6 @@ let options = {},
         };
     })();
 
-window.addEventListener('error', utils.errorEventHandler);
-
 async function createTabsSafe(tabs, {
         withRemoveEvents = true,
         sendMessageEachTab = true,
@@ -64,6 +64,10 @@ async function createTabsSafe(tabs, {
 
     if (withRemoveEvents) {
         removeEvents();
+    }
+
+    if (options.reverseTabsOnCreate) {
+        tabs.reverse();
     }
 
     let newTabs = await Promise.all(tabs.map(function(tab) {
