@@ -2708,6 +2708,10 @@ async function runMigrateForData(data) {
                     group.ifDifferentContainerReOpen = group.ifNotDefaultContainerReOpenInNew;
                     delete group.ifNotDefaultContainerReOpenInNew;
                 });
+
+                if (data.autoBackupFolderName.toLowerCase() === 'stg-backups') {
+                    data.autoBackupFolderName = '';
+                }
             },
         },
     ];
