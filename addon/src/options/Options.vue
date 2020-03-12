@@ -3,22 +3,12 @@
 
     import Vue from 'vue';
 
-    import utils from '../js/utils';
-    import storage from '../js/storage';
-    import file from '../js/file';
-    import Groups from '../js/groups';
-    import Tabs from '../js/tabs';
-    import Windows from '../js/windows';
-
     import popup from '../js/popup.vue';
     import swatches from 'vue-swatches';
     import manageAddonBackup from './manage-addon-backup';
     import 'vue-swatches/dist/vue-swatches.min.css';
 
-    const {BG} = browser.extension.getBackgroundPage();
-
-    window.addEventListener('error', utils.errorEventHandler);
-    Vue.config.errorHandler = utils.errorEventHandler;
+    Vue.config.errorHandler = errorEventHandler;
 
     const SECTION_GENERAL = 'general',
         SECTION_HOTKEYS = 'hotkeys',
@@ -260,7 +250,7 @@
                     delete window.localStorage.enableDebug;
                 }
 
-                BG.console.restart();
+                console.restart();
 
                 if (!window.localStorage.enableDebug) {
                     BG.saveConsoleLogs();
@@ -585,7 +575,7 @@
                 this.permissions.bookmarks = await browser.permissions.contains(PERMISSIONS.BOOKMARKS);
 
                 if (this.permissions.bookmarks) {
-                    this.defaultBookmarksParents = await BG.browser.bookmarks.get(DEFAULT_BOOKMARKS_PARENTS);
+                    this.defaultBookmarksParents = await browser.bookmarks.get(DEFAULT_BOOKMARKS_PARENTS);
                 }
             },
 

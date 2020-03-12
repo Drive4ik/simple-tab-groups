@@ -28,12 +28,12 @@ function bindAndUpdate(el, binding, vnode) {
     // el.removeEventListener('drop', false);
     // el.removeEventListener('dragend', false);
 
-    el.addEventListener('dragstart', handleBined, false);
-    el.addEventListener('dragenter', handleBined, false);
-    el.addEventListener('dragover', handleBined, false);
-    el.addEventListener('dragleave', handleBined, false);
-    el.addEventListener('drop', handleBined, false);
-    el.addEventListener('dragend', handleBined, false);
+    el.addEventListener('dragstart', handleBined);
+    el.addEventListener('dragenter', handleBined);
+    el.addEventListener('dragover', handleBined);
+    el.addEventListener('dragleave', handleBined);
+    el.addEventListener('drop', handleBined);
+    el.addEventListener('dragend', handleBined);
 
 }
 

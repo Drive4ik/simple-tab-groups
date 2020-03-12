@@ -1,10 +1,6 @@
 <script>
     'use strict';
 
-    import utils from '../js/utils';
-
-    const {BG} = browser.extension.getBackgroundPage();
-
     export default {
         props: {
             data: {
@@ -33,8 +29,8 @@
         },
         data() {
             return {
-                TEMPORARY_CONTAINER: BG.containers.TEMPORARY_CONTAINER,
-                allContainers: BG.containers.getAll(),
+                TEMPORARY_CONTAINER,
+                allContainers: containers.getAll(),
 
                 clearAddonData: this.allowClearAddonData ? true : false,
 

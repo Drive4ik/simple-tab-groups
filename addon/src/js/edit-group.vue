@@ -1,18 +1,11 @@
 <script>
     'use strict';
 
-    import file from './file';
-    import utils from './utils';
-
     import Vue from 'vue';
 
     import popup from './popup.vue';
     import swatches from 'vue-swatches';
-    import Groups from '../js/groups';
-    import Tabs from '../js/tabs';
     import 'vue-swatches/dist/vue-swatches.min.css';
-
-    const {BG} = browser.extension.getBackgroundPage();
 
     export default {
         name: 'edit-group',
@@ -32,8 +25,8 @@
         },
         data() {
             return {
-                containers: BG.containers.getAll(),
-                TEMPORARY_CONTAINER: BG.containers.TEMPORARY_CONTAINER,
+                containers: containers.getAll(),
+                TEMPORARY_CONTAINER,
                 disabledContainers: {},
 
                 showMessageCantLoadFile: false,
@@ -75,7 +68,7 @@
                 }
             },
             hasContainers() {
-                return Object.keys(this.containers).some(cookieStoreId => cookieStoreId !== BG.containers.TEMPORARY_CONTAINER);
+                return Object.keys(this.containers).some(cookieStoreId => cookieStoreId !== TEMPORARY_CONTAINER);
             },
         },
         async created() {
@@ -157,7 +150,7 @@
                 this.group.iconColor = utils.randomColor();
 
                 if (!this.group.iconViewType) {
-                    this.group.iconViewType = BG.getOptions().defaultGroupIconViewType;
+                    this.group.iconViewType = BG.getOptions('defaultGroupIconViewType');
                 }
             },
 
@@ -181,7 +174,7 @@
                 let iconUrl = await file.load('.ico,.png,.jpg,.svg', 'url'),
                     img = new Image();
 
-                img.addEventListener('load', function() {
+                img.addEventListener('load', () => {
                     let resizedIconUrl = iconUrl;
 
                     if (img.height > 64 || img.width > 64) {
@@ -189,7 +182,7 @@
                     }
 
                     this.setIconUrl(resizedIconUrl);
-                }.bind(this));
+                });
 
                 img.src = iconUrl;
             },

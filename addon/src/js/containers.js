@@ -1,234 +1,218 @@
-'use strict';
+(function() {
+    'use strict';
 
-import utils from './utils';
-
-const TEMPORARY_CONTAINER = 'temporary-container';
-const DEFAULT_COOKIE_STORE_ID = 'firefox-default';
-
-const temporaryContainerOptions = Object.freeze({
-    color: 'toolbar',
-    colorCode: false,
-    cookieStoreId: TEMPORARY_CONTAINER,
-    icon: 'chill',
-    iconUrl: 'resource://usercontext-content/chill.svg',
-    name: browser.i18n.getMessage('temporaryContainerTitle'),
-});
-
-let containers = {},
-    mappedContainerCookieStoreId = {};
-
-async function init() {
-    const {BG} = browser.extension.getBackgroundPage();
-
-    containers = {
-        [TEMPORARY_CONTAINER]: temporaryContainerOptions,
-    };
-    mappedContainerCookieStoreId = {};
-
-    // CONTAINER PROPS:
-    // color: "blue"
-    // colorCode: "#37adff"
-    // cookieStoreId: "firefox-container-1"
-    // icon: "fingerprint"
-    // iconUrl: "resource://usercontext-content/fingerprint.svg"
-    // name: "Personal"
-
-    let _containers = await BG.browser.contextualIdentities.query({});
-
-    _containers.forEach(container => containers[container.cookieStoreId] = container);
-
-    BG.browser.contextualIdentities.onCreated.removeListener(onCreated);
-    BG.browser.contextualIdentities.onUpdated.removeListener(onUpdated);
-    BG.browser.contextualIdentities.onRemoved.removeListener(onRemoved);
-
-    BG.browser.contextualIdentities.onCreated.addListener(onCreated);
-    BG.browser.contextualIdentities.onUpdated.addListener(onUpdated);
-    BG.browser.contextualIdentities.onRemoved.addListener(onRemoved);
-}
-
-function onCreated({contextualIdentity}) {
-    containers[contextualIdentity.cookieStoreId] = contextualIdentity;
-
-    const {BG} = browser.extension.getBackgroundPage();
-
-    BG.sendMessage({
-        action: 'containers-updated',
+    const temporaryContainerOptions = Object.freeze({
+        color: 'toolbar',
+        colorCode: false,
+        cookieStoreId: TEMPORARY_CONTAINER,
+        icon: 'chill',
+        iconUrl: 'resource://usercontext-content/chill.svg',
+        name: browser.i18n.getMessage('temporaryContainerTitle'),
     });
-}
 
-function onUpdated({contextualIdentity}) {
-    let {cookieStoreId} = contextualIdentity;
+    let containers = {},
+        mappedContainerCookieStoreId = {};
 
-    if (
-        containers[cookieStoreId].name !== contextualIdentity.name &&
-        containers[cookieStoreId].name !== temporaryContainerOptions.name
-    ) {
-        if (isTemporary(cookieStoreId) && !isTemporary(null, contextualIdentity)) {
-            utils.notify(browser.i18n.getMessage('thisContainerIsNotTemporary', contextualIdentity.name));
+    async function init() {
+        containers = {
+            [TEMPORARY_CONTAINER]: temporaryContainerOptions,
+        };
+        mappedContainerCookieStoreId = {};
+
+        // CONTAINER PROPS:
+        // color: "blue"
+        // colorCode: "#37adff"
+        // cookieStoreId: "firefox-container-1"
+        // icon: "fingerprint"
+        // iconUrl: "resource://usercontext-content/fingerprint.svg"
+        // name: "Personal"
+
+        let _containers = await browser.contextualIdentities.query({});
+
+        _containers.forEach(container => containers[container.cookieStoreId] = container);
+
+        browser.contextualIdentities.onCreated.removeListener(onCreated);
+        browser.contextualIdentities.onUpdated.removeListener(onUpdated);
+        browser.contextualIdentities.onRemoved.removeListener(onRemoved);
+
+        browser.contextualIdentities.onCreated.addListener(onCreated);
+        browser.contextualIdentities.onUpdated.addListener(onUpdated);
+        browser.contextualIdentities.onRemoved.addListener(onRemoved);
+    }
+
+    function onCreated({contextualIdentity}) {
+        containers[contextualIdentity.cookieStoreId] = contextualIdentity;
+
+        BG.sendMessage({
+            action: 'containers-updated',
+        });
+    }
+
+    function onUpdated({contextualIdentity}) {
+        let { cookieStoreId } = contextualIdentity;
+
+        if (
+            containers[cookieStoreId].name !== contextualIdentity.name &&
+            containers[cookieStoreId].name !== temporaryContainerOptions.name
+        ) {
+            if (isTemporary(cookieStoreId) && !isTemporary(null, contextualIdentity)) {
+                utils.notify(browser.i18n.getMessage('thisContainerIsNotTemporary', contextualIdentity.name));
+            }
+
+            if (!isTemporary(cookieStoreId) && isTemporary(null, contextualIdentity)) {
+                utils.notify(browser.i18n.getMessage('thisContainerNowIsTemporary', contextualIdentity.name));
+            }
         }
 
-        if (!isTemporary(cookieStoreId) && isTemporary(null, contextualIdentity)) {
-            utils.notify(browser.i18n.getMessage('thisContainerNowIsTemporary', contextualIdentity.name));
+        containers[cookieStoreId] = contextualIdentity;
+
+        BG.sendMessage({
+            action: 'containers-updated',
+        });
+    }
+
+    async function onRemoved({contextualIdentity}) {
+        delete containers[contextualIdentity.cookieStoreId];
+
+        await BG.normalizeContainersInGroups();
+
+        BG.sendMessage({
+            action: 'containers-updated',
+        });
+    }
+
+
+    function isDefault(cookieStoreId) {
+        return DEFAULT_COOKIE_STORE_ID === cookieStoreId || !cookieStoreId;
+    }
+
+    function isTemporary(cookieStoreId, contextualIdentity) {
+        if (cookieStoreId === TEMPORARY_CONTAINER) {
+            return true;
         }
+
+        if (!contextualIdentity) {
+            contextualIdentity = containers[cookieStoreId];
+        }
+
+        if (!contextualIdentity) {
+            return false;
+        }
+
+        return contextualIdentity.name.includes(temporaryContainerOptions.name);
     }
 
-    containers[cookieStoreId] = contextualIdentity;
+    async function createTemporaryContainer() {
+        let {cookieStoreId} = await browser.contextualIdentities.create({
+                name: temporaryContainerOptions.name,
+                color: temporaryContainerOptions.color,
+                icon: temporaryContainerOptions.icon,
+            }),
+            [containerId] = /\d+$/.exec(cookieStoreId);
 
-    const {BG} = browser.extension.getBackgroundPage();
+        browser.contextualIdentities.update(cookieStoreId, {
+            name: temporaryContainerOptions.name + ' ' + containerId,
+        });
 
-    BG.sendMessage({
-        action: 'containers-updated',
-    });
-}
-
-async function onRemoved({contextualIdentity}) {
-    const {BG} = browser.extension.getBackgroundPage();
-
-    delete containers[contextualIdentity.cookieStoreId];
-
-    await BG.normalizeContainersInGroups();
-
-    BG.sendMessage({
-        action: 'containers-updated',
-    });
-}
-
-
-function isDefault(cookieStoreId) {
-    return DEFAULT_COOKIE_STORE_ID === cookieStoreId || !cookieStoreId;
-}
-
-function isTemporary(cookieStoreId, contextualIdentity) {
-    if (cookieStoreId === TEMPORARY_CONTAINER) {
-        return true;
-    }
-
-    if (!contextualIdentity) {
-        contextualIdentity = containers[cookieStoreId];
-    }
-
-    if (!contextualIdentity) {
-        return false;
-    }
-
-    return contextualIdentity.name.includes(temporaryContainerOptions.name);
-}
-
-async function createTemporaryContainer() {
-    const {BG} = browser.extension.getBackgroundPage();
-
-    let {cookieStoreId} = await BG.browser.contextualIdentities.create({
-            name: temporaryContainerOptions.name,
-            color: temporaryContainerOptions.color,
-            icon: temporaryContainerOptions.icon,
-        }),
-        [containerId] = /\d+$/.exec(cookieStoreId);
-
-    BG.browser.contextualIdentities.update(cookieStoreId, {
-        name: temporaryContainerOptions.name + ' ' + containerId,
-    });
-
-    return cookieStoreId;
-}
-
-function remove(cookieStoreId) {
-    const {BG} = browser.extension.getBackgroundPage();
-
-    return BG.browser.contextualIdentities.remove(cookieStoreId);
-}
-
-async function normalize(cookieStoreId, containerData) {
-    if (isDefault(cookieStoreId)) {
-        return DEFAULT_COOKIE_STORE_ID;
-    }
-
-    if (containers[cookieStoreId]) {
         return cookieStoreId;
     }
 
-    if (!mappedContainerCookieStoreId[cookieStoreId]) {
-        if (containerData) {
-            for (let csId in containers) {
-                if (
-                    !isTemporary(csId) &&
-                    containerData.name === containers[csId].name &&
-                    containerData.color === containers[csId].color &&
-                    containerData.icon === containers[csId].icon
-                ) {
-                    mappedContainerCookieStoreId[cookieStoreId] = csId;
-                    break;
+    function remove(cookieStoreId) {
+        return browser.contextualIdentities.remove(cookieStoreId);
+    }
+
+    async function normalize(cookieStoreId, containerData) {
+        if (isDefault(cookieStoreId)) {
+            return DEFAULT_COOKIE_STORE_ID;
+        }
+
+        if (containers[cookieStoreId]) {
+            return cookieStoreId;
+        }
+
+        if (!mappedContainerCookieStoreId[cookieStoreId]) {
+            if (containerData) {
+                for (let csId in containers) {
+                    if (
+                        !isTemporary(csId) &&
+                        containerData.name === containers[csId].name &&
+                        containerData.color === containers[csId].color &&
+                        containerData.icon === containers[csId].icon
+                    ) {
+                        mappedContainerCookieStoreId[cookieStoreId] = csId;
+                        break;
+                    }
                 }
-            }
 
-            if (!mappedContainerCookieStoreId[cookieStoreId]) {
-                const {BG} = browser.extension.getBackgroundPage();
-                let {cookieStoreId: csId} = await BG.browser.contextualIdentities.create({
-                    name: containerData.name,
-                    color: containerData.color,
-                    icon: containerData.icon,
-                });
-                mappedContainerCookieStoreId[cookieStoreId] = csId;
+                if (!mappedContainerCookieStoreId[cookieStoreId]) {
+                    let {cookieStoreId: csId} = await browser.contextualIdentities.create({
+                        name: containerData.name,
+                        color: containerData.color,
+                        icon: containerData.icon,
+                    });
+                    mappedContainerCookieStoreId[cookieStoreId] = csId;
+                }
+            } else {
+                mappedContainerCookieStoreId[cookieStoreId] = await createTemporaryContainer();
             }
+        }
+
+        return mappedContainerCookieStoreId[cookieStoreId];
+    }
+
+    function get(cookieStoreId, key = null) {
+        let result = null;
+
+        if (containers[cookieStoreId]) {
+            result = containers[cookieStoreId];
+        } else if (containers[mappedContainerCookieStoreId[cookieStoreId]]) {
+            result = containers[mappedContainerCookieStoreId[cookieStoreId]];
         } else {
-            mappedContainerCookieStoreId[cookieStoreId] = await createTemporaryContainer();
+            result = {
+                cookieStoreId: DEFAULT_COOKIE_STORE_ID,
+                name: 'default',
+            };
         }
+
+        return key ? result[key] : { ...result };
     }
 
-    return mappedContainerCookieStoreId[cookieStoreId];
-}
+    function getAll() {
+        let _containers = utils.clone(containers);
 
-function get(cookieStoreId, key = null) {
-    let result = null;
-
-    if (containers[cookieStoreId]) {
-        result = containers[cookieStoreId];
-    } else if (containers[mappedContainerCookieStoreId[cookieStoreId]]) {
-        result = containers[mappedContainerCookieStoreId[cookieStoreId]];
-    } else {
-        result = {
-            cookieStoreId: DEFAULT_COOKIE_STORE_ID,
-            name: 'default',
-        };
-    }
-
-    return key ? result[key] : {...result};
-}
-
-function getAll() {
-    let _containers = utils.clone(containers);
-
-    for (let cookieStoreId in _containers) {
-        if (isTemporary(cookieStoreId)) {
-            delete _containers[cookieStoreId];
+        for (let cookieStoreId in _containers) {
+            if (isTemporary(cookieStoreId)) {
+                delete _containers[cookieStoreId];
+            }
         }
+
+        // add temporary container to end of obj
+        _containers[TEMPORARY_CONTAINER] = utils.clone(temporaryContainerOptions);
+
+        return _containers;
     }
 
-    // add temporary container to end of obj
-    _containers[TEMPORARY_CONTAINER] = utils.clone(temporaryContainerOptions);
+    function removeUnusedTemporaryContainers(windows) {
+        let tabContainers = windows.reduce(function(acc, win) {
+            win.tabs.forEach(tab => acc.includes(tab.cookieStoreId) ? null : acc.push(tab.cookieStoreId));
+            return acc;
+        }, []);
 
-    return _containers;
-}
+        Object.keys(containers)
+            .filter(cookieStoreId => isTemporary(cookieStoreId) && !tabContainers.includes(cookieStoreId))
+            .forEach(cookieStoreId => remove(cookieStoreId).catch(noop));
+    }
 
-function removeUnusedTemporaryContainers(windows) {
-    let tabContainers = windows.reduce(function(acc, win) {
-        win.tabs.forEach(tab => acc.includes(tab.cookieStoreId) ? null : acc.push(tab.cookieStoreId));
-        return acc;
-    }, []);
+    window.containers = {
+        init,
+        isDefault,
+        isTemporary,
+        createTemporaryContainer,
+        remove,
+        normalize,
+        get,
+        getAll,
+        removeUnusedTemporaryContainers,
+    };
 
-    Object.keys(containers)
-        .filter(cookieStoreId => isTemporary(cookieStoreId) && !tabContainers.includes(cookieStoreId))
-        .forEach(cookieStoreId => remove(cookieStoreId).catch(function() {}));
-}
-
-export default {
-    init,
-    isDefault,
-    isTemporary,
-    createTemporaryContainer,
-    remove,
-    normalize,
-    get,
-    getAll,
-    removeUnusedTemporaryContainers,
-    TEMPORARY_CONTAINER,
-};
+})();

@@ -4,37 +4,19 @@
     import Vue from 'vue';
     import VueLazyload from 'vue-lazyload';
 
-    import utils from '../js/utils';
-    import Groups from '../js/groups';
-    import Tabs from '../js/tabs';
-    import Windows from '../js/windows';
     import popup from '../js/popup.vue';
     import editGroupPopup from './edit-group-popup.vue';
     import editGroup from '../js/edit-group.vue';
     import contextMenu from '../js/context-menu-component.vue';
-
-    const {BG} = browser.extension.getBackgroundPage();
 
     if (!BG.inited) {
         browser.runtime.onMessage.addListener(({action}) => 'i-am-back' === action && window.location.reload());
         throw 'Background not inited, waiting...';
     }
 
-    window.addEventListener('error', utils.errorEventHandler);
-    Vue.config.errorHandler = utils.errorEventHandler;
+    Vue.config.errorHandler = errorEventHandler;
 
     Vue.use(VueLazyload);
-
-    Vue.config.keyCodes = {
-        'arrow-left': KeyEvent.DOM_VK_LEFT,
-        'arrow-up': KeyEvent.DOM_VK_UP,
-        'arrow-right': KeyEvent.DOM_VK_RIGHT,
-        'arrow-down': KeyEvent.DOM_VK_DOWN,
-        'enter': KeyEvent.DOM_VK_RETURN,
-        'tab': KeyEvent.DOM_VK_TAB,
-        'delete': KeyEvent.DOM_VK_DELETE,
-        'f3': KeyEvent.DOM_VK_F3,
-    };
 
     const loadingNode = document.getElementById('loading');
 
@@ -60,8 +42,6 @@
             return {
                 isSidebar: isSidebar,
 
-                TEMPORARY_CONTAINER: BG.containers.TEMPORARY_CONTAINER,
-
                 SECTION_SEARCH,
                 SECTION_GROUPS_LIST,
                 SECTION_GROUP_TABS,
@@ -85,7 +65,7 @@
                 groupToEdit: null,
                 groupToRemove: null,
 
-                containers: BG.containers.getAll(),
+                containers: containers.getAll(),
                 options: {},
                 groups: [],
 
@@ -230,7 +210,7 @@
                                     group.tabs.push(...request.tabs.map(this.mapTab));
                                     group.tabs.sort(utils.sortBy('index'));
                                 } else {
-                                    throw Error(utils.errorEventMessage('group for new tabs not found', request));
+                                    throw Error(errorEventMessage('group for new tabs not found', request));
                                 }
                             }
 
@@ -303,7 +283,7 @@
                             this.loadOptions();
                             break;
                         case 'containers-updated':
-                            this.containers = BG.containers.getAll();
+                            this.containers = containers.getAll();
                             break;
                     }
                 }.bind(this));
@@ -372,7 +352,7 @@
 
                 tab = utils.normalizeTabFavIcon(tab);
 
-                tab.container = BG.containers.isDefault(tab.cookieStoreId) ? false : BG.containers.get(tab.cookieStoreId);
+                tab.container = containers.isDefault(tab.cookieStoreId) ? false : containers.get(tab.cookieStoreId);
 
                 tab.isMoving = false;
                 tab.isOver = false;
@@ -382,7 +362,7 @@
                 });
             },
 
-            getWindowId: BG.cache.getWindowId,
+            getWindowId: cache.getWindowId,
 
             async loadGroups() {
                 let groups = await Groups.load(null, true);
@@ -474,7 +454,7 @@
 
             discardOtherGroups(groupExclude) {
                 let tabIds = this.groups.reduce(function(acc, gr) {
-                    let groupTabIds = (gr.id === groupExclude.id || gr.isArchive || BG.cache.getWindowId(gr.id)) ? [] : gr.tabs.map(utils.keyId);
+                    let groupTabIds = (gr.id === groupExclude.id || gr.isArchive || cache.getWindowId(gr.id)) ? [] : gr.tabs.map(utils.keyId);
 
                     return [...acc, ...groupTabIds];
                 }, []);
@@ -611,7 +591,7 @@
                     index: -1,
                 });
 
-                await BG.browser.tabs.show(hiddenTabsIds);
+                await browser.tabs.show(hiddenTabsIds);
 
                 if (this.currentGroup) {
                     this.unSyncTabs = [];
@@ -893,8 +873,8 @@
                         @input="$refs.search.value === '' ? showSectionDefault() : null"
                         autocomplete="off"
                         @keyup.enter="selectFirstItemOnSearch"
-                        @keydown.arrow-down="focusToNextElement"
-                        @keydown.arrow-up="focusToNextElement"
+                        @keydown.down="focusToNextElement"
+                        @keydown.up="focusToNextElement"
                         :placeholder="lang('searchPlaceholder')" />
                 </div>
                 <div v-show="search" class="control">
@@ -919,9 +899,9 @@
 
                             @click="!group.isArchive && applyGroup(group)"
                             @keyup.enter="!group.isArchive && applyGroup(group)"
-                            @keydown.arrow-right="showSectionGroupTabs(group)"
-                            @keydown.arrow-up="focusToNextElement"
-                            @keydown.arrow-down="focusToNextElement"
+                            @keydown.right="showSectionGroupTabs(group)"
+                            @keydown.up="focusToNextElement"
+                            @keydown.down="focusToNextElement"
                             @keydown.f2.stop="renameGroup(group)"
                             tabindex="0"
                             :title="getGroupTitle(group, 'withCountTabs withTabs withContainer')"
@@ -978,8 +958,8 @@
                                 @click.stop="clickOnTab($event, tab, group)"
                                 @keyup.enter="clickOnTab($event, tab, group)"
                                 @keyup.delete="removeTab(tab)"
-                                @keydown.arrow-up="focusToNextElement"
-                                @keydown.arrow-down="focusToNextElement"
+                                @keydown.up="focusToNextElement"
+                                @keydown.down="focusToNextElement"
                                 tabindex="0"
                                 @mousedown.middle.prevent
                                 @mouseup.middle.prevent="removeTab(tab)"
@@ -1046,9 +1026,9 @@
                         @contextmenu="$refs.groupContextMenu.open($event, {group})"
                         @click="!group.isArchive && applyGroup(group)"
                         @keyup.enter="!group.isArchive && applyGroup(group)"
-                        @keydown.arrow-right="showSectionGroupTabs(group)"
-                        @keydown.arrow-up="focusToNextElement"
-                        @keydown.arrow-down="focusToNextElement"
+                        @keydown.right="showSectionGroupTabs(group)"
+                        @keydown.up="focusToNextElement"
+                        @keydown.down="focusToNextElement"
                         @keydown.f2.stop="renameGroup(group)"
                         tabindex="0"
                         :title="getGroupTitle(group, 'withCountTabs withTabs withContainer')"
@@ -1221,9 +1201,9 @@
                         @contextmenu="$refs.tabsContextMenu.open($event, {tab, group: groupToShow})"
                         @click.stop="clickOnTab($event, tab, groupToShow)"
                         @keyup.enter="clickOnTab($event, tab, groupToShow)"
-                        @keydown.arrow-left="showSectionDefault"
-                        @keydown.arrow-up="focusToNextElement"
-                        @keydown.arrow-down="focusToNextElement"
+                        @keydown.left="showSectionDefault"
+                        @keydown.up="focusToNextElement"
+                        @keydown.down="focusToNextElement"
                         @keydown.delete="removeTab(tab)"
                         tabindex="0"
                         @mousedown.middle.prevent

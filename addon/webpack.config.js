@@ -19,7 +19,7 @@ function copy(path) {
     };
 }
 
-function multipleCopy(...paths) {
+function multipleCopy(paths) {
     return paths.map(copy);
 }
 
@@ -100,7 +100,35 @@ const config = {
             // chunkFilename: "[id].css"
         }),
 
-        new CopyWebpackPlugin(multipleCopy('icons', 'help', '_locales', 'css', 'js/console.js', 'js/constants.js', 'popup/popup.html', 'manage/manage.html', 'options/options.html', 'manifest.json')),
+        new CopyWebpackPlugin(multipleCopy([
+            // folders
+            'icons',
+            'help',
+            '_locales',
+            'css',
+
+            // js
+            'js/console.js',
+            'js/constants.js',
+            'js/startup.js',
+            'js/utils.js',
+            'js/containers.js',
+            'js/storage.js',
+            'js/cache.js',
+            'js/file.js',
+            'js/groups.js',
+            'js/tabs.js',
+            'js/windows.js',
+            'js/error-handler.js',
+
+            // pages
+            'popup/popup.html',
+            'manage/manage.html',
+            'options/options.html',
+
+            // manifest
+            'manifest.json',
+        ])),
 
         new WebpackShellPlugin({
             onBuildEnd: ['node scripts/remove-evals.js'],

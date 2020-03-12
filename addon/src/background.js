@@ -1,15 +1,6 @@
 'use strict';
 
-import containers from './js/containers';
-import utils from './js/utils';
-import storage from './js/storage';
-import file from './js/file';
-import cache from './js/cache';
-import Groups from './js/groups';
-import Tabs from './js/tabs';
-import Windows from './js/windows';
-
-window.addEventListener('error', utils.errorEventHandler);
+import * as npmCompareVersions from 'compare-versions';
 
 window.IS_PRODUCTION = IS_PRODUCTION;
 
@@ -18,10 +9,7 @@ if (2 == window.localStorage.enableDebug) { // if debug was auto-enabled - disab
 }
 console.restart();
 
-const addonUrlPrefix = browser.extension.getURL('');
 const manageTabsPageUrl = browser.extension.getURL(MANAGE_TABS_URL);
-const manifest = browser.runtime.getManifest();
-const noop = function() {};
 
 let options = {},
     reCreateTabsOnRemoveWindow = [],
@@ -186,7 +174,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                 groupToHide = groups.find(gr => gr.id === oldGroupId);
 
             if (!groupToShow) {
-                throw Error(utils.errorEventMessage('applyGroup: groupToShow not found', {groupId, activeTabId}));
+                throw Error(errorEventMessage('applyGroup: groupToShow not found', {groupId, activeTabId}));
             }
 
             if (groupToShow.isArchive) {
@@ -420,7 +408,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
         console.error('🛑 ERROR applyGroup', e);
 
         if (e) {
-            utils.errorEventHandler(e);
+            errorEventHandler(e);
 
             updateBrowserActionData(null, windowId);
 
@@ -888,8 +876,8 @@ async function loadingBrowserAction(start = true, windowId) {
 
 async function addUndoRemoveGroupItem(groupToRemove) {
     let restoreGroup = async function(group) {
-        browser.menus.remove(Groups.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id);
-        browser.notifications.clear(Groups.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id);
+        browser.menus.remove(CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id);
+        browser.notifications.clear(CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id);
 
         let groups = await Groups.load();
 
@@ -916,7 +904,7 @@ async function addUndoRemoveGroupItem(groupToRemove) {
     }.bind(null, utils.clone(groupToRemove));
 
     browser.menus.create({
-        id: Groups.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + groupToRemove.id,
+        id: CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + groupToRemove.id,
         title: browser.i18n.getMessage('undoRemoveGroupItemTitle', groupToRemove.title),
         contexts: [browser.menus.ContextType.BROWSER_ACTION],
         icons: utils.getGroupIconUrl(groupToRemove, 16),
@@ -927,7 +915,7 @@ async function addUndoRemoveGroupItem(groupToRemove) {
         utils.notify(
                 browser.i18n.getMessage('undoRemoveGroupNotification', groupToRemove.title),
                 undefined,
-                Groups.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + groupToRemove.id,
+                CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + groupToRemove.id,
                 undefined,
                 restoreGroup
             );
@@ -1546,7 +1534,7 @@ async function onBeforeTabRequest({tabId, url, originUrl, requestId, frameId}) {
         return {};
     }
 
-    if (!tabGroup.isSticky && tabGroup.newTabContainer !== containers.TEMPORARY_CONTAINER) {
+    if (!tabGroup.isSticky && tabGroup.newTabContainer !== TEMPORARY_CONTAINER) {
         groups = groups.filter(group => !group.isArchive);
 
         let destGroup = _getCatchedGroupForTab(groups, tab);
@@ -2087,7 +2075,7 @@ async function runAction(data, externalExtId) {
             case 'create-temp-tab':
                 await Tabs.createNative({
                     active: data.active,
-                    cookieStoreId: containers.TEMPORARY_CONTAINER,
+                    cookieStoreId: TEMPORARY_CONTAINER,
                 });
 
                 result.ok = true;
@@ -2198,7 +2186,7 @@ async function resetAutoBackup() {
         value = Number(options.autoBackupIntervalValue);
 
     if (isNaN(value) || 1 > value || 20 < value) {
-        throw Error(utils.errorEventMessage('invalid autoBackupIntervalValue', options));
+        throw Error(errorEventMessage('invalid autoBackupIntervalValue', options));
     }
 
     let intervalSec = null,
@@ -2215,7 +2203,7 @@ async function resetAutoBackup() {
             intervalSec = DAY_SEC;
         }
     } else {
-        throw Error(utils.errorEventMessage('invalid autoBackupIntervalKey', options));
+        throw Error(errorEventMessage('invalid autoBackupIntervalKey', options));
     }
 
     let timeToBackup = value * intervalSec + options.autoBackupLastBackupTimeStamp;
@@ -2269,7 +2257,7 @@ async function createBackup(includeTabThumbnails, includeTabFavIcons, isAutoBack
     data.containers = {};
 
     containersToExport.filter(Boolean).forEach(function(cookieStoreId) {
-        if (cookieStoreId !== containers.TEMPORARY_CONTAINER && !data.containers[cookieStoreId]) {
+        if (cookieStoreId !== TEMPORARY_CONTAINER && !data.containers[cookieStoreId]) {
             data.containers[cookieStoreId] = allContainers[cookieStoreId];
         }
     });
@@ -2466,7 +2454,7 @@ window.BG = {
     cache,
     openManageGroups,
 
-    getOptions: () => utils.clone(options),
+    getOptions: key => key ? options[key] : utils.clone(options),
     saveOptions,
 
     containers,
@@ -2545,6 +2533,13 @@ window.BG = {
 function openHelp(page) {
     let url = browser.extension.getURL(`/help/${page}.html`);
     return Tabs.createUrlOnce(url);
+}
+
+// -1 : a < b
+// 0 : a === b
+// 1 : a > b
+function compareVersions(a, b) {
+    return npmCompareVersions(String(a), String(b));
 }
 
 async function runMigrateForData(data) {
@@ -2825,10 +2820,10 @@ async function runMigrateForData(data) {
     let keysToRemoveFromStorage = [];
 
     // if data version < required latest migrate version then need migration
-    if (-1 === utils.compareVersions(data.version, migrations[migrations.length - 1].version)) {
+    if (-1 === compareVersions(data.version, migrations[migrations.length - 1].version)) {
 
         for (let migration of migrations) {
-            if (-1 === utils.compareVersions(data.version, migration.version)) {
+            if (-1 === compareVersions(data.version, migration.version)) {
                 await migration.migration();
 
                 if (Array.isArray(migration.remove)) {
@@ -2837,7 +2832,7 @@ async function runMigrateForData(data) {
             }
         }
 
-    } else if (1 === utils.compareVersions(data.version, currentVersion)) {
+    } else if (1 === compareVersions(data.version, currentVersion)) {
         let [currentMajor, currentMinor] = currentVersion.split('.'),
             [dataMajor, dataMinor] = data.version.split('.');
 
@@ -2977,7 +2972,7 @@ async function normalizeContainersInGroups(groups = null) {
         let oldNewTabContainer = group.newTabContainer,
             oldCatchTabContainersLength = group.catchTabContainers.length;
 
-        if (group.newTabContainer && group.newTabContainer !== containers.TEMPORARY_CONTAINER) {
+        if (group.newTabContainer && group.newTabContainer !== TEMPORARY_CONTAINER) {
             group.newTabContainer = containers.get(group.newTabContainer, 'cookieStoreId');
         }
 
@@ -3020,7 +3015,7 @@ browser.runtime.onInstalled.addListener(function onInstalled({previousVersion, r
     }
 
     if (browser.runtime.OnInstalledReason.INSTALL === reason ||
-        (browser.runtime.OnInstalledReason.UPDATE === reason && -1 === utils.compareVersions(previousVersion, '4.0'))) {
+        (browser.runtime.OnInstalledReason.UPDATE === reason && -1 === compareVersions(previousVersion, '4.0'))) {
         openHelp('welcome-v4');
     }
 });
@@ -3222,6 +3217,6 @@ init()
         browser.browserAction.onClicked.addListener(() => browser.runtime.reload());
 
         if (e) {
-            utils.errorEventHandler(e);
+            errorEventHandler(e);
         }
     });

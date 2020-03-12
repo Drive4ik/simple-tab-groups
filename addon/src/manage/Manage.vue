@@ -4,10 +4,6 @@
     import Vue from 'vue';
     import VueLazyload from 'vue-lazyload';
 
-    import utils from '../js/utils';
-    import Groups from '../js/groups';
-    import Tabs from '../js/tabs';
-    import Windows from '../js/windows';
     import popup from '../js/popup.vue';
     import editGroup from '../js/edit-group.vue';
     import contextMenu from '../js/context-menu-component.vue';
@@ -16,8 +12,6 @@
     // import { Drag, Drop } from 'vue-drag-drop';
     // import draggable from 'vuedraggable';
 
-    const {BG} = browser.extension.getBackgroundPage();
-
     document.title = browser.i18n.getMessage('manageGroupsTitle');
 
     if (!BG.inited) {
@@ -25,14 +19,9 @@
         throw 'Background not inited, waiting...';
     }
 
-    window.addEventListener('error', utils.errorEventHandler);
-    Vue.config.errorHandler = utils.errorEventHandler;
+    Vue.config.errorHandler = errorEventHandler;
 
     Vue.use(VueLazyload);
-
-    Vue.config.keyCodes = {
-        'f3': KeyEvent.DOM_VK_F3,
-    };
 
     const VIEW_GRID = 'grid',
         VIEW_DEFAULT = VIEW_GRID,
@@ -60,7 +49,7 @@
                 groupToEdit: null,
                 groupToRemove: null,
 
-                containers: BG.containers.getAll(),
+                containers: containers.getAll(),
                 options: {},
 
                 groups: [],
@@ -203,7 +192,7 @@
                                     group.tabs.push(...request.tabs.map(this.mapTab));
                                     group.tabs.sort(utils.sortBy('index'));
                                 } else {
-                                    throw Error(utils.errorEventMessage('group for new tabs not found', request)); //this.loadUnsyncedTabs();
+                                    throw Error(errorEventMessage('group for new tabs not found', request)); //this.loadUnsyncedTabs();
                                 }
                             }
 
@@ -283,7 +272,7 @@
                             this.loadOptions();
                             break;
                         case 'containers-updated':
-                            this.containers = BG.containers.getAll();
+                            this.containers = containers.getAll();
                             break;
                     }
 
@@ -410,7 +399,7 @@
 
                 tab = utils.normalizeTabFavIcon(tab);
 
-                tab.container = BG.containers.isDefault(tab.cookieStoreId) ? false : BG.containers.get(tab.cookieStoreId);
+                tab.container = containers.isDefault(tab.cookieStoreId) ? false : containers.get(tab.cookieStoreId);
 
                 tab.isMoving = false;
                 tab.isOver = false;
@@ -458,7 +447,7 @@
             },
             discardOtherGroups(groupExclude) {
                 let tabIds = this.groups.reduce(function(acc, gr) {
-                    let groupTabIds = (gr.id === groupExclude.id || gr.isArchive || BG.cache.getWindowId(gr.id)) ? [] : gr.tabs.map(utils.keyId);
+                    let groupTabIds = (gr.id === groupExclude.id || gr.isArchive || cache.getWindowId(gr.id)) ? [] : gr.tabs.map(utils.keyId);
 
                     return [...acc, ...groupTabIds];
                 }, []);
@@ -470,7 +459,7 @@
             },
             async applyGroup(groupId, tabId, openInNewWindow = false) {
                 if (!this.isCurrentWindowIsAllow) {
-                    await BG.browser.windows.update(this.currentWindow.id, {
+                    await browser.windows.update(this.currentWindow.id, {
                         state: browser.windows.WindowState.MINIMIZED,
                     });
                 }
@@ -486,7 +475,7 @@
                 }
             },
 
-            getWindowId: BG.cache.getWindowId,
+            getWindowId: cache.getWindowId,
 
             async clickOnTab(event, tab, group) {
                 if (event.ctrlKey || event.metaKey) {
@@ -646,7 +635,7 @@
                     let tab = await Tabs.getActive();
                     Tabs.remove(tab.id);
                 } else {
-                    BG.browser.windows.remove(this.currentWindow.id); // close manage groups POPUP window
+                    browser.windows.remove(this.currentWindow.id); // close manage groups POPUP window
                 }
             },
 

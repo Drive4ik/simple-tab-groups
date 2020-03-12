@@ -69,7 +69,21 @@
     },
 
     "background": {
-        "scripts": ["js/console.js", "js/constants.js", "background.js"]
+        "scripts": [
+            "js/console.js",
+            "js/constants.js",
+            "js/startup.js",
+            "js/utils.js",
+            "js/containers.js",
+            "js/storage.js",
+            "js/cache.js",
+            "js/file.js",
+            "js/groups.js",
+            "js/tabs.js",
+            "js/windows.js",
+            "js/error-handler.js",
+            "background.js"
+        ]
     },
 
     "content_security_policy": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data:; script-src 'self'",

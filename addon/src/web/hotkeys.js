@@ -54,13 +54,13 @@ function changeHotkeysListener(request) {
 }
 
 function resetWindowEvents() {
-    window.removeEventListener('keydown', checkKey, false);
-    window.removeEventListener('keyup', resetFoundHotKey, false);
+    window.removeEventListener('keydown', checkKey);
+    window.removeEventListener('keyup', resetFoundHotKey);
 }
 
 function addWindowEvents() {
-    window.addEventListener('keydown', checkKey, false);
-    window.addEventListener('keyup', resetFoundHotKey, false);
+    window.addEventListener('keydown', checkKey);
+    window.addEventListener('keyup', resetFoundHotKey);
 }
 
 function unsubscribeFromAllEvents() {
