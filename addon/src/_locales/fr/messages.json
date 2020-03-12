@@ -978,5 +978,9 @@
     "unloadGroup": {
         "message": "Décharger le groupe",
         "description": "Unload the group"
+    },
+    "tabsInThisWindowWereHidden": {
+        "message": "Des onglets dans cette fenêtre ont été cachés. Vous les retrouverez en bas de la fenêtre pop-up de l'extension.",
+        "description": "Tabs in this window were hidden. You can find them at the bottom of the popup window of the addon."
     }
 }
