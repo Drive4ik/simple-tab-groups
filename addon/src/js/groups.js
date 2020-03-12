@@ -228,7 +228,7 @@
 
     async function sort(vector = 'asc') {
         if (!['asc', 'desc'].includes(vector)) {
-            throw Error(`invalid sort vector: ${vector}`));
+            throw Error(`invalid sort vector: ${vector}`);
         }
 
         let groups = await load();
