@@ -982,5 +982,9 @@
     "unloadGroup": {
         "message": "Unload the group",
         "description": "Unload the group"
+    },
+    "tabsInThisWindowWereHidden": {
+        "message": "Tabs in this window were hidden. You can find them at the bottom of the popup window of the addon.",
+        "description": "Tabs in this window were hidden. You can find them at the bottom of the popup window of the addon."
     }
 }

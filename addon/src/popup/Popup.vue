@@ -257,9 +257,9 @@
                                     .filter(group => !group.isArchive)
                                     .forEach(group => group.tabs = group.tabs.filter(tab => !request.tabIds.includes(tab.id)));
 
-                                this.unSyncTabs = this.unSyncTabs.filter(tab => !request.tabIds.includes(tab.id));
-
                                 this.multipleTabIds = this.multipleTabIds.filter(tabId => !request.tabIds.includes(tabId));
+
+                                this.loadUnsyncedTabs();
                             }
 
                             break;
@@ -285,6 +285,7 @@
 
                             break;
                         case 'groups-updated':
+                        case 'group-unloaded':
                             this.loadGroups();
                             this.loadUnsyncedTabs();
                             this.loadCurrentWindow();
@@ -297,10 +298,6 @@
                                     this.showSectionGroupTabs(this.currentGroup);
                                 }
                             }
-                            break;
-                        case 'group-unloaded':
-                            this.loadGroups();
-                            this.loadCurrentWindow();
                             break;
                         case 'options-updated':
                             this.loadOptions();

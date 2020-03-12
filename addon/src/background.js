@@ -219,37 +219,125 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                 if (groupToShow.muteTabsWhenGroupCloseAndRestoreWhenOpen) {
                     Tabs.setMute(groupToShow.tabs, false);
                 }
+            }
 
-                // set active tab
-                if (activeTabId) {
-                    await Tabs.setActive(activeTabId);
-                    sendMessage({
-                        action: 'tab-updated',
-                        tab: {
-                            id: activeTabId,
-                            discarded: false,
-                        },
-                    });
-                } else if (groupToHide && groupToHide.tabs.some(tab => tab.active)) {
+            // set active tab
+            if (activeTabId) {
+                await Tabs.setActive(activeTabId);
+
+                sendMessage({
+                    action: 'tab-updated',
+                    tab: {
+                        id: activeTabId,
+                        active: true,
+                        discarded: false,
+                    },
+                });
+
+                if (!groupToHide) {
+                    let tabs = await Tabs.get(windowId);
+
+                    tabs = tabs.filter(tab => !tab.groupId);
+
+                    if (tabs.length === 1 && utils.isUrlEmpty(tabs[0].url)) {
+                        browser.tabs.remove(tabs[0].id);
+                    } else if (tabs.length) {
+                        await browser.tabs.hide(tabs.map(utils.keyId));
+                        utils.notify(browser.i18n.getMessage('tabsInThisWindowWereHidden'), undefined, 'tabsInThisWindowWereHidden');
+                    }
+                }
+            } else if (groupToHide) {
+                if (groupToHide.tabs.some(tab => tab.active)) {
                     let tabToActive = await Tabs.setActive(undefined, groupToShow.tabs);
-                    sendMessage({
-                        action: 'tab-updated',
-                        tab: {
-                            id: tabToActive.id,
-                            discarded: false,
-                        },
-                    });
+
+                    if (tabToActive) {
+                        sendMessage({
+                            action: 'tab-updated',
+                            tab: {
+                                id: tabToActive.id,
+                                active: true,
+                                discarded: false,
+                            },
+                        });
+                    } else {
+                        // group to show has no any tabs, try select pinned tab or create new one
+                        let pinnedTabs = await Tabs.get(windowId, true),
+                            activePinnedTab = await Tabs.setActive(undefined, pinnedTabs);
+
+                        if (!activePinnedTab) {
+                            let newGroupTab = await Tabs.create({
+                                active: true,
+                                windowId,
+                                ...Groups.getNewTabParams(groupToShow),
+                            });
+
+                            sendMessage({
+                                action: 'group-updated',
+                                group: {
+                                    id: groupToShow.id,
+                                    tabs: [newGroupTab],
+                                },
+                            });
+                        }
+                    }
+                } else {
+                    // some pinned tab active, do nothing
                 }
             } else {
-                let pinnedTabs = await Tabs.get(windowId, true),
-                    activeTab = await Tabs.setActive(undefined, pinnedTabs);
+                let tabs = await Tabs.get(windowId, null); // get tabs with pinned
 
-                if (!activeTab) {
-                    await Tabs.create({
-                        active: true,
-                        windowId,
-                        ...Groups.getNewTabParams(groupToShow),
-                    });
+                // remove tabs without group
+                tabs = tabs.filter(tab => !tab.groupId);
+
+                let activePinnedTab = await Tabs.setActive(undefined, tabs.filter(tab => tab.pinned));
+
+                if (!activePinnedTab) {
+                    // no pinned tabs found, some tab without group is active
+
+                    // find other not pinned tabs
+                    tabs = tabs.filter(tab => !tab.pinned);
+
+                    let hideUnSyncTabs = false;
+
+                    if (groupToShow.tabs.length) {
+                        // set active group tab
+                        await Tabs.setActive(undefined, groupToShow.tabs);
+
+                        // if has one empty tab - remove it
+                        if (tabs.length === 1 && utils.isUrlEmpty(tabs[0].url)) {
+                            browser.tabs.remove(tabs[0].id);
+                        } else {
+                            hideUnSyncTabs = true;
+                        }
+                    } else {
+                        let newGroupTab = null;
+
+                        if (tabs.length === 1 && utils.isUrlEmpty(tabs[0].url)) {
+                            await cache.setTabGroup(tabs[0].id, groupToShow.id);
+                            newGroupTab = tabs[0];
+                        } else {
+                            newGroupTab = await Tabs.create({
+                                active: true,
+                                windowId,
+                                ...Groups.getNewTabParams(groupToShow),
+                            });
+
+                            hideUnSyncTabs = true;
+                        }
+
+                        sendMessage({
+                            action: 'group-updated',
+                            group: {
+                                id: groupToShow.id,
+                                tabs: [newGroupTab],
+                            },
+                        });
+                    }
+
+                    if (hideUnSyncTabs) {
+                        await browser.tabs.hide(tabs.map(utils.keyId));
+                        utils.notify(browser.i18n.getMessage('tabsInThisWindowWereHidden'), undefined, 'tabsInThisWindowWereHidden');
+                    }
                 }
             }
 
@@ -299,30 +387,6 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                 if (tabsIdsToRemove.length) {
                     browser.tabs.remove(tabsIdsToRemove);
                     tabsIdsToRemove.forEach(tabId => onRemovedTab(tabId, {}));
-                }
-            }
-
-            // set group id for tabs which may has opened without groupId (new window without group, etc...)
-            if (!groupToHide) {
-                let sendGroupUpdateMessage = false,
-                    tabs = await Tabs.get(windowId);
-
-                tabs.forEach(function(tab) {
-                    if (tab.groupId !== groupToShow.id) {
-                        tab.groupId = groupToShow.id;
-                        cache.setTabGroup(tab.id, groupToShow.id);
-                        sendGroupUpdateMessage = true;
-                    }
-                });
-
-                if (sendGroupUpdateMessage) {
-                    sendMessage({
-                        action: 'group-updated',
-                        group: {
-                            id: groupToShow.id,
-                            tabs,
-                        },
-                    });
                 }
             }
 
@@ -486,7 +550,9 @@ function addExcludeTabsIds(tabIds) {
 }
 
 function removeExcludeTabsIds(tabIds) {
-    excludeTabsIds = excludeTabsIds.filter(tabId => !tabIds.includes(tabId));
+    if (tabIds.length) {
+        excludeTabsIds = excludeTabsIds.filter(tabId => !tabIds.includes(tabId));
+    }
 }
 
 async function onUpdatedTab(tabId, changeInfo, tab) {
@@ -519,11 +585,12 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
     }
 
     cache.setTab(tab);
-/*
-    if (undefined === changeInfo.discarded) { // discarded not work when tab loading
+
+    // discarded not work when tab loading after tab showing tab from hidden status
+    if (browser.tabs.TabStatus.LOADING === changeInfo.status) {
         changeInfo.discarded = false;
     }
-*/
+
     let tabGroupId = cache.getTabSession(tab.id, 'groupId'),
         winGroupId = cache.getWindowGroup(tab.windowId);
 
@@ -554,16 +621,32 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
                     if (winGroupId) {
                         let [winGroup] = await Groups.load(winGroupId, true);
 
-                        if (!winGroup.tabs.length) {
-                            await Tabs.createTempActiveTab(tab.windowId, false);
-                            addExcludeTabsIds([tab.id]);
-                            await browser.tabs.hide(tab.id);
-                            removeExcludeTabsIds([tab.id]);
+                        if (winGroup.tabs.length) {
+                            applyGroup(tab.windowId, tabGroupId, tab.id);
                             return;
                         }
                     }
 
-                    applyGroup(tab.windowId, tabGroupId, tab.id);
+                    let tabs = await Tabs.get(tab.windowId);
+
+                    tabs = tabs.filter(tab => !tab.groupId);
+
+                    let activePinnedTab = await Tabs.setActive(undefined, tabs.filter(tab => tab.pinned));
+
+                    if (!activePinnedTab) {
+                        let unSyncTabs = tabs.filter(tab => !tab.pinned);
+
+                        if (unSyncTabs.length) {
+                            await Tabs.setActive(undefined, unSyncTabs);
+                        } else {
+                            await Tabs.createTempActiveTab(tab.windowId, false);
+                        }
+                    }
+
+                    addExcludeTabsIds([tab.id]);
+                    await browser.tabs.hide(tab.id);
+                    removeExcludeTabsIds([tab.id]);
+
                     return;
                 } else {
                     cache.setTabGroup(tab.id, winGroupId);
