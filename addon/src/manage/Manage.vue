@@ -449,7 +449,9 @@
                 let tabIds = this.groups.reduce(function(acc, gr) {
                     let groupTabIds = (gr.id === groupExclude.id || gr.isArchive || cache.getWindowId(gr.id)) ? [] : gr.tabs.map(utils.keyId);
 
-                    return [...acc, ...groupTabIds];
+                    acc.push(...groupTabIds);
+
+                    return acc;
                 }, []);
 
                 Tabs.discard(tabIds);

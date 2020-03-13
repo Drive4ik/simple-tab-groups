@@ -49,7 +49,7 @@
     }
 
     function onUpdated({contextualIdentity}) {
-        let { cookieStoreId } = contextualIdentity;
+        let {cookieStoreId} = contextualIdentity;
 
         if (
             containers[cookieStoreId].name !== contextualIdentity.name &&
@@ -174,7 +174,7 @@
             };
         }
 
-        return key ? result[key] : { ...result };
+        return key ? result[key] : {...result};
     }
 
     function getAll() {

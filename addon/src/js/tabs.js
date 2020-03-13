@@ -291,7 +291,7 @@
         BG.addExcludeTabsIds(tabIds);
 
         let showPinnedMessage = false,
-            tabsCantHide = [],
+            tabsCantHide = new Set,
             groupWindowId = cache.getWindowId(groupId),
             windowId = groupWindowId,
             [group, groups] = await Groups.load(groupId, true),
@@ -310,12 +310,7 @@
             }
 
             if (utils.isTabCanNotBeHidden(tab)) {
-                let tabTitle = utils.getTabTitle(tab, false, 20);
-
-                if (!tabsCantHide.includes(tabTitle)) {
-                    tabsCantHide.push(tabTitle);
-                }
-
+                tabsCantHide.add(utils.getTabTitle(tab, false, 20));
                 return false;
             }
 
@@ -420,8 +415,8 @@
             utils.notify(browser.i18n.getMessage('pinnedTabsAreNotSupported'));
         }
 
-        if (tabsCantHide.length) {
-            utils.notify(browser.i18n.getMessage('thisTabsCanNotBeHidden', tabsCantHide.join(', ')));
+        if (tabsCantHide.size) {
+            utils.notify(browser.i18n.getMessage('thisTabsCanNotBeHidden', Array.from(tabsCantHide).join(', ')));
         }
 
         if (!tabs.length) {

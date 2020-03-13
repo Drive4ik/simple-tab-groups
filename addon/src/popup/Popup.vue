@@ -456,7 +456,9 @@
                 let tabIds = this.groups.reduce(function(acc, gr) {
                     let groupTabIds = (gr.id === groupExclude.id || gr.isArchive || cache.getWindowId(gr.id)) ? [] : gr.tabs.map(utils.keyId);
 
-                    return [...acc, ...groupTabIds];
+                    acc.push(...groupTabIds);
+
+                    return acc;
                 }, []);
 
                 Tabs.discard(tabIds);
@@ -496,7 +498,7 @@
                         let tabs = [];
 
                         if (SECTION_SEARCH === this.section) {
-                            tabs = this.filteredGroupsBySearch.reduce((acc, group) => [...acc, ...group.filteredTabsBySearch], []);
+                            tabs = this.filteredGroupsBySearch.reduce((acc, group) => (acc.push(...group.filteredTabsBySearch), acc), []);
                         } else {
                             tabs = group ? group.tabs : this.unSyncTabs;
                         }

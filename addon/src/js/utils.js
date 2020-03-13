@@ -239,10 +239,10 @@
     }
 
     const createTabUrlRegexp = /^((https?|ftp|moz-extension):|about:blank)/,
-        emptyUrlsArray = ['about:blank', 'about:newtab', 'about:home'];
+        emptyUrlsArray = new Set(['about:blank', 'about:newtab', 'about:home']);
 
     function isUrlEmpty(url) {
-        return emptyUrlsArray.includes(url);
+        return emptyUrlsArray.has(url);
     }
 
     function isUrlAllowToCreate(url) {

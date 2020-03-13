@@ -3,13 +3,13 @@
 
     let tabs = {},
         tabSessionLoaded = {},
-        removedTabs = [],
+        removedTabs = new Set,
         windows = {};
 
     function clear() {
         tabs = {};
         tabSessionLoaded = {};
-        removedTabs = [];
+        removedTabs.clear();
         windows = {};
     }
 
@@ -37,7 +37,7 @@
     }
 
     function removeTab(tabId) {
-        removedTabs.push(tabId);
+        removedTabs.add(tabId);
         delete tabSessionLoaded[tabId];
         delete tabs[tabId];
     }
@@ -185,8 +185,8 @@
             .filter(Boolean);
     }
 
-    function filterRemovedTab({ id }) {
-        return !removedTabs.includes(id);
+    function filterRemovedTab({id}) {
+        return !removedTabs.has(id);
     }
 
     // WINDOWS
@@ -207,7 +207,7 @@
 
                 windows[windowId].groupId = groupId;
             } else {
-                windows[windowId] = { groupId };
+                windows[windowId] = {groupId};
             }
 
             return browser.sessions.setWindowValue(windowId, 'groupId', groupId);
