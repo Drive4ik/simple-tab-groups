@@ -785,9 +785,11 @@ async function onCreatedWindow(win) {
 
             let winTabs = await Tabs.get(win.id, null, null);
             winTabs.forEach(tab => cache.removeTabGroup(tab.id));
-        } else if (options.createNewGroupWhenOpenNewWindow && window.BG.canAddGroupToWindowAfterItCreated) {
+        } else if (options.createNewGroupWhenOpenNewWindow && !BG.skipAddGroupToNextNewWindow) {
             await Groups.add(win.id);
         }
+
+        BG.skipAddGroupToNextNewWindow = false;
 
         await tryRestoreMissedTabs(false);
     } else {
@@ -2488,7 +2490,7 @@ window.BG = {
     restoreBackup,
     clearAddon,
 
-    canAddGroupToWindowAfterItCreated: true,
+    skipAddGroupToNextNewWindow: false,
 
     browser,
 

@@ -43,16 +43,12 @@
                 return null;
             }
 
-            BG.canAddGroupToWindowAfterItCreated = false;
+            BG.skipAddGroupToNextNewWindow = true;
         }
 
         let win = await browser.windows.create(createData);
 
         console.log('created window', win);
-
-        if (groupId) {
-            BG.canAddGroupToWindowAfterItCreated = true;
-        }
 
         if (utils.isWindowAllow(win)) {
             if (groupId) {
