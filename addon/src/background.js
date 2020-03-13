@@ -279,13 +279,15 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
 
                 let activePinnedTab = await Tabs.setActive(undefined, tabs.filter(tab => tab.pinned));
 
-                if (!activePinnedTab) {
+                // find other not pinned tabs
+                tabs = tabs.filter(tab => !tab.pinned);
+
+                let hideUnSyncTabs = false;
+
+                if (activePinnedTab) {
+                    hideUnSyncTabs = true;
+                } else {
                     // no pinned tabs found, some tab without group is active
-
-                    // find other not pinned tabs
-                    tabs = tabs.filter(tab => !tab.pinned);
-
-                    let hideUnSyncTabs = false;
 
                     if (groupToShow.tabs.length) {
                         // set active group tab
@@ -321,11 +323,11 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                             },
                         });
                     }
+                }
 
-                    if (hideUnSyncTabs) {
-                        await browser.tabs.hide(tabs.map(utils.keyId));
-                        utils.notify(browser.i18n.getMessage('tabsInThisWindowWereHidden'), undefined, 'tabsInThisWindowWereHidden');
-                    }
+                if (hideUnSyncTabs && tabs.length) {
+                    await browser.tabs.hide(tabs.map(utils.keyId));
+                    utils.notify(browser.i18n.getMessage('tabsInThisWindowWereHidden'), undefined, 'tabsInThisWindowWereHidden');
                 }
             }
 
