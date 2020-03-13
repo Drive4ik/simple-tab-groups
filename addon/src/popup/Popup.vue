@@ -32,7 +32,7 @@
         SECTION_GROUPS_LIST = 'groupsList',
         SECTION_GROUP_TABS = 'groupTabs',
         SECTION_DEFAULT = SECTION_GROUPS_LIST,
-        availableTabKeys = ['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'lastAccessed'],
+        availableTabKeys = new Set(['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'lastAccessed']),
         isSidebar = '#sidebar' === window.location.hash;
 
     let loadPromise = null;
@@ -68,6 +68,8 @@
                 containers: containers.getAll(),
                 options: {},
                 groups: [],
+
+                allTabs: {},
 
                 showUnSyncTabs: false,
                 unSyncTabs: [],
@@ -199,8 +201,136 @@
                     .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
                     .$on('drag-over', (item, isOver) => item.isOver = isOver);
 
-                browser.runtime.onMessage.addListener(async function(request) {
+                const removeTab = (tabId, withAllTabs = false) => {
+                    if (withAllTabs) {
+                        delete this.allTabs[tabId];
+                    }
 
+                    let groupId = cache.getTabSession(tabId, 'groupId');
+
+                    if (groupId) {
+                        let group = this.groups.find(group => group.id === groupId),
+                            tabIndex = group.tabs.findIndex(tab => tab.id === tabId);
+
+                        if (tabIndex !== -1) {
+                            group.tabs.splice(tabIndex, 0);
+                        } else {
+                            throw Error('tab not found???');
+                        }
+                    }
+                };
+
+                let lazyAddTabTimer = {};
+                const lazyAddTab = (tab, groupId) => {
+                    tab = this.allTabs[tab.id] = this.mapTab(cache.applyTabSession(tab));
+
+                    let group = this.groups.find(gr => gr.id === groupId);
+
+                    if (group) {
+                        group.tabs.push(tab);
+
+                        clearTimeout(lazyAddTabTimer[groupId]);
+                        lazyAddTabTimer = setTimeout(group => group.tabs.sort(utils.sortBy('index')), 100, group);
+                    } else {
+                        throw Error(errorEventMessage('group for new tabs not found', request));
+                    }
+                };
+
+                browser.tabs.onActivated.addListener(({previousTabId, tabId}) => {
+                    if (this.allTabs[tabId]) {
+                        this.allTabs[tabId].active = true;
+                    }
+                    if (this.allTabs[previousTabId]) {
+                        this.allTabs[previousTabId].active = false;
+                    }
+                });
+
+                browser.tabs.onRemoved.addListener(tabId => removeTab(tabId, true));
+
+                const onUpdatedTab = (tabId, changeInfo, tab) => {
+                    console.debug('[POPUP] changeInfo', utils.clone(changeInfo));
+
+                    if (utils.isTabPinned(tab) && undefined === changeInfo.pinned) {
+                        return;
+                    }
+
+                    if (!cache.hasTab(tab.id)) {
+                        return;
+                    }
+
+                    if (this.allTabs[tab.id]) {
+                        if (changeInfo.favIconUrl) {
+                            utils.normalizeTabFavIcon(changeInfo);
+                            this.allTabs[tab.id].favIconUrl = changeInfo.favIconUrl;
+                        }
+
+                        if (changeInfo.url) {
+                            utils.normalizeTabUrl(changeInfo);
+                            this.allTabs[tab.id].url = changeInfo.url;
+                        }
+
+                        if (changeInfo.title) {
+                            this.allTabs[tab.id].title = changeInfo.title;
+                        }
+
+                        if (changeInfo.status) {
+                            this.allTabs[tab.id].status = changeInfo.status;
+                        }
+
+                        if ('discarded' in changeInfo) {
+                            this.allTabs[tab.id].discarded = changeInfo.discarded;
+                        } else if (changeInfo.status) {
+                            this.allTabs[tab.id].discarded = false;
+                        }
+
+                        this.allTabs[tab.id].lastAccessed = tab.lastAccessed;
+                    }
+
+                    if (BG.excludeTabsIds.has(tab.id)) {
+                        return;
+                    }
+
+                    if ('pinned' in changeInfo || 'hidden' in changeInfo) {
+                        let tabGroupId = cache.getTabSession(tab.id, 'groupId'),
+                            winGroupId = cache.getWindowGroup(tab.windowId);
+
+                        if (changeInfo.pinned || changeInfo.hidden) {
+                            if (tabGroupId) {
+                                removeTab(tab.id);
+                            }
+                        } else {
+
+                            if (false === changeInfo.hidden) {
+                                if (tabGroupId) {
+                                    return;
+                                }
+                            }
+
+                            if (winGroupId) {
+                                lazyAddTab(tab, winGroupId);
+                            }
+                        }
+                    }
+
+                };
+
+                window.addEventListener('unload', function() {
+                    browser.tabs.onUpdated.removeListener(onUpdatedTab);
+                });
+
+                browser.tabs.onUpdated.addListener(onUpdatedTab, {
+                    urls: ['<all_urls>'],
+                    properties: [
+                        browser.tabs.UpdatePropertyName.DISCARDED,
+                        browser.tabs.UpdatePropertyName.FAVICONURL,
+                        browser.tabs.UpdatePropertyName.HIDDEN,
+                        browser.tabs.UpdatePropertyName.PINNED,
+                        browser.tabs.UpdatePropertyName.TITLE,
+                        browser.tabs.UpdatePropertyName.STATUS,
+                    ],
+                });
+
+                browser.runtime.onMessage.addListener(async function(request) {
                     switch (request.action) {
                         case 'tabs-added':
                             {
@@ -348,7 +478,7 @@
             },
 
             mapTab(tab) {
-                Object.keys(tab).forEach(key => !availableTabKeys.includes(key) && delete tab[key]);
+                Object.keys(tab).forEach(key => !availableTabKeys.has(key) && delete tab[key]);
 
                 tab = utils.normalizeTabFavIcon(tab);
 
@@ -357,7 +487,7 @@
                 tab.isMoving = false;
                 tab.isOver = false;
 
-                return new Vue({
+                return this.allTabs[tab.id] = new Vue({
                     data: tab,
                 });
             },

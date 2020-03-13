@@ -461,26 +461,26 @@ async function onActivatedTab({previousTabId, tabId, windowId}) {
     console.log('onActivatedTab', {previousTabId, tabId, windowId});
 
     if (cache.getTabSession(tabId, 'groupId')) {
-        sendMessage({
-            action: 'tab-updated',
-            tab: {
-                id: tabId,
-                active: true,
-            },
-        });
+        // sendMessage({
+        //     action: 'tab-updated',
+        //     tab: {
+        //         id: tabId,
+        //         active: true,
+        //     },
+        // });
 
         Tabs.updateThumbnail(tabId);
     }
 
-    if (previousTabId && cache.getTabSession(previousTabId, 'groupId')) {
-        sendMessage({
-            action: 'tab-updated',
-            tab: {
-                id: previousTabId,
-                active: false,
-            },
-        });
-    }
+    // if (previousTabId && cache.getTabSession(previousTabId, 'groupId')) {
+    //     sendMessage({
+    //         action: 'tab-updated',
+    //         tab: {
+    //             id: previousTabId,
+    //             active: false,
+    //         },
+    //     });
+    // }
 }
 
 function _isCatchedUrl(url, catchTabRules) {
@@ -584,19 +584,19 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
         cache.setTabFavIcon(tab.id, changeInfo.favIconUrl);
     }
 
-    if (changeInfo.url) {
-        utils.normalizeTabUrl(changeInfo);
-    }
+    // if (changeInfo.url) {
+    //     utils.normalizeTabUrl(changeInfo);
+    // }
 
     if ('pinned' in changeInfo || 'hidden' in changeInfo) {
         if (changeInfo.pinned || changeInfo.hidden) {
             if (tabGroupId) {
                 cache.removeTabGroup(tab.id);
 
-                sendMessage({
-                    action: 'tabs-removed',
-                    tabIds: [tab.id],
-                });
+                // sendMessage({
+                //     action: 'tabs-removed',
+                //     tabIds: [tab.id],
+                // });
             }
         } else {
 
@@ -639,13 +639,13 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
                 }
             }
 
-            if (winGroupId) {
-                sendMessage({
-                    action: 'tabs-added',
-                    groupId: winGroupId,
-                    tabs: [cache.applyTabSession(tab)],
-                });
-            }
+            // if (winGroupId) {
+            //     sendMessage({
+            //         action: 'tabs-added',
+            //         groupId: winGroupId,
+            //         tabs: [cache.applyTabSession(tab)],
+            //     });
+            // }
         }
 
         return;
@@ -656,13 +656,13 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
             Tabs.updateThumbnail(tab.id);
         }
 
-        sendMessage({
-            action: 'tab-updated',
-            tab: {
-                id: tab.id,
-                ...changeInfo,
-            },
-        });
+        // sendMessage({
+        //     action: 'tab-updated',
+        //     tab: {
+        //         id: tab.id,
+        //         ...changeInfo,
+        //     },
+        // });
     }
 }
 
@@ -693,9 +693,9 @@ function lazyRemoveTabEvent(tabId) {
 }
 
 function onRemovedTab(tabId, {isWindowClosing, windowId}) {
-    let excludeTab = excludeTabsIds.has(tabId);
+    // let excludeTab = excludeTabsIds.has(tabId);
 
-    console.log('onRemovedTab', (excludeTab && '🛑'), {tabId, isWindowClosing, windowId});
+    console.log('onRemovedTab', /*(excludeTab && '🛑'), */{tabId, isWindowClosing, windowId});
 
     let cookieStoreId = cache.getTabSession(tabId, 'cookieStoreId');
 
@@ -703,10 +703,10 @@ function onRemovedTab(tabId, {isWindowClosing, windowId}) {
         setTimeout(checkTemporaryContainer, 300, cookieStoreId, tabId);
     }
 
-    if (excludeTab) {
-        cache.removeTab(tabId);
-        return;
-    }
+    // if (excludeTab) {
+    //     cache.removeTab(tabId);
+    //     return;
+    // }
 
     lazyRemoveTabEvent(tabId);
 
@@ -2468,6 +2468,7 @@ window.BG = {
 
     addUndoRemoveGroupItem,
 
+    excludeTabsIds,
     addExcludeTabsIds,
     removeExcludeTabsIds,
 
