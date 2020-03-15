@@ -189,11 +189,13 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
 
             loadingBrowserAction(true, windowId);
 
-            removeEvents();
+            // removeEvents();
 
             // show tabs
             if (groupToShow.tabs.length) {
                 let tabIds = groupToShow.tabs.map(utils.keyId);
+
+                addExcludeTabsIds(tabIds);
 
                 if (!groupToShow.tabs.every(tab => tab.windowId === windowId)) {
                     groupToShow.tabs = await Tabs.moveNative(groupToShow.tabs, {
@@ -204,6 +206,8 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
 
                 await browser.tabs.show(tabIds);
 
+                removeExcludeTabsIds(tabIds);
+
                 if (groupToShow.muteTabsWhenGroupCloseAndRestoreWhenOpen) {
                     Tabs.setMute(groupToShow.tabs, false);
                 }
@@ -213,14 +217,14 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
             if (activeTabId) {
                 await Tabs.setActive(activeTabId);
 
-                sendMessage({
-                    action: 'tab-updated',
-                    tab: {
-                        id: activeTabId,
-                        active: true,
-                        discarded: false,
-                    },
-                });
+                // sendMessage({
+                //     action: 'tab-updated',
+                //     tab: {
+                //         id: activeTabId,
+                //         active: true,
+                //         discarded: false,
+                //     },
+                // });
 
                 if (!groupToHide) {
                     let tabs = await Tabs.get(windowId);
@@ -239,14 +243,14 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                     let tabToActive = await Tabs.setActive(undefined, groupToShow.tabs);
 
                     if (tabToActive) {
-                        sendMessage({
-                            action: 'tab-updated',
-                            tab: {
-                                id: tabToActive.id,
-                                active: true,
-                                discarded: false,
-                            },
-                        });
+                        // sendMessage({
+                        //     action: 'tab-updated',
+                        //     tab: {
+                        //         id: tabToActive.id,
+                        //         active: true,
+                        //         discarded: false,
+                        //     },
+                        // });
                     } else {
                         // group to show has no any tabs, try select pinned tab or create new one
                         let pinnedTabs = await Tabs.get(windowId, true),
@@ -353,22 +357,26 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
 
                     let tabIds = groupToHide.tabs.map(utils.keyId);
 
+                    addExcludeTabsIds(tabIds);
+
                     await browser.tabs.hide(tabIds);
 
-                    groupToHide.tabs.forEach(tab => tab.hidden = true);
+                    removeExcludeTabsIds(tabIds);
+
+                    // groupToHide.tabs.forEach(tab => tab.hidden = true);
 
                     if (options.discardTabsAfterHide && !groupToHide.dontDiscardTabsAfterHideThisGroup) {
                         Tabs.discard(tabIds);
 
-                        groupToHide.tabs.forEach(tab => tab.discarded = true);
+                        // groupToHide.tabs.forEach(tab => tab.discarded = true);
 
-                        sendMessage({
-                            action: 'group-updated',
-                            group: {
-                                id: groupToHide.id,
-                                tabs: groupToHide.tabs,
-                            },
-                        });
+                        // sendMessage({
+                        //     action: 'group-updated',
+                        //     group: {
+                        //         id: groupToHide.id,
+                        //         tabs: groupToHide.tabs,
+                        //     },
+                        // });
                     }
                 }
 
@@ -386,7 +394,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                 groupsHistory.add(groupId);
             }
 
-            addEvents();
+            // addEvents();
         }
 
         sendMessage({
@@ -413,8 +421,9 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
             updateBrowserActionData(null, windowId);
 
             if (!groupWindowId) {
-                removeEvents();
-                addEvents();
+                excludeTabsIds.clear();
+                // removeEvents();
+                // addEvents();
             }
         }
     }
@@ -708,7 +717,7 @@ function onRemovedTab(tabId, {isWindowClosing, windowId}) {
     //     return;
     // }
 
-    lazyRemoveTabEvent(tabId);
+    // lazyRemoveTabEvent(tabId);
 
     if (isWindowClosing) {
         reCreateTabsOnRemoveWindow.push(tabId);
@@ -1665,6 +1674,8 @@ function removeEvents() {
 
     browser.webRequest.onBeforeRequest.removeListener(onBeforeTabRequest);
 }
+
+window.addEventListener('unload', removeEvents);
 
 async function openManageGroups() {
     if (options.openManageGroupsInTab) {

@@ -4,7 +4,7 @@
     async function createNative({url, active, pinned, title, index, windowId, isInReaderMode, openInReaderMode, openerTabId, cookieStoreId, newTabContainer, ifDifferentContainerReOpen, groupId, favIconUrl, thumbnail}) {
         let tab = {};
 
-        if (utils.isUrlAllowToCreate(url)) {
+        if (utils.isUrlAllowToCreate(url)) { // TODO create page for unsupported urls
             tab.url = url;
         }
 
@@ -14,11 +14,11 @@
             tab.pinned = true;
         }
 
-        if (!tab.active && !tab.pinned && tab.url && !utils.isUrlEmpty(tab.url)) {
+        if (!tab.active && !tab.pinned && tab.url && !tab.url.startsWith('about:')) {
             tab.discarded = true;
         }
 
-        if (tab.discarded && typeof title === 'string' && title.length) {
+        if (tab.discarded && title) {
             tab.title = title;
         }
 

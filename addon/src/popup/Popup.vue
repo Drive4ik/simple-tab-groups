@@ -206,7 +206,7 @@
                         delete this.allTabs[tabId];
                     }
 
-                    let groupId = cache.getTabSession(tabId, 'groupId');
+                    let groupId = cache.getTabSession(tabId, 'groupId'); // TODO найти другой способ...
 
                     if (groupId) {
                         let group = this.groups.find(group => group.id === groupId),
@@ -236,20 +236,18 @@
                     }
                 };
 
-                browser.tabs.onActivated.addListener(({previousTabId, tabId}) => {
+                const onActivatedTab = ({previousTabId, tabId}) => {
                     if (this.allTabs[tabId]) {
                         this.allTabs[tabId].active = true;
                     }
                     if (this.allTabs[previousTabId]) {
                         this.allTabs[previousTabId].active = false;
                     }
-                });
+                };
 
-                browser.tabs.onRemoved.addListener(tabId => removeTab(tabId, true));
+                const onRemovedTab = tabId => removeTab(tabId, true);
 
                 const onUpdatedTab = (tabId, changeInfo, tab) => {
-                    console.debug('[POPUP] changeInfo', utils.clone(changeInfo));
-
                     if (utils.isTabPinned(tab) && undefined === changeInfo.pinned) {
                         return;
                     }
@@ -290,6 +288,8 @@
                         return;
                     }
 
+                    console.debug('[POPUP] processing onUpdatedTab, changeInfo', changeInfo);
+
                     if ('pinned' in changeInfo || 'hidden' in changeInfo) {
                         let tabGroupId = cache.getTabSession(tab.id, 'groupId'),
                             winGroupId = cache.getWindowGroup(tab.windowId);
@@ -311,26 +311,9 @@
                             }
                         }
                     }
-
                 };
 
-                window.addEventListener('unload', function() {
-                    browser.tabs.onUpdated.removeListener(onUpdatedTab);
-                });
-
-                browser.tabs.onUpdated.addListener(onUpdatedTab, {
-                    urls: ['<all_urls>'],
-                    properties: [
-                        browser.tabs.UpdatePropertyName.DISCARDED,
-                        browser.tabs.UpdatePropertyName.FAVICONURL,
-                        browser.tabs.UpdatePropertyName.HIDDEN,
-                        browser.tabs.UpdatePropertyName.PINNED,
-                        browser.tabs.UpdatePropertyName.TITLE,
-                        browser.tabs.UpdatePropertyName.STATUS,
-                    ],
-                });
-
-                browser.runtime.onMessage.addListener(async function(request) {
+                const onMessage = async request => {
                     switch (request.action) {
                         case 'tabs-added':
                             {
@@ -416,7 +399,32 @@
                             this.containers = containers.getAll();
                             break;
                     }
-                }.bind(this));
+                };
+
+                browser.tabs.onActivated.addListener(onActivatedTab);
+
+                browser.tabs.onRemoved.addListener(onRemovedTab);
+
+                browser.tabs.onUpdated.addListener(onUpdatedTab, {
+                    urls: ['<all_urls>'],
+                    properties: [
+                        browser.tabs.UpdatePropertyName.DISCARDED,
+                        browser.tabs.UpdatePropertyName.FAVICONURL,
+                        browser.tabs.UpdatePropertyName.HIDDEN,
+                        browser.tabs.UpdatePropertyName.PINNED,
+                        browser.tabs.UpdatePropertyName.TITLE,
+                        browser.tabs.UpdatePropertyName.STATUS,
+                    ],
+                });
+
+                browser.runtime.onMessage.addListener(onMessage);
+
+                window.addEventListener('unload', function() {
+                    browser.tabs.onActivated.removeListener(onActivatedTab);
+                    browser.tabs.onRemoved.removeListener(onRemovedTab);
+                    browser.tabs.onUpdated.removeListener(onUpdatedTab);
+                    browser.runtime.onMessage.removeListener(onMessage);
+                });
             },
 
             showSectionGroupTabs(group) {
