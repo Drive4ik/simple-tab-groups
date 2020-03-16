@@ -278,7 +278,16 @@
 
         await cache.removeWindowSession(windowId);
 
-        await Tabs.createTempActiveTab(windowId, false);
+        let tabs = await Tabs.get(windowId, false, true);
+        // remove tabs without group
+        tabs = tabs.filter(tab => !tab.groupId);
+
+        if (tabs.length) {
+            await BG.browser.tabs.show(tabs.map(utils.keyId));
+            await Tabs.setActive(undefined, tabs);
+        } else {
+            await Tabs.createTempActiveTab(windowId, false);
+        }
 
         if (group.tabs.length) {
             let tabIds = group.tabs.map(utils.keyId);
