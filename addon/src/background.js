@@ -198,10 +198,22 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                 addExcludeTabsIds(tabIds);
 
                 if (!groupToShow.tabs.every(tab => tab.windowId === windowId)) {
+                    // find new tabId, for temp fix bug https://bugzilla.mozilla.org/show_bug.cgi?id=1580879
+                    let activeTabIndex = activeTabId ? groupToShow.tabs.findIndex(tab => tab.id === activeTabId) : null;
+
                     groupToShow.tabs = await Tabs.moveNative(groupToShow.tabs, {
                         index: -1,
                         windowId: windowId,
                     });
+
+                    // for bug https://bugzilla.mozilla.org/show_bug.cgi?id=1580879
+                    removeExcludeTabsIds(tabIds);
+                    tabIds = groupToShow.tabs.map(utils.keyId);
+                    addExcludeTabsIds(tabIds);
+
+                    if (activeTabId) {
+                        activeTabId = groupToShow.tabs[activeTabIndex].id;
+                    }
                 }
 
                 await browser.tabs.show(tabIds);

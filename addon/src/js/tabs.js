@@ -475,21 +475,37 @@
         }
 
         let result = await browser.tabs.move(tabs.map(utils.keyId), options);
-        /*
-            // temp fix bug https://bugzilla.mozilla.org/show_bug.cgi?id=1580879
-            // after FF 73 bug not replicated
-            let tabIdsToReload = result.reduce(function(acc, tab, index) {
-                if (tab.url && tab.discarded && tab.url !== tabs[index].url) {
-                    tab.url = tabs[index].url;
-                    acc.push(tab.id);
-                }
 
-                return acc;
-            }, []);
+        // ==================================================================================
+        // temp fix bug https://bugzilla.mozilla.org/show_bug.cgi?id=1580879
+        let tabIndexesToReCreate = result.reduce(function(acc, tab, index) {
+            if (tab.url && tab.discarded && tab.url !== tabs[index].url) {
+                tab.url = tabs[index].url;
+                delete tab.active;
+                acc.push(index);
+            }
 
-            console.log('tabIdsToReload', tabIdsToReload);
-            reload(tabIdsToReload, true);
-        */
+            return acc;
+        }, []);
+
+        if (tabIndexesToReCreate.length) {
+            let tabsToReCreate = tabIndexesToReCreate.map(index => result[index]);
+
+            console.log('tabsToReCreate by bug https://bugzilla.mozilla.org/show_bug.cgi?id=1580879');
+
+            tabsToReCreate = await Promise.all(tabsToReCreate.map(cache.loadTabSession));
+
+            let newTabs = await Promise.all(tabsToReCreate.reverse().map(createNative)); // create tabs back to front
+
+            newTabs = await Promise.all(newTabs.reverse().map(cache.setTabSession)); // reverse tabs back (reset tabs positions)
+
+            tabIndexesToReCreate.forEach((resultIndex, newTabIndex) => result[resultIndex] = newTabs[newTabIndex]);
+
+            await remove(tabsToReCreate.map(utils.keyId));
+        }
+        // end fix bug https://bugzilla.mozilla.org/show_bug.cgi?id=1580879
+        // ==================================================================================
+
         return result;
     }
 
