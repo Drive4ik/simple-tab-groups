@@ -62,10 +62,11 @@
 
     function removeTabGroup(tabId) {
         if (tabs[tabId]) {
-            delete tabs[tabId].groupId;
+            if (tabs[tabId].groupId) {
+                delete tabs[tabId].groupId;
+                return browser.sessions.removeTabValue(tabId, 'groupId');
+            }
         }
-
-        return browser.sessions.removeTabValue(tabId, 'groupId');
     }
 
     function setTabThumbnail(tabId, thumbnail) {
@@ -88,10 +89,11 @@
 
     function removeTabThumbnail(tabId) {
         if (tabs[tabId]) {
-            delete tabs[tabId].thumbnail;
+            if (tabs[tabId].thumbnail) {
+                delete tabs[tabId].thumbnail;
+                return browser.sessions.removeTabValue(tabId, 'thumbnail');
+            }
         }
-
-        return browser.sessions.removeTabValue(tabId, 'thumbnail');
     }
 
     function setTabFavIcon(tabId, favIconUrl) {
@@ -114,10 +116,11 @@
 
     function removeTabFavIcon(tabId) {
         if (tabs[tabId]) {
-            delete tabs[tabId].favIconUrl;
+            if (tabs[tabId].favIconUrl) {
+                delete tabs[tabId].favIconUrl;
+                return browser.sessions.removeTabValue(tabId, 'favIconUrl');
+            }
         }
-
-        return browser.sessions.removeTabValue(tabId, 'favIconUrl');
     }
 
     function getTabSession(tabId, key = null) {
@@ -143,21 +146,19 @@
             applySession(tabs[tab.id], {groupId, favIconUrl, thumbnail});
         }
 
-        applyTabSession(tab);
-
-        return tab;
+        return applyTabSession(tab);
     }
 
     async function setTabSession(tab) {
+        tabSessionLoaded[tab.id] = true;
+
         await Promise.all([
             setTabGroup(tab.id, tab.groupId),
             setTabFavIcon(tab.id, tab.favIconUrl),
             setTabThumbnail(tab.id, tab.thumbnail),
         ]);
 
-        tabSessionLoaded[tab.id] = true;
-
-        return applyTabSession(tab);
+        return tab;
     }
 
     function applyTabSession(tab) {
@@ -218,10 +219,11 @@
 
     function removeWindowGroup(windowId) {
         if (windows[windowId]) {
-            delete windows[windowId].groupId;
+            if (windows[windowId].groupId) {
+                delete windows[windowId].groupId;
+                return browser.sessions.removeWindowValue(windowId, 'groupId');
+            }
         }
-
-        return browser.sessions.removeWindowValue(windowId, 'groupId');
     }
 
     function getWindowId(groupId) {
@@ -254,9 +256,9 @@
         return win;
     }
 
-    function removeWindowSession(windowId) {
+    async function removeWindowSession(windowId) {
+        await removeWindowGroup(windowId);
         removeWindow(windowId);
-        return removeWindowGroup(windowId);
     }
 
     window.cache = {

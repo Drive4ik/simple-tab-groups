@@ -45,18 +45,12 @@ let options = {},
         };
     })();
 
-async function createTabsSafe(tabs, {
-        withRemoveEvents = true,
-        sendMessageEachTab = true,
-    } = {}) {
-
-    if (withRemoveEvents) {
-        removeEvents();
-    }
-
+async function createTabsSafe(tabs, sendMessageCreateTabs = true) {
     if (options.reverseTabsOnCreate) {
         tabs.reverse();
     }
+
+    BG.skipCreateTab = true;
 
     let newTabs = await Promise.all(tabs.map(function(tab) {
         delete tab.active;
@@ -66,50 +60,46 @@ async function createTabsSafe(tabs, {
         return Tabs.createNative(tab);
     }));
 
+    BG.skipCreateTab = false;
+
+    if (options.reverseTabsOnCreate) {
+        newTabs.reverse();
+    }
+
     newTabs = await Promise.all(newTabs.map(cache.setTabSession));
 
     let tabsToHide = newTabs.filter(tab => !tab.pinned && tab.groupId && !cache.getWindowId(tab.groupId)),
         tabsToHideIds = tabsToHide.map(utils.keyId);
 
     if (tabsToHideIds.length) {
-        if (!withRemoveEvents) {
-            addExcludeTabsIds(tabsToHideIds);
-        }
-
+        addExcludeTabsIds(tabsToHideIds);
         await browser.tabs.hide(tabsToHideIds);
-
-        if (!withRemoveEvents) {
-            removeExcludeTabsIds(tabsToHideIds);
-        }
+        removeExcludeTabsIds(tabsToHideIds);
 
         tabsToHide.forEach(tab => tab.hidden = true);
     }
 
-    if (withRemoveEvents) {
-        addEvents();
-    }
+    // if (sendMessageCreateTabs) {
+    //     let groupTabs = {};
 
-    if (sendMessageEachTab) {
-        let groupTabs = {};
+    //     newTabs.forEach(function(tab) {
+    //         if (tab.groupId) {
+    //             if (groupTabs[tab.groupId]) {
+    //                 groupTabs[tab.groupId].push(tab);
+    //             } else {
+    //                 groupTabs[tab.groupId] = [tab];
+    //             }
+    //         }
+    //     });
 
-        newTabs.forEach(function(tab) {
-            if (tab.groupId) {
-                if (groupTabs[tab.groupId]) {
-                    groupTabs[tab.groupId].push(tab);
-                } else {
-                    groupTabs[tab.groupId] = [tab];
-                }
-            }
-        });
-
-        for (let groupId in groupTabs) {
-            sendMessage({
-                action: 'tabs-added',
-                groupId: Number(groupId),
-                tabs: groupTabs[groupId],
-            });
-        }
-    }
+    //     for (let groupId in groupTabs) {
+    //         sendMessage({
+    //             action: 'tabs-added',
+    //             groupId: Number(groupId),
+    //             tabs: groupTabs[groupId],
+    //         });
+    //     }
+    // }
 
     return newTabs;
 }
@@ -491,8 +481,8 @@ async function applyGroupByHistory(textPosition, groups) {
     return applyGroup(undefined, nextGroupId, undefined, true);
 }
 
-async function onActivatedTab({previousTabId, tabId, windowId}) {
-    console.log('onActivatedTab', {previousTabId, tabId, windowId});
+async function onActivatedTab({tabId, previousTabId, windowId}) {
+    console.log('onActivatedTab', {tabId, previousTabId, windowId});
 
     if (cache.getTabSession(tabId, 'groupId')) {
         // sendMessage({
@@ -554,6 +544,10 @@ async function onCreatedTab(tab) {
     console.log('onCreatedTab', tab);
 
     cache.setTab(tab);
+
+    if (BG.skipCreateTab) {
+        return;
+    }
 
     if (utils.isTabPinned(tab)) {
         return;
@@ -821,7 +815,7 @@ async function onCreatedWindow(win) {
 
         BG.skipAddGroupToNextNewWindow = false;
 
-        await tryRestoreMissedTabs(false);
+        tryRestoreMissedTabs();
     } else {
         let winTabs = await Tabs.get(win.id, null, null, {
             windowType: null,
@@ -878,7 +872,7 @@ async function onRemovedWindow(windowId) {
                 windows.forEach(win => loadingBrowserAction(true, win.id));
 
                 try {
-                    await tryRestoreMissedTabs(true);
+                    await tryRestoreMissedTabs();
 
                     windows.forEach(win => loadingBrowserAction(false, win.id));
                 } catch (e) {
@@ -922,9 +916,7 @@ async function addUndoRemoveGroupItem(groupToRemove) {
         if (group.tabs.length && !group.isArchive) {
             await loadingBrowserAction();
 
-            await createTabsSafe(Groups.setNewTabsParams(group.tabs, group), {
-                sendMessageEachTab: false,
-            });
+            await createTabsSafe(Groups.setNewTabsParams(group.tabs, group), false);
 
             await loadingBrowserAction(false);
         }
@@ -2416,9 +2408,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         });
 
         if (data.pinnedTabs.length) {
-            await createTabsSafe(data.pinnedTabs, {
-                withRemoveEvents: false,
-            });
+            await createTabsSafe(data.pinnedTabs, false);
         }
     }
 
@@ -2525,6 +2515,8 @@ window.BG = {
     createBackup,
     restoreBackup,
     clearAddon,
+
+    skipCreateTab: false,
 
     skipAddGroupToNextNewWindow: false,
 
@@ -2949,7 +2941,7 @@ async function syncTabs(groups, windows, hideAllTabs = false) {
     return groups;
 }
 
-async function tryRestoreMissedTabs(withRemoveEvents = false) {
+async function tryRestoreMissedTabs() {
     // try to restore missed tabs
     let {tabsToRestore} = await storage.get('tabsToRestore');
 
@@ -2965,6 +2957,10 @@ async function tryRestoreMissedTabs(withRemoveEvents = false) {
         console.log('tryRestoreMissedTabs tabsToRestore', tabsToRestore);
 
         groups.forEach(function(group) {
+            if (group.isArchive) {
+                return;
+            }
+
             groupsObj[group.id] = {
                 tabs: group.tabs,
                 newTabParams: Groups.getNewTabParams(group),
@@ -2993,9 +2989,7 @@ async function tryRestoreMissedTabs(withRemoveEvents = false) {
             .filter(Boolean);
 
         if (tabsToRestore.length) {
-            await createTabsSafe(tabsToRestore, {
-                withRemoveEvents: withRemoveEvents,
-            });
+            await createTabsSafe(tabsToRestore);
         }
     }
 
@@ -3216,7 +3210,7 @@ async function init() {
         }
     });
 
-    await tryRestoreMissedTabs(false);
+    await tryRestoreMissedTabs();
 
     containers.removeUnusedTemporaryContainers(windows);
 

@@ -215,9 +215,7 @@
                 title,
                 cookieStoreId,
                 ...Groups.getNewTabParams(group),
-            }], {
-                withRemoveEvents: false,
-            });
+            }]);
 
         return tab;
     }

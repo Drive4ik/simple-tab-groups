@@ -74,7 +74,7 @@
                 showUnSyncTabs: false,
                 unSyncTabs: [],
 
-                multipleTabIds: [],
+                multipleTabIds: [], // TODO try use Set Object
             };
         },
         components: {
@@ -201,48 +201,83 @@
                     .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
                     .$on('drag-over', (item, isOver) => item.isOver = isOver);
 
+                let lazyRemoveTabTimer = 0,
+                    lazyRemoveTabIds = [];
                 const removeTab = (tabId, withAllTabs = false) => {
+                    lazyRemoveTabIds.push(tabId);
+
                     if (withAllTabs) {
                         delete this.allTabs[tabId];
                     }
 
-                    let groupId = cache.getTabSession(tabId, 'groupId'); // TODO найти другой способ...
+                    clearTimeout(lazyRemoveTabTimer);
+                    lazyRemoveTabTimer = setTimeout(tabIds => {
+                        lazyRemoveTabIds = [];
 
-                    if (groupId) {
-                        let group = this.groups.find(group => group.id === groupId),
-                            tabIndex = group.tabs.findIndex(tab => tab.id === tabId);
+                        this.multipleTabIds = this.multipleTabIds.filter(tabId => !tabIds.includes(tabId));
+                        this.unSyncTabs = this.unSyncTabs.filter(tab => !tabIds.includes(tab.id));
 
-                        if (tabIndex !== -1) {
-                            group.tabs.splice(tabIndex, 0);
-                        } else {
-                            throw Error('tab not found???');
-                        }
-                    }
+                        tabIds.forEach(tabId => {
+                            let tabIndex = -1,
+                                group = this.groups.find(gr => !gr.isArchive && -1 !== (tabIndex = gr.tabs.findIndex(tab => tab.id === tabId)));
+
+                            if (group) {
+                                group.tabs.splice(tabIndex, 1);
+                            }
+                        });
+                    }, 150, lazyRemoveTabIds);
                 };
 
-                let lazyAddTabTimer = {};
+                let lazyAddGroupTabTimer = {},
+                    lazyAddUnsyncTabTimer = 0,
+                    lazyAddUnsyncTabs = [];
                 const lazyAddTab = (tab, groupId) => {
-                    tab = this.allTabs[tab.id] = this.mapTab(cache.applyTabSession(tab));
+                    tab = this.allTabs[tab.id] = this.mapTab(cache.applyTabSession(tab), this);
 
-                    let group = this.groups.find(gr => gr.id === groupId);
+                    let group = groupId ? this.groups.find(gr => gr.id === groupId) : null;
 
                     if (group) {
                         group.tabs.push(tab);
 
-                        clearTimeout(lazyAddTabTimer[groupId]);
-                        lazyAddTabTimer = setTimeout(group => group.tabs.sort(utils.sortBy('index')), 100, group);
+                        clearTimeout(lazyAddGroupTabTimer[groupId]);
+                        lazyAddGroupTabTimer[groupId] = setTimeout(group => group.tabs.sort(utils.sortBy('index')), 100, group);
                     } else {
-                        throw Error(errorEventMessage('group for new tabs not found', request));
+                        lazyAddUnsyncTabs.push(tab);
+
+                        clearTimeout(lazyAddUnsyncTabTimer);
+                        lazyAddUnsyncTabTimer = setTimeout(tabs => {
+                            lazyAddUnsyncTabs = [];
+
+                            this.unSyncTabs.push(...tabs);
+                            this.unSyncTabs.sort(utils.sortBy('index'));
+                        }, 150, lazyAddUnsyncTabs);
                     }
                 };
 
-                const onActivatedTab = ({previousTabId, tabId}) => {
+                const onActivatedTab = ({tabId, previousTabId}) => {
                     if (this.allTabs[tabId]) {
                         this.allTabs[tabId].active = true;
                     }
                     if (this.allTabs[previousTabId]) {
                         this.allTabs[previousTabId].active = false;
                     }
+                };
+
+                let lazyCreateTabsTimer = 0,
+                    lazyCreateTabs = [];
+                const onCreatedTab = tab => {
+                    if (utils.isTabPinned(tab)) {
+                        return;
+                    }
+
+                    lazyCreateTabs.push(tab);
+
+                    clearTimeout(lazyCreateTabsTimer);
+                    lazyCreateTabsTimer = setTimeout(function(tabs) {
+                        lazyCreateTabs = [];
+
+                        tabs.forEach(tab => lazyAddTab(tab, cache.getTabSession(tab.id, 'groupId')));
+                    }, 150, lazyCreateTabs);
                 };
 
                 const onRemovedTab = tabId => removeTab(tabId, true);
@@ -320,7 +355,7 @@
                                 let group = this.groups.find(gr => gr.id === request.groupId);
 
                                 if (group) {
-                                    group.tabs.push(...request.tabs.map(this.mapTab));
+                                    group.tabs.push(...request.tabs.map(this.mapTab, this));
                                     group.tabs.sort(utils.sortBy('index'));
                                 } else {
                                     throw Error(errorEventMessage('group for new tabs not found', request));

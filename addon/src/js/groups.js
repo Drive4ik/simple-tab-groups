@@ -328,9 +328,7 @@
         if (group.isArchive) {
             group.isArchive = false;
 
-            await BG.createTabsSafe(setNewTabsParams(group.tabs, group), {
-                sendMessageEachTab: false,
-            });
+            await BG.createTabsSafe(setNewTabsParams(group.tabs, group), false);
         } else {
             group.isArchive = true;
 
