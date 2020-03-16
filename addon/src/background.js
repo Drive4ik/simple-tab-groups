@@ -193,7 +193,8 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
 
             // show tabs
             if (groupToShow.tabs.length) {
-                let tabIds = groupToShow.tabs.map(utils.keyId);
+                let groupToShowHasNewTabs = false,
+                    tabIds = groupToShow.tabs.map(utils.keyId);
 
                 addExcludeTabsIds(tabIds);
 
@@ -205,6 +206,8 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                         index: -1,
                         windowId: windowId,
                     });
+
+                    groupToShowHasNewTabs = tabIds.some(tabId => !groupToShow.tabs.some(tab => tab.id === tabId));
 
                     // for bug https://bugzilla.mozilla.org/show_bug.cgi?id=1580879
                     removeExcludeTabsIds(tabIds);
@@ -219,6 +222,16 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                 await browser.tabs.show(tabIds);
 
                 removeExcludeTabsIds(tabIds);
+
+                if (groupToShowHasNewTabs) {
+                    sendMessage({
+                        action: 'group-updated',
+                        group: {
+                            id: groupToShow.id,
+                            tabs: groupToShow.tabs,
+                        },
+                    });
+                }
 
                 if (groupToShow.muteTabsWhenGroupCloseAndRestoreWhenOpen) {
                     Tabs.setMute(groupToShow.tabs, false);
