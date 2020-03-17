@@ -2593,6 +2593,8 @@ async function runMigrateForData(data) {
                     delete group.ifNotDefaultContainerReOpenInNew;
                 });
 
+                data.leaveBookmarksOfClosedTabs = false;
+
                 if (data.autoBackupFolderName.toLowerCase() === 'stg-backups') {
                     data.autoBackupFolderName = '';
                 }

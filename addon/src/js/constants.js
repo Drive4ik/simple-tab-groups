@@ -162,7 +162,7 @@ const DEFAULT_OPTIONS = Object.freeze({
     showContextMenuOnLinks: true,
     exportGroupToMainBookmarkFolder: true,
     defaultBookmarksParent: DEFAULT_BOOKMARKS_PARENTS[0],
-    leaveBookmarksOfClosedTabs: true,
+    leaveBookmarksOfClosedTabs: false,
     showExtendGroupsPopupWithActiveTabs: false,
     showTabsWithThumbnailsInManageGroups: false,
     reverseTabsOnCreate: false,
