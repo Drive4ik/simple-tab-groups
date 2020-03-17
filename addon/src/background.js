@@ -790,7 +790,7 @@ async function createMoveTabMenus() {
             contexts: [browser.menus.ContextType.BOOKMARK],
             onclick: async function(info) {
                 if (!info.bookmarkId) {
-                    utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'));
+                    utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7000, 'bookmarkNotAllowed');
                     return;
                 }
 
@@ -906,6 +906,11 @@ async function createMoveTabMenus() {
                     proposalTitle: info.linkText,
                 });
 
+            if (!ok) {
+                group = await Groups.add(undefined, undefined, info.linkText);
+                ok = true;
+            }
+
             if (ok && group) {
                 let newTab = await Tabs.add(group.id, undefined, info.linkUrl, info.linkText);
 
@@ -925,93 +930,76 @@ async function createMoveTabMenus() {
         contexts: [browser.menus.ContextType.BOOKMARK],
         onclick: async function(info) {
             if (!info.bookmarkId) {
-                utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'));
+                utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7000, 'bookmarkNotAllowed');
                 return;
             }
 
             let [bookmark] = await browser.bookmarks.get(info.bookmarkId);
 
-            if (bookmark.type !== browser.bookmarks.BookmarkTreeNodeType.BOOKMARK || !utils.isUrlAllowToCreate(bookmark.url)) {
-                utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'));
-                return;
-            }
-
-            let setActive = 2 === info.button,
-                {ok, group} = await runAction({
-                    action: 'add-new-group',
-                    proposalTitle: bookmark.title,
-                });
-
-            if (ok && group) {
-                let newTab = await Tabs.add(group.id, undefined, bookmark.url, bookmark.title);
-
-                if (setActive) {
-                    applyGroup(undefined, group.id, newTab.id);
+            if (bookmark.type === browser.bookmarks.BookmarkTreeNodeType.BOOKMARK) {
+                if (!utils.isUrlAllowToCreate(bookmark.url)) {
+                    utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7000, 'bookmarkNotAllowed');
+                    return;
                 }
-            }
-        },
-    }));
 
-    hasBookmarksPermission && menuIds.push(browser.menus.create({
-        type: browser.menus.ItemType.SEPARATOR,
-        parentId: 'stg-open-bookmark-in-group-parent',
-        contexts: [browser.menus.ContextType.BOOKMARK],
-    }));
+                let setActive = 2 === info.button,
+                    {ok, group} = await runAction({
+                        action: 'add-new-group',
+                        proposalTitle: bookmark.title,
+                    });
 
-    hasBookmarksPermission && menuIds.push(browser.menus.create({
-        title: browser.i18n.getMessage('importBookmarkFolderAsNewGroup'),
-        icons: {
-            16: '/icons/bookmark-o.svg',
-        },
-        parentId: 'stg-open-bookmark-in-group-parent',
-        contexts: [browser.menus.ContextType.BOOKMARK],
-        onclick: async function(info) {
-            if (!info.bookmarkId) {
-                utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'));
-                return;
-            }
+                if (!ok) {
+                    group = await Groups.add(undefined, undefined, bookmark.title);
+                    ok = true;
+                }
 
-            let [folder] = await browser.bookmarks.getSubTree(info.bookmarkId),
-                groupsCreatedCount = 0;
+                if (ok && group) {
+                    let newTab = await Tabs.add(group.id, undefined, bookmark.url, bookmark.title);
 
-            if (folder.type !== browser.bookmarks.BookmarkTreeNodeType.FOLDER) {
-                utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'));
-                return;
-            }
+                    if (setActive) {
+                        applyGroup(undefined, group.id, newTab.id);
+                    }
+                }
+            } else if (bookmark.type === browser.bookmarks.BookmarkTreeNodeType.FOLDER) {
+                let [folder] = await browser.bookmarks.getSubTree(info.bookmarkId),
+                    groupsCreatedCount = 0;
 
-            async function addBookmarkFolderAsGroup(folder) {
-                let tabsToCreate = [];
+                async function addBookmarkFolderAsGroup(folder) {
+                    let tabsToCreate = [];
 
-                for (let bookmark of folder.children) {
-                    if (bookmark.type === browser.bookmarks.BookmarkTreeNodeType.FOLDER) {
-                        await addBookmarkFolderAsGroup(bookmark);
-                    } else if (bookmark.type === browser.bookmarks.BookmarkTreeNodeType.BOOKMARK) {
-                        tabsToCreate.push({
-                            title: bookmark.title,
-                            url: bookmark.url,
-                        });
+                    for (let bookmark of folder.children) {
+                        if (bookmark.type === browser.bookmarks.BookmarkTreeNodeType.FOLDER) {
+                            await addBookmarkFolderAsGroup(bookmark);
+                        } else if (bookmark.type === browser.bookmarks.BookmarkTreeNodeType.BOOKMARK) {
+                            tabsToCreate.push({
+                                title: bookmark.title,
+                                url: bookmark.url,
+                            });
+                        }
+                    }
+
+                    if (tabsToCreate.length) {
+                        let newGroup = await Groups.add(undefined, undefined, folder.title);
+
+                        await createTabsSafe(Groups.setNewTabsParams(tabsToCreate, newGroup));
+
+                        groupsCreatedCount++;
                     }
                 }
 
-                if (tabsToCreate.length) {
-                    let newGroup = await Groups.add(undefined, undefined, folder.title);
+                await loadingBrowserAction();
 
-                    await createTabsSafe(Groups.setNewTabsParams(tabsToCreate, newGroup));
+                await addBookmarkFolderAsGroup(folder);
 
-                    groupsCreatedCount++;
+                loadingBrowserAction(false);
+
+                if (groupsCreatedCount) {
+                    utils.notify(browser.i18n.getMessage('groupsCreatedCount', groupsCreatedCount), 7000);
+                } else {
+                    utils.notify(browser.i18n.getMessage('noGroupsCreated'), 7000);
                 }
-            }
-
-            await loadingBrowserAction();
-
-            await addBookmarkFolderAsGroup(folder);
-
-            loadingBrowserAction(false);
-
-            if (groupsCreatedCount) {
-                utils.notify(browser.i18n.getMessage('groupsCreatedCount', groupsCreatedCount), 7000);
             } else {
-                utils.notify(browser.i18n.getMessage('noGroupsCreated'), 7000);
+                utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7000, 'bookmarkNotAllowed');
             }
         },
     }));
@@ -1080,6 +1068,8 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
         loadingBrowserAction(true);
     }
 
+    const {BOOKMARK, FOLDER, SEPARATOR} = browser.bookmarks.BookmarkTreeNodeType;
+
     let rootFolder = {
         id: options.defaultBookmarksParent,
     };
@@ -1092,34 +1082,30 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
 
     let groupBookmarkFolder = await _getBookmarkFolderFromTitle(group.title, rootFolder.id, groupIndex);
 
-    if (groupBookmarkFolder.children.length) {
-        let bookmarksToRemove = [];
+    let bookmarksToRemove = new Set;
 
-        if (options.leaveBookmarksOfClosedTabs) {
-            group.tabs.forEach(function(tab) {
-                groupBookmarkFolder.children = groupBookmarkFolder.children.filter(function(bookmark) {
-                    if (bookmark.type === browser.bookmarks.BookmarkTreeNodeType.BOOKMARK) {
-                        if (bookmark.url === tab.url) {
-                            bookmarksToRemove.push(bookmark);
-                            return false;
-                        }
-
-                        return true;
+    if (options.leaveBookmarksOfClosedTabs) {
+        group.tabs.forEach(function(tab) {
+            groupBookmarkFolder.children = groupBookmarkFolder.children.filter(function(bookmark) {
+                if (bookmark.type === BOOKMARK) {
+                    if (bookmark.url === tab.url) {
+                        bookmarksToRemove.add(bookmark.id);
+                        return false;
                     }
-                });
-            });
-        } else {
-            bookmarksToRemove = groupBookmarkFolder.children.filter(bookmark => bookmark.type !== browser.bookmarks.BookmarkTreeNodeType.FOLDER);
-        }
 
-        await Promise.all(bookmarksToRemove.map(bookmark => browser.bookmarks.remove(bookmark.id).catch(noop)));
+                    return true;
+                }
+            });
+        });
+
+        await Promise.all(Array.from(bookmarksToRemove).map(id => browser.bookmarks.remove(id).catch(noop)));
 
         let children = await browser.bookmarks.getChildren(groupBookmarkFolder.id);
 
         if (children.length) {
-            if (children[0].type !== browser.bookmarks.BookmarkTreeNodeType.SEPARATOR) {
+            if (children[0].type !== SEPARATOR) {
                 await browser.bookmarks.create({
-                    type: browser.bookmarks.BookmarkTreeNodeType.SEPARATOR,
+                    type: SEPARATOR,
                     index: 0,
                     parentId: groupBookmarkFolder.id,
                 });
@@ -1127,12 +1113,10 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
 
             // found and remove duplicated separators
             let duplicatedSeparators = children.filter(function(separator, index) {
-                return separator.type === browser.bookmarks.BookmarkTreeNodeType.SEPARATOR &&
-                    children[index - 1] &&
-                    children[index - 1].type === browser.bookmarks.BookmarkTreeNodeType.SEPARATOR;
+                return separator.type === SEPARATOR && children[index - 1] && children[index - 1].type === SEPARATOR;
             });
 
-            if (children[children.length - 1].type === browser.bookmarks.BookmarkTreeNodeType.SEPARATOR && !duplicatedSeparators.includes(children[children.length - 1])) {
+            if (children[children.length - 1].type === SEPARATOR && !duplicatedSeparators.includes(children[children.length - 1])) {
                 duplicatedSeparators.push(children[children.length - 1]);
             }
 
@@ -1140,16 +1124,44 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
                 await Promise.all(duplicatedSeparators.map(separator => browser.bookmarks.remove(separator.id).catch(noop)));
             }
         }
-    }
 
-    for (let index in group.tabs) {
-        await browser.bookmarks.create({
-            title: group.tabs[index].title,
-            url: group.tabs[index].url,
-            type: browser.bookmarks.BookmarkTreeNodeType.BOOKMARK,
-            index: Number(index),
-            parentId: groupBookmarkFolder.id,
-        });
+        for (let index in group.tabs) {
+            await browser.bookmarks.create({
+                title: group.tabs[index].title,
+                url: group.tabs[index].url,
+                type: BOOKMARK,
+                index: Number(index),
+                parentId: groupBookmarkFolder.id,
+            });
+        }
+    } else {
+        let foundedBookmarks = new Set;
+
+        for (let index in group.tabs) {
+            index = Number(index);
+
+            let tab = group.tabs[index],
+                bookmark = groupBookmarkFolder.children.find(function({id, type, url}) {
+                    return !foundedBookmarks.has(id) && type === BOOKMARK && url === tab.url;
+                });
+
+            if (bookmark) {
+                foundedBookmarks.add(bookmark.id);
+                await browser.bookmarks.move(bookmark.id, {index});
+            } else {
+                await browser.bookmarks.create({
+                    title: tab.title,
+                    url: tab.url,
+                    type: BOOKMARK,
+                    index,
+                    parentId: groupBookmarkFolder.id,
+                });
+            }
+        }
+
+        groupBookmarkFolder.children.forEach(({id, type}) => type !== FOLDER && !foundedBookmarks.has(id) && bookmarksToRemove.add(id));
+
+        await Promise.all(Array.from(bookmarksToRemove).map(id => browser.bookmarks.remove(id).catch(noop)));
     }
 
     if (showMessages) {

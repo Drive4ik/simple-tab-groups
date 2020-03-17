@@ -611,10 +611,6 @@
         "message": "Afficher le menu contextuel sur les liens",
         "description": "Show context menu on links"
     },
-    "importBookmarkFolderAsNewGroup": {
-        "message": "Importer le dossier de marque-pages comme un nouveau groupe",
-        "description": "Import bookmark folder as new group"
-    },
     "groupsCreatedCount": {
         "message": "$groupscount$ groupe(s) créé(s)",
         "description": "Groups created count",

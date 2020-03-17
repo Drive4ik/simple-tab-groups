@@ -611,10 +611,6 @@
         "message": "Контекстуално меню на препратките",
         "description": "Show context menu on links"
     },
-    "importBookmarkFolderAsNewGroup": {
-        "message": "Внасяне на папката с отметки като група",
-        "description": "Import bookmark folder as new group"
-    },
     "groupsCreatedCount": {
         "message": "Създадени са $groupscount$ групи",
         "description": "Groups created count",

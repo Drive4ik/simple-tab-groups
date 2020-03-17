@@ -595,10 +595,6 @@
         "message": "在鏈結右鍵選單中顯示",
         "description": "Show context menu on links"
     },
-    "importBookmarkFolderAsNewGroup": {
-        "message": "匯入書籤資料夾為新群組",
-        "description": "Import bookmark folder as new group"
-    },
     "groupsCreatedCount": {
         "message": "已建立 $groupscount$ 個群組",
         "description": "Groups created count",

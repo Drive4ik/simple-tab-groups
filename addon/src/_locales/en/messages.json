@@ -615,10 +615,6 @@
         "message": "Show context menu on links",
         "description": "Show context menu on links"
     },
-    "importBookmarkFolderAsNewGroup": {
-        "message": "Import bookmark folder as new group",
-        "description": "Import bookmark folder as new group"
-    },
     "groupsCreatedCount": {
         "message": "$groupscount$ groups created",
         "description": "Groups created count",

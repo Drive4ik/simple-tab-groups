@@ -611,10 +611,6 @@
         "message": "Показывать контекстное меню на ссылках",
         "description": "Show context menu on links"
     },
-    "importBookmarkFolderAsNewGroup": {
-        "message": "Импорт папки закладок в новую группу",
-        "description": "Import bookmark folder as new group"
-    },
     "groupsCreatedCount": {
         "message": "$groupscount$ групп создано",
         "description": "Groups created count",

@@ -573,10 +573,6 @@
         "message": "在链接右键菜单中显示",
         "description": "Show context menu on links"
     },
-    "importBookmarkFolderAsNewGroup": {
-        "message": "导入书签文件夹为新群组",
-        "description": "Import bookmark folder as new group"
-    },
     "groupsCreatedCount": {
         "message": "$groupscount$个群组已创建",
         "description": "Groups created count",

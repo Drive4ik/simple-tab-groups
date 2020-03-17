@@ -611,10 +611,6 @@
         "message": "リンクにコンテキストメニューを表示する",
         "description": "Show context menu on links"
     },
-    "importBookmarkFolderAsNewGroup": {
-        "message": "新しいグループとしてブックマークのフォルダをインポートする",
-        "description": "Import bookmark folder as new group"
-    },
     "groupsCreatedCount": {
         "message": "$groupscount$ 個のグループを作成しました",
         "description": "Groups created count",
