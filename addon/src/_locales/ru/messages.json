@@ -982,5 +982,9 @@
     "tabsInThisWindowWereHidden": {
         "message": "Вкладки в этом окне были скрыты. Вы можете найти их в нижней части всплывающего окна аддона.",
         "description": "Tabs in this window were hidden. You can find them at the bottom of the popup window of the addon."
+    },
+    "searchOrGoToActive": {
+        "message": "Поиск или стрелку вправо для перехода к активной вкладке/группе",
+        "description": "Search or right arrow to focus on active tab/group"
     }
 }

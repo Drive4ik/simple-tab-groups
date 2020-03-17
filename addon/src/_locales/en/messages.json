@@ -986,5 +986,9 @@
     "tabsInThisWindowWereHidden": {
         "message": "Tabs in this window were hidden. You can find them at the bottom of the popup window of the addon.",
         "description": "Tabs in this window were hidden. You can find them at the bottom of the popup window of the addon."
+    },
+    "searchOrGoToActive": {
+        "message": "Search or right arrow to focus on active tab/group",
+        "description": "Search or right arrow to focus on active tab/group"
     }
 }

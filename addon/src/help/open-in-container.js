@@ -105,10 +105,10 @@ async function openTab(url, cookieStoreId = DEFAULT_COOKIE_STORE_ID, buttonId = 
             cookieStoreId,
         });
 
-        Tabs.remove(id);
+        browser.tabs.remove(id);
     } catch (e) {
         if (buttonId) {
-            $(`#{buttonId}`).disabled = true;
+            $('#' + buttonId).disabled = true;
         }
         alert(e);
     }

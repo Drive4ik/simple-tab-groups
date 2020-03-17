@@ -471,7 +471,7 @@
                 this.groupToShow = group;
                 this.search = '';
                 this.section = SECTION_GROUP_TABS;
-                this.setFocusOnActive();
+                this.setFocusOnSearch();
             },
 
             showSectionSearch() {
@@ -1040,6 +1040,7 @@
         @focus.capture="scrollToActiveElement"
         @keydown.f3.stop.prevent="setFocusOnSearch"
         @keydown.f2.stop.prevent="tryRenameGroup"
+        @keydown.right="setFocusOnActive"
 
         >
         <header id="search-wrapper">
@@ -1055,7 +1056,7 @@
                         @keyup.enter="selectFirstItemOnSearch"
                         @keydown.down="focusToNextElement"
                         @keydown.up="focusToNextElement"
-                        :placeholder="lang('searchPlaceholder')" />
+                        :placeholder="lang('searchOrGoToActive')" />
                 </div>
                 <div v-show="search" class="control">
                     <label class="button is-small" :title="lang('extendedTabSearch')">
@@ -1208,7 +1209,7 @@
                         @contextmenu="$refs.groupContextMenu.open($event, {group})"
                         @click="!group.isArchive && applyGroup(group)"
                         @keyup.enter="!group.isArchive && applyGroup(group)"
-                        @keydown.right="showSectionGroupTabs(group)"
+                        @keydown.right.stop="showSectionGroupTabs(group); setFocusOnSearch();"
                         @keydown.up="focusToNextElement"
                         @keydown.down="focusToNextElement"
                         @keydown.f2.stop="renameGroup(group)"
