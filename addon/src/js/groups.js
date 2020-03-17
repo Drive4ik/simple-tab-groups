@@ -292,9 +292,9 @@
         if (group.tabs.length) {
             let tabIds = group.tabs.map(utils.keyId);
 
-            BG.addExcludeTabsIds(tabIds);
+            BG.addExcludeTabIds(tabIds);
             await BG.browser.tabs.hide(tabIds);
-            BG.removeExcludeTabsIds(tabIds);
+            BG.removeExcludeTabIds(tabIds);
 
             if (BG.getOptions('discardTabsAfterHide') && !group.dontDiscardTabsAfterHideThisGroup) {
                 await Tabs.discard(tabIds);
@@ -328,7 +328,7 @@
         if (group.isArchive) {
             group.isArchive = false;
 
-            await BG.createTabsSafe(setNewTabsParams(group.tabs, group), false);
+            await BG.createTabsSafe(setNewTabsParams(group.tabs, group));
         } else {
             group.isArchive = true;
 
@@ -344,9 +344,9 @@
             }
 
             if (tabIds.length) {
-                BG.addExcludeTabsIds(tabIds);
+                BG.addExcludeTabIds(tabIds);
                 await Tabs.remove(tabIds);
-                BG.removeExcludeTabsIds(tabIds);
+                BG.removeExcludeTabIds(tabIds);
             }
         }
 
@@ -382,6 +382,34 @@
         return utils.createGroupTitle(null, lastCreatedGroupPosition + 1);
     }
 
+    function isCatchedUrl(url, catchTabRules) {
+        return catchTabRules
+            .split(/\s*\n\s*/)
+            .map(regExpStr => regExpStr.trim())
+            .filter(Boolean)
+            .some(function(regExpStr) {
+                try {
+                    return new RegExp(regExpStr).test(url);
+                } catch (e) {};
+            });
+    }
+
+    function getCatchedForTab(groups, {cookieStoreId, url}) {
+        return groups.find(function({isArchive, catchTabContainers, catchTabRules}) {
+            if (isArchive) {
+                return false;
+            }
+
+            if (catchTabContainers.includes(cookieStoreId)) {
+                return true;
+            }
+
+            if (catchTabRules && isCatchedUrl(url, catchTabRules)) {
+                return true;
+            }
+        });
+    }
+
     window.Groups = {
         load,
         save,
@@ -397,6 +425,7 @@
         getNewTabParams,
         setNewTabsParams,
         getNextTitle,
+        getCatchedForTab,
     };
 
 })();

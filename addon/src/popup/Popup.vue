@@ -11,7 +11,7 @@
 
     if (!BG.inited) {
         browser.runtime.onMessage.addListener(({action}) => 'i-am-back' === action && window.location.reload());
-        throw 'Background not inited, waiting...';
+        throw 'waiting background initialization...';
     }
 
     Vue.config.errorHandler = errorEventHandler;
@@ -140,14 +140,14 @@
                 let searchStr = this.search.toLowerCase(),
                     groups = [];
 
-                this.groups.forEach(function(group) {
+                this.groups.forEach(group => {
                     group.filteredTabsBySearch = group.tabs.filter(tab => utils.mySearchFunc(searchStr, utils.getTabTitle(tab, true), this.extendedSearch));
 
                     if (group.filteredTabsBySearch.length || utils.mySearchFunc(searchStr, group.title, this.extendedSearch)) {
                         group.filteredTabsBySearch.sort(this.$_simpleSortTabs.bind(null, searchStr));
                         groups.push(group);
                     }
-                }, this);
+                });
 
                 return groups;
             },
@@ -229,10 +229,9 @@
                 };
 
                 let lazyAddGroupTabTimer = {},
-                    lazyAddUnsyncTabTimer = 0,
-                    lazyAddUnsyncTabs = [];
+                    lazyAddUnsyncTabTimer = 0;
                 const lazyAddTab = (tab, groupId) => {
-                    tab = this.allTabs[tab.id] = this.mapTab(cache.applyTabSession(tab), this);
+                    tab = this.mapTab(cache.applyTabSession(tab));
 
                     let group = groupId ? this.groups.find(gr => gr.id === groupId) : null;
 
@@ -242,24 +241,8 @@
                         clearTimeout(lazyAddGroupTabTimer[groupId]);
                         lazyAddGroupTabTimer[groupId] = setTimeout(group => group.tabs.sort(utils.sortBy('index')), 100, group);
                     } else {
-                        lazyAddUnsyncTabs.push(tab);
-
                         clearTimeout(lazyAddUnsyncTabTimer);
-                        lazyAddUnsyncTabTimer = setTimeout(tabs => {
-                            lazyAddUnsyncTabs = [];
-
-                            this.unSyncTabs.push(...tabs);
-                            this.unSyncTabs.sort(utils.sortBy('index'));
-                        }, 150, lazyAddUnsyncTabs);
-                    }
-                };
-
-                const onActivatedTab = ({tabId, previousTabId}) => {
-                    if (this.allTabs[tabId]) {
-                        this.allTabs[tabId].active = true;
-                    }
-                    if (this.allTabs[previousTabId]) {
-                        this.allTabs[previousTabId].active = false;
+                        lazyAddUnsyncTabTimer = setTimeout(() => this.loadUnsyncedTabs(), 150);
                     }
                 };
 
@@ -270,6 +253,11 @@
                         return;
                     }
 
+                    if (BG.groupIdForNextTab) {
+                        lazyAddTab(tab, BG.groupIdForNextTab);
+                        return;
+                    }
+
                     lazyCreateTabs.push(tab);
 
                     clearTimeout(lazyCreateTabsTimer);
@@ -277,10 +265,8 @@
                         lazyCreateTabs = [];
 
                         tabs.forEach(tab => lazyAddTab(tab, cache.getTabSession(tab.id, 'groupId')));
-                    }, 150, lazyCreateTabs);
+                    }, 200, lazyCreateTabs);
                 };
-
-                const onRemovedTab = tabId => removeTab(tabId, true);
 
                 const onUpdatedTab = (tabId, changeInfo, tab) => {
                     if (utils.isTabPinned(tab) && undefined === changeInfo.pinned) {
@@ -323,8 +309,6 @@
                         return;
                     }
 
-                    console.debug('[POPUP] processing onUpdatedTab, changeInfo', changeInfo);
-
                     if ('pinned' in changeInfo || 'hidden' in changeInfo) {
                         let tabGroupId = cache.getTabSession(tab.id, 'groupId'),
                             winGroupId = cache.getWindowGroup(tab.windowId);
@@ -348,58 +332,68 @@
                     }
                 };
 
+                const onRemovedTab = tabId => removeTab(tabId, true);
+
+                const onActivatedTab = ({tabId, previousTabId}) => {
+                    if (this.allTabs[tabId]) {
+                        this.allTabs[tabId].active = true;
+                    }
+                    if (this.allTabs[previousTabId]) {
+                        this.allTabs[previousTabId].active = false;
+                    }
+                };
+
+                let onMovedTabTimer = 0,
+                    onMovedUnsyncTabTimer = 0;
+                const onMovedTab = (tabId, {windowId}) => {
+                    let groupId = cache.getWindowGroup(windowId);
+
+                    if (groupId) {
+                        clearTimeout(onMovedTabTimer);
+                        onMovedTabTimer = setTimeout(groupId => this.loadGroupTabs(groupId), 100, groupId);
+                    } else {
+                        clearTimeout(onMovedUnsyncTabTimer);
+                        onMovedUnsyncTabTimer = setTimeout(() => this.loadUnsyncedTabs(), 100);
+                    }
+                };
+
+                let onDetachedTabTimer = 0;
+                const onDetachedTab = (tabId, {oldWindowId}) => { // notice: call before onAttached
+                    if (BG.excludeTabsIds.has(tabId)) {
+                        return;
+                    }
+
+                    let groupId = cache.getWindowGroup(oldWindowId);
+
+                    if (groupId) {
+                        clearTimeout(onDetachedTabTimer);
+                        onDetachedTabTimer = setTimeout(groupId => this.loadGroupTabs(groupId), 100, groupId);
+                    }
+                };
+
+                let onAttachedTabTimer = 0,
+                    onAttachedUnsyncTabTimer = 0;
+                const onAttachedTab = (tabId, {newWindowId}) => {
+                    if (BG.excludeTabsIds.has(tabId)) {
+                        return;
+                    }
+
+                    let groupId = cache.getWindowGroup(newWindowId);
+
+                    if (groupId) {
+                        clearTimeout(onAttachedTabTimer);
+                        onAttachedTabTimer = setTimeout(groupId => this.loadGroupTabs(groupId), 100, groupId);
+                    } else {
+                        clearTimeout(onAttachedUnsyncTabTimer);
+                        onAttachedUnsyncTabTimer = setTimeout(() => this.loadUnsyncedTabs(), 100);
+                    }
+                };
+
                 const onMessage = async request => {
                     switch (request.action) {
-                        case 'tabs-added':
-                            {
-                                let group = this.groups.find(gr => gr.id === request.groupId);
-
-                                if (group) {
-                                    group.tabs.push(...request.tabs.map(this.mapTab, this));
-                                    group.tabs.sort(utils.sortBy('index'));
-                                } else {
-                                    throw Error(errorEventMessage('group for new tabs not found', request));
-                                }
-                            }
-
-                            break;
-                        case 'tab-updated':
-                            {
-                                let tab = null;
-
-                                this.groups.some(gr => tab = gr.tabs.find(t => t.id === request.tab.id));
-
-                                if (!tab) {
-                                    tab = this.unSyncTabs.find(t => t.id === request.tab.id);
-                                }
-
-                                if (tab) {
-                                    Object.assign(tab, request.tab);
-                                }
-                            }
-
-                            break;
-                        case 'tabs-removed':
-                            {
-                                this.groups
-                                    .filter(group => !group.isArchive)
-                                    .forEach(group => group.tabs = group.tabs.filter(tab => !request.tabIds.includes(tab.id)));
-
-                                this.multipleTabIds = this.multipleTabIds.filter(tabId => !request.tabIds.includes(tabId));
-
-                                this.loadUnsyncedTabs();
-                            }
-
-                            break;
                         case 'group-updated':
                             let group = this.groups.find(gr => gr.id === request.group.id);
-
-                            if (request.group.tabs) {
-                                request.group.tabs = request.group.tabs.map(this.mapTab, this);
-                            }
-
                             Object.assign(group, request.group);
-
                             break;
                         case 'group-added':
                             this.groups.push(this.mapGroup(request.group));
@@ -436,12 +430,8 @@
                     }
                 };
 
-                browser.tabs.onActivated.addListener(onActivatedTab);
-
-                browser.tabs.onRemoved.addListener(onRemovedTab);
-
+                browser.tabs.onCreated.addListener(onCreatedTab);
                 browser.tabs.onUpdated.addListener(onUpdatedTab, {
-                    urls: ['<all_urls>'],
                     properties: [
                         browser.tabs.UpdatePropertyName.DISCARDED,
                         browser.tabs.UpdatePropertyName.FAVICONURL,
@@ -451,15 +441,30 @@
                         browser.tabs.UpdatePropertyName.STATUS,
                     ],
                 });
-
+                browser.tabs.onRemoved.addListener(onRemovedTab);
+                browser.tabs.onActivated.addListener(onActivatedTab);
+                browser.tabs.onMoved.addListener(onMovedTab);
+                browser.tabs.onDetached.addListener(onDetachedTab);
+                browser.tabs.onAttached.addListener(onAttachedTab);
                 browser.runtime.onMessage.addListener(onMessage);
 
                 window.addEventListener('unload', function() {
-                    browser.tabs.onActivated.removeListener(onActivatedTab);
-                    browser.tabs.onRemoved.removeListener(onRemovedTab);
+                    browser.tabs.onCreated.removeListener(onCreatedTab);
                     browser.tabs.onUpdated.removeListener(onUpdatedTab);
+                    browser.tabs.onRemoved.removeListener(onRemovedTab);
+                    browser.tabs.onActivated.removeListener(onActivatedTab);
+                    browser.tabs.onMoved.removeListener(onMovedTab);
+                    browser.tabs.onDetached.removeListener(onDetachedTab);
+                    browser.tabs.onAttached.removeListener(onAttachedTab);
                     browser.runtime.onMessage.removeListener(onMessage);
                 });
+            },
+
+            async loadGroupTabs(groupId) {
+                let [{tabs}] = await Groups.load(groupId, true),
+                    group = this.groups.find(gr => gr.id === groupId);
+
+                group.tabs = tabs.map(this.mapTab, this);
             },
 
             showSectionGroupTabs(group) {
@@ -1109,7 +1114,8 @@
                                 :title="getTabTitle(tab, true)"
                                 >
                                 <div class="item-icon">
-                                    <img v-lazy="tab.favIconUrl" class="size-16" />
+                                    <img v-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
+                                    <img v-else v-lazy="tab.favIconUrl" class="size-16" />
                                 </div>
                                 <div class="item-title">
                                     <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
@@ -1145,7 +1151,8 @@
                                 :title="getTabTitle(tab, true)"
                                 >
                                 <div class="item-icon">
-                                    <img v-lazy="tab.favIconUrl" class="size-16" />
+                                    <img v-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
+                                    <img v-else v-lazy="tab.favIconUrl" class="size-16" />
                                 </div>
                                 <div class="item-title">
                                     <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
@@ -1276,7 +1283,8 @@
                             tabindex="0"
                             >
                             <div class="item-icon">
-                                <img v-lazy="tab.favIconUrl" class="size-16" />
+                                <img v-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
+                                <img v-else v-lazy="tab.favIconUrl" class="size-16" />
                             </div>
                             <div class="item-title">
                                 <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
@@ -1350,7 +1358,8 @@
                         @mousedown.middle.prevent
                         >
                         <div class="item-icon">
-                            <img v-lazy="tab.favIconUrl" class="size-16" />
+                            <img v-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
+                            <img v-else v-lazy="tab.favIconUrl" class="size-16" />
                         </div>
                         <div class="item-title">
                             <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
@@ -1400,7 +1409,8 @@
                         @dragend="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
                         >
                         <div class="item-icon">
-                            <img v-lazy="tab.favIconUrl" class="size-16" />
+                            <img v-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
+                            <img v-else v-lazy="tab.favIconUrl" class="size-16" />
                         </div>
                         <div class="item-title">
                             <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">

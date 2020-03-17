@@ -37,6 +37,7 @@
         return e.stack.split(addonUrlPrefix).join('').split('@').slice(start, to).map(s => s.trim().replace('\n', ' <- '));
     }
 
+    console.addErrorLog = addErrorLog;
     console.getErrorStack = getErrorStack;
 
     function log(key, ...args) {

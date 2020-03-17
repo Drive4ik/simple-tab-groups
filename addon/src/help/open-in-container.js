@@ -105,7 +105,7 @@ async function openTab(url, cookieStoreId = DEFAULT_COOKIE_STORE_ID, buttonId = 
             cookieStoreId,
         });
 
-        browser.tabs.remove(id);
+        Tabs.remove(id);
     } catch (e) {
         if (buttonId) {
             $(`#{buttonId}`).disabled = true;

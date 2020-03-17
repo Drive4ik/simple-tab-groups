@@ -9,6 +9,11 @@
         event.preventDefault && event.preventDefault();
         event.stopImmediatePropagation && event.stopImmediatePropagation();
 
+        if (event.error && event.error && event.error.includes('waiting background')) {
+            console.log(event.error);
+            return;
+        }
+
         let nativeError = event.error || event,
             data = null;
 
@@ -33,6 +38,13 @@
             lineNumber: nativeError.lineNumber,
             stack: console.getErrorStack(nativeError),
         };
+
+        if (/^invalid (tab|window)/i.test(errorData.message) && !window.localStorage.lastReloadFromError) {
+            window.localStorage.lastReloadFromError = 1;
+            console.addErrorLog(errorData);
+            browser.runtime.reload();
+            return;
+        }
 
         console.logError(errorData);
 

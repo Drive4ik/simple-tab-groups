@@ -53,13 +53,6 @@
         if (utils.isWindowAllow(win)) {
             if (groupId) {
                 await BG.applyGroup(win.id, groupId, activeTabId);
-
-                let tabs = await Tabs.get(win.id),
-                    [emptyTab] = win.tabs;
-
-                if (tabs.length > 1) {
-                    await Tabs.remove(emptyTab.id);
-                }
             }
 
             win = await cache.loadWindowSession(win);

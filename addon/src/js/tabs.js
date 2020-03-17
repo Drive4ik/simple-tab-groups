@@ -72,17 +72,17 @@
     }
 
     async function create(tab, sendMessage = true) {
+        BG.groupIdForNextTab = tab.groupId;
+
+        BG.skipCreateTab = true;
+
         let newTab = await createNative(tab);
 
-        newTab = await cache.setTabSession(newTab);
+        BG.skipCreateTab = false;
 
-        if (newTab.groupId && sendMessage === true) {
-            BG.sendMessage({
-                action: 'tabs-added',
-                groupId: newTab.groupId,
-                tabs: [newTab],
-            });
-        }
+        BG.groupIdForNextTab = null;
+
+        newTab = await cache.setTabSession(newTab);
 
         return newTab;
     }
@@ -222,6 +222,7 @@
 
     // tabIds integer or integer array
     async function remove(tabIds) {
+        console.log('remove tab ids:', tabIds);
         return browser.tabs.remove(tabIds);
     }
 
@@ -286,7 +287,7 @@
 
         console.info('moveTabs', {groupId, newTabIndex, showNotificationAfterMoveTab, showTabAfterMoving, tabIds});
 
-        BG.addExcludeTabsIds(tabIds);
+        BG.addExcludeTabIds(tabIds);
 
         let showPinnedMessage = false,
             tabsCantHide = new Set,
@@ -373,7 +374,7 @@
                         }
                     });
 
-                    BG.addExcludeTabsIds(tabIdsToExclude);
+                    BG.addExcludeTabIds(tabIdsToExclude);
 
                     await remove(tabsIdsToRemove);
                 }
@@ -400,13 +401,13 @@
 
             await Promise.all(tabs.map(tab => cache.setTabGroup(tab.id, groupId)));
 
-            BG.removeExcludeTabsIds(tabIds);
+            BG.removeExcludeTabIds(tabIds);
 
             BG.sendMessage({
                 action: 'groups-updated',
             });
         } else {
-            BG.removeExcludeTabsIds(tabs.map(utils.keyId));
+            BG.removeExcludeTabIds(tabs.map(utils.keyId));
         }
 
         if (showPinnedMessage) {
@@ -468,7 +469,8 @@
 
         if (tabsToReload.length) {
             console.log('tabsToReload by bug 1595583', tabsToReload);
-            await reload(tabsToReload.map(utils.keyId));
+            await reload(tabsToReload.map(utils.keyId), true);
+            tabsToReload.forEach(tab => tab.discarded = false);
             await utils.wait(100);
         }
 
@@ -476,6 +478,7 @@
 
         // ==================================================================================
         // temp fix bug https://bugzilla.mozilla.org/show_bug.cgi?id=1580879
+        // TODO не могу найти при каком условии воспроизводится баг
         let tabIndexesToReCreate = result.reduce(function(acc, tab, index) {
             if (tab.url && tab.discarded && tab.url !== tabs[index].url) {
                 tab.url = tabs[index].url;
@@ -493,7 +496,20 @@
 
             tabsToReCreate = await Promise.all(tabsToReCreate.map(cache.loadTabSession));
 
+            let groupIds = tabsToReCreate.map(tab => tab.groupId).filter(utils.onlyUniqueFilter),
+                groupIdForNextTabs = (groupIds.length === 1 && groupIds[0]) ? groupIds[0] : null;
+
+            if (groupIdForNextTabs) {
+                BG.groupIdForNextTab = groupIdForNextTabs;
+            }
+
+            BG.skipCreateTab = true;
+
             let newTabs = await Promise.all(tabsToReCreate.reverse().map(createNative)); // create tabs back to front
+
+            BG.skipCreateTab = false;
+
+            BG.groupIdForNextTab = null;
 
             newTabs = await Promise.all(newTabs.reverse().map(cache.setTabSession)); // reverse tabs back (reset tabs positions)
 
