@@ -1082,14 +1082,14 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
 
     let groupBookmarkFolder = await _getBookmarkFolderFromTitle(group.title, rootFolder.id, groupIndex);
 
-    let bookmarksToRemove = new Set;
+    let bookmarksToRemove = [];
 
     if (options.leaveBookmarksOfClosedTabs) {
         group.tabs.forEach(function(tab) {
             groupBookmarkFolder.children = groupBookmarkFolder.children.filter(function(bookmark) {
                 if (bookmark.type === BOOKMARK) {
                     if (bookmark.url === tab.url) {
-                        bookmarksToRemove.add(bookmark.id);
+                        bookmarksToRemove.push(bookmark.id);
                         return false;
                     }
 
@@ -1098,7 +1098,7 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
             });
         });
 
-        await Promise.all(Array.from(bookmarksToRemove).map(id => browser.bookmarks.remove(id).catch(noop)));
+        await Promise.all(bookmarksToRemove.map(id => browser.bookmarks.remove(id).catch(noop)));
 
         let children = await browser.bookmarks.getChildren(groupBookmarkFolder.id);
 
@@ -1159,9 +1159,9 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
             }
         }
 
-        groupBookmarkFolder.children.forEach(({id, type}) => type !== FOLDER && !foundedBookmarks.has(id) && bookmarksToRemove.add(id));
+        groupBookmarkFolder.children.forEach(({id, type}) => type !== FOLDER && !foundedBookmarks.has(id) && bookmarksToRemove.push(id));
 
-        await Promise.all(Array.from(bookmarksToRemove).map(id => browser.bookmarks.remove(id).catch(noop)));
+        await Promise.all(bookmarksToRemove.map(id => browser.bookmarks.remove(id).catch(noop)));
     }
 
     if (showMessages) {
