@@ -265,6 +265,13 @@
         return tab;
     }
 
+    const UUIDRegExp = /^moz-extension:\/\/([a-f\-\d]+)\//;
+
+    function getUUIDFromUrl(url) {
+        let [, uuid] = UUIDRegExp.exec(url);
+        return uuid;
+    }
+
     function setUrlSearchParams(url, params = {}) {
         let urlObj = new URL(url);
 
@@ -667,6 +674,7 @@
         isUrlAllowToCreate,
         normalizeUrl,
         normalizeTabUrl,
+        getUUIDFromUrl,
         setUrlSearchParams,
         isTabPinned,
         isTabNotPinned,

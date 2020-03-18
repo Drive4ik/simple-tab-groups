@@ -1353,13 +1353,11 @@ async function onBeforeTabRequest({tabId, url, originUrl, requestId, frameId}) {
             if (tab.hidden) {
                 //
             } else {
-                let [, uuid] = /moz-extension:\/\/([a-f\-\d]+)\//.exec(originUrl);
-
                 newTabParams.url = utils.setUrlSearchParams(browser.extension.getURL('/help/open-in-container.html'), {
                     url: tab.url,
                     currentCookieStoreId: tabGroup.newTabContainer,
                     anotherCookieStoreId: tab.cookieStoreId,
-                    uuid: uuid,
+                    uuid: utils.getUUIDFromUrl(originUrl),
                     groupId: tabGroup.id,
                 });
 
@@ -2788,6 +2786,24 @@ async function normalizeContainersInGroups(groups = null) {
     return groups ? _groups : Groups.save(_groups);
 }
 
+async function restoreOldExtensionUrls() {
+    let tabs = await browser.tabs.query({
+            url: 'moz-extension://*/help/open-in-container.html*',
+        }),
+        currentUUID = utils.getUUIDFromUrl(addonUrlPrefix);
+
+    tabs.forEach(function({id, url}) {
+        let uuid = utils.getUUIDFromUrl(url);
+
+        if (uuid !== currentUUID) {
+            browser.tabs.update(id, {
+                url: url.replace(uuid, currentUUID),
+                loadReplace: true,
+            });
+        }
+    });
+}
+
 // { reason: "update", previousVersion: "3.0.1", temporary: true }
 // { reason: "install", temporary: true }
 browser.runtime.onInstalled.addListener(function onInstalled({previousVersion, reason, temporary}) {
@@ -2969,6 +2985,8 @@ async function init() {
     await tryRestoreMissedTabs();
 
     containers.removeUnusedTemporaryContainers(windows);
+
+    restoreOldExtensionUrls();
 
     resetAutoBackup();
 
