@@ -9,7 +9,7 @@
         event.preventDefault && event.preventDefault();
         event.stopImmediatePropagation && event.stopImmediatePropagation();
 
-        if (event.error && event.error && event.error.includes('waiting background')) {
+        if (typeof event.error === 'string' && event.error.includes('waiting background')) {
             console.log(event.error);
             return;
         }

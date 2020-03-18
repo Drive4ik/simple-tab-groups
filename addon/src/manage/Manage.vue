@@ -217,7 +217,7 @@
                 let lazyAddGroupTabTimer = {},
                     lazyAddUnsyncTabTimer = 0;
                 const lazyAddTab = (tab, groupId) => {
-                    tab = this.mapTab(cache.applyTabSession(tab));
+                    tab = this.mapTab(tab);
 
                     let group = groupId ? this.groups.find(gr => gr.id === groupId) : null;
 
