@@ -659,6 +659,8 @@ async function addUndoRemoveGroupItem(groupToRemove) {
 
         groups.push(group);
 
+        groups = await normalizeContainersInGroups(groups);
+
         await Groups.save(groups);
 
         updateMoveTabMenus();
@@ -666,13 +668,14 @@ async function addUndoRemoveGroupItem(groupToRemove) {
         if (group.tabs.length && !group.isArchive) {
             await loadingBrowserAction();
 
-            await createTabsSafe(Groups.setNewTabsParams(group.tabs, group));
+            group.tabs = await createTabsSafe(Groups.setNewTabsParams(group.tabs, group));
 
             await loadingBrowserAction(false);
         }
 
         sendMessage({
-            action: 'groups-updated',
+            action: 'group-added',
+            group,
         });
 
     }.bind(null, utils.clone(groupToRemove));

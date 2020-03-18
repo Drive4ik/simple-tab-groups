@@ -399,6 +399,10 @@
                             this.groups.push(this.mapGroup(request.group));
                             break;
                         case 'group-removed':
+                            if (this.groupToShow && this.groupToShow.id === request.groupId) {
+                                this.showSectionDefault();
+                            }
+
                             let groupIndex = this.groups.findIndex(gr => gr.id === request.groupId);
 
                             if (-1 !== groupIndex) {

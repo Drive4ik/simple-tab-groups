@@ -207,7 +207,6 @@
             BG.sendExternalMessage({
                 action: 'group-updated',
                 group: mapForExternalExtension(group),
-                windowId: cache.getWindowId(groupId),
             });
 
             BG.updateMoveTabMenus();
@@ -349,6 +348,11 @@
                 BG.removeExcludeTabIds(tabIds);
             }
         }
+
+        BG.sendExternalMessage({
+            action: 'group-updated',
+            group: mapForExternalExtension(group),
+        });
 
         await save(groups, true);
 
