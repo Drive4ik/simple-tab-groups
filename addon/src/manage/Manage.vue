@@ -25,7 +25,7 @@
 
     const VIEW_GRID = 'grid',
         VIEW_DEFAULT = VIEW_GRID,
-        availableTabKeys = ['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'thumbnail'];
+        availableTabKeys = new Set(['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'thumbnail']);
 
     export default {
         data() {
@@ -579,9 +579,13 @@
             },
 
             mapTab(tab) {
-                Object.keys(tab).forEach(key => !availableTabKeys.includes(key) && delete tab[key]);
+                Object.keys(tab).forEach(key => !availableTabKeys.has(key) && delete tab[key]);
 
                 tab = utils.normalizeTabFavIcon(tab);
+
+                if (tab.url === window.location.href) {
+                    tab.status = browser.tabs.TabStatus.COMPLETE;
+                }
 
                 tab.container = containers.isDefault(tab.cookieStoreId) ? false : containers.get(tab.cookieStoreId);
 
