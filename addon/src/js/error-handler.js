@@ -14,6 +14,10 @@
             return;
         }
 
+        if (undefined === console.getErrorStack) { // background not inited
+            return;
+        }
+
         let nativeError = event.error || event,
             data = null;
 

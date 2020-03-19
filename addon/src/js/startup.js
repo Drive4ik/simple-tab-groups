@@ -23,6 +23,8 @@
                         browser.tabs.remove(currentTab.id);
                     }
                 });
+
+            return;
         }
 
         window.BG = background.BG;
