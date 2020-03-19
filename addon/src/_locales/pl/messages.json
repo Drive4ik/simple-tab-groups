@@ -168,7 +168,7 @@
         "description": "General"
     },
     "groupSettings": {
-        "message": "Ustawienia grup",
+        "message": "Ustawienia grupy",
         "description": "Group settings"
     },
     "deleteGroup": {
