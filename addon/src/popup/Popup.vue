@@ -431,6 +431,10 @@
                         case 'containers-updated':
                             this.containers = containers.getAll();
                             break;
+                        case 'lock-addon':
+                            fullLoading(true);
+                            removeEvents();
+                            break;
                     }
                 };
 
@@ -452,7 +456,7 @@
                 browser.tabs.onAttached.addListener(onAttachedTab);
                 browser.runtime.onMessage.addListener(onMessage);
 
-                window.addEventListener('unload', function() {
+                function removeEvents() {
                     browser.tabs.onCreated.removeListener(onCreatedTab);
                     browser.tabs.onUpdated.removeListener(onUpdatedTab);
                     browser.tabs.onRemoved.removeListener(onRemovedTab);
@@ -461,7 +465,9 @@
                     browser.tabs.onDetached.removeListener(onDetachedTab);
                     browser.tabs.onAttached.removeListener(onAttachedTab);
                     browser.runtime.onMessage.removeListener(onMessage);
-                });
+                }
+
+                window.addEventListener('unload', removeEvents);
             },
 
             async loadGroupTabs(groupId) {

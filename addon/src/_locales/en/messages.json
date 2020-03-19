@@ -986,5 +986,27 @@
     "searchOrGoToActive": {
         "message": "Search or right arrow to focus on active tab/group",
         "description": "Search or right arrow to focus on active tab/group"
+    },
+    "thisGroupIsMain": {
+        "message": "This group is marked as main",
+        "description": "This group is marked as main"
+    },
+    "setGroupAsMain": {
+        "message": "Set this group as main",
+        "description": "Set this group as main"
+    },
+    "thisGroupWasMain": {
+        "message": "Notice\nThis group was marked as the main",
+        "description": "Notice\nThis group was marked as the main"
+    },
+    "moveToMainIfNotInCatchTabRules": {
+        "message": "Move tabs from this group to the \"$grouptitle$\" group if none of the regular expression rules matches",
+        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "My main group"
+            }
+        }
     }
 }

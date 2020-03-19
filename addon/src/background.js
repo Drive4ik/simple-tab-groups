@@ -1321,10 +1321,11 @@ async function onBeforeTabRequest({tabId, url, originUrl, requestId, frameId}) {
         return {};
     }
 
-    if (!tabGroup.isSticky && tabGroup.newTabContainer !== TEMPORARY_CONTAINER) {
-        let destGroup = Groups.getCatchedForTab(groups, tab);
+    if (!tabGroup.isSticky) {
+        let destGroup = Groups.getCatchedForTab(groups, tabGroup, tab);
 
-        if (destGroup && destGroup.id !== tabGroup.id) {
+        if (destGroup) {
+            cache.backupTabForMove(tab);
             console.log('onBeforeTabRequest move tab from groupId %d -> %d', tabGroup.id, destGroup.id);
             addTabToLazyMove(tab.id, destGroup.id, destGroup.showTabAfterMovingItIntoThisGroup);
             return {};
@@ -2066,6 +2067,10 @@ async function createBackup(includeTabThumbnails, includeTabFavIcons, isAutoBack
 async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
     removeEvents();
 
+    sendMessage({
+        action: 'lock-addon',
+    });
+
     await loadingBrowserAction();
 
     let {os} = await browser.runtime.getPlatformInfo(),
@@ -2077,6 +2082,8 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         await utils.wait(1000);
 
         await containers.init();
+    } else {
+        data.groups.forEach(group => group.isMain = false);
     }
 
     let currentData = await storage.get(null),
@@ -2180,6 +2187,10 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
 async function clearAddon(reloadAddonOnFinish = true) {
     if (reloadAddonOnFinish) {
         await loadingBrowserAction();
+
+        sendMessage({
+            action: 'lock-addon',
+        });
     }
 
     removeEvents();
@@ -2588,8 +2599,12 @@ async function runMigrateForData(data) {
         },
         {
             version: '4.5',
+            remove: ['withoutSession'],
             migration() {
                 data.groups.forEach(function(group) {
+                    group.isMain = false;
+                    group.moveToMainIfNotInCatchTabRules = false;
+
                     group.ifDifferentContainerReOpen = group.ifNotDefaultContainerReOpenInNew;
                     delete group.ifNotDefaultContainerReOpenInNew;
                 });

@@ -67,8 +67,10 @@
             iconViewType: BG.getOptions('defaultGroupIconViewType'),
             tabs: [],
             isArchive: false,
-            catchTabRules: '',
             catchTabContainers: [],
+            catchTabRules: '',
+            isMain: false,
+            moveToMainIfNotInCatchTabRules: false,
             newTabContainer: null,
             ifDifferentContainerReOpen: true,
             isSticky: false,
@@ -131,7 +133,10 @@
     }
 
     async function remove(groupId) {
-        let [group, groups, index] = await load(groupId, true);
+        let [group, groups, index] = await load(groupId, true),
+            {isMain} = group;
+
+        group.isMain = false;
 
         BG.addUndoRemoveGroupItem(group);
 
@@ -159,6 +164,10 @@
 
             if (groupWindowId) {
                 BG.updateBrowserActionData(null, groupWindowId);
+            }
+
+            if (isMain) {
+                utils.notify(browser.i18n.getMessage('thisGroupWasMain'), 7000);
             }
         }
 
@@ -189,6 +198,10 @@
 
         if (updateData.title) {
             updateData.title = updateData.title.slice(0, 256);
+        }
+
+        if (updateData.isMain) {
+            groups.forEach(gr => gr.isMain = gr.id === groupId);
         }
 
         Object.assign(group, updateData);
@@ -347,6 +360,11 @@
                 await Tabs.remove(tabIds);
                 BG.removeExcludeTabIds(tabIds);
             }
+
+            if (group.isMain) {
+                group.isMain = false;
+                utils.notify(browser.i18n.getMessage('thisGroupWasMain'), 7000);
+            }
         }
 
         BG.sendExternalMessage({
@@ -398,12 +416,10 @@
             });
     }
 
-    function getCatchedForTab(groups, {cookieStoreId, url}) {
-        return groups.find(function({isArchive, catchTabContainers, catchTabRules}) {
-            if (isArchive) {
-                return false;
-            }
+    function getCatchedForTab(groups, currentGroup, {cookieStoreId, url}) {
+        groups = groups.filter(group => !group.isArchive);
 
+        let destGroup = groups.find(function({catchTabContainers, catchTabRules}) {
             if (catchTabContainers.includes(cookieStoreId)) {
                 return true;
             }
@@ -412,6 +428,26 @@
                 return true;
             }
         });
+
+        if (destGroup) {
+            if (destGroup.id === currentGroup.id) {
+                return false;
+            }
+
+            return destGroup;
+        }
+
+        if (!currentGroup.moveToMainIfNotInCatchTabRules || !currentGroup.catchTabRules) {
+            return false;
+        }
+
+        let mainGroup = groups.find(group => group.isMain);
+
+        if (!mainGroup || mainGroup.id === currentGroup.id) {
+            return false;
+        }
+
+        return mainGroup;
     }
 
     window.Groups = {

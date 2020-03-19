@@ -305,11 +305,13 @@
         tabs = tabs.filter(function(tab) {
             if (tab.pinned) {
                 showPinnedMessage = true;
+                BG.excludeTabsIds.delete(tab.id);
                 return false;
             }
 
             if (utils.isTabCanNotBeHidden(tab)) {
                 tabsCantHide.add(utils.getTabTitle(tab, false, 20));
+                BG.excludeTabsIds.delete(tab.id);
                 return false;
             }
 
@@ -328,7 +330,7 @@
                 if (winGroupId) {
                     tabsToActive = groups.find(gr => gr.id === winGroupId).tabs;
                 } else {
-                    tabsToActive = await get(activeTab.windowId);
+                    tabsToActive = await get(activeTab.windowId, null);
                 }
 
                 tabsToActive = tabsToActive.filter(tab => !tabs.some(t => t.id === tab.id));
@@ -344,7 +346,11 @@
                 let tabsIdsToRemove = [],
                     newTabParams = Groups.getNewTabParams(group);
 
-                tabs = await Promise.all(tabs.map(function(tab) {
+                BG.groupIdForNextTab = group.id;
+
+                BG.skipCreateTab = true;
+
+                tabs = await Promise.all(tabs.map(async function(tab) {
                     if (
                         tab.cookieStoreId === group.newTabContainer ||
                         containers.isTemporary(tab.cookieStoreId) ||
@@ -357,12 +363,30 @@
 
                     tabsIdsToRemove.push(tab.id);
 
-                    return create({
-                        ...tab,
+                    let backupedTab = cache.getBackupedTabForMove(tab.id);
+
+                    if (backupedTab) {
+                        tab.url = backupedTab.url;
+                        tab.title = backupedTab.title;
+                    }
+
+                    let newTab = await createNative({
+                        url: tab.url,
+                        title: tab.title,
+                        favIconUrl: tab.favIconUrl,
+                        thumbnail: tab.thumbnail,
+                        cookieStoreId: tab.cookieStoreId,
+                        isInReaderMode: tab.isInReaderMode,
                         windowId,
                         ...newTabParams,
                     });
+
+                    return cache.setTabSession(newTab);
                 }));
+
+                BG.skipCreateTab = false;
+
+                BG.groupIdForNextTab = null;
 
                 if (tabsIdsToRemove.length) {
                     let tabIdsToExclude = [];
@@ -406,8 +430,6 @@
             BG.sendMessage({
                 action: 'groups-updated',
             });
-        } else {
-            BG.removeExcludeTabIds(tabs.map(utils.keyId));
         }
 
         if (showPinnedMessage) {

@@ -340,7 +340,6 @@
 
                 try {
                     data = await BG.runMigrateForData(data); // run migration for data
-                    delete data.withoutSession;
                 } catch (e) {
                     utils.notify(String(e));
                     return;
