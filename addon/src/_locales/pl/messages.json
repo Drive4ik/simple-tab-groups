@@ -12,15 +12,15 @@
         "description": "Manage groups"
     },
     "setTabIconAsGroupIcon": {
-        "message": "Ustaw ikonę strony jako ikonę grupy",
+        "message": "Ustaw ikonę karty jako ikonę grupy",
         "description": "Set tab icon as group icon"
     },
     "moveTabToGroupDisabledTitle": {
-        "message": "Przesuń zakładkę do grupy",
+        "message": "Przesuń kartę do grupy",
         "description": "Move tab to group title"
     },
     "moveTabToGroupMessage": {
-        "message": "Zakładka \"$tabtitle$\" została przeniesiona do grupy \"$grouptitle$\".\n\nKliknij tutaj, aby wyświetlić tę kartę.",
+        "message": "Karta \"$tabtitle$\" została przeniesiona do grupy \"$grouptitle$\".\n\nKliknij tutaj, aby wyświetlić tę kartę.",
         "description": "Tab moved popup title",
         "placeholders": {
             "grouptitle": {
@@ -88,7 +88,7 @@
         "description": "Show notification when tab is moved to another group"
     },
     "openManageGroupsInTab": {
-        "message": "Otwórz \"Menadżer grup\" w nowej zakładce",
+        "message": "Otwórz \"Menadżer grup\" w nowej karcie",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
@@ -96,7 +96,7 @@
         "description": "Show confirm dialog before group delete"
     },
     "exportAddonSettingsTitle": {
-        "message": "Kopia zapasowa twoich zakładek",
+        "message": "Kopia zapasowa twoich grup",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
@@ -112,11 +112,11 @@
         "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "Przywróć zakładki",
+        "message": "Przywróć grupy używając kopii zapasowej",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
-        "message": "Załaduj plik kopii zapasowej zawierający grupy kart, które chcesz przywrócić.",
+        "message": "Wczytaj plik kopii zapasowej zawierający grupy kart, które chcesz przywrócić.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
     "importAddonSettingsButton": {
@@ -128,7 +128,7 @@
         "description": "Restore Quicksaver's \"Tab Groups\""
     },
     "importSettingsOldTabGroupsAddonDescription": {
-        "message": "Załaduj plik kopii zapasowej",
+        "message": "Wczytaj plik kopii zapasowej",
         "description": "Load a backup file old \"Tab Groups\" addon."
     },
     "openGroupAfterChange": {
@@ -146,7 +146,7 @@
         }
     },
     "searchNotFoundTitle": {
-        "message": "Wyszukaj karty dla \"$search$\" nie znaleziono",
+        "message": "Nie znaleziono wyników dla \"$search$\"",
         "description": "No results found",
         "placeholders": {
             "search": {
@@ -214,11 +214,11 @@
         }
     },
     "deleteTab": {
-        "message": "Usuń zakładkę",
+        "message": "Usuń kartę",
         "description": "Delete tab"
     },
     "createNewTab": {
-        "message": "Otwórz nową zakładkę",
+        "message": "Otwórz nową kartę",
         "description": "Open new tab"
     },
     "createNewGroup": {
@@ -242,11 +242,11 @@
         "description": "Icon color"
     },
     "selectUserGroupIcon": {
-        "message": "Załaduj ikonę",
+        "message": "Wczytaj ikonę",
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Niestety, nie możesz załadować niestandardowej ikony w tym okienku, ale możesz załadować niestandardową ikonę grupy w opcji \"Zarządzaj grupami\". \nOtwórz \"Zarządzaj grupami\"?",
+        "message": "Niestety, nie możesz załadować niestandardowej ikony w tym okienku, ale możesz załadować niestandardową ikonę grupy w opcji \"Zarządzaj grupami\". \nOtworzyć \"Zarządzaj grupami\"?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -254,11 +254,11 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Złap i przenieś zakładki z zasobnikami do tej grupy",
+        "message": "Złap i przenieś karty z kontekstem do tej grupy",
         "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
-        "message": "Szukaj kart za pomocą wyrażenia regularnego",
+        "message": "Dopasuj karty za pomocą wyrażenia regularnego",
         "description": "Regular expressions for catch tabs"
     },
     "regexpForTabsPlaceholder": {
@@ -298,39 +298,39 @@
         "description": "Select group"
     },
     "hotkeyActionTitleLoadNextGroup": {
-        "message": "Załaduj następną grupę",
+        "message": "Wczytaj następną grupę",
         "description": "Load next group"
     },
     "hotkeyActionTitleLoadPrevGroup": {
-        "message": "Załaduj poprzednią grupę",
+        "message": "Wczytaj poprzednią grupę",
         "description": "Load previous group"
     },
     "hotkeyActionTitleLoadNextUnloadedGroup": {
-        "message": "Załaduj kolejną niewczytaną grupę",
+        "message": "Wczytaj kolejną ukrytą grupę",
         "description": "Load next unloaded group"
     },
     "hotkeyActionTitleLoadPrevUnloadedGroup": {
-        "message": "Załaduj poprzednią niewczytaną grupę",
+        "message": "Wczytaj poprzednią ukrytą grupę",
         "description": "Load previous unloaded group"
     },
     "hotkeyActionTitleLoadHistoryNextGroup": {
-        "message": "Załaduj następną grupę z historii",
+        "message": "Wczytaj następną grupę z historii",
         "description": "Load next group from history"
     },
     "hotkeyActionTitleLoadHistoryPrevGroup": {
-        "message": "Załaduj poprzednią grupę z historii",
+        "message": "Wczytaj poprzednią grupę z historii",
         "description": "Load previous group from history"
     },
     "hotkeyActionTitleLoadFirstGroup": {
-        "message": "Załaduj pierwszą grupę",
+        "message": "Wczytaj pierwszą grupę",
         "description": "Load first group"
     },
     "hotkeyActionTitleLoadLastGroup": {
-        "message": "Załaduj ostatnią grupę",
+        "message": "Wczytaj ostatnią grupę",
         "description": "Load last group"
     },
     "hotkeyActionTitleLoadCustomGroup": {
-        "message": "Załaduj niestandardową grupę",
+        "message": "Wczytaj niestandardową grupę",
         "description": "Load custom group"
     },
     "hotkeyActionTitleAddNewGroup": {
@@ -354,7 +354,7 @@
         "description": "Hotkey action Discard group"
     },
     "hotkeyActionTitleDiscardOtherGroups": {
-        "message": "Odrzuć pozostałe hrupy",
+        "message": "Odrzuć pozostałe grupy",
         "description": "Hotkey action Discard other groups"
     },
     "hotkeyActionTitleReloadAllTabsInCurrentGroup": {
@@ -402,7 +402,7 @@
         "description": "Icon style"
     },
     "discardTabsAfterHide": {
-        "message": "Zamknij zakładki po ich ukryciu (to zmniejszy użycie pamięci RAM)",
+        "message": "Zamknij karty po ich ukryciu (to zmniejszy użycie pamięci RAM)",
         "description": "Discard tabs after hide (this will save the RAM)"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
@@ -418,7 +418,7 @@
         "description": "Move all of these tabs into current group/window"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
-        "message": "Utwórz nową grupę z tymi zakładkami",
+        "message": "Utwórz nową grupę z tymi kartami",
         "description": "Create new group with all of these tabs"
     },
     "actionHiddenUnSyncTabsCloseAll": {
@@ -426,7 +426,7 @@
         "description": "Close all of these tabs"
     },
     "updateTabThumbnail": {
-        "message": "Zaktualizuj miniaturę dla tej zakładki",
+        "message": "Zaktualizuj miniaturę dla tej karty",
         "description": "Update thumbnail for this tab"
     },
     "notFoundWindowsAddonStoppedWorking": {
@@ -458,7 +458,7 @@
         "description": "Tab moving"
     },
     "includeTabFavIconsIntoBackup": {
-        "message": "Uwzględnij favikony kart w kopii (plik kopii będzie przez to większy)",
+        "message": "Uwzględnij ikony kart w kopii (plik kopii będzie przez to większy)",
         "description": "Include tab fav-icons in backup (makes backup file size bigger)"
     },
     "groupRemovedByExtension": {
@@ -484,7 +484,7 @@
         "description": "Extended search"
     },
     "movingMultipleTabsText": {
-        "message": "Przenoszenie $count$ tabs",
+        "message": "Przenoszenie $count$ kart",
         "description": "Moving $count$ tabs",
         "placeholders": {
             "count": {
@@ -518,7 +518,7 @@
         }
     },
     "moveMultipleTabsToGroupMessage": {
-        "message": "Przeniesionych zostało $tabscount$ zakładek. Kliknij tutaj aby przejść do pierwszej.",
+        "message": "Przeniesionych zostało $tabscount$ kart. Kliknij tutaj aby przejść do pierwszej.",
         "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
         "placeholders": {
             "tabscount": {
@@ -532,7 +532,7 @@
         "description": "Enable auto backup"
     },
     "autoBackupCreateEveryTitle": {
-        "message": "Utwórz kopie co:",
+        "message": "Utwórz kopię co:",
         "description": "Create backup every:"
     },
     "autoBackupIntervalKeyHours": {
@@ -548,11 +548,11 @@
         "description": "Last backup:"
     },
     "enableDarkTheme": {
-        "message": "Włącz ciemny schemat",
+        "message": "Włącz ciemny motyw",
         "description": "Enable dark theme"
     },
     "enableDarkThemeNotification": {
-        "message": "Aby uzyskać pełne wsparcie ciemnego schematu, ustaw parametr<br><code>svg.context-properties.content.enabled</code>na <code>true</code> w <code>about:config</config>.<br><br><a href='https://support.mozilla.org/kb/about-config-editor-firefox'>Jak to zrobić?</a>",
+        "message": "Aby uzyskać pełne wsparcie ciemnego motywu, ustaw parametr<br><code>svg.context-properties.content.enabled</code>na <code>true</code> w <code>about:config</config>.<br><br><a href='https://support.mozilla.org/kb/about-config-editor-firefox'>Jak to zrobić?</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {
@@ -584,7 +584,7 @@
         "description": "Create a new group when opening a new window"
     },
     "prependGroupTitleToWindowTitle": {
-        "message": "Przypnij nazwę grupy do nazwy okna przeglądarki",
+        "message": "Pokaż nazwę grupy jako prefiks w tytule okna",
         "description": "Prepend group title to window title"
     },
     "allowAccessToBookmarks": {
@@ -706,11 +706,11 @@
         "description": "Show notification after group delete"
     },
     "reloadTab": {
-        "message": "Przeładuj zakładkę",
+        "message": "Odśwież kartę",
         "description": "Reload tab"
     },
     "thisTabIsNotSupported": {
-        "message": "Wybrana zakładka nie jest wspierana",
+        "message": "Wybrana karta nie jest wspierana",
         "description": "This tab is not supported"
     },
     "showExtendGroupsPopupWithActiveTabs": {
@@ -718,7 +718,7 @@
         "description": "Show active tabs in groups popup"
     },
     "reloadAllTabsInGroup": {
-        "message": "Przeładuj wszystkie karty w grupie",
+        "message": "Odśwież wszystkie karty w grupie",
         "description": "Reload all tabs in group"
     },
     "tabsCreatedCount": {
@@ -740,15 +740,15 @@
         "description": "Show tabs with thumbnails in \"Manage groups\" page"
     },
     "alwaysOpenTabsInContainer": {
-        "message": "Zawsze otwieraj karty w zasobniku",
+        "message": "Zawsze otwieraj karty w kontekście",
         "description": "Always open tabs in container"
     },
     "temporaryContainerTitle": {
-        "message": "Zasobnik tymczasowy",
+        "message": "Kontekst tymczasowy",
         "description": "⌚Temporary Container"
     },
     "thisContainerIsNotTemporary": {
-        "message": "Zasobnik '$containerName$' przestał być tymczasowym",
+        "message": "Kontekst '$containerName$' przestał być tymczasowym",
         "description": "This container '$containerName$' is no longer temporary",
         "placeholders": {
             "containerName": {
@@ -758,7 +758,7 @@
         }
     },
     "thisContainerNowIsTemporary": {
-        "message": "Zasobnik '$containerName$' stał się tymczasowym",
+        "message": "Kontekst '$containerName$' stał się tymczasowym",
         "description": "This container '$containerName$' has now become temporary",
         "placeholders": {
             "containerName": {
@@ -796,7 +796,213 @@
         "description": "Warning! Removing ALL addon data! Are you really sure?"
     },
     "ifDifferentContainerReOpen": {
-        "message": "Jeśli zasobnik jest inny niż poprzednio wybrany, to zmień zasobnik",
+        "message": "Jeśli kontekst jest inny niż poprzednio wybrany, to zmień kontekst",
         "description": "If the container is different from the selected one - change the container"
+    },
+    "deleteAllAddonDataAndSettingsBeforeRestoringBackup": {
+        "message": "Usuń wszystkie dane i ustawienia przed przywróceniem kopii zapasowej",
+        "description": "Delete all addon data and settings before restoring backup"
+    },
+    "helpPageWelcomeV4Title": {
+        "message": "Witaj w Simple Tab Groups v4",
+        "description": "Welcome to Simple Tab Groups v4"
+    },
+    "helpPageWelcomeV4Description": {
+        "message": "Włącz \"Przywracanie poprzedniej sesji\" w ustawieniach przeglądarki.<br>Jest to niezbędne do utrzymania komunikacji pomiędzy grupą a kartą,<br>w przeciwnym wypadku karty nie zostaną otwarte podczas uruchamiania przeglądarki i rozszerzenie straci informację o nich -<br>rozszerzenie nie będzie działać.",
+        "description": "Please enable \"Restore previous session\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
+    },
+    "helpPageDisableIncognitoTitle": {
+        "message": "Witaj w Simple Tab Groups v4",
+        "description": "Welcome to Simple Tab Groups v4"
+    },
+    "helpPageDisableIncognitoDescription": {
+        "message": "Wyłącz zezwalanie na działanie rozszerzenia w oknach prywatnych:",
+        "description": "Please disable add-on access to private mode in windows:"
+    },
+    "leaveBookmarksOfClosedTabs": {
+        "message": "Pozostaw zakładki zamkniętych kart (zakładki będą rozdzielone separatorem)",
+        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+    },
+    "enableDebugTitle": {
+        "message": "Włącz tryb DEBUG",
+        "description": "Enable DEBUG"
+    },
+    "loggingIsEnabledTitle": {
+        "message": "zapisywanie zdarzeń w dzienniku jest włączone",
+        "description": "logging is enabled"
+    },
+    "loggingIsAutoEnabledTitle": {
+        "message": "zapisywanie zdarzeń w dzienniku zostało automatycznie włączone z powodu błędu w rozszerzeniu",
+        "description": "logging was auto-enabled due to an error in addon"
+    },
+    "loggingDescription": {
+        "message": "Włącz tę opcję tylko jeśli potrzebujesz zarejestrować błąd i wysłać związane z nim logi do mnie. Zaznaczenie tej opcji spowoduje zauważalne spowolnienie działania tego rozszerzenia w związku z logowaniem wszystkich wykonywanych operacji. W momencie, gdy uda się tobie powtórzyć błąd odznacz tę opcję, a rozszerzenie umożliwi zapisanie pliku z dziennikiem zdarzeń. Ta opcja może zostać zaznaczona automatycznie w momencie pojawienia się błędu. W takiej sytuacji, aby zapisać plik dziennika zdarzeń należy wyłączyć opcję DEBUG<br>\nProszę o wysłanie do mnie tego pliku dziennika zdarzeń pod adres email: <a href=\"mailto:drive4ik@gmail.com\">drive4ik@gmail.com</a><br> <span class=\"has-text-danger\">Uwaga! W dzienniku zdarzeń nie są zapisywane dane osobiste, hasła, zakładki, itp.!</span><br> Jest to niezbędne, abym miał możliwość zreprodukowania i naprawienia tego błędu.<br> Z poważaniem",
+        "description": "logging description"
+    },
+    "archiveGroup": {
+        "message": "Archiwizuj grupę",
+        "description": "Archive"
+    },
+    "unArchiveGroup": {
+        "message": "Przywróć zarchiwizowaną grupę",
+        "description": "Unarchive"
+    },
+    "groupIsArchived": {
+        "message": "Nie można wykonać akcji, grupa \"$grouptitle$\" jest w archiwum",
+        "description": "Unable to complete the action, the group is in the archive",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "updateAddonToLatestVersion": {
+        "message": "Zaktualizuj rozszerzenie do najnowszej wersji",
+        "description": "Please, update addon to latest version"
+    },
+    "hotkeyActionTitleRenameGroup": {
+        "message": "Zmień nazwę grupy",
+        "description": "Rename group"
+    },
+    "noGroupsAvailable": {
+        "message": "Nie masz żadnych grup",
+        "description": "You have no groups"
+    },
+    "alwaysAskNewGroupName": {
+        "message": "Zawsze pytaj o nazwę nowej grupy",
+        "description": "Always ask for a new group name"
+    },
+    "impossibleToAskUserAboutAction": {
+        "message": "Nie można na stronie \"$page$\" zapytać o akcję \"$action$\"\n\nKliknij tutaj, aby poznać szczegóły",
+        "description": "On page \"$page$\" it is impossible to ask about \"$action$\"",
+        "placeholders": {
+            "page": {
+                "content": "$1",
+                "example": "Add-ons for Firefox"
+            },
+            "action": {
+                "content": "$2",
+                "example": "some action"
+            }
+        }
+    },
+    "openPopupTitle": {
+        "message": "Otwórz popup",
+        "description": "Open popup"
+    },
+    "openSidebarTitle": {
+        "message": "Otwórz panel boczny",
+        "description": "Open sidebar"
+    },
+    "helpPageOpenInContainerTitle": {
+        "message": "Nie można otworzyć adresu w kontekście",
+        "description": "Can't open URL in container"
+    },
+    "helpPageOpenInContainerMainTitle": {
+        "message": "Nie można otworzyć adresu w kontekście <container-name>$containerName$</container-name>",
+        "description": "Can't open the URL into Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerSubTitle": {
+        "message": "rozszerzenie nie może otworzyć adresu:",
+        "description": "addon can't open URL:"
+    },
+    "helpPageOpenInContainerDesc1": {
+        "message": "Grupa <strong>$groupTitle$</strong> została przypisana do otwartych kart w kontekście <container-name>$containerName$</container-name>.",
+        "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
+        "placeholders": {
+            "groupTitle": {
+                "content": "$1",
+                "example": "Group 1"
+            },
+            "containerName": {
+                "content": "$2",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerDesc2": {
+        "message": "Inne rozszerzenie z następującym UUID:",
+        "description": "Another addon, which has UUID:"
+    },
+    "helpPageOpenInContainerDesc3": {
+        "message": "próbuje otworzyć ten adres w kontekście <container-name>$containerName$</container-name>. Przenieś kartę do innej grupy albo zabroń rozszerzeniu <strong>$uuid$</strong> wykonania tej akcji.",
+        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon '757eaba7-0b3d-478b-ace2-cbe0a16eed47' to perform this action.",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Business"
+            },
+            "uuid": {
+                "content": "$2",
+                "example": "757eaba7-0b3d-478b-ace2-cbe0a16eed47"
+            }
+        }
+    },
+    "helpPageOpenInContainerDesc4": {
+        "message": "Możesz odnaleźć rozszerzenie przy pomocy jego UUID na stronie:",
+        "description": "You can find out the addon by UUID on the page:"
+    },
+    "helpPageOpenInContainerOpenInContainer": {
+        "message": "Otwórz w kontekście <container-name>$containerName$</container-name>",
+        "description": "Open in Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
+    },
+    "reverseTabsOnCreate": {
+        "message": "Zmień kolejność kart przy tworzeniu, jeśli opcja <code>browser.tabs.insertAfterCurrent</code> jest ustawiona na <code>true</code>",
+        "description": "Reverse tabs on create, if you have the browser.tabs.insertAfterCurrent preference is true"
+    },
+    "groupNotLoaded": {
+        "message": "Grupa nie została wczytana",
+        "description": "Group not loaded"
+    },
+    "groupNotFound": {
+        "message": "Nie znaleziono grupy",
+        "description": "Group not found"
+    },
+    "unloadGroup": {
+        "message": "Ukryj karty grupy",
+        "description": "Unload the group"
+    },
+    "tabsInThisWindowWereHidden": {
+        "message": "Karty w tym oknie zostały ukryte. Możesz znaleźć je na dole wyskakującego okna rozszerzenia.",
+        "description": "Tabs in this window were hidden. You can find them at the bottom of the popup window of the addon."
+    },
+    "searchOrGoToActive": {
+        "message": "Wyszukaj i użyj strzałek aby wybrać i uaktywnić kartę/grupę",
+        "description": "Search or right arrow to focus on active tab/group"
+    },
+    "thisGroupIsMain": {
+        "message": "Ta grupa jest oznaczona jako główna",
+        "description": "This group is marked as main"
+    },
+    "setGroupAsMain": {
+        "message": "Ustaw tę grupę jako główną",
+        "description": "Set this group as main"
+    },
+    "thisGroupWasMain": {
+        "message": "Informacja\nTa grupa została oznaczona jako główna",
+        "description": "Notice\nThis group was marked as the main"
+    },
+    "moveToMainIfNotInCatchTabRules": {
+        "message": "Przenieś karty z tej grupy do grupy \"$grouptitle$\" jeśli nie pasują do żadnego z wyrażeń regularnych",
+        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "My main group"
+            }
+        }
     }
 }
