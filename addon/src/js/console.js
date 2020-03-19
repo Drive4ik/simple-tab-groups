@@ -1,9 +1,8 @@
-
 (function() {
+    'use strict';
+
     let keys = Object.keys(console),
-        checkTime = function() {
-            console.lastUsage = Date.now();
-        },
+        checkTime = () => console.lastUsage = Date.now(),
         logs = [],
         _console = {},
         browserFuncs = {};
@@ -11,8 +10,6 @@
     checkTime();
 
     keys.forEach(key => _console[key] = console[key].bind(console));
-
-    const addonUrlPrefix = browser.extension.getURL('');
 
     function clone(obj) {
         return JSON.parse(JSON.stringify(obj));
@@ -36,9 +33,12 @@
         window.localStorage.errorLogs = JSON.stringify(errorLogs);
     }
 
-    function getStack(e, start = 1, to = 10) {
+    function getErrorStack(e, start = 1, to = 20) {
         return e.stack.split(addonUrlPrefix).join('').split('@').slice(start, to).map(s => s.trim().replace('\n', ' <- '));
     }
+
+    console.addErrorLog = addErrorLog;
+    console.getErrorStack = getErrorStack;
 
     function log(key, ...args) {
         checkTime();
@@ -48,7 +48,7 @@
         logs.push({
             key,
             time: (new Date).toISOString(),
-            stack: Array.isArray(this) ? clone(this) : getStack(new Error()),
+            stack: Array.isArray(this) ? clone(this) : getErrorStack(new Error()),
             args,
         });
 
@@ -96,7 +96,7 @@
         return [...result, 'errorLogs:', ...getErrorLogs(true)];
     };
 
-    const excludeKeys = ['i18n', 'management', 'permissions', 'runtime', 'menus', 'extension', 'sidebarAction', 'browserAction', 'theme', 'commands', 'test'];
+    const excludeKeys = ['i18n', 'management', 'permissions', 'runtime', 'menus', 'extension', 'sidebarAction', 'browserAction', 'theme', 'commands', 'test', 'webRequest'];
 
     function bindBrowser(obj, ...keys) {
         for (let k in obj) {
@@ -117,7 +117,7 @@
                     obj[k] = async function(key, ...args) {
                         log('[before] ' + key, ...args);
 
-                        let stack = getStack(new Error()),
+                        let stack = getErrorStack(new Error()),
                             now = Date.now(),
                             result = null;
 

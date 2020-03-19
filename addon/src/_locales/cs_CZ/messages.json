@@ -611,10 +611,6 @@
         "message": "Zobrazit kontextovou nabídku doplňku u odkazů",
         "description": "Show context menu on links"
     },
-    "importBookmarkFolderAsNewGroup": {
-        "message": "Importovat záložky ve složce do nové skupiny",
-        "description": "Import bookmark folder as new group"
-    },
     "groupsCreatedCount": {
         "message": "Vytvořeno skupin: $groupscount$",
         "description": "Groups created count",

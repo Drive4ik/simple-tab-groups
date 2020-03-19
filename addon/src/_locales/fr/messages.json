@@ -611,10 +611,6 @@
         "message": "Afficher le menu contextuel sur les liens",
         "description": "Show context menu on links"
     },
-    "importBookmarkFolderAsNewGroup": {
-        "message": "Importer le dossier de marque-pages comme un nouveau groupe",
-        "description": "Import bookmark folder as new group"
-    },
     "groupsCreatedCount": {
         "message": "$groupscount$ groupe(s) créé(s)",
         "description": "Groups created count",
@@ -978,5 +974,9 @@
     "unloadGroup": {
         "message": "Décharger le groupe",
         "description": "Unload the group"
+    },
+    "tabsInThisWindowWereHidden": {
+        "message": "Des onglets dans cette fenêtre ont été cachés. Vous les retrouverez en bas de la fenêtre pop-up de l'extension.",
+        "description": "Tabs in this window were hidden. You can find them at the bottom of the popup window of the addon."
     }
 }

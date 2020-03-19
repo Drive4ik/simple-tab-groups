@@ -66,8 +66,8 @@
                                     event.stopImmediatePropagation();
                                     node.click();
                                 }
-                            }, false);
-                            node.addEventListener('blur', this.onblur.bind(this), false);
+                            });
+                            node.addEventListener('blur', this.onblur.bind(this));
                         }, this);
                 });
             },

@@ -3,22 +3,12 @@
 
     import Vue from 'vue';
 
-    import utils from '../js/utils';
-    import storage from '../js/storage';
-    import file from '../js/file';
-    import Groups from '../js/groups';
-    import Tabs from '../js/tabs';
-    import Windows from '../js/windows';
-
     import popup from '../js/popup.vue';
     import swatches from 'vue-swatches';
     import manageAddonBackup from './manage-addon-backup';
     import 'vue-swatches/dist/vue-swatches.min.css';
 
-    const {BG} = browser.extension.getBackgroundPage();
-
-    window.addEventListener('error', utils.errorEventHandler);
-    Vue.config.errorHandler = utils.errorEventHandler;
+    Vue.config.errorHandler = errorEventHandler;
 
     const SECTION_GENERAL = 'general',
         SECTION_HOTKEYS = 'hotkeys',
@@ -135,6 +125,11 @@
                 }, this);
 
             browser.runtime.onMessage.addListener(({action}) => 'i-am-back' === action && window.location.reload());
+        },
+        mounted() {
+            if (this.enableDebug === '2') {
+                setTimeout(() => this.scrollToLoggingDesc(), 1000);
+            }
         },
         watch: {
             section(section) {
@@ -260,7 +255,7 @@
                     delete window.localStorage.enableDebug;
                 }
 
-                BG.console.restart();
+                console.restart();
 
                 if (!window.localStorage.enableDebug) {
                     BG.saveConsoleLogs();
@@ -280,6 +275,12 @@
         methods: {
             lang: browser.i18n.getMessage,
             getHotkeyActionTitle: action => browser.i18n.getMessage('hotkeyActionTitle' + utils.capitalize(utils.toCamelCase(action))),
+
+            scrollToLoggingDesc() {
+                this.section = SECTION_GENERAL;
+
+                this.$nextTick(() => utils.scrollTo('#logging-description'));
+            },
 
             openBackupFolder: file.openBackupFolder,
 
@@ -339,7 +340,6 @@
 
                 try {
                     data = await BG.runMigrateForData(data); // run migration for data
-                    delete data.withoutSession;
                 } catch (e) {
                     utils.notify(String(e));
                     return;
@@ -585,7 +585,7 @@
                 this.permissions.bookmarks = await browser.permissions.contains(PERMISSIONS.BOOKMARKS);
 
                 if (this.permissions.bookmarks) {
-                    this.defaultBookmarksParents = await BG.browser.bookmarks.get(DEFAULT_BOOKMARKS_PARENTS);
+                    this.defaultBookmarksParents = await browser.bookmarks.get(DEFAULT_BOOKMARKS_PARENTS);
                 }
             },
 
@@ -598,11 +598,11 @@
 
 <template>
     <div id="stg-options">
-        <div id="logging-notification" v-if="enableDebug === '2'">
+        <div id="logging-notification" @click="scrollToLoggingDesc" v-if="enableDebug === '2'">
             <span v-html="lang('loggingIsAutoEnabledTitle')"></span>
         </div>
 
-        <div class="tabs is-fullwidth">
+        <div class="tabs is-boxed is-fullwidth">
             <ul>
                 <li :class="{'is-active': section === SECTION_GENERAL}">
                     <a @click="section = SECTION_GENERAL" @keydown.enter="section = SECTION_GENERAL" tabindex="0">
@@ -803,7 +803,7 @@
                 </div>
             </div>
 
-            <div class="field" v-html="lang('loggingDescription')"></div>
+            <div id="logging-description" class="field" v-html="lang('loggingDescription')"></div>
         </div>
 
         <div v-show="section === SECTION_HOTKEYS">
@@ -1153,14 +1153,19 @@
     #logging-notification {
         display: flex;
         height: 30px;
-        background-color: #fdcbcb;
+        background-color: rgba(255, 123, 123, 0.5);
         align-items: center;
         justify-content: center;
+        cursor: pointer;
+        margin-bottom: 10px;
+        border-radius: 5px;
     }
 
     #stg-options {
         overflow-x: auto;
-        padding-left: 1px;
+        max-width: 1024px;
+        margin: 0 auto;
+        padding: 10px 0 50px;
 
         .backup-time-input {
             width: 100px;
@@ -1168,7 +1173,7 @@
 
         .hotkeys > .field {
             &:not(:last-child) {
-                border-bottom: 1px solid rgba(10, 132, 255, 0.6);
+                border-bottom: 1px solid var(--color-hr);
                 padding-bottom: .75rem;
             }
 
@@ -1217,41 +1222,29 @@
         }
     }
 
-    // bulma
     .tabs {
-        a {
-            border-top-color: transparent;
-            border-top-style: solid;
-            border-top-width: 3px;
-            cursor: default;
-        }
-
-        ul,
-        li a {
-            border-bottom: none;
-        }
-
-        li.is-active a {
-            border-top-color: #0a84ff;
-            color: #0a84ff;
-        }
-
-        a:hover,
-        a:focus {
-            border-top-color: #a9a9ac;
-            background-color: #ededf0;
+        ul {
+            border-bottom-color: var(--color-hr);
         }
     }
 
     html.dark-theme {
         --background-color: #202023;
 
-        .tabs a {
-            color: #a6a5a5;
+        .tabs {
+            a {
+                color: #a6a5a5;
+            }
 
-            &:hover,
-            &:focus {
-                background-color: #2c2c2f;
+            &.is-boxed {
+                li.is-active a {
+                    border-color: var(--color-hr);
+                }
+
+                li.is-active a,
+                a:hover {
+                    background-color: var(--background-color);
+                }
             }
         }
 

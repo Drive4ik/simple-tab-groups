@@ -599,10 +599,6 @@
         "message": "Zeige kontextsensitives Menü in Links",
         "description": "Show context menu on links"
     },
-    "importBookmarkFolderAsNewGroup": {
-        "message": "Importiere Lesezeichen-Ordner als neue Gruppe",
-        "description": "Import bookmark folder as new group"
-    },
     "groupsCreatedCount": {
         "message": "$groupscount$ Gruppen erzeugt",
         "description": "Groups created count",

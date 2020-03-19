@@ -4,6 +4,11 @@ const MANAGE_TABS_URL = '/manage/manage.html';
 const ACTIVE_SYMBOL = '⚪';
 const DISCARDED_SYMBOL = '❄';
 
+const TEMPORARY_CONTAINER = 'temporary-container';
+const DEFAULT_COOKIE_STORE_ID = 'firefox-default';
+
+const CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP = 'stg-undo-remove-group-id-';
+
 // permission "<all_urls>" need for tab thumbnails and webRequestBlocking
 const PERMISSIONS = Object.freeze({
     BOOKMARKS: {
@@ -157,7 +162,7 @@ const DEFAULT_OPTIONS = Object.freeze({
     showContextMenuOnLinks: true,
     exportGroupToMainBookmarkFolder: true,
     defaultBookmarksParent: DEFAULT_BOOKMARKS_PARENTS[0],
-    leaveBookmarksOfClosedTabs: true,
+    leaveBookmarksOfClosedTabs: false,
     showExtendGroupsPopupWithActiveTabs: false,
     showTabsWithThumbnailsInManageGroups: false,
     reverseTabsOnCreate: false,

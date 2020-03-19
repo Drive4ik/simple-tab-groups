@@ -1,18 +1,11 @@
 <script>
     'use strict';
 
-    import file from './file';
-    import utils from './utils';
-
     import Vue from 'vue';
 
     import popup from './popup.vue';
     import swatches from 'vue-swatches';
-    import Groups from '../js/groups';
-    import Tabs from '../js/tabs';
     import 'vue-swatches/dist/vue-swatches.min.css';
-
-    const {BG} = browser.extension.getBackgroundPage();
 
     export default {
         name: 'edit-group',
@@ -32,8 +25,8 @@
         },
         data() {
             return {
-                containers: BG.containers.getAll(),
-                TEMPORARY_CONTAINER: BG.containers.TEMPORARY_CONTAINER,
+                containers: containers.getAll(),
+                TEMPORARY_CONTAINER,
                 disabledContainers: {},
 
                 showMessageCantLoadFile: false,
@@ -41,6 +34,8 @@
                 GROUP_ICON_VIEW_TYPES: GROUP_ICON_VIEW_TYPES,
 
                 group: null,
+
+                mainGroup: null,
 
                 changedKeys: [],
 
@@ -75,7 +70,7 @@
                 }
             },
             hasContainers() {
-                return Object.keys(this.containers).some(cookieStoreId => cookieStoreId !== BG.containers.TEMPORARY_CONTAINER);
+                return Object.keys(this.containers).some(cookieStoreId => cookieStoreId !== TEMPORARY_CONTAINER);
             },
         },
         async created() {
@@ -94,6 +89,8 @@
                 },
             });
 
+            this.mainGroup = groups.find(gr => gr.isMain);
+
             for (let key in group) {
                 let unwatch = this.$watch(`group.${key}`, function() {
                     this.changedKeys.push(key);
@@ -104,7 +101,7 @@
             };
 
             for (let cookieStoreId in this.containers) {
-                groups.forEach(function(gr) {
+                groups.forEach(gr => {
                     if (gr.id === this.groupId) {
                         return;
                     }
@@ -112,7 +109,7 @@
                     if (gr.catchTabContainers.includes(cookieStoreId)) {
                         this.$set(this.disabledContainers, cookieStoreId, gr.title);
                     }
-                }, this);
+                });
             }
 
             let currentTab = await Tabs.getActive();
@@ -157,7 +154,7 @@
                 this.group.iconColor = utils.randomColor();
 
                 if (!this.group.iconViewType) {
-                    this.group.iconViewType = BG.getOptions().defaultGroupIconViewType;
+                    this.group.iconViewType = BG.getOptions('defaultGroupIconViewType');
                 }
             },
 
@@ -181,7 +178,7 @@
                 let iconUrl = await file.load('.ico,.png,.jpg,.svg', 'url'),
                     img = new Image();
 
-                img.addEventListener('load', function() {
+                img.addEventListener('load', () => {
                     let resizedIconUrl = iconUrl;
 
                     if (img.height > 64 || img.width > 64) {
@@ -189,7 +186,7 @@
                     }
 
                     this.setIconUrl(resizedIconUrl);
-                }.bind(this));
+                });
 
                 img.src = iconUrl;
             },
@@ -362,16 +359,13 @@
             </div>
         </div>
 
-        <div class="field h-margin-bottom-10">
+        <div class="field">
             <label class="label is-inline-flex indent-children">
                 <span v-text="lang('regexpForTabsTitle')"></span>
                 <span class="cursor-help" :title="lang('regexpForTabsHelp')">
                     <img class="size-18" src="/icons/help.svg" />
                 </span>
             </label>
-            <div class="control">
-                <textarea class="textarea reg-exp" :rows="canLoadFile ? false : 2" @keydown.enter.stop v-model.trim="group.catchTabRules" :placeholder="lang('regexpForTabsPlaceholder')"></textarea>
-            </div>
         </div>
 
         <div v-if="currentDomainRegexp || currentDomainWithSubdomainsRegexp" class="field is-grouped">
@@ -386,6 +380,33 @@
                 </button>
             </div>
         </div>
+
+        <div class="field h-margin-bottom-10">
+            <div class="control">
+                <textarea class="textarea reg-exp" :rows="canLoadFile ? false : 2" @keydown.enter.stop v-model.trim="group.catchTabRules" :placeholder="lang('regexpForTabsPlaceholder')"></textarea>
+            </div>
+        </div>
+
+        <template v-if="!group.isArchive">
+            <div class="field">
+                <div class="control">
+                    <button
+                        :disabled="group.isMain"
+                        :class="['button is-small', {'is-info': !group.isMain}]"
+                        @click="group.isMain = true"
+                        v-text="group.isMain ? lang('thisGroupIsMain') : lang('setGroupAsMain')"
+                        >
+                    </button>
+                </div>
+            </div>
+
+            <div class="field" v-if="!group.isMain && mainGroup">
+                <label class="checkbox" :disabled="!group.catchTabRules || group.isSticky">
+                    <input type="checkbox" :disabled="!group.catchTabRules || group.isSticky" v-model="group.moveToMainIfNotInCatchTabRules" />
+                    <span v-text="lang('moveToMainIfNotInCatchTabRules', mainGroup.title)"></span>
+                </label>
+            </div>
+        </template>
 
         <popup
             v-if="showMessageCantLoadFile"

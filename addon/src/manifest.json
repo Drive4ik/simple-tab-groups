@@ -4,7 +4,7 @@
     "applications": {
         "gecko": {
             "id": "simple-tab-groups@drive4ik",
-            "strict_min_version": "73.0"
+            "strict_min_version": "68.0"
         }
     },
 
@@ -65,11 +65,26 @@
 
     "options_ui": {
         "page": "options/options.html",
+        "open_in_tab": true,
         "browser_style": false
     },
 
     "background": {
-        "scripts": ["js/console.js", "js/constants.js", "background.js"]
+        "scripts": [
+            "js/console.js",
+            "js/constants.js",
+            "js/startup.js",
+            "js/utils.js",
+            "js/containers.js",
+            "js/storage.js",
+            "js/cache.js",
+            "js/file.js",
+            "js/groups.js",
+            "js/tabs.js",
+            "js/windows.js",
+            "js/error-handler.js",
+            "background.js"
+        ]
     },
 
     "content_security_policy": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data:; script-src 'self'",

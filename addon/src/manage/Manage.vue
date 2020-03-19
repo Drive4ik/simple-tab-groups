@@ -4,10 +4,6 @@
     import Vue from 'vue';
     import VueLazyload from 'vue-lazyload';
 
-    import utils from '../js/utils';
-    import Groups from '../js/groups';
-    import Tabs from '../js/tabs';
-    import Windows from '../js/windows';
     import popup from '../js/popup.vue';
     import editGroup from '../js/edit-group.vue';
     import contextMenu from '../js/context-menu-component.vue';
@@ -16,27 +12,20 @@
     // import { Drag, Drop } from 'vue-drag-drop';
     // import draggable from 'vuedraggable';
 
-    const {BG} = browser.extension.getBackgroundPage();
-
     document.title = browser.i18n.getMessage('manageGroupsTitle');
 
     if (!BG.inited) {
         browser.runtime.onMessage.addListener(({action}) => 'i-am-back' === action && window.location.reload());
-        throw 'Background not inited, waiting...';
+        throw 'waiting background initialization...';
     }
 
-    window.addEventListener('error', utils.errorEventHandler);
-    Vue.config.errorHandler = utils.errorEventHandler;
+    Vue.config.errorHandler = errorEventHandler;
 
     Vue.use(VueLazyload);
 
-    Vue.config.keyCodes = {
-        'f3': KeyEvent.DOM_VK_F3,
-    };
-
     const VIEW_GRID = 'grid',
         VIEW_DEFAULT = VIEW_GRID,
-        availableTabKeys = ['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'thumbnail'];
+        availableTabKeys = new Set(['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'thumbnail']);
 
     export default {
         data() {
@@ -50,7 +39,7 @@
                 promptValue: '',
                 promptResolveFunc: null,
 
-                isLoaded: false,
+                isLoading: true,
 
                 search: '',
                 extendedSearch: false,
@@ -60,10 +49,12 @@
                 groupToEdit: null,
                 groupToRemove: null,
 
-                containers: BG.containers.getAll(),
+                containers: containers.getAll(),
                 options: {},
 
                 groups: [],
+
+                allTabs: {},
 
                 unSyncTabs: [],
 
@@ -98,7 +89,7 @@
 
             this.setupListeners();
 
-            this.isLoaded = true;
+            this.isLoading = false;
 
             this.$nextTick(function() {
                 this.setFocusOnSearch();
@@ -136,10 +127,14 @@
             filteredGroups() {
                 let searchStr = this.search.toLowerCase();
 
-                return this.groups.map(function(group) {
+                if (!searchStr) {
+                    return this.groups.map(group => (group.filteredTabs = group.tabs, group));
+                }
+
+                return this.groups.map(group => {
                     group.filteredTabs = group.tabs.filter(tab => utils.mySearchFunc(searchStr, utils.getTabTitle(tab, true), this.extendedSearch));
                     return group;
-                }, this);
+                });
             },
             filteredUnSyncTabs() {
                 let searchStr = this.search.toLowerCase();
@@ -192,72 +187,203 @@
                     .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
                     .$on('drag-over', (item, isOver) => item.isOver = isOver);
 
-                browser.runtime.onMessage.addListener(async function(request) {
+                let lazyRemoveTabTimer = 0,
+                    lazyRemoveTabIds = [];
+                const removeTab = (tabId, withAllTabs = false) => {
+                    lazyRemoveTabIds.push(tabId);
 
+                    if (withAllTabs) {
+                        delete this.allTabs[tabId];
+                    }
+
+                    clearTimeout(lazyRemoveTabTimer);
+                    lazyRemoveTabTimer = setTimeout(tabIds => {
+                        lazyRemoveTabIds = [];
+
+                        this.multipleTabIds = this.multipleTabIds.filter(tabId => !tabIds.includes(tabId));
+                        this.unSyncTabs = this.unSyncTabs.filter(tab => !tabIds.includes(tab.id));
+
+                        tabIds.forEach(tabId => {
+                            let tabIndex = -1,
+                                group = this.groups.find(gr => !gr.isArchive && -1 !== (tabIndex = gr.tabs.findIndex(tab => tab.id === tabId)));
+
+                            if (group) {
+                                group.tabs.splice(tabIndex, 1);
+                            }
+                        });
+                    }, 150, lazyRemoveTabIds);
+                };
+
+                let lazyAddGroupTabTimer = {},
+                    lazyAddUnsyncTabTimer = 0;
+                const lazyAddTab = (tab, groupId) => {
+                    tab = this.mapTab(tab);
+
+                    let group = groupId ? this.groups.find(gr => gr.id === groupId) : null;
+
+                    if (group) {
+                        group.tabs.push(tab);
+
+                        clearTimeout(lazyAddGroupTabTimer[groupId]);
+                        lazyAddGroupTabTimer[groupId] = setTimeout(group => group.tabs.sort(utils.sortBy('index')), 100, group);
+                    } else {
+                        clearTimeout(lazyAddUnsyncTabTimer);
+                        lazyAddUnsyncTabTimer = setTimeout(() => this.loadUnsyncedTabs(), 150);
+                    }
+                };
+
+                let lazyCreateTabsTimer = 0,
+                    lazyCreateTabs = [];
+                const onCreatedTab = tab => {
+                    if (utils.isTabPinned(tab)) {
+                        return;
+                    }
+
+                    if (BG.groupIdForNextTab) {
+                        lazyAddTab(tab, BG.groupIdForNextTab);
+                        return;
+                    }
+
+                    lazyCreateTabs.push(tab);
+
+                    clearTimeout(lazyCreateTabsTimer);
+                    lazyCreateTabsTimer = setTimeout(function(tabs) {
+                        lazyCreateTabs = [];
+
+                        tabs.forEach(tab => lazyAddTab(tab, cache.getTabSession(tab.id, 'groupId')));
+                    }, 200, lazyCreateTabs);
+                };
+
+                const onUpdatedTab = (tabId, changeInfo, tab) => {
+                    if (utils.isTabPinned(tab) && undefined === changeInfo.pinned) {
+                        return;
+                    }
+
+                    if (!cache.hasTab(tab.id)) {
+                        return;
+                    }
+
+                    if (this.allTabs[tab.id]) {
+                        if (changeInfo.favIconUrl) {
+                            utils.normalizeTabFavIcon(changeInfo);
+                            this.allTabs[tab.id].favIconUrl = changeInfo.favIconUrl;
+                        }
+
+                        if (changeInfo.url) {
+                            utils.normalizeTabUrl(changeInfo);
+                            this.allTabs[tab.id].url = changeInfo.url;
+                        }
+
+                        if (changeInfo.title) {
+                            this.allTabs[tab.id].title = changeInfo.title;
+                        }
+
+                        if (changeInfo.status) {
+                            this.allTabs[tab.id].status = changeInfo.status;
+                        }
+
+                        if ('discarded' in changeInfo) {
+                            this.allTabs[tab.id].discarded = changeInfo.discarded;
+                        } else if (changeInfo.status) {
+                            this.allTabs[tab.id].discarded = false;
+                        }
+
+                        this.allTabs[tab.id].lastAccessed = tab.lastAccessed;
+                    }
+
+                    if (BG.excludeTabsIds.has(tab.id)) {
+                        return;
+                    }
+
+                    if ('pinned' in changeInfo || 'hidden' in changeInfo) {
+                        let tabGroupId = cache.getTabSession(tab.id, 'groupId'),
+                            winGroupId = cache.getWindowGroup(tab.windowId);
+
+                        if (changeInfo.pinned || changeInfo.hidden) {
+                            if (tabGroupId) {
+                                removeTab(tab.id);
+                            }
+                        } else {
+
+                            if (false === changeInfo.hidden) {
+                                if (tabGroupId) {
+                                    return;
+                                }
+                            }
+
+                            if (winGroupId) {
+                                lazyAddTab(tab, winGroupId);
+                            }
+                        }
+                    }
+                };
+
+                const onRemovedTab = tabId => removeTab(tabId, true);
+
+                const onActivatedTab = ({tabId, previousTabId}) => {
+                    if (this.allTabs[tabId]) {
+                        this.allTabs[tabId].active = true;
+                    }
+                    if (this.allTabs[previousTabId]) {
+                        this.allTabs[previousTabId].active = false;
+                    }
+                };
+
+                let onMovedTabTimer = 0,
+                    onMovedUnsyncTabTimer = 0;
+                const onMovedTab = (tabId, {windowId}) => {
+                    let groupId = cache.getWindowGroup(windowId);
+
+                    if (groupId) {
+                        clearTimeout(onMovedTabTimer);
+                        onMovedTabTimer = setTimeout(groupId => this.loadGroupTabs(groupId), 100, groupId);
+                    } else {
+                        clearTimeout(onMovedUnsyncTabTimer);
+                        onMovedUnsyncTabTimer = setTimeout(() => this.loadUnsyncedTabs(), 100);
+                    }
+                };
+
+                let onDetachedTabTimer = 0;
+                const onDetachedTab = (tabId, {oldWindowId}) => { // notice: call before onAttached
+                    if (BG.excludeTabsIds.has(tabId)) {
+                        return;
+                    }
+
+                    let groupId = cache.getWindowGroup(oldWindowId);
+
+                    if (groupId) {
+                        clearTimeout(onDetachedTabTimer);
+                        onDetachedTabTimer = setTimeout(groupId => this.loadGroupTabs(groupId), 100, groupId);
+                    }
+                };
+
+                let onAttachedTabTimer = 0,
+                    onAttachedUnsyncTabTimer = 0,
+                    onAttachedTabWinTimer = 0;
+                const onAttachedTab = (tabId, {newWindowId}) => {
+                    if (BG.excludeTabsIds.has(tabId)) {
+                        return;
+                    }
+
+                    clearTimeout(onAttachedTabWinTimer);
+                    onAttachedTabWinTimer = setTimeout(() => this.loadCurrentWindow());
+
+                    let groupId = cache.getWindowGroup(newWindowId);
+
+                    if (groupId) {
+                        clearTimeout(onAttachedTabTimer);
+                        onAttachedTabTimer = setTimeout(groupId => this.loadGroupTabs(groupId), 100, groupId);
+                    } else {
+                        clearTimeout(onAttachedUnsyncTabTimer);
+                        onAttachedUnsyncTabTimer = setTimeout(() => this.loadUnsyncedTabs(), 100);
+                    }
+                };
+
+                const onMessage = async request => {
                     switch (request.action) {
-                        case 'tabs-added':
-                            {
-                                let group = this.groups.find(gr => gr.id === request.groupId);
-
-                                if (group) {
-                                    group.tabs.push(...request.tabs.map(this.mapTab));
-                                    group.tabs.sort(utils.sortBy('index'));
-                                } else {
-                                    throw Error(utils.errorEventMessage('group for new tabs not found', request)); //this.loadUnsyncedTabs();
-                                }
-                            }
-
-                            break;
-                        case 'tab-updated':
-                            {
-                                let tab = null;
-
-                                this.groups.some(gr => tab = gr.tabs.find(t => t.id === request.tab.id));
-
-                                if (!tab) {
-                                    tab = this.unSyncTabs.find(t => t.id === request.tab.id);
-                                }
-
-                                if (tab) {
-                                    Object.assign(tab, request.tab);
-                                }
-                            }
-
-                            break;
-                        case 'tabs-removed':
-                            {
-                                this.groups
-                                    .filter(group => !group.isArchive)
-                                    .forEach(group => group.tabs = group.tabs.filter(tab => !request.tabIds.includes(tab.id)));
-
-                                this.multipleTabIds = this.multipleTabIds.filter(tabId => !request.tabIds.includes(tabId));
-
-                                this.loadUnsyncedTabs();
-                            }
-
-                            break;
-                        case 'thumbnail-updated':
-                            this.groups.some(function(group) {
-                                let tab = group.tabs.find(tab => tab.id === request.tabId);
-
-                                if (tab) {
-                                    this.$set(tab, 'thumbnail', request.thumbnail);
-                                    return true;
-                                } else {
-                                    this.loadUnsyncedTabs();
-                                }
-                            }, this);
-
-                            break;
                         case 'group-updated':
                             let group = this.groups.find(gr => gr.id === request.group.id);
-
-                            if (request.group.tabs) {
-                                request.group.tabs = request.group.tabs.map(this.mapTab, this);
-                            }
-
                             Object.assign(group, request.group);
-
                             break;
                         case 'group-added':
                             this.groups.push(this.mapGroup(request.group));
@@ -283,26 +409,79 @@
                             this.loadOptions();
                             break;
                         case 'containers-updated':
-                            this.containers = BG.containers.getAll();
+                            this.containers = containers.getAll();
+                            break;
+                        case 'lock-addon':
+                            this.isLoading = true;
+                            removeEvents();
+                            break;
+                        case 'thumbnail-updated':
+                            let foundTab = this.groups.some(group => {
+                                let tab = group.tabs.find(tab => tab.id === request.tabId);
+
+                                if (tab) {
+                                    this.$set(tab, 'thumbnail', request.thumbnail);
+                                    return true;
+                                }
+                            });
+
+                            if (!foundTab) {
+                                this.loadUnsyncedTabs();
+                            }
+
                             break;
                     }
+                };
 
-                }.bind(this));
+                browser.tabs.onCreated.addListener(onCreatedTab);
+                browser.tabs.onUpdated.addListener(onUpdatedTab, {
+                    properties: [
+                        browser.tabs.UpdatePropertyName.DISCARDED,
+                        browser.tabs.UpdatePropertyName.FAVICONURL,
+                        browser.tabs.UpdatePropertyName.HIDDEN,
+                        browser.tabs.UpdatePropertyName.PINNED,
+                        browser.tabs.UpdatePropertyName.TITLE,
+                        browser.tabs.UpdatePropertyName.STATUS,
+                    ],
+                });
+                browser.tabs.onRemoved.addListener(onRemovedTab);
+                browser.tabs.onActivated.addListener(onActivatedTab);
+                browser.tabs.onMoved.addListener(onMovedTab);
+                browser.tabs.onDetached.addListener(onDetachedTab);
+                browser.tabs.onAttached.addListener(onAttachedTab);
+                browser.runtime.onMessage.addListener(onMessage);
 
-                browser.tabs.onAttached.addListener(function() {
-                    this.loadCurrentWindow();
-                    this.loadUnsyncedTabs();
-                }.bind(this));
+                function removeEvents() {
+                    browser.tabs.onCreated.removeListener(onCreatedTab);
+                    browser.tabs.onUpdated.removeListener(onUpdatedTab);
+                    browser.tabs.onRemoved.removeListener(onRemovedTab);
+                    browser.tabs.onActivated.removeListener(onActivatedTab);
+                    browser.tabs.onMoved.removeListener(onMovedTab);
+                    browser.tabs.onDetached.removeListener(onDetachedTab);
+                    browser.tabs.onAttached.removeListener(onAttachedTab);
+                    browser.runtime.onMessage.removeListener(onMessage);
+                }
+
+                window.addEventListener('unload', removeEvents);
 
                 if (!this.isCurrentWindowIsAllow) {
                     window.addEventListener('resize', function() {
-                        ['Width', 'Height'].forEach(function(option) {
-                            if (window.localStorage['manageGroupsWindow' + option] != window['inner' + option]) {
-                                window.localStorage['manageGroupsWindow' + option] = window['inner' + option];
-                            }
-                        });
+                        if (window.localStorage.manageGroupsWindowWidth != window.innerWidth) {
+                            window.localStorage.manageGroupsWindowWidth = window.innerWidth;
+                        }
+
+                        if (window.localStorage.manageGroupsWindowHeight != window.innerHeight) {
+                            window.localStorage.manageGroupsWindowHeight = window.innerHeight;
+                        }
                     });
                 }
+            },
+
+            async loadGroupTabs(groupId) {
+                let [{tabs}] = await Groups.load(groupId, true),
+                    group = this.groups.find(gr => gr.id === groupId);
+
+                group.tabs = tabs.map(this.mapTab, this);
             },
 
             getTabIdsForMove(tabId) {
@@ -406,16 +585,20 @@
             },
 
             mapTab(tab) {
-                Object.keys(tab).forEach(key => !availableTabKeys.includes(key) && delete tab[key]);
+                Object.keys(tab).forEach(key => !availableTabKeys.has(key) && delete tab[key]);
 
                 tab = utils.normalizeTabFavIcon(tab);
 
-                tab.container = BG.containers.isDefault(tab.cookieStoreId) ? false : BG.containers.get(tab.cookieStoreId);
+                if (tab.url === window.location.href) {
+                    tab.status = browser.tabs.TabStatus.COMPLETE;
+                }
+
+                tab.container = containers.isDefault(tab.cookieStoreId) ? false : containers.get(tab.cookieStoreId);
 
                 tab.isMoving = false;
                 tab.isOver = false;
 
-                return new Vue({
+                return this.allTabs[tab.id] = new Vue({
                     data: tab,
                 });
             },
@@ -458,9 +641,11 @@
             },
             discardOtherGroups(groupExclude) {
                 let tabIds = this.groups.reduce(function(acc, gr) {
-                    let groupTabIds = (gr.id === groupExclude.id || gr.isArchive || BG.cache.getWindowId(gr.id)) ? [] : gr.tabs.map(utils.keyId);
+                    let groupTabIds = (gr.id === groupExclude.id || gr.isArchive || cache.getWindowId(gr.id)) ? [] : gr.tabs.map(utils.keyId);
 
-                    return [...acc, ...groupTabIds];
+                    acc.push(...groupTabIds);
+
+                    return acc;
                 }, []);
 
                 Tabs.discard(tabIds);
@@ -470,7 +655,7 @@
             },
             async applyGroup(groupId, tabId, openInNewWindow = false) {
                 if (!this.isCurrentWindowIsAllow) {
-                    await BG.browser.windows.update(this.currentWindow.id, {
+                    await browser.windows.update(this.currentWindow.id, {
                         state: browser.windows.WindowState.MINIMIZED,
                     });
                 }
@@ -486,7 +671,7 @@
                 }
             },
 
-            getWindowId: BG.cache.getWindowId,
+            getWindowId: cache.getWindowId,
 
             async clickOnTab(event, tab, group) {
                 if (event.ctrlKey || event.metaKey) {
@@ -498,7 +683,7 @@
                 } else if (event.shiftKey) {
                     if (this.multipleTabIds.length) {
                         let tabIds = group ? group.filteredTabs.map(utils.keyId) : this.filteredUnSyncTabs.map(utils.keyId),
-                            tabIndex = tabIds.indexOf(tab),
+                            tabIndex = tabIds.indexOf(tab.id),
                             lastTabIndex = -1;
 
                         this.multipleTabIds.slice().reverse().some(function(tabId) {
@@ -646,7 +831,7 @@
                     let tab = await Tabs.getActive();
                     Tabs.remove(tab.id);
                 } else {
-                    BG.browser.windows.remove(this.currentWindow.id); // close manage groups POPUP window
+                    browser.windows.remove(this.currentWindow.id); // close manage groups POPUP window
                 }
             },
 
@@ -694,7 +879,7 @@
                             ref="search"
                             @click.stop
                             :placeholder="lang('searchPlaceholder')"
-                            :readonly="!isLoaded"
+                            :readonly="isLoading"
                             v-model.trim="search" />
                     </div>
                     <div v-show="search" class="control">
@@ -707,7 +892,7 @@
         </header>
 
         <transition name="fade">
-            <main id="result" v-show="isLoaded">
+            <main id="result" v-show="!isLoading">
                 <!-- GRID -->
                 <div v-if="view === VIEW_GRID" :class="['grid',
                         dragData ? 'drag-' + dragData.itemType : false,
@@ -746,7 +931,7 @@
                         <div class="header">
                             <div class="group-icon">
                                 <figure class="image is-16x16">
-                                    <img v-lazy="group.iconUrlToDisplay" />
+                                    <img :src="group.iconUrlToDisplay" />
                                 </figure>
                             </div>
                             <div class="group-icon" v-if="group.newTabContainer">
@@ -807,8 +992,9 @@
                                 @drop="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
                                 @dragend="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
                                 >
-                                <div v-if="tab.favIconUrl" class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                    <img class="size-16" v-lazy="tab.favIconUrl" />
+                                <div class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                    <img v-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
+                                    <img v-else class="size-16" v-lazy="tab.favIconUrl" />
                                 </div>
                                 <div v-if="isTabLoading(tab)" class="refresh-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <img class="spin size-16" src="/icons/refresh.svg"/>
@@ -875,8 +1061,9 @@
                                 @dragstart="dragHandle($event, 'tab', ['tab', 'group'], {item: tab})"
                                 @dragend="dragHandle($event, 'tab', ['tab', 'group'], {item: tab})"
                                 >
-                                <div v-if="tab.favIconUrl" class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                    <img class="size-16" v-lazy="tab.favIconUrl" />
+                                <div class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                    <img v-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
+                                    <img v-else class="size-16" v-lazy="tab.favIconUrl" />
                                 </div>
                                 <div v-if="isTabLoading(tab)" class="refresh-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <img class="spin size-16" src="/icons/refresh.svg"/>
@@ -921,7 +1108,7 @@
         </transition>
 
         <transition name="fade">
-            <div class="loading spin" v-show="!isLoaded">
+            <div class="loading spin" v-show="isLoading">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                     <path d="M288 39.056v16.659c0 10.804 7.281 20.159 17.686 23.066C383.204 100.434 440 171.518 440 256c0 101.689-82.295 184-184 184-101.689 0-184-82.295-184-184 0-84.47 56.786-155.564 134.312-177.219C216.719 75.874 224 66.517 224 55.712V39.064c0-15.709-14.834-27.153-30.046-23.234C86.603 43.482 7.394 141.206 8.003 257.332c.72 137.052 111.477 246.956 248.531 246.667C393.255 503.711 504 392.788 504 256c0-115.633-79.14-212.779-186.211-240.236C302.678 11.889 288 23.456 288 39.056z"></path>
                 </svg>

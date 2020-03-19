@@ -8,8 +8,6 @@ const INNER_HTML = 'innerHTML',
         "'": '&#039;',
         '&': '&amp;',
     },
-    TEMPORARY_CONTAINER = 'temporary-container',
-    DEFAULT_COOKIE_STORE_ID = 'firefox-default',
     urlParams = new URLSearchParams(window.location.search);
 
 function lang(...args) {
@@ -25,7 +23,7 @@ function createFavIconNode(url) {
     const imageElement = document.createElement('img');
 
     imageElement.src = url;
-    imageElement.addEventListener('error', e => imageElement.src = '/icons/tab.svg', false);
+    imageElement.addEventListener('error', e => imageElement.src = '/icons/tab.svg');
 
     return imageElement;
 }
@@ -92,8 +90,8 @@ async function init() {
 
     addFavicon(url);
 
-    $('#deny').addEventListener('click', () => openTab(url, anotherCookieStoreId, 'deny'), false);
-    $('#confirm').addEventListener('click', () => openTab(url, currentCookieStoreId, 'confirm'), false);
+    $('#deny').addEventListener('click', () => openTab(url, anotherCookieStoreId, 'deny'));
+    $('#confirm').addEventListener('click', () => openTab(url, currentCookieStoreId, 'confirm'));
 }
 
 async function openTab(url, cookieStoreId = DEFAULT_COOKIE_STORE_ID, buttonId = null) {
@@ -110,7 +108,7 @@ async function openTab(url, cookieStoreId = DEFAULT_COOKIE_STORE_ID, buttonId = 
         browser.tabs.remove(id);
     } catch (e) {
         if (buttonId) {
-            $(`#{buttonId}`).disabled = true;
+            $('#' + buttonId).disabled = true;
         }
         alert(e);
     }
