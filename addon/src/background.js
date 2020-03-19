@@ -1307,7 +1307,9 @@ async function onBeforeTabRequest({tabId, url, originUrl, requestId, frameId}) {
         return {};
     }
 
-    let oldUrl = tab.url;
+    if (utils.isUrlEmpty(tab.url)) {
+        delete tab.title;
+    }
 
     tab.url = url;
 
@@ -1338,7 +1340,7 @@ async function onBeforeTabRequest({tabId, url, originUrl, requestId, frameId}) {
 
     let newTabParams = {
         url: tab.url,
-        title: utils.isUrlEmpty(oldUrl) ? tab.url : tab.title,
+        title: tab.title,
         index: tab.index,
         active: tab.active,
         windowId: tab.windowId,
