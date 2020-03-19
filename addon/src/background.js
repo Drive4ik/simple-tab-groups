@@ -725,6 +725,8 @@ async function createMoveTabMenus() {
 
     await removeMoveTabMenus();
 
+    const temporaryContainer = containers.get(TEMPORARY_CONTAINER);
+
     hasBookmarksPermission && menuIds.push(browser.menus.create({
         id: 'stg-open-bookmark-in-group-parent',
         title: browser.i18n.getMessage('openBookmarkInGroup'),
@@ -741,6 +743,131 @@ async function createMoveTabMenus() {
         id: 'stg-open-link-parent',
         title: browser.i18n.getMessage('openLinkInGroupDisabledTitle'),
         contexts: [browser.menus.ContextType.LINK],
+    }));
+
+    options.showContextMenuOnTabs && menuIds.push(browser.menus.create({
+        title: temporaryContainer.name,
+        icons: {
+            16: temporaryContainer.iconUrl,
+        },
+        parentId: 'stg-move-tab-parent',
+        contexts: [browser.menus.ContextType.TAB],
+        onclick: function(info, tab) {
+            if (!utils.isUrlAllowToCreate(tab.url)) {
+                utils.notify(browser.i18n.getMessage('thisUrlsAreNotSupported', tab.url), 7000, 'thisUrlsAreNotSupported');
+                return;
+            }
+
+            let setActive = 2 === info.button;
+
+            Tabs.create({
+                ...tab,
+                active: setActive,
+                cookieStoreId: TEMPORARY_CONTAINER,
+            });
+        }
+    }));
+
+    options.showContextMenuOnTabs && menuIds.push(browser.menus.create({
+        title: browser.i18n.getMessage('setTabIconAsGroupIcon'),
+        enabled: Boolean(currentGroup),
+        icons: {
+            16: '/icons/image.svg',
+        },
+        parentId: 'stg-move-tab-parent',
+        contexts: [browser.menus.ContextType.TAB],
+        onclick: function(info, tab) {
+            let groupId = cache.getWindowGroup(tab.windowId);
+
+            if (!groupId) {
+                return;
+            }
+
+            cache.applyTabSession(tab);
+
+            tab = utils.normalizeTabFavIcon(tab);
+
+            Groups.update(groupId, {
+                iconUrl: tab.favIconUrl,
+            });
+        }
+    }));
+
+    options.showContextMenuOnTabs && groups.length && menuIds.push(browser.menus.create({
+        type: browser.menus.ItemType.SEPARATOR,
+        parentId: 'stg-move-tab-parent',
+        contexts: [browser.menus.ContextType.TAB],
+    }));
+
+    options.showContextMenuOnLinks && menuIds.push(browser.menus.create({
+        title: temporaryContainer.name,
+        icons: {
+            16: temporaryContainer.iconUrl,
+        },
+        parentId: 'stg-open-link-parent',
+        contexts: [browser.menus.ContextType.LINK],
+        onclick: async function(info) {
+            if (!utils.isUrlAllowToCreate(info.linkUrl)) {
+                return;
+            }
+
+            if (!utils.isUrlAllowToCreate(info.linkUrl)) {
+                utils.notify(browser.i18n.getMessage('thisUrlsAreNotSupported', info.linkUrl), 7000, 'thisUrlsAreNotSupported');
+                return;
+            }
+
+            let setActive = 2 === info.button;
+
+            Tabs.create({
+                url: info.linkUrl,
+                title: info.linkText,
+                active: setActive,
+                cookieStoreId: TEMPORARY_CONTAINER,
+            });
+        },
+    }));
+
+    options.showContextMenuOnLinks && groups.length && menuIds.push(browser.menus.create({
+        type: browser.menus.ItemType.SEPARATOR,
+        parentId: 'stg-open-link-parent',
+        contexts: [browser.menus.ContextType.LINK],
+    }));
+
+    hasBookmarksPermission && menuIds.push(browser.menus.create({
+        title: temporaryContainer.name,
+        icons: {
+            16: temporaryContainer.iconUrl,
+        },
+        parentId: 'stg-open-bookmark-in-group-parent',
+        contexts: [browser.menus.ContextType.BOOKMARK],
+        onclick: async function(info) {
+            if (!info.bookmarkId) {
+                utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7000, 'bookmarkNotAllowed');
+                return;
+            }
+
+            let [bookmark] = await browser.bookmarks.get(info.bookmarkId);
+
+            if (bookmark.type !== browser.bookmarks.BookmarkTreeNodeType.BOOKMARK) {
+                utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7000, 'bookmarkNotAllowed');
+                return;
+            }
+
+            if (!utils.isUrlAllowToCreate(bookmark.url)) {
+                utils.notify(browser.i18n.getMessage('thisUrlsAreNotSupported', bookmark.url), 7000, 'thisUrlsAreNotSupported');
+                return;
+            }
+
+            let setActive = 2 === info.button;
+
+            Tabs.create({
+                url: bookmark.url,
+                title: bookmark.title,
+                active: setActive,
+                cookieStoreId: TEMPORARY_CONTAINER,
+            });
+
+        },
     }));
 
     groups.forEach(function(group) {
@@ -773,6 +900,7 @@ async function createMoveTabMenus() {
             contexts: [browser.menus.ContextType.LINK],
             onclick: async function(info) {
                 if (!utils.isUrlAllowToCreate(info.linkUrl)) {
+                    utils.notify(browser.i18n.getMessage('thisUrlsAreNotSupported', info.linkUrl), 7000, 'thisUrlsAreNotSupported');
                     return;
                 }
 
@@ -860,37 +988,6 @@ async function createMoveTabMenus() {
         },
     }));
 
-    options.showContextMenuOnTabs && menuIds.push(browser.menus.create({
-        type: browser.menus.ItemType.SEPARATOR,
-        parentId: 'stg-move-tab-parent',
-        contexts: [browser.menus.ContextType.TAB],
-    }));
-
-    options.showContextMenuOnTabs && menuIds.push(browser.menus.create({
-        title: browser.i18n.getMessage('setTabIconAsGroupIcon'),
-        enabled: Boolean(currentGroup),
-        icons: {
-            16: '/icons/image.svg',
-        },
-        parentId: 'stg-move-tab-parent',
-        contexts: [browser.menus.ContextType.TAB],
-        onclick: function(info, tab) {
-            let groupId = cache.getWindowGroup(tab.windowId);
-
-            if (!groupId) {
-                return;
-            }
-
-            cache.applyTabSession(tab);
-
-            tab = utils.normalizeTabFavIcon(tab);
-
-            Groups.update(groupId, {
-                iconUrl: tab.favIconUrl,
-            });
-        }
-    }));
-
     options.showContextMenuOnLinks && menuIds.push(browser.menus.create({
         title: browser.i18n.getMessage('createNewGroup'),
         icons: {
@@ -900,6 +997,7 @@ async function createMoveTabMenus() {
         contexts: [browser.menus.ContextType.LINK],
         onclick: async function(info) {
             if (!utils.isUrlAllowToCreate(info.linkUrl)) {
+                utils.notify(browser.i18n.getMessage('thisUrlsAreNotSupported', info.linkUrl), 7000, 'thisUrlsAreNotSupported');
                 return;
             }
 
