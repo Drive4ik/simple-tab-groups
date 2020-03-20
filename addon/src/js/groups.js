@@ -49,6 +49,12 @@
             groups,
         });
 
+        if (needToAddBlockBeforeRequest(groups)) {
+            BG.addListenerOnBeforeRequest();
+        } else {
+            BG.removeListenerOnBeforeRequest();
+        }
+
         if (withMessage) {
             BG.sendMessage({
                 action: 'groups-updated',
@@ -450,6 +456,10 @@
         return mainGroup;
     }
 
+    function needToAddBlockBeforeRequest(groups) {
+        return groups.some(group => !group.isArchive && (group.catchTabContainers.length || group.catchTabRules || group.newTabContainer));
+    }
+
     window.Groups = {
         load,
         save,
@@ -466,6 +476,7 @@
         setNewTabsParams,
         getNextTitle,
         getCatchedForTab,
+        needToAddBlockBeforeRequest,
     };
 
 })();

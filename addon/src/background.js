@@ -1504,6 +1504,24 @@ browser.runtime.onUpdateAvailable.addListener(function() {
     }, 1000);
 });
 
+function addListenerOnBeforeRequest() {
+    if (!browser.webRequest.onBeforeRequest.hasListener(onBeforeTabRequest)) {
+        browser.webRequest.onBeforeRequest.addListener(onBeforeTabRequest,
+            {
+                urls: ['<all_urls>'],
+                types: [browser.webRequest.ResourceType.MAIN_FRAME],
+            },
+            [browser.webRequest.OnBeforeRequestOptions.BLOCKING]
+        );
+    }
+}
+
+function removeListenerOnBeforeRequest() {
+    if (browser.webRequest.onBeforeRequest.hasListener(onBeforeTabRequest)) {
+        browser.webRequest.onBeforeRequest.removeListener(onBeforeTabRequest);
+    }
+}
+
 function addEvents() {
     browser.tabs.onCreated.addListener(onCreatedTab);
     browser.tabs.onUpdated.addListener(onUpdatedTab, {
@@ -1522,14 +1540,6 @@ function addEvents() {
     browser.windows.onCreated.addListener(onCreatedWindow);
     browser.windows.onFocusChanged.addListener(onFocusChangedWindow);
     browser.windows.onRemoved.addListener(onRemovedWindow);
-
-    browser.webRequest.onBeforeRequest.addListener(onBeforeTabRequest,
-        {
-            urls: ['<all_urls>'],
-            types: [browser.webRequest.ResourceType.MAIN_FRAME],
-        },
-        [browser.webRequest.OnBeforeRequestOptions.BLOCKING]
-    );
 }
 
 function removeEvents() {
@@ -1543,7 +1553,7 @@ function removeEvents() {
     browser.windows.onFocusChanged.removeListener(onFocusChangedWindow);
     browser.windows.onRemoved.removeListener(onRemovedWindow);
 
-    browser.webRequest.onBeforeRequest.removeListener(onBeforeTabRequest);
+    removeListenerOnBeforeRequest();
 }
 
 window.addEventListener('unload', removeEvents);
@@ -2375,6 +2385,9 @@ window.BG = {
     exportGroupToBookmarks,
     applyGroup,
 
+    addListenerOnBeforeRequest,
+    removeListenerOnBeforeRequest,
+
     runMigrateForData,
 
     createBackup,
@@ -3111,6 +3124,10 @@ async function init() {
     createMoveTabMenus();
 
     addEvents();
+
+    if (Groups.needToAddBlockBeforeRequest(data.groups)) {
+        addListenerOnBeforeRequest();
+    }
 
     window.BG.inited = true;
 }
