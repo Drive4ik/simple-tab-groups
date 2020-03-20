@@ -151,7 +151,7 @@
             let [groupId, favIconUrl, thumbnail] = await Promise.all([
                 browser.sessions.getTabValue(tab.id, 'groupId'),
                 browser.sessions.getTabValue(tab.id, 'favIconUrl'),
-                browser.sessions.getTabValue(tab.id, 'thumbnail'),
+                BG.options.showTabsWithThumbnailsInManageGroups ? browser.sessions.getTabValue(tab.id, 'thumbnail') : null,
             ]);
 
             tabSessionLoaded[tab.id] = true;
@@ -168,7 +168,7 @@
         await Promise.all([
             setTabGroup(tab.id, tab.groupId),
             setTabFavIcon(tab.id, tab.favIconUrl),
-            setTabThumbnail(tab.id, tab.thumbnail),
+            BG.options.showTabsWithThumbnailsInManageGroups ? setTabThumbnail(tab.id, tab.thumbnail) : null,
         ]);
 
         return tab;
@@ -179,7 +179,11 @@
     }
 
     function removeTabSession(tabId) {
-        return Promise.all([removeTabGroup(tabId), removeTabThumbnail(tabId), removeTabFavIcon(tabId)]);
+        return Promise.all([
+            removeTabGroup(tabId),
+            removeTabFavIcon(tabId),
+            removeTabThumbnail(tabId),
+        ]);
     }
 
     function getTabsSessionAndRemove(tabIds) {

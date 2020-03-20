@@ -154,7 +154,7 @@
                 this.group.iconColor = utils.randomColor();
 
                 if (!this.group.iconViewType) {
-                    this.group.iconViewType = BG.getOptions('defaultGroupIconViewType');
+                    this.group.iconViewType = BG.options.defaultGroupIconViewType;
                 }
             },
 

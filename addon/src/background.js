@@ -2346,7 +2346,7 @@ window.BG = {
     cache,
     openManageGroups,
 
-    getOptions: key => key ? options[key] : utils.clone(options),
+    options,
     saveOptions,
 
     containers,
@@ -3072,9 +3072,9 @@ async function init() {
         throw '';
     }
 
-    await normalizeContainersInGroups(data.groups);
-
     options = utils.extractKeys(data, ALL_OPTIONS_KEYS, true);
+
+    data.groups = await normalizeContainersInGroups(data.groups);
 
     await storage.set(data);
 

@@ -384,7 +384,7 @@
     }
 
     function groupTabsCountMessage(tabs, groupIsArchived, withActiveTabs = false) {
-        if (!groupIsArchived && (withActiveTabs || BG.getOptions('showExtendGroupsPopupWithActiveTabs'))) {
+        if (!groupIsArchived && (withActiveTabs || BG.options.showExtendGroupsPopupWithActiveTabs)) {
             let activeTabs = tabs.filter(tab => !tab.discarded && tab.id).length;
             return browser.i18n.getMessage('groupTabsCountActive', [activeTabs, tabs.length]);
         } else {

@@ -62,9 +62,9 @@
         return {
             id: id,
             title: utils.createGroupTitle(title, id),
-            iconColor: BG.getOptions('defaultGroupIconColor') || utils.randomColor(),
+            iconColor: BG.options.defaultGroupIconColor || utils.randomColor(),
             iconUrl: null,
-            iconViewType: BG.getOptions('defaultGroupIconViewType'),
+            iconViewType: BG.options.defaultGroupIconViewType,
             tabs: [],
             isArchive: false,
             catchTabContainers: [],
@@ -308,7 +308,7 @@
             await BG.browser.tabs.hide(tabIds);
             BG.removeExcludeTabIds(tabIds);
 
-            if (BG.getOptions('discardTabsAfterHide') && !group.dontDiscardTabsAfterHideThisGroup) {
+            if (BG.options.discardTabsAfterHide && !group.dontDiscardTabsAfterHideThisGroup) {
                 await Tabs.discard(tabIds);
             }
         }

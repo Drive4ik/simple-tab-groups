@@ -161,7 +161,7 @@
             },
 
             loadOptions() {
-                this.options = BG.getOptions();
+                this.options = utils.clone(BG.options);
             },
 
             async loadCurrentWindow() {

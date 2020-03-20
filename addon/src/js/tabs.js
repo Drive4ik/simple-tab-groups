@@ -227,7 +227,7 @@
     }
 
     async function updateThumbnail(tabId, force) {
-        if (!BG.getOptions('showTabsWithThumbnailsInManageGroups')) {
+        if (!BG.options.showTabsWithThumbnailsInManageGroups) {
             return;
         }
 
@@ -451,7 +451,7 @@
             showNotificationAfterMoveTab = false;
         }
 
-        if (!showNotificationAfterMoveTab || !BG.getOptions('showNotificationAfterMoveTab')) {
+        if (!showNotificationAfterMoveTab || !BG.options.showNotificationAfterMoveTab) {
             return tabs;
         }
 
@@ -566,7 +566,7 @@
     }
 
     function sendMessage(tabId, message) {
-        message.enableDarkTheme = BG.getOptions('enableDarkTheme');
+        message.enableDarkTheme = BG.options.enableDarkTheme;
 
         return browser.tabs.sendMessage(tabId, message).catch(noop);
     }
