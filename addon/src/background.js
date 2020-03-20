@@ -726,7 +726,7 @@ async function createMoveTabMenus() {
     const temporaryContainer = containers.get(TEMPORARY_CONTAINER);
 
     hasBookmarksPermission && menuIds.push(browser.menus.create({
-        id: 'stg-open-bookmark-in-group-parent',
+        id: 'stg-open-bookmark-parent',
         title: browser.i18n.getMessage('openBookmarkInGroup'),
         contexts: [browser.menus.ContextType.BOOKMARK],
     }));
@@ -836,7 +836,7 @@ async function createMoveTabMenus() {
         icons: {
             16: temporaryContainer.iconUrl,
         },
-        parentId: 'stg-open-bookmark-in-group-parent',
+        parentId: 'stg-open-bookmark-parent',
         contexts: [browser.menus.ContextType.BOOKMARK],
         onclick: async function(info) {
             if (!info.bookmarkId) {
@@ -866,6 +866,12 @@ async function createMoveTabMenus() {
             });
 
         },
+    }));
+
+    hasBookmarksPermission && groups.length && menuIds.push(browser.menus.create({
+        type: browser.menus.ItemType.SEPARATOR,
+        parentId: 'stg-open-bookmark-parent',
+        contexts: [browser.menus.ContextType.BOOKMARK],
     }));
 
     groups.forEach(function(group) {
@@ -915,7 +921,7 @@ async function createMoveTabMenus() {
             enabled: !group.isArchive,
             title: groupTitle,
             icons: groupIcon,
-            parentId: 'stg-open-bookmark-in-group-parent',
+            parentId: 'stg-open-bookmark-parent',
             contexts: [browser.menus.ContextType.BOOKMARK],
             onclick: async function(info) {
                 if (!info.bookmarkId) {
@@ -1025,7 +1031,7 @@ async function createMoveTabMenus() {
         icons: {
             16: '/icons/group-new.svg',
         },
-        parentId: 'stg-open-bookmark-in-group-parent',
+        parentId: 'stg-open-bookmark-parent',
         contexts: [browser.menus.ContextType.BOOKMARK],
         onclick: async function(info) {
             if (!info.bookmarkId) {
