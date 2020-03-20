@@ -92,7 +92,7 @@
 
             let data = await storage.get(null);
 
-            let options = utils.extractKeys(data, ALL_OPTIONS_KEYS);
+            let options = utils.assignKeys({}, data, ALL_OPTIONS_KEYS);
 
             options.autoBackupFolderName = await file.getAutoBackupFolderName();
 

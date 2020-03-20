@@ -616,6 +616,11 @@
         return self.indexOf(value) === index;
     }
 
+    function assignKeys(toObj, fromObj, keys) {
+        keys.forEach(key => toObj[key] = fromObj[key]);
+        return toObj;
+    }
+
     function extractKeys(obj, keys, useClone = false) {
         let newObj = {};
 
@@ -654,6 +659,7 @@
         clone,
         format,
         formatBytes,
+        assignKeys,
         extractKeys,
         onlyUniqueFilter,
 

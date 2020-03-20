@@ -3072,7 +3072,7 @@ async function init() {
         throw '';
     }
 
-    options = utils.extractKeys(data, ALL_OPTIONS_KEYS, true);
+    utils.assignKeys(options, data, ALL_OPTIONS_KEYS);
 
     data.groups = await normalizeContainersInGroups(data.groups);
 
