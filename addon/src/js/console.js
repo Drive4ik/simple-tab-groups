@@ -59,6 +59,8 @@
 
     let autoLogsTimer = null;
     console.logError = function(error) {
+        checkTime();
+
         error = clone(error);
 
         if (!window.localStorage.enableDebug) {
@@ -85,7 +87,7 @@
     }
 
     console.restart = function() {
-        keys.forEach(key => console[key] = window.localStorage.enableDebug ? log.bind(null, `console.${key}`) : (window.IS_PRODUCTION ? checkTime : _console[key]));
+        keys.forEach(key => console[key] = window.localStorage.enableDebug ? log.bind(null, `console.${key}`) : (window.IS_TEMPORARY ? _console[key] : checkTime));
 
         bindBrowser(browser);
     };

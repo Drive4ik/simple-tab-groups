@@ -26,7 +26,7 @@ function multipleCopy(paths) {
 const config = {
     context: setPath('src'),
     entry: {
-        'background': './background.js',
+        // 'background': './background.js',
         'popup/popup': './popup/popup.js',
         'options/options': './options/options.js',
         'manage/manage': './manage/manage.js',
@@ -108,6 +108,7 @@ const config = {
             'css',
 
             // js
+            'background.js',
             'js/console.js',
             'js/constants.js',
             'js/startup.js',
@@ -144,9 +145,9 @@ module.exports = function(env, options) {
         fse.removeSync(config.output.path);
     }
 
-    config.plugins.push(new webpack.DefinePlugin({
-        IS_PRODUCTION: isProduction,
-    }));
+    // config.plugins.push(new webpack.DefinePlugin({
+    //     IS_PRODUCTION: isProduction,
+    // }));
 
     return config;
 };

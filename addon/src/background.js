@@ -1,8 +1,6 @@
 'use strict';
 
-import * as npmCompareVersions from 'compare-versions';
-
-window.IS_PRODUCTION = IS_PRODUCTION;
+window.IS_TEMPORARY = false;
 
 if (2 == window.localStorage.enableDebug) { // if debug was auto-enabled - disable on next start addon/browser
     delete window.localStorage.enableDebug;
@@ -2444,13 +2442,6 @@ function openHelp(page) {
     return Tabs.createUrlOnce(url);
 }
 
-// -1 : a < b
-// 0 : a === b
-// 1 : a > b
-function compareVersions(a, b) {
-    return npmCompareVersions(String(a), String(b));
-}
-
 async function runMigrateForData(data) {
     let currentVersion = manifest.version;
 
@@ -2735,10 +2726,10 @@ async function runMigrateForData(data) {
     let keysToRemoveFromStorage = [];
 
     // if data version < required latest migrate version then need migration
-    if (-1 === compareVersions(data.version, migrations[migrations.length - 1].version)) {
+    if (-1 === utils.compareVersions(data.version, migrations[migrations.length - 1].version)) {
 
         for (let migration of migrations) {
-            if (-1 === compareVersions(data.version, migration.version)) {
+            if (-1 === utils.compareVersions(data.version, migration.version)) {
                 await migration.migration();
 
                 if (Array.isArray(migration.remove)) {
@@ -2747,7 +2738,7 @@ async function runMigrateForData(data) {
             }
         }
 
-    } else if (1 === compareVersions(data.version, currentVersion)) {
+    } else if (1 === utils.compareVersions(data.version, currentVersion)) {
         let [currentMajor, currentMinor] = currentVersion.split('.'),
             [dataMajor, dataMinor] = data.version.split('.');
 
@@ -2938,19 +2929,21 @@ async function restoreOldExtensionUrls() {
 // { reason: "update", previousVersion: "3.0.1", temporary: true }
 // { reason: "install", temporary: true }
 browser.runtime.onInstalled.addListener(function onInstalled({previousVersion, reason, temporary}) {
+    browser.runtime.onInstalled.removeListener(onInstalled);
+
     if (!window.BG.inited) {
         setTimeout(onInstalled, 300, {previousVersion, reason, temporary});
         return;
     }
 
     if (temporary) {
-        window.IS_PRODUCTION = false;
+        window.IS_TEMPORARY = true;
         console.restart();
         return;
     }
 
     if (browser.runtime.OnInstalledReason.INSTALL === reason ||
-        (browser.runtime.OnInstalledReason.UPDATE === reason && -1 === compareVersions(previousVersion, '4.0'))) {
+        (browser.runtime.OnInstalledReason.UPDATE === reason && -1 === utils.compareVersions(previousVersion, '4.0'))) {
         openHelp('welcome-v4');
     }
 });

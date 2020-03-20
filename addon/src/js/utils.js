@@ -649,6 +649,36 @@
         return downloadObj || {};
     }
 
+    // -1 : a < b
+    // 0 : a === b
+    // 1 : a > b
+    function compareVersions(a, b) {
+        if (a === b) {
+            return 0;
+        }
+
+        let regExStrip0 = /(\.0+)+$/,
+            segmentsA = a.replace(regExStrip0, '').split('.'),
+            segmentsB = b.replace(regExStrip0, '').split('.'),
+            l = Math.min(segmentsA.length, segmentsB.length);
+
+        for (let i = 0; i < l; i++) {
+            let diff = parseInt(segmentsA[i], 10) - parseInt(segmentsB[i], 10);
+
+            if (diff) {
+                return diff > 0 ? 1 : -1;
+            }
+        }
+
+        let diff = segmentsA.length - segmentsB.length;
+
+        if (diff) {
+            return diff > 0 ? 1 : -1;
+        }
+
+        return 0;
+    }
+
     window.utils = {
         getInfo,
 
@@ -715,6 +745,8 @@
 
         wait,
         waitDownload,
+
+        compareVersions,
     };
 
 })();
