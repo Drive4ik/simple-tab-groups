@@ -503,7 +503,7 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
         return;
     }
 
-    if (utils.isTabLoaded(changeInfo) && (tabGroupId || winGroupId)) {
+    if (options.showTabsWithThumbnailsInManageGroups && utils.isTabLoaded(changeInfo) && (tabGroupId || winGroupId)) {
         Tabs.updateThumbnail(tab.id);
     }
 }
