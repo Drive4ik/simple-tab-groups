@@ -282,34 +282,28 @@
             </div>
         </div>
 
-        <div class="field containers-wrapper">
+        <div class="field">
             <label class="label" v-text="lang('alwaysOpenTabsInContainer')"></label>
-            <div class="control">
-                <div class="field">
-                    <div class="control">
-                        <label class="radio indent-children">
-                            <input type="radio" :value="null" v-model="group.newTabContainer" />
-                            <span>Default</span>
-                        </label>
-                    </div>
+            <div class="containers-wrapper">
+                <div class="control">
+                    <label class="radio indent-children">
+                        <input type="radio" :value="null" v-model="group.newTabContainer" />
+                        <span v-text="lang('noContainerTitle')"></span>
+                    </label>
                 </div>
-                <div v-for="container in containers" :key="container.cookieStoreId" class="field">
-                    <div class="control">
-                        <label class="radio indent-children">
-                            <input type="radio" :value="container.cookieStoreId" v-model="group.newTabContainer" />
-                            <img :src="container.iconUrl" class="size-16 fill-context" :style="{fill: container.colorCode}" />
-                            <span class="word-break-all" v-text="container.name"></span>
-                        </label>
-                    </div>
+                <div v-for="container in containers" :key="container.cookieStoreId" class="control">
+                    <label class="radio indent-children">
+                        <input type="radio" :value="container.cookieStoreId" v-model="group.newTabContainer" />
+                        <img :src="container.iconUrl" class="size-16 fill-context" :style="{fill: container.colorCode}" />
+                        <span class="word-break-all" v-text="container.name"></span>
+                    </label>
                 </div>
-                <div v-if="group.newTabContainer" class="field h-margin-top-10">
-                    <div class="control">
-                        <label class="checkbox indent-children">
-                            <input type="checkbox" v-model="group.ifDifferentContainerReOpen" />
-                            <span v-text="lang('ifDifferentContainerReOpen')"></span>
-                        </label>
-                    </div>
-                </div>
+            </div>
+            <div v-if="group.newTabContainer" class="control h-margin-top-10">
+                <label class="checkbox indent-children">
+                    <input type="checkbox" v-model="group.ifDifferentContainerReOpen" />
+                    <span v-text="lang('ifDifferentContainerReOpen')"></span>
+                </label>
             </div>
         </div>
 
@@ -334,16 +328,15 @@
             </div>
         </div>
 
-        <div v-if="hasContainers" class="field containers-wrapper">
+        <div v-if="hasContainers" class="field">
             <label class="label" v-text="lang('catchTabContainers')"></label>
-            <div class="control">
+            <div class="containers-wrapper">
                 <div
                     v-for="container in containers"
                     v-if="container.cookieStoreId !== TEMPORARY_CONTAINER"
                     :key="container.cookieStoreId"
-                    class="field"
+                    class="control"
                     >
-                    <div class="control">
                         <label class="checkbox indent-children" :disabled="isDisabledContainer(container)">
                             <input type="checkbox"
                                 :disabled="isDisabledContainer(container)"
@@ -354,7 +347,6 @@
                             <span class="word-break-all" v-text="container.name"></span>
                             <i class="word-break-all" v-if="container.cookieStoreId in disabledContainers">({{ disabledContainers[container.cookieStoreId] }})</i>
                         </label>
-                    </div>
                 </div>
             </div>
         </div>
@@ -445,17 +437,20 @@
             margin-right: .68rem;
         }
 
-        .containers-wrapper .field:not(:last-child) {
-            margin: 0;
+        .field .control {
+            cursor: default;
         }
 
-        .field > .control {
-            cursor: default;
+        .containers-wrapper {
+            max-height: 150px;
+            overflow-y: auto;
         }
 
         .checkbox,
         .radio {
             display: flex;
+            align-items: center;
+            line-height: 1.4;
         }
 
         .reg-exp {

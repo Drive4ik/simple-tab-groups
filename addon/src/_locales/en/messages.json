@@ -1008,5 +1008,9 @@
                 "example": "My main group"
             }
         }
+    },
+    "noContainerTitle": {
+        "message": "No container",
+        "description": "No container"
     }
 }

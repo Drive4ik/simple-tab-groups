@@ -46,7 +46,7 @@ async function init() {
                 ? {name: lang('temporaryContainerTitle')}
                 : browser.contextualIdentities.get(currentCookieStoreId).catch(() => ({name: currentCookieStoreId, notFound: true})),
             DEFAULT_COOKIE_STORE_ID === anotherCookieStoreId
-                ? {name: 'Default'}
+                ? {name: lang('noContainerTitle')}
                 : browser.contextualIdentities.get(anotherCookieStoreId).catch(() => ({name: anotherCookieStoreId, notFound: true})),
         ]),
         group = groups.find(group => group.id === groupId);
