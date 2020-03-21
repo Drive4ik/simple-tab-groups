@@ -1413,17 +1413,17 @@ async function onBeforeTabRequest({tabId, url, originUrl, requestId, frameId}) {
         delete tab.title;
     }
 
-    tab.url = url;
-
     cache.applyTabSession(tab);
+
+    if (!tab.groupId) {
+        return {};
+    }
 
     console.log('onBeforeRequest tab', tab);
 
-    let [tabGroup, groups] = await Groups.load(tab.groupId || -1);
+    tab.url = url;
 
-    if (!tabGroup) {
-        return {};
-    }
+    let [tabGroup, groups] = await Groups.load(tab.groupId);
 
     if (!tabGroup.isSticky) {
         let destGroup = Groups.getCatchedForTab(groups, tabGroup, tab);
