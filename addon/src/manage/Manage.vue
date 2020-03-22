@@ -181,7 +181,7 @@
                                 groupId = this.isGroup(to.data.item) ? to.data.item.id : to.data.group.id,
                                 index = this.isGroup(to.data.item) ? undefined : to.data.item.index;
 
-                            Tabs.move(tabIds, groupId, index, false);
+                            BG.Tabs.move(tabIds, groupId, index, false);
                         }
                     })
                     .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
@@ -498,7 +498,7 @@
             async moveTabs(tabId, groupId, loadUnsync = false, showTabAfterMoving, discardTabs) {
                 let tabIds = this.getTabIdsForMove(tabId);
 
-                await Tabs.move(tabIds, groupId, undefined, false, showTabAfterMoving);
+                await BG.Tabs.move(tabIds, groupId, undefined, false, showTabAfterMoving);
 
                 if (discardTabs) {
                     Tabs.discard(tabIds);

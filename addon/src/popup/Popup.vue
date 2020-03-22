@@ -196,7 +196,7 @@
                     .$on('drag-move-tab', function(from, to) {
                         let tabIds = this.getTabIdsForMove(from.data.item.id);
 
-                        Tabs.move(tabIds, to.data.group.id, to.data.item.index, false);
+                        BG.Tabs.move(tabIds, to.data.group.id, to.data.item.index, false);
                     })
                     .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
                     .$on('drag-over', (item, isOver) => item.isOver = isOver);
@@ -776,7 +776,7 @@
             async unsyncHiddenTabsMoveToCurrentGroup() {
                 let hiddenTabsIds = this.unSyncTabs.map(utils.keyId);
 
-                await Tabs.moveNative(this.unSyncTabs, {
+                await BG.Tabs.moveNative(this.unSyncTabs, {
                     windowId: this.currentWindow.id,
                     index: -1,
                 });
@@ -857,7 +857,7 @@
             async moveTabs(tabId, groupId, loadUnsync = false, showTabAfterMoving, discardTabs) {
                 let tabIds = this.getTabIdsForMove(tabId);
 
-                await Tabs.move(tabIds, groupId, undefined, false, showTabAfterMoving);
+                await BG.Tabs.move(tabIds, groupId, undefined, false, showTabAfterMoving);
 
                 if (discardTabs) {
                     Tabs.discard(tabIds);
