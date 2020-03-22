@@ -2373,6 +2373,7 @@ window.BG = {
     containers,
     normalizeContainersInGroups,
 
+    Tabs,
     Groups,
     Windows,
 
