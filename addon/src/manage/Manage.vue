@@ -420,7 +420,7 @@
                                 let tab = group.tabs.find(tab => tab.id === request.tabId);
 
                                 if (tab) {
-                                    this.$set(tab, 'thumbnail', request.thumbnail);
+                                    tab.thumbnail = request.thumbnail;
                                     return true;
                                 }
                             });
@@ -588,6 +588,10 @@
                 Object.keys(tab).forEach(key => !availableTabKeys.has(key) && delete tab[key]);
 
                 tab = utils.normalizeTabFavIcon(tab);
+
+                if (!tab.thumbnail) {
+                    tab.thumbnail = null;
+                }
 
                 if (tab.url === window.location.href) {
                     tab.status = browser.tabs.TabStatus.COMPLETE;
