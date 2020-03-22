@@ -16,6 +16,8 @@
         funcKeys = [...Array(12).keys()].map(n => KeyEvent[`DOM_VK_F${n + 1}`]),
         folderNameRegExp = /[\<\>\:\"\/\\\|\?\*\x00-\x1F]|^(?:aux|con|nul|prn|com\d|lpt\d)$|^\.+|\.+$/gi;
 
+    document.title = browser.i18n.getMessage('openSettings');
+
     export default {
         data() {
             return {
