@@ -224,10 +224,12 @@
         return EXTENSIONS_WHITE_LIST[extId] ? EXTENSIONS_WHITE_LIST[extId].title : 'Unknown';
     }
 
+    function isAvailableFavIconUrl(favIconUrl) {
+        return favIconUrl ? !favIconUrl.startsWith('chrome://mozapps/skin/') : false;
+    }
+
     function normalizeTabFavIcon(tab) {
-        if (tab.favIconUrl) {
-            tab.favIconUrl = tab.favIconUrl.startsWith('chrome://mozapps/skin/') ? '/icons/tab.svg' : tab.favIconUrl;
-        } else {
+        if (!isAvailableFavIconUrl(tab.favIconUrl)) {
             tab.favIconUrl = '/icons/tab.svg';
         }
 
@@ -700,6 +702,7 @@
 
         notify,
 
+        isAvailableFavIconUrl,
         normalizeTabFavIcon,
 
         getSupportedExternalExtensionName,

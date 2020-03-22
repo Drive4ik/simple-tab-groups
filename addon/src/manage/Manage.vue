@@ -250,7 +250,7 @@
                     lazyCreateTabsTimer = setTimeout(function(tabs) {
                         lazyCreateTabs = [];
 
-                        tabs.forEach(tab => lazyAddTab(tab, cache.getTabSession(tab.id, 'groupId')));
+                        tabs.forEach(tab => lazyAddTab(tab, cache.getTabGroup(tab.id)));
                     }, 200, lazyCreateTabs);
                 };
 
@@ -296,7 +296,7 @@
                     }
 
                     if ('pinned' in changeInfo || 'hidden' in changeInfo) {
-                        let tabGroupId = cache.getTabSession(tab.id, 'groupId'),
+                        let tabGroupId = cache.getTabGroup(tab.id),
                             winGroupId = cache.getWindowGroup(tab.windowId);
 
                         if (changeInfo.pinned || changeInfo.hidden) {
@@ -478,7 +478,7 @@
             },
 
             async loadGroupTabs(groupId) {
-                let [{tabs}] = await Groups.load(groupId, true),
+                let [{tabs}] = await Groups.load(groupId, true, true, true),
                     group = this.groups.find(gr => gr.id === groupId);
 
                 group.tabs = tabs.map(this.mapTab, this);
@@ -604,14 +604,14 @@
             },
 
             async loadGroups() {
-                let groups = await Groups.load(null, true);
+                let groups = await Groups.load(null, true, true, true);
 
                 this.groups = groups.map(this.mapGroup, this);
 
                 this.multipleTabIds = [];
             },
             async loadUnsyncedTabs() {
-                let windows = await Windows.load(true);
+                let windows = await Windows.load(true, true, true);
 
                 this.unSyncTabs = windows
                     .reduce(function(acc, win) {

@@ -87,6 +87,10 @@
     }
 
     function isTemporary(cookieStoreId, contextualIdentity) {
+        if (!cookieStoreId) {
+            return false;
+        }
+
         if (cookieStoreId === TEMPORARY_CONTAINER) {
             return true;
         }

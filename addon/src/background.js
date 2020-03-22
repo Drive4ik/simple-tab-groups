@@ -448,7 +448,7 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
         cache.setTab(tab);
     }
 
-    let tabGroupId = cache.getTabSession(tab.id, 'groupId'),
+    let tabGroupId = cache.getTabGroup(tab.id),
         winGroupId = cache.getWindowGroup(tab.windowId);
 
     if (changeInfo.favIconUrl && (tabGroupId || winGroupId)) {
@@ -547,6 +547,11 @@ function onAttachedTab(tabId, {newWindowId}) {
 async function onCreatedWindow(win) {
     console.log('onCreatedWindow', win);
 
+    if (BG.skipAddGroupToNextNewWindow) {
+        BG.skipAddGroupToNextNewWindow = false;
+        return;
+    }
+
     if (utils.isWindowAllow(win)) {
         win = await cache.loadWindowSession(win);
 
@@ -557,11 +562,9 @@ async function onCreatedWindow(win) {
 
             let winTabs = await Tabs.get(win.id, null, null);
             winTabs.forEach(tab => cache.removeTabGroup(tab.id));
-        } else if (options.createNewGroupWhenOpenNewWindow && !BG.skipAddGroupToNextNewWindow) {
+        } else if (options.createNewGroupWhenOpenNewWindow) {
             await Groups.add(win.id);
         }
-
-        BG.skipAddGroupToNextNewWindow = false;
 
         tryRestoreMissedTabs();
     } else {
@@ -2106,7 +2109,7 @@ async function resetAutoBackup() {
     let timeToBackup = value * intervalSec + options.autoBackupLastBackupTimeStamp;
 
     if (now > timeToBackup) {
-        createBackup(options.autoBackupIncludeTabThumbnails, options.autoBackupIncludeTabFavIcons, true, overwrite);
+        createBackup(options.autoBackupIncludeTabFavIcons, options.autoBackupIncludeTabThumbnails, true, overwrite);
         timer = value * intervalSec;
     } else {
         timer = timeToBackup - now;
@@ -2115,8 +2118,8 @@ async function resetAutoBackup() {
     _autoBackupTimer = setTimeout(resetAutoBackup, (timer + 10) * 1000);
 }
 
-async function createBackup(includeTabThumbnails, includeTabFavIcons, isAutoBackup = false, overwrite = false) {
-    let [data, groups] = await Promise.all([storage.get(null), Groups.load(null, true)]);
+async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBackup = false, overwrite = false) {
+    let [data, groups] = await Promise.all([storage.get(null), Groups.load(null, true, includeTabFavIcons, includeTabThumbnails)]);
 
     if (isAutoBackup && (!groups.length || groups.every(gr => !gr.tabs.length))) {
         console.warn('skip create auto backup, groups are empty');
@@ -2200,10 +2203,14 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         data.groups.forEach(group => group.isMain = false);
     }
 
+    if ('showTabsWithThumbnailsInManageGroups' in data) {
+        options.showTabsWithThumbnailsInManageGroups = data.showTabsWithThumbnailsInManageGroups;
+    }
+
     let currentData = await storage.get(null),
         lastCreatedGroupPosition = Math.max(currentData.lastCreatedGroupPosition, data.lastCreatedGroupPosition || 0);
 
-    currentData.groups = await Groups.load(null, true);
+    currentData.groups = await Groups.load(null, true, true, true);
 
     if (!Array.isArray(data.hotkeys)) {
         data.hotkeys = [];
@@ -2269,7 +2276,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
 
     delete data.containers;
 
-    let windows = await Windows.load(true);
+    let windows = await Windows.load(true, true, true);
 
     await syncTabs(data.groups, windows);
 
@@ -2614,7 +2621,7 @@ async function runMigrateForData(data) {
                     group.dontDiscardTabsAfterHideThisGroup = false;
                 });
 
-                let windows = await Windows.load(true);
+                let windows = await Windows.load(true, true, true);
 
                 if (!windows.length) {
                     throw browser.i18n.getMessage('notFoundWindowsAddonStoppedWorking');

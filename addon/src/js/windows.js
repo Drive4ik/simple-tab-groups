@@ -3,9 +3,9 @@
 
     // fix FF bug on browser.windows.getAll ... it's not return all windows
     // without "pinned: false" because need all windows, without normal tabs but with pinned tabs
-    async function load(withTabs) {
+    async function load(withTabs = false, includeFavIconUrl, includeThumbnail) {
         let [tabs, windows] = await Promise.all([
-            withTabs ? Tabs.get(null, null, null) : false,
+            withTabs ? Tabs.get(null, null, null, undefined, includeFavIconUrl, includeThumbnail) : false,
             browser.windows.getAll({
                 windowTypes: [browser.windows.WindowType.NORMAL],
             })

@@ -320,7 +320,7 @@
             },
 
             exportAddonSettings() {
-                BG.createBackup(this.includeTabThumbnailsIntoBackup, this.includeTabFavIconsIntoBackup);
+                BG.createBackup(this.includeTabFavIconsIntoBackup, this.includeTabThumbnailsIntoBackup);
             },
 
             async importAddonSettings() {

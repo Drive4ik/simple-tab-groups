@@ -149,7 +149,14 @@
         return tabs.map(utils.keyId);
     }
 
-    async function get(windowId = browser.windows.WINDOW_ID_CURRENT, pinned = false, hidden = false, otherProps = {}) {
+    async function get(
+            windowId = browser.windows.WINDOW_ID_CURRENT,
+            pinned = false,
+            hidden = false,
+            otherProps = {},
+            includeFavIconUrl = false,
+            includeThumbnail = false
+        ) {
         let query = {
             windowId,
             pinned,
@@ -168,7 +175,7 @@
 
         tabs = tabs.filter(cache.filterRemovedTab).map(utils.normalizeTabUrl);
 
-        return query.pinned ? tabs : Promise.all(tabs.map(cache.loadTabSession));
+        return query.pinned ? tabs : Promise.all(tabs.map(tab => cache.loadTabSession(tab, includeFavIconUrl, includeThumbnail)));
     }
 
     async function getOne(id) {
@@ -177,10 +184,10 @@
         return utils.normalizeTabUrl(tab);
     }
 
-    async function getList(tabIds, withSession = true) {
+    async function getList(tabIds, includeFavIconUrl, includeThumbnail) {
         let tabs = await Promise.all(tabIds.map(getOne));
 
-        return withSession ? Promise.all(tabs.map(cache.loadTabSession)) : tabs;
+        return Promise.all(tabs.map(tab => cache.loadTabSession(tab, includeFavIconUrl, includeThumbnail)));
     }
 
     async function setMute(tabs, muted) {
@@ -239,7 +246,7 @@
             return;
         }
 
-        if (!force && cache.getTabSession(tab.id, 'thumbnail')) {
+        if (!force && cache.getTabThumbnail(tab.id)) {
             return;
         }
 
@@ -289,7 +296,7 @@
             tabsCantHide = new Set,
             groupWindowId = cache.getWindowId(groupId),
             windowId = groupWindowId,
-            [group, groups] = await Groups.load(groupId, true),
+            [group, groups] = await Groups.load(groupId, !groupWindowId),
             activeTabs = [];
 
         if (!windowId) {
@@ -512,7 +519,7 @@
 
             console.log('tabsToReCreate by bug https://bugzilla.mozilla.org/show_bug.cgi?id=1580879');
 
-            tabsToReCreate = await Promise.all(tabsToReCreate.map(cache.loadTabSession));
+            tabsToReCreate = await Promise.all(tabsToReCreate.map(tab => cache.loadTabSession(tab)));
 
             let groupIds = tabsToReCreate.map(tab => tab.groupId).filter(utils.onlyUniqueFilter),
                 groupIdForNextTabs = (groupIds.length === 1 && groupIds[0]) ? groupIds[0] : null;
@@ -571,7 +578,7 @@
         await Promise.all(tabIds.map(tabId => browser.tabs.reload(tabId, {bypassCache}).catch(noop)));
     }
 
-    function prepareForSave(tabs, includeGroupId = false, includeFavIcon = false, includeThumbnail = false) {
+    function prepareForSave(tabs, includeGroupId = false, includeFavIconUrl = false, includeThumbnail = false) {
         return tabs.map(function({url, title, cookieStoreId, favIconUrl, isInReaderMode, openInReaderMode, groupId, thumbnail}) {
             let tab = {url, title};
 
@@ -587,7 +594,7 @@
                 tab.groupId = groupId;
             }
 
-            if (includeFavIcon && favIconUrl && favIconUrl.startsWith('data:')) {
+            if (includeFavIconUrl && favIconUrl && favIconUrl.startsWith('data:')) {
                 tab.favIconUrl = favIconUrl;
             }
 

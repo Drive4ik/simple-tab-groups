@@ -3,14 +3,12 @@
 
     let tabs = {},
         backupedTabsForMove = {},
-        tabSessionLoaded = {},
         removedTabs = new Set,
         windows = {};
 
     function clear() {
         tabs = {};
         backupedTabsForMove = {};
-        tabSessionLoaded = {};
         removedTabs.clear();
         windows = {};
     }
@@ -51,11 +49,22 @@
     function removeTab(tabId) {
         removedTabs.add(tabId);
         delete backupedTabsForMove[tabId];
-        delete tabSessionLoaded[tabId];
         delete tabs[tabId];
     }
 
-    function setTabGroup(tabId, groupId) {
+    // groupId
+    async function loadTabGroup(tabId) {
+        if (tabs[tabId]) {
+            if ('groupId' in tabs[tabId]) {
+                return tabs[tabId].groupId;
+            }
+
+            let groupId = await browser.sessions.getTabValue(tabId, 'groupId');
+            return tabs[tabId].groupId = groupId || null;
+        }
+    }
+
+    async function setTabGroup(tabId, groupId) {
         if (groupId) {
             if (tabs[tabId]) {
                 if (tabs[tabId].groupId === groupId) {
@@ -73,7 +82,11 @@
         return removeTabGroup(tabId);
     }
 
-    function removeTabGroup(tabId) {
+    function getTabGroup(tabId) {
+        return (tabs[tabId] && tabs[tabId].groupId) || null;
+    }
+
+    async function removeTabGroup(tabId) {
         if (tabs[tabId]) {
             if (tabs[tabId].groupId) {
                 delete tabs[tabId].groupId;
@@ -82,34 +95,19 @@
         }
     }
 
-    function setTabThumbnail(tabId, thumbnail) {
-        if (thumbnail) {
-            if (tabs[tabId]) {
-                if (tabs[tabId].thumbnail === thumbnail) {
-                    return;
-                }
-
-                tabs[tabId].thumbnail = thumbnail;
-            } else {
-                tabs[tabId] = {thumbnail};
-            }
-
-            return browser.sessions.setTabValue(tabId, 'thumbnail', thumbnail);
-        }
-
-        return removeTabThumbnail(tabId);
-    }
-
-    function removeTabThumbnail(tabId) {
+    // favIconUrl
+    async function loadTabFavIcon(tabId) {
         if (tabs[tabId]) {
-            if (tabs[tabId].thumbnail) {
-                delete tabs[tabId].thumbnail;
-                return browser.sessions.removeTabValue(tabId, 'thumbnail');
+            if ('favIconUrl' in tabs[tabId]) {
+                return tabs[tabId].favIconUrl;
             }
+
+            let favIconUrl = await browser.sessions.getTabValue(tabId, 'favIconUrl');
+            return tabs[tabId].favIconUrl = favIconUrl || null;
         }
     }
 
-    function setTabFavIcon(tabId, favIconUrl) {
+    async function setTabFavIcon(tabId, favIconUrl) {
         if (favIconUrl && favIconUrl.startsWith('data:')) {
             if (tabs[tabId]) {
                 if (tabs[tabId].favIconUrl === favIconUrl) {
@@ -127,7 +125,11 @@
         return removeTabFavIcon(tabId);
     }
 
-    function removeTabFavIcon(tabId) {
+    function getTabFavIcon(tabId) {
+        return (tabs[tabId] && tabs[tabId].favIconUrl) || null;
+    }
+
+    async function removeTabFavIcon(tabId) {
         if (tabs[tabId]) {
             if (tabs[tabId].favIconUrl) {
                 delete tabs[tabId].favIconUrl;
@@ -136,6 +138,54 @@
         }
     }
 
+    // thumbnail
+    async function loadTabThumbnail(tabId) {
+        if (BG.options.showTabsWithThumbnailsInManageGroups && tabs[tabId]) {
+            if ('thumbnail' in tabs[tabId]) {
+                return tabs[tabId].thumbnail;
+            }
+
+            let thumbnail = await browser.sessions.getTabValue(tabId, 'thumbnail');
+            return tabs[tabId].thumbnail = thumbnail || null;
+        }
+    }
+
+    async function setTabThumbnail(tabId, thumbnail) {
+        if (!BG.options.showTabsWithThumbnailsInManageGroups) {
+            return;
+        }
+
+        if (thumbnail) {
+            if (tabs[tabId]) {
+                if (tabs[tabId].thumbnail === thumbnail) {
+                    return;
+                }
+
+                tabs[tabId].thumbnail = thumbnail;
+            } else {
+                tabs[tabId] = {thumbnail};
+            }
+
+            return browser.sessions.setTabValue(tabId, 'thumbnail', thumbnail);
+        }
+
+        return removeTabThumbnail(tabId);
+    }
+
+    function getTabThumbnail(tabId) {
+        return (tabs[tabId] && tabs[tabId].thumbnail) || null;
+    }
+
+    async function removeTabThumbnail(tabId) {
+        if (tabs[tabId]) {
+            if (tabs[tabId].thumbnail) {
+                delete tabs[tabId].thumbnail;
+                return browser.sessions.removeTabValue(tabId, 'thumbnail');
+            }
+        }
+    }
+
+    // tab
     function getTabSession(tabId, key = null) {
         if (key) {
             return tabs[tabId] ? tabs[tabId][key] : null;
@@ -144,31 +194,27 @@
         return tabs[tabId] ? {...tabs[tabId]} : {};
     }
 
-    async function loadTabSession(tab) {
+    async function loadTabSession(tab, includeFavIconUrl = true, includeThumbnail = true) {
         setTab(tab);
 
-        if (!tabSessionLoaded[tab.id]) {
-            let [groupId, favIconUrl, thumbnail] = await Promise.all([
-                browser.sessions.getTabValue(tab.id, 'groupId'),
-                browser.sessions.getTabValue(tab.id, 'favIconUrl'),
-                BG.options.showTabsWithThumbnailsInManageGroups ? browser.sessions.getTabValue(tab.id, 'thumbnail') : null,
-            ]);
-
-            tabSessionLoaded[tab.id] = true;
-
-            applySession(tabs[tab.id], {groupId, favIconUrl, thumbnail});
+        if (utils.isAvailableFavIconUrl(tab.favIconUrl) && !tabs[tab.id].favIconUrl) {
+            tabs[tab.id].favIconUrl = tab.favIconUrl;
         }
+
+        await Promise.all([
+            loadTabGroup(tab.id),
+            includeFavIconUrl ? loadTabFavIcon(tab.id) : null,
+            includeThumbnail ? loadTabThumbnail(tab.id) : null,
+        ]);
 
         return applyTabSession(tab);
     }
 
     async function setTabSession(tab) {
-        tabSessionLoaded[tab.id] = true;
-
         await Promise.all([
             setTabGroup(tab.id, tab.groupId),
             setTabFavIcon(tab.id, tab.favIconUrl),
-            BG.options.showTabsWithThumbnailsInManageGroups ? setTabThumbnail(tab.id, tab.thumbnail) : null,
+            setTabThumbnail(tab.id, tab.thumbnail),
         ]);
 
         return tab;
@@ -290,13 +336,16 @@
         removeTab,
 
         setTabGroup,
+        getTabGroup,
         removeTabGroup,
 
-        setTabThumbnail,
-        removeTabThumbnail,
-
         setTabFavIcon,
+        getTabFavIcon,
         removeTabFavIcon,
+
+        setTabThumbnail,
+        getTabThumbnail,
+        removeTabThumbnail,
 
         getTabSession,
         loadTabSession,
