@@ -298,39 +298,39 @@
         "description": "Select group"
     },
     "hotkeyActionTitleLoadNextGroup": {
-        "message": "Charger le groupe suivant",
+        "message": "Afficher le groupe suivant",
         "description": "Load next group"
     },
     "hotkeyActionTitleLoadPrevGroup": {
-        "message": "Charger le groupe précédent",
+        "message": "Afficher le groupe précédent",
         "description": "Load previous group"
     },
     "hotkeyActionTitleLoadNextUnloadedGroup": {
-        "message": "Charger le groupe déchargé suivant",
+        "message": "Afficher le groupe masqué suivant",
         "description": "Load next unloaded group"
     },
     "hotkeyActionTitleLoadPrevUnloadedGroup": {
-        "message": "Charger le groupe déchargé précédent",
+        "message": "Afficher le groupe masqué précédent",
         "description": "Load previous unloaded group"
     },
     "hotkeyActionTitleLoadHistoryNextGroup": {
-        "message": "Charger le groupe suivant depuis l'historique",
+        "message": "Afficher le groupe qui suit dans l'historique",
         "description": "Load next group from history"
     },
     "hotkeyActionTitleLoadHistoryPrevGroup": {
-        "message": "Charger le groupe précédent depuis l'historique",
+        "message": "Afficher le groupe qui précède dans l'historique",
         "description": "Load previous group from history"
     },
     "hotkeyActionTitleLoadFirstGroup": {
-        "message": "Charger le premier groupe",
+        "message": "Afficher le premier groupe",
         "description": "Load first group"
     },
     "hotkeyActionTitleLoadLastGroup": {
-        "message": "Charger le dernier groupe",
+        "message": "Afficher le dernier groupe",
         "description": "Load last group"
     },
     "hotkeyActionTitleLoadCustomGroup": {
-        "message": "Charger un groupe personnalisé",
+        "message": "Afficher le groupe personnalisé",
         "description": "Load custom group"
     },
     "hotkeyActionTitleAddNewGroup": {
@@ -346,7 +346,7 @@
         "description": "Open manage groups"
     },
     "hotkeyActionTitleMoveActiveTabToCustomGroup": {
-        "message": "Déplacer les onglets actifs vers un groupe personnalisé",
+        "message": "Déplacer l'onglet actif vers un groupe personnalisé",
         "description": "Move active tab to custom group"
     },
     "hotkeyActionTitleDiscardGroup": {
@@ -358,7 +358,7 @@
         "description": "Hotkey action Discard other groups"
     },
     "hotkeyActionTitleReloadAllTabsInCurrentGroup": {
-        "message": "Recharger tous les onglets dans le groupe courant",
+        "message": "Recharger tous les onglets du groupe courant",
         "description": "Reload all tabs in current group"
     },
     "whatsWrongMessage": {
@@ -972,7 +972,7 @@
         "description": "Group not found"
     },
     "unloadGroup": {
-        "message": "Décharger le groupe",
+        "message": "Masquer le groupe",
         "description": "Unload the group"
     },
     "tabsInThisWindowWereHidden": {
