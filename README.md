@@ -112,9 +112,8 @@ Current list of functionality / development notes:
  * Custom group icons, set group icon from tab icon (by context menu)
  * Added undo remove group by context menu browser button (see in screenshots)
  * Added support for catch tabs by containers (#76)
- * Implement hide tabs api
- * **NEW! Added dark theme**
- * Added more settings :)
+ * Added dark theme
+ * Added support SideBar
 
 
 Permissions used:
@@ -126,6 +125,7 @@ Permissions used:
  * **sessions**: for save session data (last used group, etc)
  * **downloads**: for create auto backups
  * **storage**: for saving groups localy
+ * **unlimitedStorage**: restore tabs after close window, there can be a lot of tabs
  * **<all_urls>(Access your data for all websites)**: for tab thumbnails and catch/move/reopen tabs in needed containers/groups
  * **webRequest** & **webRequestBlocking**: for catch/move/reopen tabs in needed containers/groups</li>
  * **(optional) bookmarks**: access for create bookmarks
