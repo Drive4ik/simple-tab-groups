@@ -171,14 +171,13 @@
             result = containers[cookieStoreId];
         } else if (containers[mappedContainerCookieStoreId[cookieStoreId]]) {
             result = containers[mappedContainerCookieStoreId[cookieStoreId]];
-        } else {
-            result = {
-                cookieStoreId: DEFAULT_COOKIE_STORE_ID,
-                name: 'default',
-            };
         }
 
-        return key ? result[key] : {...result};
+        if (result) {
+            return key ? result[key] : {...result};
+        }
+
+        return null;
     }
 
     function getAll() {

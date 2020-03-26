@@ -166,7 +166,7 @@
             },
 
             isDisabledContainer({cookieStoreId}) {
-                return !this.group.catchTabContainers.includes(cookieStoreId) && cookieStoreId in this.disabledContainers;
+                return !this.group.catchTabContainers.includes(cookieStoreId) && this.disabledContainers.hasOwnProperty(cookieStoreId);
             },
 
             async selectUserGroupIcon() {
@@ -345,7 +345,7 @@
                                 />
                             <img :src="container.iconUrl" class="size-16 fill-context" :style="{fill: container.colorCode}" />
                             <span class="word-break-all" v-text="container.name"></span>
-                            <i class="word-break-all" v-if="container.cookieStoreId in disabledContainers">({{ disabledContainers[container.cookieStoreId] }})</i>
+                            <i class="word-break-all" v-if="disabledContainers.hasOwnProperty(container.cookieStoreId)">({{ disabledContainers[container.cookieStoreId] }})</i>
                         </label>
                 </div>
             </div>

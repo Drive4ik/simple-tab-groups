@@ -60,8 +60,13 @@
 
         if (tab.cookieStoreId === TEMPORARY_CONTAINER) {
             tab.cookieStoreId = await containers.createTemporaryContainer();
-        } else if ('cookieStoreId' in tab) {
+        } else if (tab.hasOwnProperty('cookieStoreId') && !containers.isDefault(tab.cookieStoreId)) {
             tab.cookieStoreId = containers.get(tab.cookieStoreId, 'cookieStoreId');
+
+        }
+
+        if (!tab.cookieStoreId) {
+            delete tab.cookieStoreId;
         }
 
         let newTab = await browser.tabs.create(tab);
@@ -583,7 +588,7 @@
             let tab = {url, title};
 
             if (!containers.isDefault(cookieStoreId)) {
-                tab.cookieStoreId = cookieStoreId;
+                tab.cookieStoreId = containers.isTemporary(cookieStoreId) ? TEMPORARY_CONTAINER : cookieStoreId;
             }
 
             if (isInReaderMode || openInReaderMode) {

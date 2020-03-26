@@ -222,10 +222,12 @@
                     let group = groupId ? this.groups.find(gr => gr.id === groupId) : null;
 
                     if (group) {
-                        group.tabs.push(tab);
+                        if (!Object.isFrozen(group.tabs)) {
+                            group.tabs.push(tab);
 
-                        clearTimeout(lazyAddGroupTabTimer[groupId]);
-                        lazyAddGroupTabTimer[groupId] = setTimeout(group => group.tabs.sort(utils.sortBy('index')), 100, group);
+                            clearTimeout(lazyAddGroupTabTimer[groupId]);
+                            lazyAddGroupTabTimer[groupId] = setTimeout(group => group.tabs.sort(utils.sortBy('index')), 100, group);
+                        }
                     } else {
                         clearTimeout(lazyAddUnsyncTabTimer);
                         lazyAddUnsyncTabTimer = setTimeout(() => this.loadUnsyncedTabs(), 150);
@@ -282,7 +284,7 @@
                             this.allTabs[tab.id].status = changeInfo.status;
                         }
 
-                        if ('discarded' in changeInfo) {
+                        if (changeInfo.hasOwnProperty('discarded')) {
                             this.allTabs[tab.id].discarded = changeInfo.discarded;
                         } else if (changeInfo.status) {
                             this.allTabs[tab.id].discarded = false;
@@ -295,7 +297,7 @@
                         return;
                     }
 
-                    if ('pinned' in changeInfo || 'hidden' in changeInfo) {
+                    if (changeInfo.hasOwnProperty('pinned') || changeInfo.hasOwnProperty('hidden')) {
                         let tabGroupId = cache.getTabGroup(tab.id),
                             winGroupId = cache.getWindowGroup(tab.windowId);
 
@@ -554,7 +556,7 @@
 
             mapGroup(group) {
                 if (group.isArchive) {
-                    group.tabs = Object.freeze(group.tabs.map(utils.normalizeTabFavIcon));
+                    group.tabs = Object.freeze(group.tabs.map(utils.normalizeTabFavIcon).map(this.mapTabContainer));
                 } else {
                     group.tabs = group.tabs.map(this.mapTab, this);
                 }
@@ -597,7 +599,7 @@
                     tab.status = browser.tabs.TabStatus.COMPLETE;
                 }
 
-                tab.container = containers.isDefault(tab.cookieStoreId) ? false : containers.get(tab.cookieStoreId);
+                tab = this.mapTabContainer(tab);
 
                 tab.isMoving = false;
                 tab.isOver = false;
@@ -605,6 +607,11 @@
                 return this.allTabs[tab.id] = new Vue({
                     data: tab,
                 });
+            },
+
+            mapTabContainer(tab) {
+                tab.container = containers.isDefault(tab.cookieStoreId) ? false : containers.get(tab.cookieStoreId);
+                return tab;
             },
 
             async loadGroups() {
@@ -755,7 +762,7 @@
             isTabLoading: utils.isTabLoading,
 
             isGroup(obj) {
-                return 'tabs' in obj;
+                return obj.hasOwnProperty('tabs');
             },
 
             sortGroups(vector) {

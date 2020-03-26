@@ -444,7 +444,7 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
         return;
     }
 
-    if ('title' in changeInfo || 'url' in changeInfo) {
+    if (changeInfo.hasOwnProperty('title') || changeInfo.hasOwnProperty('url')) {
         cache.setTab(tab);
     }
 
@@ -455,7 +455,7 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
         cache.setTabFavIcon(tab.id, changeInfo.favIconUrl);
     }
 
-    if ('pinned' in changeInfo || 'hidden' in changeInfo) {
+    if (changeInfo.hasOwnProperty('pinned') || changeInfo.hasOwnProperty('hidden')) {
         if (changeInfo.pinned || changeInfo.hidden) {
             cache.removeTabGroup(tab.id);
         } else {
@@ -761,7 +761,7 @@ async function createMoveTabMenus() {
 
             let setActive = 2 === info.button;
 
-            Tabs.create({
+            Tabs.createNative({
                 ...tab,
                 active: setActive,
                 cookieStoreId: TEMPORARY_CONTAINER,
@@ -819,7 +819,7 @@ async function createMoveTabMenus() {
 
             let setActive = 2 === info.button;
 
-            Tabs.create({
+            Tabs.createNative({
                 url: info.linkUrl,
                 title: info.linkText,
                 active: setActive,
@@ -861,7 +861,7 @@ async function createMoveTabMenus() {
 
             let setActive = 2 === info.button;
 
-            Tabs.create({
+            Tabs.createNative({
                 url: bookmark.url,
                 title: bookmark.title,
                 active: setActive,
@@ -2203,7 +2203,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         data.groups.forEach(group => group.isMain = false);
     }
 
-    if ('showTabsWithThumbnailsInManageGroups' in data) {
+    if (data.hasOwnProperty('showTabsWithThumbnailsInManageGroups')) {
         options.showTabsWithThumbnailsInManageGroups = data.showTabsWithThumbnailsInManageGroups;
     }
 
@@ -2495,7 +2495,7 @@ async function runMigrateForData(data) {
             version: '2.2',
             remove: ['showGroupCircleInSearchedTab'],
             migration() {
-                if ('showGroupCircleInSearchedTab' in data) {
+                if (data.hasOwnProperty('showGroupCircleInSearchedTab')) {
                     data.showGroupIconWhenSearchATab = data.showGroupCircleInSearchedTab;
                 }
             },
@@ -2562,7 +2562,7 @@ async function runMigrateForData(data) {
         {
             version: '3.0.9',
             migration() {
-                data.hotkeys.forEach(hotkey => 'metaKey' in hotkey ? null : hotkey.metaKey = false);
+                data.hotkeys.forEach(hotkey => hotkey.hasOwnProperty('metaKey') ? null : hotkey.metaKey = false);
                 data.groups.forEach(group => delete group.isExpanded);
             },
         },

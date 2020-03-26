@@ -55,7 +55,7 @@
     // groupId
     async function loadTabGroup(tabId) {
         if (tabs[tabId]) {
-            if ('groupId' in tabs[tabId]) {
+            if (tabs[tabId].hasOwnProperty('groupId')) {
                 return tabs[tabId].groupId;
             }
 
@@ -98,7 +98,7 @@
     // favIconUrl
     async function loadTabFavIcon(tabId) {
         if (tabs[tabId]) {
-            if ('favIconUrl' in tabs[tabId]) {
+            if (tabs[tabId].hasOwnProperty('favIconUrl')) {
                 return tabs[tabId].favIconUrl;
             }
 
@@ -141,7 +141,7 @@
     // thumbnail
     async function loadTabThumbnail(tabId) {
         if (BG.options.showTabsWithThumbnailsInManageGroups && tabs[tabId]) {
-            if ('thumbnail' in tabs[tabId]) {
+            if (tabs[tabId].hasOwnProperty('thumbnail')) {
                 return tabs[tabId].thumbnail;
             }
 

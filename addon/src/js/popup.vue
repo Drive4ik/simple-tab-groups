@@ -18,7 +18,7 @@
         mounted() {
             this.$nextTick(function() {
                 if (this.buttons.length) {
-                    let focusedButtonIndex = this.buttons.findIndex(button => 'focused' in button);
+                    let focusedButtonIndex = this.buttons.findIndex(button => button.hasOwnProperty('focused'));
 
                     if (-1 === focusedButtonIndex) {
                         focusedButtonIndex = 1;
