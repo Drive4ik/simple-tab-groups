@@ -199,6 +199,20 @@
             }
         }
     },
+    "groupTabsCountActive": {
+        "message": "$active$ su $count$ schede attive",
+        "description": "Group tabs count active",
+        "placeholders": {
+            "active": {
+                "content": "$1",
+                "example": "2"
+            },
+            "count": {
+                "content": "$2",
+                "example": "4"
+            }
+        }
+    },
     "deleteTab": {
         "message": "Elimina tab",
         "description": "Delete tab"
@@ -291,6 +305,22 @@
         "message": "Carica il gruppo precedente",
         "description": "Load previous group"
     },
+    "hotkeyActionTitleLoadNextUnloadedGroup": {
+        "message": "Carica il gruppo sospeso successivo",
+        "description": "Load next unloaded group"
+    },
+    "hotkeyActionTitleLoadPrevUnloadedGroup": {
+        "message": "Carica il gruppo sospeso precedence",
+        "description": "Load previous unloaded group"
+    },
+    "hotkeyActionTitleLoadHistoryNextGroup": {
+        "message": "Carica il gruppo successivo dalla cronologia",
+        "description": "Load next group from history"
+    },
+    "hotkeyActionTitleLoadHistoryPrevGroup": {
+        "message": "Carica il gruppo precedente dalla cronologia",
+        "description": "Load previous group from history"
+    },
     "hotkeyActionTitleLoadFirstGroup": {
         "message": "Carica il primo gruppo",
         "description": "Load first group"
@@ -318,6 +348,18 @@
     "hotkeyActionTitleMoveActiveTabToCustomGroup": {
         "message": "Sposta la tab attiva in un gruppo personalizzato",
         "description": "Move active tab to custom group"
+    },
+    "hotkeyActionTitleDiscardGroup": {
+        "message": "Sospendi il gruppo",
+        "description": "Hotkey action Discard group"
+    },
+    "hotkeyActionTitleDiscardOtherGroups": {
+        "message": "Sospendi gli altri gruppi",
+        "description": "Hotkey action Discard other groups"
+    },
+    "hotkeyActionTitleReloadAllTabsInCurrentGroup": {
+        "message": "Carica di nuovo tutte le schede di questo gruppo",
+        "description": "Reload all tabs in current group"
     },
     "whatsWrongMessage": {
         "message": "Qualcosa è andato male...\nPer favore contatta la sviluppatore con una email contenente gli ultimi log degli errori (per ottenere il log cercare un tasto apposito in fondo alla pagina delle impostazioni)",
@@ -540,5 +582,431 @@
     "createNewGroupWhenOpenNewWindow": {
         "message": "Crea un nuovo gruppo quando viene aperta una nuova finestra",
         "description": "Create a new group when opening a new window"
+    },
+    "prependGroupTitleToWindowTitle": {
+        "message": "Aggiungi il nome del gruppo in testa al titolo della finestra",
+        "description": "Prepend group title to window title"
+    },
+    "allowAccessToBookmarks": {
+        "message": "Consenti l'accesso ai segnalibri",
+        "description": "Allow access to bookmarks"
+    },
+    "openBookmarkInGroup": {
+        "message": "Apri il segnalibro nel gruppo",
+        "description": "Open bookmark in group"
+    },
+    "bookmarkNotAllowed": {
+        "message": "Questo segnalibro non è consentito",
+        "description": "This bookmark is not allowed"
+    },
+    "openLinkInGroupDisabledTitle": {
+        "message": "Apri il link nel gruppo",
+        "description": "Open link in group title"
+    },
+    "showContextMenuOnTabs": {
+        "message": "Mostra il menù contestuale sulle schede",
+        "description": "Show context menu on tabs"
+    },
+    "showContextMenuOnLinks": {
+        "message": "Mostra il menù contestuale sui link",
+        "description": "Show context menu on links"
+    },
+    "groupsCreatedCount": {
+        "message": "$groupscount$ gruppi creati",
+        "description": "Groups created count",
+        "placeholders": {
+            "groupscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "noGroupsCreated": {
+        "message": "Non è stato creato nessun gruppo",
+        "description": "No groups created"
+    },
+    "noAccessToBookmarks": {
+        "message": "Non si dispone dei permessi per accedere ai segnalibri. Consenti l'accesso ai segnalibri nelle impostazioni dell'estensione",
+        "description": "You do not have access to bookmarks. Enable it on in addon settings"
+    },
+    "exportGroupToMainBookmarkFolder": {
+        "message": "Esporta i gruppi nella cartella dei segnalibri '$bookmarkfolder$'",
+        "description": "Export groups to '$bookmarkfolder$' bookmark folder",
+        "placeholders": {
+            "bookmarkfolder": {
+                "content": "$1",
+                "example": "STG bookmarks"
+            }
+        }
+    },
+    "exportGroupToBookmarks": {
+        "message": "Esporta il gruppo nei segnalibri",
+        "description": "Export group to bookmarks"
+    },
+    "defaultBookmarkFolderLocation": {
+        "message": "Cartella dei segnalibri di default",
+        "description": "Default bookmark folder location"
+    },
+    "groupExportedToBookmarks": {
+        "message": "Il gruppo '$grouptitle$' è stato esportato correttamente nei segnalibri",
+        "description": "Group '$grouptitle$' successfully exported to bookmarks",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "groupWithoutTabs": {
+        "message": "Questo gruppo non ha nessuna scheda",
+        "description": "This group has no tabs"
+    },
+    "autoBackupGroupsToBookmarks": {
+        "message": "Backup automatico di tutti i gruppi nei segnalibri",
+        "description": "Auto backup all groups to bookmarks"
+    },
+    "exportAllGroupsToBookmarks": {
+        "message": "Esporta tutti i gruppi nei segnalibri",
+        "description": "Export all groups to bookmarks"
+    },
+    "allGroupsExportedToBookmarks": {
+        "message": "Tutti i gruppi sono stati esportati correttamente nei segnalibri",
+        "description": "All groups successfully exported to bookmarks"
+    },
+    "discardTabTitle": {
+        "message": "Sospendi la scheda",
+        "description": "Discard tab"
+    },
+    "autoBackupGroupsToFile": {
+        "message": "Backup automatico di tutti i gruppi in un file (il file è salvato nella cartella dei download)",
+        "description": "Auto backup all groups to file (into downloads folder)"
+    },
+    "folderNameTitle": {
+        "message": "Nome della cartella",
+        "description": "Folder name title"
+    },
+    "backupSuccessfullyRestored": {
+        "message": "Il backup è stato ripristinato correttamente",
+        "description": "Backup successfully restored"
+    },
+    "loading": {
+        "message": "Caricamento in corso...",
+        "description": "Loading, please wait..."
+    },
+    "showOtherTabs": {
+        "message": "Mostra le altre schede",
+        "description": "Show other tabs"
+    },
+    "dontDiscardTabsAfterHideThisGroup": {
+        "message": "Non sospendere le schede di questo gruppo dopo che sono state nascoste",
+        "description": "Don't discard tabs into this group after hide"
+    },
+    "showNotificationAfterGroupDelete": {
+        "message": "Mostra una notifica dopo che un gruppo è stato eliminato",
+        "description": "Show notification after group delete"
+    },
+    "reloadTab": {
+        "message": "Ricarica la scheda",
+        "description": "Reload tab"
+    },
+    "thisTabIsNotSupported": {
+        "message": "Questa scheda non è supportata",
+        "description": "This tab is not supported"
+    },
+    "showExtendGroupsPopupWithActiveTabs": {
+        "message": "Mostra le schede attive nel popup dei gruppi",
+        "description": "Show active tabs in groups popup"
+    },
+    "reloadAllTabsInGroup": {
+        "message": "Ricarica tutte le schede del gruppo",
+        "description": "Reload all tabs in group"
+    },
+    "tabsCreatedCount": {
+        "message": "$tabscount$ schede create",
+        "description": "Tabs created count",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "tabsNotCreated": {
+        "message": "Le schede non sono state create",
+        "description": "Tabs not created"
+    },
+    "showTabsWithThumbnailsInManageGroups": {
+        "message": "Mostra le anteprime delle schede nella pagina \"Gestione gruppi\"",
+        "description": "Show tabs with thumbnails in \"Manage groups\" page"
+    },
+    "alwaysOpenTabsInContainer": {
+        "message": "Apri sempre le schede nel container",
+        "description": "Always open tabs in container"
+    },
+    "temporaryContainerTitle": {
+        "message": "⌚ Container temporaneo",
+        "description": "⌚Temporary Container"
+    },
+    "thisContainerIsNotTemporary": {
+        "message": "Il container '$containerName$' non è più temporaneo",
+        "description": "This container '$containerName$' is no longer temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "my container"
+            }
+        }
+    },
+    "thisContainerNowIsTemporary": {
+        "message": "Il container '$containerName$' è diventato temporaneo",
+        "description": "This container '$containerName$' has now become temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "⌚Temporary Container 5"
+            }
+        }
+    },
+    "importAddonSettings": {
+        "message": "Importa le impostazione dell'estensione",
+        "description": "Import addon settings"
+    },
+    "importGroups": {
+        "message": "Importa i gruppi",
+        "description": "Import groups"
+    },
+    "pinnedTabs": {
+        "message": "Schede fissate",
+        "description": "Pinned tabs"
+    },
+    "eraseAddonSettingsWarningTitle": {
+        "message": "Questa azione <b>CANCELLERÀ COMPLEMENTE</b> tutte le impostazioni correnti e tutti i gruppi! Le schede non saranno chiuse.",
+        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+    },
+    "clear": {
+        "message": "Pulisci",
+        "description": "Clear"
+    },
+    "deleteAllAddonDataAndSettings": {
+        "message": "Cancella tutti i dati e le impostazioni dell'estensione",
+        "description": "Delete all addon data and settings"
+    },
+    "warningAllDataWillRemove": {
+        "message": "Attenzione! Saranno rimossi TUTTI I DATI dell'estensione! Sei veramente sicuro?",
+        "description": "Warning! Removing ALL addon data! Are you really sure?"
+    },
+    "ifDifferentContainerReOpen": {
+        "message": "Se il container è diverso da quello selezionato, cambia il container",
+        "description": "If the container is different from the selected one - change the container"
+    },
+    "deleteAllAddonDataAndSettingsBeforeRestoringBackup": {
+        "message": "Cancella tutti i dati e le impostazioni prima di ricaricarli dal backup",
+        "description": "Delete all addon data and settings before restoring backup"
+    },
+    "helpPageWelcomeV4Title": {
+        "message": "Benvenuto in Simple Tab Groups v4",
+        "description": "Welcome to Simple Tab Groups v4"
+    },
+    "helpPageWelcomeV4Description": {
+        "message": "Abilita \"Ripristina la sessione precedente\" nelle impostazioni del browser. <br>Questa impostazione è necessaria per mantere la comunicazione tra il gruppo corrente e le schede, <br> altrimenti le schede non saranno aperte quando il browser si avvia, le informazioni del gruppo saranno perse dall'estensione<br> e l'estensione smetterà di funzionare.",
+        "description": "Please enable \"Restore previous session\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
+    },
+    "helpPageDisableIncognitoTitle": {
+        "message": "Benvenuto in Simple Tab Groups v4",
+        "description": "Welcome to Simple Tab Groups v4"
+    },
+    "helpPageDisableIncognitoDescription": {
+        "message": "Disabilita l'accesso dell'estensione alle finestre in modalità incognito",
+        "description": "Please disable add-on access to private mode in windows:"
+    },
+    "leaveBookmarksOfClosedTabs": {
+        "message": "Lascia i segnalibri della schede chiuse (i segnalibri saranno separati da un separatore)",
+        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+    },
+    "enableDebugTitle": {
+        "message": "Abilita modalità DEBUG",
+        "description": "Enable DEBUG"
+    },
+    "loggingIsEnabledTitle": {
+        "message": "Telemetria abilitata",
+        "description": "logging is enabled"
+    },
+    "loggingIsAutoEnabledTitle": {
+        "message": "La telemetria è stata attivata automaticamente a causa di un errore nell'estensione",
+        "description": "logging was auto-enabled due to an error in addon"
+    },
+    "loggingDescription": {
+        "message": "Spunta questa casella solamente se devi registrare un bug e mandare la registrazione a me. Spuntare questa casella comporta un notevole rallentamento dell'estensione, poiché tutte le azioni dell'estensione sono registrate. Quando hai finito di registrare l'errore, togli la spunta alla casella e l'estensione ti chiederà dove salvare la registrazione. Questa opzione verrà abilitata in automatico se l'estensione trova un errore. Per salvare la registrazione devi togliere la spunta alla casella della modalità DEBUG e salvare la registrazione su file. <br> Manda il file della registrazione con un'email a <a href=\"mailto:drive4ik@gmail.com\">drive4ik@gmail.com</a><br> <span class=\"has-text-danger\"> Attenzione! La registrazione non contiene nessun tipo di dato personale, come password o segnalibri!</span><br> La registrazione è necessaria per poter riprodurre l'errore e sistemare il problema. <br> Cordiali saluti",
+        "description": "logging description"
+    },
+    "archiveGroup": {
+        "message": "Archivia",
+        "description": "Archive"
+    },
+    "unArchiveGroup": {
+        "message": "Ripristina dall'archivio",
+        "description": "Unarchive"
+    },
+    "groupIsArchived": {
+        "message": "Impossibile completare l'azione, il gruppo '$grouptitle$' è nell'archivio.",
+        "description": "Unable to complete the action, the group is in the archive",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "updateAddonToLatestVersion": {
+        "message": "Aggiorna l'estesione all'ultima versione, perfavore",
+        "description": "Please, update addon to latest version"
+    },
+    "hotkeyActionTitleRenameGroup": {
+        "message": "Rinomina il gruppo",
+        "description": "Rename group"
+    },
+    "noGroupsAvailable": {
+        "message": "Non hai nessun gruppo",
+        "description": "You have no groups"
+    },
+    "alwaysAskNewGroupName": {
+        "message": "Chiedi sempre il nome per un nuovo gruppo",
+        "description": "Always ask for a new group name"
+    },
+    "impossibleToAskUserAboutAction": {
+        "message": "Non è possibile chiedere '$action$' sulla pagina \"$page$\"\n\nClicca qui per maggiori informazioni",
+        "description": "On page \"$page$\" it is impossible to ask about \"$action$\"",
+        "placeholders": {
+            "page": {
+                "content": "$1",
+                "example": "Add-ons for Firefox"
+            },
+            "action": {
+                "content": "$2",
+                "example": "some action"
+            }
+        }
+    },
+    "openPopupTitle": {
+        "message": "Apri il popup",
+        "description": "Open popup"
+    },
+    "openSidebarTitle": {
+        "message": "Apri la sidebar",
+        "description": "Open sidebar"
+    },
+    "helpPageOpenInContainerTitle": {
+        "message": "Non è possibile aprire l'URL nel container",
+        "description": "Can't open URL in container"
+    },
+    "helpPageOpenInContainerMainTitle": {
+        "message": "Non è possibile aprire l'URL nel container <container-name>$containerName$</container-name>",
+        "description": "Can't open the URL into Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerSubTitle": {
+        "message": "L'estensione non può aprire l'URL:",
+        "description": "addon can't open URL:"
+    },
+    "helpPageOpenInContainerDesc1": {
+        "message": "Il gruppo <strong>$groupTitle$</strong> è stato assegnato per aprire le schede nel contenitore <container-name>$containerName$</container-name>",
+        "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
+        "placeholders": {
+            "groupTitle": {
+                "content": "$1",
+                "example": "Group 1"
+            },
+            "containerName": {
+                "content": "$2",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerDesc2": {
+        "message": "Un'altra estensione che UUID:",
+        "description": "Another addon, which has UUID:"
+    },
+    "helpPageOpenInContainerDesc3": {
+        "message": "ha tentato di aprire questo URL nel container <container-name>$containerName$</container-name>. Sposta questa schede in un altro gruppo oppure vieta all'estensione <strong>$uuid$</strong> di effettuare questa azione.",
+        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon '757eaba7-0b3d-478b-ace2-cbe0a16eed47' to perform this action.",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Business"
+            },
+            "uuid": {
+                "content": "$2",
+                "example": "757eaba7-0b3d-478b-ace2-cbe0a16eed47"
+            }
+        }
+    },
+    "helpPageOpenInContainerDesc4": {
+        "message": "Puoi trovare lo UUID delle estensioni in questa pagina:",
+        "description": "You can find out the addon by UUID on the page:"
+    },
+    "helpPageOpenInContainerOpenInContainer": {
+        "message": "Apri nel container <container-name>$containerName$</container-name>",
+        "description": "Open in Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
+    },
+    "reverseTabsOnCreate": {
+        "message": "Inverti l'ordine delle schede durante la creazione, se hai l'impostazione <code>browser.tabs.insertAfterCurrent</code> a <code>true</code>",
+        "description": "Reverse tabs on create, if you have the browser.tabs.insertAfterCurrent preference is true"
+    },
+    "groupNotLoaded": {
+        "message": "Gruppo non caricato",
+        "description": "Group not loaded"
+    },
+    "groupNotFound": {
+        "message": "Gruppo non trovato",
+        "description": "Group not found"
+    },
+    "unloadGroup": {
+        "message": "Sospendi il gruppo",
+        "description": "Unload the group"
+    },
+    "tabsInThisWindowWereHidden": {
+        "message": "Alcune schede di questa finestra sono state nascoste. Le puoi trovare al fondo della finestra di popup dell'estensione",
+        "description": "Tabs in this window were hidden. You can find them at the bottom of the popup window of the addon."
+    },
+    "searchOrGoToActive": {
+        "message": "Cerca o premi la freccia destra per mostrare la scheda o il gruppo attivi",
+        "description": "Search or right arrow to focus on active tab/group"
+    },
+    "thisGroupIsMain": {
+        "message": "Questo gruppo è stato impostato come principale",
+        "description": "This group is marked as main"
+    },
+    "setGroupAsMain": {
+        "message": "Imposta questo gruppo come principale",
+        "description": "Set this group as main"
+    },
+    "thisGroupWasMain": {
+        "message": "Informazione\nQuesto gruppo è stato impostato come il principale",
+        "description": "Notice\nThis group was marked as the main"
+    },
+    "moveToMainIfNotInCatchTabRules": {
+        "message": "Sposta le schede di questo gruppo nel gruppo \"$grouptitle$\" se nessuna delle espressioni regolari combacia",
+        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "My main group"
+            }
+        }
+    },
+    "noContainerTitle": {
+        "message": "Nessun container",
+        "description": "No container"
     }
 }
