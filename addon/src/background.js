@@ -434,18 +434,18 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
         return;
     }
 
-    if (utils.isTabPinned(tab) && undefined === changeInfo.pinned) {
-        console.log('onUpdatedTab 🛑 tab is pinned tabId: %s, changeInfo:', tab.id, changeInfo);
+    if (changeInfo.hasOwnProperty('title') || changeInfo.hasOwnProperty('url')) {
+        cache.setTab(tab);
+    }
+
+    if (utils.isTabPinned(tab) && !changeInfo.hasOwnProperty('pinned')) {
+        console.log('onUpdatedTab 🛑 tab is pinned tabId: %s:', tab.id);
         return;
     }
 
     if (!cache.hasTab(tab.id)) {
-        console.log('onUpdatedTab 🛑 tab not yet created tabId: %s, changeInfo:', tab.id);
+        console.log('onUpdatedTab 🛑 tab not yet created tabId:', tab.id);
         return;
-    }
-
-    if (changeInfo.hasOwnProperty('title') || changeInfo.hasOwnProperty('url')) {
-        cache.setTab(tab);
     }
 
     let tabGroupId = cache.getTabGroup(tab.id),
@@ -2425,7 +2425,7 @@ window.BG = {
                 return obj.map(normalize);
             } else if ('object' === utils.type(obj)) {
                 for (let key in obj) {
-                    if (['title', 'icon', 'icons', 'iconUrl', 'favIconUrl', 'thumbnail'].includes(key)) {
+                    if (['title', 'icon', 'icons', 'iconUrl', 'favIconUrl', 'thumbnail', 'filename'].includes(key)) {
                         obj[key] = obj[key] ? ('some ' + key) : obj[key];
                     } else {
                         obj[key] = normalize(obj[key]);
@@ -2437,6 +2437,8 @@ window.BG = {
                 return 'some data:image';
             } else if (String(obj).startsWith('http')) {
                 return urls[obj] || (urls[obj] = 'URL_' + index++);
+            } else if (String(obj).startsWith('file:')) {
+                return urls[obj] || (urls[obj] = 'FILE_' + index++);
             }
 
             return obj;

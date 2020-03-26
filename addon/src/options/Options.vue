@@ -1167,7 +1167,7 @@
         overflow-x: auto;
         max-width: 1024px;
         margin: 0 auto;
-        padding: 10px 0 50px;
+        padding: 10px 20px 50px;
 
         .backup-time-input {
             width: 100px;
