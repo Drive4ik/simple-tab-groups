@@ -3136,6 +3136,8 @@ async function init() {
         addListenerOnBeforeRequest();
     }
 
+    Groups.load(null, true, true); // load favIconUrls, speed up first run popup
+
     window.BG.inited = true;
 }
 
