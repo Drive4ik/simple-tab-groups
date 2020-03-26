@@ -48,7 +48,7 @@
             tab.cookieStoreId = cookieStoreId;
         }
 
-        if (newTabContainer) {
+        if (newTabContainer && tab.cookieStoreId !== TEMPORARY_CONTAINER) {
             if (ifDifferentContainerReOpen) {
                 tab.cookieStoreId = newTabContainer;
             } else {
@@ -62,7 +62,6 @@
             tab.cookieStoreId = await containers.createTemporaryContainer();
         } else if (tab.hasOwnProperty('cookieStoreId') && !containers.isDefault(tab.cookieStoreId)) {
             tab.cookieStoreId = containers.get(tab.cookieStoreId, 'cookieStoreId');
-
         }
 
         if (!tab.cookieStoreId) {
