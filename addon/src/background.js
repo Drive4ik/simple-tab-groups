@@ -2589,15 +2589,15 @@ async function runMigrateForData(data) {
                 });
 
                 if (tabs.length) {
-                    for (let tab of tabs) {
-                        await Tabs.createNative(utils.normalizeTabUrl(tab));
-                    }
+                    tabs.reverse();
 
-                    await utils.wait(1000);
+                    await Promise.all(tabs.map(tab => Tabs.createNative(utils.normalizeTabUrl(tab))));
+
+                    await utils.wait(100);
 
                     await Tabs.remove(tabs.map(tab => tab.id));
 
-                    await utils.wait(1000);
+                    await utils.wait(100);
                 }
             },
         },
