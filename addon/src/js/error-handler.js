@@ -43,7 +43,7 @@
             stack: console.getErrorStack(nativeError),
         };
 
-        if (/^invalid (tab|window)/i.test(errorData.message) && !window.localStorage.lastReloadFromError) {
+        if (/^(invalid (tab|window))|(An unexpected error occurred)/i.test(errorData.message) && !window.localStorage.lastReloadFromError) {
             window.localStorage.lastReloadFromError = 1;
             console.addErrorLog(errorData);
             browser.runtime.reload();
