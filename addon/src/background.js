@@ -506,22 +506,8 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
     }
 }
 
-async function checkTemporaryContainer(cookieStoreId, excludeTabId) {
-    let tabs = await Tabs.get(null, null, null, {cookieStoreId});
-
-    if (!tabs.filter(tab => tab.id !== excludeTabId).length) {
-        containers.remove(cookieStoreId);
-    }
-}
-
 function onRemovedTab(tabId, {isWindowClosing, windowId}) {
     console.log('onRemovedTab', {tabId, isWindowClosing, windowId});
-
-    let cookieStoreId = cache.getTabSession(tabId, 'cookieStoreId');
-
-    if (containers.isTemporary(cookieStoreId)) {
-        setTimeout(checkTemporaryContainer, 300, cookieStoreId, tabId);
-    }
 
     if (isWindowClosing) {
         reCreateTabsOnRemoveWindow.push(tabId);
@@ -1119,6 +1105,60 @@ async function createMoveTabMenus() {
         },
         contexts: [browser.menus.ContextType.BROWSER_ACTION],
         onclick: () => exportAllGroupsToBookmarks(true),
+    }));
+
+    menuIds.push(browser.menus.create({
+        title: browser.i18n.getMessage('reopenTabsWithTemporaryContainersInNew'),
+        icons: {
+            16: 'resource://usercontext-content/chill.svg',
+        },
+        contexts: [browser.menus.ContextType.BROWSER_ACTION],
+        onclick: async function() {
+            let windows = await Windows.load(true, true, true),
+                allTabs = windows.reduce((acc, win) => (acc.push(...win.tabs), acc), []),
+                cookieStoreIdsToRemove = new Set,
+                tabsToCreate = [];
+
+            let tabsIdsToRemove = allTabs
+                .filter(tab => containers.isTemporary(tab.cookieStoreId))
+                .reverse()
+                .map(function(tab) {
+                    cookieStoreIdsToRemove.add(tab.cookieStoreId);
+
+                    tabsToCreate.push({
+                        ...tab,
+                        cookieStoreId: TEMPORARY_CONTAINER,
+                    });
+
+                    return tab.id;
+                });
+
+            if (tabsToCreate.length) {
+                // create tabs
+                BG.skipCreateTab = true;
+
+                let newTabs = await Promise.all(tabsToCreate.map(Tabs.createNative));
+
+                BG.skipCreateTab = false;
+
+                newTabs = await Promise.all(newTabs.map(cache.setTabSession));
+
+                let tabsToHide = newTabs.filter(tab => tab.groupId && !cache.getWindowId(tab.groupId)),
+                    tabsToHideIds = tabsToHide.map(utils.keyId);
+
+                if (tabsToHideIds.length) {
+                    addExcludeTabIds(tabsToHideIds);
+                    await browser.tabs.hide(tabsToHideIds);
+                    removeExcludeTabIds(tabsToHideIds);
+                }
+
+                // remove old tabs
+                await Tabs.remove(tabsIdsToRemove);
+
+                // remove temporary containers
+                cookieStoreIdsToRemove.forEach(containers.remove);
+            }
+        },
     }));
 }
 

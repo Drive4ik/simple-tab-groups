@@ -1012,5 +1012,9 @@
     "noContainerTitle": {
         "message": "No container",
         "description": "No container"
+    },
+    "reopenTabsWithTemporaryContainersInNew": {
+        "message": "Reopen tabs with temporary containers in new",
+        "description": "Reopen tabs with temporary containers in new"
     }
 }

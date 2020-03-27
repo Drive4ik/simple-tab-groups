@@ -122,7 +122,7 @@
     }
 
     function remove(cookieStoreId) {
-        return browser.contextualIdentities.remove(cookieStoreId);
+        return browser.contextualIdentities.remove(cookieStoreId).catch(noop);
     }
 
     async function normalize(cookieStoreId, containerData) {
@@ -203,7 +203,7 @@
 
         Object.keys(containers)
             .filter(cookieStoreId => isTemporary(cookieStoreId) && !tabContainers.includes(cookieStoreId))
-            .forEach(cookieStoreId => remove(cookieStoreId).catch(noop));
+            .forEach(remove);
     }
 
     window.containers = {
