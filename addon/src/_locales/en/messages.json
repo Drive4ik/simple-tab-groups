@@ -1016,5 +1016,9 @@
     "reopenTabsWithTemporaryContainersInNew": {
         "message": "Reopen tabs with temporary containers in new",
         "description": "Reopen tabs with temporary containers in new"
+    },
+    "temporaryContainerTitleDescription": {
+        "message": "Prefix of the temporary container title",
+        "description": "Prefix of the temporary container title"
     }
 }

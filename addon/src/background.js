@@ -646,7 +646,7 @@ async function addUndoRemoveGroupItem(groupToRemove) {
 
         groups.push(group);
 
-        groups = await normalizeContainersInGroups(groups);
+        normalizeContainersInGroups(groups);
 
         await Groups.save(groups);
 
@@ -1116,14 +1116,14 @@ async function createMoveTabMenus() {
         onclick: async function() {
             let windows = await Windows.load(true, true, true),
                 allTabs = windows.reduce((acc, win) => (acc.push(...win.tabs), acc), []),
-                cookieStoreIdsToRemove = new Set,
+                // cookieStoreIdsToRemove = new Set,
                 tabsToCreate = [];
 
             let tabsIdsToRemove = allTabs
                 .filter(tab => containers.isTemporary(tab.cookieStoreId))
                 .reverse()
                 .map(function(tab) {
-                    cookieStoreIdsToRemove.add(tab.cookieStoreId);
+                    // cookieStoreIdsToRemove.add(tab.cookieStoreId);
 
                     tabsToCreate.push({
                         ...tab,
@@ -1134,6 +1134,8 @@ async function createMoveTabMenus() {
                 });
 
             if (tabsToCreate.length) {
+                await loadingBrowserAction();
+
                 // create tabs
                 BG.skipCreateTab = true;
 
@@ -1156,7 +1158,9 @@ async function createMoveTabMenus() {
                 await Tabs.remove(tabsIdsToRemove);
 
                 // remove temporary containers
-                cookieStoreIdsToRemove.forEach(containers.remove);
+                // await containers.remove(Array.from(cookieStoreIdsToRemove));
+
+                loadingBrowserAction(false);
             }
         },
     }));
@@ -2101,6 +2105,10 @@ async function saveOptions(_options) {
         });
     }
 
+    if (optionsKeys.includes('temporaryContainerTitle')) {
+        containers.updateTemporaryContainerTitle(options.temporaryContainerTitle);
+    }
+
     if (optionsKeys.some(key => ['showContextMenuOnTabs', 'showContextMenuOnLinks'].includes(key))) {
         updateMoveTabMenus();
     }
@@ -2176,18 +2184,19 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
         data.pinnedTabs = Tabs.prepareForSave(pinnedTabs);
     }
 
-    let containersToExport = [];
+    let containersToExport = new Set;
 
     data.groups = groups.map(function(group) {
         group.tabs = Tabs.prepareForSave(group.tabs, false, includeTabFavIcons, includeTabThumbnails);
 
         group.tabs.forEach(function({cookieStoreId}) {
-            if (!containers.isDefault(cookieStoreId) && !containersToExport.includes(cookieStoreId)) {
-                containersToExport.push(cookieStoreId);
+            if (!containers.isDefault(cookieStoreId) && !containers.isTemporary(cookieStoreId)) {
+                containersToExport.add(cookieStoreId);
             }
         });
 
-        containersToExport.push(...group.catchTabContainers, group.newTabContainer);
+        group.newTabContainer && containersToExport.add(group.newTabContainer);
+        group.catchTabContainers.forEach(containersToExport.add, containersToExport);
 
         return group;
     });
@@ -2196,11 +2205,7 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
 
     data.containers = {};
 
-    containersToExport.filter(Boolean).forEach(function(cookieStoreId) {
-        if (cookieStoreId !== TEMPORARY_CONTAINER && !data.containers[cookieStoreId]) {
-            data.containers[cookieStoreId] = allContainers[cookieStoreId];
-        }
-    });
+    containersToExport.forEach(cookieStoreId => data.containers[cookieStoreId] = allContainers[cookieStoreId]);
 
     if (isAutoBackup) {
         data.autoBackupLastBackupTimeStamp = options.autoBackupLastBackupTimeStamp = utils.unixNow();
@@ -2237,11 +2242,11 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         await clearAddon(false);
 
         await utils.wait(1000);
-
-        await containers.init();
     } else {
         data.groups.forEach(group => group.isMain = false);
     }
+
+    await containers.updateTemporaryContainerTitle(data.temporaryContainerTitle);
 
     if (data.hasOwnProperty('showTabsWithThumbnailsInManageGroups')) {
         options.showTabsWithThumbnailsInManageGroups = data.showTabsWithThumbnailsInManageGroups;
@@ -2364,10 +2369,6 @@ async function clearAddon(reloadAddonOnFinish = true) {
     await storage.clear();
 
     cache.clear();
-
-    if (tabs.length) {
-        await browser.tabs.show(tabs.map(utils.keyId));
-    }
 
     window.localStorage.clear();
 
@@ -2928,28 +2929,23 @@ async function tryRestoreMissedTabs() {
     await storage.remove('tabsToRestore');
 }
 
-async function normalizeContainersInGroups(groups = null) {
-    let _groups = groups ? groups : await Groups.load(),
-        allContainers = containers.getAll();
+function normalizeContainersInGroups(groups) {
+    let allContainers = containers.getAll(),
+        needSaveGroups = false;
 
-    _groups.forEach(function(group) {
+    groups.forEach(function(group) {
         let oldNewTabContainer = group.newTabContainer,
             oldCatchTabContainersLength = group.catchTabContainers.length;
 
-        if (group.newTabContainer && group.newTabContainer !== TEMPORARY_CONTAINER) {
+        if (group.newTabContainer) {
             group.newTabContainer = containers.get(group.newTabContainer, 'cookieStoreId');
-        }
-
-        if (containers.isDefault(group.newTabContainer)) {
-            group.newTabContainer = null;
         }
 
         group.catchTabContainers = group.catchTabContainers.filter(cookieStoreId => allContainers[cookieStoreId]);
 
-        if (!groups && (
-            oldNewTabContainer !== group.newTabContainer ||
-            oldCatchTabContainersLength !== group.catchTabContainers.length
-        )) {
+        if (oldNewTabContainer !== group.newTabContainer || oldCatchTabContainersLength !== group.catchTabContainers.length) {
+            needSaveGroups = true;
+
             sendMessage({
                 action: 'group-updated',
                 group: {
@@ -2961,7 +2957,7 @@ async function normalizeContainersInGroups(groups = null) {
         }
     });
 
-    return groups ? _groups : Groups.save(_groups);
+    return needSaveGroups;
 }
 
 async function restoreOldExtensionUrls() {
@@ -3125,7 +3121,7 @@ async function init() {
         data.groups = [];
     }
 
-    await containers.init();
+    await containers.init(data.temporaryContainerTitle);
 
     try {
         data = await runMigrateForData(data); // run migration for data
@@ -3136,7 +3132,7 @@ async function init() {
 
     utils.assignKeys(options, data, ALL_OPTIONS_KEYS);
 
-    data.groups = await normalizeContainersInGroups(data.groups);
+    normalizeContainersInGroups(data.groups);
 
     await storage.set(data);
 

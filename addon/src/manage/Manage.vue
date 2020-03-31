@@ -412,6 +412,7 @@
                             break;
                         case 'containers-updated':
                             this.containers = containers.getAll();
+                            Object.values(this.allTabs).forEach(this.mapTabContainer);
                             break;
                         case 'lock-addon':
                             this.isLoading = true;

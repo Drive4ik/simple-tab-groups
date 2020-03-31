@@ -166,6 +166,7 @@ const DEFAULT_OPTIONS = Object.freeze({
     showExtendGroupsPopupWithActiveTabs: false,
     showTabsWithThumbnailsInManageGroups: false,
     reverseTabsOnCreate: false,
+    temporaryContainerTitle: browser.i18n.getMessage('temporaryContainerTitle'),
 
     defaultGroupIconViewType: GROUP_ICON_VIEW_TYPES[0],
     defaultGroupIconColor: '',
@@ -211,6 +212,7 @@ const ONLY_BOOL_OPTION_KEYS = Object.freeze(Object.keys(DEFAULT_OPTIONS).filter(
 
 const ALL_OPTIONS_KEYS = Object.freeze([
     ...ONLY_BOOL_OPTION_KEYS,
+    'temporaryContainerTitle',
     'hotkeys',
     'defaultBookmarksParent',
     'defaultGroupIconViewType',

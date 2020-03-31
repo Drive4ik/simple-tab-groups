@@ -213,6 +213,15 @@
                     this.showEnableDarkThemeNotification = true;
                 }
             },
+            'options.temporaryContainerTitle': function(temporaryContainerTitle, oldValue) {
+                if (!temporaryContainerTitle || null == oldValue) {
+                    return;
+                }
+
+                BG.saveOptions({
+                    temporaryContainerTitle,
+                });
+            },
             'options.hotkeys': {
                 handler(hotkeys, oldValue) {
                     if (null == oldValue) {
@@ -757,6 +766,12 @@
                     <span v-text="lang('showTabsWithThumbnailsInManageGroups')"></span>
                 </label>
             </div>
+            <div class="field">
+                <label class="label" v-text="lang('temporaryContainerTitleDescription')"></label>
+                <div class="control">
+                    <input v-model.lazy.trim="options.temporaryContainerTitle" class="input tmp-container-input" type="text" :placeholder="lang('temporaryContainerTitle')">
+                </div>
+            </div>
 
             <hr>
 
@@ -1171,6 +1186,10 @@
 
         .backup-time-input {
             width: 100px;
+        }
+
+        .tmp-container-input {
+            width: 300px;
         }
 
         .hotkeys > .field {
