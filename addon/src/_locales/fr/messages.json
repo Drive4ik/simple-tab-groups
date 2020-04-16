@@ -1008,5 +1008,31 @@
     "noContainerTitle": {
         "message": "Aucun contexte",
         "description": "No container"
+    },
+    "reopenTabsWithTemporaryContainersInNew": {
+        "message": "Ré-ouvrir les onglets en contexte temporaire dans un nouveau",
+        "description": "Reopen tabs with temporary containers in new"
+    },
+    "temporaryContainerTitleDescription": {
+        "message": "Préfixe du nom du contexte temporaire",
+        "description": "Prefix of the temporary container title"
+    },
+    "excludeContainersForReOpen": {
+        "message": "en excluant ces contextes",
+        "description": "excluding these containers"
+    },
+    "helpPageOpenInContainerExcludeContainerToGroup": {
+        "message": "Exclure le contexte <container-name>$containerName$</container-name> du groupe <strong>$groupTitle$</strong>",
+        "description": "Exclude Personal container for group Group 1",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            },
+            "groupTitle": {
+                "content": "$2",
+                "example": "Group 1"
+            }
+        }
     }
 }
