@@ -49,7 +49,7 @@
             groups,
         });
 
-        if (needToAddBlockBeforeRequest(groups)) {
+        if (isNeedBlockBeforeRequest(groups)) {
             BG.addListenerOnBeforeRequest();
         } else {
             BG.removeListenerOnBeforeRequest();
@@ -73,13 +73,14 @@
             iconViewType: BG.options.defaultGroupIconViewType,
             tabs: [],
             isArchive: false,
+            newTabContainer: DEFAULT_COOKIE_STORE_ID,
+            ifDifferentContainerReOpen: false,
+            excludeContainersForReOpen: [],
+            isMain: false,
+            isSticky: false,
             catchTabContainers: [],
             catchTabRules: '',
-            isMain: false,
             moveToMainIfNotInCatchTabRules: false,
-            newTabContainer: null,
-            ifDifferentContainerReOpen: true,
-            isSticky: false,
             muteTabsWhenGroupCloseAndRestoreWhenOpen: false,
             showTabAfterMovingItIntoThisGroup: false,
             dontDiscardTabsAfterHideThisGroup: false,
@@ -391,12 +392,12 @@
             title: utils.getGroupTitle(group, group.isArchive ? '' : 'withActiveGroup'),
             isArchive: group.isArchive,
             iconUrl: utils.getGroupIconUrl(group),
-            contextualIdentity: group.newTabContainer ? containers.get(group.newTabContainer) : null,
+            contextualIdentity: containers.get(group.newTabContainer),
         };
     }
 
-    function getNewTabParams({id, newTabContainer, ifDifferentContainerReOpen}) {
-        return {groupId: id, newTabContainer, ifDifferentContainerReOpen};
+    function getNewTabParams({id, newTabContainer, ifDifferentContainerReOpen, excludeContainersForReOpen}) {
+        return {groupId: id, newTabContainer, ifDifferentContainerReOpen, excludeContainersForReOpen};
     }
 
     function setNewTabsParams(tabs, group) {
@@ -456,8 +457,22 @@
         return mainGroup;
     }
 
-    function needToAddBlockBeforeRequest(groups) {
-        return groups.some(group => !group.isArchive && (group.catchTabContainers.length || group.catchTabRules || group.newTabContainer));
+    function isNeedBlockBeforeRequest(groups) {
+        return groups.some(function({isArchive, catchTabContainers, catchTabRules, ifDifferentContainerReOpen, newTabContainer}) {
+            if (isArchive) {
+                return false;
+            }
+
+            if (catchTabContainers.length || catchTabRules) {
+                return true;
+            }
+
+            if (ifDifferentContainerReOpen) {
+                return true;
+            }
+
+            return newTabContainer !== DEFAULT_COOKIE_STORE_ID;
+        });
     }
 
     window.Groups = {
@@ -476,7 +491,7 @@
         setNewTabsParams,
         getNextTitle,
         getCatchedForTab,
-        needToAddBlockBeforeRequest,
+        isNeedBlockBeforeRequest,
     };
 
 })();

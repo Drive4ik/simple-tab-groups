@@ -2,6 +2,10 @@
     'use strict';
 
     const temporaryContainerDefaultTitle = browser.i18n.getMessage('temporaryContainerTitle'),
+        defaultContainerOptions = {
+            cookieStoreId: DEFAULT_COOKIE_STORE_ID,
+            name: browser.i18n.getMessage('noContainerTitle'),
+        },
         temporaryContainerOptions = {
             color: 'toolbar',
             colorCode: false,
@@ -181,13 +185,15 @@
         return mappedContainerCookieStoreId[cookieStoreId];
     }
 
-    function get(cookieStoreId, key = null) {
+    function get(cookieStoreId, key = null, withDefaultContainer = false) {
         let result = null;
 
         if (containers[cookieStoreId]) {
             result = containers[cookieStoreId];
         } else if (containers[mappedContainerCookieStoreId[cookieStoreId]]) {
             result = containers[mappedContainerCookieStoreId[cookieStoreId]];
+        } else if (withDefaultContainer) {
+            result = defaultContainerOptions;
         }
 
         if (result) {
@@ -197,7 +203,7 @@
         return null;
     }
 
-    function getAll() {
+    function getAll(withDefaultContainer) {
         let _containers = utils.clone(containers);
 
         for (let cookieStoreId in _containers) {
@@ -206,9 +212,15 @@
             }
         }
 
+        if (withDefaultContainer) {
+            _containers = {
+                [DEFAULT_COOKIE_STORE_ID]: {...defaultContainerOptions},
+                ..._containers,
+            };
+        }
+
         // add temporary container to end of obj
-        _containers[TEMPORARY_CONTAINER] = utils.clone(temporaryContainerOptions);
-        _containers[TEMPORARY_CONTAINER].name = temporaryContainerDefaultTitle;
+        _containers[TEMPORARY_CONTAINER] = {...temporaryContainerOptions, name: temporaryContainerDefaultTitle};
 
         return _containers;
     }

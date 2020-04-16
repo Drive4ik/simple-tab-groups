@@ -30,6 +30,9 @@
     export default {
         data() {
             return {
+                DEFAULT_COOKIE_STORE_ID,
+                TEMPORARY_CONTAINER,
+
                 VIEW_GRID,
 
                 view: VIEW_DEFAULT,
@@ -49,7 +52,7 @@
                 groupToEdit: null,
                 groupToRemove: null,
 
-                containers: containers.getAll(),
+                containers: containers.getAll(true),
                 options: {},
 
                 groups: [],
@@ -411,7 +414,7 @@
                             this.loadOptions();
                             break;
                         case 'containers-updated':
-                            this.containers = containers.getAll();
+                            this.containers = containers.getAll(true);
                             Object.values(this.allTabs).forEach(this.mapTabContainer);
                             break;
                         case 'lock-addon':
@@ -611,7 +614,7 @@
             },
 
             mapTabContainer(tab) {
-                tab.container = containers.isDefault(tab.cookieStoreId) ? false : containers.get(tab.cookieStoreId);
+                tab.container = containers.get(tab.cookieStoreId);
                 return tab;
             },
 
@@ -946,7 +949,7 @@
                                     <img :src="group.iconUrlToDisplay" />
                                 </figure>
                             </div>
-                            <div class="group-icon" v-if="group.newTabContainer">
+                            <div class="group-icon" v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID">
                                 <figure class="image is-16x16">
                                     <img
                                         :src="containers[group.newTabContainer].iconUrl"
@@ -1147,8 +1150,24 @@
 
                     <hr>
 
-                    <li v-for="container in containers" :key="container.cookieStoreId" @click="addTab(menu.data.group, container.cookieStoreId)">
-                        <img :src="container.iconUrl" class="is-inline-block size-16" :style="{fill: container.colorCode}" />
+                    <li
+                        v-for="container in containers"
+                        v-if="
+                            container.cookieStoreId !== DEFAULT_COOKIE_STORE_ID &&
+                            (
+                                menu.data.group.ifDifferentContainerReOpen
+                                ? (
+                                    menu.data.group.excludeContainersForReOpen.includes(container.cookieStoreId) ||
+                                    menu.data.group.newTabContainer === container.cookieStoreId ||
+                                    container.cookieStoreId === TEMPORARY_CONTAINER
+                                )
+                                : true
+                            )
+                        "
+                        :key="container.cookieStoreId"
+                        @click="addTab(menu.data.group, container.cookieStoreId)"
+                        >
+                        <img v-if="container.iconUrl" :src="container.iconUrl" class="is-inline-block size-16" :style="{fill: container.colorCode}" />
                         <span v-text="container.name"></span>
                     </li>
                 </ul>

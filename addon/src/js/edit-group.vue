@@ -25,13 +25,14 @@
         },
         data() {
             return {
-                containers: containers.getAll(),
+                containers: containers.getAll(true),
                 TEMPORARY_CONTAINER,
+                DEFAULT_COOKIE_STORE_ID,
                 disabledContainers: {},
 
                 showMessageCantLoadFile: false,
 
-                GROUP_ICON_VIEW_TYPES: GROUP_ICON_VIEW_TYPES,
+                GROUP_ICON_VIEW_TYPES,
 
                 group: null,
 
@@ -41,6 +42,11 @@
 
                 currentTabUrl: null,
             };
+        },
+        watch: {
+            'group.newTabContainer': function(newTabContainer) {
+                this.group.excludeContainersForReOpen = this.group.excludeContainersForReOpen.filter(cookieStoreId => cookieStoreId !== newTabContainer);
+            },
         },
         computed: {
             currentDomainRegexp() {
@@ -68,9 +74,6 @@
                         }
                     }
                 }
-            },
-            hasContainers() {
-                return Object.keys(this.containers).some(cookieStoreId => cookieStoreId !== TEMPORARY_CONTAINER);
             },
         },
         async created() {
@@ -285,25 +288,37 @@
         <div class="field">
             <label class="label" v-text="lang('alwaysOpenTabsInContainer')"></label>
             <div class="containers-wrapper">
-                <div class="control">
-                    <label class="radio indent-children">
-                        <input type="radio" :value="null" v-model="group.newTabContainer" />
-                        <span v-text="lang('noContainerTitle')"></span>
-                    </label>
-                </div>
                 <div v-for="container in containers" :key="container.cookieStoreId" class="control">
                     <label class="radio indent-children">
                         <input type="radio" :value="container.cookieStoreId" v-model="group.newTabContainer" />
-                        <img :src="container.iconUrl" class="size-16 fill-context" :style="{fill: container.colorCode}" />
+                        <img v-if="container.iconUrl" :src="container.iconUrl" class="size-16 fill-context" :style="{fill: container.colorCode}" />
                         <span class="word-break-all" v-text="container.name"></span>
                     </label>
                 </div>
             </div>
-            <div v-if="group.newTabContainer" class="control h-margin-top-10">
+            <div class="control h-margin-top-10">
                 <label class="checkbox indent-children">
                     <input type="checkbox" v-model="group.ifDifferentContainerReOpen" />
                     <span v-text="lang('ifDifferentContainerReOpen')"></span>
                 </label>
+            </div>
+            <div v-if="group.ifDifferentContainerReOpen" class="field h-margin-top-10">
+                <label class="label" v-text="lang('excludeContainersForReOpen')"></label>
+                <div class="containers-wrapper">
+                    <div v-for="container in containers" v-if="container.cookieStoreId !== TEMPORARY_CONTAINER" :key="container.cookieStoreId" class="control">
+                        <label
+                            class="checkbox indent-children"
+                            :disabled="container.cookieStoreId === group.newTabContainer">
+                            <input
+                                type="checkbox"
+                                :disabled="container.cookieStoreId === group.newTabContainer"
+                                :value="container.cookieStoreId"
+                                v-model="group.excludeContainersForReOpen" />
+                            <img v-if="container.iconUrl" :src="container.iconUrl" class="size-16 fill-context" :style="{fill: container.colorCode}" />
+                            <span class="word-break-all" v-text="container.name"></span>
+                        </label>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -328,25 +343,16 @@
             </div>
         </div>
 
-        <div v-if="hasContainers" class="field">
+        <div class="field">
             <label class="label" v-text="lang('catchTabContainers')"></label>
             <div class="containers-wrapper">
-                <div
-                    v-for="container in containers"
-                    v-if="container.cookieStoreId !== TEMPORARY_CONTAINER"
-                    :key="container.cookieStoreId"
-                    class="control"
-                    >
-                        <label class="checkbox indent-children" :disabled="isDisabledContainer(container)">
-                            <input type="checkbox"
-                                :disabled="isDisabledContainer(container)"
-                                :value="container.cookieStoreId"
-                                v-model="group.catchTabContainers"
-                                />
-                            <img :src="container.iconUrl" class="size-16 fill-context" :style="{fill: container.colorCode}" />
-                            <span class="word-break-all" v-text="container.name"></span>
-                            <i class="word-break-all" v-if="disabledContainers.hasOwnProperty(container.cookieStoreId)">({{ disabledContainers[container.cookieStoreId] }})</i>
-                        </label>
+                <div v-for="container in containers" v-if="container.cookieStoreId !== TEMPORARY_CONTAINER" :key="container.cookieStoreId" class="control">
+                    <label class="checkbox indent-children" :disabled="isDisabledContainer(container)">
+                        <input type="checkbox" :disabled="isDisabledContainer(container)" :value="container.cookieStoreId" v-model="group.catchTabContainers" />
+                        <img v-if="container.iconUrl" :src="container.iconUrl" class="size-16 fill-context" :style="{fill: container.colorCode}" />
+                        <span class="word-break-all" v-text="container.name"></span>
+                        <i class="word-break-all" v-if="disabledContainers.hasOwnProperty(container.cookieStoreId)">({{ disabledContainers[container.cookieStoreId] }})</i>
+                    </label>
                 </div>
             </div>
         </div>

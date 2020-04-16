@@ -30,6 +30,7 @@
         data() {
             return {
                 TEMPORARY_CONTAINER,
+                DEFAULT_COOKIE_STORE_ID,
                 allContainers: containers.getAll(),
 
                 clearAddonData: this.allowClearAddonData ? true : false,
@@ -139,14 +140,11 @@
                         </figure>
                         &nbsp;
                     </template>
-                    <template v-if="group.newTabContainer">
-                        <figure v-if="TEMPORARY_CONTAINER === group.newTabContainer" class="image is-16x16 is-inline-block">
-                            <img
-                                :src="allContainers[TEMPORARY_CONTAINER].iconUrl"
-                                class="size-16 fill-context"
-                                />
+                    <template v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID">
+                        <figure v-if="group.newTabContainer === TEMPORARY_CONTAINER" class="image is-16x16 is-inline-block">
+                            <img :src="allContainers[TEMPORARY_CONTAINER].iconUrl" class="size-16 fill-context" />
                         </figure>
-                        <figure v-if="TEMPORARY_CONTAINER !== group.newTabContainer && data.containers && data.containers[group.newTabContainer] && data.containers[group.newTabContainer].iconUrl" class="image is-16x16 is-inline-block">
+                        <figure v-else-if="data.containers && data.containers[group.newTabContainer] && data.containers[group.newTabContainer].iconUrl" class="image is-16x16 is-inline-block">
                             <img
                                 :src="data.containers[group.newTabContainer].iconUrl"
                                 :style="{fill: data.containers[group.newTabContainer].colorCode}"

@@ -34,6 +34,16 @@ function addFavicon(url) {
     $('#redirect-url').prepend(createFavIconNode(`${origin}/favicon.ico`));
 }
 
+function getContainer(cookieStoreId) {
+    if (cookieStoreId === TEMPORARY_CONTAINER) {
+        return {name: lang('temporaryContainerTitle')};
+    } else if (cookieStoreId === DEFAULT_COOKIE_STORE_ID) {
+        return {name: lang('noContainerTitle')};
+    } else {
+        return browser.contextualIdentities.get(cookieStoreId).catch(() => ({name: cookieStoreId, notFound: true}));
+    }
+}
+
 async function init() {
     const url = urlParams.get('url'),
         currentCookieStoreId = urlParams.get('currentCookieStoreId'),
@@ -42,12 +52,8 @@ async function init() {
         groupId = Number(urlParams.get('groupId')),
         [{groups}, currentContainer, anotherContainer] = await Promise.all([
             browser.storage.local.get('groups'),
-            TEMPORARY_CONTAINER === currentCookieStoreId
-                ? {name: lang('temporaryContainerTitle')}
-                : browser.contextualIdentities.get(currentCookieStoreId).catch(() => ({name: currentCookieStoreId, notFound: true})),
-            DEFAULT_COOKIE_STORE_ID === anotherCookieStoreId
-                ? {name: lang('noContainerTitle')}
-                : browser.contextualIdentities.get(anotherCookieStoreId).catch(() => ({name: anotherCookieStoreId, notFound: true})),
+            getContainer(currentCookieStoreId),
+            getContainer(anotherCookieStoreId),
         ]),
         group = groups.find(group => group.id === groupId);
 
@@ -88,14 +94,31 @@ async function init() {
     $('#deny')[INNER_HTML] = lang('helpPageOpenInContainerOpenInContainer', safeHtml(anotherContainer.name));
     $('#confirm')[INNER_HTML] = lang('helpPageOpenInContainerOpenInContainer', safeHtml(currentContainer.name));
 
+    $('#helpPageOpenInContainerExcludeContainerToGroup')[INNER_HTML] = lang('helpPageOpenInContainerExcludeContainerToGroup', [safeHtml(anotherContainer.name), safeHtml(group.title)]);
+
     addFavicon(url);
 
-    $('#deny').addEventListener('click', () => openTab(url, anotherCookieStoreId, 'deny'));
+    $('#deny').addEventListener('click', () => openTab(url, anotherCookieStoreId, 'deny', groupId));
     $('#confirm').addEventListener('click', () => openTab(url, currentCookieStoreId, 'confirm'));
+    $('#exclude-container').addEventListener('change', e => $('#confirm').disabled = e.target.checked);
 }
 
-async function openTab(url, cookieStoreId = DEFAULT_COOKIE_STORE_ID, buttonId = null) {
+async function openTab(url, cookieStoreId = DEFAULT_COOKIE_STORE_ID, buttonId = null, groupId = null) {
     try {
+        if (buttonId === 'deny' && $('#exclude-container').checked) {
+            let result = await browser.runtime.sendMessage({
+                action: 'exclude-container-for-group',
+                cookieStoreId,
+                groupId,
+            });
+
+            if (!result) {
+                throw Error('unknown error');
+            } else if (!result.ok) {
+                throw Error(result.error);
+            }
+        }
+
         const {id, index} = await browser.tabs.getCurrent();
 
         await browser.tabs.create({

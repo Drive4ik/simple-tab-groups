@@ -46,6 +46,9 @@
                 SECTION_GROUPS_LIST,
                 SECTION_GROUP_TABS,
 
+                DEFAULT_COOKIE_STORE_ID,
+                TEMPORARY_CONTAINER,
+
                 section: SECTION_DEFAULT,
 
                 showPromptPopup: false,
@@ -65,7 +68,7 @@
                 groupToEdit: null,
                 groupToRemove: null,
 
-                containers: containers.getAll(),
+                containers: containers.getAll(true),
                 options: {},
                 groups: [],
 
@@ -431,7 +434,7 @@
                             this.loadOptions();
                             break;
                         case 'containers-updated':
-                            this.containers = containers.getAll();
+                            this.containers = containers.getAll(true);
                             Object.values(this.allTabs).forEach(this.mapTabContainer);
                             break;
                         case 'lock-addon':
@@ -554,7 +557,7 @@
             },
 
             mapTabContainer(tab) {
-                tab.container = containers.isDefault(tab.cookieStoreId) ? false : containers.get(tab.cookieStoreId);
+                tab.container = containers.get(tab.cookieStoreId);
                 return tab;
             },
 
@@ -1109,7 +1112,7 @@
                                     <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                                 </div>
                                 <div class="item-title">
-                                    <template v-if="group.newTabContainer">
+                                    <template v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID">
                                         <img
                                             :src="containers[group.newTabContainer].iconUrl"
                                             :style="{fill: containers[group.newTabContainer].colorCode}"
@@ -1238,7 +1241,7 @@
                                 <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                             </div>
                             <div class="item-title">
-                                <template v-if="group.newTabContainer">
+                                <template v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID">
                                     <img
                                         :src="containers[group.newTabContainer].iconUrl"
                                         :style="{fill: containers[group.newTabContainer].colorCode}"
@@ -1345,7 +1348,7 @@
                         <img :src="groupToShow.iconUrlToDisplay" class="is-inline-block size-16" />
                     </div>
                     <div class="item-title">
-                        <template v-if="groupToShow.newTabContainer">
+                        <template v-if="groupToShow.newTabContainer !== DEFAULT_COOKIE_STORE_ID">
                             <img
                                 :src="containers[groupToShow.newTabContainer].iconUrl"
                                 :style="{fill: containers[groupToShow.newTabContainer].colorCode}"
@@ -1478,9 +1481,25 @@
         </footer>
 
         <context-menu ref="createNewTabContextMenu">
-            <ul class="is-unselectable">
-                <li v-for="container in containers" :key="container.cookieStoreId" @click="addTab(container.cookieStoreId)">
-                    <img :src="container.iconUrl" class="is-inline-block size-16" :style="{fill: container.colorCode}" />
+            <ul class="is-unselectable" v-if="groupToShow">
+                <li
+                    v-for="container in containers"
+                    v-if="
+                        container.cookieStoreId !== DEFAULT_COOKIE_STORE_ID &&
+                        (
+                            groupToShow.ifDifferentContainerReOpen
+                            ? (
+                                groupToShow.excludeContainersForReOpen.includes(container.cookieStoreId) ||
+                                groupToShow.newTabContainer === container.cookieStoreId ||
+                                container.cookieStoreId === TEMPORARY_CONTAINER
+                            )
+                            : true
+                        )
+                    "
+                    :key="container.cookieStoreId"
+                    @click="addTab(container.cookieStoreId)"
+                    >
+                    <img v-if="container.iconUrl" :src="container.iconUrl" class="is-inline-block size-16" :style="{fill: container.colorCode}" />
                     <span v-text="container.name"></span>
                 </li>
             </ul>
@@ -1493,6 +1512,10 @@
                         <img src="/icons/window-new.svg" class="size-16" />
                         <span v-text="lang('openGroupInNewWindow')"></span>
                     </li>
+                    <li :class="{'is-disabled': menu.data.group.isArchive}" @click="!menu.data.group.isArchive && reloadAllTabsInGroup(menu.data.group, $event.ctrlKey || $event.metaKey)">
+                        <img src="/icons/refresh.svg" class="size-16" />
+                        <span v-text="lang('reloadAllTabsInGroup')"></span>
+                    </li>
                     <li @click="sortGroups('asc')">
                         <img src="/icons/sort-alpha-asc.svg" class="size-16" />
                         <span v-text="lang('sortGroupsAZ')"></span>
@@ -1504,10 +1527,6 @@
                     <li @click="exportGroupToBookmarks(menu.data.group)">
                         <img src="/icons/bookmark.svg" class="size-16" />
                         <span v-text="lang('exportGroupToBookmarks')"></span>
-                    </li>
-                    <li :class="{'is-disabled': menu.data.group.isArchive}" @click="!menu.data.group.isArchive && reloadAllTabsInGroup(menu.data.group, $event.ctrlKey || $event.metaKey)">
-                        <img src="/icons/refresh.svg" class="size-16" />
-                        <span v-text="lang('reloadAllTabsInGroup')"></span>
                     </li>
                     <li :class="{'is-disabled': menu.data.group.isArchive}" @click="!menu.data.group.isArchive && discardGroup(menu.data.group)">
                         <img src="/icons/snowflake.svg" class="size-16" />

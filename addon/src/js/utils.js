@@ -331,7 +331,7 @@
             }
         }
 
-        if (withContainer && newTabContainer) {
+        if (withContainer && newTabContainer !== DEFAULT_COOKIE_STORE_ID) {
             title = '[' + containers.get(newTabContainer, 'name') + '] ' + title;
         }
 

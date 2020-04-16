@@ -1,7 +1,7 @@
 (function() {
     'use strict';
 
-    async function createNative({url, active, pinned, title, index, windowId, isInReaderMode, openInReaderMode, openerTabId, cookieStoreId, newTabContainer, ifDifferentContainerReOpen, groupId, favIconUrl, thumbnail}) {
+    async function createNative({url, active, pinned, title, index, windowId, isInReaderMode, openInReaderMode, openerTabId, cookieStoreId, newTabContainer, ifDifferentContainerReOpen, excludeContainersForReOpen, groupId, favIconUrl, thumbnail}) {
         let tab = {};
 
         if (utils.isUrlAllowToCreate(url)) { // TODO create page for unsupported urls
@@ -44,28 +44,14 @@
             tab.openInReaderMode = true;
         }
 
-        if (typeof cookieStoreId === 'string') {
-            tab.cookieStoreId = cookieStoreId;
-        }
+        tab.cookieStoreId = cookieStoreId || DEFAULT_COOKIE_STORE_ID;
 
-        if (newTabContainer && tab.cookieStoreId !== TEMPORARY_CONTAINER) {
-            if (ifDifferentContainerReOpen) {
-                tab.cookieStoreId = newTabContainer;
-            } else {
-                if (containers.isDefault(tab.cookieStoreId)) {
-                    tab.cookieStoreId = newTabContainer;
-                }
-            }
-        }
+        tab.cookieStoreId = getNewTabContainer(tab, {newTabContainer, ifDifferentContainerReOpen, excludeContainersForReOpen});
 
         if (tab.cookieStoreId === TEMPORARY_CONTAINER) {
             tab.cookieStoreId = await containers.createTemporaryContainer();
-        } else if (tab.hasOwnProperty('cookieStoreId') && !containers.isDefault(tab.cookieStoreId)) {
-            tab.cookieStoreId = containers.get(tab.cookieStoreId, 'cookieStoreId');
-        }
-
-        if (!tab.cookieStoreId) {
-            delete tab.cookieStoreId;
+        } else {
+            tab.cookieStoreId = containers.get(tab.cookieStoreId, 'cookieStoreId', true);
         }
 
         let newTab = await browser.tabs.create(tab);
@@ -349,66 +335,58 @@
                 }
             }));
 
-            if (group.newTabContainer) {
-                let tabsIdsToRemove = [],
-                    newTabParams = Groups.getNewTabParams(group);
+            let tabsIdsToRemove = [],
+                newTabParams = Groups.getNewTabParams(group);
 
-                BG.groupIdForNextTab = group.id;
+            BG.groupIdForNextTab = group.id;
 
-                BG.skipCreateTab = true;
+            BG.skipCreateTab = true;
 
-                tabs = await Promise.all(tabs.map(async function(tab) {
-                    if (
-                        tab.cookieStoreId === group.newTabContainer ||
-                        containers.isTemporary(tab.cookieStoreId) ||
-                        tab.url.startsWith('moz-extension') ||
-                        (tab.url.startsWith('about:') && !utils.isUrlEmpty(tab.url)) ||
-                        (!group.ifDifferentContainerReOpen && !containers.isDefault(tab.cookieStoreId))
-                    ) {
-                        return tab;
-                    }
+            tabs = await Promise.all(tabs.map(async function(tab) {
+                let newTabContainer = getNewTabContainer(tab, group);
 
-                    tabsIdsToRemove.push(tab.id);
-
-                    let backupedTab = cache.getBackupedTabForMove(tab.id);
-
-                    if (backupedTab) {
-                        tab.url = backupedTab.url;
-                        tab.title = backupedTab.title;
-                    }
-
-                    let newTab = await createNative({
-                        url: tab.url,
-                        title: tab.title,
-                        favIconUrl: tab.favIconUrl,
-                        thumbnail: tab.thumbnail,
-                        cookieStoreId: tab.cookieStoreId,
-                        isInReaderMode: tab.isInReaderMode,
-                        windowId,
-                        ...newTabParams,
-                    });
-
-                    return cache.setTabSession(newTab);
-                }));
-
-                BG.skipCreateTab = false;
-
-                BG.groupIdForNextTab = null;
-
-                if (tabsIdsToRemove.length) {
-                    let tabIdsToExclude = [];
-
-                    tabs.forEach(function({id}) {
-                        if (!tabIds.includes(id)) {
-                            tabIds.push(id);
-                            tabIdsToExclude.push(id);
-                        }
-                    });
-
-                    BG.addExcludeTabIds(tabIdsToExclude);
-
-                    await remove(tabsIdsToRemove);
+                if (tab.cookieStoreId === newTabContainer) {
+                    return tab;
+                } else {
+                    tab.cookieStoreId = newTabContainer;
                 }
+
+                tabsIdsToRemove.push(tab.id);
+
+                let backupedTab = cache.getBackupedTabForMove(tab.id);
+
+                if (backupedTab) {
+                    tab.url = backupedTab.url;
+                    tab.title = backupedTab.title;
+                }
+
+                let newTab = await createNative({
+                    ...tab,
+                    active: false,
+                    windowId,
+                    ...newTabParams,
+                });
+
+                return cache.setTabSession(newTab);
+            }));
+
+            BG.skipCreateTab = false;
+
+            BG.groupIdForNextTab = null;
+
+            if (tabsIdsToRemove.length) {
+                let tabIdsToExclude = [];
+
+                tabs.forEach(function({id}) {
+                    if (!tabIds.includes(id)) {
+                        tabIds.push(id);
+                        tabIdsToExclude.push(id);
+                    }
+                });
+
+                BG.addExcludeTabIds(tabIdsToExclude);
+
+                await remove(tabsIdsToRemove);
             }
 
             tabs = await moveNative(tabs, {
@@ -610,6 +588,26 @@
         });
     }
 
+    function getNewTabContainer(
+            {url, cookieStoreId},
+            {newTabContainer = DEFAULT_COOKIE_STORE_ID, ifDifferentContainerReOpen, excludeContainersForReOpen = []}
+        ) {
+
+        if (cookieStoreId === newTabContainer || containers.isTemporary(cookieStoreId)) {
+            return cookieStoreId;
+        }
+
+        if (url && !url.startsWith('http') && !url.startsWith('ftp')) {
+            return DEFAULT_COOKIE_STORE_ID;
+        }
+
+        if (ifDifferentContainerReOpen) {
+            return excludeContainersForReOpen.includes(cookieStoreId) ? cookieStoreId : newTabContainer;
+        }
+
+        return containers.isDefault(cookieStoreId) ? newTabContainer : cookieStoreId;
+    }
+
     window.Tabs = {
         createNative,
         create,
@@ -632,6 +630,7 @@
         sendMessage,
         reload,
         prepareForSave,
+        getNewTabContainer,
     };
 
 })();

@@ -1020,5 +1020,23 @@
     "temporaryContainerTitleDescription": {
         "message": "Prefix of the temporary container title",
         "description": "Prefix of the temporary container title"
+    },
+    "excludeContainersForReOpen": {
+        "message": "excluding these containers",
+        "description": "excluding these containers"
+    },
+    "helpPageOpenInContainerExcludeContainerToGroup": {
+        "message": "Exclude <container-name>$containerName$</container-name> container for group <strong>$groupTitle$</strong>",
+        "description": "Exclude Personal container for group Group 1",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            },
+            "groupTitle": {
+                "content": "$2",
+                "example": "Group 1"
+            }
+        }
     }
 }

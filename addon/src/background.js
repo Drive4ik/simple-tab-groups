@@ -1436,11 +1436,23 @@ async function onBeforeTabRequest({tabId, url, originUrl, requestId, frameId}) {
         };
     }
 
+    originUrl = originUrl || '';
+
+    if (originUrl.startsWith(addonUrlPrefix)) {
+        originUrl = 'this_addon';
+    }
+
     let excludeTab = excludeTabsIds.has(tabId);
 
-    console.log('onBeforeTabRequest %s tabId: %s, url: %s, originUrl is STG: %s', (excludeTab ? '🛑' : ''), tabId, url, originUrl && originUrl.startsWith(addonUrlPrefix));
+    console.log('onBeforeTabRequest %s tabId: %s, url: %s, originUrl: %s', (excludeTab ? '🛑' : ''), tabId, url, originUrl);
 
     if (excludeTab) {
+        return {};
+    }
+
+    let {cookieStoreId, groupId} = cache.getTabSession(tabId);
+
+    if (containers.isTemporary(cookieStoreId) || !groupId) {
         return {};
     }
 
@@ -1451,20 +1463,11 @@ async function onBeforeTabRequest({tabId, url, originUrl, requestId, frameId}) {
         return {};
     }
 
-    if (containers.isTemporary(tab.cookieStoreId)) {
-        console.log('onBeforeTabRequest 🛑 cancel, container is temporary', tab.cookieStoreId);
-        return {};
-    }
-
     if (utils.isUrlEmpty(tab.url)) {
         delete tab.title;
     }
 
     cache.applyTabSession(tab);
-
-    if (!tab.groupId) {
-        return {};
-    }
 
     console.log('onBeforeRequest tab', tab);
 
@@ -1483,50 +1486,36 @@ async function onBeforeTabRequest({tabId, url, originUrl, requestId, frameId}) {
         }
     }
 
-    if (!tabGroup.newTabContainer || tabGroup.newTabContainer === tab.cookieStoreId) {
+    let newTabContainer = Tabs.getNewTabContainer(tab, tabGroup);
+
+    if (tab.cookieStoreId === newTabContainer) {
         return {};
     }
 
     let newTabParams = {
-        url: tab.url,
-        title: tab.title,
-        index: tab.index,
-        active: tab.active,
-        windowId: tab.windowId,
-        openerTabId: tab.openerTabId,
-        favIconUrl: tab.favIconUrl,
-        thumbnail: tab.thumbnail,
+        ...tab,
+        cookieStoreId: newTabContainer,
         ...Groups.getNewTabParams(tabGroup),
     };
 
-    if (tabGroup.ifDifferentContainerReOpen) {
-        if (originUrl && originUrl.startsWith(addonUrlPrefix)) {
-            originUrl = null;
-        }
+    if (originUrl.startsWith('moz-extension')) {
+        if (tab.hidden) {
+            //
+        } else {
+            newTabParams.url = utils.setUrlSearchParams(browser.extension.getURL('/help/open-in-container.html'), {
+                url: tab.url,
+                currentCookieStoreId: tabGroup.newTabContainer,
+                anotherCookieStoreId: tab.cookieStoreId,
+                uuid: utils.getUUIDFromUrl(originUrl),
+                groupId: tabGroup.id,
+            });
 
-        if (originUrl && originUrl.startsWith('moz-extension')) {
-            if (tab.hidden) {
-                //
-            } else {
-                newTabParams.url = utils.setUrlSearchParams(browser.extension.getURL('/help/open-in-container.html'), {
-                    url: tab.url,
-                    currentCookieStoreId: tabGroup.newTabContainer,
-                    anotherCookieStoreId: tab.cookieStoreId,
-                    uuid: utils.getUUIDFromUrl(originUrl),
-                    groupId: tabGroup.id,
-                });
-
-                newTabParams.active = true;
-            }
-        }
-    } else {
-        if (!containers.isDefault(tab.cookieStoreId)) {
-            return {};
+            newTabParams.active = true;
         }
     }
 
     canceledRequests.add(requestId);
-    setTimeout(() => canceledRequests.delete(requestId), 2000);
+    setTimeout(requestId => canceledRequests.delete(requestId), 2000, requestId);
 
     let newTabPromise = Tabs.create(newTabParams);
 
@@ -1557,6 +1546,8 @@ browser.runtime.onUpdateAvailable.addListener(function() {
 
 function addListenerOnBeforeRequest() {
     if (!browser.webRequest.onBeforeRequest.hasListener(onBeforeTabRequest)) {
+        console.debug('run addListenerOnBeforeRequest');
+
         browser.webRequest.onBeforeRequest.addListener(onBeforeTabRequest,
             {
                 urls: ['<all_urls>'],
@@ -1569,6 +1560,8 @@ function addListenerOnBeforeRequest() {
 
 function removeListenerOnBeforeRequest() {
     if (browser.webRequest.onBeforeRequest.hasListener(onBeforeTabRequest)) {
+        console.debug('run removeListenerOnBeforeRequest');
+
         browser.webRequest.onBeforeRequest.removeListener(onBeforeTabRequest);
     }
 }
@@ -1637,9 +1630,9 @@ function openNotSupportedUrlHelper() {
     Tabs.createUrlOnce('https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/Content_scripts');
 }
 
-browser.commands.onCommand.addListener(command => runAction(command));
+browser.commands.onCommand.addListener(runAction);
 
-browser.runtime.onMessage.addListener(request => runAction(request));
+browser.runtime.onMessage.addListener(runAction);
 
 browser.runtime.onMessageExternal.addListener(async function(request, sender) {
     let extensionRules = {};
@@ -1666,10 +1659,10 @@ browser.runtime.onMessageExternal.addListener(async function(request, sender) {
         };
     }
 
-    return runAction(request, sender.id);
+    return runAction(request, sender);
 });
 
-async function runAction(data, externalExtId) {
+async function runAction(data, sender = {}) {
     let result = {
         ok: false,
     };
@@ -1685,7 +1678,7 @@ async function runAction(data, externalExtId) {
         return result;
     }
 
-    console.info('runAction', {data, externalExtId});
+    console.info('runAction', {data, sender});
 
     try {
         let currentWindow = await Windows.getLastFocusedNormalWindow(false),
@@ -1755,13 +1748,13 @@ async function runAction(data, externalExtId) {
                         }
                     } else {
                         delete data.groupId;
-                        result = await runAction(data, externalExtId);
+                        result = await runAction(data, sender);
                     }
                 } else if ('new' === data.groupId) {
                     let {ok, group} = await runAction({
                         action: 'add-new-group',
                         proposalTitle: data.title,
-                    }, externalExtId);
+                    }, sender);
 
                     if (ok) {
                         result.ok = await applyGroup(currentWindow.id, group.id);
@@ -1791,7 +1784,7 @@ async function runAction(data, externalExtId) {
             case 'add-new-group':
                 if (!options.alwaysAskNewGroupName || data.title) {
                     // only this addon can move tabs to new group
-                    let newGroup = await Groups.add(undefined, (!externalExtId && data.tabIds), data.title, data.showTabsAfterMoving);
+                    let newGroup = await Groups.add(undefined, (!sender.id && data.tabIds), data.title, data.showTabsAfterMoving);
 
                     result.ok = true;
                     result.group = Groups.mapForExternalExtension(newGroup);
@@ -1812,7 +1805,7 @@ async function runAction(data, externalExtId) {
                                 title: title,
                                 tabIds: data.tabIds,
                                 showTabsAfterMoving: data.showTabsAfterMoving,
-                            }, externalExtId);
+                            }, sender);
                         } else {
                             result.error = 'title in empty - skip create group';
                         }
@@ -1822,7 +1815,7 @@ async function runAction(data, externalExtId) {
                             title: data.proposalTitle || browser.i18n.getMessage('newGroupTitle', lastCreatedGroupPosition + 1),
                             tabIds: data.tabIds,
                             showTabsAfterMoving: data.showTabsAfterMoving,
-                        }, externalExtId);
+                        }, sender);
 
                         if (options.alwaysAskNewGroupName) {
                             result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('createNewGroup')]);
@@ -1868,7 +1861,7 @@ async function runAction(data, externalExtId) {
 
                             if (title) {
                                 data.title = title;
-                                result = await runAction(data, externalExtId);
+                                result = await runAction(data, sender);
                             } else {
                                 result.error = 'title in empty - skip rename group';
                             }
@@ -1877,7 +1870,7 @@ async function runAction(data, externalExtId) {
                             utils.notify(result.error, 15000, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
                         }
                     } else {
-                        result = await runAction('rename-group', externalExtId);
+                        result = await runAction('rename-group', sender);
                     }
                 } else if (data.groupId && data.title && typeof data.title === 'string') {
                     let groupToRename = groups.find(group => group.id === data.groupId);
@@ -1888,18 +1881,18 @@ async function runAction(data, externalExtId) {
                         });
                         result.ok = true;
                     } else {
-                        result = await runAction('rename-group', externalExtId);
+                        result = await runAction('rename-group', sender);
                     }
                 } else {
-                    result = await runAction('rename-group', externalExtId);
+                    result = await runAction('rename-group', sender);
                 }
                 break;
             case 'delete-current-group':
                 if (currentGroup.id) {
                     await Groups.remove(currentGroup.id);
 
-                    if (externalExtId) {
-                        utils.notify(browser.i18n.getMessage('groupRemovedByExtension', [currentGroup.title, utils.getSupportedExternalExtensionName(externalExtId)]));
+                    if (sender.id) {
+                        utils.notify(browser.i18n.getMessage('groupRemovedByExtension', [currentGroup.title, utils.getSupportedExternalExtensionName(sender.id)]));
                     }
 
                     result.ok = true;
@@ -1935,7 +1928,7 @@ async function runAction(data, externalExtId) {
                             }
                         } else {
                             delete data.groupId;
-                            result = await runAction(data, externalExtId);
+                            result = await runAction(data, sender);
                         }
                     } else if ('new' === data.groupId) {
                         let {ok} = await runAction({
@@ -1943,7 +1936,7 @@ async function runAction(data, externalExtId) {
                             title: data.title,
                             proposalTitle: activeTab.title,
                             tabIds: [activeTab.id],
-                        }, externalExtId);
+                        }, sender);
 
                         result.ok = ok;
                     } else {
@@ -2039,8 +2032,23 @@ async function runAction(data, externalExtId) {
 
                     result.ok = true;
                 } else {
-                    throw 'windowId is required';
+                    throw Error('windowId is required');
                 }
+
+                break;
+            case 'exclude-container-for-group':
+                let group = groups.find(group => group.id === data.groupId);
+
+                if (!group || !data.cookieStoreId || containers.get(data.cookieStoreId, 'cookieStoreId') !== data.cookieStoreId) {
+                    throw Error('invalid groupId or cookieStoreId');
+                }
+
+                if (!group.excludeContainersForReOpen.includes(data.cookieStoreId)) {
+                    group.excludeContainersForReOpen.push(data.cookieStoreId);
+                    await Groups.save(groups);
+                }
+
+                result.ok = true;
 
                 break;
             default:
@@ -2195,7 +2203,10 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
             }
         });
 
-        group.newTabContainer && containersToExport.add(group.newTabContainer);
+        if (group.newTabContainer !== TEMPORARY_CONTAINER && group.newTabContainer !== DEFAULT_COOKIE_STORE_ID) {
+            containersToExport.add(group.newTabContainer);
+        }
+
         group.catchTabContainers.forEach(containersToExport.add, containersToExport);
 
         return group;
@@ -2777,6 +2788,19 @@ async function runMigrateForData(data) {
                 }
             },
         },
+        {
+            version: '4.5.1',
+            migration() {
+                data.groups.forEach(function(group) {
+                    if (!group.newTabContainer) {
+                        group.newTabContainer = DEFAULT_COOKIE_STORE_ID;
+                        group.ifDifferentContainerReOpen = false;
+                    }
+
+                    group.excludeContainersForReOpen = [];
+                });
+            },
+        },
     ];
 
     // start migration
@@ -2796,10 +2820,22 @@ async function runMigrateForData(data) {
         }
 
     } else if (1 === utils.compareVersions(data.version, currentVersion)) {
-        let [currentMajor, currentMinor] = currentVersion.split('.'),
-            [dataMajor, dataMinor] = data.version.split('.');
+        let [currentMajor, currentMinor, currentPatch] = currentVersion.split('.'),
+            [dataMajor, dataMinor, dataPatch] = data.version.split('.');
 
-        if (dataMajor > currentMajor || (dataMajor == currentMajor && dataMinor > currentMinor)) {
+        if (!currentPatch) {
+            currentPatch = 0;
+        }
+
+        if (!dataPatch) {
+            dataPatch = 0;
+        }
+
+        if (
+            dataMajor > currentMajor ||
+            (dataMajor == currentMajor && dataMinor > currentMinor) ||
+            (dataMajor == currentMajor && dataMinor == currentMinor && dataPatch > currentPatch)
+        ) {
             throw browser.i18n.getMessage('updateAddonToLatestVersion');
         }
     }
@@ -2930,20 +2966,23 @@ async function tryRestoreMissedTabs() {
 }
 
 function normalizeContainersInGroups(groups) {
-    let allContainers = containers.getAll(),
+    let allContainers = containers.getAll(true),
         needSaveGroups = false;
 
     groups.forEach(function(group) {
         let oldNewTabContainer = group.newTabContainer,
-            oldCatchTabContainersLength = group.catchTabContainers.length;
+            oldCatchTabContainersLength = group.catchTabContainers.length,
+            oldExcludeContainersForReOpenLength = group.excludeContainersForReOpen.length;
 
-        if (group.newTabContainer) {
-            group.newTabContainer = containers.get(group.newTabContainer, 'cookieStoreId');
-        }
-
+        group.newTabContainer = containers.get(group.newTabContainer, 'cookieStoreId', true);
         group.catchTabContainers = group.catchTabContainers.filter(cookieStoreId => allContainers[cookieStoreId]);
+        group.excludeContainersForReOpen = group.excludeContainersForReOpen.filter(cookieStoreId => allContainers[cookieStoreId]);
 
-        if (oldNewTabContainer !== group.newTabContainer || oldCatchTabContainersLength !== group.catchTabContainers.length) {
+        if (
+            oldNewTabContainer !== group.newTabContainer ||
+            oldCatchTabContainersLength !== group.catchTabContainers.length ||
+            oldExcludeContainersForReOpenLength !== group.excludeContainersForReOpen.length
+        ) {
             needSaveGroups = true;
 
             sendMessage({
@@ -2952,6 +2991,7 @@ function normalizeContainersInGroups(groups) {
                     id: group.id,
                     newTabContainer: group.newTabContainer,
                     catchTabContainers: group.catchTabContainers,
+                    excludeContainersForReOpen: group.excludeContainersForReOpen,
                 },
             });
         }
@@ -3170,7 +3210,7 @@ async function init() {
 
     addEvents();
 
-    if (Groups.needToAddBlockBeforeRequest(data.groups)) {
+    if (Groups.isNeedBlockBeforeRequest(data.groups)) {
         addListenerOnBeforeRequest();
     }
 
