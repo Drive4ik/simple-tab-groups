@@ -68,7 +68,7 @@
     }
 
     async function getLastFocusedNormalWindow(returnId = true) {
-        let lastFocusedWindow = await browser.windows.getLastFocused().catch(errorEventHandler);
+        let lastFocusedWindow = await browser.windows.getLastFocused().catch(noop);
 
         if (lastFocusedWindow && utils.isWindowAllow(lastFocusedWindow)) {
             return returnId ? lastFocusedWindow.id : cache.loadWindowSession(lastFocusedWindow);
