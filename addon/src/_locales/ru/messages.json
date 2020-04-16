@@ -1009,6 +1009,10 @@
         "message": "Без контейнера",
         "description": "No container"
     },
+    "reopenTabsWithTemporaryContainersInNew": {
+        "message": "Пере-открыть вкладки с временными контейнерами",
+        "description": "Reopen tabs with temporary containers in new"
+    },
     "temporaryContainerTitleDescription": {
         "message": "Префикс заголовка временного контейнера",
         "description": "Prefix of the temporary container title"
