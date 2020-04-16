@@ -562,19 +562,14 @@ async function onCreatedWindow(win) {
     }
 }
 
-let _lastFocusedWinId = null;
 function onFocusChangedWindow(windowId) {
     // console.log('onFocusChangedWindow', windowId);
 
-    if (browser.windows.WINDOW_ID_NONE === windowId) {
-        return;
+    if (browser.windows.WINDOW_ID_NONE !== windowId && options.showContextMenuOnTabs) {
+        browser.menus.update('set-tab-icon-as-group-icon', {
+            enabled: Boolean(cache.getWindowGroup(windowId)),
+        });
     }
-
-    if (_lastFocusedWinId !== windowId) {
-        updateMoveTabMenus();
-    }
-
-    _lastFocusedWinId = windowId;
 }
 
 async function onRemovedWindow(windowId) {
@@ -705,10 +700,7 @@ async function createMoveTabMenus() {
         return;
     }
 
-    let windowId = await Windows.getLastFocusedNormalWindow();
-
-    let groupId = cache.getWindowGroup(windowId),
-        [currentGroup, groups] = await Groups.load(groupId || -1);
+    let groups = await Groups.load();
 
     await removeMoveTabMenus();
 
@@ -756,8 +748,8 @@ async function createMoveTabMenus() {
     }));
 
     options.showContextMenuOnTabs && menuIds.push(browser.menus.create({
+        id: 'set-tab-icon-as-group-icon',
         title: browser.i18n.getMessage('setTabIconAsGroupIcon'),
-        enabled: Boolean(currentGroup),
         icons: {
             16: '/icons/image.svg',
         },
@@ -767,6 +759,9 @@ async function createMoveTabMenus() {
             let groupId = cache.getWindowGroup(tab.windowId);
 
             if (!groupId) {
+                browser.menus.update(info.menuItemId, {
+                    enabled: false,
+                });
                 return;
             }
 
