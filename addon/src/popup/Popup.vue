@@ -1469,7 +1469,7 @@
             </div>
         </main>
 
-        <footer v-if="!isSidebar" class="is-flex is-unselectable">
+        <footer class="is-flex is-unselectable">
             <div tabindex="0" class="is-flex is-align-items-center manage-groups is-full-height is-full-width" @click="openManageGroups" @keyup.enter="openManageGroups" :title="lang('manageGroupsTitle')">
                 <img class="size-16" src="/icons/icon.svg" />
                 <span class="h-margin-left-10" v-text="lang('manageGroupsTitle')"></span>
@@ -1692,7 +1692,6 @@
 
         --footer-background-color: var(--item-background-color-active);
         --footer-background-hover-color: var(--item-background-color-hover);
-
     }
 
     #loading {
@@ -1735,12 +1734,21 @@
     }
 
     #stg-popup {
+        --footer-height: 45px;
+
         &.is-sidebar {
             --max-popup-height: 100vh;
             --min-popup-height: 100vh;
+            display: flex;
+            flex-direction: column;
 
-            #result > * {
-                padding-bottom: var(--indent);
+            > main {
+                flex-grow: 1;
+                padding-bottom: calc(var(--footer-height) + 10px);
+            }
+
+            > footer > :not(.is-vertical-separator) {
+                height: var(--footer-height);
             }
         }
 
@@ -1759,7 +1767,7 @@
         > footer {
             position: sticky;
             bottom: 0;
-            height: 45px;
+            height: var(--footer-height);
             margin-top: var(--indent);
             align-items: center;
             background-color: var(--footer-background-color);
