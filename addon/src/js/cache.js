@@ -254,8 +254,8 @@
     }
 
     // WINDOWS
-    function hasWindow(windowId) {
-        return !!windows[windowId];
+    function hasAnyWindow() {
+        return Object.keys(windows).length > 0;
     }
 
     function removeWindow(windowId) {
@@ -357,7 +357,7 @@
         filterRemovedTab,
 
         // windows
-        hasWindow,
+        hasAnyWindow,
         removeWindow,
 
         setWindowGroup,

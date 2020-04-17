@@ -11,8 +11,24 @@
 
     keys.forEach(key => _console[key] = console[key].bind(console));
 
+    function getCircularReplacer() {
+        const seen = new WeakSet();
+
+        return (key, value) => {
+            if (typeof value === 'object' && value !== null) {
+                if (seen.has(value)) {
+                    return;
+                }
+
+                seen.add(value);
+            }
+
+            return value;
+        };
+    }
+
     function clone(obj) {
-        return JSON.parse(JSON.stringify(obj));
+        return JSON.parse(JSON.stringify(obj, getCircularReplacer()));
     }
 
     function getErrorLogs(clearAfter) {
@@ -34,7 +50,7 @@
     }
 
     function getErrorStack(e, start = 1, to = 20) {
-        return e.stack.split(addonUrlPrefix).join('').split('@').slice(start, to).map(s => s.trim().replace('\n', ' <- '));
+        return e.stack.split('\n').filter(Boolean).slice(start, to).map(s => s.trim().replace('@', ' -> ').replace(addonUrlPrefix, ''));
     }
 
     console.addErrorLog = addErrorLog;

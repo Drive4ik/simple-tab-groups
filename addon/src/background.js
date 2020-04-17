@@ -577,41 +577,43 @@ async function onRemovedWindow(windowId) {
 
     cache.removeWindow(windowId);
 
-    if (reCreateTabsOnRemoveWindow.length) {
-        let tabsToRestore = cache.getTabsSessionAndRemove(reCreateTabsOnRemoveWindow);
+    if (!cache.hasAnyWindow()) {
+        return;
+    }
 
-        reCreateTabsOnRemoveWindow = [];
+    let tabsToRestore = cache.getTabsSessionAndRemove(reCreateTabsOnRemoveWindow);
 
-        if (tabsToRestore.length) {
-            await storage.set({tabsToRestore});
+    reCreateTabsOnRemoveWindow = [];
 
-            let windows = await Windows.load(true);
+    if (tabsToRestore.length) {
+        await storage.set({tabsToRestore});
 
-            windows = windows.filter(function(win) {
-                if (win.id === windowId) { // just in case
-                    return false;
-                }
+        let windows = await Windows.load(true);
 
-                // exclude wrong popup window type and tab with extension url
-                if (win.tabs.length === 1 && win.tabs[0].url.startsWith('moz-extension')) {
-                    return false;
-                }
+        windows = windows.filter(function(win) {
+            if (win.id === windowId) { // just in case
+                return false;
+            }
 
-                return true;
-            });
+            // exclude wrong popup window type and tab with extension url
+            if (win.tabs.length === 1 && win.tabs[0].url.startsWith('moz-extension')) {
+                return false;
+            }
 
-            if (windows.length) {
-                windows.forEach(win => loadingBrowserAction(true, win.id));
+            return true;
+        });
 
-                try {
-                    await tryRestoreMissedTabs();
+        if (windows.length) {
+            windows.forEach(win => loadingBrowserAction(true, win.id));
 
-                    windows.forEach(win => loadingBrowserAction(false, win.id));
-                } catch (e) {
-                    console.error('error create tabs: %s, tabsToRestore: %s', e, utils.stringify(tabsToRestore));
-                    await utils.wait(500);
-                    browser.runtime.reload();
-                }
+            try {
+                await tryRestoreMissedTabs();
+
+                windows.forEach(win => loadingBrowserAction(false, win.id));
+            } catch (e) {
+                console.error('error create tabs: %s, tabsToRestore: %s', e, utils.stringify(tabsToRestore));
+                await utils.wait(500);
+                browser.runtime.reload();
             }
         }
     }
@@ -3146,83 +3148,79 @@ async function initializeGroupWindows(windows, currentGroupIds) {
 }
 
 async function init() {
-    let isAllowedIncognitoAccess = await browser.extension.isAllowedIncognitoAccess();
-
-    if (isAllowedIncognitoAccess) {
-        openHelp('disable-incognito');
-        throw '';
-    }
-
-    let data = await storage.get(null);
-
-    if (!Array.isArray(data.groups)) {
-        utils.notify(browser.i18n.getMessage('ffFailedAndLostDataMessage'));
-
-        data.groups = [];
-    }
-
-    await containers.init(data.temporaryContainerTitle);
-
     try {
-        data = await runMigrateForData(data); // run migration for data
-    } catch (e) {
-        utils.notify(String(e));
-        throw '';
-    }
+        let isAllowedIncognitoAccess = await browser.extension.isAllowedIncognitoAccess();
 
-    utils.assignKeys(options, data, ALL_OPTIONS_KEYS);
-
-    normalizeContainersInGroups(data.groups);
-
-    await storage.set(data);
-
-    let windows = await Windows.load(true);
-
-    if (!windows.length) {
-        utils.notify(browser.i18n.getMessage('notFoundWindowsAddonStoppedWorking'));
-        throw '';
-    }
-
-    await initializeGroupWindows(windows, data.groups.map(utils.keyId));
-
-    if (window.localStorage.isBackupRestoring) {
-        delete window.localStorage.isBackupRestoring;
-        utils.notify(browser.i18n.getMessage('backupSuccessfullyRestored'));
-    }
-
-    windows.forEach(function(win) {
-        updateBrowserActionData(null, win.id);
-
-        if (win.groupId) {
-            groupsHistory.add(win.groupId);
+        if (isAllowedIncognitoAccess) {
+            openHelp('disable-incognito');
+            throw '';
         }
-    });
 
-    await tryRestoreMissedTabs();
+        let data = await storage.get(null);
 
-    containers.removeUnusedTemporaryContainers(windows);
+        if (!Array.isArray(data.groups)) {
+            utils.notify(browser.i18n.getMessage('ffFailedAndLostDataMessage'));
 
-    restoreOldExtensionUrls();
+            data.groups = [];
+        }
 
-    resetAutoBackup();
+        await containers.init(data.temporaryContainerTitle);
 
-    createMoveTabMenus();
+        try {
+            data = await runMigrateForData(data); // run migration for data
+        } catch (e) {
+            utils.notify(String(e));
+            throw '';
+        }
 
-    addEvents();
+        utils.assignKeys(options, data, ALL_OPTIONS_KEYS);
 
-    if (Groups.isNeedBlockBeforeRequest(data.groups)) {
-        addListenerOnBeforeRequest();
-    }
+        normalizeContainersInGroups(data.groups);
 
-    Groups.load(null, true, true); // load favIconUrls, speed up first run popup
+        await storage.set(data);
 
-    window.BG.inited = true;
-}
+        let windows = await Windows.load(true);
 
-setBrowserAction(undefined, 'loading', undefined, false);
+        if (!windows.length) {
+            utils.notify(browser.i18n.getMessage('notFoundWindowsAddonStoppedWorking'));
+            throw '';
+        }
 
-init()
-    .then(function() {
+        await initializeGroupWindows(windows, data.groups.map(utils.keyId));
+
+        if (window.localStorage.isBackupRestoring) {
+            delete window.localStorage.isBackupRestoring;
+            utils.notify(browser.i18n.getMessage('backupSuccessfullyRestored'));
+        }
+
+        await tryRestoreMissedTabs();
+
+        windows.forEach(function(win) {
+            updateBrowserActionData(null, win.id);
+
+            if (win.groupId) {
+                groupsHistory.add(win.groupId);
+            }
+        });
+
+        containers.removeUnusedTemporaryContainers(windows);
+
+        restoreOldExtensionUrls();
+
+        resetAutoBackup();
+
+        createMoveTabMenus();
+
+        addEvents();
+
+        if (Groups.isNeedBlockBeforeRequest(data.groups)) {
+            addListenerOnBeforeRequest();
+        }
+
+        Groups.load(null, true, true); // load favIconUrls, speed up first run popup
+
+        window.BG.inited = true;
+
         // send message for addon plugins
         sendExternalMessage({
             action: 'i-am-back',
@@ -3236,8 +3234,7 @@ init()
         setBrowserAction(undefined, undefined, undefined, true);
 
         delete window.localStorage.lastReloadFromError;
-    })
-    .catch(function(e) {
+    } catch (e) {
         setBrowserAction(undefined, 'lang:clickHereToReloadAddon', '/icons/exclamation-triangle-yellow.svg', true);
 
         browser.browserAction.setPopup({
@@ -3249,4 +3246,14 @@ init()
         if (e) {
             errorEventHandler(e);
         }
-    });
+    }
+}
+
+setBrowserAction(undefined, 'loading', undefined, false);
+
+// delay startup to avoid errors with extensions "Facebook Container", "Firefox Multi-Account Containers" etc.
+// TransactionInactiveError: A request was placed against a transaction which is currently not active, or which is finished.
+// An unexpected error occurred
+// etc.
+
+setTimeout(init, 200);
