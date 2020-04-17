@@ -3086,7 +3086,12 @@ async function initializeGroupWindows(windows, currentGroupIds) {
                 }
             } else if (win.groupId) {
                 if (!tab.hidden) {
-                    tabsToHide.push(tab);
+                    if (utils.isTabLoading(tab) || tab.url.startsWith('file:') || tab.lastAccessed > window.BG.startTime) {
+                        tab.groupId = win.groupId;
+                        cache.setTabGroup(tab.id, win.groupId);
+                    } else {
+                        tabsToHide.push(tab);
+                    }
                 }
             } else {
                 if (tab.hidden) {
