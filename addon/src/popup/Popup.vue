@@ -226,13 +226,13 @@
 
                             if (group) {
                                 group.tabs.splice(tabIndex, 1);
+                                group.tabs.slice(tabIndex).forEach(t => t.index--);
                             }
                         });
                     }, 150, lazyRemoveTabIds);
                 };
 
-                let lazyAddGroupTabTimer = {},
-                    lazyAddUnsyncTabTimer = 0;
+                let lazyAddUnsyncTabTimer = 0;
                 const lazyAddTab = (tab, groupId) => {
                     tab = this.mapTab(tab);
 
@@ -240,10 +240,14 @@
 
                     if (group) {
                         if (!Object.isFrozen(group.tabs)) {
-                            group.tabs.push(tab);
+                            let index = group.tabs.findIndex(t => t.index === tab.index);
 
-                            clearTimeout(lazyAddGroupTabTimer[groupId]);
-                            lazyAddGroupTabTimer[groupId] = setTimeout(group => group.tabs.sort(utils.sortBy('index')), 100, group);
+                            if (index === -1) {
+                                group.tabs.push(tab);
+                            } else {
+                                group.tabs.splice(index, 0, tab);
+                                group.tabs.slice(index + 1).forEach(t => t.index++);
+                            }
                         }
                     } else {
                         clearTimeout(lazyAddUnsyncTabTimer);
