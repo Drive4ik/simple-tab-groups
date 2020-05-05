@@ -861,11 +861,14 @@ async function createMoveTabMenus() {
     }));
 
     groups.forEach(function(group) {
+        if (group.isArchive) {
+            return;
+        }
+
         let groupIcon = utils.getGroupIconUrl(group, 16),
             groupTitle = String(utils.getGroupTitle(group, 'withActiveGroup withContainer'));
 
         options.showContextMenuOnTabs && menuIds.push(browser.menus.create({
-            enabled: !group.isArchive,
             title: groupTitle,
             icons: groupIcon,
             parentId: 'stg-move-tab-parent',
@@ -883,7 +886,6 @@ async function createMoveTabMenus() {
         }));
 
         options.showContextMenuOnLinks && menuIds.push(browser.menus.create({
-            enabled: !group.isArchive,
             title: groupTitle,
             icons: groupIcon,
             parentId: 'stg-open-link-parent',
@@ -904,7 +906,6 @@ async function createMoveTabMenus() {
         }));
 
         hasBookmarksPermission && menuIds.push(browser.menus.create({
-            enabled: !group.isArchive,
             title: groupTitle,
             icons: groupIcon,
             parentId: 'stg-open-bookmark-parent',
@@ -1764,8 +1765,8 @@ async function runAction(data, sender = {}) {
                             action: 'show-groups-popup',
                             popupAction: 'load-custom-group',
                             popupTitle: browser.i18n.getMessage('hotkeyActionTitleLoadCustomGroup'),
-                            groups: groups.map(Groups.mapForExternalExtension),
-                            disableGroupIds: [currentGroup.id, ...groups.filter(group => group.isArchive).map(utils.keyId)],
+                            groups: notArchivedGroups.map(Groups.mapForExternalExtension),
+                            disableGroupIds: currentGroup.id,
                         });
 
                         result.ok = true;
@@ -1942,8 +1943,7 @@ async function runAction(data, sender = {}) {
                                 action: 'show-groups-popup',
                                 popupAction: 'move-active-tab-to-custom-group',
                                 popupTitle: browser.i18n.getMessage('moveTabToGroupDisabledTitle'),
-                                groups: groups.map(Groups.mapForExternalExtension),
-                                disableGroupIds: groups.filter(group => group.isArchive).map(utils.keyId),
+                                groups: notArchivedGroups.map(Groups.mapForExternalExtension),
                                 focusedGroupId: activeTab.groupId,
                             });
 
@@ -1974,9 +1974,8 @@ async function runAction(data, sender = {}) {
                             action: 'show-groups-popup',
                             popupAction: 'discard-group',
                             popupTitle: browser.i18n.getMessage('hotkeyActionTitleDiscardGroup'),
-                            groups: groups.map(Groups.mapForExternalExtension),
+                            groups: notArchivedGroups.map(Groups.mapForExternalExtension),
                             focusedGroupId: currentGroup.id,
-                            disableGroupIds: groups.filter(group => group.isArchive).map(utils.keyId),
                             disableNewGroupItem: true,
                         });
 
