@@ -798,5 +798,241 @@
     "ifDifferentContainerReOpen": {
         "message": "Změnit kontejner, pokud je panel otevřen v jiném než nastaveném.",
         "description": "If the container is different from the selected one - change the container"
+    },
+    "deleteAllAddonDataAndSettingsBeforeRestoringBackup": {
+        "message": "Odstranit všechna data a nastavení doplňku před obnovením zálohy",
+        "description": "Delete all addon data and settings before restoring backup"
+    },
+    "helpPageWelcomeV4Title": {
+        "message": "Vítejte v Simple Tab Groups v4",
+        "description": "Welcome to Simple Tab Groups v4"
+    },
+    "helpPageWelcomeV4Description": {
+        "message": "V nastavení prohlížeče povolte prosím možnost \"Otevřít panely z minula\".\n<br>Je to nutné pro udržení komunikace mezi panely a skupinami, <br>v opačném případě nebudou panely při příštím spuštění prohlížeče obnoveny a spárovány s doplňkem -<br>doplněk přestane pracovat",
+        "description": "Please enable \"Restore previous session\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
+    },
+    "helpPageDisableIncognitoTitle": {
+        "message": "Vítejte v Simple Tab Groups v4",
+        "description": "Welcome to Simple Tab Groups v4"
+    },
+    "helpPageDisableIncognitoDescription": {
+        "message": "Zrušte prosím povolení doplňku pro práci v anonymních oknech:",
+        "description": "Please disable add-on access to private mode in windows:"
+    },
+    "leaveBookmarksOfClosedTabs": {
+        "message": "Ponechat v záložkách již zavřené panely (budou oddělené oddělovačem)",
+        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+    },
+    "enableDebugTitle": {
+        "message": "Umožnit ladění",
+        "description": "Enable DEBUG"
+    },
+    "loggingIsEnabledTitle": {
+        "message": "Zaznamenávání je povoleno",
+        "description": "logging is enabled"
+    },
+    "loggingIsAutoEnabledTitle": {
+        "message": "Zaznamenávání akcí doplňku bylo automaticky povoleno z důvodu výskytu chyby doplňku.",
+        "description": "logging was auto-enabled due to an error in addon"
+    },
+    "loggingDescription": {
+        "message": "Tuto možnost povolte pouze v případě, že chcete zaznamenat chybu doplňku a chybový protokol mi poslat. Zapnutím této funkce dojde k výraznému zpomalení doplňku z důvodu zaznamenávání všech jeho akcí. Po zachycení chyby tuto možnost opět vypněte a bude vám nabídnuta možnost uložení protokolu. Možnost ladění může být zapnuta i automaticky, a to v případě, že se detekovala chyba. Poté je nutné tuto možnost vypnout a následně uložit protokol.<br> Protokol prosím pošlete na email: <a href=\"mailto:drive4ik@gmail.com\">drive4ik@gmail.com</a><br> <span class=\"has-text-danger\">V tomto protokolu nejsou odesílána žádná osobní data, hesla, záložky ani jiné podobné položky!</span><br> Tento protokol je nutný pro reprodukci problému a jeho následné vyřešení.<br> Děkuji",
+        "description": "logging description"
+    },
+    "archiveGroup": {
+        "message": "Archivovat",
+        "description": "Archive"
+    },
+    "unArchiveGroup": {
+        "message": "Obnovit archiv",
+        "description": "Unarchive"
+    },
+    "groupIsArchived": {
+        "message": "Není možné dokončit akci, skupina \"$grouptitle$\" je archivována",
+        "description": "Unable to complete the action, the group is in the archive",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "updateAddonToLatestVersion": {
+        "message": "Aktualizujte prosím doplněk na nejnovější verzi",
+        "description": "Please, update addon to latest version"
+    },
+    "hotkeyActionTitleRenameGroup": {
+        "message": "Přejmenovat skupinu",
+        "description": "Rename group"
+    },
+    "noGroupsAvailable": {
+        "message": "Žádné skupiny",
+        "description": "You have no groups"
+    },
+    "alwaysAskNewGroupName": {
+        "message": "Vždy zadat název nové skupiny",
+        "description": "Always ask for a new group name"
+    },
+    "impossibleToAskUserAboutAction": {
+        "message": "Není možné žadát o akci \"$action$\" na stránce \"$page$\"\n\nKlikněte pro více informací",
+        "description": "On page \"$page$\" it is impossible to ask about \"$action$\"",
+        "placeholders": {
+            "page": {
+                "content": "$1",
+                "example": "Add-ons for Firefox"
+            },
+            "action": {
+                "content": "$2",
+                "example": "some action"
+            }
+        }
+    },
+    "openPopupTitle": {
+        "message": "Otevřít vyskakovací okno",
+        "description": "Open popup"
+    },
+    "openSidebarTitle": {
+        "message": "Otevřít postranní lištu",
+        "description": "Open sidebar"
+    },
+    "helpPageOpenInContainerTitle": {
+        "message": "Není možné otevřít adresu URL v kontejneru",
+        "description": "Can't open URL in container"
+    },
+    "helpPageOpenInContainerMainTitle": {
+        "message": "Není možné otevřít URL adresu v kontejneru <container-name>$containerName$</container-name>",
+        "description": "Can't open the URL into Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerSubTitle": {
+        "message": "Doplněk nemůže otevřít URL adresu:",
+        "description": "addon can't open URL:"
+    },
+    "helpPageOpenInContainerDesc1": {
+        "message": "Skupina <strong>$groupTitle$</strong> byla určena k otvíraní panelů v kontejneru <container-name>$containerName$</container-name>.",
+        "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
+        "placeholders": {
+            "groupTitle": {
+                "content": "$1",
+                "example": "Group 1"
+            },
+            "containerName": {
+                "content": "$2",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerDesc2": {
+        "message": "Další doplněk, který má UUID:",
+        "description": "Another addon, which has UUID:"
+    },
+    "helpPageOpenInContainerDesc3": {
+        "message": "zkouší otevřít tuto URL adresu v kontejneru <container-name>$containerName$</container-name>. Přesuňte panel do jiné skupiny nebo zakažte doplňku <strong>$uuid$</strong> provádět tuto akci.",
+        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon '757eaba7-0b3d-478b-ace2-cbe0a16eed47' to perform this action.",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Business"
+            },
+            "uuid": {
+                "content": "$2",
+                "example": "757eaba7-0b3d-478b-ace2-cbe0a16eed47"
+            }
+        }
+    },
+    "helpPageOpenInContainerDesc4": {
+        "message": "Doplněk najdete podle UUID na stránce:",
+        "description": "You can find out the addon by UUID on the page:"
+    },
+    "helpPageOpenInContainerOpenInContainer": {
+        "message": "Otevřít v kontejneru <container-name>$containerName$</container-name>",
+        "description": "Open in Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
+    },
+    "reverseTabsOnCreate": {
+        "message": "Pokud je možnost <code>browser.tabs.insertAfterCurrent</code> nastavena na <code>true</code>, obrátit pořadí panelů",
+        "description": "Reverse tabs on create, if you have the browser.tabs.insertAfterCurrent preference is true"
+    },
+    "groupNotLoaded": {
+        "message": "Skupina nenačtena",
+        "description": "Group not loaded"
+    },
+    "groupNotFound": {
+        "message": "Skupina nenalezena",
+        "description": "Group not found"
+    },
+    "unloadGroup": {
+        "message": "Skrýt panely skupiny",
+        "description": "Unload the group"
+    },
+    "tabsInThisWindowWereHidden": {
+        "message": "Panely byly v tomto okně skryty. Naleznete je ve spodní části vyskakovacího okna doplňku.",
+        "description": "Tabs in this window were hidden. You can find them at the bottom of the popup window of the addon."
+    },
+    "searchOrGoToActive": {
+        "message": "Vyhledejte nebo pomocí šipek vyberte panel/skupinu",
+        "description": "Search or right arrow to focus on active tab/group"
+    },
+    "thisGroupIsMain": {
+        "message": "Tato skupina je vybrána jako hlavní",
+        "description": "This group is marked as main"
+    },
+    "setGroupAsMain": {
+        "message": "Nastavit tuto skupinu jako hlavní",
+        "description": "Set this group as main"
+    },
+    "thisGroupWasMain": {
+        "message": "Upozornění\nTato skupina byla označena jako hlavní",
+        "description": "Notice\nThis group was marked as the main"
+    },
+    "moveToMainIfNotInCatchTabRules": {
+        "message": "Pokud žádné pravidlo nebylo splněno, přesunout panely z této skupiny do skupiny \"$grouptitle$\"",
+        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "My main group"
+            }
+        }
+    },
+    "noContainerTitle": {
+        "message": "Žádný",
+        "description": "No container"
+    },
+    "reopenTabsWithTemporaryContainersInNew": {
+        "message": "Znovu otevřít panely v dočasných kontejnerech",
+        "description": "Reopen tabs with temporary containers in new"
+    },
+    "temporaryContainerTitleDescription": {
+        "message": "Předpona názvu dočasného kontejneru",
+        "description": "Prefix of the temporary container title"
+    },
+    "excludeContainersForReOpen": {
+        "message": "kromě těchto kontejnerů",
+        "description": "excluding these containers"
+    },
+    "helpPageOpenInContainerExcludeContainerToGroup": {
+        "message": "Vyloučit kontejner <container-name>$containerName$</container-name> pro skupinu <strong>$groupTitle$</strong>",
+        "description": "Exclude Personal container for group Group 1",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            },
+            "groupTitle": {
+                "content": "$2",
+                "example": "Group 1"
+            }
+        }
     }
 }
