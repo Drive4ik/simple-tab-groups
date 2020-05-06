@@ -826,6 +826,7 @@
         <div v-show="section === SECTION_HOTKEYS">
             <label class="has-text-weight-bold" v-text="lang('hotkeysTitle')"></label>
             <div class="h-margin-bottom-10" v-html="lang('hotkeysDescription')"></div>
+            <div class="h-margin-bottom-10" v-html="lang('hotkeysDescription2')"></div>
             <div class="hotkeys">
                 <div v-for="(hotkey, hotkeyIndex) in options.hotkeys" :key="hotkeyIndex" class="field">
                     <div class="is-flex is-align-items-center">
