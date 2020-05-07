@@ -41,6 +41,10 @@
                 changedKeys: [],
 
                 currentTabUrl: null,
+
+                options: {
+                    discardTabsAfterHide: BG.options.discardTabsAfterHide,
+                },
             };
         },
         watch: {
@@ -277,7 +281,7 @@
                     <span v-text="lang('muteTabsWhenGroupCloseAndRestoreWhenOpen')"></span>
                 </label>
             </div>
-            <div class="control">
+            <div v-if="discardTabsAfterHide" class="control">
                 <label class="checkbox">
                     <input type="checkbox" v-model="group.dontDiscardTabsAfterHideThisGroup" />
                     <span v-text="lang('dontDiscardTabsAfterHideThisGroup')"></span>
