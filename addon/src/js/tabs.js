@@ -184,7 +184,12 @@
         return Promise.all(
             tabs
             .filter(tab => muted ? tab.audible : tab.mutedInfo.muted)
-            .map(tab => browser.tabs.update(tab.id, {muted}))
+            .map(function(tab) {
+                tab.audible = !muted;
+                tab.mutedInfo.muted = muted;
+
+                return browser.tabs.update(tab.id, {muted});
+            })
         );
     }
 

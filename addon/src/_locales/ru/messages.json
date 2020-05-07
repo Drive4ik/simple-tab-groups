@@ -1038,5 +1038,21 @@
     "hotkeysDescription2": {
         "message": "Вы также можете настроить горячие клавиши на странице <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Управление горячими клавишами в расширениях Firefox</a>. Они будут работать на всех окнах и страницах браузера.",
         "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
+    },
+    "muteTab": {
+        "message": "Убрать звук вкладки",
+        "description": "Mute tab"
+    },
+    "unMuteTab": {
+        "message": "Восстановить звук вкладки",
+        "description": "Unmute tab"
+    },
+    "muteGroup": {
+        "message": "Убрать звук группы",
+        "description": "Mute group"
+    },
+    "unMuteGroup": {
+        "message": "Восстановить звук группы",
+        "description": "Unmute group"
     }
 }

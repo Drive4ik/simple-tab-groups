@@ -32,7 +32,7 @@
         SECTION_GROUPS_LIST = 'groupsList',
         SECTION_GROUP_TABS = 'groupTabs',
         SECTION_DEFAULT = SECTION_GROUPS_LIST,
-        availableTabKeys = new Set(['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'lastAccessed']),
+        availableTabKeys = new Set(['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'lastAccessed', 'audible', 'mutedInfo']),
         isSidebar = '#sidebar' === window.location.hash;
 
     let loadPromise = null;
@@ -297,6 +297,13 @@
                             this.allTabs[tab.id].url = changeInfo.url;
                         }
 
+                        if (changeInfo.hasOwnProperty('audible')) {
+                            Tabs.getOne(tab.id).then(({id, audible, mutedInfo}) => {
+                                this.allTabs[id].audible = audible;
+                                this.allTabs[id].mutedInfo = mutedInfo;
+                            });
+                        }
+
                         if (changeInfo.title) {
                             this.allTabs[tab.id].title = changeInfo.title;
                         }
@@ -457,6 +464,7 @@
                         browser.tabs.UpdatePropertyName.PINNED,
                         browser.tabs.UpdatePropertyName.TITLE,
                         browser.tabs.UpdatePropertyName.STATUS,
+                        browser.tabs.UpdatePropertyName.AUDIBLE,
                     ],
                 });
                 browser.tabs.onRemoved.addListener(onRemovedTab);
@@ -649,6 +657,22 @@
 
             discardTab(tab) {
                 Tabs.discard(this.getTabIdsForMove(tab.id));
+            },
+
+            showMuteIconTab(tab) {
+                return tab.audible || tab.mutedInfo.muted;
+            },
+
+            showMuteIconGroup(group) {
+                return group.isArchive ? false : group.tabs.some(this.showMuteIconTab);
+            },
+
+            toggleMuteTab(tab) {
+                Tabs.setMute([tab], tab.audible);
+            },
+
+            toggleMuteGroup(group) {
+                Tabs.setMute(group.tabs, group.tabs.some(tab => tab.audible));
             },
 
             discardGroup({tabs}) {
@@ -1123,9 +1147,14 @@
                                             class="size-16"
                                             />
                                     </template>
-                                    <template v-if="group.isArchive">
-                                        <img src="/icons/archive.svg" class="size-16" />
-                                    </template>
+                                    <img v-if="group.isArchive" src="/icons/archive.svg" class="size-16" />
+                                    <span
+                                        v-if="showMuteIconGroup(group)"
+                                        @click.stop="toggleMuteGroup(group)"
+                                        :title="group.tabs.some(tab => tab.audible) ? lang('muteGroup') : lang('unMuteGroup')"
+                                        >
+                                        <img :src="group.tabs.some(tab => tab.audible) ? '/icons/audio.svg' : '/icons/audio-mute.svg'" class="size-16 align-text-bottom" />
+                                    </span>
                                     <span v-text="getGroupTitle(group, options.showExtendGroupsPopupWithActiveTabs ? 'withActiveTab' : '')"></span>
                                 </div>
                                 <div class="item-action bold-hover is-unselectable" @click.stop="showSectionGroupTabs(group)">
@@ -1184,6 +1213,13 @@
                                     <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                         <span v-if="isTabLoading(tab)">
                                             <img src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
+                                        </span>
+                                        <span
+                                            v-if="showMuteIconTab(tab)"
+                                            @click.stop="toggleMuteTab(tab)"
+                                            :title="tab.audible ? lang('muteTab') : lang('unMuteTab')"
+                                            >
+                                            <img :src="tab.audible ? '/icons/audio.svg' : '/icons/audio-mute.svg'" class="size-16 align-text-bottom" />
                                         </span>
                                         <template v-if="tab.container">
                                             <span :title="tab.container.name">
@@ -1252,9 +1288,14 @@
                                         class="size-16"
                                         />
                                 </template>
-                                <template v-if="group.isArchive">
-                                    <img src="/icons/archive.svg" class="size-16" />
-                                </template>
+                                <img v-if="group.isArchive" src="/icons/archive.svg" class="size-16" />
+                                <span
+                                    v-if="showMuteIconGroup(group)"
+                                    @click.stop="toggleMuteGroup(group)"
+                                    :title="group.tabs.some(tab => tab.audible) ? lang('muteGroup') : lang('unMuteGroup')"
+                                    >
+                                    <img :src="group.tabs.some(tab => tab.audible) ? '/icons/audio.svg' : '/icons/audio-mute.svg'" class="size-16 align-text-bottom" />
+                                </span>
                                 <span v-text="getGroupTitle(group, options.showExtendGroupsPopupWithActiveTabs ? 'withActiveTab' : '')"></span>
                             </div>
                             <div class="item-action bold-hover is-unselectable" @click.stop="showSectionGroupTabs(group)">
@@ -1317,6 +1358,13 @@
                                     <span v-if="isTabLoading(tab)">
                                         <img src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
                                     </span>
+                                    <span
+                                        v-if="showMuteIconTab(tab)"
+                                        @click.stop="toggleMuteTab(tab)"
+                                        :title="tab.audible ? lang('muteTab') : lang('unMuteTab')"
+                                        >
+                                        <img :src="tab.audible ? '/icons/audio.svg' : '/icons/audio-mute.svg'" class="size-16 align-text-bottom" />
+                                    </span>
                                     <template v-if="tab.container">
                                         <span :title="tab.container.name">
                                             <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" />
@@ -1360,9 +1408,7 @@
                                 class="size-16"
                                 />
                         </template>
-                        <template v-if="groupToShow.isArchive">
-                            <img src="/icons/archive.svg" class="size-16" />
-                        </template>
+                        <img v-if="groupToShow.isArchive" src="/icons/archive.svg" class="size-16" />
                         <span v-text="getGroupTitle(groupToShow)"></span>
                     </div>
                     <div class="item-action is-unselectable">
@@ -1442,6 +1488,13 @@
                             <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                 <span v-if="isTabLoading(tab)">
                                     <img src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
+                                </span>
+                                <span
+                                    v-if="showMuteIconTab(tab)"
+                                    @click.stop="toggleMuteTab(tab)"
+                                    :title="tab.audible ? lang('muteTab') : lang('unMuteTab')"
+                                    >
+                                    <img :src="tab.audible ? '/icons/audio.svg' : '/icons/audio-mute.svg'" class="size-16 align-text-bottom" />
                                 </span>
                                 <template v-if="tab.container">
                                     <span :title="tab.container.name">
