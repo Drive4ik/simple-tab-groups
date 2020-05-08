@@ -82,7 +82,7 @@ Supported actions:
 * `{"action":"discard-group"}`
 * `{"action":"discard-other-groups"}`
 * `{"action":"reload-all-tabs-in-current-group"}`
-* `{"action":"create-new-tab","cookieStoreId":"temporary-container"}`
+* `{"action":"create-temp-tab"}`
 
 
 This extension may conflict with other programs similar in functionality.

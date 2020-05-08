@@ -6,6 +6,15 @@ All these commands and their execution are described in the `package.json` file.
 How the build is going and with what settings you can also see in the file `webpack.config.js`
 There is also a `remove-evals.js` script that removes the eval code from vue when creating a build.
 
+I use Windows 10 x64
+```
+$ node -v
+v12.16.3
+
+$ npm -v
+6.14.4
+```
+
 ```bash
 $ npm install
 $ npm run build-zip
