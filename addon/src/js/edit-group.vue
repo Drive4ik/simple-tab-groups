@@ -5,7 +5,7 @@
 
     import popup from './popup.vue';
     import swatches from 'vue-swatches';
-    import 'vue-swatches/dist/vue-swatches.min.css';
+    import 'vue-swatches/dist/vue-swatches.css';
 
     export default {
         name: 'edit-group',
@@ -248,7 +248,7 @@
             <label class="label" v-text="lang('iconStyle')"></label>
             <div class="field is-grouped icon-buttons">
                 <div class="control">
-                    <swatches v-model.trim="group.iconColor" :title="lang('iconColor')" colors="text-advanced" popover-to="right" show-fallback :trigger-style="{
+                    <swatches v-model.trim="group.iconColor" :title="lang('iconColor')" swatches="text-advanced" popover-x="right" show-fallback :trigger-style="{
                         width: '35px',
                         height: '30px',
                         borderRadius: '4px',
@@ -430,10 +430,6 @@
 </template>
 
 <style lang="scss">
-    .vue-swatches__fallback__wrapper {
-        margin-top: 5px;
-    }
-
     .edit-group {
         .word-break-all {
             word-break: break-word;

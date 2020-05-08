@@ -15,10 +15,10 @@ const replaceEvalRegexp = {
     dev: [{
         fr: /;\s*\/\/ This works in non-strict mode\s*([a-z])\s*=\s*\(\s*function\(\)\s*\{\s*return this;\s*}\)\(\);\s*try\s*{\s*\/\/\s*This works if eval is allowed(?:\s*|.+){1,14}/g,
         to: '=window;',
-    }, {
+    }, /*{
         fr: 'self.Math==Math?self:Function("return this")();',
         to: 'self.Math==Math?self:window;',
-    }, {
+    },*/ {
         fr: 'svgContainer.innerHTML = "<svg>"',
         to: 'svgContainer.innerText = "<svg>"',
     }],
@@ -30,10 +30,10 @@ const replaceEvalRegexp = {
     {
         fr: /;\s*\/\/ This works in non-strict mode\s*([a-z])\s*=\s*\(\s*function\(\)\s*\{\s*return this;\s*}\)\(\);\s*try\s*{\s*\/\/\s*This works if eval is allowed(?:\s*|.+){1,14}/g,
         to: '=window;', // from DEV
-    }, {
+    }, /*{
         fr: 'self.Math==Math?self:Function("return this")();',
         to: 'self.Math==Math?self:window;',
-    },
+    },*/
     /*{
         fr: 'document.createElement("div")).innerHTML="<svg>"',
         to: 'document.createElement("div")).innerText="<svg>"',

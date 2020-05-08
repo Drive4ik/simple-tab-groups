@@ -6,7 +6,7 @@
     import popup from '../js/popup.vue';
     import swatches from 'vue-swatches';
     import manageAddonBackup from './manage-addon-backup';
-    import 'vue-swatches/dist/vue-swatches.min.css';
+    import 'vue-swatches/dist/vue-swatches.css';
 
     Vue.config.errorHandler = errorEventHandler;
 
@@ -786,7 +786,7 @@
                 <label class="label" v-text="lang('enterDefaultGroupIconViewTypeTitle')"></label>
                 <div class="field is-grouped">
                     <div class="control">
-                        <swatches v-model.trim="options.defaultGroupIconColor" :title="lang('iconColor')" colors="text-advanced" popover-to="right" show-fallback :trigger-style="{
+                        <swatches v-model.trim="options.defaultGroupIconColor" :title="lang('iconColor')" swatches="text-advanced" popover-x="right" show-fallback :trigger-style="{
                             width: '40px',
                             height: '33px',
                             borderRadius: '4px',
@@ -1164,10 +1164,6 @@
         transition: background-color ease .2s;
     }
 
-    .vue-swatches__container {
-        transform: translate(2px, calc(-100% - 44px));
-    }
-
     #logging-notification {
         display: flex;
         height: 30px;
@@ -1268,11 +1264,6 @@
                     background-color: var(--background-color);
                 }
             }
-        }
-
-        .vue-swatches__trigger.vue-swatches--is-empty {
-            background-color: transparent !important;
-            border-color: var(--color-hr);
         }
 
         .delete-button:hover img {

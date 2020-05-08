@@ -351,3 +351,29 @@ hr {
         transform: rotate(360deg);
     }
 }
+
+/* vue-swatches */
+.vue-swatches__fallback__wrapper {
+    margin-top: 5px;
+}
+
+.vue-swatches__fallback__input {
+    padding-left: 5px;
+    padding-right: 0;
+    color: var(--input-text-color) !important;
+}
+
+html.dark-theme .vue-swatches__container {
+    background-color: var(--background-color-other) !important;
+}
+
+html.dark-theme .vue-swatches__trigger.vue-swatches--is-empty {
+    background-color: transparent !important;
+    border-color: var(--color-hr);
+}
+
+html.dark-theme .vue-swatches__fallback__input {
+    background: var(--input-background-color);
+    border-color: var(--color-hr);
+}
+/* end vue-swatches */
