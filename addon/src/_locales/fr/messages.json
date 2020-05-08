@@ -1034,5 +1034,25 @@
                 "example": "Group 1"
             }
         }
+    },
+    "hotkeysDescription2": {
+        "message": "Vous pouvez aussi configurer les raccourcis sur la page <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Gérer les raccourcis d'extension</a>. Ceci s'appliquera à toutes les fenêtres et toutes les pages du navigateur.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
+    },
+    "muteTab": {
+        "message": "Rendre l'onglet silencieux",
+        "description": "Mute tab"
+    },
+    "unMuteTab": {
+        "message": "Réactiver le son de l'onglet",
+        "description": "Unmute tab"
+    },
+    "muteGroup": {
+        "message": "Rendre le groupe silencieux",
+        "description": "Mute group"
+    },
+    "unMuteGroup": {
+        "message": "Réactiver le son du groupe",
+        "description": "Unmute group"
     }
 }
