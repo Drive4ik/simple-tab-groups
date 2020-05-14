@@ -151,6 +151,9 @@
         },
         "reload-all-tabs-in-current-group": {
             "description": "__MSG_hotkeyActionTitleReloadAllTabsInCurrentGroup__"
+        },
+        "create-backup": {
+            "description": "__MSG_exportAddonSettingsButton__"
         }
     }
 

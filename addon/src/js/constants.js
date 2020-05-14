@@ -107,6 +107,7 @@ const EXTENSIONS_WHITE_LIST = Object.freeze({
             'discard-other-groups',
             'reload-all-tabs-in-current-group',
             'create-temp-tab',
+            'create-backup',
         ],
     },
     'tridactyl.vim@cmcaine.co.uk': {
@@ -140,6 +141,7 @@ const EXTENSIONS_WHITE_LIST = Object.freeze({
             'discard-other-groups',
             'reload-all-tabs-in-current-group',
             'create-temp-tab',
+            'create-backup',
         ],
     },
     'tridactyl.vim.betas@cmcaine.co.uk': {
@@ -173,6 +175,7 @@ const EXTENSIONS_WHITE_LIST = Object.freeze({
             'discard-other-groups',
             'reload-all-tabs-in-current-group',
             'create-temp-tab',
+            'create-backup',
         ],
     },
 });

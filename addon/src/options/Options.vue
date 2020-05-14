@@ -142,7 +142,9 @@
                     return;
                 }
 
-                value = value.replace(folderNameRegExp, '').trim();
+                while (folderNameRegExp.exec(value)) {
+                    value = value.replace(folderNameRegExp, '').trim();
+                }
 
                 if (value.length > 200) {
                     value = '';
@@ -157,7 +159,9 @@
                     return;
                 }
 
-                value = value.replace(folderNameRegExp, '').trim();
+                while (folderNameRegExp.exec(value)) {
+                    value = value.replace(folderNameRegExp, '').trim();
+                }
 
                 if (!value.length || value.length > 200) {
                     value = DEFAULT_OPTIONS.autoBackupBookmarksFolderName;

@@ -2047,6 +2047,10 @@ async function runAction(data, sender = {}) {
                 result.ok = true;
 
                 break;
+            case 'create-backup':
+                result.ok = await createBackup(true, true, true, true);
+
+                break;
             default:
                 throw Error(`Action '${data.action}' is wrong`);
                 break;
@@ -2175,7 +2179,7 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
 
     if (isAutoBackup && (!groups.length || groups.every(gr => !gr.tabs.length))) {
         console.warn('skip create auto backup, groups are empty');
-        return;
+        return false;
     }
 
     if (includeTabThumbnails) {
@@ -2231,6 +2235,8 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
     } else {
         await file.backup(data, false, overwrite);
     }
+
+    return true;
 }
 
 async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
