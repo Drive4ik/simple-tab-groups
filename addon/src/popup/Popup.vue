@@ -1178,9 +1178,6 @@
                                 </div>
                                 <div class="item-title">
                                     <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                        <span v-if="isTabLoading(tab)">
-                                            <img src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
-                                        </span>
                                         <template v-if="tab.container">
                                             <span :title="tab.container.name">
                                                 <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" />
@@ -1210,14 +1207,12 @@
                                 :title="getTabTitle(tab, true)"
                                 >
                                 <div class="item-icon">
-                                    <img v-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
+                                    <img v-if="isTabLoading(tab)" src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
+                                    <img v-else-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
                                     <img v-else v-lazy="tab.favIconUrl" class="size-16" />
                                 </div>
                                 <div class="item-title">
                                     <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                        <span v-if="isTabLoading(tab)">
-                                            <img src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
-                                        </span>
                                         <span
                                             v-if="showMuteIconTab(tab)"
                                             @click.stop="toggleMuteTab(tab)"
@@ -1354,14 +1349,12 @@
                             tabindex="0"
                             >
                             <div class="item-icon">
-                                <img v-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
+                                <img v-if="isTabLoading(tab)" src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
+                                <img v-else-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
                                 <img v-else v-lazy="tab.favIconUrl" class="size-16" />
                             </div>
                             <div class="item-title">
                                 <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                    <span v-if="isTabLoading(tab)">
-                                        <img src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
-                                    </span>
                                     <span
                                         v-if="showMuteIconTab(tab)"
                                         @click.stop="toggleMuteTab(tab)"
@@ -1439,9 +1432,6 @@
                         </div>
                         <div class="item-title">
                             <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                <span v-if="isTabLoading(tab)">
-                                    <img src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
-                                </span>
                                 <template v-if="tab.container">
                                     <span :title="tab.container.name">
                                         <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" />
@@ -1485,14 +1475,12 @@
                         @dragend="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
                         >
                         <div class="item-icon">
-                            <img v-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
+                            <img v-if="isTabLoading(tab)" src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
+                            <img v-else-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
                             <img v-else v-lazy="tab.favIconUrl" class="size-16" />
                         </div>
                         <div class="item-title">
                             <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                <span v-if="isTabLoading(tab)">
-                                    <img src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
-                                </span>
                                 <span
                                     v-if="showMuteIconTab(tab)"
                                     @click.stop="toggleMuteTab(tab)"

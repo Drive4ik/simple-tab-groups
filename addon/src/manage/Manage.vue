@@ -1011,13 +1011,22 @@
                                 @drop="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
                                 @dragend="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
                                 >
-                                <div class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                    <img v-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
-                                    <img v-else class="size-16" v-lazy="tab.favIconUrl" />
-                                </div>
-                                <div v-if="isTabLoading(tab)" class="refresh-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                    <img class="spin size-16" src="/icons/refresh.svg"/>
-                                </div>
+                                <template v-if="options.showTabsWithThumbnailsInManageGroups">
+                                    <div class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                        <img v-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
+                                        <img v-else class="size-16" v-lazy="tab.favIconUrl" />
+                                    </div>
+                                    <div v-if="isTabLoading(tab)" class="refresh-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                        <img class="spin size-16" src="/icons/refresh.svg"/>
+                                    </div>
+                                </template>
+                                <template v-else>
+                                    <div class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                        <img v-if="isTabLoading(tab)" class="spin size-16" src="/icons/refresh.svg"/>
+                                        <img v-else-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
+                                        <img v-else class="size-16" v-lazy="tab.favIconUrl" />
+                                    </div>
+                                </template>
                                 <template v-if="tab.container">
                                     <div class="cookie-container" :title="tab.container.name" :style="{borderColor: tab.container.colorCode}">
                                         <img class="size-16" :src="tab.container.iconUrl" :style="{fill: tab.container.colorCode}">
@@ -1080,13 +1089,22 @@
                                 @dragstart="dragHandle($event, 'tab', ['tab', 'group'], {item: tab})"
                                 @dragend="dragHandle($event, 'tab', ['tab', 'group'], {item: tab})"
                                 >
-                                <div class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                    <img v-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
-                                    <img v-else class="size-16" v-lazy="tab.favIconUrl" />
-                                </div>
-                                <div v-if="isTabLoading(tab)" class="refresh-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                    <img class="spin size-16" src="/icons/refresh.svg"/>
-                                </div>
+                                <template v-if="options.showTabsWithThumbnailsInManageGroups">
+                                    <div class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                        <img v-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
+                                        <img v-else class="size-16" v-lazy="tab.favIconUrl" />
+                                    </div>
+                                    <div v-if="isTabLoading(tab)" class="refresh-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                        <img class="spin size-16" src="/icons/refresh.svg"/>
+                                    </div>
+                                </template>
+                                <template v-else>
+                                    <div class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                        <img v-if="isTabLoading(tab)" class="spin size-16" src="/icons/refresh.svg"/>
+                                        <img v-else-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
+                                        <img v-else class="size-16" v-lazy="tab.favIconUrl" />
+                                    </div>
+                                </template>
                                 <template v-if="tab.container">
                                     <div class="cookie-container" :title="tab.container.name" :style="{borderColor: tab.container.colorCode}">
                                         <img class="size-16" :src="tab.container.iconUrl" :style="{fill: tab.container.colorCode}">
