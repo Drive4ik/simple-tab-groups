@@ -358,12 +358,8 @@
 
                 tabsIdsToRemove.push(tab.id);
 
-                let backupedTab = cache.getBackupedTabForMove(tab.id);
-
-                if (backupedTab) {
-                    tab.url = backupedTab.url;
-                    tab.title = backupedTab.title;
-                }
+                tab.url = cache.getTabSession(tab.id, 'url');
+                tab.title = cache.getTabSession(tab.id, 'title');
 
                 let newTab = await createNative({
                     ...tab,

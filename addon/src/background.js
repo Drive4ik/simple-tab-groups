@@ -1477,7 +1477,7 @@ async function onBeforeTabRequest({tabId, url, originUrl, requestId, frameId}) {
         let destGroup = Groups.getCatchedForTab(groups, tabGroup, tab);
 
         if (destGroup) {
-            cache.backupTabForMove(tab);
+            cache.setTab(tab);
             console.log('onBeforeTabRequest move tab from groupId %d -> %d', tabGroup.id, destGroup.id);
             addTabToLazyMove(tab.id, destGroup.id, destGroup.showTabAfterMovingItIntoThisGroup);
             return {};

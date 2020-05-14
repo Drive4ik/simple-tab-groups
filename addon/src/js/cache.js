@@ -2,13 +2,11 @@
     'use strict';
 
     let tabs = {},
-        backupedTabsForMove = {},
         removedTabs = new Set,
         windows = {};
 
     function clear() {
         tabs = {};
-        backupedTabsForMove = {};
         removedTabs.clear();
         windows = {};
     }
@@ -36,19 +34,8 @@
         return !!tabs[tabId];
     }
 
-    function backupTabForMove({id, url, title}) {
-        backupedTabsForMove[id] = {url, title};
-    }
-
-    function getBackupedTabForMove(tabId) {
-        let backupedTab = backupedTabsForMove[tabId];
-        delete backupedTabsForMove[tabId];
-        return backupedTab;
-    }
-
     function removeTab(tabId) {
         removedTabs.add(tabId);
-        delete backupedTabsForMove[tabId];
         delete tabs[tabId];
     }
 
@@ -331,8 +318,6 @@
         // tabs
         setTab,
         hasTab,
-        backupTabForMove,
-        getBackupedTabForMove,
         removeTab,
 
         setTabGroup,
