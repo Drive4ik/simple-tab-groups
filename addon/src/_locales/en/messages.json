@@ -1058,5 +1058,9 @@
     "unMuteGroup": {
         "message": "Unmute group",
         "description": "Unmute group"
+    },
+    "fullPopupWidth": {
+        "message": "Use full popup width",
+        "description": "Use full popup width"
     }
 }

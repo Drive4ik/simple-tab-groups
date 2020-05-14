@@ -1054,5 +1054,9 @@
     "unMuteGroup": {
         "message": "Восстановить звук группы",
         "description": "Unmute group"
+    },
+    "fullPopupWidth": {
+        "message": "Использовать полную ширину всплывающего окна",
+        "description": "Use full popup width"
     }
 }

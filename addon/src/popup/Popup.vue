@@ -87,6 +87,10 @@
             'context-menu': contextMenu,
         },
         created() {
+            if (!isSidebar && BG.options.fullPopupWidth) {
+                document.documentElement.classList.add('full-popup-width');
+            }
+
             this.loadOptions();
 
             loadPromise = Promise.all([this.loadCurrentWindow(), this.loadGroups(), this.loadUnsyncedTabs()]);
@@ -1737,7 +1741,7 @@
 
 <style lang="scss">
     :root {
-        --popup-width: 432px;
+        --popup-width: 450px;
         --max-popup-width: 100%;
 
         --max-popup-height: 600px;
@@ -1779,6 +1783,10 @@
         min-width: 200px;
         // max-height: calc(var(--max-popup-height) - 10px);
         overflow-x: hidden;
+
+        &.full-popup-width {
+            --popup-width: 800px;
+        }
     }
 
     html.dark-theme {

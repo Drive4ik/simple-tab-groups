@@ -712,6 +712,12 @@
             </div>
             <div class="field">
                 <label class="checkbox">
+                    <input v-model="options.fullPopupWidth" type="checkbox" />
+                    <span v-text="lang('fullPopupWidth')"></span>
+                </label>
+            </div>
+            <div class="field">
+                <label class="checkbox">
                     <input v-model="options.openGroupAfterChange" type="checkbox" />
                     <span v-text="lang('openGroupAfterChange')"></span>
                 </label>

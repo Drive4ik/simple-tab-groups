@@ -204,6 +204,7 @@ const DEFAULT_OPTIONS = Object.freeze({
     showExtendGroupsPopupWithActiveTabs: false,
     showTabsWithThumbnailsInManageGroups: false,
     reverseTabsOnCreate: false,
+    fullPopupWidth: false,
     temporaryContainerTitle: browser.i18n.getMessage('temporaryContainerTitle'),
 
     defaultGroupIconViewType: GROUP_ICON_VIEW_TYPES[0],
