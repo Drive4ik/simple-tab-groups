@@ -53,7 +53,7 @@
         console.logError(errorData);
 
         if (false !== data.showNotification) {
-            utils.notify(browser.i18n.getMessage('whatsWrongMessage'), undefined, undefined, undefined, () => browser.runtime.openOptionsPage());
+            utils.notify(browser.i18n.getMessage('whatsWrongMessage'), undefined, 'whatsWrongMessage', undefined, () => browser.runtime.openOptionsPage());
         }
     }
 

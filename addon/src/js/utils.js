@@ -548,7 +548,7 @@
     }
 
     function convertSvgToUrl(svg) {
-        return 'data:image/svg+xml;base64,' + b64EncodeUnicode(svg);
+        return 'data:image/svg+xml,' + encodeURIComponent(svg);
     }
 
     function resizeImage(img, height, width, useTransparency = true, ...canvasParams) { // img: new Image()
