@@ -140,10 +140,7 @@
     }
 
     async function remove(groupId) {
-        let [group, groups, index] = await load(groupId, true),
-            {isMain} = group;
-
-        group.isMain = false;
+        let [group, groups, index] = await load(groupId, true);
 
         BG.addUndoRemoveGroupItem(group);
 
@@ -173,7 +170,7 @@
                 BG.updateBrowserActionData(null, groupWindowId);
             }
 
-            if (isMain) {
+            if (group.isMain) {
                 utils.notify(browser.i18n.getMessage('thisGroupWasMain'), 7000);
             }
         }

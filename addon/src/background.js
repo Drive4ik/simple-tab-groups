@@ -641,18 +641,22 @@ async function addUndoRemoveGroupItem(groupToRemove) {
 
         let groups = await Groups.load();
 
+        group.isMain = false;
+
         groups.push(group);
 
         normalizeContainersInGroups(groups);
+
+        let tabs = group.tabs;
 
         await Groups.save(groups);
 
         updateMoveTabMenus();
 
-        if (group.tabs.length && !group.isArchive) {
+        if (tabs.length && !group.isArchive) {
             await loadingBrowserAction();
 
-            group.tabs = await createTabsSafe(Groups.setNewTabsParams(group.tabs, group));
+            group.tabs = await createTabsSafe(Groups.setNewTabsParams(tabs, group));
 
             await loadingBrowserAction(false);
         }
