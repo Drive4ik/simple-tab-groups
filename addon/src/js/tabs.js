@@ -36,9 +36,9 @@
             tab.windowId = windowId;
         }
 
-        if (Number.isFinite(openerTabId) && openerTabId >= 1) {
+        /*if (Number.isFinite(openerTabId) && openerTabId >= 1) {
             tab.openerTabId = openerTabId;
-        }
+        }*/
 
         if (isInReaderMode || openInReaderMode) {
             tab.openInReaderMode = true;
@@ -562,7 +562,7 @@
     }
 
     function prepareForSave(tabs, includeGroupId = false, includeFavIconUrl = false, includeThumbnail = false) {
-        return tabs.map(function({url, title, cookieStoreId, favIconUrl, isInReaderMode, openInReaderMode, groupId, thumbnail}) {
+        return tabs.map(function({id, url, title, cookieStoreId, favIconUrl, isInReaderMode, openInReaderMode, openerTabId, groupId, thumbnail}) {
             let tab = {url, title};
 
             if (!containers.isDefault(cookieStoreId)) {
@@ -571,6 +571,11 @@
 
             if (isInReaderMode || openInReaderMode) {
                 tab.openInReaderMode = true;
+            }
+
+            if (openerTabId > 0) {
+                tab.openerTabId = openerTabId;
+                tab.id = id;
             }
 
             if (includeGroupId && groupId) {

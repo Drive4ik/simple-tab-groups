@@ -20,7 +20,7 @@
     }
 
     // TABS
-    function setTab({id, url, title, cookieStoreId}) {
+    function setTab({id, url, title, cookieStoreId, openerTabId}) {
         if (!tabs[id]) {
             tabs[id] = {};
         }
@@ -28,6 +28,7 @@
         tabs[id].url = url;
         tabs[id].title = title;
         tabs[id].cookieStoreId = cookieStoreId;
+        tabs[id].openerTabId = openerTabId;
     }
 
     function hasTab(tabId) {
@@ -227,7 +228,7 @@
                     return false;
                 }
 
-                let tab = {...tabs[tabId]};
+                let tab = {id: tabId, ...tabs[tabId]};
 
                 removeTab(tabId);
 

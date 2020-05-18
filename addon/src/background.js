@@ -70,8 +70,11 @@ async function createTabsSafe(tabs) {
     BG.groupIdForNextTab = null;
 
     if (options.reverseTabsOnCreate) {
+        tabs.reverse();
         newTabs.reverse();
     }
+
+    newTabs = syncOpenerTabs(tabs, newTabs);
 
     newTabs = await Promise.all(newTabs.map(cache.setTabSession));
 
@@ -85,6 +88,27 @@ async function createTabsSafe(tabs) {
 
         tabsToHide.forEach(tab => tab.hidden = true);
     }
+
+    return newTabs;
+}
+
+function syncOpenerTabs(tabs, newTabs) {
+    tabs.forEach(function({openerTabId}, index) {
+        if (openerTabId < 1) {
+            return;
+        }
+
+        let openerIndex = tabs.findIndex(tab => tab.id === openerTabId);
+
+        if (openerIndex !== -1) {
+            newTabs[index].openerTabId = newTabs[openerIndex].id;
+            cache.setTab(newTabs[index]);
+
+            browser.tabs.update(newTabs[index].id, {
+                openerTabId: newTabs[index].openerTabId,
+            }).catch(errorEventHandler);
+        }
+    });
 
     return newTabs;
 }
@@ -178,6 +202,8 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                         index: -1,
                         windowId: windowId,
                     });
+
+                    await utils.wait(200); // https://github.com/piroor/treestyletab/issues/2546#issuecomment-629327672
 
                     // for bug https://bugzilla.mozilla.org/show_bug.cgi?id=1580879
                     removeExcludeTabIds(tabIds);
@@ -434,9 +460,7 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
         return;
     }
 
-    if (changeInfo.hasOwnProperty('title') || changeInfo.hasOwnProperty('url')) {
-        cache.setTab(tab);
-    }
+    cache.setTab(tab);
 
     if (utils.isTabPinned(tab) && !changeInfo.hasOwnProperty('pinned')) {
         console.log('onUpdatedTab 🛑 tab is pinned tabId: %s:', tab.id);
@@ -513,6 +537,14 @@ function onRemovedTab(tabId, {isWindowClosing, windowId}) {
         reCreateTabsOnRemoveWindow.push(tabId);
     } else {
         cache.removeTab(tabId);
+    }
+}
+
+let openerTabTimer = 0;
+function onMovedTab(tabId) {
+    if (cache.getTabGroup(tabId)) {
+        clearTimeout(openerTabTimer);
+        openerTabTimer = setTimeout(() => Tabs.get(), 500); // load visible tabs of current window for set openerTabId
     }
 }
 
@@ -1580,6 +1612,7 @@ function addEvents() {
         ],
     });
     browser.tabs.onRemoved.addListener(onRemovedTab);
+    browser.tabs.onMoved.addListener(onMovedTab);
 
     browser.tabs.onAttached.addListener(onAttachedTab);
 
@@ -1592,6 +1625,7 @@ function removeEvents() {
     browser.tabs.onCreated.removeListener(onCreatedTab);
     browser.tabs.onUpdated.removeListener(onUpdatedTab);
     browser.tabs.onRemoved.removeListener(onRemovedTab);
+    browser.tabs.onMoved.removeListener(onMovedTab);
 
     browser.tabs.onAttached.removeListener(onAttachedTab);
 
@@ -2896,7 +2930,9 @@ async function syncTabs(groups, windows, hideAllTabs = false) {
             }
         }
 
-        group.tabs = await Promise.all(tabs);
+        tabs = await Promise.all(tabs);
+
+        group.tabs = syncOpenerTabs(group.tabs, tabs);
     }
 
     // sort tabs
