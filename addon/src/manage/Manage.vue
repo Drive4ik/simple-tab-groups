@@ -54,6 +54,7 @@
 
                 containers: containers.getAll(true),
                 options: {},
+                showArchivedGroupsInManageGroups: !!window.localStorage.showArchivedGroupsInManageGroups,
 
                 groups: [],
 
@@ -98,15 +99,7 @@
                 this.setFocusOnSearch();
 
                 if (this.options.showTabsWithThumbnailsInManageGroups) {
-                    this.groups.forEach(function(group) {
-                        if (!group.isArchive) {
-                            group.tabs.forEach(function(tab) {
-                                if (!tab.thumbnail && !tab.discarded && utils.isTabLoaded(tab)) {
-                                    Tabs.updateThumbnail(tab.id);
-                                }
-                            });
-                        }
-                    });
+                    this.loadAvailableTabThumbnails();
                 }
             });
         },
@@ -123,18 +116,30 @@
                     BG.saveOptions({
                         showTabsWithThumbnailsInManageGroups: value,
                     });
+
+                    if (value) {
+                        this.loadAvailableTabThumbnails();
+                    }
+                }
+            },
+            showArchivedGroupsInManageGroups(value) {
+                if (value) {
+                    window.localStorage.showArchivedGroupsInManageGroups = 1;
+                } else {
+                    delete window.localStorage.showArchivedGroupsInManageGroups;
                 }
             },
         },
         computed: {
             filteredGroups() {
-                let searchStr = this.search.toLowerCase();
+                let searchStr = this.search.toLowerCase(),
+                    groups = this.showArchivedGroupsInManageGroups ? this.groups : this.groups.filter(group => !group.isArchive);
 
                 if (!searchStr) {
-                    return this.groups.map(group => (group.filteredTabs = group.tabs, group));
+                    return groups.map(group => (group.filteredTabs = group.tabs, group));
                 }
 
-                return this.groups.map(group => {
+                return groups.map(group => {
                     group.filteredTabs = group.tabs.filter(tab => utils.mySearchFunc(searchStr, utils.getTabTitle(tab, true), this.extendedSearch));
                     return group;
                 });
@@ -485,6 +490,18 @@
                         }
                     });
                 }
+            },
+
+            loadAvailableTabThumbnails() {
+                this.groups.forEach(function(group) {
+                    if (!group.isArchive) {
+                        group.tabs.forEach(function(tab) {
+                            if (!tab.thumbnail && !tab.discarded && utils.isTabLoaded(tab)) {
+                                Tabs.updateThumbnail(tab.id);
+                            }
+                        });
+                    }
+                });
             },
 
             async loadGroupTabs(groupId) {
@@ -882,6 +899,11 @@
                     <label class="checkbox">
                         <input v-model="options.showTabsWithThumbnailsInManageGroups" type="checkbox" />
                         <span v-text="lang('showTabsWithThumbnailsInManageGroups')"></span>
+                    </label>
+                    <br>
+                    <label class="checkbox">
+                        <input v-model="showArchivedGroupsInManageGroups" type="checkbox" />
+                        <span v-text="lang('showArchivedGroupsInManageGroups')"></span>
                     </label>
                 </div>
                 <div class="buttons has-addons" style="display: none;">

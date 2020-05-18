@@ -1062,5 +1062,9 @@
     "fullPopupWidth": {
         "message": "Use full popup width",
         "description": "Use full popup width"
+    },
+    "showArchivedGroupsInManageGroups": {
+        "message": "Show archived groups",
+        "description": "Show archived groups"
     }
 }

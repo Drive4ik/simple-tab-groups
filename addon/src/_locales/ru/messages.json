@@ -1058,5 +1058,9 @@
     "fullPopupWidth": {
         "message": "Использовать полную ширину всплывающего окна",
         "description": "Use full popup width"
+    },
+    "showArchivedGroupsInManageGroups": {
+        "message": "Показать архивные группы",
+        "description": "Show archived groups"
     }
 }
