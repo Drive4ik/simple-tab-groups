@@ -1054,5 +1054,9 @@
     "unMuteGroup": {
         "message": "Réactiver le son du groupe",
         "description": "Unmute group"
+    },
+    "fullPopupWidth": {
+        "message": "Utiliser toute la largeur de la pop-up",
+        "description": "Use full popup width"
     }
 }
