@@ -2506,43 +2506,6 @@ window.BG = {
     browser,
 
     console,
-    async saveConsoleLogs() {
-        let urls = {},
-            index = 1;
-
-        let logs = console.getLogs();
-
-        function normalize(obj) {
-            if (Array.isArray(obj)) {
-                return obj.map(normalize);
-            } else if ('object' === utils.type(obj)) {
-                for (let key in obj) {
-                    if (['title', 'icon', 'icons', 'iconUrl', 'favIconUrl', 'thumbnail', 'filename'].includes(key)) {
-                        obj[key] = obj[key] ? ('some ' + key) : obj[key];
-                    } else {
-                        obj[key] = normalize(obj[key]);
-                    }
-                }
-
-                return obj;
-            } else if (String(obj).startsWith('data:image')) {
-                return 'some data:image';
-            } else if (String(obj).startsWith('http')) {
-                return urls[obj] || (urls[obj] = 'URL_' + index++);
-            } else if (String(obj).startsWith('file:')) {
-                return urls[obj] || (urls[obj] = 'FILE_' + index++);
-            }
-
-            return obj;
-        }
-
-        logs = normalize(logs);
-
-        return file.save({
-            info: await utils.getInfo(),
-            logs: logs,
-        }, 'STG-debug-logs.json');
-    },
 };
 
 function openHelp(page) {
