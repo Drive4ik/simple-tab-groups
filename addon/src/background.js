@@ -1804,7 +1804,7 @@ async function runAction(data, sender = {}) {
                             popupAction: 'load-custom-group',
                             popupTitle: browser.i18n.getMessage('hotkeyActionTitleLoadCustomGroup'),
                             groups: notArchivedGroups.map(Groups.mapForExternalExtension),
-                            disableGroupIds: currentGroup.id,
+                            disableGroupIds: [currentGroup.id],
                         });
 
                         result.ok = true;
