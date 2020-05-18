@@ -9,16 +9,11 @@
 
             try {
                 result = await browser.storage.local.get(data);
-
-                if (!result) {
-                    throw Error('managed storage is not set, browser.storage.local.get result = undefined');
-                }
             } catch (e) {
                 errorCounter++;
 
                 if (errorCounter > 100) {
                     errorCounter = 0;
-                    console.error(e);
                     throw e;
                 }
 

@@ -43,7 +43,14 @@
             stack: console.getErrorStack(nativeError),
         };
 
-        if (/^(invalid (tab|window))|(An unexpected error occurred)/i.test(errorData.message) && !window.localStorage.lastReloadFromError) {
+        if (errorData.message === 'An unexpected error occurred') {
+            browser.tabs.create({
+                active: true,
+                url: browser.extension.getURL('/help/db-error-reinstall.html'),
+            });
+        }
+
+        if (/^(invalid (tab|window))/i.test(errorData.message) && !window.localStorage.lastReloadFromError) {
             window.localStorage.lastReloadFromError = 1;
             console.addErrorLog(errorData);
             browser.runtime.reload();

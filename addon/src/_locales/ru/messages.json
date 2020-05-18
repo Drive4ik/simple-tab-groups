@@ -1062,5 +1062,41 @@
     "showArchivedGroupsInManageGroups": {
         "message": "Показать архивные группы",
         "description": "Show archived groups"
+    },
+    "helpPageDbErrorReinstallTitle": {
+        "message": "Ошибка базы данных в Simple Tab Groups",
+        "description": "Database error in Simple Tab Groups"
+    },
+    "helpPageDbErrorReinstallDescription": {
+        "message": "К сожалению, произошла ошибка чтения данных аддоном STG из базы данных Firefox. На данный момент работа аддона остановлена. Для возобновления работы аддона выпролните следующие действия:",
+        "description": "Unfortunately, an error occurred while reading data from the STG addon from the Firefox database. At the moment, the addon is stopped. To resume the add-on, do the following:"
+    },
+    "helpPageDbErrorReinstallDescription2": {
+        "message": "Перезапустите браузер Firefox (для Linux и Mac OS с завершением процесса)",
+        "description": "Restart Firefox Browser (for Linux and Mac OS with process termination)"
+    },
+    "helpPageDbErrorReinstallDescription3": {
+        "message": "Если вы снова увидите это окно, попробуйте переустановить аддон:",
+        "description": "If you see this window again, try reinstalling the addon:"
+    },
+    "helpPageDbErrorReinstallDescription4": {
+        "message": "Удалите аддон STG",
+        "description": "Remove STG Addon"
+    },
+    "helpPageDbErrorReinstallDescription5": {
+        "message": "Перезапустите браузер Firefox",
+        "description": "Restart Firefox Browser"
+    },
+    "helpPageDbErrorReinstallDescription6": {
+        "message": "Установите аддон STG",
+        "description": "Install STG Addon"
+    },
+    "helpPageDbErrorReinstallDescription7": {
+        "message": "Восстановите последний бекап данных аддона STG, который находится в папке загрузок \"STG-backups\"<br>Восстановить бэкап вы можете в настройках аддона",
+        "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".<br>You can restore backup in addon settings"
+    },
+    "helpPageDbErrorReinstallOpenFFDownloadsFolder": {
+        "message": "Открыть папку загрузок Firefox",
+        "description": "Open Firefox downloads folder"
     }
 }

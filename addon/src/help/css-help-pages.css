@@ -15,3 +15,11 @@ img {
 img + img {
     margin-top: 20px;
 }
+
+li + li {
+    margin-top: 5px;
+}
+
+.has-text-left {
+    text-align: left;
+}
