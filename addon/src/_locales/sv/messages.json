@@ -320,7 +320,7 @@
         "description": "Move active tab to custom group"
     },
     "whatsWrongMessage": {
-        "message": "Någonting gick fel...\nVänligen kontakta utvecklaren per e-post (drive4ik@gmail.com) med senaste fellogg (hittas längst ner på inställningssidan)",
+        "message": "Någonting gick fel...\nVänligen kontakta utvecklaren per e-post med senaste fellogg (hittas längst ner på inställningssidan)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
     },
     "saveErrorLogsIntoFile": {
