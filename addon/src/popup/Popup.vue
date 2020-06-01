@@ -1774,6 +1774,11 @@
 
         &.full-popup-width {
             --popup-width: 800px;
+
+            .groups .item .item-action {
+                width: 150px;
+                min-width: 150px;
+            }
         }
     }
 
@@ -1976,8 +1981,8 @@
     }
 
     .groups .item .item-action {
-        width: 100px;
-        min-width: 100px;
+        width: 110px;
+        min-width: 110px;
     }
 
     .bordered {
