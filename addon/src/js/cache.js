@@ -20,13 +20,17 @@
     }
 
     // TABS
-    function setTab({id, url, title, cookieStoreId, openerTabId}) {
+    function setTab({id, url, title, cookieStoreId, openerTabId, status}) {
         if (!tabs[id]) {
             tabs[id] = {};
         }
 
+        if (url === 'about:blank' && tabs[id].url && tabs[id].url !== 'about:blank' && status === browser.tabs.TabStatus.LOADING) {
+            return;
+        }
+
         tabs[id].url = url;
-        tabs[id].title = title;
+        tabs[id].title = title || tabs[id].url;
         tabs[id].cookieStoreId = cookieStoreId;
         tabs[id].openerTabId = openerTabId;
     }

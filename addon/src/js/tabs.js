@@ -595,7 +595,7 @@
     }
 
     function getNewTabContainer(
-            {url, cookieStoreId},
+            {url, cookieStoreId, status},
             {newTabContainer = DEFAULT_COOKIE_STORE_ID, ifDifferentContainerReOpen, excludeContainersForReOpen = []}
         ) {
 
@@ -603,7 +603,7 @@
             return cookieStoreId;
         }
 
-        if (url && !url.startsWith('http') && !url.startsWith('ftp')) {
+        if (url && !url.startsWith('http') && !url.startsWith('ftp') && status !== browser.tabs.TabStatus.LOADING) {
             return DEFAULT_COOKIE_STORE_ID;
         }
 
