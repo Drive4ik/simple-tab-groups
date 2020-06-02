@@ -1642,9 +1642,9 @@
                     <li
                         v-for="group in groups"
                         :key="group.id"
-                        :class="{'is-disabled': group.isArchive}"
-                        @click="!group.isArchive && moveTabs(menu.data.tab.id, group.id, !menu.data.group, undefined, $event.ctrlKey || $event.metaKey)"
-                        @contextmenu="!group.isArchive && moveTabs(menu.data.tab.id, group.id, !menu.data.group, true)"
+                        v-if="!group.isArchive"
+                        @click="moveTabs(menu.data.tab.id, group.id, !menu.data.group, undefined, $event.ctrlKey || $event.metaKey)"
+                        @contextmenu="moveTabs(menu.data.tab.id, group.id, !menu.data.group, true)"
                         >
                         <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
                         <span v-text="getGroupTitle(group, 'withActiveGroup withContainer')"></span>
