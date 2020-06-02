@@ -208,6 +208,8 @@
             groups.forEach(gr => gr.isMain = gr.id === groupId);
         }
 
+        let oldGroupTitle = group.title;
+
         Object.assign(group, updateData);
 
         await save(groups);
@@ -229,6 +231,10 @@
             BG.updateMoveTabMenus();
 
             BG.updateBrowserActionData(groupId);
+        }
+
+        if (updateData.hasOwnProperty('title')) {
+            BG.updateBookmarkGroupTitle(oldGroupTitle, updateData.title);
         }
     }
 
