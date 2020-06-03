@@ -2829,6 +2829,18 @@ async function runMigrateForData(data) {
                 });
             },
         },
+        {
+            version: '4.5.2',
+            migration() {
+                data.groups.forEach(function(group) {
+                    data.groups.forEach(function(gr) {
+                        if (gr.title === group.title && gr.id !== group.id) {
+                            gr.title += ` ${gr.id}`;
+                        }
+                    });
+                });
+            },
+        },
     ];
 
     // start migration

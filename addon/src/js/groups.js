@@ -96,9 +96,14 @@
 
         lastCreatedGroupPosition++;
 
-        let newGroup = create(lastCreatedGroupPosition, title);
-
         let groups = await load();
+
+        if (title && groups.some(gr => gr.title === title)) {
+            utils.notify(browser.i18n.getMessage('groupWithSameNameExists'));
+            title = null;
+        }
+
+        let newGroup = create(lastCreatedGroupPosition, title);
 
         groups.push(newGroup);
 
@@ -202,6 +207,15 @@
 
         if (updateData.title) {
             updateData.title = updateData.title.slice(0, 256);
+
+            if (groups.some(gr => gr.title === updateData.title)) {
+                utils.notify(browser.i18n.getMessage('groupWithSameNameExists'));
+                delete updateData.title;
+            }
+        }
+
+        if (!Object.keys(updateData).length) {
+            return;
         }
 
         if (updateData.isMain) {

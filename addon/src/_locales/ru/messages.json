@@ -1098,5 +1098,9 @@
     "helpPageDbErrorReinstallOpenFFDownloadsFolder": {
         "message": "Открыть папку загрузок Firefox",
         "description": "Open Firefox downloads folder"
+    },
+    "groupWithSameNameExists": {
+        "message": "Группа с таким именем уже существует!",
+        "description": "A group with the same name already exists!"
     }
 }
