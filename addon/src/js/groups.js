@@ -180,6 +180,8 @@
             }
         }
 
+        BG.removeBookmarkGroup(group.title);
+
         BG.sendMessage({
             action: 'group-removed',
             groupId: groupId,
