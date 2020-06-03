@@ -40,7 +40,7 @@ Zip file is located in `dist-zip` folder.
 
 ## Description
 
-Simple Tab Groups works across browser instances/windows too. If you select a group in another window, the selected window will jump to the foreground with the chosen group selected. You can even select the specific tab within that group in background browser windows. GIF example
+Simple Tab Groups works across browser instances/windows too. If you select a group in another window, the selected window will jump to the foreground with the chosen group selected. You can even select the specific tab within that group in background browser windows. [GIF example](https://user-images.githubusercontent.com/7843031/33828871-806ccf6e-de76-11e7-9a0e-1ddfb97e878d.gif)
 
 This allows for easy switching between active and pre-loaded tabs across multiple browser windows.
 
@@ -51,6 +51,7 @@ This allows for easy switching between active and pre-loaded tabs across multipl
  * [Open Manage groups](https://addons.mozilla.org/firefox/addon/stg-plugin-open-manage-groups/)
  * [Delete current group](https://addons.mozilla.org/firefox/addon/stg-plugin-del-current-group/)
  * [Create new tab](https://addons.mozilla.org/firefox/addon/stg-plugin-create-new-tab/)
+ * [Create new tab in temporary container](https://addons.mozilla.org/firefox/addon/stg-plugin-create-temp-tab/)
 
 **NEW** Allow support message actions from Gesturify addon.
 
@@ -88,9 +89,13 @@ Supported actions:
 This extension may conflict with other programs similar in functionality.
 Conflicted addons:
  * Tab Open/Close Control
+ * OneTab
+ * Tiled Tab Groups
+ * Totally not Panorama (Tab Groups with tab hiding)
+ * Panorama Tab Groups
  * Panorama View (etc.)
 
-Open popup shortcut: `F8`. You can change this hotkey in addon options.
+Open popup shortcut: `F8`. [You can change this hotkey](https://support.mozilla.org/kb/manage-extension-shortcuts-firefox)
 
 Current list of functionality / development notes:
 

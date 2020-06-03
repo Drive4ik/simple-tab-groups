@@ -352,7 +352,7 @@
         if (withTabs && tabs.length) {
             title += ':\n' + tabs
                 .slice(0, 30)
-                .map(tab => getTabTitle(tab, false, 70, true))
+                .map(tab => getTabTitle(tab, false, 70, !isArchive))
                 .join('\n');
 
             if (tabs.length > 30) {
@@ -367,14 +367,14 @@
         return title;
     }
 
-    function getTabTitle({id, index, title, url, discarded}, withUrl = false, sliceLength = 0, withTabActive = false) {
+    function getTabTitle({id, index, title, url, discarded}, withUrl = false, sliceLength = 0, withActiveTab = false) {
         title = title || url || 'about:blank';
 
         if (withUrl && url && title !== url) {
             title += '\n' + url;
         }
 
-        if (withTabActive && !discarded && id) {
+        if (withActiveTab && !discarded && id) {
             title = ACTIVE_SYMBOL + ' ' + title;
         }
 

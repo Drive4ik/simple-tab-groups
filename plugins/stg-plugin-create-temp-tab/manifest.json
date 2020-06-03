@@ -1,0 +1,43 @@
+{
+    "manifest_version": 2,
+
+    "applications": {
+        "gecko": {
+            "id": "stg-plugin-create-temp-tab@drive4ik",
+            "strict_min_version": "68.0"
+        }
+    },
+
+    "name": "__MSG_extensionName__",
+    "description": "__MSG_extensionDescription__",
+    "version": "1.0",
+    "author": "Drive4ik",
+    "homepage_url": "https://github.com/drive4ik/simple-tab-groups",
+
+    "icons": {
+        "16": "/icons/icon.svg"
+    },
+
+    "browser_action": {
+        "default_area": "tabstrip",
+        "default_icon": "/icons/icon.svg",
+        "default_title": "__MSG_newTempTabTitle__"
+    },
+
+    "permissions": [
+        "notifications"
+    ],
+
+    "background": {
+        "scripts": ["background.js"]
+    },
+
+    "default_locale": "en",
+
+    "commands": {
+        "_execute_browser_action": {
+            "description": "__MSG_newTempTabTitle__"
+        }
+    }
+
+}

@@ -1,0 +1,18 @@
+{
+    "extensionName": {
+        "message": "[STG plugin] Create new tab in temporary container",
+        "description": "Name of the extension"
+    },
+    "extensionDescription": {
+        "message": "Create a new tab in the container in the Simple Tab Groups v4.5.2+ extension",
+        "description": "Extension description"
+    },
+    "needInstallSTGExtension": {
+        "message": "Need install Simple Tab Groups extention\n\nClick here to open Simple Tab Groups home page",
+        "description": "Need install Simple Tab Groups extention\n\nClick here to open Simple Tab Groups home page"
+    },
+    "newTempTabTitle": {
+        "message": "Open a new tab in temporary container",
+        "description": "Open a new tab in temporary container"
+    }
+}

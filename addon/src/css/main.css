@@ -6,7 +6,7 @@
 
     --background-color: #ffffff;
     --text-color: inherit;
-    --discarded-text-color: #888888;
+    --discarded-text-color: rgba(145, 145, 145, 0.6);
 
     --input-background-color: var(--background-color);
     --input-text-color: var(--text-color);
