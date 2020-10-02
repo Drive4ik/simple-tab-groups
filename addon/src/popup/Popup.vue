@@ -244,10 +244,18 @@
 
                     if (group) {
                         if (!Object.isFrozen(group.tabs)) {
-                            let index = group.tabs.findIndex(t => t.index > tab.index);
+                            let index = group.tabs.findIndex(t => t.index === tab.index);
 
                             if (index === -1) {
-                                index = group.tabs.length;
+                                if (group.tabs.length) {
+                                    if (tab.index < group.tabs[0].index) {
+                                        index = 0;
+                                    } else {
+                                        index = group.tabs.length;
+                                    }
+                                } else {
+                                    index = 0;
+                                }
                             }
 
                             group.tabs.splice(index, 0, tab);
