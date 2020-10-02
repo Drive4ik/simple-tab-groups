@@ -11,7 +11,11 @@
             browser.tabs.getCurrent()
                 .then(async function(currentTab) {
                     if (DEFAULT_COOKIE_STORE_ID === currentTab.cookieStoreId) {
-                        window.alert('Cannot open this page, please contact the add-on developer with a screenshot of this window');
+                        if (currentTab.pinned) {
+                            window.setTimeout(window.location.reload.bind(window.location), 500);
+                        } else {
+                            window.alert('Cannot open this page, please contact the add-on developer with a screenshot of this window');
+                        }
                     } else {
                         await browser.tabs.create({
                             url:  currentTab.url,
