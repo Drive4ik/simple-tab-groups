@@ -3255,7 +3255,7 @@ async function init() {
 
         restoreOldExtensionUrls();
 
-        resetAutoBackup();
+        window.setTimeout(resetAutoBackup, 5000);
 
         createMoveTabMenus();
 
