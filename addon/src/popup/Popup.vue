@@ -244,14 +244,14 @@
 
                     if (group) {
                         if (!Object.isFrozen(group.tabs)) {
-                            let index = group.tabs.findIndex(t => t.index === tab.index);
+                            let index = group.tabs.findIndex(t => t.index > tab.index);
 
                             if (index === -1) {
-                                group.tabs.push(tab);
-                            } else {
-                                group.tabs.splice(index, 0, tab);
-                                group.tabs.slice(index + 1).forEach(t => t.index++);
+                                index = group.tabs.length;
                             }
+
+                            group.tabs.splice(index, 0, tab);
+                            group.tabs.slice(index + 1).forEach(t => t.index++);
                         }
                     } else {
                         clearTimeout(lazyAddUnsyncTabTimer);
@@ -334,9 +334,7 @@
                             winGroupId = cache.getWindowGroup(tab.windowId);
 
                         if (changeInfo.pinned || changeInfo.hidden) {
-                            if (tabGroupId) {
-                                removeTab(tab.id);
-                            }
+                            removeTab(tab.id);
                         } else {
 
                             if (false === changeInfo.hidden) {
