@@ -199,6 +199,20 @@
             }
         }
     },
+    "groupTabsCountActive": {
+        "message": "$active$/$count$ 个标签活动",
+        "description": "Group tabs count active",
+        "placeholders": {
+            "active": {
+                "content": "$1",
+                "example": "2"
+            },
+            "count": {
+                "content": "$2",
+                "example": "4"
+            }
+        }
+    },
     "deleteTab": {
         "message": "删除标签页",
         "description": "Delete tab"
@@ -291,6 +305,22 @@
         "message": "加载上一群组",
         "description": "Load previous group"
     },
+    "hotkeyActionTitleLoadNextUnloadedGroup": {
+        "message": "加载下一个未加载群组",
+        "description": "Load next unloaded group"
+    },
+    "hotkeyActionTitleLoadPrevUnloadedGroup": {
+        "message": "加载上一个未加载群组",
+        "description": "Load previous unloaded group"
+    },
+    "hotkeyActionTitleLoadHistoryNextGroup": {
+        "message": "加载下一个未加载群组",
+        "description": "Load next group from history"
+    },
+    "hotkeyActionTitleLoadHistoryPrevGroup": {
+        "message": "从历史中加载先前的群组",
+        "description": "Load previous group from history"
+    },
     "hotkeyActionTitleLoadFirstGroup": {
         "message": "加载第一个群组",
         "description": "Load first group"
@@ -322,6 +352,14 @@
     "hotkeyActionTitleDiscardGroup": {
         "message": "丢弃（休眠）群组",
         "description": "Hotkey action Discard group"
+    },
+    "hotkeyActionTitleDiscardOtherGroups": {
+        "message": "丢弃（休眠）其它群组",
+        "description": "Hotkey action Discard other groups"
+    },
+    "hotkeyActionTitleReloadAllTabsInCurrentGroup": {
+        "message": "在当前群组重新加载所有有标签页",
+        "description": "Reload all tabs in current group"
     },
     "whatsWrongMessage": {
         "message": "出什么错了……\n请联系开发者，发送电子邮件，附上最新错误日志的JSON文件（在选项的底部有个保存日志的按钮）",
@@ -646,5 +684,423 @@
     "folderNameTitle": {
         "message": "文件夹名称",
         "description": "Folder name title"
+    },
+    "backupSuccessfullyRestored": {
+        "message": "成功恢复备份！",
+        "description": "Backup successfully restored"
+    },
+    "loading": {
+        "message": "正在加载，请稍等……",
+        "description": "Loading, please wait..."
+    },
+    "showOtherTabs": {
+        "message": "显示其它标签页",
+        "description": "Show other tabs"
+    },
+    "dontDiscardTabsAfterHideThisGroup": {
+        "message": "隐藏标签页后不要丢弃它到这个群组",
+        "description": "Don't discard tabs into this group after hide"
+    },
+    "showNotificationAfterGroupDelete": {
+        "message": "删除群组后显示通知",
+        "description": "Show notification after group delete"
+    },
+    "reloadTab": {
+        "message": "重新加载标签页",
+        "description": "Reload tab"
+    },
+    "thisTabIsNotSupported": {
+        "message": "该标签页不支持",
+        "description": "This tab is not supported"
+    },
+    "showExtendGroupsPopupWithActiveTabs": {
+        "message": "在群组弹出框中显示活动标签页",
+        "description": "Show active tabs in groups popup"
+    },
+    "reloadAllTabsInGroup": {
+        "message": "在群组中重新加载所有标签页",
+        "description": "Reload all tabs in group"
+    },
+    "tabsCreatedCount": {
+        "message": "$tabscount$ 个标签页已创建",
+        "description": "Tabs created count",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "tabsNotCreated": {
+        "message": "未创建标签页",
+        "description": "Tabs not created"
+    },
+    "showTabsWithThumbnailsInManageGroups": {
+        "message": "在“管理群组”页面中以缩略图显示标签页",
+        "description": "Show tabs with thumbnails in \"Manage groups\" page"
+    },
+    "alwaysOpenTabsInContainer": {
+        "message": "总是在身份标签页容器中打开标签页",
+        "description": "Always open tabs in container"
+    },
+    "temporaryContainerTitle": {
+        "message": "⌚临时身份标签页容器",
+        "description": "⌚Temporary Container"
+    },
+    "thisContainerIsNotTemporary": {
+        "message": "容器“$containerName$”不再是临时",
+        "description": "This container '$containerName$' is no longer temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "my container"
+            }
+        }
+    },
+    "thisContainerNowIsTemporary": {
+        "message": "容器“$containerName$”变为临时",
+        "description": "This container '$containerName$' has now become temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "⌚Temporary Container 5"
+            }
+        }
+    },
+    "importAddonSettings": {
+        "message": "导入扩展设置",
+        "description": "Import addon settings"
+    },
+    "importGroups": {
+        "message": "导入群组",
+        "description": "Import groups"
+    },
+    "pinnedTabs": {
+        "message": "固定标签页",
+        "description": "Pinned tabs"
+    },
+    "eraseAddonSettingsWarningTitle": {
+        "message": "该操作将<b>完全清除</b>所有已有的设置和群组!<br>标签页不受影响。",
+        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+    },
+    "clear": {
+        "message": "清除",
+        "description": "Clear"
+    },
+    "deleteAllAddonDataAndSettings": {
+        "message": "删除所有扩展数据和设置",
+        "description": "Delete all addon data and settings"
+    },
+    "warningAllDataWillRemove": {
+        "message": "警告！清除所有扩展数据！您确定？",
+        "description": "Warning! Removing ALL addon data! Are you really sure?"
+    },
+    "ifDifferentContainerReOpen": {
+        "message": "如果身份标签页容器与选择的不同—改变容器",
+        "description": "If the container is different from the selected one - change the container"
+    },
+    "deleteAllAddonDataAndSettingsBeforeRestoringBackup": {
+        "message": "在恢复份前删除所有数据和设置",
+        "description": "Delete all addon data and settings before restoring backup"
+    },
+    "helpPageWelcomeV4Title": {
+        "message": "欢迎使用 Simple Tab Groups v4",
+        "description": "Welcome to Simple Tab Groups v4"
+    },
+    "helpPageWelcomeV4Description": {
+        "message": "请在浏览器选项中启用“恢复先前的浏览状态”。<br>这是在群组和标签之间通信所必需的，<br>否则浏览器启动时标签页不会打开，扩展也会丢失它们 -<br>扩展无法工作。",
+        "description": "Please enable \"Restore previous session\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
+    },
+    "helpPageDisableIncognitoTitle": {
+        "message": "欢迎使用 Simple Tab Groups v4",
+        "description": "Welcome to Simple Tab Groups v4"
+    },
+    "helpPageDisableIncognitoDescription": {
+        "message": "请在窗口中禁用",
+        "description": "Please disable add-on access to private mode in windows:"
+    },
+    "leaveBookmarksOfClosedTabs": {
+        "message": "关闭标签页留下书签（书签将分隔开分隔符）",
+        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+    },
+    "enableDebugTitle": {
+        "message": "启用调试",
+        "description": "Enable DEBUG"
+    },
+    "loggingIsEnabledTitle": {
+        "message": "启用日志记录",
+        "description": "logging is enabled"
+    },
+    "loggingIsAutoEnabledTitle": {
+        "message": "扩展发生错误时将自动启用日志",
+        "description": "logging was auto-enabled due to an error in addon"
+    },
+    "loggingDescription": {
+        "message": "请仅在您需要记录问题并发送日志给我时才启用该选项。启用该选项将明显让扩展变展，因为所有的扩展动作将被记录。当您重现该错误后，关闭该选项，扩展会提示保存日志文件。该选项将在错误发生后自动启用。您要禁用 调试 选择框并保存日志文件。<br> 请使用邮件将该文件发送至： <a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com</a><br> <span class=\"has-text-danger\">注意！日志文件中不包含任何个人文件，密码，书签等！</span><br> 这是重现问题并尝试修复它的必要过程。<br> 十分感谢",
+        "description": "logging description"
+    },
+    "archiveGroup": {
+        "message": "归档",
+        "description": "Archive"
+    },
+    "unArchiveGroup": {
+        "message": "解除归档",
+        "description": "Unarchive"
+    },
+    "groupIsArchived": {
+        "message": "无法完成该操作，群组“$grouptitle$”被归档",
+        "description": "Unable to complete the action, the group is in the archive",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "updateAddonToLatestVersion": {
+        "message": "请更新扩展到最新版",
+        "description": "Please, update addon to latest version"
+    },
+    "hotkeyActionTitleRenameGroup": {
+        "message": "重命名群组",
+        "description": "Rename group"
+    },
+    "noGroupsAvailable": {
+        "message": "您没有群组",
+        "description": "You have no groups"
+    },
+    "alwaysAskNewGroupName": {
+        "message": "总是询问新群组名",
+        "description": "Always ask for a new group name"
+    },
+    "impossibleToAskUserAboutAction": {
+        "message": "一页“$page$”无法进行“$action$”\n\n点击这里取得更多信息",
+        "description": "On page \"$page$\" it is impossible to ask about \"$action$\"",
+        "placeholders": {
+            "page": {
+                "content": "$1",
+                "example": "Add-ons for Firefox"
+            },
+            "action": {
+                "content": "$2",
+                "example": "some action"
+            }
+        }
+    },
+    "openPopupTitle": {
+        "message": "打开弹出窗口",
+        "description": "Open popup"
+    },
+    "openSidebarTitle": {
+        "message": "打开侧边栏",
+        "description": "Open sidebar"
+    },
+    "helpPageOpenInContainerTitle": {
+        "message": "无法在身份标签页容器中打开链接",
+        "description": "Can't open URL in container"
+    },
+    "helpPageOpenInContainerMainTitle": {
+        "message": "无法在在身份标签页容器<container-name>$containerName$</container-name>中打开链接",
+        "description": "Can't open the URL into Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerSubTitle": {
+        "message": "扩展无法打开链接：",
+        "description": "addon can't open URL:"
+    },
+    "helpPageOpenInContainerDesc1": {
+        "message": "群组<strong>$groupTitle$</strong>已分配打开的标签在<container-name>$containerName$</container-name>身份标签页容器中。",
+        "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
+        "placeholders": {
+            "groupTitle": {
+                "content": "$1",
+                "example": "Group 1"
+            },
+            "containerName": {
+                "content": "$2",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerDesc2": {
+        "message": "另一个扩展，UUID：",
+        "description": "Another addon, which has UUID:"
+    },
+    "helpPageOpenInContainerDesc3": {
+        "message": "尝试在<container-name>$containerName$</container-name>身份标签页容器中打开链接。移动标签页到其它分组或禁止扩展<strong>$uuid$</strong>执行该操作。",
+        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon '757eaba7-0b3d-478b-ace2-cbe0a16eed47' to perform this action.",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Business"
+            },
+            "uuid": {
+                "content": "$2",
+                "example": "757eaba7-0b3d-478b-ace2-cbe0a16eed47"
+            }
+        }
+    },
+    "helpPageOpenInContainerDesc4": {
+        "message": "您可以使用UUID在这个页面找到该扩展：",
+        "description": "You can find out the addon by UUID on the page:"
+    },
+    "helpPageOpenInContainerOpenInContainer": {
+        "message": "在<container-name>$containerName$</container-name>身份标签页容器中打开",
+        "description": "Open in Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
+    },
+    "reverseTabsOnCreate": {
+        "message": "如果你设置<code>browser.tabs.insertAfterCurrent</code>为<code>true</code>则在相反位置创建标签页",
+        "description": "Reverse tabs on create, if you have the browser.tabs.insertAfterCurrent preference is true"
+    },
+    "groupNotLoaded": {
+        "message": "未加载群组",
+        "description": "Group not loaded"
+    },
+    "groupNotFound": {
+        "message": "未找到群组",
+        "description": "Group not found"
+    },
+    "unloadGroup": {
+        "message": "不加载该群组",
+        "description": "Unload the group"
+    },
+    "tabsInThisWindowWereHidden": {
+        "message": "该窗口中的标签页被隐藏。您可在扩展的弹出窗口底部找到它们。",
+        "description": "Tabs in this window were hidden. You can find them at the bottom of the popup window of the addon."
+    },
+    "searchOrGoToActive": {
+        "message": "搜索或右箭以聚焦于归档的标签页/群组",
+        "description": "Search or right arrow to focus on active tab/group"
+    },
+    "thisGroupIsMain": {
+        "message": "该群组已设置为主要",
+        "description": "This group is marked as main"
+    },
+    "setGroupAsMain": {
+        "message": "设置该群组为主要",
+        "description": "Set this group as main"
+    },
+    "thisGroupWasMain": {
+        "message": "注意\n该群组已设置为主要",
+        "description": "Notice\nThis group was marked as the main"
+    },
+    "moveToMainIfNotInCatchTabRules": {
+        "message": "如果没有正则表达式匹配则移动标签页至群组“$grouptitle$”",
+        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "My main group"
+            }
+        }
+    },
+    "noContainerTitle": {
+        "message": "无身份",
+        "description": "No container"
+    },
+    "reopenTabsWithTemporaryContainersInNew": {
+        "message": "在新的临时身份标签容器中重新打开标签",
+        "description": "Reopen tabs with temporary containers in new"
+    },
+    "temporaryContainerTitleDescription": {
+        "message": "临时身份标签容器标签前辍",
+        "description": "Prefix of the temporary container title"
+    },
+    "excludeContainersForReOpen": {
+        "message": "排除这些身份标签容器",
+        "description": "excluding these containers"
+    },
+    "helpPageOpenInContainerExcludeContainerToGroup": {
+        "message": "为群组<strong>$groupTitle$</strong>排除身份标签容器<container-name>$containerName$</container-name>",
+        "description": "Exclude Personal container for group Group 1",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            },
+            "groupTitle": {
+                "content": "$2",
+                "example": "Group 1"
+            }
+        }
+    },
+    "hotkeysDescription2": {
+        "message": "您也可以在<a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">页面配置快捷键。它们可以在所有窗口和浏览器页面工作。",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
+    },
+    "muteTab": {
+        "message": "静音标签页",
+        "description": "Mute tab"
+    },
+    "unMuteTab": {
+        "message": "取消静音标签页",
+        "description": "Unmute tab"
+    },
+    "muteGroup": {
+        "message": "静音群组",
+        "description": "Mute group"
+    },
+    "unMuteGroup": {
+        "message": "取消静音群组",
+        "description": "Unmute group"
+    },
+    "fullPopupWidth": {
+        "message": "使用完全的弹出宽度",
+        "description": "Use full popup width"
+    },
+    "showArchivedGroupsInManageGroups": {
+        "message": "显示归档的群组",
+        "description": "Show archived groups"
+    },
+    "helpPageDbErrorReinstallTitle": {
+        "message": "Simple Tab Groups 内部数据库错误",
+        "description": "Database error in Simple Tab Groups"
+    },
+    "helpPageDbErrorReinstallDescription": {
+        "message": "很不幸，从Firefox数据库中读取STG数据时出现错误。此时，扩展无法工作。为恢复扩展，以做以下操作：",
+        "description": "Unfortunately, an error occurred while reading data from the STG addon from the Firefox database. At the moment, the addon is stopped. To resume the add-on, do the following:"
+    },
+    "helpPageDbErrorReinstallDescription2": {
+        "message": "重启 Firefox 浏览器（Linux 和 Mac OS 要结束进程）",
+        "description": "Restart Firefox Browser (for Linux and Mac OS with process termination)"
+    },
+    "helpPageDbErrorReinstallDescription3": {
+        "message": "如果您又看到该窗口，试着重新安装扩展：",
+        "description": "If you see this window again, try reinstalling the addon:"
+    },
+    "helpPageDbErrorReinstallDescription4": {
+        "message": "移除 STG 扩展",
+        "description": "Remove STG Addon"
+    },
+    "helpPageDbErrorReinstallDescription5": {
+        "message": "重新 Firefox 浏览器",
+        "description": "Restart Firefox Browser"
+    },
+    "helpPageDbErrorReinstallDescription6": {
+        "message": "安装 STG 扩展",
+        "description": "Install STG Addon"
+    },
+    "helpPageDbErrorReinstallDescription7": {
+        "message": "从 Firefox 的下载目录的“STG-backups”目录中恢复扩展数据<br>您可以在扩展设置中恢复设置",
+        "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".<br>You can restore backup in addon settings"
+    },
+    "helpPageDbErrorReinstallOpenFFDownloadsFolder": {
+        "message": "打开 Firefox 下载目录",
+        "description": "Open Firefox downloads folder"
+    },
+    "groupWithSameNameExists": {
+        "message": "相同名字的群组已存在！",
+        "description": "A group with the same name already exists!"
     }
 }
