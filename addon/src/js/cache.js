@@ -25,7 +25,7 @@
             tabs[id] = {};
         }
 
-        if (url === 'about:blank' && tabs[id].url && tabs[id].url !== 'about:blank' && status === browser.tabs.TabStatus.LOADING) {
+        if (utils.isUrlEmpty(url) && tabs[id].url && !utils.isUrlEmpty(tabs[id].url) && status === browser.tabs.TabStatus.LOADING) {
             return;
         }
 
