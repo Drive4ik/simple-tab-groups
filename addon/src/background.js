@@ -2541,12 +2541,12 @@ async function runMigrateForData(data) {
     let currentVersion = manifest.version;
 
     if (data.version === currentVersion) {
-        return data;
+        return false;
     }
 
     if (data.version === DEFAULT_OPTIONS.version) {
         data.version = currentVersion;
-        return data;
+        return true;
     }
 
     let migrations = [
@@ -2887,7 +2887,7 @@ async function runMigrateForData(data) {
     }
     // end migration
 
-    return data;
+    return true;
 }
 
 async function syncTabs(groups, windows, hideAllTabs = false) {
@@ -3008,7 +3008,7 @@ async function tryRestoreMissedTabs() {
 
 function normalizeContainersInGroups(groups) {
     let allContainers = containers.getAll(true),
-        needSaveGroups = false;
+        hasChanges = false;
 
     groups.forEach(function(group) {
         let oldNewTabContainer = group.newTabContainer,
@@ -3024,7 +3024,7 @@ function normalizeContainersInGroups(groups) {
             oldCatchTabContainersLength !== group.catchTabContainers.length ||
             oldExcludeContainersForReOpenLength !== group.excludeContainersForReOpen.length
         ) {
-            needSaveGroups = true;
+            hasChanges = true;
 
             sendMessage({
                 action: 'group-updated',
@@ -3038,7 +3038,7 @@ function normalizeContainersInGroups(groups) {
         }
     });
 
-    return needSaveGroups;
+    return hasChanges;
 }
 
 async function restoreOldExtensionUrls() {
@@ -3200,18 +3200,21 @@ async function init() {
             throw '';
         }
 
-        let data = await storage.get(null);
+        let data = await storage.get(null),
+            dataChanged = [];
 
         if (!Array.isArray(data.groups)) {
             utils.notify(browser.i18n.getMessage('ffFailedAndLostDataMessage'));
 
             data.groups = [];
+            dataChanged.push(true);
         }
 
         await containers.init(data.temporaryContainerTitle);
 
         try {
-            data = await runMigrateForData(data); // run migration for data
+            let change = await runMigrateForData(data);
+            dataChanged.push(change); // run migration for data
         } catch (e) {
             utils.notify(String(e));
             throw '';
@@ -3219,9 +3222,11 @@ async function init() {
 
         utils.assignKeys(options, data, ALL_OPTIONS_KEYS);
 
-        normalizeContainersInGroups(data.groups);
+        dataChanged.push(normalizeContainersInGroups(data.groups));
 
-        await storage.set(data);
+        if (dataChanged.some(change => change)) {
+            await storage.set(data);
+        }
 
         let windows = await Windows.load(true);
 
