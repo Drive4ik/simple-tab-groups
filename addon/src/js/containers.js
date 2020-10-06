@@ -39,7 +39,7 @@
 
         browser.contextualIdentities.onCreated.addListener(onCreated);
         browser.contextualIdentities.onUpdated.addListener(onUpdated);
-        browser.contextualIdentities.onRemoved.addListener(utils.catchAsyncFunc(onRemoved));
+        browser.contextualIdentities.onRemoved.addListener(utils.catchFunc(onRemoved));
     }
 
     function onCreated({contextualIdentity}) {

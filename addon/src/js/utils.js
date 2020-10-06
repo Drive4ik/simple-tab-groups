@@ -49,8 +49,14 @@
         return Object.prototype.toString.call(obj).replace(/(^\[.+\ |\]$)/g, '').toLowerCase();
     }
 
-    function catchAsyncFunc(asyncFunc) {
-        return (...args) => asyncFunc(...args)?.catch(window.errorEventHandler);
+    function catchFunc(asyncFunc) {
+        return async function(...args) {
+            try {
+                await asyncFunc(...args);
+            } catch (e) {
+                window.errorEventHandler(e);
+            }
+        };
     }
 
     function getCircularReplacer() {
@@ -690,7 +696,7 @@
 
         keyId,
         unixNow,
-        catchAsyncFunc,
+        catchFunc,
         type,
         stringify,
         clone,

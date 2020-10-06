@@ -407,7 +407,7 @@
                     }
                 };
 
-                const onMessage = async request => {
+                const onMessage = utils.catchFunc(async request => {
                     switch (request.action) {
                         case 'group-updated':
                             let group = this.groups.find(gr => gr.id === request.group.id);
@@ -455,7 +455,7 @@
                             removeEvents();
                             break;
                     }
-                };
+                });
 
                 browser.tabs.onCreated.addListener(onCreatedTab);
                 browser.tabs.onUpdated.addListener(onUpdatedTab, {

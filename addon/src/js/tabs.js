@@ -283,7 +283,7 @@
     async function move(tabIds, groupId, newTabIndex = -1, showNotificationAfterMoveTab = true, showTabAfterMoving = false) {
         tabIds = tabIds.slice();
 
-        console.info('moveTabs', {groupId, newTabIndex, showNotificationAfterMoveTab, showTabAfterMoving, tabIds});
+        console.info('moveTabs', {tabIds, groupId, newTabIndex, showNotificationAfterMoveTab, showTabAfterMoving});
 
         BG.addExcludeTabIds(tabIds);
 

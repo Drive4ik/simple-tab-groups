@@ -423,7 +423,7 @@ async function applyGroupByHistory(textPosition, groups) {
     return applyGroup(undefined, nextGroupId, undefined, true);
 }
 
-const onCreatedTab = utils.catchAsyncFunc(async function(tab) {
+const onCreatedTab = utils.catchFunc(async function(tab) {
     console.log('onCreatedTab', tab);
 
     cache.setTab(tab);
@@ -451,7 +451,7 @@ function removeExcludeTabIds(tabIds) {
     tabIds.forEach(excludeTabsIds.delete, excludeTabsIds);
 }
 
-const onUpdatedTab = utils.catchAsyncFunc(async function(tabId, changeInfo, tab) {
+const onUpdatedTab = utils.catchFunc(async function(tabId, changeInfo, tab) {
     let excludeTab = excludeTabsIds.has(tab.id);
 
     console.log('onUpdatedTab %s tabId: %s, changeInfo:', (excludeTab ? '🛑' : ''), tab.id, changeInfo);
@@ -562,7 +562,7 @@ function onAttachedTab(tabId, {newWindowId}) {
     cache.setTabGroup(tabId, groupId);
 }
 
-const onCreatedWindow = utils.catchAsyncFunc(async function(win) {
+const onCreatedWindow = utils.catchFunc(async function(win) {
     console.log('onCreatedWindow', win);
 
     if (BG.skipAddGroupToNextNewWindow) {
@@ -604,7 +604,7 @@ function onFocusChangedWindow(windowId) {
     }
 }
 
-const onRemovedWindow = utils.catchAsyncFunc(async function(windowId) {
+const onRemovedWindow = utils.catchFunc(async function(windowId) {
     console.log('onRemovedWindow windowId:', windowId);
 
     cache.removeWindow(windowId);
@@ -667,7 +667,7 @@ async function loadingBrowserAction(start = true, windowId) {
 }
 
 async function addUndoRemoveGroupItem(groupToRemove) {
-    let restoreGroup = utils.catchAsyncFunc(async function(group) {
+    let restoreGroup = utils.catchFunc(async function(group) {
         browser.menus.remove(CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id);
         browser.notifications.clear(CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id);
 
@@ -769,7 +769,7 @@ async function createMoveTabMenus() {
         },
         parentId: 'stg-move-tab-parent',
         contexts: [browser.menus.ContextType.TAB],
-        onclick: utils.catchAsyncFunc(function(info, tab) {
+        onclick: utils.catchFunc(function(info, tab) {
             if (!utils.isUrlAllowToCreate(tab.url)) {
                 utils.notify(browser.i18n.getMessage('thisUrlsAreNotSupported', tab.url), 7000, 'thisUrlsAreNotSupported');
                 return;
@@ -793,7 +793,7 @@ async function createMoveTabMenus() {
         },
         parentId: 'stg-move-tab-parent',
         contexts: [browser.menus.ContextType.TAB],
-        onclick: utils.catchAsyncFunc(function(info, tab) {
+        onclick: utils.catchFunc(function(info, tab) {
             let groupId = cache.getWindowGroup(tab.windowId);
 
             if (!groupId) {
@@ -826,7 +826,7 @@ async function createMoveTabMenus() {
         },
         parentId: 'stg-open-link-parent',
         contexts: [browser.menus.ContextType.LINK],
-        onclick: utils.catchAsyncFunc(async function(info) {
+        onclick: utils.catchFunc(async function(info) {
             if (!utils.isUrlAllowToCreate(info.linkUrl)) {
                 return;
             }
@@ -860,7 +860,7 @@ async function createMoveTabMenus() {
         },
         parentId: 'stg-open-bookmark-parent',
         contexts: [browser.menus.ContextType.BOOKMARK],
-        onclick: utils.catchAsyncFunc(async function(info) {
+        onclick: utils.catchFunc(async function(info) {
             if (!info.bookmarkId) {
                 utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7000, 'bookmarkNotAllowed');
                 return;
@@ -909,7 +909,7 @@ async function createMoveTabMenus() {
             icons: groupIcon,
             parentId: 'stg-move-tab-parent',
             contexts: [browser.menus.ContextType.TAB],
-            onclick: utils.catchAsyncFunc(async function(info, tab) {
+            onclick: utils.catchFunc(async function(info, tab) {
                 let setActive = 2 === info.button,
                     tabIds = await Tabs.getHighlightedIds(tab.windowId, tab);
 
@@ -926,7 +926,7 @@ async function createMoveTabMenus() {
             icons: groupIcon,
             parentId: 'stg-open-link-parent',
             contexts: [browser.menus.ContextType.LINK],
-            onclick: utils.catchAsyncFunc(async function(info) {
+            onclick: utils.catchFunc(async function(info) {
                 if (!utils.isUrlAllowToCreate(info.linkUrl)) {
                     utils.notify(browser.i18n.getMessage('thisUrlsAreNotSupported', info.linkUrl), 7000, 'thisUrlsAreNotSupported');
                     return;
@@ -946,7 +946,7 @@ async function createMoveTabMenus() {
             icons: groupIcon,
             parentId: 'stg-open-bookmark-parent',
             contexts: [browser.menus.ContextType.BOOKMARK],
-            onclick: utils.catchAsyncFunc(async function(info) {
+            onclick: utils.catchFunc(async function(info) {
                 if (!info.bookmarkId) {
                     utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7000, 'bookmarkNotAllowed');
                     return;
@@ -1002,7 +1002,7 @@ async function createMoveTabMenus() {
         },
         parentId: 'stg-move-tab-parent',
         contexts: [browser.menus.ContextType.TAB],
-        onclick: utils.catchAsyncFunc(async function(info, tab) {
+        onclick: utils.catchFunc(async function(info, tab) {
             let setActive = 2 === info.button,
                 tabIds = await Tabs.getHighlightedIds(tab.windowId, tab);
 
@@ -1022,7 +1022,7 @@ async function createMoveTabMenus() {
         },
         parentId: 'stg-open-link-parent',
         contexts: [browser.menus.ContextType.LINK],
-        onclick: utils.catchAsyncFunc(async function(info) {
+        onclick: utils.catchFunc(async function(info) {
             if (!utils.isUrlAllowToCreate(info.linkUrl)) {
                 utils.notify(browser.i18n.getMessage('thisUrlsAreNotSupported', info.linkUrl), 7000, 'thisUrlsAreNotSupported');
                 return;
@@ -1056,7 +1056,7 @@ async function createMoveTabMenus() {
         },
         parentId: 'stg-open-bookmark-parent',
         contexts: [browser.menus.ContextType.BOOKMARK],
-        onclick: utils.catchAsyncFunc(async function(info) {
+        onclick: utils.catchFunc(async function(info) {
             if (!info.bookmarkId) {
                 utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7000, 'bookmarkNotAllowed');
                 return;
@@ -1138,7 +1138,7 @@ async function createMoveTabMenus() {
             16: '/icons/bookmark.svg',
         },
         contexts: [browser.menus.ContextType.BROWSER_ACTION],
-        onclick: utils.catchAsyncFunc(() => exportAllGroupsToBookmarks(true)),
+        onclick: utils.catchFunc(() => exportAllGroupsToBookmarks(true)),
     }));
 
     menuIds.push(browser.menus.create({
@@ -1147,7 +1147,7 @@ async function createMoveTabMenus() {
             16: 'resource://usercontext-content/chill.svg',
         },
         contexts: [browser.menus.ContextType.BROWSER_ACTION],
-        onclick: utils.catchAsyncFunc(async function() {
+        onclick: utils.catchFunc(async function() {
             let windows = await Windows.load(true, true, true),
                 allTabs = windows.reduce((acc, win) => (acc.push(...win.tabs), acc), []),
                 // cookieStoreIdsToRemove = new Set,
@@ -1473,7 +1473,7 @@ function addTabToLazyMove(tabId, groupId, showTabAfterMovingItIntoThisGroup) {
 
     _tabsLazyMoving[groupId].tabIds.add(tabId);
 
-    _tabsLazyMovingTimer = window.setTimeout(utils.catchAsyncFunc(async function() {
+    _tabsLazyMovingTimer = window.setTimeout(utils.catchFunc(async function() {
         let groups = Object.values(_tabsLazyMoving);
 
         _tabsLazyMoving = {};
