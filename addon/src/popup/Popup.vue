@@ -815,17 +815,19 @@
                 }
             },
             async unsyncHiddenTabsMoveToCurrentGroup() {
-                let hiddenTabsIds = this.unSyncTabs.map(utils.keyId);
-
-                await BG.Tabs.moveNative(this.unSyncTabs, {
-                    windowId: this.currentWindow.id,
-                    index: -1,
-                });
-
-                await browser.tabs.show(hiddenTabsIds);
+                let tabsIds = this.unSyncTabs.map(utils.keyId);
 
                 if (this.currentGroup) {
                     this.unSyncTabs = [];
+
+                    await BG.Tabs.move(tabsIds, this.currentGroup.id, undefined, false);
+                } else {
+                    await BG.Tabs.moveNative(this.unSyncTabs, {
+                        windowId: this.currentWindow.id,
+                        index: -1,
+                    });
+
+                    await browser.tabs.show(tabsIds);
                 }
 
                 this.loadGroups();
