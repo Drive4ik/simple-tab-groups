@@ -423,7 +423,7 @@ async function applyGroupByHistory(textPosition, groups) {
     return applyGroup(undefined, nextGroupId, undefined, true);
 }
 
-async function onCreatedTab(tab) {
+const onCreatedTab = utils.catchAsyncFunc(async function(tab) {
     console.log('onCreatedTab', tab);
 
     cache.setTab(tab);
@@ -441,7 +441,7 @@ async function onCreatedTab(tab) {
     if (groupId) {
         cache.setTabGroup(tab.id, groupId);
     }
-}
+});
 
 function addExcludeTabIds(tabIds) {
     tabIds.forEach(excludeTabsIds.add, excludeTabsIds);
@@ -451,7 +451,7 @@ function removeExcludeTabIds(tabIds) {
     tabIds.forEach(excludeTabsIds.delete, excludeTabsIds);
 }
 
-async function onUpdatedTab(tabId, changeInfo, tab) {
+const onUpdatedTab = utils.catchAsyncFunc(async function(tabId, changeInfo, tab) {
     let excludeTab = excludeTabsIds.has(tab.id);
 
     console.log('onUpdatedTab %s tabId: %s, changeInfo:', (excludeTab ? '🛑' : ''), tab.id, changeInfo);
@@ -528,7 +528,7 @@ async function onUpdatedTab(tabId, changeInfo, tab) {
     if (options.showTabsWithThumbnailsInManageGroups && utils.isTabLoaded(changeInfo) && (tabGroupId || winGroupId)) {
         Tabs.updateThumbnail(tab.id);
     }
-}
+});
 
 function onRemovedTab(tabId, {isWindowClosing, windowId}) {
     console.log('onRemovedTab', {tabId, isWindowClosing, windowId});
@@ -562,7 +562,7 @@ function onAttachedTab(tabId, {newWindowId}) {
     cache.setTabGroup(tabId, groupId);
 }
 
-async function onCreatedWindow(win) {
+const onCreatedWindow = utils.catchAsyncFunc(async function(win) {
     console.log('onCreatedWindow', win);
 
     if (BG.skipAddGroupToNextNewWindow) {
@@ -592,10 +592,10 @@ async function onCreatedWindow(win) {
 
         addExcludeTabIds(winTabs.map(utils.keyId));
     }
-}
+});
 
 function onFocusChangedWindow(windowId) {
-    // console.log('onFocusChangedWindow', windowId);
+    console.log('onFocusChangedWindow', windowId);
 
     if (browser.windows.WINDOW_ID_NONE !== windowId && options.showContextMenuOnTabs) {
         browser.menus.update('set-tab-icon-as-group-icon', {
@@ -604,7 +604,7 @@ function onFocusChangedWindow(windowId) {
     }
 }
 
-async function onRemovedWindow(windowId) {
+const onRemovedWindow = utils.catchAsyncFunc(async function(windowId) {
     console.log('onRemovedWindow windowId:', windowId);
 
     cache.removeWindow(windowId);
@@ -649,7 +649,7 @@ async function onRemovedWindow(windowId) {
             }
         }
     }
-}
+});
 
 let _currentWindowForLoadingBrowserAction = null;
 async function loadingBrowserAction(start = true, windowId) {
@@ -667,7 +667,7 @@ async function loadingBrowserAction(start = true, windowId) {
 }
 
 async function addUndoRemoveGroupItem(groupToRemove) {
-    let restoreGroup = async function(group) {
+    let restoreGroup = utils.catchAsyncFunc(async function(group) {
         browser.menus.remove(CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id);
         browser.notifications.clear(CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id);
 
@@ -698,7 +698,7 @@ async function addUndoRemoveGroupItem(groupToRemove) {
             group,
         });
 
-    }.bind(null, utils.clone(groupToRemove));
+    }.bind(null, utils.clone(groupToRemove)));
 
     browser.menus.create({
         id: CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + groupToRemove.id,
@@ -769,7 +769,7 @@ async function createMoveTabMenus() {
         },
         parentId: 'stg-move-tab-parent',
         contexts: [browser.menus.ContextType.TAB],
-        onclick: function(info, tab) {
+        onclick: utils.catchAsyncFunc(function(info, tab) {
             if (!utils.isUrlAllowToCreate(tab.url)) {
                 utils.notify(browser.i18n.getMessage('thisUrlsAreNotSupported', tab.url), 7000, 'thisUrlsAreNotSupported');
                 return;
@@ -782,7 +782,7 @@ async function createMoveTabMenus() {
                 active: setActive,
                 cookieStoreId: TEMPORARY_CONTAINER,
             });
-        }
+        }),
     }));
 
     options.showContextMenuOnTabs && menuIds.push(browser.menus.create({
@@ -793,7 +793,7 @@ async function createMoveTabMenus() {
         },
         parentId: 'stg-move-tab-parent',
         contexts: [browser.menus.ContextType.TAB],
-        onclick: function(info, tab) {
+        onclick: utils.catchAsyncFunc(function(info, tab) {
             let groupId = cache.getWindowGroup(tab.windowId);
 
             if (!groupId) {
@@ -810,7 +810,7 @@ async function createMoveTabMenus() {
             Groups.update(groupId, {
                 iconUrl: tab.favIconUrl,
             });
-        }
+        }),
     }));
 
     options.showContextMenuOnTabs && groups.length && menuIds.push(browser.menus.create({
@@ -826,7 +826,7 @@ async function createMoveTabMenus() {
         },
         parentId: 'stg-open-link-parent',
         contexts: [browser.menus.ContextType.LINK],
-        onclick: async function(info) {
+        onclick: utils.catchAsyncFunc(async function(info) {
             if (!utils.isUrlAllowToCreate(info.linkUrl)) {
                 return;
             }
@@ -844,7 +844,7 @@ async function createMoveTabMenus() {
                 active: setActive,
                 cookieStoreId: TEMPORARY_CONTAINER,
             });
-        },
+        }),
     }));
 
     options.showContextMenuOnLinks && groups.length && menuIds.push(browser.menus.create({
@@ -860,7 +860,7 @@ async function createMoveTabMenus() {
         },
         parentId: 'stg-open-bookmark-parent',
         contexts: [browser.menus.ContextType.BOOKMARK],
-        onclick: async function(info) {
+        onclick: utils.catchAsyncFunc(async function(info) {
             if (!info.bookmarkId) {
                 utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7000, 'bookmarkNotAllowed');
                 return;
@@ -887,7 +887,7 @@ async function createMoveTabMenus() {
                 cookieStoreId: TEMPORARY_CONTAINER,
             });
 
-        },
+        }),
     }));
 
     hasBookmarksPermission && groups.length && menuIds.push(browser.menus.create({
@@ -909,7 +909,7 @@ async function createMoveTabMenus() {
             icons: groupIcon,
             parentId: 'stg-move-tab-parent',
             contexts: [browser.menus.ContextType.TAB],
-            onclick: async function(info, tab) {
+            onclick: utils.catchAsyncFunc(async function(info, tab) {
                 let setActive = 2 === info.button,
                     tabIds = await Tabs.getHighlightedIds(tab.windowId, tab);
 
@@ -918,7 +918,7 @@ async function createMoveTabMenus() {
                 if (!setActive && info.modifiers.includes('Ctrl')) {
                     Tabs.discard(tabIds);
                 }
-            },
+            }),
         }));
 
         options.showContextMenuOnLinks && menuIds.push(browser.menus.create({
@@ -926,7 +926,7 @@ async function createMoveTabMenus() {
             icons: groupIcon,
             parentId: 'stg-open-link-parent',
             contexts: [browser.menus.ContextType.LINK],
-            onclick: async function(info) {
+            onclick: utils.catchAsyncFunc(async function(info) {
                 if (!utils.isUrlAllowToCreate(info.linkUrl)) {
                     utils.notify(browser.i18n.getMessage('thisUrlsAreNotSupported', info.linkUrl), 7000, 'thisUrlsAreNotSupported');
                     return;
@@ -938,7 +938,7 @@ async function createMoveTabMenus() {
                 if (setActive) {
                     applyGroup(newTab.windowId, group.id, newTab.id);
                 }
-            },
+            }),
         }));
 
         hasBookmarksPermission && menuIds.push(browser.menus.create({
@@ -946,7 +946,7 @@ async function createMoveTabMenus() {
             icons: groupIcon,
             parentId: 'stg-open-bookmark-parent',
             contexts: [browser.menus.ContextType.BOOKMARK],
-            onclick: async function(info) {
+            onclick: utils.catchAsyncFunc(async function(info) {
                 if (!info.bookmarkId) {
                     utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7000, 'bookmarkNotAllowed');
                     return;
@@ -991,7 +991,7 @@ async function createMoveTabMenus() {
                     loadingBrowserAction(false);
                     utils.notify(browser.i18n.getMessage('tabsNotCreated'), 7000);
                 }
-            },
+            }),
         }));
     });
 
@@ -1002,7 +1002,7 @@ async function createMoveTabMenus() {
         },
         parentId: 'stg-move-tab-parent',
         contexts: [browser.menus.ContextType.TAB],
-        onclick: async function(info, tab) {
+        onclick: utils.catchAsyncFunc(async function(info, tab) {
             let setActive = 2 === info.button,
                 tabIds = await Tabs.getHighlightedIds(tab.windowId, tab);
 
@@ -1012,7 +1012,7 @@ async function createMoveTabMenus() {
                 tabIds: tabIds,
                 showTabsAfterMoving: setActive,
             });
-        },
+        }),
     }));
 
     options.showContextMenuOnLinks && menuIds.push(browser.menus.create({
@@ -1022,7 +1022,7 @@ async function createMoveTabMenus() {
         },
         parentId: 'stg-open-link-parent',
         contexts: [browser.menus.ContextType.LINK],
-        onclick: async function(info) {
+        onclick: utils.catchAsyncFunc(async function(info) {
             if (!utils.isUrlAllowToCreate(info.linkUrl)) {
                 utils.notify(browser.i18n.getMessage('thisUrlsAreNotSupported', info.linkUrl), 7000, 'thisUrlsAreNotSupported');
                 return;
@@ -1046,7 +1046,7 @@ async function createMoveTabMenus() {
                     applyGroup(undefined, group.id, newTab.id);
                 }
             }
-        },
+        }),
     }));
 
     hasBookmarksPermission && menuIds.push(browser.menus.create({
@@ -1056,7 +1056,7 @@ async function createMoveTabMenus() {
         },
         parentId: 'stg-open-bookmark-parent',
         contexts: [browser.menus.ContextType.BOOKMARK],
-        onclick: async function(info) {
+        onclick: utils.catchAsyncFunc(async function(info) {
             if (!info.bookmarkId) {
                 utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7000, 'bookmarkNotAllowed');
                 return;
@@ -1129,7 +1129,7 @@ async function createMoveTabMenus() {
             } else {
                 utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7000, 'bookmarkNotAllowed');
             }
-        },
+        }),
     }));
 
     hasBookmarksPermission && menuIds.push(browser.menus.create({
@@ -1138,7 +1138,7 @@ async function createMoveTabMenus() {
             16: '/icons/bookmark.svg',
         },
         contexts: [browser.menus.ContextType.BROWSER_ACTION],
-        onclick: () => exportAllGroupsToBookmarks(true),
+        onclick: utils.catchAsyncFunc(() => exportAllGroupsToBookmarks(true)),
     }));
 
     menuIds.push(browser.menus.create({
@@ -1147,7 +1147,7 @@ async function createMoveTabMenus() {
             16: 'resource://usercontext-content/chill.svg',
         },
         contexts: [browser.menus.ContextType.BROWSER_ACTION],
-        onclick: async function() {
+        onclick: utils.catchAsyncFunc(async function() {
             let windows = await Windows.load(true, true, true),
                 allTabs = windows.reduce((acc, win) => (acc.push(...win.tabs), acc), []),
                 // cookieStoreIdsToRemove = new Set,
@@ -1196,7 +1196,7 @@ async function createMoveTabMenus() {
 
                 loadingBrowserAction(false);
             }
-        },
+        }),
     }));
 }
 
@@ -1473,7 +1473,7 @@ function addTabToLazyMove(tabId, groupId, showTabAfterMovingItIntoThisGroup) {
 
     _tabsLazyMoving[groupId].tabIds.add(tabId);
 
-    _tabsLazyMovingTimer = window.setTimeout(async function() {
+    _tabsLazyMovingTimer = window.setTimeout(utils.catchAsyncFunc(async function() {
         let groups = Object.values(_tabsLazyMoving);
 
         _tabsLazyMoving = {};
@@ -1481,7 +1481,7 @@ function addTabToLazyMove(tabId, groupId, showTabAfterMovingItIntoThisGroup) {
         for (let group of groups) {
             await Tabs.move(Array.from(group.tabIds), group.id, undefined, undefined, group.showTabAfterMovingItIntoThisGroup);
         }
-    }, 100);
+    }), 100);
 }
 
 let canceledRequests = new Set;
@@ -1606,8 +1606,6 @@ browser.runtime.onUpdateAvailable.addListener(function() {
 
 function addListenerOnBeforeRequest() {
     if (!browser.webRequest.onBeforeRequest.hasListener(onBeforeTabRequest)) {
-        console.debug('run addListenerOnBeforeRequest');
-
         browser.webRequest.onBeforeRequest.addListener(onBeforeTabRequest,
             {
                 urls: ['<all_urls>'],
@@ -1620,8 +1618,6 @@ function addListenerOnBeforeRequest() {
 
 function removeListenerOnBeforeRequest() {
     if (browser.webRequest.onBeforeRequest.hasListener(onBeforeTabRequest)) {
-        console.debug('run removeListenerOnBeforeRequest');
-
         browser.webRequest.onBeforeRequest.removeListener(onBeforeTabRequest);
     }
 }
@@ -2136,7 +2132,7 @@ async function saveOptions(_options) {
 
     _options = utils.clone(_options);
 
-    console.debug('save options', _options);
+    console.info('save options', _options);
 
     let optionsKeys = Object.keys(_options);
 

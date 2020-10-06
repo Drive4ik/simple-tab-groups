@@ -49,6 +49,10 @@
         return Object.prototype.toString.call(obj).replace(/(^\[.+\ |\]$)/g, '').toLowerCase();
     }
 
+    function catchAsyncFunc(asyncFunc) {
+        return (...args) => asyncFunc(...args)?.catch(window.errorEventHandler);
+    }
+
     function getCircularReplacer() {
         const seen = new WeakSet();
 
@@ -686,6 +690,7 @@
 
         keyId,
         unixNow,
+        catchAsyncFunc,
         type,
         stringify,
         clone,

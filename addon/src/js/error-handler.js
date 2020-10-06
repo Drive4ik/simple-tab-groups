@@ -37,9 +37,7 @@
 
         let errorData = {
             time: (new Date).toISOString(),
-            message: data.message,
-            data: data.data,
-            lineNumber: nativeError.lineNumber,
+            ...JSON.parse(JSON.stringify(data, Object.getOwnPropertyNames(data))),
             stack: console.getErrorStack(nativeError),
         };
 
@@ -50,12 +48,12 @@
             });
         }
 
-        if (/^(invalid (tab|window))/i.test(errorData.message) && !window.localStorage.lastReloadFromError) {
-            window.localStorage.lastReloadFromError = 1;
-            console.addErrorLog(errorData);
-            browser.runtime.reload();
-            return;
-        }
+        // if (/^(invalid (tab|window))/i.test(errorData.message) && !window.localStorage.lastReloadFromError) {
+        //     window.localStorage.lastReloadFromError = 1;
+        //     console.addErrorLog(errorData);
+        //     browser.runtime.reload();
+        //     return;
+        // }
 
         console.logError(errorData);
 

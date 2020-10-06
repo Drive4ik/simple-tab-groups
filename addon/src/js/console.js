@@ -61,16 +61,21 @@
 
         args = clone(args);
 
+        if (!window.localStorage.enableDebug) {
+            logs = logs.slice(-50);
+        }
+
         logs.push({
-            key,
+            [key]: args,
             time: (new Date).toISOString(),
             stack: Array.isArray(this) ? clone(this) : getErrorStack(new Error()),
-            args,
         });
 
-        let keyFunc = key.startsWith('console') && key.split('.')[1];
+        if (window.localStorage.enableDebug) {
+            let funcName = key.startsWith('console') && key.split('.')[1];
 
-        (keyFunc && _console[keyFunc]) ? _console[keyFunc](...args) : _console.debug(`[${key}]:`, ...args);
+            (funcName && _console[funcName]) ? _console[funcName](...args) : _console.debug(`[${key}]:`, ...args);
+        }
     }
 
     let autoLogsTimer = null;
@@ -103,7 +108,7 @@
     }
 
     console.restart = function() {
-        keys.forEach(key => console[key] = window.localStorage.enableDebug ? log.bind(null, `console.${key}`) : (window.IS_TEMPORARY ? _console[key] : checkTime));
+        keys.forEach(key => console[key] = window.IS_TEMPORARY ? _console[key] : log.bind(null, `console.${key}`));
 
         bindBrowser(browser);
     };
@@ -133,7 +138,7 @@
 
                 if (window.localStorage.enableDebug) {
                     obj[k] = async function(key, ...args) {
-                        log('[before] ' + key, ...args);
+                        log.call([], 'before ' + key, ...args);
 
                         let stack = getErrorStack(new Error()),
                             now = Date.now(),
