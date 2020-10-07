@@ -46,13 +46,13 @@ function getContainer(cookieStoreId) {
 
 async function init() {
     const url = urlParams.get('url'),
-        currentCookieStoreId = urlParams.get('currentCookieStoreId'),
         anotherCookieStoreId = urlParams.get('anotherCookieStoreId'),
         uuid = urlParams.get('uuid'),
         groupId = Number(urlParams.get('groupId')),
+        currentTab = await browser.tabs.getCurrent(),
         [{groups}, currentContainer, anotherContainer] = await Promise.all([
             browser.storage.local.get('groups'),
-            getContainer(currentCookieStoreId),
+            getContainer(currentTab.cookieStoreId),
             getContainer(anotherCookieStoreId),
         ]),
         group = groups.find(group => group.id === groupId);
@@ -74,13 +74,12 @@ async function init() {
 
     if (!isValidGroup) {
         return;
-    } else if (anotherContainer.notFound && currentContainer.notFound) {
-        openTab(url);
-        return;
     } else if (anotherContainer.notFound) {
-        $('#deny').disabled = true;
-    } else if (currentContainer.notFound) {
-        $('#confirm').disabled = true;
+        openTab(url, currentTab.cookieStoreId);
+        return;
+    } else if (group.ifDifferentContainerReOpen && group.excludeContainersForReOpen.includes(anotherCookieStoreId)) {
+        openTab(url, anotherCookieStoreId);
+        return;
     }
 
     window.onfocus = checkTabGroup;
@@ -99,7 +98,7 @@ async function init() {
     addFavicon(url);
 
     $('#deny').addEventListener('click', () => openTab(url, anotherCookieStoreId, 'deny', groupId));
-    $('#confirm').addEventListener('click', () => openTab(url, currentCookieStoreId, 'confirm'));
+    $('#confirm').addEventListener('click', () => openTab(url, currentTab.cookieStoreId, 'confirm'));
     $('#exclude-container').addEventListener('change', e => $('#confirm').disabled = e.target.checked);
 }
 

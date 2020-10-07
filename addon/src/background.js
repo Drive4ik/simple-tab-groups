@@ -1485,7 +1485,7 @@ function addTabToLazyMove(tabId, groupId, showTabAfterMovingItIntoThisGroup) {
 }
 
 let canceledRequests = new Set;
-async function onBeforeTabRequest({tabId, url, originUrl, requestId, frameId}) {
+const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, originUrl, requestId, frameId}) {
     if (frameId !== 0 || tabId === -1) {
         return {};
     }
@@ -1552,6 +1552,14 @@ async function onBeforeTabRequest({tabId, url, originUrl, requestId, frameId}) {
         return {};
     }
 
+    // try fix bug #572
+    try {
+        await utils.wait(100);
+        await browser.tabs.get(tabId);
+    } catch (e) {
+        return {};
+    }
+
     let newTabParams = {
         ...tab,
         cookieStoreId: newTabContainer,
@@ -1564,7 +1572,6 @@ async function onBeforeTabRequest({tabId, url, originUrl, requestId, frameId}) {
         } else {
             newTabParams.url = utils.setUrlSearchParams(browser.extension.getURL('/help/open-in-container.html'), {
                 url: tab.url,
-                currentCookieStoreId: tabGroup.newTabContainer,
                 anotherCookieStoreId: tab.cookieStoreId,
                 uuid: utils.getUUIDFromUrl(originUrl),
                 groupId: tabGroup.id,
@@ -1592,7 +1599,7 @@ async function onBeforeTabRequest({tabId, url, originUrl, requestId, frameId}) {
     return {
         cancel: true,
     };
-}
+});
 
 // wait for reload addon if found update
 browser.runtime.onUpdateAvailable.addListener(function() {
