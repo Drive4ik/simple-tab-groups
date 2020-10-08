@@ -88,8 +88,8 @@
 
 <style lang="scss" scoped>
     .v-context-menu {
-        --top-bottom-indent-blocks: 6px;
-        --left-right-indent-blocks: 10px;
+        --main-inden: 6px;
+        --scroll-indent: 20px;
 
         background: #f2f2f2;
         border: 1px solid #bdbdbd;
@@ -102,20 +102,22 @@
         max-width: calc(100vw - 30px);
         max-height: calc(100vh - 30px);
         overflow-y: auto;
+        overflow-x: hidden;
         z-index: 99999;
+        scrollbar-width: thin;
 
         ul {
             list-style: none;
-            padding: var(--top-bottom-indent-blocks) 0;
-            margin: 0;
+            padding: var(--main-inden) 0;
             font-size: 12px;
             font-weight: normal;
+            width: max-content;
 
             li {
                 display: flex;
                 align-items: center;
                 margin: 0;
-                padding: 0 var(--left-right-indent-blocks) 0 var(--top-bottom-indent-blocks);
+                padding: 0 var(--scroll-indent) 0 var(--main-inden);
                 cursor: pointer;
                 height: 25px;
 
@@ -126,7 +128,7 @@
 
                 > img,
                 > figure.image {
-                    margin-right: var(--left-right-indent-blocks);
+                    margin-right: var(--main-inden);
                 }
 
                 > span {
@@ -150,7 +152,7 @@
             }
 
             hr {
-                margin: var(--top-bottom-indent-blocks) 0 var(--top-bottom-indent-blocks) calc(var(--left-right-indent-blocks) + 16px + var(--top-bottom-indent-blocks));
+                margin: var(--main-inden) 0 var(--main-inden) calc(16px + var(--main-inden) * 2);
             }
         }
     }
