@@ -40,7 +40,7 @@
 </script>
 
 <template>
-    <div class="modal popup is-active" @keydown.esc.stop="$emit('close-popup')">
+    <div class="modal popup is-active" @keydown.stop @keydown.esc="$emit('close-popup')">
         <div class="modal-background" @click="$emit('close-popup')" @keydown.enter="$emit('close-popup')" tabindex="0"></div>
         <div class="modal-card">
             <header class="modal-card-head">

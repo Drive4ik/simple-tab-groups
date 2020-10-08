@@ -231,7 +231,7 @@
 </script>
 
 <template>
-    <div v-if="group" @keydown.enter.stop="saveGroup" @keydown.f2.stop @keydown.f3.stop tabindex="-1" class="no-outline edit-group">
+    <div v-if="group" @keydown.stop @keydown.enter="saveGroup" tabindex="-1" class="no-outline edit-group">
         <div class="field">
             <label class="label" v-text="lang('title')"></label>
             <div class="control has-icons-left">
