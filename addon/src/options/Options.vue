@@ -406,14 +406,7 @@
                         let tabData = {},
                             tab = oldTab.entries.pop();
 
-                        if (tab.url.startsWith('about:reader')) {
-                            tab.url = decodeURIComponent(tab.url.slice(17));
-                            tab.openInReaderMode = true;
-                        } else {
-                            tab.openInReaderMode = false;
-                        }
-
-                        tab.url = utils.normalizeUrl(tab.url);
+                        tab = utils.normalizeTabUrl(tab);
 
                         if (!utils.isUrlAllowToCreate(tab.url)) {
                             return;

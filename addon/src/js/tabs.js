@@ -40,7 +40,7 @@
             tab.openerTabId = openerTabId;
         }*/
 
-        if (isInReaderMode || openInReaderMode) {
+        if (!tab.discarded && (isInReaderMode || openInReaderMode)) {
             tab.openInReaderMode = true;
         }
 

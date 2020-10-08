@@ -262,18 +262,33 @@
     }
 
     function normalizeUrl(url) {
-        if (url && url.startsWith('moz-extension')) {
+        if (null == url || 'string' !== typeof url) {
+            url = '';
+        }
+
+        if (url.startsWith('moz-extension')) {
             let urlObj = new URL(url),
                 urlStr = urlObj.searchParams.get('url') || urlObj.searchParams.get('u') || urlObj.searchParams.get('go');
 
             return urlStr ? normalizeUrl(urlStr) : url;
+        } else if (url.startsWith('about:reader')) {
+            return decodeURIComponent(url.slice(17));
         }
 
-        return url || '';
+        return url;
     }
 
     function normalizeTabUrl(tab) {
+        if (null == tab.url || 'string' !== typeof tab.url) {
+            tab.url = '';
+        }
+
+        if (tab.url.startsWith('about:reader') || tab.isInReaderMode) {
+            tab.openInReaderMode = true;
+        }
+
         tab.url = normalizeUrl(tab.url);
+
         return tab;
     }
 
