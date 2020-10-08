@@ -902,7 +902,7 @@ async function createMoveTabMenus() {
         }
 
         let groupIcon = utils.getGroupIconUrl(group, 16),
-            groupTitle = String(utils.getGroupTitle(group, 'withActiveGroup withContainer'));
+            groupTitle = String(utils.getGroupTitle(group, 'withSticky withActiveGroup withContainer'));
 
         options.showContextMenuOnTabs && menuIds.push(browser.menus.create({
             title: groupTitle,
@@ -1384,7 +1384,7 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
     return true;
 }
 
-function setBrowserAction(windowId, title, icon, enable) {
+function setBrowserAction(windowId, title, icon, enable, isSticky) {
     console.info('setBrowserAction', {windowId, title, icon, enable});
 
     let winObj = windowId ? {windowId} : {};
@@ -1401,6 +1401,11 @@ function setBrowserAction(windowId, title, icon, enable) {
     browser.browserAction.setTitle({
         ...winObj,
         title: title || manifest.browser_action.default_title,
+    });
+
+    browser.browserAction.setBadgeText({
+        ...winObj,
+        text: isSticky ? STICKY_SYMBOL : '',
     });
 
     if ('loading' === icon) {
@@ -1441,7 +1446,7 @@ async function updateBrowserActionData(groupId, windowId) {
     }
 
     if (group) {
-        setBrowserAction(windowId, utils.sliceText(utils.getGroupTitle(group, 'withContainer'), 43) + ' - STG', utils.getGroupIconUrl(group), true);
+        setBrowserAction(windowId, utils.sliceText(utils.getGroupTitle(group, 'withContainer'), 43) + ' - STG', utils.getGroupIconUrl(group), true, group.isSticky);
         prependWindowTitle(windowId, group.title);
     } else {
         setBrowserAction(windowId, undefined, undefined, true);
@@ -3288,6 +3293,10 @@ async function init() {
         });
 
         setBrowserAction(undefined, undefined, undefined, true);
+
+        browser.browserAction.setBadgeBackgroundColor({
+            color: 'transparent',
+        });
 
         delete window.localStorage.lastReloadFromError;
     } catch (e) {

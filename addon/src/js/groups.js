@@ -410,6 +410,7 @@
             id: group.id,
             title: utils.getGroupTitle(group, group.isArchive ? '' : 'withActiveGroup'),
             isArchive: group.isArchive,
+            isSticky: group.isSticky,
             iconUrl: utils.getGroupIconUrl(group),
             contextualIdentity: containers.get(group.newTabContainer),
         };

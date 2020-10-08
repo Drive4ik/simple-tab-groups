@@ -166,27 +166,32 @@ function showGroupsPopup(data) {
     }
 
     function createGroupNode(group, isEnabled) {
-        let groupNode = document.createElement('div'),
-            imgNode = document.createElement('img'),
-            titleNode = document.createElement('span');
-
+        let groupNode = document.createElement('div');
         groupNode.dataset.groupId = group.id;
-
         groupNode.classList.add('stg-popup-group');
 
+        let imgNode = document.createElement('img');
         imgNode.src = group.iconUrl.startsWith('/icons') ? browser.extension.getURL(group.iconUrl) : group.iconUrl;
-        imgNode.classList = 'group-icon';
-        groupNode.append(imgNode);
+
+        let figureNode = document.createElement('figure');
+        figureNode.classList = 'group-icon';
+        group.isSticky && figureNode.classList.add('is-sticky');
+        figureNode.append(imgNode);
+
+        groupNode.append(figureNode);
 
         if (group.contextualIdentity) {
             let containerImgNode = document.createElement('img');
 
-            containerImgNode.classList = 'container-icon';
             containerImgNode.title = group.contextualIdentity.name;
             containerImgNode.src = group.contextualIdentity.iconUrl;
             containerImgNode.style.fill = group.contextualIdentity.colorCode;
 
-            groupNode.append(containerImgNode);
+            let containerFigureNode = document.createElement('figure');
+            containerFigureNode.classList = 'container-icon';
+            containerFigureNode.append(containerImgNode);
+
+            groupNode.append(containerFigureNode);
         }
 
         /*if (group.isArchive) {
@@ -198,6 +203,7 @@ function showGroupsPopup(data) {
             groupNode.append(archiveImgNode);
         }*/
 
+        let titleNode = document.createElement('span');
         titleNode.innerText = group.title;
         titleNode.classList.add('stg-popup-has-text');
         groupNode.append(titleNode);

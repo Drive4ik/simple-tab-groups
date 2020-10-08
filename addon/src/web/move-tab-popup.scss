@@ -79,19 +79,35 @@
                     }
                 }
 
+                * + * {
+                    margin: 0 0 0 7px !important;
+                }
+
                 img {
                     width: 16px;
                     min-width: 16px;
                     height: 16px;
                     min-height: 16px;
-                    margin: 0 7px 0 0 !important;
                     position: relative !important;
                     -moz-context-properties: fill;
                 }
 
-                img.group-icon,
-                img.archive-icon {
+                .group-icon img/*,
+                img.archive-icon*/ {
                     fill: var(--fill-group-icon-color) !important;
+                }
+
+                figure {
+                    position: relative;
+                }
+
+                .is-sticky::after {
+                    content: '📌';
+                    position: absolute;
+                    top: -5px;
+                    right: -5px;
+                    font-size: 10px !important;
+                    line-height: 1 !important;
                 }
             }
         }

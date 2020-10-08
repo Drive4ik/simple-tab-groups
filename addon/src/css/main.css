@@ -352,6 +352,15 @@ hr {
     }
 }
 
+.is-sticky::after {
+    content: '📌';
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    font-size: 10px;
+    line-height: 1;
+}
+
 /* vue-swatches */
 .vue-swatches__fallback__wrapper {
     margin-top: 5px;

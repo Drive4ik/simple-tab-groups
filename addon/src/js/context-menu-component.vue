@@ -120,9 +120,13 @@
                 height: 25px;
 
                 > img {
-                    margin-right: var(--left-right-indent-blocks);
                     width: 16px;
                     height: 16px;
+                }
+
+                > img,
+                > figure.image {
+                    margin-right: var(--left-right-indent-blocks);
                 }
 
                 > span {

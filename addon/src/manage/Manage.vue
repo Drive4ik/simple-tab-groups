@@ -969,11 +969,11 @@
                         >
                         <div class="header">
                             <div class="group-icon">
-                                <figure class="image is-16x16">
+                                <figure :class="['image is-16x16', {'is-sticky': group.isSticky}]">
                                     <img :src="group.iconUrlToDisplay" />
                                 </figure>
                             </div>
-                            <div class="group-icon" v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID">
+                            <div class="other-icon" v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID">
                                 <figure class="image is-16x16">
                                     <img
                                         :src="containers[group.newTabContainer].iconUrl"
@@ -982,7 +982,7 @@
                                         />
                                 </figure>
                             </div>
-                            <div class="group-icon" v-if="group.isArchive">
+                            <div class="other-icon" v-if="group.isArchive">
                                 <figure class="image is-16x16">
                                     <img src="/icons/archive.svg" class="size-16"/>
                                 </figure>
@@ -998,11 +998,15 @@
                                     />
                             </div>
                             <div class="tabs-count" v-text="groupTabsCountMessage(group.filteredTabs, group.isArchive)"></div>
-                            <div class="group-icon cursor-pointer is-unselectable" @click="openGroupSettings(group)" :title="lang('groupSettings')">
-                                <img class="size-16" src="/icons/settings.svg" />
+                            <div class="other-icon cursor-pointer is-unselectable" @click="openGroupSettings(group)" :title="lang('groupSettings')">
+                                <figure class="image is-16x16">
+                                    <img src="/icons/settings.svg" />
+                                </figure>
                             </div>
-                            <div class="group-icon cursor-pointer is-unselectable" @click="removeGroup(group)" :title="lang('deleteGroup')">
-                                <img class="size-16" src="/icons/group-delete.svg" />
+                            <div class="other-icon cursor-pointer is-unselectable" @click="removeGroup(group)" :title="lang('deleteGroup')">
+                                <figure class="image is-16x16">
+                                    <img src="/icons/group-delete.svg" />
+                                </figure>
                             </div>
                         </div>
                         <div :class="['body', {
@@ -1266,7 +1270,9 @@
                         @click="moveTabs(menu.data.tab.id, group.id, !menu.data.group, undefined, $event.ctrlKey || $event.metaKey)"
                         @contextmenu="moveTabs(menu.data.tab.id, group.id, !menu.data.group, true)"
                         >
-                        <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
+                        <figure :class="['image is-16x16', {'is-sticky': group.isSticky}]">
+                            <img :src="group.iconUrlToDisplay" />
+                        </figure>
                         <span v-text="getGroupTitle(group, 'withActiveGroup withContainer')"></span>
                     </li>
 
@@ -1487,7 +1493,12 @@
                     padding-left: var(--margin);
                 }
 
-                > .group-icon > * {
+                > .group-icon {
+                    position: relative;
+                }
+
+                > .group-icon > *,
+                > .other-icon > * {
                     pointer-events: none;
                 }
             }

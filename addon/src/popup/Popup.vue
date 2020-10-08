@@ -1141,7 +1141,9 @@
                             :title="getGroupTitle(group, 'withCountTabs withTabs withContainer')"
                             >
                                 <div class="item-icon">
-                                    <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
+                                    <figure :class="['image is-16x16', {'is-sticky': group.isSticky}]">
+                                        <img :src="group.iconUrlToDisplay" />
+                                    </figure>
                                 </div>
                                 <div class="item-title">
                                     <template v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID">
@@ -1277,7 +1279,9 @@
                         :title="getGroupTitle(group, 'withCountTabs withTabs withContainer')"
                         >
                             <div class="item-icon">
-                                <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
+                                <figure :class="['image is-16x16', {'is-sticky': group.isSticky}]">
+                                    <img :src="group.iconUrlToDisplay" />
+                                </figure>
                             </div>
                             <div class="item-title">
                                 <template v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID">
@@ -1646,7 +1650,9 @@
                         @click="moveTabs(menu.data.tab.id, group.id, !menu.data.group, undefined, $event.ctrlKey || $event.metaKey)"
                         @contextmenu="moveTabs(menu.data.tab.id, group.id, !menu.data.group, true)"
                         >
-                        <img :src="group.iconUrlToDisplay" class="is-inline-block size-16" />
+                        <figure :class="['image is-16x16', {'is-sticky': group.isSticky}]">
+                            <img :src="group.iconUrlToDisplay" />
+                        </figure>
                         <span v-text="getGroupTitle(group, 'withActiveGroup withContainer')"></span>
                     </li>
 
@@ -1920,6 +1926,7 @@
         }
 
         .item-icon {
+            position: relative;
             width: 20px;
             max-width: 20px;
             min-width: 20px;

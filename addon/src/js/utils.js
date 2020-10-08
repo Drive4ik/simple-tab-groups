@@ -341,23 +341,33 @@
         return tabs.find(tab => tab.active) || tabs.slice().sort(sortBy('lastAccessed')).pop();
     }
 
-    function getGroupTitle({id, title, isArchive, tabs, newTabContainer}, args = '') {
+    function getGroupTitle({id, title, isArchive, isSticky, tabs, newTabContainer}, args = '') {
         let withActiveGroup = args.includes('withActiveGroup'),
             withCountTabs = args.includes('withCountTabs'),
             withActiveTab = args.includes('withActiveTab'),
             withContainer = args.includes('withContainer'),
-            withTabs = args.includes('withTabs');
+            withSticky = args.includes('withSticky'),
+            withTabs = args.includes('withTabs'),
+            beforeTitle = [];
 
-        if (withActiveGroup) {
-            if (cache.getWindowId(id)) {
-                title = ACTIVE_SYMBOL + ' ' + title;
-            } else if (isArchive) {
-                title = DISCARDED_SYMBOL + ' ' + title;
-            }
+        if (withSticky && isSticky) {
+            beforeTitle.push(STICKY_SYMBOL);
         }
 
         if (withContainer && newTabContainer !== DEFAULT_COOKIE_STORE_ID) {
-            title = '[' + containers.get(newTabContainer, 'name') + '] ' + title;
+            beforeTitle.push('[' + containers.get(newTabContainer, 'name') + ']');
+        }
+
+        if (withActiveGroup) {
+            if (cache.getWindowId(id)) {
+                beforeTitle.push(ACTIVE_SYMBOL);
+            } else if (isArchive) {
+                beforeTitle.push(DISCARDED_SYMBOL);
+            }
+        }
+
+        if (beforeTitle.length) {
+            title = beforeTitle.join(' ') + ' ' + title;
         }
 
         tabs = tabs.slice();
