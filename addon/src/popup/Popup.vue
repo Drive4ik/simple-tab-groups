@@ -1432,7 +1432,7 @@
                                 />
                         </template>
                         <img v-if="groupToShow.isArchive" src="/icons/archive.svg" class="size-16" />
-                        <span v-text="getGroupTitle(groupToShow)"></span>
+                        <span class="group-title" v-text="getGroupTitle(groupToShow)"></span>
                     </div>
                     <div class="item-action is-unselectable">
                         <span tabindex="0" @click="openGroupSettings(groupToShow)" @keyup.enter="openGroupSettings(groupToShow)" class="size-16 cursor-pointer" :title="lang('groupSettings')">
@@ -2005,7 +2005,7 @@
     }
 
     .tabs-list .group-info.item .item-title {
-        text-align: center;
+        justify-content: center;
 
         > img {
             pointer-events: auto;
