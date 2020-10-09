@@ -315,10 +315,6 @@
         "message": "Visa Gruppöversikt",
         "description": "Open manage groups"
     },
-    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
-        "message": "Flytta nuvarande flik till en specifik grupp",
-        "description": "Move active tab to custom group"
-    },
     "whatsWrongMessage": {
         "message": "Någonting gick fel...\nVänligen kontakta utvecklaren per e-post med senaste fellogg (hittas längst ner på inställningssidan)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"

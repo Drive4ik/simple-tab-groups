@@ -1853,8 +1853,7 @@ async function runAction(data, sender = {}) {
                 break;
             case 'add-new-group':
                 if (!options.alwaysAskNewGroupName || data.title) {
-                    // only this addon can move tabs to new group
-                    let newGroup = await Groups.add(undefined, (!sender.id && data.tabIds), data.title, data.showTabsAfterMoving);
+                    let newGroup = await Groups.add(undefined, data.tabIds, data.title, data.showTabsAfterMoving);
 
                     result.ok = true;
                     result.group = Groups.mapForExternalExtension(newGroup);
@@ -1975,55 +1974,48 @@ async function runAction(data, sender = {}) {
                 await openManageGroups();
                 result.ok = true;
                 break;
-            case 'move-active-tab-to-custom-group':
-                let activeTab = await Tabs.getActive();
+            case 'move-selected-tabs-to-custom-group':
+                let activeTab = await Tabs.getActive(),
+                    tabIds = await Tabs.getHighlightedIds(activeTab.windowId, undefined, null);
 
-                if (utils.isTabPinned(activeTab)) {
-                    result.error = browser.i18n.getMessage('pinnedTabsAreNotSupported');
-                    utils.notify(result.error, 7000, 'pinnedTabsAreNotSupported');
-                } else if (utils.isTabCanNotBeHidden(activeTab)) {
-                    result.error = browser.i18n.getMessage('thisTabsCanNotBeHidden', utils.getTabTitle(activeTab, false, 25));
-                    utils.notify(result.error, 7000, 'thisTabsCanNotBeHidden');
-                } else {
-                    if (Number.isFinite(data.groupId) && 0 < data.groupId) {
-                        if (groups.some(group => group.id === data.groupId)) {
-                            let groupMoveTo = groups.find(group => group.id === data.groupId);
+                if (Number.isFinite(data.groupId) && 0 < data.groupId) {
+                    if (groups.some(group => group.id === data.groupId)) {
+                        let groupMoveTo = groups.find(group => group.id === data.groupId);
 
-                            if (groupMoveTo.isArchive) {
-                                result.error = browser.i18n.getMessage('groupIsArchived', groupMoveTo.title);
-                                utils.notify(result.error, 7000, 'groupIsArchived');
-                            } else {
-                                await Tabs.move([activeTab.id], data.groupId);
-                                result.ok = true;
-                            }
+                        if (groupMoveTo.isArchive) {
+                            result.error = browser.i18n.getMessage('groupIsArchived', groupMoveTo.title);
+                            utils.notify(result.error, 7000, 'groupIsArchived');
                         } else {
-                            delete data.groupId;
-                            result = await runAction(data, sender);
-                        }
-                    } else if ('new' === data.groupId) {
-                        let {ok} = await runAction({
-                            action: 'add-new-group',
-                            title: data.title,
-                            proposalTitle: activeTab.title,
-                            tabIds: [activeTab.id],
-                        }, sender);
-
-                        result.ok = ok;
-                    } else {
-                        if (Tabs.isCanSendMessage(activeTab)) {
-                            Tabs.sendMessage(activeTab.id, {
-                                action: 'show-groups-popup',
-                                popupAction: 'move-active-tab-to-custom-group',
-                                popupTitle: browser.i18n.getMessage('moveTabToGroupDisabledTitle'),
-                                groups: notArchivedGroups.map(Groups.mapForExternalExtension),
-                                focusedGroupId: activeTab.groupId,
-                            });
-
+                            await Tabs.move(tabIds, data.groupId);
                             result.ok = true;
-                        } else {
-                            result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('moveTabToGroupDisabledTitle')]);
-                            utils.notify(result.error, 15000, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
                         }
+                    } else {
+                        delete data.groupId;
+                        result = await runAction(data, sender);
+                    }
+                } else if ('new' === data.groupId) {
+                    let {ok} = await runAction({
+                        action: 'add-new-group',
+                        title: data.title,
+                        proposalTitle: activeTab.title,
+                        tabIds: tabIds,
+                    }, sender);
+
+                    result.ok = ok;
+                } else {
+                    if (Tabs.isCanSendMessage(activeTab)) {
+                        Tabs.sendMessage(activeTab.id, {
+                            action: 'show-groups-popup',
+                            popupAction: data.action,
+                            popupTitle: browser.i18n.getMessage('hotkeyActionTitleMoveSelectedTabsToCustomGroup'),
+                            groups: notArchivedGroups.map(Groups.mapForExternalExtension),
+                            focusedGroupId: activeTab.groupId,
+                        });
+
+                        result.ok = true;
+                    } else {
+                        result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleMoveSelectedTabsToCustomGroup')]);
+                        utils.notify(result.error, 15000, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
                     }
                 }
                 break;
@@ -2059,16 +2051,18 @@ async function runAction(data, sender = {}) {
                 }
                 break;
             case 'discard-other-groups':
-                let tabIds = notArchivedGroups.reduce(function(acc, gr) {
-                    if (gr.id !== currentGroup.id && !cache.getWindowId(gr.id)) {
-                        acc.push(...gr.tabs.map(utils.keyId));
-                    }
-                    return acc;
-                }, []);
+                {
+                    let tabIds = notArchivedGroups.reduce(function(acc, gr) {
+                        if (gr.id !== currentGroup.id && !cache.getWindowId(gr.id)) {
+                            acc.push(...gr.tabs.map(utils.keyId));
+                        }
+                        return acc;
+                    }, []);
 
-                await Tabs.discard(tabIds);
+                    await Tabs.discard(tabIds);
 
-                result.ok = true;
+                    result.ok = true;
+                }
                 break;
             case 'reload-all-tabs-in-current-group':
                 if (currentGroup.id) {
@@ -2849,6 +2843,12 @@ async function runMigrateForData(data) {
                             gr.title += ` ${gr.id}`;
                         }
                     });
+                });
+
+                data.hotkeys.forEach(function(hotkey) {
+                    if (hotkey.action === 'move-active-tab-to-custom-group') {
+                        hotkey.action = 'move-selected-tabs-to-custom-group';
+                    }
                 });
             },
         },

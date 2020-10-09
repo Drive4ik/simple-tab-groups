@@ -213,10 +213,14 @@ function showGroupsPopup(data) {
 
             groupNode.onmouseover = () => groupsWrapper.contains(document.activeElement) && header.focus();
 
-            groupNode.onclick = function(action, groupId) {
-                browser.runtime.sendMessage({action, groupId});
+            groupNode.onclick = function(sendData) {
+                browser.runtime.sendMessage(sendData).catch(e => console.error(e));
                 closeGroupsPopup();
-            }.bind(null, data.popupAction, group.id);
+            }.bind(null, {
+                ...data,
+                action: data.popupAction,
+                groupId: group.id,
+            });
 
             groupNode.onkeydown = function(e) {
                 if (checkUpDownKeys(e)) {

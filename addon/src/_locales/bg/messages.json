@@ -345,10 +345,6 @@
         "message": "Отваряне на управлението на групи",
         "description": "Open manage groups"
     },
-    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
-        "message": "Преместване на раздела в определена група",
-        "description": "Move active tab to custom group"
-    },
     "hotkeyActionTitleDiscardGroup": {
         "message": "Освобождаване на памет от разделите в групата",
         "description": "Hotkey action Discard group"

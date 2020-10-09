@@ -345,10 +345,6 @@
         "message": "Otevřít správu skupin",
         "description": "Open manage groups"
     },
-    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
-        "message": "Přesunout aktivní panel do jiné skupiny",
-        "description": "Move active tab to custom group"
-    },
     "hotkeyActionTitleDiscardGroup": {
         "message": "Uvolnit skupinu z paměti",
         "description": "Hotkey action Discard group"

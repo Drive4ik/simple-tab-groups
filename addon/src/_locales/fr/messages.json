@@ -345,10 +345,6 @@
         "message": "Ouvrir \"Gérer les groupes\"",
         "description": "Open manage groups"
     },
-    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
-        "message": "Déplacer l'onglet actif vers un groupe personnalisé",
-        "description": "Move active tab to custom group"
-    },
     "hotkeyActionTitleDiscardGroup": {
         "message": "Décharger le groupe de la mémoire",
         "description": "Hotkey action Discard group"

@@ -104,8 +104,8 @@
         "open-manage-groups": {
             "description": "__MSG_hotkeyActionTitleOpenManageGroups__"
         },
-        "move-active-tab-to-custom-group": {
-            "description": "__MSG_hotkeyActionTitleMoveActiveTabToCustomGroup__"
+        "move-selected-tabs-to-custom-group": {
+            "description": "__MSG_hotkeyActionTitleMoveSelectedTabsToCustomGroup__"
         },
         "load-custom-group": {
             "description": "__MSG_hotkeyActionTitleLoadCustomGroup__"

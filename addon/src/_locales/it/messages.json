@@ -345,10 +345,6 @@
         "message": "Apri la gestione dei gruppi",
         "description": "Open manage groups"
     },
-    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
-        "message": "Sposta la tab attiva in un gruppo personalizzato",
-        "description": "Move active tab to custom group"
-    },
     "hotkeyActionTitleDiscardGroup": {
         "message": "Sospendi il gruppo",
         "description": "Hotkey action Discard group"

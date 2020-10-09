@@ -345,9 +345,9 @@
         "message": "Открыть \"Управление группами\"",
         "description": "Open manage groups"
     },
-    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
-        "message": "Переместить активную вкладку в другую группу",
-        "description": "Move active tab to custom group"
+    "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
+        "message": "Переместить выбранные вкладки в другую группу",
+        "description": "Move selected tabs to custom group"
     },
     "hotkeyActionTitleDiscardGroup": {
         "message": "Выгрузить группу из памяти",

@@ -337,10 +337,6 @@
         "message": "開啟管理分頁群組",
         "description": "Open manage groups"
     },
-    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
-        "message": "移動活動分頁到自訂分頁群組",
-        "description": "Move active tab to custom group"
-    },
     "hotkeyActionTitleDiscardGroup": {
         "message": "廢棄(休眠)群組",
         "description": "Hotkey action Discard group"

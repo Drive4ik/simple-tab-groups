@@ -41,7 +41,7 @@
                     'rename-group',
                     'delete-current-group',
                     'open-manage-groups',
-                    'move-active-tab-to-custom-group',
+                    'move-selected-tabs-to-custom-group',
                     'discard-group',
                     'discard-other-groups',
                     'reload-all-tabs-in-current-group',
@@ -49,7 +49,7 @@
 
                 actionsWithCustomGroup: [
                     'load-custom-group',
-                    'move-active-tab-to-custom-group',
+                    'move-selected-tabs-to-custom-group',
                     'discard-group',
                     'rename-group',
                 ],

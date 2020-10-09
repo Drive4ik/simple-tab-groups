@@ -123,8 +123,8 @@
         return activeTab;
     }
 
-    async function getHighlightedIds(windowId = browser.windows.WINDOW_ID_CURRENT, clickedTab = null) {
-        let tabs = await get(windowId, false, false, {
+    async function getHighlightedIds(windowId = browser.windows.WINDOW_ID_CURRENT, clickedTab = null, pinned = false) {
+        let tabs = await get(windowId, pinned, false, {
             highlighted: true,
         });
 
@@ -544,7 +544,7 @@
             return true;
         }
 
-        if (url.startsWith('moz-extension')) {
+        if (url.startsWith('moz-extension') || url.startsWith('about:')) {
             return false;
         }
 

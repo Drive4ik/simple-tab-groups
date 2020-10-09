@@ -315,10 +315,6 @@
         "message": "Abrir gerenciador de grupos",
         "description": "Open manage groups"
     },
-    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
-        "message": "Mover a aba ativa para o grupo customizado",
-        "description": "Move active tab to custom group"
-    },
     "whatsWrongMessage": {
         "message": "Erro...\nPor favor, contate o desenvolvedor pelo email de suporte com o último log de erro (existe o botão na parte de baixo das opções)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"

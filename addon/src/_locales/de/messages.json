@@ -337,10 +337,6 @@
         "message": "Öffne \"Gruppen verwalten\"",
         "description": "Open manage groups"
     },
-    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
-        "message": "Verschiebe aktiven Tab in benutzerdefinierte Gruppe",
-        "description": "Move active tab to custom group"
-    },
     "hotkeyActionTitleDiscardGroup": {
         "message": "Gruppe verwerfen",
         "description": "Hotkey action Discard group"

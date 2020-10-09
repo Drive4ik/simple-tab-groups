@@ -315,10 +315,6 @@
         "message": "Abrir \"Gestión de grupos\"",
         "description": "Open manage groups"
     },
-    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
-        "message": "Mover pestaña activa a un grupo personalizado",
-        "description": "Move active tab to custom group"
-    },
     "whatsWrongMessage": {
         "message": "¡Ups! Se ha producido un error\nSi deseas enviarle un informe al desarrollador, puedes generarlo desde la página de configuración.",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"

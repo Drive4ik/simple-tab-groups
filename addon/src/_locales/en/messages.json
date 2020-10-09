@@ -349,9 +349,9 @@
         "message": "Open manage groups",
         "description": "Open manage groups"
     },
-    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
-        "message": "Move active tab to custom group",
-        "description": "Move active tab to custom group"
+    "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
+        "message": "Move selected tabs to custom group",
+        "description": "Move selected tabs to custom group"
     },
     "hotkeyActionTitleDiscardGroup": {
         "message": "Discard group",

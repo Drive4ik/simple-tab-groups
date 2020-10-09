@@ -315,10 +315,6 @@
         "message": "Άνοιγμα Διαχείρισης groups",
         "description": "Open manage groups"
     },
-    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
-        "message": "Μεταφορά ενεργού tab σε custom group",
-        "description": "Move active tab to custom group"
-    },
     "whatsWrongMessage": {
         "message": "Κάτι δεν πήγε καλά...\nΠαρακαλώ επικοινωνείστε με τον δημιουργό στο support email με τα τελευταία αρχεία καταγραφής σφαλμάτων (υπάρχει σχετικό κουμπί στο τέλος των options)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"

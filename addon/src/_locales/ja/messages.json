@@ -345,10 +345,6 @@
         "message": "グループの管理を開く",
         "description": "Open manage groups"
     },
-    "hotkeyActionTitleMoveActiveTabToCustomGroup": {
-        "message": "アクティブなタブをカスタムグループへ移動",
-        "description": "Move active tab to custom group"
-    },
     "hotkeyActionTitleDiscardGroup": {
         "message": "グループを削除する",
         "description": "Hotkey action Discard group"
