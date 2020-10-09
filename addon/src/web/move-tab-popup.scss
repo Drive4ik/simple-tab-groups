@@ -79,10 +79,6 @@
                     }
                 }
 
-                * + * {
-                    margin: 0 0 0 7px !important;
-                }
-
                 img {
                     width: 16px;
                     min-width: 16px;
@@ -99,6 +95,10 @@
 
                 figure {
                     position: relative;
+                    margin: 0;
+                    line-height: 1;
+                    height: 16px;
+                    width: 16px;
                 }
 
                 .is-sticky::after {
@@ -108,6 +108,10 @@
                     right: -5px;
                     font-size: 10px !important;
                     line-height: 1 !important;
+                }
+
+                * + * {
+                    margin: 0 0 0 7px !important;
                 }
             }
         }
