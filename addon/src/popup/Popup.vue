@@ -927,6 +927,8 @@
             getTabTitle: utils.getTabTitle,
             isTabLoading: utils.isTabLoading,
             getGroupTitle: utils.getGroupTitle,
+            getLastActiveTabTitle: utils.getLastActiveTabTitle,
+            getLastActiveTabContainer: utils.getLastActiveTabContainer,
             groupTabsCountMessage: utils.groupTabsCountMessage,
 
             openOptionsPage() {
@@ -1122,7 +1124,7 @@
         <main id="result" :class="['is-full-width', dragData ? 'drag-' + dragData.itemType : false]">
             <!-- SEARCH TABS -->
             <div v-if="section === SECTION_SEARCH">
-                <div v-if="filteredGroupsBySearch.length">
+                <div v-if="filteredGroupsBySearch.length" class="groups">
                     <div v-for="group in filteredGroupsBySearch" :key="group.id">
                         <div
                             :class="['group item is-unselectable', {
@@ -1146,22 +1148,32 @@
                                     </figure>
                                 </div>
                                 <div class="item-title">
-                                    <template v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID">
+                                    <figure v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID" class="image is-16x16">
                                         <img
                                             :src="containers[group.newTabContainer].iconUrl"
-                                            :style="{fill: containers[group.newTabContainer].colorCode}"
-                                            class="size-16"
-                                            />
-                                    </template>
-                                    <img v-if="group.isArchive" src="/icons/archive.svg" class="size-16" />
-                                    <span
+                                            :style="{fill: containers[group.newTabContainer].colorCode}" />
+                                    </figure>
+                                    <figure v-if="group.isArchive" class="image is-16x16">
+                                        <img src="/icons/archive.svg" />
+                                    </figure>
+                                    <figure
                                         v-if="showMuteIconGroup(group)"
+                                        class="image is-16x16"
                                         @click.stop="toggleMuteGroup(group)"
                                         :title="group.tabs.some(tab => tab.audible) ? lang('muteGroup') : lang('unMuteGroup')"
                                         >
-                                        <img :src="group.tabs.some(tab => tab.audible) ? '/icons/audio.svg' : '/icons/audio-mute.svg'" class="size-16 align-text-bottom" />
+                                        <img
+                                            :src="group.tabs.some(tab => tab.audible) ? '/icons/audio.svg' : '/icons/audio-mute.svg'"
+                                            class="align-text-bottom" />
+                                    </figure>
+                                    <span class="group-title">
+                                        <span v-text="getGroupTitle(group)"></span>
+                                        <span
+                                            v-if="options.showExtendGroupsPopupWithActiveTabs && !group.isArchive"
+                                            :class="['tab-title', {bordered: getLastActiveTabContainer(group.tabs)}]"
+                                            :style="{borderColor: getLastActiveTabContainer(group.tabs, 'colorCode')}"
+                                            v-text="getLastActiveTabTitle(group.tabs)"></span>
                                     </span>
-                                    <span v-text="getGroupTitle(group, options.showExtendGroupsPopupWithActiveTabs ? 'withActiveTab' : '')"></span>
                                 </div>
                                 <div class="item-action bold-hover is-unselectable" @click.stop="showSectionGroupTabs(group)">
                                     <img class="size-16 rotate-180" src="/icons/arrow-left.svg" />
@@ -1284,22 +1296,32 @@
                                 </figure>
                             </div>
                             <div class="item-title">
-                                <template v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID">
+                                <figure class="image is-16x16" v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID">
                                     <img
                                         :src="containers[group.newTabContainer].iconUrl"
-                                        :style="{fill: containers[group.newTabContainer].colorCode}"
-                                        class="size-16"
-                                        />
-                                </template>
-                                <img v-if="group.isArchive" src="/icons/archive.svg" class="size-16" />
-                                <span
+                                        :style="{fill: containers[group.newTabContainer].colorCode}" />
+                                </figure>
+                                <figure v-if="group.isArchive" class="image is-16x16">
+                                    <img src="/icons/archive.svg" />
+                                </figure>
+                                <figure
                                     v-if="showMuteIconGroup(group)"
+                                    class="image is-16x16"
                                     @click.stop="toggleMuteGroup(group)"
                                     :title="group.tabs.some(tab => tab.audible) ? lang('muteGroup') : lang('unMuteGroup')"
                                     >
-                                    <img :src="group.tabs.some(tab => tab.audible) ? '/icons/audio.svg' : '/icons/audio-mute.svg'" class="size-16 align-text-bottom" />
+                                    <img
+                                        :src="group.tabs.some(tab => tab.audible) ? '/icons/audio.svg' : '/icons/audio-mute.svg'"
+                                        class="align-text-bottom" />
+                                </figure>
+                                <span class="group-title">
+                                    <span v-text="getGroupTitle(group)"></span>
+                                    <span
+                                        v-if="options.showExtendGroupsPopupWithActiveTabs && !group.isArchive"
+                                        :class="['tab-title', {bordered: getLastActiveTabContainer(group.tabs)}]"
+                                        :style="{borderColor: getLastActiveTabContainer(group.tabs, 'colorCode')}"
+                                        v-text="getLastActiveTabTitle(group.tabs)"></span>
                                 </span>
-                                <span v-text="getGroupTitle(group, options.showExtendGroupsPopupWithActiveTabs ? 'withActiveTab' : '')"></span>
                             </div>
                             <div class="item-action bold-hover is-unselectable" @click.stop="showSectionGroupTabs(group)">
                                 <img class="size-16 rotate-180" src="/icons/arrow-left.svg" />
@@ -1942,9 +1964,22 @@
             padding-left: 5px;
             padding-right: 5px;
             cursor: default;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
 
-            img {
-                vertical-align: text-bottom;
+            > * + * {
+                margin-left: 5px;
+            }
+
+            .group-title {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .tab-title {
+                opacity: 0.4;
             }
         }
 
@@ -1993,7 +2028,6 @@
     }
 
     .bordered {
-        display: inline-block;
         border-bottom-right-radius: 5px;
         border-bottom-left-radius: 5px;
         border-bottom-width: 1px;

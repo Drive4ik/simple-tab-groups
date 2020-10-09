@@ -341,10 +341,25 @@
         return tabs.find(tab => tab.active) || tabs.slice().sort(sortBy('lastAccessed')).pop();
     }
 
+    function getLastActiveTabTitle(tabs) {
+        let tab = getLastActiveTab(tabs);
+
+        return tab ? getTabTitle(tab, undefined, undefined, true) : '';
+    }
+
+    function getLastActiveTabContainer(tabs, key = null) {
+        let tab = getLastActiveTab(tabs);
+
+        if (!tab) {
+            return null;
+        }
+
+        return containers.get(tab.cookieStoreId, key);
+    }
+
     function getGroupTitle({id, title, isArchive, isSticky, tabs, newTabContainer}, args = '') {
         let withActiveGroup = args.includes('withActiveGroup'),
             withCountTabs = args.includes('withCountTabs'),
-            withActiveTab = args.includes('withActiveTab'),
             withContainer = args.includes('withContainer'),
             withSticky = args.includes('withSticky'),
             withTabs = args.includes('withTabs'),
@@ -376,14 +391,6 @@
             title += ' (' + groupTabsCountMessage(tabs, isArchive) + ')';
         }
 
-        if (withActiveTab && tabs.length && !isArchive) {
-            let activeTab = getLastActiveTab(tabs);
-
-            if (activeTab) {
-                title += ' ' + (activeTab.discarded ? DISCARDED_SYMBOL : ACTIVE_SYMBOL) + ' ' + getTabTitle(activeTab);
-            }
-        }
-
         if (withTabs && tabs.length) {
             title += ':\n' + tabs
                 .slice(0, 30)
@@ -409,8 +416,8 @@
             title += '\n' + url;
         }
 
-        if (withActiveTab && !discarded && id) {
-            title = ACTIVE_SYMBOL + ' ' + title;
+        if (withActiveTab && id) {
+            title = (discarded ? DISCARDED_SYMBOL : ACTIVE_SYMBOL) + ' ' + title;
         }
 
         if (window.localStorage.enableDebug && id) {
@@ -760,6 +767,8 @@
 
         createGroupTitle,
         getLastActiveTab,
+        getLastActiveTabTitle,
+        getLastActiveTabContainer,
         getGroupTitle,
         getTabTitle,
         groupTabsCountMessage,

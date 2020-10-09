@@ -1064,7 +1064,7 @@
                                     @mouseup.middle.prevent="!group.isArchive && removeTab(tab)"
                                     class="tab-title text-ellipsis"
                                     :style="tab.container ? {borderColor: tab.container.colorCode} : false"
-                                    v-text="getTabTitle(tab, false, 0, true)"></div>
+                                    v-text="getTabTitle(tab, false, 0, !tab.discarded)"></div>
 
                                 <div v-if="!group.isArchive" class="delete-tab-button" @click.stop="removeTab(tab)" :title="lang('deleteTab')" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <img class="size-14" src="/icons/close.svg" />
@@ -1142,7 +1142,7 @@
                                     @mouseup.middle.prevent="removeTab(tab)"
                                     class="tab-title text-ellipsis"
                                     :style="tab.container ? {borderColor: tab.container.colorCode} : false"
-                                    v-text="getTabTitle(tab, false, 0, true)"></div>
+                                    v-text="getTabTitle(tab, false, 0, !tab.discarded)"></div>
 
                                 <div class="delete-tab-button" @click.stop="removeTab(tab)" :title="lang('deleteTab')" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <img class="size-14" src="/icons/close.svg" />
