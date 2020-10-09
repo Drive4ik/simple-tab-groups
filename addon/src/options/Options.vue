@@ -354,7 +354,7 @@
                 }
 
                 try {
-                    data = await BG.runMigrateForData(data); // run migration for data
+                    await BG.runMigrateForData(data); // run migration for data
                 } catch (e) {
                     utils.notify(String(e));
                     return;
