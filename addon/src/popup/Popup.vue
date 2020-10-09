@@ -32,7 +32,7 @@
         SECTION_GROUPS_LIST = 'groupsList',
         SECTION_GROUP_TABS = 'groupTabs',
         SECTION_DEFAULT = SECTION_GROUPS_LIST,
-        availableTabKeys = new Set(['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'lastAccessed', 'audible', 'mutedInfo']),
+        availableTabKeys = new Set(['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'lastAccessed', 'audible', 'mutedInfo', 'windowId']),
         isSidebar = '#sidebar' === window.location.hash;
 
     let loadPromise = null;
@@ -157,6 +157,9 @@
                 });
 
                 return groups;
+            },
+            unSyncWindowTabs() {
+                return this.currentWindow ? this.unSyncTabs.filter(tab => tab.windowId === this.currentWindow.id) : [];
             },
         },
         methods: {
@@ -832,7 +835,12 @@
 
                 this.loadGroups();
             },
-            async unsyncHiddenTabsCreateNewGroup() {
+            async unsyncHiddenWindowTabsCreateNewGroup() {
+                await this.createNewGroup(this.unSyncWindowTabs.map(utils.keyId), undefined, this.unSyncWindowTabs[0].title);
+
+                this.loadUnsyncedTabs();
+            },
+            async unsyncHiddenTabsCreateNewGroupAll() {
                 await this.createNewGroup(this.unSyncTabs.map(utils.keyId), undefined, this.unSyncTabs[0].title);
 
                 this.unSyncTabs = [];
@@ -1355,10 +1363,21 @@
                 <div v-if="unSyncTabs.length && showUnSyncTabs" class="not-sync-tabs">
                     <hr>
                     <p class="h-margin-bottom-10">
-                        <span v-text="lang('foundHiddenUnSyncTabsDescription')"></span><br>
-                        <a tabindex="0" @click="unsyncHiddenTabsMoveToCurrentGroup" @keyup.enter="unsyncHiddenTabsMoveToCurrentGroup" v-text="lang('actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup')"></a><br>
-                        <a tabindex="0" @click="unsyncHiddenTabsCreateNewGroup" @keyup.enter="unsyncHiddenTabsCreateNewGroup" v-text="lang('actionHiddenUnSyncTabsCreateGroup')"></a><br>
-                        <a tabindex="0" @click="unsyncHiddenTabsCloseAll" @keyup.enter="unsyncHiddenTabsCloseAll" v-text="lang('actionHiddenUnSyncTabsCloseAll')"></a>
+                        <span v-text="lang('foundHiddenUnSyncTabsDescription')"></span>
+                        <ul>
+                            <li>
+                                <a tabindex="0" @click="unsyncHiddenTabsMoveToCurrentGroup" @keyup.enter="unsyncHiddenTabsMoveToCurrentGroup" v-text="lang('actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup')"></a>
+                            </li>
+                            <li v-if="unSyncWindowTabs.length">
+                                <a tabindex="0" @click="unsyncHiddenWindowTabsCreateNewGroup" @keyup.enter="unsyncHiddenWindowTabsCreateNewGroup" v-text="lang('actionHiddenUnSyncWindowTabsCreateGroup')"></a>
+                            </li>
+                            <li>
+                                <a tabindex="0" @click="unsyncHiddenTabsCreateNewGroupAll" @keyup.enter="unsyncHiddenTabsCreateNewGroupAll" v-text="lang('actionHiddenUnSyncTabsCreateGroup')"></a>
+                            </li>
+                            <li>
+                                <a tabindex="0" @click="unsyncHiddenTabsCloseAll" @keyup.enter="unsyncHiddenTabsCloseAll" v-text="lang('actionHiddenUnSyncTabsCloseAll')"></a>
+                            </li>
+                        </ul>
                     </p>
                     <div>
                         <div v-for="tab in unSyncTabs" :key="tab.id"

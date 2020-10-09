@@ -417,6 +417,10 @@
         "message": "Переместить все эти вкладки в текущую группу/окно",
         "description": "Move all of these tabs into current group/window"
     },
+    "actionHiddenUnSyncWindowTabsCreateGroup": {
+        "message": "Создать новую группу со вкладками только из этого окна",
+        "description": "Create new group with tabs only from the current window"
+    },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "Создать новую группу со всеми этими вкладками",
         "description": "Create new group with all of these tabs"

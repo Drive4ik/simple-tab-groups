@@ -421,6 +421,10 @@
         "message": "Move all of these tabs into current group/window",
         "description": "Move all of these tabs into current group/window"
     },
+    "actionHiddenUnSyncWindowTabsCreateGroup": {
+        "message": "Create new group with tabs only from the current window",
+        "description": "Create new group with tabs only from the current window"
+    },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "Create new group with all of these tabs",
         "description": "Create new group with all of these tabs"
