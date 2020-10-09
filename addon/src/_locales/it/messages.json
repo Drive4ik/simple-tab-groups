@@ -1004,5 +1004,99 @@
     "noContainerTitle": {
         "message": "Nessun container",
         "description": "No container"
+    },
+    "reopenTabsWithTemporaryContainersInNew": {
+        "message": "Riapri le schede in container temporanei in nuovi container",
+        "description": "Reopen tabs with temporary containers in new"
+    },
+    "temporaryContainerTitleDescription": {
+        "message": "Prefisso al titolo dei container temporanei",
+        "description": "Prefix of the temporary container title"
+    },
+    "excludeContainersForReOpen": {
+        "message": "Escludi questi container",
+        "description": "excluding these containers"
+    },
+    "helpPageOpenInContainerExcludeContainerToGroup": {
+        "message": "Escludi il container <container-name>$containerName$</container-name> per il gruppo <strong>$groupTitle$</strong>",
+        "description": "Exclude Personal container for group Group 1",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            },
+            "groupTitle": {
+                "content": "$2",
+                "example": "Group 1"
+            }
+        }
+    },
+    "hotkeysDescription2": {
+        "message": "Puoi modificare le scorciatoie sulla pagina <a href=\"https://support.mozilla.org/it/manage-extension-shortcuts-firefox\" target=\"_blank\">Manage extension shortcuts in Firefox</a>. funzioneranno su tutte le finestre e spagine del browser.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
+    },
+    "muteTab": {
+        "message": "Silenzia la scheda",
+        "description": "Mute tab"
+    },
+    "unMuteTab": {
+        "message": "Non silenziare la scheda",
+        "description": "Unmute tab"
+    },
+    "muteGroup": {
+        "message": "Silenzia il gruppo",
+        "description": "Mute group"
+    },
+    "unMuteGroup": {
+        "message": "Non silenziare il gruppo",
+        "description": "Unmute group"
+    },
+    "fullPopupWidth": {
+        "message": "Usa l'intera lunghezza del popup",
+        "description": "Use full popup width"
+    },
+    "showArchivedGroupsInManageGroups": {
+        "message": "Mostra i gruppi archiviati",
+        "description": "Show archived groups"
+    },
+    "helpPageDbErrorReinstallTitle": {
+        "message": "Errore database in Simple Tab Groups",
+        "description": "Database error in Simple Tab Groups"
+    },
+    "helpPageDbErrorReinstallDescription": {
+        "message": "Sfortunatamente, c'è stato un errore durante la lettura dei dati dal componente aggiuntivo STG dal database di Firefox. Al momento, il componente aggiuntivo è stato interrotto. Per riavviare il componente aggiuntivo, procedere con i seguenti:",
+        "description": "Unfortunately, an error occurred while reading data from the STG addon from the Firefox database. At the moment, the addon is stopped. To resume the add-on, do the following:"
+    },
+    "helpPageDbErrorReinstallDescription2": {
+        "message": "Riavvia il Browser Firefox (con terminazione del processo su Mac e Linux)",
+        "description": "Restart Firefox Browser (for Linux and Mac OS with process termination)"
+    },
+    "helpPageDbErrorReinstallDescription3": {
+        "message": "Se vedi di nuovo questa finestra, prova a reinstallare l'addon",
+        "description": "If you see this window again, try reinstalling the addon:"
+    },
+    "helpPageDbErrorReinstallDescription4": {
+        "message": "Componente aggiuntivo STG rimosso.",
+        "description": "Remove STG Addon"
+    },
+    "helpPageDbErrorReinstallDescription5": {
+        "message": "Riavvia il Browser Firefox",
+        "description": "Restart Firefox Browser"
+    },
+    "helpPageDbErrorReinstallDescription6": {
+        "message": "Installa il Componente aggiuntivo STG",
+        "description": "Install STG Addon"
+    },
+    "helpPageDbErrorReinstallDescription7": {
+        "message": "Ripristina l'ultimo backup dei dati del componente aggiuntivo STG locati nella cartella dei download di Firefox \"STG-backups\".<br>Puoi ripristinare il backup nelle preferenze del componente aggiuntivo.",
+        "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".<br>You can restore backup in addon settings"
+    },
+    "helpPageDbErrorReinstallOpenFFDownloadsFolder": {
+        "message": "Apri la cartella di download di Firefox.",
+        "description": "Open Firefox downloads folder"
+    },
+    "groupWithSameNameExists": {
+        "message": "Esiste già un gruppo con lo stesso nome!",
+        "description": "A group with the same name already exists!"
     }
 }
