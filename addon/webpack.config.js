@@ -74,18 +74,8 @@ const config = {
                 test: /\.(scss|css)$/,
                 use: [
                     MiniCssExtractPlugin.loader,
-                    {
-                        loader: 'css-loader',
-                        // options: {
-                        //     minimize: {
-                        //         safe: true,
-                        //     },
-                        // },
-                    },
-                    {
-                        loader: 'sass-loader',
-                        // options: {},
-                    },
+                    'css-loader',
+                    'sass-loader',
                 ]
             },
         ],
@@ -97,39 +87,41 @@ const config = {
             // Options similar to the same options in webpackOptions.output
             // both options are optional
             filename: '[name].css',
-            // chunkFilename: "[id].css"
+            // chunkFilename: '[id].css',
         }),
 
-        new CopyWebpackPlugin(multipleCopy([
-            // folders
-            'icons',
-            'help',
-            '_locales',
-            'css',
+        new CopyWebpackPlugin({
+            patterns: multipleCopy([
+                // folders
+                'icons',
+                'help',
+                '_locales',
+                'css',
 
-            // js
-            'background.js',
-            'js/console.js',
-            'js/constants.js',
-            'js/startup.js',
-            'js/utils.js',
-            'js/containers.js',
-            'js/storage.js',
-            'js/cache.js',
-            'js/file.js',
-            'js/groups.js',
-            'js/tabs.js',
-            'js/windows.js',
-            'js/error-handler.js',
+                // js
+                'background.js',
+                'js/console.js',
+                'js/constants.js',
+                'js/startup.js',
+                'js/utils.js',
+                'js/containers.js',
+                'js/storage.js',
+                'js/cache.js',
+                'js/file.js',
+                'js/groups.js',
+                'js/tabs.js',
+                'js/windows.js',
+                'js/error-handler.js',
 
-            // pages
-            'popup/popup.html',
-            'manage/manage.html',
-            'options/options.html',
+                // pages
+                'popup/popup.html',
+                'manage/manage.html',
+                'options/options.html',
 
-            // manifest
-            'manifest.json',
-        ])),
+                // manifest
+                'manifest.json',
+            ]),
+        }),
 
         new WebpackShellPlugin({
             onBuildEnd: ['node scripts/remove-evals.js'],

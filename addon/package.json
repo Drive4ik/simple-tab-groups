@@ -16,14 +16,14 @@
         "vue-swatches": "^2.1.0"
     },
     "devDependencies": {
-        "copy-webpack-plugin": "^5.1.1",
+        "copy-webpack-plugin": "^6.2.1",
         "cross-env": "^7.0.0",
-        "css-loader": "^3.5.3",
+        "css-loader": "^4.3.0",
         "fs-extra": "^9.0.1",
         "mini-css-extract-plugin": "^0.9.0",
         "node-sass": "^4.14.1",
-        "optimize-css-assets-webpack-plugin": "^5.0.3",
-        "sass-loader": "^8.0.2",
+        "optimize-css-assets-webpack-plugin": "^5.0.4",
+        "sass-loader": "^10.0.3",
         "vue-loader": "^15.9.3",
         "vue-template-compiler": "^2.6.12",
         "webpack": "^4.44.2",
