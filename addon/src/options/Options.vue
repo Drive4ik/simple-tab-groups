@@ -263,17 +263,24 @@
                     this.includeTabThumbnailsIntoBackup = this.options.autoBackupIncludeTabThumbnails = false;
                 }
             },
-            enableDebug(enableDebug) {
+            async enableDebug(enableDebug) {
+                let wasAutoDebug = null;
+
                 if (enableDebug) {
                     window.localStorage.enableDebug = 1;
                 } else {
+                    wasAutoDebug = window.localStorage.enableDebug == 2;
                     delete window.localStorage.enableDebug;
                 }
 
                 console.restart();
 
                 if (!window.localStorage.enableDebug) {
-                    this.saveConsoleLogs();
+                    await this.saveConsoleLogs();
+
+                    if (wasAutoDebug) {
+                        utils.safeReloadAddon();
+                    }
                 }
             },
         },
@@ -633,7 +640,7 @@
 
                 logs = normalize(logs);
 
-                file.save({
+                await file.save({
                     info: await utils.getInfo(),
                     logs: logs,
                 }, 'STG-debug-logs.json');

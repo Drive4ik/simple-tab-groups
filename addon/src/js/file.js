@@ -80,7 +80,9 @@
                 filename: fileName,
                 url: url,
                 saveAs: saveAs,
-                conflictAction: overwrite ? browser.downloads.FilenameConflictAction.OVERWRITE : browser.downloads.FilenameConflictAction.UNIQUIFY,
+                conflictAction: overwrite
+                    ? browser.downloads.FilenameConflictAction.OVERWRITE
+                    : browser.downloads.FilenameConflictAction.UNIQUIFY,
             });
 
             let {state, error} = await utils.waitDownload(id);
@@ -110,7 +112,7 @@
         } catch (e) {
             e = String(e);
             console.error(e);
-            utils.notify(e, 10000);
+            utils.notify(e);
         } finally {
             URL.revokeObjectURL(url);
         }

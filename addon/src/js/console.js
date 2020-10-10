@@ -92,12 +92,8 @@
         if (window.localStorage.enableDebug == 2) {
             clearTimeout(autoLogsTimer);
 
-            autoLogsTimer = setTimeout(function() { // delete autoenable error logs after 5 min after last error
-                if (window.localStorage.enableDebug == 2) {
-                    delete window.localStorage.enableDebug;
-                    console.restart();
-                }
-            }, 5 * 60 * 1000);
+            // reload addon after 5 min after last error
+            autoLogsTimer = setTimeout(utils.safeReloadAddon, 5 * 60 * 1000);
         }
 
         addErrorLog(error);

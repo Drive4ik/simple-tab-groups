@@ -711,7 +711,7 @@ async function addUndoRemoveGroupItem(groupToRemove) {
     if (options.showNotificationAfterGroupDelete) {
         utils.notify(
                 browser.i18n.getMessage('undoRemoveGroupNotification', groupToRemove.title),
-                7000,
+                7,
                 CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + groupToRemove.id,
                 undefined,
                 restoreGroup
@@ -771,7 +771,7 @@ async function createMoveTabMenus() {
         contexts: [browser.menus.ContextType.TAB],
         onclick: utils.catchFunc(function(info, tab) {
             if (!utils.isUrlAllowToCreate(tab.url)) {
-                utils.notify(browser.i18n.getMessage('thisUrlsAreNotSupported', tab.url), 7000, 'thisUrlsAreNotSupported');
+                utils.notify(browser.i18n.getMessage('thisUrlsAreNotSupported', tab.url), 7, 'thisUrlsAreNotSupported');
                 return;
             }
 
@@ -832,7 +832,7 @@ async function createMoveTabMenus() {
             }
 
             if (!utils.isUrlAllowToCreate(info.linkUrl)) {
-                utils.notify(browser.i18n.getMessage('thisUrlsAreNotSupported', info.linkUrl), 7000, 'thisUrlsAreNotSupported');
+                utils.notify(browser.i18n.getMessage('thisUrlsAreNotSupported', info.linkUrl), 7, 'thisUrlsAreNotSupported');
                 return;
             }
 
@@ -862,19 +862,19 @@ async function createMoveTabMenus() {
         contexts: [browser.menus.ContextType.BOOKMARK],
         onclick: utils.catchFunc(async function(info) {
             if (!info.bookmarkId) {
-                utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7000, 'bookmarkNotAllowed');
+                utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7, 'bookmarkNotAllowed');
                 return;
             }
 
             let [bookmark] = await browser.bookmarks.get(info.bookmarkId);
 
             if (bookmark.type !== browser.bookmarks.BookmarkTreeNodeType.BOOKMARK) {
-                utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7000, 'bookmarkNotAllowed');
+                utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7, 'bookmarkNotAllowed');
                 return;
             }
 
             if (!utils.isUrlAllowToCreate(bookmark.url)) {
-                utils.notify(browser.i18n.getMessage('thisUrlsAreNotSupported', bookmark.url), 7000, 'thisUrlsAreNotSupported');
+                utils.notify(browser.i18n.getMessage('thisUrlsAreNotSupported', bookmark.url), 7, 'thisUrlsAreNotSupported');
                 return;
             }
 
@@ -928,7 +928,7 @@ async function createMoveTabMenus() {
             contexts: [browser.menus.ContextType.LINK],
             onclick: utils.catchFunc(async function(info) {
                 if (!utils.isUrlAllowToCreate(info.linkUrl)) {
-                    utils.notify(browser.i18n.getMessage('thisUrlsAreNotSupported', info.linkUrl), 7000, 'thisUrlsAreNotSupported');
+                    utils.notify(browser.i18n.getMessage('thisUrlsAreNotSupported', info.linkUrl), 7, 'thisUrlsAreNotSupported');
                     return;
                 }
 
@@ -948,7 +948,7 @@ async function createMoveTabMenus() {
             contexts: [browser.menus.ContextType.BOOKMARK],
             onclick: utils.catchFunc(async function(info) {
                 if (!info.bookmarkId) {
-                    utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7000, 'bookmarkNotAllowed');
+                    utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7, 'bookmarkNotAllowed');
                     return;
                 }
 
@@ -985,11 +985,11 @@ async function createMoveTabMenus() {
                     if (setActive) {
                         applyGroup(undefined, group.id, firstTab.id);
                     } else {
-                        utils.notify(browser.i18n.getMessage('tabsCreatedCount', tabsToCreate.length), 7000);
+                        utils.notify(browser.i18n.getMessage('tabsCreatedCount', tabsToCreate.length), 7);
                     }
                 } else {
                     loadingBrowserAction(false);
-                    utils.notify(browser.i18n.getMessage('tabsNotCreated'), 7000);
+                    utils.notify(browser.i18n.getMessage('tabsNotCreated'), 7);
                 }
             }),
         }));
@@ -1024,7 +1024,7 @@ async function createMoveTabMenus() {
         contexts: [browser.menus.ContextType.LINK],
         onclick: utils.catchFunc(async function(info) {
             if (!utils.isUrlAllowToCreate(info.linkUrl)) {
-                utils.notify(browser.i18n.getMessage('thisUrlsAreNotSupported', info.linkUrl), 7000, 'thisUrlsAreNotSupported');
+                utils.notify(browser.i18n.getMessage('thisUrlsAreNotSupported', info.linkUrl), 7, 'thisUrlsAreNotSupported');
                 return;
             }
 
@@ -1058,7 +1058,7 @@ async function createMoveTabMenus() {
         contexts: [browser.menus.ContextType.BOOKMARK],
         onclick: utils.catchFunc(async function(info) {
             if (!info.bookmarkId) {
-                utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7000, 'bookmarkNotAllowed');
+                utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7, 'bookmarkNotAllowed');
                 return;
             }
 
@@ -1066,7 +1066,7 @@ async function createMoveTabMenus() {
 
             if (bookmark.type === browser.bookmarks.BookmarkTreeNodeType.BOOKMARK) {
                 if (!utils.isUrlAllowToCreate(bookmark.url)) {
-                    utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7000, 'bookmarkNotAllowed');
+                    utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7, 'bookmarkNotAllowed');
                     return;
                 }
 
@@ -1122,12 +1122,12 @@ async function createMoveTabMenus() {
                 loadingBrowserAction(false);
 
                 if (groupsCreatedCount) {
-                    utils.notify(browser.i18n.getMessage('groupsCreatedCount', groupsCreatedCount), 7000);
+                    utils.notify(browser.i18n.getMessage('groupsCreatedCount', groupsCreatedCount), 7);
                 } else {
-                    utils.notify(browser.i18n.getMessage('noGroupsCreated'), 7000);
+                    utils.notify(browser.i18n.getMessage('noGroupsCreated'), 7);
                 }
             } else {
-                utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7000, 'bookmarkNotAllowed');
+                utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7, 'bookmarkNotAllowed');
             }
         }),
     }));
@@ -1378,7 +1378,7 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
 
     if (showMessages) {
         loadingBrowserAction(false);
-        utils.notify(browser.i18n.getMessage('groupExportedToBookmarks', group.title), 7000);
+        utils.notify(browser.i18n.getMessage('groupExportedToBookmarks', group.title), 7);
     }
 
     return true;
@@ -1607,14 +1607,7 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, originUrl
 });
 
 // wait for reload addon if found update
-browser.runtime.onUpdateAvailable.addListener(function() {
-    let interval = setInterval(function() {
-        if (console.lastUsage < (Date.now() - 1000 * 10)) {
-            clearInterval(interval);
-            browser.runtime.reload();
-        }
-    }, 1000);
-});
+browser.runtime.onUpdateAvailable.addListener(() => utils.safeReloadAddon());
 
 function addListenerOnBeforeRequest() {
     if (!browser.webRequest.onBeforeRequest.hasListener(onBeforeTabRequest)) {
@@ -1812,7 +1805,7 @@ async function runAction(data, sender = {}) {
 
                         if (groupToLoad.isArchive) {
                             result.error = browser.i18n.getMessage('groupIsArchived', groupToLoad.title);
-                            utils.notify(result.error, 7000, 'groupIsArchived');
+                            utils.notify(result.error, 7, 'groupIsArchived');
                         } else {
                             result.ok = await applyGroup(currentWindow.id, data.groupId);
                         }
@@ -1844,7 +1837,7 @@ async function runAction(data, sender = {}) {
                         result.ok = true;
                     } else {
                         result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleLoadCustomGroup')]);
-                        utils.notify(result.error, 15000, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
+                        utils.notify(result.error, 15, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
                     }
                 }
                 break;
@@ -1888,7 +1881,7 @@ async function runAction(data, sender = {}) {
 
                         if (options.alwaysAskNewGroupName) {
                             result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('createNewGroup')]);
-                            utils.notify(result.error, 15000, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
+                            utils.notify(result.error, 15, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
                         }
                     }
                 }
@@ -1896,7 +1889,7 @@ async function runAction(data, sender = {}) {
             case 'rename-group':
                 if (!groups.length) {
                     result.error = browser.i18n.getMessage('noGroupsAvailable');
-                    utils.notify(result.error, 7000, 'noGroupsAvailable');
+                    utils.notify(result.error, 7, 'noGroupsAvailable');
                 } else if (!data.groupId) {
                     let activeTab = await Tabs.getActive();
 
@@ -1913,7 +1906,7 @@ async function runAction(data, sender = {}) {
                         result.ok = true;
                     } else {
                         result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleRenameGroup')]);
-                        utils.notify(result.error, 15000, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
+                        utils.notify(result.error, 15, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
                     }
                 } else if (data.groupId && !data.title) {
                     let groupToRename = groups.find(group => group.id === data.groupId);
@@ -1936,7 +1929,7 @@ async function runAction(data, sender = {}) {
                             }
                         } else {
                             result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleRenameGroup')]);
-                            utils.notify(result.error, 15000, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
+                            utils.notify(result.error, 15, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
                         }
                     } else {
                         result = await runAction('rename-group', sender);
@@ -1984,7 +1977,7 @@ async function runAction(data, sender = {}) {
 
                         if (groupMoveTo.isArchive) {
                             result.error = browser.i18n.getMessage('groupIsArchived', groupMoveTo.title);
-                            utils.notify(result.error, 7000, 'groupIsArchived');
+                            utils.notify(result.error, 7, 'groupIsArchived');
                         } else {
                             await Tabs.move(tabIds, data.groupId);
                             result.ok = true;
@@ -2015,7 +2008,7 @@ async function runAction(data, sender = {}) {
                         result.ok = true;
                     } else {
                         result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleMoveSelectedTabsToCustomGroup')]);
-                        utils.notify(result.error, 15000, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
+                        utils.notify(result.error, 15, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
                     }
                 }
                 break;
@@ -2025,7 +2018,7 @@ async function runAction(data, sender = {}) {
                 if (groupToDiscard) {
                     if (groupToDiscard.isArchive) {
                         result.error = browser.i18n.getMessage('groupIsArchived', groupToDiscard.title);
-                        utils.notify(result.error, 7000, 'groupIsArchived');
+                        utils.notify(result.error, 7, 'groupIsArchived');
                     } else {
                         await Tabs.discard(groupToDiscard.tabs.map(utils.keyId));
                         result.ok = true;
@@ -2046,7 +2039,7 @@ async function runAction(data, sender = {}) {
                         result.ok = true;
                     } else {
                         result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleDiscardGroup')]);
-                        utils.notify(result.error, 15000, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
+                        utils.notify(result.error, 15, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
                     }
                 }
                 break;

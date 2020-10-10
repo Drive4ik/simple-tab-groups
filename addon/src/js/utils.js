@@ -162,7 +162,7 @@
         return (text && text.length > length) ? (text.slice(0, length - 3) + '...') : (text || '');
     }
 
-    async function notify(message, timer = 20000, id = null, iconUrl = null, onClick = null, onClose = null) {
+    async function notify(message, sec = 20, id = null, iconUrl = null, onClick = null, onClose = null) {
         if (id) {
             await browser.notifications.clear(id);
         } else {
@@ -205,7 +205,7 @@
                 }
             }.bind(null, id);
 
-        rejectTimer = setTimeout(onClosedListener, timer, id, 'timeout');
+        rejectTimer = setTimeout(onClosedListener, sec * 1000, id, 'timeout');
 
         browser.notifications.onClicked.addListener(listener);
         browser.notifications.onClosed.addListener(onClosedListener);
@@ -723,6 +723,16 @@
         return 0;
     }
 
+    function safeReloadAddon(sec = 10) {
+        let interval = setInterval(function() {
+            if (console.lastUsage < (Date.now() - 1000 * sec)) {
+                browser.runtime.reload();
+            }
+        }, 1000);
+
+        return interval;
+    }
+
     window.utils = {
         getInfo,
 
@@ -795,6 +805,8 @@
         waitDownload,
 
         compareVersions,
+
+        safeReloadAddon,
     };
 
 })();

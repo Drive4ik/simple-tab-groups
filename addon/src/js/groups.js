@@ -176,7 +176,7 @@
             }
 
             if (group.isMain) {
-                utils.notify(browser.i18n.getMessage('thisGroupWasMain'), 7000);
+                utils.notify(browser.i18n.getMessage('thisGroupWasMain'), 7);
             }
         }
 
@@ -284,26 +284,26 @@
 
     async function unload(groupId) {
         if (!groupId) {
-            utils.notify(browser.i18n.getMessage('groupNotFound'), 7000, 'groupNotFound');
+            utils.notify(browser.i18n.getMessage('groupNotFound'), 7, 'groupNotFound');
             return false;
         }
 
         let windowId = cache.getWindowId(groupId);
 
         if (!windowId) {
-            utils.notify(browser.i18n.getMessage('groupNotLoaded'), 7000, 'groupNotLoaded');
+            utils.notify(browser.i18n.getMessage('groupNotLoaded'), 7, 'groupNotLoaded');
             return false;
         }
 
         let [group] = await load(groupId, true);
 
         if (!group) {
-            utils.notify(browser.i18n.getMessage('groupNotFound'), 7000, 'groupNotFound');
+            utils.notify(browser.i18n.getMessage('groupNotFound'), 7, 'groupNotFound');
             return false;
         }
 
         if (group.isArchive) {
-            utils.notify(browser.i18n.getMessage('groupIsArchived', group.title), 7000, 'groupIsArchived');
+            utils.notify(browser.i18n.getMessage('groupIsArchived', group.title), 7, 'groupIsArchived');
             return false;
         }
 
@@ -389,7 +389,7 @@
 
             if (group.isMain) {
                 group.isMain = false;
-                utils.notify(browser.i18n.getMessage('thisGroupWasMain'), 7000);
+                utils.notify(browser.i18n.getMessage('thisGroupWasMain'), 7);
             }
         }
 
