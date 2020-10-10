@@ -17,6 +17,11 @@
     .text-break-all {
         word-break: break-all;
     }
+    .miss-translate {
+        position: fixed;
+        right: 30px;
+        top: 25vh;
+    }
     </style>
 </head>
 
@@ -179,6 +184,10 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+
+        <div class="miss-translate">
+            <button @click="findMissTranslate" class="button is-warning is-small">Find missed translate</button>
         </div>
     </main>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.11/vue.min.js"></script>

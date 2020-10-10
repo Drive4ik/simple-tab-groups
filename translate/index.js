@@ -303,6 +303,19 @@
                 a.dispatchEvent(new MouseEvent('click'));
             },
 
+            findMissTranslate() {
+                let missedTextarea = [...document.getElementsByTagName('textarea')].find(textarea => textarea.offsetParent && !textarea.value);
+
+                if (missedTextarea) {
+                    missedTextarea.focus();
+                    missedTextarea.scrollIntoView({
+                        block: 'center',
+                        behavior: 'smooth',
+                    });
+                } else {
+                    alert('All translations are ready! Thanks!');
+                }
+            },
         },
     });
 
