@@ -1,27 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
 <svg width="32" height="32" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-        <style>
-        view#dark.theme:target~use#default {
-            fill: #606060;
-        }
-
-        view#light.theme:target~use#default {
-            fill: #bebebe;
-        }
-        </style>
-        <symbol id="shape">
-            <g>
-                <rect x="0" y="0" width="8" height="8" />
-                <rect x="24" y="0" width="8" height="8" />
-                <rect x="0" y="24" width="8" height="8" />
-                <rect x="24" y="24" width="8" height="8" />
-                <rect x="14.5" y="2" width="3" height="28" />
-                <rect x="2" y="14.5" width="28" height="3" />
-            </g>
-        </symbol>
-    </defs>
-    <view class="theme" id="dark" viewTarget="default" />
-    <view class="theme" id="light" viewTarget="default" />
-    <use class="theme" id="default" fill="#535353" href="#shape" />
+    <g fill="context-fill" fill-opacity="context-fill-opacity">
+        <rect x="0" y="0" width="8" height="8" />
+        <rect x="24" y="0" width="8" height="8" />
+        <rect x="0" y="24" width="8" height="8" />
+        <rect x="24" y="24" width="8" height="8" />
+        <line x1="2" y1="16" x2="30" y2="16" stroke="context-fill" stroke-width="4" stroke-linecap="round"/>
+        <line x1="16" y1="2" x2="16" y2="30" stroke="context-fill" stroke-width="4" stroke-linecap="round"/>
+    </g>
 </svg>
