@@ -47,11 +47,11 @@ This allows for easy switching between active and pre-loaded tabs across multipl
 ### This extension has these plugins:
 
  * [Create new group](https://addons.mozilla.org/firefox/addon/stg-plugin-create-new-group/)
- * [Load custom group](https://addons.mozilla.org/firefox/addon/stg-plugin-load-custom-group/)
- * [Open Manage groups](https://addons.mozilla.org/firefox/addon/stg-plugin-open-manage-groups/)
- * [Delete current group](https://addons.mozilla.org/firefox/addon/stg-plugin-del-current-group/)
  * [Create new tab](https://addons.mozilla.org/firefox/addon/stg-plugin-create-new-tab/)
  * [Create new tab in temporary container](https://addons.mozilla.org/firefox/addon/stg-plugin-create-temp-tab/)
+ * [Delete current group](https://addons.mozilla.org/firefox/addon/stg-plugin-del-current-group/)
+ * [Load custom group](https://addons.mozilla.org/firefox/addon/stg-plugin-load-custom-group/)
+ * [Open Manage groups](https://addons.mozilla.org/firefox/addon/stg-plugin-manage-groups/)
 
 **NEW** Allow support message actions from Gesturify addon.
 
@@ -67,23 +67,25 @@ You have to copy and paste into Gesturefy addon
 `Parse message` -> `On`
 
 Supported actions:
-* `{"action":"add-new-group"}`
-* `{"action":"load-next-group"}`
-* `{"action":"load-prev-group"}`
-* `{"action":"load-next-unloaded-group"}`
-* `{"action":"load-prev-unloaded-group"}`
-* `{"action":"load-history-next-group"}`
-* `{"action":"load-history-prev-group"}`
-* `{"action":"load-first-group"}`
-* `{"action":"load-last-group"}`
-* `{"action":"load-custom-group"}`
-* `{"action":"delete-current-group"}`
-* `{"action":"open-manage-groups"}`
-* `{"action":"move-active-tab-to-custom-group"}`
-* `{"action":"discard-group"}`
-* `{"action":"discard-other-groups"}`
-* `{"action":"reload-all-tabs-in-current-group"}`
-* `{"action":"create-temp-tab"}`
+* `{"action": "add-new-group"}`
+* `{"action": "rename-group"}`
+* `{"action": "load-next-group"}`
+* `{"action": "load-prev-group"}`
+* `{"action": "load-next-unloaded-group"}`
+* `{"action": "load-prev-unloaded-group"}`
+* `{"action": "load-history-next-group"}`
+* `{"action": "load-history-prev-group"}`
+* `{"action": "load-first-group"}`
+* `{"action": "load-last-group"}`
+* `{"action": "load-custom-group"}`
+* `{"action": "delete-current-group"}`
+* `{"action": "open-manage-groups"}`
+* `{"action": "move-selected-tabs-to-custom-group"}`
+* `{"action": "discard-group"}`
+* `{"action": "discard-other-groups"}`
+* `{"action": "reload-all-tabs-in-current-group"}`
+* `{"action": "create-temp-tab"}`
+* `{"action": "create-backup"}`
 
 
 This extension may conflict with other programs similar in functionality.
