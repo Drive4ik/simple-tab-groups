@@ -345,6 +345,10 @@
         "message": "Ouvrir \"Gérer les groupes\"",
         "description": "Open manage groups"
     },
+    "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
+        "message": "Déplacer les onglets sélectionnés vers un dossier personnalisé",
+        "description": "Move selected tabs to custom group"
+    },
     "hotkeyActionTitleDiscardGroup": {
         "message": "Décharger le groupe de la mémoire",
         "description": "Hotkey action Discard group"
@@ -412,6 +416,10 @@
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
         "message": "Déplacer tous les onglets vers le groupe ou la fenêtre courante",
         "description": "Move all of these tabs into current group/window"
+    },
+    "actionHiddenUnSyncWindowTabsCreateGroup": {
+        "message": "Créer un nouveau groupe à partir des onglets de la fenêtre courante",
+        "description": "Create new group with tabs only from the current window"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "Créer un nouveau groupe avec ces onglets",
