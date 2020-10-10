@@ -351,19 +351,19 @@
                 try {
                     data = await file.load();
                 } catch (e) {
-                    utils.notify(String(e));
+                    utils.notify(e);
                     return;
                 }
 
                 if ('object' !== utils.type(data) || !Array.isArray(data.groups) || !Number.isFinite(data.lastCreatedGroupPosition)) {
-                    utils.notify('this is wrong backup!');
+                    utils.notify('This is wrong backup!');
                     return;
                 }
 
                 try {
                     await BG.runMigrateForData(data); // run migration for data
                 } catch (e) {
-                    utils.notify(String(e));
+                    utils.notify(e);
                     return;
                 }
 
@@ -376,7 +376,7 @@
                 try {
                     oldOptions = await file.load();
                 } catch (e) {
-                    utils.notify(String(e));
+                    utils.notify(e);
                     return;
                 }
 
@@ -460,7 +460,7 @@
                 try {
                     panoramaOptions = await file.load();
                 } catch (e) {
-                    utils.notify(String(e));
+                    utils.notify(e);
                     return;
                 }
 
@@ -513,7 +513,7 @@
                 try {
                     syncTabOptions = await file.load();
                 } catch (e) {
-                    utils.notify(String(e));
+                    utils.notify(e);
                     return;
                 }
 

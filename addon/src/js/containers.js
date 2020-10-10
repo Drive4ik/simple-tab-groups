@@ -60,9 +60,9 @@
 
         if (!isOldContainerNameAreTmp && containers[cookieStoreId].name !== contextualIdentity.name) {
             if (isTemporary(cookieStoreId) && !isTemporary(null, contextualIdentity)) {
-                utils.notify(browser.i18n.getMessage('thisContainerIsNotTemporary', contextualIdentity.name));
+                utils.notify(['thisContainerIsNotTemporary', contextualIdentity.name]);
             } else if (!isTemporary(cookieStoreId) && isTemporary(null, contextualIdentity)) {
-                utils.notify(browser.i18n.getMessage('thisContainerNowIsTemporary', contextualIdentity.name));
+                utils.notify(['thisContainerNowIsTemporary', contextualIdentity.name]);
             }
         }
 

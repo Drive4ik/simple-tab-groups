@@ -59,7 +59,7 @@
 
         if (false !== data.showNotification) {
             utils.notify(
-                browser.i18n.getMessage('whatsWrongMessage'),
+                ['whatsWrongMessage'],
                 undefined,
                 'whatsWrongMessage',
                 '/icons/exclamation-triangle-yellow.svg',

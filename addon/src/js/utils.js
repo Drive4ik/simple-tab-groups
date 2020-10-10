@@ -175,7 +175,7 @@
             type: 'basic',
             iconUrl: iconUrl || '/icons/icon.svg',
             title: browser.i18n.getMessage('extensionName'),
-            message: String(message),
+            message: Array.isArray(message) ? browser.i18n.getMessage(...message) : String(message),
         });
 
         let rejectTimer = null,

@@ -110,7 +110,6 @@
 
             return id;
         } catch (e) {
-            e = String(e);
             console.error(e);
             utils.notify(e);
         } finally {

@@ -216,7 +216,7 @@
                                 try {
                                     new RegExp(regExpStr);
                                 } catch (e) {
-                                    utils.notify(browser.i18n.getMessage('invalidRegExpRuleTitle', regExpStr));
+                                    utils.notify(['invalidRegExpRuleTitle', regExpStr]);
                                 }
                             });
                     }

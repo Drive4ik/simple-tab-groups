@@ -419,11 +419,11 @@
         }
 
         if (showPinnedMessage) {
-            utils.notify(browser.i18n.getMessage('pinnedTabsAreNotSupported'));
+            utils.notify(['pinnedTabsAreNotSupported']);
         }
 
         if (tabsCantHide.size) {
-            utils.notify(browser.i18n.getMessage('thisTabsCanNotBeHidden', Array.from(tabsCantHide).join(', ')));
+            utils.notify(['thisTabsCanNotBeHidden', Array.from(tabsCantHide).join(', ')]);
         }
 
         if (!tabs.length) {
@@ -441,15 +441,15 @@
             return tabs;
         }
 
-        let message = '',
+        let message = [],
             iconUrl = null;
 
         if (tabs.length > 1) {
-            message = browser.i18n.getMessage('moveMultipleTabsToGroupMessage', tabs.length);
+            message = ['moveMultipleTabsToGroupMessage', tabs.length];
             iconUrl = utils.getGroupIconUrl(group);
         } else {
             let tabTitle = utils.getTabTitle(firstTab, false, 50);
-            message = browser.i18n.getMessage('moveTabToGroupMessage', [group.title, tabTitle]);
+            message = ['moveTabToGroupMessage', [group.title, tabTitle]];
             firstTab = utils.normalizeTabFavIcon(firstTab);
             iconUrl = firstTab.favIconUrl;
         }

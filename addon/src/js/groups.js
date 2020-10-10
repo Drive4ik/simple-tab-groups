@@ -99,7 +99,7 @@
         let groups = await load();
 
         if (title && groups.some(gr => gr.title === title)) {
-            utils.notify(browser.i18n.getMessage('groupWithSameNameExists'));
+            utils.notify(['groupWithSameNameExists']);
             title = null;
         }
 
@@ -176,7 +176,7 @@
             }
 
             if (group.isMain) {
-                utils.notify(browser.i18n.getMessage('thisGroupWasMain'), 7);
+                utils.notify(['thisGroupWasMain'], 7);
             }
         }
 
@@ -211,7 +211,7 @@
             updateData.title = updateData.title.slice(0, 256);
 
             if (groups.some(gr => gr.title === updateData.title)) {
-                utils.notify(browser.i18n.getMessage('groupWithSameNameExists'));
+                utils.notify(['groupWithSameNameExists']);
                 delete updateData.title;
             }
         }
@@ -284,31 +284,31 @@
 
     async function unload(groupId) {
         if (!groupId) {
-            utils.notify(browser.i18n.getMessage('groupNotFound'), 7, 'groupNotFound');
+            utils.notify(['groupNotFound'], 7, 'groupNotFound');
             return false;
         }
 
         let windowId = cache.getWindowId(groupId);
 
         if (!windowId) {
-            utils.notify(browser.i18n.getMessage('groupNotLoaded'), 7, 'groupNotLoaded');
+            utils.notify(['groupNotLoaded'], 7, 'groupNotLoaded');
             return false;
         }
 
         let [group] = await load(groupId, true);
 
         if (!group) {
-            utils.notify(browser.i18n.getMessage('groupNotFound'), 7, 'groupNotFound');
+            utils.notify(['groupNotFound'], 7, 'groupNotFound');
             return false;
         }
 
         if (group.isArchive) {
-            utils.notify(browser.i18n.getMessage('groupIsArchived', group.title), 7, 'groupIsArchived');
+            utils.notify(['groupIsArchived', group.title], 7, 'groupIsArchived');
             return false;
         }
 
         if (group.tabs.some(utils.isTabCanNotBeHidden)) {
-            utils.notify(browser.i18n.getMessage('notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera'));
+            utils.notify(['notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera']);
             return false;
         }
 
@@ -389,7 +389,7 @@
 
             if (group.isMain) {
                 group.isMain = false;
-                utils.notify(browser.i18n.getMessage('thisGroupWasMain'), 7);
+                utils.notify(['thisGroupWasMain'], 7);
             }
         }
 

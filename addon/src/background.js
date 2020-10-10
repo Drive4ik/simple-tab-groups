@@ -177,12 +177,12 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
             }
 
             if (groupToShow.isArchive) {
-                utils.notify(browser.i18n.getMessage('groupIsArchived', groupToShow.title));
+                utils.notify(['groupIsArchived', groupToShow.title]);
                 throw '';
             }
 
             if (groupToHide && groupToHide.tabs.some(utils.isTabCanNotBeHidden)) {
-                utils.notify(browser.i18n.getMessage('notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera'));
+                utils.notify(['notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera']);
                 throw '';
             }
 
@@ -237,7 +237,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                         Tabs.remove(tabs[0].id);
                     } else if (tabs.length) {
                         await browser.tabs.hide(tabs.map(utils.keyId));
-                        utils.notify(browser.i18n.getMessage('tabsInThisWindowWereHidden'), undefined, 'tabsInThisWindowWereHidden');
+                        utils.notify(['tabsInThisWindowWereHidden'], undefined, 'tabsInThisWindowWereHidden');
                     }
                 }
             } else if (groupToHide) {
@@ -305,7 +305,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
 
                 if (hideUnSyncTabs && tabs.length) {
                     await browser.tabs.hide(tabs.map(utils.keyId));
-                    utils.notify(browser.i18n.getMessage('tabsInThisWindowWereHidden'), undefined, 'tabsInThisWindowWereHidden');
+                    utils.notify(['tabsInThisWindowWereHidden'], undefined, 'tabsInThisWindowWereHidden');
                 }
             }
 
@@ -710,7 +710,7 @@ async function addUndoRemoveGroupItem(groupToRemove) {
 
     if (options.showNotificationAfterGroupDelete) {
         utils.notify(
-                browser.i18n.getMessage('undoRemoveGroupNotification', groupToRemove.title),
+                ['undoRemoveGroupNotification', groupToRemove.title],
                 7,
                 CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + groupToRemove.id,
                 undefined,
@@ -771,7 +771,7 @@ async function createMoveTabMenus() {
         contexts: [browser.menus.ContextType.TAB],
         onclick: utils.catchFunc(function(info, tab) {
             if (!utils.isUrlAllowToCreate(tab.url)) {
-                utils.notify(browser.i18n.getMessage('thisUrlsAreNotSupported', tab.url), 7, 'thisUrlsAreNotSupported');
+                utils.notify(['thisUrlsAreNotSupported', tab.url], 7, 'thisUrlsAreNotSupported');
                 return;
             }
 
@@ -832,7 +832,7 @@ async function createMoveTabMenus() {
             }
 
             if (!utils.isUrlAllowToCreate(info.linkUrl)) {
-                utils.notify(browser.i18n.getMessage('thisUrlsAreNotSupported', info.linkUrl), 7, 'thisUrlsAreNotSupported');
+                utils.notify(['thisUrlsAreNotSupported', info.linkUrl], 7, 'thisUrlsAreNotSupported');
                 return;
             }
 
@@ -862,19 +862,19 @@ async function createMoveTabMenus() {
         contexts: [browser.menus.ContextType.BOOKMARK],
         onclick: utils.catchFunc(async function(info) {
             if (!info.bookmarkId) {
-                utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7, 'bookmarkNotAllowed');
+                utils.notify(['bookmarkNotAllowed'], 7, 'bookmarkNotAllowed');
                 return;
             }
 
             let [bookmark] = await browser.bookmarks.get(info.bookmarkId);
 
             if (bookmark.type !== browser.bookmarks.BookmarkTreeNodeType.BOOKMARK) {
-                utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7, 'bookmarkNotAllowed');
+                utils.notify(['bookmarkNotAllowed'], 7, 'bookmarkNotAllowed');
                 return;
             }
 
             if (!utils.isUrlAllowToCreate(bookmark.url)) {
-                utils.notify(browser.i18n.getMessage('thisUrlsAreNotSupported', bookmark.url), 7, 'thisUrlsAreNotSupported');
+                utils.notify(['thisUrlsAreNotSupported', bookmark.url], 7, 'thisUrlsAreNotSupported');
                 return;
             }
 
@@ -928,7 +928,7 @@ async function createMoveTabMenus() {
             contexts: [browser.menus.ContextType.LINK],
             onclick: utils.catchFunc(async function(info) {
                 if (!utils.isUrlAllowToCreate(info.linkUrl)) {
-                    utils.notify(browser.i18n.getMessage('thisUrlsAreNotSupported', info.linkUrl), 7, 'thisUrlsAreNotSupported');
+                    utils.notify(['thisUrlsAreNotSupported', info.linkUrl], 7, 'thisUrlsAreNotSupported');
                     return;
                 }
 
@@ -948,7 +948,7 @@ async function createMoveTabMenus() {
             contexts: [browser.menus.ContextType.BOOKMARK],
             onclick: utils.catchFunc(async function(info) {
                 if (!info.bookmarkId) {
-                    utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7, 'bookmarkNotAllowed');
+                    utils.notify(['bookmarkNotAllowed'], 7, 'bookmarkNotAllowed');
                     return;
                 }
 
@@ -985,11 +985,11 @@ async function createMoveTabMenus() {
                     if (setActive) {
                         applyGroup(undefined, group.id, firstTab.id);
                     } else {
-                        utils.notify(browser.i18n.getMessage('tabsCreatedCount', tabsToCreate.length), 7);
+                        utils.notify(['tabsCreatedCount', tabsToCreate.length], 7);
                     }
                 } else {
                     loadingBrowserAction(false);
-                    utils.notify(browser.i18n.getMessage('tabsNotCreated'), 7);
+                    utils.notify(['tabsNotCreated'], 7);
                 }
             }),
         }));
@@ -1024,7 +1024,7 @@ async function createMoveTabMenus() {
         contexts: [browser.menus.ContextType.LINK],
         onclick: utils.catchFunc(async function(info) {
             if (!utils.isUrlAllowToCreate(info.linkUrl)) {
-                utils.notify(browser.i18n.getMessage('thisUrlsAreNotSupported', info.linkUrl), 7, 'thisUrlsAreNotSupported');
+                utils.notify(['thisUrlsAreNotSupported', info.linkUrl], 7, 'thisUrlsAreNotSupported');
                 return;
             }
 
@@ -1058,7 +1058,7 @@ async function createMoveTabMenus() {
         contexts: [browser.menus.ContextType.BOOKMARK],
         onclick: utils.catchFunc(async function(info) {
             if (!info.bookmarkId) {
-                utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7, 'bookmarkNotAllowed');
+                utils.notify(['bookmarkNotAllowed'], 7, 'bookmarkNotAllowed');
                 return;
             }
 
@@ -1066,7 +1066,7 @@ async function createMoveTabMenus() {
 
             if (bookmark.type === browser.bookmarks.BookmarkTreeNodeType.BOOKMARK) {
                 if (!utils.isUrlAllowToCreate(bookmark.url)) {
-                    utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7, 'bookmarkNotAllowed');
+                    utils.notify(['bookmarkNotAllowed'], 7, 'bookmarkNotAllowed');
                     return;
                 }
 
@@ -1122,12 +1122,12 @@ async function createMoveTabMenus() {
                 loadingBrowserAction(false);
 
                 if (groupsCreatedCount) {
-                    utils.notify(browser.i18n.getMessage('groupsCreatedCount', groupsCreatedCount), 7);
+                    utils.notify(['groupsCreatedCount', groupsCreatedCount], 7);
                 } else {
-                    utils.notify(browser.i18n.getMessage('noGroupsCreated'), 7);
+                    utils.notify(['noGroupsCreated'], 7);
                 }
             } else {
-                utils.notify(browser.i18n.getMessage('bookmarkNotAllowed'), 7, 'bookmarkNotAllowed');
+                utils.notify(['bookmarkNotAllowed'], 7, 'bookmarkNotAllowed');
             }
         }),
     }));
@@ -1261,7 +1261,7 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
     let hasBookmarksPermission = await browser.permissions.contains(PERMISSIONS.BOOKMARKS);
 
     if (!hasBookmarksPermission) {
-        showMessages && utils.notify(browser.i18n.getMessage('noAccessToBookmarks'), undefined, undefined, undefined, () => browser.runtime.openOptionsPage());
+        showMessages && utils.notify(['noAccessToBookmarks'], undefined, undefined, undefined, () => browser.runtime.openOptionsPage());
         return;
     }
 
@@ -1276,7 +1276,7 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
     }
 
     if (!group.tabs.length) {
-        showMessages && utils.notify(browser.i18n.getMessage('groupWithoutTabs'));
+        showMessages && utils.notify(['groupWithoutTabs']);
         return;
     }
 
@@ -1378,7 +1378,7 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
 
     if (showMessages) {
         loadingBrowserAction(false);
-        utils.notify(browser.i18n.getMessage('groupExportedToBookmarks', group.title), 7);
+        utils.notify(['groupExportedToBookmarks', group.title], 7);
     }
 
     return true;
@@ -1954,7 +1954,7 @@ async function runAction(data, sender = {}) {
                     await Groups.remove(currentGroup.id);
 
                     if (sender.id) {
-                        utils.notify(browser.i18n.getMessage('groupRemovedByExtension', [currentGroup.title, utils.getSupportedExternalExtensionName(sender.id)]));
+                        utils.notify(['groupRemovedByExtension', [currentGroup.title, utils.getSupportedExternalExtensionName(sender.id)]]);
                     }
 
                     result.ok = true;
@@ -2469,7 +2469,7 @@ async function exportAllGroupsToBookmarks(showFinishMessage) {
     if (showFinishMessage) {
         loadingBrowserAction(false);
 
-        utils.notify(browser.i18n.getMessage('allGroupsExportedToBookmarks'));
+        utils.notify(['allGroupsExportedToBookmarks']);
     }
 }
 
@@ -2708,7 +2708,7 @@ async function runMigrateForData(data) {
                     throw browser.i18n.getMessage('notFoundWindowsAddonStoppedWorking');
                 }
 
-                let notifId = await utils.notify(browser.i18n.getMessage('loading'));
+                let notifId = await utils.notify(['loading']);
 
                 await Promise.all(windows.map(win => Tabs.createTempActiveTab(win.id, false, 'about:blank')));
 
@@ -3209,7 +3209,7 @@ async function init() {
             dataChanged = [];
 
         if (!Array.isArray(data.groups)) {
-            utils.notify(browser.i18n.getMessage('ffFailedAndLostDataMessage'));
+            utils.notify(['ffFailedAndLostDataMessage']);
 
             data.groups = [];
             dataChanged.push(true);
@@ -3221,7 +3221,7 @@ async function init() {
             let change = await runMigrateForData(data);
             dataChanged.push(change); // run migration for data
         } catch (e) {
-            utils.notify(String(e));
+            utils.notify(e);
             throw '';
         }
 
@@ -3236,7 +3236,7 @@ async function init() {
         let windows = await Windows.load(true);
 
         if (!windows.length) {
-            utils.notify(browser.i18n.getMessage('notFoundWindowsAddonStoppedWorking'));
+            utils.notify(['notFoundWindowsAddonStoppedWorking']);
             throw '';
         }
 
@@ -3244,7 +3244,7 @@ async function init() {
 
         if (window.localStorage.isBackupRestoring) {
             delete window.localStorage.isBackupRestoring;
-            utils.notify(browser.i18n.getMessage('backupSuccessfullyRestored'));
+            utils.notify(['backupSuccessfullyRestored']);
         }
 
         await tryRestoreMissedTabs();
