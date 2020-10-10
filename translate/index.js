@@ -3,6 +3,7 @@
 
     const USER_NAME = 'Drive4ik',
         REPOSITORY = 'simple-tab-groups',
+        MY_EMAIL = 'drive4ik+stg@protonmail.com',
         LOCALE_FILE_EXT = '.json',
         apiUrlPrefix = `https://api.github.com/repos/${USER_NAME}/${REPOSITORY}/`,
         contentUrlPrefix = `https://raw.githubusercontent.com/${USER_NAME}/${REPOSITORY}/`;
@@ -78,7 +79,7 @@
                     polyglot = this.locale.polyglot || 'unknown polyglot',
                     locale = this.locale.locale || 'unknown locale';
 
-                return `mailto:drive4ik@gmail.com?subject=[${component}-translation] ${locale} from ${polyglot}`;
+                return `mailto:${MY_EMAIL}?subject=[${component}-translation] ${locale} from ${polyglot}`;
             },
             componentPath() {
                 let component = this.components.find(comp => comp.name === this.componentName);
