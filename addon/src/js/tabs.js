@@ -290,13 +290,9 @@
         let showPinnedMessage = false,
             tabsCantHide = new Set,
             groupWindowId = cache.getWindowId(groupId),
-            windowId = groupWindowId,
-            [group, groups] = await Groups.load(groupId, !groupWindowId),
+            windowId = groupWindowId || await Windows.getLastFocusedNormalWindow(),
+            [group] = await Groups.load(groupId),
             activeTabs = [];
-
-        if (!windowId) {
-            windowId = group.tabs.length ? group.tabs[0].windowId : await Windows.getLastFocusedNormalWindow();
-        }
 
         let tabs = await getList(tabIds);
 
@@ -322,20 +318,14 @@
 
         if (tabs.length) {
             await Promise.all(activeTabs.map(async function(activeTab) {
-                let winGroupId = cache.getWindowGroup(activeTab.windowId),
-                    tabsToActive = [];
+                let tabsToActive = await get(activeTab.windowId, null);
 
-                if (winGroupId) {
-                    tabsToActive = groups.find(gr => gr.id === winGroupId).tabs;
-                } else {
-                    tabsToActive = await get(activeTab.windowId, null);
-                }
-
+                // exclude movable tabs
                 tabsToActive = tabsToActive.filter(tab => !tabs.some(t => t.id === tab.id));
 
                 if (tabsToActive.length) {
                     await setActive(undefined, tabsToActive);
-                } else if (winGroupId !== groupId) {
+                } else if (activeTab.groupId !== groupId) {
                     await createTempActiveTab(activeTab.windowId, false);
                 }
             }));
