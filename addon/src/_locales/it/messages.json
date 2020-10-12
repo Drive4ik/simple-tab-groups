@@ -345,6 +345,10 @@
         "message": "Apri la gestione dei gruppi",
         "description": "Open manage groups"
     },
+    "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
+        "message": "Sposta le schede selezionata in un gruppo personalizzato",
+        "description": "Move selected tabs to custom group"
+    },
     "hotkeyActionTitleDiscardGroup": {
         "message": "Sospendi il gruppo",
         "description": "Hotkey action Discard group"
@@ -412,6 +416,10 @@
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
         "message": "Sposta tutte queste tab nel gruppo o nella finestra corrente",
         "description": "Move all of these tabs into current group/window"
+    },
+    "actionHiddenUnSyncWindowTabsCreateGroup": {
+        "message": "Crea un nuovo gruppo dalle schede nella finestra corrente",
+        "description": "Create new group with tabs only from the current window"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "Crea un nuovo gruppo a partire da queste tab",
