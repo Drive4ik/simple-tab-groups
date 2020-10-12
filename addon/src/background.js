@@ -237,7 +237,12 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                         Tabs.remove(tabs[0].id);
                     } else if (tabs.length) {
                         await browser.tabs.hide(tabs.map(utils.keyId));
-                        utils.notify(['tabsInThisWindowWereHidden'], undefined, 'tabsInThisWindowWereHidden');
+
+                        let showNotif = +window.localStorage.showTabsInThisWindowWereHidden || 0;
+                        if (showNotif < 5) {
+                            window.localStorage.showTabsInThisWindowWereHidden = ++showNotif;
+                            utils.notify(['tabsInThisWindowWereHidden'], undefined, 'tabsInThisWindowWereHidden');
+                        }
                     }
                 }
             } else if (groupToHide) {
@@ -305,7 +310,12 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
 
                 if (hideUnSyncTabs && tabs.length) {
                     await browser.tabs.hide(tabs.map(utils.keyId));
-                    utils.notify(['tabsInThisWindowWereHidden'], undefined, 'tabsInThisWindowWereHidden');
+
+                    let showNotif = +window.localStorage.showTabsInThisWindowWereHidden || 0;
+                    if (showNotif < 5) {
+                        window.localStorage.showTabsInThisWindowWereHidden = ++showNotif;
+                        utils.notify(['tabsInThisWindowWereHidden'], undefined, 'tabsInThisWindowWereHidden');
+                    }
                 }
             }
 

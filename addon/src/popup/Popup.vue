@@ -225,7 +225,7 @@
                         lazyRemoveTabIds = [];
 
                         this.multipleTabIds = this.multipleTabIds.filter(tabId => !tabIds.includes(tabId));
-                        this.unSyncTabs = this.unSyncTabs.filter(tab => !tabIds.includes(tab.id));
+                        this.loadUnsyncedTabs();
 
                         tabIds.forEach(tabId => {
                             let tabIndex = -1,
