@@ -111,7 +111,6 @@
             padding: var(--main-inden) 0;
             font-size: 12px;
             font-weight: normal;
-            width: max-content;
 
             li {
                 display: flex;
@@ -120,6 +119,7 @@
                 padding: 0 var(--scroll-indent) 0 var(--main-inden);
                 cursor: pointer;
                 height: 25px;
+                white-space: nowrap;
 
                 > img {
                     width: 16px;
@@ -129,12 +129,6 @@
                 > img,
                 > figure.image {
                     margin-right: var(--main-inden);
-                }
-
-                > span {
-                    white-space: nowrap;
-                    text-overflow: ellipsis;
-                    overflow: hidden;
                 }
 
                 &.is-disabled {

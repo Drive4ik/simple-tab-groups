@@ -185,6 +185,11 @@ img,
     outline: none;
 }
 
+.clip-text {
+    mask-image: linear-gradient(to left, transparent, black 3em);
+    overflow: hidden;
+}
+
 /*
 .no-events {
     pointer-events: none;
@@ -211,6 +216,10 @@ hr {
 /*BULMA REWRITE*/
 .modal-card-title {
     max-width: 97%;
+}
+
+.modal-card-body {
+    scrollbar-width: thin;
 }
 
 .checkbox {
@@ -307,12 +316,6 @@ hr {
 
 .rotate-180 {
     transform: rotate(180deg);
-}
-
-.text-ellipsis {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 

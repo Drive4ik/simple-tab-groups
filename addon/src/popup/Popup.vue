@@ -1155,7 +1155,7 @@
                                         <img :src="group.iconUrlToDisplay" />
                                     </figure>
                                 </div>
-                                <div class="item-title">
+                                <div class="item-title clip-text">
                                     <figure v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID" class="image is-16x16">
                                         <img
                                             :src="containers[group.newTabContainer].iconUrl"
@@ -1174,18 +1174,16 @@
                                             :src="group.tabs.some(tab => tab.audible) ? '/icons/audio.svg' : '/icons/audio-mute.svg'"
                                             class="align-text-bottom" />
                                     </figure>
-                                    <span class="group-title">
-                                        <span v-text="getGroupTitle(group)"></span>
-                                        <span
-                                            v-if="options.showExtendGroupsPopupWithActiveTabs && !group.isArchive"
-                                            :class="['tab-title', {bordered: getLastActiveTabContainer(group.tabs)}]"
-                                            :style="{borderColor: getLastActiveTabContainer(group.tabs, 'colorCode')}"
-                                            v-text="getLastActiveTabTitle(group.tabs)"></span>
-                                    </span>
+                                    <span v-text="getGroupTitle(group)"></span>
+                                    <span
+                                        v-if="options.showExtendGroupsPopupWithActiveTabs && !group.isArchive"
+                                        :class="['tab-title', {bordered: getLastActiveTabContainer(group.tabs)}]"
+                                        :style="{borderColor: getLastActiveTabContainer(group.tabs, 'colorCode')}"
+                                        v-text="getLastActiveTabTitle(group.tabs)"></span>
                                 </div>
                                 <div class="item-action bold-hover is-unselectable" @click.stop="showSectionGroupTabs(group)">
                                     <img class="size-16 rotate-180" src="/icons/arrow-left.svg" />
-                                    <span class="tabs-text" v-text="groupTabsCountMessage(group.tabs, group.isArchive)"></span>
+                                    <span class="tabs-text clip-text" v-text="groupTabsCountMessage(group.tabs, group.isArchive)"></span>
                                 </div>
                         </div>
 
@@ -1198,7 +1196,7 @@
                                     <img v-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
                                     <img v-else v-lazy="tab.favIconUrl" class="size-16" />
                                 </div>
-                                <div class="item-title">
+                                <div class="item-title clip-text">
                                     <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                         <template v-if="tab.container">
                                             <span :title="tab.container.name">
@@ -1233,7 +1231,7 @@
                                     <img v-else-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
                                     <img v-else v-lazy="tab.favIconUrl" class="size-16" />
                                 </div>
-                                <div class="item-title">
+                                <div class="item-title clip-text">
                                     <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                         <span
                                             v-if="showMuteIconTab(tab)"
@@ -1303,7 +1301,7 @@
                                     <img :src="group.iconUrlToDisplay" />
                                 </figure>
                             </div>
-                            <div class="item-title">
+                            <div class="item-title clip-text">
                                 <figure class="image is-16x16" v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID">
                                     <img
                                         :src="containers[group.newTabContainer].iconUrl"
@@ -1322,18 +1320,16 @@
                                         :src="group.tabs.some(tab => tab.audible) ? '/icons/audio.svg' : '/icons/audio-mute.svg'"
                                         class="align-text-bottom" />
                                 </figure>
-                                <span class="group-title">
-                                    <span v-text="getGroupTitle(group)"></span>
-                                    <span
-                                        v-if="options.showExtendGroupsPopupWithActiveTabs && !group.isArchive"
-                                        :class="['tab-title', {bordered: getLastActiveTabContainer(group.tabs)}]"
-                                        :style="{borderColor: getLastActiveTabContainer(group.tabs, 'colorCode')}"
-                                        v-text="getLastActiveTabTitle(group.tabs)"></span>
-                                </span>
+                                <span v-text="getGroupTitle(group)"></span>
+                                <span
+                                    v-if="options.showExtendGroupsPopupWithActiveTabs && !group.isArchive"
+                                    :class="['tab-title', {bordered: getLastActiveTabContainer(group.tabs)}]"
+                                    :style="{borderColor: getLastActiveTabContainer(group.tabs, 'colorCode')}"
+                                    v-text="getLastActiveTabTitle(group.tabs)"></span>
                             </div>
                             <div class="item-action bold-hover is-unselectable" @click.stop="showSectionGroupTabs(group)">
                                 <img class="size-16 rotate-180" src="/icons/arrow-left.svg" />
-                                <span class="tabs-text" v-text="groupTabsCountMessage(group.tabs, group.isArchive)"></span>
+                                <span class="tabs-text clip-text" v-text="groupTabsCountMessage(group.tabs, group.isArchive)"></span>
                             </div>
                     </div>
 
@@ -1398,7 +1394,7 @@
                                 <img v-else-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
                                 <img v-else v-lazy="tab.favIconUrl" class="size-16" />
                             </div>
-                            <div class="item-title">
+                            <div class="item-title clip-text">
                                 <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <span
                                         v-if="showMuteIconTab(tab)"
@@ -1441,7 +1437,7 @@
                     <div class="item-icon">
                         <img :src="groupToShow.iconUrlToDisplay" class="is-inline-block size-16" />
                     </div>
-                    <div class="item-title">
+                    <div class="item-title clip-text">
                         <template v-if="groupToShow.newTabContainer !== DEFAULT_COOKIE_STORE_ID">
                             <img
                                 :src="containers[groupToShow.newTabContainer].iconUrl"
@@ -1475,7 +1471,7 @@
                             <img v-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
                             <img v-else v-lazy="tab.favIconUrl" class="size-16" />
                         </div>
-                        <div class="item-title">
+                        <div class="item-title clip-text">
                             <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                 <template v-if="tab.container">
                                     <span :title="tab.container.name">
@@ -1524,7 +1520,7 @@
                             <img v-else-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
                             <img v-else v-lazy="tab.favIconUrl" class="size-16" />
                         </div>
-                        <div class="item-title">
+                        <div class="item-title clip-text">
                             <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                 <span
                                     v-if="showMuteIconTab(tab)"
@@ -1865,6 +1861,8 @@
         overflow-y: auto;
         // margin: 0 auto;
 
+        scrollbar-width: thin;
+
         &.edit-group-popup {
             min-height: var(--max-popup-height);
         }
@@ -1979,22 +1977,14 @@
             flex-grow: 1;
             white-space: nowrap;
             overflow: hidden;
-            text-overflow: ellipsis;
             padding-left: 5px;
             padding-right: 5px;
             cursor: default;
             display: flex;
             align-items: center;
-            justify-content: flex-start;
 
             > * + * {
                 margin-left: 5px;
-            }
-
-            .group-title {
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
             }
 
             .tab-title {
@@ -2031,14 +2021,18 @@
         }
     }
 
+    .group-title {
+        max-width: 100%;
+    }
+
     .group,
     .tab {
         position: relative;
     }
 
     .group .tabs-text {
+        flex-grow: 1;
         overflow: hidden;
-        text-overflow: ellipsis;
     }
 
     .groups .item .item-action {
@@ -2053,7 +2047,6 @@
         border-bottom-style: solid;
         max-width: 100%;
         overflow: hidden;
-        text-overflow: ellipsis;
         vertical-align: middle;
     }
 

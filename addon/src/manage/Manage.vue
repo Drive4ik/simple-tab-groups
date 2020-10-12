@@ -1062,7 +1062,7 @@
                                 <div
                                     @mousedown.middle.prevent
                                     @mouseup.middle.prevent="!group.isArchive && removeTab(tab)"
-                                    class="tab-title text-ellipsis"
+                                    class="tab-title clip-text"
                                     :style="tab.container ? {borderColor: tab.container.colorCode} : false"
                                     v-text="getTabTitle(tab, false, 0, !tab.discarded)"></div>
 
@@ -1080,7 +1080,7 @@
                                 <div :class="options.showTabsWithThumbnailsInManageGroups ? 'screenshot' : 'tab-icon'">
                                     <img src="/icons/tab-new.svg">
                                 </div>
-                                <div class="tab-title text-ellipsis" v-text="lang('createNewTab')"></div>
+                                <div class="tab-title clip-text" v-text="lang('createNewTab')"></div>
                             </div>
                         </div>
                     </div>
@@ -1140,7 +1140,7 @@
                                 <div
                                     @mousedown.middle.prevent
                                     @mouseup.middle.prevent="removeTab(tab)"
-                                    class="tab-title text-ellipsis"
+                                    class="tab-title clip-text"
                                     :style="tab.container ? {borderColor: tab.container.colorCode} : false"
                                     v-text="getTabTitle(tab, false, 0, !tab.discarded)"></div>
 
@@ -1512,6 +1512,8 @@
                 min-height: 110px;
                 /* flex-grow: 1; */
 
+                scrollbar-width: thin;
+
                 &:not(.in-list-view) {
                     display: grid;
                     grid-gap: var(--margin);
@@ -1625,6 +1627,7 @@
                     left: var(--tab-inner-padding);
                     right: var(--tab-inner-padding);
                     bottom: var(--tab-inner-padding);
+                    white-space: nowrap;
                 }
 
                 > .screenshot {
@@ -1738,6 +1741,7 @@
                     padding: 0 var(--margin);
                     border-radius: var(--border-radius);
                     border-bottom: 1px solid transparent;
+                    white-space: nowrap;
                 }
 
                 &.is-active {
