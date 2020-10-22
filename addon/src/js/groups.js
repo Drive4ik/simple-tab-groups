@@ -238,7 +238,7 @@
             },
         });
 
-        if (['title', 'iconUrl', 'iconColor', 'iconViewType', 'newTabContainer'].some(key => updateData.hasOwnProperty(key))) {
+        if (['title', 'iconUrl', 'iconColor', 'iconViewType', 'newTabContainer', 'isSticky'].some(key => updateData.hasOwnProperty(key))) {
             BG.sendExternalMessage({
                 action: 'group-updated',
                 group: mapForExternalExtension(group),

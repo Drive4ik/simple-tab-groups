@@ -459,7 +459,7 @@
     }
 
     async function moveNative(tabs, options = {}) {
-        console.log('tabs before moving', tabs);
+        console.log('moveNative', {tabs, options});
 
         // fix bug "Error: An unexpected error occurred"
         // https://bugzilla.mozilla.org/show_bug.cgi?id=1595583

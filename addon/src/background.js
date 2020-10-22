@@ -1531,7 +1531,13 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, originUrl
         return {};
     }
 
-    let tab = await browser.tabs.get(tabId);
+    let tab = null;
+
+    try {
+        tab = await browser.tabs.get(tabId);
+    } catch (e) {
+        return {};
+    }
 
     if (utils.isTabPinned(tab)) {
         console.log('onBeforeTabRequest 🛑 cancel, tab is pinned');
