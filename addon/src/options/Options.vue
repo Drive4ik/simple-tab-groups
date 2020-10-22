@@ -1182,14 +1182,18 @@
 
         <popup
             v-if="manageAddonSettings"
+            ref="mng"
             :title="lang(manageAddonSettingsTitle)"
             @close-popup="manageAddonSettings = null"
-            @save="() => saveManagedAddonSettings($refs.manageAddonBackup.getData(), $refs.manageAddonBackup.clearAddonData)"
+            @save="() => {
+                $refs.mng.buttonsClone = [{lang: 'ok'}];
+                saveManagedAddonSettings($refs.manageAddonBackup.getData(), $refs.manageAddonBackup.clearAddonData);
+            }"
             :buttons="
                 [{
                     event: 'save',
-                    lang: 'ok',
-                    classList: 'is-primary',
+                    lang: 'eraseAndImportAddonBackupButton',
+                    classList: 'is-danger',
                 }, {
                     event: 'close-popup',
                     lang: 'cancel',
@@ -1200,6 +1204,11 @@
                 :disable-empty-groups="manageAddonSettingsDisableEmptyGroups"
                 :allow-clear-addon-data="manageAddonSettingsAllowClearAddonDataBeforeRestore"
                 ref="manageAddonBackup"
+                @clear-addon-data-update="value =>
+                    Object.assign($refs.mng.buttonsClone[0], value ?
+                        {lang: 'eraseAndImportAddonBackupButton', classList: 'is-danger'} :
+                        {lang: 'importAddonSettingsButton', classList: 'is-primary'})
+                "
                 ></manage-addon-backup>
         </popup>
 

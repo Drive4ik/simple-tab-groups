@@ -1110,5 +1110,9 @@
     "groupWithSameNameExists": {
         "message": "A group with the same name already exists!",
         "description": "A group with the same name already exists!"
+    },
+    "eraseAndImportAddonBackupButton": {
+        "message": "Erase and restore backup",
+        "description": "Erase and restore backup"
     }
 }

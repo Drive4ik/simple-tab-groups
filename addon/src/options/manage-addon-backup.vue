@@ -16,6 +16,11 @@
                 type: Boolean,
             },
         },
+        watch: {
+            clearAddonData(value) {
+                this.$emit('clear-addon-data-update', value);
+            },
+        },
         computed: {
             showPinnedTabs() {
                 return this.data.pinnedTabs && this.data.pinnedTabs.length > 0;

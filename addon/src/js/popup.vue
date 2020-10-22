@@ -12,6 +12,11 @@
                 default: () => [],
             },
         },
+        data() {
+            return {
+                buttonsClone: utils.clone(this.buttons),
+            };
+        },
         methods: {
             lang: browser.i18n.getMessage,
         },
@@ -50,8 +55,8 @@
             <section class="modal-card-body">
                 <slot></slot>
             </section>
-            <footer v-if="buttons.length" class="modal-card-foot">
-                <button v-for="button in buttons" :key="button.lang" @click="$emit(button.event)" :class="['button', button.classList]" v-text="lang(button.lang)"></button>
+            <footer v-if="buttonsClone.length" class="modal-card-foot">
+                <button v-for="button in buttonsClone" :key="button.lang" @click="button.event && $emit(button.event)" :class="['button', button.classList]" v-text="lang(button.lang)"></button>
             </footer>
         </div>
     </div>
