@@ -20,7 +20,7 @@
         "description": "This window does not have a loaded group."
     },
     "openInTab": {
-        "message": "Открыть заметки во вкладке.",
+        "message": "Открыть заметки во вкладке",
         "description": "Open notes in a tab"
     },
     "notesPlaceholder": {
