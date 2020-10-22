@@ -71,6 +71,20 @@ const EXTENSIONS_WHITE_LIST = Object.freeze({
             'delete-current-group',
         ],
     },
+    'stg-plugin-group-notes@drive4ik': {
+        title: '[STG plugin] Group notes',
+        url: 'https://addons.mozilla.org/firefox/addon/stg-plugin-group-notes/',
+        postActions: [
+            'i-am-back',
+            'group-loaded',
+            'group-unloaded',
+            'group-updated',
+            'group-removed',
+        ],
+        getActions: [
+            'get-groups-list',
+        ],
+    },
     'stg-plugin-create-new-tab@drive4ik': {
         title: '[STG plugin] Create new tab',
         url: 'https://addons.mozilla.org/firefox/addon/stg-plugin-create-new-tab/',

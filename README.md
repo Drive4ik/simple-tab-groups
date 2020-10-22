@@ -46,6 +46,7 @@ This allows for easy switching between active and pre-loaded tabs across multipl
 
 ### This extension has these plugins:
 
+ * **NEW** [Group notes](https://addons.mozilla.org/firefox/addon/stg-plugin-group-notes/)
  * [Create new group](https://addons.mozilla.org/firefox/addon/stg-plugin-create-new-group/)
  * [Create new tab](https://addons.mozilla.org/firefox/addon/stg-plugin-create-new-tab/)
  * [Create new tab in temporary container](https://addons.mozilla.org/firefox/addon/stg-plugin-create-temp-tab/)
@@ -53,9 +54,8 @@ This allows for easy switching between active and pre-loaded tabs across multipl
  * [Load custom group](https://addons.mozilla.org/firefox/addon/stg-plugin-load-custom-group/)
  * [Open Manage groups](https://addons.mozilla.org/firefox/addon/stg-plugin-manage-groups/)
 
-**NEW** Allow support message actions from Gesturify addon.
-
-**NEW** Allow import groups from addons "Panorama View" and "Sync Tab Groups".
+Allow support message actions from Gesturify addon.
+Allow import groups from addons "Panorama View" and "Sync Tab Groups".
 
 ### Work with Gesturefy addon
 [How to configure the work with the plugin Gesturefy](https://user-images.githubusercontent.com/7843031/44263498-dffb1b00-a227-11e8-95c7-1b9474199ef0.png)
@@ -101,7 +101,7 @@ Open popup shortcut: `F8`. [You can change this hotkey](https://support.mozilla.
 
 Current list of functionality / development notes:
 
- * New Design (fork old add-on design "Tab Groups")
+ * Design like old add-on "Tab Groups"
  * Added colored group icon
  * Added the ability to import the backup groups of the old plug-in "Tab Groups"
  * Added support of "Firefox Multi-Account Containers"

@@ -1,0 +1,52 @@
+{
+    "extensionName": {
+        "message": "[STG plugin] Group notes",
+        "description": "Name of the extension"
+    },
+    "extensionDescription": {
+        "message": "Create notes for group",
+        "description": "Extension description"
+    },
+    "needInstallSTGExtension": {
+        "message": "Need install Simple Tab Groups extention\nClick here to open Simple Tab Groups home page",
+        "description": "Need install Simple Tab Groups extention\nClick here to open Simple Tab Groups home page"
+    },
+    "openPopupTitle": {
+        "message": "Open popup with group notes",
+        "description": "Open popup with group notes"
+    },
+    "openSidebarTitle": {
+        "message": "Open notes sidebar",
+        "description": "Open notes sidebar"
+    },
+    "windowNotHaveGroup": {
+        "message": "This window does not have a loaded group.",
+        "description": "This window does not have a loaded group."
+    },
+    "openInTab": {
+        "message": "Open notes in a tab",
+        "description": "Open notes in a tab"
+    },
+    "notesPlaceholder": {
+        "message": "Type here...",
+        "description": "Type here..."
+    },
+    "groupAndWindowTitle": {
+        "message": "$grouptitle$ - Notes",
+        "description": "Group and window title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 1"
+            }
+        }
+    },
+    "importBackup": {
+        "message": "Load notes backup",
+        "description": "Load notes backup"
+    },
+    "exportBackup": {
+        "message": "Save notes backup",
+        "description": "Save notes backup"
+    }
+}

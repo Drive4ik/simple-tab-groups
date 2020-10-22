@@ -1,0 +1,48 @@
+{
+    "extensionDescription": {
+        "message": "Создавайте заметки для группы",
+        "description": "Extension description"
+    },
+    "needInstallSTGExtension": {
+        "message": "Необходимо установить расширение Simple Tab Groups\nНажмите здесь чтобы открыть домашнюю страницу Simple Tab Groups",
+        "description": "Need install Simple Tab Groups extention\nClick here to open Simple Tab Groups home page"
+    },
+    "openPopupTitle": {
+        "message": "Открыть всплывающее окно с заметками группы",
+        "description": "Open popup with group notes"
+    },
+    "openSidebarTitle": {
+        "message": "Открыть боковую панель заметок",
+        "description": "Open notes sidebar"
+    },
+    "windowNotHaveGroup": {
+        "message": "В этом окне нет загруженной группы.",
+        "description": "This window does not have a loaded group."
+    },
+    "openInTab": {
+        "message": "Открыть заметки во вкладке.",
+        "description": "Open notes in a tab"
+    },
+    "notesPlaceholder": {
+        "message": "Введите здесь ...",
+        "description": "Type here..."
+    },
+    "groupAndWindowTitle": {
+        "message": "$grouptitle$ - Заметки",
+        "description": "Group and window title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 1"
+            }
+        }
+    },
+    "importBackup": {
+        "message": "Загрузить резервную копию заметок",
+        "description": "Load notes backup"
+    },
+    "exportBackup": {
+        "message": "Сохранить резервную копию заметок",
+        "description": "Save notes backup"
+    }
+}

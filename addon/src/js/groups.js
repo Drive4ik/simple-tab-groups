@@ -413,6 +413,7 @@
             isSticky: group.isSticky,
             iconUrl: utils.getGroupIconUrl(group),
             contextualIdentity: containers.get(group.newTabContainer),
+            windowId: cache.getWindowId(group.id),
         };
     }
 

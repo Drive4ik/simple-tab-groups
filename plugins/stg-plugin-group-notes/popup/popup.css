@@ -1,0 +1,101 @@
+html {
+    font-family: Segoe UI, Arial;
+    scrollbar-width: thin;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    padding: 0;
+    margin: 0;
+    font: message-box;
+}
+
+#root {
+    padding: 5px;
+    width: 800px;
+}
+
+html.fluid #root {
+    width: auto;
+}
+
+html.fluid,
+html.fluid body,
+html.fluid .notes,
+html.fluid .EasyMDEContainer,
+html.fluid .EasyMDEContainer .CodeMirror,
+html.fluid .EasyMDEContainer .editor-preview {
+    height: 100%;
+}
+
+html.fluid body #root {
+    height: 86vh;
+}
+
+html.fluid .EasyMDEContainer .fullscreen ~ .editor-preview {
+    height: calc(100% - 50px);
+}
+
+.group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.group > * + * {
+    margin-left: 5px;
+}
+
+.group .icon {
+    line-height: 0;
+}
+
+.group .title {
+    overflow-wrap: anywhere;
+}
+
+#groupIcon {
+    max-height: 16px;
+    max-width: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+/* easyMDE */
+.CodeMirror,
+.editor-preview {
+    padding: 5px;
+}
+
+.CodeMirror-lines {
+    padding: 0;
+}
+
+.editor-toolbar {
+    padding: 3px;
+}
+
+.editor-toolbar::before,
+.editor-toolbar::after {
+    content: none;
+}
+
+.editor-toolbar i.separator {
+    margin: 0 3px;
+}
+
+.CodeMirror-vscrollbar,
+.editor-preview {
+    scrollbar-width: thin;
+}
+
+html:not(.fluid) .CodeMirror-scroll {
+    max-height: 500px;
+}
+
+html:not(.fluid) .editor-preview {
+    max-height: calc(100vh - 68px);
+}
