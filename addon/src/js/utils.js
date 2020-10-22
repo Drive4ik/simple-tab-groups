@@ -427,13 +427,18 @@
         return sliceLength ? sliceText(title, sliceLength) : title;
     }
 
-    function groupTabsCountMessage(tabs, groupIsArchived, withActiveTabs = false) {
-        if (!groupIsArchived && (withActiveTabs || BG.options.showExtendGroupsPopupWithActiveTabs)) {
-            let activeTabs = tabs.filter(tab => !tab.discarded && tab.id).length;
-            return browser.i18n.getMessage('groupTabsCountActive', [activeTabs, tabs.length]);
-        } else {
-            return browser.i18n.getMessage('groupTabsCount', tabs.length);
+    function groupTabsCountMessage(tabs, groupIsArchived, lang = true) {
+        if (groupIsArchived) {
+            return lang ? browser.i18n.getMessage('groupTabsCount', tabs.length) : tabs.length;
         }
+
+        let activeTabs = tabs.filter(tab => !tab.discarded).length;
+
+        if (lang) {
+            return browser.i18n.getMessage('groupTabsCountActive', [activeTabs, tabs.length]);
+        }
+
+        return activeTabs ? (activeTabs + '/' + tabs.length) : tabs.length;
     }
 
     function getNextIndex(index, length, textPosition = 'next') {

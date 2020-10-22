@@ -24,9 +24,8 @@
 }
 
 html {
-    font-family: Segoe UI, Arial;
+    font: message-box;
     overflow-y: auto;
-    font-size: 15px;
 }
 
 html,

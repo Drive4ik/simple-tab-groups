@@ -835,8 +835,8 @@
                 <div class="field is-grouped">
                     <div class="control">
                         <swatches v-model.trim="options.defaultGroupIconColor" :title="lang('iconColor')" swatches="text-advanced" popover-x="right" show-fallback :trigger-style="{
-                            width: '40px',
-                            height: '33px',
+                            width: '36px',
+                            height: '27px',
                             borderRadius: '4px',
                         }" />
                     </div>
@@ -1219,6 +1219,7 @@
     body {
         // background-color: #f9f9fa;
         transition: background-color ease .2s;
+        font-size: 14px;
     }
 
     #logging-notification {

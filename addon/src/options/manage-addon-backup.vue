@@ -91,7 +91,7 @@
 <template>
     <div id="manageAddonBackup">
         <div v-if="allowClearAddonData" class="field">
-            <div class="control">
+            <div class="field">
                 <label class="checkbox">
                     <input type="checkbox" v-model="clearAddonData" />
                     <span class="has-text-weight-bold" v-text="lang('deleteAllAddonDataAndSettingsBeforeRestoringBackup')"></span>
@@ -103,7 +103,7 @@
         </div>
 
         <div v-if="showPinnedTabs" class="field">
-            <div class="control">
+            <div class="field">
                 <label class="checkbox">
                     <input type="checkbox" v-model="includePinnedTabs" />
                     <span v-text="lang('pinnedTabs')"></span>
@@ -118,13 +118,13 @@
 
         <div v-if="showGeneral || showHotkeys" class="field">
             <label class="label" v-text="lang('importAddonSettings')"></label>
-            <div v-if="showGeneral" class="control">
+            <div v-if="showGeneral" class="field">
                 <label class="checkbox">
                     <input type="checkbox" v-model="includeGeneral" />
                     <span v-text="lang('generalTitle')"></span>
                 </label>
             </div>
-            <div v-if="showHotkeys" class="control">
+            <div v-if="showHotkeys" class="field">
                 <label class="checkbox">
                     <input type="checkbox" v-model="includeHotkeys" />
                     <span v-text="lang('hotkeysTitle')"></span>

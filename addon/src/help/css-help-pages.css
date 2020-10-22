@@ -1,5 +1,6 @@
 body {
-    font-family: Helvetica, Arial, sans-serif;
+    font: message-box;
+    font-size: 14px;
 }
 
 #main {

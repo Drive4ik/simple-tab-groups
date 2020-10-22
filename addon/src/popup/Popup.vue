@@ -1183,7 +1183,7 @@
                                 </div>
                                 <div class="item-action bold-hover is-unselectable" @click.stop="showSectionGroupTabs(group)">
                                     <img class="size-16 rotate-180" src="/icons/arrow-left.svg" />
-                                    <span class="tabs-text clip-text" v-text="groupTabsCountMessage(group.tabs, group.isArchive)"></span>
+                                    <span class="tabs-text" v-text="groupTabsCountMessage(group.tabs, group.isArchive, options.fullPopupWidth)"></span>
                                 </div>
                         </div>
 
@@ -1329,7 +1329,7 @@
                             </div>
                             <div class="item-action bold-hover is-unselectable" @click.stop="showSectionGroupTabs(group)">
                                 <img class="size-16 rotate-180" src="/icons/arrow-left.svg" />
-                                <span class="tabs-text clip-text" v-text="groupTabsCountMessage(group.tabs, group.isArchive)"></span>
+                                <span class="tabs-text" v-text="groupTabsCountMessage(group.tabs, group.isArchive, options.fullPopupWidth)"></span>
                             </div>
                     </div>
 
@@ -1807,7 +1807,6 @@
     }
 
     html {
-        font-size: 13px;
         width: var(--popup-width);
         min-height: var(--min-popup-height);
         max-width: var(--max-popup-width);
@@ -2001,7 +2000,7 @@
         }
 
         .item-action > :not(:first-child) {
-            margin-left: 5px;
+            margin-left: 3px;
         }
 
         .flex-on-hover {
@@ -2032,12 +2031,13 @@
 
     .group .tabs-text {
         flex-grow: 1;
-        overflow: hidden;
     }
 
     .groups .item .item-action {
-        width: 110px;
-        min-width: 110px;
+        width: 75px;
+        min-width: 75px;
+        overflow: hidden;
+        text-align: center;
     }
 
     .bordered {

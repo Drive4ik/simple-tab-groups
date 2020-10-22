@@ -783,6 +783,7 @@
             getTabTitle: utils.getTabTitle,
             getGroupTitle: utils.getGroupTitle,
             isTabLoading: utils.isTabLoading,
+            groupTabsCountMessage: utils.groupTabsCountMessage,
 
             isGroup(obj) {
                 return obj.hasOwnProperty('tabs');
@@ -869,10 +870,6 @@
                 }
             },
 
-            groupTabsCountMessage(tabs, groupIsArchived) {
-                return utils.groupTabsCountMessage(tabs, groupIsArchived, true);
-            },
-
         },
     }
 </script>
@@ -914,7 +911,7 @@
                     <div class="control is-expanded">
                         <input
                             type="text"
-                            class="input is-small search-input"
+                            class="input search-input"
                             ref="search"
                             @click.stop
                             :placeholder="lang('searchPlaceholder')"
@@ -922,7 +919,7 @@
                             v-model.trim="search" />
                     </div>
                     <div v-show="search" class="control">
-                        <label class="button is-small" :title="lang('extendedTabSearch')">
+                        <label class="button" :title="lang('extendedTabSearch')">
                             <input type="checkbox" v-model="extendedSearch" />
                         </label>
                     </div>
@@ -990,7 +987,7 @@
                             <div class="group-title">
                                 <input
                                     type="text"
-                                    class="input is-small"
+                                    class="input"
                                     @focus="group.draggable = false"
                                     @blur="group.draggable = true"
                                     v-model.lazy.trim="group.title"
@@ -1400,10 +1397,6 @@
         opacity: 0;
     }
 
-    html {
-        font-size: 14px;
-    }
-
     #stg-manage {
         padding: var(--indent) var(--indent) calc(var(--indent) * 10);
 
@@ -1413,8 +1406,7 @@
             }
 
             .page-title {
-                font-size: 20px;
-                line-height: 1;
+                font-size: 18px;
             }
         }
 
@@ -1440,8 +1432,6 @@
         position: fixed;
         text-align: center;
         color: #000;
-        font-size: 15px;
-        font-weight: bold;
         background-color: #fff;
         border-radius: 10px;
         left: -1000%;
@@ -1531,7 +1521,6 @@
 
             .tab {
                 position: relative;
-                font-size: 12px;
             }
 
             &:not(.is-archive) .tab {

@@ -87,7 +87,7 @@
 
             > .text {
                 text-align: center;
-                font-weight: 600;
+                font-weight: 700;
                 flex-grow: 1;
                 padding-right: 32px;
             }

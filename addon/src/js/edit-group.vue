@@ -249,8 +249,8 @@
             <div class="field is-grouped icon-buttons">
                 <div class="control">
                     <swatches v-model.trim="group.iconColor" :title="lang('iconColor')" swatches="text-advanced" popover-x="right" show-fallback :trigger-style="{
-                        width: '35px',
-                        height: '30px',
+                        width: '36px',
+                        height: '27px',
                         borderRadius: '4px',
                     }" />
                 </div>
@@ -394,7 +394,7 @@
                 <div class="control">
                     <button
                         :disabled="group.isMain"
-                        :class="['button is-small', {'is-info': !group.isMain}]"
+                        :class="['button', {'is-info': !group.isMain}]"
                         @click="group.isMain = true"
                         v-text="group.isMain ? lang('thisGroupIsMain') : lang('setGroupAsMain')"
                         >
