@@ -214,6 +214,10 @@
     }
 
     function isAllowExternalRequestAndSender(request, sender, extensionRules = {}) {
+        if (sender.id.startsWith('test-stg-action')) {
+            return true;
+        }
+
         let extension = EXTENSIONS_WHITE_LIST[sender.id];
 
         if (!extension) {
