@@ -102,7 +102,7 @@
                     <div class="field">
                         <label class="label" for="locale">
                             Enter locale code (en, en_US, ru_RU, fr_CA, es_MX etc.):
-                            <span class="tag is-rounded is-danger">required</span>
+                            <span v-if="!locale.locale || locale.locale.length < 2" class="tag is-rounded is-danger">required</span>
                         </label>
                         <div class="control">
                             <input id="locale" :class="['input', {'is-danger': !locale.locale}]" type="text" placeholder="en, en_US, ru_RU, fr_CA, es_MX etc." v-model.trim="locale.locale">
@@ -147,6 +147,7 @@
                                                         'is-danger': !locale[key]
                                                     }]"
                                                     v-model.trim="locale[key]"
+                                                    :disabled="!locale.locale || locale.locale.length < 2"
                                                     :placeholder="val.description"
                                                     @input="onChangeMessage"
                                                 ></textarea>
