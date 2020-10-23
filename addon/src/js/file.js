@@ -118,7 +118,7 @@
     }
 
     async function backup(data, isAutoBackup, overwrite) {
-        let fileName = generateBackupFileName(!overwrite);
+        let fileName = generateBackupFileName(isAutoBackup, !overwrite);
 
         if (isAutoBackup) {
             let autoBackupFolderName = await getAutoBackupFolderName();
@@ -159,16 +159,17 @@
         return autoBackupFolderName;
     }
 
-    function generateBackupFileName(withTime) {
+    function generateBackupFileName(isAutoBackup, withTime) {
         let now = new Date(),
             day = _intToStr(now.getDate()),
             month = _intToStr(now.getMonth() + 1),
             year = now.getFullYear(),
             hours = _intToStr(now.getHours()),
             min = _intToStr(now.getMinutes()),
-            time = withTime ? `~${hours}-${min}` : '';
+            time = withTime ? `~${hours}-${min}` : '',
+            type = isAutoBackup ? 'auto' : 'manual';
 
-        return `stg-backup-${year}-${month}-${day}${time}@drive4ik.json`;
+        return `${type}-stg-backup-${year}-${month}-${day}${time}@drive4ik.json`;
     }
 
     function _intToStr(i) {
