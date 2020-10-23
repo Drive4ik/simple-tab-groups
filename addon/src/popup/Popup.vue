@@ -305,10 +305,10 @@
                         }
 
                         if (changeInfo.hasOwnProperty('audible')) {
-                            Tabs.getOne(tab.id).then(({id, audible, mutedInfo}) => {
+                            Tabs.getOne(tab.id, true).then(({id, audible, mutedInfo}) => {
                                 this.allTabs[id].audible = audible;
                                 this.allTabs[id].mutedInfo = mutedInfo;
-                            });
+                            }).catch(console.error);
                         }
 
                         if (changeInfo.title) {

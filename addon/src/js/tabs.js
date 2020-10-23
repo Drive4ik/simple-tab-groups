@@ -168,16 +168,23 @@
         return query.pinned ? tabs : Promise.all(tabs.map(tab => cache.loadTabSession(tab, includeFavIconUrl, includeThumbnail)));
     }
 
-    async function getOne(id) {
-        let tab = await browser.tabs.get(id);
+    async function getOne(id, withThrowOnError) {
+        try {
+            let tab = await browser.tabs.get(id);
+            return utils.normalizeTabUrl(tab);
+        } catch (e) {
+            if (withThrowOnError === true) {
+                throw e;
+            }
 
-        return utils.normalizeTabUrl(tab);
+            return null;
+        }
     }
 
     async function getList(tabIds, includeFavIconUrl, includeThumbnail) {
         let tabs = await Promise.all(tabIds.map(getOne));
 
-        return Promise.all(tabs.map(tab => cache.loadTabSession(tab, includeFavIconUrl, includeThumbnail)));
+        return Promise.all(tabs.filter(Boolean).map(tab => cache.loadTabSession(tab, includeFavIconUrl, includeThumbnail)));
     }
 
     async function setMute(tabs, muted) {
@@ -229,11 +236,9 @@
     }
 
     async function updateThumbnail(tabId, force) {
-        let tab = null;
+        let tab = await getOne(tabId);
 
-        try {
-            tab = await getOne(tabId);
-        } catch (e) {
+        if (!tab) {
             return;
         }
 
@@ -295,6 +300,10 @@
             activeTabs = [];
 
         let tabs = await getList(tabIds);
+
+        if (!tabs.length) {
+            return [];
+        }
 
         tabs = tabs.filter(function(tab) {
             if (tab.pinned) {
@@ -446,7 +455,7 @@
 
         utils.notify(message, undefined, undefined, iconUrl, async function(groupId, tabId) {
             let [group] = await Groups.load(groupId),
-                tab = await getOne(tabId).catch(noop);
+                tab = await getOne(tabId);
 
             if (group && tab) {
                 let winId = cache.getWindowId(groupId) || await Windows.getLastFocusedNormalWindow();

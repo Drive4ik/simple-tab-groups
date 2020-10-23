@@ -1531,11 +1531,12 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, originUrl
         return {};
     }
 
-    let tab = null;
+    await utils.wait(50);
 
-    try {
-        tab = await browser.tabs.get(tabId);
-    } catch (e) {
+    let tab = await Tabs.getOne(tabId);
+
+    if (!tab) {
+        console.warn('onBeforeTabRequest tab not found');
         return {};
     }
 
@@ -1573,11 +1574,11 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, originUrl
         return {};
     }
 
-    // try fix bug #572
-    try {
-        await utils.wait(100);
-        await browser.tabs.get(tabId);
-    } catch (e) {
+    await utils.wait(100);
+    tab = await Tabs.getOne(tabId);
+
+    if (!tab) {
+        console.warn('onBeforeTabRequest tab not found');
         return {};
     }
 
