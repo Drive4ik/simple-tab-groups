@@ -1234,7 +1234,7 @@ async function _getBookmarkFolderFromTitle(title, parentId, createIfNeed) {
 async function getBookmarkGroup(groupTitle, createBookmarkFolderIfNeed) {
     let hasBookmarksPermission = await browser.permissions.contains(PERMISSIONS.BOOKMARKS);
 
-    if (!hasBookmarksPermission || !options.autoBackupGroupsToBookmarks) {
+    if (!hasBookmarksPermission) {
         return;
     }
 
