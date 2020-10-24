@@ -540,7 +540,12 @@
                 group.iconColor = 'transparent';
             }
 
-            let stroke = 'transparent' === group.iconColor ? 'stroke="#606060" stroke-width="1"' : '';
+            let stroke = 'transparent' === group.iconColor ? 'stroke="#606060" stroke-width="1"' : '',
+                title = null;
+
+            if (group.iconViewType === 'title') {
+                title = group.title?.slice(0, 4) || browser.i18n.getMessage('title');
+            }
 
             let icons = {
                 'main-squares': `
@@ -582,6 +587,11 @@
                         <rect width="5" height="7" x="1" y="8" rx="1"></rect>
                         <rect width="8" height="7" x="7" y="8" rx="1" fill="${group.iconColor}"></rect>
                     </g>
+                </svg>
+            `,
+                'title': `
+                <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg">
+                    <text x="0" y="13" fill="${group.iconColor}" font-family="Segoe UI, Verdana, Arial, sans-serif" font-size="12px">${title}</text>
                 </svg>
             `,
             };

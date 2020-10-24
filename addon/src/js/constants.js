@@ -21,7 +21,8 @@ const GROUP_ICON_VIEW_TYPES = Object.freeze([
     'main-squares',
     'circle',
     'squares',
-    'old-tab-groups'
+    'old-tab-groups',
+    'title',
 ]);
 
 const DEFAULT_BOOKMARKS_PARENTS = Object.freeze([

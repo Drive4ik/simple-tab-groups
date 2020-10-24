@@ -88,6 +88,7 @@
                 computed: {
                     iconUrlToDisplay() {
                         return utils.getGroupIconUrl({
+                            title: this.title,
                             iconUrl: this.iconUrl,
                             iconColor: this.iconColor,
                             iconViewType: this.iconViewType,
