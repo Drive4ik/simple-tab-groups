@@ -481,53 +481,7 @@
             await utils.wait(100);
         }
 
-        let result = await browser.tabs.move(tabs.map(utils.keyId), options);
-
-        // ==================================================================================
-        // temp fix bug https://bugzilla.mozilla.org/show_bug.cgi?id=1580879
-        // TODO не могу найти при каком условии воспроизводится баг
-        let tabIndexesToReCreate = result.reduce(function(acc, tab, index) {
-            if (tab.url && tab.discarded && tab.url !== tabs[index].url) {
-                tab.url = tabs[index].url;
-                delete tab.active;
-                acc.push(index);
-            }
-
-            return acc;
-        }, []);
-
-        if (tabIndexesToReCreate.length) {
-            let tabsToReCreate = tabIndexesToReCreate.map(index => result[index]);
-
-            console.log('tabsToReCreate by bug https://bugzilla.mozilla.org/show_bug.cgi?id=1580879');
-
-            tabsToReCreate = await Promise.all(tabsToReCreate.map(tab => cache.loadTabSession(tab)));
-
-            let groupIds = tabsToReCreate.map(tab => tab.groupId).filter(utils.onlyUniqueFilter),
-                groupIdForNextTabs = (groupIds.length === 1 && groupIds[0]) ? groupIds[0] : null;
-
-            if (groupIdForNextTabs) {
-                BG.groupIdForNextTab = groupIdForNextTabs;
-            }
-
-            BG.skipCreateTab = true;
-
-            let newTabs = await Promise.all(tabsToReCreate.reverse().map(createNative)); // create tabs back to front
-
-            BG.skipCreateTab = false;
-
-            BG.groupIdForNextTab = null;
-
-            newTabs = await Promise.all(newTabs.reverse().map(cache.setTabSession)); // reverse tabs back (reset tabs positions)
-
-            tabIndexesToReCreate.forEach((resultIndex, newTabIndex) => result[resultIndex] = newTabs[newTabIndex]);
-
-            await remove(tabsToReCreate.map(utils.keyId));
-        }
-        // end fix bug https://bugzilla.mozilla.org/show_bug.cgi?id=1580879
-        // ==================================================================================
-
-        return result;
+        return browser.tabs.move(tabs.map(utils.keyId), options);
     }
 
     async function discard(tabIds = []) {
