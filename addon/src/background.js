@@ -2342,7 +2342,8 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
     }
 
     let currentData = await storage.get(null),
-        lastCreatedGroupPosition = Math.max(currentData.lastCreatedGroupPosition, data.lastCreatedGroupPosition || 0);
+        lastCreatedGroupPosition = Math.max(currentData.lastCreatedGroupPosition, data.lastCreatedGroupPosition || 0),
+        neededConteiners = new Set;
 
     currentData.groups = await Groups.load(null, true, true, true);
 
@@ -2374,6 +2375,10 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
                 delete tab.index;
                 delete tab.pinned;
 
+                if (tab.cookieStoreId && !containers.isTemporary(tab.cookieStoreId)) {
+                    neededConteiners.add(tab.cookieStoreId);
+                }
+
                 return Object.assign(tab, newTabParams);
             });
 
@@ -2394,6 +2399,10 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
 
     if (data.containers) {
         for (let cookieStoreId in data.containers) {
+            if (!neededConteiners.has(cookieStoreId)) {
+                continue;
+            }
+
             let newCookieStoreId = await containers.normalize(cookieStoreId, data.containers[cookieStoreId]);
 
             if (newCookieStoreId !== cookieStoreId) {
