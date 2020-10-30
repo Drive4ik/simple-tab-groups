@@ -1133,7 +1133,7 @@
         <main id="result" :class="['is-full-width', dragData ? 'drag-' + dragData.itemType : false]">
             <!-- SEARCH TABS -->
             <div v-if="section === SECTION_SEARCH">
-                <div v-if="filteredGroupsBySearch.length" class="groups">
+                <div v-if="filteredGroupsBySearch.length">
                     <div v-for="group in filteredGroupsBySearch" :key="group.id">
                         <div
                             :class="['group item is-unselectable', {
@@ -1268,7 +1268,7 @@
 
             <!-- GROUPS LIST -->
             <div v-if="section === SECTION_GROUPS_LIST">
-                <div class="groups">
+                <div>
                     <div
                         v-for="group in groups"
                         :key="group.id"
@@ -1818,7 +1818,7 @@
         &.full-popup-width {
             --popup-width: 800px;
 
-            .groups .item .item-action {
+            .group.item .item-action {
                 width: 150px;
                 min-width: 150px;
             }
@@ -2034,7 +2034,7 @@
         flex-grow: 1;
     }
 
-    .groups .item .item-action {
+    .group.item .item-action {
         width: 75px;
         min-width: 75px;
         overflow: hidden;
