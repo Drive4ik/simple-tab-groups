@@ -100,14 +100,8 @@
 
             this.permissions.bookmarks = await browser.permissions.contains(PERMISSIONS.BOOKMARKS);
 
+            this.groups = data.groups; // set before for watch hotkeys
             this.options = options;
-            this.groups = data.groups;
-
-            this.options.hotkeys.forEach(function(hotkey) {
-                if (this.actionsWithCustomGroup.includes(hotkey.action) && hotkey.groupId && !this.groups.some(gr => gr.id === hotkey.groupId)) {
-                    hotkey.groupId = 0;
-                }
-            }, this);
 
             this.loadBookmarksParents();
 
@@ -228,11 +222,7 @@
             },
             'options.hotkeys': {
                 handler(hotkeys, oldValue) {
-                    if (null == oldValue) {
-                        return;
-                    }
-
-                    let filteredHotkeys = hotkeys.filter(function(hotkey) {
+                    hotkeys = hotkeys.filter(function(hotkey, index, self) {
                         if (!hotkey.action) {
                             return false;
                         }
@@ -245,11 +235,15 @@
                             return false;
                         }
 
-                        return true;
+                        if (this.actionsWithCustomGroup.includes(hotkey.action) && hotkey.groupId && !this.groups.some(gr => gr.id === hotkey.groupId)) {
+                            hotkey.groupId = 0;
+                        }
+
+                        return self.findIndex(h => Object.keys(hotkey).every(key => hotkey[key] === h[key])) === index;
                     }, this);
 
                     BG.saveOptions({
-                        hotkeys: filteredHotkeys,
+                        hotkeys: hotkeys,
                     });
                 },
                 deep: true,
