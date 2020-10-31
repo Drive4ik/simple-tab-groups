@@ -682,19 +682,19 @@
             },
 
             discardGroup({tabs}) {
-                Tabs.discard(tabs.map(utils.keyId));
+                Tabs.discard(tabs);
             },
 
             discardOtherGroups(groupExclude) {
-                let tabIds = this.groups.reduce(function(acc, gr) {
-                    let groupTabIds = (gr.id === groupExclude.id || gr.isArchive || cache.getWindowId(gr.id)) ? [] : gr.tabs.map(utils.keyId);
+                let tabs = this.groups.reduce(function(acc, gr) {
+                    let groupTabs = (gr.id === groupExclude.id || gr.isArchive || cache.getWindowId(gr.id)) ? [] : gr.tabs;
 
-                    acc.push(...groupTabIds);
+                    acc.push(...groupTabs);
 
                     return acc;
                 }, []);
 
-                Tabs.discard(tabIds);
+                Tabs.discard(tabs);
             },
 
             async unloadGroup({id}) {
@@ -714,9 +714,7 @@
             },
 
             reloadAllTabsInGroup(group, bypassCache) {
-                if (group.tabs.length) {
-                    Tabs.reload(group.tabs.map(utils.keyId), bypassCache);
-                }
+                Tabs.reload(group.tabs, bypassCache);
             },
 
             clickOnTab(event, tab, group) {
@@ -847,7 +845,7 @@
                 this.unSyncTabs = [];
             },
             unsyncHiddenTabsCloseAll() {
-                Tabs.remove(this.unSyncTabs.map(utils.keyId));
+                BG.Tabs.remove(this.unSyncTabs.map(utils.keyId));
 
                 this.unSyncTabs = [];
             },

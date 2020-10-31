@@ -166,7 +166,7 @@
                     await Tabs.createTempActiveTab(groupWindowId, false);
                 }
 
-                await Tabs.remove(group.tabs.map(utils.keyId));
+                await Tabs.remove(group.tabs);
             }
 
             BG.updateMoveTabMenus();
@@ -327,16 +327,10 @@
             await Tabs.createTempActiveTab(windowId, false);
         }
 
-        if (group.tabs.length) {
-            let tabIds = group.tabs.map(utils.keyId);
+        await Tabs.safeHide(group.tabs);
 
-            BG.addExcludeTabIds(tabIds);
-            await BG.browser.tabs.hide(tabIds);
-            BG.removeExcludeTabIds(tabIds);
-
-            if (BG.options.discardTabsAfterHide && !group.dontDiscardTabsAfterHideThisGroup) {
-                await Tabs.discard(tabIds);
-            }
+        if (BG.options.discardTabsAfterHide && !group.dontDiscardTabsAfterHideThisGroup) {
+            Tabs.discard(group.tabs);
         }
 
         BG.updateBrowserActionData(null, windowId);
@@ -366,11 +360,11 @@
         if (group.isArchive) {
             group.isArchive = false;
 
-            await BG.createTabsSafe(setNewTabsParams(group.tabs, group));
+            await BG.createTabsSafe(setNewTabsParams(group.tabs, group), true);
+
+            group.tabs = [];
         } else {
             group.isArchive = true;
-
-            let tabIds = group.tabs.map(utils.keyId);
 
             group.tabs = Tabs.prepareForSave(group.tabs, false, true, true);
 
@@ -381,11 +375,11 @@
                 await Tabs.createTempActiveTab(groupWindowId, false);
             }
 
-            if (tabIds.length) {
-                BG.addExcludeTabIds(tabIds);
-                await Tabs.remove(tabIds);
-                BG.removeExcludeTabIds(tabIds);
-            }
+            let tabIds = group.tabs.map(utils.keyId);
+
+            BG.addExcludeTabIds(tabIds);
+            await Tabs.remove(tabIds);
+            BG.removeExcludeTabIds(tabIds);
 
             if (group.isMain) {
                 group.isMain = false;

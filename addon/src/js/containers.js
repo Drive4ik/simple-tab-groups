@@ -225,12 +225,12 @@
         return _containers;
     }
 
-    async function removeUnusedTemporaryContainers(windows) {
-        let tabContainers = windows.reduce((acc, win) => (win.tabs.forEach(tab => acc.add(tab.cookieStoreId)), acc), new Set);
+    async function removeUnusedTemporaryContainers(tabs) {
+        let tabContainers = tabs.map(tab => tab.cookieStoreId).filter(utils.onlyUniqueFilter);
 
         return remove(
             Object.keys(containers)
-            .filter(cookieStoreId => isTemporary(cookieStoreId, null, true) && !tabContainers.has(cookieStoreId))
+            .filter(cookieStoreId => isTemporary(cookieStoreId, null, true) && !tabContainers.includes(cookieStoreId))
         );
     }
 

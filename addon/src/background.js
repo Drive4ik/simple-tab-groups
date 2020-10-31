@@ -43,9 +43,11 @@ let options = {},
         };
     })();
 
-async function createTabsSafe(tabs) {
-    if (options.reverseTabsOnCreate) {
-        tabs.reverse();
+async function createTabsSafe(tabs, tryRestoreOpeners, hideTabs = true) {
+    console.log('createTabsSafe', tabs);
+
+    if (!tabs.length) {
+        return [];
     }
 
     let groupIds = tabs.map(tab => tab.groupId).filter(utils.onlyUniqueFilter),
@@ -55,60 +57,54 @@ async function createTabsSafe(tabs) {
         BG.groupIdForNextTab = groupIdForNextTabs;
     }
 
-    BG.skipCreateTab = true;
+    let isEnabledTreeTabsExt = await utils.isEnabledTreeTabsExtension(),
+        oldNewTabIds = {},
+        newTabs = [];
 
-    let newTabs = await Promise.all(tabs.map(function(tab) {
+    tabs.forEach(function(tab) {
         delete tab.active;
         delete tab.index;
         delete tab.windowId;
+    });
 
-        return Tabs.createNative(tab);
-    }));
+    BG.skipCreateTab = true;
+
+    if (tryRestoreOpeners && isEnabledTreeTabsExt && tabs.some(tab => tab.openerTabId)) {
+        for (let tab of tabs) {
+            if (tab.id && tab.openerTabId) {
+                tab.openerTabId = oldNewTabIds[tab.openerTabId];
+            }
+
+            let newTab = await Tabs.createNative(tab);
+
+            if (tab.id) {
+                oldNewTabIds[tab.id] = newTab.id;
+            }
+
+            newTabs.push(newTab);
+        }
+    } else {
+        tabs.forEach(tab => delete tab.openerTabId);
+        newTabs = await Promise.all(tabs.map(Tabs.createNative));
+    }
 
     BG.skipCreateTab = false;
 
     BG.groupIdForNextTab = null;
 
-    if (options.reverseTabsOnCreate) {
-        tabs.reverse();
-        newTabs.reverse();
-    }
-
-    newTabs = syncOpenerTabs(tabs, newTabs);
-
     newTabs = await Promise.all(newTabs.map(cache.setTabSession));
 
-    let tabsToHide = newTabs.filter(tab => !tab.pinned && tab.groupId && !cache.getWindowId(tab.groupId)),
-        tabsToHideIds = tabsToHide.map(utils.keyId);
-
-    if (tabsToHideIds.length) {
-        addExcludeTabIds(tabsToHideIds);
-        await browser.tabs.hide(tabsToHideIds);
-        removeExcludeTabIds(tabsToHideIds);
-
-        tabsToHide.forEach(tab => tab.hidden = true);
-    }
-
-    return newTabs;
-}
-
-function syncOpenerTabs(tabs, newTabs) {
-    tabs.forEach(function({openerTabId}, index) {
-        if (openerTabId < 1) {
-            return;
-        }
-
-        let openerIndex = tabs.findIndex(tab => tab.id === openerTabId);
-
-        if (openerIndex !== -1) {
-            newTabs[index].openerTabId = newTabs[openerIndex].id;
-            cache.setTab(newTabs[index]);
-
-            browser.tabs.update(newTabs[index].id, {
-                openerTabId: newTabs[index].openerTabId,
-            }).catch(errorEventHandler);
-        }
+    newTabs = await Tabs.moveNative(newTabs, {
+        index: -1,
     });
+
+    newTabs.forEach(cache.applyTabSession);
+
+    if (hideTabs) {
+        let tabsToHide = newTabs.filter(tab => !tab.pinned && tab.groupId && !cache.getWindowId(tab.groupId));
+
+        await Tabs.safeHide(tabsToHide);
+    }
 
     return newTabs;
 }
@@ -339,22 +335,14 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                         Tabs.setMute(groupToHide.tabs, true);
                     }
 
-                    let tabIds = groupToHide.tabs.map(utils.keyId);
-
-                    addExcludeTabIds(tabIds);
-
-                    await browser.tabs.hide(tabIds);
-
-                    removeExcludeTabIds(tabIds);
+                    await Tabs.safeHide(groupToHide.tabs);
 
                     if (options.discardTabsAfterHide && !groupToHide.dontDiscardTabsAfterHideThisGroup) {
-                        Tabs.discard(tabIds);
+                        Tabs.discard(groupToHide.tabs);
                     }
                 }
 
-                if (tabsIdsToRemove.length) {
-                    Tabs.remove(tabsIdsToRemove);
-                }
+                Tabs.remove(tabsIdsToRemove);
             }
 
             updateMoveTabMenus();
@@ -523,9 +511,7 @@ const onUpdatedTab = utils.catchFunc(async function(tabId, changeInfo, tab) {
                         }
                     }
 
-                    excludeTabsIds.add(tab.id);
-                    await browser.tabs.hide(tab.id);
-                    excludeTabsIds.delete(tab.id);
+                    await Tabs.safeHide([tab]);
                 } else {
                     cache.setTabGroup(tab.id, winGroupId);
                 }
@@ -698,7 +684,7 @@ async function addUndoRemoveGroupItem(groupToRemove) {
         if (tabs.length && !group.isArchive) {
             await loadingBrowserAction();
 
-            group.tabs = await createTabsSafe(Groups.setNewTabsParams(tabs, group));
+            group.tabs = await createTabsSafe(Groups.setNewTabsParams(tabs, group), true);
 
             await loadingBrowserAction(false);
         }
@@ -1157,18 +1143,14 @@ async function createMoveTabMenus() {
             16: 'resource://usercontext-content/chill.svg',
         },
         contexts: [browser.menus.ContextType.BROWSER_ACTION],
-        onclick: utils.catchFunc(async function() {
-            let windows = await Windows.load(true, true, true),
-                allTabs = windows.reduce((acc, win) => (acc.push(...win.tabs), acc), []),
-                // cookieStoreIdsToRemove = new Set,
+        onclick: utils.catchFunc(async function(info) {
+            let setActive = 2 === info.button,
+                allTabs = await Tabs.get(null, null, null, undefined, true, true),
                 tabsToCreate = [];
 
             let tabsIdsToRemove = allTabs
                 .filter(tab => containers.isTemporary(tab.cookieStoreId))
-                .reverse()
                 .map(function(tab) {
-                    // cookieStoreIdsToRemove.add(tab.cookieStoreId);
-
                     tabsToCreate.push({
                         ...tab,
                         cookieStoreId: TEMPORARY_CONTAINER,
@@ -1189,20 +1171,17 @@ async function createMoveTabMenus() {
 
                 newTabs = await Promise.all(newTabs.map(cache.setTabSession));
 
-                let tabsToHide = newTabs.filter(tab => tab.groupId && !cache.getWindowId(tab.groupId)),
-                    tabsToHideIds = tabsToHide.map(utils.keyId);
+                let tabsToHide = newTabs.filter(tab => tab.groupId && !cache.getWindowId(tab.groupId));
 
-                if (tabsToHideIds.length) {
-                    addExcludeTabIds(tabsToHideIds);
-                    await browser.tabs.hide(tabsToHideIds);
-                    removeExcludeTabIds(tabsToHideIds);
-                }
+                await Tabs.safeHide(tabsToHide);
 
                 // remove old tabs
                 await Tabs.remove(tabsIdsToRemove);
 
                 // remove temporary containers
-                // await containers.remove(Array.from(cookieStoreIdsToRemove));
+                if (setActive) {
+                    containers.removeUnusedTemporaryContainers(newTabs);
+                }
 
                 loadingBrowserAction(false);
             }
@@ -1609,11 +1588,7 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, originUrl
     let newTabPromise = Tabs.create(newTabParams);
 
     if (tab.hidden) {
-        newTabPromise.then(async function({id}) {
-            excludeTabsIds.add(id);
-            await browser.tabs.hide(id);
-            excludeTabsIds.delete(id);
-        });
+        newTabPromise.then(newTab => Tabs.safeHide([newTab]));
     }
 
     Tabs.remove(tab.id);
@@ -2037,7 +2012,7 @@ async function runAction(data, sender = {}) {
                         result.error = browser.i18n.getMessage('groupIsArchived', groupToDiscard.title);
                         utils.notify(result.error, 7, 'groupIsArchived');
                     } else {
-                        await Tabs.discard(groupToDiscard.tabs.map(utils.keyId));
+                        await Tabs.discard(groupToDiscard.tabs);
                         result.ok = true;
                     }
                 } else {
@@ -2062,21 +2037,21 @@ async function runAction(data, sender = {}) {
                 break;
             case 'discard-other-groups':
                 {
-                    let tabIds = notArchivedGroups.reduce(function(acc, gr) {
+                    let tabs = notArchivedGroups.reduce(function(acc, gr) {
                         if (gr.id !== currentGroup.id && !cache.getWindowId(gr.id)) {
-                            acc.push(...gr.tabs.map(utils.keyId));
+                            acc.push(...gr.tabs);
                         }
                         return acc;
                     }, []);
 
-                    await Tabs.discard(tabIds);
+                    await Tabs.discard(tabs);
 
                     result.ok = true;
                 }
                 break;
             case 'reload-all-tabs-in-current-group':
                 if (currentGroup.id) {
-                    await Tabs.reload(currentGroup.tabs.map(utils.keyId));
+                    await Tabs.reload(currentGroup.tabs);
                     result.ok = true;
                 }
 
@@ -2419,9 +2394,9 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
 
     delete data.containers;
 
-    let windows = await Windows.load(true, true, true);
+    let allTabs = await Tabs.get(null, false, null, undefined, true, true);
 
-    await syncTabs(data.groups, windows);
+    await syncTabs(data.groups, allTabs);
 
     if (Array.isArray(data.pinnedTabs)) {
         let currentPinnedTabs = await Tabs.get(null, true, null);
@@ -2433,7 +2408,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         });
 
         if (data.pinnedTabs.length) {
-            await createTabsSafe(data.pinnedTabs);
+            await createTabsSafe(data.pinnedTabs, false, false);
         }
     }
 
@@ -2653,13 +2628,13 @@ async function runMigrateForData(data) {
                 });
 
                 if (tabs.length) {
-                    tabs.reverse();
+                    tabs.forEach(tab => delete tab.openerTabId);
 
                     await Promise.all(tabs.map(tab => Tabs.createNative(utils.normalizeTabUrl(tab))));
 
                     await utils.wait(100);
 
-                    await Tabs.remove(tabs.map(tab => tab.id));
+                    await Tabs.remove(tabs);
 
                     await utils.wait(100);
                 }
@@ -2754,7 +2729,13 @@ async function runMigrateForData(data) {
                     });
                 });
 
-                data.groups = await syncTabs(data.groups, windows, true);
+                let allTabs = utils.getTabs(windows);
+
+                if (allTabs.length) {
+                    await browser.tabs.hide(allTabs.map(utils.keyId));
+                }
+
+                data.groups = await syncTabs(data.groups, allTabs);
 
                 browser.notifications.clear(notifId);
 
@@ -2871,6 +2852,13 @@ async function runMigrateForData(data) {
                 });
             },
         },
+        {
+            version: '4.5.5',
+            remove: ['reverseTabsOnCreate'],
+            migration() {
+                //
+            },
+        },
     ];
 
     // start migration
@@ -2921,12 +2909,8 @@ async function runMigrateForData(data) {
     return true;
 }
 
-async function syncTabs(groups, windows, hideAllTabs = false) {
-    let allTabs = windows.reduce((acc, win) => (acc.push(...win.tabs), acc), []);
-
-    if (hideAllTabs && allTabs.length) {
-        await browser.tabs.hide(allTabs.map(utils.keyId));
-    }
+async function syncTabs(groups, allTabs) {
+    console.log('syncTabs');
 
     for (let group of groups) {
         if (group.isArchive) {
@@ -2934,6 +2918,7 @@ async function syncTabs(groups, windows, hideAllTabs = false) {
         }
 
         let tabs = [],
+            newTabs = [],
             newTabParams = Groups.getNewTabParams(group);
 
         for (let tab of group.tabs) {
@@ -2950,19 +2935,23 @@ async function syncTabs(groups, windows, hideAllTabs = false) {
 
                 tabs.push(cache.setTabSession(winTab));
             } else {
-                tabs.push(Tabs.create({
-                    title: tab.title,
-                    url: tab.url,
-                    cookieStoreId: tab.cookieStoreId,
+                tabs.push(null);
+                newTabs.push({
+                    ...tab,
+                    openerTabId: null,
                     ...cache.applySession({}, tab),
                     ...newTabParams,
-                }, false));
+                });
             }
         }
 
-        tabs = await Promise.all(tabs);
+        if (newTabs.length) {
+            newTabs = await createTabsSafe(newTabs, true);
 
-        group.tabs = syncOpenerTabs(group.tabs, tabs);
+            tabs = tabs.map(tab => tab ? tab : newTabs.shift());
+        }
+
+        group.tabs = await Promise.all(tabs);
     }
 
     // sort tabs
@@ -3030,7 +3019,7 @@ async function tryRestoreMissedTabs() {
             .filter(Boolean);
 
         if (tabsToRestore.length) {
-            await createTabsSafe(tabsToRestore);
+            await createTabsSafe(tabsToRestore, true);
         }
     }
 
@@ -3283,7 +3272,7 @@ async function init() {
             }
         });
 
-        containers.removeUnusedTemporaryContainers(windows);
+        containers.removeUnusedTemporaryContainers(utils.getTabs(windows));
 
         restoreOldExtensionUrls();
 

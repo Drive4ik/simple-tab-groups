@@ -36,9 +36,9 @@
             tab.windowId = windowId;
         }
 
-        /*if (Number.isFinite(openerTabId) && openerTabId >= 1) {
+        if (Number.isFinite(openerTabId) && openerTabId >= 1) {
             tab.openerTabId = openerTabId;
-        }*/
+        }
 
         if (!tab.discarded && (isInReaderMode || openInReaderMode)) {
             tab.openInReaderMode = true;
@@ -229,10 +229,14 @@
         return tab;
     }
 
-    // tabIds integer or integer array
-    async function remove(tabIds) {
-        console.log('remove tab ids:', tabIds);
-        return browser.tabs.remove(tabIds);
+    async function remove(tabs) { // id or ids or tabs
+        console.log('remove tab ids:', tabs);
+
+        tabs = Array.isArray(tabs) ? tabs : [tabs];
+
+        if (tabs.length) {
+            await browser.tabs.remove(tabs.map(tab => tab.id || tab));
+        }
     }
 
     async function updateThumbnail(tabId, force) {
@@ -251,7 +255,7 @@
         }
 
         if (tab.discarded) {
-            reload([tab.id]);
+            reload([tab]);
             return;
         }
 
@@ -363,6 +367,7 @@
                 let newTab = await createNative({
                     ...tab,
                     active: false,
+                    openerTabId: null,
                     windowId,
                     ...newTabParams,
                 });
@@ -476,17 +481,28 @@
 
         if (tabsToReload.length) {
             console.log('tabsToReload by bug 1595583', tabsToReload);
-            await reload(tabsToReload.map(utils.keyId), true);
-            tabsToReload.forEach(tab => tab.discarded = false);
+            await reload(tabsToReload, true);
             await utils.wait(100);
         }
 
         return browser.tabs.move(tabs.map(utils.keyId), options);
     }
 
-    async function discard(tabIds = []) {
-        if (tabIds.length) {
-            return browser.tabs.discard(tabIds).catch(noop);
+    async function discard(tabs) { // ids or tabs
+        if (tabs.length) {
+            await browser.tabs.discard(tabs.map(tab => tab.id || tab)).catch(noop);
+        }
+    }
+
+    async function safeHide(tabs) { // ids or tabs
+        if (tabs.length) {
+            let tabIds = tabs.map(tab => tab.id || tab);
+
+            BG.addExcludeTabIds(tabIds);
+            await browser.tabs.hide(tabIds);
+            BG.removeExcludeTabIds(tabIds);
+
+            tabs.forEach(tab => tab.hidden = true);
         }
     }
 
@@ -510,8 +526,10 @@
         return browser.tabs.sendMessage(tabId, message).catch(noop);
     }
 
-    async function reload(tabIds = [], bypassCache = false) {
-        await Promise.all(tabIds.map(tabId => browser.tabs.reload(tabId, {bypassCache}).catch(noop)));
+    async function reload(tabs = [], bypassCache = false) { // ids or tabs
+        if (tabs.length) {
+            await Promise.all(tabs.map(tab => browser.tabs.reload((tab.id || tab), {bypassCache}).catch(noop)));
+        }
     }
 
     function prepareForSave(tabs, includeGroupId = false, includeFavIconUrl = false, includeThumbnail = false) {
@@ -526,9 +544,12 @@
                 tab.openInReaderMode = true;
             }
 
-            if (openerTabId > 0) {
-                tab.openerTabId = openerTabId;
+            if (id) {
                 tab.id = id;
+
+                if (openerTabId) {
+                    tab.openerTabId = openerTabId;
+                }
             }
 
             if (includeGroupId && groupId) {
@@ -585,6 +606,7 @@
         move,
         moveNative,
         discard,
+        safeHide,
         isCanSendMessage,
         sendMessage,
         reload,

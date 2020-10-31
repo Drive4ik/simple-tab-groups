@@ -672,18 +672,18 @@
                 Tabs.discard(this.getTabIdsForMove(tab.id));
             },
             discardGroup({tabs}) {
-                Tabs.discard(tabs.map(utils.keyId));
+                Tabs.discard(tabs);
             },
             discardOtherGroups(groupExclude) {
-                let tabIds = this.groups.reduce(function(acc, gr) {
-                    let groupTabIds = (gr.id === groupExclude.id || gr.isArchive || cache.getWindowId(gr.id)) ? [] : gr.tabs.map(utils.keyId);
+                let tabs = this.groups.reduce(function(acc, gr) {
+                    let groupTabs = (gr.id === groupExclude.id || gr.isArchive || cache.getWindowId(gr.id)) ? [] : gr.tabs;
 
-                    acc.push(...groupTabIds);
+                    acc.push(...groupTabs);
 
                     return acc;
                 }, []);
 
-                Tabs.discard(tabIds);
+                Tabs.discard(tabs);
             },
             reloadTab(tab, bypassCache) {
                 Tabs.reload(this.getTabIdsForMove(tab.id), bypassCache);

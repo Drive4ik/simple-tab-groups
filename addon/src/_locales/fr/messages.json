@@ -963,10 +963,6 @@
             }
         }
     },
-    "reverseTabsOnCreate": {
-        "message": "Inverser les onglets à la création, si la préférence <code>browser.tabs.insertAfterCurrent</code> est <code>true</code>",
-        "description": "Reverse tabs on create, if you have the browser.tabs.insertAfterCurrent preference is true"
-    },
     "groupNotLoaded": {
         "message": "Groupe non chargé",
         "description": "Group not loaded"

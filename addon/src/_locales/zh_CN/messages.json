@@ -955,10 +955,6 @@
             }
         }
     },
-    "reverseTabsOnCreate": {
-        "message": "如果你设置<code>browser.tabs.insertAfterCurrent</code>为<code>true</code>则在相反位置创建标签页",
-        "description": "Reverse tabs on create, if you have the browser.tabs.insertAfterCurrent preference is true"
-    },
     "groupNotLoaded": {
         "message": "未加载群组",
         "description": "Group not loaded"

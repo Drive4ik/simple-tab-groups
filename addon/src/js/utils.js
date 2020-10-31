@@ -337,6 +337,10 @@
         return browser.tabs.TabStatus.LOADING === status;
     }
 
+    function getTabs(windows) {
+        return windows.reduce((acc, win) => (acc.push(...win.tabs), acc), []);
+    }
+
     function createGroupTitle(title, groupId) {
         return String(title || browser.i18n.getMessage('newGroupTitle', groupId));
     }
@@ -752,6 +756,18 @@
         return interval;
     }
 
+    async function isEnabledTreeTabsExtension() {
+        for (let extId of TREE_TABS_EXTENSIONS) {
+            let extInfo = await browser.management.get(extId).catch(noop);
+
+            if (extInfo && extInfo.enabled) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     window.utils = {
         getInfo,
 
@@ -794,6 +810,7 @@
         isTabLoaded,
         isTabLoading,
 
+        getTabs,
         createGroupTitle,
         getLastActiveTab,
         getLastActiveTabTitle,
@@ -826,6 +843,8 @@
         compareVersions,
 
         safeReloadAddon,
+
+        isEnabledTreeTabsExtension,
     };
 
 })();

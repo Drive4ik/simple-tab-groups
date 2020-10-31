@@ -963,10 +963,6 @@
             }
         }
     },
-    "reverseTabsOnCreate": {
-        "message": "Inverti l'ordine delle schede durante la creazione, se hai l'impostazione <code>browser.tabs.insertAfterCurrent</code> a <code>true</code>",
-        "description": "Reverse tabs on create, if you have the browser.tabs.insertAfterCurrent preference is true"
-    },
     "groupNotLoaded": {
         "message": "Gruppo non caricato",
         "description": "Group not loaded"

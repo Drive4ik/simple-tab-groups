@@ -955,10 +955,6 @@
             }
         }
     },
-    "reverseTabsOnCreate": {
-        "message": "Pokud je možnost <code>browser.tabs.insertAfterCurrent</code> nastavena na <code>true</code>, obrátit pořadí panelů",
-        "description": "Reverse tabs on create, if you have the browser.tabs.insertAfterCurrent preference is true"
-    },
     "groupNotLoaded": {
         "message": "Skupina nenačtena",
         "description": "Group not loaded"

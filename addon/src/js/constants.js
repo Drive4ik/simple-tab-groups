@@ -31,6 +31,11 @@ const DEFAULT_BOOKMARKS_PARENTS = Object.freeze([
     'unfiled_____',
 ]);
 
+const TREE_TABS_EXTENSIONS = Object.freeze([
+    'treestyletab@piro.sakura.ne.jp',
+    '{8d808887-ed13-4931-9f5a-4c0bff979a5a}',
+]);
+
 const EXTENSIONS_WHITE_LIST = Object.freeze({
     'stg-plugin-create-new-group@drive4ik': {
         title: '[STG plugin] Create new group',
@@ -193,7 +198,6 @@ const DEFAULT_OPTIONS = Object.freeze({
     leaveBookmarksOfClosedTabs: false,
     showExtendGroupsPopupWithActiveTabs: false,
     showTabsWithThumbnailsInManageGroups: false,
-    reverseTabsOnCreate: false,
     fullPopupWidth: false,
     temporaryContainerTitle: browser.i18n.getMessage('temporaryContainerTitle'),
 

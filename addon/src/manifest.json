@@ -10,7 +10,7 @@
 
     "name": "__MSG_extensionName__",
     "description": "__MSG_extensionDescription__",
-    "version": "4.5.2",
+    "version": "4.5.5",
     "author": "Drive4ik",
     "homepage_url": "https://github.com/drive4ik/simple-tab-groups",
 
@@ -27,6 +27,7 @@
         "cookies",
         "sessions",
         "downloads",
+        "management",
         "webRequest",
         "webRequestBlocking",
         "<all_urls>",

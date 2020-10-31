@@ -955,10 +955,6 @@
             }
         }
     },
-    "reverseTabsOnCreate": {
-        "message": "Zmień kolejność kart przy tworzeniu, jeśli opcja <code>browser.tabs.insertAfterCurrent</code> jest ustawiona na <code>true</code>",
-        "description": "Reverse tabs on create, if you have the browser.tabs.insertAfterCurrent preference is true"
-    },
     "groupNotLoaded": {
         "message": "Grupa nie została wczytana",
         "description": "Group not loaded"
