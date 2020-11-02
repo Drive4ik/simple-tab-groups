@@ -3075,22 +3075,21 @@ function normalizeContainersInGroups(groups) {
     return hasChanges;
 }
 
-async function restoreOldExtensionUrls() {
-    let tabs = await browser.tabs.query({
-            url: 'moz-extension://*/help/open-in-container.html*',
-        }),
-        currentUUID = utils.getUUIDFromUrl(addonUrlPrefix);
+async function restoreOldExtensionUrls(tabs) {
+    let currentUUID = utils.getUUIDFromUrl(addonUrlPrefix);
 
-    tabs.forEach(function({id, url}) {
-        let uuid = utils.getUUIDFromUrl(url);
+    tabs
+        .filter(({url}) => url.startsWith('moz-extension:') && url.includes('/help/open-in-container.html'))
+        .forEach(function({id, url}) {
+            let uuid = utils.getUUIDFromUrl(url);
 
-        if (uuid !== currentUUID) {
-            browser.tabs.update(id, {
-                url: url.replace(uuid, currentUUID),
-                loadReplace: true,
-            });
-        }
-    });
+            if (uuid !== currentUUID) {
+                browser.tabs.update(id, {
+                    url: url.replace(uuid, currentUUID),
+                    loadReplace: true,
+                }).catch(noop);
+            }
+        });
 }
 
 // { reason: "update", previousVersion: "3.0.1", temporary: true }
@@ -3285,9 +3284,11 @@ async function init() {
                 .catch(noop);
         });
 
-        containers.removeUnusedTemporaryContainers(utils.getTabs(windows));
+        let tabs = utils.getTabs(windows);
 
-        restoreOldExtensionUrls();
+        containers.removeUnusedTemporaryContainers(tabs);
+
+        restoreOldExtensionUrls(tabs);
 
         window.setTimeout(resetAutoBackup, 10000);
 
