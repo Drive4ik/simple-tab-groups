@@ -115,10 +115,10 @@
 
         if (windowId) {
             await cache.setWindowGroup(windowId, newGroup.id);
-            BG.updateBrowserActionData(newGroup.id);
+            BG.updateBrowserActionData(newGroup.id, undefined, groups);
         }
 
-        BG.updateMoveTabMenus();
+        BG.updateMoveTabMenus(groups);
 
         if (windowId && !tabIds.length) {
             let tabs = await Tabs.get(windowId);
@@ -169,10 +169,10 @@
                 await Tabs.remove(group.tabs);
             }
 
-            BG.updateMoveTabMenus();
+            BG.updateMoveTabMenus(groups);
 
             if (groupWindowId) {
-                BG.updateBrowserActionData(null, groupWindowId);
+                BG.updateBrowserActionData(null, groupWindowId, groups);
             }
 
             if (group.isMain) {
@@ -244,9 +244,9 @@
                 group: mapForExternalExtension(group),
             });
 
-            BG.updateMoveTabMenus();
+            BG.updateMoveTabMenus(groups);
 
-            BG.updateBrowserActionData(groupId);
+            BG.updateBrowserActionData(groupId, undefined, groups);
         }
 
         if (updateData.hasOwnProperty('title')) {
@@ -261,7 +261,7 @@
 
         await save(groups, true);
 
-        BG.updateMoveTabMenus();
+        BG.updateMoveTabMenus(groups);
     }
 
     async function sort(vector = 'asc') {
@@ -279,7 +279,7 @@
 
         await save(groups, true);
 
-        BG.updateMoveTabMenus();
+        BG.updateMoveTabMenus(groups);
     }
 
     async function unload(groupId) {
@@ -295,7 +295,7 @@
             return false;
         }
 
-        let [group] = await load(groupId, true);
+        let [group, groups] = await load(groupId, true);
 
         if (!group) {
             utils.notify(['groupNotFound'], 7, 'groupNotFound');
@@ -333,9 +333,9 @@
             Tabs.discard(group.tabs);
         }
 
-        BG.updateBrowserActionData(null, windowId);
+        BG.updateBrowserActionData(null, windowId, groups);
 
-        BG.updateMoveTabMenus();
+        BG.updateMoveTabMenus(groups);
 
         BG.sendMessage({
             action: 'group-unloaded',
@@ -396,7 +396,7 @@
 
         BG.loadingBrowserAction(false);
 
-        BG.updateMoveTabMenus();
+        BG.updateMoveTabMenus(groups);
     }
 
     function mapForExternalExtension(group) {

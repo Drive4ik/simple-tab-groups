@@ -24,7 +24,7 @@
 
         return {
             version: manifest.version,
-            upTime: (Math.ceil((Date.now() - BG.startTime) / 1000)) + ' sec',
+            upTime: (Math.ceil((Date.now() - ((BG && BG.startTime) || 0)) / 1000)) + ' sec',
             browserAndOS: {
                 ...platformInfo,
                 ...browserInfo,

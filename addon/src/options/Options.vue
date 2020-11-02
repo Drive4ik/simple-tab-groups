@@ -89,38 +89,46 @@
             'manage-addon-backup': manageAddonBackup,
         },
         async created() {
-            let {os} = await browser.runtime.getPlatformInfo();
-            this.isMac = os === browser.runtime.PlatformOs.MAC;
+            try {
+                let {os} = await browser.runtime.getPlatformInfo();
+                this.isMac = os === browser.runtime.PlatformOs.MAC;
 
-            let data = await storage.get(null);
+                let data = await storage.get(null);
 
-            let options = utils.assignKeys({}, data, ALL_OPTIONS_KEYS);
+                let options = utils.assignKeys({}, data, ALL_OPTIONS_KEYS);
 
-            options.autoBackupFolderName = await file.getAutoBackupFolderName();
+                options.autoBackupFolderName = await file.getAutoBackupFolderName();
 
-            this.permissions.bookmarks = await browser.permissions.contains(PERMISSIONS.BOOKMARKS);
+                this.permissions.bookmarks = await browser.permissions.contains(PERMISSIONS.BOOKMARKS);
 
-            this.groups = data.groups; // set before for watch hotkeys
-            this.options = options;
+                this.groups = data.groups; // set before for watch hotkeys
+                this.options = options;
 
-            this.loadBookmarksParents();
+                this.loadBookmarksParents();
 
-            [
-                ...ONLY_BOOL_OPTION_KEYS,
-                'defaultBookmarksParent',
-                'defaultGroupIconViewType',
-                'defaultGroupIconColor',
-                'autoBackupIntervalKey'
-                ]
-                .forEach(function(option) {
-                    this.$watch(`options.${option}`, function(newValue) {
-                        BG.saveOptions({
-                            [option]: newValue,
+                [
+                    ...ONLY_BOOL_OPTION_KEYS,
+                    'defaultBookmarksParent',
+                    'defaultGroupIconViewType',
+                    'defaultGroupIconColor',
+                    'autoBackupIntervalKey'
+                    ]
+                    .forEach(function(option) {
+                        this.$watch(`options.${option}`, function(value, oldValue) {
+                            if (null == oldValue) {
+                                return;
+                            }
+
+                            BG.saveOptions({
+                                [option]: value,
+                            });
                         });
-                    });
-                }, this);
+                    }, this);
 
-            browser.runtime.onMessage.addListener(({action}) => 'i-am-back' === action && window.location.reload());
+                browser.runtime.onMessage.addListener(({action}) => 'i-am-back' === action && window.location.reload());
+            } catch (e) {
+                errorEventHandler(e);
+            }
         },
         mounted() {
             if (this.enableDebug === '2') {
@@ -242,7 +250,7 @@
                         return self.findIndex(h => Object.keys(hotkey).every(key => hotkey[key] === h[key])) === index;
                     }, this);
 
-                    BG.saveOptions({
+                    BG && BG.saveOptions({
                         hotkeys: hotkeys,
                     });
                 },

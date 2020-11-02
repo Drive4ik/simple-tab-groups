@@ -345,9 +345,9 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                 Tabs.remove(tabsIdsToRemove);
             }
 
-            updateMoveTabMenus();
+            updateMoveTabMenus(groups);
 
-            updateBrowserActionData(groupToShow.id);
+            updateBrowserActionData(groupToShow.id, undefined, groups);
 
             if (!applyFromHistory) {
                 groupsHistory.add(groupId);
@@ -679,7 +679,7 @@ async function addUndoRemoveGroupItem(groupToRemove) {
 
         await Groups.save(groups);
 
-        updateMoveTabMenus();
+        updateMoveTabMenus(groups);
 
         if (tabs.length && !group.isArchive) {
             await loadingBrowserAction();
@@ -715,9 +715,9 @@ async function addUndoRemoveGroupItem(groupToRemove) {
     }
 }
 
-async function updateMoveTabMenus() {
+async function updateMoveTabMenus(groups) {
     await removeMoveTabMenus();
-    await createMoveTabMenus();
+    await createMoveTabMenus(groups);
 }
 
 async function removeMoveTabMenus() {
@@ -727,14 +727,16 @@ async function removeMoveTabMenus() {
     }
 }
 
-async function createMoveTabMenus() {
+async function createMoveTabMenus(groups) {
     let hasBookmarksPermission = await browser.permissions.contains(PERMISSIONS.BOOKMARKS);
 
     if (!options.showContextMenuOnTabs && !options.showContextMenuOnLinks && !hasBookmarksPermission) {
         return;
     }
 
-    let groups = await Groups.load();
+    if (!Array.isArray(groups)) {
+        groups = await Groups.load();
+    }
 
     await removeMoveTabMenus();
 
@@ -1374,7 +1376,7 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
 }
 
 function setBrowserAction(windowId, title, icon, enable, isSticky) {
-    console.info('setBrowserAction', {windowId, title, icon, enable});
+    console.info('setBrowserAction', {windowId, title, icon, enable, isSticky});
 
     let winObj = windowId ? {windowId} : {};
 
@@ -1415,7 +1417,7 @@ function setBrowserAction(windowId, title, icon, enable, isSticky) {
     }
 }
 
-async function updateBrowserActionData(groupId, windowId) {
+async function updateBrowserActionData(groupId, windowId, groups) {
     console.log('updateBrowserActionData', {groupId, windowId});
 
     if (groupId) {
@@ -1431,7 +1433,11 @@ async function updateBrowserActionData(groupId, windowId) {
     let group = null;
 
     if (groupId) {
-        [group] = await Groups.load(groupId);
+        if (Array.isArray(groups)) {
+            group = groups.find(gr => gr.id === groupId);
+        } else {
+            [group] = await Groups.load(groupId);
+        }
     }
 
     if (group) {
@@ -2971,12 +2977,17 @@ async function syncTabs(groups, allTabs) {
     return groups;
 }
 
-async function tryRestoreMissedTabs() {
-    // try to restore missed tabs
-    let {tabsToRestore} = await storage.get('tabsToRestore');
+async function tryRestoreMissedTabs(tabsToRestore) {
+    console.log('tryRestoreMissedTabs', tabsToRestore);
+
+    let tabsRestored = false;
 
     if (!tabsToRestore) {
-        return;
+        ({tabsToRestore} = await storage.get('tabsToRestore'));
+    }
+
+    if (!tabsToRestore) {
+        return tabsRestored;
     }
 
     if (tabsToRestore.length) {
@@ -3020,10 +3031,13 @@ async function tryRestoreMissedTabs() {
 
         if (tabsToRestore.length) {
             await createTabsSafe(tabsToRestore, true);
+            tabsRestored = true;
         }
     }
 
     await storage.remove('tabsToRestore');
+
+    return tabsRestored;
 }
 
 function normalizeContainersInGroups(groups) {
@@ -3248,37 +3262,36 @@ async function init() {
             await storage.set(data);
         }
 
-        let windows = await Windows.load(true);
+        let windows = await Windows.load();
 
         if (!windows.length) {
             utils.notify(['notFoundWindowsAddonStoppedWorking']);
             throw '';
         }
 
+        await tryRestoreMissedTabs(data.tabsToRestore);
+
+        windows = await Windows.load(true);
+
         await initializeGroupWindows(windows, data.groups.map(utils.keyId));
 
-        if (window.localStorage.isBackupRestoring) {
-            delete window.localStorage.isBackupRestoring;
-            utils.notify(['backupSuccessfullyRestored']);
-        }
-
-        await tryRestoreMissedTabs();
-
         windows.forEach(function(win) {
-            updateBrowserActionData(null, win.id);
-
-            if (win.groupId) {
-                groupsHistory.add(win.groupId);
-            }
+            updateBrowserActionData(null, win.id, data.groups)
+                .then(function() {
+                    if (win.groupId) {
+                        groupsHistory.add(win.groupId);
+                    }
+                })
+                .catch(noop);
         });
 
         containers.removeUnusedTemporaryContainers(utils.getTabs(windows));
 
         restoreOldExtensionUrls();
 
-        window.setTimeout(resetAutoBackup, 5000);
+        window.setTimeout(resetAutoBackup, 10000);
 
-        createMoveTabMenus();
+        createMoveTabMenus(data.groups);
 
         addEvents();
 
@@ -3288,6 +3301,11 @@ async function init() {
 
         Groups.load(null, true, true); // load favIconUrls, speed up first run popup
 
+        if (window.localStorage.isBackupRestoring) {
+            delete window.localStorage.isBackupRestoring;
+            utils.notify(['backupSuccessfullyRestored']);
+        }
+
         window.BG.inited = true;
 
         // send message for addon plugins
@@ -3295,7 +3313,7 @@ async function init() {
             action: 'i-am-back',
         });
 
-        // send message for addon options page if it's open
+        // send message for addon pages if it's open
         sendMessage({
             action: 'i-am-back',
         });
@@ -3306,7 +3324,7 @@ async function init() {
             color: 'transparent',
         });
 
-        delete window.localStorage.lastReloadFromError;
+        // delete window.localStorage.lastReloadFromError;
     } catch (e) {
         setBrowserAction(undefined, 'lang:clickHereToReloadAddon', '/icons/exclamation-triangle-yellow.svg', true);
 
