@@ -1182,7 +1182,7 @@
                                 </div>
                                 <div class="item-action bold-hover is-unselectable" @click.stop="showSectionGroupTabs(group)">
                                     <img class="size-16 rotate-180" src="/icons/arrow-left.svg" />
-                                    <span class="tabs-text" v-text="groupTabsCountMessage(group.tabs, group.isArchive, options.fullPopupWidth)"></span>
+                                    <span class="tabs-text" v-text="groupTabsCountMessage(group.tabs, group.isArchive, false)"></span>
                                 </div>
                         </div>
 
@@ -1328,7 +1328,7 @@
                             </div>
                             <div class="item-action bold-hover is-unselectable" @click.stop="showSectionGroupTabs(group)">
                                 <img class="size-16 rotate-180" src="/icons/arrow-left.svg" />
-                                <span class="tabs-text" v-text="groupTabsCountMessage(group.tabs, group.isArchive, options.fullPopupWidth)"></span>
+                                <span class="tabs-text" v-text="groupTabsCountMessage(group.tabs, group.isArchive, false)"></span>
                             </div>
                     </div>
 
@@ -1817,8 +1817,8 @@
             --popup-width: 800px;
 
             .group.item .item-action {
-                width: 150px;
-                min-width: 150px;
+                width: 100px;
+                min-width: 100px;
             }
         }
     }
