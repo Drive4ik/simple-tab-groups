@@ -526,8 +526,8 @@
         }
     },
     "moveMultipleTabsToGroupMessage": {
-        "message": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
-        "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
+        "message": "$tabscount$ tabs have been moved.\nClick here to open the first tab",
+        "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",
         "placeholders": {
             "tabscount": {
                 "content": "$1",
