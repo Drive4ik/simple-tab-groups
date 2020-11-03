@@ -19,6 +19,15 @@
         },
         methods: {
             lang: browser.i18n.getMessage,
+            focusTo(vector) {
+                let buttons = this.$refs.modal.querySelectorAll('button');
+
+                if (vector === 'first') {
+                    buttons[0].focus();
+                } else {
+                    buttons[buttons.length - 1].focus();
+                }
+            },
         },
         mounted() {
             this.$nextTick(function() {
@@ -45,8 +54,7 @@
 </script>
 
 <template>
-    <div class="modal popup is-active" @keydown.stop @keydown.esc="$emit('close-popup')">
-        <div class="modal-background" @click="$emit('close-popup')" @keydown.enter="$emit('close-popup')" tabindex="0"></div>
+    <div class="modal popup is-active" ref="modal" @keyup.stop @keydown.stop @keydown.esc="$emit('close-popup')" tabindex="0" @focus="focusTo()">
         <div class="modal-card">
             <header class="modal-card-head">
                 <p class="modal-card-title" v-text="title"></p>
@@ -59,13 +67,19 @@
                 <button v-for="button in buttonsClone" :key="button.lang" @click="button.event && $emit(button.event)" :class="['button', button.classList]" v-text="lang(button.lang)"></button>
             </footer>
         </div>
+        <div class="modal-background" @click="$emit('close-popup')" tabindex="0" @focus="focusTo('first')"></div>
     </div>
 </template>
 
 <style lang="scss">
+    .modal-card {
+        z-index: 9999;
+    }
+
     .modal-card-title {
         font-size: 1.2rem;
         color: inherit;
+        max-width: 97%;
     }
 
     @media screen and (max-width: 769px) {
@@ -92,6 +106,7 @@
 
     .modal-card-body {
         background-color: var(--background-color);
+        scrollbar-width: thin;
     }
 
     .modal-card-head {
