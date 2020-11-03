@@ -305,7 +305,7 @@
                         this.allTabs[tab.id].lastAccessed = tab.lastAccessed;
                     }
 
-                    if (BG.excludeTabsIds.has(tab.id)) {
+                    if (BG.excludeTabIds.has(tab.id)) {
                         return;
                     }
 
@@ -357,7 +357,7 @@
 
                 let onDetachedTabTimer = 0;
                 const onDetachedTab = (tabId, {oldWindowId}) => { // notice: call before onAttached
-                    if (BG.excludeTabsIds.has(tabId)) {
+                    if (BG.excludeTabIds.has(tabId)) {
                         return;
                     }
 
@@ -373,7 +373,7 @@
                     onAttachedUnsyncTabTimer = 0,
                     onAttachedTabWinTimer = 0;
                 const onAttachedTab = (tabId, {newWindowId}) => {
-                    if (BG.excludeTabsIds.has(tabId)) {
+                    if (BG.excludeTabIds.has(tabId)) {
                         return;
                     }
 

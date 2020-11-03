@@ -230,11 +230,10 @@
     }
 
     async function remove(tabs) { // id or ids or tabs
-        console.log('remove tab ids:', tabs);
-
         tabs = Array.isArray(tabs) ? tabs : [tabs];
 
         if (tabs.length) {
+            console.log('remove tabs:', tabs);
             await browser.tabs.remove(tabs.map(tab => tab.id || tab));
         }
     }
@@ -299,8 +298,8 @@
         let showPinnedMessage = false,
             tabsCantHide = new Set,
             groupWindowId = cache.getWindowId(groupId),
-            windowId = groupWindowId || await Windows.getLastFocusedNormalWindow(),
-            [group] = await Groups.load(groupId),
+            [group] = await Groups.load(groupId, !groupWindowId),
+            windowId = groupWindowId || (group.tabs[0] && group.tabs[0].windowId) || await Windows.getLastFocusedNormalWindow(),
             activeTabs = [];
 
         let tabs = await getList(tabIds);
@@ -312,13 +311,13 @@
         tabs = tabs.filter(function(tab) {
             if (tab.pinned) {
                 showPinnedMessage = true;
-                BG.excludeTabsIds.delete(tab.id);
+                BG.excludeTabIds.delete(tab.id);
                 return false;
             }
 
             if (utils.isTabCanNotBeHidden(tab)) {
                 tabsCantHide.add(utils.getTabTitle(tab, false, 20));
-                BG.excludeTabsIds.delete(tab.id);
+                BG.excludeTabIds.delete(tab.id);
                 return false;
             }
 
@@ -343,7 +342,7 @@
                 }
             }));
 
-            let tabsIdsToRemove = [],
+            let tabIdsToRemove = [],
                 newTabParams = Groups.getNewTabParams(group);
 
             BG.groupIdForNextTab = group.id;
@@ -359,7 +358,7 @@
                     tab.cookieStoreId = newTabContainer;
                 }
 
-                tabsIdsToRemove.push(tab.id);
+                tabIdsToRemove.push(tab.id);
 
                 tab.url = cache.getTabSession(tab.id, 'url');
                 tab.title = cache.getTabSession(tab.id, 'title');
@@ -372,6 +371,9 @@
                     ...newTabParams,
                 });
 
+                tabIds.push(newTab.id);
+                BG.excludeTabIds.add(newTab.id);
+
                 return cache.setTabSession(newTab);
             }));
 
@@ -379,20 +381,7 @@
 
             BG.groupIdForNextTab = null;
 
-            if (tabsIdsToRemove.length) {
-                let tabIdsToExclude = [];
-
-                tabs.forEach(function({id}) {
-                    if (!tabIds.includes(id)) {
-                        tabIds.push(id);
-                        tabIdsToExclude.push(id);
-                    }
-                });
-
-                BG.addExcludeTabIds(tabIdsToExclude);
-
-                await remove(tabsIdsToRemove);
-            }
+            await remove(tabIdsToRemove);
 
             tabs = await moveNative(tabs, {
                 index: newTabIndex,

@@ -12,7 +12,7 @@ const manageTabsPageUrl = browser.extension.getURL(MANAGE_TABS_URL);
 let options = {},
     reCreateTabsOnRemoveWindow = [],
     menuIds = [],
-    excludeTabsIds = new Set,
+    excludeTabIds = new Set,
 
     groupsHistory = (function() {
         let index = -1,
@@ -378,7 +378,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
             updateBrowserActionData(null, windowId);
 
             if (!groupWindowId) {
-                excludeTabsIds.clear();
+                excludeTabIds.clear();
             }
         }
     }
@@ -442,15 +442,15 @@ const onCreatedTab = utils.catchFunc(async function(tab) {
 });
 
 function addExcludeTabIds(tabIds) {
-    tabIds.forEach(excludeTabsIds.add, excludeTabsIds);
+    tabIds.forEach(excludeTabIds.add, excludeTabIds);
 }
 
 function removeExcludeTabIds(tabIds) {
-    tabIds.forEach(excludeTabsIds.delete, excludeTabsIds);
+    tabIds.forEach(excludeTabIds.delete, excludeTabIds);
 }
 
 const onUpdatedTab = utils.catchFunc(async function(tabId, changeInfo, tab) {
-    let excludeTab = excludeTabsIds.has(tab.id);
+    let excludeTab = excludeTabIds.has(tab.id);
 
     console.log('onUpdatedTab %s tabId: %s, changeInfo:', (excludeTab ? '🛑' : ''), tab.id, changeInfo);
 
@@ -545,7 +545,7 @@ function onMovedTab(tabId) {
 }
 
 function onAttachedTab(tabId, {newWindowId}) {
-    let excludeTab = excludeTabsIds.has(tabId);
+    let excludeTab = excludeTabIds.has(tabId);
 
     console.log('onAttachedTab', (excludeTab && '🛑'), {tabId, newWindowId});
 
@@ -1502,7 +1502,7 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, originUrl
         originUrl = 'this_addon';
     }
 
-    let excludeTab = excludeTabsIds.has(tabId);
+    let excludeTab = excludeTabIds.has(tabId);
 
     console.log('onBeforeTabRequest %s tabId: %s, url: %s, originUrl: %s', (excludeTab ? '🛑' : ''), tabId, url, originUrl);
 
@@ -2501,7 +2501,7 @@ window.BG = {
 
     addUndoRemoveGroupItem,
 
-    excludeTabsIds,
+    excludeTabIds,
     addExcludeTabIds,
     removeExcludeTabIds,
 
