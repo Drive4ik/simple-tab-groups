@@ -63,6 +63,7 @@
                 extendedSearch: false,
 
                 currentWindow: null,
+                openedWindows: [],
 
                 groupToShow: null,
                 groupToEdit: null,
@@ -95,7 +96,7 @@
 
             this.loadOptions();
 
-            loadPromise = Promise.all([this.loadCurrentWindow(), this.loadGroups(), this.loadUnsyncedTabs()]);
+            loadPromise = Promise.all([this.loadWindows(), this.loadGroups(), this.loadUnsyncedTabs()]);
         },
         async mounted() {
             await loadPromise;
@@ -172,8 +173,9 @@
             lang: browser.i18n.getMessage,
             safeHtml: utils.safeHtml,
 
-            async loadCurrentWindow() {
+            async loadWindows() {
                 this.currentWindow = await Windows.get(undefined, false);
+                this.openedWindows = await Windows.load();
             },
 
             loadOptions() {
@@ -441,16 +443,19 @@
                         case 'group-unloaded':
                             this.loadGroups();
                             this.loadUnsyncedTabs();
-                            this.loadCurrentWindow();
+                            this.loadWindows();
                             break;
                         case 'group-loaded':
-                            await this.loadCurrentWindow();
+                            await this.loadWindows();
 
                             if (this.options.openGroupAfterChange) {
                                 if (this.currentGroup && this.currentGroup.id === request.groupId && this.groupToShow !== this.currentGroup) {
                                     this.showSectionGroupTabs(this.currentGroup);
                                 }
                             }
+                            break;
+                        case 'window-closed':
+                            this.loadWindows();
                             break;
                         case 'options-updated':
                             this.loadOptions();
@@ -585,7 +590,9 @@
                 return tab;
             },
 
-            getWindowId: cache.getWindowId,
+            isOpenedGroup({id}) {
+                return this.openedWindows.some(win => win.groupId === id);
+            },
 
             async loadGroups() {
                 let groups = await Groups.load(null, true, true);
@@ -696,8 +703,8 @@
             },
 
             discardOtherGroups(groupExclude) {
-                let tabs = this.groups.reduce(function(acc, gr) {
-                    let groupTabs = (gr.id === groupExclude.id || gr.isArchive || cache.getWindowId(gr.id)) ? [] : gr.tabs;
+                let tabs = this.groups.reduce((acc, gr) => {
+                    let groupTabs = (gr.id === groupExclude.id || gr.isArchive || this.isOpenedGroup(gr)) ? [] : gr.tabs;
 
                     acc.push(...groupTabs);
 
@@ -1146,7 +1153,7 @@
                         <div
                             :class="['group item is-unselectable', {
                                 'is-active': group === currentGroup,
-                                'is-opened': getWindowId(group.id),
+                                'is-opened': isOpenedGroup(group),
                             }]"
                             @contextmenu="$refs.groupContextMenu.open($event, {group})"
 
@@ -1284,7 +1291,7 @@
                             'drag-moving': group.isMoving,
                             'drag-over': group.isOver,
                             'is-active': group === currentGroup,
-                            'is-opened': getWindowId(group.id),
+                            'is-opened': isOpenedGroup(group),
                         }]"
 
                         draggable="true"
@@ -1658,7 +1665,7 @@
 
                     <hr>
 
-                    <li :class="{'is-disabled': !getWindowId(menu.data.group.id)}" @click="getWindowId(menu.data.group.id) && unloadGroup(menu.data.group)">
+                    <li :class="{'is-disabled': !isOpenedGroup(menu.data.group)}" @click="isOpenedGroup(menu.data.group) && unloadGroup(menu.data.group)">
                         <img src="/icons/upload.svg" class="size-16" />
                         <span v-text="lang('unloadGroup')"></span>
                     </li>

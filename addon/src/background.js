@@ -603,6 +603,15 @@ function onFocusChangedWindow(windowId) {
 const onRemovedWindow = utils.catchFunc(async function(windowId) {
     console.log('onRemovedWindow windowId:', windowId);
 
+    let groupId = cache.getWindowGroup(windowId);
+
+    if (groupId) {
+        sendMessage({
+            action: 'window-closed',
+            windowId,
+        });
+    }
+
     cache.removeWindow(windowId);
 
     if (!cache.hasAnyWindow()) {

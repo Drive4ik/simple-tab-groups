@@ -48,6 +48,7 @@
                 extendedSearch: false,
 
                 currentWindow: null,
+                openedWindows: [],
 
                 groupToEdit: null,
                 groupToRemove: null,
@@ -83,7 +84,7 @@
         //     this.loadOptions();
         // },
         async mounted() {
-            await this.loadCurrentWindow();
+            await this.loadWindows();
 
             this.loadOptions();
 
@@ -172,8 +173,9 @@
                 this.options = utils.clone(BG.options);
             },
 
-            async loadCurrentWindow() {
+            async loadWindows() {
                 this.currentWindow = await Windows.get(undefined, false);
+                this.openedWindows = await Windows.load();
             },
 
             setupListeners() {
@@ -378,7 +380,7 @@
                     }
 
                     clearTimeout(onAttachedTabWinTimer);
-                    onAttachedTabWinTimer = setTimeout(() => this.loadCurrentWindow());
+                    onAttachedTabWinTimer = setTimeout(() => this.loadWindows());
 
                     let groupId = cache.getWindowGroup(newWindowId);
 
@@ -412,10 +414,11 @@
                         case 'group-unloaded':
                             this.loadGroups();
                             this.loadUnsyncedTabs();
-                            this.loadCurrentWindow();
+                            this.loadWindows();
                             break;
                         case 'group-loaded':
-                            this.loadCurrentWindow();
+                        case 'window-closed':
+                            this.loadWindows();
                             break;
                         case 'options-updated':
                             this.loadOptions();
@@ -675,8 +678,8 @@
                 Tabs.discard(tabs);
             },
             discardOtherGroups(groupExclude) {
-                let tabs = this.groups.reduce(function(acc, gr) {
-                    let groupTabs = (gr.id === groupExclude.id || gr.isArchive || cache.getWindowId(gr.id)) ? [] : gr.tabs;
+                let tabs = this.groups.reduce((acc, gr) => {
+                    let groupTabs = (gr.id === groupExclude.id || gr.isArchive || this.isOpenedGroup(gr)) ? [] : gr.tabs;
 
                     acc.push(...groupTabs);
 
@@ -706,7 +709,9 @@
                 }
             },
 
-            getWindowId: cache.getWindowId,
+            isOpenedGroup({id}) {
+                return this.openedWindows.some(win => win.groupId === id);
+            },
 
             async clickOnTab(event, tab, group) {
                 if (event.ctrlKey || event.metaKey) {
@@ -952,7 +957,7 @@
                             'is-archive': group.isArchive,
                             'drag-moving': group.isMoving,
                             'drag-over': group.isOver,
-                            'loaded': getWindowId(group.id),
+                            'is-opened': isOpenedGroup(group),
                         }]"
                         @contextmenu="'INPUT' !== $event.target.nodeName && !group.isArchive && $refs.groupContextMenu.open($event, {group})"
 
@@ -1751,7 +1756,7 @@
                 }
             }
 
-            &.loaded {
+            &.is-opened {
                 box-shadow: var(--group-active-shadow);
                 border: var(--group-active-border);
             }
