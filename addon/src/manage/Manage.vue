@@ -899,7 +899,7 @@
                     <br>
                     <label class="checkbox">
                         <input v-model="showArchivedGroupsInManageGroups" type="checkbox" />
-                        <span v-text="lang('showArchivedGroupsInManageGroups')"></span>
+                        <span v-text="lang('showArchivedGroups')"></span>
                     </label>
                 </div>
                 <div class="buttons has-addons" style="display: none;">

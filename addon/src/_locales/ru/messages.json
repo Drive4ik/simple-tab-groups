@@ -1059,7 +1059,7 @@
         "message": "Использовать полную ширину всплывающего окна",
         "description": "Use full popup width"
     },
-    "showArchivedGroupsInManageGroups": {
+    "showArchivedGroups": {
         "message": "Показать архивные группы",
         "description": "Show archived groups"
     },

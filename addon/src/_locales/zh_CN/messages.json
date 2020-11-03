@@ -1051,7 +1051,7 @@
         "message": "使用完全的弹出宽度",
         "description": "Use full popup width"
     },
-    "showArchivedGroupsInManageGroups": {
+    "showArchivedGroups": {
         "message": "显示归档的群组",
         "description": "Show archived groups"
     },

@@ -77,6 +77,8 @@
                 showUnSyncTabs: false,
                 unSyncTabs: [],
 
+                showArchivedGroupsInPopup: window.localStorage.hasOwnProperty('showArchivedGroupsInPopup') ? window.localStorage.showArchivedGroupsInPopup == 1 : true,
+
                 multipleTabIds: [], // TODO try use Set Object
             };
         },
@@ -134,29 +136,33 @@
                     this.groupToShow = groups.find(gr => gr.id === this.groupToShow.id) || null;
                 }
             },
+            showArchivedGroupsInPopup(value) {
+                window.localStorage.showArchivedGroupsInPopup = value ? 1 : 0;
+            },
         },
         computed: {
             currentGroup() {
                 return this.currentWindow && this.groups.find(group => group.id === this.currentWindow.groupId);
             },
-            filteredGroupsBySearch() {
-                if (!this.search) {
-                    return [];
+            filteredGroups() {
+                let searchStr = this.search.toLowerCase(),
+                    groups = this.showArchivedGroupsInPopup ? this.groups : this.groups.filter(group => !group.isArchive),
+                    filteredGroups = [];
+
+                if (!searchStr) {
+                    return groups;
                 }
 
-                let searchStr = this.search.toLowerCase(),
-                    groups = [];
+                groups.forEach(group => {
+                    group.filteredTabs = group.tabs.filter(tab => utils.mySearchFunc(searchStr, utils.getTabTitle(tab, true), this.extendedSearch));
 
-                this.groups.forEach(group => {
-                    group.filteredTabsBySearch = group.tabs.filter(tab => utils.mySearchFunc(searchStr, utils.getTabTitle(tab, true), this.extendedSearch));
-
-                    if (group.filteredTabsBySearch.length || utils.mySearchFunc(searchStr, group.title, this.extendedSearch)) {
-                        group.filteredTabsBySearch.sort(this.$_simpleSortTabs.bind(null, searchStr));
-                        groups.push(group);
+                    if (group.filteredTabs.length || utils.mySearchFunc(searchStr, group.title, this.extendedSearch)) {
+                        group.filteredTabs.sort(this.$_simpleSortTabs.bind(null, searchStr));
+                        filteredGroups.push(group);
                     }
                 });
 
-                return groups;
+                return filteredGroups;
             },
             unSyncWindowTabs() {
                 return this.currentWindow ? this.unSyncTabs.filter(tab => tab.windowId === this.currentWindow.id) : [];
@@ -605,6 +611,8 @@
                 }
 
                 return new Promise(resolve => {
+                    let prevFocusedElement = document.activeElement;
+
                     this.promptTitle = title;
                     this.promptValue = value;
 
@@ -616,6 +624,8 @@
                         } else {
                             resolve(false);
                         }
+
+                        prevFocusedElement.focus();
                     };
 
                     this.showPromptPopup = true;
@@ -729,7 +739,7 @@
                         let tabs = [];
 
                         if (SECTION_SEARCH === this.section) {
-                            tabs = this.filteredGroupsBySearch.reduce((acc, group) => (acc.push(...group.filteredTabsBySearch), acc), []);
+                            tabs = this.filteredGroups.reduce((acc, group) => (acc.push(...group.filteredTabs), acc), []);
                         } else {
                             tabs = group ? group.tabs : this.unSyncTabs;
                         }
@@ -1060,14 +1070,14 @@
             },
 
             selectFirstItemOnSearch() {
-                let groups = this.filteredGroupsBySearch.filter(group => !group.isArchive);
+                let groups = this.filteredGroups.filter(group => !group.isArchive);
 
                 if (!groups.length) {
                     return;
                 }
 
                 let [group] = groups,
-                    [tab] = group.filteredTabsBySearch;
+                    [tab] = group.filteredTabs;
 
                 this.applyGroup(group, tab, true);
             },
@@ -1131,8 +1141,8 @@
         <main id="result" :class="['is-full-width', dragData ? 'drag-' + dragData.itemType : false]">
             <!-- SEARCH TABS -->
             <div v-if="section === SECTION_SEARCH">
-                <div v-if="filteredGroupsBySearch.length">
-                    <div v-for="group in filteredGroupsBySearch" :key="group.id">
+                <div v-if="filteredGroups.length">
+                    <div v-for="group in filteredGroups" :key="group.id">
                         <div
                             :class="['group item is-unselectable', {
                                 'is-active': group === currentGroup,
@@ -1187,7 +1197,7 @@
                         </div>
 
                         <template v-if="group.isArchive">
-                            <div v-for="(tab, index) in group.filteredTabsBySearch" :key="index"
+                            <div v-for="(tab, index) in group.filteredTabs" :key="index"
                                 class="tab item is-unselectable space-left"
                                 :title="getTabTitle(tab, true)"
                                 >
@@ -1209,7 +1219,7 @@
                         </template>
 
                         <template v-else>
-                            <div v-for="(tab, index) in group.filteredTabsBySearch" :key="index"
+                            <div v-for="(tab, index) in group.filteredTabs" :key="index"
                                 @contextmenu="$refs.tabsContextMenu.open($event, {tab, group})"
                                 @click.stop="clickOnTab($event, tab, group)"
                                 @keyup.enter="clickOnTab($event, tab, group)"
@@ -1268,7 +1278,7 @@
             <div v-if="section === SECTION_GROUPS_LIST">
                 <div>
                     <div
-                        v-for="group in groups"
+                        v-for="group in filteredGroups"
                         :key="group.id"
                         :class="['group item is-unselectable', {
                             'drag-moving': group.isMoving,
@@ -1564,10 +1574,26 @@
                 <span class="h-margin-left-10" v-text="lang('manageGroupsTitle')"></span>
             </div>
             <div class="is-flex is-align-items-center is-vertical-separator"></div>
-            <div tabindex="0" class="is-flex is-align-items-center is-full-height" @click="openOptionsPage" @keyup.enter="openOptionsPage" :title="lang('openSettings')">
+            <div
+                tabindex="0"
+                class="is-flex is-align-items-center is-full-height"
+                @click="openOptionsPage"
+                @keyup.enter="openOptionsPage"
+                :title="lang('openSettings')"
+                @contextmenu="$refs.settingsContextMenu.open($event)"
+                >
                 <img class="size-16" src="/icons/settings.svg" />
             </div>
         </footer>
+
+        <context-menu ref="settingsContextMenu">
+            <ul class="is-unselectable">
+                <li @click="showArchivedGroupsInPopup = !showArchivedGroupsInPopup">
+                    <img :src="showArchivedGroupsInPopup ? '/icons/check-square.svg' : '/icons/square.svg'" class="size-16" />
+                    <span v-text="lang('showArchivedGroups')"></span>
+                </li>
+            </ul>
+        </context-menu>
 
         <context-menu ref="createNewTabContextMenu">
             <ul class="is-unselectable" v-if="groupToShow">

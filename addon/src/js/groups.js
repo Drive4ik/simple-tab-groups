@@ -211,7 +211,10 @@
             updateData.title = updateData.title.slice(0, 256);
 
             if (groups.some(gr => gr.title === updateData.title)) {
-                utils.notify(['groupWithSameNameExists']);
+                if (groups.some(gr => gr.title === updateData.title && gr.id !== groupId)) {
+                    utils.notify(['groupWithSameNameExists']);
+                }
+
                 delete updateData.title;
             }
         }

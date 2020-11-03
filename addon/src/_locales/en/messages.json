@@ -1063,7 +1063,7 @@
         "message": "Use full popup width",
         "description": "Use full popup width"
     },
-    "showArchivedGroupsInManageGroups": {
+    "showArchivedGroups": {
         "message": "Show archived groups",
         "description": "Show archived groups"
     },

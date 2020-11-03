@@ -232,7 +232,7 @@
 </script>
 
 <template>
-    <div v-if="group" @keydown.stop @keydown.enter="saveGroup" tabindex="-1" class="no-outline edit-group">
+    <div v-if="group" @keyup.stop @keydown.stop @keydown.enter="saveGroup" tabindex="-1" class="no-outline edit-group">
         <div class="field">
             <label class="label" v-text="lang('title')"></label>
             <div class="control has-icons-left">
