@@ -62,7 +62,7 @@
         args = clone(args);
 
         if (!window.localStorage.enableDebug) {
-            logs = logs.slice(-50);
+            logs = logs.slice(-100);
         }
 
         logs.push({
@@ -106,7 +106,7 @@
     console.restart = function() {
         keys.forEach(key => console[key] = window.IS_TEMPORARY ? _console[key] : log.bind(null, `console.${key}`));
 
-        bindBrowser(browser);
+        // bindBrowser(browser);
     };
 
     console.getLogs = function() {
@@ -114,20 +114,20 @@
         logs = [];
         return [...result, 'errorLogs:', ...getErrorLogs(true)];
     };
-
-    const excludeKeys = ['i18n', 'management', 'permissions', 'runtime', 'menus', 'extension', 'sidebarAction', 'browserAction', 'theme', 'commands', 'test', 'webRequest'];
+/*
+    const excludeKeys = ['i18n', 'management', 'permissions', 'runtime', 'menus', 'extension', 'sidebarAction', 'browserAction', 'theme', 'commands', 'test', 'webRequest', 'getCurrent', 'windows.get', 'tabs.get'];
 
     function bindBrowser(obj, ...keys) {
         for (let k in obj) {
-            if (k.includes('Listener') || excludeKeys.includes(k) || k.startsWith('on')) {
+            let key = [...keys, k].join('.');
+
+            if (excludeKeys.includes(k) || excludeKeys.includes(key) || k.startsWith('on')) {
                 continue;
             }
 
             if (!Array.isArray(obj[k]) && 'object' === typeof obj[k]) {
                 bindBrowser(obj[k], ...keys, k);
             } else if ('function' === typeof obj[k]) {
-                let key = [...keys, k].join('.');
-
                 if (!browserFuncs[key]) {
                     browserFuncs[key] = obj[k];
                 }
@@ -153,5 +153,5 @@
             }
         }
     }
-
+/**/
 })();

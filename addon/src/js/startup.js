@@ -12,8 +12,6 @@
                 .then(async function(currentTab) {
                     if (DEFAULT_COOKIE_STORE_ID === currentTab.cookieStoreId) {
                         browser.runtime.onMessage.addListener(({action}) => 'i-am-back' === action && window.location.reload());
-
-                        window.setTimeout(window.alert, 4000, 'Cannot open this page, please contact the add-on developer with a screenshot of this window');
                     } else {
                         await browser.tabs.create({
                             url:  currentTab.url,
@@ -35,11 +33,11 @@
         window.cache = background.cache;
         window.containers = background.containers;
 
-        window.browser.tabs = background.browser.tabs;
+        /*window.browser.tabs = background.browser.tabs;
         window.browser.windows = background.browser.windows;
         window.browser.storage = background.browser.storage;
         window.browser.downloads = background.browser.downloads;
-        window.browser.notifications = background.browser.notifications;
+        window.browser.notifications = background.browser.notifications;*/
     }
 
     window.addonUrlPrefix = browser.extension.getURL('');

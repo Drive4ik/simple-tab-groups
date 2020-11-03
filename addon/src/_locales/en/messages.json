@@ -366,7 +366,7 @@
         "description": "Reload all tabs in current group"
     },
     "whatsWrongMessage": {
-        "message": "What's wrong...\nPlease notify the developer by support email with last error logs (button exists at the bottom of the Options page)",
+        "message": "What's wrong...\nPlease notify the developer by support email with last error logs (button exists at the bottom of the Options page)\nClick here to continue...",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
     },
     "saveErrorLogsIntoFile": {

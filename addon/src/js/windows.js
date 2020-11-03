@@ -24,12 +24,8 @@
             .sort(utils.sortBy('id'));
     }
 
-    async function get(windowId = browser.windows.WINDOW_ID_CURRENT, checkIsWindowAllow = true) {
+    async function get(windowId = browser.windows.WINDOW_ID_CURRENT) {
         let win = await browser.windows.get(windowId);
-
-        if (checkIsWindowAllow && !utils.isWindowAllow(win)) {
-            throw Error(`[Windows.get] normal window not found! windowId: ${windowId}, win: ` + utils.stringify(win));
-        }
 
         return cache.loadWindowSession(win);
     }

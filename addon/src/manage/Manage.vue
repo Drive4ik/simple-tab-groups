@@ -174,7 +174,7 @@
             },
 
             async loadWindows() {
-                this.currentWindow = await Windows.get(undefined, false);
+                this.currentWindow = await Windows.get();
                 this.openedWindows = await Windows.load();
             },
 

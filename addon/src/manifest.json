@@ -72,8 +72,8 @@
 
     "background": {
         "scripts": [
-            "js/console.js",
             "js/constants.js",
+            "js/console.js",
             "js/startup.js",
             "js/utils.js",
             "js/containers.js",

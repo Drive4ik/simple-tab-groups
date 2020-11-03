@@ -52,7 +52,7 @@
     function catchFunc(asyncFunc) {
         return async function(...args) {
             try {
-                await asyncFunc(...args);
+                return await asyncFunc(...args);
             } catch (e) {
                 window.errorEventHandler(e);
             }

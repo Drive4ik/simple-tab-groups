@@ -2987,13 +2987,13 @@ async function syncTabs(groups, allTabs) {
 }
 
 async function tryRestoreMissedTabs(tabsToRestore) {
-    console.log('tryRestoreMissedTabs', tabsToRestore);
-
     let tabsRestored = false;
 
     if (!tabsToRestore) {
         ({tabsToRestore} = await storage.get('tabsToRestore'));
     }
+
+    console.log('tryRestoreMissedTabs', tabsToRestore);
 
     if (!tabsToRestore) {
         return tabsRestored;
