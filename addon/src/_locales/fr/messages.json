@@ -523,7 +523,7 @@
     },
     "moveMultipleTabsToGroupMessage": {
         "message": "$tabscount$ onglets ont été déplacés.\nCliquez ici pour ouvrir le premier onglet.",
-        "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
+        "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",
         "placeholders": {
             "tabscount": {
                 "content": "$1",
@@ -1102,5 +1102,9 @@
     "groupWithSameNameExists": {
         "message": "Un groupe avec le même nom existe déjà !",
         "description": "A group with the same name already exists!"
+    },
+    "eraseAndImportAddonBackupButton": {
+        "message": "Restaurer la sauvegarde (efface la configuration actuelle)",
+        "description": "Erase and restore backup"
     }
 }
