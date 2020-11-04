@@ -1539,6 +1539,8 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, originUrl
         return {};
     }
 
+    tab.url = url;
+
     if (utils.isUrlEmpty(tab.url)) {
         delete tab.title;
     }
@@ -1546,8 +1548,6 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, originUrl
     cache.applyTabSession(tab);
 
     console.log('onBeforeRequest tab', tab);
-
-    tab.url = url;
 
     let [tabGroup, groups] = await Groups.load(tab.groupId);
 
@@ -1575,6 +1575,8 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, originUrl
         console.warn('onBeforeTabRequest tab not found');
         return {};
     }
+
+    tab.url = url;
 
     let newTabParams = {
         ...tab,
