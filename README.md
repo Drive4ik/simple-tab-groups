@@ -131,6 +131,7 @@ Permissions used:
  * **menus**: for creating tabs context menus
  * **sessions**: for save session data (last used group, etc)
  * **downloads**: for create auto backups
+ * **management**: for automatically detect the required addons
  * **storage**: for saving groups localy
  * **unlimitedStorage**: restore tabs after close window, there can be a lot of tabs
  * **<all_urls>(Access your data for all websites)**: for tab thumbnails and catch/move/reopen tabs in needed containers/groups
