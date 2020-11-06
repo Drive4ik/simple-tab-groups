@@ -4,13 +4,13 @@
     "applications": {
         "gecko": {
             "id": "stg-plugin-group-notes@drive4ik",
-            "strict_min_version": "68.0"
+            "strict_min_version": "73.0"
         }
     },
 
     "name": "__MSG_extensionName__",
     "description": "__MSG_extensionDescription__",
-    "version": "1.0",
+    "version": "1.1",
     "author": "Drive4ik",
     "homepage_url": "https://github.com/drive4ik/simple-tab-groups",
 

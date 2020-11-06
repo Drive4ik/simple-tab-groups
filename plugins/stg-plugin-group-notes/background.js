@@ -144,10 +144,19 @@
         }
 
         switch (request.action) {
+            case 'i-am-back':
+                sendExternalMessage({
+                    action: 'ignore-ext-for-reopen-container',
+                });
+                break;
             case 'group-removed':
                 browser.storage.local.remove(`${request.groupId}`);
                 break;
         }
+    });
+
+    sendExternalMessage({
+        action: 'ignore-ext-for-reopen-container',
     });
 
     window.STG_ID = STG_ID;
