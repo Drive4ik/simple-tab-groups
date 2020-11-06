@@ -13,6 +13,7 @@ let options = {},
     reCreateTabsOnRemoveWindow = [],
     menuIds = [],
     excludeTabIds = new Set,
+    ignoreExtForReopenContainer = new Set,
 
     groupsHistory = (function() {
         let index = -1,
@@ -1594,14 +1595,18 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, originUrl
         if (tab.hidden) {
             //
         } else {
-            newTabParams.url = utils.setUrlSearchParams(browser.extension.getURL('/help/open-in-container.html'), {
-                url: tab.url,
-                anotherCookieStoreId: tab.cookieStoreId,
-                uuid: utils.getUUIDFromUrl(originUrl),
-                groupId: tabGroup.id,
-            });
+            let uuid = utils.getUUIDFromUrl(originUrl);
 
-            newTabParams.active = true;
+            if (!ignoreExtForReopenContainer.has(uuid)) {
+                newTabParams.url = utils.setUrlSearchParams(browser.extension.getURL('/help/open-in-container.html'), {
+                    url: tab.url,
+                    anotherCookieStoreId: tab.cookieStoreId,
+                    uuid: uuid,
+                    groupId: tabGroup.id,
+                });
+
+                newTabParams.active = true;
+            }
         }
     }
 
@@ -1713,7 +1718,12 @@ browser.commands.onCommand.addListener(runAction);
 browser.runtime.onMessage.addListener(runAction);
 
 browser.runtime.onMessageExternal.addListener(async function(request, sender) {
-    let extensionRules = {};
+    if (request?.action === 'ignore-ext-for-reopen-container') {
+        ignoreExtForReopenContainer.add(utils.getUUIDFromUrl(sender.url));
+        return {
+            ok: true,
+        };
+    }
 
     if (!window.BG.inited) {
         return {
@@ -1721,6 +1731,8 @@ browser.runtime.onMessageExternal.addListener(async function(request, sender) {
             error: '[STG] I am not yet loaded',
         };
     }
+
+    let extensionRules = {};
 
     if (!utils.isAllowExternalRequestAndSender(request, sender, extensionRules)) {
         return {
