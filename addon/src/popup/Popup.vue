@@ -618,8 +618,6 @@
                 }
 
                 return new Promise(resolve => {
-                    let prevFocusedElement = document.activeElement;
-
                     this.promptTitle = title;
                     this.promptValue = value;
 
@@ -631,8 +629,6 @@
                         } else {
                             resolve(false);
                         }
-
-                        prevFocusedElement.focus();
                     };
 
                     this.showPromptPopup = true;
