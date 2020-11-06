@@ -451,6 +451,7 @@
         .containers-wrapper {
             max-height: 155px;
             overflow-y: auto;
+            scrollbar-width: thin;
         }
 
         .checkbox,

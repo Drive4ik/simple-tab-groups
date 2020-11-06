@@ -1634,10 +1634,6 @@
                         <img src="/icons/window-new.svg" class="size-16" />
                         <span v-text="lang('openGroupInNewWindow')"></span>
                     </li>
-                    <li :class="{'is-disabled': menu.data.group.isArchive}" @click="!menu.data.group.isArchive && reloadAllTabsInGroup(menu.data.group, $event.ctrlKey || $event.metaKey)">
-                        <img src="/icons/refresh.svg" class="size-16" />
-                        <span v-text="lang('reloadAllTabsInGroup')"></span>
-                    </li>
                     <li @click="sortGroups('asc')">
                         <img src="/icons/sort-alpha-asc.svg" class="size-16" />
                         <span v-text="lang('sortGroupsAZ')"></span>
@@ -1645,10 +1641,6 @@
                     <li @click="sortGroups('desc')">
                         <img src="/icons/sort-alpha-desc.svg" class="size-16" />
                         <span v-text="lang('sortGroupsZA')"></span>
-                    </li>
-                    <li @click="exportGroupToBookmarks(menu.data.group)">
-                        <img src="/icons/bookmark.svg" class="size-16" />
-                        <span v-text="lang('exportGroupToBookmarks')"></span>
                     </li>
                     <li :class="{'is-disabled': menu.data.group.isArchive}" @click="!menu.data.group.isArchive && discardGroup(menu.data.group)">
                         <img src="/icons/snowflake.svg" class="size-16" />
@@ -1658,13 +1650,10 @@
                         <img src="/icons/snowflake.svg" class="size-16" />
                         <span v-text="lang('hotkeyActionTitleDiscardOtherGroups')"></span>
                     </li>
-                    <li @click="renameGroup(menu.data.group)">
-                        <img src="/icons/edit.svg" class="size-16" />
-                        <span v-text="lang('hotkeyActionTitleRenameGroup') + ' (F2)'"></span>
+                    <li @click="exportGroupToBookmarks(menu.data.group)">
+                        <img src="/icons/bookmark.svg" class="size-16" />
+                        <span v-text="lang('exportGroupToBookmarks')"></span>
                     </li>
-
-                    <hr>
-
                     <li :class="{'is-disabled': !isOpenedGroup(menu.data.group)}" @click="isOpenedGroup(menu.data.group) && unloadGroup(menu.data.group)">
                         <img src="/icons/upload.svg" class="size-16" />
                         <span v-text="lang('unloadGroup')"></span>
@@ -1673,6 +1662,20 @@
                         <img :src="'/icons/' + (menu.data.group.isArchive ? 'unarchive' : 'archive') + '.svg'" class="size-16" />
                         <span v-text="lang(menu.data.group.isArchive ? 'unArchiveGroup' : 'archiveGroup')"></span>
                     </li>
+                    <li @click="renameGroup(menu.data.group)">
+                        <img src="/icons/edit.svg" class="size-16" />
+                        <span v-text="lang('hotkeyActionTitleRenameGroup') + ' (F2)'"></span>
+                    </li>
+
+                    <hr>
+
+                    <li :class="{'is-disabled': menu.data.group.isArchive}" @click="!menu.data.group.isArchive && reloadAllTabsInGroup(menu.data.group, $event.ctrlKey || $event.metaKey)">
+                        <img src="/icons/refresh.svg" class="size-16" />
+                        <span v-text="lang('reloadAllTabsInGroup')"></span>
+                    </li>
+
+                    <hr>
+
                     <li @click="openGroupSettings(menu.data.group)">
                         <img src="/icons/settings.svg" class="size-16" />
                         <span v-text="lang('groupSettings')"></span>
