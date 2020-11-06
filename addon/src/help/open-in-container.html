@@ -85,6 +85,13 @@
             display: flex;
         }
 
+        .check-label + .check-label {
+            margin-top: 15px;
+        }
+
+        .check-label > span {
+            user-select: none;
+        }
     </style>
 </head>
 
@@ -109,6 +116,10 @@
             <label for="exclude-container" class="check-label">
                 <input id="exclude-container" type="checkbox">
                 <span id="helpPageOpenInContainerExcludeContainerToGroup">Exclude <container-name>Facebook</container-name> container for group <strong>Group 1</strong></span>
+            </label>
+            <label for="ignore-uuid-for-session" class="check-label">
+                <input id="ignore-uuid-for-session" type="checkbox">
+                <span id="helpPageOpenInContainerIgnoreUuidForSession">Ignore this "<strong>ff06d2f8-3660-43ed-becb-ad1c458ae76d</strong>" UUID until the browser is closed</span>
             </label>
             <br />
 

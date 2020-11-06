@@ -95,20 +95,48 @@ async function init() {
 
     $('#helpPageOpenInContainerExcludeContainerToGroup')[INNER_HTML] = lang('helpPageOpenInContainerExcludeContainerToGroup', [safeHtml(anotherContainer.name), safeHtml(group.title)]);
 
+    $('#helpPageOpenInContainerIgnoreUuidForSession')[INNER_HTML] = lang('helpPageOpenInContainerIgnoreUuidForSession', uuid);
+
     addFavicon(url);
 
     $('#deny').addEventListener('click', () => openTab(url, anotherCookieStoreId, 'deny', groupId));
-    $('#confirm').addEventListener('click', () => openTab(url, currentTab.cookieStoreId, 'confirm'));
-    $('#exclude-container').addEventListener('change', e => $('#confirm').disabled = e.target.checked);
+    $('#confirm').addEventListener('click', () => openTab(url, currentTab.cookieStoreId, 'confirm', undefined, uuid));
+    $('#exclude-container').addEventListener('change', e => {
+        $('#confirm').disabled = e.target.checked;
+
+        if (e.target.checked) {
+            $('#ignore-uuid-for-session').checked = $('#deny').disabled = false;
+        }
+    });
+    $('#ignore-uuid-for-session').addEventListener('change', e => {
+        $('#deny').disabled = e.target.checked;
+
+        if (e.target.checked) {
+            $('#exclude-container').checked = $('#confirm').disabled = false;
+        }
+    });
 }
 
-async function openTab(url, cookieStoreId = DEFAULT_COOKIE_STORE_ID, buttonId = null, groupId = null) {
+async function openTab(url, cookieStoreId = DEFAULT_COOKIE_STORE_ID, buttonId = null, groupId = null, uuid = null) {
     try {
         if (buttonId === 'deny' && $('#exclude-container').checked) {
             let result = await browser.runtime.sendMessage({
                 action: 'exclude-container-for-group',
                 cookieStoreId,
                 groupId,
+            });
+
+            if (!result) {
+                throw Error('unknown error');
+            } else if (!result.ok) {
+                throw Error(result.error);
+            }
+        }
+
+        if (buttonId === 'confirm' && $('#ignore-uuid-for-session').checked) {
+            let result = await browser.runtime.sendMessage({
+                action: 'ignore-ext-for-reopen-container',
+                uuid,
             });
 
             if (!result) {

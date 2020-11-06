@@ -1770,6 +1770,13 @@ async function runAction(data, sender = {}) {
 
     console.info('runAction', {data, sender});
 
+    if (data.action === 'ignore-ext-for-reopen-container') {
+        ignoreExtForReopenContainer.add(data.uuid);
+        return {
+            ok: true,
+        };
+    }
+
     try {
         let currentWindow = await Windows.getLastFocusedNormalWindow(false),
             actionWithTabs = ['discard-group', 'discard-other-groups', 'reload-all-tabs-in-current-group'],
