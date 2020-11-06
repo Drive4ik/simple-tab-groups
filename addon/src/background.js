@@ -1236,6 +1236,10 @@ async function getBookmarkGroup(groupTitle, createBookmarkFolderIfNeed) {
 
     if (options.exportGroupToMainBookmarkFolder) {
         rootFolder = await _getBookmarkFolderFromTitle(options.autoBackupBookmarksFolderName, options.defaultBookmarksParent, createBookmarkFolderIfNeed);
+
+        if (!rootFolder) {
+            return;
+        }
     }
 
     return _getBookmarkFolderFromTitle(groupTitle, rootFolder.id, createBookmarkFolderIfNeed);

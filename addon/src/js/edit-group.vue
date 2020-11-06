@@ -168,6 +168,7 @@
 
             getIconTypeUrl(iconType) {
                 return utils.getGroupIconUrl({
+                    title: this.group.title,
                     iconViewType: iconType,
                     iconColor: this.group.iconColor || 'rgb(66, 134, 244)',
                 });
@@ -232,7 +233,7 @@
 </script>
 
 <template>
-    <div v-if="group" @keyup.stop @keydown.stop @keydown.enter="saveGroup" tabindex="-1" class="no-outline edit-group">
+    <div v-if="group" @keydown.stop @keyup.stop.enter="saveGroup" tabindex="-1" class="no-outline edit-group">
         <div class="field">
             <label class="label" v-text="lang('title')"></label>
             <div class="control has-icons-left">
