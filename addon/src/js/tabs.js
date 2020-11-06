@@ -337,7 +337,7 @@
 
                 if (tabsToActive.length) {
                     await setActive(undefined, tabsToActive);
-                } else if (activeTab.groupId !== groupId) {
+                } else if (activeTab.groupId !== groupId && activeTab.windowId !== windowId) {
                     await createTempActiveTab(activeTab.windowId, false);
                 }
             }));
