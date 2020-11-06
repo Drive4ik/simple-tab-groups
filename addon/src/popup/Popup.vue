@@ -151,7 +151,7 @@
                     filteredGroups = [];
 
                 if (!searchStr) {
-                    return groups;
+                    return groups.map(group => (group.filteredTabs = group.tabs, group));
                 }
 
                 groups.forEach(group => {

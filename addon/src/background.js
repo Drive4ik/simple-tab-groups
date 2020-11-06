@@ -908,7 +908,8 @@ async function createMoveTabMenus(groups) {
             return;
         }
 
-        let groupIcon = utils.getGroupIconUrl(group, 16),
+        let groupId = group.id,
+            groupIcon = utils.getGroupIconUrl(group, 16),
             groupTitle = String(utils.getGroupTitle(group, 'withSticky withActiveGroup withContainer'));
 
         options.showContextMenuOnTabs && menuIds.push(browser.menus.create({
@@ -920,7 +921,7 @@ async function createMoveTabMenus(groups) {
                 let setActive = 2 === info.button,
                     tabIds = await Tabs.getHighlightedIds(tab.windowId, tab);
 
-                await Tabs.move(tabIds, group.id, undefined, undefined, setActive);
+                await Tabs.move(tabIds, groupId, undefined, undefined, setActive);
 
                 if (!setActive && info.modifiers.includes('Ctrl')) {
                     Tabs.discard(tabIds);
@@ -940,10 +941,10 @@ async function createMoveTabMenus(groups) {
                 }
 
                 let setActive = 2 === info.button,
-                    newTab = await Tabs.add(group.id, undefined, info.linkUrl, info.linkText);
+                    newTab = await Tabs.add(groupId, undefined, info.linkUrl, info.linkText);
 
                 if (setActive) {
-                    applyGroup(newTab.windowId, group.id, newTab.id);
+                    applyGroup(newTab.windowId, groupId, newTab.id);
                 }
             }),
         }));
@@ -985,12 +986,13 @@ async function createMoveTabMenus(groups) {
                 }
 
                 if (tabsToCreate.length) {
-                    let [firstTab] = await createTabsSafe(Groups.setNewTabsParams(tabsToCreate, group));
+                    let [group] = await Groups.load(groupId),
+                        [firstTab] = await createTabsSafe(Groups.setNewTabsParams(tabsToCreate, group));
 
                     loadingBrowserAction(false);
 
                     if (setActive) {
-                        applyGroup(undefined, group.id, firstTab.id);
+                        applyGroup(undefined, groupId, firstTab.id);
                     } else {
                         utils.notify(['tabsCreatedCount', tabsToCreate.length], 7);
                     }
