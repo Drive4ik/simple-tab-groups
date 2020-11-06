@@ -157,15 +157,11 @@
         "message": "Verwijder groep",
         "description": "Delete group"
     },
-    "deleteGroupTitle": {
-        "message": "Groep verwijderen?",
-        "description": "Delete group?"
-    },
-    "deleteGroupBody": {
-        "message": "Wil je de groep \"$name$\" verwijderen?<br>Het verwijderen van de groep sluit ook de tabbladen en verbonden venster als deze open is.",
+    "confirmDeleteGroup": {
+        "message": "Wil je de groep \"$grouptitle$\" verwijderen?<br>Het verwijderen van de groep sluit ook de tabbladen en verbonden venster als deze open is.",
         "description": "Delete group?",
         "placeholders": {
-            "name": {
+            "grouptitle": {
                 "content": "$1",
                 "example": "Group #4"
             }

@@ -175,15 +175,11 @@
         "message": "Διαγραφή group",
         "description": "Delete group"
     },
-    "deleteGroupTitle": {
-        "message": "Να διαγραφεί το group?",
-        "description": "Delete group?"
-    },
-    "deleteGroupBody": {
-        "message": "Να διαγραφεί το group \"$name$\" ?<br>τα tabs ή το παράθυρο του group θα κλείσουν!",
+    "confirmDeleteGroup": {
+        "message": "Να διαγραφεί το group \"$grouptitle$\" ?<br>τα tabs ή το παράθυρο του group θα κλείσουν!",
         "description": "Delete group?",
         "placeholders": {
-            "name": {
+            "grouptitle": {
                 "content": "$1",
                 "example": "Group #4"
             }

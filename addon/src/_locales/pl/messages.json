@@ -175,15 +175,11 @@
         "message": "Usuń grupę",
         "description": "Delete group"
     },
-    "deleteGroupTitle": {
-        "message": "Czy usunąć grupę?",
-        "description": "Delete group?"
-    },
-    "deleteGroupBody": {
-        "message": "Czy chcesz usunąć grupę \"$name$\" ?<br>Usunięcie grupy spowoduje również zamknięcie kart i powiązanego okna, jeśli jest już otwarte!",
+    "confirmDeleteGroup": {
+        "message": "Czy chcesz usunąć grupę \"$grouptitle$\" ?<br>Usunięcie grupy spowoduje również zamknięcie kart i powiązanego okna, jeśli jest już otwarte!",
         "description": "Delete group?",
         "placeholders": {
-            "name": {
+            "grouptitle": {
                 "content": "$1",
                 "example": "Group #4"
             }

@@ -175,15 +175,11 @@
         "message": "Odstranit skupinu",
         "description": "Delete group"
     },
-    "deleteGroupTitle": {
-        "message": "Opravdu chcete odstranit skupinu?",
-        "description": "Delete group?"
-    },
-    "deleteGroupBody": {
-        "message": "Chcete smazat skupinu \"$name$\"?<br>Odstraněním skupiny zavřete přiřazené panely a okna, pokud jsou otevřena!",
+    "confirmDeleteGroup": {
+        "message": "Chcete smazat skupinu \"$grouptitle$\"?<br>Odstraněním skupiny zavřete přiřazené panely a okna, pokud jsou otevřena!",
         "description": "Delete group?",
         "placeholders": {
-            "name": {
+            "grouptitle": {
                 "content": "$1",
                 "example": "Group #4"
             }

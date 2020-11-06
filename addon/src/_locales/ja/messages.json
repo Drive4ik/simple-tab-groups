@@ -175,15 +175,11 @@
         "message": "グループを削除",
         "description": "Delete group"
     },
-    "deleteGroupTitle": {
-        "message": "グループを削除しますか？",
-        "description": "Delete group?"
-    },
-    "deleteGroupBody": {
-        "message": "グループ \"$name$\" を削除しますか？<br>グループを削除するとタブが閉じられます。グループを表示しているウィンドウも閉じます。",
+    "confirmDeleteGroup": {
+        "message": "グループ \"$grouptitle$\" を削除しますか？<br>グループを削除するとタブが閉じられます。グループを表示しているウィンドウも閉じます。",
         "description": "Delete group?",
         "placeholders": {
-            "name": {
+            "grouptitle": {
                 "content": "$1",
                 "example": "Group #4"
             }

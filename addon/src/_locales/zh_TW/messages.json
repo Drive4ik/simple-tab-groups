@@ -175,15 +175,11 @@
         "message": "刪除分頁群組",
         "description": "Delete group"
     },
-    "deleteGroupTitle": {
-        "message": "確認刪除分頁群組？",
-        "description": "Delete group?"
-    },
-    "deleteGroupBody": {
-        "message": "是否要刪除分頁群組 \"$name$\"？",
+    "confirmDeleteGroup": {
+        "message": "是否要刪除分頁群組 \"$grouptitle$\"？",
         "description": "Delete group?",
         "placeholders": {
-            "name": {
+            "grouptitle": {
                 "content": "$1",
                 "example": "Group #4"
             }

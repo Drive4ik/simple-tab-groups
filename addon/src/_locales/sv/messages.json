@@ -175,15 +175,11 @@
         "message": "Ta bort grupp",
         "description": "Delete group"
     },
-    "deleteGroupTitle": {
-        "message": "Ta bort grupp?",
-        "description": "Delete group?"
-    },
-    "deleteGroupBody": {
-        "message": "Vill du ta bort gruppen \"$name$\"?<br>Att stänga en grupp stänger också alla flikar och eventuella fönster kopplade till dem!",
+    "confirmDeleteGroup": {
+        "message": "Vill du ta bort gruppen \"$grouptitle$\"?<br>Att stänga en grupp stänger också alla flikar och eventuella fönster kopplade till dem!",
         "description": "Delete group?",
         "placeholders": {
-            "name": {
+            "grouptitle": {
                 "content": "$1",
                 "example": "Group #4"
             }

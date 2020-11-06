@@ -175,15 +175,11 @@
         "message": "Supprimer le groupe",
         "description": "Delete group"
     },
-    "deleteGroupTitle": {
-        "message": "Supprimer le groupe ?",
-        "description": "Delete group?"
-    },
-    "deleteGroupBody": {
-        "message": "Souhaitez-vous supprimer \"$name$\" ?<br>Supprimer un groupe ferme également les onglets et la fenêtre liée si elle est ouverte !",
+    "confirmDeleteGroup": {
+        "message": "Souhaitez-vous supprimer \"$grouptitle$\" ?<br>Supprimer un groupe ferme également les onglets et la fenêtre liée si elle est ouverte !",
         "description": "Delete group?",
         "placeholders": {
-            "name": {
+            "grouptitle": {
                 "content": "$1",
                 "example": "Group #4"
             }

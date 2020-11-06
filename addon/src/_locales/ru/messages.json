@@ -175,15 +175,11 @@
         "message": "Удалить группу",
         "description": "Delete group"
     },
-    "deleteGroupTitle": {
-        "message": "Удалить группу?",
-        "description": "Delete group?"
-    },
-    "deleteGroupBody": {
-        "message": "Вы хотите удалить группу $name$?<br>Удаление группы приведет к закрытию всех вкладок и окна этой группы!",
+    "confirmDeleteGroup": {
+        "message": "Вы хотите удалить группу \"$grouptitle$\"?<br>Удаление группы приведет к закрытию всех вкладок и окна этой группы!",
         "description": "Delete group?",
         "placeholders": {
-            "name": {
+            "grouptitle": {
                 "content": "$1",
                 "example": "Group #4"
             }
@@ -846,6 +842,16 @@
     "archiveGroup": {
         "message": "Архивировать",
         "description": "Archive"
+    },
+    "confirmArchiveGroup": {
+        "message": "Вы хотите за архивировать группу \"$grouptitle$\"?<br>При архивации группы вкладки будут сохранены в базе аддона, и будут удалены из браузера.",
+        "description": "Do you want to archive the group",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
     },
     "unArchiveGroup": {
         "message": "Разархивировать",

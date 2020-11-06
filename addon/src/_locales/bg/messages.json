@@ -175,15 +175,11 @@
         "message": "Изтриване на групата",
         "description": "Delete group"
     },
-    "deleteGroupTitle": {
-        "message": "Изтриване на групата?",
-        "description": "Delete group?"
-    },
-    "deleteGroupBody": {
-        "message": "Желаете ли групата „$name$“ да бъде изтрита?<br>При изтриване на група разделите и прозорците в нея биват затваряни.",
+    "confirmDeleteGroup": {
+        "message": "Желаете ли групата „$grouptitle$“ да бъде изтрита?<br>При изтриване на група разделите и прозорците в нея биват затваряни.",
         "description": "Delete group?",
         "placeholders": {
-            "name": {
+            "grouptitle": {
                 "content": "$1",
                 "example": "Group #4"
             }

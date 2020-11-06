@@ -175,15 +175,11 @@
         "message": "Elimina un gruppo",
         "description": "Delete group"
     },
-    "deleteGroupTitle": {
-        "message": "Vuoi eliminare il gruppo?",
-        "description": "Delete group?"
-    },
-    "deleteGroupBody": {
-        "message": "Vuoi eliminare il gruppo \"$name$\"? <br> La rimozione del gruppo comporta la sia la chiusura di tutte le tab del gruppo e della finestra!",
+    "confirmDeleteGroup": {
+        "message": "Vuoi eliminare il gruppo \"$grouptitle$\"? <br> La rimozione del gruppo comporta la sia la chiusura di tutte le tab del gruppo e della finestra!",
         "description": "Delete group?",
         "placeholders": {
-            "name": {
+            "grouptitle": {
                 "content": "$1",
                 "example": "Group #4"
             }

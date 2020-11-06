@@ -56,6 +56,13 @@
                 promptValue: '',
                 promptResolveFunc: null,
 
+                showConfirmPopup: false,
+                confirmTitle: '',
+                confirmText: '',
+                confirmLang: '',
+                confirmClass: '',
+                confirmResolveFunc: null,
+
                 dragData: null,
                 someGroupAreLoading: false,
 
@@ -67,7 +74,6 @@
 
                 groupToShow: null,
                 groupToEdit: null,
-                groupToRemove: null,
 
                 containers: containers.getAll(true),
                 options: {},
@@ -171,7 +177,6 @@
         },
         methods: {
             lang: browser.i18n.getMessage,
-            safeHtml: utils.safeHtml,
 
             async loadWindows() {
                 this.currentWindow = await Windows.get();
@@ -635,6 +640,26 @@
                 });
             },
 
+            showConfirm(title, text, confirmLang = 'ok', confirmClass = 'is-success') {
+                if (this.showConfirmPopup) {
+                    return Promise.resolve(false);
+                }
+
+                return new Promise(resolve => {
+                    this.confirmTitle = title;
+                    this.confirmText = text;
+                    this.confirmLang = confirmLang;
+                    this.confirmClass = confirmClass;
+
+                    this.confirmResolveFunc = ok => {
+                        this.showConfirmPopup = false;
+                        resolve(ok);
+                    };
+
+                    this.showConfirmPopup = true;
+                });
+            },
+
             async createNewGroup(tabIds, showTabAfterMoving, proposalTitle) {
                 let newGroupTitle = '';
 
@@ -716,10 +741,20 @@
                 fullLoading(false);
             },
 
-            async toggleArchiveGroup({id}) {
-                fullLoading(true);
-                await BG.Groups.archiveToggle(id);
-                fullLoading(false);
+            async toggleArchiveGroup({id, title, isArchive}) {
+                let ok = null;
+
+                if (isArchive) {
+                    ok = true;
+                } else {
+                    ok = await this.showConfirm(this.lang('archiveGroup'), this.lang('confirmArchiveGroup', utils.safeHtml(title)));
+                }
+
+                if (ok) {
+                    fullLoading(true);
+                    await BG.Groups.archiveToggle(id);
+                    fullLoading(false);
+                }
             },
 
             reloadTab(tab, bypassCache) {
@@ -884,23 +919,22 @@
             openGroupSettings(group) {
                 this.groupToEdit = group;
             },
-            removeGroup(group) {
+            async removeGroup(group) {
                 if (this.options.showConfirmDialogBeforeGroupDelete) {
-                    this.groupToRemove = group;
-                } else {
-                    this.onSubmitRemoveGroup(group);
-                }
-            },
-            async onSubmitRemoveGroup(group) {
-                this.groups.splice(this.groups.indexOf(group), 1);
+                    let ok = await this.showConfirm(this.lang('deleteGroup'), this.lang('confirmDeleteGroup', utils.safeHtml(group.title)), 'delete', 'is-danger');
 
-                this.groupToRemove = null;
+                    if (!ok) {
+                        return;
+                    }
+                }
+
+                this.groups.splice(this.groups.indexOf(group), 1);
 
                 if (this.groupToShow) {
                     this.showSectionDefault();
                 }
 
-                await Groups.remove(group.id);
+                await BG.Groups.remove(group.id);
 
                 if (!this.currentGroup) {
                     this.loadUnsyncedTabs();
@@ -1758,25 +1792,6 @@
         </edit-group-popup>
 
         <popup
-            v-if="groupToRemove"
-            :title="lang('deleteGroupTitle')"
-            @remove-group="onSubmitRemoveGroup(groupToRemove)"
-            @close-popup="groupToRemove = null"
-            :buttons="
-                [{
-                    event: 'remove-group',
-                    classList: 'is-danger',
-                    lang: 'delete',
-                }, {
-                    event: 'close-popup',
-                    lang: 'cancel',
-                    focused: true,
-                }]
-            ">
-            <span v-html="lang('deleteGroupBody', safeHtml(groupToRemove.title))"></span>
-        </popup>
-
-        <popup
             v-if="showPromptPopup"
             :title="promptTitle"
             @resolve="promptResolveFunc(true)"
@@ -1796,6 +1811,25 @@
             <div class="control is-expanded">
                 <input v-model.trim="promptValue" type="text" class="input" ref="promptInput" @keyup.enter.stop="promptResolveFunc(true)" />
             </div>
+        </popup>
+
+        <popup
+            v-if="showConfirmPopup"
+            :title="confirmTitle"
+            @resolve="confirmResolveFunc(true)"
+            @close-popup="confirmResolveFunc(false)"
+            :buttons="
+                [{
+                    event: 'resolve',
+                    classList: confirmClass,
+                    lang: confirmLang,
+                    focused: true,
+                }, {
+                    event: 'close-popup',
+                    lang: 'cancel',
+                }]
+            ">
+            <span v-html="confirmText"></span>
         </popup>
 
     </div>

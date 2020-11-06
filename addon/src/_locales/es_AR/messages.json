@@ -171,15 +171,11 @@
         "message": "Borrar grupo",
         "description": "Delete group"
     },
-    "deleteGroupTitle": {
-        "message": "¿Borrar el grupo?",
-        "description": "Delete group?"
-    },
-    "deleteGroupBody": {
-        "message": "¿Quiere borrar el grupo \"$name$\"?<br>Borrar el grupo también cierra las pestañas y la ventana enlazada si la ventana esta activa ahora!",
+    "confirmDeleteGroup": {
+        "message": "¿Quiere borrar el grupo \"$grouptitle$\"?<br>Borrar el grupo también cierra las pestañas y la ventana enlazada si la ventana esta activa ahora!",
         "description": "Delete group?",
         "placeholders": {
-            "name": {
+            "grouptitle": {
                 "content": "$1",
                 "example": "Group #4"
             }

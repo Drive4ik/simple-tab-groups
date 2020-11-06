@@ -27,6 +27,8 @@
         VIEW_DEFAULT = VIEW_GRID,
         availableTabKeys = new Set(['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'thumbnail']);
 
+    let loadPromise = null;
+
     export default {
         data() {
             return {
@@ -42,6 +44,13 @@
                 promptValue: '',
                 promptResolveFunc: null,
 
+                showConfirmPopup: false,
+                confirmTitle: '',
+                confirmText: '',
+                confirmLang: '',
+                confirmClass: '',
+                confirmResolveFunc: null,
+
                 isLoading: true,
 
                 search: '',
@@ -51,7 +60,6 @@
                 openedWindows: [],
 
                 groupToEdit: null,
-                groupToRemove: null,
 
                 containers: containers.getAll(true),
                 options: {},
@@ -71,33 +79,19 @@
             popup: popup,
             'edit-group': editGroup,
             'context-menu': contextMenu,
-
-            // Drag: Drag,
-            // Drop: Drop,
-            // draggable: draggable,
-            // dnd: dnd,
         },
-        // directives: {
-        //     dnd: dnd,
-        // },
-        // async created() {
-        //     this.loadOptions();
-        // },
-        async mounted() {
-            await this.loadWindows();
-
+        created() {
             this.loadOptions();
 
-            await this.loadGroups();
-
-            await this.loadUnsyncedTabs();
-
-            this.setupListeners();
-
-            this.isLoading = false;
+            loadPromise = Promise.all([this.loadWindows(), this.loadGroups(), this.loadUnsyncedTabs()]);
+        },
+        async mounted() {
+            await loadPromise;
 
             this.$nextTick(function() {
+                this.isLoading = false;
                 this.setFocusOnSearch();
+                this.setupListeners();
 
                 if (this.options.showTabsWithThumbnailsInManageGroups) {
                     this.loadAvailableTabThumbnails();
@@ -153,17 +147,9 @@
             isCurrentWindowIsAllow() {
                 return this.currentWindow && utils.isWindowAllow(this.currentWindow);
             },
-            currentGroup() {
-                if (!this.isCurrentWindowIsAllow) {
-                    return null;
-                }
-
-                return this.groups.find(group => group.id === this.currentWindow.groupId);
-            },
         },
         methods: {
             lang: browser.i18n.getMessage,
-            safeHtml: utils.safeHtml,
 
             setFocusOnSearch() {
                 this.$nextTick(() => this.$refs.search.focus());
@@ -580,6 +566,26 @@
                 });
             },
 
+            showConfirm(title, text, confirmLang = 'ok', confirmClass = 'is-success') {
+                if (this.showConfirmPopup) {
+                    return Promise.resolve(false);
+                }
+
+                return new Promise(resolve => {
+                    this.confirmTitle = title;
+                    this.confirmText = text;
+                    this.confirmLang = confirmLang;
+                    this.confirmClass = confirmClass;
+
+                    this.confirmResolveFunc = ok => {
+                        this.showConfirmPopup = false;
+                        resolve(ok);
+                    };
+
+                    this.showConfirmPopup = true;
+                });
+            },
+
             mapGroup(group) {
                 if (group.isArchive) {
                     group.tabs = Object.freeze(group.tabs.map(utils.normalizeTabFavIcon).map(this.mapTabContainer));
@@ -765,17 +771,16 @@
             openGroupSettings(group) {
                 this.groupToEdit = group;
             },
-            removeGroup(group) {
+            async removeGroup(group) {
                 if (this.options.showConfirmDialogBeforeGroupDelete) {
-                    this.groupToRemove = group;
-                } else {
-                    this.onSubmitRemoveGroup(group);
-                }
-            },
-            onSubmitRemoveGroup(group) {
-                this.groups.splice(this.groups.indexOf(group), 1);
+                    let ok = await this.showConfirm(this.lang('deleteGroup'), this.lang('confirmDeleteGroup', utils.safeHtml(group.title)), 'delete', 'is-danger');
 
-                this.groupToRemove = null;
+                    if (!ok) {
+                        return;
+                    }
+                }
+
+                this.groups.splice(this.groups.indexOf(group), 1);
 
                 BG.Groups.remove(group.id);
             },
@@ -798,6 +803,29 @@
             sortGroups(vector) {
                 Groups.sort(vector);
             },
+            exportGroupToBookmarks({id}) {
+                BG.exportGroupToBookmarks(id);
+            },
+            unloadGroup({id}) {
+                BG.Groups.unload(id);
+            },
+
+            async toggleArchiveGroup({id, title, isArchive}) {
+                let ok = null;
+
+                if (isArchive) {
+                    ok = true;
+                } else {
+                    ok = await this.showConfirm(this.lang('archiveGroup'), this.lang('confirmArchiveGroup', utils.safeHtml(title)));
+                }
+
+                if (ok) {
+                    this.isLoading = true;
+                    await BG.Groups.archiveToggle(id);
+                    this.isLoading = false;
+                }
+            },
+
 
             // allowTypes: Array ['groups', 'tabs']
             dragHandle(event, itemType, allowTypes, data) {
@@ -933,243 +961,230 @@
             </span>
         </header>
 
-        <transition name="fade">
-            <main id="result" v-show="!isLoading">
-                <!-- GRID -->
-                <div v-if="view === VIEW_GRID" :class="['grid',
-                        dragData ? 'drag-' + dragData.itemType : false,
-                    ]">
+        <main id="result" v-show="!isLoading">
+            <!-- GRID -->
+            <div v-if="view === VIEW_GRID" :class="['grid',
+                dragData ? 'drag-' + dragData.itemType : false,
+            ]">
+                <div
+                    v-for="group in filteredGroups"
+                    :key="group.id"
+                    :class="['group', {
+                        'is-archive': group.isArchive,
+                        'drag-moving': group.isMoving,
+                        'drag-over': group.isOver,
+                        'is-opened': isOpenedGroup(group),
+                    }]"
+                    @contextmenu="'INPUT' !== $event.target.nodeName && $refs.groupContextMenu.open($event, {group})"
 
+                    :draggable="String(group.draggable)"
+                    @dragstart="dragHandle($event, 'group', ['group'], {item: group})"
+                    @dragenter="dragHandle($event, 'group', ['group'], {item: group})"
+                    @dragover="dragHandle($event, 'group', ['group'], {item: group})"
+                    @dragleave="dragHandle($event, 'group', ['group'], {item: group})"
+                    @drop="dragHandle($event, 'group', ['group'], {item: group})"
+                    @dragend="dragHandle($event, 'group', ['group'], {item: group})"
 
-                    <!--
-
-                        v-dnd:group.group="{item: group}"
-
-                        TODO move to dnd.js
-
-                    -->
-
-
-                    <div
-                        v-for="group in filteredGroups"
-                        :key="group.id"
-                        :class="['group', {
-                            'is-archive': group.isArchive,
-                            'drag-moving': group.isMoving,
-                            'drag-over': group.isOver,
-                            'is-opened': isOpenedGroup(group),
-                        }]"
-                        @contextmenu="'INPUT' !== $event.target.nodeName && !group.isArchive && $refs.groupContextMenu.open($event, {group})"
-
-                        :draggable="String(group.draggable)"
-                        @dragstart="dragHandle($event, 'group', ['group'], {item: group})"
-                        @dragenter="dragHandle($event, 'group', ['group'], {item: group})"
-                        @dragover="dragHandle($event, 'group', ['group'], {item: group})"
-                        @dragleave="dragHandle($event, 'group', ['group'], {item: group})"
-                        @drop="dragHandle($event, 'group', ['group'], {item: group})"
-                        @dragend="dragHandle($event, 'group', ['group'], {item: group})"
-
-                        >
-                        <div class="header">
-                            <div class="group-icon">
-                                <figure :class="['image is-16x16', {'is-sticky': group.isSticky}]">
-                                    <img :src="group.iconUrlToDisplay" />
-                                </figure>
-                            </div>
-                            <div class="other-icon" v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID">
-                                <figure class="image is-16x16">
-                                    <img
-                                        :src="containers[group.newTabContainer].iconUrl"
-                                        :style="{fill: containers[group.newTabContainer].colorCode}"
-                                        class="size-16"
-                                        />
-                                </figure>
-                            </div>
-                            <div class="other-icon" v-if="group.isArchive">
-                                <figure class="image is-16x16">
-                                    <img src="/icons/archive.svg" class="size-16"/>
-                                </figure>
-                            </div>
-                            <div class="group-title">
-                                <input
-                                    type="text"
-                                    class="input"
-                                    @focus="group.draggable = false"
-                                    @blur="group.draggable = true"
-                                    v-model.lazy.trim="group.title"
-                                    :placeholder="lang('title')"
+                    >
+                    <div class="header">
+                        <div class="group-icon">
+                            <figure :class="['image is-16x16', {'is-sticky': group.isSticky}]">
+                                <img :src="group.iconUrlToDisplay" />
+                            </figure>
+                        </div>
+                        <div class="other-icon" v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID">
+                            <figure class="image is-16x16">
+                                <img
+                                    :src="containers[group.newTabContainer].iconUrl"
+                                    :style="{fill: containers[group.newTabContainer].colorCode}"
+                                    class="size-16"
                                     />
-                            </div>
-                            <div class="tabs-count" v-text="groupTabsCountMessage(group.filteredTabs, group.isArchive)"></div>
-                            <div class="other-icon cursor-pointer is-unselectable" @click="openGroupSettings(group)" :title="lang('groupSettings')">
-                                <figure class="image is-16x16">
-                                    <img src="/icons/settings.svg" />
-                                </figure>
-                            </div>
-                            <div class="other-icon cursor-pointer is-unselectable" @click="removeGroup(group)" :title="lang('deleteGroup')">
-                                <figure class="image is-16x16">
-                                    <img src="/icons/group-delete.svg" />
-                                </figure>
-                            </div>
+                            </figure>
                         </div>
-                        <div :class="['body', {
-                                'in-list-view': !options.showTabsWithThumbnailsInManageGroups,
-                            }]">
-                            <div
-                                v-for="(tab, index) in group.filteredTabs"
-                                :key="index"
-                                :class="['tab', {
-                                    'is-active': tab.active,
-                                    'is-in-multiple-drop': multipleTabIds.includes(tab.id),
-                                    'has-thumbnail': options.showTabsWithThumbnailsInManageGroups && tab.thumbnail,
-                                    'drag-moving': tab.isMoving,
-                                    'drag-over': tab.isOver,
-                                }]"
-                                :title="getTabTitle(tab, true)"
-                                @contextmenu.stop.prevent="!group.isArchive && $refs.tabsContextMenu.open($event, {tab, group})"
-
-                                @click.stop="!group.isArchive && clickOnTab($event, tab, group)"
-
-                                :draggable="String(!group.isArchive)"
-                                @dragstart="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
-                                @dragenter="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
-                                @dragover="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
-                                @dragleave="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
-                                @drop="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
-                                @dragend="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
-                                >
-                                <template v-if="options.showTabsWithThumbnailsInManageGroups">
-                                    <div class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                        <img v-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
-                                        <img v-else class="size-16" v-lazy="tab.favIconUrl" />
-                                    </div>
-                                    <div v-if="isTabLoading(tab)" class="refresh-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                        <img class="spin size-16" src="/icons/refresh.svg"/>
-                                    </div>
-                                </template>
-                                <template v-else>
-                                    <div class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                        <img v-if="isTabLoading(tab)" class="spin size-16" src="/icons/refresh.svg"/>
-                                        <img v-else-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
-                                        <img v-else class="size-16" v-lazy="tab.favIconUrl" />
-                                    </div>
-                                </template>
-                                <template v-if="tab.container">
-                                    <div class="cookie-container" :title="tab.container.name" :style="{borderColor: tab.container.colorCode}">
-                                        <img class="size-16" :src="tab.container.iconUrl" :style="{fill: tab.container.colorCode}">
-                                    </div>
-                                </template>
-                                <div v-if="options.showTabsWithThumbnailsInManageGroups" class="screenshot" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                    <img v-if="tab.thumbnail" v-lazy="tab.thumbnail">
-                                </div>
-                                <div
-                                    @mousedown.middle.prevent
-                                    @mouseup.middle.prevent="!group.isArchive && removeTab(tab)"
-                                    class="tab-title clip-text"
-                                    :style="tab.container ? {borderColor: tab.container.colorCode} : false"
-                                    v-text="getTabTitle(tab, false, 0, !tab.discarded)"></div>
-
-                                <div v-if="!group.isArchive" class="delete-tab-button" @click.stop="removeTab(tab)" :title="lang('deleteTab')" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                    <img class="size-14" src="/icons/close.svg" />
-                                </div>
-                            </div>
-
-                            <div
-                                v-if="!group.isArchive"
-                                class="tab new"
-                                :title="lang('createNewTab')"
-                                @click="addTab(group)"
-                                >
-                                <div :class="options.showTabsWithThumbnailsInManageGroups ? 'screenshot' : 'tab-icon'">
-                                    <img src="/icons/tab-new.svg">
-                                </div>
-                                <div :class="['tab-title', {'clip-text': options.showTabsWithThumbnailsInManageGroups}]" v-text="lang('createNewTab')"></div>
-                            </div>
+                        <div class="other-icon" v-if="group.isArchive">
+                            <figure class="image is-16x16">
+                                <img src="/icons/archive.svg" class="size-16"/>
+                            </figure>
+                        </div>
+                        <div class="group-title">
+                            <input
+                                type="text"
+                                class="input"
+                                @focus="group.draggable = false"
+                                @blur="group.draggable = true"
+                                v-model.lazy.trim="group.title"
+                                :placeholder="lang('title')"
+                                />
+                        </div>
+                        <div class="tabs-count" v-text="groupTabsCountMessage(group.filteredTabs, group.isArchive)"></div>
+                        <div class="other-icon cursor-pointer is-unselectable" @click="openGroupSettings(group)" :title="lang('groupSettings')">
+                            <figure class="image is-16x16">
+                                <img src="/icons/settings.svg" />
+                            </figure>
+                        </div>
+                        <div class="other-icon cursor-pointer is-unselectable" @click="removeGroup(group)" :title="lang('deleteGroup')">
+                            <figure class="image is-16x16">
+                                <img src="/icons/group-delete.svg" />
+                            </figure>
                         </div>
                     </div>
+                    <div :class="['body', {
+                        'in-list-view': !options.showTabsWithThumbnailsInManageGroups,
+                    }]">
+                        <div
+                            v-for="(tab, index) in group.filteredTabs"
+                            :key="index"
+                            :class="['tab', {
+                                'is-active': tab.active,
+                                'is-in-multiple-drop': multipleTabIds.includes(tab.id),
+                                'has-thumbnail': options.showTabsWithThumbnailsInManageGroups && tab.thumbnail,
+                                'drag-moving': tab.isMoving,
+                                'drag-over': tab.isOver,
+                            }]"
+                            :title="getTabTitle(tab, true)"
+                            @contextmenu.stop.prevent="!group.isArchive && $refs.tabsContextMenu.open($event, {tab, group})"
 
-                    <div v-if="unSyncTabs.length" class="group">
-                        <div class="header">
-                            <div class="group-icon"></div>
-                            <div class="group-title">
-                                <span v-text="lang('showOtherTabs')"></span>
+                            @click.stop="!group.isArchive && clickOnTab($event, tab, group)"
+
+                            :draggable="String(!group.isArchive)"
+                            @dragstart="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
+                            @dragenter="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
+                            @dragover="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
+                            @dragleave="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
+                            @drop="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
+                            @dragend="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
+                            >
+                            <template v-if="options.showTabsWithThumbnailsInManageGroups">
+                                <div class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                    <img v-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
+                                    <img v-else class="size-16" v-lazy="tab.favIconUrl" />
+                                </div>
+                                <div v-if="isTabLoading(tab)" class="refresh-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                    <img class="spin size-16" src="/icons/refresh.svg"/>
+                                </div>
+                            </template>
+                            <template v-else>
+                                <div class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                    <img v-if="isTabLoading(tab)" class="spin size-16" src="/icons/refresh.svg"/>
+                                    <img v-else-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
+                                    <img v-else class="size-16" v-lazy="tab.favIconUrl" />
+                                </div>
+                            </template>
+                            <template v-if="tab.container">
+                                <div class="cookie-container" :title="tab.container.name" :style="{borderColor: tab.container.colorCode}">
+                                    <img class="size-16" :src="tab.container.iconUrl" :style="{fill: tab.container.colorCode}">
+                                </div>
+                            </template>
+                            <div v-if="options.showTabsWithThumbnailsInManageGroups" class="screenshot" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                <img v-if="tab.thumbnail" v-lazy="tab.thumbnail">
                             </div>
-                            <div class="tabs-count" v-text="groupTabsCountMessage(unSyncTabs)"></div>
-                        </div>
-                        <div :class="['body', {
-                                'in-list-view': !options.showTabsWithThumbnailsInManageGroups,
-                            }]">
                             <div
-                                v-for="tab in filteredUnSyncTabs"
-                                :key="tab.id"
-                                :class="['tab', {
-                                    'is-in-multiple-drop': multipleTabIds.includes(tab.id),
-                                    'has-thumbnail': options.showTabsWithThumbnailsInManageGroups && tab.thumbnail,
-                                    'drag-moving': tab.isMoving,
-                                }]"
-                                :title="getTabTitle(tab, true)"
-                                @contextmenu.stop.prevent="$refs.tabsContextMenu.open($event, {tab})"
+                                @mousedown.middle.prevent
+                                @mouseup.middle.prevent="!group.isArchive && removeTab(tab)"
+                                class="tab-title clip-text"
+                                :style="tab.container ? {borderColor: tab.container.colorCode} : false"
+                                v-text="getTabTitle(tab, false, 0, !group.isArchive && !tab.discarded)"></div>
 
-                                @click.stop="clickOnTab($event, tab)"
-
-                                draggable="true"
-                                @dragstart="dragHandle($event, 'tab', ['tab', 'group'], {item: tab})"
-                                @dragend="dragHandle($event, 'tab', ['tab', 'group'], {item: tab})"
-                                >
-                                <template v-if="options.showTabsWithThumbnailsInManageGroups">
-                                    <div class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                        <img v-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
-                                        <img v-else class="size-16" v-lazy="tab.favIconUrl" />
-                                    </div>
-                                    <div v-if="isTabLoading(tab)" class="refresh-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                        <img class="spin size-16" src="/icons/refresh.svg"/>
-                                    </div>
-                                </template>
-                                <template v-else>
-                                    <div class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                        <img v-if="isTabLoading(tab)" class="spin size-16" src="/icons/refresh.svg"/>
-                                        <img v-else-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
-                                        <img v-else class="size-16" v-lazy="tab.favIconUrl" />
-                                    </div>
-                                </template>
-                                <template v-if="tab.container">
-                                    <div class="cookie-container" :title="tab.container.name" :style="{borderColor: tab.container.colorCode}">
-                                        <img class="size-16" :src="tab.container.iconUrl" :style="{fill: tab.container.colorCode}">
-                                    </div>
-                                </template>
-                                <div v-if="options.showTabsWithThumbnailsInManageGroups" class="screenshot" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                    <img v-if="tab.thumbnail" v-lazy="tab.thumbnail">
-                                </div>
-                                <div
-                                    @mousedown.middle.prevent
-                                    @mouseup.middle.prevent="removeTab(tab)"
-                                    class="tab-title clip-text"
-                                    :style="tab.container ? {borderColor: tab.container.colorCode} : false"
-                                    v-text="getTabTitle(tab, false, 0, !tab.discarded)"></div>
-
-                                <div class="delete-tab-button" @click.stop="removeTab(tab)" :title="lang('deleteTab')" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                    <img class="size-14" src="/icons/close.svg" />
-                                </div>
+                            <div v-if="!group.isArchive" class="delete-tab-button" @click.stop="removeTab(tab)" :title="lang('deleteTab')" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                <img class="size-14" src="/icons/close.svg" />
                             </div>
                         </div>
-                    </div>
 
-                    <div class="group new cursor-pointer"
-                        @click="addGroup"
-
-                        draggable="true"
-                        @dragover="dragHandle($event, 'tab', ['tab'])"
-                        @drop="dragHandle($event, 'tab', ['tab'], {item: {id: 'new-group'}})"
-
-                        >
-                        <div class="body">
-                            <img src="/icons/group-new.svg">
-                            <div class="h-margin-top-10" v-text="lang('createNewGroup')"></div>
+                        <div
+                            v-if="!group.isArchive"
+                            class="tab new"
+                            :title="lang('createNewTab')"
+                            @click="addTab(group)"
+                            >
+                            <div :class="options.showTabsWithThumbnailsInManageGroups ? 'screenshot' : 'tab-icon'">
+                                <img src="/icons/tab-new.svg">
+                            </div>
+                            <div :class="['tab-title', {'clip-text': options.showTabsWithThumbnailsInManageGroups}]" v-text="lang('createNewTab')"></div>
                         </div>
                     </div>
                 </div>
-            </main>
-        </transition>
+
+                <div v-if="unSyncTabs.length" class="group">
+                    <div class="header">
+                        <div class="group-icon"></div>
+                        <div class="group-title">
+                            <span v-text="lang('showOtherTabs')"></span>
+                        </div>
+                        <div class="tabs-count" v-text="groupTabsCountMessage(unSyncTabs)"></div>
+                    </div>
+                    <div :class="['body', {
+                            'in-list-view': !options.showTabsWithThumbnailsInManageGroups,
+                        }]">
+                        <div
+                            v-for="tab in filteredUnSyncTabs"
+                            :key="tab.id"
+                            :class="['tab', {
+                                'is-in-multiple-drop': multipleTabIds.includes(tab.id),
+                                'has-thumbnail': options.showTabsWithThumbnailsInManageGroups && tab.thumbnail,
+                                'drag-moving': tab.isMoving,
+                            }]"
+                            :title="getTabTitle(tab, true)"
+                            @contextmenu.stop.prevent="$refs.tabsContextMenu.open($event, {tab})"
+
+                            @click.stop="clickOnTab($event, tab)"
+
+                            draggable="true"
+                            @dragstart="dragHandle($event, 'tab', ['tab', 'group'], {item: tab})"
+                            @dragend="dragHandle($event, 'tab', ['tab', 'group'], {item: tab})"
+                            >
+                            <template v-if="options.showTabsWithThumbnailsInManageGroups">
+                                <div class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                    <img v-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
+                                    <img v-else class="size-16" v-lazy="tab.favIconUrl" />
+                                </div>
+                                <div v-if="isTabLoading(tab)" class="refresh-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                    <img class="spin size-16" src="/icons/refresh.svg"/>
+                                </div>
+                            </template>
+                            <template v-else>
+                                <div class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                    <img v-if="isTabLoading(tab)" class="spin size-16" src="/icons/refresh.svg"/>
+                                    <img v-else-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
+                                    <img v-else class="size-16" v-lazy="tab.favIconUrl" />
+                                </div>
+                            </template>
+                            <template v-if="tab.container">
+                                <div class="cookie-container" :title="tab.container.name" :style="{borderColor: tab.container.colorCode}">
+                                    <img class="size-16" :src="tab.container.iconUrl" :style="{fill: tab.container.colorCode}">
+                                </div>
+                            </template>
+                            <div v-if="options.showTabsWithThumbnailsInManageGroups" class="screenshot" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                <img v-if="tab.thumbnail" v-lazy="tab.thumbnail">
+                            </div>
+                            <div
+                                @mousedown.middle.prevent
+                                @mouseup.middle.prevent="removeTab(tab)"
+                                class="tab-title clip-text"
+                                :style="tab.container ? {borderColor: tab.container.colorCode} : false"
+                                v-text="getTabTitle(tab, false, 0, !tab.discarded)"></div>
+
+                            <div class="delete-tab-button" @click.stop="removeTab(tab)" :title="lang('deleteTab')" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                <img class="size-14" src="/icons/close.svg" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="group new cursor-pointer"
+                    @click="addGroup"
+
+                    draggable="true"
+                    @dragover="dragHandle($event, 'tab', ['tab'])"
+                    @drop="dragHandle($event, 'tab', ['tab'], {item: {id: 'new-group'}})"
+
+                    >
+                    <div class="body">
+                        <img src="/icons/group-new.svg">
+                        <div class="h-margin-top-10" v-text="lang('createNewGroup')"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
 
         <transition name="fade">
             <div class="loading spin" v-show="isLoading">
@@ -1184,11 +1199,15 @@
         <context-menu ref="groupContextMenu">
             <template v-slot="menu">
                 <ul v-if="menu.data" class="is-unselectable">
-                    <li @click="addTab(menu.data.group)">
-                        <img src="/icons/tab-new.svg" class="size-16" />
-                        <span v-text="lang('createNewTab')"></span>
+                    <li @click="sortGroups('asc')">
+                        <img src="/icons/sort-alpha-asc.svg" class="size-16" />
+                        <span v-text="lang('sortGroupsAZ')"></span>
                     </li>
-                    <li v-if="menu.data.group !== currentGroup" @click="discardGroup(menu.data.group)">
+                    <li @click="sortGroups('desc')">
+                        <img src="/icons/sort-alpha-desc.svg" class="size-16" />
+                        <span v-text="lang('sortGroupsZA')"></span>
+                    </li>
+                    <li :class="{'is-disabled': menu.data.group.isArchive}" @click="!menu.data.group.isArchive && discardGroup(menu.data.group)">
                         <img src="/icons/snowflake.svg" class="size-16" />
                         <span v-text="lang('hotkeyActionTitleDiscardGroup')"></span>
                     </li>
@@ -1196,29 +1215,48 @@
                         <img src="/icons/snowflake.svg" class="size-16" />
                         <span v-text="lang('hotkeyActionTitleDiscardOtherGroups')"></span>
                     </li>
-
-                    <hr>
-
-                    <li
-                        v-for="container in containers"
-                        v-if="
-                            container.cookieStoreId !== DEFAULT_COOKIE_STORE_ID &&
-                            (
-                                menu.data.group.ifDifferentContainerReOpen
-                                ? (
-                                    menu.data.group.excludeContainersForReOpen.includes(container.cookieStoreId) ||
-                                    menu.data.group.newTabContainer === container.cookieStoreId ||
-                                    container.cookieStoreId === TEMPORARY_CONTAINER
-                                )
-                                : true
-                            )
-                        "
-                        :key="container.cookieStoreId"
-                        @click="addTab(menu.data.group, container.cookieStoreId)"
-                        >
-                        <img v-if="container.iconUrl" :src="container.iconUrl" class="is-inline-block size-16" :style="{fill: container.colorCode}" />
-                        <span v-text="container.name"></span>
+                    <li @click="exportGroupToBookmarks(menu.data.group)">
+                        <img src="/icons/bookmark.svg" class="size-16" />
+                        <span v-text="lang('exportGroupToBookmarks')"></span>
                     </li>
+                    <li :class="{'is-disabled': !isOpenedGroup(menu.data.group)}" @click="isOpenedGroup(menu.data.group) && unloadGroup(menu.data.group)">
+                        <img src="/icons/upload.svg" class="size-16" />
+                        <span v-text="lang('unloadGroup')"></span>
+                    </li>
+                    <li @click="toggleArchiveGroup(menu.data.group)">
+                        <img :src="'/icons/' + (menu.data.group.isArchive ? 'unarchive' : 'archive') + '.svg'" class="size-16" />
+                        <span v-text="lang(menu.data.group.isArchive ? 'unArchiveGroup' : 'archiveGroup')"></span>
+                    </li>
+
+                    <template v-if="!menu.data.group.isArchive">
+                        <hr>
+
+                        <li @click="addTab(menu.data.group)">
+                            <img src="/icons/tab-new.svg" class="size-16" />
+                            <span v-text="lang('createNewTab')"></span>
+                        </li>
+
+                        <li
+                            v-for="container in containers"
+                            v-if="
+                                container.cookieStoreId !== DEFAULT_COOKIE_STORE_ID &&
+                                (
+                                    menu.data.group.ifDifferentContainerReOpen
+                                    ? (
+                                        menu.data.group.excludeContainersForReOpen.includes(container.cookieStoreId) ||
+                                        menu.data.group.newTabContainer === container.cookieStoreId ||
+                                        container.cookieStoreId === TEMPORARY_CONTAINER
+                                    )
+                                    : true
+                                )
+                            "
+                            :key="container.cookieStoreId"
+                            @click="addTab(menu.data.group, container.cookieStoreId)"
+                            >
+                            <img v-if="container.iconUrl" :src="container.iconUrl" class="is-inline-block size-16" :style="{fill: container.colorCode}" />
+                            <span v-text="container.name"></span>
+                        </li>
+                    </template>
                 </ul>
             </template>
         </context-menu>
@@ -1241,14 +1279,6 @@
                     <li v-if="!menu.data.tab.discarded" @click="discardTab(menu.data.tab)">
                         <img src="/icons/snowflake.svg" class="size-16" />
                         <span v-text="lang('discardTabTitle')"></span>
-                    </li>
-                    <li v-if="menu.data.group && menu.data.group !== currentGroup" @click="discardGroup(menu.data.group)">
-                        <img src="/icons/snowflake.svg" class="size-16" />
-                        <span v-text="lang('hotkeyActionTitleDiscardGroup')"></span>
-                    </li>
-                    <li v-if="menu.data.group && groups.length > 1" @click="discardOtherGroups(menu.data.group)">
-                        <img src="/icons/snowflake.svg" class="size-16" />
-                        <span v-text="lang('hotkeyActionTitleDiscardOtherGroups')"></span>
                     </li>
                     <li v-if="options.showTabsWithThumbnailsInManageGroups" @click="updateTabThumbnail(menu.data.tab)">
                         <img src="/icons/image.svg" class="size-16" />
@@ -1312,25 +1342,6 @@
         </popup>
 
         <popup
-            v-if="groupToRemove"
-            :title="lang('deleteGroupTitle')"
-            @remove-group="onSubmitRemoveGroup(groupToRemove)"
-            @close-popup="groupToRemove = null"
-            :buttons="
-                [{
-                    event: 'remove-group',
-                    classList: 'is-danger',
-                    lang: 'delete',
-                }, {
-                    event: 'close-popup',
-                    lang: 'cancel',
-                    focused: true,
-                }]
-            ">
-            <span v-html="lang('deleteGroupBody', safeHtml(groupToRemove.title))"></span>
-        </popup>
-
-        <popup
             v-if="showPromptPopup"
             :title="promptTitle"
             @resolve="promptResolveFunc(true)"
@@ -1350,6 +1361,25 @@
             <div class="control is-expanded">
                 <input v-model.trim="promptValue" type="text" class="input" ref="promptInput" @keyup.enter.stop="promptResolveFunc(true)" />
             </div>
+        </popup>
+
+        <popup
+            v-if="showConfirmPopup"
+            :title="confirmTitle"
+            @resolve="confirmResolveFunc(true)"
+            @close-popup="confirmResolveFunc(false)"
+            :buttons="
+                [{
+                    event: 'resolve',
+                    classList: confirmClass,
+                    lang: confirmLang,
+                    focused: true,
+                }, {
+                    event: 'close-popup',
+                    lang: 'cancel',
+                }]
+            ">
+            <span v-html="confirmText"></span>
         </popup>
 
 

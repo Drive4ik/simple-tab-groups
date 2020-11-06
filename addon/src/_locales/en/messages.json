@@ -179,15 +179,11 @@
         "message": "Delete group",
         "description": "Delete group"
     },
-    "deleteGroupTitle": {
-        "message": "Delete group?",
-        "description": "Delete group?"
-    },
-    "deleteGroupBody": {
-        "message": "Do you want to delete group \"$name$\" ?<br>Removing groups also closes tabs and windows if they are open!",
+    "confirmDeleteGroup": {
+        "message": "Do you want to delete group \"$grouptitle$\" ?<br>Removing groups also closes tabs and windows if they are open!",
         "description": "Delete group?",
         "placeholders": {
-            "name": {
+            "grouptitle": {
                 "content": "$1",
                 "example": "Group #4"
             }
@@ -850,6 +846,16 @@
     "archiveGroup": {
         "message": "Archive",
         "description": "Archive"
+    },
+    "confirmArchiveGroup": {
+        "message": "Do you want to archive the group \"$grouptitle$\"?<br>When you archive a group, the tabs will be saved in the add-on database and will be removed from the browser.",
+        "description": "Do you want to archive the group",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
     },
     "unArchiveGroup": {
         "message": "Unarchive",
