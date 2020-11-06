@@ -449,7 +449,7 @@
         }
 
         .containers-wrapper {
-            max-height: 150px;
+            max-height: 155px;
             overflow-y: auto;
         }
 

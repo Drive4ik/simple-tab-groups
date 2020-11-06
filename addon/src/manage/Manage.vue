@@ -1083,7 +1083,7 @@
                                 <div :class="options.showTabsWithThumbnailsInManageGroups ? 'screenshot' : 'tab-icon'">
                                     <img src="/icons/tab-new.svg">
                                 </div>
-                                <div class="tab-title clip-text" v-text="lang('createNewTab')"></div>
+                                <div :class="['tab-title', {'clip-text': options.showTabsWithThumbnailsInManageGroups}]" v-text="lang('createNewTab')"></div>
                             </div>
                         </div>
                     </div>
