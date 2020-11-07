@@ -2342,9 +2342,30 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
     await loadingBrowserAction();
 
     let {os} = await browser.runtime.getPlatformInfo(),
-        isMac = os === browser.runtime.PlatformOs.MAC;
+        isMac = os === browser.runtime.PlatformOs.MAC,
+        {lastCreatedGroupPosition} = await storage.get('lastCreatedGroupPosition'),
+        currentData = {};
 
-    if (true === clearAddonDataBeforeRestore) {
+    if (!lastCreatedGroupPosition) {
+        clearAddonDataBeforeRestore = true;
+    }
+
+    if (clearAddonDataBeforeRestore) {
+        lastCreatedGroupPosition = 0;
+    }
+
+    lastCreatedGroupPosition = Math.max(lastCreatedGroupPosition, data.lastCreatedGroupPosition);
+
+    if (isNaN(lastCreatedGroupPosition)) {
+        utils.notify('Invalid/wrong backup');
+
+        await utils.wait(5000);
+
+        browser.runtime.reload(); // reload addon
+        return;
+    }
+
+    if (clearAddonDataBeforeRestore) {
         await clearAddon(false);
 
         await utils.wait(1000);
@@ -2358,11 +2379,13 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         options.showTabsWithThumbnailsInManageGroups = data.showTabsWithThumbnailsInManageGroups;
     }
 
-    let currentData = await storage.get(null),
-        lastCreatedGroupPosition = Math.max(currentData.lastCreatedGroupPosition, data.lastCreatedGroupPosition || 0),
-        neededConteiners = new Set;
-
-    currentData.groups = await Groups.load(null, true, true, true);
+    if (clearAddonDataBeforeRestore) {
+        currentData.groups = [];
+        currentData.hotkeys = [];
+    } else {
+        currentData = await storage.get(null),
+        currentData.groups = await Groups.load(null, true, true, true);
+    }
 
     if (!Array.isArray(data.hotkeys)) {
         data.hotkeys = [];
@@ -2370,49 +2393,47 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         data.hotkeys.forEach(hotkey => hotkey.metaKey = false);
     }
 
-    data.groups = data.groups.map(function(group) {
-        let newGroup = Groups.create(++lastCreatedGroupPosition, group.title);
+    let neededConteiners = new Set;
 
-        data.hotkeys.forEach(hotkey => hotkey.groupId === group.id ? (hotkey.groupId = newGroup.id) : null);
+    function prepareTab(newTabParams, tab) {
+        delete tab.active;
+        delete tab.windowId;
+        delete tab.index;
+        delete tab.pinned;
 
-        delete group.id;
-        delete group.title;
-
-        newGroup = {
-            ...newGroup,
-            ...group,
-        };
-
-        let newTabParams = Groups.getNewTabParams(newGroup);
-
-        newGroup.tabs = group.tabs
-            .map(function(tab) {
-                delete tab.active;
-                delete tab.windowId;
-                delete tab.index;
-                delete tab.pinned;
-
-                if (tab.cookieStoreId && !containers.isTemporary(tab.cookieStoreId)) {
-                    neededConteiners.add(tab.cookieStoreId);
-                }
-
-                return Object.assign(tab, newTabParams);
-            });
-
-        if ('string' === typeof group.catchTabRules && group.catchTabRules.length) {
-            newGroup.catchTabRules = group.catchTabRules;
+        if (tab.cookieStoreId && !containers.isTemporary(tab.cookieStoreId)) {
+            neededConteiners.add(tab.cookieStoreId);
         }
 
-        return newGroup;
-    });
+        Object.assign(tab, newTabParams);
+    }
 
-    data = {
-        ...currentData,
-        ...data,
-        lastCreatedGroupPosition,
-        groups: [...currentData.groups, ...data.groups],
-        hotkeys: [...currentData.hotkeys, ...data.hotkeys],
-    };
+    if (clearAddonDataBeforeRestore) {
+        data.groups.forEach(function(group) {
+            let newTabParams = Groups.getNewTabParams(group);
+            group.tabs.forEach(prepareTab.bind(null, newTabParams));
+        });
+    } else {
+        data.groups = data.groups.map(function(group) {
+            let newGroup = Groups.create(++lastCreatedGroupPosition, group.title);
+
+            data.hotkeys.forEach(hotkey => hotkey.groupId === group.id ? (hotkey.groupId = newGroup.id) : null);
+
+            delete group.id;
+
+            Object.assign(newGroup, group);
+
+            let newTabParams = Groups.getNewTabParams(newGroup);
+            newGroup.tabs.forEach(prepareTab.bind(null, newTabParams));
+
+            return newGroup;
+        });
+
+        data.groups = [...currentData.groups, ...data.groups];
+        data.hotkeys = [...currentData.hotkeys, ...data.hotkeys];
+    }
+
+    data.lastCreatedGroupPosition = lastCreatedGroupPosition;
 
     if (data.containers) {
         for (let cookieStoreId in data.containers) {
