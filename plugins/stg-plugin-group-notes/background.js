@@ -138,21 +138,57 @@
         });
     }
 
-    browser.runtime.onMessageExternal.addListener(function(request, sender) {
+    function setBadge(show, windowId) {
+        windowId && browser.browserAction.setBadgeText({
+            text: show ? '⭐️' : '',
+            windowId,
+        });
+    }
+
+    async function init() {
+        let {groupsList} = await sendExternalMessage({
+                action: 'get-groups-list',
+            }),
+            notes = await browser.storage.local.get(null);
+
+        groupsList.forEach(function({id, windowId}) {
+            if (windowId && notes[id]?.notes.trim()) {
+                setBadge(true, windowId);
+            }
+        });
+    }
+
+    init();
+
+    browser.runtime.onMessageExternal.addListener(async function(request, sender) {
         if (sender.id !== STG_ID) {
             return;
         }
 
         switch (request.action) {
             case 'i-am-back':
+                init();
                 sendExternalMessage({
                     action: 'ignore-ext-for-reopen-container',
                 });
                 break;
+            case 'group-loaded':
+                let {[request.groupId]: notes} = await browser.storage.local.get(String(request.groupId));
+
+                setBadge(notes?.notes?.trim(), request.windowId);
+                break;
+            case 'group-unloaded':
+                setBadge(false, request.windowId);
+                break;
             case 'group-removed':
+                setBadge(false, request.windowId);
                 browser.storage.local.remove(`${request.groupId}`);
                 break;
         }
+    });
+
+    browser.browserAction.setBadgeBackgroundColor({
+        color: 'transparent',
     });
 
     sendExternalMessage({
@@ -162,5 +198,6 @@
     window.STG_ID = STG_ID;
     window.STG_HOME_PAGE = STG_HOME_PAGE;
     window.sendExternalMessage = sendExternalMessage;
+    window.setBadge = setBadge;
 
 })()

@@ -153,9 +153,9 @@
 
         await save(groups);
 
-        if (!group.isArchive) {
-            let groupWindowId = cache.getWindowId(groupId);
+        let groupWindowId = cache.getWindowId(groupId);
 
+        if (!group.isArchive) {
             if (groupWindowId) {
                 BG.setBrowserAction(groupWindowId, 'loading');
                 await cache.removeWindowSession(groupWindowId);
@@ -185,11 +185,13 @@
         BG.sendMessage({
             action: 'group-removed',
             groupId: groupId,
+            windowId: groupWindowId,
         });
 
         BG.sendExternalMessage({
             action: 'group-removed',
             groupId: groupId,
+            windowId: groupWindowId,
         });
     }
 

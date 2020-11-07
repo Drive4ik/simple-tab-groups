@@ -33,6 +33,7 @@
         }),
         previewButtonNode = $('.editor-toolbar button.preview'),
         currentGroupId = null,
+        currentWindow = null,
         saveTimer = 0;
 
     // fix bug with empty statusbar
@@ -106,12 +107,16 @@
 
     async function saveCurrentGroupNotes() {
         if (currentGroupId) {
+            let notes = easyMDE.value();
+
             await browser.storage.local.set({
                 [currentGroupId]: {
-                    notes: easyMDE.value(),
+                    notes,
                     preview: easyMDE.isPreviewActive(),
                 },
             });
+
+            BG.setBadge(notes.trim(), currentWindow.id);
 
             browser.runtime.sendMessage({
                     notesUpdatedForGroupId: currentGroupId,
@@ -132,10 +137,11 @@
     }
 
     async function loadCurrentGroup() {
-        let currentWindow = await browser.windows.getCurrent(),
-            {groupsList} = await BG.sendExternalMessage({
-                action: 'get-groups-list',
-            });
+        let {groupsList} = await BG.sendExternalMessage({
+            action: 'get-groups-list',
+        });
+
+        currentWindow = await browser.windows.getCurrent();
 
         return groupsList.find(group => group.windowId === currentWindow.id);
     }
@@ -161,7 +167,7 @@
                 break;
             case 'group-loaded':
             case 'group-unloaded':
-                let currentWindow = await browser.windows.getCurrent();
+                currentWindow = await browser.windows.getCurrent();
 
                 if (currentWindow.id === request.windowId) {
                     init();

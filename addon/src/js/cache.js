@@ -283,7 +283,7 @@
 
     function getWindowId(groupId) {
         if (!groupId) {
-            return false;
+            return null;
         }
 
         for (let windowId in windows) {
@@ -291,6 +291,8 @@
                 return Number(windowId);
             }
         }
+
+        return null;
     }
 
     function getWindowGroup(windowId) {
