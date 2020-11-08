@@ -213,7 +213,7 @@
 
                 let lazyAddUnsyncTabTimer = 0;
                 const lazyAddTab = (tab, groupId) => {
-                    tab = this.mapTab(tab);
+                    tab = this.mapTab(cache.applyTabSession(tab));
 
                     let group = groupId ? this.groups.find(gr => gr.id === groupId) : null;
 
@@ -386,7 +386,9 @@
                             Object.assign(group, request.group);
                             break;
                         case 'group-added':
-                            this.groups.push(this.mapGroup(request.group));
+                            if (!this.groups.some(gr => gr.id === request.group.id)) {
+                                this.groups.push(this.mapGroup(request.group));
+                            }
                             break;
                         case 'group-removed':
                             let groupIndex = this.groups.findIndex(gr => gr.id === request.groupId);

@@ -611,34 +611,7 @@ const onRemovedWindow = utils.catchFunc(async function(windowId) {
     if (tabsToRestore.length) {
         await storage.set({tabsToRestore});
 
-        let windows = await Windows.load(true);
-
-        windows = windows.filter(function(win) {
-            if (win.id === windowId) { // just in case
-                return false;
-            }
-
-            // exclude wrong popup window type and tab with extension url
-            if (win.tabs.length === 1 && win.tabs[0].url.startsWith('moz-extension')) {
-                return false;
-            }
-
-            return true;
-        });
-
-        if (windows.length) {
-            windows.forEach(win => loadingBrowserAction(true, win.id));
-
-            try {
-                await tryRestoreMissedTabs();
-
-                windows.forEach(win => loadingBrowserAction(false, win.id));
-            } catch (e) {
-                console.error('error create tabs: %s, tabsToRestore: %s', e, utils.stringify(tabsToRestore));
-                await utils.wait(500);
-                browser.runtime.reload();
-            }
-        }
+        tryRestoreMissedTabs(tabsToRestore).catch(noop);
     }
 });
 
@@ -3033,6 +3006,8 @@ async function tryRestoreMissedTabs(tabsToRestore) {
     }
 
     if (tabsToRestore.length) {
+        browser.browserAction.disable();
+
         let groups = await Groups.load(null, true),
             groupsObj = {},
             foundTabIds = new Set;
@@ -3074,6 +3049,14 @@ async function tryRestoreMissedTabs(tabsToRestore) {
         if (tabsToRestore.length) {
             await createTabsSafe(tabsToRestore, true);
             tabsRestored = true;
+        }
+
+        browser.browserAction.enable();
+
+        if (tabsToRestore.length) {
+            sendMessage({
+                action: 'groups-updated',
+            });
         }
     }
 
