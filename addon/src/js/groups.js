@@ -327,7 +327,7 @@
 
         if (tabs.length) {
             await BG.browser.tabs.show(tabs.map(utils.keyId));
-            await Tabs.setActive(undefined, tabs);
+            await Tabs.setActive(null, tabs);
         } else {
             await Tabs.createTempActiveTab(windowId, false);
         }

@@ -299,7 +299,7 @@
             tabsCantHide = new Set,
             groupWindowId = cache.getWindowId(groupId),
             [group] = await Groups.load(groupId, !groupWindowId),
-            windowId = groupWindowId || (group.tabs[0] && group.tabs[0].windowId) || await Windows.getLastFocusedNormalWindow(),
+            windowId = groupWindowId || (group.tabs[0]?.windowId) || await Windows.getLastFocusedNormalWindow(),
             activeTabs = [];
 
         let tabs = await getList(tabIds);
@@ -474,7 +474,20 @@
             await utils.wait(100);
         }
 
-        return browser.tabs.move(tabs.map(utils.keyId), options);
+        let movedTabs = await browser.tabs.move(tabs.map(utils.keyId), options),
+            movedTabsObj = utils.arrayToObj(movedTabs, 'id');
+
+        return tabs.map(function(tab) {
+            if (options.windowId) {
+                tab.windowId = options.windowId;
+            }
+
+            if (movedTabsObj[tab.id]) {
+                tab.index = movedTabsObj[tab.id].index;
+            }
+
+            return tab;
+        });
     }
 
     async function discard(tabs) { // ids or tabs

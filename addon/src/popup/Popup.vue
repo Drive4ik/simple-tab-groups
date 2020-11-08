@@ -458,6 +458,11 @@
                                     this.showSectionGroupTabs(this.currentGroup);
                                 }
                             }
+
+                            if (request.addTabs.length) {
+                                let group = this.groups.find(gr => gr.id === request.groupId);
+                                group.tabs.push(...request.addTabs.map(this.mapTab, this));
+                            }
                             break;
                         case 'window-closed':
                             this.loadWindows();
@@ -660,7 +665,7 @@
                 });
             },
 
-            async createNewGroup(tabIds, showTabAfterMoving, proposalTitle) {
+            async createNewGroup(tabIds, showTabAfterMoving, proposalTitle, windowId) {
                 let newGroupTitle = '';
 
                 if (this.options.alwaysAskNewGroupName) {
@@ -673,7 +678,7 @@
                     }
                 }
 
-                Groups.add(undefined, tabIds, newGroupTitle, showTabAfterMoving);
+                Groups.add(windowId, tabIds, newGroupTitle, showTabAfterMoving);
             },
 
             async renameGroup({id, title}) {
@@ -883,7 +888,7 @@
                 this.loadGroups();
             },
             async unsyncHiddenWindowTabsCreateNewGroup() {
-                await this.createNewGroup(this.unSyncWindowTabs.map(utils.keyId), undefined, this.unSyncWindowTabs[0].title);
+                await this.createNewGroup(this.unSyncWindowTabs.map(utils.keyId), undefined, this.unSyncWindowTabs[0].title, this.currentWindow.id);
 
                 this.loadUnsyncedTabs();
             },

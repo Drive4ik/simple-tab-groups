@@ -696,6 +696,13 @@
         return newObj;
     }
 
+    function arrayToObj(arr, primaryKey) {
+        return arr.reduce(function(acc, obj) {
+            acc[obj[primaryKey]] = obj;
+            return acc;
+        }, {});
+    }
+
     function wait(ms = 200) {
         return new Promise(resolve => setTimeout(resolve, ms, ms));
     }
@@ -781,6 +788,7 @@
         formatBytes,
         assignKeys,
         extractKeys,
+        arrayToObj,
         onlyUniqueFilter,
 
         safeHtml,
