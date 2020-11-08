@@ -341,6 +341,10 @@
         "message": "Otevřít správu skupin",
         "description": "Open manage groups"
     },
+    "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
+        "message": "Přesunout vybrané panely do určené skupiny",
+        "description": "Move selected tabs to custom group"
+    },
     "hotkeyActionTitleDiscardGroup": {
         "message": "Uvolnit skupinu z paměti",
         "description": "Hotkey action Discard group"
@@ -408,6 +412,10 @@
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
         "message": "Přesunout všechny tyto panely do aktuální skupiny/okna.",
         "description": "Move all of these tabs into current group/window"
+    },
+    "actionHiddenUnSyncWindowTabsCreateGroup": {
+        "message": "Vytvořit novou skupinu z panelů otevřeného okna",
+        "description": "Create new group with tabs only from the current window"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "Vytvořit novou skupinu se všemi těmito panely",
@@ -511,7 +519,7 @@
     },
     "moveMultipleTabsToGroupMessage": {
         "message": "$tabscount$ panelů bylo přesunuto.\nKlikněte zde pro otevření prvního.",
-        "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
+        "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",
         "placeholders": {
             "tabscount": {
                 "content": "$1",
@@ -1022,5 +1030,77 @@
                 "example": "Group 1"
             }
         }
+    },
+    "hotkeysDescription2": {
+        "message": "Klávesové zkratky lze také nastavit <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">ve správě doplňků ve Firefoxu.</a> Tyto zkratky fungují na všech stránkách.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
+    },
+    "muteTab": {
+        "message": "Ztlumit zvuk panelu",
+        "description": "Mute tab"
+    },
+    "unMuteTab": {
+        "message": "Zapnout zvuk panelu",
+        "description": "Unmute tab"
+    },
+    "muteGroup": {
+        "message": "Ztlumit zvuk skupiny",
+        "description": "Mute group"
+    },
+    "unMuteGroup": {
+        "message": "Zapnout zvuk skupiny",
+        "description": "Unmute group"
+    },
+    "fullPopupWidth": {
+        "message": "Použít plnou šířku vyskakovacího okna",
+        "description": "Use full popup width"
+    },
+    "showArchivedGroups": {
+        "message": "Zobrazit archivované skupiny",
+        "description": "Show archived groups"
+    },
+    "helpPageDbErrorReinstallTitle": {
+        "message": "Chyba databáze doplňku Simple Tab Groups",
+        "description": "Database error in Simple Tab Groups"
+    },
+    "helpPageDbErrorReinstallDescription": {
+        "message": "Při čtení dat doplňku z databáze Firefoxu bohužel nastala chyba. Doplněk přestal pracovat. Pro obnovení postupujte dle následujících instrukcí:",
+        "description": "Unfortunately, an error occurred while reading data from the STG addon from the Firefox database. At the moment, the addon is stopped. To resume the add-on, do the following:"
+    },
+    "helpPageDbErrorReinstallDescription2": {
+        "message": "Restartujte Firefox (s ukončením procesu v případě Linuxu nebo Mac OS)",
+        "description": "Restart Firefox Browser (for Linux and Mac OS with process termination)"
+    },
+    "helpPageDbErrorReinstallDescription3": {
+        "message": "Pokud tuto zprávu vidíte znovu, přeinstalujte doplněk:",
+        "description": "If you see this window again, try reinstalling the addon:"
+    },
+    "helpPageDbErrorReinstallDescription4": {
+        "message": "Odstraňte doplněk",
+        "description": "Remove STG Addon"
+    },
+    "helpPageDbErrorReinstallDescription5": {
+        "message": "Restartujte Firefox",
+        "description": "Restart Firefox Browser"
+    },
+    "helpPageDbErrorReinstallDescription6": {
+        "message": "Nainstalujte doplněk",
+        "description": "Install STG Addon"
+    },
+    "helpPageDbErrorReinstallDescription7": {
+        "message": "Obnovte poslední zálohu doplňku, která se nachází mezi staženými soubory ve složce \"STG-backups.\"<br>Zálohu je možné obnovit v nastavení doplňku.",
+        "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".<br>You can restore backup in addon settings"
+    },
+    "helpPageDbErrorReinstallOpenFFDownloadsFolder": {
+        "message": "Otevřete složku stažených souborů",
+        "description": "Open Firefox downloads folder"
+    },
+    "groupWithSameNameExists": {
+        "message": "Skupina se stejným názvem již existuje.",
+        "description": "A group with the same name already exists!"
+    },
+    "eraseAndImportAddonBackupButton": {
+        "message": "Smazat a obnovit zálohu",
+        "description": "Erase and restore backup"
     }
 }
