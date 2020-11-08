@@ -107,14 +107,11 @@
                 }
             },
             'options.showTabsWithThumbnailsInManageGroups': function(value, oldValue) {
-                if (undefined !== oldValue) {
+                if (null != oldValue) {
                     BG.saveOptions({
-                        showTabsWithThumbnailsInManageGroups: value,
-                    });
-
-                    if (value) {
-                        this.loadAvailableTabThumbnails();
-                    }
+                            showTabsWithThumbnailsInManageGroups: value,
+                        })
+                        .then(() => value && window.location.reload());
                 }
             },
             showArchivedGroupsInManageGroups(value) {
@@ -650,7 +647,7 @@
             },
 
             async loadGroups() {
-                let groups = await Groups.load(null, true, true, true);
+                let groups = await Groups.load(null, true, true, this.options.showTabsWithThumbnailsInManageGroups);
 
                 this.groups = groups.map(this.mapGroup, this);
 
