@@ -96,8 +96,12 @@
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
-        "message": "Show confirm dialog before group delete",
-        "description": "Show confirm dialog before group delete"
+        "message": "Show confirmation dialog before deleting the group",
+        "description": "Show confirmation dialog before deleting the group"
+    },
+    "showConfirmDialogBeforeGroupArchiving": {
+        "message": "Show confirmation dialog before archiving the group",
+        "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
         "message": "Backup your Simple Tab Groups",

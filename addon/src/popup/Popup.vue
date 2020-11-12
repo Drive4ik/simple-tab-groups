@@ -749,11 +749,9 @@
             },
 
             async toggleArchiveGroup({id, title, isArchive}) {
-                let ok = null;
+                let ok = true;
 
-                if (isArchive) {
-                    ok = true;
-                } else {
+                if (!isArchive && this.options.showConfirmDialogBeforeGroupArchiving) {
                     ok = await this.showConfirm(this.lang('archiveGroup'), this.lang('confirmArchiveGroup', utils.safeHtml(title)));
                 }
 

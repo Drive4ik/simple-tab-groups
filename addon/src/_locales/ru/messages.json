@@ -95,6 +95,10 @@
         "message": "Подтверждать удаление группы",
         "description": "Show confirm dialog before group delete"
     },
+    "showConfirmDialogBeforeGroupArchiving": {
+        "message": "Подтверждать архивацию группы",
+        "description": "Show confirmation dialog before archiving the group"
+    },
     "exportAddonSettingsTitle": {
         "message": "Резервное копирование",
         "description": "Backup your Simple Tab Groups"

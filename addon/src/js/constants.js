@@ -189,6 +189,7 @@ const DEFAULT_OPTIONS = Object.freeze({
     createNewGroupWhenOpenNewWindow: false,
     showNotificationAfterMoveTab: true,
     openManageGroupsInTab: true,
+    showConfirmDialogBeforeGroupArchiving: true,
     showConfirmDialogBeforeGroupDelete: true,
     showNotificationAfterGroupDelete: true,
     showContextMenuOnTabs: true,

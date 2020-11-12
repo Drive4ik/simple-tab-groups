@@ -800,6 +800,12 @@
             </div>
             <div class="field">
                 <label class="checkbox">
+                    <input v-model="options.showConfirmDialogBeforeGroupArchiving" type="checkbox" />
+                    <span v-text="lang('showConfirmDialogBeforeGroupArchiving')"></span>
+                </label>
+            </div>
+            <div class="field">
+                <label class="checkbox">
                     <input v-model="options.showNotificationAfterGroupDelete" type="checkbox" />
                     <span v-text="lang('showNotificationAfterGroupDelete')"></span>
                 </label>
