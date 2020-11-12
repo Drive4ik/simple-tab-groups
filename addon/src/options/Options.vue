@@ -734,12 +734,6 @@
             </div>
             <div class="field">
                 <label class="checkbox">
-                    <input v-model="options.discardTabsAfterHide" type="checkbox" />
-                    <span v-text="lang('discardTabsAfterHide')"></span>
-                </label>
-            </div>
-            <div class="field">
-                <label class="checkbox">
                     <input v-model="options.closePopupAfterChangeGroup" type="checkbox" />
                     <span v-text="lang('closePopupAfterChangeGroup')"></span>
                 </label>
@@ -758,14 +752,14 @@
             </div>
             <div class="field">
                 <label class="checkbox">
-                    <input v-model="options.showExtendGroupsPopupWithActiveTabs" type="checkbox" />
-                    <span v-text="lang('showExtendGroupsPopupWithActiveTabs')"></span>
+                    <input v-model="options.createNewGroupWhenOpenNewWindow" type="checkbox" />
+                    <span v-text="lang('createNewGroupWhenOpenNewWindow')"></span>
                 </label>
             </div>
             <div class="field">
                 <label class="checkbox">
-                    <input v-model="options.createNewGroupWhenOpenNewWindow" type="checkbox" />
-                    <span v-text="lang('createNewGroupWhenOpenNewWindow')"></span>
+                    <input v-model="options.showExtendGroupsPopupWithActiveTabs" type="checkbox" />
+                    <span v-text="lang('showExtendGroupsPopupWithActiveTabs')"></span>
                 </label>
             </div>
             <div class="field">
@@ -782,8 +776,8 @@
             </div>
             <div class="field">
                 <label class="checkbox">
-                    <input v-model="options.showNotificationAfterMoveTab" type="checkbox" />
-                    <span v-text="lang('showNotificationAfterMoveTab')"></span>
+                    <input v-model="options.discardTabsAfterHide" type="checkbox" />
+                    <span v-text="lang('discardTabsAfterHide')"></span>
                 </label>
             </div>
             <div class="field">
@@ -808,6 +802,12 @@
                 <label class="checkbox">
                     <input v-model="options.showNotificationAfterGroupDelete" type="checkbox" />
                     <span v-text="lang('showNotificationAfterGroupDelete')"></span>
+                </label>
+            </div>
+            <div class="field">
+                <label class="checkbox">
+                    <input v-model="options.showNotificationAfterMoveTab" type="checkbox" />
+                    <span v-text="lang('showNotificationAfterMoveTab')"></span>
                 </label>
             </div>
             <div class="field">
