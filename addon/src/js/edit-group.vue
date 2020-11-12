@@ -387,7 +387,7 @@
 
         <div class="field h-margin-bottom-10">
             <div class="control">
-                <textarea class="textarea reg-exp" :rows="canLoadFile ? false : 2" @keydown.enter.stop v-model.trim="group.catchTabRules" :placeholder="lang('regexpForTabsPlaceholder')"></textarea>
+                <textarea class="textarea reg-exp" :rows="canLoadFile ? false : 2" @keydown.enter.stop @keypress.enter.stop @keyup.enter.stop v-model.trim="group.catchTabRules" :placeholder="lang('regexpForTabsPlaceholder')"></textarea>
             </div>
         </div>
 
