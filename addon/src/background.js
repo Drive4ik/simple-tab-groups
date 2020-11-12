@@ -214,6 +214,8 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
             // hide tabs
             await hideTabs(groupToHide?.tabs);
 
+            let activeTabGroupToHide = groupToHide?.tabs.find(tab => tab.active);
+
             async function hideTabs(tabs = []) {
                 await Tabs.safeHide(tabs);
 
@@ -258,8 +260,6 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                     }
                 }
             } else if (groupToHide) {
-                let activeTabGroupToHide = groupToHide.tabs.find(tab => tab.active);
-
                 if (activeTabGroupToHide) {
                     let tabToActive = await Tabs.setActive(null, groupToShow.tabs);
 
@@ -276,8 +276,6 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                             });
                         }
                     }
-
-                    await hideTabs([activeTabGroupToHide]);
                 } else {
                     // some pinned tab active, do nothing
                 }
@@ -325,6 +323,10 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
             }
 
             if (groupToHide) {
+                if (activeTabGroupToHide) {
+                    await hideTabs([activeTabGroupToHide]);
+                }
+
                 groupToHide.tabs.forEach(tab => tab.url === manageTabsPageUrl && tabsIdsToRemove.push(tab.id));
             }
 
