@@ -511,7 +511,7 @@
     },
     "moveMultipleTabsToGroupMessage": {
         "message": "$tabscount$个标签页已被移动。点击此处打开第一个标签页",
-        "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
+        "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",
         "placeholders": {
             "tabscount": {
                 "content": "$1",
@@ -828,7 +828,7 @@
         "description": "logging was auto-enabled due to an error in addon"
     },
     "loggingDescription": {
-        "message": "请仅在您需要记录问题并发送日志给我时才启用该选项。启用该选项将明显让扩展变展，因为所有的扩展动作将被记录。当您重现该错误后，关闭该选项，扩展会提示保存日志文件。该选项将在错误发生后自动启用。您要禁用 调试 选择框并保存日志文件。<br> 请使用邮件将该文件发送至： <a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com</a><br> <span class=\"has-text-danger\">注意！日志文件中不包含任何个人文件，密码，书签等！</span><br> 这是重现问题并尝试修复它的必要过程。<br> 十分感谢",
+        "message": "请仅在您需要记录问题并发送日志给我时才启用该选项。启用该选项将明显让扩展变慢，因为所有的扩展动作将被记录。当您重现该错误后，关闭该选项，扩展会提示保存日志文件。该选项将在错误发生后自动启用。您要禁用 调试 选择框并保存日志文件。<br> 请使用邮件将该文件发送至： <a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com</a><br> <span class=\"has-text-danger\">注意！日志文件中不包含任何个人文件，密码，书签等！</span><br> 这是重现问题并尝试修复它的必要过程。<br> 十分感谢",
         "description": "logging description"
     },
     "archiveGroup": {
