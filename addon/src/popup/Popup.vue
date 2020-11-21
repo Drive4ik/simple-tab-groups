@@ -9,11 +9,6 @@
     import editGroup from '../js/edit-group.vue';
     import contextMenu from '../js/context-menu-component.vue';
 
-    if (!BG.inited) {
-        browser.runtime.onMessage.addListener(({action}) => 'i-am-back' === action && window.location.reload());
-        throw 'waiting background initialization...';
-    }
-
     Vue.config.errorHandler = errorEventHandler;
 
     Vue.use(VueLazyload);
@@ -318,10 +313,12 @@
                         }
 
                         if (changeInfo.hasOwnProperty('audible')) {
-                            Tabs.getOne(tab.id, true).then(({id, audible, mutedInfo}) => {
-                                this.allTabs[id].audible = audible;
-                                this.allTabs[id].mutedInfo = mutedInfo;
-                            }).catch(console.error);
+                            Tabs.getOne(tab.id).then(tab => {
+                                if (tab) {
+                                    this.allTabs[tab.id].audible = tab.audible;
+                                    this.allTabs[tab.id].mutedInfo = tab.mutedInfo;
+                                }
+                            });
                         }
 
                         if (changeInfo.title) {

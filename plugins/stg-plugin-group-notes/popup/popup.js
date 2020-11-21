@@ -71,7 +71,7 @@
         let title = '';
 
         if (group && group.id) {
-            groupTitleNode.innerText = title = browser.i18n.getMessage('groupAndWindowTitle', group.title.replace('⚪', '').trim());
+            groupTitleNode.innerText = title = browser.i18n.getMessage('groupAndWindowTitle', group.title);
             groupIconNode.src = group.iconUrl;
             currentGroupId = group.id;
         } else {

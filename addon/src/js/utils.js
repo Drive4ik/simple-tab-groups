@@ -254,7 +254,7 @@
         return browser.windows.WindowType.NORMAL === type;
     }
 
-    const createTabUrlRegexp = /^((https?|ftp|moz-extension):|about:blank)/,
+    const createTabUrlRegexp = /^((http|ftp|moz-extension)|about:blank)/,
         emptyUrlsArray = new Set(['about:blank', 'about:newtab', 'about:home']);
 
     function isUrlEmpty(url) {

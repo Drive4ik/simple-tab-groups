@@ -819,14 +819,6 @@
         "message": "Please enable \"Restore previous session\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working.",
         "description": "Please enable \"Restore previous session\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
-    "helpPageDisableIncognitoTitle": {
-        "message": "Welcome to Simple Tab Groups v4",
-        "description": "Welcome to Simple Tab Groups v4"
-    },
-    "helpPageDisableIncognitoDescription": {
-        "message": "Please disable add-on access to private mode in windows:",
-        "description": "Please disable add-on access to private mode in windows:"
-    },
     "leaveBookmarksOfClosedTabs": {
         "message": "Leave bookmarks of closed tabs (bookmarks will separate the separator)",
         "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
@@ -1130,5 +1122,9 @@
     "eraseAndImportAddonBackupButton": {
         "message": "Erase and restore backup",
         "description": "Erase and restore backup"
+    },
+    "notSupportedIncognito": {
+        "message": "Addon does not support private/incognito windows and tabs",
+        "description": "Addon does not support private/incognito windows and tabs"
     }
 }

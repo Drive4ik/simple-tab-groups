@@ -113,7 +113,7 @@
                     'defaultGroupIconColor',
                     'autoBackupIntervalKey'
                     ]
-                    .forEach(function(option) {
+                    .forEach(option => {
                         this.$watch(`options.${option}`, function(value, oldValue) {
                             if (null == oldValue) {
                                 return;
@@ -123,9 +123,7 @@
                                 [option]: value,
                             });
                         });
-                    }, this);
-
-                browser.runtime.onMessage.addListener(({action}) => 'i-am-back' === action && window.location.reload());
+                    });
             } catch (e) {
                 errorEventHandler(e);
             }

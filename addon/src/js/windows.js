@@ -11,7 +11,27 @@
             })
         ]);
 
-        windows = await Promise.all(windows.filter(utils.isWindowAllow).map(cache.loadWindowSession));
+        windows = await Promise.all(
+            windows
+                .filter(function(win) {
+                    if (win.incognito) {
+                        if (!cache.incognitoWindows.has(win.id)) {
+                            cache.incognitoWindows.add(win.id);
+                            browser.browserAction.setPopup({
+                                windowId: win.id,
+                                popup: '/help/incognito.html',
+                            });
+                        }
+
+                        return false;
+                    } else if (!utils.isWindowAllow(win)) {
+                        return false;
+                    }
+
+                    return true;
+                })
+                .map(cache.loadWindowSession)
+        );
 
         return windows
             .map(function(win) {
@@ -66,7 +86,7 @@
     async function getLastFocusedNormalWindow(returnId = true) {
         let lastFocusedWindow = await browser.windows.getLastFocused().catch(noop);
 
-        if (lastFocusedWindow && utils.isWindowAllow(lastFocusedWindow)) {
+        if (lastFocusedWindow && !lastFocusedWindow.incognito && utils.isWindowAllow(lastFocusedWindow)) {
             return returnId ? lastFocusedWindow.id : cache.loadWindowSession(lastFocusedWindow);
         }
 
@@ -76,6 +96,8 @@
 
         if (!win) {
             throw Error('[Windows.getLastFocusedNormalWindow] normal window not found!');
+        } else if (win.incognito) {
+            throw Error(browser.i18n.getMessage('notSupportedIncognito'));
         }
 
         return returnId ? win.id : win;

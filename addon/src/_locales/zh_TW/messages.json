@@ -815,14 +815,6 @@
         "message": "請啟用瀏覽器設定中的 \"回復瀏覽狀態\" 功能。<br>在群組與分頁切換之間需要打開此功能，<br>否則當打開瀏覽器之後，所有分頁將無法開啟並遺失，套件也會停止執行。",
         "description": "Please enable \"Restore previous session\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
-    "helpPageDisableIncognitoTitle": {
-        "message": "歡迎使用 Simple Tab Groups v4",
-        "description": "Welcome to Simple Tab Groups v4"
-    },
-    "helpPageDisableIncognitoDescription": {
-        "message": "請禁用插件存取隱私瀏覽模式：",
-        "description": "Please disable add-on access to private mode in windows:"
-    },
     "leaveBookmarksOfClosedTabs": {
         "message": "在書籤中保留已關閉的分頁(書籤會用分隔號分開)",
         "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"

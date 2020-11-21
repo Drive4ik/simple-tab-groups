@@ -787,10 +787,6 @@
         "message": "Limpar",
         "description": "Clear"
     },
-    "helpPageDisableIncognitoTitle": {
-        "message": "Bem-vindo(a) ao Simple Tab Groups v4",
-        "description": "Welcome to Simple Tab Groups v4"
-    },
     "enableDebugTitle": {
         "message": "Habilitar DEBUG",
         "description": "Enable DEBUG"

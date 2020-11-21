@@ -2,6 +2,8 @@
     'use strict';
 
     let tabs = {},
+        incognitoTabs = new Set,
+        incognitoWindows = new Set,
         removedTabs = new Set,
         windows = {};
 
@@ -241,10 +243,6 @@
             .filter(Boolean);
     }
 
-    function filterRemovedTab({id}) {
-        return !removedTabs.has(id);
-    }
-
     // WINDOWS
     function hasAnyWindow() {
         return Object.keys(windows).length > 0;
@@ -323,6 +321,8 @@
         applySession,
 
         // tabs
+        incognitoTabs,
+
         setTab,
         hasTab,
         removeTab,
@@ -346,9 +346,11 @@
         removeTabSession,
 
         getTabsSessionAndRemove,
-        filterRemovedTab,
+        removedTabs,
 
         // windows
+        incognitoWindows,
+
         hasAnyWindow,
         removeWindow,
 

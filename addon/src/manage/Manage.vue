@@ -14,11 +14,6 @@
 
     document.title = browser.i18n.getMessage('manageGroupsTitle');
 
-    if (!BG.inited) {
-        browser.runtime.onMessage.addListener(({action}) => 'i-am-back' === action && window.location.reload());
-        throw 'waiting background initialization...';
-    }
-
     Vue.config.errorHandler = errorEventHandler;
 
     Vue.use(VueLazyload);

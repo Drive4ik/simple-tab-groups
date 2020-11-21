@@ -410,6 +410,11 @@ async function applyGroupByHistory(textPosition, groups) {
 }
 
 const onCreatedTab = utils.catchFunc(async function(tab) {
+    if (tab.incognito) {
+        cache.incognitoTabs.add(tab.id);
+        return;
+    }
+
     console.log('onCreatedTab', tab);
 
     cache.setTab(tab);
@@ -438,6 +443,10 @@ function removeExcludeTabIds(tabIds) {
 }
 
 const onUpdatedTab = utils.catchFunc(async function(tabId, changeInfo, tab) {
+    if (tab.incognito) {
+        return;
+    }
+
     let excludeTab = excludeTabIds.has(tab.id);
 
     console.log('onUpdatedTab %s tabId: %s, changeInfo:', (excludeTab ? '🛑' : ''), tab.id, changeInfo);
@@ -515,6 +524,10 @@ const onUpdatedTab = utils.catchFunc(async function(tabId, changeInfo, tab) {
 });
 
 function onRemovedTab(tabId, {isWindowClosing, windowId}) {
+    if (cache.incognitoTabs.has(tabId)) {
+        return;
+    }
+
     console.log('onRemovedTab', {tabId, isWindowClosing, windowId});
 
     if (isWindowClosing) {
@@ -526,6 +539,10 @@ function onRemovedTab(tabId, {isWindowClosing, windowId}) {
 
 let openerTabTimer = 0;
 function onMovedTab(tabId) {
+    if (cache.incognitoTabs.has(tabId)) {
+        return;
+    }
+
     if (cache.getTabGroup(tabId)) {
         clearTimeout(openerTabTimer);
         openerTabTimer = setTimeout(() => Tabs.get(), 500); // load visible tabs of current window for set openerTabId
@@ -533,6 +550,10 @@ function onMovedTab(tabId) {
 }
 
 function onAttachedTab(tabId, {newWindowId}) {
+    if (cache.incognitoTabs.has(tabId)) {
+        return;
+    }
+
     let excludeTab = excludeTabIds.has(tabId);
 
     console.log('onAttachedTab', (excludeTab && '🛑'), {tabId, newWindowId});
@@ -547,6 +568,15 @@ function onAttachedTab(tabId, {newWindowId}) {
 }
 
 const onCreatedWindow = utils.catchFunc(async function(win) {
+    if (win.incognito) {
+        cache.incognitoWindows.add(win.id);
+        browser.browserAction.setPopup({
+            windowId: win.id,
+            popup: '/help/incognito.html',
+        });
+        return;
+    }
+
     console.log('onCreatedWindow', win);
 
     if (BG.skipAddGroupToNextNewWindow) {
@@ -579,6 +609,10 @@ const onCreatedWindow = utils.catchFunc(async function(win) {
 });
 
 function onFocusChangedWindow(windowId) {
+    if (cache.incognitoWindows.has(windowId)) {
+        return;
+    }
+
     console.log('onFocusChangedWindow', windowId);
 
     if (browser.windows.WINDOW_ID_NONE !== windowId && options.showContextMenuOnTabs) {
@@ -589,6 +623,10 @@ function onFocusChangedWindow(windowId) {
 }
 
 const onRemovedWindow = utils.catchFunc(async function(windowId) {
+    if (cache.incognitoWindows.has(windowId)) {
+        return;
+    }
+
     console.log('onRemovedWindow windowId:', windowId);
 
     let groupId = cache.getWindowGroup(windowId);
@@ -1462,7 +1500,7 @@ function addTabToLazyMove(tabId, groupId, showTabAfterMovingItIntoThisGroup) {
 
 let canceledRequests = new Set;
 const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, originUrl, requestId, frameId}) {
-    if (frameId !== 0 || tabId === -1) {
+    if (frameId !== 0 || tabId === -1 || cache.incognitoTabs.has(tabId)) {
         return {};
     }
 
@@ -2240,6 +2278,8 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
     }
 
     let pinnedTabs = await Tabs.get(null, true, null);
+
+    pinnedTabs = pinnedTabs.filter(tab => utils.isUrlAllowToCreate(tab.url));
 
     if (pinnedTabs.length) {
         data.pinnedTabs = Tabs.prepareForSave(pinnedTabs);
@@ -3246,13 +3286,6 @@ async function initializeGroupWindows(windows, currentGroupIds) {
 
 async function init() {
     try {
-        let isAllowedIncognitoAccess = await browser.extension.isAllowedIncognitoAccess();
-
-        if (isAllowedIncognitoAccess) {
-            openHelp('disable-incognito');
-            throw '';
-        }
-
         let data = await storage.get(null),
             dataChanged = [];
 

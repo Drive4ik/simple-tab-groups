@@ -8,9 +8,11 @@ let errorCounter = 0,
 
 const popupId = 'stg-move-tab-to-group-popup-wrapper';
 
-browser.runtime.onMessage.addListener(changeHotkeysListener);
+if (!browser.extension.inIncognitoContext) {
+    browser.runtime.onMessage.addListener(changeHotkeysListener);
 
-init();
+    init();
+}
 
 async function init() {
     resetWindowEvents();

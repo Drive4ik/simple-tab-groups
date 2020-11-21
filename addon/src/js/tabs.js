@@ -163,20 +163,27 @@
 
         let tabs = await browser.tabs.query(query);
 
-        tabs = tabs.filter(cache.filterRemovedTab).map(utils.normalizeTabUrl);
+        tabs = tabs
+            .filter(function(tab) {
+                if (tab.incognito) {
+                    cache.incognitoTabs.add(tab.id);
+                    return false;
+                } else if (cache.removedTabs.has(tab.id)) {
+                    return false;
+                }
+
+                return true;
+            })
+            .map(utils.normalizeTabUrl);
 
         return query.pinned ? tabs : Promise.all(tabs.map(tab => cache.loadTabSession(tab, includeFavIconUrl, includeThumbnail)));
     }
 
-    async function getOne(id, withThrowOnError) {
+    async function getOne(id) {
         try {
             let tab = await browser.tabs.get(id);
             return utils.normalizeTabUrl(tab);
         } catch (e) {
-            if (withThrowOnError === true) {
-                throw e;
-            }
-
             return null;
         }
     }

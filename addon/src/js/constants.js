@@ -1,8 +1,8 @@
 'use strict';
 
 const MANAGE_TABS_URL = '/manage/manage.html';
-const ACTIVE_SYMBOL = '⚪';
-const DISCARDED_SYMBOL = '❄';
+const ACTIVE_SYMBOL = '〇';
+const DISCARDED_SYMBOL = '✱';
 const STICKY_SYMBOL = '📌';
 
 const TEMPORARY_CONTAINER = 'temporary-container';

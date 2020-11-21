@@ -164,5 +164,8 @@ async function openTab(url, cookieStoreId = DEFAULT_COOKIE_STORE_ID, buttonId = 
     }
 }
 
-init();
-
+if (browser.extension.inIncognitoContext) {
+    window.location.replace('/help/incognito.html');
+} else {
+    init();
+}

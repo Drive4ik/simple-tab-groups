@@ -407,7 +407,7 @@
     function mapForExternalExtension(group) {
         return {
             id: group.id,
-            title: utils.getGroupTitle(group, group.isArchive ? '' : 'withActiveGroup'),
+            title: utils.getGroupTitle(group),
             isArchive: group.isArchive,
             isSticky: group.isSticky,
             iconUrl: utils.getGroupIconUrl(group),
