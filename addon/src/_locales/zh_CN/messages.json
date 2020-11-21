@@ -93,7 +93,11 @@
     },
     "showConfirmDialogBeforeGroupDelete": {
         "message": "在删除群组之前，显示确认对话框",
-        "description": "Show confirm dialog before group delete"
+        "description": "Show confirmation dialog before deleting the group"
+    },
+    "showConfirmDialogBeforeGroupArchiving": {
+        "message": "激活群组前显示确认对话框",
+        "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
         "message": "备份你的“Simple Tab Groups”",
@@ -196,7 +200,7 @@
         }
     },
     "groupTabsCountActive": {
-        "message": "$active$/$count$ 个标签活动",
+        "message": "$active$/$count$ 个标签页活动",
         "description": "Group tabs count active",
         "placeholders": {
             "active": {
@@ -250,7 +254,7 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "捕捉并移动Firefox身份标签页（多账户容器）到该群组",
+        "message": "捕捉并移动Firefox身份标签页到该群组",
         "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
@@ -341,12 +345,16 @@
         "message": "打开管理群组",
         "description": "Open manage groups"
     },
+    "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
+        "message": "移动选中标签页到自定义群组",
+        "description": "Move selected tabs to custom group"
+    },
     "hotkeyActionTitleDiscardGroup": {
-        "message": "丢弃（休眠）群组",
+        "message": "丢弃群组",
         "description": "Hotkey action Discard group"
     },
     "hotkeyActionTitleDiscardOtherGroups": {
-        "message": "丢弃（休眠）其它群组",
+        "message": "丢弃其它群组",
         "description": "Hotkey action Discard other groups"
     },
     "hotkeyActionTitleReloadAllTabsInCurrentGroup": {
@@ -409,12 +417,16 @@
         "message": "将这些标签页移动到当前群组或窗口中",
         "description": "Move all of these tabs into current group/window"
     },
+    "actionHiddenUnSyncWindowTabsCreateGroup": {
+        "message": "仅在当前窗口创建新标签页群组",
+        "description": "Create new group with tabs only from the current window"
+    },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "为这些标签页创建新群组",
         "description": "Create new group with all of these tabs"
     },
     "actionHiddenUnSyncTabsCloseAll": {
-        "message": "关闭这些标签",
+        "message": "关闭这些标签页",
         "description": "Close all of these tabs"
     },
     "updateTabThumbnail": {
@@ -666,7 +678,7 @@
         "description": "All groups successfully exported to bookmarks"
     },
     "discardTabTitle": {
-        "message": "丢弃（休眠）标签页",
+        "message": "丢弃标签页",
         "description": "Discard tab"
     },
     "autoBackupGroupsToFile": {
@@ -835,6 +847,16 @@
         "message": "归档",
         "description": "Archive"
     },
+    "confirmArchiveGroup": {
+        "message": "您想要归档群组“$grouptitle$”？<br>当您将一个群组归档，标签页将保存到扩展数据库并从浏览器中删除。",
+        "description": "Do you want to archive the group",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
     "unArchiveGroup": {
         "message": "解除归档",
         "description": "Unarchive"
@@ -906,7 +928,7 @@
         "description": "addon can't open URL:"
     },
     "helpPageOpenInContainerDesc1": {
-        "message": "群组<strong>$groupTitle$</strong>已分配打开的标签在<container-name>$containerName$</container-name>身份标签页容器中。",
+        "message": "群组<strong>$groupTitle$</strong>已分配打开的标签页在<container-name>$containerName$</container-name>身份标签页容器中。",
         "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
         "placeholders": {
             "groupTitle": {
@@ -998,19 +1020,19 @@
         "description": "No container"
     },
     "reopenTabsWithTemporaryContainersInNew": {
-        "message": "在新的临时身份标签容器中重新打开标签",
+        "message": "在新的临时身份标签页容器中重新打开标签页",
         "description": "Reopen tabs with temporary containers in new"
     },
     "temporaryContainerTitleDescription": {
-        "message": "临时身份标签容器标签前辍",
+        "message": "临时身份标签页容器标签页前辍",
         "description": "Prefix of the temporary container title"
     },
     "excludeContainersForReOpen": {
-        "message": "排除这些身份标签容器",
+        "message": "排除这些身份标签页容器",
         "description": "excluding these containers"
     },
     "helpPageOpenInContainerExcludeContainerToGroup": {
-        "message": "为群组<strong>$groupTitle$</strong>排除身份标签容器<container-name>$containerName$</container-name>",
+        "message": "为群组<strong>$groupTitle$</strong>排除身份标签页容器<container-name>$containerName$</container-name>",
         "description": "Exclude Personal container for group Group 1",
         "placeholders": {
             "containerName": {
@@ -1020,6 +1042,16 @@
             "groupTitle": {
                 "content": "$2",
                 "example": "Group 1"
+            }
+        }
+    },
+    "helpPageOpenInContainerIgnoreUuidForSession": {
+        "message": "忽略这些\"<strong>$uuid$</strong>\" UUID直到浏览器关闭。",
+        "description": "Ignore UUID for session",
+        "placeholders": {
+            "uuid": {
+                "content": "$1",
+                "example": "ff06d2f8-3660-43ed-becb-ad1c458ae76d"
             }
         }
     },
@@ -1090,5 +1122,9 @@
     "groupWithSameNameExists": {
         "message": "相同名字的群组已存在！",
         "description": "A group with the same name already exists!"
+    },
+    "eraseAndImportAddonBackupButton": {
+        "message": "擦除并恢复备份",
+        "description": "Erase and restore backup"
     }
 }
