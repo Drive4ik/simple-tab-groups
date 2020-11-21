@@ -229,8 +229,8 @@
         return tab;
     }
 
-    async function remove(tabs) { // id or ids or tabs
-        tabs = Array.isArray(tabs) ? tabs : [tabs];
+    async function remove(...tabs) { // id or ids or tabs
+        tabs = tabs.flat();
 
         if (tabs.length) {
             console.log('remove tabs:', tabs);
@@ -490,13 +490,17 @@
         });
     }
 
-    async function discard(tabs) { // ids or tabs
+    async function discard(...tabs) { // ids or tabs
+        tabs = tabs.flat();
+
         if (tabs.length) {
             await browser.tabs.discard(tabs.map(tab => tab.id || tab)).catch(noop);
         }
     }
 
-    async function safeHide(tabs) { // ids or tabs
+    async function safeHide(...tabs) { // ids or tabs
+        tabs = tabs.flat();
+
         if (tabs.length) {
             let tabIds = tabs.map(tab => tab.id || tab);
 

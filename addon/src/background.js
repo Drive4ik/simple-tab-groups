@@ -499,7 +499,7 @@ const onUpdatedTab = utils.catchFunc(async function(tabId, changeInfo, tab) {
                         }
                     }
 
-                    await Tabs.safeHide([tab]);
+                    await Tabs.safeHide(tab);
                 } else {
                     cache.setTabGroup(tab.id, winGroupId);
                 }
@@ -1573,10 +1573,10 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, originUrl
     canceledRequests.add(requestId);
     setTimeout(requestId => canceledRequests.delete(requestId), 2000, requestId);
 
-    let newTabPromise = Tabs.create(newTabParams);
+    let newTab = await Tabs.create(newTabParams);
 
     if (tab.hidden) {
-        newTabPromise.then(newTab => Tabs.safeHide([newTab]));
+        await Tabs.safeHide(newTab);
     }
 
     Tabs.remove(tab.id);
