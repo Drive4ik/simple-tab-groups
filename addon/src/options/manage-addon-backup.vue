@@ -20,6 +20,16 @@
             clearAddonData(value) {
                 this.$emit('clear-addon-data-update', value);
             },
+            groups({length}) {
+                if (!length) {
+                    this.checkAllGroups = false;
+                } else if (this.filteredGroups.length === length) {
+                    this.checkAllGroups = true;
+                }
+            },
+            checkAllGroups(cheched) {
+                this.groups = cheched ? this.filteredGroups.slice() : [];
+            },
         },
         computed: {
             showPinnedTabs() {
@@ -36,10 +46,14 @@
             this.$nextTick(() => this.$emit('clear-addon-data-update', this.allowClearAddonData));
         },
         data() {
+            let filteredGroups = this.disableEmptyGroups ? this.data.groups.filter(group => group.tabs.length) : this.data.groups;
+
             return {
                 TEMPORARY_CONTAINER,
                 DEFAULT_COOKIE_STORE_ID,
                 allContainers: containers.getAll(),
+
+                filteredGroups,
 
                 clearAddonData: this.allowClearAddonData ? true : false,
 
@@ -47,7 +61,9 @@
                 includeGeneral: true,
                 includeHotkeys: true,
 
-                groups: this.disableEmptyGroups ? this.data.groups.filter(group => group.tabs.length) : this.data.groups,
+                checkAllGroups: true,
+
+                groups: filteredGroups.slice(),
                 disabledGroups: this.disableEmptyGroups ? this.data.groups.filter(group => !group.tabs.length) : [],
             };
         },
@@ -137,7 +153,10 @@
         </div>
 
         <div class="field">
-            <label class="label" v-text="lang('importGroups')"></label>
+            <label class="label checkbox">
+                <input type="checkbox" v-model="checkAllGroups" />
+                <span v-text="lang('importGroups')"></span>
+            </label>
 
             <div class="control" v-for="group in data.groups" :key="group.id">
                 <label class="checkbox" :disabled="disabledGroups.includes(group)">
