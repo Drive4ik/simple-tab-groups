@@ -92,8 +92,12 @@
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
-        "message": "Afficher une confirmation avant de supprimer le groupe",
-        "description": "Show confirm dialog before group delete"
+        "message": "Afficher une confirmation avant de supprimer un groupe",
+        "description": "Show confirmation dialog before deleting the group"
+    },
+    "showConfirmDialogBeforeGroupArchiving": {
+        "message": "Afficher une confirmation avant d'archiver un groupe",
+        "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
         "message": "Sauvegarder vos groupes Simple Tab Groups",
@@ -843,6 +847,16 @@
         "message": "Archiver",
         "description": "Archive"
     },
+    "confirmArchiveGroup": {
+        "message": "Voulez-vous archiver le groupe \"$grouptitle$\" ?<br>Quand vous archivez un groupe, les onglets sont sauvegardés dans la base de données de l'extension et sont supprimés du navigateur lui-même.",
+        "description": "Do you want to archive the group",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
     "unArchiveGroup": {
         "message": "Désarchiver",
         "description": "Unarchive"
@@ -1028,6 +1042,16 @@
             "groupTitle": {
                 "content": "$2",
                 "example": "Group 1"
+            }
+        }
+    },
+    "helpPageOpenInContainerIgnoreUuidForSession": {
+        "message": "Ignorer l'UUID \"<strong>$uuid$</strong>\" jusqu'à la fermeture du navigateur",
+        "description": "Ignore UUID for session",
+        "placeholders": {
+            "uuid": {
+                "content": "$1",
+                "example": "ff06d2f8-3660-43ed-becb-ad1c458ae76d"
             }
         }
     },
