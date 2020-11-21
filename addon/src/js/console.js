@@ -61,8 +61,8 @@
 
         args = clone(args);
 
-        if (!window.localStorage.enableDebug) {
-            logs = logs.slice(-100);
+        if (!window.localStorage.enableDebug && logs.length > 200) {
+            logs = logs.slice(-150);
         }
 
         logs.push({
