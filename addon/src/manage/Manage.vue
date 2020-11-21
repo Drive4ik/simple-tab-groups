@@ -761,7 +761,7 @@
                         index: -1,
                     });
 
-                    await browser.tabs.show(tab.id);
+                    await Tabs.show(tab.id);
 
                     this.loadUnsyncedTabs();
                 }

@@ -326,16 +326,16 @@
         tabs = tabs.filter(tab => !tab.groupId);
 
         if (tabs.length) {
-            await BG.browser.tabs.show(tabs.map(utils.keyId));
-            await Tabs.setActive(null, tabs);
+            await BG.Tabs.show(tabs);
+            await BG.Tabs.setActive(null, tabs);
         } else {
-            await Tabs.createTempActiveTab(windowId, false);
+            await BG.Tabs.createTempActiveTab(windowId, false);
         }
 
-        await Tabs.safeHide(group.tabs);
+        await BG.Tabs.safeHide(group.tabs);
 
         if (BG.options.discardTabsAfterHide && !group.dontDiscardTabsAfterHideThisGroup) {
-            Tabs.discard(group.tabs);
+            BG.Tabs.discard(group.tabs);
         }
 
         BG.updateBrowserActionData(null, windowId, groups);

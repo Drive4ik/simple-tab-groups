@@ -392,13 +392,13 @@
                 let tabsToShow = tabs.filter(tab => tab.hidden);
 
                 if (tabsToShow.length) {
-                    await browser.tabs.show(tabsToShow.map(utils.keyId));
+                    await show(tabsToShow);
                 }
             } else {
                 let tabsToHide = tabs.filter(tab => !tab.hidden);
 
                 if (tabsToHide.length) {
-                    await browser.tabs.hide(tabsToHide.map(utils.keyId));
+                    await hide(tabsToHide);
                 }
             }
 
@@ -474,8 +474,12 @@
             await utils.wait(100);
         }
 
+        console.log('Tabs.moveNative before');
+
         let movedTabs = await browser.tabs.move(tabs.map(utils.keyId), options),
             movedTabsObj = utils.arrayToObj(movedTabs, 'id');
+
+        console.log('Tabs.moveNative after');
 
         return tabs.map(function(tab) {
             if (options.windowId) {
@@ -490,11 +494,33 @@
         });
     }
 
+    async function show(...tabs) {
+        tabs = tabs.flat();
+
+        if (tabs.length) {
+            console.log('Tabs.show before');
+            await browser.tabs.show(tabs.map(tab => tab.id || tab));
+            console.log('Tabs.show after');
+        }
+    }
+
+    async function hide(...tabs) {
+        tabs = tabs.flat();
+
+        if (tabs.length) {
+            console.log('Tabs.hide before');
+            await browser.tabs.hide(tabs.map(tab => tab.id || tab));
+            console.log('Tabs.hide after');
+        }
+    }
+
     async function discard(...tabs) { // ids or tabs
         tabs = tabs.flat();
 
         if (tabs.length) {
-            await browser.tabs.discard(tabs.map(tab => tab.id || tab)).catch(noop);
+            console.log('Tabs.discard before');
+            await browser.tabs.discard(tabs.map(tab => tab.id || tab));
+            console.log('Tabs.discard after');
         }
     }
 
@@ -505,8 +531,15 @@
             let tabIds = tabs.map(tab => tab.id || tab);
 
             BG.addExcludeTabIds(tabIds);
-            await browser.tabs.hide(tabIds);
-            BG.removeExcludeTabIds(tabIds);
+            try {
+                console.log('Tabs.safeHide before');
+                await hide(tabIds);
+                console.log('Tabs.safeHide after');
+                BG.removeExcludeTabIds(tabIds);
+            } catch (e) {
+                BG.removeExcludeTabIds(tabIds);
+                throw e;
+            }
 
             tabs.forEach(tab => tab.hidden = true);
         }
@@ -611,6 +644,8 @@
         updateThumbnail,
         move,
         moveNative,
+        show,
+        hide,
         discard,
         safeHide,
         isCanSendMessage,

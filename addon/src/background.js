@@ -199,7 +199,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                     });
                 }
 
-                await browser.tabs.show(tabIds);
+                await Tabs.show(tabIds);
 
                 removeExcludeTabIds(tabIds);
 
@@ -235,7 +235,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                     return;
                 }
 
-                await browser.tabs.hide(tabs.map(utils.keyId));
+                await Tabs.hide(tabs);
 
                 let showNotif = +window.localStorage.showTabsInThisWindowWereHidden || 0;
                 if (showNotif < 5) {
@@ -499,7 +499,7 @@ const onUpdatedTab = utils.catchFunc(async function(tabId, changeInfo, tab) {
                         }
                     }
 
-                    await Tabs.safeHide(tab);
+                    Tabs.safeHide(tab).catch(noop);
                 } else {
                     cache.setTabGroup(tab.id, winGroupId);
                 }
@@ -2750,7 +2750,7 @@ async function runMigrateForData(data) {
                 let allTabs = utils.getTabs(windows);
 
                 if (allTabs.length) {
-                    await browser.tabs.hide(allTabs.map(utils.keyId));
+                    await Tabs.hide(allTabs);
                 }
 
                 data.groups = await syncTabs(data.groups, allTabs);
@@ -3214,7 +3214,7 @@ async function initializeGroupWindows(windows, currentGroupIds) {
     }
 
     if (tabsToShow.length) {
-        await browser.tabs.show(tabsToShow.map(utils.keyId));
+        await Tabs.show(tabsToShow);
 
         tabsToShow.forEach(tab => tab.hidden = false);
 
@@ -3238,7 +3238,7 @@ async function initializeGroupWindows(windows, currentGroupIds) {
             }
         }
 
-        await browser.tabs.hide(tabsToHide.map(utils.keyId));
+        await Tabs.hide(tabsToHide);
 
         console.log('[initializeGroupWindows] tabsToHide length', tabsToHide.length);
     }

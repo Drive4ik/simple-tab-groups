@@ -882,7 +882,7 @@
                         index: -1,
                     });
 
-                    await browser.tabs.show(tabsIds);
+                    await BG.Tabs.show(tabsIds);
                 }
 
                 this.loadGroups();
@@ -908,7 +908,7 @@
                     index: -1,
                 });
 
-                browser.tabs.show(tab.id);
+                await Tabs.show(tab.id);
 
                 if (this.currentGroup) {
                     this.unSyncTabs.splice(this.unSyncTabs.indexOf(tab), 1);
