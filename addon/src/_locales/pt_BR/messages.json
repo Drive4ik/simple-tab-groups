@@ -20,7 +20,7 @@
         "description": "Move tab to group title"
     },
     "moveTabToGroupMessage": {
-        "message": "Aba \"$tabtitle$\" foi movida para o grupo \"$grouptitle$\".\n\nClique aqui para exibir essa aba.",
+        "message": "Aba \"$tabtitle$\" foi movida para o grupo \"$grouptitle$\".\n\nClique aqui para exibir a aba.",
         "description": "Tab moved popup title",
         "placeholders": {
             "grouptitle": {
@@ -80,7 +80,7 @@
         "description": "Free arrange"
     },
     "closePopupAfterChangeGroup": {
-        "message": "Fechar o popup depois da mudança de grupo",
+        "message": "Fechar o pop-up depois da mudança de grupo",
         "description": "Close popup after changing group"
     },
     "showNotificationAfterMoveTab": {
@@ -93,7 +93,11 @@
     },
     "showConfirmDialogBeforeGroupDelete": {
         "message": "Exibir diálogo de confirmação antes de deletar o grupo",
-        "description": "Show confirm dialog before group delete"
+        "description": "Show confirmation dialog before deleting the group"
+    },
+    "showConfirmDialogBeforeGroupArchiving": {
+        "message": "Exibir diálogo de confirmação antes de arquivar o grupo",
+        "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
         "message": "Fazer backup de seu Simple Tab Groups",
@@ -195,6 +199,20 @@
             }
         }
     },
+    "groupTabsCountActive": {
+        "message": "$active$/$count$ abas ativas",
+        "description": "Group tabs count active",
+        "placeholders": {
+            "active": {
+                "content": "$1",
+                "example": "2"
+            },
+            "count": {
+                "content": "$2",
+                "example": "4"
+            }
+        }
+    },
     "deleteTab": {
         "message": "Deletar aba",
         "description": "Delete tab"
@@ -228,15 +246,15 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Desculpe, você não pode carregar icone customizado nesse popup, mas você pode carregar icone customizado do grupo em \"Gerenciar grupos\".\nAbrir \"Gerenciar grupos\"?",
+        "message": "Desculpe, você não pode carregar os ícones personalizados do grupo neste pop-up. Para isso, dirija-se a \"Gerenciar grupos\".\nAbrir \"Gerenciar grupos\"?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
-        "message": "Cor aleatória",
+        "message": "Fixar cor aleatória",
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Capturar e mover abas com 'containers' para esse grupo",
+        "message": "Capturar e mover abas com 'containers' para este grupo",
         "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
@@ -248,7 +266,7 @@
         "description": "Regular expressions"
     },
     "regexpForTabsHelp": {
-        "message": "Insira expressões regulares para endereços web aqui. Abas encontradas vão ser movidas automaticamente para esse grupo.\nUse uma linha por regra, podendo haver quantas você quiser.\nExemplos:\ngithub\\.com/drive4ik/simple-tab-groups - pega todas as páginas na extensão do repositório\nbugzilla\\.mozilla\\.org - pega Firefox bug reports\n(facebook|twitter|youtube)\\.com - pega todas suas páginas sociais",
+        "message": "Insira expressões regulares para endereços web aqui. Abas encontradas vão ser movidas automaticamente para este grupo.\nUse uma linha por regra, podendo haver quantas você quiser.\nExemplos:\ngithub\\.com/drive4ik/simple-tab-groups - pega todas as páginas na extensão do repositório\nbugzilla\\.mozilla\\.org - pega Firefox bug reports\n(facebook|twitter|youtube)\\.com - pega todas suas páginas sociais",
         "description": "Regular exceptions helper"
     },
     "hotkeysTitle": {
@@ -256,7 +274,7 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Aqui você pode adicionar teclas de atalho.<br>Restrições:<br>1. Essas teclas de atalho vão funcioanr somente em paginas web (http:, https:). Em páginas do navegador (about:) - não vai funcionar, o WebExtensions API não permite isso.<br>2. Algumas teclas de atalho não vão funcioanr em teclados diferentes. Por exemplo, o atalho criado no layout Ingles <code>Ctrl + ~</code> não vai funcionar no layout Russo, porque no layout Russo essa tecla tem outro código. Para corrigir isso, apenas crie outro atalho no layout russo: <code>Ctrl + Ё</code>",
+        "message": "Aqui você pode adicionar teclas de atalho.<br>Restrições:<br>1. Estas teclas de atalho vão funcionar somente em paginas web (http:, https:). Em páginas do navegador (about:) - não vai funcionar, o WebExtensions API não permite isso.<br>2. Algumas teclas de atalho não vão funcioanr em teclados diferentes. Por exemplo, o atalho criado no layout Ingles <code>Ctrl + ~</code> não vai funcionar no layout Russo, porque no layout Russo essa tecla tem outro código. Para corrigir isso, apenas crie outro atalho no layout russo: <code>Ctrl + Ё</code>",
         "description": "Hotkeys description"
     },
     "addHotKeyButton": {
@@ -287,6 +305,22 @@
         "message": "Carregar o grupo anterior",
         "description": "Load previous group"
     },
+    "hotkeyActionTitleLoadNextUnloadedGroup": {
+        "message": "Carregar próximo grupo descarregado",
+        "description": "Load next unloaded group"
+    },
+    "hotkeyActionTitleLoadPrevUnloadedGroup": {
+        "message": "Carregar grupo descarregado anterior",
+        "description": "Load previous unloaded group"
+    },
+    "hotkeyActionTitleLoadHistoryNextGroup": {
+        "message": "Carregar próximo grupo do histórico",
+        "description": "Load next group from history"
+    },
+    "hotkeyActionTitleLoadHistoryPrevGroup": {
+        "message": "Carregar grupo anterior do histórico",
+        "description": "Load previous group from history"
+    },
     "hotkeyActionTitleLoadFirstGroup": {
         "message": "Carregar o primeiro grupo",
         "description": "Load first group"
@@ -296,7 +330,7 @@
         "description": "Load last group"
     },
     "hotkeyActionTitleLoadCustomGroup": {
-        "message": "Carregar grupo customizado",
+        "message": "Carregar grupo personalizado",
         "description": "Load custom group"
     },
     "hotkeyActionTitleAddNewGroup": {
@@ -311,8 +345,24 @@
         "message": "Abrir gerenciador de grupos",
         "description": "Open manage groups"
     },
+    "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
+        "message": "Mover abas selecionadas a um grupo personalizado",
+        "description": "Move selected tabs to custom group"
+    },
+    "hotkeyActionTitleDiscardGroup": {
+        "message": "Descartar grupo",
+        "description": "Hotkey action Discard group"
+    },
+    "hotkeyActionTitleDiscardOtherGroups": {
+        "message": "Descartar outros grupos",
+        "description": "Hotkey action Discard other groups"
+    },
+    "hotkeyActionTitleReloadAllTabsInCurrentGroup": {
+        "message": "Recarregar todas as abas no grupo atual",
+        "description": "Reload all tabs in current group"
+    },
     "whatsWrongMessage": {
-        "message": "Erro...\nPor favor, contate o desenvolvedor pelo email de suporte com o último log de erro (existe o botão na parte de baixo das opções)",
+        "message": "Algo deu errado...\nPor favor, contate o desenvolvedor pelo email de suporte com o último log de erro (há um botão na parte de baixo da página de opções)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
     },
     "saveErrorLogsIntoFile": {
@@ -340,11 +390,11 @@
         }
     },
     "isStickyGroupTitle": {
-        "message": "Grupo pegajoso",
+        "message": "Grupo fixado",
         "description": "Sticky group"
     },
     "isStickyGroupHelp": {
-        "message": "Abas nesse grupo nunca vão ser automaticamente movidas para outro grupo",
+        "message": "Abas deste grupo nunca serão movidas automaticamente  para outro grupo",
         "description": "Tabs in this group will never be automatically moved to another group"
     },
     "iconStyle": {
@@ -360,27 +410,31 @@
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
     },
     "foundHiddenUnSyncTabsDescription": {
-        "message": "Encontrado abas escondidas dessincronizadas. Clique na aba para mostrar no grupo/janela atual ou:",
+        "message": "Foram encontradas abas escondidas dessincronizadas. Clique na aba para mostrar no grupo/janela atual ou:",
         "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
     },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
-        "message": "Mover todas essas abas para o grupo/janela atual",
+        "message": "Mover todas estas abas para o grupo/janela atual",
         "description": "Move all of these tabs into current group/window"
     },
+    "actionHiddenUnSyncWindowTabsCreateGroup": {
+        "message": "Criar novo grupo apenas com abas da janela atual",
+        "description": "Create new group with tabs only from the current window"
+    },
     "actionHiddenUnSyncTabsCreateGroup": {
-        "message": "Crie novo grupo com todas essas abas",
+        "message": "Criar novo grupo com estas abas",
         "description": "Create new group with all of these tabs"
     },
     "actionHiddenUnSyncTabsCloseAll": {
-        "message": "Feche todas essas abas",
+        "message": "Feche todas estas abas",
         "description": "Close all of these tabs"
     },
     "updateTabThumbnail": {
-        "message": "Atualize a miniatura para essa aba",
+        "message": "Atualizar miniatura desta aba",
         "description": "Update thumbnail for this tab"
     },
     "notFoundWindowsAddonStoppedWorking": {
-        "message": "Error: não encontrado nenhuma janela normal não privado/incógnito/popup.\nExtensão parou de funcionar. Por favor, reinicie o navegador.",
+        "message": "Erro: não foi encontrada nenhuma janela normal não privativa/incógnito/pop-up.\nExtensão parou de funcionar. Por favor, reinicie o navegador.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
     },
     "ffFailedAndLostDataMessage": {
@@ -400,7 +454,7 @@
         "description": "Mute tabs when group close and restore when open"
     },
     "showTabAfterMovingItIntoThisGroup": {
-        "message": "Exibir a aba depois de auto movê-la para o grupo",
+        "message": "Exibir a aba depois de movê-la automaticamente para este grupo",
         "description": "Show the tab after auto-moving it into this group"
     },
     "tabMoving": {
@@ -408,7 +462,7 @@
         "description": "Tab moving"
     },
     "includeTabFavIconsIntoBackup": {
-        "message": "Incluir fav-icons das abas no backup (isso torna o arquivo de backup maior)",
+        "message": "Incluir ícones favoritos das abas no backup (isso torna o arquivo de backup maior)",
         "description": "Include tab fav-icons in backup (makes backup file size bigger)"
     },
     "groupRemovedByExtension": {
@@ -426,11 +480,11 @@
         }
     },
     "clickHereToReloadAddon": {
-        "message": "Algo aconteceu de errado, clique aqui para recarregar a extensão STG",
+        "message": "Algo deu errado, clique aqui para recarregar a extensão STG",
         "description": "Something went wrong, click here to reload STG addon"
     },
     "extendedTabSearch": {
-        "message": "Pesquisa estendida",
+        "message": "Pesquisa ampliada",
         "description": "Extended search"
     },
     "movingMultipleTabsText": {
@@ -444,11 +498,11 @@
         }
     },
     "pinnedTabsAreNotSupported": {
-        "message": "Abas pinadas não são suportadas",
+        "message": "Abas fixadas não são suportadas",
         "description": "Pinned tabs are not supported"
     },
     "thisUrlsAreNotSupported": {
-        "message": "Esses endereços \"$urls$\" não são suportados",
+        "message": "Estes endereços \"$urls$\" não são suportados",
         "description": "This urls \"$urls$\" are not supported",
         "placeholders": {
             "urls": {
@@ -458,7 +512,7 @@
         }
     },
     "thisTabsCanNotBeHidden": {
-        "message": "Essas abas não podem ser escondidas porque elas estão pinadas, usando um microfone, câmera ou tela compartilhada: \"$titles$\"",
+        "message": "Estas abas não podem ser escondidas porque elas estão fixadas, usando um microfone, câmera ou tela compartilhada: \"$titles$\"",
         "description": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
         "placeholders": {
             "titles": {
@@ -469,7 +523,7 @@
     },
     "moveMultipleTabsToGroupMessage": {
         "message": "$tabscount$ abas foram movidas.\nClique aqui para mover a primeira aba",
-        "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
+        "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",
         "placeholders": {
             "tabscount": {
                 "content": "$1",
@@ -506,7 +560,7 @@
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {
-        "message": "Restaurar a \"Panorama View\" de fotodiodo",
+        "message": "Restaurar \"Panorama View\" de photodiode",
         "description": "Restore photodiode's \"Panorama View\""
     },
     "importSettingsPanoramaViewAddonDescription": {
@@ -514,7 +568,7 @@
         "description": "Load a backup file from \"Panorama View\" addon."
     },
     "importSettingsSyncTabGroupsAddonTitle": {
-        "message": "Restaurar os \"Grupos de abas sincronizados\" do Morikko",
+        "message": "Restaurar \"Sync Tab Groups\" de Morikko",
         "description": "Restore Morikko's \"Sync Tab Groups\""
     },
     "importSettingsSyncTabGroupsAddonDescription": {
@@ -526,11 +580,283 @@
         "description": "Browse..."
     },
     "openBackupFolder": {
-        "message": "Abrir a pasta de backup",
+        "message": "Abrir pasta de backup",
         "description": "Open backup folder"
     },
     "createNewGroupWhenOpenNewWindow": {
-        "message": "Criar um novo grupo quando abrir uma nova janela",
+        "message": "Criar novo grupo ao abrir uma nova janela",
         "description": "Create a new group when opening a new window"
+    },
+    "prependGroupTitleToWindowTitle": {
+        "message": "Adicionar título do grupo ao título da janela",
+        "description": "Prepend group title to window title"
+    },
+    "allowAccessToBookmarks": {
+        "message": "Permitir acesso aos favoritos",
+        "description": "Allow access to bookmarks"
+    },
+    "openBookmarkInGroup": {
+        "message": "Abrir favorito em novo grupo",
+        "description": "Open bookmark in group"
+    },
+    "bookmarkNotAllowed": {
+        "message": "Este favorito não é permitido",
+        "description": "This bookmark is not allowed"
+    },
+    "openLinkInGroupDisabledTitle": {
+        "message": "Abrir link em algum grupo",
+        "description": "Open link in group title"
+    },
+    "showContextMenuOnTabs": {
+        "message": "Mostrar menu de contexto em abas",
+        "description": "Show context menu on tabs"
+    },
+    "showContextMenuOnLinks": {
+        "message": "Mostrar menu de contexto em links",
+        "description": "Show context menu on links"
+    },
+    "groupsCreatedCount": {
+        "message": "$groupscount$ grupos criados",
+        "description": "Groups created count",
+        "placeholders": {
+            "groupscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "noGroupsCreated": {
+        "message": "Nenhum grupo criado",
+        "description": "No groups created"
+    },
+    "noAccessToBookmarks": {
+        "message": "Você não tem acesso aos favoritos. Ative a permissão nas configurações da extensão.",
+        "description": "You do not have access to bookmarks. Enable it on in addon settings"
+    },
+    "exportGroupToMainBookmarkFolder": {
+        "message": "Exportar grupos para a pasta de favoritos '$bookmarkfolder$'",
+        "description": "Export groups to '$bookmarkfolder$' bookmark folder",
+        "placeholders": {
+            "bookmarkfolder": {
+                "content": "$1",
+                "example": "STG bookmarks"
+            }
+        }
+    },
+    "exportGroupToBookmarks": {
+        "message": "Exportar grupos para favoritos",
+        "description": "Export group to bookmarks"
+    },
+    "defaultBookmarkFolderLocation": {
+        "message": "Local padrão da pasta de favoritos",
+        "description": "Default bookmark folder location"
+    },
+    "groupExportedToBookmarks": {
+        "message": "Grupo '$grouptitle$' exportado com sucesso aos favoritos",
+        "description": "Group '$grouptitle$' successfully exported to bookmarks",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "groupWithoutTabs": {
+        "message": "Este grupo não tem abas",
+        "description": "This group has no tabs"
+    },
+    "autoBackupGroupsToBookmarks": {
+        "message": "Fazer backup automático de todos os grupos para os favoritos",
+        "description": "Auto backup all groups to bookmarks"
+    },
+    "exportAllGroupsToBookmarks": {
+        "message": "Exportar todos os grupos para os favoritos",
+        "description": "Export all groups to bookmarks"
+    },
+    "allGroupsExportedToBookmarks": {
+        "message": "Todos os grupos foram exportados para os favoritos com sucesso",
+        "description": "All groups successfully exported to bookmarks"
+    },
+    "discardTabTitle": {
+        "message": "Descartar aba",
+        "description": "Discard tab"
+    },
+    "autoBackupGroupsToFile": {
+        "message": "Fazer backup automático de todos os grupos num arquivo (para a pasta Downloads)",
+        "description": "Auto backup all groups to file (into downloads folder)"
+    },
+    "folderNameTitle": {
+        "message": "Nome da pasta",
+        "description": "Folder name title"
+    },
+    "backupSuccessfullyRestored": {
+        "message": "Backup restaurado com sucesso!",
+        "description": "Backup successfully restored"
+    },
+    "loading": {
+        "message": "Carregando, por favor aguarde...",
+        "description": "Loading, please wait..."
+    },
+    "showOtherTabs": {
+        "message": "Mostrar outras abas",
+        "description": "Show other tabs"
+    },
+    "dontDiscardTabsAfterHideThisGroup": {
+        "message": "Não descarte abas a este grupo após esconder",
+        "description": "Don't discard tabs into this group after hide"
+    },
+    "showNotificationAfterGroupDelete": {
+        "message": "Mostrar notificação após exclusão do grupo",
+        "description": "Show notification after group delete"
+    },
+    "reloadTab": {
+        "message": "Recarregar aba",
+        "description": "Reload tab"
+    },
+    "thisTabIsNotSupported": {
+        "message": "Esta aba não é suportada",
+        "description": "This tab is not supported"
+    },
+    "showExtendGroupsPopupWithActiveTabs": {
+        "message": "Mostrar abas ativas no pop-up de grupos",
+        "description": "Show active tabs in groups popup"
+    },
+    "reloadAllTabsInGroup": {
+        "message": "Recarregar todas as abas no grupo",
+        "description": "Reload all tabs in group"
+    },
+    "tabsCreatedCount": {
+        "message": "$tabscount$ abas criadas",
+        "description": "Tabs created count",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "tabsNotCreated": {
+        "message": "As abas não foram criadas",
+        "description": "Tabs not created"
+    },
+    "showTabsWithThumbnailsInManageGroups": {
+        "message": "Mostrar abas com a miniatura na página \"Gerenciar grupos\"",
+        "description": "Show tabs with thumbnails in \"Manage groups\" page"
+    },
+    "alwaysOpenTabsInContainer": {
+        "message": "Sempre abrir abas em um novo contêiner",
+        "description": "Always open tabs in container"
+    },
+    "temporaryContainerTitle": {
+        "message": "Contêiner temporário",
+        "description": "⌚Temporary Container"
+    },
+    "thisContainerIsNotTemporary": {
+        "message": "O contêiner '$containerName$' não está mais disponível",
+        "description": "This container '$containerName$' is no longer temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "my container"
+            }
+        }
+    },
+    "thisContainerNowIsTemporary": {
+        "message": "O contêiner '$containerName$' tornou-se temporário",
+        "description": "This container '$containerName$' has now become temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "⌚Temporary Container 5"
+            }
+        }
+    },
+    "importAddonSettings": {
+        "message": "Importar configurações de extensões",
+        "description": "Import addon settings"
+    },
+    "importGroups": {
+        "message": "Importar grupos",
+        "description": "Import groups"
+    },
+    "pinnedTabs": {
+        "message": "Abas fixadas",
+        "description": "Pinned tabs"
+    },
+    "clear": {
+        "message": "Limpar",
+        "description": "Clear"
+    },
+    "helpPageDisableIncognitoTitle": {
+        "message": "Bem-vindo(a) ao Simple Tab Groups v4",
+        "description": "Welcome to Simple Tab Groups v4"
+    },
+    "enableDebugTitle": {
+        "message": "Habilitar DEBUG",
+        "description": "Enable DEBUG"
+    },
+    "loggingIsEnabledTitle": {
+        "message": "O log de dados está habilitado",
+        "description": "logging is enabled"
+    },
+    "archiveGroup": {
+        "message": "Arquivar",
+        "description": "Archive"
+    },
+    "unArchiveGroup": {
+        "message": "Desarquivar",
+        "description": "Unarchive"
+    },
+    "hotkeyActionTitleRenameGroup": {
+        "message": "Renomear grupo",
+        "description": "Rename group"
+    },
+    "noGroupsAvailable": {
+        "message": "Você não possui grupos",
+        "description": "You have no groups"
+    },
+    "openPopupTitle": {
+        "message": "Abrir pop-up",
+        "description": "Open popup"
+    },
+    "openSidebarTitle": {
+        "message": "Abrir barra lateral",
+        "description": "Open sidebar"
+    },
+    "setGroupAsMain": {
+        "message": "Fixar grupo como principal",
+        "description": "Set this group as main"
+    },
+    "thisGroupWasMain": {
+        "message": "Aviso\nEste grupo foi fixado como o principal",
+        "description": "Notice\nThis group was marked as the main"
+    },
+    "noContainerTitle": {
+        "message": "Nenhum contêiner",
+        "description": "No container"
+    },
+    "muteTab": {
+        "message": "Mutar aba",
+        "description": "Mute tab"
+    },
+    "unMuteTab": {
+        "message": "Desmutar aba",
+        "description": "Unmute tab"
+    },
+    "muteGroup": {
+        "message": "Mutar grupo",
+        "description": "Mute group"
+    },
+    "unMuteGroup": {
+        "message": "Desmutar grupo",
+        "description": "Unmute group"
+    },
+    "fullPopupWidth": {
+        "message": "Usar largura inteira de pop-ups",
+        "description": "Use full popup width"
+    },
+    "eraseAndImportAddonBackupButton": {
+        "message": "Apagar e restaurar backup",
+        "description": "Erase and restore backup"
     }
 }
