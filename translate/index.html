@@ -55,16 +55,7 @@
                     </div>
                 </div>
                 <div class="column">
-                    <p class="subtitle">Load translation file:</p>
-                    <button type="button" class="button is-primary is-fullwidth" @click="clickLoadLocaleFileButton">
-                        <span class="icon">
-                            <i class="fa fa-upload" aria-hidden="true"></i>
-                        </span>
-                        <span>Load translation file</span>
-                    </button>
-                </div>
-                <div class="column">
-                    <p class="subtitle">Or load existing locale:</p>
+                    <p class="subtitle">Load existing locale:</p>
                     <div class="control has-icons-left">
                         <div :class="['select is-fullwidth', {'is-loading': availableLocalesLoading}]">
                             <select v-model="componentLocale" :disabled="!componentName">
@@ -76,6 +67,15 @@
                             <i class="fa fa-globe"></i>
                         </span>
                     </div>
+                </div>
+                <div class="column">
+                    <p class="subtitle">or load translation file:</p>
+                    <button type="button" class="button is-primary is-fullwidth" @click="clickLoadLocaleFileButton">
+                        <span class="icon">
+                            <i class="fa fa-upload" aria-hidden="true"></i>
+                        </span>
+                        <span>Load translation file</span>
+                    </button>
                 </div>
                 <div class="column">
                     <p class="subtitle">Save locale:</p>
