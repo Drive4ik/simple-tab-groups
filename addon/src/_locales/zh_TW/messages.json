@@ -93,7 +93,11 @@
     },
     "showConfirmDialogBeforeGroupDelete": {
         "message": "刪除分頁群組前顯示確認對話框",
-        "description": "Show confirm dialog before group delete"
+        "description": "Show confirmation dialog before deleting the group"
+    },
+    "showConfirmDialogBeforeGroupArchiving": {
+        "message": "封存分頁群組前顯示確認對話框",
+        "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
         "message": "備份 Simple Tab Groups",
@@ -301,6 +305,14 @@
         "message": "載入上一個分頁群組",
         "description": "Load previous group"
     },
+    "hotkeyActionTitleLoadNextUnloadedGroup": {
+        "message": "載入下一個已卸載分頁群組",
+        "description": "Load next unloaded group"
+    },
+    "hotkeyActionTitleLoadPrevUnloadedGroup": {
+        "message": "載入上一個已卸載分頁群組",
+        "description": "Load previous unloaded group"
+    },
     "hotkeyActionTitleLoadHistoryNextGroup": {
         "message": "從歷史資料載入下一個群組",
         "description": "Load next group from history"
@@ -333,9 +345,21 @@
         "message": "開啟管理分頁群組",
         "description": "Open manage groups"
     },
+    "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
+        "message": "將所選分頁移至自訂分頁群組",
+        "description": "Move selected tabs to custom group"
+    },
     "hotkeyActionTitleDiscardGroup": {
         "message": "廢棄(休眠)群組",
         "description": "Hotkey action Discard group"
+    },
+    "hotkeyActionTitleDiscardOtherGroups": {
+        "message": "廢棄(休眠)其他群組",
+        "description": "Hotkey action Discard other groups"
+    },
+    "hotkeyActionTitleReloadAllTabsInCurrentGroup": {
+        "message": "重新載入自訂群組的全部分頁",
+        "description": "Reload all tabs in current group"
     },
     "whatsWrongMessage": {
         "message": "出錯囉...\n請寄信聯絡開發者，並附上最近的錯誤記錄 (選項頁面最下面的按鈕)",
@@ -392,6 +416,10 @@
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
         "message": "將所有分頁移動到目前群組/視窗",
         "description": "Move all of these tabs into current group/window"
+    },
+    "actionHiddenUnSyncWindowTabsCreateGroup": {
+        "message": "將本視窗所有分頁建立為新的分頁群組",
+        "description": "Create new group with tabs only from the current window"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "將所有分頁建立為分頁群組",
@@ -495,7 +523,7 @@
     },
     "moveMultipleTabsToGroupMessage": {
         "message": "$tabscount$ 個分頁已被移動。點選此處開啟第一個分頁",
-        "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
+        "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",
         "placeholders": {
             "tabscount": {
                 "content": "$1",
@@ -682,7 +710,7 @@
         "description": "Show notification after group delete"
     },
     "reloadTab": {
-        "message": "新載入分頁",
+        "message": "重新載入分頁",
         "description": "Reload tab"
     },
     "thisTabIsNotSupported": {
@@ -710,5 +738,393 @@
     "tabsNotCreated": {
         "message": "未建立分頁",
         "description": "Tabs not created"
+    },
+    "showTabsWithThumbnailsInManageGroups": {
+        "message": "在管理分頁群組頁面以縮圖顯示每個分頁",
+        "description": "Show tabs with thumbnails in \"Manage groups\" page"
+    },
+    "alwaysOpenTabsInContainer": {
+        "message": "在容器中開啟分頁",
+        "description": "Always open tabs in container"
+    },
+    "temporaryContainerTitle": {
+        "message": "暫存容器",
+        "description": "⌚Temporary Container"
+    },
+    "thisContainerIsNotTemporary": {
+        "message": "'$containerName$' 已非暫存容器",
+        "description": "This container '$containerName$' is no longer temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "my container"
+            }
+        }
+    },
+    "thisContainerNowIsTemporary": {
+        "message": "'$containerName$' 轉為暫存容器",
+        "description": "This container '$containerName$' has now become temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "⌚Temporary Container 5"
+            }
+        }
+    },
+    "importAddonSettings": {
+        "message": "導入套件設定記錄檔",
+        "description": "Import addon settings"
+    },
+    "importGroups": {
+        "message": "導入群組記錄檔",
+        "description": "Import groups"
+    },
+    "pinnedTabs": {
+        "message": "固定分頁",
+        "description": "Pinned tabs"
+    },
+    "eraseAddonSettingsWarningTitle": {
+        "message": "完全清除所有已建立群組與設定！分頁不受影響。",
+        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+    },
+    "clear": {
+        "message": "清除",
+        "description": "Clear"
+    },
+    "deleteAllAddonDataAndSettings": {
+        "message": "刪除所有套件資料與設定",
+        "description": "Delete all addon data and settings"
+    },
+    "warningAllDataWillRemove": {
+        "message": "警告！確定刪除所有套件資料？",
+        "description": "Warning! Removing ALL addon data! Are you really sure?"
+    },
+    "ifDifferentContainerReOpen": {
+        "message": "若容器與所選的不同 - 請自行點選容器",
+        "description": "If the container is different from the selected one - change the container"
+    },
+    "deleteAllAddonDataAndSettingsBeforeRestoringBackup": {
+        "message": "回復備份之前先刪除所有套件資料與設定",
+        "description": "Delete all addon data and settings before restoring backup"
+    },
+    "helpPageWelcomeV4Title": {
+        "message": "歡迎使用 Simple Tab Groups v4",
+        "description": "Welcome to Simple Tab Groups v4"
+    },
+    "helpPageWelcomeV4Description": {
+        "message": "請啟用瀏覽器設定中的 \"回復瀏覽狀態\" 功能。<br>在群組與分頁切換之間需要打開此功能，<br>否則當打開瀏覽器之後，所有分頁將無法開啟並遺失，套件也會停止執行。",
+        "description": "Please enable \"Restore previous session\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
+    },
+    "helpPageDisableIncognitoTitle": {
+        "message": "歡迎使用 Simple Tab Groups v4",
+        "description": "Welcome to Simple Tab Groups v4"
+    },
+    "helpPageDisableIncognitoDescription": {
+        "message": "請禁用插件存取隱私瀏覽模式：",
+        "description": "Please disable add-on access to private mode in windows:"
+    },
+    "leaveBookmarksOfClosedTabs": {
+        "message": "在書籤中保留已關閉的分頁(書籤會用分隔號分開)",
+        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+    },
+    "enableDebugTitle": {
+        "message": "啟用除錯模式",
+        "description": "Enable DEBUG"
+    },
+    "loggingIsEnabledTitle": {
+        "message": "啟用除錯訊息紀錄",
+        "description": "logging is enabled"
+    },
+    "loggingIsAutoEnabledTitle": {
+        "message": "因插件發生錯誤，已自動啟用除錯訊息紀錄",
+        "description": "logging was auto-enabled due to an error in addon"
+    },
+    "loggingDescription": {
+        "message": "請在必須紀錄臭蟲及傳送紀錄給我時才啟用這項功能。一旦啟用後會導致插件明顯變慢，因為所有動作及資訊都會被記錄下來。完成問題重現後就請關閉，插件會提示紀錄存檔。此功能可能因插件發生錯誤而自動被啟用。建議關閉此項功能並存檔。<br>請 Email 紀錄檔給我：<a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com</a><br> <span class=\"has-text-danger\">注意！記錄檔不會包含任何個資、密碼、書籤...等資訊！</span><br> 只會包含重現問題的必要資訊，也才能藉此除錯及修復。<br> 以上",
+        "description": "logging description"
+    },
+    "archiveGroup": {
+        "message": "封存",
+        "description": "Archive"
+    },
+    "confirmArchiveGroup": {
+        "message": "確定封存 \"$grouptitle$\" 群組？<br>一旦群組被封存，所有分頁資料將被寫入到資料庫內，並從瀏覽器移除。",
+        "description": "Do you want to archive the group",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "unArchiveGroup": {
+        "message": "解封",
+        "description": "Unarchive"
+    },
+    "groupIsArchived": {
+        "message": "無法動作，\"$grouptitle$\" 群組已被封存",
+        "description": "Unable to complete the action, the group is in the archive",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "updateAddonToLatestVersion": {
+        "message": "請先更新套件版本",
+        "description": "Please, update addon to latest version"
+    },
+    "hotkeyActionTitleRenameGroup": {
+        "message": "群組更名",
+        "description": "Rename group"
+    },
+    "noGroupsAvailable": {
+        "message": "未發現群組",
+        "description": "You have no groups"
+    },
+    "alwaysAskNewGroupName": {
+        "message": "建立新群組時要求命名",
+        "description": "Always ask for a new group name"
+    },
+    "impossibleToAskUserAboutAction": {
+        "message": "在 \"$page$\" 不能執行 \"$action$\"",
+        "description": "On page \"$page$\" it is impossible to ask about \"$action$\"",
+        "placeholders": {
+            "page": {
+                "content": "$1",
+                "example": "Add-ons for Firefox"
+            },
+            "action": {
+                "content": "$2",
+                "example": "some action"
+            }
+        }
+    },
+    "openPopupTitle": {
+        "message": "開啟彈出視窗",
+        "description": "Open popup"
+    },
+    "openSidebarTitle": {
+        "message": "開啟側邊欄",
+        "description": "Open sidebar"
+    },
+    "helpPageOpenInContainerTitle": {
+        "message": "無法於容器中開啟 URL",
+        "description": "Can't open URL in container"
+    },
+    "helpPageOpenInContainerMainTitle": {
+        "message": "無法將 URL 開啟至 <container-name>$containerName$</container-name> 容器中",
+        "description": "Can't open the URL into Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerSubTitle": {
+        "message": "插件無法開啟 URL：",
+        "description": "addon can't open URL:"
+    },
+    "helpPageOpenInContainerDesc1": {
+        "message": "<strong>$groupTitle$</strong> 群組被指定於 <container-name>$containerName$</container-name> 容器中開啟分頁。",
+        "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
+        "placeholders": {
+            "groupTitle": {
+                "content": "$1",
+                "example": "Group 1"
+            },
+            "containerName": {
+                "content": "$2",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerDesc2": {
+        "message": "另一個插件已使用此 UUID：",
+        "description": "Another addon, which has UUID:"
+    },
+    "helpPageOpenInContainerDesc3": {
+        "message": "嘗試於 <container-name>$containerName$</container-name> 容器中開啟這個 URL。將分頁移至其他群組，或禁止 <strong>$uuid$</strong> 插件執行此動作。",
+        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon '757eaba7-0b3d-478b-ace2-cbe0a16eed47' to perform this action.",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Business"
+            },
+            "uuid": {
+                "content": "$2",
+                "example": "757eaba7-0b3d-478b-ace2-cbe0a16eed47"
+            }
+        }
+    },
+    "helpPageOpenInContainerDesc4": {
+        "message": "以 UUID 找出插件：",
+        "description": "You can find out the addon by UUID on the page:"
+    },
+    "helpPageOpenInContainerOpenInContainer": {
+        "message": "開啟於 <container-name>$containerName$</container-name> 容器",
+        "description": "Open in Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
+    },
+    "groupNotLoaded": {
+        "message": "群組尚未載入",
+        "description": "Group not loaded"
+    },
+    "groupNotFound": {
+        "message": "未發現群組",
+        "description": "Group not found"
+    },
+    "unloadGroup": {
+        "message": "卸載群組",
+        "description": "Unload the group"
+    },
+    "tabsInThisWindowWereHidden": {
+        "message": "本視窗中的分頁已隱藏。可於插件彈出視窗底部找到他們。",
+        "description": "Tabs in this window were hidden. You can find them at the bottom of the popup window of the addon."
+    },
+    "searchOrGoToActive": {
+        "message": "以搜尋或右鍵在活動中分頁/群組獲得焦點",
+        "description": "Search or right arrow to focus on active tab/group"
+    },
+    "thisGroupIsMain": {
+        "message": "已標記為主要群組",
+        "description": "This group is marked as main"
+    },
+    "setGroupAsMain": {
+        "message": "標記為主要群組",
+        "description": "Set this group as main"
+    },
+    "thisGroupWasMain": {
+        "message": "注意\n已標記為主要群組",
+        "description": "Notice\nThis group was marked as the main"
+    },
+    "moveToMainIfNotInCatchTabRules": {
+        "message": "將此群組內與正規表述式不相符的分頁移至主要群組 \"$grouptitle$\"",
+        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "My main group"
+            }
+        }
+    },
+    "noContainerTitle": {
+        "message": "無容器",
+        "description": "No container"
+    },
+    "reopenTabsWithTemporaryContainersInNew": {
+        "message": "於暫存容器中重新開啟分頁",
+        "description": "Reopen tabs with temporary containers in new"
+    },
+    "temporaryContainerTitleDescription": {
+        "message": "暫存容器前綴名",
+        "description": "Prefix of the temporary container title"
+    },
+    "excludeContainersForReOpen": {
+        "message": "排除所選容器",
+        "description": "excluding these containers"
+    },
+    "helpPageOpenInContainerExcludeContainerToGroup": {
+        "message": "於<strong>$groupTitle$</strong> 群組排除 <container-name>$containerName$</container-name> 容器",
+        "description": "Exclude Personal container for group Group 1",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            },
+            "groupTitle": {
+                "content": "$2",
+                "example": "Group 1"
+            }
+        }
+    },
+    "helpPageOpenInContainerIgnoreUuidForSession": {
+        "message": "忽略此 \"<strong>$uuid$</strong>\" UUID 直至瀏覽器關閉",
+        "description": "Ignore UUID for session",
+        "placeholders": {
+            "uuid": {
+                "content": "$1",
+                "example": "ff06d2f8-3660-43ed-becb-ad1c458ae76d"
+            }
+        }
+    },
+    "hotkeysDescription2": {
+        "message": "也可以在 <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Manage extension shortcuts in Firefox</a> 設定全域快速鍵。",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
+    },
+    "muteTab": {
+        "message": "分頁靜音",
+        "description": "Mute tab"
+    },
+    "unMuteTab": {
+        "message": "分頁取消靜音",
+        "description": "Unmute tab"
+    },
+    "muteGroup": {
+        "message": "群組靜音",
+        "description": "Mute group"
+    },
+    "unMuteGroup": {
+        "message": "群組取消靜音",
+        "description": "Unmute group"
+    },
+    "fullPopupWidth": {
+        "message": "使用全幅彈出視窗",
+        "description": "Use full popup width"
+    },
+    "showArchivedGroups": {
+        "message": "顯示已封存群組",
+        "description": "Show archived groups"
+    },
+    "helpPageDbErrorReinstallTitle": {
+        "message": "Simple Tab Groups 資料庫發生錯誤",
+        "description": "Database error in Simple Tab Groups"
+    },
+    "helpPageDbErrorReinstallDescription": {
+        "message": "很不幸地，STG 套件嘗試從 Firefox 資料庫內讀取設定資料時發生錯誤。此時套件已停止，請照下列步驟繼續使用：",
+        "description": "Unfortunately, an error occurred while reading data from the STG addon from the Firefox database. At the moment, the addon is stopped. To resume the add-on, do the following:"
+    },
+    "helpPageDbErrorReinstallDescription2": {
+        "message": "重啟 Firefox 瀏覽器 (Linux / Mac OS 可直接終止程序)",
+        "description": "Restart Firefox Browser (for Linux and Mac OS with process termination)"
+    },
+    "helpPageDbErrorReinstallDescription3": {
+        "message": "若重複出現此視窗，請重新安裝套件：",
+        "description": "If you see this window again, try reinstalling the addon:"
+    },
+    "helpPageDbErrorReinstallDescription4": {
+        "message": "移除 STG 套件",
+        "description": "Remove STG Addon"
+    },
+    "helpPageDbErrorReinstallDescription5": {
+        "message": "重啟 Firefox 瀏覽器",
+        "description": "Restart Firefox Browser"
+    },
+    "helpPageDbErrorReinstallDescription6": {
+        "message": "安裝 STG 套件",
+        "description": "Install STG Addon"
+    },
+    "helpPageDbErrorReinstallDescription7": {
+        "message": "還原存放於 Firefox 下載目錄 \"STG-backups\" 中的最新一份備份檔。可以從套件設定中還原備份檔",
+        "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".<br>You can restore backup in addon settings"
+    },
+    "helpPageDbErrorReinstallOpenFFDownloadsFolder": {
+        "message": "開啟 Firefox 下載目錄",
+        "description": "Open Firefox downloads folder"
+    },
+    "groupWithSameNameExists": {
+        "message": "已有同名群組存在！",
+        "description": "A group with the same name already exists!"
+    },
+    "eraseAndImportAddonBackupButton": {
+        "message": "清除並還原備份",
+        "description": "Erase and restore backup"
     }
 }
