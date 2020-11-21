@@ -357,7 +357,7 @@
                     return;
                 }
 
-                if ('object' !== utils.type(data) || !Array.isArray(data.groups) || !Number.isFinite(data.lastCreatedGroupPosition)) {
+                if ('object' !== utils.type(data) || !Array.isArray(data.groups) || !Number.isInteger(data.lastCreatedGroupPosition)) {
                     utils.notify('This is wrong backup!');
                     return;
                 }

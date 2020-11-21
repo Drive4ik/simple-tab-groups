@@ -32,6 +32,9 @@
                 return this.data.hotkeys && this.data.hotkeys.length > 0;
             },
         },
+        mounted() {
+            this.$nextTick(() => this.$emit('clear-addon-data-update', this.allowClearAddonData));
+        },
         data() {
             return {
                 TEMPORARY_CONTAINER,
@@ -62,7 +65,7 @@
                     result.containers = this.data.containers;
                 }
 
-                if (this.data.lastCreatedGroupPosition) {
+                if (Number.isInteger(this.data.lastCreatedGroupPosition)) {
                     result.lastCreatedGroupPosition = this.data.lastCreatedGroupPosition;
                 }
 

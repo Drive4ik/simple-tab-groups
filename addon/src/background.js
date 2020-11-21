@@ -2314,16 +2314,11 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         lastCreatedGroupPosition = 0;
     }
 
-    lastCreatedGroupPosition = Math.max(lastCreatedGroupPosition, data.lastCreatedGroupPosition);
-
-    if (isNaN(lastCreatedGroupPosition)) {
-        utils.notify('Invalid/wrong backup');
-
-        await utils.wait(5000);
-
-        browser.runtime.reload(); // reload addon
-        return;
+    if (!Number.isInteger(data.lastCreatedGroupPosition)) {
+        data.lastCreatedGroupPosition = 0;
     }
+
+    lastCreatedGroupPosition = Math.max(lastCreatedGroupPosition, data.lastCreatedGroupPosition);
 
     if (clearAddonDataBeforeRestore) {
         await clearAddon(false);
