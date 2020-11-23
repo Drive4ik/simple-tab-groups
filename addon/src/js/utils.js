@@ -9,6 +9,8 @@
         '&': '&amp;',
     };
 
+    const INNER_HTML = 'innerHTML';
+
     async function getInfo() {
         let [
             browserInfo,
@@ -631,10 +633,9 @@
             svg = decodeURIComponent(svgURI);
         }
 
-        let innerHTML = 'innerHTML',
-            div = document.createElement('div');
+        let div = document.createElement('div');
 
-        div[innerHTML] = svg;
+        div[INNER_HTML] = svg;
 
         let svgNode = div.querySelector('svg');
 
@@ -645,7 +646,7 @@
             }
         });
 
-        return convertSvgToUrl(div[innerHTML]);
+        return convertSvgToUrl(div[INNER_HTML]);
     }
 
     function normalizeGroupIcon(iconUrl) {
