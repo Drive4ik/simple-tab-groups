@@ -974,10 +974,7 @@
                 }
             },
             setTabIconAsGroupIcon({favIconUrl}) {
-                Groups.update(this.groupToShow.id, {
-                    iconViewType: null,
-                    iconUrl: favIconUrl,
-                });
+                Groups.setIconUrl(this.groupToShow.id, favIconUrl);
             },
 
             getTabTitle: utils.getTabTitle,

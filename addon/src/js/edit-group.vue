@@ -184,20 +184,14 @@
                     return;
                 }
 
-                let iconUrl = await file.load('.ico,.png,.jpg,.svg', 'url'),
-                    img = new Image();
+                let iconUrl = await file.load('.ico,.png,.jpg,.svg', 'url');
 
-                img.addEventListener('load', () => {
-                    let resizedIconUrl = iconUrl;
-
-                    if (img.height > 64 || img.width > 64) {
-                        resizedIconUrl = utils.resizeImage(img, 64, 64);
-                    }
-
-                    this.setIconUrl(resizedIconUrl);
-                });
-
-                img.src = iconUrl;
+                try {
+                    iconUrl = await utils.normalizeGroupIcon(iconUrl);
+                    this.setIconUrl(iconUrl);
+                } catch (e) {
+                    utils.notify(e);
+                }
             },
 
             async saveGroup() {

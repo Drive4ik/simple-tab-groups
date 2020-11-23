@@ -616,6 +616,60 @@
         return 'data:image/svg+xml,' + encodeURIComponent(svg);
     }
 
+    function isSvg(url) {
+        return url.startsWith('data:image/svg+xml');
+    }
+
+    function normalizeSvg(svgUrl) {
+        let svg = null;
+
+        if (svgUrl.startsWith('data:image/svg+xml;base64,')) {
+            let [, svgBase64] = svgUrl.split('data:image/svg+xml;base64,');
+            svg = b64DecodeUnicode(svgBase64);
+        } else {
+            let [, svgURI] = svgUrl.split('data:image/svg+xml,');
+            svg = decodeURIComponent(svgURI);
+        }
+
+        let innerHTML = 'innerHTML',
+            div = document.createElement('div');
+
+        div[innerHTML] = svg;
+
+        let svgNode = div.querySelector('svg');
+
+        [...svgNode.children].forEach(function(node) {
+            let fillAttr = node.getAttribute('fill');
+            if (!node.attributes.fill || node.attributes.fill.textContent === 'currentColor') {
+                node.setAttribute('fill', 'context-fill');
+            }
+        });
+
+        return convertSvgToUrl(div[innerHTML]);
+    }
+
+    function normalizeGroupIcon(iconUrl) {
+        return new Promise(function(resolve, reject) {
+            if (isSvg(iconUrl)) {
+                resolve(normalizeSvg(iconUrl));
+            } else {
+                let img = new Image();
+
+                img.addEventListener('load', () => {
+                    if (img.height > 64 || img.width > 64) {
+                        resolve(resizeImage(img, 64, 64));
+                    } else {
+                        resolve(iconUrl);
+                    }
+                });
+
+                img.addEventListener('error', () => reject('Error load icon'));
+
+                img.src = iconUrl;
+            }
+        });
+    }
+
     function resizeImage(img, height, width, useTransparency = true, ...canvasParams) { // img: new Image()
         let canvas = document.createElement('canvas'),
             context = canvas.getContext('2d');
@@ -794,6 +848,9 @@
         safeHtml,
         unSafeHtml,
 
+        b64EncodeUnicode,
+        b64DecodeUnicode,
+
         sliceText,
 
         notify,
@@ -840,6 +897,10 @@
         safeColor,
         getRandomInt,
         randomColor,
+
+        isSvg,
+        normalizeSvg,
+        normalizeGroupIcon,
 
         resizeImage,
 

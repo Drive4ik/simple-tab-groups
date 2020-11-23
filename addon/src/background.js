@@ -813,9 +813,7 @@ async function createMoveTabMenus(groups) {
 
             tab = utils.normalizeTabFavIcon(tab);
 
-            Groups.update(groupId, {
-                iconUrl: tab.favIconUrl,
-            });
+            Groups.setIconUrl(groupId, tab.favIconUrl);
         }),
     }));
 

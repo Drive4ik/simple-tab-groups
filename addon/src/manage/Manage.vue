@@ -779,10 +779,7 @@
                 BG.Groups.remove(group.id);
             },
             setTabIconAsGroupIcon({favIconUrl}, group) {
-                Groups.update(group.id, {
-                    iconViewType: null,
-                    iconUrl: favIconUrl,
-                });
+                Groups.setIconUrl(group.id, favIconUrl);
             },
 
             getTabTitle: utils.getTabTitle,

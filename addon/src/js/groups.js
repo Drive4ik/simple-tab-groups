@@ -495,6 +495,17 @@
         });
     }
 
+    async function setIconUrl(groupId, iconUrl) {
+        try {
+            await update(groupId, {
+                iconViewType: null,
+                iconUrl: await utils.normalizeGroupIcon(iconUrl),
+            });
+        } catch (e) {
+            utils.notify(e);
+        }
+    }
+
     window.Groups = {
         load,
         save,
@@ -512,6 +523,7 @@
         getNextTitle,
         getCatchedForTab,
         isNeedBlockBeforeRequest,
+        setIconUrl,
     };
 
 })();

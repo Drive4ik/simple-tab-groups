@@ -236,6 +236,11 @@ hr {
     min-width: 16px;
     min-height: 16px;
 }
+
+.image.is-16x16 img {
+    max-width: 16px;
+    max-height: 16px;
+}
 /*BULMA REWRITE END*/
 
 /* HEPLERS */
