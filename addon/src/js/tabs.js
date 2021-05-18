@@ -481,6 +481,8 @@
             await utils.wait(100);
         }
 
+        let openerTabIds = options.windowId ? tabs.map(tab => tab.openerTabId) : [];
+
         console.log('Tabs.moveNative before');
 
         let movedTabs = await browser.tabs.move(tabs.map(utils.keyId), options),
@@ -488,9 +490,16 @@
 
         console.log('Tabs.moveNative after');
 
-        return tabs.map(function(tab) {
+        return tabs.map(function(tab, index) {
             if (options.windowId) {
                 tab.windowId = options.windowId;
+                // Tabs moved across windows always lose their openerTabId even
+                // if it is also moved to the same window together, thus we need
+                // to restore it manually.
+                if (openerTabIds[index] > 0) {
+                  tab.openerTabId = openerTabIds[index];
+                  browser.tabs.update(tab.id, { openerTabId: tab.openerTabId });
+                }
             }
 
             if (movedTabsObj[tab.id]) {
