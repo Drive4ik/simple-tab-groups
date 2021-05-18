@@ -93,7 +93,11 @@
     },
     "showConfirmDialogBeforeGroupDelete": {
         "message": "Pokaż okno potwierdzające usunięcie grupy",
-        "description": "Show confirm dialog before group delete"
+        "description": "Show confirmation dialog before deleting the group"
+    },
+    "showConfirmDialogBeforeGroupArchiving": {
+        "message": "Pokaż okno potwierdzające zarchwizowanie grupy",
+        "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
         "message": "Kopia zapasowa twoich grup",
@@ -341,6 +345,10 @@
         "message": "Otwórz zarządzanie grupami",
         "description": "Open manage groups"
     },
+    "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
+        "message": "Przenieś zaznaczone karty do niestandardowej grupy",
+        "description": "Move selected tabs to custom group"
+    },
     "hotkeyActionTitleDiscardGroup": {
         "message": "Porzuć grupę",
         "description": "Hotkey action Discard group"
@@ -408,6 +416,10 @@
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
         "message": "Przenieś wszystkie te karty do bieżącej grupy / okna",
         "description": "Move all of these tabs into current group/window"
+    },
+    "actionHiddenUnSyncWindowTabsCreateGroup": {
+        "message": "Utwórz nową grupę z zakładkami tylko z aktualnego okna",
+        "description": "Create new group with tabs only from the current window"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "Utwórz nową grupę z tymi kartami",
@@ -511,7 +523,7 @@
     },
     "moveMultipleTabsToGroupMessage": {
         "message": "Przeniesionych zostało $tabscount$ kart. Kliknij tutaj aby przejść do pierwszej.",
-        "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
+        "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",
         "placeholders": {
             "tabscount": {
                 "content": "$1",
@@ -827,12 +839,22 @@
         "message": "Archiwizuj grupę",
         "description": "Archive"
     },
+    "confirmArchiveGroup": {
+        "message": "Czy chcesz zarchiwizować grupę \"$grouptitle$\"?<br>Gdy to zrobisz, karty zostaną zapisane w bazie danych rozszerzenia i będą usunięte z przeglądarki",
+        "description": "Do you want to archive the group",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
     "unArchiveGroup": {
         "message": "Przywróć zarchiwizowaną grupę",
         "description": "Unarchive"
     },
     "groupIsArchived": {
-        "message": "Nie można wykonać akcji, grupa \"$grouptitle$\" jest w archiwum",
+        "message": "Nie można wykonać tej akcji, grupa \"$grouptitle$\" jest w archiwum",
         "description": "Unable to complete the action, the group is in the archive",
         "placeholders": {
             "grouptitle": {
@@ -984,5 +1006,117 @@
                 "example": "My main group"
             }
         }
+    },
+    "noContainerTitle": {
+        "message": "Brak kontekstu",
+        "description": "No container"
+    },
+    "temporaryContainerTitleDescription": {
+        "message": "Prefiks tytułu tymczasowego kontekstu",
+        "description": "Prefix of the temporary container title"
+    },
+    "excludeContainersForReOpen": {
+        "message": "Wykluczywszy następujące konteksty",
+        "description": "excluding these containers"
+    },
+    "helpPageOpenInContainerExcludeContainerToGroup": {
+        "message": "Wyklucz kontekst  <container-name>$containerName$</container-name> dla grupy <strong>$groupTitle$</strong>",
+        "description": "Exclude Personal container for group Group 1",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            },
+            "groupTitle": {
+                "content": "$2",
+                "example": "Group 1"
+            }
+        }
+    },
+    "helpPageOpenInContainerIgnoreUuidForSession": {
+        "message": "Ignoruj UUID \"<strong>$uuid$</strong>\" do momentu zamknięcia przeglądarki",
+        "description": "Ignore UUID for session",
+        "placeholders": {
+            "uuid": {
+                "content": "$1",
+                "example": "ff06d2f8-3660-43ed-becb-ad1c458ae76d"
+            }
+        }
+    },
+    "hotkeysDescription2": {
+        "message": "Możesz również skonfigurować skróty klawiszowe na stronie <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Zarządzanie skrótami klawiaturowymi w Firefox</a>. Będą one działać we wszystkich oknach i stronach przeglądarki.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
+    },
+    "muteTab": {
+        "message": "Wycisz kartę",
+        "description": "Mute tab"
+    },
+    "unMuteTab": {
+        "message": "Wyłącz wyciszenie karty",
+        "description": "Unmute tab"
+    },
+    "muteGroup": {
+        "message": "Wycisz grupę",
+        "description": "Mute group"
+    },
+    "unMuteGroup": {
+        "message": "Wyłącz wyciszenie grupy",
+        "description": "Unmute group"
+    },
+    "fullPopupWidth": {
+        "message": "Otwórz w pełnym rozmiarze",
+        "description": "Use full popup width"
+    },
+    "showArchivedGroups": {
+        "message": "Pokaż zarchiwizowane grupy",
+        "description": "Show archived groups"
+    },
+    "helpPageDbErrorReinstallTitle": {
+        "message": "Błąd bazodanowy w Simple Tab Groups",
+        "description": "Database error in Simple Tab Groups"
+    },
+    "helpPageDbErrorReinstallDescription": {
+        "message": "Niestety, pojawił się błąd podczas odczytu informacji z bazy danych STG w przeglądarce. Aktualnie rozszerzenie zostaje zatrzymane. By wznowić jego działanie, wykonaj jedną z następujących czynności:",
+        "description": "Unfortunately, an error occurred while reading data from the STG addon from the Firefox database. At the moment, the addon is stopped. To resume the add-on, do the following:"
+    },
+    "helpPageDbErrorReinstallDescription2": {
+        "message": "Uruchom ponownie przeglądarkę (w przypadku systemów Linux lub Mac OS możliwa jest konieczność zatrzymania procesu)",
+        "description": "Restart Firefox Browser (for Linux and Mac OS with process termination)"
+    },
+    "helpPageDbErrorReinstallDescription3": {
+        "message": "Jeśli ponownie widzisz to okno, spróbuj przeinstalować rozszerzenie:",
+        "description": "If you see this window again, try reinstalling the addon:"
+    },
+    "helpPageDbErrorReinstallDescription4": {
+        "message": "Usuń rozszerzenie STG",
+        "description": "Remove STG Addon"
+    },
+    "helpPageDbErrorReinstallDescription5": {
+        "message": "Uruchom ponownie przeglądarkę",
+        "description": "Restart Firefox Browser"
+    },
+    "helpPageDbErrorReinstallDescription6": {
+        "message": "Zainstaluj rozszerzenie STG",
+        "description": "Install STG Addon"
+    },
+    "helpPageDbErrorReinstallDescription7": {
+        "message": "Przywróć ostatnią kopię zapasową (zlokalizowaną w katalogu STG-backups będącego w katalogu \"Pobrane\" przeglądarki.<br>Możesz przywrócić kopię zapasową w ustawieniach rozszerzenia",
+        "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".<br>You can restore backup in addon settings"
+    },
+    "helpPageDbErrorReinstallOpenFFDownloadsFolder": {
+        "message": "Otwórz katalog \"Pobrane\" przeglądarki",
+        "description": "Open Firefox downloads folder"
+    },
+    "groupWithSameNameExists": {
+        "message": "Grupa o tej nazwie już istnieje!",
+        "description": "A group with the same name already exists!"
+    },
+    "eraseAndImportAddonBackupButton": {
+        "message": "Wyczyść lub przywróć kopię zapasową",
+        "description": "Erase and restore backup"
+    },
+    "notSupportedIncognito": {
+        "message": "To rozszerzenie nie wspiera okien czy kart prywatnych / incognito",
+        "description": "Addon does not support private/incognito windows and tabs"
     }
 }
