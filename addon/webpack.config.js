@@ -64,6 +64,10 @@ const config = {
             new OptimizeCSSAssetsPlugin({}),
         ],
     },
+    performance: {
+        maxEntrypointSize: 1024000,
+        maxAssetSize: 1024000,
+    },
     module: {
         rules: [
             {
