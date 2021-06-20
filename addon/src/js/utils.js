@@ -31,7 +31,7 @@
                 ...platformInfo,
                 ...browserInfo,
             },
-            UUID: browser.extension.getURL(''),
+            UUID: browser.runtime.getURL(''),
             permissions: {
                 bookmarks: permissionBookmarks,
             },

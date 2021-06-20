@@ -53,7 +53,7 @@
             browser.tabs.create({
                 active: true,
                 pinned: true,
-                url: browser.extension.getURL('popup/popup.html#tab'),
+                url: browser.runtime.getURL('popup/popup.html#tab'),
             });
         },
         contexts: ['browser_action'],

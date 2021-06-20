@@ -153,7 +153,7 @@
     // https://dxr.mozilla.org/mozilla-central/source/browser/components/contextualidentity/content
     async function getIcon(container) {
         if (!container) {
-            return browser.extension.getURL('/icons/icon.svg');
+            return browser.runtime.getURL('/icons/icon.svg');
         }
 
         let {icon, colorCode, cookieStoreId} = container,
