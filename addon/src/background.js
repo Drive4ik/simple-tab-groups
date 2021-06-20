@@ -7,7 +7,7 @@ if (2 == window.localStorage.enableDebug) { // if debug was auto-enabled - disab
 }
 console.restart();
 
-const manageTabsPageUrl = browser.extension.getURL(MANAGE_TABS_URL);
+const manageTabsPageUrl = browser.runtime.getURL(MANAGE_TABS_URL);
 
 let options = {},
     reCreateTabsOnRemoveWindow = [],
@@ -1594,7 +1594,7 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, originUrl
             let uuid = utils.getUUIDFromUrl(originUrl);
 
             if (!ignoreExtForReopenContainer.has(uuid)) {
-                newTabParams.url = utils.setUrlSearchParams(browser.extension.getURL('/help/open-in-container.html'), {
+                newTabParams.url = utils.setUrlSearchParams(browser.runtime.getURL('/help/open-in-container.html'), {
                     url: tab.url,
                     anotherCookieStoreId: tab.cookieStoreId,
                     uuid: uuid,
@@ -2589,7 +2589,7 @@ window.BG = {
 };
 
 function openHelp(page) {
-    let url = browser.extension.getURL(`/help/${page}.html`);
+    let url = browser.runtime.getURL(`/help/${page}.html`);
     return Tabs.createUrlOnce(url);
 }
 
