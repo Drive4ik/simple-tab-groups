@@ -707,7 +707,7 @@ async function addUndoRemoveGroupItem(groupToRemove) {
     browser.menus.create({
         id: CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + groupToRemove.id,
         title: browser.i18n.getMessage('undoRemoveGroupItemTitle', groupToRemove.title),
-        contexts: [browser.menus.ContextType.BROWSER_ACTION],
+        contexts: ['browser_action'],
         icons: utils.getGroupIconUrl(groupToRemove, 16),
         onclick: restoreGroup,
     });
@@ -753,19 +753,19 @@ async function createMoveTabMenus(groups) {
     hasBookmarksPermission && menuIds.push(browser.menus.create({
         id: 'stg-open-bookmark-parent',
         title: browser.i18n.getMessage('openBookmarkInGroup'),
-        contexts: [browser.menus.ContextType.BOOKMARK],
+        contexts: ['bookmark'],
     }));
 
     options.showContextMenuOnTabs && menuIds.push(browser.menus.create({
         id: 'stg-move-tab-parent',
         title: browser.i18n.getMessage('moveTabToGroupDisabledTitle'),
-        contexts: [browser.menus.ContextType.TAB],
+        contexts: ['tab'],
     }));
 
     options.showContextMenuOnLinks && menuIds.push(browser.menus.create({
         id: 'stg-open-link-parent',
         title: browser.i18n.getMessage('openLinkInGroupDisabledTitle'),
-        contexts: [browser.menus.ContextType.LINK],
+        contexts: ['link'],
     }));
 
     options.showContextMenuOnTabs && menuIds.push(browser.menus.create({
@@ -774,7 +774,7 @@ async function createMoveTabMenus(groups) {
             16: temporaryContainer.iconUrl,
         },
         parentId: 'stg-move-tab-parent',
-        contexts: [browser.menus.ContextType.TAB],
+        contexts: ['tab'],
         onclick: utils.catchFunc(function(info, tab) {
             if (!utils.isUrlAllowToCreate(tab.url)) {
                 utils.notify(['thisUrlsAreNotSupported', tab.url], 7, 'thisUrlsAreNotSupported');
@@ -798,7 +798,7 @@ async function createMoveTabMenus(groups) {
             16: '/icons/image.svg',
         },
         parentId: 'stg-move-tab-parent',
-        contexts: [browser.menus.ContextType.TAB],
+        contexts: ['tab'],
         onclick: utils.catchFunc(function(info, tab) {
             let groupId = cache.getWindowGroup(tab.windowId);
 
@@ -820,7 +820,7 @@ async function createMoveTabMenus(groups) {
     options.showContextMenuOnTabs && groups.length && menuIds.push(browser.menus.create({
         type: browser.menus.ItemType.SEPARATOR,
         parentId: 'stg-move-tab-parent',
-        contexts: [browser.menus.ContextType.TAB],
+        contexts: ['tab'],
     }));
 
     options.showContextMenuOnLinks && menuIds.push(browser.menus.create({
@@ -829,7 +829,7 @@ async function createMoveTabMenus(groups) {
             16: temporaryContainer.iconUrl,
         },
         parentId: 'stg-open-link-parent',
-        contexts: [browser.menus.ContextType.LINK],
+        contexts: ['link'],
         onclick: utils.catchFunc(async function(info) {
             if (!utils.isUrlAllowToCreate(info.linkUrl)) {
                 return;
@@ -854,7 +854,7 @@ async function createMoveTabMenus(groups) {
     options.showContextMenuOnLinks && groups.length && menuIds.push(browser.menus.create({
         type: browser.menus.ItemType.SEPARATOR,
         parentId: 'stg-open-link-parent',
-        contexts: [browser.menus.ContextType.LINK],
+        contexts: ['link'],
     }));
 
     hasBookmarksPermission && menuIds.push(browser.menus.create({
@@ -863,7 +863,7 @@ async function createMoveTabMenus(groups) {
             16: temporaryContainer.iconUrl,
         },
         parentId: 'stg-open-bookmark-parent',
-        contexts: [browser.menus.ContextType.BOOKMARK],
+        contexts: ['bookmark'],
         onclick: utils.catchFunc(async function(info) {
             if (!info.bookmarkId) {
                 utils.notify(['bookmarkNotAllowed'], 7, 'bookmarkNotAllowed');
@@ -897,7 +897,7 @@ async function createMoveTabMenus(groups) {
     hasBookmarksPermission && groups.length && menuIds.push(browser.menus.create({
         type: browser.menus.ItemType.SEPARATOR,
         parentId: 'stg-open-bookmark-parent',
-        contexts: [browser.menus.ContextType.BOOKMARK],
+        contexts: ['bookmark'],
     }));
 
     groups.forEach(function(group) {
@@ -913,7 +913,7 @@ async function createMoveTabMenus(groups) {
             title: groupTitle,
             icons: groupIcon,
             parentId: 'stg-move-tab-parent',
-            contexts: [browser.menus.ContextType.TAB],
+            contexts: ['tab'],
             onclick: utils.catchFunc(async function(info, tab) {
                 let setActive = 2 === info.button,
                     tabIds = await Tabs.getHighlightedIds(tab.windowId, tab);
@@ -930,7 +930,7 @@ async function createMoveTabMenus(groups) {
             title: groupTitle,
             icons: groupIcon,
             parentId: 'stg-open-link-parent',
-            contexts: [browser.menus.ContextType.LINK],
+            contexts: ['link'],
             onclick: utils.catchFunc(async function(info) {
                 if (!utils.isUrlAllowToCreate(info.linkUrl)) {
                     utils.notify(['thisUrlsAreNotSupported', info.linkUrl], 7, 'thisUrlsAreNotSupported');
@@ -950,7 +950,7 @@ async function createMoveTabMenus(groups) {
             title: groupTitle,
             icons: groupIcon,
             parentId: 'stg-open-bookmark-parent',
-            contexts: [browser.menus.ContextType.BOOKMARK],
+            contexts: ['bookmark'],
             onclick: utils.catchFunc(async function(info) {
                 if (!info.bookmarkId) {
                     utils.notify(['bookmarkNotAllowed'], 7, 'bookmarkNotAllowed');
@@ -1007,7 +1007,7 @@ async function createMoveTabMenus(groups) {
             16: '/icons/group-new.svg',
         },
         parentId: 'stg-move-tab-parent',
-        contexts: [browser.menus.ContextType.TAB],
+        contexts: ['tab'],
         onclick: utils.catchFunc(async function(info, tab) {
             let setActive = 2 === info.button,
                 tabIds = await Tabs.getHighlightedIds(tab.windowId, tab);
@@ -1027,7 +1027,7 @@ async function createMoveTabMenus(groups) {
             16: '/icons/group-new.svg',
         },
         parentId: 'stg-open-link-parent',
-        contexts: [browser.menus.ContextType.LINK],
+        contexts: ['link'],
         onclick: utils.catchFunc(async function(info) {
             if (!utils.isUrlAllowToCreate(info.linkUrl)) {
                 utils.notify(['thisUrlsAreNotSupported', info.linkUrl], 7, 'thisUrlsAreNotSupported');
@@ -1061,7 +1061,7 @@ async function createMoveTabMenus(groups) {
             16: '/icons/group-new.svg',
         },
         parentId: 'stg-open-bookmark-parent',
-        contexts: [browser.menus.ContextType.BOOKMARK],
+        contexts: ['bookmark'],
         onclick: utils.catchFunc(async function(info) {
             if (!info.bookmarkId) {
                 utils.notify(['bookmarkNotAllowed'], 7, 'bookmarkNotAllowed');
@@ -1143,7 +1143,7 @@ async function createMoveTabMenus(groups) {
         icons: {
             16: '/icons/bookmark.svg',
         },
-        contexts: [browser.menus.ContextType.BROWSER_ACTION],
+        contexts: ['browser_action'],
         onclick: utils.catchFunc(() => exportAllGroupsToBookmarks(true)),
     }));
 
@@ -1152,7 +1152,7 @@ async function createMoveTabMenus(groups) {
         icons: {
             16: 'resource://usercontext-content/chill.svg',
         },
-        contexts: [browser.menus.ContextType.BROWSER_ACTION],
+        contexts: ['browser_action'],
         onclick: utils.catchFunc(async function(info) {
             let setActive = 2 === info.button,
                 allTabs = await Tabs.get(null, null, null, undefined, true, true),
