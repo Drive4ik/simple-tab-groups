@@ -543,6 +543,10 @@
         "message": "Create backup every:",
         "description": "Create backup every:"
     },
+    "autoBackupIntervalKeyMinutes": {
+        "message": "minute(s)",
+        "description": "minute(s)"
+    },
     "autoBackupIntervalKeyHours": {
         "message": "hour(s)",
         "description": "hour(s)"

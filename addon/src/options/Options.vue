@@ -999,6 +999,7 @@
                             <div class="control">
                                 <div class="select">
                                     <select v-model="options.autoBackupIntervalKey">
+                                        <option value="minutes" v-text="lang('autoBackupIntervalKeyMinutes')"></option>
                                         <option value="hours" v-text="lang('autoBackupIntervalKeyHours')"></option>
                                         <option value="days" v-text="lang('autoBackupIntervalKeyDays')"></option>
                                     </select>
