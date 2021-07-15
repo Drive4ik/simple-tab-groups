@@ -2237,7 +2237,9 @@ async function resetAutoBackup() {
     let intervalSec = null,
         overwrite = false;
 
-    if ('hours' === options.autoBackupIntervalKey) {
+    if ('minutes' === options.autoBackupIntervalKey) {
+        intervalSec = MINUTE_SEC;
+    } else if ('hours' === options.autoBackupIntervalKey) {
         intervalSec = HOUR_SEC;
     } else if ('days' === options.autoBackupIntervalKey) {
         if (1 === value) {

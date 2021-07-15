@@ -258,5 +258,6 @@ const ALL_OPTIONS_KEYS = Object.freeze([
     'autoBackupBookmarksFolderName',
 ]);
 
+const MINUTE_SEC = 60;
 const HOUR_SEC = 60 * 60;
 const DAY_SEC = 24 * HOUR_SEC;
