@@ -1,0 +1,424 @@
+{
+    "extensionDescription": {
+        "message": "Sekme grupları oluşturun, düzenleyin ve hızlıca geçiş yapın",
+        "description": "Description of the extension."
+    },
+    "openSettings": {
+        "message": "Ayarlar",
+        "description": "Settings context button title"
+    },
+    "manageGroupsTitle": {
+        "message": "Grupları yönet",
+        "description": "Manage groups"
+    },
+    "setTabIconAsGroupIcon": {
+        "message": "Sekme ikonunu grup ikonu yap",
+        "description": "Set tab icon as group icon"
+    },
+    "moveTabToGroupDisabledTitle": {
+        "message": "Sekmeyi gruba taşı",
+        "description": "Move tab to group title"
+    },
+    "moveTabToGroupMessage": {
+        "message": "$tabtitle$ sekmesi, $grouptitle$ grubuna taşındı.\n\nSekmeyi görüntülemek için tıklayın.",
+        "description": "Tab moved popup title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            },
+            "tabtitle": {
+                "content": "$2",
+                "example": "tab title"
+            }
+        }
+    },
+    "warning": {
+        "message": "Uyarı!",
+        "description": "Warning!"
+    },
+    "success": {
+        "message": "Başarılı!",
+        "description": "Success!"
+    },
+    "ok": {
+        "message": "Tamam",
+        "description": "OK button"
+    },
+    "save": {
+        "message": "Kaydet",
+        "description": "Save"
+    },
+    "delete": {
+        "message": "Sil",
+        "description": "Delete"
+    },
+    "cancel": {
+        "message": "İptal",
+        "description": "Cancel"
+    },
+    "searchPlaceholder": {
+        "message": "Ara",
+        "description": "Search placeholder"
+    },
+    "invalidRegExpRuleTitle": {
+        "message": "$regexp$ kuralı geçerli değil ve es geçilecek.",
+        "description": "Invalid rule description",
+        "placeholders": {
+            "regexp": {
+                "content": "$1",
+                "example": "googlecom"
+            }
+        }
+    },
+    "manageGroupViewGrid": {
+        "message": "Izgara ekranı",
+        "description": "Grid display"
+    },
+    "manageGroupViewFreeArrange": {
+        "message": "Serbest düzenleme (gelecek sürümlerde)",
+        "description": "Free arrange"
+    },
+    "closePopupAfterChangeGroup": {
+        "message": "Grubu düzenledikten sonra açılır pencereyi kapat",
+        "description": "Close popup after changing group"
+    },
+    "showNotificationAfterMoveTab": {
+        "message": "Bir sekme başka bir gruba taşındığında bildirim göster",
+        "description": "Show notification when tab is moved to another group"
+    },
+    "openManageGroupsInTab": {
+        "message": "\"Grupları Yönet\" sayfasını yeni sekmede aç",
+        "description": "Open \"Manage Groups\" in new tab"
+    },
+    "showConfirmDialogBeforeGroupDelete": {
+        "message": "Grubu silmeden önce onay kutusu göster",
+        "description": "Show confirmation dialog before deleting the group"
+    },
+    "showConfirmDialogBeforeGroupArchiving": {
+        "message": "Grubu arşivlemeden önce onay kutusu göster",
+        "description": "Show confirmation dialog before archiving the group"
+    },
+    "exportAddonSettingsTitle": {
+        "message": "Simple Tab Groups yedeği al",
+        "description": "Backup your Simple Tab Groups"
+    },
+    "exportAddonSettingsDescription": {
+        "message": "Sekme gruplarınızı bir yedekleme dosyasına aktarın, bu sayede daha sonra geri yükleyebilirsiniz.",
+        "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
+    },
+    "exportAddonSettingsButton": {
+        "message": "Yedek oluştur",
+        "description": "Create backup"
+    },
+    "includeTabThumbnailsIntoBackup": {
+        "message": "Yedeklemeye sekme küçük resimlerini dahil edin (yedek dosya boyutunu büyütür)",
+        "description": "Include tab thumbnails in backup (makes backup file size bigger)"
+    },
+    "importAddonSettingsTitle": {
+        "message": "Yedek dosyasından Simple Tab Groups geri yükle",
+        "description": "Restore Simple Tab Groups"
+    },
+    "importAddonSettingsDescription": {
+        "message": "Geri yüklemek istediğiniz sekme gruplarını içeren bir yedekleme dosyası yükleyin.",
+        "description": "Load a backup file containing the tab groups you want to restore."
+    },
+    "importAddonSettingsButton": {
+        "message": "Yedeği geri yükle",
+        "description": "Restore backup"
+    },
+    "importSettingsOldTabGroupsAddonTitle": {
+        "message": "Quicksaver'ın \"Tab Groups\" Geri Yükle",
+        "description": "Restore Quicksaver's \"Tab Groups\""
+    },
+    "importSettingsOldTabGroupsAddonDescription": {
+        "message": "Eski \"Tab Groups\" eklentisinden yedekleme dosyası yükle",
+        "description": "Load a backup file old \"Tab Groups\" addon."
+    },
+    "openGroupAfterChange": {
+        "message": "Düzenledikten sonra grubu aç",
+        "description": "Open group after changing to it"
+    },
+    "newGroupTitle": {
+        "message": "Grup $id$",
+        "description": "group id",
+        "placeholders": {
+            "id": {
+                "content": "$1",
+                "example": "1"
+            }
+        }
+    },
+    "searchNotFoundTitle": {
+        "message": "$search$ için arama sonucu bulunamadı",
+        "description": "No results found",
+        "placeholders": {
+            "search": {
+                "content": "$1",
+                "example": "mail"
+            }
+        }
+    },
+    "sortGroupsAZ": {
+        "message": "Grupları [A-Z] sırala",
+        "description": "Sort groups [A-Z]"
+    },
+    "sortGroupsZA": {
+        "message": "Grupları [Z-A] sırala",
+        "description": "Sort groups [Z-A]"
+    },
+    "generalTitle": {
+        "message": "Genel",
+        "description": "General"
+    },
+    "groupSettings": {
+        "message": "Grup ayarları",
+        "description": "Group settings"
+    },
+    "deleteGroup": {
+        "message": "Grubu sil",
+        "description": "Delete group"
+    },
+    "confirmDeleteGroup": {
+        "message": "$grouptitle$ grubunu silmek istiyor musunuz? <br> Grup içindeki sekmeler ve pencereler kapatılacaktır.",
+        "description": "Delete group?",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group #4"
+            }
+        }
+    },
+    "groupTabsCount": {
+        "message": "$count$ sekme",
+        "description": "Group tabs count",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "groupTabsCountActive": {
+        "message": "$active$/$count$ sekme aktif",
+        "description": "Group tabs count active",
+        "placeholders": {
+            "active": {
+                "content": "$1",
+                "example": "2"
+            },
+            "count": {
+                "content": "$2",
+                "example": "4"
+            }
+        }
+    },
+    "deleteTab": {
+        "message": "Sekmeyi sil",
+        "description": "Delete tab"
+    },
+    "createNewTab": {
+        "message": "Yeni sekme aç",
+        "description": "Open new tab"
+    },
+    "createNewGroup": {
+        "message": "Yeni grup oluştur",
+        "description": "Create new group"
+    },
+    "goBackButtonTitle": {
+        "message": "Geri git",
+        "description": "Go back"
+    },
+    "goBackToGroupsButtonTitle": {
+        "message": "Gruplara geri git",
+        "description": "Go back to groups"
+    },
+    "title": {
+        "message": "Başlık",
+        "description": "Title"
+    },
+    "iconColor": {
+        "message": "İkon rengi",
+        "description": "Icon color"
+    },
+    "selectUserGroupIcon": {
+        "message": "İkon yükle",
+        "description": "Load icon"
+    },
+    "selectUserGroupIconWarnText": {
+        "message": "Üzgünüz, bu açılır pencerede özel bir simge yükleyemezsiniz, ancak \"Grupları yönet\" bölümüne özel bir grup simgesi yükleyebilirsiniz. \"Grupları yönet\" açılsın mı?",
+        "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
+    },
+    "setRandomColor": {
+        "message": "Rastgele renk seç",
+        "description": "Set random color"
+    },
+    "catchTabContainers": {
+        "message": "Konteynır içeren sekmeleri yakalayıp bu gruba taşı",
+        "description": "Catch and move tabs with containers to this group"
+    },
+    "regexpForTabsTitle": {
+        "message": "Yakalanacak sekmeler için kurallı ifade",
+        "description": "Regular expressions for catch tabs"
+    },
+    "regexpForTabsPlaceholder": {
+        "message": "Kurallı ifade",
+        "description": "Regular expressions"
+    },
+    "regexpForTabsHelp": {
+        "message": "Web adresleri için kurallı ifadeleri buraya ekleyin. Eşleşen sekmeler otomatik olarak bu gruba taşınacaktır.\nKural başına bir satır kullanın, istediğiniz kadar satır olabilir.\nÖrnekler:\ngithub\\.com/drive4ik/simple-tab-groups - eklentinin deposundaki tüm sayfaları yakala\nbugzilla\\.mozilla\\.org - Firefox hata raporlarını yakala\n(facebook|twitter|youtube)\\.com - tüm sosyal sayfalarınızı yakalayın",
+        "description": "Regular exceptions helper"
+    },
+    "hotkeysTitle": {
+        "message": "Kısayollar",
+        "description": "Hotkeys"
+    },
+    "hotkeysDescription": {
+        "message": "Burada kısayol tuşları ekleyebilirsiniz. <br> Kısıtlamalar: <br> 1. Bu kısayol tuşları yalnızca web sayfalarında çalışır (http:, https:), tarayıcı sayfalarında değil (about:) çünkü WebExtensions API buna izin vermiyor. <br> 2. Bazı kısayol tuşları tüm klavye düzenleriyle çalışmayacaktır. Örneğin, İngilizce bir düzende oluşturulmuş bir <code>Ctrl + ~</code> kısayolu, Rusça yerleşimli bir klavyede çalışmaz, çünkü Rusça düzeninde bu tuşun başka bir kodu vardır. Bunu düzeltmek için, Rusça düzen ile başka bir kısayol tuşu oluşturun: <code>Ctrl + Ё</code>",
+        "description": "Hotkeys description"
+    },
+    "addHotKeyButton": {
+        "message": "Kısayol ekle",
+        "description": "Add hotkey"
+    },
+    "deleteHotKeyButton": {
+        "message": "Kısayol sil",
+        "description": "Delete hotkey"
+    },
+    "hotkeyPlaceholder": {
+        "message": "Tuşa basınız",
+        "description": "Press key here"
+    },
+    "selectAction": {
+        "message": "Aksiyon seçin",
+        "description": "Select action"
+    },
+    "selectGroup": {
+        "message": "Grup seçin",
+        "description": "Select group"
+    },
+    "hotkeyActionTitleLoadNextGroup": {
+        "message": "Sıradaki grubu yükle",
+        "description": "Load next group"
+    },
+    "hotkeyActionTitleLoadPrevGroup": {
+        "message": "Önceki grubu yükle",
+        "description": "Load previous group"
+    },
+    "hotkeyActionTitleLoadNextUnloadedGroup": {
+        "message": "Sıradaki yüklü olmayan grubu yükle",
+        "description": "Load next unloaded group"
+    },
+    "hotkeyActionTitleLoadPrevUnloadedGroup": {
+        "message": "Önceki yüklü olmayan grubu yükle",
+        "description": "Load previous unloaded group"
+    },
+    "hotkeyActionTitleLoadHistoryNextGroup": {
+        "message": "Sıradaki grubu geçmişten yükle",
+        "description": "Load next group from history"
+    },
+    "hotkeyActionTitleLoadHistoryPrevGroup": {
+        "message": "Önceki grubu geçmişten yükle",
+        "description": "Load previous group from history"
+    },
+    "hotkeyActionTitleLoadFirstGroup": {
+        "message": "İlk grubu yükle",
+        "description": "Load first group"
+    },
+    "hotkeyActionTitleLoadLastGroup": {
+        "message": "Son grubu yükle",
+        "description": "Load last group"
+    },
+    "hotkeyActionTitleLoadCustomGroup": {
+        "message": "Özel grup yükle",
+        "description": "Load custom group"
+    },
+    "hotkeyActionTitleAddNewGroup": {
+        "message": "Yeni grup ekle",
+        "description": "Add new group"
+    },
+    "hotkeyActionTitleDeleteCurrentGroup": {
+        "message": "Geçerli grubu sil",
+        "description": "Delete current group"
+    },
+    "hotkeyActionTitleOpenManageGroups": {
+        "message": "Grup yöneti aç",
+        "description": "Open manage groups"
+    },
+    "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
+        "message": "Seçili sekmeleri özel gruba taşı",
+        "description": "Move selected tabs to custom group"
+    },
+    "hotkeyActionTitleDiscardGroup": {
+        "message": "Grubu ıskartaya çıkar",
+        "description": "Hotkey action Discard group"
+    },
+    "hotkeyActionTitleDiscardOtherGroups": {
+        "message": "Diğer grupları ıskartaya çıkar",
+        "description": "Hotkey action Discard other groups"
+    },
+    "hotkeyActionTitleReloadAllTabsInCurrentGroup": {
+        "message": "Geçerli gruptaki tüm sekmeleri yeniden yükle",
+        "description": "Reload all tabs in current group"
+    },
+    "whatsWrongMessage": {
+        "message": "Sorun nedir...\nLütfen geliştiriciyi en son hata günlüklerini içeren destek e-postasıyla bilgilendirin (düğme Seçenekler sayfasının altında mevcuttur)\nDevam etmek için buraya tıklayın...",
+        "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
+    },
+    "saveErrorLogsIntoFile": {
+        "message": "Son hata günlüklerini JSON dosyasına kaydedin",
+        "description": "Save last error logs into JSON file"
+    },
+    "undoRemoveGroupItemTitle": {
+        "message": "\"$grouptitle$\" silme işlemini geri al",
+        "description": "Undelete a group menu title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "undoRemoveGroupNotification": {
+        "message": "\"$grouptitle$\" grubunun silinmesini iptal etmek için tıklayın",
+        "description": "Click here to cancel the deletion of the group title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "isStickyGroupTitle": {
+        "message": "Yapışkan grup",
+        "description": "Sticky group"
+    },
+    "isStickyGroupHelp": {
+        "message": "Bu gruptaki sekmeler hiçbir zaman başka bir gruba otomatik olarak taşınmayacak",
+        "description": "Tabs in this group will never be automatically moved to another group"
+    },
+    "iconStyle": {
+        "message": "Ikon stili",
+        "description": "Icon style"
+    },
+    "discardTabsAfterHide": {
+        "message": "Gizledikten sonra sekmeleri ıskartaya çıkar (RAM kullanımını azaltır)",
+        "description": "Discard tabs after hide (this will save the RAM)"
+    },
+    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
+        "message": "Açık sekmelerden biri mikrofonu veya kamerayı paylaştığı için grubu değiştirmek mümkün değildir",
+        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
+    },
+    "foundHiddenUnSyncTabsDescription": {
+        "message": "Senkronize edilmemiş gizli sekmeler bulundu. Geçerli grup/pencerede göstermek için sekmeye tıklayın veya:",
+        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
+    },
+    "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
+        "message": "Tüm bu sekmeleri mevcut gruba/pencereye taşı",
+        "description": "Move all of these tabs into current group/window"
+    },
+    "actionHiddenUnSyncWindowTabsCreateGroup": {
+        "message": "Yalnızca mevcut pencerede bulunan sekmelerle yeni grup oluştur",
+        "description": "Create new group with tabs only from the current window"
+    }
+}
