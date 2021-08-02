@@ -1118,5 +1118,9 @@
     "eraseAndImportAddonBackupButton": {
         "message": "Restaurer la sauvegarde (efface la configuration actuelle)",
         "description": "Erase and restore backup"
+    },
+    "notSupportedIncognito": {
+        "message": "Cette extension ne fonctionne pas avec les fenêtre et les onglets en navigation privée",
+        "description": "Addon does not support private/incognito windows and tabs"
     }
 }
