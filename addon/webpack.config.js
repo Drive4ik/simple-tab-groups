@@ -1,10 +1,9 @@
 const path = require('path');
 const fse = require('fs-extra');
-const webpack = require('webpack');
+// const webpack = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const WebpackShellPlugin = require('webpack-shell-plugin');
+const WebpackShellPluginNext = require('webpack-shell-plugin-next');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-// const TerserPlugin = require('terser-webpack-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const { VueLoaderPlugin } = require('vue-loader');
 
@@ -40,7 +39,7 @@ const config = {
         extensions: ['.js', '.vue'],
     },
     node: {
-        setImmediate: false,
+        // setImmediate: false,
     },
     watchOptions: {
         ignored: /node_modules/,
@@ -53,14 +52,6 @@ const config = {
     devtool: false,
     optimization: {
         minimizer: [
-            // new TerserPlugin({
-            //     terserOptions: {
-            //         ecma: 8,
-            //         compress: {
-            //             drop_console: true,
-            //         },
-            //     },
-            // }),
             new OptimizeCSSAssetsPlugin({}),
         ],
     },
@@ -127,8 +118,17 @@ const config = {
             ]),
         }),
 
-        new WebpackShellPlugin({
-            onBuildEnd: ['node scripts/remove-evals.js'],
+        new WebpackShellPluginNext({
+            onBuildStart:{
+                // scripts: ['echo "Webpack Start"'],
+                // blocking: true,
+                // parallel: false,
+            },
+            onBuildEnd: {
+                scripts: ['node scripts/remove-evals.js'],
+                blocking: false,
+                parallel: true,
+            },
         }),
     ],
 };

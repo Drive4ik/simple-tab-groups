@@ -11,25 +11,30 @@ const bundles = [
     'options/options.js',
 ];
 
+// /;\s*\/\/ This works in non-strict mode\s*([a-z])\s*=\s*\(\s*function\(\)\s*\{\s*return this;\s*}\)\(\);\s*try\s*{\s*\/\/\s*This works if eval is allowed(?:\s*|.+){1,14}/g
+
 const replaceEvalRegexp = {
     dev: [{
-        fr: /;\s*\/\/ This works in non-strict mode\s*([a-z])\s*=\s*\(\s*function\(\)\s*\{\s*return this;\s*}\)\(\);\s*try\s*{\s*\/\/\s*This works if eval is allowed(?:\s*|.+){1,14}/g,
-        to: '=window;',
+        fr: /this \|\| new Function\(\'return this\'\)\(\)/g,
+        to: 'window',
     }, /*{
         fr: 'self.Math==Math?self:Function("return this")();',
         to: 'self.Math==Math?self:window;',
     },*/ {
         fr: 'svgContainer.innerHTML = "<svg>"',
         to: 'svgContainer.innerText = "<svg>"',
-    }],
+    }/*, {
+        fr: 'el.innerHTML = \'!\';',
+        to: 'el.innerText = \'!\';',
+    }*/],
     prod: [
     /*{
         fr: /;([a-z])=function\(\){return this}\(\);try{\1=\1\|\|new Function\("return this"\)\(\)}catch\([a-z]\){"object"==typeof window&&\(\1=window\)}/g,
         to: '=window;',
     },*/
     {
-        fr: /;\s*\/\/ This works in non-strict mode\s*([a-z])\s*=\s*\(\s*function\(\)\s*\{\s*return this;\s*}\)\(\);\s*try\s*{\s*\/\/\s*This works if eval is allowed(?:\s*|.+){1,14}/g,
-        to: '=window;', // from DEV
+        fr: /this \|\| new Function\(\'return this\'\)\(\)/g,
+        to: 'window', // from DEV
     }, /*{
         fr: 'self.Math==Math?self:Function("return this")();',
         to: 'self.Math==Math?self:window;',
@@ -41,8 +46,10 @@ const replaceEvalRegexp = {
     {
         fr: 'svgContainer.innerHTML = "<svg>"', // from DEV
         to: 'svgContainer.innerText = "<svg>"',
-    },
-    ],
+    }/*, {
+        fr: 'el.innerHTML = \'!\';',
+        to: 'el.innerText = \'!\';',
+    }*/],
 };
 
 function removeEvals(file) {
@@ -60,18 +67,18 @@ function removeEvals(file) {
             let notFound = regexArray.some(function({fr, to}) {
                 if ('string' === typeof fr) {
                     if (!data.includes(fr)) {
-                        reject(`===> Error: no string '${fr}' found in ${file}.`);
+                        reject(`no string '${fr}' found in ${file}.`);
                         return true;
                     }
 
-                    console.info('Replace string OK');
+                    console.info('Replace string \033[0;32mOK\033[0m');
                 } else { // regexp
                     if (!fr.test(data)) {
-                        reject(`===> Error: no eval CSP specific code found in ${file}.`);
+                        reject(`no eval CSP specific code found in ${file}.`);
                         return true;
                     }
 
-                    console.info('Removing eval() OK');
+                    console.info('Removing eval() \033[0;32mOK\033[0m');
                 }
 
                 data = data.replace(fr, to);
@@ -87,14 +94,14 @@ function removeEvals(file) {
 }
 
 function main() {
-    console.info('============= remove evals =============');
+    console.info('\033[0;35m============= REMOVE EVAL\'S =============\033[0m');
 
     bundles.forEach(async function(bundle) {
         try {
             await removeEvals(path.join(BUNDLE_DIR, bundle))
             console.info(`Bundle ${bundle}: OK`);
         } catch (e) {
-            console.error(`\n${e}\n`);
+            console.error('\n\033[0;31mERROR: ' + e + '\033[0m\n');
         }
     });
 }

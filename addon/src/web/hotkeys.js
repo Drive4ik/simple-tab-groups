@@ -173,7 +173,7 @@ function showGroupsPopup(data) {
         groupNode.classList.add('stg-popup-group');
 
         let imgNode = document.createElement('img');
-        imgNode.src = group.iconUrl.startsWith('/icons') ? browser.extension.getURL(group.iconUrl) : group.iconUrl;
+        imgNode.src = group.iconUrl.startsWith('/icons') ? browser.runtime.getURL(group.iconUrl) : group.iconUrl;
 
         let figureNode = document.createElement('figure');
         figureNode.classList = 'group-icon';
@@ -200,7 +200,7 @@ function showGroupsPopup(data) {
             let archiveImgNode = document.createElement('img');
 
             archiveImgNode.classList = 'archive-icon';
-            archiveImgNode.src = browser.extension.getURL('/icons/archive.svg');
+            archiveImgNode.src = browser.runtime.getURL('/icons/archive.svg');
 
             groupNode.append(archiveImgNode);
         }*/
@@ -293,7 +293,7 @@ function showGroupsPopup(data) {
         let newGroupNode = createGroupNode({
             id: 'new',
             title: browser.i18n.getMessage('createNewGroup'),
-            iconUrl: browser.extension.getURL('/icons/group-new.svg'),
+            iconUrl: browser.runtime.getURL('/icons/group-new.svg'),
         }, true);
 
         // newGroupNode.style.justifyContent = 'center';

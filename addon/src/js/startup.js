@@ -39,7 +39,7 @@
         window.containers = background.containers;
     }
 
-    window.addonUrlPrefix = browser.extension.getURL('');
+    window.addonUrlPrefix = browser.runtime.getURL('');
     window.manifest = browser.runtime.getManifest();
     window.noop = function() {};
 

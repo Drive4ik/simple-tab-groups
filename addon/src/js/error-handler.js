@@ -44,7 +44,7 @@
         if (errorData.message === 'An unexpected error occurred') {
             browser.tabs.create({
                 active: true,
-                url: browser.extension.getURL('/help/db-error-reinstall.html'),
+                url: browser.runtime.getURL('/help/db-error-reinstall.html'),
             });
         }
 
