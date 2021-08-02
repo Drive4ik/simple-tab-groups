@@ -1,0 +1,48 @@
+{
+    "extensionDescription": {
+        "message": "Crear, modificar y cambiar rápidamente los grupos de pestañas",
+        "description": "Extension description"
+    },
+    "needInstallSTGExtension": {
+        "message": "Necesitas instalar la extensión Simple Tab Groups\n\nHacé clic acá para abrir la página de inicio de Simple Tab Groups",
+        "description": "Need install Simple Tab Groups extention\nClick here to open Simple Tab Groups home page"
+    },
+    "openPopupTitle": {
+        "message": "Abrir ventana emergente",
+        "description": "Open popup with group notes"
+    },
+    "openSidebarTitle": {
+        "message": "Abrir barra lateral",
+        "description": "Open notes sidebar"
+    },
+    "windowNotHaveGroup": {
+        "message": "Esta ventana no tiene un grupo cargado",
+        "description": "This window does not have a loaded group."
+    },
+    "openInTab": {
+        "message": "Abrir notas en una pestaña",
+        "description": "Open notes in a tab"
+    },
+    "notesPlaceholder": {
+        "message": "Escribí acá...",
+        "description": "Type here..."
+    },
+    "groupAndWindowTitle": {
+        "message": "$grouptitle$ - Notas",
+        "description": "Group and window title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 1"
+            }
+        }
+    },
+    "importBackup": {
+        "message": "Cargar respaldo de notas",
+        "description": "Load notes backup"
+    },
+    "exportBackup": {
+        "message": "Guardar respaldo de notas",
+        "description": "Save notes backup"
+    }
+}

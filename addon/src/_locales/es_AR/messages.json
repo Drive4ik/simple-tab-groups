@@ -93,7 +93,11 @@
     },
     "showConfirmDialogBeforeGroupDelete": {
         "message": "Mostrar dialogo para confirmar antes de borrar el grupo",
-        "description": "Show confirm dialog before group delete"
+        "description": "Show confirmation dialog before deleting the group"
+    },
+    "showConfirmDialogBeforeGroupArchiving": {
+        "message": "Mostrar diálogo de confirmación antes de archivar un grupo",
+        "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
         "message": "Resguardar tus Simple Tab Groups",
@@ -109,7 +113,7 @@
     },
     "includeTabThumbnailsIntoBackup": {
         "message": "Incluir vistas en miniaturas de pestañas en la copia de resguardo (hace que el tamaño del archivo de la copia de resguardo sea mayor)",
-        "description": "Include tab thumbnails into backup (make backup file size bigger)"
+        "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
         "message": "Restaurar Simple Tabs Groups",
@@ -163,6 +167,10 @@
         "message": "Ordenar grupos [Z-A]",
         "description": "Sort groups [Z-A]"
     },
+    "generalTitle": {
+        "message": "General",
+        "description": "General"
+    },
     "groupSettings": {
         "message": "Grupo de configuraciones",
         "description": "Group settings"
@@ -187,6 +195,20 @@
         "placeholders": {
             "count": {
                 "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "groupTabsCountActive": {
+        "message": "$active$/$count$ pestañas activas",
+        "description": "Group tabs count active",
+        "placeholders": {
+            "active": {
+                "content": "$1",
+                "example": "2"
+            },
+            "count": {
+                "content": "$2",
                 "example": "4"
             }
         }
@@ -224,15 +246,19 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Disculpe, no puede cargar un icono personalizado en este grupo, pero puede cargar un icono de grupo personalizad en \"Administrador de grupos\".\n¿Abrir \"Administrador de grupos\"?",
+        "message": "Disculpá, no podés cargar un icono personalizado en esta ventana emergente, pero podés cargar un icono de grupo personalizado en \"Administrador de grupos\".\n¿Abrir \"Administrador de grupos\"?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
         "message": "Colocar color aleatorio",
         "description": "Set random color"
     },
+    "catchTabContainers": {
+        "message": "Agarrá y mové pestañas con contenedores a este grupo",
+        "description": "Catch and move tabs with containers to this group"
+    },
     "regexpForTabsTitle": {
-        "message": "Expresiones regulares para fijar las pestañas",
+        "message": "Expresiones regulares para encontrar pestañas",
         "description": "Regular expressions for catch tabs"
     },
     "regexpForTabsPlaceholder": {
@@ -240,35 +266,35 @@
         "description": "Regular expressions"
     },
     "regexpForTabsHelp": {
-        "message": "Inserte expresiones regulares para direcciones web aqui. Las pestanas encontradas seran movidas automaticamente de este grupo. \nUse solo una linea por regla, puede haber tantas como quiera. \nEjemplos:\ngithub\\.com/drive4ik/simple-tab-groups - devuelve todas las paginas del repositorio del addon \nbugzilla\\.mozilla\\.org - devuelve el reporte de errores (bugs) de Firefox\n(facebook|twitter|youtube)\\.com - devuelve todas tus redes sociales",
+        "message": "Insertá expresiones regulares para direcciones web acá. Las pestañas encontradas seran movidas automaticamente de este grupo. \nUsá solo una linea por regla, puede haber tantas como quieras.\nEjemplos:\ngithub\\.com/drive4ik/simple-tab-groups - devuelve todas las paginas del repositorio del addon \nbugzilla\\.mozilla\\.org - devuelve el reporte de errores (bugs) de Firefox\n(facebook|twitter|youtube)\\.com - devuelve todas tus redes sociales",
         "description": "Regular exceptions helper"
     },
     "hotkeysTitle": {
-        "message": "Tecla rápida",
+        "message": "Atajos rápidos",
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Aquí puedes agregar teclas rápidas. <br>Restricciones:<br>1. Estas teclas rápidas solo funcionan en paginas web (http:; https:) En las paginas de navegadores (about:) - estas no funcionan, WebExtensions API no lo permite.<br>2. Algunas teclas rápidas no funcionaran en diferentes diseños de teclados. Por ejemplo, el acceso creado en un teclado en Ingles <code>Ctrl + ~</code>no funcionara en un teclado de diseño Ruso, porque en el diseño Ruso esta tecla tiene otro código. Para corregir esto, solo cree una tecla rápida en el teclado de diseño Ruso <code>Ctrl + Ё</code>",
+        "message": "Acá podes agregar atajos rápidos.<br>Restricciones:<br>1. Estos atajos rápidos solo funcionan en paginas web (http:, https:),no en las paginas del navegador (about:), porque la API WebExtensions no lo permite.<br>2. Algunos atajos rápidos no funcionarán con todas las distribuciones de teclados. Por ejemplo, el atajo <code>Ctrl + ~</code> creado en un teclado en Inglés no funcionará en un teclado en Ruso, porque en el diseño Ruso esta tecla tiene otro código. Para corregir esto, creá un atajo rápido con el teclado en Ruso <code>Ctrl + Ё</code>",
         "description": "Hotkeys description"
     },
     "addHotKeyButton": {
-        "message": "Agregar tecla rapida",
+        "message": "Agregar atajo rápido",
         "description": "Add hotkey"
     },
     "deleteHotKeyButton": {
-        "message": "Borrar tecla rápida",
+        "message": "Borrar atajo rápido",
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Presiona teclas aquí",
+        "message": "Presioná una tecla acá",
         "description": "Press key here"
     },
     "selectAction": {
-        "message": "Seleccionar acción",
+        "message": "Seleccioná una acción",
         "description": "Select action"
     },
     "selectGroup": {
-        "message": "Seleccionar grupo",
+        "message": "Seleccioná un grupo",
         "description": "Select group"
     },
     "hotkeyActionTitleLoadNextGroup": {
@@ -279,6 +305,22 @@
         "message": "Cargar el grupo anterior",
         "description": "Load previous group"
     },
+    "hotkeyActionTitleLoadNextUnloadedGroup": {
+        "message": "Cargar el próximo grupo no-cargado",
+        "description": "Load next unloaded group"
+    },
+    "hotkeyActionTitleLoadPrevUnloadedGroup": {
+        "message": "Cargar el grupo no-cargado anterior",
+        "description": "Load previous unloaded group"
+    },
+    "hotkeyActionTitleLoadHistoryNextGroup": {
+        "message": "Cargar el próximo grupo desde el historial",
+        "description": "Load next group from history"
+    },
+    "hotkeyActionTitleLoadHistoryPrevGroup": {
+        "message": "Cargar el grupo anterior desde el historial",
+        "description": "Load previous group from history"
+    },
     "hotkeyActionTitleLoadFirstGroup": {
         "message": "Cargar el primer grupo",
         "description": "Load first group"
@@ -288,7 +330,7 @@
         "description": "Load last group"
     },
     "hotkeyActionTitleLoadCustomGroup": {
-        "message": "Cargar un grupo personalizado",
+        "message": "Cargar grupo personalizado",
         "description": "Load custom group"
     },
     "hotkeyActionTitleAddNewGroup": {
@@ -303,17 +345,33 @@
         "message": "Abrir administrador de grupos",
         "description": "Open manage groups"
     },
+    "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
+        "message": "Mover pestañas seleccionadas a un grupo personalizado",
+        "description": "Move selected tabs to custom group"
+    },
+    "hotkeyActionTitleDiscardGroup": {
+        "message": "Descartar grupo",
+        "description": "Hotkey action Discard group"
+    },
+    "hotkeyActionTitleDiscardOtherGroups": {
+        "message": "Descartar otros grupos",
+        "description": "Hotkey action Discard other groups"
+    },
+    "hotkeyActionTitleReloadAllTabsInCurrentGroup": {
+        "message": "Recargar todas las pestañas del grupo actual",
+        "description": "Reload all tabs in current group"
+    },
     "whatsWrongMessage": {
-        "message": "Que esta yendo mal...\nPor favor, contacte con el desarrollador al correo de mantenimiento con el ultimo registro de errores (existe un boton abajo con estas opciones)",
+        "message": "Qué está mal...\nPor favor, notificá al desarrollador con un correo electrónico de soporte con el ultimo registro de errores (el botón se encuentra en la parte inferior de la página de opciones)\nHace clic acá para continuar...",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
     },
     "saveErrorLogsIntoFile": {
-        "message": "Guardar el ultimo error registrado en un archivo JSON",
+        "message": "Guardar el último registro de errores en un archivo JSON",
         "description": "Save last error logs into JSON file"
     },
     "undoRemoveGroupItemTitle": {
-        "message": "Deshacer remover grupo \"$grouptitle$\"",
-        "description": "Undo remove group menu title",
+        "message": "Des-remover grupo \"$grouptitle$\"",
+        "description": "Undelete a group menu title",
         "placeholders": {
             "grouptitle": {
                 "content": "$1",
@@ -321,16 +379,748 @@
             }
         }
     },
+    "undoRemoveGroupNotification": {
+        "message": "Hacé clic acá para cancelar la eliminación del grupo $grouptitle$",
+        "description": "Click here to cancel the deletion of the group title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "isStickyGroupTitle": {
+        "message": "Grupo fijado",
+        "description": "Sticky group"
+    },
     "isStickyGroupHelp": {
-        "message": "Las pestañas en este grupo nunca seran movidas de forma automatica a otro grupo",
+        "message": "Las pestañas en este grupo nunca serán movidas de forma automática a otro grupo",
         "description": "Tabs in this group will never be automatically moved to another group"
     },
     "iconStyle": {
         "message": "Estilo del icono",
         "description": "Icon style"
     },
+    "discardTabsAfterHide": {
+        "message": "Descartar pestañas después de ocultarlas (esto ahorrará RAM)",
+        "description": "Discard tabs after hide (this will save the RAM)"
+    },
+    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
+        "message": "No se puede cambiar de grupo porque una de las pestañas abiertas comparte micrófono o cámara",
+        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
+    },
+    "foundHiddenUnSyncTabsDescription": {
+        "message": "Encontrar pestañas ocultas desincronizadas. Hacé clic en una pestaña para mostrarla en el grupo/ventana actual o:",
+        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
+    },
+    "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
+        "message": "Mover todas estas pestañas al grupo/ventana actual",
+        "description": "Move all of these tabs into current group/window"
+    },
+    "actionHiddenUnSyncWindowTabsCreateGroup": {
+        "message": "Crear nuevo grupo con las pestañas de la ventana actual solamente",
+        "description": "Create new group with tabs only from the current window"
+    },
+    "actionHiddenUnSyncTabsCreateGroup": {
+        "message": "Crear nuevo grupo con todas estas pestañas",
+        "description": "Create new group with all of these tabs"
+    },
+    "actionHiddenUnSyncTabsCloseAll": {
+        "message": "Cerrar todas estas pestañas",
+        "description": "Close all of these tabs"
+    },
+    "updateTabThumbnail": {
+        "message": "Actualizar miniatura de esta pestaña",
+        "description": "Update thumbnail for this tab"
+    },
+    "notFoundWindowsAddonStoppedWorking": {
+        "message": "Error: no se encontró ninguna ventana normal no privada/incógnita/emergente.\nLa extensión se detuvo. Por favor, reinicia el navegador.",
+        "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
+    },
+    "ffFailedAndLostDataMessage": {
+        "message": "FF falló y todos los grupos se perdieron.\nSi tenés un respaldo, podés restablecer los datos de él",
+        "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
+    },
+    "enterDefaultGroupIconViewTypeTitle": {
+        "message": "Estilo de iconos para los nuevos grupos",
+        "description": "Icon style for a new group"
+    },
     "openGroupInNewWindow": {
         "message": "Abrir grupo en una ventana nueva",
         "description": "Open group in new window"
+    },
+    "muteTabsWhenGroupCloseAndRestoreWhenOpen": {
+        "message": "Mutear pestañas cuando se cierre el grupo y restaurar cuando se abra",
+        "description": "Mute tabs when group close and restore when open"
+    },
+    "showTabAfterMovingItIntoThisGroup": {
+        "message": "Mostrar la pestaña después de que se mueva automáticamente a este grupo",
+        "description": "Show the tab after auto-moving it into this group"
+    },
+    "tabMoving": {
+        "message": "Movimiento de pestaña",
+        "description": "Tab moving"
+    },
+    "includeTabFavIconsIntoBackup": {
+        "message": "Incluir pestaña fav-icons en el respaldo (hace el peso del respaldo mayor)",
+        "description": "Include tab fav-icons in backup (makes backup file size bigger)"
+    },
+    "groupRemovedByExtension": {
+        "message": "Grupo \"$group$\" removido por la extensión: $extension$",
+        "description": "Group \"$group$\" removed by extension: $extension$",
+        "placeholders": {
+            "group": {
+                "content": "$1",
+                "example": "group title"
+            },
+            "extension": {
+                "content": "$2",
+                "example": "external extension title"
+            }
+        }
+    },
+    "clickHereToReloadAddon": {
+        "message": "Algo salió mal, hacé clic acá para recargar STG",
+        "description": "Something went wrong, click here to reload STG addon"
+    },
+    "extendedTabSearch": {
+        "message": "Búsqueda extendida",
+        "description": "Extended search"
+    },
+    "movingMultipleTabsText": {
+        "message": "Moviendo $count$ pestañas",
+        "description": "Moving $count$ tabs",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "7"
+            }
+        }
+    },
+    "pinnedTabsAreNotSupported": {
+        "message": "Las pestañas fijadas/ancladas no son soportadas",
+        "description": "Pinned tabs are not supported"
+    },
+    "thisUrlsAreNotSupported": {
+        "message": "Estas urls \"$urls$\" no son soportadas",
+        "description": "This urls \"$urls$\" are not supported",
+        "placeholders": {
+            "urls": {
+                "content": "$1",
+                "example": "about:addons, file://..."
+            }
+        }
+    },
+    "thisTabsCanNotBeHidden": {
+        "message": "Estas pestañas no pueden ocultarse porque están fijadas, usando el micrófono, cámara o compartiendo pantalla: \"$titles$\"",
+        "description": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
+        "placeholders": {
+            "titles": {
+                "content": "$1",
+                "example": "some titles"
+            }
+        }
+    },
+    "moveMultipleTabsToGroupMessage": {
+        "message": "$tabscount$ pestañas fueron movidas.\nHacé clic acá para abrir la primera pestaña",
+        "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "autoBackupEnableTitle": {
+        "message": "Activar respaldo automático",
+        "description": "Enable auto backup"
+    },
+    "autoBackupCreateEveryTitle": {
+        "message": "Crear respaldo cada:",
+        "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyHours": {
+        "message": "hora(s)",
+        "description": "hour(s)"
+    },
+    "autoBackupIntervalKeyDays": {
+        "message": "día(s)",
+        "description": "day(s)"
+    },
+    "autoBackupLastBackupTitle": {
+        "message": "Último respaldo",
+        "description": "Last backup:"
+    },
+    "enableDarkTheme": {
+        "message": "Activar modo oscuro",
+        "description": "Enable dark theme"
+    },
+    "enableDarkThemeNotification": {
+        "message": "Para un soporte completo de tema oscuro, activa el parámetro <br><code>svg.context-properties.content.enabled</code> a <code>true</code> en la página <br><code>about:config</code><br><br><a href='https://support.mozilla.org/kb/about-config-editor-firefox'>Cómo hacerlo?</a>",
+        "description": "Fully support the dark theme text"
+    },
+    "importSettingsPanoramaViewAddonTitle": {
+        "message": "Restablecer \"Panorama View\" de photodiode",
+        "description": "Restore photodiode's \"Panorama View\""
+    },
+    "importSettingsPanoramaViewAddonDescription": {
+        "message": "Cargar archivo de respaldo de la extensión \"Panorama View\"",
+        "description": "Load a backup file from \"Panorama View\" addon."
+    },
+    "importSettingsSyncTabGroupsAddonTitle": {
+        "message": "Restablecer \"Sync Tab Groups\" de Morikko",
+        "description": "Restore Morikko's \"Sync Tab Groups\""
+    },
+    "importSettingsSyncTabGroupsAddonDescription": {
+        "message": "Cargar archivo de respaldo de la extensión \"Sync Tab Groups\"",
+        "description": "Load a backup file from \"Sync Tab Groups\" addon."
+    },
+    "browseFileTitle": {
+        "message": "Navegar...",
+        "description": "Browse..."
+    },
+    "openBackupFolder": {
+        "message": "Abrir carpeta de respaldos",
+        "description": "Open backup folder"
+    },
+    "createNewGroupWhenOpenNewWindow": {
+        "message": "Crear un nuevo grupo cuando se abra una nueva ventana",
+        "description": "Create a new group when opening a new window"
+    },
+    "prependGroupTitleToWindowTitle": {
+        "message": "Anteponer el título del grupo al título de la ventana",
+        "description": "Prepend group title to window title"
+    },
+    "allowAccessToBookmarks": {
+        "message": "Permitir acceso a marcadores",
+        "description": "Allow access to bookmarks"
+    },
+    "openBookmarkInGroup": {
+        "message": "Abrir marcador en grupo",
+        "description": "Open bookmark in group"
+    },
+    "bookmarkNotAllowed": {
+        "message": "Este marcador no está permitido",
+        "description": "This bookmark is not allowed"
+    },
+    "openLinkInGroupDisabledTitle": {
+        "message": "Abrir link en grupo",
+        "description": "Open link in group title"
+    },
+    "showContextMenuOnTabs": {
+        "message": "Mostrar menú contextual en pestañas",
+        "description": "Show context menu on tabs"
+    },
+    "showContextMenuOnLinks": {
+        "message": "Mostrar menú contextual en links",
+        "description": "Show context menu on links"
+    },
+    "groupsCreatedCount": {
+        "message": "$groupscount$ grupos creados",
+        "description": "Groups created count",
+        "placeholders": {
+            "groupscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "noGroupsCreated": {
+        "message": "No hay grupos creados",
+        "description": "No groups created"
+    },
+    "noAccessToBookmarks": {
+        "message": "No tenés acceso a los marcadores. Activalo en los ajustes de la extensión",
+        "description": "You do not have access to bookmarks. Enable it on in addon settings"
+    },
+    "exportGroupToMainBookmarkFolder": {
+        "message": "Exportar grupos a la carpeta de marcadores '$bookmarkfolder$'",
+        "description": "Export groups to '$bookmarkfolder$' bookmark folder",
+        "placeholders": {
+            "bookmarkfolder": {
+                "content": "$1",
+                "example": "STG bookmarks"
+            }
+        }
+    },
+    "exportGroupToBookmarks": {
+        "message": "Exportar grupo a los marcadores",
+        "description": "Export group to bookmarks"
+    },
+    "defaultBookmarkFolderLocation": {
+        "message": "Ubicación predeterminada de los marcadores",
+        "description": "Default bookmark folder location"
+    },
+    "groupExportedToBookmarks": {
+        "message": "Grupo '$grouptitle$' exportado exitosamente a los marcadores",
+        "description": "Group '$grouptitle$' successfully exported to bookmarks",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "groupWithoutTabs": {
+        "message": "Este grupo no tiene pestañas",
+        "description": "This group has no tabs"
+    },
+    "autoBackupGroupsToBookmarks": {
+        "message": "Hacer respaldos automáticamente de todos los grupos en los marcadores",
+        "description": "Auto backup all groups to bookmarks"
+    },
+    "exportAllGroupsToBookmarks": {
+        "message": "Exportar todos los grupos  a los marcadores",
+        "description": "Export all groups to bookmarks"
+    },
+    "allGroupsExportedToBookmarks": {
+        "message": "Todos los grupos fueron exitosamente exportados a los marcadores",
+        "description": "All groups successfully exported to bookmarks"
+    },
+    "discardTabTitle": {
+        "message": "Descartar pestaña",
+        "description": "Discard tab"
+    },
+    "autoBackupGroupsToFile": {
+        "message": "Hacer respaldos automáticamente de todos los grupos en un archivo (dentro de la carpeta de descargas)",
+        "description": "Auto backup all groups to file (into downloads folder)"
+    },
+    "folderNameTitle": {
+        "message": "Nombre de carpeta",
+        "description": "Folder name title"
+    },
+    "backupSuccessfullyRestored": {
+        "message": "Respaldo restaurado exitosamente!",
+        "description": "Backup successfully restored"
+    },
+    "loading": {
+        "message": "Cargando, esperá por favor...",
+        "description": "Loading, please wait..."
+    },
+    "showOtherTabs": {
+        "message": "Mostrar otras pestañas",
+        "description": "Show other tabs"
+    },
+    "dontDiscardTabsAfterHideThisGroup": {
+        "message": "No descartar pestañas en este grupo después de ocultarlas",
+        "description": "Don't discard tabs into this group after hide"
+    },
+    "showNotificationAfterGroupDelete": {
+        "message": "Mostrar notificación tras la eliminación de un grupo",
+        "description": "Show notification after group delete"
+    },
+    "reloadTab": {
+        "message": "Recargar pestaña",
+        "description": "Reload tab"
+    },
+    "thisTabIsNotSupported": {
+        "message": "Esta pestaña no es soportada",
+        "description": "This tab is not supported"
+    },
+    "showExtendGroupsPopupWithActiveTabs": {
+        "message": "Mostrar pestañas activas en la ventana emergente de grupos",
+        "description": "Show active tabs in groups popup"
+    },
+    "reloadAllTabsInGroup": {
+        "message": "Recargar todas las pestañas en este grupo",
+        "description": "Reload all tabs in group"
+    },
+    "tabsCreatedCount": {
+        "message": "$tabscount$ pestañas creadas",
+        "description": "Tabs created count",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "tabsNotCreated": {
+        "message": "Pestañas no creadas",
+        "description": "Tabs not created"
+    },
+    "showTabsWithThumbnailsInManageGroups": {
+        "message": "Mostrar vistas previas en la página \"Administración de grupos\"",
+        "description": "Show tabs with thumbnails in \"Manage groups\" page"
+    },
+    "alwaysOpenTabsInContainer": {
+        "message": "Siempre abrir pestañas en contenedores",
+        "description": "Always open tabs in container"
+    },
+    "temporaryContainerTitle": {
+        "message": "⌚Contenedor Temporal",
+        "description": "⌚Temporary Container"
+    },
+    "thisContainerIsNotTemporary": {
+        "message": "El contenedor '$containerName$' ya no es temporal",
+        "description": "This container '$containerName$' is no longer temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "my container"
+            }
+        }
+    },
+    "thisContainerNowIsTemporary": {
+        "message": "El contenedor '$containerName$' ahora es temporal",
+        "description": "This container '$containerName$' has now become temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "⌚Temporary Container 5"
+            }
+        }
+    },
+    "importAddonSettings": {
+        "message": "Importar ajustes de la extensión",
+        "description": "Import addon settings"
+    },
+    "importGroups": {
+        "message": "Importar grupos",
+        "description": "Import groups"
+    },
+    "pinnedTabs": {
+        "message": "Pestañas fijadas",
+        "description": "Pinned tabs"
+    },
+    "eraseAddonSettingsWarningTitle": {
+        "message": "Esta acción va a <b>BORRAR COMPLETAMENTE</b> todos los ajustes y grupos existentes!<br>Las pestañas no se verán afectadas.",
+        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+    },
+    "clear": {
+        "message": "Limpiar",
+        "description": "Clear"
+    },
+    "deleteAllAddonDataAndSettings": {
+        "message": "Borrar todos los datos y ajustes de la extensión",
+        "description": "Delete all addon data and settings"
+    },
+    "warningAllDataWillRemove": {
+        "message": "Advertencia! Se removerán TODOS los datos de la extensión! Estás realmente seguro/a?",
+        "description": "Warning! Removing ALL addon data! Are you really sure?"
+    },
+    "ifDifferentContainerReOpen": {
+        "message": "Si el contenedor es diferente del seleccionado - cambiar el contenedor",
+        "description": "If the container is different from the selected one - change the container"
+    },
+    "deleteAllAddonDataAndSettingsBeforeRestoringBackup": {
+        "message": "Borrar todos los datos y ajustes de la extensión antes de restaurar el respaldo",
+        "description": "Delete all addon data and settings before restoring backup"
+    },
+    "helpPageWelcomeV4Title": {
+        "message": "Bienvenido/a a Simple Tab Groups v4",
+        "description": "Welcome to Simple Tab Groups v4"
+    },
+    "helpPageWelcomeV4Description": {
+        "message": "Por favor activá \"Restaurar sesión previa\" en los ajustes del navegadr.<br>Esto es necesario para mantener la comunicación entre el grupo y la pestaña, <br>sino las pestañas no se abrirían cuando el navegador inicia y se perderían en la extensión -<br>la extensión dejará de funcionar.",
+        "description": "Please enable \"Restore previous session\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
+    },
+    "leaveBookmarksOfClosedTabs": {
+        "message": "Dejar marcadores de las pestañas cerradas (los marcadores van a separar el separador)",
+        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+    },
+    "enableDebugTitle": {
+        "message": "Activar DEPURACION",
+        "description": "Enable DEBUG"
+    },
+    "loggingIsEnabledTitle": {
+        "message": "está activado el loggeo",
+        "description": "logging is enabled"
+    },
+    "loggingIsAutoEnabledTitle": {
+        "message": "el loggeo fue activado automáticamente debido a un error en la extensión",
+        "description": "logging was auto-enabled due to an error in addon"
+    },
+    "loggingDescription": {
+        "message": "Por favor habilitá ésta casilla de verificación solo si necesitas registrar el error y enviarme registros. Habilitar esto provocará una desaceleración notable de la extensión, ya que se registran todas las acciones del mismo. Cuando reproduzcas el error, desactivá esta casilla de verificación y la extensión ofrecerá guardar el archivo de registro. Esta opción se puede habilitar por sí sola si ocurre un error. Tenés que deseleccionar la casilla de verificación DEPURACION y guardar el archivo de registro.<br> Por favor enviame el archivo de registro por email: <a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com</a><br> <span class=\"has-text-danger\">Atención! No hay datos personales, contraseñas, marcadores, etc. en este archivo de registro!</span><br> Esto es necesario para poder reproducir el problema e intentar solucionarlo.<br> Atentamente",
+        "description": "logging description"
+    },
+    "archiveGroup": {
+        "message": "Archivar",
+        "description": "Archive"
+    },
+    "confirmArchiveGroup": {
+        "message": "Querés archivar el grupo $grouptitle$?<br>Cuando archivas un grupo, las pestañas serán guardadas en la base de datos de la extensión y serán removidas del navegador.",
+        "description": "Do you want to archive the group",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "unArchiveGroup": {
+        "message": "Desarchivar",
+        "description": "Unarchive"
+    },
+    "groupIsArchived": {
+        "message": "No se puede completar la acción, el grupo $grouptitle$ está en el archivo",
+        "description": "Unable to complete the action, the group is in the archive",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "updateAddonToLatestVersion": {
+        "message": "Por favor, actualizá la extensión a la última versión",
+        "description": "Please, update addon to latest version"
+    },
+    "hotkeyActionTitleRenameGroup": {
+        "message": "Renombrar grupo",
+        "description": "Rename group"
+    },
+    "noGroupsAvailable": {
+        "message": "No tenés grupos",
+        "description": "You have no groups"
+    },
+    "alwaysAskNewGroupName": {
+        "message": "Siempre preguntar por el nombre de un nuevo grupo",
+        "description": "Always ask for a new group name"
+    },
+    "impossibleToAskUserAboutAction": {
+        "message": "En la página \"$page$\" no es posible realizar \"$action$\"\n\nClic acá para información",
+        "description": "On page \"$page$\" it is impossible to ask about \"$action$\"",
+        "placeholders": {
+            "page": {
+                "content": "$1",
+                "example": "Add-ons for Firefox"
+            },
+            "action": {
+                "content": "$2",
+                "example": "some action"
+            }
+        }
+    },
+    "openPopupTitle": {
+        "message": "Abrir ventana emergente",
+        "description": "Open popup"
+    },
+    "openSidebarTitle": {
+        "message": "Abrir barra lateral",
+        "description": "Open sidebar"
+    },
+    "helpPageOpenInContainerTitle": {
+        "message": "No se puede abrir el URL en un contenedor:",
+        "description": "Can't open URL in container"
+    },
+    "helpPageOpenInContainerMainTitle": {
+        "message": "No se puede abrir el URL en el contenedor <container-name>$containerName$</container-name>",
+        "description": "Can't open the URL into Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerSubTitle": {
+        "message": "la extensión no puede abrir el URL:",
+        "description": "addon can't open URL:"
+    },
+    "helpPageOpenInContainerDesc1": {
+        "message": "El grupo <strong>$groupTitle$</strong> fue asignado para abrir pestañas en el contenedor <container-name>$containerName$</container-name>.",
+        "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
+        "placeholders": {
+            "groupTitle": {
+                "content": "$1",
+                "example": "Group 1"
+            },
+            "containerName": {
+                "content": "$2",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerDesc2": {
+        "message": "Otra extensión, que tiene UUID:",
+        "description": "Another addon, which has UUID:"
+    },
+    "helpPageOpenInContainerDesc3": {
+        "message": "intentar abrir este URL en el contenedor <container-name>$containerName$</container-name>. Mové la pestaña a otro grupo o prohibile a la extensión <strong>$uuid$</strong> realizar esta acción.",
+        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon '757eaba7-0b3d-478b-ace2-cbe0a16eed47' to perform this action.",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Business"
+            },
+            "uuid": {
+                "content": "$2",
+                "example": "757eaba7-0b3d-478b-ace2-cbe0a16eed47"
+            }
+        }
+    },
+    "helpPageOpenInContainerDesc4": {
+        "message": "Podés encontrar la extensión por UUID en la página",
+        "description": "You can find out the addon by UUID on the page:"
+    },
+    "helpPageOpenInContainerOpenInContainer": {
+        "message": "Abrir en el contenedor <container-name>$containerName$</container-name>",
+        "description": "Open in Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
+    },
+    "groupNotLoaded": {
+        "message": "Grupo no cargado",
+        "description": "Group not loaded"
+    },
+    "groupNotFound": {
+        "message": "Grupo no encontrado",
+        "description": "Group not found"
+    },
+    "unloadGroup": {
+        "message": "Des-cargar el grupo",
+        "description": "Unload the group"
+    },
+    "tabsInThisWindowWereHidden": {
+        "message": "Las pestañas en esta ventana están ocultas. Podés encontrarlas en la parte inferior de la ventana emergente de la extensión.",
+        "description": "Tabs in this window were hidden. You can find them at the bottom of the popup window of the addon."
+    },
+    "searchOrGoToActive": {
+        "message": "Buscar o flecha hacia arriba para poner en foco la pestaña/grupo activo",
+        "description": "Search or right arrow to focus on active tab/group"
+    },
+    "thisGroupIsMain": {
+        "message": "Este grupo está marcado como el principal",
+        "description": "This group is marked as main"
+    },
+    "setGroupAsMain": {
+        "message": "Establecer este grupo como el principal",
+        "description": "Set this group as main"
+    },
+    "thisGroupWasMain": {
+        "message": "Atención\nEste grupo fué marcado como el principal",
+        "description": "Notice\nThis group was marked as the main"
+    },
+    "moveToMainIfNotInCatchTabRules": {
+        "message": "Mover pestañas de este grupo al grupo \"$grouptitle$\" si ninguna regla de expresiones regulares coincide",
+        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "My main group"
+            }
+        }
+    },
+    "noContainerTitle": {
+        "message": "Sin contenedor",
+        "description": "No container"
+    },
+    "reopenTabsWithTemporaryContainersInNew": {
+        "message": "Reabrir pestañas con contenedores temporales en una nueva",
+        "description": "Reopen tabs with temporary containers in new"
+    },
+    "temporaryContainerTitleDescription": {
+        "message": "Prefijo del título del contenedor temporal",
+        "description": "Prefix of the temporary container title"
+    },
+    "excludeContainersForReOpen": {
+        "message": "excluyendo estos contenedores",
+        "description": "excluding these containers"
+    },
+    "helpPageOpenInContainerExcludeContainerToGroup": {
+        "message": "Excluir el contenedor <container-name>$containerName$</container-name> del grupo <strong>$groupTitle$</strong>",
+        "description": "Exclude Personal container for group Group 1",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            },
+            "groupTitle": {
+                "content": "$2",
+                "example": "Group 1"
+            }
+        }
+    },
+    "helpPageOpenInContainerIgnoreUuidForSession": {
+        "message": "Ignorá este UUID \"<strong>$uuid$</strong>\" hasta que el navegador esté cerrado",
+        "description": "Ignore UUID for session",
+        "placeholders": {
+            "uuid": {
+                "content": "$1",
+                "example": "ff06d2f8-3660-43ed-becb-ad1c458ae76d"
+            }
+        }
+    },
+    "hotkeysDescription2": {
+        "message": "Además podes configurar atajos rápidos en la página <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Gestionar atajos de teclado de extensiones en Firefox</a>. Estos funcionarán en todas las ventanas y páginas del navegador.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
+    },
+    "muteTab": {
+        "message": "Mutear pestaña",
+        "description": "Mute tab"
+    },
+    "unMuteTab": {
+        "message": "Desmutear pestaña",
+        "description": "Unmute tab"
+    },
+    "muteGroup": {
+        "message": "Mutear grupo",
+        "description": "Mute group"
+    },
+    "unMuteGroup": {
+        "message": "Desmutear grupo",
+        "description": "Unmute group"
+    },
+    "fullPopupWidth": {
+        "message": "Usar ventana emergente de ancho completo",
+        "description": "Use full popup width"
+    },
+    "showArchivedGroups": {
+        "message": "Mostrar grupos archivados",
+        "description": "Show archived groups"
+    },
+    "helpPageDbErrorReinstallTitle": {
+        "message": "Error de base de datos en Simple Tab Groups",
+        "description": "Database error in Simple Tab Groups"
+    },
+    "helpPageDbErrorReinstallDescription": {
+        "message": "Desafortunadamente, ocurrió un error mientras se leía la base de datos de la extensión STG de Firefox. De momento, la extensión está detenida. Para reanudar la extensión, hacé lo siguiente:",
+        "description": "Unfortunately, an error occurred while reading data from the STG addon from the Firefox database. At the moment, the addon is stopped. To resume the add-on, do the following:"
+    },
+    "helpPageDbErrorReinstallDescription2": {
+        "message": "Reiniciar Firefox",
+        "description": "Restart Firefox Browser (for Linux and Mac OS with process termination)"
+    },
+    "helpPageDbErrorReinstallDescription3": {
+        "message": "Si ves esta ventana de nuevo, probá reinstalar la extensión",
+        "description": "If you see this window again, try reinstalling the addon:"
+    },
+    "helpPageDbErrorReinstallDescription4": {
+        "message": "Remover extensión STG",
+        "description": "Remove STG Addon"
+    },
+    "helpPageDbErrorReinstallDescription5": {
+        "message": "Reiniciar Firefox",
+        "description": "Restart Firefox Browser"
+    },
+    "helpPageDbErrorReinstallDescription6": {
+        "message": "Instalar extensión STG",
+        "description": "Install STG Addon"
+    },
+    "helpPageDbErrorReinstallDescription7": {
+        "message": "Restablecer el respaldo más reciente de la carpeta de la extensión STG ubicada en la carpeta de descargas de Firefox \"STG-backups\".<br>Podés restablecer el respaldo en los ajustes de la extensión",
+        "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".<br>You can restore backup in addon settings"
+    },
+    "helpPageDbErrorReinstallOpenFFDownloadsFolder": {
+        "message": "Abrir carpeta de descargas de Firefox",
+        "description": "Open Firefox downloads folder"
+    },
+    "groupWithSameNameExists": {
+        "message": "Ya existe un grupo con ese nombre!",
+        "description": "A group with the same name already exists!"
+    },
+    "eraseAndImportAddonBackupButton": {
+        "message": "Limpiar y restablecer respaldo",
+        "description": "Erase and restore backup"
+    },
+    "notSupportedIncognito": {
+        "message": "La extensión no soporta ventanas y pestañas en modo privado/incognito",
+        "description": "Addon does not support private/incognito windows and tabs"
     }
 }
