@@ -1,6 +1,6 @@
 {
     "extensionDescription": {
-        "message": "Crea, modifica e cambia i tab groups",
+        "message": "Crea, modifica e cambia i gruppi di schede",
         "description": "Description of the extension."
     },
     "openSettings": {
@@ -8,7 +8,7 @@
         "description": "Settings context button title"
     },
     "manageGroupsTitle": {
-        "message": "Gestisci i tab groups",
+        "message": "Gestisci i gruppi di schede",
         "description": "Manage groups"
     },
     "setTabIconAsGroupIcon": {
@@ -16,11 +16,11 @@
         "description": "Set tab icon as group icon"
     },
     "moveTabToGroupDisabledTitle": {
-        "message": "Sposta la tab nel gruppo",
+        "message": "Sposta la scheda nel gruppo",
         "description": "Move tab to group title"
     },
     "moveTabToGroupMessage": {
-        "message": "La tab \"$tabtitle$\" è stata spostata dal gruppo \"$grouptitle$\".\n\nClicca qui per vedere la tab.",
+        "message": "La scheda \"$tabtitle$\" è stata spostata dal gruppo \"$grouptitle$\".\n\nClicca qui per vedere la scheda.",
         "description": "Tab moved popup title",
         "placeholders": {
             "grouptitle": {
@@ -58,7 +58,7 @@
         "description": "Cancel"
     },
     "searchPlaceholder": {
-        "message": "Cerca una tab...",
+        "message": "Cerca una scheda...",
         "description": "Search placeholder"
     },
     "invalidRegExpRuleTitle": {
@@ -84,23 +84,27 @@
         "description": "Close popup after changing group"
     },
     "showNotificationAfterMoveTab": {
-        "message": "Mostra una notifica quando una tab è stata spostata in un altro gruppo",
+        "message": "Mostra una notifica quando una scheda è stata spostata in un altro gruppo",
         "description": "Show notification when tab is moved to another group"
     },
     "openManageGroupsInTab": {
-        "message": "Apri \"Gestione gruppi\" in una nuova tab",
+        "message": "Apri \"Gestione gruppi\" in una nuova scheda",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
-        "message": "Mostra una finestra di conferma prima di eliminare un gruppo",
-        "description": "Show confirm dialog before group delete"
+        "message": "Mostra una finestra di conferma prima di eliminare il gruppo",
+        "description": "Show confirmation dialog before deleting the group"
+    },
+    "showConfirmDialogBeforeGroupArchiving": {
+        "message": "Mostra una finestra di conferma prima dell'archiviazione del gruppo",
+        "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
         "message": "Effettua il backup dei gruppi di Simple Tab Groups",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
-        "message": "Esporta i tuoi gruppi di tab in un file di backup per preservarli e ripristinarli in seguito se fosse necessario.",
+        "message": "Esporta i tuoi gruppi di schede in un file di backup per preservarli e ripristinarli in seguito se fosse necessario.",
         "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
     },
     "exportAddonSettingsButton": {
@@ -108,7 +112,7 @@
         "description": "Create backup"
     },
     "includeTabThumbnailsIntoBackup": {
-        "message": "Includi le anteprime delle tab all'interno del backup (la dimensione del file di backup diventerà maggiore)",
+        "message": "Includi le anteprime delle schede all'interno del backup (la dimensione del file di backup diventerà maggiore)",
         "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
@@ -116,7 +120,7 @@
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
-        "message": "Carica un file di backup contenente i gruppi di tab che si vogliono ripristinare.",
+        "message": "Carica un file di backup contenente i gruppi di schede che si vogliono ripristinare.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
     "importAddonSettingsButton": {
@@ -146,7 +150,7 @@
         }
     },
     "searchNotFoundTitle": {
-        "message": "La ricerca di \"$search$\" nel titolo delle tab non ha prodotto alcun risultato",
+        "message": "La ricerca di \"$search$\" nel titolo delle schede non ha prodotto alcun risultato",
         "description": "No results found",
         "placeholders": {
             "search": {
@@ -172,11 +176,11 @@
         "description": "Group settings"
     },
     "deleteGroup": {
-        "message": "Elimina un gruppo",
+        "message": "Elimina gruppo",
         "description": "Delete group"
     },
     "confirmDeleteGroup": {
-        "message": "Vuoi eliminare il gruppo \"$grouptitle$\"? <br> La rimozione del gruppo comporta la sia la chiusura di tutte le tab del gruppo e della finestra!",
+        "message": "Vuoi eliminare il gruppo \"$grouptitle$\"? <br> La rimozione del gruppo comporta la sia la chiusura di tutte le schede del gruppo e della finestra!",
         "description": "Delete group?",
         "placeholders": {
             "grouptitle": {
@@ -210,11 +214,11 @@
         }
     },
     "deleteTab": {
-        "message": "Elimina tab",
+        "message": "Elimina scheda",
         "description": "Delete tab"
     },
     "createNewTab": {
-        "message": "Apri una nuova tab",
+        "message": "Apri una nuova scheda",
         "description": "Open new tab"
     },
     "createNewGroup": {
@@ -250,19 +254,19 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Prendi le tab con i container e spostale in questo gruppo",
+        "message": "Prendi le schede con contenitori e spostale in questo gruppo",
         "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
-        "message": "Espressione regolare per selezionare le tab",
+        "message": "Espressioni regolari per selezionare le schede",
         "description": "Regular expressions for catch tabs"
     },
     "regexpForTabsPlaceholder": {
-        "message": "Espressione regolare",
+        "message": "Espressioni regolari",
         "description": "Regular expressions"
     },
     "regexpForTabsHelp": {
-        "message": "Inserisci un'espressione regolare per gli indirizzi. Le tab che hanno un indirizzo che corrisponde a quello dell'espressione regolare verrano spostate automaticamente in questo gruppo.\nUsa una linea per ogni regola e usa quanto regole vuoi.\nEsempi:\ngithub\\.com/drive4ik/simple-tab-groups - seleziona tutte le tab che riguardano il repository di questa estensione\nbugzilla\\.mozilla\\.org - seleziona tutte le tab nello strumento di cattura dei bug di Firefox\n(facebook|twitter|youtube)\\.com - seleziona tutte le tab dei social network",
+        "message": "Inserisci delle espressioni regolari per gli indirizzi web. Le schede che hanno un indirizzo che corrisponde a quello dell'espressione regolare verrano spostate automaticamente in questo gruppo.\nUsa una linea per ogni regola e usa quanto regole vuoi.\nEsempi:\ngithub\\.com/drive4ik/simple-tab-groups - seleziona tutte le schede nel repository di questa estensione\nbugzilla\\.mozilla\\.org - seleziona tutte le schede nello strumento di cattura dei bug di Firefox\n(facebook|twitter|youtube)\\.com - seleziona tutte le schede dei social network",
         "description": "Regular exceptions helper"
     },
     "hotkeysTitle": {
@@ -358,7 +362,7 @@
         "description": "Reload all tabs in current group"
     },
     "whatsWrongMessage": {
-        "message": "Qualcosa è andato male...\nPer favore contatta la sviluppatore con una email contenente gli ultimi log degli errori (per ottenere il log cercare un tasto apposito in fondo alla pagina delle impostazioni)",
+        "message": "Qualcosa è andato storto...\nPer favore contatta lo sviluppatore con una email contenente gli ultimi log degli errori (per ottenere il log cercare il tasto apposito in fondo alla pagina delle impostazioni)\nClicca qui per continuare...",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
     },
     "saveErrorLogsIntoFile": {
@@ -390,7 +394,7 @@
         "description": "Sticky group"
     },
     "isStickyGroupHelp": {
-        "message": "Le tab di questo gruppo non verranno mai spostate automaticamente in un altro gruppo",
+        "message": "Le schede di questo gruppo non verranno mai spostate automaticamente in un altro gruppo",
         "description": "Tabs in this group will never be automatically moved to another group"
     },
     "iconStyle": {
@@ -398,15 +402,15 @@
         "description": "Icon style"
     },
     "discardTabsAfterHide": {
-        "message": "Riduci il consumo di RAM per le tab che sono state nascoste",
+        "message": "Riduci il consumo di RAM per le schede che sono state nascoste",
         "description": "Discard tabs after hide (this will save the RAM)"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
-        "message": "Non è possibile cambiare il gruppo perché una delle tab aperte sta utilizzando il microfono o la fotocamera",
+        "message": "Non è possibile cambiare il gruppo perché una delle schede aperte sta utilizzando il microfono o la fotocamera",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
     },
     "foundHiddenUnSyncTabsDescription": {
-        "message": "Sono state trovate delle tab nascoste che non sono sincronizzate. Clicca qui per mostrarle all'interno del gruppo o della finestra corrente",
+        "message": "Sono state trovate delle schede nascoste che non sono sincronizzate. Clicca qui per mostrarle all'interno del gruppo o della finestra corrente",
         "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
     },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
@@ -418,15 +422,15 @@
         "description": "Create new group with tabs only from the current window"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
-        "message": "Crea un nuovo gruppo a partire da queste tab",
+        "message": "Crea un nuovo gruppo a partire da queste schede",
         "description": "Create new group with all of these tabs"
     },
     "actionHiddenUnSyncTabsCloseAll": {
-        "message": "Chiudi tutte queste tab",
+        "message": "Chiudi tutte queste schede",
         "description": "Close all of these tabs"
     },
     "updateTabThumbnail": {
-        "message": "Aggiorna l'anteprima per questa tab",
+        "message": "Aggiorna l'anteprima per questa scheda",
         "description": "Update thumbnail for this tab"
     },
     "notFoundWindowsAddonStoppedWorking": {
@@ -446,19 +450,19 @@
         "description": "Open group in new window"
     },
     "muteTabsWhenGroupCloseAndRestoreWhenOpen": {
-        "message": "Silenzia le tab quando il gruppo viene chiuso e ripristina l'audio quando il gruppo viene riaperto",
+        "message": "Silenzia le schede quando il gruppo viene chiuso e ripristina l'audio quando il gruppo viene riaperto",
         "description": "Mute tabs when group close and restore when open"
     },
     "showTabAfterMovingItIntoThisGroup": {
-        "message": "Mostra la tab dopo che è stata spostata all'interno di questo gruppo",
+        "message": "Mostra la scheda dopo che è stata spostata all'interno di questo gruppo",
         "description": "Show the tab after auto-moving it into this group"
     },
     "tabMoving": {
-        "message": "Spostamento della tab",
+        "message": "Spostamento della scheda",
         "description": "Tab moving"
     },
     "includeTabFavIconsIntoBackup": {
-        "message": "Inserisci le icone dei siti per le tab all'interno dei backup (questa operazione renderà la dimensione dei backup maggiore)",
+        "message": "Inserisci le icone dei siti per le schede all'interno dei backup (questa operazione renderà la dimensione dei backup maggiore)",
         "description": "Include tab fav-icons in backup (makes backup file size bigger)"
     },
     "groupRemovedByExtension": {
@@ -494,11 +498,11 @@
         }
     },
     "pinnedTabsAreNotSupported": {
-        "message": "Le tab fissate non sono supportate",
+        "message": "Le schede fissate non sono supportate",
         "description": "Pinned tabs are not supported"
     },
     "thisUrlsAreNotSupported": {
-        "message": "Questo URL \"\"$urls$\" non è supportato",
+        "message": "Questo URL \"$urls$\" non è supportato",
         "description": "This urls \"$urls$\" are not supported",
         "placeholders": {
             "urls": {
@@ -508,7 +512,7 @@
         }
     },
     "thisTabsCanNotBeHidden": {
-        "message": "Queste tab non possono essere nascoste. Sono fissate, usano il microfono, usano la fotocamera oppure usano lo schermo condiviso. Lista delle tab:\n\"$titles$\"",
+        "message": "Queste schede non possono essere nascoste. Sono fissate, usano il microfono, usano la fotocamera oppure usano lo schermo condiviso. Lista delle schede:\n\"$titles$\"",
         "description": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
         "placeholders": {
             "titles": {
@@ -518,8 +522,8 @@
         }
     },
     "moveMultipleTabsToGroupMessage": {
-        "message": "$tabscount$ tab sono state spostate. Clicca qui per aprire la prima tab.",
-        "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
+        "message": "$tabscount$ tab sono state spostate. Clicca qui per aprire la prima scheda.",
+        "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",
         "placeholders": {
             "tabscount": {
                 "content": "$1",
@@ -552,7 +556,7 @@
         "description": "Enable dark theme"
     },
     "enableDarkThemeNotification": {
-        "message": "Per abilitare completamente il tema scuro, modificare<br><code>svg.context-properties.content.enabled</code> in <code>true</code> all'inteno della pagina <br><code>about:config</code> <br><br><a href='https://support.mozilla.org/kb/about-config-editor-firefox'>Per maggiori informazioni, clicca qui</a>",
+        "message": "Per abilitare completamente il tema scuro, modificare il parametro <br><code>svg.context-properties.content.enabled</code> in <code>true</code> all'interno della pagina <br><code>about:config</code> <br><br><a href='https://support.mozilla.org/it/kb/editor-configurazione-firefox'>Per maggiori informazioni, clicca qui</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {
@@ -740,15 +744,15 @@
         "description": "Show tabs with thumbnails in \"Manage groups\" page"
     },
     "alwaysOpenTabsInContainer": {
-        "message": "Apri sempre le schede nel container",
+        "message": "Apri sempre le schede nel contenitore",
         "description": "Always open tabs in container"
     },
     "temporaryContainerTitle": {
-        "message": "⌚ Container temporaneo",
+        "message": "⌚ Contenitore temporaneo",
         "description": "⌚Temporary Container"
     },
     "thisContainerIsNotTemporary": {
-        "message": "Il container '$containerName$' non è più temporaneo",
+        "message": "Il contenitore'$containerName$' non è più temporaneo",
         "description": "This container '$containerName$' is no longer temporary",
         "placeholders": {
             "containerName": {
@@ -758,7 +762,7 @@
         }
     },
     "thisContainerNowIsTemporary": {
-        "message": "Il container '$containerName$' è diventato temporaneo",
+        "message": "Il contenitore '$containerName$' è diventato temporaneo",
         "description": "This container '$containerName$' has now become temporary",
         "placeholders": {
             "containerName": {
@@ -796,7 +800,7 @@
         "description": "Warning! Removing ALL addon data! Are you really sure?"
     },
     "ifDifferentContainerReOpen": {
-        "message": "Se il container è diverso da quello selezionato, cambia il container",
+        "message": "Se il contenitore è diverso da quello selezionato, cambia il contenitore",
         "description": "If the container is different from the selected one - change the container"
     },
     "deleteAllAddonDataAndSettingsBeforeRestoringBackup": {
@@ -835,6 +839,16 @@
         "message": "Archivia",
         "description": "Archive"
     },
+    "confirmArchiveGroup": {
+        "message": "Vuoi archiviare il gruppo \"$grouptitle$\"?<br>Una volta archiviato il gruppo, le schede verranno salvate nel database dell'estensione e saranno rimosse dal browser.",
+        "description": "Do you want to archive the group",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
     "unArchiveGroup": {
         "message": "Ripristina dall'archivio",
         "description": "Unarchive"
@@ -850,7 +864,7 @@
         }
     },
     "updateAddonToLatestVersion": {
-        "message": "Aggiorna l'estesione all'ultima versione, perfavore",
+        "message": "Si prega di aggiornare l'estensione all'ultima versione",
         "description": "Please, update addon to latest version"
     },
     "hotkeyActionTitleRenameGroup": {
@@ -884,15 +898,15 @@
         "description": "Open popup"
     },
     "openSidebarTitle": {
-        "message": "Apri la sidebar",
+        "message": "Apri la barra laterale",
         "description": "Open sidebar"
     },
     "helpPageOpenInContainerTitle": {
-        "message": "Non è possibile aprire l'URL nel container",
+        "message": "Non è possibile aprire l'URL nel contenitore",
         "description": "Can't open URL in container"
     },
     "helpPageOpenInContainerMainTitle": {
-        "message": "Non è possibile aprire l'URL nel container <container-name>$containerName$</container-name>",
+        "message": "Non è possibile aprire l'URL nel contenitore<container-name>$containerName$</container-name>",
         "description": "Can't open the URL into Personal container",
         "placeholders": {
             "containerName": {
@@ -920,11 +934,11 @@
         }
     },
     "helpPageOpenInContainerDesc2": {
-        "message": "Un'altra estensione che UUID:",
+        "message": "Un'altra estensione, con UUID:",
         "description": "Another addon, which has UUID:"
     },
     "helpPageOpenInContainerDesc3": {
-        "message": "ha tentato di aprire questo URL nel container <container-name>$containerName$</container-name>. Sposta questa schede in un altro gruppo oppure vieta all'estensione <strong>$uuid$</strong> di effettuare questa azione.",
+        "message": "ha tentato di aprire questo URL nel contenitore <container-name>$containerName$</container-name>. Sposta questa schede in un altro gruppo oppure vieta all'estensione <strong>$uuid$</strong> di effettuare questa azione.",
         "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon '757eaba7-0b3d-478b-ace2-cbe0a16eed47' to perform this action.",
         "placeholders": {
             "containerName": {
@@ -938,11 +952,11 @@
         }
     },
     "helpPageOpenInContainerDesc4": {
-        "message": "Puoi trovare lo UUID delle estensioni in questa pagina:",
+        "message": "Puoi trovare l'UUID delle estensioni in questa pagina:",
         "description": "You can find out the addon by UUID on the page:"
     },
     "helpPageOpenInContainerOpenInContainer": {
-        "message": "Apri nel container <container-name>$containerName$</container-name>",
+        "message": "Apri nel contenitore <container-name>$containerName$</container-name>",
         "description": "Open in Personal container",
         "placeholders": {
             "containerName": {
@@ -980,7 +994,7 @@
         "description": "Set this group as main"
     },
     "thisGroupWasMain": {
-        "message": "Informazione\nQuesto gruppo è stato impostato come il principale",
+        "message": "Informazione\nQuesto gruppo è stato impostato come principale",
         "description": "Notice\nThis group was marked as the main"
     },
     "moveToMainIfNotInCatchTabRules": {
@@ -994,7 +1008,7 @@
         }
     },
     "noContainerTitle": {
-        "message": "Nessun container",
+        "message": "Nessun contenitore",
         "description": "No container"
     },
     "reopenTabsWithTemporaryContainersInNew": {
@@ -1002,15 +1016,15 @@
         "description": "Reopen tabs with temporary containers in new"
     },
     "temporaryContainerTitleDescription": {
-        "message": "Prefisso al titolo dei container temporanei",
+        "message": "Prefisso al titolo dei contenitori temporanei",
         "description": "Prefix of the temporary container title"
     },
     "excludeContainersForReOpen": {
-        "message": "Escludi questi container",
+        "message": "Escludi questi contenitori",
         "description": "excluding these containers"
     },
     "helpPageOpenInContainerExcludeContainerToGroup": {
-        "message": "Escludi il container <container-name>$containerName$</container-name> per il gruppo <strong>$groupTitle$</strong>",
+        "message": "Escludi il contenitore <container-name>$containerName$</container-name> per il gruppo <strong>$groupTitle$</strong>",
         "description": "Exclude Personal container for group Group 1",
         "placeholders": {
             "containerName": {
@@ -1023,8 +1037,18 @@
             }
         }
     },
+    "helpPageOpenInContainerIgnoreUuidForSession": {
+        "message": "Ignora l'UUID \"<strong>$uuid$</strong>\" fino alla chiusura del browser",
+        "description": "Ignore UUID for session",
+        "placeholders": {
+            "uuid": {
+                "content": "$1",
+                "example": "ff06d2f8-3660-43ed-becb-ad1c458ae76d"
+            }
+        }
+    },
     "hotkeysDescription2": {
-        "message": "Puoi modificare le scorciatoie sulla pagina <a href=\"https://support.mozilla.org/it/manage-extension-shortcuts-firefox\" target=\"_blank\">Manage extension shortcuts in Firefox</a>. funzioneranno su tutte le finestre e spagine del browser.",
+        "message": "Puoi modificare le scorciatoie sulla pagina <a href=\"https://support.mozilla.org/it/kb/gestire-scorciatoie-componenti-aggiuntivi-firefox\" target=\"_blank\">Gestire le scorciatoie da tastiera per i componenti aggiuntivi in Firefox</a>. Funzioneranno su tutte le finestre e le pagine del browser.",
         "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "muteTab": {
@@ -1064,7 +1088,7 @@
         "description": "Restart Firefox Browser (for Linux and Mac OS with process termination)"
     },
     "helpPageDbErrorReinstallDescription3": {
-        "message": "Se vedi di nuovo questa finestra, prova a reinstallare l'addon",
+        "message": "Se vedi di nuovo questa finestra, prova a reinstallare l'estensione",
         "description": "If you see this window again, try reinstalling the addon:"
     },
     "helpPageDbErrorReinstallDescription4": {
@@ -1076,7 +1100,7 @@
         "description": "Restart Firefox Browser"
     },
     "helpPageDbErrorReinstallDescription6": {
-        "message": "Installa il Componente aggiuntivo STG",
+        "message": "Installa il componente aggiuntivo STG",
         "description": "Install STG Addon"
     },
     "helpPageDbErrorReinstallDescription7": {
@@ -1084,11 +1108,19 @@
         "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".<br>You can restore backup in addon settings"
     },
     "helpPageDbErrorReinstallOpenFFDownloadsFolder": {
-        "message": "Apri la cartella di download di Firefox.",
+        "message": "Apri la cartella di download di Firefox",
         "description": "Open Firefox downloads folder"
     },
     "groupWithSameNameExists": {
         "message": "Esiste già un gruppo con lo stesso nome!",
         "description": "A group with the same name already exists!"
+    },
+    "eraseAndImportAddonBackupButton": {
+        "message": "Cancella e ripristina il backup",
+        "description": "Erase and restore backup"
+    },
+    "notSupportedIncognito": {
+        "message": "L'estensione non supporta finestre e schede anonime",
+        "description": "Addon does not support private/incognito windows and tabs"
     }
 }
