@@ -8,7 +8,7 @@
         "description": "Settings context button title"
     },
     "manageGroupsTitle": {
-        "message": "Управление на групите",
+        "message": "Управление на групи",
         "description": "Manage groups"
     },
     "setTabIconAsGroupIcon": {
@@ -88,12 +88,16 @@
         "description": "Show notification when tab is moved to another group"
     },
     "openManageGroupsInTab": {
-        "message": "Отваряне на „Управление на групите“ в раздел",
+        "message": "Отваряне на „Управление на групи“ в раздел",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
         "message": "Потвърждаване при изтриване на група",
-        "description": "Show confirm dialog before group delete"
+        "description": "Show confirmation dialog before deleting the group"
+    },
+    "showConfirmDialogBeforeGroupArchiving": {
+        "message": "Потвърждаване при архивиране на група",
+        "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
         "message": "Резервни копия",
@@ -242,7 +246,7 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Извинете, не може да избирате пиктограма от това меню, но може в прозореца за управление на групите.  Желаете ли прозореца за управление на групите да бъде отворен?",
+        "message": "Извинете, не може да избирате пиктограма от това меню, но може в прозореца за управление на групи.  Желаете ли този прозорец да бъде отворен сега?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -254,7 +258,7 @@
         "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
-        "message": "Регулярен израз за улавяне на раздели",
+        "message": "Регулярен израз за преместване на раздели",
         "description": "Regular expressions for catch tabs"
     },
     "regexpForTabsPlaceholder": {
@@ -262,7 +266,7 @@
         "description": "Regular expressions"
     },
     "regexpForTabsHelp": {
-        "message": "Въведете регулярни изрази за адреси от мрежата. При съвпадение разделът автоматично ще бъде премесен в тази група.\nЕдно правило на ред, но може да има неограничен брой правила.\nПримери:\ngithub\\.com/drive4ik/simple-tab-groups - прехваща страниците от хранилището на добавката\nbugzilla\\.mozilla\\.org - прехваща страници от дефектите на Firefox\n(facebook|twitter|youtube)\\.com - прехваща страници от социалните мрежи",
+        "message": "Въведете регулярни изрази за адреси от мрежата. При съвпадение разделът автоматично ще бъде премесен в тази група.\nПо едно правило на ред, но може да има неограничен брой правила.\nПримери:\ngithub\\.com/drive4ik/simple-tab-groups - прехваща страниците от хранилището на добавката\nbugzilla\\.mozilla\\.org - прехваща страници от дефектите на Firefox\n(facebook|twitter|youtube)\\.com - прехваща страници от социалните мрежи",
         "description": "Regular exceptions helper"
     },
     "hotkeysTitle": {
@@ -294,63 +298,67 @@
         "description": "Select group"
     },
     "hotkeyActionTitleLoadNextGroup": {
-        "message": "Отваряне на следващата група",
+        "message": "Отваря следващата група",
         "description": "Load next group"
     },
     "hotkeyActionTitleLoadPrevGroup": {
-        "message": "Отваряне на предишната група",
+        "message": "Отваря предишната група",
         "description": "Load previous group"
     },
     "hotkeyActionTitleLoadNextUnloadedGroup": {
-        "message": "Отваряне на следващата неотваряна група",
+        "message": "Отваря следващата неотваряна група",
         "description": "Load next unloaded group"
     },
     "hotkeyActionTitleLoadPrevUnloadedGroup": {
-        "message": "Отваряне на предишната неотваряна група",
+        "message": "Отваря предишната неотваряна група",
         "description": "Load previous unloaded group"
     },
     "hotkeyActionTitleLoadHistoryNextGroup": {
-        "message": "Отваряне на следващата група от историята",
+        "message": "Отваря следващата група от историята",
         "description": "Load next group from history"
     },
     "hotkeyActionTitleLoadHistoryPrevGroup": {
-        "message": "Отваряне на предишната група от историята",
+        "message": "Отваря предишната група от историята",
         "description": "Load previous group from history"
     },
     "hotkeyActionTitleLoadFirstGroup": {
-        "message": "Отваряне на първата група",
+        "message": "Отваря първата група",
         "description": "Load first group"
     },
     "hotkeyActionTitleLoadLastGroup": {
-        "message": "Отваряне на последната група",
+        "message": "Отваря последната група",
         "description": "Load last group"
     },
     "hotkeyActionTitleLoadCustomGroup": {
-        "message": "Отваряне на определена група",
+        "message": "Отваря определена група",
         "description": "Load custom group"
     },
     "hotkeyActionTitleAddNewGroup": {
-        "message": "Нова група",
+        "message": "Добавя група",
         "description": "Add new group"
     },
     "hotkeyActionTitleDeleteCurrentGroup": {
-        "message": "Изтриване на текущата група",
+        "message": "Изтрива текущата група",
         "description": "Delete current group"
     },
     "hotkeyActionTitleOpenManageGroups": {
-        "message": "Отваряне на управлението на групи",
+        "message": "Отваря управлението на групи",
         "description": "Open manage groups"
     },
+    "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
+        "message": "Премества избраните раздели в група",
+        "description": "Move selected tabs to custom group"
+    },
     "hotkeyActionTitleDiscardGroup": {
-        "message": "Освобождаване на памет от разделите в групата",
+        "message": "Освобождава памет от разделите в групата",
         "description": "Hotkey action Discard group"
     },
     "hotkeyActionTitleDiscardOtherGroups": {
-        "message": "Освобождаване на памет от разделите в другите групи",
+        "message": "Освобождава памет от разделите в другите групи",
         "description": "Hotkey action Discard other groups"
     },
     "hotkeyActionTitleReloadAllTabsInCurrentGroup": {
-        "message": "Презареждане на разделите в групата",
+        "message": "Презарежда разделите в групата",
         "description": "Reload all tabs in current group"
     },
     "whatsWrongMessage": {
@@ -394,7 +402,7 @@
         "description": "Icon style"
     },
     "discardTabsAfterHide": {
-        "message": "Освобождаване на памет от скритите раздели",
+        "message": "Освобождаване на памет от скрити раздели",
         "description": "Discard tabs after hide (this will save the RAM)"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
@@ -408,6 +416,10 @@
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
         "message": "Преместване на всички в текущата група/прозорец",
         "description": "Move all of these tabs into current group/window"
+    },
+    "actionHiddenUnSyncWindowTabsCreateGroup": {
+        "message": "Създаване на група с разделите само от този прозорец",
+        "description": "Create new group with tabs only from the current window"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "Създаване на група с всички",
@@ -511,7 +523,7 @@
     },
     "moveMultipleTabsToGroupMessage": {
         "message": "$tabscount$ раздела са преместени.\nНатиснете тук, за да посетите първия",
-        "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
+        "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",
         "placeholders": {
             "tabscount": {
                 "content": "$1",
@@ -596,11 +608,11 @@
         "description": "Open link in group title"
     },
     "showContextMenuOnTabs": {
-        "message": "Контекстуално меню на разделите",
+        "message": "Контекстуално меню на раздели",
         "description": "Show context menu on tabs"
     },
     "showContextMenuOnLinks": {
-        "message": "Контекстуално меню на препратките",
+        "message": "Контекстуално меню на препратки",
         "description": "Show context menu on links"
     },
     "groupsCreatedCount": {
@@ -728,7 +740,7 @@
         "description": "Tabs not created"
     },
     "showTabsWithThumbnailsInManageGroups": {
-        "message": "Представяне на сайтовете с миниатюри в страницата „Управление на групите“",
+        "message": "Представяне на сайтовете с миниатюри в страницата „Управление на групи“",
         "description": "Show tabs with thumbnails in \"Manage groups\" page"
     },
     "alwaysOpenTabsInContainer": {
@@ -803,6 +815,10 @@
         "message": "Моля, отметнете „Възстановяване на предишната сесия“ в настройките на четеца.<br>Това е необходимо, за да бъде запазена връзката между групите и разделите<br>В противен случай при отваряне на четеца разделите няма да бъдат заредени<br>и ще бъдат недостъпни за добавката и ще спре да работи.",
         "description": "Please enable \"Restore previous session\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
+    "leaveBookmarksOfClosedTabs": {
+        "message": "Запазване на отметките на затворени раздели (под разделителя)",
+        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+    },
     "enableDebugTitle": {
         "message": "Включване на режим DEBUG",
         "description": "Enable DEBUG"
@@ -822,6 +838,16 @@
     "archiveGroup": {
         "message": "Архивиране",
         "description": "Archive"
+    },
+    "confirmArchiveGroup": {
+        "message": "Желаете ли група „$grouptitle$“ да бъде архивирана?<br>При този процес разделите от групата ще бъдат запазени като данни на добавката и ще бъдат премахнати от четеца.",
+        "description": "Do you want to archive the group",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
     },
     "unArchiveGroup": {
         "message": "Разархивиране",
@@ -890,7 +916,7 @@
         }
     },
     "helpPageOpenInContainerSubTitle": {
-        "message": "добавката не може да отвори адрес:",
+        "message": "добавката не може да отвори адреса:",
         "description": "addon can't open URL:"
     },
     "helpPageOpenInContainerDesc1": {
@@ -912,7 +938,7 @@
         "description": "Another addon, which has UUID:"
     },
     "helpPageOpenInContainerDesc3": {
-        "message": "опитва да да отвори същия адрес в изолатор <container-name>$containerName$</container-name>. Или преместете раздела в друга група, или забранете на добавката <strong>$uuid$</strong> да извършва това действие.",
+        "message": "опитва да отвори същия адрес в изолатор <container-name>$containerName$</container-name>. Или преместете раздела в друга група, или забранете на добавката <strong>$uuid$</strong> да извършва това действие.",
         "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon '757eaba7-0b3d-478b-ace2-cbe0a16eed47' to perform this action.",
         "placeholders": {
             "containerName": {
@@ -938,5 +964,163 @@
                 "example": "Personal"
             }
         }
+    },
+    "groupNotLoaded": {
+        "message": "Групата не е заредена",
+        "description": "Group not loaded"
+    },
+    "groupNotFound": {
+        "message": "Групата не е намерена",
+        "description": "Group not found"
+    },
+    "unloadGroup": {
+        "message": "Освобождаване на памет от групата",
+        "description": "Unload the group"
+    },
+    "tabsInThisWindowWereHidden": {
+        "message": "Разделите от този прозорец са скрити. Ще ги намерите най-долу в менюто на добавката.",
+        "description": "Tabs in this window were hidden. You can find them at the bottom of the popup window of the addon."
+    },
+    "searchOrGoToActive": {
+        "message": "Търсене или дясна стрелка за посочване на активния раздел/група",
+        "description": "Search or right arrow to focus on active tab/group"
+    },
+    "thisGroupIsMain": {
+        "message": "Групата е избрана като главна",
+        "description": "This group is marked as main"
+    },
+    "setGroupAsMain": {
+        "message": "Избиране за главна група",
+        "description": "Set this group as main"
+    },
+    "thisGroupWasMain": {
+        "message": "Предупреждение\nГрупата е избрана за главна",
+        "description": "Notice\nThis group was marked as the main"
+    },
+    "moveToMainIfNotInCatchTabRules": {
+        "message": "Преместване на разделите от тази група в „$grouptitle$“ ако не съвпадат с никой от регулярните изрази",
+        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "My main group"
+            }
+        }
+    },
+    "noContainerTitle": {
+        "message": "Без изолатор",
+        "description": "No container"
+    },
+    "reopenTabsWithTemporaryContainersInNew": {
+        "message": "Отваряне на раздели във временни изолатори в нови",
+        "description": "Reopen tabs with temporary containers in new"
+    },
+    "temporaryContainerTitleDescription": {
+        "message": "Представка на временния изолатор",
+        "description": "Prefix of the temporary container title"
+    },
+    "excludeContainersForReOpen": {
+        "message": "с изключение на тези контейнери",
+        "description": "excluding these containers"
+    },
+    "helpPageOpenInContainerExcludeContainerToGroup": {
+        "message": "С изключение на изолатора <container-name>$containerName$</container-name> за група <strong>$groupTitle$</strong>",
+        "description": "Exclude Personal container for group Group 1",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            },
+            "groupTitle": {
+                "content": "$2",
+                "example": "Group 1"
+            }
+        }
+    },
+    "helpPageOpenInContainerIgnoreUuidForSession": {
+        "message": "Пренебрегване на UUID \"<strong>$uuid$</strong>\" до рестарт на четеца",
+        "description": "Ignore UUID for session",
+        "placeholders": {
+            "uuid": {
+                "content": "$1",
+                "example": "ff06d2f8-3660-43ed-becb-ad1c458ae76d"
+            }
+        }
+    },
+    "hotkeysDescription2": {
+        "message": "Също така можете да настроите клавишни комбинации на страницата <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Управление на клавишни комбинации на разширения</a>. Ще работят във всички прозорци и на всички страници.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
+    },
+    "muteTab": {
+        "message": "Спиране звука на раздела",
+        "description": "Mute tab"
+    },
+    "unMuteTab": {
+        "message": "Включване звука на раздела",
+        "description": "Unmute tab"
+    },
+    "muteGroup": {
+        "message": "Спиране звука на групата",
+        "description": "Mute group"
+    },
+    "unMuteGroup": {
+        "message": "Включване звука на групата",
+        "description": "Unmute group"
+    },
+    "fullPopupWidth": {
+        "message": "Пълна ширина на менюто",
+        "description": "Use full popup width"
+    },
+    "showArchivedGroups": {
+        "message": "Показване на архивираните групи",
+        "description": "Show archived groups"
+    },
+    "helpPageDbErrorReinstallTitle": {
+        "message": "Грешка в данните на Simple Tab Groups",
+        "description": "Database error in Simple Tab Groups"
+    },
+    "helpPageDbErrorReinstallDescription": {
+        "message": "За съжаление има грешка при прочитане на данните на добавката STG от банката от данни на Firefox. В момента добавката е спряна. За да подновите работа с нея, направете следното:",
+        "description": "Unfortunately, an error occurred while reading data from the STG addon from the Firefox database. At the moment, the addon is stopped. To resume the add-on, do the following:"
+    },
+    "helpPageDbErrorReinstallDescription2": {
+        "message": "Рестартирайте Firefox (за Linux и MacOS с прекъсване на процеса)",
+        "description": "Restart Firefox Browser (for Linux and Mac OS with process termination)"
+    },
+    "helpPageDbErrorReinstallDescription3": {
+        "message": "Ако виждате повторно този прозорец преинсталирайте добавката:",
+        "description": "If you see this window again, try reinstalling the addon:"
+    },
+    "helpPageDbErrorReinstallDescription4": {
+        "message": "Премахнете добавката STG",
+        "description": "Remove STG Addon"
+    },
+    "helpPageDbErrorReinstallDescription5": {
+        "message": "Рестартирайте Firefox",
+        "description": "Restart Firefox Browser"
+    },
+    "helpPageDbErrorReinstallDescription6": {
+        "message": "Инсталирайте добавката STG",
+        "description": "Install STG Addon"
+    },
+    "helpPageDbErrorReinstallDescription7": {
+        "message": "Възстановете последното резервно копие от данните на добавката STG, намиращо се в папката за изтегляния на Firefox, наречена „STG-Backups„.<br>Можете да го направите в настройките на добавката",
+        "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".<br>You can restore backup in addon settings"
+    },
+    "helpPageDbErrorReinstallOpenFFDownloadsFolder": {
+        "message": "Папка за изтегляния на Firefox",
+        "description": "Open Firefox downloads folder"
+    },
+    "groupWithSameNameExists": {
+        "message": "Група със същото име вече съществува!",
+        "description": "A group with the same name already exists!"
+    },
+    "eraseAndImportAddonBackupButton": {
+        "message": "Изтриване и възстановяване",
+        "description": "Erase and restore backup"
+    },
+    "notSupportedIncognito": {
+        "message": "Добавката не поддържа поверителни/инкогнито прозорци и раздели",
+        "description": "Addon does not support private/incognito windows and tabs"
     }
 }
