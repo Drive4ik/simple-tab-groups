@@ -1012,7 +1012,7 @@
         }
     },
     "noContainerTitle": {
-        "message": "No container",
+        "message": "Default",
         "description": "No container"
     },
     "reopenTabsWithTemporaryContainersInNew": {

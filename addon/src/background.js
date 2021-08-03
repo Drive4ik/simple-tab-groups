@@ -1559,7 +1559,7 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, originUrl
 
         if (destGroup) {
             cache.setTab(tab);
-            console.log('onBeforeTabRequest move tab from groupId %d -> %d', tabGroup.id, destGroup.id);
+            console.log('onBeforeTabRequest move tab from groupId %s -> %s', tabGroup.id, destGroup.id);
             addTabToLazyMove(tab.id, destGroup.id, destGroup.showTabAfterMovingItIntoThisGroup);
             return {};
         }
@@ -2124,7 +2124,7 @@ async function runAction(data, sender = {}) {
             case 'exclude-container-for-group':
                 let group = groups.find(group => group.id === data.groupId);
 
-                if (!group || !data.cookieStoreId || containers.get(data.cookieStoreId, 'cookieStoreId') !== data.cookieStoreId) {
+                if (!group || !data.cookieStoreId || containers.get(data.cookieStoreId, 'cookieStoreId', true) !== data.cookieStoreId) {
                     throw Error('invalid groupId or cookieStoreId');
                 }
 
@@ -3163,7 +3163,7 @@ browser.runtime.onInstalled.addListener(function onInstalled({previousVersion, r
     }
 
     if (temporary) {
-        window.IS_TEMPORARY = true;
+        // window.IS_TEMPORARY = true;
         console.restart();
         return;
     }
