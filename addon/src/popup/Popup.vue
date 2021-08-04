@@ -62,6 +62,8 @@
                 someGroupAreLoading: false,
 
                 search: '',
+                searchDelay: '',
+                searchDelayTimer: 0,
                 extendedSearch: false,
 
                 currentWindow: null,
@@ -128,9 +130,28 @@
                     this.setFocusOnSearch();
                 }
             },
+            searchDelay(search) {
+                if (search.length && this.allTabsCount > 500) {
+                    window.clearTimeout(this.searchDelayTimer);
+                    this.searchDelayTimer = 0;
+
+                    this.$nextTick(function() {
+                        window.setTimeout(() => {
+                            this.searchDelayTimer = window.setTimeout(() => {
+                                this.search = search;
+                                this.searchDelayTimer = 0;
+                            }, 500);
+                        }, 10);
+                    });
+                } else {
+                    this.search = search;
+                }
+            },
             search(search) {
                 if (search.length) {
                     this.showSectionSearch();
+                } else {
+                    this.showSectionDefault();
                 }
             },
             groups(groups) {
@@ -169,6 +190,9 @@
             unSyncWindowTabs() {
                 return this.currentWindow ? this.unSyncTabs.filter(tab => tab.windowId === this.currentWindow.id) : [];
             },
+            allTabsCount() {
+                return Object.keys(this.allTabs).length;
+            },
         },
         methods: {
             lang: browser.i18n.getMessage,
@@ -183,7 +207,7 @@
             },
 
             setFocusOnSearch() {
-                this.$refs.search.focus();
+                this.$nextTick(() => this.$refs.search.focus());
             },
 
             setFocusOnActive() {
@@ -1152,21 +1176,20 @@
 
         >
         <header id="search-wrapper">
-            <div :class="['field', {'has-addons': search}]">
-                <div class="control is-expanded">
+            <div :class="['field', {'has-addons': searchDelay}]">
+                <div :class="['control is-expanded', {'searching-loader': searchDelayTimer !== 0}]">
                     <input
                         type="text"
                         class="input is-small search-input"
                         ref="search"
-                        v-model.trim="search"
-                        @input="$refs.search.value === '' ? showSectionDefault() : null"
+                        v-model.trim="searchDelay"
                         autocomplete="off"
                         @keyup.enter="selectFirstItemOnSearch"
                         @keydown.down="focusToNextElement"
                         @keydown.up="focusToNextElement"
                         :placeholder="lang('searchOrGoToActive')" />
                 </div>
-                <div v-show="search" class="control">
+                <div v-show="searchDelay" class="control">
                     <label class="button is-small" :title="lang('extendedTabSearch')">
                         <input type="checkbox" v-model="extendedSearch" />
                     </label>

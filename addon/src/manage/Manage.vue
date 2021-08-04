@@ -49,6 +49,8 @@
                 isLoading: true,
 
                 search: '',
+                searchDelay: '',
+                searchDelayTimer: 0,
                 extendedSearch: false,
 
                 currentWindow: null,
@@ -116,6 +118,23 @@
                     delete window.localStorage.showArchivedGroupsInManageGroups;
                 }
             },
+            searchDelay(search) {
+                if (search.length && this.allTabsCount > 500) {
+                    window.clearTimeout(this.searchDelayTimer);
+                    this.searchDelayTimer = 0;
+
+                    this.$nextTick(function() {
+                        window.setTimeout(() => {
+                            this.searchDelayTimer = window.setTimeout(() => {
+                                this.search = search;
+                                this.searchDelayTimer = 0;
+                            }, 500);
+                        }, 10);
+                    });
+                } else {
+                    this.search = search;
+                }
+            },
         },
         computed: {
             filteredGroups() {
@@ -138,6 +157,9 @@
             },
             isCurrentWindowIsAllow() {
                 return this.currentWindow && utils.isWindowAllow(this.currentWindow);
+            },
+            allTabsCount() {
+                return Object.keys(this.allTabs).length;
             },
         },
         methods: {
@@ -930,18 +952,19 @@
                 </div>
             </span>
             <span>
-                <div id="search-wrapper" :class="['field', {'has-addons': search}]">
-                    <div class="control is-expanded">
+                <div id="search-wrapper" :class="['field', {'has-addons': searchDelay}]">
+                    <div :class="['control is-expanded', {'searching-loader': searchDelayTimer !== 0}]">
                         <input
                             type="text"
                             class="input search-input"
                             ref="search"
+                            v-model.trim="searchDelay"
+                            autocomplete="off"
                             @click.stop
                             :placeholder="lang('searchPlaceholder')"
-                            :readonly="isLoading"
-                            v-model.trim="search" />
+                            :readonly="isLoading" />
                     </div>
-                    <div v-show="search" class="control">
+                    <div v-show="searchDelay" class="control">
                         <label class="button" :title="lang('extendedTabSearch')">
                             <input type="checkbox" v-model="extendedSearch" />
                         </label>
