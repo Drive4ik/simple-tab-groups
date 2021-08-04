@@ -121,16 +121,10 @@
             searchDelay(search) {
                 if (search.length && this.allTabsCount > 500) {
                     window.clearTimeout(this.searchDelayTimer);
-                    this.searchDelayTimer = 0;
-
-                    this.$nextTick(function() {
-                        window.setTimeout(() => {
-                            this.searchDelayTimer = window.setTimeout(() => {
-                                this.search = search;
-                                this.searchDelayTimer = 0;
-                            }, 500);
-                        }, 10);
-                    });
+                    this.searchDelayTimer = window.setTimeout(() => {
+                        this.search = search;
+                        this.searchDelayTimer = 0;
+                    }, 500);
                 } else {
                     this.search = search;
                 }
@@ -140,10 +134,6 @@
             filteredGroups() {
                 let searchStr = this.search.toLowerCase(),
                     groups = this.showArchivedGroupsInManageGroups ? this.groups : this.groups.filter(group => !group.isArchive);
-
-                if (!searchStr) {
-                    return groups.map(group => (group.filteredTabs = group.tabs, group));
-                }
 
                 return groups.map(group => {
                     group.filteredTabs = group.tabs.filter(tab => utils.mySearchFunc(searchStr, utils.getTabTitle(tab, true), this.extendedSearch));
@@ -952,8 +942,8 @@
                 </div>
             </span>
             <span>
-                <div id="search-wrapper" :class="['field', {'has-addons': searchDelay}]">
-                    <div :class="['control is-expanded', {'searching-loader': searchDelayTimer !== 0}]">
+                <div id="search-wrapper" :class="['field', {'has-addons': searchDelay.length}]">
+                    <div :class="['control is-expanded', {'is-loading': searchDelayTimer}]">
                         <input
                             type="text"
                             class="input search-input"
@@ -964,7 +954,7 @@
                             :placeholder="lang('searchPlaceholder')"
                             :readonly="isLoading" />
                     </div>
-                    <div v-show="searchDelay" class="control">
+                    <div v-show="searchDelay.length" class="control">
                         <label class="button" :title="lang('extendedTabSearch')">
                             <input type="checkbox" v-model="extendedSearch" />
                         </label>
@@ -1047,7 +1037,7 @@
                             v-for="(tab, index) in group.filteredTabs"
                             :key="index"
                             :class="['tab', {
-                                'is-active': tab.active,
+                                'is-active-element': tab.active,
                                 'is-in-multiple-drop': multipleTabIds.includes(tab.id),
                                 'has-thumbnail': options.showTabsWithThumbnailsInManageGroups && tab.thumbnail,
                                 'drag-moving': tab.isMoving,
@@ -1701,14 +1691,14 @@
                 //     background-color: var(--active-tab-bg-color);
                 // }
 
-                &.is-active {
+                &.is-active-element {
                     box-shadow: var(--tab-active-shadow);
                     outline: var(--tab-active-border);
                     outline-offset: -1px;
                     -moz-outline-radius: var(--border-radius);
                 }
 
-                // &:not(.is-active):not(.drag-moving):hover {
+                // &:not(.is-active-element):not(.drag-moving):hover {
                 //     outline: 1px solid var(--tab-hover-outline-color);
                 //     outline-offset: 1px;
                 // }
@@ -1781,7 +1771,7 @@
                     white-space: nowrap;
                 }
 
-                &.is-active {
+                &.is-active-element {
                     outline: var(--tab-active-border);
                     outline-offset: -1px;
                     -moz-outline-radius: var(--border-radius);

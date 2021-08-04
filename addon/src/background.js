@@ -3163,7 +3163,7 @@ browser.runtime.onInstalled.addListener(function onInstalled({previousVersion, r
     }
 
     if (temporary) {
-        // window.IS_TEMPORARY = true;
+        window.IS_TEMPORARY = true;
         console.restart();
         return;
     }

@@ -64,6 +64,7 @@
                 search: '',
                 searchDelay: '',
                 searchDelayTimer: 0,
+                searchOnlyGroups: window.localStorage.searchOnlyGroupsInPopup == 1,
                 extendedSearch: false,
 
                 currentWindow: null,
@@ -133,16 +134,10 @@
             searchDelay(search) {
                 if (search.length && this.allTabsCount > 500) {
                     window.clearTimeout(this.searchDelayTimer);
-                    this.searchDelayTimer = 0;
-
-                    this.$nextTick(function() {
-                        window.setTimeout(() => {
-                            this.searchDelayTimer = window.setTimeout(() => {
-                                this.search = search;
-                                this.searchDelayTimer = 0;
-                            }, 500);
-                        }, 10);
-                    });
+                    this.searchDelayTimer = window.setTimeout(() => {
+                        this.search = search;
+                        this.searchDelayTimer = 0;
+                    }, 500);
                 } else {
                     this.search = search;
                 }
@@ -150,9 +145,10 @@
             search(search) {
                 if (search.length) {
                     this.showSectionSearch();
-                } else {
-                    this.showSectionDefault();
                 }
+            },
+            searchOnlyGroups(value) {
+                window.localStorage.searchOnlyGroupsInPopup = value ? 1 : 0;
             },
             groups(groups) {
                 if (this.groupToShow) {
@@ -172,16 +168,20 @@
                     groups = this.showArchivedGroupsInPopup ? this.groups : this.groups.filter(group => !group.isArchive),
                     filteredGroups = [];
 
-                if (!searchStr) {
-                    return groups.map(group => (group.filteredTabs = group.tabs, group));
-                }
-
                 groups.forEach(group => {
-                    group.filteredTabs = group.tabs.filter(tab => utils.mySearchFunc(searchStr, utils.getTabTitle(tab, true), this.extendedSearch));
+                    if (this.searchOnlyGroups) {
+                        group.filteredTabs = [];
 
-                    if (group.filteredTabs.length || utils.mySearchFunc(searchStr, group.title, this.extendedSearch)) {
-                        group.filteredTabs.sort(this.$_simpleSortTabs.bind(null, searchStr));
-                        filteredGroups.push(group);
+                        if (utils.mySearchFunc(searchStr, group.title)) {
+                            filteredGroups.push(group);
+                        }
+                    } else {
+                        group.filteredTabs = group.tabs.filter(tab => utils.mySearchFunc(searchStr, utils.getTabTitle(tab, true), this.extendedSearch));
+
+                        if (group.filteredTabs.length || utils.mySearchFunc(searchStr, group.title, this.extendedSearch)) {
+                            group.filteredTabs.sort(this.$_simpleSortTabs.bind(null, searchStr));
+                            filteredGroups.push(group);
+                        }
                     }
                 });
 
@@ -212,7 +212,7 @@
 
             setFocusOnActive() {
                 this.$nextTick(function() {
-                    let activeItemNode = document.querySelector('.is-active');
+                    let activeItemNode = document.querySelector('.is-active-element');
 
                     if (!activeItemNode && this.groupToShow) {
                         let activeTab = utils.getLastActiveTab(this.groupToShow.tabs);
@@ -546,7 +546,7 @@
 
             showSectionGroupTabs(group) {
                 this.groupToShow = group;
-                this.search = '';
+                this.search = this.searchDelay = '';
                 this.section = SECTION_GROUP_TABS;
                 this.setFocusOnSearch();
             },
@@ -559,7 +559,7 @@
             showSectionDefault() {
                 this.section = SECTION_DEFAULT;
                 this.groupToShow = null;
-                this.search = '';
+                this.search = this.searchDelay = '';
                 this.setFocusOnSearch();
             },
 
@@ -1100,7 +1100,7 @@
 
                 let nodes = [...document.querySelectorAll('#result .group, #result .tab')],
                     focusedNodeIndex = nodes.findIndex(node => node === document.activeElement),
-                    activeNodeIndex = nodes.findIndex(node => node.classList.contains('is-active')),
+                    activeNodeIndex = nodes.findIndex(node => node.classList.contains('is-active-element')),
                     nextIndex = -1,
                     textPosition = null;
 
@@ -1173,11 +1173,12 @@
         @keydown.f3.stop.prevent="setFocusOnSearch"
         @keydown.f2.stop.prevent="tryRenameGroup"
         @keydown.right="setFocusOnActive"
+        @keydown.left="searchDelay.length ? null : showSectionDefault()"
 
         >
         <header id="search-wrapper">
-            <div :class="['field', {'has-addons': searchDelay}]">
-                <div :class="['control is-expanded', {'searching-loader': searchDelayTimer !== 0}]">
+            <div :class="['field', {'has-addons': searchDelay.length}]">
+                <div :class="['control is-small is-expanded', {'is-loading': searchDelayTimer}]">
                     <input
                         type="text"
                         class="input is-small search-input"
@@ -1187,13 +1188,19 @@
                         @keyup.enter="selectFirstItemOnSearch"
                         @keydown.down="focusToNextElement"
                         @keydown.up="focusToNextElement"
+                        @input="searchDelay.length ? null : showSectionDefault()"
                         :placeholder="lang('searchOrGoToActive')" />
                 </div>
-                <div v-show="searchDelay" class="control">
-                    <label class="button is-small" :title="lang('extendedTabSearch')">
-                        <input type="checkbox" v-model="extendedSearch" />
-                    </label>
-                </div>
+                <template v-if="searchDelay.length">
+                    <div v-show="!searchOnlyGroups" class="control is-small">
+                        <label class="button is-small" :title="lang('extendedTabSearch')">
+                            <input type="checkbox" v-model="extendedSearch" />
+                        </label>
+                    </div>
+                    <div class="control is-small">
+                        <button :class="['button is-small', {'is-active': searchOnlyGroups}]" @click="searchOnlyGroups = !searchOnlyGroups" v-text="lang('searchOnlyGroups')"></button>
+                    </div>
+                </template>
             </div>
         </header>
 
@@ -1204,14 +1211,14 @@
                     <div v-for="group in filteredGroups" :key="group.id">
                         <div
                             :class="['group item is-unselectable', {
-                                'is-active': group === currentGroup,
+                                'is-active-element': group === currentGroup,
                                 'is-opened': isOpenedGroup(group),
                             }]"
                             @contextmenu="$refs.groupContextMenu.open($event, {group})"
 
                             @click="!group.isArchive && applyGroup(group)"
                             @keyup.enter="!group.isArchive && applyGroup(group)"
-                            @keydown.right="showSectionGroupTabs(group)"
+                            @keydown.right.stop="showSectionGroupTabs(group)"
                             @keydown.up="focusToNextElement"
                             @keydown.down="focusToNextElement"
                             @keydown.f2.stop="renameGroup(group)"
@@ -1289,7 +1296,7 @@
                                 @mousedown.middle.prevent
                                 @mouseup.middle.prevent="removeTab(tab)"
                                 :class="['tab item is-unselectable space-left', {
-                                    'is-active': group === currentGroup && tab.active,
+                                    'is-active-element': group === currentGroup && tab.active,
                                     'is-multiple-tab-to-move': multipleTabIds.includes(tab.id),
                                 }]"
                                 :title="getTabTitle(tab, true)"
@@ -1342,7 +1349,7 @@
                         :class="['group item is-unselectable', {
                             'drag-moving': group.isMoving,
                             'drag-over': group.isOver,
-                            'is-active': group === currentGroup,
+                            'is-active-element': group === currentGroup,
                             'is-opened': isOpenedGroup(group),
                         }]"
 
@@ -1357,7 +1364,7 @@
                         @contextmenu="$refs.groupContextMenu.open($event, {group})"
                         @click="!group.isArchive && applyGroup(group)"
                         @keyup.enter="!group.isArchive && applyGroup(group)"
-                        @keydown.right.stop="showSectionGroupTabs(group); setFocusOnSearch();"
+                        @keydown.right.stop="showSectionGroupTabs(group);"
                         @keydown.up="focusToNextElement"
                         @keydown.down="focusToNextElement"
                         @keydown.f2.stop="renameGroup(group)"
@@ -1568,7 +1575,7 @@
                         @mousedown.middle.prevent
                         @mouseup.middle.prevent="removeTab(tab)"
                         :class="['tab item is-unselectable', {
-                            'is-active': groupToShow === currentGroup && tab.active,
+                            'is-active-element': groupToShow === currentGroup && tab.active,
                             'drag-moving': tab.isMoving,
                             'drag-over': tab.isOver,
                             'is-multiple-tab-to-move': multipleTabIds.includes(tab.id),
@@ -2019,7 +2026,7 @@
             padding-right: var(--indent);
         }
 
-        &.is-active:before,
+        &.is-active-element:before,
         &.is-opened:before,
         &.is-multiple-tab-to-move:before {
             content: '';
@@ -2031,7 +2038,7 @@
             width: 4px;
         }
 
-        &.is-active.is-multiple-tab-to-move:before {
+        &.is-active-element.is-multiple-tab-to-move:before {
             width: 6px;
         }
 
@@ -2046,7 +2053,7 @@
         }
 
         &:not(.no-hover):active,
-        &.is-active {
+        &.is-active-element {
             background-color: var(--item-background-color-active-hover);
         }
 

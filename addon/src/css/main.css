@@ -152,30 +152,6 @@ img,
     fill: var(--fill-color);
 }
 
-#search-wrapper .searching-loader::after {
-    display: block;
-    height: 2px;
-    width: 0%;
-    background-color: #8853ff;
-    content: "";
-    position: absolute;
-    max-width: 100%;
-    bottom: 0;
-    animation-name: search-control;
-    animation-duration: 500ms;
-    animation-timing-function: linear;
-    z-index: 3;
-}
-
-@keyframes search-control {
-    from {
-        width: 0%;
-    }
-    to {
-        width: 100%;
-    }
-}
-
 .search-input {
     background-position-x: 4px;
     background-position-y: center;

@@ -1122,5 +1122,9 @@
     "notSupportedIncognito": {
         "message": "Аддон не поддерживает приватные/инкогнито окна и вкладки",
         "description": "Addon does not support private/incognito windows and tabs"
+    },
+    "searchOnlyGroups": {
+        "message": "Только группы",
+        "description": "Only groups"
     }
 }
