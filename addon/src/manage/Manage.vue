@@ -119,7 +119,7 @@
                 }
             },
             searchDelay(search) {
-                if (search.length && this.allTabsCount > 500) {
+                if (search.length && this.allTabsCount > 200) {
                     window.clearTimeout(this.searchDelayTimer);
                     this.searchDelayTimer = window.setTimeout(() => {
                         this.search = search;
