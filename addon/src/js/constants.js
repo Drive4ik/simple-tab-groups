@@ -10,6 +10,12 @@ const DEFAULT_COOKIE_STORE_ID = 'firefox-default';
 
 const CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP = 'stg-undo-remove-group-id-';
 
+const AUTO_BACKUP_INTERVAL_KEY = Object.freeze({
+    minutes: 'minutes',
+    hours: 'hours',
+    days: 'days',
+});
+
 // permission "<all_urls>" need for tab thumbnails and webRequestBlocking
 const PERMISSIONS = Object.freeze({
     BOOKMARKS: {
@@ -207,7 +213,7 @@ const DEFAULT_OPTIONS = Object.freeze({
 
     autoBackupEnable: true,
     autoBackupLastBackupTimeStamp: 1,
-    autoBackupIntervalKey: 'days', // days, hours
+    autoBackupIntervalKey: AUTO_BACKUP_INTERVAL_KEY.days, // minutes, hours, days
     autoBackupIntervalValue: 1,
     autoBackupIncludeTabThumbnails: true,
     autoBackupIncludeTabFavIcons: true,
@@ -215,6 +221,7 @@ const DEFAULT_OPTIONS = Object.freeze({
     autoBackupGroupsToFile: true,
     autoBackupFolderName: '',
     autoBackupBookmarksFolderName: 'STG bookmarks',
+    autoBackupByDayIndex: false,
 
     enableDarkTheme: false,
 
@@ -258,5 +265,6 @@ const ALL_OPTIONS_KEYS = Object.freeze([
     'autoBackupBookmarksFolderName',
 ]);
 
-const HOUR_SEC = 60 * 60;
+const MINUTE_SEC = 60;
+const HOUR_SEC = 60 * MINUTE_SEC;
 const DAY_SEC = 24 * HOUR_SEC;

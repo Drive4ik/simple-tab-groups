@@ -54,7 +54,8 @@
                     'rename-group',
                 ],
 
-                GROUP_ICON_VIEW_TYPES: GROUP_ICON_VIEW_TYPES,
+                GROUP_ICON_VIEW_TYPES,
+                AUTO_BACKUP_INTERVAL_KEY,
 
                 includeTabThumbnailsIntoBackup: false,
                 includeTabFavIconsIntoBackup: true,
@@ -194,7 +195,12 @@
                     return;
                 }
 
-                if (1 > value || 20 < value) {
+                if (
+                    value < 1 ||
+                    (AUTO_BACKUP_INTERVAL_KEY.minutes === this.options.autoBackupIntervalKey && value > 59) ||
+                    (AUTO_BACKUP_INTERVAL_KEY.hours === this.options.autoBackupIntervalKey && value > 24) ||
+                    (AUTO_BACKUP_INTERVAL_KEY.days === this.options.autoBackupIntervalKey && value > 30)
+                    ) {
                     value = 1;
                 }
 
@@ -989,6 +995,13 @@
                             <span v-text="lang('includeTabFavIconsIntoBackup')"></span>
                         </label>
                     </div>
+                    <div class="field">
+                        <label class="checkbox">
+                            <input v-model="options.autoBackupByDayIndex" type="checkbox" />
+                            <span v-text="lang('autoBackupByDayIndexTitle')"></span>
+                        </label>
+                        <p class="help is-medium" v-text="lang('autoBackupByDayIndexDescription')"></p>
+                    </div>
 
                     <div class="field is-flex is-align-items-center indent-children">
                         <div class="h-margin-right-5" v-html="lang('autoBackupCreateEveryTitle')"></div>
@@ -999,8 +1012,9 @@
                             <div class="control">
                                 <div class="select">
                                     <select v-model="options.autoBackupIntervalKey">
-                                        <option value="hours" v-text="lang('autoBackupIntervalKeyHours')"></option>
-                                        <option value="days" v-text="lang('autoBackupIntervalKeyDays')"></option>
+                                        <option :value="AUTO_BACKUP_INTERVAL_KEY.minutes" v-text="lang('autoBackupIntervalKeyMinutes')"></option>
+                                        <option :value="AUTO_BACKUP_INTERVAL_KEY.hours" v-text="lang('autoBackupIntervalKeyHours')"></option>
+                                        <option :value="AUTO_BACKUP_INTERVAL_KEY.days" v-text="lang('autoBackupIntervalKeyDays')"></option>
                                     </select>
                                 </div>
                             </div>
@@ -1327,6 +1341,10 @@
         .delete-button:hover img {
             fill: #0078d7;
         }
+    }
+
+    .help.is-medium {
+        font-size: 1rem;
     }
 
 </style>

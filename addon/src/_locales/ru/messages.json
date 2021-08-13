@@ -539,6 +539,10 @@
         "message": "Создавать резервные копии каждый:",
         "description": "Create backup every:"
     },
+    "autoBackupIntervalKeyMinutes": {
+        "message": "минут",
+        "description": "минут"
+    },
     "autoBackupIntervalKeyHours": {
         "message": "час",
         "description": "hour(s)"
@@ -1126,5 +1130,13 @@
     "searchOnlyGroups": {
         "message": "Только группы",
         "description": "Only groups"
+    },
+    "autoBackupByDayIndexTitle": {
+        "message": "Номер резервной копии как день месяца",
+        "description": "Backup number as day of month"
+    },
+    "autoBackupByDayIndexDescription": {
+        "message": "Помогает избавиться от большого количества файлов бекапа в папке загрузок. Файл бекапа будет иметь вид: \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
+        "description": "Backup by day description"
     }
 }

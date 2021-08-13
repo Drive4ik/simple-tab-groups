@@ -58,7 +58,7 @@
         return result;
     }
 
-    async function save(data, fileName = 'file-name', saveAs = true, overwrite = false, clearOnComplete = false, tryCount = 0) { // data : Object/Array/Text
+    async function save(data, fileName = 'file-name', saveAs = true, clearOnComplete = false, tryCount = 0) { // data : Object/Array/Text
         let body = null,
             type = null;
 
@@ -73,16 +73,14 @@
         let blob = new Blob([body], {type}),
             url = URL.createObjectURL(blob);
 
-        console.log('start save file', {fileName, saveAs, overwrite, clearOnComplete, tryCount});
+        console.log('start save file', {fileName, saveAs, clearOnComplete, tryCount});
 
         try {
             let id = await browser.downloads.download({
                 filename: fileName,
                 url: url,
                 saveAs: saveAs,
-                conflictAction: overwrite
-                    ? browser.downloads.FilenameConflictAction.OVERWRITE
-                    : browser.downloads.FilenameConflictAction.UNIQUIFY,
+                conflictAction: browser.downloads.FilenameConflictAction.OVERWRITE,
             });
 
             let {state, error} = await utils.waitDownload(id);
@@ -103,7 +101,7 @@
             } else if (browser.downloads.State.INTERRUPTED === state && !saveAs && tryCount < 5) {
                 await browser.downloads.erase({id});
                 URL.revokeObjectURL(url);
-                return save(data, fileName, saveAs, overwrite, clearOnComplete, tryCount + 1);
+                return save(data, fileName, saveAs, clearOnComplete, tryCount + 1);
             } else {
                 throw error;
             }
@@ -117,20 +115,20 @@
         }
     }
 
-    async function backup(data, isAutoBackup, overwrite) {
-        let fileName = generateBackupFileName(isAutoBackup, !overwrite);
+    async function backup(data, isAutoBackup, byDayIndex) {
+        let fileName = generateBackupFileName(isAutoBackup, byDayIndex);
 
         if (isAutoBackup) {
             let autoBackupFolderName = await getAutoBackupFolderName();
             fileName = autoBackupFolderName + '/' + fileName;
         }
 
-        return save(data, fileName, !isAutoBackup, overwrite, isAutoBackup);
+        return save(data, fileName, !isAutoBackup, isAutoBackup);
     }
 
     async function openBackupFolder() {
         let autoBackupFolderName = await getAutoBackupFolderName(),
-            id = await save('temp file', autoBackupFolderName + '/tmp.tmp', false, true, false);
+            id = await save('temp file', autoBackupFolderName + '/tmp.tmp', false);
 
         await browser.downloads.show(id);
         await utils.wait(750);
@@ -159,17 +157,15 @@
         return autoBackupFolderName;
     }
 
-    function generateBackupFileName(isAutoBackup, withTime) {
+    function generateBackupFileName(isAutoBackup, byDayIndex = false) {
         let now = new Date(),
             day = _intToStr(now.getDate()),
             month = _intToStr(now.getMonth() + 1),
             year = now.getFullYear(),
-            hours = _intToStr(now.getHours()),
-            min = _intToStr(now.getMinutes()),
-            time = withTime ? `~${hours}-${min}` : '',
-            type = isAutoBackup ? 'auto' : 'manual';
+            type = isAutoBackup ? 'auto' : 'manual',
+            dateOrDayIndex = (isAutoBackup && byDayIndex) ? `day-of-month-${day}` : `${year}-${month}-${day}`;
 
-        return `${type}-stg-backup-${year}-${month}-${day}${time}@drive4ik.json`;
+        return `${type}-stg-backup-${dateOrDayIndex}@drive4ik.json`;
     }
 
     function _intToStr(i) {

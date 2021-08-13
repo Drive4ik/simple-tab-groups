@@ -2230,19 +2230,31 @@ async function resetAutoBackup() {
         timer = 0,
         value = Number(options.autoBackupIntervalValue);
 
-    if (isNaN(value) || 1 > value || 20 < value) {
+    if (isNaN(value) || value < 1) {
         throw Error(errorEventMessage('invalid autoBackupIntervalValue', options));
     }
 
-    let intervalSec = null,
-        overwrite = false;
+    let intervalSec = null;
 
-    if ('hours' === options.autoBackupIntervalKey) {
+    if (AUTO_BACKUP_INTERVAL_KEY.minutes === options.autoBackupIntervalKey) {
+        if (value > 59) {
+            throw Error(errorEventMessage('invalid autoBackupIntervalValue', options));
+        }
+
+        intervalSec = MINUTE_SEC;
+    } else if (AUTO_BACKUP_INTERVAL_KEY.hours === options.autoBackupIntervalKey) {
+        if (value > 24) {
+            throw Error(errorEventMessage('invalid autoBackupIntervalValue', options));
+        }
+
         intervalSec = HOUR_SEC;
-    } else if ('days' === options.autoBackupIntervalKey) {
-        if (1 === value) {
+    } else if (AUTO_BACKUP_INTERVAL_KEY.days === options.autoBackupIntervalKey) {
+        if (value > 30) {
+            throw Error(errorEventMessage('invalid autoBackupIntervalValue', options));
+        }
+
+        if (value === 1) {
             // if backup will create every day - overwrite backups every 2 hours in order to keep as recent changes as possible
-            overwrite = true;
             intervalSec = HOUR_SEC * 2;
         } else {
             intervalSec = DAY_SEC;
@@ -2254,7 +2266,7 @@ async function resetAutoBackup() {
     let timeToBackup = value * intervalSec + options.autoBackupLastBackupTimeStamp;
 
     if (now > timeToBackup) {
-        createBackup(options.autoBackupIncludeTabFavIcons, options.autoBackupIncludeTabThumbnails, true, overwrite);
+        createBackup(options.autoBackupIncludeTabFavIcons, options.autoBackupIncludeTabThumbnails, true);
         timer = value * intervalSec;
     } else {
         timer = timeToBackup - now;
@@ -2263,7 +2275,7 @@ async function resetAutoBackup() {
     _autoBackupTimer = setTimeout(resetAutoBackup, (timer + 10) * 1000);
 }
 
-async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBackup = false, overwrite = false) {
+async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBackup = false) {
     let [data, groups] = await Promise.all([storage.get(null), Groups.load(null, true, includeTabFavIcons, includeTabThumbnails)]);
 
     if (isAutoBackup && (!groups.length || groups.every(gr => !gr.tabs.length))) {
@@ -2313,7 +2325,7 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
         data.autoBackupLastBackupTimeStamp = options.autoBackupLastBackupTimeStamp = utils.unixNow();
 
         if (options.autoBackupGroupsToFile) {
-            file.backup(data, true, overwrite);
+            file.backup(data, true, options.autoBackupByDayIndex);
         }
 
         if (options.autoBackupGroupsToBookmarks) {
@@ -2324,7 +2336,7 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
             autoBackupLastBackupTimeStamp: data.autoBackupLastBackupTimeStamp,
         });
     } else {
-        await file.backup(data, false, overwrite);
+        await file.backup(data, false);
     }
 
     return true;

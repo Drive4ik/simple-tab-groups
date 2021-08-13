@@ -543,6 +543,10 @@
         "message": "Create backup every:",
         "description": "Create backup every:"
     },
+    "autoBackupIntervalKeyMinutes": {
+        "message": "minute(s)",
+        "description": "minute(s)"
+    },
     "autoBackupIntervalKeyHours": {
         "message": "hour(s)",
         "description": "hour(s)"
@@ -1130,5 +1134,13 @@
     "searchOnlyGroups": {
         "message": "Only groups",
         "description": "Only groups"
+    },
+    "autoBackupByDayIndexTitle": {
+        "message": "Backup number as day of month",
+        "description": "Backup number as day of month"
+    },
+    "autoBackupByDayIndexDescription": {
+        "message": "It helps to get rid of a large number of backup files in the downloads folder. The backup file will look like this: \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
+        "description": "Backup by day description"
     }
 }
