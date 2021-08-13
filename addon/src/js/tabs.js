@@ -496,9 +496,12 @@
                 // Tabs moved across windows always lose their openerTabId even
                 // if it is also moved to the same window together, thus we need
                 // to restore it manually.
+                // https://github.com/piroor/treestyletab/issues/2546#issuecomment-733488187
                 if (openerTabIds[index] > 0) {
-                  tab.openerTabId = openerTabIds[index];
-                  browser.tabs.update(tab.id, { openerTabId: tab.openerTabId });
+                    tab.openerTabId = openerTabIds[index];
+                    browser.tabs.update(tab.id, {
+                        openerTabId: tab.openerTabId,
+                    });
                 }
             }
 
