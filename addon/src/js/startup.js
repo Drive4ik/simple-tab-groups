@@ -4,11 +4,6 @@
     const isBackgroundPage = window.location.pathname.includes('background');
 
     if (!isBackgroundPage) {
-        if (browser.extension.inIncognitoContext) { // will never be on background, I believe...
-            window.location.replace('/help/incognito.html');
-            return;
-        }
-
         const background = browser.extension.getBackgroundPage();
 
         if (background === null) {

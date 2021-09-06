@@ -1118,9 +1118,5 @@
     "eraseAndImportAddonBackupButton": {
         "message": "清空后导入备份",
         "description": "Erase and restore backup"
-    },
-    "notSupportedIncognito": {
-        "message": "该扩展不支持隐私浏览模式",
-        "description": "Addon does not support private/incognito windows and tabs"
     }
 }

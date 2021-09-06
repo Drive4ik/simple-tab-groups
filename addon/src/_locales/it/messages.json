@@ -1118,9 +1118,5 @@
     "eraseAndImportAddonBackupButton": {
         "message": "Cancella e ripristina il backup",
         "description": "Erase and restore backup"
-    },
-    "notSupportedIncognito": {
-        "message": "L'estensione non supporta finestre e schede anonime",
-        "description": "Addon does not support private/incognito windows and tabs"
     }
 }

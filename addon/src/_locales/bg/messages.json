@@ -1118,9 +1118,5 @@
     "eraseAndImportAddonBackupButton": {
         "message": "Изтриване и възстановяване",
         "description": "Erase and restore backup"
-    },
-    "notSupportedIncognito": {
-        "message": "Добавката не поддържа поверителни/инкогнито прозорци и раздели",
-        "description": "Addon does not support private/incognito windows and tabs"
     }
 }

@@ -2,8 +2,6 @@
     'use strict';
 
     let tabs = {},
-        incognitoTabs = new Set,
-        incognitoWindows = new Set,
         removedTabs = new Set,
         windows = {};
 
@@ -321,8 +319,6 @@
         applySession,
 
         // tabs
-        incognitoTabs,
-
         setTab,
         hasTab,
         removeTab,
@@ -349,8 +345,6 @@
         removedTabs,
 
         // windows
-        incognitoWindows,
-
         hasAnyWindow,
         removeWindow,
 

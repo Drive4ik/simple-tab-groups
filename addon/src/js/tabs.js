@@ -164,16 +164,7 @@
         let tabs = await browser.tabs.query(query);
 
         tabs = tabs
-            .filter(function(tab) {
-                if (tab.incognito) {
-                    cache.incognitoTabs.add(tab.id);
-                    return false;
-                } else if (cache.removedTabs.has(tab.id)) {
-                    return false;
-                }
-
-                return true;
-            })
+            .filter(tab => !cache.removedTabs.has(tab.id))
             .map(utils.normalizeTabUrl);
 
         return query.pinned ? tabs : Promise.all(tabs.map(tab => cache.loadTabSession(tab, includeFavIconUrl, includeThumbnail)));

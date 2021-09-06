@@ -14,6 +14,8 @@
     "author": "Drive4ik",
     "homepage_url": "https://github.com/drive4ik/simple-tab-groups",
 
+    "incognito": "not_allowed",
+
     "icons": {
         "128": "icons/icon.svg"
     },

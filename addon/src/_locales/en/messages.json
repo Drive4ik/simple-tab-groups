@@ -1127,10 +1127,6 @@
         "message": "Erase and restore backup",
         "description": "Erase and restore backup"
     },
-    "notSupportedIncognito": {
-        "message": "Addon does not support private/incognito windows and tabs",
-        "description": "Addon does not support private/incognito windows and tabs"
-    },
     "searchOnlyGroups": {
         "message": "Only groups",
         "description": "Only groups"
