@@ -602,10 +602,6 @@ const onRemovedWindow = utils.catchFunc(async function(windowId) {
 
     cache.removeWindow(windowId);
 
-    if (!cache.hasAnyWindow()) {
-        return;
-    }
-
     let tabsToRestore = cache.getTabsSessionAndRemove(reCreateTabsOnRemoveWindow);
 
     reCreateTabsOnRemoveWindow = [];
@@ -613,7 +609,9 @@ const onRemovedWindow = utils.catchFunc(async function(windowId) {
     if (tabsToRestore.length) {
         await storage.set({tabsToRestore});
 
-        tryRestoreMissedTabs(tabsToRestore).catch(noop);
+        if (cache.hasAnyWindow()) {
+            tryRestoreMissedTabs(tabsToRestore).catch(noop);
+        }
     }
 });
 
