@@ -430,7 +430,6 @@
                                 title: tab.title,
                                 url: tab.url,
                                 pinned: true,
-                                openInReaderMode: tab.openInReaderMode,
                             });
                             return;
                         }
@@ -449,7 +448,6 @@
                                 title: tab.title,
                                 url: tab.url,
                                 groupId: groups[tabData.groupID].id,
-                                openInReaderMode: tab.openInReaderMode,
                             });
                         }
                     });
@@ -540,11 +538,11 @@
 
                 syncTabOptions.groups.forEach(function({id, title, tabs}) {
                     tabs = tabs
-                        .map(function({url, title, favIconUrl, pinned, isInReaderMode}) {
+                        .map(function({url, title, favIconUrl, pinned}) {
                             url = utils.normalizeUrl(url);
 
                             if (utils.isUrlAllowToCreate(url)) {
-                                return {url, title, favIconUrl, pinned, isInReaderMode};
+                                return {url, title, favIconUrl, pinned};
                             }
                         })
                         .filter(Boolean);

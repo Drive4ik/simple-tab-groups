@@ -289,10 +289,6 @@
             tab.url = '';
         }
 
-        if (tab.url.startsWith('about:reader') || tab.isInReaderMode) {
-            tab.openInReaderMode = true;
-        }
-
         tab.url = normalizeUrl(tab.url);
 
         return tab;

@@ -1,7 +1,7 @@
 (function() {
     'use strict';
 
-    async function createNative({url, active, pinned, title, index, windowId, isInReaderMode, openInReaderMode, openerTabId, cookieStoreId, newTabContainer, ifDifferentContainerReOpen, excludeContainersForReOpen, groupId, favIconUrl, thumbnail}) {
+    async function createNative({url, active, pinned, title, index, windowId, openerTabId, cookieStoreId, newTabContainer, ifDifferentContainerReOpen, excludeContainersForReOpen, groupId, favIconUrl, thumbnail}) {
         let tab = {};
 
         if (utils.isUrlAllowToCreate(url)) { // TODO create page for unsupported urls
@@ -38,10 +38,6 @@
 
         if (Number.isFinite(openerTabId) && openerTabId >= 1) {
             tab.openerTabId = openerTabId;
-        }
-
-        if (!tab.discarded && (isInReaderMode || openInReaderMode)) {
-            tab.openInReaderMode = true;
         }
 
         tab.cookieStoreId = cookieStoreId || DEFAULT_COOKIE_STORE_ID;
@@ -582,15 +578,11 @@
     }
 
     function prepareForSave(tabs, includeGroupId = false, includeFavIconUrl = false, includeThumbnail = false) {
-        return tabs.map(function({id, url, title, cookieStoreId, favIconUrl, isInReaderMode, openInReaderMode, openerTabId, groupId, thumbnail}) {
+        return tabs.map(function({id, url, title, cookieStoreId, favIconUrl, openerTabId, groupId, thumbnail}) {
             let tab = {url, title};
 
             if (!containers.isDefault(cookieStoreId)) {
                 tab.cookieStoreId = containers.isTemporary(cookieStoreId) ? TEMPORARY_CONTAINER : cookieStoreId;
-            }
-
-            if (isInReaderMode || openInReaderMode) {
-                tab.openInReaderMode = true;
             }
 
             if (id) {
