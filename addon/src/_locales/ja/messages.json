@@ -4,7 +4,7 @@
         "description": "Description of the extension."
     },
     "openSettings": {
-        "message": "設定",
+        "message": "STG 設定",
         "description": "Settings context button title"
     },
     "manageGroupsTitle": {
@@ -20,7 +20,7 @@
         "description": "Move tab to group title"
     },
     "moveTabToGroupMessage": {
-        "message": "タブ \"$tabtitle$\" をグループ \"$grouptitle$\" へ移動しました。\n\n移動したタブを表示するにはここをクリックしてください。",
+        "message": "\"$tabtitle$\" のタブを \"$grouptitle$\" グループへ移動しました。\n\n移動したタブを表示するにはここをクリックしてください。",
         "description": "Tab moved popup title",
         "placeholders": {
             "grouptitle": {
@@ -58,7 +58,7 @@
         "description": "Cancel"
     },
     "searchPlaceholder": {
-        "message": "タブを検索中...",
+        "message": "タブを検索",
         "description": "Search placeholder"
     },
     "invalidRegExpRuleTitle": {
@@ -76,7 +76,7 @@
         "description": "Grid display"
     },
     "manageGroupViewFreeArrange": {
-        "message": "自由にアレンジ（将来のバージョンで対応）",
+        "message": "自由にアレンジ (将来のバージョンで対応)",
         "description": "Free arrange"
     },
     "closePopupAfterChangeGroup": {
@@ -84,19 +84,23 @@
         "description": "Close popup after changing group"
     },
     "showNotificationAfterMoveTab": {
-        "message": "タブを別のグループへ移動した際に、通知を表示する",
+        "message": "タブを別のグループへ移動した時に通知を表示する",
         "description": "Show notification when tab is moved to another group"
     },
     "openManageGroupsInTab": {
-        "message": "\"グループの管理\" を新しいタブで開く",
+        "message": "[グループの管理] を新しいタブで開く",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
-        "message": "グループを削除する際に確認画面を表示する",
-        "description": "Show confirm dialog before group delete"
+        "message": "グループの削除時に確認画面を表示する",
+        "description": "Show confirmation dialog before deleting the group"
+    },
+    "showConfirmDialogBeforeGroupArchiving": {
+        "message": "グループのアーカイブ時に確認画面を表示する",
+        "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
-        "message": "あなたの Simple Tab Groups をバックアップする",
+        "message": "Simple Tab Groups データのバックアップ",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
@@ -108,7 +112,7 @@
         "description": "Create backup"
     },
     "includeTabThumbnailsIntoBackup": {
-        "message": "バックアップにタブのサムネイルを含める（バックアップファイルのサイズが大きくなります）",
+        "message": "バックアップにタブのサムネイルを含める (バックアップファイルのサイズが大きくなります)",
         "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
@@ -116,15 +120,15 @@
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
-        "message": "復元するバックアップファイルをロードしてください",
+        "message": "復元するバックアップファイルを読み込んでください",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
     "importAddonSettingsButton": {
-        "message": "バックアップの復元",
+        "message": "バックアップを復元",
         "description": "Restore backup"
     },
     "importSettingsOldTabGroupsAddonTitle": {
-        "message": "Quicksaver's \"Tab Groups\" をインポートする",
+        "message": "Quicksaver 氏の \"Tab Groups\" をインポートする",
         "description": "Restore Quicksaver's \"Tab Groups\""
     },
     "importSettingsOldTabGroupsAddonDescription": {
@@ -176,7 +180,7 @@
         "description": "Delete group"
     },
     "confirmDeleteGroup": {
-        "message": "グループ \"$grouptitle$\" を削除しますか？<br>グループを削除するとタブが閉じられます。グループを表示しているウィンドウも閉じます。",
+        "message": "\"$grouptitle$\" グループを削除しますか？<br>グループを削除するとタブが閉じられます。グループを表示しているウィンドウも閉じます。",
         "description": "Delete group?",
         "placeholders": {
             "grouptitle": {
@@ -186,7 +190,7 @@
         }
     },
     "groupTabsCount": {
-        "message": "$count$ tabs",
+        "message": "$count$ 個のタブ",
         "description": "Group tabs count",
         "placeholders": {
             "count": {
@@ -196,7 +200,7 @@
         }
     },
     "groupTabsCountActive": {
-        "message": "$active$/$count$ tabs active",
+        "message": "$active$/$count$ 個のタブがアクティブ",
         "description": "Group tabs count active",
         "placeholders": {
             "active": {
@@ -238,11 +242,11 @@
         "description": "Icon color"
     },
     "selectUserGroupIcon": {
-        "message": "アイコンをロードする",
+        "message": "アイコンを読み込む",
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "カスタムアイコンをロードできませんでした。\"グループの管理\" によってグループアイコンのカスタマイズが可能です。\n\"グループの管理\"を開きますか？",
+        "message": "カスタムアイコンを読み込めませんでした。[グループの管理] によってグループアイコンのカスタマイズが可能です。\n[グループの管理] を開きますか？",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -262,7 +266,7 @@
         "description": "Regular expressions"
     },
     "regexpForTabsHelp": {
-        "message": "ここに web addresses を正規表現で記入してください。正規表現にマッチするタブを自動的にこのグループ内に移動（キャッチ）します。\n一行に一個のルールを記載してください。記載できるルールの数に制限はありません。\n例：\ngithub\\.com/drive4ik/simple-tab-groups　すべてのアドオンリポジトリのページをキャッチします。\nbugzilla\\.mozilla\\.org　Firefoxのバグレポートをキャッチします。\n(facebook|twitter|youtube)\\.com　すべてのソーシャルページをキャッチします。",
+        "message": "ここにウェブアドレスを正規表現で記入してください。正規表現にマッチするタブを自動的にこのグループ内に移動 (キャッチ) します。\n一行に一個のルールを記載してください。記載できるルールの数に制限はありません。\n例：\ngithub\\.com/drive4ik/simple-tab-groups　すべてのアドオンリポジトリのページをキャッチします。\nbugzilla\\.mozilla\\.org　Firefoxのバグレポートをキャッチします。\n(facebook|twitter|youtube)\\.com　すべてのソーシャルページをキャッチします。",
         "description": "Regular exceptions helper"
     },
     "hotkeysTitle": {
@@ -270,7 +274,7 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "ホットキーを追加できます。<br>制限事項<br>1. これらのホットキーはWebページ (http:, https:) でのみ機能します。ブラウザーページ  (about:) では機能しません。WebExtensions API の制限によるもです。<br>2. いくつかのホットキーは English layout 以外のキーボードレイアウトでは機能しません。例えば、English layout で作成したホットキー <code>Ctrl + ~</code> は Russian layout では動作しません。この問題を解決するには、別のホットキーを新たに作成してください。例：Russian layout にて <code>Ctrl + Ё</code> を作成する",
+        "message": "ホットキーを追加できます。<br>制限事項<br>1. これらのホットキーはウェブページ (http:, https:) でのみ機能します。ブラウザーページ  (about:) では機能しません。WebExtensions API の制限によるもです。<br>2. いくつかのホットキーは English layout 以外のキーボードレイアウトでは機能しません。例えば、English layout で作成したホットキー <code>Ctrl + ~</code> は Russian layout では動作しません。この問題を解決するには、別のホットキーを新たに作成してください。例：Russian layout にて <code>Ctrl + Ё</code> を作成する",
         "description": "Hotkeys description"
     },
     "addHotKeyButton": {
@@ -286,7 +290,7 @@
         "description": "Press key here"
     },
     "selectAction": {
-        "message": "アクションを選択",
+        "message": "アクションを選択してください",
         "description": "Select action"
     },
     "selectGroup": {
@@ -294,39 +298,39 @@
         "description": "Select group"
     },
     "hotkeyActionTitleLoadNextGroup": {
-        "message": "次のグループをロード",
+        "message": "次のグループを読み込む",
         "description": "Load next group"
     },
     "hotkeyActionTitleLoadPrevGroup": {
-        "message": "前のグループをロード",
+        "message": "前のグループを読み込む",
         "description": "Load previous group"
     },
     "hotkeyActionTitleLoadNextUnloadedGroup": {
-        "message": "次の未ロードのグループをロードする",
+        "message": "次の未読み込みのグループを読み込む",
         "description": "Load next unloaded group"
     },
     "hotkeyActionTitleLoadPrevUnloadedGroup": {
-        "message": "前の未ロードのグループをロードする",
+        "message": "前の未読み込みのグループを読み込む",
         "description": "Load previous unloaded group"
     },
     "hotkeyActionTitleLoadHistoryNextGroup": {
-        "message": "履歴から次のグループをロードする",
+        "message": "履歴から次のグループを読み込む",
         "description": "Load next group from history"
     },
     "hotkeyActionTitleLoadHistoryPrevGroup": {
-        "message": "履歴から前のグループをロードする",
+        "message": "履歴から前のグループを読み込む",
         "description": "Load previous group from history"
     },
     "hotkeyActionTitleLoadFirstGroup": {
-        "message": "最初のグループをロード",
+        "message": "最初のグループを読み込む",
         "description": "Load first group"
     },
     "hotkeyActionTitleLoadLastGroup": {
-        "message": "最後のグループをロード",
+        "message": "最後のグループを読み込む",
         "description": "Load last group"
     },
     "hotkeyActionTitleLoadCustomGroup": {
-        "message": "カスタムグループをロード",
+        "message": "カスタムグループを読み込む",
         "description": "Load custom group"
     },
     "hotkeyActionTitleAddNewGroup": {
@@ -341,6 +345,10 @@
         "message": "グループの管理を開く",
         "description": "Open manage groups"
     },
+    "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
+        "message": "選択したタブをカスタムグループへ移動する",
+        "description": "Move selected tabs to custom group"
+    },
     "hotkeyActionTitleDiscardGroup": {
         "message": "グループを削除する",
         "description": "Hotkey action Discard group"
@@ -350,19 +358,19 @@
         "description": "Hotkey action Discard other groups"
     },
     "hotkeyActionTitleReloadAllTabsInCurrentGroup": {
-        "message": "現在のグループの全てのタブをリロードする",
+        "message": "現在のグループの全てのタブを再読み込みする",
         "description": "Reload all tabs in current group"
     },
     "whatsWrongMessage": {
-        "message": "なにか問題が起きました...\n開発者にEメールでエラーログをお送りいただけますようご協力をお願いします。(Simple Tab Groups の設定画面の一番下にログを出力するためのボタンがあります)",
+        "message": "なにか問題が起きました...\n開発者にメールでエラーログをお送りくださいますようご協力をお願いします。(Simple Tab Groups の設定画面の一番下にログを出力するためのボタンがあります)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
     },
     "saveErrorLogsIntoFile": {
-        "message": "最後に発生したエラーのログをJSONファイル形式で保存する",
+        "message": "最後に発生したエラーのログを JSON ファイル形式で保存する",
         "description": "Save last error logs into JSON file"
     },
     "undoRemoveGroupItemTitle": {
-        "message": "グループ \"$grouptitle$\" の削除を取り消す",
+        "message": "\"$grouptitle$\" グループの削除を取り消す",
         "description": "Undelete a group menu title",
         "placeholders": {
             "grouptitle": {
@@ -372,7 +380,7 @@
         }
     },
     "undoRemoveGroupNotification": {
-        "message": "グループ \"$grouptitle$\" の削除を取り消すにはここをクリック",
+        "message": "\"$grouptitle$\" グループの削除を取り消すにはここをクリックしてください",
         "description": "Click here to cancel the deletion of the group title",
         "placeholders": {
             "grouptitle": {
@@ -382,11 +390,11 @@
         }
     },
     "isStickyGroupTitle": {
-        "message": "Sticky グループ",
+        "message": "グループを固定する",
         "description": "Sticky group"
     },
     "isStickyGroupHelp": {
-        "message": "このグループ内のタグが他のグループへ自動的には移動しないようにします。",
+        "message": "このグループ内のタブが他のグループへ自動的に移動しないようにします。",
         "description": "Tabs in this group will never be automatically moved to another group"
     },
     "iconStyle": {
@@ -394,27 +402,31 @@
         "description": "Icon style"
     },
     "discardTabsAfterHide": {
-        "message": "タブが隠れた後に破棄する（メモリを節約します）",
+        "message": "タブが隠れた後に破棄する (メモリーを節約します)",
         "description": "Discard tabs after hide (this will save the RAM)"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
-        "message": "開いているタブの中にマイクかカメラを使用しているものがあるためグループを変更することができません",
+        "message": "開いているタブの中にマイクかカメラを使用しているものがあるためグループを変更できません",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
     },
     "foundHiddenUnSyncTabsDescription": {
-        "message": "同期されていない隠れたタブがみつかりました。タブをクリックして現在のグループ/ウィンドウに表示するかまたは：",
+        "message": "同期されていない隠れたタブが見つかりました。タブをクリックして現在のグループ/ウィンドウに表示するか、または:",
         "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
     },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
         "message": "これらのタブを現在のグループ/ウィンドウに移動する",
         "description": "Move all of these tabs into current group/window"
     },
+    "actionHiddenUnSyncWindowTabsCreateGroup": {
+        "message": "現在のウィンドウのタブでグループを作成する",
+        "description": "Create new group with tabs only from the current window"
+    },
     "actionHiddenUnSyncTabsCreateGroup": {
         "message": "これらのタブを使って新しいグループを作成する",
         "description": "Create new group with all of these tabs"
     },
     "actionHiddenUnSyncTabsCloseAll": {
-        "message": "これらのタブをクローズする",
+        "message": "これらのタブを閉じる",
         "description": "Close all of these tabs"
     },
     "updateTabThumbnail": {
@@ -422,11 +434,11 @@
         "description": "Update thumbnail for this tab"
     },
     "notFoundWindowsAddonStoppedWorking": {
-        "message": "エラー：not found any normal not private/incognito/popup windows.\nアドオンは動作を停止しました。ブラウザを再起動してください。",
+        "message": "エラー: 通常のウィンドウ (非プライベート / 匿名 / ポップアップ) が見つかりませんでした。\nアドオンが動作を停止しました。ブラウザーを再起動してください。",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
     },
     "ffFailedAndLostDataMessage": {
-        "message": "FF failed and all the groups were lost.\nバックアップがもしあれば、バックアップからデータを復元可能です。",
+        "message": "致命的なエラーが発生したためすべてのグループが失われました。\nバックアップがもしあれば、そのデータを復元可能です。",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
     },
     "enterDefaultGroupIconViewTypeTitle": {
@@ -450,11 +462,11 @@
         "description": "Tab moving"
     },
     "includeTabFavIconsIntoBackup": {
-        "message": "バックアップにタブのfav-iconsを含める（バックアップファイルのサイズが増加します）",
+        "message": "バックアップにタブの favicon を含める (バックアップファイルのサイズが増加します)",
         "description": "Include tab fav-icons in backup (makes backup file size bigger)"
     },
     "groupRemovedByExtension": {
-        "message": "グループ \"$group$\" は拡張: $extension$ によって削除されました",
+        "message": "\"$group$\" グループが別の拡張機能により削除されました: $extension$",
         "description": "Group \"$group$\" removed by extension: $extension$",
         "placeholders": {
             "group": {
@@ -468,7 +480,7 @@
         }
     },
     "clickHereToReloadAddon": {
-        "message": "なんらかの問題が発生しました ここをクリックしてSTGアドオンを再起動してください",
+        "message": "なんらかの問題が発生しました。ここをクリックして STG アドオンを再起動してください",
         "description": "Something went wrong, click here to reload STG addon"
     },
     "extendedTabSearch": {
@@ -490,7 +502,7 @@
         "description": "Pinned tabs are not supported"
     },
     "thisUrlsAreNotSupported": {
-        "message": "このURL\"$urls$\"はサポートされていません",
+        "message": "このURL \"$urls$\" はサポートされていません",
         "description": "This urls \"$urls$\" are not supported",
         "placeholders": {
             "urls": {
@@ -500,7 +512,7 @@
         }
     },
     "thisTabsCanNotBeHidden": {
-        "message": "これらのタブを隠すことはできません。タブが隠れているか、マイクやカメラを使用しているか、スクリーン\"$titles$\"を共有しています。",
+        "message": "これらのタブを隠すことはできません。タブがピン留めされているか、マイクやカメラを使用しているか、画面共有されています: \"$titles$\"",
         "description": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
         "placeholders": {
             "titles": {
@@ -510,8 +522,8 @@
         }
     },
     "moveMultipleTabsToGroupMessage": {
-        "message": "$tabscount$このタブが移動しました。\nここをクリックして最初のタブをオープンしてください。",
-        "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
+        "message": "$tabscount$ 個のタブを移動しました。\nここをクリックして最初のタブを開いてください",
+        "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",
         "placeholders": {
             "tabscount": {
                 "content": "$1",
@@ -520,12 +532,16 @@
         }
     },
     "autoBackupEnableTitle": {
-        "message": "オートバックアップを有効にする",
+        "message": "自動バックアップを有効にする",
         "description": "Enable auto backup"
     },
     "autoBackupCreateEveryTitle": {
-        "message": "バックアップを作成する:",
+        "message": "バックアップの作成間隔:",
         "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyMinutes": {
+        "message": "分毎",
+        "description": "minute(s)"
     },
     "autoBackupIntervalKeyHours": {
         "message": "時間毎",
@@ -540,31 +556,31 @@
         "description": "Last backup:"
     },
     "enableDarkTheme": {
-        "message": "darkテーマを有効にする",
+        "message": "ダークテーマを有効にする",
         "description": "Enable dark theme"
     },
     "enableDarkThemeNotification": {
-        "message": "darkテーマをフルサポートにするためには<br><code>svg.context-properties.content.enabled</code> のパラメータを <code>true</code> へ変更してください<br><code>about:config</code> page<br><br><a href='https://support.mozilla.org/kb/about-config-editor-firefox'>How to do it?</a>",
+        "message": "ダークテーマをフルサポートにするために<br><code>svg.context-properties.content.enabled</code> のパラメータを <code>true</code> へ変更してください<br><code>about:config</code> page<br><br><a href='https://support.mozilla.org/kb/about-config-editor-firefox'>How to do it?</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {
-        "message": "\"Panorama View\"アドオンを復元する",
+        "message": "\"Panorama View\" アドオンを復元する",
         "description": "Restore photodiode's \"Panorama View\""
     },
     "importSettingsPanoramaViewAddonDescription": {
-        "message": "バックアップファイルをphotodiodeさん作成のアドオン\"Panorama View\"からロードします",
+        "message": "バックアップファイルを \"Panorama View\" アドオンから読み込みます",
         "description": "Load a backup file from \"Panorama View\" addon."
     },
     "importSettingsSyncTabGroupsAddonTitle": {
-        "message": "\"Sync Tab Groups\"アドオンを復元する",
+        "message": "Morikko 氏の \"Sync Tab Groups\" アドオンを復元する",
         "description": "Restore Morikko's \"Sync Tab Groups\""
     },
     "importSettingsSyncTabGroupsAddonDescription": {
-        "message": "バックアップファイルをMorikkoさん作成のアドオン\"Sync Tab Groups\"ロードします",
+        "message": "バックアップファイルを \"Sync Tab Groups\" アドオンから読み込みます",
         "description": "Load a backup file from \"Sync Tab Groups\" addon."
     },
     "browseFileTitle": {
-        "message": "ファイルを参照",
+        "message": "ファイルを参照…",
         "description": "Browse..."
     },
     "openBackupFolder": {
@@ -572,7 +588,7 @@
         "description": "Open backup folder"
     },
     "createNewGroupWhenOpenNewWindow": {
-        "message": "新しいウィンドウを開く際には新しいグループを作成する",
+        "message": "新しいウィンドウを開く時に新しいグループを作成する",
         "description": "Create a new group when opening a new window"
     },
     "prependGroupTitleToWindowTitle": {
@@ -636,7 +652,7 @@
         "description": "Export group to bookmarks"
     },
     "defaultBookmarkFolderLocation": {
-        "message": "Default bookmark folder location",
+        "message": "既定のブックマークフォルダーの場所",
         "description": "Default bookmark folder location"
     },
     "groupExportedToBookmarks": {
@@ -666,11 +682,11 @@
         "description": "All groups successfully exported to bookmarks"
     },
     "discardTabTitle": {
-        "message": "タブを削除する",
+        "message": "タブを破棄する",
         "description": "Discard tab"
     },
     "autoBackupGroupsToFile": {
-        "message": "全てのグループを（ダウンロードフォルダ内の）ファイルへ自動でバックアップします",
+        "message": "全てのグループを (ダウンロードフォルダ内の) ファイルへ自動でバックアップします",
         "description": "Auto backup all groups to file (into downloads folder)"
     },
     "folderNameTitle": {
@@ -682,7 +698,7 @@
         "description": "Backup successfully restored"
     },
     "loading": {
-        "message": "ロード中、しばらくお待ちください…",
+        "message": "読み込み中、しばらくお待ちください…",
         "description": "Loading, please wait..."
     },
     "showOtherTabs": {
@@ -694,11 +710,11 @@
         "description": "Don't discard tabs into this group after hide"
     },
     "showNotificationAfterGroupDelete": {
-        "message": "グループを削除した際に、通知を表示する",
+        "message": "グループの削除時に通知を表示する",
         "description": "Show notification after group delete"
     },
     "reloadTab": {
-        "message": "タブをリロード",
+        "message": "タブを再読み込み",
         "description": "Reload tab"
     },
     "thisTabIsNotSupported": {
@@ -710,7 +726,7 @@
         "description": "Show active tabs in groups popup"
     },
     "reloadAllTabsInGroup": {
-        "message": "グループ内の全てのタブをリロード",
+        "message": "グループ内の全てのタブを再読み込み",
         "description": "Reload all tabs in group"
     },
     "tabsCreatedCount": {
@@ -724,23 +740,23 @@
         }
     },
     "tabsNotCreated": {
-        "message": "タブは１件も作成されませんでした",
+        "message": "タブが作成されませんでした",
         "description": "Tabs not created"
     },
     "showTabsWithThumbnailsInManageGroups": {
-        "message": "\"グループの管理\"ページでタブのサムネイルを表示する",
+        "message": "[グループの管理] ページでタブのサムネイルを表示する",
         "description": "Show tabs with thumbnails in \"Manage groups\" page"
     },
     "alwaysOpenTabsInContainer": {
-        "message": "常にContainerでタブを開く",
+        "message": "常にコンテナーでタブを開く",
         "description": "Always open tabs in container"
     },
     "temporaryContainerTitle": {
-        "message": "⌚一時的なContainer",
+        "message": "⌚一時的なコンテナー",
         "description": "⌚Temporary Container"
     },
     "thisContainerIsNotTemporary": {
-        "message": "'$containerName$'は一時的なContainerではなくなりました",
+        "message": "この '$containerName$' が一時的なコンテナーではなくなりました",
         "description": "This container '$containerName$' is no longer temporary",
         "placeholders": {
             "containerName": {
@@ -750,7 +766,7 @@
         }
     },
     "thisContainerNowIsTemporary": {
-        "message": "'$containerName$'は一時的なContainerになりました",
+        "message": "この '$containerName$' が一時的なコンテナーになりました",
         "description": "This container '$containerName$' has now become temporary",
         "placeholders": {
             "containerName": {
@@ -776,7 +792,7 @@
         "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
     },
     "clear": {
-        "message": "クリア",
+        "message": "消去",
         "description": "Clear"
     },
     "deleteAllAddonDataAndSettings": {
@@ -784,11 +800,339 @@
         "description": "Delete all addon data and settings"
     },
     "warningAllDataWillRemove": {
-        "message": "警告 アドオンの全てのデータを削除します よろしいですか？",
+        "message": "警告！ アドオンの全てのデータを削除します よろしいですか？",
         "description": "Warning! Removing ALL addon data! Are you really sure?"
     },
     "ifDifferentContainerReOpen": {
-        "message": "Containerが違った場合、Containerを変える",
+        "message": "コンテナーが選択したものと違う場合、コンテナーを変更する",
         "description": "If the container is different from the selected one - change the container"
+    },
+    "deleteAllAddonDataAndSettingsBeforeRestoringBackup": {
+        "message": "バックアップを復元する前にすべてのアドオンデータと設定を削除する",
+        "description": "Delete all addon data and settings before restoring backup"
+    },
+    "helpPageWelcomeV4Title": {
+        "message": "Simple Tab Groups v4 へようこそ",
+        "description": "Welcome to Simple Tab Groups v4"
+    },
+    "helpPageWelcomeV4Description": {
+        "message": "ブラウザーの設定で [以前のセッションを復元する] を有効にしてください。<br>これはグループとタブの間の通信を管理するために必要です。<br>これが無効になっている場合、ブラウザーの起動時にタブが開かず、アドオンからタブの情報が失われます。<br>つまり、アドオンの動作が停止するでしょう。",
+        "description": "Please enable \"Restore previous session\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
+    },
+    "leaveBookmarksOfClosedTabs": {
+        "message": "閉じたタブのブックマークを残す (ブックマークはセパレーターで分けられます)",
+        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+    },
+    "enableDebugTitle": {
+        "message": "DEBUG を有効にする",
+        "description": "Enable DEBUG"
+    },
+    "loggingIsEnabledTitle": {
+        "message": "ログが有効です",
+        "description": "logging is enabled"
+    },
+    "loggingIsAutoEnabledTitle": {
+        "message": "アドオン内のエラーのためログが自動的に有効になりました",
+        "description": "logging was auto-enabled due to an error in addon"
+    },
+    "loggingDescription": {
+        "message": "このチェックボックスは、バグの記録とログを作者へ送信する必要がある場合のみ有効にしてください。このチェックボックスにチェックを入れると、アドオンのすべてのアクションが記録されるため、アドオンの動作が遅くなります。エラーを再現できる場合は、このチェックボックスのチェックを外してください。アドオンのログファイルが保存できます。このオプションは、エラーが発生したときにも有効になります。その場合は、ご自身で DEBUG のチェックボックスを無効にしてログファイルを保存する必要があります。<br>このログファイルをメールで作者に送信してください: <a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com</a><br> <span class=\"has-text-danger\">注意！ このログファイルには、パスワードやブックマークなどの個人データは含まれていません。</span><br> これは、問題を再現して解決するために必要です。<br> ご協力に感謝します。",
+        "description": "logging description"
+    },
+    "archiveGroup": {
+        "message": "アーカイブ",
+        "description": "Archive"
+    },
+    "confirmArchiveGroup": {
+        "message": "\"$grouptitle$\" グループをアーカイブしますか？<br>グループをアーカイブすると、タブがアドオンのデータベース内に保存され、ブラウザーからは削除されます。",
+        "description": "Do you want to archive the group",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "unArchiveGroup": {
+        "message": "アーカイブ解除",
+        "description": "Unarchive"
+    },
+    "groupIsArchived": {
+        "message": "操作を完了できませんでした。\"$grouptitle$\" グループはアーカイブ内にあります",
+        "description": "Unable to complete the action, the group is in the archive",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "updateAddonToLatestVersion": {
+        "message": "アドオンを最新バージョンに更新してください",
+        "description": "Please, update addon to latest version"
+    },
+    "hotkeyActionTitleRenameGroup": {
+        "message": "グループ名を変更",
+        "description": "Rename group"
+    },
+    "noGroupsAvailable": {
+        "message": "グループがありません",
+        "description": "You have no groups"
+    },
+    "alwaysAskNewGroupName": {
+        "message": "グループ名を常に尋ねる",
+        "description": "Always ask for a new group name"
+    },
+    "impossibleToAskUserAboutAction": {
+        "message": "\"$page$\" ページ上で \"$action$\" について尋ねることはできません\n\n詳細はここをクリックしてください",
+        "description": "On page \"$page$\" it is impossible to ask about \"$action$\"",
+        "placeholders": {
+            "page": {
+                "content": "$1",
+                "example": "Add-ons for Firefox"
+            },
+            "action": {
+                "content": "$2",
+                "example": "some action"
+            }
+        }
+    },
+    "openPopupTitle": {
+        "message": "ポップアップを開く",
+        "description": "Open popup"
+    },
+    "openSidebarTitle": {
+        "message": "サイドバーを開く",
+        "description": "Open sidebar"
+    },
+    "helpPageOpenInContainerTitle": {
+        "message": "コンテナー内の URL を開けません",
+        "description": "Can't open URL in container"
+    },
+    "helpPageOpenInContainerMainTitle": {
+        "message": "URL を <container-name>$containerName$</container-name> コンテナーに開けません",
+        "description": "Can't open the URL into Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerSubTitle": {
+        "message": "アドオンが URL を開けません:",
+        "description": "addon can't open URL:"
+    },
+    "helpPageOpenInContainerDesc1": {
+        "message": "<strong>$groupTitle$</strong> グループが <container-name>$containerName$</container-name> コンテナー内の開いたタブに割り当てられました。",
+        "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
+        "placeholders": {
+            "groupTitle": {
+                "content": "$1",
+                "example": "Group 1"
+            },
+            "containerName": {
+                "content": "$2",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerDesc2": {
+        "message": "別のアドオンの UUID:",
+        "description": "Another addon, which has UUID:"
+    },
+    "helpPageOpenInContainerDesc3": {
+        "message": "この URL を <container-name>$containerName$</container-name> コンテナーに開こうとしています。タブを別のグループへ移動するか、アドオン <strong>$uuid$</strong> のこのアクションを禁止してください。",
+        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon '757eaba7-0b3d-478b-ace2-cbe0a16eed47' to perform this action.",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Business"
+            },
+            "uuid": {
+                "content": "$2",
+                "example": "757eaba7-0b3d-478b-ace2-cbe0a16eed47"
+            }
+        }
+    },
+    "helpPageOpenInContainerDesc4": {
+        "message": "このページ上の UUID でアドオンを見つけられます:",
+        "description": "You can find out the addon by UUID on the page:"
+    },
+    "helpPageOpenInContainerOpenInContainer": {
+        "message": "<container-name>$containerName$</container-name> コンテナーに開く",
+        "description": "Open in Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
+    },
+    "groupNotLoaded": {
+        "message": "グループが読み込まれませんでした",
+        "description": "Group not loaded"
+    },
+    "groupNotFound": {
+        "message": "グループが見つかりませんでした",
+        "description": "Group not found"
+    },
+    "unloadGroup": {
+        "message": "グループをアンロード",
+        "description": "Unload the group"
+    },
+    "tabsInThisWindowWereHidden": {
+        "message": "このウィンドウ内のタブは隠されています。これらのタブはアドオンのポップアップの下部で見つけられます。",
+        "description": "Tabs in this window were hidden. You can find them at the bottom of the popup window of the addon."
+    },
+    "searchOrGoToActive": {
+        "message": "検索または右矢印でアクティブなタブ/グループにフォーカスする",
+        "description": "Search or right arrow to focus on active tab/group"
+    },
+    "thisGroupIsMain": {
+        "message": "このグループはメインのマークが付いています",
+        "description": "This group is marked as main"
+    },
+    "setGroupAsMain": {
+        "message": "このグループをメインに設定する",
+        "description": "Set this group as main"
+    },
+    "thisGroupWasMain": {
+        "message": "注記\nこのグループはメインのマークが付いています",
+        "description": "Notice\nThis group was marked as the main"
+    },
+    "moveToMainIfNotInCatchTabRules": {
+        "message": "正規表現のルールが一致しない場合はこのグループのタブを \"$grouptitle$\" グループへ移動する",
+        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "My main group"
+            }
+        }
+    },
+    "noContainerTitle": {
+        "message": "既定",
+        "description": "No container"
+    },
+    "reopenTabsWithTemporaryContainersInNew": {
+        "message": "新しい一時コンテナーでタブを再び開く",
+        "description": "Reopen tabs with temporary containers in new"
+    },
+    "temporaryContainerTitleDescription": {
+        "message": "一時コンテナーのタイトルのプレフィックス",
+        "description": "Prefix of the temporary container title"
+    },
+    "excludeContainersForReOpen": {
+        "message": "これらのコンテナーを除外する",
+        "description": "excluding these containers"
+    },
+    "helpPageOpenInContainerExcludeContainerToGroup": {
+        "message": "<strong>$groupTitle$</strong> グループの <container-name>$containerName$</container-name> コンテナーを除外する",
+        "description": "Exclude Personal container for group Group 1",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            },
+            "groupTitle": {
+                "content": "$2",
+                "example": "Group 1"
+            }
+        }
+    },
+    "helpPageOpenInContainerIgnoreUuidForSession": {
+        "message": "ブラウザーを閉じるまで、この UUID \"<strong>$uuid$</strong>\" を無視する",
+        "description": "Ignore UUID for session",
+        "placeholders": {
+            "uuid": {
+                "content": "$1",
+                "example": "ff06d2f8-3660-43ed-becb-ad1c458ae76d"
+            }
+        }
+    },
+    "hotkeysDescription2": {
+        "message": "ホットキーは、<a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Firefox のショートカットキーの管理</a> ページでも設定できます。これらはすべてのウィンドウとブラウザーページで動作します。",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
+    },
+    "muteTab": {
+        "message": "タブをミュート",
+        "description": "Mute tab"
+    },
+    "unMuteTab": {
+        "message": "タブをミュート解除",
+        "description": "Unmute tab"
+    },
+    "muteGroup": {
+        "message": "グループをミュート",
+        "description": "Mute group"
+    },
+    "unMuteGroup": {
+        "message": "グループをミュート解除",
+        "description": "Unmute group"
+    },
+    "fullPopupWidth": {
+        "message": "ポップアップの幅を最大化する",
+        "description": "Use full popup width"
+    },
+    "showArchivedGroups": {
+        "message": "アーカイブされたグループを表示する",
+        "description": "Show archived groups"
+    },
+    "helpPageDbErrorReinstallTitle": {
+        "message": "Simple Tab Groups のデータベースエラー",
+        "description": "Database error in Simple Tab Groups"
+    },
+    "helpPageDbErrorReinstallDescription": {
+        "message": "残念ながら Firefox データベースの STG アドオンからデータを読み込み中にエラーが発生しました。この間、アドオンは停止しています。アドオンを再開するため、次の操作を行ってください:",
+        "description": "Unfortunately, an error occurred while reading data from the STG addon from the Firefox database. At the moment, the addon is stopped. To resume the add-on, do the following:"
+    },
+    "helpPageDbErrorReinstallDescription2": {
+        "message": "Firefox ブラウザーを再起動してください (Linux および MacOS ではプロセスを終了してください)",
+        "description": "Restart Firefox Browser (for Linux and Mac OS with process termination)"
+    },
+    "helpPageDbErrorReinstallDescription3": {
+        "message": "このウィンドウが再び表示される場合はアドオンを再インストールしてください:",
+        "description": "If you see this window again, try reinstalling the addon:"
+    },
+    "helpPageDbErrorReinstallDescription4": {
+        "message": "STG アドオンを削除します",
+        "description": "Remove STG Addon"
+    },
+    "helpPageDbErrorReinstallDescription5": {
+        "message": "Firefox ブラウザーを再起動します",
+        "description": "Restart Firefox Browser"
+    },
+    "helpPageDbErrorReinstallDescription6": {
+        "message": "STG アドオンをインストールします",
+        "description": "Install STG Addon"
+    },
+    "helpPageDbErrorReinstallDescription7": {
+        "message": "最新の STG アドオンのデータのバックアップを Firefox のダウンロードフォルダー \"STG-backups\" から復元してください。<br>アドオンの設定でバックアップから復元できます。",
+        "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".<br>You can restore backup in addon settings"
+    },
+    "helpPageDbErrorReinstallOpenFFDownloadsFolder": {
+        "message": "Firefox のダウンロードフォルダーを開きます",
+        "description": "Open Firefox downloads folder"
+    },
+    "groupWithSameNameExists": {
+        "message": "同じ名前のグループがすでに存在します！",
+        "description": "A group with the same name already exists!"
+    },
+    "eraseAndImportAddonBackupButton": {
+        "message": "削除してバックアップを復元",
+        "description": "Erase and restore backup"
+    },
+    "searchOnlyGroups": {
+        "message": "グループのみ",
+        "description": "Only groups"
+    },
+    "autoBackupByDayIndexTitle": {
+        "message": "日付をバックアップ番号にする",
+        "description": "Backup number as day of month"
+    },
+    "autoBackupByDayIndexDescription": {
+        "message": "ダウンロードフォルダー内にある数多くのバックアップファイルを整理するのに役立ちます。バックアップファイル名は次のようになります: \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
+        "description": "Backup by day description"
     }
 }

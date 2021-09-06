@@ -1,0 +1,14 @@
+{
+    "extensionDescription": {
+        "message": "Simple Tab Groups v4.5.2+ 拡張でコンテナー内に新しいタブを作成します",
+        "description": "Extension description"
+    },
+    "needInstallSTGExtension": {
+        "message": "Simple Tab Groups 拡張のインストールが必要です\n\nここをクリックすると Simple Tab Groups のホームページを開きます",
+        "description": "Need install Simple Tab Groups extention\n\nClick here to open Simple Tab Groups home page"
+    },
+    "newTempTabTitle": {
+        "message": "一時コンテナー内に新しいタブを開く",
+        "description": "Open a new tab in temporary container"
+    }
+}

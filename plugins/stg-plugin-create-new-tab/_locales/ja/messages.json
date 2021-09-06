@@ -1,0 +1,14 @@
+{
+    "extensionDescription": {
+        "message": "Simple Tab Groups v4.4 拡張でグループ上にコンテナーベースの新しいタブを作成します",
+        "description": "Extension description"
+    },
+    "needInstallSTGExtension": {
+        "message": "Simple Tab Groups 拡張のインストールが必要です\n\nここをクリックすると Simple Tab Groups のホームページを開きます",
+        "description": "Need install Simple Tab Groups extention or change container in addon settings\n\nClick here to open Simple Tab Groups home page"
+    },
+    "newTabTitle": {
+        "message": "新しいタブを開く",
+        "description": "Open a new tab"
+    }
+}
