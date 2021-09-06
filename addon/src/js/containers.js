@@ -86,6 +86,10 @@
             return;
         }
 
+        if (!BG.inited) {
+            return;
+        }
+
         let groups = await Groups.load(),
             needSaveGroups = BG.normalizeContainersInGroups(groups);
 
