@@ -157,11 +157,15 @@
             }
         }
 
+        console.log('START Tabs.get', {query});
+
         let tabs = await browser.tabs.query(query);
 
         tabs = tabs
             .filter(tab => !cache.removedTabs.has(tab.id))
             .map(utils.normalizeTabUrl);
+
+        console.log('STOP Tabs.get');
 
         return query.pinned ? tabs : Promise.all(tabs.map(tab => cache.loadTabSession(tab, includeFavIconUrl, includeThumbnail)));
     }

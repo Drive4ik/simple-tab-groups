@@ -5,6 +5,8 @@
 
     window.storage = {
         async get(data) {
+            console.log('START storage.get', data);
+
             let result = null;
 
             try {
@@ -31,9 +33,13 @@
                 data.forEach(key => undefined === result[key] ? result[key] = utils.clone(DEFAULT_OPTIONS[key]) : null);
             }
 
+            console.log('STOP storage.get');
+
             return result;
         },
         async set(data) {
+            console.log('START storage.set');
+
             if (data.groups) {
                 data.groups.forEach(group => !group.isArchive && (group.tabs = []));
             }
@@ -68,6 +74,8 @@
                 }
 
             }
+
+            console.log('STOP storage.set');
 
             // return browser.storage.local.set(data);
         },

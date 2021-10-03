@@ -4,6 +4,8 @@
     // fix FF bug on browser.windows.getAll ... it's not return all windows
     // without "pinned: false" because need all windows, without normal tabs but with pinned tabs
     async function load(withTabs = false, includeFavIconUrl, includeThumbnail) {
+        console.log('START Windows.load', withTabs, includeFavIconUrl, includeThumbnail);
+
         let [tabs, windows] = await Promise.all([
             withTabs ? Tabs.get(null, null, null, undefined, includeFavIconUrl, includeThumbnail) : false,
             browser.windows.getAll({
@@ -16,6 +18,8 @@
                 .filter(utils.isWindowAllow)
                 .map(cache.loadWindowSession)
         );
+
+        console.log('STOP Windows.load');
 
         return windows
             .map(function(win) {

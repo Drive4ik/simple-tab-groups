@@ -1457,8 +1457,8 @@ function addTabToLazyMove(tabId, groupId, showTabAfterMovingItIntoThisGroup) {
 }
 
 let canceledRequests = new Set;
-const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, originUrl, requestId, frameId}) {
-    if (frameId !== 0 || tabId === -1) {
+const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, cookieStoreId, originUrl, requestId, frameId}) {
+    if (frameId !== 0 || tabId === -1 || containers.isTemporary(cookieStoreId)) {
         return {};
     }
 
@@ -1478,22 +1478,16 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, originUrl
 
     console.log('onBeforeTabRequest %s tabId: %s, url: %s, originUrl: %s', (excludeTab ? '🛑' : ''), tabId, url, originUrl);
 
-    if (excludeTab) {
+    if (excludeTab || !cache.getTabGroup(tabId)) {
         return {};
     }
 
-    let {cookieStoreId, groupId} = cache.getTabSession(tabId);
-
-    if (containers.isTemporary(cookieStoreId) || !groupId) {
-        return {};
-    }
-
-    await utils.wait(50);
+    await utils.wait(100);
 
     let tab = await Tabs.getOne(tabId);
 
     if (!tab) {
-        console.warn('onBeforeTabRequest tab not found');
+        console.warn('onBeforeTabRequest tab %s not found', tabId);
         return {};
     }
 
@@ -1510,7 +1504,7 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, originUrl
 
     cache.applyTabSession(tab);
 
-    console.log('onBeforeRequest tab', tab);
+    console.log('onBeforeTabRequest tab', tab);
 
     let [tabGroup, groups] = await Groups.load(tab.groupId);
 
@@ -1531,51 +1525,42 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, originUrl
         return {};
     }
 
-    await utils.wait(100);
-    tab = await Tabs.getOne(tabId);
+    Tabs.remove(tab.id).catch(noop);
 
-    if (!tab) {
-        console.warn('onBeforeTabRequest tab not found');
-        return {};
-    }
+    Promise.resolve().then(async () => {
+        let newTabParams = {
+            ...tab,
+            cookieStoreId: newTabContainer,
+            ...Groups.getNewTabParams(tabGroup),
+        };
 
-    tab.url = url;
+        if (originUrl.startsWith('moz-extension')) {
+            if (tab.hidden) {
+                //
+            } else {
+                let uuid = utils.getUUIDFromUrl(originUrl);
 
-    let newTabParams = {
-        ...tab,
-        cookieStoreId: newTabContainer,
-        ...Groups.getNewTabParams(tabGroup),
-    };
+                if (!ignoreExtForReopenContainer.has(uuid)) {
+                    newTabParams.url = utils.setUrlSearchParams(browser.runtime.getURL('/help/open-in-container.html'), {
+                        url: tab.url,
+                        anotherCookieStoreId: tab.cookieStoreId,
+                        uuid: uuid,
+                        groupId: tabGroup.id,
+                    });
 
-    if (originUrl.startsWith('moz-extension')) {
-        if (tab.hidden) {
-            //
-        } else {
-            let uuid = utils.getUUIDFromUrl(originUrl);
-
-            if (!ignoreExtForReopenContainer.has(uuid)) {
-                newTabParams.url = utils.setUrlSearchParams(browser.runtime.getURL('/help/open-in-container.html'), {
-                    url: tab.url,
-                    anotherCookieStoreId: tab.cookieStoreId,
-                    uuid: uuid,
-                    groupId: tabGroup.id,
-                });
-
-                newTabParams.active = true;
+                    newTabParams.active = true;
+                }
             }
         }
-    }
 
-    canceledRequests.add(requestId);
-    setTimeout(requestId => canceledRequests.delete(requestId), 2000, requestId);
+        canceledRequests.add(requestId);
+        setTimeout(requestId => canceledRequests.delete(requestId), 2000, requestId);
 
-    let newTab = await Tabs.create(newTabParams);
-
-    if (tab.hidden) {
-        await Tabs.safeHide(newTab);
-    }
-
-    Tabs.remove(tab.id);
+        let newTab = await Tabs.create(newTabParams);
+        if (tab.hidden) {
+            Tabs.safeHide(newTab);
+        }
+    });
 
     return {
         cancel: true,
@@ -3255,6 +3240,8 @@ async function initializeGroupWindows(windows, currentGroupIds) {
 }
 
 async function init() {
+    console.log('[STG] START init');
+
     try {
         let data = await storage.get(null),
             dataChanged = [];
@@ -3348,6 +3335,8 @@ async function init() {
             color: 'transparent',
         });
 
+        console.log('[STG] STOP init');
+
         // delete window.localStorage.lastReloadFromError;
     } catch (e) {
         setBrowserAction(undefined, 'lang:clickHereToReloadAddon', '/icons/exclamation-triangle-yellow.svg', true);
@@ -3361,6 +3350,8 @@ async function init() {
         if (e) {
             errorEventHandler(e);
         }
+
+        console.log('[STG] STOP init with errors');
     }
 }
 

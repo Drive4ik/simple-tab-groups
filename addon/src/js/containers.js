@@ -23,6 +23,8 @@
         mappedContainerCookieStoreId = {};
 
     async function init(temporaryContainerTitle) {
+        console.log('START containers.init');
+
         setTemporaryContainerTitle(temporaryContainerTitle);
 
         // CONTAINER PROPS:
@@ -40,6 +42,8 @@
         browser.contextualIdentities.onCreated.addListener(onCreated);
         browser.contextualIdentities.onUpdated.addListener(onUpdated);
         browser.contextualIdentities.onRemoved.addListener(utils.catchFunc(onRemoved));
+
+        console.log('STOP containers.init');
     }
 
     function onCreated({contextualIdentity}) {
