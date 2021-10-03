@@ -3255,6 +3255,8 @@ async function init() {
 
         await containers.init(data.temporaryContainerTitle);
 
+        console.log('[STG] containers inited');
+
         try {
             let change = await runMigrateForData(data);
             dataChanged.push(change); // run migration for data
@@ -3262,6 +3264,8 @@ async function init() {
             utils.notify(e);
             throw '';
         }
+
+        console.log('[STG] runMigrateForData finish');
 
         utils.assignKeys(options, data, ALL_OPTIONS_KEYS);
 
@@ -3279,6 +3283,8 @@ async function init() {
         }
 
         await tryRestoreMissedTabs(data.tabsToRestore);
+
+        console.log('[STG] tryRestoreMissedTabs finish');
 
         windows = await Windows.load(true);
 
@@ -3298,11 +3304,17 @@ async function init() {
 
         containers.removeUnusedTemporaryContainers(tabs);
 
+        console.log('[STG] containers.removeUnusedTemporaryContainers finish');
+
         restoreOldExtensionUrls(tabs);
+
+        console.log('[STG] restoreOldExtensionUrls finish');
 
         window.setTimeout(resetAutoBackup, 10000);
 
         createMoveTabMenus(data.groups);
+
+        console.log('[STG] createMoveTabMenus finish');
 
         addEvents();
 
