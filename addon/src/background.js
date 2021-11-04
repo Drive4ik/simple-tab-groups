@@ -2359,9 +2359,14 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
     }
 
     if (clearAddonDataBeforeRestore) {
+        let latestExampleGroup = Groups.create(0),
+            latestExampleGroupKeys = Object.keys(latestExampleGroup).filter(key => !['id', 'title', 'tabs'].includes(key));
+
         data.groups.forEach(function(group) {
             let newTabParams = Groups.getNewTabParams(group);
             group.tabs.forEach(prepareTab.bind(null, newTabParams));
+
+            latestExampleGroupKeys.forEach(key => !group.hasOwnProperty(key) && (group[key] = latestExampleGroup[key]));
         });
     } else {
         data.groups = data.groups.map(function(group) {
