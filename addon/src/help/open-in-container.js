@@ -19,21 +19,6 @@ function safeHtml(html) {
     return (html || '').replace(regExp, tag => tagsToReplace[tag] || tag);
 }
 
-function createFavIconNode(url) {
-    const imageElement = document.createElement('img');
-
-    imageElement.src = url;
-    imageElement.addEventListener('error', e => imageElement.src = '/icons/tab.svg');
-
-    return imageElement;
-}
-
-function addFavicon(url) {
-    const origin = new URL(url).origin;
-
-    $('#redirect-url').prepend(createFavIconNode(`${origin}/favicon.ico`));
-}
-
 function getContainer(cookieStoreId) {
     if (cookieStoreId === TEMPORARY_CONTAINER) {
         return {name: lang('temporaryContainerTitle')};
@@ -47,12 +32,15 @@ function getContainer(cookieStoreId) {
 async function init() {
     const url = urlParams.get('url'),
         anotherCookieStoreId = urlParams.get('anotherCookieStoreId'),
-        uuid = urlParams.get('uuid'),
+        destCookieStoreId = urlParams.get('destCookieStoreId'),
+        originId = urlParams.get('originId'),
+        originName = urlParams.get('originName'),
+        originIcon = urlParams.get('originIcon'),
         groupId = Number(urlParams.get('groupId')),
-        currentTab = await browser.tabs.getCurrent(),
+        asInfo = urlParams.get('asInfo'),
         [{groups}, currentContainer, anotherContainer] = await Promise.all([
             browser.storage.local.get('groups'),
-            getContainer(currentTab.cookieStoreId),
+            getContainer(destCookieStoreId),
             getContainer(anotherCookieStoreId),
         ]),
         group = groups.find(group => group.id === groupId);
@@ -70,45 +58,55 @@ async function init() {
         openTab(url);
     }
 
-    let isValidGroup = await checkTabGroup();
+    if (!asInfo) {
+        let isValidGroup = await checkTabGroup();
 
-    if (!isValidGroup) {
-        return;
-    } else if (anotherContainer.notFound) {
-        openTab(url, currentTab.cookieStoreId);
-        return;
-    } else if (group.ifDifferentContainerReOpen && group.excludeContainersForReOpen.includes(anotherCookieStoreId)) {
-        openTab(url, anotherCookieStoreId);
-        return;
+        if (!isValidGroup) {
+            return;
+        } else if (anotherContainer.notFound) {
+            openTab(url, destCookieStoreId);
+            return;
+        } else if (group.ifDifferentContainerReOpen && group.excludeContainersForReOpen.includes(anotherCookieStoreId)) {
+            openTab(url, anotherCookieStoreId);
+            return;
+        }
+
+        window.onfocus = checkTabGroup;
     }
-
-    window.onfocus = checkTabGroup;
 
     $('#helpPageOpenInContainerMainTitle')[INNER_HTML] = lang('helpPageOpenInContainerMainTitle', safeHtml(currentContainer.name));
     $('#redirect-url').innerText = url;
     $('#helpPageOpenInContainerDesc1')[INNER_HTML] = lang('helpPageOpenInContainerDesc1', [safeHtml(group.title), safeHtml(currentContainer.name)]);
-    $('#addon-known-content').innerText = uuid;
-    $('#helpPageOpenInContainerDesc3')[INNER_HTML] = lang('helpPageOpenInContainerDesc3', [safeHtml(anotherContainer.name), safeHtml(uuid)]);
+    $('#another-addon-img').src = originIcon;
+    $('#another-addon-name').innerText = originName;
+    $('#helpPageOpenInContainerDesc3')[INNER_HTML] = lang('helpPageOpenInContainerDesc3', [safeHtml(anotherContainer.name), safeHtml(originName)]);
+
+    // load favicon
+    $('#redirect-img').addEventListener('error', e => e.target.src = '/icons/tab.svg');
+    $('#redirect-img').src = (new URL(url).origin) + '/favicon.ico';
+
+    if (asInfo) {
+        $('main').classList.add('as-info');
+        return;
+    }
 
     $('#deny')[INNER_HTML] = lang('helpPageOpenInContainerOpenInContainer', safeHtml(anotherContainer.name));
     $('#confirm')[INNER_HTML] = lang('helpPageOpenInContainerOpenInContainer', safeHtml(currentContainer.name));
 
     $('#helpPageOpenInContainerExcludeContainerToGroup')[INNER_HTML] = lang('helpPageOpenInContainerExcludeContainerToGroup', [safeHtml(anotherContainer.name), safeHtml(group.title)]);
 
-    $('#helpPageOpenInContainerIgnoreUuidForSession')[INNER_HTML] = lang('helpPageOpenInContainerIgnoreUuidForSession', uuid);
-
-    addFavicon(url);
+    $('#helpPageOpenInContainerIgnoreAppForSession')[INNER_HTML] = lang('helpPageOpenInContainerIgnoreAppForSession', safeHtml(originName));
 
     $('#deny').addEventListener('click', () => openTab(url, anotherCookieStoreId, 'deny', groupId));
-    $('#confirm').addEventListener('click', () => openTab(url, currentTab.cookieStoreId, 'confirm', undefined, uuid));
+    $('#confirm').addEventListener('click', () => openTab(url, destCookieStoreId, 'confirm', undefined, originId));
     $('#exclude-container').addEventListener('change', e => {
         $('#confirm').disabled = e.target.checked;
 
         if (e.target.checked) {
-            $('#ignore-uuid-for-session').checked = $('#deny').disabled = false;
+            $('#ignore-origin-id-for-session').checked = $('#deny').disabled = false;
         }
     });
-    $('#ignore-uuid-for-session').addEventListener('change', e => {
+    $('#ignore-origin-id-for-session').addEventListener('change', e => {
         $('#deny').disabled = e.target.checked;
 
         if (e.target.checked) {
@@ -117,7 +115,7 @@ async function init() {
     });
 }
 
-async function openTab(url, cookieStoreId = DEFAULT_COOKIE_STORE_ID, buttonId = null, groupId = null, uuid = null) {
+async function openTab(url, cookieStoreId = DEFAULT_COOKIE_STORE_ID, buttonId = null, groupId = null, originId = null) {
     try {
         if (buttonId === 'deny' && $('#exclude-container').checked) {
             let result = await browser.runtime.sendMessage({
@@ -133,10 +131,10 @@ async function openTab(url, cookieStoreId = DEFAULT_COOKIE_STORE_ID, buttonId = 
             }
         }
 
-        if (buttonId === 'confirm' && $('#ignore-uuid-for-session').checked) {
+        if (buttonId === 'confirm' && $('#ignore-origin-id-for-session').checked) {
             let result = await browser.runtime.sendMessage({
                 action: 'ignore-ext-for-reopen-container',
-                uuid,
+                id: originId,
             });
 
             if (!result) {
@@ -146,7 +144,16 @@ async function openTab(url, cookieStoreId = DEFAULT_COOKIE_STORE_ID, buttonId = 
             }
         }
 
-        const {id, index} = await browser.tabs.getCurrent();
+        const {id, index, cookieStoreId: currentCookieStoreId} = await browser.tabs.getCurrent();
+
+        if (currentCookieStoreId === cookieStoreId) {
+            browser.tabs.update(id, {
+                loadReplace: true,
+                url,
+            });
+
+            return;
+        }
 
         await browser.tabs.create({
             url,

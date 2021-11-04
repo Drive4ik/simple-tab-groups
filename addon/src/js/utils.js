@@ -294,12 +294,12 @@
         return tab;
     }
 
-    const UUIDRegExp = /^moz-extension:\/\/([a-f\-\d]+)\//;
+    /*const UUIDRegExp = /^moz-extension:\/\/([a-f\-\d]+)\//;
 
     function getUUIDFromUrl(url) {
         let [, uuid] = UUIDRegExp.exec(url);
         return uuid;
-    }
+    }*/
 
     function setUrlSearchParams(url, params = {}) {
         let urlObj = new URL(url);
@@ -360,7 +360,7 @@
             return null;
         }
 
-        return containers.get(tab.cookieStoreId, key);
+        return Containers.get(tab.cookieStoreId, key);
     }
 
     function getGroupTitle({id, title, isArchive, isSticky, tabs, newTabContainer}, args = '') {
@@ -376,7 +376,7 @@
         }
 
         if (withContainer && newTabContainer !== DEFAULT_COOKIE_STORE_ID) {
-            beforeTitle.push('[' + containers.get(newTabContainer, 'name') + ']');
+            beforeTitle.push('[' + Containers.get(newTabContainer, 'name') + ']');
         }
 
         if (withActiveGroup) {
@@ -863,7 +863,7 @@
         isUrlAllowToCreate,
         normalizeUrl,
         normalizeTabUrl,
-        getUUIDFromUrl,
+        // getUUIDFromUrl,
         setUrlSearchParams,
         isTabPinned,
         isTabNotPinned,

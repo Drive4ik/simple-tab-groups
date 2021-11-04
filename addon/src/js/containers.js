@@ -270,7 +270,7 @@
         }
     }
 
-    window.containers = {
+    window.Containers = {
         init,
         isDefault,
         isTemporary,

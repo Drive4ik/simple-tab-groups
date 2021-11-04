@@ -25,7 +25,7 @@
         },
         data() {
             return {
-                containers: containers.getAll(true),
+                containers: Containers.getAll(true),
                 TEMPORARY_CONTAINER,
                 DEFAULT_COOKIE_STORE_ID,
                 disabledContainers: {},

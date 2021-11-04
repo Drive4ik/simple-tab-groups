@@ -933,27 +933,19 @@
             }
         }
     },
-    "helpPageOpenInContainerDesc2": {
-        "message": "另一個插件已使用此 UUID：",
-        "description": "Another addon, which has UUID:"
-    },
     "helpPageOpenInContainerDesc3": {
-        "message": "嘗試於 <container-name>$containerName$</container-name> 容器中開啟這個 URL。將分頁移至其他群組，或禁止 <strong>$uuid$</strong> 插件執行此動作。",
-        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon '757eaba7-0b3d-478b-ace2-cbe0a16eed47' to perform this action.",
+        "message": "嘗試於 <container-name>$containerName$</container-name> 容器中開啟這個 URL。將分頁移至其他群組，或禁止 <strong>$addonName$</strong> 插件執行此動作。",
+        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
         "placeholders": {
             "containerName": {
                 "content": "$1",
                 "example": "Business"
             },
-            "uuid": {
+            "addonName": {
                 "content": "$2",
-                "example": "757eaba7-0b3d-478b-ace2-cbe0a16eed47"
+                "example": "Facebook Container"
             }
         }
-    },
-    "helpPageOpenInContainerDesc4": {
-        "message": "以 UUID 找出插件：",
-        "description": "You can find out the addon by UUID on the page:"
     },
     "helpPageOpenInContainerOpenInContainer": {
         "message": "開啟於 <container-name>$containerName$</container-name> 容器",
@@ -1034,16 +1026,6 @@
             "groupTitle": {
                 "content": "$2",
                 "example": "Group 1"
-            }
-        }
-    },
-    "helpPageOpenInContainerIgnoreUuidForSession": {
-        "message": "忽略此 \"<strong>$uuid$</strong>\" UUID 直至瀏覽器關閉",
-        "description": "Ignore UUID for session",
-        "placeholders": {
-            "uuid": {
-                "content": "$1",
-                "example": "ff06d2f8-3660-43ed-becb-ad1c458ae76d"
             }
         }
     },

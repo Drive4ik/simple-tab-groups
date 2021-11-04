@@ -16,7 +16,7 @@
         }
 
         main {
-            background: url(/icons/icon.svg) no-repeat 0px 10px;
+            background: url("/icons/icon.svg") no-repeat 0px 10px;
             background-size: 128px;
             margin-inline-start: -150px;
             padding-inline-start: 170px;
@@ -34,7 +34,7 @@
 
             /* for a mid sized window we have enough for this but not our image */
             .title {
-                background-image: url("chrome://global/skin/icons/info.svg");
+                background-image: url("/icons/icon.svg");
             }
         }
 
@@ -92,6 +92,10 @@
         .check-label > span {
             user-select: none;
         }
+
+        .as-info .hide-as-info {
+            display: none;
+        }
     </style>
 </head>
 
@@ -104,28 +108,34 @@
         </div>
         <div>
             <p><strong i18n="extensionName"></strong> <span i18n="helpPageOpenInContainerSubTitle">addon can't open URL:</span></p>
-            <div id="redirect-url" class="block-content">https://google.com</div>
+            <div class="block-content">
+                <img id="redirect-img" src="" />
+                <div id="redirect-url">https://google.com</div>
+            </div>
             <p id="helpPageOpenInContainerDesc1">Group <strong>Group 1</strong> was assigned to open tabs in <container-name>Personal</container-name> container.</p>
-            <p i18n="helpPageOpenInContainerDesc2">Another addon who has UUID:</p>
-            <div id="addon-known-content" class="block-content">ff06d2f8-3660-43ed-becb-ad1c458ae76d</div>
-            <p id="helpPageOpenInContainerDesc3">tries to open this URL in <container-name>Personal2</container-name> container. Move the tab to another group or forbid the addon <strong>ff06d2f8-3660-43ed-becb-ad1c458ae76d</strong> to perform this action.</p>
-            <p i18n="helpPageOpenInContainerDesc4">You can find out the addon by UUID on the page:</p>
-            <div class="block-content">about:debugging#/runtime/this-firefox</div>
-            <br />
-            <br />
-            <label for="exclude-container" class="check-label">
-                <input id="exclude-container" type="checkbox">
-                <span id="helpPageOpenInContainerExcludeContainerToGroup">Exclude <container-name>Facebook</container-name> container for group <strong>Group 1</strong></span>
-            </label>
-            <label for="ignore-uuid-for-session" class="check-label">
-                <input id="ignore-uuid-for-session" type="checkbox">
-                <span id="helpPageOpenInContainerIgnoreUuidForSession">Ignore this "<strong>ff06d2f8-3660-43ed-becb-ad1c458ae76d</strong>" UUID until the browser is closed</span>
-            </label>
-            <br />
+            <p i18n="helpPageOpenInContainerDesc2">Another addon:</p>
+            <div class="block-content">
+                <img id="another-addon-img" src="" />
+                <div id="another-addon-name">Facebook</div>
+            </div>
+            <p id="helpPageOpenInContainerDesc3">tries to open this URL in <container-name>Personal2</container-name> container. Move the tab to another group or forbid the addon <strong>Facebook Container</strong> to perform this action.</p>
 
-            <div class="button-container">
-                <button id="deny" class="button">Open in <container-name>Personal</container-name> container</button>
-                <button id="confirm" class="button primary" autofocus>Open in <container-name>Personal</container-name> container</button>
+            <div class="hide-as-info">
+                <br>
+                <label for="exclude-container" class="check-label">
+                    <input id="exclude-container" type="checkbox">
+                    <span id="helpPageOpenInContainerExcludeContainerToGroup">Exclude <container-name>Facebook</container-name> container for group <strong>Group 1</strong></span>
+                </label>
+                <label for="ignore-origin-id-for-session" class="check-label">
+                    <input id="ignore-origin-id-for-session" type="checkbox">
+                    <span id="helpPageOpenInContainerIgnoreAppForSession">Ignore addon "<strong>Facebook Container</strong>" until the browser is closed</span>
+                </label>
+                <br>
+
+                <div class="button-container">
+                    <button id="deny" class="button">Open in <container-name>Personal</container-name> container</button>
+                    <button id="confirm" class="button primary" autofocus>Open in <container-name>Personal</container-name> container</button>
+                </div>
             </div>
         </div>
     </main>

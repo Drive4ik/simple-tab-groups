@@ -942,26 +942,22 @@
         }
     },
     "helpPageOpenInContainerDesc2": {
-        "message": "Another addon, which has UUID:",
-        "description": "Another addon, which has UUID:"
+        "message": "Another addon:",
+        "description": "Another addon:"
     },
     "helpPageOpenInContainerDesc3": {
-        "message": "tries to open this URL in <container-name>$containerName$</container-name> container. Move the tab to another group or forbid the addon <strong>$uuid$</strong> to perform this action.",
-        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon '757eaba7-0b3d-478b-ace2-cbe0a16eed47' to perform this action.",
+        "message": "tries to open this URL in <container-name>$containerName$</container-name> container. Move the tab to another group or forbid the addon <strong>$addonName$</strong> to perform this action.",
+        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
         "placeholders": {
             "containerName": {
                 "content": "$1",
                 "example": "Business"
             },
-            "uuid": {
+            "addonName": {
                 "content": "$2",
-                "example": "757eaba7-0b3d-478b-ace2-cbe0a16eed47"
+                "example": "Facebook Container"
             }
         }
-    },
-    "helpPageOpenInContainerDesc4": {
-        "message": "You can find out the addon by UUID on the page:",
-        "description": "You can find out the addon by UUID on the page:"
     },
     "helpPageOpenInContainerOpenInContainer": {
         "message": "Open in <container-name>$containerName$</container-name> container",
@@ -1045,13 +1041,13 @@
             }
         }
     },
-    "helpPageOpenInContainerIgnoreUuidForSession": {
-        "message": "Ignore this \"<strong>$uuid$</strong>\" UUID until the browser is closed",
-        "description": "Ignore UUID for session",
+    "helpPageOpenInContainerIgnoreAppForSession": {
+        "message": "Ignore extension \"<strong>$addonName$</strong>\" until the browser is closed",
+        "description": "Ignore addon for session",
         "placeholders": {
-            "uuid": {
+            "addonName": {
                 "content": "$1",
-                "example": "ff06d2f8-3660-43ed-becb-ad1c458ae76d"
+                "example": "Facebook Container"
             }
         }
     },
@@ -1138,5 +1134,9 @@
     "autoBackupByDayIndexDescription": {
         "message": "It helps to get rid of a large number of backup files in the downloads folder. The backup file will look like this: \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
         "description": "Backup by day description"
+    },
+    "clickHereForInfo": {
+        "message": "Click here for more info",
+        "description": "Click here for more info"
     }
 }

@@ -411,7 +411,7 @@
             isArchive: group.isArchive,
             isSticky: group.isSticky,
             iconUrl: utils.getGroupIconUrl(group),
-            contextualIdentity: containers.get(group.newTabContainer),
+            contextualIdentity: Containers.get(group.newTabContainer),
             windowId: cache.getWindowId(group.id),
         };
     }

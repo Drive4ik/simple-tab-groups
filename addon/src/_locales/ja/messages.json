@@ -937,27 +937,19 @@
             }
         }
     },
-    "helpPageOpenInContainerDesc2": {
-        "message": "別のアドオンの UUID:",
-        "description": "Another addon, which has UUID:"
-    },
     "helpPageOpenInContainerDesc3": {
-        "message": "この URL を <container-name>$containerName$</container-name> コンテナーに開こうとしています。タブを別のグループへ移動するか、アドオン <strong>$uuid$</strong> のこのアクションを禁止してください。",
-        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon '757eaba7-0b3d-478b-ace2-cbe0a16eed47' to perform this action.",
+        "message": "この URL を <container-name>$containerName$</container-name> コンテナーに開こうとしています。タブを別のグループへ移動するか、アドオン <strong>$addonName$</strong> のこのアクションを禁止してください。",
+        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
         "placeholders": {
             "containerName": {
                 "content": "$1",
                 "example": "Business"
             },
-            "uuid": {
+            "addonName": {
                 "content": "$2",
-                "example": "757eaba7-0b3d-478b-ace2-cbe0a16eed47"
+                "example": "Facebook Container"
             }
         }
-    },
-    "helpPageOpenInContainerDesc4": {
-        "message": "このページ上の UUID でアドオンを見つけられます:",
-        "description": "You can find out the addon by UUID on the page:"
     },
     "helpPageOpenInContainerOpenInContainer": {
         "message": "<container-name>$containerName$</container-name> コンテナーに開く",
@@ -1038,16 +1030,6 @@
             "groupTitle": {
                 "content": "$2",
                 "example": "Group 1"
-            }
-        }
-    },
-    "helpPageOpenInContainerIgnoreUuidForSession": {
-        "message": "ブラウザーを閉じるまで、この UUID \"<strong>$uuid$</strong>\" を無視する",
-        "description": "Ignore UUID for session",
-        "placeholders": {
-            "uuid": {
-                "content": "$1",
-                "example": "ff06d2f8-3660-43ed-becb-ad1c458ae76d"
             }
         }
     },

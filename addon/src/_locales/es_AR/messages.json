@@ -933,27 +933,19 @@
             }
         }
     },
-    "helpPageOpenInContainerDesc2": {
-        "message": "Otra extensión, que tiene UUID:",
-        "description": "Another addon, which has UUID:"
-    },
     "helpPageOpenInContainerDesc3": {
-        "message": "intentar abrir este URL en el contenedor <container-name>$containerName$</container-name>. Mové la pestaña a otro grupo o prohibile a la extensión <strong>$uuid$</strong> realizar esta acción.",
-        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon '757eaba7-0b3d-478b-ace2-cbe0a16eed47' to perform this action.",
+        "message": "intentar abrir este URL en el contenedor <container-name>$containerName$</container-name>. Mové la pestaña a otro grupo o prohibile a la extensión <strong>$addonName$</strong> realizar esta acción.",
+        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
         "placeholders": {
             "containerName": {
                 "content": "$1",
                 "example": "Business"
             },
-            "uuid": {
+            "addonName": {
                 "content": "$2",
-                "example": "757eaba7-0b3d-478b-ace2-cbe0a16eed47"
+                "example": "Facebook Container"
             }
         }
-    },
-    "helpPageOpenInContainerDesc4": {
-        "message": "Podés encontrar la extensión por UUID en la página",
-        "description": "You can find out the addon by UUID on the page:"
     },
     "helpPageOpenInContainerOpenInContainer": {
         "message": "Abrir en el contenedor <container-name>$containerName$</container-name>",
@@ -1034,16 +1026,6 @@
             "groupTitle": {
                 "content": "$2",
                 "example": "Group 1"
-            }
-        }
-    },
-    "helpPageOpenInContainerIgnoreUuidForSession": {
-        "message": "Ignorá este UUID \"<strong>$uuid$</strong>\" hasta que el navegador esté cerrado",
-        "description": "Ignore UUID for session",
-        "placeholders": {
-            "uuid": {
-                "content": "$1",
-                "example": "ff06d2f8-3660-43ed-becb-ad1c458ae76d"
             }
         }
     },

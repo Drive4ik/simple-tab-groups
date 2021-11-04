@@ -106,6 +106,7 @@ const config = {
                 'js/groups.js',
                 'js/tabs.js',
                 'js/windows.js',
+                'js/management.js',
                 'js/error-handler.js',
 
                 // pages

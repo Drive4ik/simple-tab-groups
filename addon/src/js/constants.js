@@ -42,6 +42,16 @@ const TREE_TABS_EXTENSIONS = Object.freeze([
     '{8d808887-ed13-4931-9f5a-4c0bff979a5a}',
 ]);
 
+const IGNORE_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER = Object.freeze([
+    '@testpilot-containers',
+    '@contain-google',
+    '@contain-facebook',
+    '@contain-amzn',
+    '@contain-twitter',
+    '@contain-youtube',
+    '@containing-reddit',
+]);
+
 const EXTENSIONS_WHITE_LIST = Object.freeze({
     'stg-plugin-create-new-group@drive4ik': {
         title: '[STG plugin] Create new group',

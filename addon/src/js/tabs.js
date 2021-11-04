@@ -45,9 +45,9 @@
         tab.cookieStoreId = getNewTabContainer(tab, {newTabContainer, ifDifferentContainerReOpen, excludeContainersForReOpen});
 
         if (tab.cookieStoreId === TEMPORARY_CONTAINER) {
-            tab.cookieStoreId = await containers.createTemporaryContainer();
+            tab.cookieStoreId = await Containers.createTemporaryContainer();
         } else {
-            tab.cookieStoreId = containers.get(tab.cookieStoreId, 'cookieStoreId', true);
+            tab.cookieStoreId = Containers.get(tab.cookieStoreId, 'cookieStoreId', true);
         }
 
         let newTab = await browser.tabs.create(tab);
@@ -585,8 +585,8 @@
         return tabs.map(function({id, url, title, cookieStoreId, favIconUrl, openerTabId, groupId, thumbnail}) {
             let tab = {url, title};
 
-            if (!containers.isDefault(cookieStoreId)) {
-                tab.cookieStoreId = containers.isTemporary(cookieStoreId) ? TEMPORARY_CONTAINER : cookieStoreId;
+            if (!Containers.isDefault(cookieStoreId)) {
+                tab.cookieStoreId = Containers.isTemporary(cookieStoreId) ? TEMPORARY_CONTAINER : cookieStoreId;
             }
 
             if (id) {
@@ -618,7 +618,7 @@
             {newTabContainer = DEFAULT_COOKIE_STORE_ID, ifDifferentContainerReOpen, excludeContainersForReOpen = []}
         ) {
 
-        if (cookieStoreId === newTabContainer || containers.isTemporary(cookieStoreId)) {
+        if (cookieStoreId === newTabContainer || Containers.isTemporary(cookieStoreId)) {
             return cookieStoreId;
         }
 
@@ -630,7 +630,7 @@
             return excludeContainersForReOpen.includes(cookieStoreId) ? cookieStoreId : newTabContainer;
         }
 
-        return containers.isDefault(cookieStoreId) ? newTabContainer : cookieStoreId;
+        return Containers.isDefault(cookieStoreId) ? newTabContainer : cookieStoreId;
     }
 
     window.Tabs = {

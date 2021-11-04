@@ -51,7 +51,7 @@
             return {
                 TEMPORARY_CONTAINER,
                 DEFAULT_COOKIE_STORE_ID,
-                allContainers: containers.getAll(),
+                allContainers: Containers.getAll(),
 
                 filteredGroups,
 

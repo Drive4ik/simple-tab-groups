@@ -933,27 +933,19 @@
             }
         }
     },
-    "helpPageOpenInContainerDesc2": {
-        "message": "Друга добавка с UUID:",
-        "description": "Another addon, which has UUID:"
-    },
     "helpPageOpenInContainerDesc3": {
-        "message": "опитва да отвори същия адрес в изолатор <container-name>$containerName$</container-name>. Или преместете раздела в друга група, или забранете на добавката <strong>$uuid$</strong> да извършва това действие.",
-        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon '757eaba7-0b3d-478b-ace2-cbe0a16eed47' to perform this action.",
+        "message": "опитва да отвори същия адрес в изолатор <container-name>$containerName$</container-name>. Или преместете раздела в друга група, или забранете на добавката <strong>$addonName$</strong> да извършва това действие.",
+        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
         "placeholders": {
             "containerName": {
                 "content": "$1",
                 "example": "Business"
             },
-            "uuid": {
+            "addonName": {
                 "content": "$2",
-                "example": "757eaba7-0b3d-478b-ace2-cbe0a16eed47"
+                "example": "Facebook Container"
             }
         }
-    },
-    "helpPageOpenInContainerDesc4": {
-        "message": "Можете да видите добавките и техните UUID на:",
-        "description": "You can find out the addon by UUID on the page:"
     },
     "helpPageOpenInContainerOpenInContainer": {
         "message": "Отваря в изолатор <container-name>$containerName$</container-name>",
@@ -1034,16 +1026,6 @@
             "groupTitle": {
                 "content": "$2",
                 "example": "Group 1"
-            }
-        }
-    },
-    "helpPageOpenInContainerIgnoreUuidForSession": {
-        "message": "Пренебрегване на UUID \"<strong>$uuid$</strong>\" до рестарт на четеца",
-        "description": "Ignore UUID for session",
-        "placeholders": {
-            "uuid": {
-                "content": "$1",
-                "example": "ff06d2f8-3660-43ed-becb-ad1c458ae76d"
             }
         }
     },

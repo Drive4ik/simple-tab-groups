@@ -708,7 +708,7 @@ async function createMoveTabMenus(groups) {
 
     await removeMoveTabMenus();
 
-    const temporaryContainer = containers.get(TEMPORARY_CONTAINER);
+    const temporaryContainer = Containers.get(TEMPORARY_CONTAINER);
 
     hasBookmarksPermission && menuIds.push(browser.menus.create({
         id: 'stg-open-bookmark-parent',
@@ -1119,7 +1119,7 @@ async function createMoveTabMenus(groups) {
                 tabsToCreate = [];
 
             let tabsIdsToRemove = allTabs
-                .filter(tab => containers.isTemporary(tab.cookieStoreId))
+                .filter(tab => Containers.isTemporary(tab.cookieStoreId))
                 .map(function(tab) {
                     tabsToCreate.push({
                         ...tab,
@@ -1150,7 +1150,7 @@ async function createMoveTabMenus(groups) {
 
                 // remove temporary containers
                 if (setActive) {
-                    containers.removeUnusedTemporaryContainers(newTabs);
+                    Containers.removeUnusedTemporaryContainers(newTabs);
                 }
 
                 loadingBrowserAction(false);
@@ -1458,7 +1458,7 @@ function addTabToLazyMove(tabId, groupId, showTabAfterMovingItIntoThisGroup) {
 
 let canceledRequests = new Set;
 const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, cookieStoreId, originUrl, requestId, frameId}) {
-    if (frameId !== 0 || tabId === -1 || containers.isTemporary(cookieStoreId)) {
+    if (frameId !== 0 || tabId === -1 || Containers.isTemporary(cookieStoreId)) {
         return {};
     }
 
@@ -1525,6 +1525,50 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, cookieSto
         return {};
     }
 
+    let originExt = Management.getExtensionByUUID(originUrl.slice(0, 50));
+
+    function getNewAddonTabUrl(asInfo) {
+        let params = {
+            url: tab.url,
+            anotherCookieStoreId: tab.cookieStoreId,
+            destCookieStoreId: newTabContainer,
+            originId: originExt.id,
+            originName: originExt.name,
+            originIcon: originExt.icon,
+            groupId: tabGroup.id,
+        };
+
+        if (asInfo) {
+            params.asInfo = true;
+        }
+
+        return utils.setUrlSearchParams(browser.runtime.getURL('/help/open-in-container.html'), params);
+    }
+
+    if (IGNORE_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER.includes(originExt.id)) {
+        let showNotif = +window.localStorage.ignoreExtensionsForReopenTabInContainer || 0;
+
+        if (showNotif < 10) {
+            window.localStorage.ignoreExtensionsForReopenTabInContainer = ++showNotif;
+            let str = browser.i18n.getMessage('helpPageOpenInContainerMainTitle', Containers.get(newTabContainer, 'name'));
+
+            str = str.replace(/(\<.+?\>)/g, '') + '\n\n' + browser.i18n.getMessage('clickHereForInfo');
+
+            utils.notify(str, undefined, undefined, undefined, function() {
+                Tabs.create({
+                    active: true,
+                    url: getNewAddonTabUrl(true),
+                    groupId: tabGroup.id,
+                });
+            });
+        }
+
+        return {};
+    }
+
+    canceledRequests.add(requestId);
+    setTimeout(requestId => canceledRequests.delete(requestId), 2000, requestId);
+
     Tabs.remove(tab.id).catch(noop);
 
     Promise.resolve().then(async () => {
@@ -1538,23 +1582,12 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, cookieSto
             if (tab.hidden) {
                 //
             } else {
-                let uuid = utils.getUUIDFromUrl(originUrl);
-
-                if (!ignoreExtForReopenContainer.has(uuid)) {
-                    newTabParams.url = utils.setUrlSearchParams(browser.runtime.getURL('/help/open-in-container.html'), {
-                        url: tab.url,
-                        anotherCookieStoreId: tab.cookieStoreId,
-                        uuid: uuid,
-                        groupId: tabGroup.id,
-                    });
-
+                if (!ignoreExtForReopenContainer.has(originExt.id)) {
                     newTabParams.active = true;
+                    newTabParams.url = getNewAddonTabUrl();
                 }
             }
         }
-
-        canceledRequests.add(requestId);
-        setTimeout(requestId => canceledRequests.delete(requestId), 2000, requestId);
 
         let newTab = await Tabs.create(newTabParams);
         if (tab.hidden) {
@@ -1660,7 +1693,7 @@ browser.runtime.onMessage.addListener(runAction);
 
 browser.runtime.onMessageExternal.addListener(async function(request, sender) {
     if (request?.action === 'ignore-ext-for-reopen-container') {
-        ignoreExtForReopenContainer.add(utils.getUUIDFromUrl(sender.url));
+        ignoreExtForReopenContainer.add(sender.id);
         return {
             ok: true,
         };
@@ -1712,7 +1745,7 @@ async function runAction(data, sender = {}) {
     console.info('runAction', {data, sender});
 
     if (data.action === 'ignore-ext-for-reopen-container') {
-        ignoreExtForReopenContainer.add(data.uuid);
+        ignoreExtForReopenContainer.add(data.id);
         return {
             ok: true,
         };
@@ -2069,7 +2102,7 @@ async function runAction(data, sender = {}) {
             case 'exclude-container-for-group':
                 let group = groups.find(group => group.id === data.groupId);
 
-                if (!group || !data.cookieStoreId || containers.get(data.cookieStoreId, 'cookieStoreId', true) !== data.cookieStoreId) {
+                if (!group || !data.cookieStoreId || Containers.get(data.cookieStoreId, 'cookieStoreId', true) !== data.cookieStoreId) {
                     throw Error('invalid groupId or cookieStoreId');
                 }
 
@@ -2148,7 +2181,7 @@ async function saveOptions(_options) {
     }
 
     if (optionsKeys.includes('temporaryContainerTitle')) {
-        containers.updateTemporaryContainerTitle(options.temporaryContainerTitle);
+        Containers.updateTemporaryContainerTitle(options.temporaryContainerTitle);
     }
 
     if (optionsKeys.some(key => ['showContextMenuOnTabs', 'showContextMenuOnLinks'].includes(key))) {
@@ -2246,7 +2279,7 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
         group.tabs = Tabs.prepareForSave(group.tabs, false, includeTabFavIcons, includeTabThumbnails);
 
         group.tabs.forEach(function({cookieStoreId}) {
-            if (!containers.isDefault(cookieStoreId) && !containers.isTemporary(cookieStoreId)) {
+            if (!Containers.isDefault(cookieStoreId) && !Containers.isTemporary(cookieStoreId)) {
                 containersToExport.add(cookieStoreId);
             }
         });
@@ -2260,7 +2293,7 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
         return group;
     });
 
-    let allContainers = containers.getAll();
+    let allContainers = Containers.getAll();
 
     data.containers = {};
 
@@ -2323,7 +2356,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         data.groups.forEach(group => group.isMain = false);
     }
 
-    await containers.updateTemporaryContainerTitle(data.temporaryContainerTitle);
+    await Containers.updateTemporaryContainerTitle(data.temporaryContainerTitle);
 
     if (data.hasOwnProperty('showTabsWithThumbnailsInManageGroups')) {
         options.showTabsWithThumbnailsInManageGroups = data.showTabsWithThumbnailsInManageGroups;
@@ -2351,7 +2384,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         delete tab.index;
         delete tab.pinned;
 
-        if (tab.cookieStoreId && !containers.isTemporary(tab.cookieStoreId)) {
+        if (tab.cookieStoreId && !Containers.isTemporary(tab.cookieStoreId)) {
             neededConteiners.add(tab.cookieStoreId);
         }
 
@@ -2396,7 +2429,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
                 continue;
             }
 
-            let newCookieStoreId = await containers.normalize(cookieStoreId, data.containers[cookieStoreId]);
+            let newCookieStoreId = await Containers.normalize(cookieStoreId, data.containers[cookieStoreId]);
 
             if (newCookieStoreId !== cookieStoreId) {
                 data.groups.forEach(function(group) {
@@ -2502,7 +2535,7 @@ window.BG = {
     options,
     saveOptions,
 
-    containers,
+    Containers,
     normalizeContainersInGroups,
 
     Tabs,
@@ -2877,6 +2910,18 @@ async function runMigrateForData(data) {
                 //
             },
         },
+        {
+            version: '4.7.1',
+            migration() {
+                let latestExampleGroup = Groups.create(0),
+                    latestExampleGroupKeys = Object.keys(latestExampleGroup).filter(key => !['id', 'title', 'tabs'].includes(key));
+
+                data.groups.forEach(function(group) {
+                    latestExampleGroupKeys
+                        .forEach(key => !group.hasOwnProperty(key) && (group[key] = utils.clone(latestExampleGroup[key])));
+                });
+            },
+        },
     ];
 
     // start migration
@@ -2942,7 +2987,7 @@ async function syncTabs(groups, allTabs) {
         for (let tab of group.tabs) {
             tab.groupId = group.id;
 
-            tab.cookieStoreId = await containers.normalize(tab.cookieStoreId);
+            tab.cookieStoreId = await Containers.normalize(tab.cookieStoreId);
 
             let winTabIndex = allTabs.findIndex(winTab => winTab.url === tab.url && winTab.cookieStoreId === tab.cookieStoreId);
 
@@ -3063,7 +3108,7 @@ async function tryRestoreMissedTabs(tabsToRestore) {
 }
 
 function normalizeContainersInGroups(groups) {
-    let allContainers = containers.getAll(true),
+    let allContainers = Containers.getAll(true),
         hasChanges = false;
 
     groups.forEach(function(group) {
@@ -3071,7 +3116,7 @@ function normalizeContainersInGroups(groups) {
             oldCatchTabContainersLength = group.catchTabContainers.length,
             oldExcludeContainersForReOpenLength = group.excludeContainersForReOpen.length;
 
-        group.newTabContainer = containers.get(group.newTabContainer, 'cookieStoreId', true);
+        group.newTabContainer = Containers.get(group.newTabContainer, 'cookieStoreId', true);
         group.catchTabContainers = group.catchTabContainers.filter(cookieStoreId => allContainers[cookieStoreId]);
         group.excludeContainersForReOpen = group.excludeContainersForReOpen.filter(cookieStoreId => allContainers[cookieStoreId]);
 
@@ -3098,16 +3143,12 @@ function normalizeContainersInGroups(groups) {
 }
 
 async function restoreOldExtensionUrls(tabs) {
-    let currentUUID = utils.getUUIDFromUrl(addonUrlPrefix);
-
     tabs
         .filter(({url}) => url.startsWith('moz-extension:') && url.includes('/help/open-in-container.html'))
         .forEach(function({id, url}) {
-            let uuid = utils.getUUIDFromUrl(url);
-
-            if (uuid !== currentUUID) {
+            if (!url.startsWith(addonUrlPrefix)) {
                 browser.tabs.update(id, {
-                    url: url.replace(uuid, currentUUID),
+                    url: addonUrlPrefix + url.slice(addonUrlPrefix.length),
                     loadReplace: true,
                 }).catch(noop);
             }
@@ -3258,9 +3299,13 @@ async function init() {
             dataChanged.push(true);
         }
 
-        await containers.init(data.temporaryContainerTitle);
+        await Containers.init(data.temporaryContainerTitle);
 
         console.log('[STG] containers inited');
+
+        await Management.init();
+
+        console.log('[STG] Management inited');
 
         try {
             let change = await runMigrateForData(data);
@@ -3307,9 +3352,9 @@ async function init() {
 
         let tabs = utils.getTabs(windows);
 
-        containers.removeUnusedTemporaryContainers(tabs);
+        Containers.removeUnusedTemporaryContainers(tabs);
 
-        console.log('[STG] containers.removeUnusedTemporaryContainers finish');
+        console.log('[STG] Containers.removeUnusedTemporaryContainers finish');
 
         restoreOldExtensionUrls(tabs);
 

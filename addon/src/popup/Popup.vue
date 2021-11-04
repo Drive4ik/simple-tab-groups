@@ -73,7 +73,7 @@
                 groupToShow: null,
                 groupToEdit: null,
 
-                containers: containers.getAll(true),
+                containers: Containers.getAll(true),
                 options: {},
                 groups: [],
 
@@ -494,7 +494,7 @@
                             this.loadOptions();
                             break;
                         case 'containers-updated':
-                            this.containers = containers.getAll(true);
+                            this.containers = Containers.getAll(true);
                             Object.values(this.allTabs).forEach(this.mapTabContainer);
                             break;
                         case 'lock-addon':
@@ -619,7 +619,7 @@
             },
 
             mapTabContainer(tab) {
-                tab.container = containers.get(tab.cookieStoreId);
+                tab.container = Containers.get(tab.cookieStoreId);
                 return tab;
             },
 

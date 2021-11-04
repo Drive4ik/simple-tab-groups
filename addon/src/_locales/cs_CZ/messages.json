@@ -919,27 +919,19 @@
             }
         }
     },
-    "helpPageOpenInContainerDesc2": {
-        "message": "Další doplněk, který má UUID:",
-        "description": "Another addon, which has UUID:"
-    },
     "helpPageOpenInContainerDesc3": {
-        "message": "zkouší otevřít tuto URL adresu v kontejneru <container-name>$containerName$</container-name>. Přesuňte panel do jiné skupiny nebo zakažte doplňku <strong>$uuid$</strong> provádět tuto akci.",
-        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon '757eaba7-0b3d-478b-ace2-cbe0a16eed47' to perform this action.",
+        "message": "zkouší otevřít tuto URL adresu v kontejneru <container-name>$containerName$</container-name>. Přesuňte panel do jiné skupiny nebo zakažte doplňku <strong>$addonName$</strong> provádět tuto akci.",
+        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
         "placeholders": {
             "containerName": {
                 "content": "$1",
                 "example": "Business"
             },
-            "uuid": {
+            "addonName": {
                 "content": "$2",
-                "example": "757eaba7-0b3d-478b-ace2-cbe0a16eed47"
+                "example": "Facebook Container"
             }
         }
-    },
-    "helpPageOpenInContainerDesc4": {
-        "message": "Doplněk najdete podle UUID na stránce:",
-        "description": "You can find out the addon by UUID on the page:"
     },
     "helpPageOpenInContainerOpenInContainer": {
         "message": "Otevřít v kontejneru <container-name>$containerName$</container-name>",

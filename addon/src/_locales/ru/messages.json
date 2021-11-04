@@ -938,26 +938,22 @@
         }
     },
     "helpPageOpenInContainerDesc2": {
-        "message": "Еще один аддон, который имеет UUID:",
-        "description": "Another addon, which has UUID:"
+        "message": "Еще один аддон:",
+        "description": "Another addon:"
     },
     "helpPageOpenInContainerDesc3": {
-        "message": "пытается открыть этот URL в контейнере <container-name>$containerName$</container-name>. Переместите вкладку в другую группу или запретите аддону <strong>$uuid$</strong> выполнять это действие.",
-        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon '757eaba7-0b3d-478b-ace2-cbe0a16eed47' to perform this action.",
+        "message": "пытается открыть этот URL в контейнере <container-name>$containerName$</container-name>. Переместите вкладку в другую группу или запретите аддону <strong>$addonName$</strong> выполнять это действие.",
+        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
         "placeholders": {
             "containerName": {
                 "content": "$1",
                 "example": "Business"
             },
-            "uuid": {
+            "addonName": {
                 "content": "$2",
-                "example": "757eaba7-0b3d-478b-ace2-cbe0a16eed47"
+                "example": "Facebook Container"
             }
         }
-    },
-    "helpPageOpenInContainerDesc4": {
-        "message": "Вы можете найти этот аддон по UUID на странице:",
-        "description": "You can find out the addon by UUID on the page:"
     },
     "helpPageOpenInContainerOpenInContainer": {
         "message": "Открыть в контейнере <container-name>$containerName$</container-name>",
@@ -1041,13 +1037,13 @@
             }
         }
     },
-    "helpPageOpenInContainerIgnoreUuidForSession": {
-        "message": "Игнорировать этот UUID \"$uuid$\" до закрытия браузера",
-        "description": "Ignore UUID for session",
+    "helpPageOpenInContainerIgnoreAppForSession": {
+        "message": "Игнорировать аддон \"$addonName$\" до закрытия браузера",
+        "description": "Ignore addon for session",
         "placeholders": {
-            "uuid": {
+            "addonName": {
                 "content": "$1",
-                "example": "ff06d2f8-3660-43ed-becb-ad1c458ae76d"
+                "example": "Facebook Container"
             }
         }
     },
@@ -1134,5 +1130,9 @@
     "autoBackupByDayIndexDescription": {
         "message": "Помогает избавиться от большого количества файлов бекапа в папке загрузок. Файл бекапа будет иметь вид: \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
         "description": "Backup by day description"
+    },
+    "clickHereForInfo": {
+        "message": "Нажмите здесь для получения дополнительной информации",
+        "description": "Click here for more info"
     }
 }

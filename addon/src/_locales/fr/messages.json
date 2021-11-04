@@ -933,27 +933,19 @@
             }
         }
     },
-    "helpPageOpenInContainerDesc2": {
-        "message": "Une autre extension, qui porte l'UUID",
-        "description": "Another addon, which has UUID:"
-    },
     "helpPageOpenInContainerDesc3": {
-        "message": ", tente d'ouvrir cette URL dans le contexte <container-name>$containerName$</container-name>. Déplacez l'onglet dans un autre groupe ou interdisez à l'extension <strong>$uuid$</strong> de procéder à cette action.",
-        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon '757eaba7-0b3d-478b-ace2-cbe0a16eed47' to perform this action.",
+        "message": ", tente d'ouvrir cette URL dans le contexte <container-name>$containerName$</container-name>. Déplacez l'onglet dans un autre groupe ou interdisez à l'extension <strong>$addonName$</strong> de procéder à cette action.",
+        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
         "placeholders": {
             "containerName": {
                 "content": "$1",
                 "example": "Business"
             },
-            "uuid": {
+            "addonName": {
                 "content": "$2",
-                "example": "757eaba7-0b3d-478b-ace2-cbe0a16eed47"
+                "example": "Facebook Container"
             }
         }
-    },
-    "helpPageOpenInContainerDesc4": {
-        "message": "Vous pouvez retrouver l'extension à partir de son UUID dans la page :",
-        "description": "You can find out the addon by UUID on the page:"
     },
     "helpPageOpenInContainerOpenInContainer": {
         "message": "Ouvrir dans le contexte <container-name>$containerName$</container-name>",
@@ -1034,16 +1026,6 @@
             "groupTitle": {
                 "content": "$2",
                 "example": "Group 1"
-            }
-        }
-    },
-    "helpPageOpenInContainerIgnoreUuidForSession": {
-        "message": "Ignorer l'UUID \"<strong>$uuid$</strong>\" jusqu'à la fermeture du navigateur",
-        "description": "Ignore UUID for session",
-        "placeholders": {
-            "uuid": {
-                "content": "$1",
-                "example": "ff06d2f8-3660-43ed-becb-ad1c458ae76d"
             }
         }
     },

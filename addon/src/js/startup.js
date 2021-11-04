@@ -31,7 +31,7 @@
 
         window.console = background.console;
         window.cache = background.cache;
-        window.containers = background.containers;
+        window.Containers = background.Containers;
     }
 
     window.addonUrlPrefix = browser.runtime.getURL('');

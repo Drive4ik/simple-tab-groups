@@ -933,28 +933,6 @@
             }
         }
     },
-    "helpPageOpenInContainerDesc2": {
-        "message": "Otro complemento, con UUID:",
-        "description": "Another addon, which has UUID:"
-    },
-    "helpPageOpenInContainerDesc3": {
-        "message": "intenta abrir esta URL en el contenedor <container-name>$containerName$</container-name>. Mueve la pestaña a otro grupo o prohíbe al complemento realizar esta acción.",
-        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon '757eaba7-0b3d-478b-ace2-cbe0a16eed47' to perform this action.",
-        "placeholders": {
-            "containerName": {
-                "content": "$1",
-                "example": "Business"
-            },
-            "uuid": {
-                "content": "$2",
-                "example": "757eaba7-0b3d-478b-ace2-cbe0a16eed47"
-            }
-        }
-    },
-    "helpPageOpenInContainerDesc4": {
-        "message": "Puedes encontrar el complemento según su UUID en la página:",
-        "description": "You can find out the addon by UUID on the page:"
-    },
     "helpPageOpenInContainerOpenInContainer": {
         "message": "Abrir en el contenedor <container-name>$containerName$</container-name>",
         "description": "Open in Personal container",
@@ -1034,16 +1012,6 @@
             "groupTitle": {
                 "content": "$2",
                 "example": "Group 1"
-            }
-        }
-    },
-    "helpPageOpenInContainerIgnoreUuidForSession": {
-        "message": "Ignorar el UUID \"<strong>$uuid$</strong>\" hasta que se cierre el navegador",
-        "description": "Ignore UUID for session",
-        "placeholders": {
-            "uuid": {
-                "content": "$1",
-                "example": "ff06d2f8-3660-43ed-becb-ad1c458ae76d"
             }
         }
     },
