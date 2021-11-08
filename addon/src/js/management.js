@@ -6,7 +6,11 @@
     async function init() {
         console.log('START management.init');
 
-        await loadExtensions();
+        let addons = await browser.management.getAll();
+
+        addons
+            .filter(({type}) => type === browser.management.ExtensionType.EXTENSION)
+            .forEach(ext => extensions[ext.id] = ext);
 
         browser.management.onEnabled.addListener(onEnabled);
         browser.management.onDisabled.addListener(onDisabled);
@@ -14,16 +18,6 @@
         browser.management.onUninstalled.addListener(onUninstalled);
 
         console.log('STOP management.init');
-    }
-
-    async function loadExtensions() {
-        let addons = await browser.management.getAll();
-
-        extensions = {};
-
-        (addons || [])
-            .filter(({type}) => type === browser.management.ExtensionType.EXTENSION)
-            .forEach(ext => extensions[ext.id] = ext);
     }
 
     function onEnabled({id}) {
@@ -34,8 +28,12 @@
         extensions[id].enabled = false;
     }
 
-    function onInstalled(ext) {
-        setTimeout(loadExtensions, 50);
+    async function onInstalled(ext) {
+        extensions[ext.id] = ext;
+
+        await utils.wait(50);
+
+        extensions[ext.id] = await browser.management.get(ext.id);
     }
 
     function onUninstalled({id}) {
