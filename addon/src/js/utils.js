@@ -814,18 +814,6 @@
         return interval;
     }
 
-    async function isEnabledTreeTabsExtension() {
-        for (let extId of TREE_TABS_EXTENSIONS) {
-            let extInfo = await browser.management.get(extId).catch(noop);
-
-            if (extInfo && extInfo.enabled) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     window.utils = {
         getInfo,
 
@@ -909,8 +897,6 @@
         compareVersions,
 
         safeReloadAddon,
-
-        isEnabledTreeTabsExtension,
     };
 
 })();

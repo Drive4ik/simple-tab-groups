@@ -58,7 +58,7 @@ async function createTabsSafe(tabs, tryRestoreOpeners, hideTabs = true) {
         BG.groupIdForNextTab = groupIdForNextTabs;
     }
 
-    let isEnabledTreeTabsExt = await utils.isEnabledTreeTabsExtension(),
+    let isEnabledTreeTabsExt = TREE_TABS_EXTENSIONS.some(Management.isEnabled),
         oldNewTabIds = {},
         newTabs = [];
 
@@ -1545,7 +1545,7 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, cookieSto
         return utils.setUrlSearchParams(browser.runtime.getURL('/help/open-in-container.html'), params);
     }
 
-    if (IGNORE_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER.includes(originExt.id)) {
+    if (IGNORE_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER.includes(originExt?.id)) {
         let showNotif = +window.localStorage.ignoreExtensionsForReopenTabInContainer || 0;
 
         if (showNotif < 10) {
