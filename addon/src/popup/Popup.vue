@@ -1178,10 +1178,10 @@
         >
         <header id="search-wrapper">
             <div :class="['field', {'has-addons': searchDelay.length}]">
-                <div :class="['control is-small is-expanded', {'is-loading': searchDelayTimer}]">
+                <div :class="['control is-expanded', {'is-loading': searchDelayTimer}]">
                     <input
                         type="text"
-                        class="input is-small search-input"
+                        class="input search-input"
                         ref="search"
                         v-model.trim="searchDelay"
                         autocomplete="off"
@@ -1192,13 +1192,13 @@
                         :placeholder="lang('searchOrGoToActive')" />
                 </div>
                 <template v-if="searchDelay.length">
-                    <div v-show="!searchOnlyGroups" class="control is-small">
-                        <label class="button is-small" :title="lang('extendedTabSearch')">
+                    <div v-show="!searchOnlyGroups" class="control">
+                        <label class="button" :title="lang('extendedTabSearch')">
                             <input type="checkbox" v-model="extendedSearch" />
                         </label>
                     </div>
-                    <div class="control is-small">
-                        <button :class="['button is-small', {'is-active': searchOnlyGroups}]" @click="searchOnlyGroups = !searchOnlyGroups" v-text="lang('searchOnlyGroups')"></button>
+                    <div class="control">
+                        <button :class="['button', {'is-active': searchOnlyGroups}]" @click="searchOnlyGroups = !searchOnlyGroups" v-text="lang('searchOnlyGroups')"></button>
                     </div>
                 </template>
             </div>
