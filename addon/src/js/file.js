@@ -130,10 +130,12 @@
         let autoBackupFolderName = await getAutoBackupFolderName(),
             id = await save('temp file', autoBackupFolderName + '/tmp.tmp', false);
 
-        await browser.downloads.show(id);
-        await utils.wait(750);
-        await browser.downloads.removeFile(id);
-        await browser.downloads.erase({id});
+        if (id) {
+            await browser.downloads.show(id);
+            await utils.wait(750);
+            await browser.downloads.removeFile(id);
+            await browser.downloads.erase({id});
+        }
     }
 
     async function getAutoBackupFolderName() {

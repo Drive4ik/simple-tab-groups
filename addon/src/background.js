@@ -1532,9 +1532,7 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, cookieSto
             url: tab.url,
             anotherCookieStoreId: tab.cookieStoreId,
             destCookieStoreId: newTabContainer,
-            originId: originExt.id,
-            originName: originExt.name,
-            originIcon: originExt.icon,
+            conflictedExtId: originExt.id,
             groupId: tabGroup.id,
         };
 

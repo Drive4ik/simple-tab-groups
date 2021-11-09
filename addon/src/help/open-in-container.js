@@ -31,20 +31,27 @@ function getContainer(cookieStoreId) {
     }
 }
 
+function loadConflictedExt(id) {
+    if (!id) {
+        return;
+    }
+
+    return browser.management.get(id).catch(function() {})
+}
+
 async function init() {
+    currentTab = await browser.tabs.getCurrent();
+
     const url = urlParams.get('url'),
         anotherCookieStoreId = urlParams.get('anotherCookieStoreId'),
         destCookieStoreId = urlParams.get('destCookieStoreId'),
-        originId = urlParams.get('originId'),
-        originName = urlParams.get('originName'),
-        originIcon = urlParams.get('originIcon'),
+        conflictedExtId = urlParams.get('conflictedExtId'),
         groupId = Number(urlParams.get('groupId')),
         asInfo = urlParams.get('asInfo'),
+        conflictedExt = await loadConflictedExt(conflictedExtId),
         group = await loadGroup(groupId),
-        currentContainer = await getContainer(destCookieStoreId),
+        destContainer = await getContainer(destCookieStoreId),
         anotherContainer = await getContainer(anotherCookieStoreId);
-
-    currentTab = await browser.tabs.getCurrent();
 
     document.title += ' ' + url;
 
@@ -55,11 +62,12 @@ async function init() {
 
     async function isDepsOk() {
         const tabGroupId = await browser.sessions.getTabValue(currentTab.id, 'groupId'),
-            conflictedExtension = await browser.management.get(originId).catch(function() {}),
+            conflictedExt = await loadConflictedExt(conflictedExtId),
             group = await loadGroup(groupId),
+            destContainer = await getContainer(destCookieStoreId);
             anotherContainer = await getContainer(anotherCookieStoreId);
 
-        if (!conflictedExtension?.enabled) {
+        if (!conflictedExt?.enabled) {
             openTab(url, destCookieStoreId);
             return;
         } else if (groupId !== tabGroupId) {
@@ -67,6 +75,9 @@ async function init() {
             return;
         } else if (anotherContainer.notFound) {
             openTab(url, destCookieStoreId);
+            return;
+        } else if (destContainer.notFound) {
+            openTab(url, anotherCookieStoreId);
             return;
         } else if (!group || group.ifDifferentContainerReOpen && group.excludeContainersForReOpen.includes(anotherCookieStoreId)) {
             openTab(url, anotherCookieStoreId);
@@ -76,7 +87,12 @@ async function init() {
         return true;
     }
 
-    if (!asInfo) {
+    if (asInfo) {
+        if (!conflictedExt || !group || !destContainer || destContainer.notFound || !anotherContainer || anotherContainer.notFound) {
+            browser.tabs.remove(currentTab.id);
+            return;
+        }
+    } else {
         let isOk = await isDepsOk();
 
         if (!isOk) {
@@ -104,12 +120,12 @@ async function init() {
         });
     }
 
-    $('#helpPageOpenInContainerMainTitle')[INNER_HTML] = lang('helpPageOpenInContainerMainTitle', safeHtml(currentContainer.name));
+    $('#helpPageOpenInContainerMainTitle')[INNER_HTML] = lang('helpPageOpenInContainerMainTitle', safeHtml(destContainer.name));
     $('#redirect-url').innerText = url;
-    $('#helpPageOpenInContainerDesc1')[INNER_HTML] = lang('helpPageOpenInContainerDesc1', [safeHtml(group.title), safeHtml(currentContainer.name)]);
-    $('#another-addon-img').src = originIcon;
-    $('#another-addon-name').innerText = originName;
-    $('#helpPageOpenInContainerDesc3')[INNER_HTML] = lang('helpPageOpenInContainerDesc3', [safeHtml(anotherContainer.name), safeHtml(originName)]);
+    $('#helpPageOpenInContainerDesc1')[INNER_HTML] = lang('helpPageOpenInContainerDesc1', [safeHtml(group.title), safeHtml(destContainer.name)]);
+    $('#another-addon-img').src = Management.getExtensionIcon(conflictedExt);
+    $('#another-addon-name').innerText = conflictedExt.name;
+    $('#helpPageOpenInContainerDesc3')[INNER_HTML] = lang('helpPageOpenInContainerDesc3', [safeHtml(anotherContainer.name), safeHtml(conflictedExt.name)]);
 
     // load favicon
     $('#redirect-img').src = 'https://www.google.com/s2/favicons?sz=16&domain_url=' + encodeURIComponent(new URL(url).origin);
@@ -120,14 +136,14 @@ async function init() {
     }
 
     $('#deny')[INNER_HTML] = lang('helpPageOpenInContainerOpenInContainer', safeHtml(anotherContainer.name));
-    $('#confirm')[INNER_HTML] = lang('helpPageOpenInContainerOpenInContainer', safeHtml(currentContainer.name));
+    $('#confirm')[INNER_HTML] = lang('helpPageOpenInContainerOpenInContainer', safeHtml(destContainer.name));
 
     $('#helpPageOpenInContainerExcludeContainerToGroup')[INNER_HTML] = lang('helpPageOpenInContainerExcludeContainerToGroup', [safeHtml(anotherContainer.name), safeHtml(group.title)]);
 
-    $('#helpPageOpenInContainerIgnoreAppForSession')[INNER_HTML] = lang('helpPageOpenInContainerIgnoreAppForSession', safeHtml(originName));
+    $('#helpPageOpenInContainerIgnoreAppForSession')[INNER_HTML] = lang('helpPageOpenInContainerIgnoreAppForSession', safeHtml(conflictedExt.name));
 
     $('#deny').addEventListener('click', () => openTab(url, anotherCookieStoreId, 'deny', groupId));
-    $('#confirm').addEventListener('click', () => openTab(url, destCookieStoreId, 'confirm', undefined, originId));
+    $('#confirm').addEventListener('click', () => openTab(url, destCookieStoreId, 'confirm', undefined, conflictedExtId));
     $('#exclude-container').addEventListener('change', e => {
         $('#confirm').disabled = e.target.checked;
 
@@ -144,7 +160,7 @@ async function init() {
     });
 }
 
-async function openTab(url, cookieStoreId = DEFAULT_COOKIE_STORE_ID, buttonId = null, groupId = null, originId = null) {
+async function openTab(url, cookieStoreId = DEFAULT_COOKIE_STORE_ID, buttonId = null, groupId = null, conflictedExtId = null) {
     try {
         if (buttonId === 'deny' && $('#exclude-container').checked) {
             let result = await browser.runtime.sendMessage({
@@ -163,7 +179,7 @@ async function openTab(url, cookieStoreId = DEFAULT_COOKIE_STORE_ID, buttonId = 
         if (buttonId === 'confirm' && $('#ignore-origin-id-for-session').checked) {
             let result = await browser.runtime.sendMessage({
                 action: 'ignore-ext-for-reopen-container',
-                id: originId,
+                id: conflictedExtId,
             });
 
             if (!result) {

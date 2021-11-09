@@ -81,10 +81,6 @@
 
         for (let i in extensions) {
             if (extensions[i]?.hostPermissions?.some(url => url.includes(uuid))) {
-                if (!extensions[i].icon) {
-                    extensions[i].icon = getExtensionIcon(extensions[i]);
-                }
-
                 return extensions[i];
             }
         }
