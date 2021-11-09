@@ -905,6 +905,10 @@
                 }
             },
 
+            openOptionsPage() {
+                delete window.localStorage.optionsSection;
+                browser.runtime.openOptionsPage();
+            },
         },
     }
 </script>
@@ -961,6 +965,9 @@
                     </div>
                 </div>
             </span>
+            <div :title="lang('openSettings')" @click="openOptionsPage" class="cursor-pointer">
+                <img class="size-20" src="/icons/settings.svg" />
+            </div>
         </header>
 
         <main id="result" v-show="!isLoading">
