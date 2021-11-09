@@ -302,7 +302,7 @@
     }*/
 
     function setUrlSearchParams(url, params = {}) {
-        let urlObj = new URL(url);
+        let urlObj = new URL(url, addonUrlPrefix);
 
         for (let i in params) {
             urlObj.searchParams.set(i, params[i]);

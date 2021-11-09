@@ -1134,5 +1134,25 @@
     "clickHereForInfo": {
         "message": "Нажмите здесь для получения дополнительной информации",
         "description": "Click here for more info"
+    },
+    "enabled": {
+        "message": "Включено",
+        "description": "Enabled text"
+    },
+    "disabled": {
+        "message": "Отключено",
+        "description": "Disabled text"
+    },
+    "helpPageExtensionsThatConflictWithStgTitle": {
+        "message": "Расширения конфликтующие с STG",
+        "description": "Extensions that conflict with STG"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc1": {
+        "message": "Simple Tab Groups конфликтует со следующими включенными расширениями:",
+        "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc2": {
+        "message": "Во избежание потери вкладок или их расположения в окнах и группах, настоятельно рекомендуется выключить или удалить включенные расширения которые конфликтуют с аддоном Simple Tab Groups. Вы можете это сделать на странице настроек аддонов \"about:addons\" или нажав комбинацию клавиш <code>Ctrl+Shift+A</code>",
+        "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     }
 }

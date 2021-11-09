@@ -52,6 +52,22 @@ const IGNORE_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER = Object.freeze([
     '@containing-reddit',
 ]);
 
+const CONFLICTED_EXTENSIONS = Object.freeze([
+    'tab_open_close_control@felix-kolbe.de', // https://addons.mozilla.org/firefox/addon/tab-open-close-control/
+    'extension@one-tab.com', // https://addons.mozilla.org/firefox/addon/onetab/
+    '{dcdaadfa-21f1-4853-9b34-aad681fff6f3}', // https://addons.mozilla.org/firefox/addon/tiled-tab-groups/
+    'panorama-tab-groups@example.com', // https://addons.mozilla.org/firefox/addon/panorama-tab-groups/
+    '{60e27487-c779-464c-8698-ad481b718d5f}', // https://addons.mozilla.org/firefox/addon/panorama-view/
+    'panorama@nyordanov.com', // https://addons.mozilla.org/firefox/addon/basic-panorama/
+    'firefox-addon@workona.com', // https://addons.mozilla.org/firefox/addon/workona/
+    'tab-stash@condordes.net', // https://addons.mozilla.org/firefox/addon/tab-stash/
+    'tab-array@menhera.org', // https://addons.mozilla.org/firefox/addon/container-tab-groups/
+    '{3c078156-979c-498b-8990-85f7987dd929}', // https://addons.mozilla.org/firefox/addon/sidebery/
+    'tab_group_window@crossblade.her.jp', // https://addons.mozilla.org/firefox/addon/tab-group-window/
+    'power-tabs@rapptz-addons.com', // https://addons.mozilla.org/firefox/addon/power-tabs/
+    '{644e8eb0-c710-47e9-b81c-5dd69bfcf86b}', // https://addons.mozilla.org/firefox/addon/tabs-aside/
+]);
+
 const EXTENSIONS_WHITE_LIST = Object.freeze({
     'stg-plugin-create-new-group@drive4ik': {
         title: '[STG plugin] Create new group',

@@ -20,20 +20,26 @@
         console.log('STOP management.init');
     }
 
-    function onEnabled({id}) {
+    async function onEnabled({id}) {
         extensions[id].enabled = true;
+
+        await utils.wait(100);
+
+        extensions[id] = await browser.management.get(id);
+
+        detectConflictedExtensions();
     }
 
     function onDisabled({id}) {
         extensions[id].enabled = false;
     }
 
-    async function onInstalled(ext) {
-        extensions[ext.id] = ext;
+    async function onInstalled({id}) {
+        await utils.wait(100);
 
-        await utils.wait(50);
+        extensions[id] = await browser.management.get(id);
 
-        extensions[ext.id] = await browser.management.get(ext.id);
+        detectConflictedExtensions();
     }
 
     function onUninstalled({id}) {
@@ -48,6 +54,26 @@
         return false;
     }
 
+    async function detectConflictedExtensions() {
+        if (CONFLICTED_EXTENSIONS.some(isEnabled)) {
+            await browser.tabs.create({
+                active: true,
+                url: '/help/extensions-that-conflict-with-stg.html',
+            });
+        }
+    }
+
+    function getExtensionIcon({icons} = {}) {
+        if (Array.isArray(icons)) {
+            let maxSize = Math.max(...icons.map(({size}) => size)),
+                {url} = icons.find(icon => icon.size === maxSize);
+
+            return url;
+        }
+
+        return '/icons/extension-generic.svg';
+    }
+
     function getExtensionByUUID(uuid) {
         if (!uuid) {
             return;
@@ -56,14 +82,7 @@
         for (let i in extensions) {
             if (extensions[i]?.hostPermissions?.some(url => url.includes(uuid))) {
                 if (!extensions[i].icon) {
-                    if (Array.isArray(extensions[i].icons)) {
-                        let maxSize = Math.max(...extensions[i].icons.map(({size}) => size)),
-                            {url} = extensions[i].icons.find(icon => icon.size === maxSize);
-
-                        extensions[i].icon = url;
-                    } else {
-                        extensions[i].icon = 'chrome://mozapps/skin/extensions/extensionGeneric.svg';
-                    }
+                    extensions[i].icon = getExtensionIcon(extensions[i]);
                 }
 
                 return extensions[i];
@@ -75,6 +94,8 @@
         init,
 
         isEnabled,
+        detectConflictedExtensions,
+        getExtensionIcon,
         getExtensionByUUID,
     };
 

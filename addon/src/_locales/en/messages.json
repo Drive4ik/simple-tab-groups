@@ -1138,5 +1138,25 @@
     "clickHereForInfo": {
         "message": "Click here for more info",
         "description": "Click here for more info"
+    },
+    "enabled": {
+        "message": "Enabled",
+        "description": "Enabled text"
+    },
+    "disabled": {
+        "message": "Disabled",
+        "description": "Disabled text"
+    },
+    "helpPageExtensionsThatConflictWithStgTitle": {
+        "message": "Extensions that conflict with STG",
+        "description": "Extensions that conflict with STG"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc1": {
+        "message": "Simple Tab Groups addon conflicts with the following enabled extensions:",
+        "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc2": {
+        "message": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page \"about:addons\" or by pressing the key combination <code>Ctrl+Shift+A</code>",
+        "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     }
 }

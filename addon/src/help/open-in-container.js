@@ -10,6 +10,8 @@ const INNER_HTML = 'innerHTML',
     },
     urlParams = new URLSearchParams(window.location.search);
 
+let currentTab;
+
 function lang(...args) {
     return browser.i18n.getMessage(...args);
 }
@@ -38,40 +40,68 @@ async function init() {
         originIcon = urlParams.get('originIcon'),
         groupId = Number(urlParams.get('groupId')),
         asInfo = urlParams.get('asInfo'),
-        [{groups}, currentContainer, anotherContainer] = await Promise.all([
-            browser.storage.local.get('groups'),
-            getContainer(destCookieStoreId),
-            getContainer(anotherCookieStoreId),
-        ]),
-        group = groups.find(group => group.id === groupId);
+        group = await loadGroup(groupId),
+        currentContainer = await getContainer(destCookieStoreId),
+        anotherContainer = await getContainer(anotherCookieStoreId);
+
+    currentTab = await browser.tabs.getCurrent();
 
     document.title += ' ' + url;
 
-    async function checkTabGroup() {
-        const {id} = await browser.tabs.getCurrent(),
-            tabGroupId = await browser.sessions.getTabValue(id, 'groupId');
-
-        if (groupId === tabGroupId) {
-            return true;
-        }
-
-        openTab(url);
+    async function loadGroup(id) {
+        let {groups} = await browser.storage.local.get('groups');
+        return groups.find(group => group.id === id);
     }
 
-    if (!asInfo) {
-        let isValidGroup = await checkTabGroup();
+    async function isDepsOk() {
+        const tabGroupId = await browser.sessions.getTabValue(currentTab.id, 'groupId'),
+            conflictedExtension = await browser.management.get(originId).catch(function() {}),
+            group = await loadGroup(groupId),
+            anotherContainer = await getContainer(anotherCookieStoreId);
 
-        if (!isValidGroup) {
+        if (!conflictedExtension?.enabled) {
+            openTab(url, destCookieStoreId);
+            return;
+        } else if (groupId !== tabGroupId) {
+            openTab(url);
             return;
         } else if (anotherContainer.notFound) {
             openTab(url, destCookieStoreId);
             return;
-        } else if (group.ifDifferentContainerReOpen && group.excludeContainersForReOpen.includes(anotherCookieStoreId)) {
+        } else if (!group || group.ifDifferentContainerReOpen && group.excludeContainersForReOpen.includes(anotherCookieStoreId)) {
             openTab(url, anotherCookieStoreId);
             return;
         }
 
-        window.onfocus = checkTabGroup;
+        return true;
+    }
+
+    if (!asInfo) {
+        let isOk = await isDepsOk();
+
+        if (!isOk) {
+            return;
+        }
+
+        window.onfocus = isDepsOk;
+
+        const onAttachedCallback = (id, {newPosition, newWindowId}) => {
+            if (id === currentTab.id) {
+                currentTab.index = newPosition;
+                currentTab.windowId = newWindowId;
+                isDepsOk();
+            }
+        };
+
+        browser.management.onDisabled.addListener(isDepsOk);
+        browser.management.onUninstalled.addListener(isDepsOk);
+        browser.tabs.onAttached.addListener(onAttachedCallback);
+
+        window.addEventListener('unload', function() {
+            browser.management.onDisabled.removeListener(isDepsOk);
+            browser.management.onUninstalled.removeListener(isDepsOk);
+            browser.tabs.onAttached.removeListener(onAttachedCallback);
+        });
     }
 
     $('#helpPageOpenInContainerMainTitle')[INNER_HTML] = lang('helpPageOpenInContainerMainTitle', safeHtml(currentContainer.name));
@@ -82,8 +112,7 @@ async function init() {
     $('#helpPageOpenInContainerDesc3')[INNER_HTML] = lang('helpPageOpenInContainerDesc3', [safeHtml(anotherContainer.name), safeHtml(originName)]);
 
     // load favicon
-    $('#redirect-img').addEventListener('error', e => e.target.src = '/icons/tab.svg');
-    $('#redirect-img').src = (new URL(url).origin) + '/favicon.ico';
+    $('#redirect-img').src = 'https://www.google.com/s2/favicons?sz=16&domain_url=' + encodeURIComponent(new URL(url).origin);
 
     if (asInfo) {
         $('main').classList.add('as-info');
@@ -144,25 +173,22 @@ async function openTab(url, cookieStoreId = DEFAULT_COOKIE_STORE_ID, buttonId = 
             }
         }
 
-        const {id, index, cookieStoreId: currentCookieStoreId} = await browser.tabs.getCurrent();
-
-        if (currentCookieStoreId === cookieStoreId) {
-            browser.tabs.update(id, {
+        if (currentTab.cookieStoreId === cookieStoreId) {
+            browser.tabs.update(currentTab.id, {
                 loadReplace: true,
                 url,
             });
+        } else {
+            await browser.tabs.create({
+                url,
+                active: true,
+                index: currentTab.index,
+                windowId: currentTab.windowId,
+                cookieStoreId,
+            });
 
-            return;
+            browser.tabs.remove(currentTab.id);
         }
-
-        await browser.tabs.create({
-            url,
-            active: true,
-            index,
-            cookieStoreId,
-        });
-
-        browser.tabs.remove(id);
     } catch (e) {
         if (buttonId) {
             $('#' + buttonId).disabled = true;

@@ -3307,6 +3307,8 @@ async function init() {
 
         console.log('[STG] Management inited');
 
+        await Management.detectConflictedExtensions();
+
         try {
             let change = await runMigrateForData(data);
             dataChanged.push(change); // run migration for data
