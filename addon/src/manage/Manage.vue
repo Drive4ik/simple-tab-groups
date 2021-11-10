@@ -392,6 +392,7 @@
                         case 'group-added':
                             if (!this.groups.some(gr => gr.id === request.group.id)) {
                                 this.groups.push(this.mapGroup(request.group));
+                                this.$emit('group-added');
                             }
                             break;
                         case 'group-removed':
@@ -671,6 +672,10 @@
                     .map(this.mapTab, this);
             },
             addGroup() {
+                this.$once('group-added', () => {
+                    this.$nextTick(() => [...document.querySelectorAll('input[type="text"]')].pop().select());
+                });
+
                 Groups.add();
             },
 
@@ -928,7 +933,7 @@
             <span class="page-title">
                 <span v-text="lang('extensionName')"></span> - <span v-text="lang('manageGroupsTitle')"></span>
             </span>
-            <span class="is-full-width">
+            <span>
                 <div>
                     <label class="checkbox">
                         <input v-model="options.showTabsWithThumbnailsInManageGroups" type="checkbox" />
@@ -945,6 +950,14 @@
                     <span class="button is-small" disabled v-text="lang('manageGroupViewFreeArrange')"></span>
                 </div>
             </span>
+            <div class="is-full-width has-text-right">
+                <button class="button" @click="addGroup">
+                    <span class="icon">
+                        <img class="size-16" src="/icons/group-new.svg">
+                    </span>
+                    <span v-text="lang('createNewGroup')"></span>
+                </button>
+            </div>
             <span>
                 <div id="search-wrapper" :class="['field', {'has-addons': searchDelay.length}]">
                     <div :class="['control is-expanded', {'is-loading': searchDelayTimer}]">
