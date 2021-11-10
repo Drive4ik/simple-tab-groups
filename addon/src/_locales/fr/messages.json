@@ -539,6 +539,10 @@
         "message": "Créer une sauvegarde tous les :",
         "description": "Create backup every:"
     },
+    "autoBackupIntervalKeyMinutes": {
+        "message": "minute(s)",
+        "description": "minute(s)"
+    },
     "autoBackupIntervalKeyHours": {
         "message": "heure(s)",
         "description": "hour(s)"
@@ -933,6 +937,10 @@
             }
         }
     },
+    "helpPageOpenInContainerDesc2": {
+        "message": "Une autre extension :",
+        "description": "Another addon:"
+    },
     "helpPageOpenInContainerDesc3": {
         "message": ", tente d'ouvrir cette URL dans le contexte <container-name>$containerName$</container-name>. Déplacez l'onglet dans un autre groupe ou interdisez à l'extension <strong>$addonName$</strong> de procéder à cette action.",
         "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
@@ -1029,6 +1037,16 @@
             }
         }
     },
+    "helpPageOpenInContainerIgnoreAppForSession": {
+        "message": "Ignorer l'extension \"<strong>$addonName$</strong>\" jusqu'à la fermeture du navigateur",
+        "description": "Ignore addon for session",
+        "placeholders": {
+            "addonName": {
+                "content": "$1",
+                "example": "Facebook Container"
+            }
+        }
+    },
     "hotkeysDescription2": {
         "message": "Vous pouvez aussi configurer les raccourcis sur la page <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Gérer les raccourcis d'extension</a>. Ceci s'appliquera à toutes les fenêtres et toutes les pages du navigateur.",
         "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
@@ -1100,5 +1118,21 @@
     "eraseAndImportAddonBackupButton": {
         "message": "Restaurer la sauvegarde (efface la configuration actuelle)",
         "description": "Erase and restore backup"
+    },
+    "searchOnlyGroups": {
+        "message": "Groupes seulement",
+        "description": "Only groups"
+    },
+    "autoBackupByDayIndexTitle": {
+        "message": "Numérotation cyclique des sauvegardes (numéro de jour dans le mois)",
+        "description": "Backup number as day of month"
+    },
+    "autoBackupByDayIndexDescription": {
+        "message": "Cela aide à éliminer un grand nombre de sauvegarde dans le dossier de téléchargements. Le fichier de sauvegarde sera nommé de la façon suivante : \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
+        "description": "Backup by day description"
+    },
+    "clickHereForInfo": {
+        "message": "Cliquer ici pour plus d'informations",
+        "description": "Click here for more info"
     }
 }
