@@ -24,6 +24,13 @@ async function showConflictedExtensions() {
         $enabledExt = $('#enabled-conflicted-extensions'),
         $disabledExt = $('#disabled-conflicted-extensions');
 
+    if (!conflictedExtensions.some(ext => ext.enabled)) {
+        let {id} = await browser.tabs.getCurrent();
+
+        browser.tabs.remove(id);
+        return;
+    }
+
     $enabledExt.textContent = $disabledExt.textContent = '';
 
     conflictedExtensions.forEach(ext => {

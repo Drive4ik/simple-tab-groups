@@ -20,7 +20,11 @@
         console.log('STOP management.init');
     }
 
-    async function onEnabled({id}) {
+    async function onEnabled({id, type}) {
+        if (type !== browser.management.ExtensionType.EXTENSION) {
+            return;
+        }
+
         extensions[id].enabled = true;
 
         await utils.wait(100);
@@ -30,11 +34,19 @@
         detectConflictedExtensions();
     }
 
-    function onDisabled({id}) {
+    function onDisabled({id, type}) {
+        if (type !== browser.management.ExtensionType.EXTENSION) {
+            return;
+        }
+
         extensions[id].enabled = false;
     }
 
-    async function onInstalled({id}) {
+    async function onInstalled({id, type}) {
+        if (type !== browser.management.ExtensionType.EXTENSION) {
+            return;
+        }
+
         await utils.wait(100);
 
         extensions[id] = await browser.management.get(id);
@@ -42,7 +54,11 @@
         detectConflictedExtensions();
     }
 
-    function onUninstalled({id}) {
+    function onUninstalled({id, type}) {
+        if (type !== browser.management.ExtensionType.EXTENSION) {
+            return;
+        }
+
         delete extensions[id];
     }
 
