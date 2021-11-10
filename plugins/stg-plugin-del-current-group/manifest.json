@@ -4,7 +4,7 @@
     "applications": {
         "gecko": {
             "id": "stg-plugin-del-current-group@drive4ik",
-            "strict_min_version": "61.0"
+            "strict_min_version": "91.0"
         }
     },
 
