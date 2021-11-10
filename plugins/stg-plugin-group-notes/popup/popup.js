@@ -32,6 +32,7 @@
             placeholder: browser.i18n.getMessage('notesPlaceholder'),
         }),
         previewButtonNode = $('.editor-toolbar button.preview'),
+        sideBySideButtonNode = $('.editor-toolbar button.side-by-side'),
         currentGroupId = null,
         currentWindow = null,
         saveTimer = 0;
@@ -45,6 +46,7 @@
     }
 
     previewButtonNode.addEventListener('click', e => e.isTrusted && setTimeout(saveCurrentGroupNotes, 50));
+    sideBySideButtonNode.addEventListener('click', e => e.isTrusted && setTimeout(saveCurrentGroupNotes, 50));
 
     needInstallSTGExtensionNode.href = BG.STG_HOME_PAGE;
     needInstallSTGExtensionNode.innerText = browser.i18n.getMessage('needInstallSTGExtension');
@@ -88,18 +90,24 @@
         document.title = title;
     }
 
-    function setGroupNotes({notes, preview}) {
+    function setGroupNotes({notes, preview, sideBySide = false}) {
         easyMDE.codemirror.off('change', lazySaveCurrentGroupNotes);
 
         easyMDE.value(notes);
 
         if (
+            (sideBySide && !easyMDE.isSideBySideActive()) ||
+            (!sideBySide && easyMDE.isSideBySideActive())
+        ) {
+            easyMDE.toggleSideBySide();
+        } else if (
             (preview && !easyMDE.isPreviewActive()) ||
             (!preview && easyMDE.isPreviewActive())
         ) {
             easyMDE.togglePreview();
         }
 
+        sideBySideButtonNode.classList.toggle('active', sideBySide);
         previewButtonNode.classList.toggle('active', preview);
 
         easyMDE.codemirror.on('change', lazySaveCurrentGroupNotes);
@@ -113,6 +121,7 @@
                 [currentGroupId]: {
                     notes,
                     preview: easyMDE.isPreviewActive(),
+                    sideBySide: easyMDE.isSideBySideActive(),
                 },
             });
 
@@ -130,6 +139,7 @@
             [currentGroupId]: {
                 notes: '',
                 preview: false,
+                sideBySide: false,
             },
         });
 

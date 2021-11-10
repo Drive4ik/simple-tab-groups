@@ -53,10 +53,10 @@
             browser.tabs.create({
                 active: true,
                 pinned: true,
-                url: browser.extension.getURL('popup/popup.html#tab'),
+                url: browser.runtime.getURL('popup/popup.html#tab'),
             });
         },
-        contexts: ['browser_action'],
+        contexts: [browser.menus.ContextType.BROWSER_ACTION],
         icons: {
             16: '/icons/icon.svg',
         },
@@ -64,6 +64,7 @@
 
     browser.menus.create({
         type: 'separator',
+        contexts: [browser.menus.ContextType.BROWSER_ACTION],
     });
 
     browser.menus.create({
@@ -75,7 +76,7 @@
                 active: true,
             });
         },
-        contexts: ['browser_action'],
+        contexts: [browser.menus.ContextType.BROWSER_ACTION],
         icons: {
             16: '/icons/upload.svg',
         },
@@ -104,7 +105,7 @@
                 URL.revokeObjectURL(url);
             }
         },
-        contexts: ['browser_action'],
+        contexts: [browser.menus.ContextType.BROWSER_ACTION],
         icons: {
             16: '/icons/download.svg',
         },
