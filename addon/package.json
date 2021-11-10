@@ -1,14 +1,14 @@
 {
     "name": "simple-tab-groups",
     "version": "1.0.0",
-    "description": "Create, modify and quickly change tab groups. Inspired by the old add-on Tab Groups :)",
-    "author": "Drive4ik <drive4ik@gmail.com>",
+    "description": "Create, modify and quickly change tab groups",
+    "author": "Drive4ik <drive4ik+stg@protonmail.com>",
     "scripts": {
         "build": "webpack --mode development",
         "build-prod": "cross-env IS_PRODUCTION=true webpack --mode production",
         "watch": "npm run build -- --watch",
-        "watch-prod": "npm run build:prod -- --watch",
-        "build-zip": "node scripts/build-zip.js && npm run build:prod && cross-env IS_PRODUCTION=true node scripts/build-zip.js"
+        "watch-prod": "npm run build-prod -- --watch",
+        "build-zip": "node scripts/build-zip.js && npm run build-prod && cross-env IS_PRODUCTION=true node scripts/build-zip.js"
     },
     "dependencies": {
         "vue": "^2.6.14",
@@ -22,7 +22,6 @@
         "fs-extra": "^10.0.0",
         "mini-css-extract-plugin": "^2.4.4",
         "node-sass": "^6.0.1",
-        "optimize-css-assets-webpack-plugin": "^6.0.1",
         "sass-loader": "^12.3.0",
         "vue-loader": "^15.9.8",
         "vue-template-compiler": "^2.6.14",

@@ -4,7 +4,6 @@ const fse = require('fs-extra');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const WebpackShellPluginNext = require('webpack-shell-plugin-next');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const { VueLoaderPlugin } = require('vue-loader');
 
 function setPath(folderName) {
@@ -51,9 +50,7 @@ const config = {
     },
     devtool: false,
     optimization: {
-        minimizer: [
-            new OptimizeCSSAssetsPlugin({}),
-        ],
+        minimize: false,
     },
     performance: {
         maxEntrypointSize: 1024000,
