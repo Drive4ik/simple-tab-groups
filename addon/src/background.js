@@ -2910,13 +2910,31 @@ async function runMigrateForData(data) {
         },
         {
             version: '4.7.1',
-            migration() {
+            async migration() {
                 let latestExampleGroup = Groups.create(0),
                     latestExampleGroupKeys = Object.keys(latestExampleGroup).filter(key => !['id', 'title', 'tabs'].includes(key));
 
                 data.groups.forEach(function(group) {
                     latestExampleGroupKeys
                         .forEach(key => !group.hasOwnProperty(key) && (group[key] = utils.clone(latestExampleGroup[key])));
+                });
+
+                await restoreOldExtensionUrls(function(url, cookieStoreId) {
+                    let urlObj = new URL(url),
+                        uuid = urlObj.searchParams.get('uuid');
+
+                    if (uuid) {
+                        let ext = Management.getExtensionByUUID(uuid);
+
+                        if (ext) {
+                            urlObj.searchParams.set('conflictedExtId', ext.id);
+                            urlObj.searchParams.set('destCookieStoreId', cookieStoreId);
+                            urlObj.searchParams.delete('uuid');
+                            url = urlObj.href;
+                        }
+                    }
+
+                    return url;
                 });
             },
         },
@@ -3140,17 +3158,27 @@ function normalizeContainersInGroups(groups) {
     return hasChanges;
 }
 
-async function restoreOldExtensionUrls(tabs) {
-    tabs
-        .filter(({url}) => url.startsWith('moz-extension:') && url.includes('/help/open-in-container.html'))
-        .forEach(function({id, url}) {
-            if (!url.startsWith(addonUrlPrefix)) {
-                browser.tabs.update(id, {
+async function restoreOldExtensionUrls(parseUrlFunc) {
+    let tabs = await browser.tabs.query({
+        url: 'moz-extension://*/help/open-in-container.html*',
+    });
+
+    await Promise.all(tabs
+        .map(async function({id, url, cookieStoreId}) {
+            let oldUrl = url;
+
+            if (parseUrlFunc) {
+                url = parseUrlFunc(url, cookieStoreId);
+            }
+
+            if (!url.startsWith(addonUrlPrefix) || oldUrl !== url) {
+                await browser.tabs.update(id, {
                     url: addonUrlPrefix + url.slice(addonUrlPrefix.length),
                     loadReplace: true,
                 }).catch(noop);
             }
-        });
+        })
+    );
 }
 
 // { reason: "update", previousVersion: "3.0.1", temporary: true }
@@ -3356,7 +3384,7 @@ async function init() {
 
         console.log('[STG] Containers.removeUnusedTemporaryContainers finish');
 
-        restoreOldExtensionUrls(tabs);
+        await restoreOldExtensionUrls();
 
         console.log('[STG] restoreOldExtensionUrls finish');
 

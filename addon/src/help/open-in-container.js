@@ -64,7 +64,7 @@ async function init() {
         const tabGroupId = await browser.sessions.getTabValue(currentTab.id, 'groupId'),
             conflictedExt = await loadConflictedExt(conflictedExtId),
             group = await loadGroup(groupId),
-            destContainer = await getContainer(destCookieStoreId);
+            destContainer = await getContainer(destCookieStoreId),
             anotherContainer = await getContainer(anotherCookieStoreId);
 
         if (!conflictedExt?.enabled) {

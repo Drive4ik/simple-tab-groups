@@ -66,6 +66,7 @@ const CONFLICTED_EXTENSIONS = Object.freeze([
     'tab_group_window@crossblade.her.jp', // https://addons.mozilla.org/firefox/addon/tab-group-window/
     'power-tabs@rapptz-addons.com', // https://addons.mozilla.org/firefox/addon/power-tabs/
     '{644e8eb0-c710-47e9-b81c-5dd69bfcf86b}', // https://addons.mozilla.org/firefox/addon/tabs-aside/
+    'containerise@kinte.sh', // https://addons.mozilla.org/firefox/addon/containerise/
 ]);
 
 const EXTENSIONS_WHITE_LIST = Object.freeze({
@@ -247,7 +248,7 @@ const DEFAULT_OPTIONS = Object.freeze({
     autoBackupGroupsToFile: true,
     autoBackupFolderName: '',
     autoBackupBookmarksFolderName: 'STG bookmarks',
-    autoBackupByDayIndex: false,
+    autoBackupByDayIndex: true,
 
     enableDarkTheme: false,
 
