@@ -50,6 +50,7 @@ const IGNORE_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER = Object.freeze([
     '@contain-twitter',
     '@contain-youtube',
     '@containing-reddit',
+    'containerise@kinte.sh',
 ]);
 
 const CONFLICTED_EXTENSIONS = Object.freeze([
