@@ -473,40 +473,69 @@
                     return;
                 }
 
-                if (1 !== panoramaOptions.file.version) {
-                    utils.notify('"Panorama View" backup has unsupported version');
-                    return;
-                }
-
                 let data = {
                     groups: [],
                     pinnedTabs: [],
                 };
 
-                panoramaOptions.windows.forEach(function(win) {
-                    let groups = {};
+                if (panoramaOptions.file.version === 1) {
+                    panoramaOptions.windows.forEach(function(win) {
+                        let groups = {};
 
-                    win.groups.forEach(function({id, name}) {
-                        groups[id] = {
-                            title: name || id,
-                            tabs: [],
-                        };
-                    });
+                        win.groups.forEach(function({id, name}) {
+                            groups[id] = {
+                                title: name || id,
+                                tabs: [],
+                            };
+                        });
 
-                    win.tabs.forEach(function({url, title, pinned, groupId}) {
-                        url = utils.normalizeUrl(url);
+                        win.tabs.forEach(function({url, title, pinned, groupId}) {
+                            url = utils.normalizeUrl(url);
 
-                        if (utils.isUrlAllowToCreate(url)) {
-                            if (pinned) {
-                                data.pinnedTabs.push({url, title, pinned});
-                            } else if (groups[groupId]) {
-                                groups[groupId].tabs.push({url, title});
+                            if (utils.isUrlAllowToCreate(url)) {
+                                if (pinned) {
+                                    data.pinnedTabs.push({url, title, pinned});
+                                } else if (groups[groupId]) {
+                                    groups[groupId].tabs.push({url, title});
+                                }
                             }
-                        }
-                    });
+                        });
 
-                    data.groups.push(...Object.values(groups));
-                });
+                        data.groups.push(...Object.values(groups));
+                    });
+                } else if (panoramaOptions.file.version === 2) {
+                    panoramaOptions.windows.forEach(function(win) {
+                        win.tabGroups?.forEach(function({title: groupTitle, tabs}) {
+                            let groupTabs = [];
+
+                            tabs.forEach(function({url, title}) {
+                                url = utils.normalizeUrl(url);
+
+                                if (utils.isUrlAllowToCreate(url)) {
+                                    groupTabs.push({url, title});
+                                }
+                            });
+
+                            if (groupTabs.length) {
+                                data.groups.push({
+                                    title: groupTitle,
+                                    tabs: groupTabs,
+                                });
+                            }
+                        });
+
+                        win.pinnedTabs?.forEach(function({url, title}) {
+                            url = utils.normalizeUrl(url);
+
+                            if (utils.isUrlAllowToCreate(url)) {
+                                data.pinnedTabs.push({url, title});
+                            }
+                        });
+                    });
+                } else {
+                    utils.notify('"Panorama View" backup has unsupported version');
+                    return;
+                }
 
                 this.setManageAddonSettings(data, 'importSettingsPanoramaViewAddonTitle', true);
             },
@@ -1106,7 +1135,7 @@
                 <div class="control">
                     <button @click="importSettingsPanoramaViewAddonButton" class="button">
                         <span class="icon">
-                            <img class="size-16" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAiklEQVR42mP4KO/o/UXJ/slXRfv/2PBnBfs3DFDgExj61i8o7D8I+waGPvb0DfFk+Kxo9xiXZhiGGQDTDMM+gSGPGAhpxmcACA8HA0ChjE8zciwAQ/4NsmYQn2HgAXLiQHcWuhw6BqvFGjB4Ag1D7TAwAJSryDUAnJlAWRLZEORYQE846Jq9/AI9AD3nkgARmnBEAAAAAElFTkSuQmCC" />
+                            <img class="size-16" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAADsOAAA7DgHMtqGDAAACL0lEQVR42m2Ty05UYRCEv+rzz03GQZORnTExuPMdeAv2JibudYO6x507fQjfgkdwYaJi8BajzAzCYQ6eOZf/bxcDgmJtuyuV6qoO6fn9R8AW+JhLEIhdYAMDEjtU8Q6zEr4Vs2JaPwvAFv4/MiAH1MMU2D+BoumxX8JxRXHk49ncH4c/yn4uCkACqhaKxmki7P6EJKdOFD8S02+JctQdB3TGcGgdyhbyCg4WcFxDTCBHJtyhmDqTt5HYEYejAYHjGubNkpTXUDRQR3CHTNA1yKBNMJ86Pz9GYg1NN+OQAYHXE1gkaNK5BRNIYIBhysSXTy3pBPMgNIR5v88idAgkdgn0MPNLRzQMsz1MVYuwvu/pmkjRUp6tiL5VgUwbSIG/+QYgkxNUPn31dfpgdUS9fmVT8h5J1NbBOrTh79iEMqsmbw4naw+v8+5Fc0OxGdy7u3arFlClVBN4yxotGYYTSL5D9B4Jx7CY0t7q+rXN9y8bsuivWOi2t57OavGLQIvw4PIBVSCmOzQOCcqTRH4CC/eeJYeS2577TcqlvYiYcoUWoYGDRJBDu3Dyz5H8yIkjSxou4/DWE6XjhSMgp88RffysdUMIx4dO/iFS/kgw1GkRdSmQBmOfERGdTx3C5HskFX76Nxcm/+CAFeb0ljs66wsEOprpqsYY0BMKaBkiKCAfwIIuU66eCxjYCqjLLNDVtlbtiQ98rEzQp6KjFoCBVyhjNhzR0CG7+OVdZuqy/RuUhxWxRglzCQAAAABJRU5ErkJggg==" />
                         </span>
                         <span class="h-margin-left-5" v-text="lang('browseFileTitle')"></span>
                     </button>
