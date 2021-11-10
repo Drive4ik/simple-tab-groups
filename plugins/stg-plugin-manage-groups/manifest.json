@@ -4,7 +4,7 @@
     "applications": {
         "gecko": {
             "id": "stg-plugin-manage-groups@drive4ik",
-            "strict_min_version": "61.0"
+            "strict_min_version": "91.0"
         }
     },
 
