@@ -43,14 +43,14 @@ const TREE_TABS_EXTENSIONS = Object.freeze([
 ]);
 
 const IGNORE_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER = Object.freeze([
-    '@testpilot-containers',
-    '@contain-google',
-    '@contain-facebook',
-    '@contain-amzn',
-    '@contain-twitter',
-    '@contain-youtube',
-    '@containing-reddit',
-    'containerise@kinte.sh',
+    '@testpilot-containers', // https://addons.mozilla.org/firefox/addon/multi-account-containers/
+    '@contain-google', // https://addons.mozilla.org/firefox/addon/google-container/
+    '@contain-facebook', // https://addons.mozilla.org/firefox/addon/facebook-container/
+    '@contain-amzn', // https://addons.mozilla.org/firefox/addon/contain-amazon/
+    '@contain-twitter', // https://addons.mozilla.org/firefox/addon/twitter-container/
+    '@contain-youtube', // https://addons.mozilla.org/firefox/addon/youtube-container/
+    '@containing-reddit', // https://addons.mozilla.org/firefox/addon/contain-reddit/
+    'containerise@kinte.sh', // https://addons.mozilla.org/firefox/addon/containerise/
 ]);
 
 const CONFLICTED_EXTENSIONS = Object.freeze([
@@ -67,7 +67,6 @@ const CONFLICTED_EXTENSIONS = Object.freeze([
     'tab_group_window@crossblade.her.jp', // https://addons.mozilla.org/firefox/addon/tab-group-window/
     'power-tabs@rapptz-addons.com', // https://addons.mozilla.org/firefox/addon/power-tabs/
     '{644e8eb0-c710-47e9-b81c-5dd69bfcf86b}', // https://addons.mozilla.org/firefox/addon/tabs-aside/
-    'containerise@kinte.sh', // https://addons.mozilla.org/firefox/addon/containerise/
 ]);
 
 const EXTENSIONS_WHITE_LIST = Object.freeze({
