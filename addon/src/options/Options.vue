@@ -1073,7 +1073,7 @@
                 <div class="h-margin-bottom-5" v-html="lang('importAddonSettingsDescription')"></div>
                 <div class="field is-grouped is-align-items-center">
                     <div class="control">
-                        <button @click="importAddonSettings" class="button is-primary">
+                        <button @click="importAddonSettings" class="button is-info">
                             <span class="icon">
                                 <img class="size-16" src="/icons/icon.svg" />
                             </span>
@@ -1089,7 +1089,7 @@
             <div class="h-margin-bottom-5" v-html="lang('importSettingsOldTabGroupsAddonDescription')"></div>
             <div class="field">
                 <div class="control">
-                    <button @click="importSettingsOldTabGroupsAddonButton" class="button is-primary">
+                    <button @click="importSettingsOldTabGroupsAddonButton" class="button">
                         <span class="icon">
                             <img class="size-16" src="/icons/old-tab-groups.svg" />
                         </span>
@@ -1104,7 +1104,7 @@
             <div class="h-margin-bottom-5" v-html="lang('importSettingsPanoramaViewAddonDescription')"></div>
             <div class="field">
                 <div class="control">
-                    <button @click="importSettingsPanoramaViewAddonButton" class="button is-primary">
+                    <button @click="importSettingsPanoramaViewAddonButton" class="button">
                         <span class="icon">
                             <img class="size-16" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAiklEQVR42mP4KO/o/UXJ/slXRfv/2PBnBfs3DFDgExj61i8o7D8I+waGPvb0DfFk+Kxo9xiXZhiGGQDTDMM+gSGPGAhpxmcACA8HA0ChjE8zciwAQ/4NsmYQn2HgAXLiQHcWuhw6BqvFGjB4Ag1D7TAwAJSryDUAnJlAWRLZEORYQE846Jq9/AI9AD3nkgARmnBEAAAAAElFTkSuQmCC" />
                         </span>
@@ -1119,7 +1119,7 @@
             <div class="h-margin-bottom-5" v-html="lang('importSettingsSyncTabGroupsAddonDescription')"></div>
             <div class="field">
                 <div class="control">
-                    <button @click="importSettingsSyncTabGroupsAddonButton" class="button is-primary">
+                    <button @click="importSettingsSyncTabGroupsAddonButton" class="button">
                         <span class="icon">
                             <img class="size-16" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAC4ElEQVR42m1Tu09TcRQ+bVx0dyFYZGiqCelQaAwNVtMApe/29t375LYNCqSFxISBRBdD1MV/wsHBaDQScTYmYkV0MDGBQRExGAddhF65v+M55eXgTb6c331833deFxJ3zlxLP4YfuWeA0iIIjkfnp2CnlwCLd8/fBLrSUvJ2sVgUhD1Jkn7mcrkIMFl/A2gQOnHl+Ky9Btt878D4A+eaVI32qBVt26yOo6Zptq7rGI1GP0Nu6YC0ckw+jFoLRHXViYlF2EpMXvLrcvWPMa6joiiCRDCZTCJwqv/NoNURsM1VB6aewKY0ddGnlo1dTVdRlmWbRDAej9uQpTrZST9w1I/JQl0mgRYJPGKBkE8uaTuqpmC5XLYJIhaL7UH+uYMJlvpqHxpjeT8qL6BtvnRayYdcQsCvFg2rLJetQqHQLpVKFgkgRO7DhrIKOLHmwNpHQPMDYJVgvqP4lkAZxe7Bujld6spm8tuKqnATMZvN4vDwcAsat1RX8vq5+lkJZjwlaPjqp+a9+omFAYp9irM52DjdlG9c6OYxqqra6/f7m263u0ljvDo7O3sS5hpzrmxcrrtdfU2/d6ip5mu9/LEsyd3BwXCzz9PfHBq4PN/v718IBALzXq+34fF4Zo4E0pnURrU+jtONKbwyOYHlSmHbNM2uVCaxbpg66oaGFaVMna8gLRA3sINUKoWhUKgFPI5arWYZhtEmWFSfRep+mvEWpWwRqU1Ns/L5vEWbx++sdDrdieFwGIFHQo6CyDaBZ7xDJF8ikdhkcTrbRBaETuMymYwg9w6oiXtA4xAkgLSaNne3UqnssgAtySadkYj2IZlckdx5AwVvIQnYwHURUfB6krsgUqcEmvFXrpWIgu4FOR+RKTveQjEyMkKrLEm/+ccgAZtqRqrzFz3riUQiXyg7FrDZ+R8BJAGbRYLB4HfgX5LcPrHy2NgY1zbRGaMs65Qi8rPR0VEGMjhtgiDyNzJ0/QXvYtJ0HU94ewAAAABJRU5ErkJggg==" />
                         </span>

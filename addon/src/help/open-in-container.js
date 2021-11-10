@@ -22,6 +22,10 @@ function safeHtml(html) {
 }
 
 function getContainer(cookieStoreId) {
+    if (!cookieStoreId) {
+        return {notFound: true};
+    }
+
     if (cookieStoreId === TEMPORARY_CONTAINER) {
         return {name: lang('temporaryContainerTitle')};
     } else if (cookieStoreId === DEFAULT_COOKIE_STORE_ID) {
