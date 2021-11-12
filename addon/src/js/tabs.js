@@ -570,7 +570,7 @@
     }
 
     function sendMessage(tabId, message) {
-        message.enableDarkTheme = BG.options.enableDarkTheme;
+        message.theme = BG.options.theme;
 
         return browser.tabs.sendMessage(tabId, message).catch(noop);
     }

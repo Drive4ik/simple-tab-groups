@@ -44,11 +44,11 @@ input[type="checkbox"] {
 
 
 /* DARK theme */
-html.dark-theme {
+html[data-theme="dark"] {
     --in-content-box-border-color: #0a84ff;
     --in-content-box-background: #3f3f43;
 }
 
-html.dark-theme input[type="checkbox"] {
+html[data-theme="dark"] input[type="checkbox"] {
     --in-content-box-border-color: #4c4c4e;
 }

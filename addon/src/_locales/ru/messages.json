@@ -560,7 +560,7 @@
         "description": "Enable dark theme"
     },
     "enableDarkThemeNotification": {
-        "message": "Для полной поддержки тёмной темы установите параметр<br><code>svg.context-properties.content.enabled</code> в <code>true</code> на странице<br><code>about:config</code><br><br><a href='https://support.mozilla.org/ru/kb/redaktor-nastroek-firefox#w_zajaoaii-aboutconfig'>Как это сделать?</a>",
+        "message": "Для полной поддержки тёмной темы установите параметр <code>svg.context-properties.content.enabled</code> в <code>true</code> на странице <code>about:config</code><br><a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">Как это сделать?</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {
@@ -1154,5 +1154,21 @@
     "helpPageExtensionsThatConflictWithStgDesc2": {
         "message": "Во избежание потери вкладок или их расположения в окнах и группах, настоятельно рекомендуется выключить или удалить включенные расширения которые конфликтуют с аддоном Simple Tab Groups. Вы можете это сделать на странице настроек аддонов \"about:addons\" или нажав комбинацию клавиш <code>Ctrl+Shift+A</code>",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
+    },
+    "theme": {
+        "message": "Тема",
+        "description": "Select theme"
+    },
+    "themeAuto": {
+        "message": "Системная тема — авто",
+        "description": "Auto theme"
+    },
+    "themeLight": {
+        "message": "Светлая",
+        "description": "Light theme"
+    },
+    "themeDark": {
+        "message": "Тёмная",
+        "description": "Dark theme"
     }
 }

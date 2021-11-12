@@ -151,7 +151,7 @@
         }
     }
 
-    .dark-theme {
+    [data-theme="dark"] {
         .v-context-menu {
             background-color: var(--input-background-color);
 

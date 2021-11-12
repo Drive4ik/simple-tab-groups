@@ -556,7 +556,7 @@
         "description": "Enable dark theme"
     },
     "enableDarkThemeNotification": {
-        "message": "要完整支援深色主題，在<br><code>about:config</code> 頁面變更<br><code>svg.context-properties.content.enabled</code> 參數為 <code>true</code><br><br><a href='https://support.mozilla.org/kb/about-config-editor-firefox'>怎麼做？</a>",
+        "message": "要完整支援深色主題，在 <code>about:config</code> 頁面變更 <code>svg.context-properties.content.enabled</code> 參數為 <code>true</code><br><a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">怎麼做？</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {

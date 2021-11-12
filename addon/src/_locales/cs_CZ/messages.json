@@ -552,7 +552,7 @@
         "description": "Enable dark theme"
     },
     "enableDarkThemeNotification": {
-        "message": "Pro plnou podporu tmavého tématu je potřeba přepnout parametr<br><code>svg.context-properties.content.enabled</code> na <code>true</code> na stránce<br><code>about:config</code>.<br><br><a href='https://support.mozilla.org/kb/about-config-editor-firefox'>Jak na to?</a>",
+        "message": "Pro plnou podporu tmavého tématu je potřeba přepnout parametr <code>svg.context-properties.content.enabled</code> na <code>true</code> na stránce <code>about:config</code>.<br><a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">Jak na to?</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {

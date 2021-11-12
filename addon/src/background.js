@@ -2938,6 +2938,13 @@ async function runMigrateForData(data) {
                 });
             },
         },
+        {
+            version: '4.7.2',
+            remove: ['enableDarkTheme'],
+            migration() {
+                data.theme = data.enableDarkTheme ? 'dark' : DEFAULT_OPTIONS.theme;
+            },
+        },
     ];
 
     // start migration

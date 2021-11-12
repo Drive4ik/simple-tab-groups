@@ -250,7 +250,7 @@ const DEFAULT_OPTIONS = Object.freeze({
     autoBackupBookmarksFolderName: 'STG bookmarks',
     autoBackupByDayIndex: true,
 
-    enableDarkTheme: false,
+    theme: 'auto', // auto, light, dark
 
     hotkeys: [
         {
@@ -290,6 +290,7 @@ const ALL_OPTIONS_KEYS = Object.freeze([
     'autoBackupIntervalValue',
     'autoBackupFolderName',
     'autoBackupBookmarksFolderName',
+    'theme',
 ]);
 
 const MINUTE_SEC = 60;

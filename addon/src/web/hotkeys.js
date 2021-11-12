@@ -6,7 +6,7 @@ let errorCounter = 0,
     hotkeys = [],
     foundHotKey = false;
 
-const popupId = 'stg-move-tab-to-group-popup-wrapper';
+const POPUP_ID = 'stg-move-tab-to-group-popup-wrapper';
 
 browser.runtime.onMessage.addListener(changeHotkeysListener);
 
@@ -109,21 +109,20 @@ function stopEvent(e) {
 }
 
 function showGroupsPopup(data) {
-    if (document.getElementById(popupId)) {
+    if (document.getElementById(POPUP_ID)) {
         return;
     }
 
     let wrapper = document.createElement('div'),
-        closeGroupsPopup = wrapper.remove.bind(wrapper);
+        closeGroupsPopup = wrapper.remove.bind(wrapper),
+        isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-    if (data.enableDarkTheme) {
-        wrapper.classList.add('dark-theme');
-    }
+    wrapper.dataset.theme = (data.theme === 'auto' && isDark) ? 'dark' : data.theme;
 
     Object.assign(wrapper, {
-        id: popupId,
+        id: POPUP_ID,
         onclick: closeGroupsPopup,
-        onkeydown: (e) => KeyEvent.DOM_VK_ESCAPE === e.keyCode ? closeGroupsPopup() : null,
+        onkeydown: ({keyCode}) => KeyEvent.DOM_VK_ESCAPE === keyCode ? closeGroupsPopup() : null,
     });
     document.body.append(wrapper);
 

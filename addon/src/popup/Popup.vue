@@ -98,6 +98,8 @@
                 document.documentElement.classList.add('full-popup-width');
             }
 
+            window.matchMedia('(prefers-color-scheme: dark)').addListener(({matches}) => this.updateTheme());
+
             this.loadOptions();
 
             loadPromise = Promise.all([this.loadWindows(), this.loadGroups(), this.loadUnsyncedTabs()]);
@@ -116,13 +118,7 @@
             });
         },
         watch: {
-            'options.enableDarkTheme': function(enableDarkTheme) {
-                if (enableDarkTheme) {
-                    document.documentElement.classList.add('dark-theme');
-                } else {
-                    document.documentElement.classList.remove('dark-theme');
-                }
-            },
+            'options.theme': 'updateTheme',
             section() {
                 this.multipleTabIds = [];
             },
@@ -196,6 +192,10 @@
         },
         methods: {
             lang: browser.i18n.getMessage,
+
+            updateTheme() {
+                document.documentElement.dataset.theme = utils.getThemeApply(this.options.theme);
+            },
 
             async loadWindows() {
                 this.currentWindow = await Windows.get();
@@ -1918,7 +1918,7 @@
         }
     }
 
-    html.dark-theme {
+    html[data-theme="dark"] {
         --item-background-color-active: #686869;
         --item-background-color-hover: var(--input-background-color);
         --item-background-color-active-hover: #4b4b4b;

@@ -18,7 +18,7 @@
     --background-focus-color: #91c9f7;
     --fill-group-icon-color: #5d5d5d;
 
-    &.dark-theme {
+    &[data-theme="dark"] {
         --text-color: #e0e0e0;
         --background-color: #444444;
         --text-focus-color: #575757;

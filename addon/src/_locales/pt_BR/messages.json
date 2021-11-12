@@ -556,7 +556,7 @@
         "description": "Enable dark theme"
     },
     "enableDarkThemeNotification": {
-        "message": "Para ter suporte completo ao tema escuro, habilite o parâmetro <br><code>svg.context-properties.content.enabled</code> para <code>true</code> na página <br><code>about:config</code> <br><br><a href='https://support.mozilla.org/kb/about-config-editor-firefox'>Como fazer isso?</a>",
+        "message": "Para ter suporte completo ao tema escuro, habilite o parâmetro <code>svg.context-properties.content.enabled</code> para <code>true</code> na página <code>about:config</code><br><a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">Como fazer isso?</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {

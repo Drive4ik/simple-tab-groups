@@ -79,8 +79,6 @@
 
                 showClearAddonConfirmPopup: false,
 
-                showEnableDarkThemeNotification: false,
-
                 enableDebug: window.localStorage.enableDebug || false,
             };
         },
@@ -90,44 +88,43 @@
             'manage-addon-backup': manageAddonBackup,
         },
         async created() {
-            try {
-                let {os} = await browser.runtime.getPlatformInfo();
-                this.isMac = os === browser.runtime.PlatformOs.MAC;
+            let {os} = await browser.runtime.getPlatformInfo();
+            this.isMac = os === browser.runtime.PlatformOs.MAC;
 
-                let data = await storage.get(null);
+            window.matchMedia('(prefers-color-scheme: dark)').addListener(({matches}) => this.updateTheme());
 
-                let options = utils.assignKeys({}, data, ALL_OPTIONS_KEYS);
+            let data = await storage.get(null);
 
-                options.autoBackupFolderName = await file.getAutoBackupFolderName();
+            let options = utils.assignKeys({}, data, ALL_OPTIONS_KEYS);
 
-                this.permissions.bookmarks = await browser.permissions.contains(PERMISSIONS.BOOKMARKS);
+            options.autoBackupFolderName = await file.getAutoBackupFolderName();
 
-                this.groups = data.groups; // set before for watch hotkeys
-                this.options = options;
+            this.permissions.bookmarks = await browser.permissions.contains(PERMISSIONS.BOOKMARKS);
 
-                this.loadBookmarksParents();
+            this.groups = data.groups; // set before for watch hotkeys
+            this.options = options;
 
-                [
-                    ...ONLY_BOOL_OPTION_KEYS,
-                    'defaultBookmarksParent',
-                    'defaultGroupIconViewType',
-                    'defaultGroupIconColor',
-                    'autoBackupIntervalKey'
-                    ]
-                    .forEach(option => {
-                        this.$watch(`options.${option}`, function(value, oldValue) {
-                            if (null == oldValue) {
-                                return;
-                            }
+            this.loadBookmarksParents();
 
-                            BG.saveOptions({
-                                [option]: value,
-                            });
+            [
+                ...ONLY_BOOL_OPTION_KEYS,
+                'defaultBookmarksParent',
+                'defaultGroupIconViewType',
+                'defaultGroupIconColor',
+                'autoBackupIntervalKey',
+                'theme',
+                ]
+                .forEach(option => {
+                    this.$watch(`options.${option}`, function(value, oldValue) {
+                        if (null == oldValue) {
+                            return;
+                        }
+
+                        BG.saveOptions({
+                            [option]: value,
                         });
                     });
-            } catch (e) {
-                errorEventHandler(e);
-            }
+                });
         },
         mounted() {
             if (this.enableDebug === '2') {
@@ -208,21 +205,7 @@
                     autoBackupIntervalValue: value,
                 });
             },
-            'options.enableDarkTheme': function(enableDarkTheme, oldValue) {
-                if (enableDarkTheme) {
-                    document.documentElement.classList.add('dark-theme');
-                } else {
-                    document.documentElement.classList.remove('dark-theme');
-                }
-
-                if (null == oldValue) {
-                    return;
-                }
-
-                if (enableDarkTheme) {
-                    this.showEnableDarkThemeNotification = true;
-                }
-            },
+            'options.theme': 'updateTheme',
             'options.temporaryContainerTitle': function(temporaryContainerTitle, oldValue) {
                 if (!temporaryContainerTitle || null == oldValue) {
                     return;
@@ -299,10 +282,17 @@
 
                 return false;
             },
+            showEnableDarkThemeNotification() {
+                return utils.getThemeApply(this.options.theme) === 'dark';
+            },
         },
         methods: {
             lang: browser.i18n.getMessage,
             getHotkeyActionTitle: action => browser.i18n.getMessage('hotkeyActionTitle' + utils.capitalize(utils.toCamelCase(action))),
+
+            updateTheme() {
+                document.documentElement.dataset.theme = utils.getThemeApply(this.options.theme);
+            },
 
             scrollToLoggingDesc() {
                 this.section = SECTION_GENERAL;
@@ -854,14 +844,20 @@
                 </div>
             </div>
 
-            <hr>
-
             <div class="field">
-                <label class="checkbox">
-                    <input v-model="options.enableDarkTheme" type="checkbox" />
-                    <span v-text="lang('enableDarkTheme')"></span>
-                </label>
+                <label class="label" v-text="lang('theme')"></label>
+                <div class="control">
+                    <div class="select">
+                        <select v-model="options.theme">
+                            <option value="auto" v-text="lang('themeAuto')"></option>
+                            <option value="light" v-text="lang('themeLight')"></option>
+                            <option value="dark" v-text="lang('themeDark')"></option>
+                        </select>
+                    </div>
+                </div>
             </div>
+
+            <div v-if="showEnableDarkThemeNotification" class="field mb-6" v-html="lang('enableDarkThemeNotification')"></div>
 
             <div class="field">
                 <label class="label" v-text="lang('enterDefaultGroupIconViewTypeTitle')"></label>
@@ -1179,20 +1175,6 @@
 
         </div>
 
-        <popup
-            v-if="showEnableDarkThemeNotification"
-            :title="lang('enableDarkTheme')"
-            @close-popup="showEnableDarkThemeNotification = false"
-            :buttons="
-                [{
-                    event: 'close-popup',
-                    lang: 'ok',
-                    classList: 'is-success',
-                }]
-            ">
-            <span v-html="lang('enableDarkThemeNotification')"></span>
-        </popup>
-
         <popup v-if="showLoadingMessage" :buttons="
                 [{
                     event: 'null',
@@ -1345,7 +1327,7 @@
         }
     }
 
-    html.dark-theme {
+    html[data-theme="dark"] {
         --background-color: #202023;
 
         .tabs {

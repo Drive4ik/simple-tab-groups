@@ -80,6 +80,8 @@
         created() {
             this.loadOptions();
 
+            window.matchMedia('(prefers-color-scheme: dark)').addListener(({matches}) => this.updateTheme());
+
             loadPromise = Promise.all([this.loadWindows(), this.loadGroups(), this.loadUnsyncedTabs()]);
         },
         async mounted() {
@@ -96,13 +98,7 @@
             });
         },
         watch: {
-            'options.enableDarkTheme': function(enableDarkTheme) {
-                if (enableDarkTheme) {
-                    document.documentElement.classList.add('dark-theme');
-                } else {
-                    document.documentElement.classList.remove('dark-theme');
-                }
-            },
+            'options.theme': 'updateTheme',
             'options.showTabsWithThumbnailsInManageGroups': function(value, oldValue) {
                 if (null != oldValue) {
                     BG.saveOptions({
@@ -154,6 +150,10 @@
         },
         methods: {
             lang: browser.i18n.getMessage,
+
+            updateTheme() {
+                document.documentElement.dataset.theme = utils.getThemeApply(this.options.theme);
+            },
 
             setFocusOnSearch() {
                 this.$nextTick(() => this.$refs.search.focus());
@@ -1435,7 +1435,7 @@
         --multiple-drag-tab-bg-color: #1e88e5;
     }
 
-    html.dark-theme {
+    html[data-theme="dark"] {
         --text-color: #e0e0e0;
 
         --group-bg-color: #444444;

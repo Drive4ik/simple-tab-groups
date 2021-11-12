@@ -28,7 +28,7 @@
 
         return {
             version: manifest.version,
-            upTime: (Math.ceil((Date.now() - ((BG && BG.startTime) || 0)) / 1000)) + ' sec',
+            upTime: (BG && BG.startTime) ? (Math.ceil((Date.now() - BG.startTime) / 1000) + ' sec') : 'unknown',
             browserAndOS: {
                 ...platformInfo,
                 ...browserInfo,
@@ -819,6 +819,12 @@
         return interval;
     }
 
+    function getThemeApply(theme) {
+        let isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        return (theme === 'auto' && isDark) ? 'dark' : theme;
+    }
+
     window.utils = {
         getInfo,
 
@@ -902,6 +908,8 @@
         compareVersions,
 
         safeReloadAddon,
+
+        getThemeApply,
     };
 
 })();
