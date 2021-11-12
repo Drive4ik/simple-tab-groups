@@ -560,7 +560,7 @@
         "description": "Enable dark theme"
     },
     "enableDarkThemeNotification": {
-        "message": "Pour activer complétement le thème sombre, activez le paramètre<br><code>svg.context-properties.content.enabled</code> en lui mettant la valeur <code>true</code> sur la page de configuration <br><code>about:config</code><br><br><a href='https://support.mozilla.org/kb/about-config-editor-firefox'>Comment faire ?</a>",
+        "message": "Pour activer complétement le thème sombre, activez le paramètre<br><code>svg.context-properties.content.enabled</code> en lui mettant la valeur <code>true</code> sur la page de configuration <br><code>about:config</code><br><br><a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">Comment faire ?</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {
@@ -756,7 +756,7 @@
         "description": "⌚Temporary Container"
     },
     "thisContainerIsNotTemporary": {
-        "message": "Ce contexte '$containerName$' n'est plus temporaire",
+        "message": "Ce contexte \"$containerName$\" n'est plus temporaire",
         "description": "This container '$containerName$' is no longer temporary",
         "placeholders": {
             "containerName": {
@@ -766,7 +766,7 @@
         }
     },
     "thisContainerNowIsTemporary": {
-        "message": "Ce contexte '$containerName$' est maintenant temporaire",
+        "message": "Ce contexte \"$containerName$\" est maintenant temporaire",
         "description": "This container '$containerName$' has now become temporary",
         "placeholders": {
             "containerName": {
@@ -1134,5 +1134,25 @@
     "clickHereForInfo": {
         "message": "Cliquer ici pour plus d'informations",
         "description": "Click here for more info"
+    },
+    "enabled": {
+        "message": "Activé",
+        "description": "Enabled text"
+    },
+    "disabled": {
+        "message": "Désactivé",
+        "description": "Disabled text"
+    },
+    "helpPageExtensionsThatConflictWithStgTitle": {
+        "message": "Extensions en conflit avec STG",
+        "description": "Extensions that conflict with STG"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc1": {
+        "message": "L'extension Simple Tab Groups est en conflit avec les extensions activées suivantes :",
+        "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc2": {
+        "message": "Pour éviter de perdre les onglets ou leur emplacement dans les fenêtres et les groupes, il est fortement recommandé de désactiver ou de supprimer les extensions activées qui entrent en conflit avec l'extension Simple Tab Groups. Vous pouvez le faire sur la page des paramètres des extensions \"about:addons\" ou en appuyant sur la combinaison de touches <code>Ctrl+Shift+A</code>.",
+        "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     }
 }
