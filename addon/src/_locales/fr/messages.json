@@ -1154,5 +1154,21 @@
     "helpPageExtensionsThatConflictWithStgDesc2": {
         "message": "Pour éviter de perdre les onglets ou leur emplacement dans les fenêtres et les groupes, il est fortement recommandé de désactiver ou de supprimer les extensions activées qui entrent en conflit avec l'extension Simple Tab Groups. Vous pouvez le faire sur la page des paramètres des extensions \"about:addons\" ou en appuyant sur la combinaison de touches <code>Ctrl+Shift+A</code>.",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
+    },
+    "theme": {
+        "message": "Thème",
+        "description": "Select theme"
+    },
+    "themeAuto": {
+        "message": "Thème système - automatique",
+        "description": "Auto theme"
+    },
+    "themeLight": {
+        "message": "Clair",
+        "description": "Light theme"
+    },
+    "themeDark": {
+        "message": "Sombre",
+        "description": "Dark theme"
     }
 }
