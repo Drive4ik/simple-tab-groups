@@ -186,6 +186,9 @@
             unSyncWindowTabs() {
                 return this.currentWindow ? this.unSyncTabs.filter(tab => tab.windowId === this.currentWindow.id) : [];
             },
+            countWindowsUnSyncTabs() {
+                return this.unSyncTabs.map(tab => tab.windowId).filter(utils.onlyUniqueFilter);
+            },
             allTabsCount() {
                 return Object.keys(this.allTabs).length;
             },
@@ -697,7 +700,7 @@
                     newGroupTitle = await this.showPrompt(this.lang('createNewGroup'), proposalTitle || newGroupTitle);
 
                     if (!newGroupTitle) {
-                        return;
+                        return false;
                     }
                 }
 
@@ -914,9 +917,11 @@
                 this.loadUnsyncedTabs();
             },
             async unsyncHiddenTabsCreateNewGroupAll() {
-                await this.createNewGroup(this.unSyncTabs.map(utils.keyId), undefined, this.unSyncTabs[0].title);
+                let groupCreated = await this.createNewGroup(this.unSyncTabs.map(utils.keyId), undefined, this.unSyncTabs[0].title);
 
-                this.unSyncTabs = [];
+                if (groupCreated !== false) {
+                    this.unSyncTabs = [];
+                }
             },
             unsyncHiddenTabsCloseAll() {
                 BG.Tabs.remove(this.unSyncTabs.map(utils.keyId));
@@ -1439,7 +1444,7 @@
                             <li>
                                 <a tabindex="0" @click="unsyncHiddenTabsMoveToCurrentGroup" @keyup.enter="unsyncHiddenTabsMoveToCurrentGroup" v-text="lang('actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup')"></a>
                             </li>
-                            <li v-if="unSyncWindowTabs.length">
+                            <li v-if="unSyncWindowTabs.length && countWindowsUnSyncTabs.length > 1">
                                 <a tabindex="0" @click="unsyncHiddenWindowTabsCreateNewGroup" @keyup.enter="unsyncHiddenWindowTabsCreateNewGroup" v-text="lang('actionHiddenUnSyncWindowTabsCreateGroup')"></a>
                             </li>
                             <li>
