@@ -67,6 +67,7 @@ const CONFLICTED_EXTENSIONS = Object.freeze([
     'tab_group_window@crossblade.her.jp', // https://addons.mozilla.org/firefox/addon/tab-group-window/
     'power-tabs@rapptz-addons.com', // https://addons.mozilla.org/firefox/addon/power-tabs/
     '{644e8eb0-c710-47e9-b81c-5dd69bfcf86b}', // https://addons.mozilla.org/firefox/addon/tabs-aside/
+    'sync-tab-groups@eric.masseran', // Sync Tab Groups
 ]);
 
 const EXTENSIONS_WHITE_LIST = Object.freeze({
