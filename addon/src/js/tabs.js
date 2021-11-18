@@ -237,6 +237,10 @@
     }
 
     async function updateThumbnail(tabId, force) {
+        if (!BG.options.showTabsWithThumbnailsInManageGroups) {
+            return;
+        }
+
         let tab = await getOne(tabId);
 
         if (!tab) {

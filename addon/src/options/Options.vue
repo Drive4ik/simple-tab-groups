@@ -27,32 +27,8 @@
 
                 section: window.localStorage.optionsSection || SECTION_GENERAL,
 
-                hotkeyActions: [
-                    'load-next-group',
-                    'load-prev-group',
-                    'load-next-unloaded-group',
-                    'load-prev-unloaded-group',
-                    'load-history-next-group',
-                    'load-history-prev-group',
-                    'load-first-group',
-                    'load-last-group',
-                    'load-custom-group',
-                    'add-new-group',
-                    'rename-group',
-                    'delete-current-group',
-                    'open-manage-groups',
-                    'move-selected-tabs-to-custom-group',
-                    'discard-group',
-                    'discard-other-groups',
-                    'reload-all-tabs-in-current-group',
-                ],
-
-                actionsWithCustomGroup: [
-                    'load-custom-group',
-                    'move-selected-tabs-to-custom-group',
-                    'discard-group',
-                    'rename-group',
-                ],
+                HOTKEY_ACTIONS,
+                HOTKEY_ACTIONS_WITH_CUSTOM_GROUP,
 
                 GROUP_ICON_VIEW_TYPES,
                 AUTO_BACKUP_INTERVAL_KEY,
@@ -217,7 +193,7 @@
             },
             'options.hotkeys': {
                 handler(hotkeys, oldValue) {
-                    hotkeys = hotkeys.filter(function(hotkey, index, self) {
+                    hotkeys = hotkeys.filter((hotkey, index, self) => {
                         if (!hotkey.action) {
                             return false;
                         }
@@ -230,12 +206,12 @@
                             return false;
                         }
 
-                        if (this.actionsWithCustomGroup.includes(hotkey.action) && hotkey.groupId && !this.groups.some(gr => gr.id === hotkey.groupId)) {
+                        if (HOTKEY_ACTIONS_WITH_CUSTOM_GROUP.includes(hotkey.action) && hotkey.groupId && !this.groups.some(gr => gr.id === hotkey.groupId)) {
                             hotkey.groupId = 0;
                         }
 
                         return self.findIndex(h => Object.keys(hotkey).every(key => hotkey[key] === h[key])) === index;
-                    }, this);
+                    });
 
                     BG && BG.saveOptions({
                         hotkeys: hotkeys,
@@ -399,7 +375,7 @@
 
                     Object.values(oldGroups).forEach(function({id, title, catchRules}) {
                         groups[id] = {
-                            title: title || id,
+                            title: utils.createGroupTitle(title, id),
                             tabs: [],
                             catchTabRules: catchRules || '',
                         };
@@ -474,7 +450,7 @@
 
                         win.groups.forEach(function({id, name}) {
                             groups[id] = {
-                                title: name || id,
+                                title: utils.createGroupTitle(name, id),
                                 tabs: [],
                             };
                         });
@@ -495,7 +471,7 @@
                     });
                 } else if (panoramaOptions.file.version === 2) {
                     panoramaOptions.windows.forEach(function(win) {
-                        win.tabGroups?.forEach(function({title: groupTitle, tabs}) {
+                        win.tabGroups?.forEach(function({title, tabs}) {
                             let groupTabs = [];
 
                             tabs.forEach(function({url, title}) {
@@ -508,7 +484,7 @@
 
                             if (groupTabs.length) {
                                 data.groups.push({
-                                    title: groupTitle,
+                                    title: utils.createGroupTitle(title, groupTabs.length),
                                     tabs: groupTabs,
                                 });
                             }
@@ -567,7 +543,7 @@
                         .filter(Boolean);
 
                     data.groups.push({
-                        title: title || id,
+                        title: utils.createGroupTitle(title, id),
                         tabs: tabs.filter(tab => !tab.pinned),
                     });
 
@@ -931,7 +907,7 @@
                         <div class="select">
                             <select v-model="hotkey.action">
                                 <option v-if="!hotkey.action" selected disabled value="" v-text="lang('selectAction')"></option>
-                                <option v-for="action in hotkeyActions" :key="action" :value="action" v-text="getHotkeyActionTitle(action)"></option>
+                                <option v-for="action in HOTKEY_ACTIONS" :key="action" :value="action" v-text="getHotkeyActionTitle(action)"></option>
                             </select>
                         </div>
                         <div class="delete-button">
@@ -941,7 +917,7 @@
                         </div>
                     </div>
 
-                    <div v-if="actionsWithCustomGroup.includes(hotkey.action)" class="is-flex is-align-items-center custom-group">
+                    <div v-if="HOTKEY_ACTIONS_WITH_CUSTOM_GROUP.includes(hotkey.action)" class="is-flex is-align-items-center custom-group">
                         <div :class="['control', {'has-icons-left': groups.some(gr => gr.id === hotkey.groupId)}]">
                             <div class="select">
                                 <select v-model.number="hotkey.groupId">

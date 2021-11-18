@@ -509,7 +509,7 @@ const onUpdatedTab = utils.catchFunc(async function(tabId, changeInfo, tab) {
         return;
     }
 
-    if (options.showTabsWithThumbnailsInManageGroups && utils.isTabLoaded(changeInfo) && (tabGroupId || winGroupId)) {
+    if (utils.isTabLoaded(changeInfo) && (tabGroupId || winGroupId)) {
         Tabs.updateThumbnail(tab.id);
     }
 });
@@ -2354,7 +2354,13 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         data.groups.forEach(group => group.isMain = false);
     }
 
-    await Containers.updateTemporaryContainerTitle(data.temporaryContainerTitle);
+    if (data.temporaryContainerTitle) {
+        await Containers.updateTemporaryContainerTitle(data.temporaryContainerTitle);
+    }
+
+    if (clearAddonDataBeforeRestore) {
+        options.showTabsWithThumbnailsInManageGroups = DEFAULT_OPTIONS.showTabsWithThumbnailsInManageGroups;
+    }
 
     if (data.hasOwnProperty('showTabsWithThumbnailsInManageGroups')) {
         options.showTabsWithThumbnailsInManageGroups = data.showTabsWithThumbnailsInManageGroups;
@@ -2365,7 +2371,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         currentData.hotkeys = [];
     } else {
         currentData = await storage.get(null),
-        currentData.groups = await Groups.load(null, true, true, true);
+        currentData.groups = await Groups.load(null, true, true, options.showTabsWithThumbnailsInManageGroups);
     }
 
     if (!Array.isArray(data.hotkeys)) {
@@ -2389,35 +2395,49 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         Object.assign(tab, newTabParams);
     }
 
-    if (clearAddonDataBeforeRestore) {
-        let latestExampleGroup = Groups.create(0),
-            latestExampleGroupKeys = Object.keys(latestExampleGroup).filter(key => !['id', 'title', 'tabs'].includes(key));
+    data.groups = data.groups.map(function(group) {
+        let newGroupId = null;
 
-        data.groups.forEach(function(group) {
-            let newTabParams = Groups.getNewTabParams(group);
-            group.tabs.forEach(prepareTab.bind(null, newTabParams));
+        if (Number.isInteger(group.id)) {
+            if (group.id > lastCreatedGroupPosition) {
+                lastCreatedGroupPosition = group.id;
+            }
 
-            latestExampleGroupKeys.forEach(key => !group.hasOwnProperty(key) && (group[key] = latestExampleGroup[key]));
-        });
-    } else {
-        data.groups = data.groups.map(function(group) {
-            let newGroup = Groups.create(++lastCreatedGroupPosition, group.title);
+            newGroupId = clearAddonDataBeforeRestore ? group.id : (++lastCreatedGroupPosition);
+        } else {
+            newGroupId = ++lastCreatedGroupPosition;
+        }
 
+        let newGroup = Groups.create(newGroupId, group.title);
+
+        if (group.id) {
             data.hotkeys.forEach(hotkey => hotkey.groupId === group.id ? (hotkey.groupId = newGroup.id) : null);
+        }
 
-            delete group.id;
+        delete group.id;
 
-            Object.assign(newGroup, group);
+        for (let key in group) {
+            if (newGroup.hasOwnProperty(key) && typeof group[key] === typeof newGroup[key]) {
+                newGroup[key] = group[key];
+            }
+        }
 
-            let newTabParams = Groups.getNewTabParams(newGroup);
-            newGroup.tabs.forEach(prepareTab.bind(null, newTabParams));
+        let newTabParams = Groups.getNewTabParams(newGroup);
+        newGroup.tabs.forEach(prepareTab.bind(null, newTabParams));
 
-            return newGroup;
-        });
+        return newGroup;
+    });
 
-        data.groups = [...currentData.groups, ...data.groups];
-        data.hotkeys = [...currentData.hotkeys, ...data.hotkeys];
-    }
+    data.groups = [...currentData.groups, ...data.groups];
+    data.hotkeys = [...currentData.hotkeys, ...data.hotkeys];
+
+    data.hotkeys = data.hotkeys.filter(function(hotkey, index, self) {
+        if (HOTKEY_ACTIONS_WITH_CUSTOM_GROUP.includes(hotkey.action) && hotkey.groupId && !data.groups.some(gr => gr.id === hotkey.groupId)) {
+            hotkey.groupId = 0;
+        }
+
+        return self.findIndex(h => Object.keys(hotkey).every(key => hotkey[key] === h[key])) === index;
+    });
 
     data.lastCreatedGroupPosition = lastCreatedGroupPosition;
 
@@ -2443,7 +2463,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
 
     delete data.containers;
 
-    let allTabs = await Tabs.get(null, false, null, undefined, true, true);
+    let allTabs = await Tabs.get(null, false, null, undefined, true, options.showTabsWithThumbnailsInManageGroups);
 
     await syncTabs(data.groups, allTabs);
 
@@ -2943,6 +2963,8 @@ async function runMigrateForData(data) {
             remove: ['enableDarkTheme'],
             migration() {
                 data.theme = data.enableDarkTheme ? 'dark' : DEFAULT_OPTIONS.theme;
+
+                data.groups.forEach(group => group.title = String(group.title));
             },
         },
     ];

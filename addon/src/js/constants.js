@@ -37,6 +37,33 @@ const DEFAULT_BOOKMARKS_PARENTS = Object.freeze([
     'unfiled_____',
 ]);
 
+const HOTKEY_ACTIONS = Object.freeze([
+    'load-next-group',
+    'load-prev-group',
+    'load-next-unloaded-group',
+    'load-prev-unloaded-group',
+    'load-history-next-group',
+    'load-history-prev-group',
+    'load-first-group',
+    'load-last-group',
+    'load-custom-group',
+    'add-new-group',
+    'rename-group',
+    'delete-current-group',
+    'open-manage-groups',
+    'move-selected-tabs-to-custom-group',
+    'discard-group',
+    'discard-other-groups',
+    'reload-all-tabs-in-current-group',
+]);
+
+const HOTKEY_ACTIONS_WITH_CUSTOM_GROUP = Object.freeze([
+    'load-custom-group',
+    'move-selected-tabs-to-custom-group',
+    'discard-group',
+    'rename-group',
+]);
+
 const TREE_TABS_EXTENSIONS = Object.freeze([
     'treestyletab@piro.sakura.ne.jp',
     '{8d808887-ed13-4931-9f5a-4c0bff979a5a}',
@@ -279,21 +306,8 @@ const DEFAULT_OPTIONS = Object.freeze({
 
 const ONLY_BOOL_OPTION_KEYS = Object.freeze(Object.keys(DEFAULT_OPTIONS).filter(key => 'boolean' === typeof DEFAULT_OPTIONS[key]));
 
-const ALL_OPTIONS_KEYS = Object.freeze([
-    ...ONLY_BOOL_OPTION_KEYS,
-    'temporaryContainerTitle',
-    'hotkeys',
-    'defaultBookmarksParent',
-    'defaultGroupIconViewType',
-    'defaultGroupIconColor',
-    'autoBackupLastBackupTimeStamp',
-    'autoBackupIntervalKey',
-    'autoBackupIntervalValue',
-    'autoBackupFolderName',
-    'autoBackupBookmarksFolderName',
-    'theme',
-]);
-
+const ALL_OPTIONS_KEYS = Object.freeze(Object.keys(DEFAULT_OPTIONS).filter(key => !['version', 'groups', 'lastCreatedGroupPosition'].includes(key)));
+console.debug('ALL_OPTIONS_KEYS', ALL_OPTIONS_KEYS)
 const MINUTE_SEC = 60;
 const HOUR_SEC = 60 * MINUTE_SEC;
 const DAY_SEC = 24 * HOUR_SEC;

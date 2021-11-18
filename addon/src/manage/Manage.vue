@@ -1360,7 +1360,7 @@
             <edit-group
                 ref="editGroup"
                 :groupId="groupToEdit.id"
-                @saved="groupToEdit = null" />
+                @saved="groupToEdit = null"></edit-group>
         </popup>
 
         <popup
