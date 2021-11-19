@@ -1159,15 +1159,16 @@ async function createMoveTabMenus(groups) {
     }));
 }
 
-async function _getBookmarkFolderFromTitle(title, parentId, createIfNeed) {
-    let bookmarks = await browser.bookmarks.search({
-            title,
-        }),
-        bookmark = bookmarks.find(b => b.type === browser.bookmarks.BookmarkTreeNodeType.FOLDER && b.parentId === parentId);
+async function findGroupBookmark(group, parentId, createIfNeed) {
+    let bookmark = null;
+
+    if (group.bookmarkId) {
+        [bookmark] = await browser.bookmarks.get(group.bookmarkId).catch(() => [bookmark]);
+    }
 
     if (!bookmark && createIfNeed) {
         bookmark = await browser.bookmarks.create({
-            title,
+            title: group.title,
             parentId,
             type: browser.bookmarks.BookmarkTreeNodeType.FOLDER,
         });
@@ -1180,42 +1181,49 @@ async function _getBookmarkFolderFromTitle(title, parentId, createIfNeed) {
     return bookmark;
 }
 
-async function getBookmarkGroup(groupTitle, createBookmarkFolderIfNeed) {
+async function getGroupBookmark(group, createIfNeed) {
     let hasBookmarksPermission = await browser.permissions.contains(PERMISSIONS.BOOKMARKS);
 
     if (!hasBookmarksPermission) {
         return;
     }
 
-    let rootFolder = {
+    let rootBookmark = {
         id: options.defaultBookmarksParent,
     };
 
     if (options.exportGroupToMainBookmarkFolder) {
-        rootFolder = await _getBookmarkFolderFromTitle(options.autoBackupBookmarksFolderName, options.defaultBookmarksParent, createBookmarkFolderIfNeed);
+        let likeGroup = {
+            title: 'STG bookmarks',
+            bookmarkId: window.localStorage.mainBookmarksFolderId,
+        };
 
-        if (!rootFolder) {
+        rootBookmark = await findGroupBookmark(likeGroup, rootBookmark.id, createIfNeed);
+
+        if (!rootBookmark) {
             return;
         }
+
+        window.localStorage.mainBookmarksFolderId = rootBookmark.id;
     }
 
-    return _getBookmarkFolderFromTitle(groupTitle, rootFolder.id, createBookmarkFolderIfNeed);
+    return findGroupBookmark(group, rootBookmark.id, createIfNeed);
 }
 
-async function removeBookmarkGroup(groupTitle) {
-    let groupBookmarkFolder = await getBookmarkGroup(groupTitle);
+async function removeGroupBookmark(group) {
+    let groupBookmarkFolder = await getGroupBookmark(group);
 
     if (groupBookmarkFolder) {
         await browser.bookmarks.removeTree(groupBookmarkFolder.id);
     }
 }
 
-async function updateBookmarkGroupTitle(oldGroupTitle, newGroupTitle) {
-    let groupBookmarkFolder = await getBookmarkGroup(oldGroupTitle);
+async function updateGroupBookmarkTitle(group) {
+    let groupBookmarkFolder = await getGroupBookmark(group);
 
     if (groupBookmarkFolder) {
         await browser.bookmarks.update(groupBookmarkFolder.id, {
-            title: newGroupTitle,
+            title: group.title,
         });
     }
 }
@@ -1233,14 +1241,7 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
     }
 
     if (Number.isFinite(group)) {
-        let [gr, groups, index] = await Groups.load(group, true);
-        group = gr;
-        groupIndex = index;
-    }
-
-    if (!group.tabs.length) {
-        showMessages && utils.notify(['groupWithoutTabs']);
-        return;
+        [group, , groupIndex] = await Groups.load(group, true);
     }
 
     if (showMessages) {
@@ -1249,12 +1250,15 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
 
     const {BOOKMARK, FOLDER, SEPARATOR} = browser.bookmarks.BookmarkTreeNodeType;
 
-    let groupBookmarkFolder = await getBookmarkGroup(group.title, true);
+    let {bookmarkId: oldGroupGookmarkId} = group,
+        groupBookmarkFolder = await getGroupBookmark(group, true);
 
     if (options.exportGroupToMainBookmarkFolder) {
-        await browser.bookmarks.move(groupBookmarkFolder.id, {
-            index: groupIndex,
-        });
+        if (groupBookmarkFolder.parentId === window.localStorage.mainBookmarksFolderId && groupBookmarkFolder.index !== groupIndex) {
+            await browser.bookmarks.move(groupBookmarkFolder.id, {
+                index: groupIndex,
+            });
+        }
     }
 
     let bookmarksToRemove = [];
@@ -1337,6 +1341,12 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
         groupBookmarkFolder.children.forEach(({id, type}) => type !== FOLDER && !foundedBookmarks.has(id) && bookmarksToRemove.push(id));
 
         await Promise.all(bookmarksToRemove.map(id => browser.bookmarks.remove(id).catch(noop)));
+    }
+
+    if (oldGroupGookmarkId !== groupBookmarkFolder.id) {
+        await Groups.update(group.id, {
+            bookmarkId: groupBookmarkFolder.id,
+        });
     }
 
     if (showMessages) {
@@ -2578,8 +2588,8 @@ window.BG = {
     loadingBrowserAction,
 
     exportGroupToBookmarks,
-    updateBookmarkGroupTitle,
-    removeBookmarkGroup,
+    updateGroupBookmarkTitle,
+    removeGroupBookmark,
     applyGroup,
 
     addListenerOnBeforeRequest,
@@ -2960,11 +2970,54 @@ async function runMigrateForData(data) {
         },
         {
             version: '4.7.2',
-            remove: ['enableDarkTheme'],
-            migration() {
+            remove: ['enableDarkTheme', 'autoBackupBookmarksFolderName'],
+            async migration() {
                 data.theme = data.enableDarkTheme ? 'dark' : DEFAULT_OPTIONS.theme;
+                data.groups.forEach(group => {
+                    group.title = String(group.title);
+                    group.bookmarkId = null;
+                });
 
-                data.groups.forEach(group => group.title = String(group.title));
+                let hasBookmarksPermission = await browser.permissions.contains(PERMISSIONS.BOOKMARKS);
+
+                if (!hasBookmarksPermission) {
+                    return;
+                }
+
+                let _bookmarkFolderFromTitle = async function(title, parentId) {
+                    let bookmarks = await browser.bookmarks.search({title});
+
+                    return bookmarks.find(b => b.type === browser.bookmarks.BookmarkTreeNodeType.FOLDER && b.parentId === parentId);
+                };
+
+                let _getBookmarkGroup = async function(title) {
+                    let rootFolder = {
+                        id: data.defaultBookmarksParent,
+                    };
+
+                    if (data.exportGroupToMainBookmarkFolder) {
+                        rootFolder = await _bookmarkFolderFromTitle(data.autoBackupBookmarksFolderName, rootFolder.id);
+
+                        if (!rootFolder) {
+                            return;
+                        }
+                    }
+
+                    return _bookmarkFolderFromTitle(title, rootFolder.id);
+                };
+
+                for (let group of data.groups) {
+                    let bookmark = await _getBookmarkGroup(group.title);
+
+                    if (bookmark) {
+                        group.bookmarkId = bookmark.id;
+                    }
+                }
+
+                let rootFolder = await _bookmarkFolderFromTitle(data.autoBackupBookmarksFolderName, data.defaultBookmarksParent);
+                if (rootFolder) {
+                    window.localStorage.mainBookmarksFolderId = rootFolder.id;
+                }
             },
         },
     ];

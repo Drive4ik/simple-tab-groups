@@ -634,14 +634,8 @@
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
     "exportGroupToMainBookmarkFolder": {
-        "message": "Exportar grupos a la carpeta de marcadores '$bookmarkfolder$'",
-        "description": "Export groups to '$bookmarkfolder$' bookmark folder",
-        "placeholders": {
-            "bookmarkfolder": {
-                "content": "$1",
-                "example": "STG bookmarks"
-            }
-        }
+        "message": "Exportar grupos a la carpeta de marcadores \"STG bookmarks\"",
+        "description": "Export groups to \"STG bookmarks\" bookmark folder"
     },
     "exportGroupToBookmarks": {
         "message": "Exportar grupo a marcadores",
@@ -1078,10 +1072,6 @@
     "helpPageDbErrorReinstallOpenFFDownloadsFolder": {
         "message": "Abrir carpeta de descargas de Firefox",
         "description": "Open Firefox downloads folder"
-    },
-    "groupWithSameNameExists": {
-        "message": "¡Ya existe un grupo con ese nombre!",
-        "description": "A group with the same name already exists!"
     },
     "eraseAndImportAddonBackupButton": {
         "message": "Borrar y restaurar respaldo",

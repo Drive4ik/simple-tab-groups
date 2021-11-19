@@ -634,14 +634,8 @@
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
     "exportGroupToMainBookmarkFolder": {
-        "message": "Exportar grupos para a pasta de favoritos '$bookmarkfolder$'",
-        "description": "Export groups to '$bookmarkfolder$' bookmark folder",
-        "placeholders": {
-            "bookmarkfolder": {
-                "content": "$1",
-                "example": "STG bookmarks"
-            }
-        }
+        "message": "Exportar grupos para a pasta de favoritos \"STG bookmarks\"",
+        "description": "Export groups to \"STG bookmarks\" bookmark folder"
     },
     "exportGroupToBookmarks": {
         "message": "Exportar grupos para favoritos",

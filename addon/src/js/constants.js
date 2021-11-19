@@ -275,7 +275,6 @@ const DEFAULT_OPTIONS = Object.freeze({
     autoBackupGroupsToBookmarks: true,
     autoBackupGroupsToFile: true,
     autoBackupFolderName: '',
-    autoBackupBookmarksFolderName: 'STG bookmarks',
     autoBackupByDayIndex: true,
 
     theme: 'auto', // auto, light, dark
@@ -307,7 +306,7 @@ const DEFAULT_OPTIONS = Object.freeze({
 const ONLY_BOOL_OPTION_KEYS = Object.freeze(Object.keys(DEFAULT_OPTIONS).filter(key => 'boolean' === typeof DEFAULT_OPTIONS[key]));
 
 const ALL_OPTIONS_KEYS = Object.freeze(Object.keys(DEFAULT_OPTIONS).filter(key => !['version', 'groups', 'lastCreatedGroupPosition'].includes(key)));
-console.debug('ALL_OPTIONS_KEYS', ALL_OPTIONS_KEYS)
+
 const MINUTE_SEC = 60;
 const HOUR_SEC = 60 * MINUTE_SEC;
 const DAY_SEC = 24 * HOUR_SEC;

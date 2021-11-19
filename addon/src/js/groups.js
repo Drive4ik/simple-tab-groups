@@ -84,26 +84,21 @@
             muteTabsWhenGroupCloseAndRestoreWhenOpen: false,
             showTabAfterMovingItIntoThisGroup: false,
             dontDiscardTabsAfterHideThisGroup: false,
+            bookmarkId: null,
         };
     }
 
     async function add(windowId, tabIds = [], title = null, showTabsAfterMoving) {
         tabIds = Array.isArray(tabIds) ? tabIds.slice() : [];
 
-        title = (typeof title === 'string' && title) ? title.slice(0, 256) : null;
+        title = title ? title.slice(0, 256) : null;
 
         let {lastCreatedGroupPosition} = await storage.get('lastCreatedGroupPosition');
 
         lastCreatedGroupPosition++;
 
-        let groups = await load();
-
-        if (title && groups.some(gr => gr.title === title)) {
-            utils.notify(['groupWithSameNameExists']);
-            title = null;
-        }
-
-        let newGroup = create(lastCreatedGroupPosition, title);
+        let groups = await load(),
+            newGroup = create(lastCreatedGroupPosition, title);
 
         groups.push(newGroup);
 
@@ -180,7 +175,7 @@
             }
         }
 
-        BG.removeBookmarkGroup(group.title);
+        BG.removeGroupBookmark(group);
 
         BG.sendMessage({
             action: 'group-removed',
@@ -211,14 +206,6 @@
 
         if (updateData.title) {
             updateData.title = updateData.title.slice(0, 256);
-
-            if (groups.some(gr => gr.title === updateData.title)) {
-                if (groups.some(gr => gr.title === updateData.title && gr.id !== groupId)) {
-                    utils.notify(['groupWithSameNameExists']);
-                }
-
-                delete updateData.title;
-            }
         }
 
         if (!Object.keys(updateData).length) {
@@ -228,8 +215,6 @@
         if (updateData.isMain) {
             groups.forEach(gr => gr.isMain = gr.id === groupId);
         }
-
-        let oldGroupTitle = group.title;
 
         Object.assign(group, updateData);
 
@@ -243,19 +228,23 @@
             },
         });
 
-        if (['title', 'iconUrl', 'iconColor', 'iconViewType', 'newTabContainer', 'isSticky'].some(key => updateData.hasOwnProperty(key))) {
+        let externalGroup = mapForExternalExtension(group);
+
+        if (Object.keys(externalGroup).some(key => updateData.hasOwnProperty(key))) {
             BG.sendExternalMessage({
                 action: 'group-updated',
-                group: mapForExternalExtension(group),
+                group: externalGroup,
             });
+        }
 
+        if (['title', 'iconUrl', 'iconColor', 'iconViewType', 'isArchive', 'isSticky'].some(key => updateData.hasOwnProperty(key))) {
             BG.updateMoveTabMenus(groups);
 
             BG.updateBrowserActionData(groupId, undefined, groups);
         }
 
         if (updateData.hasOwnProperty('title')) {
-            BG.updateBookmarkGroupTitle(oldGroupTitle, updateData.title);
+            BG.updateGroupBookmarkTitle(group);
         }
     }
 
