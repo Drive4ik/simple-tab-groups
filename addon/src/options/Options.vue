@@ -760,6 +760,13 @@
                     <span v-text="lang('discardTabsAfterHide')"></span>
                 </label>
             </div>
+            <div class="field h-margin-left-10">
+                <label class="checkbox" :disabled="!options.discardTabsAfterHide">
+                    <input v-if="options.discardTabsAfterHide" v-model="options.discardAfterHideExcludeAudioTabs" type="checkbox" />
+                    <input v-else disabled="" type="checkbox" />
+                    <span v-text="lang('discardAfterHideExcludeAudioTabs')"></span>
+                </label>
+            </div>
             <div class="field">
                 <label class="checkbox">
                     <input v-model="options.openManageGroupsInTab" type="checkbox" />

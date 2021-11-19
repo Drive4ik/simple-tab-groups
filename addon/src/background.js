@@ -225,6 +225,10 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                     }
 
                     if (options.discardTabsAfterHide && !groupToHide.dontDiscardTabsAfterHideThisGroup) {
+                        if (options.discardAfterHideExcludeAudioTabs) {
+                            tabs = tabs.filter(tab => !tab.audible);
+                        }
+
                         Tabs.discard(tabs);
                     }
                 }
@@ -2985,6 +2989,7 @@ async function runMigrateForData(data) {
             remove: ['enableDarkTheme', 'autoBackupBookmarksFolderName'],
             async migration() {
                 data.theme = data.enableDarkTheme ? 'dark' : DEFAULT_OPTIONS.theme;
+                data.discardAfterHideExcludeAudioTabs = DEFAULT_OPTIONS.discardAfterHideExcludeAudioTabs;
                 data.groups.forEach(group => {
                     group.title = String(group.title);
                     group.bookmarkId = null;

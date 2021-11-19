@@ -249,6 +249,7 @@ const DEFAULT_OPTIONS = Object.freeze({
 
     // options
     discardTabsAfterHide: false,
+    discardAfterHideExcludeAudioTabs: false,
     closePopupAfterChangeGroup: true,
     openGroupAfterChange: false,
     alwaysAskNewGroupName: true,

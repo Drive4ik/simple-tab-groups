@@ -413,6 +413,10 @@
         "message": "Выгружать вкладки из памяти после смены группы (позволяет сэкономить ОЗУ)",
         "description": "Discard tabs after hide (this will save the RAM)"
     },
+    "discardAfterHideExcludeAudioTabs": {
+        "message": "Исключить вкладки со звуком",
+        "description": "Exclude tabs with sound"
+    },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Невозможно изменить группу, потому что на одной из вкладок используется микрофон или камера",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
