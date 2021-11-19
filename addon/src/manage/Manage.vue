@@ -223,6 +223,10 @@
 
                     if (group) {
                         if (!Object.isFrozen(group.tabs)) {
+                            if (group.tabs.some(t => t.id === tab.id)) {
+                                return;
+                            }
+
                             let index = group.tabs.findIndex(t => t.index >= tab.index);
 
                             if (index === -1) {
