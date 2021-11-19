@@ -126,6 +126,12 @@
         "load-prev-unloaded-group": {
             "description": "__MSG_hotkeyActionTitleLoadPrevUnloadedGroup__"
         },
+        "load-next-non-empty-group": {
+            "description": "__MSG_hotkeyActionTitleLoadNextNonEmptyGroup__"
+        },
+        "load-prev-non-empty-group": {
+            "description": "__MSG_hotkeyActionTitleLoadPrevNonEmptyGroup__"
+        },
         "load-history-next-group": {
             "description": "__MSG_hotkeyActionTitleLoadHistoryNextGroup__"
         },

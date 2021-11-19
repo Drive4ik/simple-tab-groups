@@ -317,6 +317,14 @@
         "message": "Load previous unloaded group",
         "description": "Load previous unloaded group"
     },
+    "hotkeyActionTitleLoadNextNonEmptyGroup": {
+        "message": "Load next non-empty group",
+        "description": "Load next non-empty group"
+    },
+    "hotkeyActionTitleLoadPrevNonEmptyGroup": {
+        "message": "Load previous non-empty group",
+        "description": "Load previous non-empty group"
+    },
     "hotkeyActionTitleLoadHistoryNextGroup": {
         "message": "Load next group from history",
         "description": "Load next group from history"
