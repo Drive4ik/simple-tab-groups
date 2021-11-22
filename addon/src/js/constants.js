@@ -270,6 +270,28 @@ const DEFAULT_OPTIONS = Object.freeze({
     fullPopupWidth: false,
     temporaryContainerTitle: browser.i18n.getMessage('temporaryContainerTitle'),
 
+    contextMenuTab: [
+        'open-in-new-window',
+        'reload',
+        'discard',
+        'remove',
+        'update-thumbnail',
+        'set-group-icon',
+        'move-tab-to-group',
+    ],
+    contextMenuGroup: [
+        'open-in-new-window',
+        'sort-asc',
+        'sort-desc',
+        'discard',
+        'discard-other',
+        'export-to-bookmarks',
+        'unload',
+        'archive',
+        'rename',
+        'reload-all-tabs',
+    ],
+
     defaultGroupIconViewType: GROUP_ICON_VIEW_TYPES[0],
     defaultGroupIconColor: '',
 

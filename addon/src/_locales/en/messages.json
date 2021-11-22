@@ -1176,5 +1176,17 @@
     "themeDark": {
         "message": "Dark",
         "description": "Dark theme"
+    },
+    "contextMenuEditor": {
+        "message": "Context menu editor",
+        "description": "Context menu editor"
+    },
+    "tab": {
+        "message": "Tab",
+        "description": "Tab"
+    },
+    "group": {
+        "message": "Group",
+        "description": "Group"
     }
 }

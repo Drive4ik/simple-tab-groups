@@ -7,7 +7,10 @@
     import popup from '../js/popup.vue';
     import editGroupPopup from './edit-group-popup.vue';
     import editGroup from '../js/edit-group.vue';
-    import contextMenu from '../js/context-menu-component.vue';
+    import contextMenu from '../components/context-menu.vue';
+    import contextMenuTab from '../components/context-menu-tab.vue';
+    import contextMenuTabNew from '../components/context-menu-tab-new.vue';
+    import contextMenuGroup from '../components/context-menu-group.vue';
 
     Vue.config.errorHandler = errorEventHandler;
 
@@ -92,6 +95,9 @@
             'edit-group-popup': editGroupPopup,
             'edit-group': editGroup,
             'context-menu': contextMenu,
+            'context-menu-tab': contextMenuTab,
+            'context-menu-tab-new': contextMenuTabNew,
+            'context-menu-group': contextMenuGroup,
         },
         created() {
             if (!isSidebar && BG.options.fullPopupWidth) {
@@ -727,8 +733,8 @@
                 }
             },
 
-            addTab(cookieStoreId) {
-                Tabs.add(this.groupToShow.id, cookieStoreId);
+            addTab(group, cookieStoreId) {
+                Tabs.add(group.id, cookieStoreId);
             },
             removeTab(tab) {
                 Tabs.remove(this.getTabIdsForMove(tab.id));
@@ -947,8 +953,8 @@
                 }
             },
 
-            openGroupInNewWindow({id}) {
-                BG.Windows.create(undefined, id); // BG need because this popup will unload after win open and code not work
+            openGroupInNewWindow(group, tab = {}) {
+                BG.Windows.create(undefined, group.id, tab.id); // BG need because this popup will unload after win open and code not work
             },
 
             openGroupSettings(group) {
@@ -1019,7 +1025,7 @@
 
             openOptionsPage() {
                 delete window.localStorage.optionsSection;
-                browser.runtime.openOptionsPage();
+                browser.runtime.openOptionsPage().catch(e => console.error('cant open options page:', e));
                 this.closeWindow();
             },
             openManageGroups() {
@@ -1223,7 +1229,7 @@
                                 'is-active-element': group === currentGroup,
                                 'is-opened': isOpenedGroup(group),
                             }]"
-                            @contextmenu="$refs.groupContextMenu.open($event, {group})"
+                            @contextmenu="$refs.contextMenuGroup.open($event, {group})"
 
                             @click="!group.isArchive && applyGroup(group)"
                             @keyup.enter="!group.isArchive && applyGroup(group)"
@@ -1295,7 +1301,7 @@
 
                         <template v-else>
                             <div v-for="(tab, index) in group.filteredTabs" :key="index"
-                                @contextmenu="$refs.tabsContextMenu.open($event, {tab, group})"
+                                @contextmenu="$refs.contextMenuTab.open($event, {tab, group})"
                                 @click.stop="clickOnTab($event, tab, group)"
                                 @keyup.enter="clickOnTab($event, tab, group)"
                                 @keyup.delete="removeTab(tab)"
@@ -1370,7 +1376,7 @@
                         @drop="dragHandle($event, 'group', ['group'], {item: group})"
                         @dragend="dragHandle($event, 'group', ['group'], {item: group})"
 
-                        @contextmenu="$refs.groupContextMenu.open($event, {group})"
+                        @contextmenu="$refs.contextMenuGroup.open($event, {group})"
                         @click="!group.isArchive && applyGroup(group)"
                         @keyup.enter="!group.isArchive && applyGroup(group)"
                         @keydown.right.stop="showSectionGroupTabs(group);"
@@ -1461,7 +1467,7 @@
                     </p>
                     <div>
                         <div v-for="tab in unSyncTabs" :key="tab.id"
-                            @contextmenu="$refs.tabsContextMenu.open($event, {tab})"
+                            @contextmenu="$refs.contextMenuTab.open($event, {tab})"
                             @click.stop="($event.ctrlKey || $event.metaKey || $event.shiftKey) ? clickOnTab($event, tab) : unsyncHiddenTabsShowTabIntoCurrentWindow(tab)"
                             @keyup.enter="($event.ctrlKey || $event.metaKey || $event.shiftKey) ? clickOnTab($event, tab) : unsyncHiddenTabsShowTabIntoCurrentWindow(tab)"
                             @keydown.delete="removeTab(tab)"
@@ -1573,7 +1579,7 @@
                         v-for="(tab, tabIndex) in groupToShow.tabs"
                         :key="tabIndex"
                         :data-tab-id="tab.id"
-                        @contextmenu="$refs.tabsContextMenu.open($event, {tab, group: groupToShow})"
+                        @contextmenu="$refs.contextMenuTab.open($event, {tab, group: groupToShow})"
                         @click.stop="clickOnTab($event, tab, groupToShow)"
                         @keyup.enter="clickOnTab($event, tab, groupToShow)"
                         @keydown.left="showSectionDefault"
@@ -1631,7 +1637,7 @@
                     <hr>
 
                     <div class="create-new-tab">
-                        <div class="item" tabindex="0" @contextmenu="$refs.createNewTabContextMenu.open($event)" @click="addTab()" @keyup.enter="addTab()">
+                        <div class="item" tabindex="0" @contextmenu="$refs.contextMenuTabNew.open($event, {group: groupToShow})" @click="addTab()" @keyup.enter="addTab()">
                             <div class="item-icon">
                                 <img class="size-16" src="/icons/tab-new.svg">
                             </div>
@@ -1670,141 +1676,38 @@
             </ul>
         </context-menu>
 
-        <context-menu ref="createNewTabContextMenu">
-            <ul class="is-unselectable" v-if="groupToShow">
-                <li
-                    v-for="container in containers"
-                    v-if="
-                        container.cookieStoreId !== DEFAULT_COOKIE_STORE_ID &&
-                        (
-                            groupToShow.ifDifferentContainerReOpen
-                            ? (
-                                groupToShow.excludeContainersForReOpen.includes(container.cookieStoreId) ||
-                                groupToShow.newTabContainer === container.cookieStoreId ||
-                                container.cookieStoreId === TEMPORARY_CONTAINER
-                            )
-                            : true
-                        )
-                    "
-                    :key="container.cookieStoreId"
-                    @click="addTab(container.cookieStoreId)"
-                    >
-                    <img v-if="container.iconUrl" :src="container.iconUrl" class="is-inline-block size-16" :style="{fill: container.colorCode}" />
-                    <span v-text="container.name"></span>
-                </li>
-            </ul>
-        </context-menu>
+        <context-menu-tab-new ref="contextMenuTabNew" @add="addTab"></context-menu-tab-new>
 
-        <context-menu ref="groupContextMenu">
-            <template v-slot="menu">
-                <ul v-if="menu.data" class="is-unselectable">
-                    <li :class="{'is-disabled': menu.data.group.isArchive}" @click="!menu.data.group.isArchive && openGroupInNewWindow(menu.data.group)">
-                        <img src="/icons/window-new.svg" class="size-16" />
-                        <span v-text="lang('openGroupInNewWindow')"></span>
-                    </li>
-                    <li @click="sortGroups('asc')">
-                        <img src="/icons/sort-alpha-asc.svg" class="size-16" />
-                        <span v-text="lang('sortGroupsAZ')"></span>
-                    </li>
-                    <li @click="sortGroups('desc')">
-                        <img src="/icons/sort-alpha-desc.svg" class="size-16" />
-                        <span v-text="lang('sortGroupsZA')"></span>
-                    </li>
-                    <li :class="{'is-disabled': menu.data.group.isArchive}" @click="!menu.data.group.isArchive && discardGroup(menu.data.group)">
-                        <img src="/icons/snowflake.svg" class="size-16" />
-                        <span v-text="lang('hotkeyActionTitleDiscardGroup')"></span>
-                    </li>
-                    <li v-if="groups.length > 1" @click="discardOtherGroups(menu.data.group)">
-                        <img src="/icons/snowflake.svg" class="size-16" />
-                        <span v-text="lang('hotkeyActionTitleDiscardOtherGroups')"></span>
-                    </li>
-                    <li @click="exportGroupToBookmarks(menu.data.group)">
-                        <img src="/icons/bookmark.svg" class="size-16" />
-                        <span v-text="lang('exportGroupToBookmarks')"></span>
-                    </li>
-                    <li :class="{'is-disabled': !isOpenedGroup(menu.data.group)}" @click="isOpenedGroup(menu.data.group) && unloadGroup(menu.data.group)">
-                        <img src="/icons/upload.svg" class="size-16" />
-                        <span v-text="lang('unloadGroup')"></span>
-                    </li>
-                    <li @click="toggleArchiveGroup(menu.data.group)">
-                        <img :src="'/icons/' + (menu.data.group.isArchive ? 'unarchive' : 'archive') + '.svg'" class="size-16" />
-                        <span v-text="lang(menu.data.group.isArchive ? 'unArchiveGroup' : 'archiveGroup')"></span>
-                    </li>
-                    <li @click="renameGroup(menu.data.group)">
-                        <img src="/icons/edit.svg" class="size-16" />
-                        <span v-text="lang('hotkeyActionTitleRenameGroup') + ' (F2)'"></span>
-                    </li>
+        <context-menu-group ref="contextMenuGroup"
+            :menu="options.contextMenuGroup"
+            :groups="groups"
+            :opened-windows="openedWindows"
+            @open-in-new-window="openGroupInNewWindow"
+            @sort="sortGroups"
+            @discard="discardGroup"
+            @discard-other="discardOtherGroups"
+            @export-to-bookmarks="exportGroupToBookmarks"
+            @unload="unloadGroup"
+            @archive="toggleArchiveGroup"
+            @unarchive="toggleArchiveGroup"
+            @rename="renameGroup"
+            @reload-all-tabs="reloadAllTabsInGroup"
+            @settings="openGroupSettings"
+            @remove="removeGroup"
+            ></context-menu-group>
 
-                    <hr>
-
-                    <li :class="{'is-disabled': menu.data.group.isArchive}" @click="!menu.data.group.isArchive && reloadAllTabsInGroup(menu.data.group, $event.ctrlKey || $event.metaKey)">
-                        <img src="/icons/refresh.svg" class="size-16" />
-                        <span v-text="lang('reloadAllTabsInGroup')"></span>
-                    </li>
-
-                    <hr>
-
-                    <li @click="openGroupSettings(menu.data.group)">
-                        <img src="/icons/settings.svg" class="size-16" />
-                        <span v-text="lang('groupSettings')"></span>
-                    </li>
-                    <li @click="removeGroup(menu.data.group)">
-                        <img src="/icons/group-delete.svg" class="size-16" />
-                        <span v-text="lang('deleteGroup')"></span>
-                    </li>
-                </ul>
-            </template>
-        </context-menu>
-
-        <context-menu ref="tabsContextMenu">
-            <template v-slot="menu">
-                <ul v-if="menu.data" class="is-unselectable">
-                    <li @click="reloadTab(menu.data.tab, $event.ctrlKey || $event.metaKey)">
-                        <img src="/icons/refresh.svg" class="size-16" />
-                        <span v-text="lang('reloadTab')"></span>
-                    </li>
-                    <li v-if="!menu.data.tab.discarded" @click="discardTab(menu.data.tab)">
-                        <img src="/icons/snowflake.svg" class="size-16" />
-                        <span v-text="lang('discardTabTitle')"></span>
-                    </li>
-                    <li v-if="multipleTabIds.length" @click="removeTab(menu.data.tab)">
-                        <img src="/icons/close.svg" class="size-16" />
-                        <span v-text="lang('deleteTab')"></span>
-                    </li>
-                    <li v-if="menu.data.group" @click="setTabIconAsGroupIcon(menu.data.tab)">
-                        <img src="/icons/image.svg" class="size-16" />
-                        <span v-text="lang('setTabIconAsGroupIcon')"></span>
-                    </li>
-
-                    <hr>
-
-                    <li class="is-disabled">
-                        <img class="size-16" />
-                        <span v-text="lang('moveTabToGroupDisabledTitle') + ':'"></span>
-                    </li>
-
-                    <li
-                        v-for="group in groups"
-                        :key="group.id"
-                        v-if="!group.isArchive"
-                        @click="moveTabs(menu.data.tab.id, group.id, !menu.data.group, undefined, $event.ctrlKey || $event.metaKey)"
-                        @contextmenu="moveTabs(menu.data.tab.id, group.id, !menu.data.group, true)"
-                        >
-                        <figure :class="['image is-16x16', {'is-sticky': group.isSticky}]">
-                            <img :src="group.iconUrlToDisplay" />
-                        </figure>
-                        <span v-text="getGroupTitle(group, 'withActiveGroup withContainer')"></span>
-                    </li>
-
-                    <li
-                        @click="moveTabToNewGroup(menu.data.tab.id, !menu.data.group)"
-                        @contextmenu="moveTabToNewGroup(menu.data.tab.id, !menu.data.group, true)">
-                        <img src="/icons/group-new.svg" class="size-16" />
-                        <span v-text="lang('createNewGroup')"></span>
-                    </li>
-                </ul>
-            </template>
-        </context-menu>
+        <context-menu-tab ref="contextMenuTab"
+            :menu="options.contextMenuTab"
+            :groups="groups"
+            :multiple-tab-ids="multipleTabIds"
+            @open-in-new-window="openGroupInNewWindow"
+            @reload="reloadTab"
+            @discard="discardTab"
+            @remove="removeTab"
+            @set-group-icon="setTabIconAsGroupIcon"
+            @move-tab="moveTabs"
+            @move-tab-new-group="moveTabToNewGroup"
+            ></context-menu-tab>
 
         <edit-group-popup
             v-if="groupToEdit"

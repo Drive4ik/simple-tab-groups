@@ -1172,5 +1172,17 @@
     "themeDark": {
         "message": "Тёмная",
         "description": "Dark theme"
+    },
+    "contextMenuEditor": {
+        "message": "Редактор контекстного меню",
+        "description": "Context menu editor"
+    },
+    "tab": {
+        "message": "Вкладка",
+        "description": "Tab"
+    },
+    "group": {
+        "message": "Группа",
+        "description": "Group"
     }
 }

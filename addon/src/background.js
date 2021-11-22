@@ -2989,7 +2989,6 @@ async function runMigrateForData(data) {
             remove: ['enableDarkTheme', 'autoBackupBookmarksFolderName'],
             async migration() {
                 data.theme = data.enableDarkTheme ? 'dark' : DEFAULT_OPTIONS.theme;
-                data.discardAfterHideExcludeAudioTabs = DEFAULT_OPTIONS.discardAfterHideExcludeAudioTabs;
                 data.groups.forEach(group => {
                     group.title = String(group.title);
                     group.bookmarkId = null;
