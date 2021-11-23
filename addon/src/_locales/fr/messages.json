@@ -313,6 +313,14 @@
         "message": "Afficher le groupe masqué précédent",
         "description": "Load previous unloaded group"
     },
+    "hotkeyActionTitleLoadNextNonEmptyGroup": {
+        "message": "Afficher le premier groupe non vide qui suit",
+        "description": "Load next non-empty group"
+    },
+    "hotkeyActionTitleLoadPrevNonEmptyGroup": {
+        "message": "Afficher le premier groupe non vide qui précède",
+        "description": "Load previous non-empty group"
+    },
     "hotkeyActionTitleLoadHistoryNextGroup": {
         "message": "Afficher le groupe qui suit dans l'historique",
         "description": "Load next group from history"
@@ -404,6 +412,10 @@
     "discardTabsAfterHide": {
         "message": "Décharger les onglets lorsqu'ils sont masqués (ceci libérera de la RAM)",
         "description": "Discard tabs after hide (this will save the RAM)"
+    },
+    "discardAfterHideExcludeAudioTabs": {
+        "message": "Exclure les onglet avec du son",
+        "description": "Exclude tabs with sound"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Il n'est pas possible de changer de groupe car un des onglets ouverts partage le micro ou la caméra",
@@ -1160,5 +1172,17 @@
     "themeDark": {
         "message": "Sombre",
         "description": "Dark theme"
+    },
+    "contextMenuEditor": {
+        "message": "Éditeur du menu contextuel",
+        "description": "Context menu editor"
+    },
+    "tab": {
+        "message": "Onglet",
+        "description": "Tab"
+    },
+    "group": {
+        "message": "Groupe",
+        "description": "Group"
     }
 }
