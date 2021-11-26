@@ -2443,7 +2443,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         delete group.id;
 
         for (let key in group) {
-            if (newGroup.hasOwnProperty(key) && typeof group[key] === typeof newGroup[key]) {
+            if (newGroup.hasOwnProperty(key)) {
                 newGroup[key] = group[key];
             }
         }

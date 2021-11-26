@@ -1637,7 +1637,7 @@
                     <hr>
 
                     <div class="create-new-tab">
-                        <div class="item" tabindex="0" @contextmenu="$refs.contextMenuTabNew.open($event, {group: groupToShow})" @click="addTab()" @keyup.enter="addTab()">
+                        <div class="item" tabindex="0" @contextmenu="$refs.contextMenuTabNew.open($event, {group: groupToShow})" @click="addTab(groupToShow)" @keyup.enter="addTab(groupToShow)">
                             <div class="item-icon">
                                 <img class="size-16" src="/icons/tab-new.svg">
                             </div>
