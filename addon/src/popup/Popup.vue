@@ -1191,31 +1191,62 @@
         @keydown.left="searchDelay.length ? null : showSectionDefault()"
 
         >
-        <header id="search-wrapper">
-            <div :class="['field', {'has-addons': searchDelay.length}]">
-                <div :class="['control is-expanded', {'is-loading': searchDelayTimer}]">
-                    <input
-                        type="text"
-                        class="input search-input"
-                        ref="search"
-                        v-model.trim="searchDelay"
-                        autocomplete="off"
-                        @keyup.enter="selectFirstItemOnSearch"
-                        @keydown.down="focusToNextElement"
-                        @keydown.up="focusToNextElement"
-                        @input="searchDelay.length ? null : showSectionDefault()"
-                        :placeholder="lang('searchOrGoToActive')" />
+        <header class="is-flex is-align-items-center">
+            <div id="search-wrapper" class="is-full-width">
+                <div :class="['field', {'has-addons': searchDelay.length}]">
+                    <div :class="['control is-expanded', {'is-loading': searchDelayTimer}]">
+                        <input
+                            type="text"
+                            class="input search-input"
+                            ref="search"
+                            v-model.trim="searchDelay"
+                            autocomplete="off"
+                            @keyup.enter="selectFirstItemOnSearch"
+                            @keydown.down="focusToNextElement"
+                            @keydown.up="focusToNextElement"
+                            @input="searchDelay.length ? null : showSectionDefault()"
+                            :placeholder="lang('searchOrGoToActive')" />
+                    </div>
+                    <template v-if="searchDelay.length">
+                        <div v-show="!searchOnlyGroups" class="control">
+                            <label class="button" :title="lang('extendedTabSearch')">
+                                <input type="checkbox" v-model="extendedSearch" />
+                            </label>
+                        </div>
+                        <div class="control">
+                            <button :class="['button', {'is-active': searchOnlyGroups}]" @click="searchOnlyGroups = !searchOnlyGroups" v-text="lang('searchOnlyGroups')"></button>
+                        </div>
+                    </template>
                 </div>
-                <template v-if="searchDelay.length">
-                    <div v-show="!searchOnlyGroups" class="control">
-                        <label class="button" :title="lang('extendedTabSearch')">
-                            <input type="checkbox" v-model="extendedSearch" />
-                        </label>
-                    </div>
-                    <div class="control">
-                        <button :class="['button', {'is-active': searchOnlyGroups}]" @click="searchOnlyGroups = !searchOnlyGroups" v-text="lang('searchOnlyGroups')"></button>
-                    </div>
-                </template>
+            </div>
+            <div
+                tabindex="0"
+                @click="createNewGroup()"
+                @keyup.enter="createNewGroup()"
+                :title="lang('createNewGroup')"
+            >
+                <div class="item-icon">
+                    <img class="size-16" src="/icons/group-new.svg" />
+                </div>
+            </div>
+            <div
+                class="h-margin-left-10"
+                tabindex="0"
+                @click="openManageGroups"
+                @keyup.enter="openManageGroups"
+                :title="lang('manageGroupsTitle')"
+            >
+                <img class="size-16" src="/icons/icon.svg" />
+            </div>
+            <div
+                class="h-margin-left-10"
+                tabindex="0"
+                @click="openOptionsPage"
+                @keyup.enter="openOptionsPage"
+                :title="lang('openSettings')"
+                @contextmenu="$refs.settingsContextMenu.open($event)"
+            >
+                <img class="size-16" src="/icons/settings.svg" />
             </div>
         </header>
 
@@ -1426,15 +1457,6 @@
                 </div>
 
                 <hr>
-
-                <div class="create-new-group">
-                    <div class="item" tabindex="0" @click="createNewGroup()" @keyup.enter="createNewGroup()">
-                        <div class="item-icon">
-                            <img class="size-16" src="/icons/group-new.svg" />
-                        </div>
-                        <div class="item-title" v-text="lang('createNewGroup')"></div>
-                    </div>
-                </div>
 
                 <div v-if="unSyncTabs.length && !showUnSyncTabs">
                     <hr>
@@ -1648,24 +1670,6 @@
 
             </div>
         </main>
-
-        <footer class="is-flex is-unselectable">
-            <div tabindex="0" class="is-flex is-align-items-center manage-groups is-full-height is-full-width" @click="openManageGroups" @keyup.enter="openManageGroups" :title="lang('manageGroupsTitle')">
-                <img class="size-16" src="/icons/icon.svg" />
-                <span class="h-margin-left-10" v-text="lang('manageGroupsTitle')"></span>
-            </div>
-            <div class="is-flex is-align-items-center is-vertical-separator"></div>
-            <div
-                tabindex="0"
-                class="is-flex is-align-items-center is-full-height"
-                @click="openOptionsPage"
-                @keyup.enter="openOptionsPage"
-                :title="lang('openSettings')"
-                @contextmenu="$refs.settingsContextMenu.open($event)"
-                >
-                <img class="size-16" src="/icons/settings.svg" />
-            </div>
-        </footer>
 
         <context-menu ref="settingsContextMenu">
             <ul class="is-unselectable">
