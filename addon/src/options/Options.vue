@@ -33,6 +33,82 @@
                 GROUP_ICON_VIEW_TYPES,
                 AUTO_BACKUP_INTERVAL_KEY,
 
+                contextMenuTabTitles: {
+                    'open-in-new-window': {
+                        title: 'openGroupInNewWindow',
+                        icon: 'window-new',
+                    },
+                    'reload': {
+                        title: 'reloadTab',
+                        icon: 'refresh',
+                    },
+                    'discard': {
+                        title: 'discardTabTitle',
+                        icon: 'snowflake',
+                    },
+                    'remove': {
+                        title: 'deleteTab',
+                        icon: 'close',
+                    },
+                    'update-thumbnail': {
+                        title: 'updateTabThumbnail',
+                        icon: 'image',
+                    },
+                    'set-group-icon': {
+                        title: 'setTabIconAsGroupIcon',
+                        icon: 'image',
+                    },
+                    'hr': null,
+                    'move-tab-to-group': {
+                        title: 'moveTabToGroupDisabledTitle',
+                        icon: '',
+                    },
+                },
+
+                contextMenuGroupTitles: {
+                    'open-in-new-window': {
+                        title: 'openGroupInNewWindow',
+                        icon: 'window-new',
+                    },
+                    'sort-asc': {
+                        title: 'sortGroupsAZ',
+                        icon: 'sort-alpha-asc',
+                    },
+                    'sort-desc': {
+                        title: 'sortGroupsZA',
+                        icon: 'sort-alpha-desc',
+                    },
+                    'discard': {
+                        title: 'hotkeyActionTitleDiscardGroup',
+                        icon: 'snowflake',
+                    },
+                    'discard-other': {
+                        title: 'hotkeyActionTitleDiscardOtherGroups',
+                        icon: 'snowflake',
+                    },
+                    'export-to-bookmarks': {
+                        title: 'exportGroupToBookmarks',
+                        icon: 'bookmark',
+                    },
+                    'unload': {
+                        title: 'unloadGroup',
+                        icon: 'upload',
+                    },
+                    'archive': {
+                        title: 'archiveGroup',
+                        icon: 'archive',
+                    },
+                    'rename': {
+                        title: 'hotkeyActionTitleRenameGroup',
+                        icon: 'edit',
+                    },
+                    'hr': null,
+                    'reload-all-tabs': {
+                        title: 'reloadAllTabsInGroup',
+                        icon: 'refresh',
+                    },
+                },
+
                 includeTabThumbnailsIntoBackup: false,
                 includeTabFavIconsIntoBackup: true,
 
@@ -89,6 +165,8 @@
                 'defaultGroupIconColor',
                 'autoBackupIntervalKey',
                 'theme',
+                'contextMenuTab',
+                'contextMenuGroup',
                 ]
                 .forEach(option => {
                     this.$watch(`options.${option}`, function(value, oldValue) {
@@ -760,6 +838,13 @@
                     <span v-text="lang('discardTabsAfterHide')"></span>
                 </label>
             </div>
+            <div class="field h-margin-left-10">
+                <label class="checkbox" :disabled="!options.discardTabsAfterHide">
+                    <input v-if="options.discardTabsAfterHide" v-model="options.discardAfterHideExcludeAudioTabs" type="checkbox" />
+                    <input v-else disabled="" type="checkbox" />
+                    <span v-text="lang('discardAfterHideExcludeAudioTabs')"></span>
+                </label>
+            </div>
             <div class="field">
                 <label class="checkbox">
                     <input v-model="options.openManageGroupsInTab" type="checkbox" />
@@ -839,6 +924,42 @@
                         </button>
                     </div>
                 </div>
+            </div>
+
+            <hr/>
+
+            <div class="field">
+                <label class="label" v-text="lang('contextMenuEditor')"></label>
+
+                <div class="columns">
+                    <div class="column">
+                        <label class="label" v-text="lang('tab') + ':'"></label>
+                        <template v-for="(item, id) in contextMenuTabTitles">
+                            <hr v-if="id === 'hr'">
+                            <div v-else class="field">
+                                <label class="checkbox">
+                                    <input v-model="options.contextMenuTab" :value="id" type="checkbox" />
+                                    <img v-if="item.icon" class="size-16 mr-3" :src="`/icons/${item.icon}.svg`" />
+                                    <span v-text="lang(item.title)"></span>
+                                </label>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="column">
+                        <label class="label" v-text="lang('group') + ':'"></label>
+                        <template v-for="(item, id) in contextMenuGroupTitles">
+                            <hr v-if="id === 'hr'">
+                            <div v-else class="field">
+                                <label class="checkbox">
+                                    <input v-model="options.contextMenuGroup" :value="id" type="checkbox" />
+                                    <img v-if="item.icon" class="size-16 mr-3" :src="`/icons/${item.icon}.svg`" />
+                                    <span v-text="lang(item.title)"></span>
+                                </label>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
             </div>
 
             <hr/>

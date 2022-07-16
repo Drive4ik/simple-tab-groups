@@ -148,6 +148,13 @@
             hr {
                 margin: var(--main-inden) 0 var(--main-inden) calc(16px + var(--main-inden) * 2);
             }
+
+            hr:first-child,
+            hr:last-child,
+            hr:only-child,
+            hr + hr {
+                display: none;
+            }
         }
     }
 

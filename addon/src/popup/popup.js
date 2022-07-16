@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Popup from './Popup.vue';
 
-if (BG.inited) {
+if (window.BG?.inited) {
     new Vue({
         el: '#stg-popup',
         render: h => h(Popup),

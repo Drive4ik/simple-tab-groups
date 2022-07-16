@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Manage from './Manage.vue';
 
-if (BG.inited) {
+if (window.BG?.inited) {
     new Vue({
         el: '#stg-manage',
         render: h => h(Manage),

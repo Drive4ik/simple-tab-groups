@@ -225,6 +225,10 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                     }
 
                     if (options.discardTabsAfterHide && !groupToHide.dontDiscardTabsAfterHideThisGroup) {
+                        if (options.discardAfterHideExcludeAudioTabs) {
+                            tabs = tabs.filter(tab => !tab.audible);
+                        }
+
                         Tabs.discard(tabs);
                     }
                 }
@@ -1761,7 +1765,13 @@ async function runAction(data, sender = {}) {
 
     try {
         let currentWindow = await Windows.getLastFocusedNormalWindow(false),
-            actionWithTabs = ['discard-group', 'discard-other-groups', 'reload-all-tabs-in-current-group'],
+            actionWithTabs = [
+                'load-next-non-empty-group',
+                'load-prev-non-empty-group',
+                'discard-group',
+                'discard-other-groups',
+                'reload-all-tabs-in-current-group',
+            ],
             loadCurrentGroupWithTabs = currentWindow.groupId ? actionWithTabs.includes(data.action) : false,
             [currentGroup, groups] = await Groups.load(currentWindow.groupId || -1, loadCurrentGroupWithTabs),
             notArchivedGroups = groups.filter(group => !group.isArchive);
@@ -1797,6 +1807,12 @@ async function runAction(data, sender = {}) {
                     let unloadedGroups = notArchivedGroups.filter(group => !cache.getWindowId(group.id) || group.id === currentGroup.id);
                     result.ok = await applyGroupByPosition('prev', unloadedGroups, currentGroup.id);
                 }
+                break;
+            case 'load-next-non-empty-group':
+                    result.ok = await applyGroupByPosition('next', notArchivedGroups.filter(group => group.tabs.length), currentGroup.id);
+                break;
+            case 'load-prev-non-empty-group':
+                    result.ok = await applyGroupByPosition('prev', notArchivedGroups.filter(group => group.tabs.length), currentGroup.id);
                 break;
             case 'load-history-next-group':
                 result.ok = await applyGroupByHistory('next', notArchivedGroups);
@@ -2427,7 +2443,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         delete group.id;
 
         for (let key in group) {
-            if (newGroup.hasOwnProperty(key) && typeof group[key] === typeof newGroup[key]) {
+            if (newGroup.hasOwnProperty(key)) {
                 newGroup[key] = group[key];
             }
         }

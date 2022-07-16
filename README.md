@@ -20,7 +20,7 @@ $ npm run build
 
 Build the extension into `addon/dist` folder for **development**.
 
-### `npm run build:prod`
+### `npm run build-prod`
 
 Build the extension into `addon/dist` folder for **production**.
 
@@ -28,9 +28,9 @@ Build the extension into `addon/dist` folder for **production**.
 
 Watch for modifications then run `npm run build`.
 
-### `npm run watch:prod`
+### `npm run watch-prod`
 
-Watch for modifications then run `npm run build:prod`.
+Watch for modifications then run `npm run build-prod`.
 
 ### `npm run build-zip`
 
@@ -73,6 +73,8 @@ Supported actions:
 * `{"action": "load-prev-group"}`
 * `{"action": "load-next-unloaded-group"}`
 * `{"action": "load-prev-unloaded-group"}`
+* `{"action": "load-next-non-empty-group"}`
+* `{"action": "load-prev-non-empty-group"}`
 * `{"action": "load-history-next-group"}`
 * `{"action": "load-history-prev-group"}`
 * `{"action": "load-first-group"}`

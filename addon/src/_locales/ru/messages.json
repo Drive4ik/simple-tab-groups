@@ -313,6 +313,14 @@
         "message": "Загрузить предыдущую не загруженную группу",
         "description": "Load previous unloaded group"
     },
+    "hotkeyActionTitleLoadNextNonEmptyGroup": {
+        "message": "Загрузить следующую непустую группу",
+        "description": "Load next non-empty group"
+    },
+    "hotkeyActionTitleLoadPrevNonEmptyGroup": {
+        "message": "Загрузить предыдущую непустую группу",
+        "description": "Load previous non-empty group"
+    },
     "hotkeyActionTitleLoadHistoryNextGroup": {
         "message": "Загрузить следующую группу из истории",
         "description": "Load next group from history"
@@ -404,6 +412,10 @@
     "discardTabsAfterHide": {
         "message": "Выгружать вкладки из памяти после смены группы (позволяет сэкономить ОЗУ)",
         "description": "Discard tabs after hide (this will save the RAM)"
+    },
+    "discardAfterHideExcludeAudioTabs": {
+        "message": "Исключить вкладки со звуком",
+        "description": "Exclude tabs with sound"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Невозможно изменить группу, потому что на одной из вкладок используется микрофон или камера",
@@ -1160,5 +1172,17 @@
     "themeDark": {
         "message": "Тёмная",
         "description": "Dark theme"
+    },
+    "contextMenuEditor": {
+        "message": "Редактор контекстного меню",
+        "description": "Context menu editor"
+    },
+    "tab": {
+        "message": "Вкладка",
+        "description": "Tab"
+    },
+    "group": {
+        "message": "Группа",
+        "description": "Group"
     }
 }

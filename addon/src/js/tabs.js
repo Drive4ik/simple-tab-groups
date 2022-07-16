@@ -331,15 +331,15 @@
         });
 
         if (tabs.length) {
-            await Promise.all(activeTabs.map(async function(activeTab) {
-                let tabsToActive = await get(activeTab.windowId, null);
+            const excludeMovingTabs = tab => !tabs.some(t => t.id === tab.id);
 
-                // exclude movable tabs
-                tabsToActive = tabsToActive.filter(tab => !tabs.some(t => t.id === tab.id));
+            await Promise.all(activeTabs.map(async function(activeTab) {
+                let allTabsInActiveTabWindow = await get(activeTab.windowId, null, null),
+                    tabsToActive = allTabsInActiveTabWindow.filter(tab => !tab.hidden && excludeMovingTabs(tab));
 
                 if (tabsToActive.length) {
                     await setActive(undefined, tabsToActive);
-                } else if (activeTab.groupId !== groupId && activeTab.windowId !== windowId) {
+                } else if (activeTab.windowId !== windowId && !allTabsInActiveTabWindow.filter(excludeMovingTabs).length) {
                     await createTempActiveTab(activeTab.windowId, false);
                 }
             }));

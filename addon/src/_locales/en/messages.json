@@ -317,6 +317,14 @@
         "message": "Load previous unloaded group",
         "description": "Load previous unloaded group"
     },
+    "hotkeyActionTitleLoadNextNonEmptyGroup": {
+        "message": "Load next non-empty group",
+        "description": "Load next non-empty group"
+    },
+    "hotkeyActionTitleLoadPrevNonEmptyGroup": {
+        "message": "Load previous non-empty group",
+        "description": "Load previous non-empty group"
+    },
     "hotkeyActionTitleLoadHistoryNextGroup": {
         "message": "Load next group from history",
         "description": "Load next group from history"
@@ -408,6 +416,10 @@
     "discardTabsAfterHide": {
         "message": "Discard tabs after hide (this will save the RAM)",
         "description": "Discard tabs after hide (this will save the RAM)"
+    },
+    "discardAfterHideExcludeAudioTabs": {
+        "message": "Exclude tabs with sound",
+        "description": "Exclude tabs with sound"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "It is not possible to change the group because one of the opened tabs share microphone or camera",
@@ -1164,5 +1176,17 @@
     "themeDark": {
         "message": "Dark",
         "description": "Dark theme"
+    },
+    "contextMenuEditor": {
+        "message": "Context menu editor",
+        "description": "Context menu editor"
+    },
+    "tab": {
+        "message": "Tab",
+        "description": "Tab"
+    },
+    "group": {
+        "message": "Group",
+        "description": "Group"
     }
 }

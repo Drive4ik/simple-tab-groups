@@ -10,7 +10,7 @@
 
     "name": "__MSG_extensionName__",
     "description": "__MSG_extensionDescription__",
-    "version": "4.7.2",
+    "version": "4.7.2.1",
     "author": "Drive4ik",
     "homepage_url": "https://github.com/drive4ik/simple-tab-groups",
 
@@ -125,6 +125,12 @@
         },
         "load-prev-unloaded-group": {
             "description": "__MSG_hotkeyActionTitleLoadPrevUnloadedGroup__"
+        },
+        "load-next-non-empty-group": {
+            "description": "__MSG_hotkeyActionTitleLoadNextNonEmptyGroup__"
+        },
+        "load-prev-non-empty-group": {
+            "description": "__MSG_hotkeyActionTitleLoadPrevNonEmptyGroup__"
         },
         "load-history-next-group": {
             "description": "__MSG_hotkeyActionTitleLoadHistoryNextGroup__"
