@@ -1,5 +1,8 @@
 # gitignore file
 
+/.vscode/
+/STG-backups/
+
 /*.sublime-*
 
 /addon/node_modules/
