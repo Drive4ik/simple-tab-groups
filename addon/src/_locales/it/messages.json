@@ -313,6 +313,14 @@
         "message": "Carica il gruppo sospeso precedence",
         "description": "Load previous unloaded group"
     },
+    "hotkeyActionTitleLoadNextNonEmptyGroup": {
+        "message": "Carica prossimo gruppo non vuoto",
+        "description": "Load next non-empty group"
+    },
+    "hotkeyActionTitleLoadPrevNonEmptyGroup": {
+        "message": "Carica precedente gruppo non vuoto",
+        "description": "Load previous non-empty group"
+    },
     "hotkeyActionTitleLoadHistoryNextGroup": {
         "message": "Carica il gruppo successivo dalla cronologia",
         "description": "Load next group from history"
@@ -404,6 +412,10 @@
     "discardTabsAfterHide": {
         "message": "Riduci il consumo di RAM per le schede che sono state nascoste",
         "description": "Discard tabs after hide (this will save the RAM)"
+    },
+    "discardAfterHideExcludeAudioTabs": {
+        "message": "Escludi schede con suono",
+        "description": "Exclude tabs with sound"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Non è possibile cambiare il gruppo perché una delle schede aperte sta utilizzando il microfono o la fotocamera",
@@ -538,6 +550,10 @@
     "autoBackupCreateEveryTitle": {
         "message": "Crea un backup ogni:",
         "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyMinutes": {
+        "message": "minuto/i",
+        "description": "minute(s)"
     },
     "autoBackupIntervalKeyHours": {
         "message": "ora/e",
@@ -927,6 +943,10 @@
             }
         }
     },
+    "helpPageOpenInContainerDesc2": {
+        "message": "Un altro addon:",
+        "description": "Another addon:"
+    },
     "helpPageOpenInContainerDesc3": {
         "message": "ha tentato di aprire questo URL nel contenitore <container-name>$containerName$</container-name>. Sposta questa schede in un altro gruppo oppure vieta all'estensione <strong>$addonName$</strong> di effettuare questa azione.",
         "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
@@ -1023,6 +1043,16 @@
             }
         }
     },
+    "helpPageOpenInContainerIgnoreAppForSession": {
+        "message": "Ignora estensione \"<strong>$addonName$</strong>\" fino alla chiusura del browser",
+        "description": "Ignore addon for session",
+        "placeholders": {
+            "addonName": {
+                "content": "$1",
+                "example": "Facebook Container"
+            }
+        }
+    },
     "hotkeysDescription2": {
         "message": "Puoi modificare le scorciatoie sulla pagina <a href=\"https://support.mozilla.org/it/kb/gestire-scorciatoie-componenti-aggiuntivi-firefox\" target=\"_blank\">Gestire le scorciatoie da tastiera per i componenti aggiuntivi in Firefox</a>. Funzioneranno su tutte le finestre e le pagine del browser.",
         "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
@@ -1090,5 +1120,69 @@
     "eraseAndImportAddonBackupButton": {
         "message": "Cancella e ripristina il backup",
         "description": "Erase and restore backup"
+    },
+    "searchOnlyGroups": {
+        "message": "Solo gruppi",
+        "description": "Only groups"
+    },
+    "autoBackupByDayIndexTitle": {
+        "message": "Numero di backup come giorno del mese",
+        "description": "Backup number as day of month"
+    },
+    "autoBackupByDayIndexDescription": {
+        "message": "Aiuta a sbarazzarsi di un gran numero di file di backup nella cartella dei download. Il file di backup avrà questo nome: \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
+        "description": "Backup by day description"
+    },
+    "clickHereForInfo": {
+        "message": "Clicca qui per maggiori informazioni",
+        "description": "Click here for more info"
+    },
+    "enabled": {
+        "message": "Attivato",
+        "description": "Enabled text"
+    },
+    "disabled": {
+        "message": "Disattivato",
+        "description": "Disabled text"
+    },
+    "helpPageExtensionsThatConflictWithStgTitle": {
+        "message": "Estensioni in conflitto con STG",
+        "description": "Extensions that conflict with STG"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc1": {
+        "message": "Simple Tab Groups è in conflitto con le seguenti estensioni abilitate:",
+        "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc2": {
+        "message": "Per evitare di perdere schede o la loro posizione in finestre e gruppi, si consiglia vivamente di disattivare o rimuovere le estensioni attivate che confliggono con l'addon Simple Tab Groups. Puoi farlo nella pagina delle impostazioni degli addon \"about:addons\" o premendo la combinazione di tasti <code>Ctrl+Shift+A</code>",
+        "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
+    },
+    "theme": {
+        "message": "Tema",
+        "description": "Select theme"
+    },
+    "themeAuto": {
+        "message": "Tema del sistema — automatico",
+        "description": "Auto theme"
+    },
+    "themeLight": {
+        "message": "Chiaro",
+        "description": "Light theme"
+    },
+    "themeDark": {
+        "message": "Scuro",
+        "description": "Dark theme"
+    },
+    "contextMenuEditor": {
+        "message": "Editor menù contestuale",
+        "description": "Context menu editor"
+    },
+    "tab": {
+        "message": "Scheda",
+        "description": "Tab"
+    },
+    "group": {
+        "message": "Gruppo",
+        "description": "Group"
     }
 }
