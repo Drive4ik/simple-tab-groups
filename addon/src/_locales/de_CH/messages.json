@@ -1,0 +1,190 @@
+{
+    "extensionDescription": {
+        "message": "Erstelle, verändere und ändere schnell Tab Gruppierungen",
+        "description": "Description of the extension."
+    },
+    "openSettings": {
+        "message": "Einstellungen",
+        "description": "Settings context button title"
+    },
+    "manageGroupsTitle": {
+        "message": "Gruppierungen verwalten",
+        "description": "Manage groups"
+    },
+    "setTabIconAsGroupIcon": {
+        "message": "Definiere Tab-Icon als Gruppierung-Icon",
+        "description": "Set tab icon as group icon"
+    },
+    "moveTabToGroupDisabledTitle": {
+        "message": "Bewege Tab in eine Gruppierung",
+        "description": "Move tab to group title"
+    },
+    "moveTabToGroupMessage": {
+        "message": "Tab \"$tabtitle$\" wurde zur Gruppierung \"$grouptitle$\" verschoben.\nKlicke hier um diesen Tab anzuzeigen.",
+        "description": "Tab moved popup title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            },
+            "tabtitle": {
+                "content": "$2",
+                "example": "tab title"
+            }
+        }
+    },
+    "warning": {
+        "message": "Warnung!",
+        "description": "Warning!"
+    },
+    "success": {
+        "message": "Erfolg!",
+        "description": "Success!"
+    },
+    "ok": {
+        "message": "OK",
+        "description": "OK button"
+    },
+    "save": {
+        "message": "Speichern",
+        "description": "Save"
+    },
+    "delete": {
+        "message": "Löschen",
+        "description": "Delete"
+    },
+    "cancel": {
+        "message": "Abbrechen",
+        "description": "Cancel"
+    },
+    "searchPlaceholder": {
+        "message": "Suchen",
+        "description": "Search placeholder"
+    },
+    "invalidRegExpRuleTitle": {
+        "message": "Regel '$regexp$' ist ungültig und wird übersprungen.",
+        "description": "Invalid rule description",
+        "placeholders": {
+            "regexp": {
+                "content": "$1",
+                "example": "googlecom"
+            }
+        }
+    },
+    "closePopupAfterChangeGroup": {
+        "message": "Schliesse Popup nach dem Wechseln der Gruppierung",
+        "description": "Close popup after changing group"
+    },
+    "openManageGroupsInTab": {
+        "message": "Öffne \"Gruppierungen verwalten\" in einem neuen Tab.",
+        "description": "Open \"Manage Groups\" in new tab"
+    },
+    "exportAddonSettingsButton": {
+        "message": "Erstelle Backup",
+        "description": "Create backup"
+    },
+    "importAddonSettingsButton": {
+        "message": "Stelle Backup wieder her",
+        "description": "Restore backup"
+    },
+    "newGroupTitle": {
+        "message": "Gruppierung $id$",
+        "description": "group id",
+        "placeholders": {
+            "id": {
+                "content": "$1",
+                "example": "1"
+            }
+        }
+    },
+    "searchNotFoundTitle": {
+        "message": "Keine Resultate gefunden für \"$search$\"",
+        "description": "No results found",
+        "placeholders": {
+            "search": {
+                "content": "$1",
+                "example": "mail"
+            }
+        }
+    },
+    "sortGroupsAZ": {
+        "message": "Gruppierungen sortieren [A-Z]",
+        "description": "Sort groups [A-Z]"
+    },
+    "sortGroupsZA": {
+        "message": "Gruppierungen sortieren [Z-A]",
+        "description": "Sort groups [Z-A]"
+    },
+    "generalTitle": {
+        "message": "Allgemein",
+        "description": "General"
+    },
+    "groupSettings": {
+        "message": "Gruppierungseinstellungen",
+        "description": "Group settings"
+    },
+    "deleteGroup": {
+        "message": "Lösche Gruppierung",
+        "description": "Delete group"
+    },
+    "groupTabsCount": {
+        "message": "$count$ Tabs",
+        "description": "Group tabs count",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "groupTabsCountActive": {
+        "message": "$active$/$count$ Tabs aktiv",
+        "description": "Group tabs count active",
+        "placeholders": {
+            "active": {
+                "content": "$1",
+                "example": "2"
+            },
+            "count": {
+                "content": "$2",
+                "example": "4"
+            }
+        }
+    },
+    "deleteTab": {
+        "message": "Lösche Tab",
+        "description": "Delete tab"
+    },
+    "createNewTab": {
+        "message": "Öffne neuen Tab",
+        "description": "Open new tab"
+    },
+    "createNewGroup": {
+        "message": "Erstelle neue Gruppierung",
+        "description": "Create new group"
+    },
+    "goBackButtonTitle": {
+        "message": "Zurück",
+        "description": "Go back"
+    },
+    "goBackToGroupsButtonTitle": {
+        "message": "Zurück zu Gruppierungen",
+        "description": "Go back to groups"
+    },
+    "title": {
+        "message": "Titel",
+        "description": "Title"
+    },
+    "iconColor": {
+        "message": "Icon Farbe",
+        "description": "Icon color"
+    },
+    "selectUserGroupIcon": {
+        "message": "Lade Icon",
+        "description": "Load icon"
+    },
+    "setRandomColor": {
+        "message": "Verwende eine zufällige Farbe",
+        "description": "Set random color"
+    }
+}
