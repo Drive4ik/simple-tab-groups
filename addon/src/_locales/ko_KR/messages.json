@@ -1,0 +1,1188 @@
+{
+    "extensionDescription": {
+        "message": "생성, 탭 그룹을 빠르게 변경하고 수정합니다.",
+        "description": "Description of the extension."
+    },
+    "openSettings": {
+        "message": "설정",
+        "description": "Settings context button title"
+    },
+    "manageGroupsTitle": {
+        "message": "그룹 관리",
+        "description": "Manage groups"
+    },
+    "setTabIconAsGroupIcon": {
+        "message": "탭 아이콘을 그룹 아이콘으로 지정",
+        "description": "Set tab icon as group icon"
+    },
+    "moveTabToGroupDisabledTitle": {
+        "message": "탭을 그룹으로 이동",
+        "description": "Move tab to group title"
+    },
+    "moveTabToGroupMessage": {
+        "message": "\"$tabtitle$\" 탭이 \"$grouptitle$\" 그룹으로 이동되었습니다.\n\n이 탭을 표시하려면 여기를 클릭하십시오.",
+        "description": "Tab moved popup title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            },
+            "tabtitle": {
+                "content": "$2",
+                "example": "tab title"
+            }
+        }
+    },
+    "warning": {
+        "message": "경고!",
+        "description": "Warning!"
+    },
+    "success": {
+        "message": "성공!",
+        "description": "Success!"
+    },
+    "ok": {
+        "message": "확인",
+        "description": "OK button"
+    },
+    "save": {
+        "message": "저장",
+        "description": "Save"
+    },
+    "delete": {
+        "message": "삭제",
+        "description": "Delete"
+    },
+    "cancel": {
+        "message": "취소",
+        "description": "Cancel"
+    },
+    "searchPlaceholder": {
+        "message": "검색",
+        "description": "Search placeholder"
+    },
+    "invalidRegExpRuleTitle": {
+        "message": "'$regexp$' 규칙은 유효하지 않으며 스킵됩니다.",
+        "description": "Invalid rule description",
+        "placeholders": {
+            "regexp": {
+                "content": "$1",
+                "example": "googlecom"
+            }
+        }
+    },
+    "manageGroupViewGrid": {
+        "message": "그리드 디스플레이",
+        "description": "Grid display"
+    },
+    "manageGroupViewFreeArrange": {
+        "message": "자유 배열 (추후 추가될 버전)",
+        "description": "Free arrange"
+    },
+    "closePopupAfterChangeGroup": {
+        "message": "그룹 변경 후 팝업 닫기",
+        "description": "Close popup after changing group"
+    },
+    "showNotificationAfterMoveTab": {
+        "message": "탭이 다른 그룹으로 이동할 때 알림 표시",
+        "description": "Show notification when tab is moved to another group"
+    },
+    "openManageGroupsInTab": {
+        "message": "새 탭에서 \"그룹 관리\"  열기",
+        "description": "Open \"Manage Groups\" in new tab"
+    },
+    "showConfirmDialogBeforeGroupDelete": {
+        "message": "그룹을 삭제하기 전에 확인 대화 상자 표시",
+        "description": "Show confirmation dialog before deleting the group"
+    },
+    "showConfirmDialogBeforeGroupArchiving": {
+        "message": "그룹을 보관하기 전에 확인 대화 상자 표시",
+        "description": "Show confirmation dialog before archiving the group"
+    },
+    "exportAddonSettingsTitle": {
+        "message": "당신의 심플 탭 그룹을 백업",
+        "description": "Backup your Simple Tab Groups"
+    },
+    "exportAddonSettingsDescription": {
+        "message": "필요한 경우 나중에 복원할 수 있도록 탭 그룹을 백업 파일로 내보내 안전하게 보관하십시오.",
+        "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
+    },
+    "exportAddonSettingsButton": {
+        "message": "백업 생성",
+        "description": "Create backup"
+    },
+    "includeTabThumbnailsIntoBackup": {
+        "message": "백업에 탭 축소판 포함 (백업 파일 크기를 더 크게 함)",
+        "description": "Include tab thumbnails in backup (makes backup file size bigger)"
+    },
+    "importAddonSettingsTitle": {
+        "message": "심플 탭 그룹 복원",
+        "description": "Restore Simple Tab Groups"
+    },
+    "importAddonSettingsDescription": {
+        "message": "복원하려는 탭 그룹이 포함된 백업 파일을 로드합니다.",
+        "description": "Load a backup file containing the tab groups you want to restore."
+    },
+    "importAddonSettingsButton": {
+        "message": "백업 복원",
+        "description": "Restore backup"
+    },
+    "importSettingsOldTabGroupsAddonTitle": {
+        "message": "Quicksaver의 \"탭 그룹\" 복원",
+        "description": "Restore Quicksaver's \"Tab Groups\""
+    },
+    "importSettingsOldTabGroupsAddonDescription": {
+        "message": "이전 \"탭 그룹\" 애드온에서 백업 파일을 로드합니다.",
+        "description": "Load a backup file old \"Tab Groups\" addon."
+    },
+    "openGroupAfterChange": {
+        "message": "그룹으로 변경 후 열기",
+        "description": "Open group after changing to it"
+    },
+    "newGroupTitle": {
+        "message": "그룹 $id$",
+        "description": "group id",
+        "placeholders": {
+            "id": {
+                "content": "$1",
+                "example": "1"
+            }
+        }
+    },
+    "searchNotFoundTitle": {
+        "message": "\"$search$\"에 대한 검색결과가 없습니다.",
+        "description": "No results found",
+        "placeholders": {
+            "search": {
+                "content": "$1",
+                "example": "mail"
+            }
+        }
+    },
+    "sortGroupsAZ": {
+        "message": "그룹 정렬 [A-Z]",
+        "description": "Sort groups [A-Z]"
+    },
+    "sortGroupsZA": {
+        "message": "그룹 정렬 [Z-A]",
+        "description": "Sort groups [Z-A]"
+    },
+    "generalTitle": {
+        "message": "일반",
+        "description": "General"
+    },
+    "groupSettings": {
+        "message": "그룹 설정",
+        "description": "Group settings"
+    },
+    "deleteGroup": {
+        "message": "그룹 삭제",
+        "description": "Delete group"
+    },
+    "confirmDeleteGroup": {
+        "message": "\"$grouptitle$\" 그룹을 삭제하겠습니까? <br> 그룹을 제거하면 열려 있는 탭과 창들이 닫힙니다.",
+        "description": "Delete group?",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group #4"
+            }
+        }
+    },
+    "groupTabsCount": {
+        "message": "$count$ 탭 수",
+        "description": "Group tabs count",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "groupTabsCountActive": {
+        "message": "$active$ / $count$ 탭들 활성화",
+        "description": "Group tabs count active",
+        "placeholders": {
+            "active": {
+                "content": "$1",
+                "example": "2"
+            },
+            "count": {
+                "content": "$2",
+                "example": "4"
+            }
+        }
+    },
+    "deleteTab": {
+        "message": "탭 삭제",
+        "description": "Delete tab"
+    },
+    "createNewTab": {
+        "message": "새 탭 열기",
+        "description": "Open new tab"
+    },
+    "createNewGroup": {
+        "message": "새 그룹 만들기",
+        "description": "Create new group"
+    },
+    "goBackButtonTitle": {
+        "message": "돌아가기",
+        "description": "Go back"
+    },
+    "goBackToGroupsButtonTitle": {
+        "message": "그룹으로 돌아가기",
+        "description": "Go back to groups"
+    },
+    "title": {
+        "message": "제목",
+        "description": "Title"
+    },
+    "iconColor": {
+        "message": "아이콘 색상",
+        "description": "Icon color"
+    },
+    "selectUserGroupIcon": {
+        "message": "로드 아이콘",
+        "description": "Load icon"
+    },
+    "selectUserGroupIconWarnText": {
+        "message": "죄송합니다. 이 팝업에서 사용자 정의 아이콘을 로드할 수 없지만 \"그룹 관리\"에서 사용자 정의 그룹 아이콘을 로드할 수 있습니다.\n\"그룹 관리\"를 여시겠습니까?",
+        "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
+    },
+    "setRandomColor": {
+        "message": "랜덤 색상 지정",
+        "description": "Set random color"
+    },
+    "catchTabContainers": {
+        "message": "컨테이너가 있는 탭을 끌어 이 그룹으로 이동",
+        "description": "Catch and move tabs with containers to this group"
+    },
+    "regexpForTabsTitle": {
+        "message": "Regular expressions for catch tabs [미번역]",
+        "description": "Regular expressions for catch tabs"
+    },
+    "regexpForTabsPlaceholder": {
+        "message": "Regular expressions [미번역]",
+        "description": "Regular expressions"
+    },
+    "regexpForTabsHelp": {
+        "message": "여기에 웹 주소에 대한 정규식을 삽입하십시오. 일치하는 탭은 자동으로 이 그룹으로 이동됩니다.\n규칙당 한 줄을 사용합니다. 원하는 만큼 사용할 수 있습니다.\n예:\ngithub\\.com/drive4ik/simple-tab-groups - 애드온 저장소의 모든 페이지를 캐치\nbugzilla\\.mozilla\\.org - Firefox 버그 보고서를 캐치\n(facebook|twitter|youtube)\\.com - 모든 소셜 페이지",
+        "description": "Regular exceptions helper"
+    },
+    "hotkeysTitle": {
+        "message": "단축키",
+        "description": "Hotkeys"
+    },
+    "hotkeysDescription": {
+        "message": "여기에서 단축키를 추가할 수 있습니다.<br>제한:<br>1. 이 단축키는 WebExtensions API가 이를 허용하지 않기 때문에 브라우저 페이지(about:)가 아닌 웹 페이지(http:, https:)에서만 작동합니다.<br>2. 일부 단축키는 모든 키보드 레이아웃에서 작동하지 않습니다. 예를 들어, 영어 레이아웃으로 생성된 <code>Ctrl + ~</code> 단축키는 러시아어 레이아웃의 키보드에서 작동하지 않습니다. 러시아어 레이아웃에서 이 키에 다른 코드가 있기 때문입니다. 이 문제를 해결하려면 러시아어 레이아웃으로 다른 핫키를 만드세요. <code>Ctrl + Ё</code>",
+        "description": "Hotkeys description"
+    },
+    "addHotKeyButton": {
+        "message": "단축키 추가",
+        "description": "Add hotkey"
+    },
+    "deleteHotKeyButton": {
+        "message": "단축기 삭제",
+        "description": "Delete hotkey"
+    },
+    "hotkeyPlaceholder": {
+        "message": "여기에 키를 누르십시오.",
+        "description": "Press key here"
+    },
+    "selectAction": {
+        "message": "작업 선택",
+        "description": "Select action"
+    },
+    "selectGroup": {
+        "message": "그룹 선택",
+        "description": "Select group"
+    },
+    "hotkeyActionTitleLoadNextGroup": {
+        "message": "다음 그룹 로드",
+        "description": "Load next group"
+    },
+    "hotkeyActionTitleLoadPrevGroup": {
+        "message": "이전 그룹 로드",
+        "description": "Load previous group"
+    },
+    "hotkeyActionTitleLoadNextUnloadedGroup": {
+        "message": "언로드된 다음 그룹 로드",
+        "description": "Load next unloaded group"
+    },
+    "hotkeyActionTitleLoadPrevUnloadedGroup": {
+        "message": "언로드된 이전 그룹 로드",
+        "description": "Load previous unloaded group"
+    },
+    "hotkeyActionTitleLoadNextNonEmptyGroup": {
+        "message": "비어 있지 않은 다음 그룹 로드",
+        "description": "Load next non-empty group"
+    },
+    "hotkeyActionTitleLoadPrevNonEmptyGroup": {
+        "message": "비어 있지 않은 이전 그룹 로드",
+        "description": "Load previous non-empty group"
+    },
+    "hotkeyActionTitleLoadHistoryNextGroup": {
+        "message": "기록에서 다음 그룹 로드",
+        "description": "Load next group from history"
+    },
+    "hotkeyActionTitleLoadHistoryPrevGroup": {
+        "message": "기록에서 이전 그룹 로드",
+        "description": "Load previous group from history"
+    },
+    "hotkeyActionTitleLoadFirstGroup": {
+        "message": "첫 번째 그룹 로드",
+        "description": "Load first group"
+    },
+    "hotkeyActionTitleLoadLastGroup": {
+        "message": "마지막 그룹 로드",
+        "description": "Load last group"
+    },
+    "hotkeyActionTitleLoadCustomGroup": {
+        "message": "사용자 지정 그룹 로드",
+        "description": "Load custom group"
+    },
+    "hotkeyActionTitleAddNewGroup": {
+        "message": "새 그룹 추가",
+        "description": "Add new group"
+    },
+    "hotkeyActionTitleDeleteCurrentGroup": {
+        "message": "현재 그룹 제거",
+        "description": "Delete current group"
+    },
+    "hotkeyActionTitleOpenManageGroups": {
+        "message": "그룹 관리 열기",
+        "description": "Open manage groups"
+    },
+    "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
+        "message": "선택한 탭을 사용자 지정 그룹으로 이동",
+        "description": "Move selected tabs to custom group"
+    },
+    "hotkeyActionTitleDiscardGroup": {
+        "message": "그룹 삭제",
+        "description": "Hotkey action Discard group"
+    },
+    "hotkeyActionTitleDiscardOtherGroups": {
+        "message": "다른 그룹 삭제",
+        "description": "Hotkey action Discard other groups"
+    },
+    "hotkeyActionTitleReloadAllTabsInCurrentGroup": {
+        "message": "현재 그룹의 모든 탭 새로고침",
+        "description": "Reload all tabs in current group"
+    },
+    "whatsWrongMessage": {
+        "message": "뭔가 잘못됐습니다...\n마지막 오류 로그가 포함된 지원 이메일로 개발자에게 알리십시오 (버튼은 옵션 페이지 하단에 있음)\n계속하려면 여기를 클릭하세요...",
+        "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
+    },
+    "saveErrorLogsIntoFile": {
+        "message": "마지막 오류 로그를 JSON 파일로 저장",
+        "description": "Save last error logs into JSON file"
+    },
+    "undoRemoveGroupItemTitle": {
+        "message": "\"$grouptitle$\" 그룹 삭제 취소",
+        "description": "Undelete a group menu title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "undoRemoveGroupNotification": {
+        "message": "\"$grouptitle$\" 그룹의 삭제를 취소하려면 여기를 클릭하십시오.",
+        "description": "Click here to cancel the deletion of the group title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "isStickyGroupTitle": {
+        "message": "스티키 그룹",
+        "description": "Sticky group"
+    },
+    "isStickyGroupHelp": {
+        "message": "이 그룹의 탭은 자동으로 다른 그룹으로 이동되지 않습니다.",
+        "description": "Tabs in this group will never be automatically moved to another group"
+    },
+    "iconStyle": {
+        "message": "아이콘 스타일",
+        "description": "Icon style"
+    },
+    "discardTabsAfterHide": {
+        "message": "숨기기 후 탭을 삭제합니다. (RAM을 절약함)",
+        "description": "Discard tabs after hide (this will save the RAM)"
+    },
+    "discardAfterHideExcludeAudioTabs": {
+        "message": "소리가 있는 탭 제외",
+        "description": "Exclude tabs with sound"
+    },
+    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
+        "message": "열린 탭 중 하나가 마이크 또는 카메라를 공유하기 때문에 그룹을 변경할 수 없습니다.",
+        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
+    },
+    "foundHiddenUnSyncTabsDescription": {
+        "message": "숨겨진 동기화도지ㅣ 않은 탭을 찾았습니다. 탭을 글릭하여 현재 그룹/창에 표시하거나:",
+        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
+    },
+    "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
+        "message": "이 모든 탭을 현재 그룹/창으로 이동",
+        "description": "Move all of these tabs into current group/window"
+    },
+    "actionHiddenUnSyncWindowTabsCreateGroup": {
+        "message": "현재 창에서만 탭이 있는 새 그룹 만들기",
+        "description": "Create new group with tabs only from the current window"
+    },
+    "actionHiddenUnSyncTabsCreateGroup": {
+        "message": "이 모든 탭으로 새 그룹 만들기",
+        "description": "Create new group with all of these tabs"
+    },
+    "actionHiddenUnSyncTabsCloseAll": {
+        "message": "이 탭을 모두 닫습니다",
+        "description": "Close all of these tabs"
+    },
+    "updateTabThumbnail": {
+        "message": "이 탭의 미리보기 이미지 업데이트",
+        "description": "Update thumbnail for this tab"
+    },
+    "notFoundWindowsAddonStoppedWorking": {
+        "message": "오류: 비공개/시크릿/팝업이 아닌 일반 창을 찾을 수 없습니다.\n애드온이 작동을 멈췄습니다. 브라우저를 다시 시작해 주세요.",
+        "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
+    },
+    "ffFailedAndLostDataMessage": {
+        "message": "FF가 실패하고 모든 그룹이 손실되었습니다.\n백업이 있는 경우 백업에서 데이터를 복원할 수 있습니다.",
+        "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
+    },
+    "enterDefaultGroupIconViewTypeTitle": {
+        "message": "새 그룹의 아이콘 스타일",
+        "description": "Icon style for a new group"
+    },
+    "openGroupInNewWindow": {
+        "message": "새 창에서 그룹 열기",
+        "description": "Open group in new window"
+    },
+    "muteTabsWhenGroupCloseAndRestoreWhenOpen": {
+        "message": "그룹이 닫힐 때 탭 음소거 및 열릴 때 복원",
+        "description": "Mute tabs when group close and restore when open"
+    },
+    "showTabAfterMovingItIntoThisGroup": {
+        "message": "이 그룹으로 자동 이동한 후 탭 표시",
+        "description": "Show the tab after auto-moving it into this group"
+    },
+    "tabMoving": {
+        "message": "탭 이동",
+        "description": "Tab moving"
+    },
+    "includeTabFavIconsIntoBackup": {
+        "message": "백업에 탭 즐겨찾기 아이콘 포함 (백업 파일 크기를 더 크게 만듭니다)",
+        "description": "Include tab fav-icons in backup (makes backup file size bigger)"
+    },
+    "groupRemovedByExtension": {
+        "message": "그룹 \"$group$\"이 해당 확장 프로그램에 의해 제거됨 \"$extension$\"",
+        "description": "Group \"$group$\" removed by extension: $extension$",
+        "placeholders": {
+            "group": {
+                "content": "$1",
+                "example": "group title"
+            },
+            "extension": {
+                "content": "$2",
+                "example": "external extension title"
+            }
+        }
+    },
+    "clickHereToReloadAddon": {
+        "message": "문제가 발생했습니다. 여기를 클릭하며 심플 탭 그룹 애드온을 새로고침 하세요.",
+        "description": "Something went wrong, click here to reload STG addon"
+    },
+    "extendedTabSearch": {
+        "message": "확장 검색",
+        "description": "Extended search"
+    },
+    "movingMultipleTabsText": {
+        "message": "$count$번 탭으로 이동",
+        "description": "Moving $count$ tabs",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "7"
+            }
+        }
+    },
+    "pinnedTabsAreNotSupported": {
+        "message": "고정된 탭은 지원되지 않습니다.",
+        "description": "Pinned tabs are not supported"
+    },
+    "thisUrlsAreNotSupported": {
+        "message": "이 URL \"$urls$\"은 지원되지 않습니다.",
+        "description": "This urls \"$urls$\" are not supported",
+        "placeholders": {
+            "urls": {
+                "content": "$1",
+                "example": "about:addons, file://..."
+            }
+        }
+    },
+    "thisTabsCanNotBeHidden": {
+        "message": "\"$titles$\" 탭은 마이크, 카메라 또는 공유 화면을 사용하여 고정되어 있으므로 숨길 수 없습니다.",
+        "description": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
+        "placeholders": {
+            "titles": {
+                "content": "$1",
+                "example": "some titles"
+            }
+        }
+    },
+    "moveMultipleTabsToGroupMessage": {
+        "message": "$tabscount$ 탭이 이동되었습니다.\n첫 번째 탭을 열려면 여기를 클릭하십시오.",
+        "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "autoBackupEnableTitle": {
+        "message": "자동 백업 활성화",
+        "description": "Enable auto backup"
+    },
+    "autoBackupCreateEveryTitle": {
+        "message": "다음 간격으로 백업 생성:",
+        "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyMinutes": {
+        "message": "분(s)",
+        "description": "minute(s)"
+    },
+    "autoBackupIntervalKeyHours": {
+        "message": "시간(s)",
+        "description": "hour(s)"
+    },
+    "autoBackupIntervalKeyDays": {
+        "message": "날짜(s)",
+        "description": "day(s)"
+    },
+    "autoBackupLastBackupTitle": {
+        "message": "마지막 백업:",
+        "description": "Last backup:"
+    },
+    "enableDarkTheme": {
+        "message": "어두운 테마 활성화",
+        "description": "Enable dark theme"
+    },
+    "enableDarkThemeNotification": {
+        "message": "어두운 테마를 완전히 지원하려면 <code>about:config</code> 페이지에서 <code>svg.context-properties.content.enabled</code> 매개변수를 <code>true</code>로 활성화하세요.<br ><a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">어떻게 해야 하나요?</a>",
+        "description": "Fully support the dark theme text"
+    },
+    "importSettingsPanoramaViewAddonTitle": {
+        "message": "photodiode's \"Panorama View\"에서 복원",
+        "description": "Restore photodiode's \"Panorama View\""
+    },
+    "importSettingsPanoramaViewAddonDescription": {
+        "message": "\"Panorama View\" 확장 프로그램에서 백업 파일을 로드합니다.",
+        "description": "Load a backup file from \"Panorama View\" addon."
+    },
+    "importSettingsSyncTabGroupsAddonTitle": {
+        "message": "Morikko's \"Sync Tab Groups\"에서 복원",
+        "description": "Restore Morikko's \"Sync Tab Groups\""
+    },
+    "importSettingsSyncTabGroupsAddonDescription": {
+        "message": "\"Sync Tab Groups\" 확장 프로그램에서 백업 파일을 불러옵니다.",
+        "description": "Load a backup file from \"Sync Tab Groups\" addon."
+    },
+    "browseFileTitle": {
+        "message": "브라우저...",
+        "description": "Browse..."
+    },
+    "openBackupFolder": {
+        "message": "백업 폴더 열기",
+        "description": "Open backup folder"
+    },
+    "createNewGroupWhenOpenNewWindow": {
+        "message": "새 창을 열 때 새 그룹 만들기",
+        "description": "Create a new group when opening a new window"
+    },
+    "prependGroupTitleToWindowTitle": {
+        "message": "창 제목 앞에 그룹 제목 추가",
+        "description": "Prepend group title to window title"
+    },
+    "allowAccessToBookmarks": {
+        "message": "북마크에 대한 액세스 허용",
+        "description": "Allow access to bookmarks"
+    },
+    "openBookmarkInGroup": {
+        "message": "그룹에서 북마크 열기",
+        "description": "Open bookmark in group"
+    },
+    "bookmarkNotAllowed": {
+        "message": "이 북마크는 허용하지 않습니다.",
+        "description": "This bookmark is not allowed"
+    },
+    "openLinkInGroupDisabledTitle": {
+        "message": "그룹에서 링크 열기",
+        "description": "Open link in group title"
+    },
+    "showContextMenuOnTabs": {
+        "message": "탭에 컨텍스트(우클릭 메뉴) 표시",
+        "description": "Show context menu on tabs"
+    },
+    "showContextMenuOnLinks": {
+        "message": "링크에 컨텍스트(우클릭 메뉴) 표시",
+        "description": "Show context menu on links"
+    },
+    "groupsCreatedCount": {
+        "message": "$groupscount$ 생성된 그룹 수",
+        "description": "Groups created count",
+        "placeholders": {
+            "groupscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "noGroupsCreated": {
+        "message": "생성된 그룹이 없습니다.",
+        "description": "No groups created"
+    },
+    "noAccessToBookmarks": {
+        "message": "북마크에 대한 액세스 권한이 없습니다. 확장 프로그램 설정에서 활성화",
+        "description": "You do not have access to bookmarks. Enable it on in addon settings"
+    },
+    "exportGroupToMainBookmarkFolder": {
+        "message": "그룹을 \"STG 책갈피\" 책갈피 폴더로 가져가기",
+        "description": "Export groups to \"STG bookmarks\" bookmark folder"
+    },
+    "exportGroupToBookmarks": {
+        "message": "북마크로 그룹 내보내기",
+        "description": "Export group to bookmarks"
+    },
+    "defaultBookmarkFolderLocation": {
+        "message": "기본 북마크 폴더 위치",
+        "description": "Default bookmark folder location"
+    },
+    "groupExportedToBookmarks": {
+        "message": "$grouptitle$ 그룹 북마크를 성공적으로 내보냈습니다.",
+        "description": "Group '$grouptitle$' successfully exported to bookmarks",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "groupWithoutTabs": {
+        "message": "이 그룹에는 탭이 없습니다.",
+        "description": "This group has no tabs"
+    },
+    "autoBackupGroupsToBookmarks": {
+        "message": "모든 그룹을 북마크로 자동 백업",
+        "description": "Auto backup all groups to bookmarks"
+    },
+    "exportAllGroupsToBookmarks": {
+        "message": "모든 그룹을 북마크로 내보내기",
+        "description": "Export all groups to bookmarks"
+    },
+    "allGroupsExportedToBookmarks": {
+        "message": "모든 그룹을 북마크로 성공적으로 내보냈습니다.",
+        "description": "All groups successfully exported to bookmarks"
+    },
+    "discardTabTitle": {
+        "message": "탭 버리기",
+        "description": "Discard tab"
+    },
+    "autoBackupGroupsToFile": {
+        "message": "모든 그룹을 파일로 자동 백업 (다운로드 폴더로)",
+        "description": "Auto backup all groups to file (into downloads folder)"
+    },
+    "folderNameTitle": {
+        "message": "폴더 제목",
+        "description": "Folder name title"
+    },
+    "backupSuccessfullyRestored": {
+        "message": "백업이 성공적으로 복원되었습니다!",
+        "description": "Backup successfully restored"
+    },
+    "loading": {
+        "message": "로딩중. 기다려주세요...",
+        "description": "Loading, please wait..."
+    },
+    "showOtherTabs": {
+        "message": "다른 탭 표시",
+        "description": "Show other tabs"
+    },
+    "dontDiscardTabsAfterHideThisGroup": {
+        "message": "숨김 후에 이 그룹에 탭을 버리지 마세요",
+        "description": "Don't discard tabs into this group after hide"
+    },
+    "showNotificationAfterGroupDelete": {
+        "message": "그룹 삭제 후 알림 표시",
+        "description": "Show notification after group delete"
+    },
+    "reloadTab": {
+        "message": "탭 새로고침",
+        "description": "Reload tab"
+    },
+    "thisTabIsNotSupported": {
+        "message": "이 탭은 지원하지 않습니다.",
+        "description": "This tab is not supported"
+    },
+    "showExtendGroupsPopupWithActiveTabs": {
+        "message": "그룹 팝업에 활성 탭 표시",
+        "description": "Show active tabs in groups popup"
+    },
+    "reloadAllTabsInGroup": {
+        "message": "그룹의 모든 탭 새로고침",
+        "description": "Reload all tabs in group"
+    },
+    "tabsCreatedCount": {
+        "message": "$tabscount$ 만큼 탬이 생성됨",
+        "description": "Tabs created count",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "tabsNotCreated": {
+        "message": "탭이 생성되지 않음",
+        "description": "Tabs not created"
+    },
+    "showTabsWithThumbnailsInManageGroups": {
+        "message": "\"그룹 관리\" 페이지에서 미리보기 이미지가 있는 탭 표시",
+        "description": "Show tabs with thumbnails in \"Manage groups\" page"
+    },
+    "alwaysOpenTabsInContainer": {
+        "message": "컨테이너에서 항상 탭 열기",
+        "description": "Always open tabs in container"
+    },
+    "temporaryContainerTitle": {
+        "message": "⌚임시 컨테이너",
+        "description": "⌚Temporary Container"
+    },
+    "thisContainerIsNotTemporary": {
+        "message": "'$containerName$' 이 컨테이너는 더 이상 임시 컨테이너가 아닙니다.",
+        "description": "This container '$containerName$' is no longer temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "my container"
+            }
+        }
+    },
+    "thisContainerNowIsTemporary": {
+        "message": "'$containerName$' 컨테이너는 이제 임시 컨테이너가 되었습니다.",
+        "description": "This container '$containerName$' has now become temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "⌚Temporary Container 5"
+            }
+        }
+    },
+    "importAddonSettings": {
+        "message": "확장 프로그램 설정 가져오기",
+        "description": "Import addon settings"
+    },
+    "importGroups": {
+        "message": "그룹 가져오기",
+        "description": "Import groups"
+    },
+    "pinnedTabs": {
+        "message": "고정 탭",
+        "description": "Pinned tabs"
+    },
+    "eraseAddonSettingsWarningTitle": {
+        "message": "이 작업은 기존의 모든 설정과 그룹을 <b>완전히 지웁니다</b>!<br>탭은 영향을 받지 않습니다.",
+        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+    },
+    "clear": {
+        "message": "청소",
+        "description": "Clear"
+    },
+    "deleteAllAddonDataAndSettings": {
+        "message": "모든 확장 프로그램 데이터 및 설정 삭제",
+        "description": "Delete all addon data and settings"
+    },
+    "warningAllDataWillRemove": {
+        "message": "경고! 모든 확장 프로그램 데이터를 제거합니다! 정말 확실합니까?",
+        "description": "Warning! Removing ALL addon data! Are you really sure?"
+    },
+    "ifDifferentContainerReOpen": {
+        "message": "컨테이너가 선택한 컨테이너가 다른 경우 - 컨테이너 변경",
+        "description": "If the container is different from the selected one - change the container"
+    },
+    "deleteAllAddonDataAndSettingsBeforeRestoringBackup": {
+        "message": "백업을 복원하기 전에 모든 확장 프로그램 데이터 및 설정을 삭제합니다",
+        "description": "Delete all addon data and settings before restoring backup"
+    },
+    "helpPageWelcomeV4Title": {
+        "message": "심플 탭 그룹 v4 이용을 환영합니다",
+        "description": "Welcome to Simple Tab Groups v4"
+    },
+    "helpPageWelcomeV4Description": {
+        "message": "브라우저 설정에서 \"이전 세션 복원\"을 활성화하십시오.<br>이는 그룹과 탭 간의 통신을 유지하는 데 필요합니다. 그렇지 않으면 <br>브라우저가 시작될 때 탭이 열리지 않고 확장 프로그램에서 손실됩니다. > 확장 프로그램이 작동을 멈춥니다.",
+        "description": "Please enable \"Restore previous session\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
+    },
+    "leaveBookmarksOfClosedTabs": {
+        "message": "닫힌 탭의 북마크 유지(북마크는 구분 기호를 구분합니다)",
+        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+    },
+    "enableDebugTitle": {
+        "message": "디버그 활성화",
+        "description": "Enable DEBUG"
+    },
+    "loggingIsEnabledTitle": {
+        "message": "로깅 활성화",
+        "description": "logging is enabled"
+    },
+    "loggingIsAutoEnabledTitle": {
+        "message": "확장 프로그램의 오류로 인해 로깅이 자동으로 활성화됨",
+        "description": "logging was auto-enabled due to an error in addon"
+    },
+    "loggingDescription": {
+        "message": "버그를 기록하고 로그를 보내야 하는 경우에만 이 확인란을 활성화하십시오. 이 확인란을 활성화하면 모든 추가 작업이 기록되므로 추가 작업의 속도가 눈에 띄게 느려집니다. 오류를 재현할 때 이 확인란을 해제하면 로그 파일을 저장할 수 있습니다. 오류가 발생할 경우 이 옵션을 단독으로 실행할 수 있습니다. DEBUG 확인란을 사용하지 않도록 설정하고 로그 파일을 저장해야 합니다.이 로그 파일을 제게 이메일로 보내 주십시오: <a href=\"mailto:drive4ik+stg@protonmail.com>drive4ik+stg@protonmail.com<br> <span class=\"has-text-class\">관심! 이 로그 파일에는 개인 데이터, 암호, 북마크 등이 없습니다!이것은 문제를 재현하고 고치려고 노력하는 것이 필요합니다.[br] 안부 전합니다.",
+        "description": "logging description"
+    },
+    "archiveGroup": {
+        "message": "아카이브",
+        "description": "Archive"
+    },
+    "confirmArchiveGroup": {
+        "message": "\"$grouptitle$\" 그룹을 보관하겠습니까?<br>그룹을 보관하면 탭이 추가 기능 데이터베이스에 저장되고 브라우저에서 제거됩니다.",
+        "description": "Do you want to archive the group",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "unArchiveGroup": {
+        "message": "언아카이브",
+        "description": "Unarchive"
+    },
+    "groupIsArchived": {
+        "message": "작업을 완료할 수 없습니다. \"$grouptitle$\" 그룹이 아카이브에 있습니다.",
+        "description": "Unable to complete the action, the group is in the archive",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "updateAddonToLatestVersion": {
+        "message": "확장 프로그램을 최신 버전으로 업데이트하십시오.",
+        "description": "Please, update addon to latest version"
+    },
+    "hotkeyActionTitleRenameGroup": {
+        "message": "그룹 이름 재설정",
+        "description": "Rename group"
+    },
+    "noGroupsAvailable": {
+        "message": "그룹이 없습니다",
+        "description": "You have no groups"
+    },
+    "alwaysAskNewGroupName": {
+        "message": "항상 새 그룹 이름을 요정합니다",
+        "description": "Always ask for a new group name"
+    },
+    "impossibleToAskUserAboutAction": {
+        "message": "\"$page$\" 페이지에서 \"$action$\" 에 대해 확인할 수 없습니다.\n\n정보를 보려면 여기를 클릭하십시오",
+        "description": "On page \"$page$\" it is impossible to ask about \"$action$\"",
+        "placeholders": {
+            "page": {
+                "content": "$1",
+                "example": "Add-ons for Firefox"
+            },
+            "action": {
+                "content": "$2",
+                "example": "some action"
+            }
+        }
+    },
+    "openPopupTitle": {
+        "message": "팝업 열기",
+        "description": "Open popup"
+    },
+    "openSidebarTitle": {
+        "message": "사이드바 열기",
+        "description": "Open sidebar"
+    },
+    "helpPageOpenInContainerTitle": {
+        "message": "컨테이너에서 URL을 열 수 없습니다",
+        "description": "Can't open URL in container"
+    },
+    "helpPageOpenInContainerMainTitle": {
+        "message": "Can't open the URL into <container-name>$containerName$</container-name> container (미번역)",
+        "description": "Can't open the URL into Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerSubTitle": {
+        "message": "확장 프로그램이 URL을 열 수 없습니다:",
+        "description": "addon can't open URL:"
+    },
+    "helpPageOpenInContainerDesc1": {
+        "message": "Group <strong>$groupTitle$</strong> was assigned to open tabs in <container-name>$containerName$</container-name> container. (미번역)",
+        "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
+        "placeholders": {
+            "groupTitle": {
+                "content": "$1",
+                "example": "Group 1"
+            },
+            "containerName": {
+                "content": "$2",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerDesc2": {
+        "message": "또 다른 확장 프로그램:",
+        "description": "Another addon:"
+    },
+    "helpPageOpenInContainerDesc3": {
+        "message": "tries to open this URL in <container-name>$containerName$</container-name> container. Move the tab to another group or forbid the addon <strong>$addonName$</strong> to perform this action. (미번역)",
+        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Business"
+            },
+            "addonName": {
+                "content": "$2",
+                "example": "Facebook Container"
+            }
+        }
+    },
+    "helpPageOpenInContainerOpenInContainer": {
+        "message": "Open in <container-name>$containerName$</container-name> container (미번역)",
+        "description": "Open in Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
+    },
+    "groupNotLoaded": {
+        "message": "그룹이 로드되지 않았습니다",
+        "description": "Group not loaded"
+    },
+    "groupNotFound": {
+        "message": "그룹을 찾을 수 없습니다",
+        "description": "Group not found"
+    },
+    "unloadGroup": {
+        "message": "로드되지 않은 그룹",
+        "description": "Unload the group"
+    },
+    "tabsInThisWindowWereHidden": {
+        "message": "이 창의 탭이 숨겨져 있습니다. 확장 프로그램의 팝업 창 하단에서 찾을 수 있습니다.",
+        "description": "Tabs in this window were hidden. You can find them at the bottom of the popup window of the addon."
+    },
+    "searchOrGoToActive": {
+        "message": "활성 탭/그룹에 초점을 맞추려면 검색 또는 오른쪽 화살표",
+        "description": "Search or right arrow to focus on active tab/group"
+    },
+    "thisGroupIsMain": {
+        "message": "이 그룹은 메인으로 표시됩니다.",
+        "description": "This group is marked as main"
+    },
+    "setGroupAsMain": {
+        "message": "이 그룹을 기본으로 설정",
+        "description": "Set this group as main"
+    },
+    "thisGroupWasMain": {
+        "message": "알림\n이 그룹은 기본 그룹으로 표시되었습니다.",
+        "description": "Notice\nThis group was marked as the main"
+    },
+    "moveToMainIfNotInCatchTabRules": {
+        "message": "Move tabs from this group to the \"$grouptitle$\" group if none of the regular expression rules matches (미번역)",
+        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "My main group"
+            }
+        }
+    },
+    "noContainerTitle": {
+        "message": "기본 설정",
+        "description": "No container"
+    },
+    "reopenTabsWithTemporaryContainersInNew": {
+        "message": "새 탭에서 임시 컨테이너가 있는 탭 다시 열기",
+        "description": "Reopen tabs with temporary containers in new"
+    },
+    "temporaryContainerTitleDescription": {
+        "message": "임시 컨테이너 제목의 접두사",
+        "description": "Prefix of the temporary container title"
+    },
+    "excludeContainersForReOpen": {
+        "message": "이 컨테이너를 제외하고",
+        "description": "excluding these containers"
+    },
+    "helpPageOpenInContainerExcludeContainerToGroup": {
+        "message": "Exclude <container-name>$containerName$</container-name> container for group <strong>$groupTitle$</strong> (미번역)",
+        "description": "Exclude Personal container for group Group 1",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            },
+            "groupTitle": {
+                "content": "$2",
+                "example": "Group 1"
+            }
+        }
+    },
+    "helpPageOpenInContainerIgnoreAppForSession": {
+        "message": "Ignore extension \"<strong>$addonName$</strong>\" until the browser is closed (미번역)",
+        "description": "Ignore addon for session",
+        "placeholders": {
+            "addonName": {
+                "content": "$1",
+                "example": "Facebook Container"
+            }
+        }
+    },
+    "hotkeysDescription2": {
+        "message": "You can also configure hotkeys on the <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Manage extension shortcuts in Firefox</a> page. They will work on all windows and browser pages. (미번역)",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
+    },
+    "muteTab": {
+        "message": "탭 음소거",
+        "description": "Mute tab"
+    },
+    "unMuteTab": {
+        "message": "탭 음소거 해제",
+        "description": "Unmute tab"
+    },
+    "muteGroup": {
+        "message": "그룹 음소거",
+        "description": "Mute group"
+    },
+    "unMuteGroup": {
+        "message": "그룹 음소거 해제",
+        "description": "Unmute group"
+    },
+    "fullPopupWidth": {
+        "message": "전체 팝업 너비 사용",
+        "description": "Use full popup width"
+    },
+    "showArchivedGroups": {
+        "message": "아카이브된 그룹 표시",
+        "description": "Show archived groups"
+    },
+    "helpPageDbErrorReinstallTitle": {
+        "message": "Simple Tab Groups의 데이터베이스 에러",
+        "description": "Database error in Simple Tab Groups"
+    },
+    "helpPageDbErrorReinstallDescription": {
+        "message": "안타깝게도 Firefox 데이터베이스에서 Simple Tab Groups 확장 프로그램의 데이터를 읽는 동안 오류가 발생했습니다. 현재 확장 프로그램이 중지되었습니다. 추가 기능을 재개하려면 다음을 수행하십시오.",
+        "description": "Unfortunately, an error occurred while reading data from the STG addon from the Firefox database. At the moment, the addon is stopped. To resume the add-on, do the following:"
+    },
+    "helpPageDbErrorReinstallDescription2": {
+        "message": "Firefox 브라우저 다시 시작(프로세스 종료가 있는 Linux 및 Mac OS 전용)",
+        "description": "Restart Firefox Browser (for Linux and Mac OS with process termination)"
+    },
+    "helpPageDbErrorReinstallDescription3": {
+        "message": "이 창이 다시 표시되면 확장 프로그램을 다시 설치해 보세요.",
+        "description": "If you see this window again, try reinstalling the addon:"
+    },
+    "helpPageDbErrorReinstallDescription4": {
+        "message": "Simple Tab Groups 확장 프로그램 삭제",
+        "description": "Remove STG Addon"
+    },
+    "helpPageDbErrorReinstallDescription5": {
+        "message": "Firefox 브라우저 다시 시작",
+        "description": "Restart Firefox Browser"
+    },
+    "helpPageDbErrorReinstallDescription6": {
+        "message": "Simple Tab Groups 확장 프로그램 설치",
+        "description": "Install STG Addon"
+    },
+    "helpPageDbErrorReinstallDescription7": {
+        "message": "Firefox 다운로드 폴더 \"STG-backups\"에 있는 최신 Simple Tab Groups 확장 프로그램 데이터 백업을 복원합니다.<br>확장 프로그램 설정에서 백업을 복원할 수 있습니다.",
+        "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".<br>You can restore backup in addon settings"
+    },
+    "helpPageDbErrorReinstallOpenFFDownloadsFolder": {
+        "message": "Firefox 다운로드 폴더 열기",
+        "description": "Open Firefox downloads folder"
+    },
+    "eraseAndImportAddonBackupButton": {
+        "message": "백업 지우기 및 복원",
+        "description": "Erase and restore backup"
+    },
+    "searchOnlyGroups": {
+        "message": "오직 그룹만",
+        "description": "Only groups"
+    },
+    "autoBackupByDayIndexTitle": {
+        "message": "월 마다 백업의 번호",
+        "description": "Backup number as day of month"
+    },
+    "autoBackupByDayIndexDescription": {
+        "message": "다운로드 폴더에서 많은 수의 백업 파일을 제거하는 데 도움이 됩니다. 백업 파일은 \"auto-stg-backup-day-of-month-22@drive4ik.json\"과 같이 표시됩니다.",
+        "description": "Backup by day description"
+    },
+    "clickHereForInfo": {
+        "message": "자세한 정보를 보려면 여기를 클릭하십시오",
+        "description": "Click here for more info"
+    },
+    "enabled": {
+        "message": "활성화된 텍스트",
+        "description": "Enabled text"
+    },
+    "disabled": {
+        "message": "비활성화된 텍스트",
+        "description": "Disabled text"
+    },
+    "helpPageExtensionsThatConflictWithStgTitle": {
+        "message": "Simple Tab Groups와 충돌하는 확장 프로그램",
+        "description": "Extensions that conflict with STG"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc1": {
+        "message": "Simple Tab Groups 확장 프로그램이 활성화된 다음 확장 프로그램과 충돌합니다:",
+        "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc2": {
+        "message": "창 및 그룹에서 탭이나 탭의 위치를 ​​잃지 않으려면 Simple Tab Groups 확장 프로그램과 충돌하는 활성화된 확장 프로그램을 끄거나 제거하는 것이 좋습니다. 확장 프로그램 설정 페이지 \"about:addons\"에서 또는 키 조합 <code>Ctrl+Shift+A</code>를 눌러 이 작업을 수행할 수 있습니다.",
+        "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
+    },
+    "theme": {
+        "message": "테마",
+        "description": "Select theme"
+    },
+    "themeAuto": {
+        "message": "시스템 테마 — 자동",
+        "description": "Auto theme"
+    },
+    "themeLight": {
+        "message": "밝게",
+        "description": "Light theme"
+    },
+    "themeDark": {
+        "message": "어둡게",
+        "description": "Dark theme"
+    },
+    "contextMenuEditor": {
+        "message": "상황에 맞는 컨텍스트 메뉴 편집기",
+        "description": "Context menu editor"
+    },
+    "tab": {
+        "message": "탭",
+        "description": "Tab"
+    },
+    "group": {
+        "message": "그룹",
+        "description": "Group"
+    }
+}
