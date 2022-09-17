@@ -313,6 +313,14 @@
         "message": "Carregar grupo descarregado anterior",
         "description": "Load previous unloaded group"
     },
+    "hotkeyActionTitleLoadNextNonEmptyGroup": {
+        "message": "Carregar o próximo grupo vazio",
+        "description": "Load next non-empty group"
+    },
+    "hotkeyActionTitleLoadPrevNonEmptyGroup": {
+        "message": "Carregar o grupo vazio anterior",
+        "description": "Load previous non-empty group"
+    },
     "hotkeyActionTitleLoadHistoryNextGroup": {
         "message": "Carregar próximo grupo do histórico",
         "description": "Load next group from history"
@@ -404,6 +412,10 @@
     "discardTabsAfterHide": {
         "message": "Descartar abas depois de desaparecer (isso vai economizar RAM)",
         "description": "Discard tabs after hide (this will save the RAM)"
+    },
+    "discardAfterHideExcludeAudioTabs": {
+        "message": "Excluir abas com som",
+        "description": "Exclude tabs with sound"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Não é possível mudar o grupo porque uma das abas abertas compartilha microfone ou câmera",
@@ -538,6 +550,10 @@
     "autoBackupCreateEveryTitle": {
         "message": "Criar backup a cada:",
         "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyMinutes": {
+        "message": "minuto(s)",
+        "description": "minute(s)"
     },
     "autoBackupIntervalKeyHours": {
         "message": "hora(s)",
@@ -777,9 +793,41 @@
         "message": "Abas fixadas",
         "description": "Pinned tabs"
     },
+    "eraseAddonSettingsWarningTitle": {
+        "message": "Esta ação vai <b>APAGAR COMPLETAMENTE</b> todas as configurações e grupos existentes!<br>As abas não serão afetadas.",
+        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+    },
     "clear": {
         "message": "Limpar",
         "description": "Clear"
+    },
+    "deleteAllAddonDataAndSettings": {
+        "message": "Deletar todos os dados e configurações do addon",
+        "description": "Delete all addon data and settings"
+    },
+    "warningAllDataWillRemove": {
+        "message": "Atenção! Removendo TODOS os dados do addon! Você tem certeza?",
+        "description": "Warning! Removing ALL addon data! Are you really sure?"
+    },
+    "ifDifferentContainerReOpen": {
+        "message": "Se o container é diferente do selecionado - mude o container",
+        "description": "If the container is different from the selected one - change the container"
+    },
+    "deleteAllAddonDataAndSettingsBeforeRestoringBackup": {
+        "message": "Delete todos os dados e configurações do addon antes de restaurar o backup",
+        "description": "Delete all addon data and settings before restoring backup"
+    },
+    "helpPageWelcomeV4Title": {
+        "message": "Bem-vindo ao Simple Tab Groups v4",
+        "description": "Welcome to Simple Tab Groups v4"
+    },
+    "helpPageWelcomeV4Description": {
+        "message": "Por favor, habilite \"Restaurar sessão anterior\" nas configurações do navegador.<br>Isso é necessário para manter a comunicação entre o grupo e a aba, <br>caso contrário as abas não abrirão quando o navegador iniciar e serão perdidas do addon -<br >o addon irá parar de funcionar.",
+        "description": "Please enable \"Restore previous session\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
+    },
+    "leaveBookmarksOfClosedTabs": {
+        "message": "Deixe os favoritos das abas fechadas (os favoritos separarão o separador)",
+        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
     },
     "enableDebugTitle": {
         "message": "Habilitar DEBUG",
@@ -789,13 +837,45 @@
         "message": "O log de dados está habilitado",
         "description": "logging is enabled"
     },
+    "loggingIsAutoEnabledTitle": {
+        "message": "o registro foi ativado automaticamente devido a um erro no complemento,",
+        "description": "logging was auto-enabled due to an error in addon"
+    },
+    "loggingDescription": {
+        "message": "Por favor, habilite esta caixa de seleção somente se você precisar gravar um bug e enviar os logs para mim. Ativar esta caixa de seleção levará a uma lentidão notável do complemento, pois todas as ações do complemento são registradas. Ao reproduzir o erro, desative esta caixa de seleção e o complemento oferecerá para salvar o arquivo de log. Esta opção pode ser habilitada sozinha se ocorrer um erro. Você precisa desabilitar a caixa de seleção DEBUG e salvar o arquivo de log.<br> Envie este arquivo de log para mim por e-mail: <a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com< /a><br> <span class=\"has-text-danger\">Atenção! Não há dados pessoais, senhas, favoritos etc., neste arquivo de log!</span><br> Isso é necessário para poder reproduzir o problema e tentar corrigi-lo.<br> Atenciosamente",
+        "description": "logging description"
+    },
     "archiveGroup": {
         "message": "Arquivar",
         "description": "Archive"
     },
+    "confirmArchiveGroup": {
+        "message": "Deseja arquivar o grupo \"$grouptitle$\"?<br>Ao arquivar um grupo, as guias serão salvas no banco de dados do complemento e serão removidas do navegador.",
+        "description": "Do you want to archive the group",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
     "unArchiveGroup": {
         "message": "Desarquivar",
         "description": "Unarchive"
+    },
+    "groupIsArchived": {
+        "message": "Não foi possível concluir a ação, o grupo \"$grouptitle$\" está no arquivamento",
+        "description": "Unable to complete the action, the group is in the archive",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "updateAddonToLatestVersion": {
+        "message": "Por favor, atualize o complemento para a versão mais recente",
+        "description": "Please, update addon to latest version"
     },
     "hotkeyActionTitleRenameGroup": {
         "message": "Renomear grupo",
@@ -805,6 +885,24 @@
         "message": "Você não possui grupos",
         "description": "You have no groups"
     },
+    "alwaysAskNewGroupName": {
+        "message": "Sempre peça um novo nome de grupo",
+        "description": "Always ask for a new group name"
+    },
+    "impossibleToAskUserAboutAction": {
+        "message": "Na página \"$page$\" é impossível perguntar sobre \"$action$\"\n\nClique aqui para informações",
+        "description": "On page \"$page$\" it is impossible to ask about \"$action$\"",
+        "placeholders": {
+            "page": {
+                "content": "$1",
+                "example": "Add-ons for Firefox"
+            },
+            "action": {
+                "content": "$2",
+                "example": "some action"
+            }
+        }
+    },
     "openPopupTitle": {
         "message": "Abrir pop-up",
         "description": "Open popup"
@@ -812,6 +910,90 @@
     "openSidebarTitle": {
         "message": "Abrir barra lateral",
         "description": "Open sidebar"
+    },
+    "helpPageOpenInContainerTitle": {
+        "message": "Não é possível abrir o URL no contêiner",
+        "description": "Can't open URL in container"
+    },
+    "helpPageOpenInContainerMainTitle": {
+        "message": "Não é possível abrir o URL no contêiner <container-name>$containerName$</container-name>",
+        "description": "Can't open the URL into Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerSubTitle": {
+        "message": "complemento não pode abrir a URL:",
+        "description": "addon can't open URL:"
+    },
+    "helpPageOpenInContainerDesc1": {
+        "message": "O grupo <strong>$groupTitle$</strong> foi atribuído para abrir guias no contêiner <container-name>$containerName$</container-name>.",
+        "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
+        "placeholders": {
+            "groupTitle": {
+                "content": "$1",
+                "example": "Group 1"
+            },
+            "containerName": {
+                "content": "$2",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerDesc2": {
+        "message": "Outro complemento:",
+        "description": "Another addon:"
+    },
+    "helpPageOpenInContainerDesc3": {
+        "message": "tenta abrir esta URL no contêiner <container-name>$containerName$</container-name>. Mova a guia para outro grupo ou proíba o complemento <strong>$addonName$</strong> de realizar esta ação.",
+        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Business"
+            },
+            "addonName": {
+                "content": "$2",
+                "example": "Facebook Container"
+            }
+        }
+    },
+    "helpPageOpenInContainerOpenInContainer": {
+        "message": "Abrir no contêiner <container-name>$containerName$</container-name>",
+        "description": "Open in Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
+    },
+    "groupNotLoaded": {
+        "message": "Grupo não carregado",
+        "description": "Group not loaded"
+    },
+    "groupNotFound": {
+        "message": "Grupo não encotrado",
+        "description": "Group not found"
+    },
+    "unloadGroup": {
+        "message": "Descarregue o grupo",
+        "description": "Unload the group"
+    },
+    "tabsInThisWindowWereHidden": {
+        "message": "As guias nesta janela estavam ocultas. Você pode encontrá-los na parte inferior da janela pop-up do complemento.",
+        "description": "Tabs in this window were hidden. You can find them at the bottom of the popup window of the addon."
+    },
+    "searchOrGoToActive": {
+        "message": "Pesquisa ou seta para a direita para focar na guia/grupo ativo",
+        "description": "Search or right arrow to focus on active tab/group"
+    },
+    "thisGroupIsMain": {
+        "message": "Este grupo é marcado como principal",
+        "description": "This group is marked as main"
     },
     "setGroupAsMain": {
         "message": "Fixar grupo como principal",
@@ -821,9 +1003,59 @@
         "message": "Aviso\nEste grupo foi fixado como o principal",
         "description": "Notice\nThis group was marked as the main"
     },
+    "moveToMainIfNotInCatchTabRules": {
+        "message": "Mova as guias deste grupo para o grupo \"$grouptitle$\" se nenhuma das regras de expressão regular corresponder",
+        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "My main group"
+            }
+        }
+    },
     "noContainerTitle": {
         "message": "Nenhum contêiner",
         "description": "No container"
+    },
+    "reopenTabsWithTemporaryContainersInNew": {
+        "message": "Reabrir guias com contêineres temporários em novos",
+        "description": "Reopen tabs with temporary containers in new"
+    },
+    "temporaryContainerTitleDescription": {
+        "message": "Prefixo do título do contêiner temporário",
+        "description": "Prefix of the temporary container title"
+    },
+    "excludeContainersForReOpen": {
+        "message": "excluindo esses contêineres",
+        "description": "excluding these containers"
+    },
+    "helpPageOpenInContainerExcludeContainerToGroup": {
+        "message": "Excluir o contêiner <container-name>$containerName$</container-name> para o grupo <strong>$groupTitle$</strong>",
+        "description": "Exclude Personal container for group Group 1",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            },
+            "groupTitle": {
+                "content": "$2",
+                "example": "Group 1"
+            }
+        }
+    },
+    "helpPageOpenInContainerIgnoreAppForSession": {
+        "message": "Ignore a extensão \"<strong>$addonName$</strong>\" até que o navegador seja fechado",
+        "description": "Ignore addon for session",
+        "placeholders": {
+            "addonName": {
+                "content": "$1",
+                "example": "Facebook Container"
+            }
+        }
+    },
+    "hotkeysDescription2": {
+        "message": "Você também pode configurar teclas de atalho na página <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Gerenciar atalhos de extensão no Firefox</a>. Eles funcionarão em todas as janelas e páginas do navegador.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "muteTab": {
         "message": "Mutar aba",
@@ -845,8 +1077,112 @@
         "message": "Usar largura inteira de pop-ups",
         "description": "Use full popup width"
     },
+    "showArchivedGroups": {
+        "message": "Mostrar grupos arquivados",
+        "description": "Show archived groups"
+    },
+    "helpPageDbErrorReinstallTitle": {
+        "message": "Erro de banco de dados em Grupos de Guias Simples",
+        "description": "Database error in Simple Tab Groups"
+    },
+    "helpPageDbErrorReinstallDescription": {
+        "message": "Infelizmente, ocorreu um erro ao ler os dados do complemento STG do banco de dados do Firefox. No momento, o addon está parado. Para retomar o complemento, faça o seguinte:",
+        "description": "Unfortunately, an error occurred while reading data from the STG addon from the Firefox database. At the moment, the addon is stopped. To resume the add-on, do the following:"
+    },
+    "helpPageDbErrorReinstallDescription2": {
+        "message": "Reinicie o navegador Firefox (para Linux e Mac OS com finalização do processo)",
+        "description": "Restart Firefox Browser (for Linux and Mac OS with process termination)"
+    },
+    "helpPageDbErrorReinstallDescription3": {
+        "message": "Se você vê esta janela novamente, tente reinstalar o complemento:",
+        "description": "If you see this window again, try reinstalling the addon:"
+    },
+    "helpPageDbErrorReinstallDescription4": {
+        "message": "Remover complemento STG",
+        "description": "Remove STG Addon"
+    },
+    "helpPageDbErrorReinstallDescription5": {
+        "message": "Reiniciear o navegador Firefox",
+        "description": "Restart Firefox Browser"
+    },
+    "helpPageDbErrorReinstallDescription6": {
+        "message": "Instale o complemento STG",
+        "description": "Install STG Addon"
+    },
+    "helpPageDbErrorReinstallDescription7": {
+        "message": "Restaure o backup de dados do complemento STG mais recente localizado na pasta de downloads do Firefox \"STG-backups\".<br>Você pode restaurar o backup nas configurações do complemento",
+        "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".<br>You can restore backup in addon settings"
+    },
+    "helpPageDbErrorReinstallOpenFFDownloadsFolder": {
+        "message": "Abra a pasta de downloads do Firefox",
+        "description": "Open Firefox downloads folder"
+    },
     "eraseAndImportAddonBackupButton": {
         "message": "Apagar e restaurar backup",
         "description": "Erase and restore backup"
+    },
+    "searchOnlyGroups": {
+        "message": "Apenas grupos",
+        "description": "Only groups"
+    },
+    "autoBackupByDayIndexTitle": {
+        "message": "Número de backup como dia do mês",
+        "description": "Backup number as day of month"
+    },
+    "autoBackupByDayIndexDescription": {
+        "message": "Ajuda a se livrar de um grande número de arquivos de backup na pasta de downloads. O arquivo de backup ficará assim: \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
+        "description": "Backup by day description"
+    },
+    "clickHereForInfo": {
+        "message": "Clique aqui para mais informações",
+        "description": "Click here for more info"
+    },
+    "enabled": {
+        "message": "Habilitado",
+        "description": "Enabled text"
+    },
+    "disabled": {
+        "message": "Desabilitado",
+        "description": "Disabled text"
+    },
+    "helpPageExtensionsThatConflictWithStgTitle": {
+        "message": "Extensões que entram em conflito com STG",
+        "description": "Extensions that conflict with STG"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc1": {
+        "message": "O complemento Simple Tab Groups está em conflito com as seguintes extensões habilitadas:",
+        "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc2": {
+        "message": "Para evitar a perda de guias ou sua localização em janelas e grupos, é altamente recomendável desativar ou remover extensões habilitadas que entram em conflito com o complemento Simple Tab Groups. Você pode fazer isso na página de configurações de addons \"about:addons\" ou pressionando a combinação de teclas <code>Ctrl+Shift+A</code>",
+        "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
+    },
+    "theme": {
+        "message": "Tema",
+        "description": "Select theme"
+    },
+    "themeAuto": {
+        "message": "Tema do sistema — automático",
+        "description": "Auto theme"
+    },
+    "themeLight": {
+        "message": "Claro",
+        "description": "Light theme"
+    },
+    "themeDark": {
+        "message": "Escuro",
+        "description": "Dark theme"
+    },
+    "contextMenuEditor": {
+        "message": "Editor de menu de contexto",
+        "description": "Context menu editor"
+    },
+    "tab": {
+        "message": "Guia",
+        "description": "Tab"
+    },
+    "group": {
+        "message": "Grupo",
+        "description": "Group"
     }
 }
