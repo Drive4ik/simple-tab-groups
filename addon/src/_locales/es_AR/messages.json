@@ -313,6 +313,14 @@
         "message": "Cargar el grupo no-cargado anterior",
         "description": "Load previous unloaded group"
     },
+    "hotkeyActionTitleLoadNextNonEmptyGroup": {
+        "message": "Cargar grupo no vacío siguiente",
+        "description": "Load next non-empty group"
+    },
+    "hotkeyActionTitleLoadPrevNonEmptyGroup": {
+        "message": "Cargar grupo no vacío anterior",
+        "description": "Load previous non-empty group"
+    },
     "hotkeyActionTitleLoadHistoryNextGroup": {
         "message": "Cargar el próximo grupo desde el historial",
         "description": "Load next group from history"
@@ -404,6 +412,10 @@
     "discardTabsAfterHide": {
         "message": "Descartar pestañas después de ocultarlas (esto ahorrará RAM)",
         "description": "Discard tabs after hide (this will save the RAM)"
+    },
+    "discardAfterHideExcludeAudioTabs": {
+        "message": "Excluir pestañas con sonido",
+        "description": "Exclude tabs with sound"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "No se puede cambiar de grupo porque una de las pestañas abiertas comparte micrófono o cámara",
@@ -538,6 +550,10 @@
     "autoBackupCreateEveryTitle": {
         "message": "Crear respaldo cada:",
         "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyMinutes": {
+        "message": "minuto(s)",
+        "description": "minute(s)"
     },
     "autoBackupIntervalKeyHours": {
         "message": "hora(s)",
@@ -927,6 +943,10 @@
             }
         }
     },
+    "helpPageOpenInContainerDesc2": {
+        "message": "Otra extensión:",
+        "description": "Another addon:"
+    },
     "helpPageOpenInContainerDesc3": {
         "message": "intentar abrir este URL en el contenedor <container-name>$containerName$</container-name>. Mové la pestaña a otro grupo o prohibile a la extensión <strong>$addonName$</strong> realizar esta acción.",
         "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
@@ -1023,6 +1043,16 @@
             }
         }
     },
+    "helpPageOpenInContainerIgnoreAppForSession": {
+        "message": "Ignorar la extensión \"<strong>$addonName$</strong>\" hasta que el navegador se cierre.",
+        "description": "Ignore addon for session",
+        "placeholders": {
+            "addonName": {
+                "content": "$1",
+                "example": "Facebook Container"
+            }
+        }
+    },
     "hotkeysDescription2": {
         "message": "Además podes configurar atajos rápidos en la página <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Gestionar atajos de teclado de extensiones en Firefox</a>. Estos funcionarán en todas las ventanas y páginas del navegador.",
         "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
@@ -1090,5 +1120,69 @@
     "eraseAndImportAddonBackupButton": {
         "message": "Limpiar y restablecer respaldo",
         "description": "Erase and restore backup"
+    },
+    "searchOnlyGroups": {
+        "message": "Solo grupos",
+        "description": "Only groups"
+    },
+    "autoBackupByDayIndexTitle": {
+        "message": "Numero de respaldo como día del mes",
+        "description": "Backup number as day of month"
+    },
+    "autoBackupByDayIndexDescription": {
+        "message": "Ayuda a eliminar un gran número de archivos de respaldo de la carpeta de descargas. El archivo de respaldo tiene esta  forma \" \"auto-stg-backup-dia-del-mes-22@drive4ik.json\"",
+        "description": "Backup by day description"
+    },
+    "clickHereForInfo": {
+        "message": "Presioná aquí para mas información",
+        "description": "Click here for more info"
+    },
+    "enabled": {
+        "message": "Habilitado",
+        "description": "Enabled text"
+    },
+    "disabled": {
+        "message": "Deshabilitado",
+        "description": "Disabled text"
+    },
+    "helpPageExtensionsThatConflictWithStgTitle": {
+        "message": "Extensiones que tienen conflictos con STG",
+        "description": "Extensions that conflict with STG"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc1": {
+        "message": "La extensión Simple Tab Groups tiene conflictos con las siguientes extensiones habilitadas:",
+        "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc2": {
+        "message": "Para evitar perder pestañas o su posición en ventanas y grupos se recomienda deshabilitar o eliminar extensiones que entran en conflicto con Simple Tab Groups. Podés hacer esto en la página de ajustes de extensiones \"about:addons\" o presionando la combinación de teclas <code>Ctrl+Shift+A</code>",
+        "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
+    },
+    "theme": {
+        "message": "Tema",
+        "description": "Select theme"
+    },
+    "themeAuto": {
+        "message": "Tema del sistema - automático",
+        "description": "Auto theme"
+    },
+    "themeLight": {
+        "message": "Claro",
+        "description": "Light theme"
+    },
+    "themeDark": {
+        "message": "Oscuro",
+        "description": "Dark theme"
+    },
+    "contextMenuEditor": {
+        "message": "Editor de menú contextual",
+        "description": "Context menu editor"
+    },
+    "tab": {
+        "message": "Pestaña",
+        "description": "Tab"
+    },
+    "group": {
+        "message": "Grupo",
+        "description": "Group"
     }
 }
