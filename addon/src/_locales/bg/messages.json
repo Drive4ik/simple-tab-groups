@@ -313,6 +313,14 @@
         "message": "Отваря предишната неотваряна група",
         "description": "Load previous unloaded group"
     },
+    "hotkeyActionTitleLoadNextNonEmptyGroup": {
+        "message": "Отваря следващата непразна група",
+        "description": "Load next non-empty group"
+    },
+    "hotkeyActionTitleLoadPrevNonEmptyGroup": {
+        "message": "Отваря предишната непразна група",
+        "description": "Load previous non-empty group"
+    },
     "hotkeyActionTitleLoadHistoryNextGroup": {
         "message": "Отваря следващата група от историята",
         "description": "Load next group from history"
@@ -404,6 +412,10 @@
     "discardTabsAfterHide": {
         "message": "Освобождаване на памет от скрити раздели",
         "description": "Discard tabs after hide (this will save the RAM)"
+    },
+    "discardAfterHideExcludeAudioTabs": {
+        "message": "С изключение на разделите със звук",
+        "description": "Exclude tabs with sound"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Групата не може да бъде променяна, защото един от отворените раздели използва микрофон или камера",
@@ -538,6 +550,10 @@
     "autoBackupCreateEveryTitle": {
         "message": "На всеки",
         "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyMinutes": {
+        "message": "минута(и)",
+        "description": "minute(s)"
     },
     "autoBackupIntervalKeyHours": {
         "message": "час(а)",
@@ -794,7 +810,7 @@
         "description": "Warning! Removing ALL addon data! Are you really sure?"
     },
     "ifDifferentContainerReOpen": {
-        "message": "Ако текущия изолатор е различен от избрания, тогава да бъде подменен",
+        "message": "Ако текущия изолатор е различен от избрания, да бъде подменен",
         "description": "If the container is different from the selected one - change the container"
     },
     "deleteAllAddonDataAndSettingsBeforeRestoringBackup": {
@@ -927,6 +943,10 @@
             }
         }
     },
+    "helpPageOpenInContainerDesc2": {
+        "message": "Друга добавка:",
+        "description": "Another addon:"
+    },
     "helpPageOpenInContainerDesc3": {
         "message": "опитва да отвори същия адрес в изолатор <container-name>$containerName$</container-name>. Или преместете раздела в друга група, или забранете на добавката <strong>$addonName$</strong> да извършва това действие.",
         "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
@@ -1023,6 +1043,16 @@
             }
         }
     },
+    "helpPageOpenInContainerIgnoreAppForSession": {
+        "message": "Добавката „<strong>$addonName$</strong>“ да бъде пренебрегната до затваряне на четеца",
+        "description": "Ignore addon for session",
+        "placeholders": {
+            "addonName": {
+                "content": "$1",
+                "example": "Facebook Container"
+            }
+        }
+    },
     "hotkeysDescription2": {
         "message": "Също така можете да настроите клавишни комбинации на страницата <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Управление на клавишни комбинации на разширения</a>. Ще работят във всички прозорци и на всички страници.",
         "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
@@ -1090,5 +1120,69 @@
     "eraseAndImportAddonBackupButton": {
         "message": "Изтриване и възстановяване",
         "description": "Erase and restore backup"
+    },
+    "searchOnlyGroups": {
+        "message": "Само на групи",
+        "description": "Only groups"
+    },
+    "autoBackupByDayIndexTitle": {
+        "message": "Номера на резервното копие е деня от месеца",
+        "description": "Backup number as day of month"
+    },
+    "autoBackupByDayIndexDescription": {
+        "message": "Помага да се намали броя на резервните копия в папката за изтегляне. Файлът на резервното копие ще изглежда подобно на <code>auto-stg-backup-day-of-month-22@drive4ik.json</code>",
+        "description": "Backup by day description"
+    },
+    "clickHereForInfo": {
+        "message": "Повече информация",
+        "description": "Click here for more info"
+    },
+    "enabled": {
+        "message": "Включено",
+        "description": "Enabled text"
+    },
+    "disabled": {
+        "message": "Изключено",
+        "description": "Disabled text"
+    },
+    "helpPageExtensionsThatConflictWithStgTitle": {
+        "message": "Разширение в конфликт със STG",
+        "description": "Extensions that conflict with STG"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc1": {
+        "message": "Разширението Simple Tab Groups е в конфликт със следните, работещи добавки:",
+        "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc2": {
+        "message": "За да предотвратите загуба на раздели или разпиляването им из прозорци и раздели е силно препоръчително да изключите добавките, които са в конфликт с разширението Simple Tab Groups. Можете да го направите от страницата за настройка на добавки „about:addons“ или чрез клавишната комбинация <code>Ctrl+Shift+A</code>",
+        "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
+    },
+    "theme": {
+        "message": "Тема",
+        "description": "Select theme"
+    },
+    "themeAuto": {
+        "message": "Спрямо системната - автоматична",
+        "description": "Auto theme"
+    },
+    "themeLight": {
+        "message": "Светла",
+        "description": "Light theme"
+    },
+    "themeDark": {
+        "message": "Тъмна",
+        "description": "Dark theme"
+    },
+    "contextMenuEditor": {
+        "message": "Редактор на контекстуално меню",
+        "description": "Context menu editor"
+    },
+    "tab": {
+        "message": "Раздел",
+        "description": "Tab"
+    },
+    "group": {
+        "message": "Група",
+        "description": "Group"
     }
 }
