@@ -314,11 +314,11 @@
         "description": "Load previous unloaded group"
     },
     "hotkeyActionTitleLoadNextNonEmptyGroup": {
-        "message": "Cargar grupo no vacío siguiente",
+        "message": "Cargar siguiente grupo no-vacío",
         "description": "Load next non-empty group"
     },
     "hotkeyActionTitleLoadPrevNonEmptyGroup": {
-        "message": "Cargar grupo no vacío anterior",
+        "message": "Cargar anterior grupo no-vacío",
         "description": "Load previous non-empty group"
     },
     "hotkeyActionTitleLoadHistoryNextGroup": {
@@ -414,7 +414,7 @@
         "description": "Discard tabs after hide (this will save the RAM)"
     },
     "discardAfterHideExcludeAudioTabs": {
-        "message": "Excluir pestañas con sonido",
+        "message": "Excluir tabs con sonido",
         "description": "Exclude tabs with sound"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
@@ -1044,7 +1044,7 @@
         }
     },
     "helpPageOpenInContainerIgnoreAppForSession": {
-        "message": "Ignorar la extensión \"<strong>$addonName$</strong>\" hasta que el navegador se cierre.",
+        "message": "Ignorar la extensión \"<strong>$addonName$</strong>\" hasta que el navegador se cierre",
         "description": "Ignore addon for session",
         "placeholders": {
             "addonName": {
@@ -1126,35 +1126,35 @@
         "description": "Only groups"
     },
     "autoBackupByDayIndexTitle": {
-        "message": "Numero de respaldo como día del mes",
+        "message": "Día del mes como número de respaldo",
         "description": "Backup number as day of month"
     },
     "autoBackupByDayIndexDescription": {
-        "message": "Ayuda a eliminar un gran número de archivos de respaldo de la carpeta de descargas. El archivo de respaldo tiene esta  forma \" \"auto-stg-backup-dia-del-mes-22@drive4ik.json\"",
+        "message": "Ayuda a deshacerse de un gran número de archivos de respaldo en la carpeta de descargas. El archivo de respaldo se vera así: \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
         "description": "Backup by day description"
     },
     "clickHereForInfo": {
-        "message": "Presioná aquí para mas información",
+        "message": "Haga click aquí para más información",
         "description": "Click here for more info"
     },
     "enabled": {
-        "message": "Habilitado",
+        "message": "Activado",
         "description": "Enabled text"
     },
     "disabled": {
-        "message": "Deshabilitado",
+        "message": "Desactivado",
         "description": "Disabled text"
     },
     "helpPageExtensionsThatConflictWithStgTitle": {
-        "message": "Extensiones que tienen conflictos con STG",
+        "message": "Extensiones que no son compatibles con STG",
         "description": "Extensions that conflict with STG"
     },
     "helpPageExtensionsThatConflictWithStgDesc1": {
-        "message": "La extensión Simple Tab Groups tiene conflictos con las siguientes extensiones habilitadas:",
+        "message": "La extensión Simple Tab Groups es incompatible con las siguientes extensiones activadas:",
         "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
     },
     "helpPageExtensionsThatConflictWithStgDesc2": {
-        "message": "Para evitar perder pestañas o su posición en ventanas y grupos se recomienda deshabilitar o eliminar extensiones que entran en conflicto con Simple Tab Groups. Podés hacer esto en la página de ajustes de extensiones \"about:addons\" o presionando la combinación de teclas <code>Ctrl+Shift+A</code>",
+        "message": "Para evitar perder pestañas o su ubicación en ventanas y grupos, se recomienda desactivar o borrar las extensiones activadas que sean incompatibles con Simple Tab Groups. Puede hacerlo en la página de configuración de extensiones \"about:addons\" o presionando la combinación de teclas <code>Ctrl+Shift+A</code>",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     },
     "theme": {
@@ -1162,7 +1162,7 @@
         "description": "Select theme"
     },
     "themeAuto": {
-        "message": "Tema del sistema - automático",
+        "message": "Tema del sistema — automático",
         "description": "Auto theme"
     },
     "themeLight": {
@@ -1170,11 +1170,11 @@
         "description": "Light theme"
     },
     "themeDark": {
-        "message": "Oscuro",
+        "message": "Obscuro",
         "description": "Dark theme"
     },
     "contextMenuEditor": {
-        "message": "Editor de menú contextual",
+        "message": "Editor del menu contextual",
         "description": "Context menu editor"
     },
     "tab": {
