@@ -1,0 +1,1188 @@
+{
+    "extensionDescription": {
+        "message": "Buat, ubah, dan ubah grup tab dengan cepat",
+        "description": "Description of the extension."
+    },
+    "openSettings": {
+        "message": "Pengaturan",
+        "description": "Settings context button title"
+    },
+    "manageGroupsTitle": {
+        "message": "Kelola grup",
+        "description": "Manage groups"
+    },
+    "setTabIconAsGroupIcon": {
+        "message": "Atur ikon tab sebagai ikon grup",
+        "description": "Set tab icon as group icon"
+    },
+    "moveTabToGroupDisabledTitle": {
+        "message": "Pindahkan tab ke grup",
+        "description": "Move tab to group title"
+    },
+    "moveTabToGroupMessage": {
+        "message": "Tab \"$tabtitle$\" dipindahkan ke grup \"$grouptitle$\".",
+        "description": "Tab moved popup title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            },
+            "tabtitle": {
+                "content": "$2",
+                "example": "tab title"
+            }
+        }
+    },
+    "warning": {
+        "message": "Peringatan!",
+        "description": "Warning!"
+    },
+    "success": {
+        "message": "Sukses",
+        "description": "Success!"
+    },
+    "ok": {
+        "message": "Oke",
+        "description": "OK button"
+    },
+    "save": {
+        "message": "Simpan",
+        "description": "Save"
+    },
+    "delete": {
+        "message": "Hapus",
+        "description": "Delete"
+    },
+    "cancel": {
+        "message": "Batal",
+        "description": "Cancel"
+    },
+    "searchPlaceholder": {
+        "message": "Cari",
+        "description": "Search placeholder"
+    },
+    "invalidRegExpRuleTitle": {
+        "message": "Aturan '$regexp$' tidak valid dan akan dilewati.",
+        "description": "Invalid rule description",
+        "placeholders": {
+            "regexp": {
+                "content": "$1",
+                "example": "googlecom"
+            }
+        }
+    },
+    "manageGroupViewGrid": {
+        "message": "Tampilan kisi",
+        "description": "Grid display"
+    },
+    "manageGroupViewFreeArrange": {
+        "message": "Pengaturan bebas (dalam versi mendatang)",
+        "description": "Free arrange"
+    },
+    "closePopupAfterChangeGroup": {
+        "message": "Tutup popup setelah mengubah grup",
+        "description": "Close popup after changing group"
+    },
+    "showNotificationAfterMoveTab": {
+        "message": "Tampilkan pemberitahuan saat tab dipindahkan ke grup lain",
+        "description": "Show notification when tab is moved to another group"
+    },
+    "openManageGroupsInTab": {
+        "message": "Buka \"Kelola Grup\" di tab baru",
+        "description": "Open \"Manage Groups\" in new tab"
+    },
+    "showConfirmDialogBeforeGroupDelete": {
+        "message": "Tampilkan dialog konfirmasi sebelum menghapus grup",
+        "description": "Show confirmation dialog before deleting the group"
+    },
+    "showConfirmDialogBeforeGroupArchiving": {
+        "message": "Tampilkan dialog konfirmasi sebelum mengarsipkan grup",
+        "description": "Show confirmation dialog before archiving the group"
+    },
+    "exportAddonSettingsTitle": {
+        "message": "Cadangkan \"Simple Tab Group\" Anda",
+        "description": "Backup your Simple Tab Groups"
+    },
+    "exportAddonSettingsDescription": {
+        "message": "Ekspor grup tab Anda ke dalam file cadangan untuk disimpan dengan aman, sehingga Anda dapat memulihkannya di lain waktu jika perlu.",
+        "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
+    },
+    "exportAddonSettingsButton": {
+        "message": "Membuat backup",
+        "description": "Create backup"
+    },
+    "includeTabThumbnailsIntoBackup": {
+        "message": "Sertakan thumbnail tab dalam cadangan (membuat ukuran file cadangan lebih besar)",
+        "description": "Include tab thumbnails in backup (makes backup file size bigger)"
+    },
+    "importAddonSettingsTitle": {
+        "message": "Pulihkan \"Simple Tab Group\" dari cadangan",
+        "description": "Restore Simple Tab Groups"
+    },
+    "importAddonSettingsDescription": {
+        "message": "Muat file cadangan yang berisi grup tab yang ingin Anda pulihkan.",
+        "description": "Load a backup file containing the tab groups you want to restore."
+    },
+    "importAddonSettingsButton": {
+        "message": "Pulihkan cadangan",
+        "description": "Restore backup"
+    },
+    "importSettingsOldTabGroupsAddonTitle": {
+        "message": "Kembalikan \"Grup Tab\" Quicksaver",
+        "description": "Restore Quicksaver's \"Tab Groups\""
+    },
+    "importSettingsOldTabGroupsAddonDescription": {
+        "message": "Muat file cadangan dari addon \"Grup Tab\" yang lama.",
+        "description": "Load a backup file old \"Tab Groups\" addon."
+    },
+    "openGroupAfterChange": {
+        "message": "Buka grup setelah mengubahnya",
+        "description": "Open group after changing to it"
+    },
+    "newGroupTitle": {
+        "message": "Grup $id$",
+        "description": "group id",
+        "placeholders": {
+            "id": {
+                "content": "$1",
+                "example": "1"
+            }
+        }
+    },
+    "searchNotFoundTitle": {
+        "message": "Tidak ada hasil yang ditemukan untuk \"$search$\"",
+        "description": "No results found",
+        "placeholders": {
+            "search": {
+                "content": "$1",
+                "example": "mail"
+            }
+        }
+    },
+    "sortGroupsAZ": {
+        "message": "Urutkan grup [AZ]",
+        "description": "Sort groups [A-Z]"
+    },
+    "sortGroupsZA": {
+        "message": "Urutkan grup [ZA]",
+        "description": "Sort groups [Z-A]"
+    },
+    "generalTitle": {
+        "message": "Umum",
+        "description": "General"
+    },
+    "groupSettings": {
+        "message": "Pengaturan grup",
+        "description": "Group settings"
+    },
+    "deleteGroup": {
+        "message": "Hapus grup",
+        "description": "Delete group"
+    },
+    "confirmDeleteGroup": {
+        "message": "Apakah Anda ingin menghapus grup \"$grouptitle$\" ?<br>Menghapus grup juga akan menutup tab dan jendela jika terbuka!",
+        "description": "Delete group?",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group #4"
+            }
+        }
+    },
+    "groupTabsCount": {
+        "message": "$count$ tab",
+        "description": "Group tabs count",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "groupTabsCountActive": {
+        "message": "$active$/$count$ tab aktif",
+        "description": "Group tabs count active",
+        "placeholders": {
+            "active": {
+                "content": "$1",
+                "example": "2"
+            },
+            "count": {
+                "content": "$2",
+                "example": "4"
+            }
+        }
+    },
+    "deleteTab": {
+        "message": "Hapus tab",
+        "description": "Delete tab"
+    },
+    "createNewTab": {
+        "message": "Buka tab baru",
+        "description": "Open new tab"
+    },
+    "createNewGroup": {
+        "message": "Buat grup baru",
+        "description": "Create new group"
+    },
+    "goBackButtonTitle": {
+        "message": "Kembali",
+        "description": "Go back"
+    },
+    "goBackToGroupsButtonTitle": {
+        "message": "Kembali ke grup",
+        "description": "Go back to groups"
+    },
+    "title": {
+        "message": "Judul",
+        "description": "Title"
+    },
+    "iconColor": {
+        "message": "Warna ikon",
+        "description": "Icon color"
+    },
+    "selectUserGroupIcon": {
+        "message": "Muat ikon",
+        "description": "Load icon"
+    },
+    "selectUserGroupIconWarnText": {
+        "message": "Maaf, Anda tidak dapat memuat ikon khusus di tampilan ini, tetapi Anda dapat memuat ikon grup khusus di \"Kelola grup\".\nBuka \"Kelola grup\"?",
+        "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
+    },
+    "setRandomColor": {
+        "message": "Tetapkan warna acak",
+        "description": "Set random color"
+    },
+    "catchTabContainers": {
+        "message": "Tangkap dan pindahkan tab dengan wadah ke grup ini",
+        "description": "Catch and move tabs with containers to this group"
+    },
+    "regexpForTabsTitle": {
+        "message": "Ekspresi reguler untuk tab tangkap",
+        "description": "Regular expressions for catch tabs"
+    },
+    "regexpForTabsPlaceholder": {
+        "message": "Ekspresi reguler",
+        "description": "Regular expressions"
+    },
+    "regexpForTabsHelp": {
+        "message": "Masukkan ekspresi reguler untuk alamat web di sini. Tab yang cocok akan dipindahkan secara otomatis ke grup ini.\nGunakan satu baris per aturan, bisa sebanyak yang Anda inginkan.\nContoh:\ngithub\\.com/drive4ik/simple-tab-groups - tangkap semua halaman di repositori add-on\nbugzilla\\.mozilla\\.org - tangkap laporan bug Firefox\n(facebook|twitter|youtube)\\.com - tangkap semua laporan bug Firefox Anda halaman sosial",
+        "description": "Regular exceptions helper"
+    },
+    "hotkeysTitle": {
+        "message": "Tombol pintas",
+        "description": "Hotkeys"
+    },
+    "hotkeysDescription": {
+        "message": "Di sini Anda dapat menambahkan hotkey.<br>Pembatasan:<br>1. Tombol pintas ini hanya akan berfungsi di halaman web (http:, https:), bukan di halaman browser (about:), karena API WebExtensions tidak mengizinkan ini.<br>2. Beberapa tombol pintas tidak akan berfungsi dengan semua tata letak keyboard. Misalnya, pintasan <code>Ctrl + ~</code> yang dibuat dengan tata letak bahasa Inggris tidak akan berfungsi dengan keyboard dengan tata letak Rusia, karena dalam tata letak Rusia tombol ini memiliki kode lain. Untuk memperbaikinya, cukup buat hotkey lain dengan tata letak Rusia: <code>Ctrl + </code>",
+        "description": "Hotkeys description"
+    },
+    "addHotKeyButton": {
+        "message": "Tambahkan hotkey",
+        "description": "Add hotkey"
+    },
+    "deleteHotKeyButton": {
+        "message": "Hapus tombol pintas",
+        "description": "Delete hotkey"
+    },
+    "hotkeyPlaceholder": {
+        "message": "Tekan tombol di sini",
+        "description": "Press key here"
+    },
+    "selectAction": {
+        "message": "Pilih aksi",
+        "description": "Select action"
+    },
+    "selectGroup": {
+        "message": "Pilih grup",
+        "description": "Select group"
+    },
+    "hotkeyActionTitleLoadNextGroup": {
+        "message": "Muat grup berikutnya",
+        "description": "Load next group"
+    },
+    "hotkeyActionTitleLoadPrevGroup": {
+        "message": "Muat grup sebelumnya",
+        "description": "Load previous group"
+    },
+    "hotkeyActionTitleLoadNextUnloadedGroup": {
+        "message": "Muat grup yang diturunkan berikutnya",
+        "description": "Load next unloaded group"
+    },
+    "hotkeyActionTitleLoadPrevUnloadedGroup": {
+        "message": "Muat grup yang sebelumnya tidak dimuat",
+        "description": "Load previous unloaded group"
+    },
+    "hotkeyActionTitleLoadNextNonEmptyGroup": {
+        "message": "Muat grup yang tidak kosong berikutnya",
+        "description": "Load next non-empty group"
+    },
+    "hotkeyActionTitleLoadPrevNonEmptyGroup": {
+        "message": "Muat grup yang tidak kosong sebelumnya",
+        "description": "Load previous non-empty group"
+    },
+    "hotkeyActionTitleLoadHistoryNextGroup": {
+        "message": "Muat grup berikutnya dari riwayat",
+        "description": "Load next group from history"
+    },
+    "hotkeyActionTitleLoadHistoryPrevGroup": {
+        "message": "Muat grup sebelumnya dari riwayat",
+        "description": "Load previous group from history"
+    },
+    "hotkeyActionTitleLoadFirstGroup": {
+        "message": "Muat grup pertama",
+        "description": "Load first group"
+    },
+    "hotkeyActionTitleLoadLastGroup": {
+        "message": "Muat grup terakhir",
+        "description": "Load last group"
+    },
+    "hotkeyActionTitleLoadCustomGroup": {
+        "message": "Muat grup khusus",
+        "description": "Load custom group"
+    },
+    "hotkeyActionTitleAddNewGroup": {
+        "message": "Tambahkan grup baru",
+        "description": "Add new group"
+    },
+    "hotkeyActionTitleDeleteCurrentGroup": {
+        "message": "Hapus grup saat ini",
+        "description": "Delete current group"
+    },
+    "hotkeyActionTitleOpenManageGroups": {
+        "message": "Buka kelola grup",
+        "description": "Open manage groups"
+    },
+    "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
+        "message": "Pindahkan tab yang dipilih ke grup khusus",
+        "description": "Move selected tabs to custom group"
+    },
+    "hotkeyActionTitleDiscardGroup": {
+        "message": "Buang grup",
+        "description": "Hotkey action Discard group"
+    },
+    "hotkeyActionTitleDiscardOtherGroups": {
+        "message": "Buang grup lain",
+        "description": "Hotkey action Discard other groups"
+    },
+    "hotkeyActionTitleReloadAllTabsInCurrentGroup": {
+        "message": "Muat ulang semua tab di grup saat ini",
+        "description": "Reload all tabs in current group"
+    },
+    "whatsWrongMessage": {
+        "message": "Ada apa...\nHarap beri tahu pengembang melalui email dukungan dengan log kesalahan terakhir (tombol ada di bagian bawah halaman Opsi)\nKlik di sini untuk melanjutkan...",
+        "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
+    },
+    "saveErrorLogsIntoFile": {
+        "message": "Simpan log kesalahan terakhir ke file JSON",
+        "description": "Save last error logs into JSON file"
+    },
+    "undoRemoveGroupItemTitle": {
+        "message": "Membatalkan penghapusan grup \"$grouptitle$\"",
+        "description": "Undelete a group menu title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "undoRemoveGroupNotification": {
+        "message": "Klik di sini untuk membatalkan penghapusan grup \"$grouptitle$\"",
+        "description": "Click here to cancel the deletion of the group title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "isStickyGroupTitle": {
+        "message": "Grup lengket",
+        "description": "Sticky group"
+    },
+    "isStickyGroupHelp": {
+        "message": "Tab di grup ini tidak akan pernah otomatis dipindahkan ke grup lain",
+        "description": "Tabs in this group will never be automatically moved to another group"
+    },
+    "iconStyle": {
+        "message": "Gaya ikon",
+        "description": "Icon style"
+    },
+    "discardTabsAfterHide": {
+        "message": "Tutu tab setelah sembunyikan (ini akan menghemat RAM)",
+        "description": "Discard tabs after hide (this will save the RAM)"
+    },
+    "discardAfterHideExcludeAudioTabs": {
+        "message": "Kecualikan tab dengan suara",
+        "description": "Exclude tabs with sound"
+    },
+    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
+        "message": "Tidak mungkin mengubah grup karena salah satu tab yang terbuka membagikan mikrofon atau kamera",
+        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
+    },
+    "foundHiddenUnSyncTabsDescription": {
+        "message": "Ditemukan tab tersembunyi yang tidak disinkronkan. Klik pada tab untuk menampilkannya ke grup/jendela saat ini atau:",
+        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
+    },
+    "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
+        "message": "Pindahkan semua tab ini ke grup/jendela saat ini",
+        "description": "Move all of these tabs into current group/window"
+    },
+    "actionHiddenUnSyncWindowTabsCreateGroup": {
+        "message": "Buat grup baru dengan tab hanya dari jendela saat ini",
+        "description": "Create new group with tabs only from the current window"
+    },
+    "actionHiddenUnSyncTabsCreateGroup": {
+        "message": "Buat grup baru dengan semua tab ini",
+        "description": "Create new group with all of these tabs"
+    },
+    "actionHiddenUnSyncTabsCloseAll": {
+        "message": "Tutup semua tab ini",
+        "description": "Close all of these tabs"
+    },
+    "updateTabThumbnail": {
+        "message": "Perbarui gambar mini untuk tab ini",
+        "description": "Update thumbnail for this tab"
+    },
+    "notFoundWindowsAddonStoppedWorking": {
+        "message": "Kesalahan: tidak ditemukan jendela tidak pribadi/penyamaran/popup normal.\nAddon berhenti bekerja. Silakan, restart browser.",
+        "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
+    },
+    "ffFailedAndLostDataMessage": {
+        "message": "FF gagal dan semua grup hilang.\nJika Anda memiliki cadangan, Anda dapat memulihkan data darinya",
+        "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
+    },
+    "enterDefaultGroupIconViewTypeTitle": {
+        "message": "Gaya ikon untuk grup baru",
+        "description": "Icon style for a new group"
+    },
+    "openGroupInNewWindow": {
+        "message": "Buka grup di jendela baru",
+        "description": "Open group in new window"
+    },
+    "muteTabsWhenGroupCloseAndRestoreWhenOpen": {
+        "message": "Bisukan tab saat grup ditutup dan pulihkan saat dibuka",
+        "description": "Mute tabs when group close and restore when open"
+    },
+    "showTabAfterMovingItIntoThisGroup": {
+        "message": "Tampilkan tab setelah memindahkannya secara otomatis ke grup ini",
+        "description": "Show the tab after auto-moving it into this group"
+    },
+    "tabMoving": {
+        "message": "Perpindahan tab",
+        "description": "Tab moving"
+    },
+    "includeTabFavIconsIntoBackup": {
+        "message": "Sertakan ikon favorit tab dalam cadangan (membuat ukuran file cadangan lebih besar)",
+        "description": "Include tab fav-icons in backup (makes backup file size bigger)"
+    },
+    "groupRemovedByExtension": {
+        "message": "Grup \"$group$\" dihapus oleh ekstensi: $extension$",
+        "description": "Group \"$group$\" removed by extension: $extension$",
+        "placeholders": {
+            "group": {
+                "content": "$1",
+                "example": "group title"
+            },
+            "extension": {
+                "content": "$2",
+                "example": "external extension title"
+            }
+        }
+    },
+    "clickHereToReloadAddon": {
+        "message": "Terjadi masalah, klik di sini untuk memuat ulang addon STG",
+        "description": "Something went wrong, click here to reload STG addon"
+    },
+    "extendedTabSearch": {
+        "message": "Pencarian dipertajam",
+        "description": "Extended search"
+    },
+    "movingMultipleTabsText": {
+        "message": "Memindahkan tab $count$",
+        "description": "Moving $count$ tabs",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "7"
+            }
+        }
+    },
+    "pinnedTabsAreNotSupported": {
+        "message": "Tab yang disematkan tidak didukung",
+        "description": "Pinned tabs are not supported"
+    },
+    "thisUrlsAreNotSupported": {
+        "message": "Url ini \"$urls$\" tidak didukung",
+        "description": "This urls \"$urls$\" are not supported",
+        "placeholders": {
+            "urls": {
+                "content": "$1",
+                "example": "about:addons, file://..."
+            }
+        }
+    },
+    "thisTabsCanNotBeHidden": {
+        "message": "Tab ini tidak dapat disembunyikan karena disematkan, menggunakan mikrofon, kamera, atau layar bersama: \"$titles$\"",
+        "description": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
+        "placeholders": {
+            "titles": {
+                "content": "$1",
+                "example": "some titles"
+            }
+        }
+    },
+    "moveMultipleTabsToGroupMessage": {
+        "message": "$tabscount$ tab telah dipindahkan.\nKlik di sini untuk membuka tab pertama",
+        "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "autoBackupEnableTitle": {
+        "message": "Aktifkan pencadangan otomatis",
+        "description": "Enable auto backup"
+    },
+    "autoBackupCreateEveryTitle": {
+        "message": "Buat cadangan setiap:",
+        "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyMinutes": {
+        "message": "menit)",
+        "description": "minute(s)"
+    },
+    "autoBackupIntervalKeyHours": {
+        "message": "jam)",
+        "description": "hour(s)"
+    },
+    "autoBackupIntervalKeyDays": {
+        "message": "hari",
+        "description": "day(s)"
+    },
+    "autoBackupLastBackupTitle": {
+        "message": "Cadangan terakhir:",
+        "description": "Last backup:"
+    },
+    "enableDarkTheme": {
+        "message": "Aktifkan tema gelap",
+        "description": "Enable dark theme"
+    },
+    "enableDarkThemeNotification": {
+        "message": "Untuk mendukung sepenuhnya tema gelap, aktifkan parameter <code>svg.context-properties.content.enabled</code> ke <code>true</code> pada halaman <code>about:config</code><br ><a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">Bagaimana cara melakukannya?</a>",
+        "description": "Fully support the dark theme text"
+    },
+    "importSettingsPanoramaViewAddonTitle": {
+        "message": "Kembalikan \"Panorama View\" fotodioda",
+        "description": "Restore photodiode's \"Panorama View\""
+    },
+    "importSettingsPanoramaViewAddonDescription": {
+        "message": "Muat file cadangan dari addon \"Panorama View\".",
+        "description": "Load a backup file from \"Panorama View\" addon."
+    },
+    "importSettingsSyncTabGroupsAddonTitle": {
+        "message": "Kembalikan \"Grup Tab Sinkronisasi\" Morikko",
+        "description": "Restore Morikko's \"Sync Tab Groups\""
+    },
+    "importSettingsSyncTabGroupsAddonDescription": {
+        "message": "Muat file cadangan dari addon \"Sinkronkan Grup Tab\".",
+        "description": "Load a backup file from \"Sync Tab Groups\" addon."
+    },
+    "browseFileTitle": {
+        "message": "Jelajahi...",
+        "description": "Browse..."
+    },
+    "openBackupFolder": {
+        "message": "Buka folder cadangan",
+        "description": "Open backup folder"
+    },
+    "createNewGroupWhenOpenNewWindow": {
+        "message": "Buat grup baru saat membuka jendela baru",
+        "description": "Create a new group when opening a new window"
+    },
+    "prependGroupTitleToWindowTitle": {
+        "message": "Tambahkan judul grup ke judul jendela",
+        "description": "Prepend group title to window title"
+    },
+    "allowAccessToBookmarks": {
+        "message": "Izinkan akses ke bookmark",
+        "description": "Allow access to bookmarks"
+    },
+    "openBookmarkInGroup": {
+        "message": "Buka bookmark di grup",
+        "description": "Open bookmark in group"
+    },
+    "bookmarkNotAllowed": {
+        "message": "Bookmark ini tidak diizinkan",
+        "description": "This bookmark is not allowed"
+    },
+    "openLinkInGroupDisabledTitle": {
+        "message": "Buka tautan di grup",
+        "description": "Open link in group title"
+    },
+    "showContextMenuOnTabs": {
+        "message": "Tampilkan menu konteks pada tab",
+        "description": "Show context menu on tabs"
+    },
+    "showContextMenuOnLinks": {
+        "message": "Tampilkan menu konteks pada tautan",
+        "description": "Show context menu on links"
+    },
+    "groupsCreatedCount": {
+        "message": "$groupscount$ grup dibuat",
+        "description": "Groups created count",
+        "placeholders": {
+            "groupscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "noGroupsCreated": {
+        "message": "Tidak ada grup yang dibuat",
+        "description": "No groups created"
+    },
+    "noAccessToBookmarks": {
+        "message": "Anda tidak memiliki akses ke bookmark. Aktifkan di pengaturan addon",
+        "description": "You do not have access to bookmarks. Enable it on in addon settings"
+    },
+    "exportGroupToMainBookmarkFolder": {
+        "message": "Ekspor grup ke folder bookmark \"Penanda STG\"",
+        "description": "Export groups to \"STG bookmarks\" bookmark folder"
+    },
+    "exportGroupToBookmarks": {
+        "message": "Ekspor grup ke bookmark",
+        "description": "Export group to bookmarks"
+    },
+    "defaultBookmarkFolderLocation": {
+        "message": "Lokasi folder bookmark default",
+        "description": "Default bookmark folder location"
+    },
+    "groupExportedToBookmarks": {
+        "message": "Grup '$grouptitle$' berhasil diekspor ke bookmark",
+        "description": "Group '$grouptitle$' successfully exported to bookmarks",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "groupWithoutTabs": {
+        "message": "Grup ini tidak memiliki tab",
+        "description": "This group has no tabs"
+    },
+    "autoBackupGroupsToBookmarks": {
+        "message": "Cadangkan otomatis semua grup ke bookmark",
+        "description": "Auto backup all groups to bookmarks"
+    },
+    "exportAllGroupsToBookmarks": {
+        "message": "Ekspor semua grup ke bookmark",
+        "description": "Export all groups to bookmarks"
+    },
+    "allGroupsExportedToBookmarks": {
+        "message": "Semua grup berhasil diekspor ke bookmark",
+        "description": "All groups successfully exported to bookmarks"
+    },
+    "discardTabTitle": {
+        "message": "Buang tab",
+        "description": "Discard tab"
+    },
+    "autoBackupGroupsToFile": {
+        "message": "Cadangkan otomatis semua grup ke file (ke folder unduhan)",
+        "description": "Auto backup all groups to file (into downloads folder)"
+    },
+    "folderNameTitle": {
+        "message": "Nama folder",
+        "description": "Folder name title"
+    },
+    "backupSuccessfullyRestored": {
+        "message": "Cadangan berhasil dipulihkan!",
+        "description": "Backup successfully restored"
+    },
+    "loading": {
+        "message": "Sedang memuat, harap tunggu...",
+        "description": "Loading, please wait..."
+    },
+    "showOtherTabs": {
+        "message": "Tampilkan tab lainnya",
+        "description": "Show other tabs"
+    },
+    "dontDiscardTabsAfterHideThisGroup": {
+        "message": "Jangan membuang tab ke grup ini setelah sembunyikan",
+        "description": "Don't discard tabs into this group after hide"
+    },
+    "showNotificationAfterGroupDelete": {
+        "message": "Tampilkan notifikasi setelah grup dihapus",
+        "description": "Show notification after group delete"
+    },
+    "reloadTab": {
+        "message": "Muat ulang tab",
+        "description": "Reload tab"
+    },
+    "thisTabIsNotSupported": {
+        "message": "Tab ini tidak didukung",
+        "description": "This tab is not supported"
+    },
+    "showExtendGroupsPopupWithActiveTabs": {
+        "message": "Tampilkan tab aktif di popup grup",
+        "description": "Show active tabs in groups popup"
+    },
+    "reloadAllTabsInGroup": {
+        "message": "Muat ulang semua tab di grup",
+        "description": "Reload all tabs in group"
+    },
+    "tabsCreatedCount": {
+        "message": "$tabscount$ tab telah dibuat",
+        "description": "Tabs created count",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "tabsNotCreated": {
+        "message": "Tab tidak dibuat",
+        "description": "Tabs not created"
+    },
+    "showTabsWithThumbnailsInManageGroups": {
+        "message": "Tampilkan tab dengan gambar mini di halaman \"Kelola grup\"",
+        "description": "Show tabs with thumbnails in \"Manage groups\" page"
+    },
+    "alwaysOpenTabsInContainer": {
+        "message": "Selalu buka tab dalam wadah",
+        "description": "Always open tabs in container"
+    },
+    "temporaryContainerTitle": {
+        "message": "Wadah Sementara",
+        "description": "⌚Temporary Container"
+    },
+    "thisContainerIsNotTemporary": {
+        "message": "Wadah '$containerName$' ini tidak lagi bersifat sementara",
+        "description": "This container '$containerName$' is no longer temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "my container"
+            }
+        }
+    },
+    "thisContainerNowIsTemporary": {
+        "message": "Wadah '$containerName$' ini sekarang menjadi sementara",
+        "description": "This container '$containerName$' has now become temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "⌚Temporary Container 5"
+            }
+        }
+    },
+    "importAddonSettings": {
+        "message": "Impor pengaturan addon",
+        "description": "Import addon settings"
+    },
+    "importGroups": {
+        "message": "Impor grup",
+        "description": "Import groups"
+    },
+    "pinnedTabs": {
+        "message": "Tab yang disematkan",
+        "description": "Pinned tabs"
+    },
+    "eraseAddonSettingsWarningTitle": {
+        "message": "Tindakan ini akan <b>HAPUS PENUH</b> semua setelan dan grup yang ada!<br>Tab tidak akan terpengaruh.",
+        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+    },
+    "clear": {
+        "message": "Hapus Semua",
+        "description": "Clear"
+    },
+    "deleteAllAddonDataAndSettings": {
+        "message": "Hapus semua data dan pengaturan addon",
+        "description": "Delete all addon data and settings"
+    },
+    "warningAllDataWillRemove": {
+        "message": "Peringatan! Menghapus SEMUA data tambahan! Apakah kamu benar-benar yakin?",
+        "description": "Warning! Removing ALL addon data! Are you really sure?"
+    },
+    "ifDifferentContainerReOpen": {
+        "message": "Jika wadah berbeda dari yang dipilih - ubah wadah",
+        "description": "If the container is different from the selected one - change the container"
+    },
+    "deleteAllAddonDataAndSettingsBeforeRestoringBackup": {
+        "message": "Hapus semua data dan pengaturan addon sebelum memulihkan cadangan",
+        "description": "Delete all addon data and settings before restoring backup"
+    },
+    "helpPageWelcomeV4Title": {
+        "message": "Selamat datang di \"Simple Tab Group\" v4",
+        "description": "Welcome to Simple Tab Groups v4"
+    },
+    "helpPageWelcomeV4Description": {
+        "message": "Harap aktifkan \"Pulihkan sesi sebelumnya\" di setelan browser.<br>Ini diperlukan untuk menjaga komunikasi antara grup dan tab, <br>jika tidak, tab tidak akan terbuka saat browser dimulai dan akan hilang dari addon -<br > addon akan berhenti bekerja.",
+        "description": "Please enable \"Restore previous session\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
+    },
+    "leaveBookmarksOfClosedTabs": {
+        "message": "Tinggalkan bookmark dari tab yang ditutup (bookmark akan memisahkan pemisah)",
+        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+    },
+    "enableDebugTitle": {
+        "message": "Aktifkan DEBUG",
+        "description": "Enable DEBUG"
+    },
+    "loggingIsEnabledTitle": {
+        "message": "logging diaktifkan",
+        "description": "logging is enabled"
+    },
+    "loggingIsAutoEnabledTitle": {
+        "message": "logging diaktifkan secara otomatis karena kesalahan pada addon",
+        "description": "logging was auto-enabled due to an error in addon"
+    },
+    "loggingDescription": {
+        "message": "Harap aktifkan kotak centang ini hanya jika Anda perlu merekam bug dan mengirim log kepada saya. Mengaktifkan kotak centang ini akan menyebabkan pelambatan yang nyata pada addon, karena semua tindakan addon dicatat. Saat Anda mereproduksi kesalahan, matikan kotak centang ini, dan addon akan menawarkan untuk menyimpan file log. Opsi ini dapat diaktifkan dengan sendirinya jika terjadi kesalahan. Anda perlu menonaktifkan kotak centang DEBUG dan menyimpan file log.<br> Kirimkan file log ini kepada saya melalui email: <a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com< /a><br> <span class=\"has-text-danger\">Perhatian! Tidak ada data pribadi, kata sandi, bookmark, dll., dalam file log ini!</span><br> Ini diperlukan untuk mereproduksi masalah dan mencoba memperbaikinya.<br> Salam Hormat",
+        "description": "logging description"
+    },
+    "archiveGroup": {
+        "message": "Arsip",
+        "description": "Archive"
+    },
+    "confirmArchiveGroup": {
+        "message": "Apakah Anda ingin mengarsipkan grup \"$grouptitle$\"?<br>Saat Anda mengarsipkan grup, tab akan disimpan di database add-on dan akan dihapus dari browser.",
+        "description": "Do you want to archive the group",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "unArchiveGroup": {
+        "message": "Batalkan pengarsipan",
+        "description": "Unarchive"
+    },
+    "groupIsArchived": {
+        "message": "Tidak dapat menyelesaikan tindakan, grup \"$grouptitle$\" ada di arsip",
+        "description": "Unable to complete the action, the group is in the archive",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "updateAddonToLatestVersion": {
+        "message": "Tolong, perbarui addon ke versi terbaru",
+        "description": "Please, update addon to latest version"
+    },
+    "hotkeyActionTitleRenameGroup": {
+        "message": "Ganti nama grup",
+        "description": "Rename group"
+    },
+    "noGroupsAvailable": {
+        "message": "Anda tidak memiliki grup",
+        "description": "You have no groups"
+    },
+    "alwaysAskNewGroupName": {
+        "message": "Selalu minta nama grup baru",
+        "description": "Always ask for a new group name"
+    },
+    "impossibleToAskUserAboutAction": {
+        "message": "Di halaman \"$page$\" tidak mungkin bertanya tentang \"$action$\"\n\nKlik di sini untuk info",
+        "description": "On page \"$page$\" it is impossible to ask about \"$action$\"",
+        "placeholders": {
+            "page": {
+                "content": "$1",
+                "example": "Add-ons for Firefox"
+            },
+            "action": {
+                "content": "$2",
+                "example": "some action"
+            }
+        }
+    },
+    "openPopupTitle": {
+        "message": "Buka popup",
+        "description": "Open popup"
+    },
+    "openSidebarTitle": {
+        "message": "Buka bilah sisi",
+        "description": "Open sidebar"
+    },
+    "helpPageOpenInContainerTitle": {
+        "message": "Tidak dapat membuka URL dalam wadah",
+        "description": "Can't open URL in container"
+    },
+    "helpPageOpenInContainerMainTitle": {
+        "message": "Tidak dapat membuka URL ke wadah <container-name>$containerName$</container-name>",
+        "description": "Can't open the URL into Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerSubTitle": {
+        "message": "addon tidak dapat membuka URL:",
+        "description": "addon can't open URL:"
+    },
+    "helpPageOpenInContainerDesc1": {
+        "message": "rup <strong>$groupTitle$</strong> ditetapkan untuk membuka tab di wadah <container-name>$containerName$</container-name>.",
+        "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
+        "placeholders": {
+            "groupTitle": {
+                "content": "$1",
+                "example": "Group 1"
+            },
+            "containerName": {
+                "content": "$2",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerDesc2": {
+        "message": "tambahan lain:",
+        "description": "Another addon:"
+    },
+    "helpPageOpenInContainerDesc3": {
+        "message": "mencoba membuka URL ini di wadah <container-name>$containerName$</container-name>. Pindahkan tab ke grup lain atau larang addon <strong>$addonName$</strong> untuk melakukan tindakan ini.",
+        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Business"
+            },
+            "addonName": {
+                "content": "$2",
+                "example": "Facebook Container"
+            }
+        }
+    },
+    "helpPageOpenInContainerOpenInContainer": {
+        "message": "Buka di <container-name>$containerName$</container-name> wadah",
+        "description": "Open in Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
+    },
+    "groupNotLoaded": {
+        "message": "Grup tidak dimuat",
+        "description": "Group not loaded"
+    },
+    "groupNotFound": {
+        "message": "Grup tidak ditemukan",
+        "description": "Group not found"
+    },
+    "unloadGroup": {
+        "message": "Bongkar grup",
+        "description": "Unload the group"
+    },
+    "tabsInThisWindowWereHidden": {
+        "message": "Tab di jendela ini disembunyikan. Anda dapat menemukannya di bagian bawah jendela popup addon.",
+        "description": "Tabs in this window were hidden. You can find them at the bottom of the popup window of the addon."
+    },
+    "searchOrGoToActive": {
+        "message": "Cari atau panah kanan untuk fokus pada tab/grup yang aktif",
+        "description": "Search or right arrow to focus on active tab/group"
+    },
+    "thisGroupIsMain": {
+        "message": "Grup ini ditandai sebagai utama",
+        "description": "This group is marked as main"
+    },
+    "setGroupAsMain": {
+        "message": "Tetapkan grup ini sebagai utama",
+        "description": "Set this group as main"
+    },
+    "thisGroupWasMain": {
+        "message": "Pemberitahuan\nGrup ini ditandai sebagai utama",
+        "description": "Notice\nThis group was marked as the main"
+    },
+    "moveToMainIfNotInCatchTabRules": {
+        "message": "Pindahkan tab dari grup ini ke grup \"$grouptitle$\" jika tidak ada aturan ekspresi reguler yang cocok",
+        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "My main group"
+            }
+        }
+    },
+    "noContainerTitle": {
+        "message": "Bawaan",
+        "description": "No container"
+    },
+    "reopenTabsWithTemporaryContainersInNew": {
+        "message": "Buka kembali tab dengan wadah sementara di baru",
+        "description": "Reopen tabs with temporary containers in new"
+    },
+    "temporaryContainerTitleDescription": {
+        "message": "Awalan dari judul wadah sementara",
+        "description": "Prefix of the temporary container title"
+    },
+    "excludeContainersForReOpen": {
+        "message": "tidak termasuk wadah ini",
+        "description": "excluding these containers"
+    },
+    "helpPageOpenInContainerExcludeContainerToGroup": {
+        "message": "Kecualikan penampung <container-name>$containerName$</container-name> untuk grup <strong>$groupTitle$</strong>",
+        "description": "Exclude Personal container for group Group 1",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            },
+            "groupTitle": {
+                "content": "$2",
+                "example": "Group 1"
+            }
+        }
+    },
+    "helpPageOpenInContainerIgnoreAppForSession": {
+        "message": "Abaikan ekstensi \"<strong>$addonName$</strong>\" hingga browser ditutup",
+        "description": "Ignore addon for session",
+        "placeholders": {
+            "addonName": {
+                "content": "$1",
+                "example": "Facebook Container"
+            }
+        }
+    },
+    "hotkeysDescription2": {
+        "message": "Anda juga dapat mengonfigurasi tombol pintas di halaman <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Kelola pintasan ekstensi di Firefox</a>. Mereka akan bekerja di semua jendela dan halaman browser.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
+    },
+    "muteTab": {
+        "message": "Bisukan tab",
+        "description": "Mute tab"
+    },
+    "unMuteTab": {
+        "message": "Suarakan tab",
+        "description": "Unmute tab"
+    },
+    "muteGroup": {
+        "message": "Bisukan grup",
+        "description": "Mute group"
+    },
+    "unMuteGroup": {
+        "message": "Suarakan grup",
+        "description": "Unmute group"
+    },
+    "fullPopupWidth": {
+        "message": "Gunakan lebar popup penuh",
+        "description": "Use full popup width"
+    },
+    "showArchivedGroups": {
+        "message": "Tampilkan grup yang diarsipkan",
+        "description": "Show archived groups"
+    },
+    "helpPageDbErrorReinstallTitle": {
+        "message": "Kesalahan basis data di \"Simple Tab Grup\"",
+        "description": "Database error in Simple Tab Groups"
+    },
+    "helpPageDbErrorReinstallDescription": {
+        "message": "Sayangnya, terjadi kesalahan saat membaca data dari addon STG dari database Firefox. Saat ini, addon dihentikan. Untuk melanjutkan add-on, lakukan hal berikut:",
+        "description": "Unfortunately, an error occurred while reading data from the STG addon from the Firefox database. At the moment, the addon is stopped. To resume the add-on, do the following:"
+    },
+    "helpPageDbErrorReinstallDescription2": {
+        "message": "Mulai ulang peramban Firefox (untuk Linux dan Mac OS dengan penghentian proses)",
+        "description": "Restart Firefox Browser (for Linux and Mac OS with process termination)"
+    },
+    "helpPageDbErrorReinstallDescription3": {
+        "message": "Jika Anda melihat jendela ini lagi, coba instal ulang addon:",
+        "description": "If you see this window again, try reinstalling the addon:"
+    },
+    "helpPageDbErrorReinstallDescription4": {
+        "message": "Hapus STG Addon",
+        "description": "Remove STG Addon"
+    },
+    "helpPageDbErrorReinstallDescription5": {
+        "message": "Mulai ulang Peramban Firefox",
+        "description": "Restart Firefox Browser"
+    },
+    "helpPageDbErrorReinstallDescription6": {
+        "message": "Pasang Addon STG",
+        "description": "Install STG Addon"
+    },
+    "helpPageDbErrorReinstallDescription7": {
+        "message": "Pulihkan cadangan data addon STG terbaru yang terletak di folder unduhan Firefox \"STG-backups\".<br>Anda dapat memulihkan cadangan di pengaturan addon",
+        "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".<br>You can restore backup in addon settings"
+    },
+    "helpPageDbErrorReinstallOpenFFDownloadsFolder": {
+        "message": "Buka folder unduhan Firefox",
+        "description": "Open Firefox downloads folder"
+    },
+    "eraseAndImportAddonBackupButton": {
+        "message": "Hapus dan pulihkan cadangan",
+        "description": "Erase and restore backup"
+    },
+    "searchOnlyGroups": {
+        "message": "Hanya grup",
+        "description": "Only groups"
+    },
+    "autoBackupByDayIndexTitle": {
+        "message": "Nomor cadangan sebagai hari dalam sebulan",
+        "description": "Backup number as day of month"
+    },
+    "autoBackupByDayIndexDescription": {
+        "message": "Ini membantu untuk menyingkirkan sejumlah besar file cadangan di folder unduhan. File cadangan akan terlihat seperti ini: \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
+        "description": "Backup by day description"
+    },
+    "clickHereForInfo": {
+        "message": "Klik di sini untuk info lebih lanjut",
+        "description": "Click here for more info"
+    },
+    "enabled": {
+        "message": "Dihidupkan",
+        "description": "Enabled text"
+    },
+    "disabled": {
+        "message": "Dimatikan",
+        "description": "Disabled text"
+    },
+    "helpPageExtensionsThatConflictWithStgTitle": {
+        "message": "Ekstensi yang bertentangan dengan STG",
+        "description": "Extensions that conflict with STG"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc1": {
+        "message": "Ekstensi \"Simple Tab Group\" bertentangan dengan ekstensi yang diaktifkan berikut:",
+        "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc2": {
+        "message": "Untuk menghindari kehilangan tab atau lokasinya di jendela dan grup, sangat disarankan untuk mematikan atau menghapus ekstensi aktif yang bertentangan dengan addon Grup Tab Sederhana. Anda dapat melakukannya di halaman pengaturan addons \"about:addons\" atau dengan menekan kombinasi tombol <code>Ctrl+Shift+A</code>",
+        "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
+    },
+    "theme": {
+        "message": "Tema",
+        "description": "Select theme"
+    },
+    "themeAuto": {
+        "message": "Tema sistem — otomatis",
+        "description": "Auto theme"
+    },
+    "themeLight": {
+        "message": "Terang",
+        "description": "Light theme"
+    },
+    "themeDark": {
+        "message": "Gelap",
+        "description": "Dark theme"
+    },
+    "contextMenuEditor": {
+        "message": "Editor menu konteks",
+        "description": "Context menu editor"
+    },
+    "tab": {
+        "message": "Tab",
+        "description": "Tab"
+    },
+    "group": {
+        "message": "Grup",
+        "description": "Group"
+    }
+}
