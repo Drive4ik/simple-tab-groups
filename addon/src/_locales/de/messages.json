@@ -313,6 +313,14 @@
         "message": "Lade die vorherige nicht geladene Gruppe.",
         "description": "Load previous unloaded group"
     },
+    "hotkeyActionTitleLoadNextNonEmptyGroup": {
+        "message": "Laden der nächsten nicht leeren Gruppe",
+        "description": "Load next non-empty group"
+    },
+    "hotkeyActionTitleLoadPrevNonEmptyGroup": {
+        "message": "Laden der vorherigen nicht leeren Gruppe",
+        "description": "Load previous non-empty group"
+    },
     "hotkeyActionTitleLoadHistoryNextGroup": {
         "message": "Nächste die Gruppe aus der Chronik laden.",
         "description": "Load next group from history"
@@ -404,6 +412,10 @@
     "discardTabsAfterHide": {
         "message": "Verwerfe Tabs nach dem Verstecken (schont den Arbeitsspeicher).",
         "description": "Discard tabs after hide (this will save the RAM)"
+    },
+    "discardAfterHideExcludeAudioTabs": {
+        "message": "Schließe Tabs mit Sound aus",
+        "description": "Exclude tabs with sound"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Es ist nicht möglich die Gruppe zu ändern, da einer ihrer offenen Tabs auf das Mikrofon oder die Kamera zugreift.",
@@ -538,6 +550,10 @@
     "autoBackupCreateEveryTitle": {
         "message": "Erstelle Backup alle:",
         "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyMinutes": {
+        "message": "Minute(n)",
+        "description": "minute(s)"
     },
     "autoBackupIntervalKeyHours": {
         "message": "Stunde(n)",
@@ -927,6 +943,10 @@
             }
         }
     },
+    "helpPageOpenInContainerDesc2": {
+        "message": "Weiteres Add-on:",
+        "description": "Another addon:"
+    },
     "helpPageOpenInContainerDesc3": {
         "message": "versucht eine URL im Container <container-name>$containerName$</container-name> zu öffnen. Verschiebe den Tab in eine andere Gruppe oder verbiete dem Add-on <strong>$addonName$</strong> diese Aktion auszuführen.",
         "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
@@ -1023,6 +1043,16 @@
             }
         }
     },
+    "helpPageOpenInContainerIgnoreAppForSession": {
+        "message": "Ignoriere Erweiterung \"<strong>$addonName$</strong>\" bis der Browse geschlossen ist",
+        "description": "Ignore addon for session",
+        "placeholders": {
+            "addonName": {
+                "content": "$1",
+                "example": "Facebook Container"
+            }
+        }
+    },
     "hotkeysDescription2": {
         "message": "Du kannst außerdem Tastenkürzel auf der Seite <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Manage extension shortcuts in Firefox</a> einrichten. Sie funktionieren auf allen Seiten und Fenstern.",
         "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
@@ -1090,5 +1120,69 @@
     "eraseAndImportAddonBackupButton": {
         "message": "Lösche und stelle das Backup wiederher.",
         "description": "Erase and restore backup"
+    },
+    "searchOnlyGroups": {
+        "message": "Nur Gruppen",
+        "description": "Only groups"
+    },
+    "autoBackupByDayIndexTitle": {
+        "message": "Tag des Monats als Backupnummer",
+        "description": "Backup number as day of month"
+    },
+    "autoBackupByDayIndexDescription": {
+        "message": "Um eine große Menge an Backupdateien zu vermeiden, kann diese Option verwendet werden. Die Backupdatei wird nach folgendem Format erstellt: \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
+        "description": "Backup by day description"
+    },
+    "clickHereForInfo": {
+        "message": "Hier klicken für weitere Informationen",
+        "description": "Click here for more info"
+    },
+    "enabled": {
+        "message": "Aktiviert",
+        "description": "Enabled text"
+    },
+    "disabled": {
+        "message": "Deaktiviert",
+        "description": "Disabled text"
+    },
+    "helpPageExtensionsThatConflictWithStgTitle": {
+        "message": "Erweiterungen, die mit STG in Konflikt stehen",
+        "description": "Extensions that conflict with STG"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc1": {
+        "message": "Die Erweiterung Simple Tab Groups steht mit folgenden aktiven Erweiterungen in Konflikt:",
+        "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc2": {
+        "message": "Erweiterungen, die mit Simple Tab Groups in Konflikt stehen, sollten deaktivert oder entfernt werden. Dadurch wird vermieden, dass Tabs verloren gehen oder ihre Plazierung in Fenstern oder Gruppen fehlerhaft ist.\nUm eine Erweiterung zu deinstallieren, können Sie dies über die Addon Seite unter \"about:addons\" vornehmen oder in dem Sie die Tastenkombination <code>Strg+Umschalt+A</code> verwenden.",
+        "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
+    },
+    "theme": {
+        "message": "Wähle Theme",
+        "description": "Select theme"
+    },
+    "themeAuto": {
+        "message": "Automatisches Theme",
+        "description": "Auto theme"
+    },
+    "themeLight": {
+        "message": "Helles Theme",
+        "description": "Light theme"
+    },
+    "themeDark": {
+        "message": "Dunkles Theme",
+        "description": "Dark theme"
+    },
+    "contextMenuEditor": {
+        "message": "Kontextmenü-Editor",
+        "description": "Context menu editor"
+    },
+    "tab": {
+        "message": "Tab",
+        "description": "Tab"
+    },
+    "group": {
+        "message": "Gruppe",
+        "description": "Group"
     }
 }
