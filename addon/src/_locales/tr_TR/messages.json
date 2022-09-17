@@ -313,6 +313,14 @@
         "message": "Önceki yüklü olmayan grubu yükle",
         "description": "Load previous unloaded group"
     },
+    "hotkeyActionTitleLoadNextNonEmptyGroup": {
+        "message": "Sonraki boş olmayan grubu yükle",
+        "description": "Load next non-empty group"
+    },
+    "hotkeyActionTitleLoadPrevNonEmptyGroup": {
+        "message": "Önceki boş olmayan grubu yükle",
+        "description": "Load previous non-empty group"
+    },
     "hotkeyActionTitleLoadHistoryNextGroup": {
         "message": "Sıradaki grubu geçmişten yükle",
         "description": "Load next group from history"
@@ -405,6 +413,10 @@
         "message": "Gizledikten sonra sekmeleri ıskartaya çıkar (RAM kullanımını azaltır)",
         "description": "Discard tabs after hide (this will save the RAM)"
     },
+    "discardAfterHideExcludeAudioTabs": {
+        "message": "Sesli sekmeleri hariç tut",
+        "description": "Exclude tabs with sound"
+    },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Açık sekmelerden biri mikrofonu veya kamerayı paylaştığı için grubu değiştirmek mümkün değildir",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
@@ -420,5 +432,181 @@
     "actionHiddenUnSyncWindowTabsCreateGroup": {
         "message": "Yalnızca mevcut pencerede bulunan sekmelerle yeni grup oluştur",
         "description": "Create new group with tabs only from the current window"
+    },
+    "actionHiddenUnSyncTabsCreateGroup": {
+        "message": "Tüm bu sekmelerle yeni grup oluştur",
+        "description": "Create new group with all of these tabs"
+    },
+    "actionHiddenUnSyncTabsCloseAll": {
+        "message": "Tüm bu sekmeleri kapat",
+        "description": "Close all of these tabs"
+    },
+    "updateTabThumbnail": {
+        "message": "Bu sekme için küçük resmi güncelle",
+        "description": "Update thumbnail for this tab"
+    },
+    "notFoundWindowsAddonStoppedWorking": {
+        "message": "Hata: herhangi bir özel/gizli/açılır olmayan normal pencere bulunamadı.\nEklenti çalışmayı durdurdu. Lütfen tarayıcıyı yeniden başlatın.",
+        "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
+    },
+    "ffFailedAndLostDataMessage": {
+        "message": "FF başarısız oldu ve tüm gruplar kaybedildi.\nBir yedeğiniz varsa, ondan verileri geri yükleyebilirsiniz.",
+        "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
+    },
+    "enterDefaultGroupIconViewTypeTitle": {
+        "message": "Yeni bir grup için ikon stili",
+        "description": "Icon style for a new group"
+    },
+    "openGroupInNewWindow": {
+        "message": "Grubu yeni pencerede aç",
+        "description": "Open group in new window"
+    },
+    "extendedTabSearch": {
+        "message": "Genişletilmiş arama",
+        "description": "Extended search"
+    },
+    "movingMultipleTabsText": {
+        "message": "$count$ sekme taşınıyor",
+        "description": "Moving $count$ tabs",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "7"
+            }
+        }
+    },
+    "pinnedTabsAreNotSupported": {
+        "message": "Sabitlenmiş sekmeler desteklenmiyor",
+        "description": "Pinned tabs are not supported"
+    },
+    "autoBackupIntervalKeyMinutes": {
+        "message": "dakika(lar)",
+        "description": "minute(s)"
+    },
+    "autoBackupIntervalKeyHours": {
+        "message": "saat(ler)",
+        "description": "hour(s)"
+    },
+    "autoBackupIntervalKeyDays": {
+        "message": "gün(ler)",
+        "description": "day(s)"
+    },
+    "autoBackupLastBackupTitle": {
+        "message": "Son yedekleme:",
+        "description": "Last backup:"
+    },
+    "enableDarkTheme": {
+        "message": "Karanlık temayı etkinleştir",
+        "description": "Enable dark theme"
+    },
+    "browseFileTitle": {
+        "message": "Göz at...",
+        "description": "Browse..."
+    },
+    "folderNameTitle": {
+        "message": "Klasör ismi",
+        "description": "Folder name title"
+    },
+    "loading": {
+        "message": "Yükleniyor lütfen bekleyin...",
+        "description": "Loading, please wait..."
+    },
+    "showOtherTabs": {
+        "message": "Diğer sekmeleri göster",
+        "description": "Show other tabs"
+    },
+    "reloadTab": {
+        "message": "Sekmeyi yeniden yükle",
+        "description": "Reload tab"
+    },
+    "thisTabIsNotSupported": {
+        "message": "Bu sekme desteklenmiyor",
+        "description": "This tab is not supported"
+    },
+    "reloadAllTabsInGroup": {
+        "message": "Gruptaki tüm sekmeleri yeniden yükle",
+        "description": "Reload all tabs in group"
+    },
+    "tabsCreatedCount": {
+        "message": "$tabscount$ sekme oluşturuldu",
+        "description": "Tabs created count",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "tabsNotCreated": {
+        "message": "Sekmeler oluşturulmadı",
+        "description": "Tabs not created"
+    },
+    "noContainerTitle": {
+        "message": "Varsayılan",
+        "description": "No container"
+    },
+    "muteTab": {
+        "message": "Sekmeyi sustur",
+        "description": "Mute tab"
+    },
+    "unMuteTab": {
+        "message": "Sekmenin sesini aç",
+        "description": "Unmute tab"
+    },
+    "muteGroup": {
+        "message": "Grubu sustur",
+        "description": "Mute group"
+    },
+    "unMuteGroup": {
+        "message": "Grubun sesini aç",
+        "description": "Unmute group"
+    },
+    "helpPageDbErrorReinstallDescription3": {
+        "message": "Bu pencereyi tekrar görürseniz eklentiyi yeniden yüklemeyi deneyin:",
+        "description": "If you see this window again, try reinstalling the addon:"
+    },
+    "helpPageDbErrorReinstallDescription5": {
+        "message": "Firefox Tarayıcısını Yeniden Başlatın",
+        "description": "Restart Firefox Browser"
+    },
+    "helpPageDbErrorReinstallOpenFFDownloadsFolder": {
+        "message": "Firefox indirilenler klasörünü açın",
+        "description": "Open Firefox downloads folder"
+    },
+    "enabled": {
+        "message": "Etkin",
+        "description": "Enabled text"
+    },
+    "disabled": {
+        "message": "Devre dışı",
+        "description": "Disabled text"
+    },
+    "theme": {
+        "message": "Tema",
+        "description": "Select theme"
+    },
+    "themeAuto": {
+        "message": "Sistem teması - oto",
+        "description": "Auto theme"
+    },
+    "themeLight": {
+        "message": "Aydınlık",
+        "description": "Light theme"
+    },
+    "themeDark": {
+        "message": "Karanlık",
+        "description": "Dark theme"
+    },
+    "contextMenuEditor": {
+        "message": "Bağlam menüsü düzenleyicisi",
+        "description": "Context menu editor"
+    },
+    "tab": {
+        "message": "Sekme",
+        "description": "Tab"
+    },
+    "group": {
+        "message": "Grup",
+        "description": "Group"
     }
 }
