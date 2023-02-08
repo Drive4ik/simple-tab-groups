@@ -935,8 +935,8 @@
                     <div class="column">
                         <label class="label" v-text="lang('tab') + ':'"></label>
                         <template v-for="(item, id) in contextMenuTabTitles">
-                            <hr v-if="id === 'hr'">
-                            <div v-else class="field">
+                            <hr v-if="id === 'hr'" :key="id">
+                            <div v-else class="field" :key="id">
                                 <label class="checkbox">
                                     <input v-model="options.contextMenuTab" :value="id" type="checkbox" />
                                     <img v-if="item.icon" class="size-16 mr-3" :src="`/icons/${item.icon}.svg`" />
@@ -948,8 +948,8 @@
                     <div class="column">
                         <label class="label" v-text="lang('group') + ':'"></label>
                         <template v-for="(item, id) in contextMenuGroupTitles">
-                            <hr v-if="id === 'hr'">
-                            <div v-else class="field">
+                            <hr v-if="id === 'hr'" :key="id">
+                            <div v-else class="field" :key="id">
                                 <label class="checkbox">
                                     <input v-model="options.contextMenuGroup" :value="id" type="checkbox" />
                                     <img v-if="item.icon" class="size-16 mr-3" :src="`/icons/${item.icon}.svg`" />

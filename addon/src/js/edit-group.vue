@@ -24,8 +24,11 @@
             swatches: swatches,
         },
         data() {
+            let containers = Containers.getAll(true);
+
             return {
-                containers: Containers.getAll(true),
+                containers,
+                containersExcludeTemp: Object.values(containers).filter(c => c.cookieStoreId !== TEMPORARY_CONTAINER),
                 TEMPORARY_CONTAINER,
                 DEFAULT_COOKIE_STORE_ID,
                 disabledContainers: {},
@@ -305,7 +308,7 @@
             <div v-if="group.ifDifferentContainerReOpen" class="field h-margin-top-10">
                 <label class="label" v-text="lang('excludeContainersForReOpen')"></label>
                 <div class="containers-wrapper">
-                    <div v-for="container in containers" v-if="container.cookieStoreId !== TEMPORARY_CONTAINER" :key="container.cookieStoreId" class="control">
+                    <div v-for="container in containersExcludeTemp" :key="container.cookieStoreId" class="control">
                         <label
                             class="checkbox indent-children"
                             :disabled="container.cookieStoreId === group.newTabContainer">
@@ -346,7 +349,7 @@
         <div class="field">
             <label class="label" v-text="lang('catchTabContainers')"></label>
             <div class="containers-wrapper">
-                <div v-for="container in containers" v-if="container.cookieStoreId !== TEMPORARY_CONTAINER" :key="container.cookieStoreId" class="control">
+                <div v-for="container in containersExcludeTemp" :key="container.cookieStoreId" class="control">
                     <label class="checkbox indent-children" :disabled="isDisabledContainer(container)">
                         <input type="checkbox" :disabled="isDisabledContainer(container)" :value="container.cookieStoreId" v-model="group.catchTabContainers" />
                         <img v-if="container.iconUrl" :src="container.iconUrl" class="size-16 fill-context" :style="{fill: container.colorCode}" />
