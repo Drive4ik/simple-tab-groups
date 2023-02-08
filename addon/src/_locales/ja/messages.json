@@ -350,11 +350,11 @@
         "description": "Move selected tabs to custom group"
     },
     "hotkeyActionTitleDiscardGroup": {
-        "message": "グループを削除する",
+        "message": "グループを破棄する",
         "description": "Hotkey action Discard group"
     },
     "hotkeyActionTitleDiscardOtherGroups": {
-        "message": "他のグループを削除する",
+        "message": "他のグループを破棄する",
         "description": "Hotkey action Discard other groups"
     },
     "hotkeyActionTitleReloadAllTabsInCurrentGroup": {
