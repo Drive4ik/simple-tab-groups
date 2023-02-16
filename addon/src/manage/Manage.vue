@@ -2,7 +2,6 @@
     'use strict';
 
     import Vue from 'vue';
-    import VueLazyload from 'vue-lazyload';
 
     import popup from '../js/popup.vue';
     import editGroup from '../js/edit-group.vue';
@@ -18,8 +17,6 @@
     document.title = browser.i18n.getMessage('manageGroupsTitle');
 
     Vue.config.errorHandler = errorEventHandler;
-
-    Vue.use(VueLazyload);
 
     const VIEW_GRID = 'grid',
         VIEW_DEFAULT = VIEW_GRID,
@@ -86,7 +83,7 @@
         created() {
             this.loadOptions();
 
-            window.matchMedia('(prefers-color-scheme: dark)').addListener(({matches}) => this.updateTheme());
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.updateTheme());
 
             loadPromise = Promise.all([this.loadWindows(), this.loadGroups(), this.loadUnsyncedTabs()]);
         },
@@ -1092,8 +1089,7 @@
                             >
                             <template v-if="options.showTabsWithThumbnailsInManageGroups">
                                 <div class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                    <img v-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
-                                    <img v-else class="size-16" v-lazy="tab.favIconUrl" />
+                                    <img class="size-16" :src="tab.favIconUrl" loading="lazy" decoding="async" />
                                 </div>
                                 <div v-if="isTabLoading(tab)" class="refresh-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <img class="spin size-16" src="/icons/refresh.svg"/>
@@ -1102,17 +1098,16 @@
                             <template v-else>
                                 <div class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <img v-if="isTabLoading(tab)" class="spin size-16" src="/icons/refresh.svg"/>
-                                    <img v-else-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
-                                    <img v-else class="size-16" v-lazy="tab.favIconUrl" />
+                                    <img v-else class="size-16" :src="tab.favIconUrl" loading="lazy" decoding="async" />
                                 </div>
                             </template>
                             <template v-if="tab.container">
                                 <div class="cookie-container" :title="tab.container.name" :style="{borderColor: tab.container.colorCode}">
-                                    <img class="size-16" :src="tab.container.iconUrl" :style="{fill: tab.container.colorCode}">
+                                    <img class="size-16" :src="tab.container.iconUrl" :style="{fill: tab.container.colorCode}" loading="lazy" decoding="async">
                                 </div>
                             </template>
                             <div v-if="options.showTabsWithThumbnailsInManageGroups" class="screenshot" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                <img v-if="tab.thumbnail" v-lazy="tab.thumbnail">
+                                <img v-if="tab.thumbnail" :src="tab.thumbnail" loading="lazy" decoding="async">
                             </div>
                             <div
                                 @mousedown.middle.prevent
@@ -1172,8 +1167,7 @@
                             >
                             <template v-if="options.showTabsWithThumbnailsInManageGroups">
                                 <div class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                    <img v-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
-                                    <img v-else class="size-16" v-lazy="tab.favIconUrl" />
+                                    <img class="size-16" :src="tab.favIconUrl" loading="lazy" decoding="async" />
                                 </div>
                                 <div v-if="isTabLoading(tab)" class="refresh-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <img class="spin size-16" src="/icons/refresh.svg"/>
@@ -1182,17 +1176,16 @@
                             <template v-else>
                                 <div class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                     <img v-if="isTabLoading(tab)" class="spin size-16" src="/icons/refresh.svg"/>
-                                    <img v-else-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
-                                    <img v-else class="size-16" v-lazy="tab.favIconUrl" />
+                                    <img class="size-16" :src="tab.favIconUrl" loading="lazy" decoding="async" />
                                 </div>
                             </template>
                             <template v-if="tab.container">
                                 <div class="cookie-container" :title="tab.container.name" :style="{borderColor: tab.container.colorCode}">
-                                    <img class="size-16" :src="tab.container.iconUrl" :style="{fill: tab.container.colorCode}">
+                                    <img class="size-16" :src="tab.container.iconUrl" :style="{fill: tab.container.colorCode}" loading="lazy" decoding="async">
                                 </div>
                             </template>
                             <div v-if="options.showTabsWithThumbnailsInManageGroups" class="screenshot" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                <img v-if="tab.thumbnail" v-lazy="tab.thumbnail">
+                                <img v-if="tab.thumbnail" :src="tab.thumbnail" loading="lazy" decoding="async">
                             </div>
                             <div
                                 @mousedown.middle.prevent

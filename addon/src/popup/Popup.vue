@@ -2,7 +2,6 @@
     'use strict';
 
     import Vue from 'vue';
-    import VueLazyload from 'vue-lazyload';
 
     import popup from '../js/popup.vue';
     import editGroupPopup from './edit-group-popup.vue';
@@ -13,8 +12,6 @@
     import contextMenuGroup from '../components/context-menu-group.vue';
 
     Vue.config.errorHandler = errorEventHandler;
-
-    Vue.use(VueLazyload);
 
     const loadingNode = document.getElementById('loading');
 
@@ -104,7 +101,7 @@
                 document.documentElement.classList.add('full-popup-width');
             }
 
-            window.matchMedia('(prefers-color-scheme: dark)').addListener(({matches}) => this.updateTheme());
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.updateTheme());
 
             this.loadOptions();
 
@@ -1283,14 +1280,13 @@
                                 :title="getTabTitle(tab, true)"
                                 >
                                 <div class="item-icon">
-                                    <img v-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
-                                    <img v-else v-lazy="tab.favIconUrl" class="size-16" />
+                                    <img :src="tab.favIconUrl" class="size-16" loading="lazy" decoding="async" />
                                 </div>
                                 <div class="item-title clip-text">
                                     <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                         <template v-if="tab.container">
                                             <span :title="tab.container.name">
-                                                <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" />
+                                                <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" loading="lazy" decoding="async" />
                                             </span>
                                         </template>
                                         <span class="tab-discarded" v-text="getTabTitle(tab)"></span>
@@ -1318,8 +1314,7 @@
                                 >
                                 <div class="item-icon">
                                     <img v-if="isTabLoading(tab)" src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
-                                    <img v-else-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
-                                    <img v-else v-lazy="tab.favIconUrl" class="size-16" />
+                                    <img v-else :src="tab.favIconUrl" class="size-16" loading="lazy" decoding="async" />
                                 </div>
                                 <div class="item-title clip-text">
                                     <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
@@ -1332,7 +1327,7 @@
                                         </span>
                                         <template v-if="tab.container">
                                             <span :title="tab.container.name">
-                                                <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" />
+                                                <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" loading="lazy" decoding="async" />
                                             </span>
                                         </template>
                                         <span :class="{'tab-discarded': tab.discarded}" v-text="getTabTitle(tab)"></span>
@@ -1481,8 +1476,7 @@
                             >
                             <div class="item-icon">
                                 <img v-if="isTabLoading(tab)" src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
-                                <img v-else-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
-                                <img v-else v-lazy="tab.favIconUrl" class="size-16" />
+                                <img v-else :src="tab.favIconUrl" class="size-16" loading="lazy" decoding="async" />
                             </div>
                             <div class="item-title clip-text">
                                 <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
@@ -1558,14 +1552,13 @@
                         @mousedown.middle.prevent
                         >
                         <div class="item-icon">
-                            <img v-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
-                            <img v-else v-lazy="tab.favIconUrl" class="size-16" />
+                            <img :src="tab.favIconUrl" class="size-16" loading="lazy" decoding="async" />
                         </div>
                         <div class="item-title clip-text">
                             <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
                                 <template v-if="tab.container">
                                     <span :title="tab.container.name">
-                                        <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" />
+                                        <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" loading="lazy" decoding="async" />
                                     </span>
                                 </template>
                                 <span class="tab-discarded" v-text="getTabTitle(tab)"></span>
@@ -1607,8 +1600,7 @@
                         >
                         <div class="item-icon">
                             <img v-if="isTabLoading(tab)" src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
-                            <img v-else-if="tab.favIconUrl.startsWith('/')" :src="tab.favIconUrl" class="size-16" />
-                            <img v-else v-lazy="tab.favIconUrl" class="size-16" />
+                            <img v-else :src="tab.favIconUrl" class="size-16" loading="lazy" decoding="async" />
                         </div>
                         <div class="item-title clip-text">
                             <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">

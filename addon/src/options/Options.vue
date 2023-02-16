@@ -143,7 +143,7 @@
             let {os} = await browser.runtime.getPlatformInfo();
             this.isMac = os === browser.runtime.PlatformOs.MAC;
 
-            window.matchMedia('(prefers-color-scheme: dark)').addListener(({matches}) => this.updateTheme());
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.updateTheme());
 
             let data = await storage.get(null);
 
