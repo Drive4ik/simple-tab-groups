@@ -181,8 +181,6 @@ const EXTENSIONS_WHITE_LIST = Object.freeze({
         url: 'https://addons.mozilla.org/firefox/addon/gesturefy/',
         postActions: [],
         getActions: [
-            'add-new-group',
-            'rename-group',
             'load-next-group',
             'load-prev-group',
             'load-next-unloaded-group',
@@ -194,6 +192,8 @@ const EXTENSIONS_WHITE_LIST = Object.freeze({
             'load-first-group',
             'load-last-group',
             'load-custom-group',
+            'add-new-group',
+            'rename-group',
             'delete-current-group',
             'open-manage-groups',
             'move-selected-tabs-to-custom-group',

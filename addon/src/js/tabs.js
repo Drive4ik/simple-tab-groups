@@ -463,8 +463,14 @@
         return tabs;
     }
 
+    async function filterExist(tabs, returnTabIds = false) {
+        let returnFunc = returnTabIds ? t => t.id : t => t;
+        tabs = await Promise.all(tabs.map(tabOrId => browser.tabs.get(tabOrId.id || tabOrId).then(returnFunc, noop)));
+        return tabs.filter(Boolean);
+    }
+
     async function moveNative(tabs, options = {}) {
-        console.log('moveNative', {tabs, options});
+        console.log('Tabs.moveNative called args', {tabs, options});
 
         // fix bug "Error: An unexpected error occurred"
         // https://bugzilla.mozilla.org/show_bug.cgi?id=1595583
@@ -476,36 +482,47 @@
             await utils.wait(100);
         }
 
-        let openerTabIds = options.windowId ? tabs.map(tab => tab.openerTabId) : [];
+        let openerTabIds = options.windowId ? tabs.map(tab => tab.openerTabId) : [],
+            tabIds = await filterExist(tabs, true);
+
+        console.assert(tabIds.length === tabs.length, 'Tabs.moveNative tabs length after filter are not equal', tabIds);
 
         console.log('Tabs.moveNative before');
 
-        let movedTabs = await browser.tabs.move(tabs.map(utils.keyId), options),
+        let movedTabs = await browser.tabs.move(tabIds, options),
             movedTabsObj = utils.arrayToObj(movedTabs, 'id');
 
         console.log('Tabs.moveNative after');
 
-        return tabs.map(function(tab, index) {
-            if (options.windowId) {
-                tab.windowId = options.windowId;
-                // Tabs moved across windows always lose their openerTabId even
-                // if it is also moved to the same window together, thus we need
-                // to restore it manually.
-                // https://github.com/piroor/treestyletab/issues/2546#issuecomment-733488187
-                if (openerTabIds[index] > 0) {
-                    tab.openerTabId = openerTabIds[index];
-                    browser.tabs.update(tab.id, {
-                        openerTabId: tab.openerTabId,
-                    });
+        let movedTabIdsSet = new Set(tabIds);
+
+        return tabs
+            .map(function(tab, index) {
+                if (!movedTabIdsSet.has(tab.id)) {
+                    return;
                 }
-            }
 
-            if (movedTabsObj[tab.id]) {
-                tab.index = movedTabsObj[tab.id].index;
-            }
+                if (options.windowId) {
+                    tab.windowId = options.windowId;
+                    // Tabs moved across windows always lose their openerTabId even
+                    // if it is also moved to the same window together, thus we need
+                    // to restore it manually.
+                    // https://github.com/piroor/treestyletab/issues/2546#issuecomment-733488187
+                    if (openerTabIds[index] > 0) {
+                        tab.openerTabId = openerTabIds[index];
+                        browser.tabs.update(tab.id, {
+                            openerTabId: tab.openerTabId,
+                        }).catch(noop);
+                    }
+                }
 
-            return tab;
-        });
+                if (movedTabsObj[tab.id]) {
+                    tab.index = movedTabsObj[tab.id].index;
+                }
+
+                return tab;
+            })
+            .filter(Boolean);
     }
 
     async function show(...tabs) {
@@ -513,7 +530,8 @@
 
         if (tabs.length) {
             console.log('Tabs.show before');
-            await browser.tabs.show(tabs.map(tab => tab.id || tab));
+            tabs = await filterExist(tabs, true);
+            await browser.tabs.show(tabs);
             console.log('Tabs.show after');
         }
     }
@@ -523,7 +541,8 @@
 
         if (tabs.length) {
             console.log('Tabs.hide before');
-            await browser.tabs.hide(tabs.map(tab => tab.id || tab));
+            tabs = await filterExist(tabs, true);
+            await browser.tabs.hide(tabs);
             console.log('Tabs.hide after');
         }
     }
@@ -533,7 +552,8 @@
 
         if (tabs.length) {
             console.log('Tabs.discard before');
-            await browser.tabs.discard(tabs.map(tab => tab.id || tab));
+            tabs = await filterExist(tabs, true);
+            await browser.tabs.discard(tabs);
             console.log('Tabs.discard after');
         }
     }
