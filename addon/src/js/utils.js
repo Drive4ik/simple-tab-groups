@@ -33,13 +33,13 @@
                 ...platformInfo,
                 ...browserInfo,
             },
+            extensions: extensions
+                .filter(({id, enabled, type}) => !id.endsWith('@search.mozilla.org') && enabled && type === browser.management.ExtensionType.EXTENSION)
+                .map(({id, name, version}) => ({id, name, version})),
             UUID: browser.runtime.getURL(''),
             permissions: {
                 bookmarks: permissionBookmarks,
             },
-            extensions: extensions
-                .filter(({id, enabled, type}) => !id.endsWith('@search.mozilla.org') && enabled && type === browser.management.ExtensionType.EXTENSION)
-                .map(({id, name, version}) => ({id, name, version})),
             options: options,
         };
     }

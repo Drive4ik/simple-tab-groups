@@ -99,7 +99,7 @@
 
         lastCreatedGroupPosition++;
 
-        let groups = await load(),
+        let {groups} = await load(),
             newGroup = create(lastCreatedGroupPosition, title);
 
         groups.push(newGroup);
@@ -142,11 +142,11 @@
     }
 
     async function remove(groupId) {
-        let [group, groups, index] = await load(groupId, true);
+        let {group, groups, groupIndex} = await load(groupId, true);
 
         BG.addUndoRemoveGroupItem(group);
 
-        groups.splice(index, 1);
+        groups.splice(groupIndex, 1);
 
         await save(groups);
 
@@ -193,7 +193,7 @@
     }
 
     async function update(groupId, updateData) {
-        let [group, groups] = await load(groupId);
+        let {group, groups} = await load(groupId);
 
         if (!group) {
             throw Error(`group ${groupId} not found for update it`);
@@ -251,7 +251,7 @@
     }
 
     async function move(groupId, newGroupIndex) {
-        let [group, groups, groupIndex] = await load(groupId);
+        let {groups, groupIndex} = await load(groupId);
 
         groups.splice(newGroupIndex, 0, groups.splice(groupIndex, 1)[0]);
 
@@ -265,7 +265,7 @@
             throw Error(`invalid sort vector: ${vector}`);
         }
 
-        let groups = await load();
+        let {groups} = await load();
 
         if ('asc' === vector) {
             groups.sort(utils.sortBy('title'));
@@ -291,7 +291,7 @@
             return false;
         }
 
-        let [group, groups] = await load(groupId, true);
+        let {group, groups} = await load(groupId, true);
 
         if (!group) {
             utils.notify(['groupNotFound'], 7, 'groupNotFound');
@@ -351,7 +351,7 @@
     async function archiveToggle(groupId) {
         await BG.loadingBrowserAction();
 
-        let [group, groups] = await load(groupId, true);
+        let {group, groups} = await load(groupId, true);
 
         if (group.isArchive) {
             group.isArchive = false;
