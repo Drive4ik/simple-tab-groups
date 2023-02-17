@@ -1,6 +1,6 @@
 {
     "extensionDescription": {
-        "message": "Створення, зміна та швидка зміна груп вкладок",
+        "message": "Створення, редагування та швидке переключення між групами вкладок",
         "description": "Description of the extension."
     },
     "openSettings": {
@@ -16,11 +16,11 @@
         "description": "Set tab icon as group icon"
     },
     "moveTabToGroupDisabledTitle": {
-        "message": "Перемістити в групу",
+        "message": "Перемістити до групи",
         "description": "Move tab to group title"
     },
     "moveTabToGroupMessage": {
-        "message": "Вкладка \"$tabtitle$\" переміщена в групу \"$grouptitle$\".\n\nНатисніть тут щоб відкрити її.",
+        "message": "Вкладка \"$tabtitle$\" переміщена до групи \"$grouptitle$\".\n\nНатисніть тут щоб відкрити її.",
         "description": "Tab moved popup title",
         "placeholders": {
             "grouptitle": {
@@ -54,7 +54,7 @@
         "description": "Delete"
     },
     "cancel": {
-        "message": "Відміна",
+        "message": "Відмінити",
         "description": "Cancel"
     },
     "searchPlaceholder": {
@@ -80,11 +80,11 @@
         "description": "Free arrange"
     },
     "closePopupAfterChangeGroup": {
-        "message": "Зачинити спливаюче вікно після зміни групи",
+        "message": "Закрити спливаюче вікно після зміни групи",
         "description": "Close popup after changing group"
     },
     "showNotificationAfterMoveTab": {
-        "message": "Показувать сповіщення при переміщенні вкладки в іншу групу",
+        "message": "Показувати сповіщення при переміщенні вкладки до іншої групи",
         "description": "Show notification when tab is moved to another group"
     },
     "openManageGroupsInTab": {
@@ -92,11 +92,11 @@
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
-        "message": "Підтверджувати видалення групи",
+        "message": "Запитувати підтвердження перед видаленням групи",
         "description": "Show confirmation dialog before deleting the group"
     },
     "showConfirmDialogBeforeGroupArchiving": {
-        "message": "Підтверджувати архівацію групи",
+        "message": "Запитувати підтвердження перед архівацією групи",
         "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
@@ -108,7 +108,7 @@
         "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
     },
     "exportAddonSettingsButton": {
-        "message": "Створити бекап",
+        "message": "Створити резервну копію",
         "description": "Create backup"
     },
     "includeTabThumbnailsIntoBackup": {
@@ -116,7 +116,7 @@
         "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "Відновлення Simple Tab Groups",
+        "message": "Відновлення Simple Tab Groups з резервної копії",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
@@ -124,11 +124,11 @@
         "description": "Load a backup file containing the tab groups you want to restore."
     },
     "importAddonSettingsButton": {
-        "message": "Відновити бекап",
+        "message": "Завантажити резервну копію",
         "description": "Restore backup"
     },
     "importSettingsOldTabGroupsAddonTitle": {
-        "message": "Відновлення резервної копії від старого плагіна Quicksaver'а \"Tab Groups\"",
+        "message": "Завантаження резервної копії від старого плагіна Quicksaver'у \"Tab Groups\"",
         "description": "Restore Quicksaver's \"Tab Groups\""
     },
     "importSettingsOldTabGroupsAddonDescription": {
@@ -180,7 +180,7 @@
         "description": "Delete group"
     },
     "confirmDeleteGroup": {
-        "message": "Ви хочете видалити групу \"$grouptitle$\"? <br> Видалення групи призведе до закриття всіх вкладок і вікна цієї групи!",
+        "message": "Ви бажаєте видалити групу \"$grouptitle$\"?<br> Видалення групи призведе до закриття всіх вкладок і вікон цієї групи!",
         "description": "Delete group?",
         "placeholders": {
             "grouptitle": {
@@ -200,7 +200,7 @@
         }
     },
     "groupTabsCountActive": {
-        "message": "$active$/$count$ вк. активно",
+        "message": "$active$/$count$ вкл. активно",
         "description": "Group tabs count active",
         "placeholders": {
             "active": {
@@ -250,7 +250,7 @@
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
-        "message": "Випадковий колір",
+        "message": "Встановити випадковий колір",
         "description": "Set random color"
     },
     "catchTabContainers": {
@@ -262,11 +262,11 @@
         "description": "Regular expressions for catch tabs"
     },
     "regexpForTabsPlaceholder": {
-        "message": "Регулярні вырази",
+        "message": "Регулярні вирази",
         "description": "Regular expressions"
     },
     "regexpForTabsHelp": {
-        "message": "Тут ви маєте можливість вказати регулярні вирази для URL адреси. При збігу адреси вкладки хоча б з одним регулярним виразом вкладка автоматично буде переміщена в цю групу. Одне правило на рядок. \nНаприклад: \ngithub\\.com/drive4ik/simple-tab-groups - захоплення всіх вкладок цього плагіна на github \n(facebook|twitter|youtube)\\.com - захоплення вкладок соціальних мереж",
+        "message": "Тут ви можете вказати регулярні вирази для URL адреси. При збігу адреси вкладки хоча б з одним регулярним виразом вкладка автоматично буде переміщена в цю групу. Одне правило на рядок. \nНаприклад: \ngithub\\.com/drive4ik/simple-tab-groups - захоплення всіх вкладок цього плагіна на github \n(facebook|twitter|youtube)\\.com - захоплення вкладок соціальних мереж",
         "description": "Regular exceptions helper"
     },
     "hotkeysTitle": {
@@ -286,7 +286,7 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Натиснути тут",
+        "message": "Натисніть клавішу тут",
         "description": "Press key here"
     },
     "selectAction": {
@@ -312,6 +312,14 @@
     "hotkeyActionTitleLoadPrevUnloadedGroup": {
         "message": "Завантажити попередню не завантажену групу",
         "description": "Load previous unloaded group"
+    },
+    "hotkeyActionTitleLoadNextNonEmptyGroup": {
+        "message": "Завантажити наступну не порожню групу",
+        "description": "Load next non-empty group"
+    },
+    "hotkeyActionTitleLoadPrevNonEmptyGroup": {
+        "message": "Завантажити попередню не порожню групу",
+        "description": "Load previous non-empty group"
     },
     "hotkeyActionTitleLoadHistoryNextGroup": {
         "message": "Завантажити наступну групу з історії",
@@ -362,7 +370,7 @@
         "description": "Reload all tabs in current group"
     },
     "whatsWrongMessage": {
-        "message": "Шось не те... Будь ласка, зв'яжіться з розробником по електронній пошті з логом помилок (є кнопка на сторінці налаштувань плагіна)",
+        "message": "Щось не те... Будь ласка, зв'яжіться з розробником по електронній пошті з логом помилок (є кнопка на сторінці налаштувань плагіна)",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
     },
     "saveErrorLogsIntoFile": {
@@ -380,7 +388,7 @@
         }
     },
     "undoRemoveGroupNotification": {
-        "message": "Натисність тут щоб сказувати видалення групи \"$grouptitle$\"",
+        "message": "Натисніть тут, щоб скасувати видалення групи \"$grouptitle$\"",
         "description": "Click here to cancel the deletion of the group title",
         "placeholders": {
             "grouptitle": {
@@ -404,6 +412,10 @@
     "discardTabsAfterHide": {
         "message": "Вивантажувати вкладки з пам'яті після зміни групи (дозволяє заощадити ОЗУ)",
         "description": "Discard tabs after hide (this will save the RAM)"
+    },
+    "discardAfterHideExcludeAudioTabs": {
+        "message": "Залишати вкладки зі звуком",
+        "description": "Exclude tabs with sound"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Неможливо змінити групу, тому що на одній з вкладок використовується мікрофон або камера",
@@ -434,11 +446,11 @@
         "description": "Update thumbnail for this tab"
     },
     "notFoundWindowsAddonStoppedWorking": {
-        "message": "Помилка: не знайдено нормальних вікон, тільки приватні або спливаючі. Доповнення припиняє роботу.\nБудь ласка, перезавантажте браузер.",
+        "message": "Помилка: не знайдено звичайних вікон, тільки приватні або спливаючі. Доповнення припиняє роботу.\nБудь ласка, перезавантажте браузер.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
     },
     "ffFailedAndLostDataMessage": {
-        "message": "Firefox завершив свою роботу з помилкою і все групи були загублені.\nЯкщо у Вас є резервна копія, Ви можете відновити дані з неї",
+        "message": "Firefox завершив свою роботу з помилкою і всі групи були загублені.\nЯкщо у Вас є резервна копія, Ви можете відновити дані з неї",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
     },
     "enterDefaultGroupIconViewTypeTitle": {
@@ -536,7 +548,7 @@
         "description": "Enable auto backup"
     },
     "autoBackupCreateEveryTitle": {
-        "message": "Створювати резервні копії кожен:",
+        "message": "Створювати резервні копії кожні:",
         "description": "Create backup every:"
     },
     "autoBackupIntervalKeyMinutes": {
@@ -544,11 +556,11 @@
         "description": "minute(s)"
     },
     "autoBackupIntervalKeyHours": {
-        "message": "година",
+        "message": "годин",
         "description": "hour(s)"
     },
     "autoBackupIntervalKeyDays": {
-        "message": "день",
+        "message": "днів",
         "description": "day(s)"
     },
     "autoBackupLastBackupTitle": {
@@ -584,7 +596,7 @@
         "description": "Browse..."
     },
     "openBackupFolder": {
-        "message": "Відкрити папку резервного копіювання",
+        "message": "Відкрити теку резервного копіювання",
         "description": "Open backup folder"
     },
     "createNewGroupWhenOpenNewWindow": {
@@ -684,15 +696,15 @@
         "description": "Auto backup all groups to file (into downloads folder)"
     },
     "folderNameTitle": {
-        "message": "Им'я теки",
+        "message": "Ім'я теки",
         "description": "Folder name title"
     },
     "backupSuccessfullyRestored": {
-        "message": "Резервне копіювання успішно відновлено",
+        "message": "Відновлення з резервної копії успішно!",
         "description": "Backup successfully restored"
     },
     "loading": {
-        "message": "Завантаження, будь ласка почекайте...",
+        "message": "Завантаження, будь ласка, почекайте...",
         "description": "Loading, please wait..."
     },
     "showOtherTabs": {
@@ -1144,5 +1156,33 @@
     "helpPageExtensionsThatConflictWithStgDesc2": {
         "message": "Щоб уникнути втрати вкладок або їх розташування у вікнах і групах, настійно рекомендуємо вимкнути або видалити увімкнені розширення, які конфліктують з додатком Simple Tab Groups. Ви можете зробити це на сторінці налаштувань додатків \"about:addons\" або натиснувши комбінацію клавіш <code>Ctrl+Shift+A</code>",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
+    },
+    "theme": {
+        "message": "Тема",
+        "description": "Select theme"
+    },
+    "themeAuto": {
+        "message": "Як в системі",
+        "description": "Auto theme"
+    },
+    "themeLight": {
+        "message": "Світла",
+        "description": "Light theme"
+    },
+    "themeDark": {
+        "message": "Темна",
+        "description": "Dark theme"
+    },
+    "contextMenuEditor": {
+        "message": "Налаштування контекстного меню",
+        "description": "Context menu editor"
+    },
+    "tab": {
+        "message": "Вкладка",
+        "description": "Tab"
+    },
+    "group": {
+        "message": "Група",
+        "description": "Group"
     }
 }
