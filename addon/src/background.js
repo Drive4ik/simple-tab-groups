@@ -1524,7 +1524,7 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, cookieSto
 
     console.log('onBeforeTabRequest tab', tab);
 
-    let [tabGroup, groups] = await Groups.load(tab.groupId);
+    let {group: tabGroup, groups} = await Groups.load(tab.groupId);
 
     if (!tabGroup.isSticky) {
         let destGroup = Groups.getCatchedForTab(groups, tabGroup, tab);
