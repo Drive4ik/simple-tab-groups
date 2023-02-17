@@ -216,7 +216,7 @@
     }
 
     async function add(groupId, cookieStoreId, url, title) {
-        let [group] = await Groups.load(groupId),
+        let {group} = await Groups.load(groupId),
             [tab] = await BG.createTabsSafe([{
                 url,
                 title,
@@ -300,7 +300,7 @@
         let showPinnedMessage = false,
             tabsCantHide = new Set,
             groupWindowId = cache.getWindowId(groupId),
-            [group] = await Groups.load(groupId, !groupWindowId),
+            {group} = await Groups.load(groupId, !groupWindowId),
             windowId = groupWindowId || (group.tabs[0]?.windowId) || await Windows.getLastFocusedNormalWindow(),
             activeTabs = [];
 
@@ -450,7 +450,7 @@
         }
 
         utils.notify(message, undefined, undefined, iconUrl, async function(groupId, tabId) {
-            let [group] = await Groups.load(groupId),
+            let {group} = await Groups.load(groupId),
                 tab = await getOne(tabId);
 
             if (group && tab) {

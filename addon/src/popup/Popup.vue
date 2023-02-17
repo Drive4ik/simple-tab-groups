@@ -548,7 +548,7 @@
             },
 
             async loadGroupTabs(groupId) {
-                let [{tabs}] = await Groups.load(groupId, true, true),
+                let {group: {tabs}} = await Groups.load(groupId, true, true),
                     group = this.groups.find(gr => gr.id === groupId);
 
                 group.tabs = tabs.map(this.mapTab, this);
@@ -638,7 +638,7 @@
             },
 
             async loadGroups() {
-                let groups = await Groups.load(null, true, true);
+                let {groups} = await Groups.load(null, true, true);
 
                 this.groups = groups.map(this.mapGroup, this);
 

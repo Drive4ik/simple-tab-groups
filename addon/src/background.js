@@ -165,7 +165,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
         } else {
             // magic
 
-            let [groupToShow, groups] = await Groups.load(groupId, true),
+            let {group: groupToShow, groups} = await Groups.load(groupId, true),
                 oldGroupId = cache.getWindowGroup(windowId),
                 groupToHide = groups.find(gr => gr.id === oldGroupId),
                 tabsIdsToRemove = [];
@@ -479,7 +479,7 @@ const onUpdatedTab = utils.catchFunc(async function(tabId, changeInfo, tab) {
             } else if (false === changeInfo.hidden) {
                 if (tabGroupId) {
                     if (winGroupId) {
-                        let [winGroup] = await Groups.load(winGroupId, true);
+                        let {group: winGroup} = await Groups.load(winGroupId, true);
 
                         if (winGroup.tabs.length) {
                             applyGroup(tab.windowId, tabGroupId, tab.id);
@@ -639,7 +639,7 @@ async function addUndoRemoveGroupItem(groupToRemove) {
         browser.menus.remove(CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id);
         browser.notifications.clear(CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id);
 
-        let groups = await Groups.load();
+        let {groups} = await Groups.load();
 
         group.isMain = false;
 
@@ -707,7 +707,7 @@ async function createMoveTabMenus(groups) {
     }
 
     if (!Array.isArray(groups)) {
-        groups = await Groups.load();
+        ({groups} = await Groups.load());
     }
 
     await removeMoveTabMenus();
@@ -947,7 +947,7 @@ async function createMoveTabMenus(groups) {
                 }
 
                 if (tabsToCreate.length) {
-                    let [group] = await Groups.load(groupId),
+                    let {group} = await Groups.load(groupId),
                         [firstTab] = await createTabsSafe(Groups.setNewTabsParams(tabsToCreate, group));
 
                     loadingBrowserAction(false);
@@ -1245,7 +1245,7 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
     }
 
     if (Number.isFinite(group)) {
-        [group, , groupIndex] = await Groups.load(group, true);
+        ({group, groupIndex} = await Groups.load(group, true));
     }
 
     if (showMessages) {
@@ -1422,7 +1422,7 @@ async function updateBrowserActionData(groupId, windowId, groups) {
         if (Array.isArray(groups)) {
             group = groups.find(gr => gr.id === groupId);
         } else {
-            [group] = await Groups.load(groupId);
+            ({group} = await Groups.load(groupId));
         }
     }
 
@@ -1777,7 +1777,7 @@ async function runAction(data, sender = {}) {
                 'reload-all-tabs-in-current-group',
             ],
             loadCurrentGroupWithTabs = currentWindow.groupId ? actionWithTabs.includes(data.action) : false,
-            [currentGroup, groups] = await Groups.load(currentWindow.groupId || -1, loadCurrentGroupWithTabs),
+            {group: currentGroup, groups} = await Groups.load(currentWindow.groupId || -1, loadCurrentGroupWithTabs),
             notArchivedGroups = groups.filter(group => !group.isArchive);
 
         if (!currentGroup) {
@@ -2114,7 +2114,7 @@ async function runAction(data, sender = {}) {
                     let groupId = cache.getWindowGroup(data.windowId);
 
                     if (groupId) {
-                        let [group] = await Groups.load(groupId);
+                        let {group} = await Groups.load(groupId);
 
                         result.group = Groups.mapForExternalExtension(group);
                     } else {
@@ -2282,7 +2282,7 @@ async function resetAutoBackup() {
 }
 
 async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBackup = false) {
-    let [data, groups] = await Promise.all([storage.get(null), Groups.load(null, true, includeTabFavIcons, includeTabThumbnails)]);
+    let [data, {groups}] = await Promise.all([storage.get(null), Groups.load(null, true, includeTabFavIcons, includeTabThumbnails)]);
 
     if (isAutoBackup && (!groups.length || groups.every(gr => !gr.tabs.length))) {
         console.warn('skip create auto backup, groups are empty');
@@ -2401,7 +2401,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         currentData.hotkeys = [];
     } else {
         currentData = await storage.get(null),
-        currentData.groups = await Groups.load(null, true, true, options.showTabsWithThumbnailsInManageGroups);
+        ({group: currentData.groups} = await Groups.load(null, true, true, options.showTabsWithThumbnailsInManageGroups));
     }
 
     if (!Array.isArray(data.hotkeys)) {
@@ -2560,7 +2560,7 @@ async function exportAllGroupsToBookmarks(showFinishMessage) {
         await loadingBrowserAction();
     }
 
-    let groups = await Groups.load(null, true);
+    let {groups} = await Groups.load(null, true);
 
     for (let groupIndex in groups) {
         await exportGroupToBookmarks(groups[groupIndex], Number(groupIndex), false);
@@ -3168,7 +3168,7 @@ async function tryRestoreMissedTabs(tabsToRestore) {
     if (tabsToRestore.length) {
         browser.browserAction.disable();
 
-        let groups = await Groups.load(null, true),
+        let {groups} = await Groups.load(null, true),
             groupsObj = {},
             foundTabIds = new Set;
 

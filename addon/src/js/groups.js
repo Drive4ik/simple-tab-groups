@@ -33,11 +33,19 @@
             });
         }
 
-        if (groupId) {
-            return [groups.find(group => group.id === groupId), groups, groups.findIndex(group => group.id === groupId)];
-        }
+        let groupIndex = groups.findIndex(group => group.id === groupId);
 
-        return groups;
+        return {
+            group: groups[groupIndex],
+            groups,
+            groupIndex,
+        };
+
+        // if (groupId) {
+        //     return [groups.find(group => group.id === groupId), groups, groups.findIndex(group => group.id === groupId)];
+        // }
+
+        // return groups;
     }
 
     async function save(groups, withMessage = false) {

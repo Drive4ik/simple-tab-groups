@@ -84,7 +84,7 @@
             },
         },
         async created() {
-            let [group, groups] = await Groups.load(this.groupId);
+            let {group, groups} = await Groups.load(this.groupId);
 
             this.group = new Vue({
                 data: group,
