@@ -1518,6 +1518,10 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, cookieSto
 
     cache.applyTabSession(tab);
 
+    if (!tab.groupId) {
+        return {};
+    }
+
     console.log('onBeforeTabRequest tab', tab);
 
     let [tabGroup, groups] = await Groups.load(tab.groupId);
