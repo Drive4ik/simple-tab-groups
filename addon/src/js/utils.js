@@ -28,7 +28,7 @@
 
         return {
             version: manifest.version,
-            upTime: (BG && BG.startTime) ? (Math.ceil((Date.now() - BG.startTime) / 1000) + ' sec') : 'unknown',
+            upTime: Math.ceil((Date.now() - START_TIME) / 1000) + ' sec',
             browserAndOS: {
                 ...platformInfo,
                 ...browserInfo,

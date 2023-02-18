@@ -1,5 +1,6 @@
 'use strict';
 
+const START_TIME = Date.now();
 const MANAGE_TABS_URL = '/manage/manage.html';
 const ACTIVE_SYMBOL = '〇';
 const DISCARDED_SYMBOL = '✱';

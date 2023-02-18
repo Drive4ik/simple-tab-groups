@@ -2581,7 +2581,6 @@ async function exportAllGroupsToBookmarks(showFinishMessage) {
 
 window.BG = {
     inited: false,
-    startTime: Date.now(),
 
     cache,
     openManageGroups,
@@ -3362,7 +3361,7 @@ async function initializeGroupWindows(windows, currentGroupIds) {
                 }
             } else if (win.groupId) {
                 if (!tab.hidden) {
-                    if (utils.isTabLoading(tab) || tab.url.startsWith('file:') || tab.lastAccessed > window.BG.startTime) {
+                    if (utils.isTabLoading(tab) || tab.url.startsWith('file:') || tab.lastAccessed > START_TIME) {
                         tab.groupId = win.groupId;
                         cache.setTabGroup(tab.id, win.groupId);
                     } else {
