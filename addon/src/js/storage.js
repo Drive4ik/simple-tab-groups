@@ -44,40 +44,11 @@
                 data.groups.forEach(group => !group.isArchive && (group.tabs = []));
             }
 
-            try {
-                await browser.storage.local.set(data);
-            } catch (e) {
-                // https://bugzilla.mozilla.org/show_bug.cgi?id=1601365
-
-                console.error(e);
-
-                let message = null,
-                    {os} = await browser.runtime.getPlatformInfo();
-
-                if (e && e.message) {
-                    message = e.message;
-                }
-
-                if (message === 'An unexpected error occurred' && os === 'linux') {
-                    let existData = await this.get(null);
-
-                    let newData = {
-                        ...existData,
-                        ...data,
-                    };
-
-                    await browser.storage.local.clear();
-
-                    await browser.storage.local.set(newData);
-                } else {
-                    throw e;
-                }
-
-            }
+            let result = await browser.storage.local.set(data);
 
             console.log('STOP storage.set');
 
-            // return browser.storage.local.set(data);
+            return result;
         },
         remove: browser.storage.local.remove,
         clear: browser.storage.local.clear,
