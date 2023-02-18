@@ -413,6 +413,10 @@ async function applyGroupByHistory(textPosition, groups) {
     return applyGroup(undefined, nextGroupId, undefined, true);
 }
 
+const onActivatedTab = function(activeInfo) {
+    console.log('onActivated', activeInfo)
+}
+
 const onCreatedTab = utils.catchFunc(async function(tab) {
     console.log('onCreatedTab', tab);
 
@@ -1638,6 +1642,7 @@ function removeListenerOnBeforeRequest() {
 }
 
 function addEvents() {
+    browser.tabs.onActivated.addListener(onActivatedTab)
     browser.tabs.onCreated.addListener(onCreatedTab);
     browser.tabs.onUpdated.addListener(onUpdatedTab, {
         properties: [
@@ -1659,6 +1664,7 @@ function addEvents() {
 }
 
 function removeEvents() {
+    browser.tabs.onActivated.removeListener(onActivatedTab);
     browser.tabs.onCreated.removeListener(onCreatedTab);
     browser.tabs.onUpdated.removeListener(onUpdatedTab);
     browser.tabs.onRemoved.removeListener(onRemovedTab);
