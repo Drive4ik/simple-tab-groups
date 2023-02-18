@@ -1,6 +1,8 @@
 (function() {
     'use strict';
 
+    const BROWSER_PAGES_STARTS = 'about:';
+
     const tagsToReplace = {
         '<': '&lt;',
         '>': '&gt;',
@@ -826,6 +828,8 @@
     }
 
     window.utils = {
+        BROWSER_PAGES_STARTS,
+
         getInfo,
 
         keyId,

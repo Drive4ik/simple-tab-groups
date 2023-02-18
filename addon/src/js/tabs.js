@@ -552,7 +552,11 @@
 
         if (tabs.length) {
             console.log('Tabs.discard before');
-            tabs = await filterExist(tabs, true);
+            tabs = await filterExist(tabs);
+            tabs = tabs
+                .filter(tab => !tab.url.startsWith(utils.BROWSER_PAGES_STARTS))
+                .map(utils.keyId);
+
             await browser.tabs.discard(tabs);
             console.log('Tabs.discard after');
         }
