@@ -10,7 +10,7 @@
             if (!data) {
                 data = DEFAULT_OPTIONS;
             } else if (Array.isArray(data)) {
-                data = data.reduce(acc, key => (acc[key] = DEFAULT_OPTIONS[key], acc), {});
+                data = data.reduce((acc, key) => (acc[key] = DEFAULT_OPTIONS[key], acc), {});
             } else { // if data is string key
                 data = {[data]: DEFAULT_OPTIONS[data]};
             }
