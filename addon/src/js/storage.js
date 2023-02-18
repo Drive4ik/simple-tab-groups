@@ -7,6 +7,14 @@
         async get(data) {
             console.log('START storage.get', data);
 
+            if (!data) {
+                data = DEFAULT_OPTIONS;
+            } else if (Array.isArray(data)) {
+                data = data.reduce(acc, key => (acc[key] = DEFAULT_OPTIONS[key], acc), {});
+            } else { // if data is string key
+                data = {[data]: DEFAULT_OPTIONS[data]};
+            }
+
             let result = null;
 
             try {
@@ -21,16 +29,6 @@
 
                 await utils.wait(200);
                 return this.get(data);
-            }
-
-            if (null === data) {
-                result = {...utils.clone(DEFAULT_OPTIONS), ...result};
-            } else if ('string' === utils.type(data)) {
-                if (undefined === result[data]) {
-                    result[data] = utils.clone(DEFAULT_OPTIONS[data]);
-                }
-            } else if (Array.isArray(data)) {
-                data.forEach(key => undefined === result[key] ? result[key] = utils.clone(DEFAULT_OPTIONS[key]) : null);
             }
 
             console.log('STOP storage.get');
