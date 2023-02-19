@@ -15,12 +15,14 @@
 
     async function getInfo() {
         let [
+            background,
             browserInfo,
             platformInfo,
             permissionBookmarks,
             options,
             extensions,
         ] = await Promise.all([
+            browser.runtime.getBackgroundPage(),
             browser.runtime.getBrowserInfo(),
             browser.runtime.getPlatformInfo(),
             browser.permissions.contains(PERMISSIONS.BOOKMARKS),
@@ -30,7 +32,7 @@
 
         return {
             version: manifest.version,
-            upTime: Math.ceil((Date.now() - START_TIME) / 1000) + ' sec',
+            upTime: background?.START_TIME ? Math.ceil((Date.now() - background.START_TIME) / 1000) + ' sec' : 'unknown',
             browserAndOS: {
                 ...platformInfo,
                 ...browserInfo,

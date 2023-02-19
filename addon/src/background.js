@@ -1,5 +1,6 @@
 'use strict';
 
+window.START_TIME = Date.now();
 window.IS_TEMPORARY = false;
 
 if (2 == window.localStorage.enableDebug) { // if debug was auto-enabled - disable on next start addon/browser
@@ -618,7 +619,7 @@ const onRemovedWindow = utils.catchFunc(async function(windowId) {
         await storage.set({tabsToRestore});
 
         if (cache.hasAnyWindow()) {
-            tryRestoreMissedTabs(tabsToRestore).catch(noop);
+            tryRestoreMissedTabs().catch(noop);
         }
     }
 });
@@ -2288,7 +2289,7 @@ async function resetAutoBackup() {
 }
 
 async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBackup = false) {
-    let [data, {groups}] = await Promise.all([storage.get(null), Groups.load(null, true, includeTabFavIcons, includeTabThumbnails)]);
+    let [data, {groups}] = await Promise.all([storage.get(), Groups.load(null, true, includeTabFavIcons, includeTabThumbnails)]);
 
     if (isAutoBackup && (!groups.length || groups.every(gr => !gr.tabs.length))) {
         console.warn('skip create auto backup, groups are empty');
@@ -2406,8 +2407,8 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         currentData.groups = [];
         currentData.hotkeys = [];
     } else {
-        currentData = await storage.get(null),
-        ({group: currentData.groups} = await Groups.load(null, true, true, options.showTabsWithThumbnailsInManageGroups));
+        currentData = await storage.get('hotkeys'),
+        ({groups: currentData.groups} = await Groups.load(null, true, true, options.showTabsWithThumbnailsInManageGroups));
     }
 
     if (!Array.isArray(data.hotkeys)) {
@@ -3157,77 +3158,67 @@ async function syncTabs(groups, allTabs) {
     return groups;
 }
 
-async function tryRestoreMissedTabs(tabsToRestore) {
-    let tabsRestored = false;
+async function tryRestoreMissedTabs() {
+    let {tabsToRestore} = await storage.get('tabsToRestore');
 
-    if (!tabsToRestore) {
-        ({tabsToRestore} = await storage.get('tabsToRestore'));
+    if (!tabsToRestore?.length) {
+        return;
     }
 
     console.log('tryRestoreMissedTabs', tabsToRestore);
 
-    if (!tabsToRestore) {
-        return tabsRestored;
-    }
+    browser.browserAction.disable();
 
-    if (tabsToRestore.length) {
-        browser.browserAction.disable();
+    let {groups} = await Groups.load(null, true),
+        groupsObj = {},
+        foundTabIds = new Set;
 
-        let {groups} = await Groups.load(null, true),
-            groupsObj = {},
-            foundTabIds = new Set;
+    groups.forEach(function(group) {
+        if (group.isArchive) {
+            return;
+        }
 
-        console.log('tryRestoreMissedTabs tabsToRestore', tabsToRestore);
+        groupsObj[group.id] = {
+            tabs: group.tabs,
+            newTabParams: Groups.getNewTabParams(group),
+        };
+    });
 
-        groups.forEach(function(group) {
-            if (group.isArchive) {
-                return;
-            }
+    tabsToRestore = tabsToRestore
+        .map(function(tab) {
+            tab = utils.normalizeTabUrl(tab);
 
-            groupsObj[group.id] = {
-                tabs: group.tabs,
-                newTabParams: Groups.getNewTabParams(group),
-            };
-        });
-
-        tabsToRestore = tabsToRestore
-            .map(utils.normalizeTabUrl)
-            .map(function(tab) {
-                if (groupsObj[tab.groupId]) {
-                    let winTab = groupsObj[tab.groupId].tabs.find(function(t) {
-                        if (utils.isTabLoading(t) && utils.isUrlEmpty(t.url)) {
-                            return true;
-                        }
-
-                        return !foundTabIds.has(t.id) && t.url === tab.url && t.cookieStoreId === tab.cookieStoreId;
-                    });
-
-                    if (winTab) {
-                        foundTabIds.add(winTab.id);
-                    } else {
-                        return Object.assign(tab, groupsObj[tab.groupId].newTabParams);
+            if (groupsObj[tab.groupId]) {
+                let winTab = groupsObj[tab.groupId].tabs.find(function(t) {
+                    if (utils.isTabLoading(t) && utils.isUrlEmpty(t.url)) {
+                        return true;
                     }
+
+                    return !foundTabIds.has(t.id) && t.url === tab.url && t.cookieStoreId === tab.cookieStoreId;
+                });
+
+                if (winTab) {
+                    foundTabIds.add(winTab.id);
+                } else {
+                    return Object.assign(tab, groupsObj[tab.groupId].newTabParams);
                 }
-            })
-            .filter(Boolean);
+            }
+        })
+        .filter(Boolean);
 
-        if (tabsToRestore.length) {
-            await createTabsSafe(tabsToRestore, true);
-            tabsRestored = true;
-        }
-
-        browser.browserAction.enable();
-
-        if (tabsToRestore.length) {
-            sendMessage({
-                action: 'groups-updated',
-            });
-        }
-    }
+    await createTabsSafe(tabsToRestore, true);
 
     await storage.remove('tabsToRestore');
 
-    return tabsRestored;
+    browser.browserAction.enable();
+
+    if (tabsToRestore.length) {
+        sendMessage({
+            action: 'groups-updated',
+        });
+    }
+
+    console.log('tryRestoreMissedTabs finish');
 }
 
 function normalizeContainersInGroups(groups) {
@@ -3422,7 +3413,7 @@ async function init() {
     console.log('[STG] START init');
 
     try {
-        let data = await storage.get(null),
+        let data = await storage.get(),
             dataChanged = [];
 
         if (!Array.isArray(data.groups)) {
@@ -3445,12 +3436,11 @@ async function init() {
         try {
             let change = await runMigrateForData(data);
             dataChanged.push(change); // run migration for data
+            change && console.log('[STG] runMigrateForData finish');
         } catch (e) {
             utils.notify(e);
             throw '';
         }
-
-        console.log('[STG] runMigrateForData finish');
 
         utils.assignKeys(options, data, ALL_OPTIONS_KEYS);
 
@@ -3467,9 +3457,7 @@ async function init() {
             throw '';
         }
 
-        await tryRestoreMissedTabs(data.tabsToRestore);
-
-        console.log('[STG] tryRestoreMissedTabs finish');
+        await tryRestoreMissedTabs();
 
         windows = await Windows.load(true);
 

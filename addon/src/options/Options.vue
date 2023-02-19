@@ -145,7 +145,7 @@
 
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.updateTheme());
 
-            let data = await storage.get(null);
+            let data = await storage.get();
 
             let options = utils.assignKeys({}, data, ALL_OPTIONS_KEYS);
 
@@ -254,6 +254,9 @@
             },
             'options.hotkeys': {
                 handler(hotkeys, oldValue) {
+                    let beforeLength = hotkeys.length,
+                        hasChange = false;
+
                     hotkeys = hotkeys.filter((hotkey, index, self) => {
                         if (!hotkey.action) {
                             return false;
@@ -269,12 +272,17 @@
 
                         if (HOTKEY_ACTIONS_WITH_CUSTOM_GROUP.includes(hotkey.action) && hotkey.groupId && !this.groups.some(gr => gr.id === hotkey.groupId)) {
                             hotkey.groupId = 0;
+                            hasChange = true;
                         }
 
                         return self.findIndex(h => Object.keys(hotkey).every(key => hotkey[key] === h[key])) === index;
                     });
 
-                    BG && BG.saveOptions({
+                    if (!oldValue && hotkeys.length === beforeLength && !hasChange) {
+                        return;
+                    }
+
+                    BG?.saveOptions({
                         hotkeys: hotkeys,
                     });
                 },
@@ -679,7 +687,7 @@
                         return obj.map(normalize);
                     } else if ('object' === utils.type(obj)) {
                         for (let key in obj) {
-                            if (['title', 'icon', 'icons', 'iconUrl', 'favIconUrl', 'thumbnail', 'filename'].includes(key)) {
+                            if (['title', 'icon', 'icons', 'iconUrl', 'favIconUrl', 'thumbnail', 'filename', 'catchTabRules'].includes(key)) {
                                 obj[key] = obj[key] ? ('some ' + key) : obj[key];
                             } else {
                                 obj[key] = normalize(obj[key]);
@@ -698,11 +706,16 @@
                     return obj;
                 }
 
-                logs = normalize(logs);
+                let [{groups}, windows] = await Promise.all([Groups.load(null, true), Windows.load()]),
+                    tabKeys = ['id', 'url', 'hidden', 'cookieStoreId'];
+
+                groups.forEach(group => group.tabs = group.tabs.map(tab => utils.assignKeys({}, tab, tabKeys)));
 
                 await file.save({
                     info: await utils.getInfo(),
-                    logs: logs,
+                    windows: normalize(windows),
+                    groups: normalize(groups),
+                    logs: normalize(logs),
                 }, 'STG-debug-logs.json');
             },
         },

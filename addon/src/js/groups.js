@@ -1,7 +1,7 @@
 (function() {
     'use strict';
 
-    // if set groupId => return [group, groups, groupIndex]
+    // if set return {group, groups, groupIndex}
     async function load(groupId = null, withTabs = false, includeFavIconUrl, includeThumbnail) {
         let [allTabs, {groups}] = await Promise.all([
             withTabs ? Tabs.get(null, false, null, undefined, includeFavIconUrl, includeThumbnail) : false,
