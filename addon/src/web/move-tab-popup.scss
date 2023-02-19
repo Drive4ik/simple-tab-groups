@@ -29,9 +29,9 @@
     .stg-popup-has-text {
         color: var(--text-color) !important;
         font-family: Arial, sans-serif;
-        font-size: 16px;
+        font-size: 1rem;
         font-weight: normal;
-        line-height: 1.5;
+        line-height: 1.5rem;
         overflow: hidden;
         text-overflow: ellipsis;
     }
@@ -57,9 +57,9 @@
             .stg-popup-group {
                 display: flex;
                 align-items: center;
-                height: 30px;
+                height: 2rem;
                 margin-top: 4px;
-                padding: 2px 5px 2px;
+                padding: 0 5px;
                 border-radius: 3px;
                 cursor: default;
                 outline: none;
@@ -96,7 +96,7 @@
                 figure {
                     position: relative;
                     margin: 0;
-                    line-height: 1;
+                    line-height: 0;
                     height: 16px;
                     width: 16px;
                 }
