@@ -10,8 +10,10 @@
                 keysData = DEFAULT_OPTIONS;
             } else if (Array.isArray(keys)) {
                 keysData = keys.reduce((acc, key) => (acc[key] = DEFAULT_OPTIONS[key], acc), {});
-            } else { // if keys is string
+            } else if (typeof keys === 'string') {
                 keysData = {[keys]: DEFAULT_OPTIONS[keys]};
+            } else { // if keys is object
+                keysData = keys;
             }
 
             let result = null;
