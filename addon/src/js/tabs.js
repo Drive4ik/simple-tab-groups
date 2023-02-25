@@ -472,16 +472,6 @@
     async function moveNative(tabs, options = {}) {
         console.log('Tabs.moveNative called args', {tabs, options});
 
-        // fix bug "Error: An unexpected error occurred"
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=1595583
-        let tabsToReload = tabs.filter(tab => tab.url && tab.discarded && !utils.isUrlEmpty(tab.url) && tab.url.startsWith('about:'));
-
-        if (tabsToReload.length) {
-            console.log('tabsToReload by bug 1595583', tabsToReload);
-            await reload(tabsToReload, true);
-            await utils.wait(100);
-        }
-
         let openerTabIds = options.windowId ? tabs.map(tab => tab.openerTabId) : [],
             tabIds = await filterExist(tabs, true);
 
