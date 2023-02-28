@@ -9,10 +9,10 @@ There is also a `remove-evals.js` script that removes the eval code from vue whe
 I use Windows 10 x64
 ```
 $ node -v
-v16.13.0
+v16.17.0
 
 $ npm -v
-8.1.0
+8.15.0
 ```
 
 ```bash
