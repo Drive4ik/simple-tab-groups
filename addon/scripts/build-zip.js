@@ -12,7 +12,7 @@ function extractExtensionData() {
     let manifest = require('../src/manifest.json');
 
     return {
-        name: manifest.applications.gecko.id,
+        name: manifest.browser_specific_settings.gecko.id,
         version: manifest.version,
     };
 }
