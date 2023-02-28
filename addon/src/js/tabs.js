@@ -231,8 +231,10 @@
         tabs = tabs.flat();
 
         if (tabs.length) {
-            console.log('remove tabs:', tabs);
-            await browser.tabs.remove(tabs.map(tab => tab.id || tab));
+            console.log('Tabs.remove before');
+            tabs = await filterExist(tabs, true);
+            await browser.tabs.remove(tabs);
+            console.log('Tabs.remove after');
         }
     }
 
@@ -391,17 +393,9 @@
             });
 
             if (groupWindowId) {
-                let tabsToShow = tabs.filter(tab => tab.hidden);
-
-                if (tabsToShow.length) {
-                    await show(tabsToShow);
-                }
+                await show(tabs.filter(tab => tab.hidden));
             } else {
-                let tabsToHide = tabs.filter(tab => !tab.hidden);
-
-                if (tabsToHide.length) {
-                    await hide(tabsToHide);
-                }
+                await hide(tabs.filter(tab => !tab.hidden));
             }
 
             await Promise.all(tabs.map(tab => cache.setTabGroup(tab.id, groupId)));
@@ -476,6 +470,10 @@
             tabIds = await filterExist(tabs, true);
 
         console.assert(tabIds.length === tabs.length, 'Tabs.moveNative tabs length after filter are not equal', tabIds);
+
+        if (!tabIds.length) {
+            return;
+        }
 
         console.log('Tabs.moveNative before');
 

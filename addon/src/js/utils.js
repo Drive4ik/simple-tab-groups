@@ -26,13 +26,15 @@
             browser.runtime.getBrowserInfo(),
             browser.runtime.getPlatformInfo(),
             browser.permissions.contains(PERMISSIONS.BOOKMARKS),
-            storage.get(ALL_OPTIONS_KEYS),
+            storage.get(ALL_OPTIONS_KEYS).catch(e => String(e)),
             browser.management.getAll(),
         ]);
 
+        let startTime = background?.START_TIME || window.START_TIME;
+
         return {
             version: manifest.version,
-            upTime: background?.START_TIME ? Math.ceil((Date.now() - background.START_TIME) / 1000) + ' sec' : 'unknown',
+            upTime: startTime ? Math.ceil((Date.now() - startTime) / 1000) + ' sec' : 'unknown',
             browserAndOS: {
                 ...platformInfo,
                 ...browserInfo,
@@ -61,10 +63,13 @@
     }
 
     function catchFunc(asyncFunc) {
+        let fromStack = new Error().stack;
         return async function(...args) {
             try {
                 return await asyncFunc(...args);
             } catch (e) {
+                e.stack = fromStack + e.stack;
+                e.message += '      called args: ' + stringify(args);
                 window.errorEventHandler(e);
             }
         };
@@ -294,10 +299,6 @@
     }
 
     function normalizeTabUrl(tab) {
-        if (null == tab.url || 'string' !== typeof tab.url) {
-            tab.url = '';
-        }
-
         tab.url = normalizeUrl(tab.url);
 
         return tab;
@@ -418,13 +419,14 @@
         }
 
         if (window.localStorage.enableDebug) {
-            title = `#${id} ${title}`;
+            let windowId = cache.getWindowId(id) || tabs[0]?.windowId || 'no window';
+            title = `${windowId} #${id} ${title}`;
         }
 
         return title;
     }
 
-    function getTabTitle({id, index, title, url, discarded}, withUrl = false, sliceLength = 0, withActiveTab = false) {
+    function getTabTitle({id, index, title, url, discarded, windowId, lastAccessed}, withUrl = false, sliceLength = 0, withActiveTab = false) {
         title = title || url || 'about:blank';
 
         if (withUrl && url && title !== url) {
@@ -436,7 +438,9 @@
         }
 
         if (window.localStorage.enableDebug && id) {
-            title = `#${id}:${index} ${title}`;
+            let lastDate = new Date(lastAccessed);
+
+            title = `#${windowId}:${id}:${index} (${lastDate.getMinutes()}:${lastDate.getSeconds()}.${lastDate.getMilliseconds()}) ${title}`;
         }
 
         return sliceLength ? sliceText(title, sliceLength) : title;

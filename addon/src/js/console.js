@@ -49,8 +49,8 @@
         window.localStorage.errorLogs = JSON.stringify(errorLogs);
     }
 
-    function getErrorStack(e, start = 1, to = 20) {
-        return e.stack.split('\n').filter(Boolean).slice(start, to).map(s => s.trim().replace('@', ' -> ').replace(addonUrlPrefix, ''));
+    function getErrorStack(e, start = 0, to = 20) {
+        return e.stack.replaceAll('@', ' -> ').replaceAll(addonUrlPrefix, '').trim().split('\n').filter(Boolean).slice(start, to);
     }
 
     console.addErrorLog = addErrorLog;

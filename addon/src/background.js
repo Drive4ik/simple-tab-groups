@@ -46,11 +46,11 @@ let options = {},
     })();
 
 async function createTabsSafe(tabs, tryRestoreOpeners, hideTabs = true) {
-    console.log('createTabsSafe', tabs);
-
     if (!tabs.length) {
         return [];
     }
+
+    console.log('createTabsSafe', tabs);
 
     let groupIds = tabs.map(tab => tab.groupId).filter(utils.onlyUniqueFilter),
         groupIdForNextTabs = (groupIds.length === 1 && groupIds[0]) ? groupIds[0] : null;
@@ -447,25 +447,32 @@ function removeExcludeTabIds(tabIds) {
 }
 
 const onUpdatedTab = utils.catchFunc(async function(tabId, changeInfo, tab) {
-    let excludeTab = excludeTabIds.has(tab.id);
-
-    console.log('onUpdatedTab %s tabId: %s, changeInfo:', (excludeTab ? '🛑' : ''), tab.id, changeInfo);
-
-    if (excludeTab) {
+    if (excludeTabIds.has(tab.id)) {
+        console.log('🛑 onUpdatedTab tab was excluded tabId', tab.id);
+        cache.setTab(tab);
         return;
     }
 
+    changeInfo = cache.getRealTabStateChanged(tab);
+
+    if (!changeInfo) {
+        console.log('🛑 onUpdatedTab tabId', tab.id, 'changeInfo keys was not changed.');
+        cache.setTab(tab);
+        return;
+    }
+
+    console.log('onUpdatedTab tabId', tab.id, 'changeInfo', changeInfo);
     cache.setTab(tab);
 
     if (utils.isTabPinned(tab) && !changeInfo.hasOwnProperty('pinned')) {
-        console.log('onUpdatedTab 🛑 tab is pinned tabId: %s:', tab.id);
+        console.log('🛑 onUpdatedTab tab is pinned tabId: %s:', tab.id);
         return;
     }
 
-    if (!cache.hasTab(tab.id)) {
-        console.log('onUpdatedTab 🛑 tab not yet created tabId:', tab.id);
-        return;
-    }
+    // if (!cache.hasTab(tab.id)) {
+    //     console.log('🛑 onUpdatedTab tab not yet created tabId:', tab.id);
+    //     return;
+    // }
 
     let tabGroupId = cache.getTabGroup(tab.id),
         winGroupId = cache.getWindowGroup(tab.windowId);
@@ -535,55 +542,307 @@ function onRemovedTab(tabId, {isWindowClosing, windowId}) {
 
 let openerTabTimer = 0;
 function onMovedTab(tabId) {
-    if (cache.getTabGroup(tabId)) {
-        clearTimeout(openerTabTimer);
-        openerTabTimer = setTimeout(() => Tabs.get(), 500); // load visible tabs of current window for set openerTabId
-    }
-}
-
-function onAttachedTab(tabId, {newWindowId}) {
-    let excludeTab = excludeTabIds.has(tabId);
-
-    console.log('onAttachedTab', (excludeTab && '🛑'), {tabId, newWindowId});
-
-    if (excludeTab) {
+    /* if (excludeTabIds.has(tabId)) {
+        console.log('🛑 onMovedTab', tabId);
         return;
     }
 
-    let groupId = cache.getWindowGroup(newWindowId);
+    if (cache.getTabGroup(tabId)) {
+        clearTimeout(openerTabTimer);
+        openerTabTimer = setTimeout(() => Tabs.get().catch(noop), 500); // load visible tabs of current window for set openerTabId
+    } */
+}
 
-    cache.setTabGroup(tabId, groupId);
+function onAttachedTab(tabId, {newWindowId}) {
+    if (excludeTabIds.has(tabId)) {
+        console.log('🛑 onAttachedTab', {tabId, newWindowId});
+        return;
+    }
+
+    console.log('onAttachedTab', {tabId, newWindowId});
+
+    cache.setTabGroup(tabId, cache.getWindowGroup(newWindowId));
+}
+
+let windowIdsForRestoring = new Set,
+    grandRestoringPromise = null;
+async function GrandRestoreWindows({id}, needRestoreMissedTabsMap) {
+    windowIdsForRestoring.add(id);
+
+    needRestoreMissedTabsMap?.set(id, windowIdsForRestoring.size === 1);
+
+    if (grandRestoringPromise) {
+        await grandRestoringPromise;
+        grandRestoringPromise = null;
+        return;
+    }
+
+    let [
+        windows,
+        {groups},
+        {tabsToRestore = []}
+    ] = await Promise.all([
+        Windows.load(true),
+        Groups.load(),
+        storage.get('tabsToRestore')
+    ]);
+
+    await Promise.all(windows.map(win => loadingBrowserAction(true, win.id)));
+
+    let tabsToRestoreChanged = false;
+    function deleteTabsToRestoreByGroup({id}) {
+        let lengthBefore = tabsToRestore.length;
+        tabsToRestore = tabsToRestore.filter(tab => tab.groupId !== id);
+
+        if (!tabsToRestoreChanged) {
+            tabsToRestoreChanged = lengthBefore !== tabsToRestore.length;
+        }
+    }
+
+    // prepare windows
+    windows.forEach(win => {
+        win.groups = groups
+            .map(gr => {
+                if (gr.isArchive) {
+                    return;
+                }
+
+                let group = utils.clone(gr);
+
+                group.tabs = win.tabs.filter(tab => tab.groupId === group.id);
+
+                if (!group.tabs.length) {
+                    return;
+                }
+
+                group.tabs.forEach(tab => {
+                    if (tab.active && utils.isUrlEmpty(tab.url)) {
+                        tab.url = utils.normalizeUrl(cache.getTabSession(tab.id, 'url'));
+                    }
+                });
+
+                group.isLoaded = group.id === win.groupId;
+
+                // если группа загружена, ставим минимальный доступ (без конфликтов если она загружена в нескольких окнах одновременно), для того чтоб группа осталась в восстанавливаемом окне, а вкладки из другого окна переместятся туда
+                if (group.isLoaded) {
+                    group.lastAccessed = win.id;
+                } else {
+                    // иначе ищем минимальное значение доступа ко вкладке
+                    // если оно будет меньше чем доступ этой группы в других окнах - именно эта группа этого окна и останется - вкладки этой группы в других окнах удаляться или переместятся
+                    group.lastAccessed = Math.min(...group.tabs.map(tab => tab.lastAccessed));
+                }
+
+                group.window = win;
+
+                return group;
+            })
+            .filter(Boolean);
+    });
+
+    let tabsToDelete = new Map,
+        tabsToMoving = new Map,
+        groupsAlreadyRestored = new Map;
+
+    // restore tabs
+    windows.forEach(win => {
+        // не восстановленное окно пропускаем
+        if (!windowIdsForRestoring.has(win.id)) {
+            return;
+        }
+
+        // ищем группу которую надо восстановить и оставить, вкладки этой группы в других окнах удалить
+        win.groups.forEach(groupToKeep => {
+            // чтобы не бегать 2 раза по одной и той же группе
+            if (groupsAlreadyRestored.has(groupToKeep.id)) {
+                return;
+            }
+
+            let lastAccessGroup = new Map;
+
+            // ищем востанавливаемую группу в всех окнах
+            windows.forEach(win => {
+                win.groups.some(group => group.id === groupToKeep.id && lastAccessGroup.set(group.lastAccessed, group));
+            });
+
+            // если группа одна - удаляем все вкладки этой группы из восставновления, которое будет в будущем
+            // ведь она уже восcтановилась, нет смысла восстанавливать её вкладки
+            if (lastAccessGroup.size === 1) {
+                deleteTabsToRestoreByGroup(groupToKeep);
+                return;
+            }
+
+            // ищем группу с минимальным значением доступа,
+            // именно группа этого окна (и все её вкладки) и будет оставлена
+            let minGroupLastAccessed = Math.min(...lastAccessGroup.keys());
+
+            groupToKeep = lastAccessGroup.get(minGroupLastAccessed);
+
+            lastAccessGroup.delete(minGroupLastAccessed);
+            let otherGroups = lastAccessGroup;
+
+            // ищем вкладки в других окнах, которых нет в окне результующей группы (по урле, не уникально)
+            for (let otherGroup of otherGroups.values()) {
+                otherGroup.tabs.forEach((oTab, index) => {
+                    // удаляем другую вкладку если обе группы загружены, так как юзер мог менять вкладки в другом окне
+                    // если вкладка в востанавливаемом окне, удаляем её при условии, если восстанавливаемые окна - не все окна браузера, потому что юзер мог поменять вкладки в окне что осталось
+                    if (
+                        (groupToKeep.isLoaded && otherGroup.isLoaded) ||
+                        (
+                            windowIdsForRestoring.has(otherGroup.window.id) &&
+                            windowIdsForRestoring.size !== windows.length
+                        )
+                    ) {
+                        tabsToDelete.set(oTab.id, oTab);
+                        return;
+                    }
+
+                    let found = groupToKeep.tabs.some(tab => tab.url === oTab.url && tab.cookieStoreId === oTab.cookieStoreId);
+
+                    if (found) {
+                        tabsToDelete.set(oTab.id, oTab);
+                    } else {
+                        groupToKeep.tabs.splice(index, 0, oTab);
+                        tabsToMoving.set(oTab.id, oTab);
+                    }
+                });
+            }
+
+            // удаляем вкладки ресторед группы которых нет в других группах
+            if (otherGroups.size) {
+                let allOtherTabs = Array.from(otherGroups.values()).reduce((acc, otherGroup) => [...acc, ...otherGroup.tabs], []);
+
+                groupToKeep.tabs.forEach(tab => {
+                    // если вкладка из другого окна - пропускаем
+                    if (tabsToMoving.has(tab.id)) {
+                        return;
+                    }
+
+                    let found = allOtherTabs.some(oTab => oTab.url === tab.url && oTab.cookieStoreId === tab.cookieStoreId);
+
+                    if (!found) {
+                        tabsToDelete.set(tab.id, tab);
+                    }
+                });
+            }
+
+            groupsAlreadyRestored.set(groupToKeep.id, groupToKeep);
+
+            deleteTabsToRestoreByGroup(groupToKeep);
+        });
+    });
+
+    let activeTabs = [];
+
+    tabsToDelete.forEach(tab => tab.active && activeTabs.push(tab));
+    tabsToMoving.forEach(tab => tab.active && activeTabs.push(tab));
+
+    // делаем активной другую вкладку и удаляем привязку окна к группе
+    await Promise.all(activeTabs.map(async tabToDelete => {
+        let win = windows.find(w => w.id === tabToDelete.windowId),
+            groupToKeep = groupsAlreadyRestored.get(win.groupId);
+
+        // если удаляемая вкладка находится в нужном окне группы которую оставляем, делаем активной другую вкладку группы
+        if (tabToDelete.windowId === groupToKeep.window.id) {
+            // ищем неудаляемые вкладки текущего окна
+            let tabsToActive = groupToKeep.tabs.filter(tab => !tabsToDelete.has(tab.id) && tab.windowId === tabToDelete.windowId);
+
+            if (tabsToActive.length) {
+                await Tabs.setActive(null, tabsToActive);
+            } else { // если их нет - делаем активной перемещаемую вкладку, после временной
+                let otherMoveTabs = groupToKeep.tabs.filter(tab => tab.windowId !== tabToDelete.windowId);
+
+                if (otherMoveTabs.length) {
+                    groupToKeep.deleteTabAfterMove = await Tabs.createTempActiveTab(tabToDelete.windowId, true);
+                } else {
+                    await Tabs.createTempActiveTab(tabToDelete.windowId, false);
+                }
+            }
+        } else { // если вкладка в другом окне этой группы - удаляем сессию, и делаем пустую вкладку
+            await cache.removeWindowSession(tabToDelete.windowId);
+            await Tabs.createTempActiveTab(tabToDelete.windowId, false);
+        }
+    }));
+
+    // перемещаем недостающие вкладки из других окон
+    let excludeTabIds = [];
+    for (let groupToKeep of groupsAlreadyRestored.values()) {
+        if (!groupToKeep.tabs.some(tab => tab.windowId !== groupToKeep.window.id)) {
+            continue;
+        }
+
+        let tabIds = groupToKeep.tabs.map(utils.keyId);
+
+        excludeTabIds.push(...tabIds);
+        addExcludeTabIds(tabIds);
+
+        groupToKeep.tabs = await Tabs.moveNative(groupToKeep.tabs, {
+            windowId: groupToKeep.window.id,
+            index: -1,
+        });
+
+        if (groupToKeep.window.groupId === groupToKeep.id) {
+            await Tabs.show(groupToKeep.tabs);
+
+            if (groupToKeep.deleteTabAfterMove) {
+                await Tabs.setActive(null, groupToKeep.tabs.filter(tab => !tabsToDelete.has(tab.id)));
+                await Tabs.remove(groupToKeep.deleteTabAfterMove);
+            }
+        } else {
+            await Tabs.hide(groupToKeep.tabs);
+        }
+    };
+    removeExcludeTabIds(excludeTabIds);
+
+    await Tabs.remove(Array.from(tabsToDelete.keys()));
+
+    if (tabsToRestoreChanged) {
+        if (tabsToRestore.length) {
+            await storage.set({tabsToRestore});
+        } else {
+            needRestoreMissedTabsMap?.clear();
+            await storage.remove('tabsToRestore');
+        }
+    }
+
+    await Promise.all(windows.map(win => loadingBrowserAction(false, win.id)));
+
+    windowIdsForRestoring.clear();
 }
 
 const onCreatedWindow = utils.catchFunc(async function(win) {
-    console.log('onCreatedWindow', win);
+    console.log('onCreatedWindow', win.id, 'skip created:', BG.skipAddGroupToNextNewWindow);
 
     if (BG.skipAddGroupToNextNewWindow) {
         BG.skipAddGroupToNextNewWindow = false;
         return;
     }
 
-    if (utils.isWindowAllow(win)) {
-        win = await cache.loadWindowSession(win);
+    if (!utils.isWindowAllow(win)) {
+        return;
+    }
 
-        if (win.groupId) {
-            await cache.removeWindowSession(win.id);
+    await loadingBrowserAction(true, win.id);
 
-            updateBrowserActionData(null, win.id);
+    // для того чтоб один раз вызвалось tryRestoreMissedTabs
+    let needRestoreMissedTabsMap = new Map;
 
-            let winTabs = await Tabs.get(win.id, null, null);
-            winTabs.forEach(tab => cache.removeTabGroup(tab.id));
-        } else if (options.createNewGroupWhenOpenNewWindow) {
-            await Groups.add(win.id);
-        }
+    grandRestoringPromise = GrandRestoreWindows(win, needRestoreMissedTabsMap);
+    try {
+        await grandRestoringPromise;
+    } catch (e) {
+        return;
+    }
 
-        tryRestoreMissedTabs();
-    } else {
-        let winTabs = await Tabs.get(win.id, null, null, {
-            windowType: null,
-        });
+    await cache.loadWindowSession(win);
 
-        addExcludeTabIds(winTabs.map(utils.keyId));
+    if (!win.groupId && options.createNewGroupWhenOpenNewWindow) {
+        await Groups.add(win.id);
+    }
+
+    await loadingBrowserAction(false, win.id);
+
+    if (needRestoreMissedTabsMap.get(win.id)) {
+        await tryRestoreMissedTabs().catch(noop);
     }
 });
 
@@ -616,11 +875,14 @@ const onRemovedWindow = utils.catchFunc(async function(windowId) {
     reCreateTabsOnRemoveWindow = [];
 
     if (tabsToRestore.length) {
-        await storage.set({tabsToRestore});
+        let {tabsToRestore: prevRestore} = await storage.get({tabsToRestore: []});
+        tabsToRestore = tabsToRestore.filter(tab => !prevRestore.some(t => t.groupId === tab.groupId && t.url === tab.url && t.cookieStoreId === tab.cookieStoreId));
+        await storage.set({
+            tabsToRestore: [...prevRestore, ...tabsToRestore]
+        });
 
-        if (cache.hasAnyWindow()) {
-            tryRestoreMissedTabs().catch(noop);
-        }
+        restoringMissedTabsPromise = tryRestoreMissedTabs();
+        await restoringMissedTabsPromise.catch(noop);
     }
 });
 
@@ -629,13 +891,13 @@ async function loadingBrowserAction(start = true, windowId) {
     if (start) {
         _currentWindowForLoadingBrowserAction = windowId || await Windows.getLastFocusedNormalWindow();
 
-        setBrowserAction(_currentWindowForLoadingBrowserAction, 'loading', undefined, false);
+        await setBrowserAction(_currentWindowForLoadingBrowserAction, 'loading', undefined, false);
     } else {
         if (windowId) {
             _currentWindowForLoadingBrowserAction = windowId;
         }
 
-        updateBrowserActionData(null, _currentWindowForLoadingBrowserAction);
+        await updateBrowserActionData(null, _currentWindowForLoadingBrowserAction);
     }
 }
 
@@ -1366,7 +1628,7 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
     return true;
 }
 
-function setBrowserAction(windowId, title, icon, enable, isSticky) {
+async function setBrowserAction(windowId, title, icon, enable, isSticky) {
     console.info('setBrowserAction', {windowId, title, icon, enable, isSticky});
 
     let winObj = windowId ? {windowId} : {};
@@ -1376,28 +1638,13 @@ function setBrowserAction(windowId, title, icon, enable, isSticky) {
         icon = 'loading';
     }
 
-    if (title && title.startsWith('lang:')) {
-        title = browser.i18n.getMessage(title.slice(5));
-    }
-
-    browser.browserAction.setTitle({
-        ...winObj,
-        title: title || manifest.browser_action.default_title,
-    });
-
-    browser.browserAction.setBadgeText({
-        ...winObj,
-        text: isSticky ? STICKY_SYMBOL : '',
-    });
-
     if ('loading' === icon) {
         icon = '/icons/animate-spinner.svg';
     }
 
-    browser.browserAction.setIcon({
-        ...winObj,
-        path: icon || manifest.browser_action.default_icon,
-    });
+    if (title && title.startsWith('lang:')) {
+        title = browser.i18n.getMessage(title.slice(5));
+    }
 
     if (undefined !== enable) {
         if (enable) {
@@ -1406,6 +1653,21 @@ function setBrowserAction(windowId, title, icon, enable, isSticky) {
             browser.browserAction.disable();
         }
     }
+
+    await Promise.all([
+        browser.browserAction.setTitle({
+            ...winObj,
+            title: title || manifest.browser_action.default_title,
+        }),
+        browser.browserAction.setBadgeText({
+            ...winObj,
+            text: isSticky ? STICKY_SYMBOL : '',
+        }),
+        browser.browserAction.setIcon({
+            ...winObj,
+            path: icon || manifest.browser_action.default_icon,
+        })
+    ]);
 }
 
 async function updateBrowserActionData(groupId, windowId, groups) {
@@ -1432,17 +1694,17 @@ async function updateBrowserActionData(groupId, windowId, groups) {
     }
 
     if (group) {
-        setBrowserAction(windowId, utils.sliceText(utils.getGroupTitle(group, 'withContainer'), 43) + ' - STG', utils.getGroupIconUrl(group), true, group.isSticky);
-        prependWindowTitle(windowId, group.title);
+        await setBrowserAction(windowId, utils.sliceText(utils.getGroupTitle(group, 'withContainer'), 43) + ' - STG', utils.getGroupIconUrl(group), true, group.isSticky); // todo make this args as obj
+        await prependWindowTitle(windowId, group.title);
     } else {
-        setBrowserAction(windowId, undefined, undefined, true);
-        prependWindowTitle(windowId);
+        await setBrowserAction(windowId, undefined, undefined, true);
+        await prependWindowTitle(windowId);
     }
 }
 
-function prependWindowTitle(windowId, title) {
+async function prependWindowTitle(windowId, title) {
     if (options.prependGroupTitleToWindowTitle && windowId) {
-        browser.windows.update(windowId, {
+        await browser.windows.update(windowId, {
             titlePreface: title ? ('[' + utils.sliceText(title, 35) + '] ') : '',
         });
     }
@@ -1495,7 +1757,7 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, cookieSto
 
     let excludeTab = excludeTabIds.has(tabId);
 
-    console.log('onBeforeTabRequest %s tabId: %s, url: %s, originUrl: %s', (excludeTab ? '🛑' : ''), tabId, url, originUrl);
+    console.log((excludeTab ? '🛑' : ''), 'onBeforeTabRequest tabId', tabId, 'url', url, 'originUrl', originUrl);
 
     if (excludeTab || !cache.getTabGroup(tabId)) {
         return {};
@@ -1511,7 +1773,7 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, cookieSto
     }
 
     if (utils.isTabPinned(tab)) {
-        console.log('onBeforeTabRequest 🛑 cancel, tab is pinned');
+        console.log('🛑 onBeforeTabRequest cancel, tab is pinned');
         return {};
     }
 
@@ -1646,13 +1908,7 @@ function addEvents() {
     browser.tabs.onActivated.addListener(onActivatedTab)
     browser.tabs.onCreated.addListener(onCreatedTab);
     browser.tabs.onUpdated.addListener(onUpdatedTab, {
-        properties: [
-            browser.tabs.UpdatePropertyName.TITLE, // for cache
-            browser.tabs.UpdatePropertyName.STATUS, // for check update url and thumbnail
-            browser.tabs.UpdatePropertyName.FAVICONURL, // for session
-            browser.tabs.UpdatePropertyName.HIDDEN,
-            browser.tabs.UpdatePropertyName.PINNED,
-        ],
+        properties: ON_UPDATED_TAB_PROPERTIES,
     });
     browser.tabs.onRemoved.addListener(onRemovedTab);
     browser.tabs.onMoved.addListener(onMovedTab);
@@ -3158,65 +3414,88 @@ async function syncTabs(groups, allTabs) {
     return groups;
 }
 
+let restoringMissedTabsPromise = null; // need when remove window
 async function tryRestoreMissedTabs() {
-    let {tabsToRestore} = await storage.get('tabsToRestore');
+    if (restoringMissedTabsPromise) {
+        await restoringMissedTabsPromise.catch(noop);
+        restoringMissedTabsPromise = null;
+    }
 
-    if (!tabsToRestore?.length) {
+    let [
+        {tabsToRestore: tabsToRestoreNotModified},
+        windows,
+    ] = await Promise.all([
+        storage.get({tabsToRestore: []}),
+        Windows.load(),
+    ]);
+
+    if (!tabsToRestoreNotModified.length || !windows.length) {
         return;
     }
 
+    let tabsToRestore = utils.clone(tabsToRestoreNotModified);
+
     console.log('tryRestoreMissedTabs', tabsToRestore);
 
-    browser.browserAction.disable();
+    await Promise.all(windows.map(win => loadingBrowserAction(true, win.id)));
 
-    let {groups} = await Groups.load(null, true),
-        groupsObj = {},
-        foundTabIds = new Set;
+    let [allTabs, {groups}] = await Promise.all([Tabs.get(null, false, null), Groups.load()]),
+        groupNewTabParams = groups
+            .filter(g => !g.isArchive)
+            .reduce((acc, group) => (acc[group.id] = Groups.getNewTabParams(group), acc), {}),
+        foundTab = new Set;
 
-    groups.forEach(function(group) {
-        if (group.isArchive) {
-            return;
+    // normalize tab urls
+    allTabs.forEach(tab => {
+        if (utils.isTabLoading(tab) && utils.isUrlEmpty(tab.url)) {
+            tab.url = utils.normalizeUrl(cache.getTabSession(tab.id, 'url'));
         }
-
-        groupsObj[group.id] = {
-            tabs: group.tabs,
-            newTabParams: Groups.getNewTabParams(group),
-        };
     });
 
+    // strict find exist tabs
     tabsToRestore = tabsToRestore
         .map(function(tab) {
+            if (!groupNewTabParams[tab.groupId]) {
+                return;
+            }
+
             tab = utils.normalizeTabUrl(tab);
 
-            if (groupsObj[tab.groupId]) {
-                let winTab = groupsObj[tab.groupId].tabs.find(function(t) {
-                    if (utils.isTabLoading(t) && utils.isUrlEmpty(t.url)) {
-                        return true;
-                    }
+            let winTab = allTabs.find(
+                t => !foundTab.has(t) && t.groupId === tab.groupId && t.url === tab.url && t.cookieStoreId === tab.cookieStoreId
+            );
 
-                    return !foundTabIds.has(t.id) && t.url === tab.url && t.cookieStoreId === tab.cookieStoreId;
-                });
-
-                if (winTab) {
-                    foundTabIds.add(winTab.id);
-                } else {
-                    return Object.assign(tab, groupsObj[tab.groupId].newTabParams);
-                }
+            if (winTab) {
+                foundTab.add(winTab);
+            } else {
+                return Object.assign(tab, groupNewTabParams[tab.groupId]);
             }
         })
         .filter(Boolean);
 
-    await createTabsSafe(tabsToRestore, true);
+    try {
+        await createTabsSafe(tabsToRestore, true);
+    } catch (e) {
+        return;
+    }
 
-    await storage.remove('tabsToRestore');
-
-    browser.browserAction.enable();
+    let {tabsToRestore: tabsInDB} = await storage.get({tabsToRestore: []});
+    tabsInDB = tabsInDB.filter(t => {
+        return !tabsToRestoreNotModified.some(tab => t.groupId === tab.groupId && t.url === tab.url && t.cookieStoreId === tab.cookieStoreId);
+    });
+    if (tabsInDB.length) {
+        await storage.set({tabsToRestore: tabsInDB});
+    } else {
+        await storage.remove('tabsToRestore');
+    }
 
     if (tabsToRestore.length) {
         sendMessage({
             action: 'groups-updated',
         });
     }
+
+    await Promise.all(windows.map(win => loadingBrowserAction(false, win.id)));
 
     console.log('tryRestoreMissedTabs finish');
 }
@@ -3453,8 +3732,21 @@ async function init() {
         let windows = await Windows.load();
 
         if (!windows.length) {
+            window.localStorage.notFoundWindowsAddonStoppedWorking = 1;
             utils.notify(['notFoundWindowsAddonStoppedWorking']);
             throw '';
+        } else if (window.localStorage.notFoundWindowsAddonStoppedWorking) {
+            try {
+                await Promise.all(windows.map(async win => {
+                    grandRestoringPromise = GrandRestoreWindows(win);
+                    await grandRestoringPromise;
+                }));
+            } catch (e) {
+                browser.runtime.reload();
+                return;
+            }
+
+            delete window.localStorage.notFoundWindowsAddonStoppedWorking;
         }
 
         await tryRestoreMissedTabs();

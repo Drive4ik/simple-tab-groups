@@ -339,3 +339,12 @@ const ALL_OPTIONS_KEYS = Object.freeze(Object.keys(DEFAULT_OPTIONS).filter(key =
 const MINUTE_SEC = 60;
 const HOUR_SEC = 60 * MINUTE_SEC;
 const DAY_SEC = 24 * HOUR_SEC;
+
+const ON_UPDATED_TAB_PROPERTIES = Object.freeze([
+    browser.tabs.UpdatePropertyName.TITLE, // for cache
+    browser.tabs.UpdatePropertyName.STATUS, // for check update url and thumbnail
+    // browser.tabs.UpdatePropertyName.URL, // for check update url and thumbnail
+    browser.tabs.UpdatePropertyName.FAVICONURL, // for session
+    browser.tabs.UpdatePropertyName.HIDDEN,
+    browser.tabs.UpdatePropertyName.PINNED,
+]);

@@ -9,9 +9,7 @@
         ]);
 
         if (withTabs) {
-            let groupTabs = {};
-
-            groups.forEach(group => groupTabs[group.id] = []);
+            let groupTabs = groups.reduce((acc, group) => (acc[group.id] = [], acc), {});
 
             await Promise.all(allTabs.map(async function(tab) {
                 if (tab.groupId) {

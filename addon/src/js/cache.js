@@ -2,11 +2,33 @@
     'use strict';
 
     let tabs = {},
+        lastTabsState = {}, // bug https://bugzilla.mozilla.org/show_bug.cgi?id=1818392
         removedTabs = new Set,
         windows = {};
 
+    function setLastTabState({id, url, title, status, hidden, pinned, favIconUrl}) {
+        lastTabsState[id] = {id, url, title, status, hidden, pinned, favIconUrl};
+    }
+
+    // don't forget for pinned tabs events
+    function getRealTabStateChanged(tab) {
+        let changeInfo = null;
+
+        if (lastTabsState[tab.id]) {
+            ON_UPDATED_TAB_PROPERTIES.forEach(key => {
+                if (tab[key] !== lastTabsState[tab.id][key]) {
+                    changeInfo ??= {};
+                    changeInfo[key] = tab[key];
+                }
+            });
+        }
+
+        return changeInfo;
+    }
+
     function clear() {
         tabs = {};
+        lastTabsState = {};
         removedTabs.clear();
         windows = {};
     }
@@ -25,12 +47,14 @@
             tabs[id] = {};
         }
 
-        if (utils.isUrlEmpty(url) && tabs[id].url && !utils.isUrlEmpty(tabs[id].url) && status === browser.tabs.TabStatus.LOADING) {
+        setLastTabState(arguments[0]);
+
+        if (status === browser.tabs.TabStatus.LOADING && tabs[id].url && utils.isUrlEmpty(url)) {
             return;
         }
 
         tabs[id].url = url;
-        tabs[id].title = title || tabs[id].url;
+        tabs[id].title = title || url;
         tabs[id].cookieStoreId = cookieStoreId;
         tabs[id].openerTabId = openerTabId;
     }
@@ -42,17 +66,17 @@
     function removeTab(tabId) {
         removedTabs.add(tabId);
         delete tabs[tabId];
+        delete lastTabsState[tabId];
     }
 
     // groupId
     async function loadTabGroup(tabId) {
         if (tabs[tabId]) {
-            if (tabs[tabId].hasOwnProperty('groupId')) {
+            if (tabs[tabId].groupId) {
                 return tabs[tabId].groupId;
             }
 
-            let groupId = await browser.sessions.getTabValue(tabId, 'groupId');
-            return tabs[tabId].groupId = groupId || null;
+            return tabs[tabId].groupId = await browser.sessions.getTabValue(tabId, 'groupId');
         }
     }
 
@@ -75,32 +99,30 @@
     }
 
     function getTabGroup(tabId) {
-        return (tabs[tabId] && tabs[tabId].groupId) || null;
+        return tabs[tabId]?.groupId;
     }
 
     async function removeTabGroup(tabId) {
-        if (tabs[tabId]) {
-            if (tabs[tabId].groupId) {
-                delete tabs[tabId].groupId;
-                return browser.sessions.removeTabValue(tabId, 'groupId');
-            }
+        if (tabs[tabId]?.groupId) {
+            delete tabs[tabId].groupId;
         }
+
+        return browser.sessions.removeTabValue(tabId, 'groupId');
     }
 
     // favIconUrl
     async function loadTabFavIcon(tabId) {
         if (tabs[tabId]) {
-            if (tabs[tabId].hasOwnProperty('favIconUrl')) {
+            if (tabs[tabId].favIconUrl) {
                 return tabs[tabId].favIconUrl;
             }
 
-            let favIconUrl = await browser.sessions.getTabValue(tabId, 'favIconUrl');
-            return tabs[tabId].favIconUrl = favIconUrl || null;
+            return tabs[tabId].favIconUrl = await browser.sessions.getTabValue(tabId, 'favIconUrl');
         }
     }
 
     async function setTabFavIcon(tabId, favIconUrl) {
-        if (favIconUrl && favIconUrl.startsWith('data:')) {
+        if (favIconUrl?.startsWith('data:')) {
             if (tabs[tabId]) {
                 if (tabs[tabId].favIconUrl === favIconUrl) {
                     return;
@@ -118,27 +140,28 @@
     }
 
     function getTabFavIcon(tabId) {
-        return (tabs[tabId] && tabs[tabId].favIconUrl) || null;
+        return tabs[tabId]?.favIconUrl;
     }
 
     async function removeTabFavIcon(tabId) {
-        if (tabs[tabId]) {
-            if (tabs[tabId].favIconUrl) {
-                delete tabs[tabId].favIconUrl;
-                return browser.sessions.removeTabValue(tabId, 'favIconUrl');
-            }
+        if (tabs[tabId]?.favIconUrl) {
+            delete tabs[tabId].favIconUrl;
+            return browser.sessions.removeTabValue(tabId, 'favIconUrl');
         }
     }
 
     // thumbnail
     async function loadTabThumbnail(tabId) {
-        if (BG.options.showTabsWithThumbnailsInManageGroups && tabs[tabId]) {
-            if (tabs[tabId].hasOwnProperty('thumbnail')) {
+        if (!BG.options.showTabsWithThumbnailsInManageGroups) {
+            return;
+        }
+
+        if (tabs[tabId]) {
+            if (tabs[tabId].thumbnail) {
                 return tabs[tabId].thumbnail;
             }
 
-            let thumbnail = await browser.sessions.getTabValue(tabId, 'thumbnail');
-            return tabs[tabId].thumbnail = thumbnail || null;
+            return tabs[tabId].thumbnail = await browser.sessions.getTabValue(tabId, 'thumbnail');
         }
     }
 
@@ -165,15 +188,13 @@
     }
 
     function getTabThumbnail(tabId) {
-        return (tabs[tabId] && tabs[tabId].thumbnail) || null;
+        return tabs[tabId]?.thumbnail;
     }
 
     async function removeTabThumbnail(tabId) {
-        if (tabs[tabId]) {
-            if (tabs[tabId].thumbnail) {
-                delete tabs[tabId].thumbnail;
-                return browser.sessions.removeTabValue(tabId, 'thumbnail');
-            }
+        if (tabs[tabId]?.thumbnail) {
+            delete tabs[tabId].thumbnail;
+            return browser.sessions.removeTabValue(tabId, 'thumbnail');
         }
     }
 
@@ -242,10 +263,6 @@
     }
 
     // WINDOWS
-    function hasAnyWindow() {
-        return Object.keys(windows).length > 0;
-    }
-
     function removeWindow(windowId) {
         delete windows[windowId];
     }
@@ -297,14 +314,14 @@
 
     async function loadWindowSession(win) {
         if (!windows[win.id]) {
-            windows[win.id] = {};
-
-            let groupId = await browser.sessions.getWindowValue(win.id, 'groupId');
-
-            groupId && (windows[win.id].groupId = groupId);
+            windows[win.id] = {
+                groupId: await browser.sessions.getWindowValue(win.id, 'groupId'),
+            };
         }
 
-        windows[win.id].groupId && (win.groupId = windows[win.id].groupId);
+        if (windows[win.id]?.groupId) {
+            win.groupId = windows[win.id].groupId;
+        }
 
         return win;
     }
@@ -315,6 +332,9 @@
     }
 
     window.cache = {
+        setLastTabState,
+        getRealTabStateChanged,
+
         clear,
         applySession,
 
@@ -345,7 +365,6 @@
         removedTabs,
 
         // windows
-        hasAnyWindow,
         removeWindow,
 
         setWindowGroup,

@@ -1,6 +1,10 @@
 (function() {
     'use strict';
 
+    window.addonUrlPrefix = browser.runtime.getURL('');
+    window.manifest = browser.runtime.getManifest();
+    window.noop = function() {};
+
     const isBackgroundPage = window.location.pathname.includes('background');
 
     if (!isBackgroundPage) {
@@ -22,7 +26,8 @@
 
                         browser.tabs.remove(currentTab.id);
                     }
-                });
+                })
+                .catch(noop);
 
             return;
         }
@@ -33,9 +38,5 @@
         window.cache = background.cache;
         window.Containers = background.Containers;
     }
-
-    window.addonUrlPrefix = browser.runtime.getURL('');
-    window.manifest = browser.runtime.getManifest();
-    window.noop = function() {};
 
 })();

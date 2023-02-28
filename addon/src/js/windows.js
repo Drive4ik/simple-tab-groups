@@ -7,7 +7,7 @@
         console.log('START Windows.load', withTabs, includeFavIconUrl, includeThumbnail);
 
         let [tabs, windows] = await Promise.all([
-            withTabs ? Tabs.get(null, null, null, undefined, includeFavIconUrl, includeThumbnail) : false,
+            withTabs ? Tabs.get(null, false, null, undefined, includeFavIconUrl, includeThumbnail) : false,
             browser.windows.getAll({
                 windowTypes: [browser.windows.WindowType.NORMAL],
             })
@@ -19,17 +19,13 @@
                 .map(cache.loadWindowSession)
         );
 
+        if (withTabs) {
+            windows = windows.map(win => (win.tabs = tabs.filter(tab => tab.windowId === win.id), win));
+        }
+
         console.log('STOP Windows.load');
 
-        return windows
-            .map(function(win) {
-                if (withTabs) {
-                    win.tabs = tabs.filter(tab => tab.pinned ? false : tab.windowId === win.id);
-                }
-
-                return win;
-            })
-            .sort(utils.sortBy('id'));
+        return windows.sort(utils.sortBy('id'));
     }
 
     async function get(windowId = browser.windows.WINDOW_ID_CURRENT) {

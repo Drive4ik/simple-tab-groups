@@ -6,23 +6,23 @@
     }
 
     function errorEventHandler(event) {
-        event.preventDefault && event.preventDefault();
-        event.stopImmediatePropagation && event.stopImmediatePropagation();
+        event.preventDefault?.();
+        event.stopImmediatePropagation?.();
 
-        if (typeof event.error === 'string' && event.error.includes('waiting background')) {
+        if (event.error?.includes?.('waiting background')) {
             console.log(event.error);
             return;
         }
 
-        if (undefined === console.getErrorStack) { // background not inited
+        if (!console.getErrorStack) { // background not inited
             return;
         }
 
         let nativeError = event.error || event,
             data = null;
 
-        if (undefined === nativeError || !String(nativeError.name).toLowerCase().includes('error')) {
-            nativeError = Error(nativeError);
+        if (!nativeError || !String(nativeError?.name).toLowerCase().includes('error')) {
+            nativeError = new Error(nativeError);
         }
 
         try {
@@ -41,11 +41,11 @@
             stack: console.getErrorStack(nativeError),
         };
 
-        if (errorData.message === 'An unexpected error occurred') {
+        if (String(nativeError).includes('unexpected error')) {
             browser.tabs.create({
                 active: true,
                 url: browser.runtime.getURL('/help/db-error-reinstall.html'),
-            });
+            }).catch(noop);
         }
 
         // if (/^(invalid (tab|window))/i.test(errorData.message) && !window.localStorage.lastReloadFromError) {
@@ -72,5 +72,6 @@
     window.errorEventMessage = errorEventMessage;
 
     window.addEventListener('error', errorEventHandler);
+    window.addEventListener('unhandledrejection', e => errorEventHandler(e.reason));
 
 })();
