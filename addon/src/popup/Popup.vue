@@ -1985,7 +1985,7 @@
             }
 
             .tab-title {
-                opacity: 0.4;
+                color: var(--discarded-text-color);
             }
         }
 
