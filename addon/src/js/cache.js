@@ -44,10 +44,12 @@
     // TABS
     function setTab({id, url, title, cookieStoreId, openerTabId, status}) {
         if (!tabs[id]) {
-            tabs[id] = {};
+            tabs[id] = {id, cookieStoreId};
         }
 
         setLastTabState(arguments[0]);
+
+        tabs[id].openerTabId = openerTabId;
 
         if (status === browser.tabs.TabStatus.LOADING && tabs[id].url && utils.isUrlEmpty(url)) {
             return;
@@ -55,8 +57,6 @@
 
         tabs[id].url = url;
         tabs[id].title = title || url;
-        tabs[id].cookieStoreId = cookieStoreId;
-        tabs[id].openerTabId = openerTabId;
     }
 
     function hasTab(tabId) {
@@ -248,12 +248,12 @@
     function getTabsSessionAndRemove(tabIds) {
         return tabIds
             .map(function(tabId) {
-                if (!tabs[tabId] || !tabs[tabId].groupId || !tabs[tabId].url) {
+                if (!tabs[tabId]?.groupId || !tabs[tabId]?.url) {
                     removeTab(tabId);
                     return false;
                 }
 
-                let tab = {id: tabId, ...tabs[tabId]};
+                let tab = {...tabs[tabId]};
 
                 removeTab(tabId);
 

@@ -50,7 +50,7 @@ async function createTabsSafe(tabs, tryRestoreOpeners, hideTabs = true) {
         return [];
     }
 
-    console.log('createTabsSafe', tabs);
+    console.log('createTabsSafe count:', tabs.length);
 
     let groupIds = tabs.map(tab => tab.groupId).filter(utils.onlyUniqueFilter),
         groupIdForNextTabs = (groupIds.length === 1 && groupIds[0]) ? groupIds[0] : null;
@@ -96,9 +96,15 @@ async function createTabsSafe(tabs, tryRestoreOpeners, hideTabs = true) {
 
     newTabs = await Promise.all(newTabs.map(cache.setTabSession));
 
+    let beforeTabsLength = newTabs.length;
+
     newTabs = await Tabs.moveNative(newTabs, {
         index: -1,
     });
+
+    if (newTabs.length !== beforeTabsLength) {
+        throw Error('tabs length after creating are not equals');
+    }
 
     if (hideTabs) {
         let tabsToHide = newTabs.filter(tab => !tab.pinned && tab.groupId && !cache.getWindowId(tab.groupId));
@@ -1642,7 +1648,7 @@ async function setBrowserAction(windowId, title, icon, enable, isSticky) {
         icon = '/icons/animate-spinner.svg';
     }
 
-    if (title && title.startsWith('lang:')) {
+    if (title?.startsWith('lang:')) {
         title = browser.i18n.getMessage(title.slice(5));
     }
 
@@ -3476,6 +3482,7 @@ async function tryRestoreMissedTabs() {
     try {
         await createTabsSafe(tabsToRestore, true);
     } catch (e) {
+        setActionToReloadAddon();
         return;
     }
 
@@ -3693,13 +3700,13 @@ async function init() {
 
     try {
         let data = await storage.get(),
-            dataChanged = [];
+            dataChanged = new Set;
 
         if (!Array.isArray(data.groups)) {
             utils.notify(['ffFailedAndLostDataMessage']);
 
             data.groups = [];
-            dataChanged.push(true);
+            dataChanged.add(true);
         }
 
         await Containers.init(data.temporaryContainerTitle);
@@ -3714,7 +3721,7 @@ async function init() {
 
         try {
             let change = await runMigrateForData(data);
-            dataChanged.push(change); // run migration for data
+            dataChanged.add(change); // run migration for data
             change && console.log('[STG] runMigrateForData finish');
         } catch (e) {
             utils.notify(e);
@@ -3723,9 +3730,9 @@ async function init() {
 
         utils.assignKeys(options, data, ALL_OPTIONS_KEYS);
 
-        dataChanged.push(normalizeContainersInGroups(data.groups));
+        dataChanged.add(normalizeContainersInGroups(data.groups));
 
-        if (dataChanged.some(change => change)) {
+        if (dataChanged.has(true)) {
             await storage.set(data);
         }
 
@@ -3816,13 +3823,7 @@ async function init() {
 
         // delete window.localStorage.lastReloadFromError;
     } catch (e) {
-        setBrowserAction(undefined, 'lang:clickHereToReloadAddon', '/icons/exclamation-triangle-yellow.svg', true);
-
-        browser.browserAction.setPopup({
-            popup: '',
-        });
-
-        browser.browserAction.onClicked.addListener(() => browser.runtime.reload());
+        setActionToReloadAddon();
 
         if (e) {
             errorEventHandler(e);
@@ -3830,6 +3831,16 @@ async function init() {
 
         console.log('[STG] STOP init with errors');
     }
+}
+
+function setActionToReloadAddon() {
+    setBrowserAction(undefined, 'lang:clickHereToReloadAddon', '/icons/exclamation-triangle-yellow.svg', true).catch(noop);
+
+    browser.browserAction.setPopup({
+        popup: '',
+    });
+
+    browser.browserAction.onClicked.addListener(() => browser.runtime.reload());
 }
 
 setBrowserAction(undefined, 'loading', undefined, false);

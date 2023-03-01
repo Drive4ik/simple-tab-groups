@@ -24,7 +24,7 @@
                             windowId: currentTab.windowId,
                         });
 
-                        browser.tabs.remove(currentTab.id);
+                        return browser.tabs.remove(currentTab.id);
                     }
                 })
                 .catch(noop);
@@ -34,7 +34,8 @@
 
         window.BG = background.BG;
 
-        window.console = background.console;
+        Object.assign(window.console, background.console);
+        // window.console = background.console;
         window.cache = background.cache;
         window.Containers = background.Containers;
     }

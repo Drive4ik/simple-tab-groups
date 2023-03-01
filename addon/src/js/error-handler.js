@@ -41,12 +41,13 @@
             stack: console.getErrorStack(nativeError),
         };
 
-        if (String(nativeError).includes('unexpected error')) {
+        // no longer needed?
+        /* if (String(nativeError).includes('unexpected error')) {
             browser.tabs.create({
                 active: true,
                 url: browser.runtime.getURL('/help/db-error-reinstall.html'),
             }).catch(noop);
-        }
+        } */
 
         // if (/^(invalid (tab|window))/i.test(errorData.message) && !window.localStorage.lastReloadFromError) {
         //     window.localStorage.lastReloadFromError = 1;
@@ -64,7 +65,7 @@
                 'whatsWrongMessage',
                 '/icons/exclamation-triangle-yellow.svg',
                 () => browser.runtime.openOptionsPage()
-            );
+            ).catch(() => {});
         }
     }
 

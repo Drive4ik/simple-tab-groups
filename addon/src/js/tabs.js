@@ -469,10 +469,10 @@
         let openerTabIds = options.windowId ? tabs.map(tab => tab.openerTabId) : [],
             tabIds = await filterExist(tabs, true);
 
-        console.assert(tabIds.length === tabs.length, 'Tabs.moveNative tabs length after filter are not equal', tabIds);
+        console.assert(tabIds.length === tabs.length, `Tabs.moveNative tabs length after filter are not equal: ${tabs.length}`, tabIds);
 
         if (!tabIds.length) {
-            return;
+            return [];
         }
 
         console.log('Tabs.moveNative before');
@@ -617,7 +617,7 @@
                 tab.groupId = groupId;
             }
 
-            if (includeFavIconUrl && favIconUrl && favIconUrl.startsWith('data:')) {
+            if (includeFavIconUrl && favIconUrl?.startsWith('data:')) {
                 tab.favIconUrl = favIconUrl;
             }
 
