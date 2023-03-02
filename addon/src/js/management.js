@@ -63,19 +63,12 @@
     }
 
     function isEnabled(id) {
-        if (extensions[id]?.enabled) {
-            return true;
-        }
-
-        return false;
+        return extensions[id]?.enabled;
     }
 
     async function detectConflictedExtensions() {
         if (CONFLICTED_EXTENSIONS.some(isEnabled)) {
-            await browser.tabs.create({
-                active: true,
-                url: '/help/extensions-that-conflict-with-stg.html',
-            });
+            await openPopup('extensions-that-conflict-with-stg');
         }
     }
 

@@ -24,10 +24,7 @@
                 errorCounter++;
 
                 if (errorCounter > 100) {
-                    browser.tabs.create({
-                        active: true,
-                        url: browser.runtime.getURL('/help/db-error-reinstall.html'),
-                    }).catch(noop)
+                    openPopup('db-error-reinstall');
                     throw e;
                 }
 

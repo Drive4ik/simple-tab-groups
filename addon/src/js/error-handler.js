@@ -41,21 +41,6 @@
             stack: console.getErrorStack(nativeError),
         };
 
-        // no longer needed?
-        /* if (String(nativeError).includes('unexpected error')) {
-            browser.tabs.create({
-                active: true,
-                url: browser.runtime.getURL('/help/db-error-reinstall.html'),
-            }).catch(noop);
-        } */
-
-        // if (/^(invalid (tab|window))/i.test(errorData.message) && !window.localStorage.lastReloadFromError) {
-        //     window.localStorage.lastReloadFromError = 1;
-        //     console.addErrorLog(errorData);
-        //     browser.runtime.reload();
-        //     return;
-        // }
-
         console.logError(errorData);
 
         if (false !== data.showNotification) {

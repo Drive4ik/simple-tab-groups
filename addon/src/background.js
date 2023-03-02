@@ -2899,11 +2899,6 @@ window.BG = {
     console,
 };
 
-function openHelp(page) {
-    let url = browser.runtime.getURL(`/help/${page}.html`);
-    return Tabs.createUrlOnce(url);
-}
-
 async function runMigrateForData(data) {
     let currentVersion = manifest.version;
 
@@ -3583,7 +3578,7 @@ browser.runtime.onInstalled.addListener(function onInstalled({previousVersion, r
 
     if (browser.runtime.OnInstalledReason.INSTALL === reason ||
         (browser.runtime.OnInstalledReason.UPDATE === reason && -1 === utils.compareVersions(previousVersion, '4.0'))) {
-        openHelp('welcome-v4');
+        openPopup('welcome-v4', false);
     }
 });
 
@@ -3741,6 +3736,7 @@ async function init() {
         if (!windows.length) {
             window.localStorage.notFoundWindowsAddonStoppedWorking = 1;
             utils.notify(['notFoundWindowsAddonStoppedWorking']);
+            browser.windows.onCreated.addListener(() => browser.runtime.reload());
             throw '';
         } else if (window.localStorage.notFoundWindowsAddonStoppedWorking) {
             try {
@@ -3801,27 +3797,25 @@ async function init() {
             utils.notify(['backupSuccessfullyRestored']);
         }
 
-        window.BG.inited = true;
+        await setBrowserAction(undefined, undefined, undefined, true);
 
-        // send message for addon plugins
-        sendExternalMessage({
-            action: 'i-am-back',
+        await browser.browserAction.setBadgeBackgroundColor({
+            color: 'transparent',
         });
+
+        window.BG.inited = true;
 
         // send message for addon pages if it's open
         sendMessage({
             action: 'i-am-back',
         });
 
-        setBrowserAction(undefined, undefined, undefined, true);
-
-        browser.browserAction.setBadgeBackgroundColor({
-            color: 'transparent',
+        // send message for addon plugins
+        sendExternalMessage({
+            action: 'i-am-back',
         });
 
         console.log('[STG] STOP init');
-
-        // delete window.localStorage.lastReloadFromError;
     } catch (e) {
         setActionToReloadAddon();
 

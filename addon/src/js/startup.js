@@ -4,6 +4,23 @@
     window.addonUrlPrefix = browser.runtime.getURL('');
     window.manifest = browser.runtime.getManifest();
     window.noop = function() {};
+    window.openPopup = async function(page, asWindow = true) {
+        let url = browser.runtime.getURL(`/help/${page}.html`);
+
+        if (asWindow) {
+            return browser.windows.create({
+                focused: true,
+                type: browser.windows.CreateType.POPUP,
+                state:  browser.windows.WindowState.MAXIMIZED,
+                url,
+            }).catch(noop);
+        }
+
+        return browser.tabs.create({
+            url,
+            active: true,
+        }).catch(noop);
+    };
 
     const isBackgroundPage = window.location.pathname.includes('background');
 
