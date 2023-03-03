@@ -822,8 +822,8 @@
         "description": "Welcome to Simple Tab Groups v4"
     },
     "helpPageWelcomeV4Description": {
-        "message": "Пожалуйста, включите опцию \"Восстанавливать предыдущую сессию\" в настройках браузера. <br>Это необходимо для поддержания связи между группой и вкладкой, иначе вкладки с прошлой сессии не будут открываться при запуске браузера и будут потеряны из дополнения - аддон перестанет правильно работать.",
-        "description": "Please enable \"Restore previous session\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
+        "message": "Пожалуйста, включите опцию \"Открыть предыдущие окна и вкладки\" в настройках браузера. <br>Это необходимо для поддержания связи между группой и вкладкой, иначе вкладки с прошлой сессии не будут открываться при запуске браузера и будут потеряны из дополнения - аддон перестанет правильно работать.",
+        "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
     "leaveBookmarksOfClosedTabs": {
         "message": "Оставить закладки закрытых вкладок (закладки будет разделять разделитель)",

@@ -823,7 +823,7 @@
     },
     "helpPageWelcomeV4Description": {
         "message": "Harap aktifkan \"Pulihkan sesi sebelumnya\" di setelan browser.<br>Ini diperlukan untuk menjaga komunikasi antara grup dan tab, <br>jika tidak, tab tidak akan terbuka saat browser dimulai dan akan hilang dari addon -<br > addon akan berhenti bekerja.",
-        "description": "Please enable \"Restore previous session\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
+        "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
     "leaveBookmarksOfClosedTabs": {
         "message": "Tinggalkan bookmark dari tab yang ditutup (bookmark akan memisahkan pemisah)",
