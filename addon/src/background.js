@@ -1834,7 +1834,7 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, cookieSto
         return utils.setUrlSearchParams(browser.runtime.getURL('/help/open-in-container.html'), params);
     }
 
-    if (IGNORE_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER.includes(originExt?.id)) {
+    if (IGNORE_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER.includes(originExt?.id) && originExt.enabled) {
         let showNotif = +window.localStorage.ignoreExtensionsForReopenTabInContainer || 0;
 
         if (showNotif < 10) {
@@ -1871,7 +1871,7 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, cookieSto
             if (tab.hidden) {
                 //
             } else {
-                if (!ignoreExtForReopenContainer.has(originExt.id)) {
+                if (!ignoreExtForReopenContainer.has(originExt?.id) && originExt?.enabled) {
                     newTabParams.active = true;
                     newTabParams.url = getNewAddonTabUrl();
                 }
