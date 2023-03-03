@@ -4,9 +4,7 @@
     window.addonUrlPrefix = browser.runtime.getURL('');
     window.manifest = browser.runtime.getManifest();
     window.noop = function() {};
-    window.openPopup = async function(page, asWindow = true) {
-        let url = browser.runtime.getURL(`/help/${page}.html`);
-
+    window.openUrl = async function(url, asWindow = true) {
         if (asWindow) {
             return browser.windows.create({
                 focused: true,
@@ -20,6 +18,9 @@
             url,
             active: true,
         }).catch(noop);
+    };
+    window.openHelp = async function(page, asWindow) {
+        return openUrl(browser.runtime.getURL(`/help/${page}.html`), asWindow);
     };
 
     const isBackgroundPage = window.location.pathname.includes('background');

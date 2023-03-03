@@ -24,7 +24,7 @@
                 errorCounter++;
 
                 if (errorCounter > 100) {
-                    openPopup('db-error-reinstall');
+                    openHelp('db-error-reinstall');
                     throw e;
                 }
 

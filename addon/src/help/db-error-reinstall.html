@@ -2,41 +2,35 @@
 <html>
 
 <head>
-    <title i18n="helpPageDbErrorReinstallTitle">Database error in Simple Tab Groups</title>
+    <title data-i18n-id="helpPageDbErrorReinstallTitle">Database error in Simple Tab Groups</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" href="/icons/exclamation-triangle-yellow.svg"/>
-    <link rel="stylesheet" type="text/css" href="css-help-pages.css">
-
-    <style type="text/css">
-        button {
-            padding: 5px;
-        }
-    </style>
+    <link rel="stylesheet" type="text/css" href="browser-style.css"/>
 </head>
 
 <body>
-    <div id="main">
-        <h2 i18n="helpPageDbErrorReinstallTitle">Database error in Simple Tab Groups</h2>
-        <h3 i18n="helpPageDbErrorReinstallDescription">Unfortunately, an error occurred while reading data from the STG addon from the Firefox database. At the moment, the addon is stopped. To resume the add-on, do the following:</h3>
-
-        <div class="has-text-left">
-            <h4 i18n="helpPageDbErrorReinstallDescription2">Restart Firefox Browser (for Linux and Mac OS with process termination)</h4>
-
-            <span i18n="helpPageDbErrorReinstallDescription3">If you see this window again, try reinstalling the addon:</span>
-
-            <h4>
-                <ol>
-                    <li i18n="helpPageDbErrorReinstallDescription4">Remove STG Addon</li>
-                    <li i18n="helpPageDbErrorReinstallDescription5">Restart Firefox Browser</li>
-                    <li><a href="https://addons.mozilla.org/firefox/addon/simple-tab-groups/" target="_blank" i18n="helpPageDbErrorReinstallDescription6">Install STG Addon</a></li>
-                    <li i18n="helpPageDbErrorReinstallDescription7">Restore the latest STG addon data backup located in the Firefox downloads folder "STG-backups"<br>You can restore backup in addon settings</li>
-                </ol>
-
-                <button id="open-firefox-downloads-folder" i18n="helpPageDbErrorReinstallOpenFFDownloadsFolder">Open Firefox downloads folder</button>
-            </h4>
+    <main>
+        <div class="title">
+            <h1 class="title-text" data-i18n-id="helpPageDbErrorReinstallTitle">Database error in Simple Tab Groups</h1>
         </div>
-    </div>
+        <p data-i18n-id="helpPageDbErrorReinstallDescription">Unfortunately, an error occurred while reading data from the STG addon from the Firefox database. At the moment, the addon is stopped. To resume the add-on, do the following:</p>
+
+        <p data-i18n-id="helpPageDbErrorReinstallDescription2">Restart Firefox Browser (for Linux and Mac OS with process termination)</p>
+
+        <span data-i18n-id="helpPageDbErrorReinstallDescription3">If you see this window again, try reinstalling the addon:</span>
+
+        <ol>
+            <li data-i18n-id="helpPageDbErrorReinstallDescription4">Remove STG Addon</li>
+            <li data-i18n-id="helpPageDbErrorReinstallDescription5">Restart Firefox Browser</li>
+            <li><a href="https://addons.mozilla.org/firefox/addon/simple-tab-groups/" target="_blank" data-i18n-id="helpPageDbErrorReinstallDescription6">Install STG Addon</a></li>
+            <li data-i18n-id="helpPageDbErrorReinstallDescription7">Restore the latest STG addon data backup located in the Firefox downloads folder "STG-backups"<br>You can restore backup in addon settings</li>
+        </ol>
+
+        <div class="button-container">
+            <button id="open-firefox-downloads-folder" class="primary" data-i18n-id="helpPageDbErrorReinstallOpenFFDownloadsFolder">Open Firefox downloads folder</button>
+        </div>
+    </main>
 
     <script type="module" src="translate-help-pages.js"></script>
     <script type="module" src="db-error-reinstall.js"></script>

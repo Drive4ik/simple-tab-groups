@@ -3578,7 +3578,7 @@ browser.runtime.onInstalled.addListener(function onInstalled({previousVersion, r
 
     if (browser.runtime.OnInstalledReason.INSTALL === reason ||
         (browser.runtime.OnInstalledReason.UPDATE === reason && -1 === utils.compareVersions(previousVersion, '4.0'))) {
-        openPopup('welcome-v4', false);
+        openHelp('welcome-v4', false);
     }
 });
 

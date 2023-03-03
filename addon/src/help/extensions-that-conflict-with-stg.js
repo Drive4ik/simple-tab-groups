@@ -7,7 +7,9 @@ function createExtensionBlock(ext) {
     block.classList.add('block-content');
 
     let img = document.createElement('img');
-    img.src = Management.getExtensionIcon(ext);
+    // img.addEventListener('error', () => img.remove())
+    // img.src = Management.getExtensionIcon(ext); // can't have permission to read other addon icon :((
+    img.src = '/icons/extension-generic.svg';
 
     let text = document.createElement('span');
     text.innerText = ext.name;

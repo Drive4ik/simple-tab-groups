@@ -974,7 +974,7 @@
                     <div :class="['control is-expanded', {'is-loading': searchDelayTimer}]">
                         <input
                             type="text"
-                            class="input search-input"
+                            class="input search-input fill-context"
                             ref="search"
                             v-model.trim="searchDelay"
                             autocomplete="off"

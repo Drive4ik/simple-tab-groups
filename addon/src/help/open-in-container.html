@@ -2,82 +2,19 @@
 <html>
 
 <head>
-    <title i18n="helpPageOpenInContainerTitle">Can't open URL in container</title>
+    <title data-i18n-id="helpPageOpenInContainerTitle">Can't open URL in container</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" href="/icons/container.svg"/>
-    <link rel="stylesheet" type="text/css" href="css-help-pages.css">
-    <link xmlns="http://www.w3.org/1999/xhtml" rel="stylesheet" href="chrome://browser/skin/aboutNetError.css" type="text/css" media="all" />
+    <link rel="stylesheet" type="text/css" href="browser-style.css"/>
 
     <style type="text/css">
-        /* General Rules and Resets */
-        .title {
-            background-image: none;
-        }
-
-        main {
-            background: url("/icons/icon.svg") no-repeat 0px 10px;
-            background-size: 128px;
-            margin-inline-start: -150px;
-            padding-inline-start: 170px;
-            max-width: 700px;
-        }
-
         container-name {
             font-weight: bold;
         }
 
-        @media only screen and (max-width: 1300px) {
-            main {
-                background: none;
-            }
-
-            /* for a mid sized window we have enough for this but not our image */
-            .title {
-                background-image: url("/icons/icon.svg");
-            }
-        }
-
-        html {
-            box-sizing: border-box;
-        }
-
-        .block-content {
-            display: flex;
-            align-items: center;
-            font-weight: bold;
-            word-break: break-word;
-            background: #efedf0; /* Grey 20 */
-            border-radius: 2px;
-            line-height: 1.5;
-            padding-block-end: 0.5rem;
-            padding-block-start: 0.5rem;
-            padding-inline-end: 0.5rem;
-            padding-inline-start: 0.5rem;
-        }
-
-        @media (prefers-color-scheme: dark) {
-            .block-content {
-                background: #38383d; /* Grey 70 */
-                color: #eee; /* White 20 */
-            }
-        }
-
-        .block-content img {
-            block-size: 16px;
-            inline-size: 16px;
-            min-width: 16px;
-            margin-inline-end: 6px;
-            position: relative;
-            pointer-events: none;
-        }
-
         .button-container > button {
             min-inline-size: 240px;
-        }
-
-        .button-container > button[disabled] {
-            cursor: not-allowed;
         }
 
         .check-label {
@@ -107,16 +44,16 @@
             </h1>
         </div>
         <div>
-            <p><strong i18n="extensionName"></strong> <span i18n="helpPageOpenInContainerSubTitle">addon can't open URL:</span></p>
+            <p><strong data-i18n-id="extensionName"></strong> <span data-i18n-id="helpPageOpenInContainerSubTitle">addon can't open URL:</span></p>
             <div class="block-content">
-                <img id="redirect-img" src="" />
-                <div id="redirect-url">https://google.com</div>
+                <img id="redirect-img" src="" class="fill-context" />
+                <span id="redirect-url">https://google.com</span>
             </div>
             <p id="helpPageOpenInContainerDesc1">Group <strong>Group 1</strong> was assigned to open tabs in <container-name>Personal</container-name> container.</p>
-            <p i18n="helpPageOpenInContainerDesc2">Another addon:</p>
+            <p data-i18n-id="helpPageOpenInContainerDesc2">Another addon:</p>
             <div class="block-content">
                 <img id="another-addon-img" src="" />
-                <div id="another-addon-name">Facebook</div>
+                <span id="another-addon-name">Facebook</span>
             </div>
             <p id="helpPageOpenInContainerDesc3">tries to open this URL in <container-name>Personal2</container-name> container. Move the tab to another group or forbid the addon <strong>Facebook Container</strong> to perform this action.</p>
 
@@ -133,15 +70,16 @@
                 <br>
 
                 <div class="button-container">
-                    <button id="deny" class="button">Open in <container-name>Personal</container-name> container</button>
-                    <button id="confirm" class="button primary" autofocus>Open in <container-name>Personal</container-name> container</button>
+                    <button id="deny">Open in <container-name>Personal</container-name> container</button>
+                    <button id="confirm" class="primary" autofocus>Open in <container-name>Personal</container-name> container</button>
                 </div>
             </div>
         </div>
     </main>
 
     <script type="text/javascript" src="/js/constants.js"></script>
-    <script type="text/javascript" src="/js/management.js"></script>
+    <script type="text/javascript" src="/js/startup.js"></script>
+    <!-- <script type="text/javascript" src="/js/management.js"></script> -->
 
     <script type="module" src="translate-help-pages.js"></script>
     <script type="module" src="open-in-container.js"></script>

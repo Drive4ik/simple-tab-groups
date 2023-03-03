@@ -1,0 +1,99 @@
+
+:root {
+    --stg-icon: url("/icons/icon.svg");
+
+    --indent: 10px;
+    --color-hr: #d7d7d7;
+
+    --fill-color: #5d5d5d;
+
+    --background-color: #ffffff;
+    --text-color: inherit;
+    --discarded-text-color: gray;
+
+    --input-background-color: var(--background-color);
+    --input-text-color: var(--text-color);
+
+    --color-light-gray: #eceded;
+    --color-gray: #e3e3e3;
+    --color-dark-gray: #d4d4d4;
+    --color-dark-dark-gray: #bababa;
+
+    --outline-color: rgba(0, 0, 0, 0.5);
+
+    --background-color-other: var(--color-gray);
+
+    --in-content-border-focus: #0a84ff;
+}
+
+html[data-theme=dark] {
+    --color-hr: #5c5c61;
+
+    --fill-color: #bebebe;
+
+    --background-color: #323234;
+    --text-color: silver;
+
+    --input-background-color: #404040;
+    --input-text-color: var(--text-color);
+
+    --outline-color: var(--text-color);
+
+    --background-color-other: var(--input-background-color);
+}
+
+html[data-theme=dark] a:hover {
+    color: #22519c;
+}
+
+html[data-theme=dark] .checkbox:not([disabled]):hover,
+html[data-theme=dark] .radio:not([disabled]):hover,
+html[data-theme=dark] label:not([disabled]) {
+    color: var(--input-text-color);
+}
+
+html[data-theme=dark] .input,
+html[data-theme=dark] .textarea,
+html[data-theme=dark] .button {
+    color: var(--input-text-color);
+    box-shadow: unset;
+    border-color: var(--color-hr);
+}
+
+html[data-theme=dark] .input,
+html[data-theme=dark] .textarea,
+html[data-theme=dark] .select select {
+    background-color: var(--input-background-color);
+}
+
+html[data-theme=dark] .select select {
+    color: #f7f9fa;
+    border-color: #4c4c4e;
+}
+
+html[data-theme=dark] .button {
+    background-color: transparent;
+}
+
+html[data-theme=dark] .input:focus,
+html[data-theme=dark] .textarea:focus,
+html[data-theme=dark] .button:focus {
+    border-color: #0078d7;
+}
+
+html[data-theme=dark] .button.is-focused:not(:active) {
+    box-shadow: 0 0 0 .125em rgba(34, 109, 230, 0.74);
+}
+
+html[data-theme=dark] code {
+    background-color: #404040;
+    color: #b1b1b1;
+}
+
+html[data-theme=dark] .select:not(.is-multiple):not(.is-loading)::after {
+    border-color: var(--text-color);
+}
+
+html[data-theme=dark] .select:not(.is-multiple):not(.is-loading):hover::after {
+    border-color: #3273dc;
+}

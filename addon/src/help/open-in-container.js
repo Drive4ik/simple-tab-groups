@@ -127,7 +127,8 @@ async function init() {
     $('#helpPageOpenInContainerMainTitle')[INNER_HTML] = lang('helpPageOpenInContainerMainTitle', safeHtml(destContainer.name));
     $('#redirect-url').innerText = url;
     $('#helpPageOpenInContainerDesc1')[INNER_HTML] = lang('helpPageOpenInContainerDesc1', [safeHtml(group.title), safeHtml(destContainer.name)]);
-    $('#another-addon-img').src = Management.getExtensionIcon(conflictedExt);
+    // $('#another-addon-img').src = Management.getExtensionIcon(conflictedExt); // can't have permission to read other addon icon :((
+    $('#another-addon-img').src = '/icons/extension-generic.svg';
     $('#another-addon-name').innerText = conflictedExt.name;
     $('#helpPageOpenInContainerDesc3')[INNER_HTML] = lang('helpPageOpenInContainerDesc3', [safeHtml(anotherContainer.name), safeHtml(conflictedExt.name)]);
 
@@ -162,6 +163,8 @@ async function init() {
             $('#exclude-container').checked = $('#confirm').disabled = false;
         }
     });
+    $('#exclude-container').dispatchEvent(new Event('change'))
+    $('#ignore-origin-id-for-session').dispatchEvent(new Event('change'))
 }
 
 async function openTab(url, cookieStoreId = DEFAULT_COOKIE_STORE_ID, buttonId = null, groupId = null, conflictedExtId = null) {
@@ -207,7 +210,7 @@ async function openTab(url, cookieStoreId = DEFAULT_COOKIE_STORE_ID, buttonId = 
                 cookieStoreId,
             });
 
-            browser.tabs.remove(currentTab.id);
+            await browser.tabs.remove(currentTab.id);
         }
     } catch (e) {
         if (buttonId) {

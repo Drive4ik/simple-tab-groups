@@ -68,11 +68,12 @@
 
     async function detectConflictedExtensions() {
         if (CONFLICTED_EXTENSIONS.some(isEnabled)) {
-            await openPopup('extensions-that-conflict-with-stg');
+            await openHelp('extensions-that-conflict-with-stg');
         }
     }
 
-    function getExtensionIcon({icons} = {}) {
+    // can't have permission to read other addon icon :((
+    /* function getExtensionIcon({icons} = {}) {
         if (Array.isArray(icons)) {
             let maxSize = Math.max(...icons.map(({size}) => size)),
                 {url} = icons.find(icon => icon.size === maxSize);
@@ -81,7 +82,7 @@
         }
 
         return '/icons/extension-generic.svg';
-    }
+    } */
 
     function getExtensionByUUID(uuid) {
         if (!uuid) {
@@ -100,7 +101,7 @@
 
         isEnabled,
         detectConflictedExtensions,
-        getExtensionIcon,
+        // getExtensionIcon,
         getExtensionByUUID,
     };
 

@@ -2,74 +2,15 @@
 <html>
 
 <head>
-    <title i18n="helpPageExtensionsThatConflictWithStgTitle">Extensions that conflict with STG</title>
+    <title data-i18n-id="helpPageExtensionsThatConflictWithStgTitle">Extensions that conflict with STG</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" href="/icons/exclamation-triangle-yellow.svg"/>
-    <link rel="stylesheet" type="text/css" href="css-help-pages.css">
-    <link xmlns="http://www.w3.org/1999/xhtml" rel="stylesheet" href="chrome://browser/skin/aboutNetError.css" type="text/css" media="all" />
+    <link rel="stylesheet" type="text/css" href="browser-style.css"/>
 
     <style type="text/css">
-        /* General Rules and Resets */
-        .title {
-            background-image: none;
-        }
-
-        main {
-            background: url("/icons/icon.svg") no-repeat 0px 10px;
-            background-size: 128px;
-            margin-inline-start: -150px;
-            padding-inline-start: 170px;
-            max-width: 700px;
-        }
-
-        @media only screen and (max-width: 1300px) {
-            main {
-                background: none;
-            }
-
-            /* for a mid sized window we have enough for this but not our image */
-            .title {
-                background-image: url("/icons/icon.svg");
-            }
-        }
-
-        html {
-            box-sizing: border-box;
-        }
-
-        .block-content {
-            display: flex;
-            align-items: center;
-            font-weight: bold;
-            word-break: break-word;
-            background: #efedf0; /* Grey 20 */
-            border-radius: 2px;
-            line-height: 1.5;
-            padding-block-end: 0.5rem;
-            padding-block-start: 0.5rem;
-            padding-inline-end: 0.5rem;
-            padding-inline-start: 0.5rem;
-        }
-
-        @media (prefers-color-scheme: dark) {
-            .block-content {
-                background: #38383d; /* Grey 70 */
-                color: #eee; /* White 20 */
-            }
-        }
-
-        .block-content img {
-            block-size: 16px;
-            inline-size: 16px;
-            min-width: 16px;
-            margin-inline-end: 6px;
-            position: relative;
-            pointer-events: none;
-        }
-
         .text-gray {
-            color: gray;
+            color: var(--grey-90-a50);
         }
 
         .flex-reverse {
@@ -86,25 +27,26 @@
 <body>
     <main>
         <div class="title">
-            <h1 class="title-text" i18n="helpPageExtensionsThatConflictWithStgDesc1">
+            <h1 class="title-text" data-i18n-id="helpPageExtensionsThatConflictWithStgDesc1">
                 Simple Tab Groups addon conflicts with the following enabled extensions:
             </h1>
         </div>
         <div>
-            <p><span i18n="enabled">Enabled</span>:</p>
+            <p><span data-i18n-id="enabled">Enabled</span>:</p>
             <div id="enabled-conflicted-extensions"></div>
 
             <div class="flex-reverse">
                 <div id="disabled-conflicted-extensions" class="text-gray"></div>
-                <p><span i18n="disabled">Disabled</span>:</p>
+                <p><span data-i18n-id="disabled">Disabled</span>:</p>
             </div>
 
-            <p i18n="helpPageExtensionsThatConflictWithStgDesc2">To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page "about:addons" or by pressing the key combination <code>Ctrl+Shift+A</code></p>
+            <p data-i18n-id="helpPageExtensionsThatConflictWithStgDesc2">To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page "about:addons" or by pressing the key combination <code>Ctrl+Shift+A</code></p>
         </div>
     </main>
 
     <script type="text/javascript" src="/js/constants.js"></script>
-    <script type="text/javascript" src="/js/management.js"></script>
+    <script type="text/javascript" src="/js/startup.js"></script>
+    <!-- <script type="text/javascript" src="/js/management.js"></script> -->
 
     <script type="module" src="translate-help-pages.js"></script>
     <script type="module" src="extensions-that-conflict-with-stg.js"></script>
