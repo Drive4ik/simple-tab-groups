@@ -92,7 +92,7 @@ async function init() {
     }
 
     if (asInfo) {
-        if (!conflictedExt || !group || !destContainer || destContainer.notFound || !anotherContainer || anotherContainer.notFound) {
+        if (!conflictedExt?.enabled || !group || !destContainer || destContainer.notFound || !anotherContainer || anotherContainer.notFound) {
             browser.tabs.remove(currentTab.id);
             return;
         }
