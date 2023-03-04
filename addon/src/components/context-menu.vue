@@ -7,7 +7,7 @@
         @blur="onblur"
         @click="close"
         @keydown.esc.stop="close"
-        @contextmenu.capture.prevent="close"
+        @contextmenu.prevent="close"
         >
         <slot :data="data"></slot>
     </div>
