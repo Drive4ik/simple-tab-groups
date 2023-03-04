@@ -97,3 +97,52 @@ html[data-theme=dark] .select:not(.is-multiple):not(.is-loading)::after {
 html[data-theme=dark] .select:not(.is-multiple):not(.is-loading):hover::after {
     border-color: #3273dc;
 }
+
+/* global-classes */
+.m-indent,
+.my-indent,
+.mb-indent,
+.mb-indent-last:last-child {
+    margin-bottom: var(--indent);
+}
+.m-indent,
+.my-indent,
+.mt-indent,
+.mt-indent-first:first-child {
+    margin-top: var(--indent);
+}
+
+.m-indent,
+.mx-indent,
+.ml-indent {
+    margin-left: var(--indent);
+}
+.m-indent,
+.mx-indent,
+.mr-indent {
+    margin-right: var(--indent);
+}
+
+.p-indent,
+.py-indent,
+.pb-indent,
+.pb-indent-last:last-child {
+    padding-bottom: var(--indent);
+}
+.p-indent,
+.py-indent,
+.pt-indent,
+.pt-indent-first:first-child {
+    padding-top: var(--indent);
+}
+
+.p-indent,
+.px-indent,
+.pl-indent {
+    padding-left: var(--indent);
+}
+.p-indent,
+.px-indent,
+.pr-indent {
+    padding-right: var(--indent);
+}

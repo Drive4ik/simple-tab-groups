@@ -1188,7 +1188,7 @@
         @keydown.left="searchDelay.length ? null : showSectionDefault()"
 
         >
-        <header id="search-wrapper">
+        <header class="p-indent">
             <div :class="['field', {'has-addons': searchDelay.length}]">
                 <div :class="['control is-expanded', {'is-loading': searchDelayTimer}]">
                     <input
@@ -1219,7 +1219,7 @@
         <main id="result" :class="['is-full-width', dragData ? 'drag-' + dragData.itemType : false]">
             <!-- SEARCH TABS -->
             <div v-if="section === SECTION_SEARCH">
-                <div v-if="filteredGroups.length">
+                <div v-if="filteredGroups.length" class="search-scrollable">
                     <div v-for="group in filteredGroups" :key="group.id">
                         <div
                             :class="['group item is-unselectable', {
@@ -1517,7 +1517,7 @@
 
                 <hr>
 
-                <div class="group-info item no-hover">
+                <div class="group-info item no-hover mb-indent">
                     <div class="item-icon">
                         <img :src="groupToShow.iconUrlToDisplay" class="is-inline-block size-16" />
                     </div>
@@ -1543,7 +1543,7 @@
                     </div>
                 </div>
 
-                <template v-if="groupToShow.isArchive">
+                <div class="archive-tabs-scollable" v-if="groupToShow.isArchive">
                     <div
                         v-for="(tab, tabIndex) in groupToShow.tabs"
                         :key="tabIndex"
@@ -1565,64 +1565,66 @@
                             </span>
                         </div>
                     </div>
-                </template>
+                </div>
 
                 <template v-else>
-                    <div
-                        v-for="(tab, tabIndex) in groupToShow.tabs"
-                        :key="tabIndex"
-                        :data-tab-id="tab.id"
-                        @contextmenu="$refs.contextMenuTab.open($event, {tab, group: groupToShow})"
-                        @click.stop="clickOnTab($event, tab, groupToShow)"
-                        @keyup.enter="clickOnTab($event, tab, groupToShow)"
-                        @keydown.left="showSectionDefault"
-                        @keydown.up="focusToNextElement"
-                        @keydown.down="focusToNextElement"
-                        @keydown.delete="removeTab(tab)"
-                        tabindex="0"
-                        @mousedown.middle.prevent
-                        @mouseup.middle.prevent="removeTab(tab)"
-                        :class="['tab item is-unselectable', {
-                            'is-active-element': groupToShow === currentGroup && tab.active,
-                            'drag-moving': tab.isMoving,
-                            'drag-over': tab.isOver,
-                            'is-multiple-tab-to-move': multipleTabIds.includes(tab.id),
-                        }]"
-                        :title="getTabTitle(tab, true)"
+                    <div class="tabs-scollable">
+                        <div
+                            v-for="(tab, tabIndex) in groupToShow.tabs"
+                            :key="tabIndex"
+                            :data-tab-id="tab.id"
+                            @contextmenu="$refs.contextMenuTab.open($event, {tab, group: groupToShow})"
+                            @click.stop="clickOnTab($event, tab, groupToShow)"
+                            @keyup.enter="clickOnTab($event, tab, groupToShow)"
+                            @keydown.left="showSectionDefault"
+                            @keydown.up="focusToNextElement"
+                            @keydown.down="focusToNextElement"
+                            @keydown.delete="removeTab(tab)"
+                            tabindex="0"
+                            @mousedown.middle.prevent
+                            @mouseup.middle.prevent="removeTab(tab)"
+                            :class="['tab item is-unselectable', {
+                                'is-active-element': groupToShow === currentGroup && tab.active,
+                                'drag-moving': tab.isMoving,
+                                'drag-over': tab.isOver,
+                                'is-multiple-tab-to-move': multipleTabIds.includes(tab.id),
+                            }]"
+                            :title="getTabTitle(tab, true)"
 
-                        draggable="true"
-                        @dragstart="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
-                        @dragenter="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
-                        @dragover="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
-                        @dragleave="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
-                        @drop="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
-                        @dragend="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
-                        >
-                        <div class="item-icon">
-                            <img v-if="isTabLoading(tab)" src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
-                            <img v-else :src="tab.favIconUrl" class="size-16" loading="lazy" decoding="async" />
-                        </div>
-                        <div class="item-title clip-text">
-                            <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                <span
-                                    v-if="showMuteIconTab(tab)"
-                                    @click.stop="toggleMuteTab(tab)"
-                                    :title="tab.audible ? lang('muteTab') : lang('unMuteTab')"
-                                    >
-                                    <img :src="tab.audible ? '/icons/audio.svg' : '/icons/audio-mute.svg'" class="size-16 align-text-bottom" />
-                                </span>
-                                <template v-if="tab.container">
-                                    <span :title="tab.container.name">
-                                        <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" />
+                            draggable="true"
+                            @dragstart="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
+                            @dragenter="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
+                            @dragover="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
+                            @dragleave="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
+                            @drop="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
+                            @dragend="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
+                            >
+                            <div class="item-icon">
+                                <img v-if="isTabLoading(tab)" src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
+                                <img v-else :src="tab.favIconUrl" class="size-16" loading="lazy" decoding="async" />
+                            </div>
+                            <div class="item-title clip-text">
+                                <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                    <span
+                                        v-if="showMuteIconTab(tab)"
+                                        @click.stop="toggleMuteTab(tab)"
+                                        :title="tab.audible ? lang('muteTab') : lang('unMuteTab')"
+                                        >
+                                        <img :src="tab.audible ? '/icons/audio.svg' : '/icons/audio-mute.svg'" class="size-16 align-text-bottom" />
                                     </span>
-                                </template>
-                                <span :class="{'tab-discarded': tab.discarded}" v-text="getTabTitle(tab)"></span>
-                            </span>
-                        </div>
-                        <div class="item-action flex-on-hover">
-                            <span class="size-16 cursor-pointer" @click.stop="removeTab(tab)" :title="lang('deleteTab')">
-                                <img src="/icons/close.svg" />
-                            </span>
+                                    <template v-if="tab.container">
+                                        <span :title="tab.container.name">
+                                            <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" />
+                                        </span>
+                                    </template>
+                                    <span :class="{'tab-discarded': tab.discarded}" v-text="getTabTitle(tab)"></span>
+                                </span>
+                            </div>
+                            <div class="item-action flex-on-hover">
+                                <span class="size-16 cursor-pointer" @click.stop="removeTab(tab)" :title="lang('deleteTab')">
+                                    <img src="/icons/close.svg" />
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -1637,11 +1639,10 @@
                         </div>
                     </div>
                 </template>
-
             </div>
         </main>
 
-        <footer class="is-flex is-unselectable">
+        <footer class="is-flex is-unselectable mt-indent">
             <div tabindex="0" class="is-flex is-align-items-center manage-groups is-full-height is-full-width" @click="openManageGroups" @keyup.enter="openManageGroups" :title="lang('manageGroupsTitle')">
                 <img class="size-16" src="/icons/icon.svg" />
                 <span class="h-margin-left-10" v-text="lang('manageGroupsTitle')"></span>
@@ -1842,7 +1843,6 @@
 
             > main {
                 flex-grow: 1;
-                padding-bottom: calc(var(--footer-height) + 10px);
             }
 
             > footer > :not(.is-vertical-separator) {
@@ -1868,7 +1868,6 @@
             position: sticky;
             bottom: 0;
             height: var(--footer-height);
-            margin-top: var(--indent);
             align-items: center;
             background-color: var(--footer-background-color);
 
@@ -1905,119 +1904,131 @@
         .drag-tab .is-multiple-tab-to-move {
             opacity: 0.4;
         }
+
+        .item {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-items: center;
+            cursor: default;
+            height: 28px;
+            min-height: 28px;
+            padding-left: var(--indent);
+
+            &.space-left {
+                padding-left: calc(var(--indent) * 2);
+            }
+
+            > :last-child {
+                padding-right: var(--indent);
+            }
+
+            &.is-active-element:before,
+            &.is-opened:before,
+            &.is-multiple-tab-to-move:before {
+                content: '';
+                position: absolute;
+                background-color: var(--in-content-border-focus);
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 4px;
+            }
+
+            &.is-active-element.is-multiple-tab-to-move:before {
+                width: 6px;
+            }
+
+            &:not(.no-hover):hover,
+            &:focus,
+            &.is-context-active {
+                background-color: var(--item-background-color-hover);
+            }
+
+            .item-action.bold-hover:hover {
+                background-color: var(--item-background-color-active-hover);
+            }
+
+            &:not(.no-hover):active,
+            &.is-active-element {
+                background-color: var(--item-background-color-active-hover);
+            }
+
+            .item-icon {
+                position: relative;
+                width: 20px;
+                max-width: 20px;
+                min-width: 20px;
+                text-align: center;
+                line-height: 1;
+            }
+
+            .item-title {
+                flex-grow: 1;
+                white-space: nowrap;
+                overflow: hidden;
+                padding-left: 5px;
+                padding-right: 5px;
+                cursor: default;
+                display: flex;
+                align-items: center;
+
+                > * + * {
+                    margin-left: 5px;
+                }
+
+                .tab-title {
+                    color: var(--discarded-text-color);
+                }
+            }
+
+            .item-action {
+                display: flex;
+                align-items: center;
+                align-self: stretch;
+                padding-left: 5px;
+                white-space: nowrap;
+            }
+
+            .item-action > :not(:first-child) {
+                margin-left: 3px;
+            }
+
+            .flex-on-hover {
+                display: none;
+            }
+
+            &:hover .flex-on-hover {
+                display: flex;
+            }
+        }
+
+        .tabs-list .group-info.item .item-title {
+            justify-content: center;
+
+            > img {
+                pointer-events: auto;
+            }
+        }
+
+        .search-scrollable {
+            max-height: calc(var(--max-popup-height) - var(--footer-height) - 60px);
+            scrollbar-width: thin;
+            overflow-y: auto;
+        }
+        .archive-tabs-scollable {
+            max-height: calc(var(--max-popup-height) - var(--footer-height) - 150px);
+            scrollbar-width: thin;
+            overflow-y: auto;
+        }
+        .tabs-scollable {
+            max-height: calc(var(--max-popup-height) - var(--footer-height) - 210px);
+            scrollbar-width: thin;
+            overflow-y: auto;
+        }
     }
 
     /* END HELPERS */
-    #search-wrapper {
-        padding: var(--indent);
-    }
-
-    .item {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: nowrap;
-        align-items: center;
-        cursor: default;
-        height: 28px;
-        min-height: 28px;
-        padding-left: var(--indent);
-
-        &.space-left {
-            padding-left: calc(var(--indent) * 2);
-        }
-
-        > :last-child {
-            padding-right: var(--indent);
-        }
-
-        &.is-active-element:before,
-        &.is-opened:before,
-        &.is-multiple-tab-to-move:before {
-            content: '';
-            position: absolute;
-            background-color: var(--in-content-border-focus);
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 4px;
-        }
-
-        &.is-active-element.is-multiple-tab-to-move:before {
-            width: 6px;
-        }
-
-        &:not(.no-hover):hover,
-        &:focus,
-        &.is-context-active {
-            background-color: var(--item-background-color-hover);
-        }
-
-        .item-action.bold-hover:hover {
-            background-color: var(--item-background-color-active-hover);
-        }
-
-        &:not(.no-hover):active,
-        &.is-active-element {
-            background-color: var(--item-background-color-active-hover);
-        }
-
-        .item-icon {
-            position: relative;
-            width: 20px;
-            max-width: 20px;
-            min-width: 20px;
-            text-align: center;
-            line-height: 1;
-        }
-
-        .item-title {
-            flex-grow: 1;
-            white-space: nowrap;
-            overflow: hidden;
-            padding-left: 5px;
-            padding-right: 5px;
-            cursor: default;
-            display: flex;
-            align-items: center;
-
-            > * + * {
-                margin-left: 5px;
-            }
-
-            .tab-title {
-                color: var(--discarded-text-color);
-            }
-        }
-
-        .item-action {
-            display: flex;
-            align-items: center;
-            align-self: stretch;
-            padding-left: 5px;
-            white-space: nowrap;
-        }
-
-        .item-action > :not(:first-child) {
-            margin-left: 3px;
-        }
-
-        .flex-on-hover {
-            display: none;
-        }
-
-        &:hover .flex-on-hover {
-            display: flex;
-        }
-    }
-
-    .tabs-list .group-info.item .item-title {
-        justify-content: center;
-
-        > img {
-            pointer-events: auto;
-        }
-    }
-
     .group-title {
         max-width: 100%;
     }
