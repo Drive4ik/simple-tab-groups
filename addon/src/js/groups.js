@@ -110,10 +110,10 @@
 
         if (windowId) {
             await cache.setWindowGroup(windowId, newGroup.id);
-            BG.updateBrowserActionData(newGroup.id, undefined, groups);
+            BG.updateBrowserActionData(newGroup.id);
         }
 
-        BG.updateMoveTabMenus(groups);
+        BG.updateMoveTabMenus();
 
         if (windowId && !tabIds.length) {
             let tabs = await Tabs.get(windowId);
@@ -164,10 +164,10 @@
                 await Tabs.remove(group.tabs);
             }
 
-            BG.updateMoveTabMenus(groups);
+            BG.updateMoveTabMenus();
 
             if (groupWindowId) {
-                BG.updateBrowserActionData(null, groupWindowId, groups);
+                BG.updateBrowserActionData(null, groupWindowId);
             }
 
             if (group.isMain) {
@@ -238,9 +238,9 @@
         }
 
         if (['title', 'iconUrl', 'iconColor', 'iconViewType', 'isArchive', 'isSticky'].some(key => updateData.hasOwnProperty(key))) {
-            BG.updateMoveTabMenus(groups);
+            BG.updateMoveTabMenus();
 
-            BG.updateBrowserActionData(groupId, undefined, groups);
+            BG.updateBrowserActionData(groupId);
         }
 
         if (updateData.hasOwnProperty('title')) {
@@ -255,7 +255,7 @@
 
         await save(groups, true);
 
-        BG.updateMoveTabMenus(groups);
+        BG.updateMoveTabMenus();
     }
 
     async function sort(vector = 'asc') {
@@ -273,7 +273,7 @@
 
         await save(groups, true);
 
-        BG.updateMoveTabMenus(groups);
+        BG.updateMoveTabMenus();
     }
 
     async function unload(groupId) {
@@ -327,9 +327,9 @@
             BG.Tabs.discard(group.tabs);
         }
 
-        BG.updateBrowserActionData(null, windowId, groups);
+        BG.updateBrowserActionData(null, windowId);
 
-        BG.updateMoveTabMenus(groups);
+        BG.updateMoveTabMenus();
 
         BG.sendMessage({
             action: 'group-unloaded',
@@ -349,7 +349,8 @@
     async function archiveToggle(groupId) {
         await BG.loadingBrowserAction();
 
-        let {group, groups} = await load(groupId, true);
+        let {group, groups} = await load(groupId, true),
+            tabIdsToRemove = [];
 
         if (group.isArchive) {
             group.isArchive = false;
@@ -358,22 +359,20 @@
 
             group.tabs = [];
         } else {
-            group.isArchive = true;
+            if (cache.getWindowId(groupId)) {
+                let result = await unload(groupId);
 
-            group.tabs = Tabs.prepareForSave(group.tabs, false, true, true);
+                if (!result) {
+                    return;
+                }
 
-            let groupWindowId = cache.getWindowId(group.id);
-
-            if (groupWindowId) {
-                await cache.removeWindowSession(groupWindowId);
-                await Tabs.createTempActiveTab(groupWindowId, false);
+                ({group, groups} = await load(groupId, true));
             }
 
-            let tabIds = group.tabs.map(utils.keyId);
+            tabIdsToRemove = group.tabs.map(utils.keyId);
 
-            BG.addExcludeTabIds(tabIds);
-            await Tabs.remove(tabIds);
-            BG.removeExcludeTabIds(tabIds);
+            group.isArchive = true;
+            group.tabs = Tabs.prepareForSave(group.tabs, false, true, true);
 
             if (group.isMain) {
                 group.isMain = false;
@@ -381,16 +380,26 @@
             }
         }
 
+        await save(groups);
+
+        if (tabIdsToRemove.length) {
+            BG.addExcludeTabIds(tabIdsToRemove);
+            await Tabs.remove(tabIdsToRemove);
+            BG.removeExcludeTabIds(tabIdsToRemove);
+        }
+
+        BG.sendMessage({
+            action: 'groups-updated',
+        });
+
         BG.sendExternalMessage({
             action: 'group-updated',
             group: mapForExternalExtension(group),
         });
 
-        await save(groups, true);
-
         BG.loadingBrowserAction(false);
 
-        BG.updateMoveTabMenus(groups);
+        BG.updateMoveTabMenus();
     }
 
     function mapForExternalExtension(group) {

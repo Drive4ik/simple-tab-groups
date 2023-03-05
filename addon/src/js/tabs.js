@@ -165,9 +165,11 @@
             .filter(tab => !cache.removedTabs.has(tab.id))
             .map(utils.normalizeTabUrl);
 
+        let result = query.pinned ? tabs : await Promise.all(tabs.map(tab => cache.loadTabSession(tab, includeFavIconUrl, includeThumbnail)));
+
         console.log('STOP Tabs.get');
 
-        return query.pinned ? tabs : Promise.all(tabs.map(tab => cache.loadTabSession(tab, includeFavIconUrl, includeThumbnail)));
+        return result;
     }
 
     async function getOne(id) {

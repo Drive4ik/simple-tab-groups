@@ -343,9 +343,9 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
 
             Tabs.remove(tabsIdsToRemove);
 
-            updateMoveTabMenus(groups);
+            updateMoveTabMenus();
 
-            updateBrowserActionData(groupToShow.id, undefined, groups);
+            updateBrowserActionData(groupToShow.id);
 
             if (!applyFromHistory) {
                 groupsHistory.add(groupId);
@@ -924,7 +924,7 @@ async function addUndoRemoveGroupItem(groupToRemove) {
 
         await Groups.save(groups);
 
-        updateMoveTabMenus(groups);
+        updateMoveTabMenus();
 
         if (tabs.length && !group.isArchive) {
             await loadingBrowserAction();
@@ -960,9 +960,9 @@ async function addUndoRemoveGroupItem(groupToRemove) {
     }
 }
 
-async function updateMoveTabMenus(groups) {
+async function updateMoveTabMenus() {
     await removeMoveTabMenus();
-    await createMoveTabMenus(groups);
+    await createMoveTabMenus();
 }
 
 async function removeMoveTabMenus() {
@@ -972,18 +972,16 @@ async function removeMoveTabMenus() {
     }
 }
 
-async function createMoveTabMenus(groups) {
+async function createMoveTabMenus() {
     let hasBookmarksPermission = await browser.permissions.contains(PERMISSIONS.BOOKMARKS);
 
     if (!options.showContextMenuOnTabs && !options.showContextMenuOnLinks && !hasBookmarksPermission) {
         return;
     }
 
-    if (!Array.isArray(groups)) {
-        ({groups} = await Groups.load());
-    }
-
     await removeMoveTabMenus();
+
+    let {groups} = await Groups.load();
 
     const temporaryContainer = Containers.get(TEMPORARY_CONTAINER);
 
@@ -1676,7 +1674,7 @@ async function setBrowserAction(windowId, title, icon, enable, isSticky) {
     ]);
 }
 
-async function updateBrowserActionData(groupId, windowId, groups) {
+async function updateBrowserActionData(groupId, windowId) {
     console.log('updateBrowserActionData', {groupId, windowId});
 
     if (groupId) {
@@ -1692,11 +1690,7 @@ async function updateBrowserActionData(groupId, windowId, groups) {
     let group = null;
 
     if (groupId) {
-        if (Array.isArray(groups)) {
-            group = groups.find(gr => gr.id === groupId);
-        } else {
-            ({group} = await Groups.load(groupId));
-        }
+        ({group} = await Groups.load(groupId));
     }
 
     if (group) {
@@ -3759,7 +3753,7 @@ async function init() {
         await initializeGroupWindows(windows, data.groups.map(utils.keyId));
 
         windows.forEach(function(win) {
-            updateBrowserActionData(null, win.id, data.groups)
+            updateBrowserActionData(null, win.id)
                 .then(function() {
                     if (win.groupId) {
                         groupsHistory.add(win.groupId);
@@ -3816,6 +3810,8 @@ async function init() {
         });
 
         console.log('[STG] STOP init');
+
+        // openUrl('/popup/popup.html#sidebar', false);
     } catch (e) {
         setActionToReloadAddon();
 
