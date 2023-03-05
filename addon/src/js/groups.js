@@ -289,7 +289,7 @@
             return false;
         }
 
-        let {group, groups} = await load(groupId, true);
+        let {group} = await load(groupId, true);
 
         if (!group) {
             utils.notify(['groupNotFound'], 7, 'groupNotFound');

@@ -373,7 +373,10 @@
         return Containers.get(tab.cookieStoreId, key);
     }
 
-    function getGroupTitle({id, title, isArchive, isSticky, tabs, newTabContainer}, args = '') {
+    const emojiRegExp = /\p{RI}\p{RI}|\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?(\u{200D}\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?)+|\p{EPres}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?|\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})/u;
+    const firstCharEmojiRegExp = new RegExp(`^(${emojiRegExp.source})`, emojiRegExp.flags);
+
+    function getGroupTitle({id, title, isArchive, isSticky, tabs, iconViewType, newTabContainer}, args = '') {
         let withActiveGroup = args.includes('withActiveGroup'),
             withCountTabs = args.includes('withCountTabs'),
             withContainer = args.includes('withContainer'),
@@ -395,6 +398,11 @@
             } else if (isArchive) {
                 beforeTitle.push(DISCARDED_SYMBOL);
             }
+        }
+
+        // replace first emoji to empty string
+        if (iconViewType === 'title') {
+            title = title.replace(firstCharEmojiRegExp, '');
         }
 
         if (beforeTitle.length) {
@@ -556,10 +564,15 @@
             }
 
             let stroke = 'transparent' === group.iconColor ? 'stroke="#606060" stroke-width="1"' : '',
-                title = null;
+                title = null,
+                emoji = null;
 
             if (group.iconViewType === 'title') {
-                title = group.title?.slice(0, 4) || browser.i18n.getMessage('title');
+                title = group?.title || browser.i18n.getMessage('title');
+
+                [emoji] = firstCharEmojiRegExp.exec(title) || [];
+
+                title = emoji || title;
             }
 
             let icons = {
@@ -606,12 +619,20 @@
             `,
                 'title': `
                 <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg">
-                    <text x="0" y="13" fill="${group.iconColor}" font-family="Segoe UI, Verdana, Arial, sans-serif" font-size="12px">${title}</text>
+                    <text ${emoji ? 'text-anchor="middle" x="50%"' : 'x="0"'} y="13" fill="${group.iconColor}" font-family="Segoe UI, Verdana, Arial, sans-serif" font-size="12px">${title}</text>
                 </svg>
             `,
             };
 
-            result = convertSvgToUrl(icons[group.iconViewType]);
+            try {
+                result = convertSvgToUrl(icons[group.iconViewType].trim());
+            } catch (e) {
+                result = getGroupIconUrl({
+                    title: '❓',
+                    iconViewType: 'title',
+                    iconColor: 'gray',
+                });
+            }
         }
 
         if (keyInObj) {

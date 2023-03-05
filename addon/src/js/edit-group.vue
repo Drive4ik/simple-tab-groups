@@ -234,7 +234,7 @@
         <div class="field">
             <label class="label" v-text="lang('title')"></label>
             <div class="control has-icons-left">
-                <input ref="groupTitle" v-model.trim="group.title" type="text" class="input" :placeholder="lang('title')" />
+                <input ref="groupTitle" v-model.trim="group.title" type="text" maxlength="256" class="input" :placeholder="lang('title')" />
                 <span class="icon is-small is-left">
                     <figure class="image is-16x16 is-inline-block">
                         <img :src="group.iconUrlToDisplay" />
