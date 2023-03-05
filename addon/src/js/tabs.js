@@ -295,7 +295,13 @@
     }
 
     async function move(tabIds, groupId, newTabIndex = -1, showNotificationAfterMoveTab = true, showTabAfterMoving = false) {
-        tabIds = tabIds.slice();
+        let tabs = await getList(tabIds.slice());
+
+        if (tabs.length) {
+            tabIds = tabs.map(utils.keyId);
+        } else {
+            return [];
+        }
 
         console.info('moveTabs', {tabIds, groupId, newTabIndex, showNotificationAfterMoveTab, showTabAfterMoving});
 
@@ -307,12 +313,6 @@
             {group} = await Groups.load(groupId, !groupWindowId),
             windowId = groupWindowId || (group.tabs[0]?.windowId) || await Windows.getLastFocusedNormalWindow(),
             activeTabs = [];
-
-        let tabs = await getList(tabIds);
-
-        if (!tabs.length) {
-            return [];
-        }
 
         tabs = tabs.filter(function(tab) {
             if (tab.pinned) {
@@ -343,8 +343,25 @@
 
                 if (tabsToActive.length) {
                     await setActive(undefined, tabsToActive);
-                } else if (activeTab.windowId !== windowId && !allTabsInActiveTabWindow.filter(excludeMovingTabs).length) {
-                    await createTempActiveTab(activeTab.windowId, false);
+                } else { // if not found other visible (include pinned) tabs in window
+                    let differentWindows = activeTab.windowId !== windowId,
+                        otherHiddenAndVisibleTabsInActiveTabWindow = allTabsInActiveTabWindow.filter(excludeMovingTabs),
+                        activeTabIsLastInSrcGroup = false,
+                        activeTabIsInLoadedGroup = false;
+
+                    if (activeTab.groupId) {
+                        activeTabIsLastInSrcGroup = !otherHiddenAndVisibleTabsInActiveTabWindow
+                            .some(tab => tab.groupId === activeTab.groupId);
+
+                        activeTabIsInLoadedGroup = activeTab.groupId === cache.getWindowGroup(activeTab.windowId);
+                    }
+
+                    if (
+                        (differentWindows && !otherHiddenAndVisibleTabsInActiveTabWindow.length) ||
+                        (activeTabIsLastInSrcGroup && activeTabIsInLoadedGroup)
+                    ) {
+                        await createTempActiveTab(activeTab.windowId, false);
+                    }
                 }
             }));
 

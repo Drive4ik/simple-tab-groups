@@ -309,7 +309,7 @@
     }
 
     function getWindowGroup(windowId) {
-        return windows[windowId] ? windows[windowId].groupId : null;
+        return windows[windowId]?.groupId;
     }
 
     async function loadWindowSession(win) {

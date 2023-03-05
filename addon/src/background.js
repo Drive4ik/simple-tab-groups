@@ -216,7 +216,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
             }
 
             // link group with window
-            cache.setWindowGroup(windowId, groupToShow.id);
+            await cache.setWindowGroup(windowId, groupToShow.id);
 
             // hide tabs
             await hideTabs(groupToHide?.tabs);
