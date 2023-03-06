@@ -294,7 +294,12 @@
         });
     }
 
-    async function move(tabIds, groupId, newTabIndex = -1, showNotificationAfterMoveTab = true, showTabAfterMoving = false) {
+    async function move(tabIds, groupId, {
+        newTabIndex: newTabIndex = -1,
+        showTabAfterMovingItIntoThisGroup: showTabAfterMovingItIntoThisGroup = false,
+        showOnlyActiveTabAfterMovingItIntoThisGroup: showOnlyActiveTabAfterMovingItIntoThisGroup = false,
+        showNotificationAfterMovingTabIntoThisGroup: showNotificationAfterMovingTabIntoThisGroup = false,
+    } = {}) {
         let tabs = await getList(tabIds.slice());
 
         if (tabs.length) {
@@ -303,7 +308,7 @@
             return [];
         }
 
-        console.info('moveTabs', {tabIds, groupId, newTabIndex, showNotificationAfterMoveTab, showTabAfterMoving});
+        console.info('moveTabs', {tabIds, groupId, newTabIndex, showTabAfterMovingItIntoThisGroup, showNotificationAfterMovingTabIntoThisGroup});
 
         BG.addExcludeTabIds(tabIds);
 
@@ -364,6 +369,7 @@
                     }
                 }
             }));
+            activeTabs = [];
 
             let tabIdsToRemove = [],
                 newTabParams = Groups.getNewTabParams(group);
@@ -376,6 +382,9 @@
                 let newTabContainer = getNewTabContainer(tab, group);
 
                 if (tab.cookieStoreId === newTabContainer) {
+                    if (tab.active) {
+                        activeTabs.push(tab);
+                    }
                     return tab;
                 } else {
                     tab.cookieStoreId = newTabContainer;
@@ -393,6 +402,10 @@
                     windowId,
                     ...newTabParams,
                 });
+
+                if (tab.active) {
+                    activeTabs.push({...newTab, active: true});
+                }
 
                 tabIds.push(newTab.id);
                 BG.excludeTabIds.add(newTab.id);
@@ -438,14 +451,21 @@
             return [];
         }
 
-        let [firstTab] = tabs;
+        let [firstTab] = activeTabs.length ? activeTabs : tabs;
 
-        if (showTabAfterMoving) {
-            await BG.applyGroup(windowId, groupId, firstTab.id);
-            showNotificationAfterMoveTab = false;
+        if (showTabAfterMovingItIntoThisGroup) {
+            if (showOnlyActiveTabAfterMovingItIntoThisGroup) {
+                if (activeTabs.length) {
+                    await BG.applyGroup(windowId, groupId, firstTab.id);
+                    showNotificationAfterMovingTabIntoThisGroup = false;
+                }
+            } else {
+                await BG.applyGroup(windowId, groupId, firstTab.id);
+                showNotificationAfterMovingTabIntoThisGroup = false;
+            }
         }
 
-        if (!showNotificationAfterMoveTab || !BG.options.showNotificationAfterMoveTab) {
+        if (!showNotificationAfterMovingTabIntoThisGroup) {
             return tabs;
         }
 
@@ -482,10 +502,10 @@
         return tabs.filter(Boolean);
     }
 
-    async function moveNative(tabs, options = {}) {
-        console.log('Tabs.moveNative called args', {tabs, options});
+    async function moveNative(tabs, moveProperties = {}) {
+        console.log('Tabs.moveNative called args', {tabs, moveProperties});
 
-        let openerTabIds = options.windowId ? tabs.map(tab => tab.openerTabId) : [],
+        let openerTabIds = moveProperties.windowId ? tabs.map(tab => tab.openerTabId) : [],
             tabIds = await filterExist(tabs, true);
 
         console.assert(tabIds.length === tabs.length, `Tabs.moveNative tabs length after filter are not equal: ${tabs.length}`, tabIds);
@@ -496,7 +516,7 @@
 
         console.log('Tabs.moveNative before');
 
-        let movedTabs = await browser.tabs.move(tabIds, options),
+        let movedTabs = await browser.tabs.move(tabIds, moveProperties),
             movedTabsObj = utils.arrayToObj(movedTabs, 'id');
 
         console.log('Tabs.moveNative after');
@@ -509,8 +529,8 @@
                     return;
                 }
 
-                if (options.windowId) {
-                    tab.windowId = options.windowId;
+                if (moveProperties.windowId) {
+                    tab.windowId = moveProperties.windowId;
                     // Tabs moved across windows always lose their openerTabId even
                     // if it is also moved to the same window together, thus we need
                     // to restore it manually.

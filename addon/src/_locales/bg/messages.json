@@ -83,10 +83,6 @@
         "message": "Затваряне на менюто при смяна на група",
         "description": "Close popup after changing group"
     },
-    "showNotificationAfterMoveTab": {
-        "message": "Известие при автоматично преместване на раздел",
-        "description": "Show notification when tab is moved to another group"
-    },
     "openManageGroupsInTab": {
         "message": "Отваряне на „Управление на групи“ в раздел",
         "description": "Open \"Manage Groups\" in new tab"

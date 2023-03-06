@@ -83,10 +83,6 @@
         "message": "Cerrar ventanas emergentes después de cambiar de grupo",
         "description": "Close popup after changing group"
     },
-    "showNotificationAfterMoveTab": {
-        "message": "Mostrar notificación cuando una pestaña es movida a otro grupo",
-        "description": "Show notification when tab is moved to another group"
-    },
     "openManageGroupsInTab": {
         "message": "Abrir \"Administrar Grupos\" en una nueva pestaña.",
         "description": "Open \"Manage Groups\" in new tab"

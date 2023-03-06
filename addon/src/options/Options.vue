@@ -884,12 +884,6 @@
             </div>
             <div class="field">
                 <label class="checkbox">
-                    <input v-model="options.showNotificationAfterMoveTab" type="checkbox" />
-                    <span v-text="lang('showNotificationAfterMoveTab')"></span>
-                </label>
-            </div>
-            <div class="field">
-                <label class="checkbox">
                     <input v-model="options.showTabsWithThumbnailsInManageGroups" type="checkbox" />
                     <span v-text="lang('showTabsWithThumbnailsInManageGroups')"></span>
                 </label>

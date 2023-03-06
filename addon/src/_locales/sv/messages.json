@@ -83,10 +83,6 @@
         "message": "Stäng popup efter byte av grupp",
         "description": "Close popup after changing group"
     },
-    "showNotificationAfterMoveTab": {
-        "message": "Visa en notis när en flik flyttas till en annan grupp",
-        "description": "Show notification when tab is moved to another group"
-    },
     "openManageGroupsInTab": {
         "message": "Öppna \"Gruppöversikt\" i en ny flik",
         "description": "Open \"Manage Groups\" in new tab"

@@ -184,7 +184,7 @@
                                 groupId = this.isGroup(to.data.item) ? to.data.item.id : to.data.group.id,
                                 index = this.isGroup(to.data.item) ? undefined : to.data.item.index;
 
-                            BG.Tabs.move(tabIds, groupId, index, false);
+                            BG.Tabs.move(tabIds, groupId, {newTabIndex: index});
                         }
                     })
                     .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
@@ -523,10 +523,10 @@
 
                 return tabs;
             },
-            async moveTabs(tabId, groupId, loadUnsync = false, showTabAfterMoving, discardTabs) {
+            async moveTabs(tabId, groupId, loadUnsync = false, showTabAfterMovingItIntoThisGroup, discardTabs) {
                 let tabIds = this.getTabIdsForMove(tabId);
 
-                await BG.Tabs.move(tabIds, groupId, undefined, false, showTabAfterMoving);
+                await BG.Tabs.move(tabIds, groupId, {showTabAfterMovingItIntoThisGroup});
 
                 if (discardTabs) {
                     Tabs.discard(tabIds);
@@ -536,7 +536,7 @@
                     this.loadUnsyncedTabs();
                 }
             },
-            async moveTabToNewGroup(tabId, loadUnsync, showTabAfterMoving) {
+            async moveTabToNewGroup(tabId, loadUnsync, showTabAfterMovingItIntoThisGroup) {
                 let newGroupTitle = '',
                     tabIds = this.getTabIdsForMove(tabId);
 
@@ -550,7 +550,7 @@
                     }
                 }
 
-                await Groups.add(undefined, tabIds, newGroupTitle, showTabAfterMoving);
+                await Groups.add(undefined, tabIds, newGroupTitle, showTabAfterMovingItIntoThisGroup);
 
                 if (loadUnsync) {
                     this.loadUnsyncedTabs();

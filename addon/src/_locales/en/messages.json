@@ -87,10 +87,6 @@
         "message": "Close popup after changing group",
         "description": "Close popup after changing group"
     },
-    "showNotificationAfterMoveTab": {
-        "message": "Show notification when a tab is moved to another group",
-        "description": "Show notification when tab is moved to another group"
-    },
     "openManageGroupsInTab": {
         "message": "Open \"Manage Groups\" in new tab",
         "description": "Open \"Manage Groups\" in new tab"
@@ -472,6 +468,14 @@
     "showTabAfterMovingItIntoThisGroup": {
         "message": "Show the tab after auto-moving it into this group",
         "description": "Show the tab after auto-moving it into this group"
+    },
+    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
+        "message": "Only if the active tab has been moved",
+        "description": "Only if the active tab has been moved"
+    },
+    "showNotificationAfterMovingTabIntoThisGroup": {
+        "message": "Show a notification when tabs are moved to this group",
+        "description": "Show a notification when tabs are moved to this group"
     },
     "tabMoving": {
         "message": "Tab moving",

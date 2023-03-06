@@ -83,10 +83,6 @@
         "message": "Zamknij okno pop-up po zmianie grupy",
         "description": "Close popup after changing group"
     },
-    "showNotificationAfterMoveTab": {
-        "message": "Pokaż powiadomienie kiedy zakładka zostanie przesunięta do innej grupy",
-        "description": "Show notification when tab is moved to another group"
-    },
     "openManageGroupsInTab": {
         "message": "Otwórz \"Menadżer grup\" w nowej karcie",
         "description": "Open \"Manage Groups\" in new tab"

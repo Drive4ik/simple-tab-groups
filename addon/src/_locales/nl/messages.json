@@ -79,10 +79,6 @@
         "message": "Sluit popup na het wisselen van groep",
         "description": "Close popup after changing group"
     },
-    "showNotificationAfterMoveTab": {
-        "message": "Toon notificatie wanneer tabbladen worden verplaatst naar een andere groep",
-        "description": "Show notification when tab is moved to another group"
-    },
     "openManageGroupsInTab": {
         "message": "Open \"Groepen beheren\" in nieuw tabblad",
         "description": "Open \"Manage Groups\" in new tab"

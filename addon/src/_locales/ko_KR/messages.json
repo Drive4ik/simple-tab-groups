@@ -83,10 +83,6 @@
         "message": "그룹 변경 후 팝업 닫기",
         "description": "Close popup after changing group"
     },
-    "showNotificationAfterMoveTab": {
-        "message": "탭이 다른 그룹으로 이동할 때 알림 표시",
-        "description": "Show notification when tab is moved to another group"
-    },
     "openManageGroupsInTab": {
         "message": "새 탭에서 \"그룹 관리\"  열기",
         "description": "Open \"Manage Groups\" in new tab"

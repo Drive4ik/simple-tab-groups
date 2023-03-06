@@ -83,10 +83,6 @@
         "message": "Fechar o pop-up depois da mudança de grupo",
         "description": "Close popup after changing group"
     },
-    "showNotificationAfterMoveTab": {
-        "message": "Exibir notificação quando a aba for movida para outro grupo",
-        "description": "Show notification when tab is moved to another group"
-    },
     "openManageGroupsInTab": {
         "message": "Abrir \"Gerenciar Grupos\" em nova aba",
         "description": "Open \"Manage Groups\" in new tab"

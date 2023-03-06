@@ -83,10 +83,6 @@
         "message": "Fermer la pop-up après avoir changé de groupe",
         "description": "Close popup after changing group"
     },
-    "showNotificationAfterMoveTab": {
-        "message": "Afficher une notification quand l'onglet est transféré dans un autre groupe",
-        "description": "Show notification when tab is moved to another group"
-    },
     "openManageGroupsInTab": {
         "message": "Ouvrir \"Gérer les groupes\" dans un nouvel onglet",
         "description": "Open \"Manage Groups\" in new tab"

@@ -83,10 +83,6 @@
         "message": "Κλείσιμο αναδυόμενου μηνύματος μετά την αλλαγή group",
         "description": "Close popup after changing group"
     },
-    "showNotificationAfterMoveTab": {
-        "message": "Να εμφανίζεται ειδοποίηση όταν ένα tab μετακινείται σε άλλο  group",
-        "description": "Show notification when tab is moved to another group"
-    },
     "openManageGroupsInTab": {
         "message": "Άνοιγμα \"Διαχείριση Groups\" σε νέο tab",
         "description": "Open \"Manage Groups\" in new tab"

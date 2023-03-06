@@ -83,10 +83,6 @@
         "message": "Grubu düzenledikten sonra açılır pencereyi kapat",
         "description": "Close popup after changing group"
     },
-    "showNotificationAfterMoveTab": {
-        "message": "Bir sekme başka bir gruba taşındığında bildirim göster",
-        "description": "Show notification when tab is moved to another group"
-    },
     "openManageGroupsInTab": {
         "message": "\"Grupları Yönet\" sayfasını yeni sekmede aç",
         "description": "Open \"Manage Groups\" in new tab"

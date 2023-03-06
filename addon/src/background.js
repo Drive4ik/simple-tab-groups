@@ -1153,9 +1153,12 @@ async function createMoveTabMenus() {
                 let setActive = 2 === info.button,
                     tabIds = await Tabs.getHighlightedIds(tab.windowId, tab);
 
-                await Tabs.move(tabIds, groupId, undefined, undefined, setActive);
+                await Tabs.move(tabIds, groupId, {
+                    ...group,
+                    showTabAfterMovingItIntoThisGroup: setActive,
+                });
 
-                if (!setActive && info.modifiers.includes('Ctrl')) {
+                if (!setActive && info.modifiers.includes('Ctrl')) { // todo make util for modifier with MAC
                     Tabs.discard(tabIds);
                 }
             }),
@@ -1710,29 +1713,29 @@ async function prependWindowTitle(windowId, title) {
     }
 }
 
-let _tabsLazyMoving = {},
+let _tabsLazyMovingMap = new Map,
     _tabsLazyMovingTimer = 0;
 
-function addTabToLazyMove(tabId, groupId, showTabAfterMovingItIntoThisGroup) {
+function addTabToLazyMove(tabId, groupId) {
     clearTimeout(_tabsLazyMovingTimer);
 
-    if (!_tabsLazyMoving[groupId]) {
-        _tabsLazyMoving[groupId] = {
-            id: groupId,
-            tabIds: new Set,
-            showTabAfterMovingItIntoThisGroup,
-        };
-    }
-
-    _tabsLazyMoving[groupId].tabIds.add(tabId);
+    _tabsLazyMovingMap.set(tabId, groupId);
 
     _tabsLazyMovingTimer = window.setTimeout(utils.catchFunc(async function() {
-        let groups = Object.values(_tabsLazyMoving);
+        let tabsEntries = Array.from(_tabsLazyMovingMap.entries());
 
-        _tabsLazyMoving = {};
+        _tabsLazyMovingMap.clear();
 
-        for (let group of groups) {
-            await Tabs.move(Array.from(group.tabIds), group.id, undefined, undefined, group.showTabAfterMovingItIntoThisGroup);
+        let moveData = tabsEntries.reduce((acc, [tabId, groupId]) => {
+                acc[groupId] ??= [];
+                acc[groupId].push(tabId);
+                return acc;
+            }, {}),
+            {groups} = await Groups.load();
+
+        for (let groupId in moveData) {
+            groupId = Number(groupId);
+            await Tabs.move(moveData[groupId], groupId, groups.find(gr => gr.id === groupId));
         }
     }), 100);
 }
@@ -1799,7 +1802,7 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, cookieSto
         if (destGroup) {
             cache.setTab(tab);
             console.log('onBeforeTabRequest move tab from groupId %s -> %s', tabGroup.id, destGroup.id);
-            addTabToLazyMove(tab.id, destGroup.id, destGroup.showTabAfterMovingItIntoThisGroup);
+            addTabToLazyMove(tab.id, destGroup.id);
             return {};
         }
     }
@@ -2099,9 +2102,9 @@ async function runAction(data, sender = {}) {
                 break;
             case 'load-custom-group':
                 if (Number.isFinite(data.groupId) && 0 < data.groupId) {
-                    if (groups.some(group => group.id === data.groupId)) {
-                        let groupToLoad = groups.find(group => group.id === data.groupId);
+                    let groupToLoad = groups.find(group => group.id === data.groupId);
 
+                    if (groupToLoad) {
                         if (groupToLoad.isArchive) {
                             result.error = browser.i18n.getMessage('groupIsArchived', groupToLoad.title);
                             utils.notify(result.error, 7, 'groupIsArchived');
@@ -2271,14 +2274,14 @@ async function runAction(data, sender = {}) {
                     tabIds = await Tabs.getHighlightedIds(activeTab.windowId, undefined, null);
 
                 if (Number.isFinite(data.groupId) && 0 < data.groupId) {
-                    if (groups.some(group => group.id === data.groupId)) {
-                        let groupMoveTo = groups.find(group => group.id === data.groupId);
+                    let groupMoveTo = groups.find(group => group.id === data.groupId);
 
+                    if (groupMoveTo) {
                         if (groupMoveTo.isArchive) {
                             result.error = browser.i18n.getMessage('groupIsArchived', groupMoveTo.title);
                             utils.notify(result.error, 7, 'groupIsArchived');
                         } else {
-                            await Tabs.move(tabIds, data.groupId);
+                            await Tabs.move(tabIds, data.groupId, groupMoveTo);
                             result.ok = true;
                         }
                     } else {
@@ -3295,6 +3298,16 @@ async function runMigrateForData(data) {
                 if (rootFolder) {
                     window.localStorage.mainBookmarksFolderId = rootFolder.id;
                 }
+            },
+        },
+        {
+            version: '4.8.1',
+            remove: ['showNotificationAfterMoveTab'],
+            async migration() {
+                data.groups.forEach(group => {
+                    group.showNotificationAfterMovingTabIntoThisGroup = data.showNotificationAfterMoveTab;
+                    group.showOnlyActiveTabAfterMovingItIntoThisGroup = false;
+                });
             },
         },
     ];

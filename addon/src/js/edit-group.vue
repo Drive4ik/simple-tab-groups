@@ -344,6 +344,18 @@
                     <span v-text="lang('showTabAfterMovingItIntoThisGroup')"></span>
                 </label>
             </div>
+            <div class="control ml-indent">
+                <label class="checkbox" :disabled="!group.showTabAfterMovingItIntoThisGroup">
+                    <input type="checkbox" :disabled="!group.showTabAfterMovingItIntoThisGroup" v-model="group.showOnlyActiveTabAfterMovingItIntoThisGroup" />
+                    <span v-text="lang('showOnlyActiveTabAfterMovingItIntoThisGroup')"></span>
+                </label>
+            </div>
+            <div class="control">
+                <label class="checkbox">
+                    <input type="checkbox" v-model="group.showNotificationAfterMovingTabIntoThisGroup" />
+                    <span v-text="lang('showNotificationAfterMovingTabIntoThisGroup')"></span>
+                </label>
+            </div>
         </div>
 
         <div class="field">

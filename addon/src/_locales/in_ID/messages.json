@@ -83,10 +83,6 @@
         "message": "Tutup popup setelah mengubah grup",
         "description": "Close popup after changing group"
     },
-    "showNotificationAfterMoveTab": {
-        "message": "Tampilkan pemberitahuan saat tab dipindahkan ke grup lain",
-        "description": "Show notification when tab is moved to another group"
-    },
     "openManageGroupsInTab": {
         "message": "Buka \"Kelola Grup\" di tab baru",
         "description": "Open \"Manage Groups\" in new tab"

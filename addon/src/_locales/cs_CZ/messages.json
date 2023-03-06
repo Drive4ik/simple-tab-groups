@@ -83,10 +83,6 @@
         "message": "Zavřít vyskakovací okno po změně skupiny",
         "description": "Close popup after changing group"
     },
-    "showNotificationAfterMoveTab": {
-        "message": "Upozornit, pokud je panel přesunut do jiné skupiny",
-        "description": "Show notification when tab is moved to another group"
-    },
     "openManageGroupsInTab": {
         "message": "Otevřít \"Správu skupin\" v novém panelu",
         "description": "Open \"Manage Groups\" in new tab"

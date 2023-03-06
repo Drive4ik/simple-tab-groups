@@ -83,6 +83,8 @@
             moveToMainIfNotInCatchTabRules: false,
             muteTabsWhenGroupCloseAndRestoreWhenOpen: false,
             showTabAfterMovingItIntoThisGroup: false,
+            showOnlyActiveTabAfterMovingItIntoThisGroup: false,
+            showNotificationAfterMovingTabIntoThisGroup: true,
             dontDiscardTabsAfterHideThisGroup: false,
             bookmarkId: null,
         };
@@ -121,7 +123,10 @@
         }
 
         if (tabIds.length) {
-            newGroup.tabs = await Tabs.move(tabIds, newGroup.id, undefined, false, showTabsAfterMoving);
+            newGroup.tabs = await Tabs.move(tabIds, newGroup.id, {
+                ...newGroup,
+                showTabAfterMovingItIntoThisGroup: showTabsAfterMoving,
+            });
         }
 
         if (!showTabsAfterMoving) {
@@ -141,7 +146,7 @@
 
     async function remove(groupId) {
         let {group, groups, groupIndex} = await load(groupId, true);
-
+// todo made unload group
         BG.addUndoRemoveGroupItem(group);
 
         groups.splice(groupIndex, 1);

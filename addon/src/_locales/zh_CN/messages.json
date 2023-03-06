@@ -83,10 +83,6 @@
         "message": "切换群组后关闭弹出框",
         "description": "Close popup after changing group"
     },
-    "showNotificationAfterMoveTab": {
-        "message": "标签页移到其他群组时显示通知",
-        "description": "Show notification when tab is moved to another group"
-    },
     "openManageGroupsInTab": {
         "message": "在新标签页里打开”群组管理“",
         "description": "Open \"Manage Groups\" in new tab"

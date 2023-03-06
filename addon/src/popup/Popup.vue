@@ -244,7 +244,7 @@
                     .$on('drag-move-tab', function(from, to) {
                         let tabIds = this.getTabIdsForMove(from.data.item.id);
 
-                        BG.Tabs.move(tabIds, to.data.group.id, to.data.item.index, false);
+                        BG.Tabs.move(tabIds, to.data.group.id, {newTabIndex: to.data.item.index});
                     })
                     .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
                     .$on('drag-over', (item, isOver) => item.isOver = isOver);
@@ -698,7 +698,7 @@
                 });
             },
 
-            async createNewGroup(tabIds, showTabAfterMoving, proposalTitle, windowId) {
+            async createNewGroup(tabIds, showTabAfterMovingItIntoThisGroup, proposalTitle, windowId) {
                 let newGroupTitle = '';
 
                 if (this.options.alwaysAskNewGroupName) {
@@ -711,7 +711,7 @@
                     }
                 }
 
-                Groups.add(windowId, tabIds, newGroupTitle, showTabAfterMoving);
+                Groups.add(windowId, tabIds, newGroupTitle, showTabAfterMovingItIntoThisGroup);
             },
 
             async renameGroup({id, title}) {
@@ -906,7 +906,7 @@
                 if (this.currentGroup) {
                     this.unSyncTabs = [];
 
-                    await BG.Tabs.move(tabsIds, this.currentGroup.id, undefined, false);
+                    await BG.Tabs.move(tabsIds, this.currentGroup.id, this.currentGroup);
                 } else {
                     await BG.Tabs.moveNative(this.unSyncTabs, {
                         windowId: this.currentWindow.id,
@@ -989,10 +989,11 @@
 
                 return tabs;
             },
-            async moveTabs(tabId, groupId, loadUnsync = false, showTabAfterMoving, discardTabs) {
-                let tabIds = this.getTabIdsForMove(tabId);
+            async moveTabs(tabId, groupId, loadUnsync = false, showTabAfterMovingItIntoThisGroup, discardTabs) {
+                let tabIds = this.getTabIdsForMove(tabId),
+                    group = this.groups.find(gr => gr.id === groupId);
 
-                await BG.Tabs.move(tabIds, groupId, undefined, false, showTabAfterMoving);
+                await BG.Tabs.move(tabIds, groupId, {...group, showTabAfterMovingItIntoThisGroup});
 
                 if (discardTabs) {
                     Tabs.discard(tabIds);

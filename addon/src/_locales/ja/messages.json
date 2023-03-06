@@ -83,10 +83,6 @@
         "message": "グループを変更後にポップアップを閉じる",
         "description": "Close popup after changing group"
     },
-    "showNotificationAfterMoveTab": {
-        "message": "タブを別のグループへ移動した時に通知を表示する",
-        "description": "Show notification when tab is moved to another group"
-    },
     "openManageGroupsInTab": {
         "message": "[グループの管理] を新しいタブで開く",
         "description": "Open \"Manage Groups\" in new tab"
