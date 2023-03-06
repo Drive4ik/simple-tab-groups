@@ -845,7 +845,7 @@
                         this.multipleTabIds.push(tab.id);
                     }
                 } else {
-                    this.applyGroup(group, tab);
+                    this.applyGroup(group, tab, event.key === 'Enter');
                 }
             },
 
@@ -864,6 +864,10 @@
 
                 let isCurrentGroup = group === this.currentGroup;
 
+                if (isSidebar && closePopup) {
+                    this.showSectionGroupTabs(group);
+                }
+
                 if (isCurrentGroup) {
                     if (!tab) { // open group
                         this.showSectionGroupTabs(group);
@@ -875,15 +879,13 @@
                     }
                 }
 
-                let tabId = tab && tab.id;
-
                 if (closePopup) {
-                    BG.applyGroup(this.currentWindow.id, group.id, tabId);
+                    BG.applyGroup(this.currentWindow.id, group.id, tab?.id);
                     this.closeWindow();
                 } else {
                     this.someGroupAreLoading = true;
 
-                    let loadGroupPromise = BG.applyGroup(this.currentWindow.id, group.id, tabId);
+                    let loadGroupPromise = BG.applyGroup(this.currentWindow.id, group.id, tab?.id);
 
                     if (this.options.closePopupAfterChangeGroup) {
                         if (!isCurrentGroup) {
@@ -1198,7 +1200,7 @@
                         ref="search"
                         v-model.trim="searchDelay"
                         autocomplete="off"
-                        @keyup.enter="selectFirstItemOnSearch"
+                        @keydown.enter="selectFirstItemOnSearch"
                         @keydown.down="focusToNextElement"
                         @keydown.up="focusToNextElement"
                         @input="searchDelay.length ? null : showSectionDefault()"
@@ -1220,7 +1222,7 @@
         <main id="result" :class="['is-full-width', dragData ? 'drag-' + dragData.itemType : false]">
             <!-- SEARCH TABS -->
             <div v-if="section === SECTION_SEARCH">
-                <div v-if="filteredGroups.length" class="search-scrollable">
+                <div v-if="filteredGroups.length" class="search-scrollable no-outline">
                     <div v-for="group in filteredGroups" :key="group.id">
                         <div
                             :class="['group item is-unselectable', {
@@ -1230,7 +1232,7 @@
                             @contextmenu="$refs.contextMenuGroup.open($event, {group})"
 
                             @click="!group.isArchive && applyGroup(group)"
-                            @keyup.enter="!group.isArchive && applyGroup(group)"
+                            @keydown.enter="!group.isArchive && applyGroup(group, undefined, true)"
                             @keydown.right.stop="showSectionGroupTabs(group)"
                             @keydown.up="focusToNextElement"
                             @keydown.down="focusToNextElement"
@@ -1300,8 +1302,8 @@
                             <div v-for="(tab, index) in group.filteredTabs" :key="index"
                                 @contextmenu="$refs.contextMenuTab.open($event, {tab, group})"
                                 @click.stop="clickOnTab($event, tab, group)"
-                                @keyup.enter="clickOnTab($event, tab, group)"
-                                @keyup.delete="removeTab(tab)"
+                                @keydown.enter="clickOnTab($event, tab, group)"
+                                @keydown.delete="removeTab(tab)"
                                 @keydown.up="focusToNextElement"
                                 @keydown.down="focusToNextElement"
                                 tabindex="0"
@@ -1374,7 +1376,7 @@
 
                         @contextmenu="$refs.contextMenuGroup.open($event, {group})"
                         @click="!group.isArchive && applyGroup(group)"
-                        @keyup.enter="!group.isArchive && applyGroup(group)"
+                        @keydown.enter="!group.isArchive && applyGroup(group, undefined, true)"
                         @keydown.right.stop="showSectionGroupTabs(group);"
                         @keydown.up="focusToNextElement"
                         @keydown.down="focusToNextElement"
@@ -1424,7 +1426,7 @@
                 <hr>
 
                 <div class="create-new-group">
-                    <div class="item" tabindex="0" @click="createNewGroup()" @keyup.enter="createNewGroup()">
+                    <div class="item" tabindex="0" @click="createNewGroup()" @keydown.enter="createNewGroup()">
                         <div class="item-icon">
                             <img class="size-16" src="/icons/group-new.svg" />
                         </div>
@@ -1434,7 +1436,7 @@
 
                 <div v-if="unSyncTabs.length && !showUnSyncTabs">
                     <hr>
-                    <div class="item" tabindex="0" @click="showUnSyncTabs = true" @keyup.enter="showUnSyncTabs = true">
+                    <div class="item" tabindex="0" @click="showUnSyncTabs = true" @keydown.enter="showUnSyncTabs = true">
                         <div class="item-icon">
                             <img class="size-16" src="/icons/arrow-down.svg" />
                         </div>
@@ -1448,16 +1450,16 @@
                         <span v-text="lang('foundHiddenUnSyncTabsDescription')"></span>
                         <ul>
                             <li>
-                                <a tabindex="0" @click="unsyncHiddenTabsMoveToCurrentGroup" @keyup.enter="unsyncHiddenTabsMoveToCurrentGroup" v-text="lang('actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup')"></a>
+                                <a tabindex="0" @click="unsyncHiddenTabsMoveToCurrentGroup" @keydown.enter="unsyncHiddenTabsMoveToCurrentGroup" v-text="lang('actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup')"></a>
                             </li>
                             <li v-if="unSyncWindowTabs.length && countWindowsUnSyncTabs.length > 1">
-                                <a tabindex="0" @click="unsyncHiddenWindowTabsCreateNewGroup" @keyup.enter="unsyncHiddenWindowTabsCreateNewGroup" v-text="lang('actionHiddenUnSyncWindowTabsCreateGroup')"></a>
+                                <a tabindex="0" @click="unsyncHiddenWindowTabsCreateNewGroup" @keydown.enter="unsyncHiddenWindowTabsCreateNewGroup" v-text="lang('actionHiddenUnSyncWindowTabsCreateGroup')"></a>
                             </li>
                             <li>
-                                <a tabindex="0" @click="unsyncHiddenTabsCreateNewGroupAll" @keyup.enter="unsyncHiddenTabsCreateNewGroupAll" v-text="lang('actionHiddenUnSyncTabsCreateGroup')"></a>
+                                <a tabindex="0" @click="unsyncHiddenTabsCreateNewGroupAll" @keydown.enter="unsyncHiddenTabsCreateNewGroupAll" v-text="lang('actionHiddenUnSyncTabsCreateGroup')"></a>
                             </li>
                             <li>
-                                <a tabindex="0" @click="unsyncHiddenTabsCloseAll" @keyup.enter="unsyncHiddenTabsCloseAll" v-text="lang('actionHiddenUnSyncTabsCloseAll')"></a>
+                                <a tabindex="0" @click="unsyncHiddenTabsCloseAll" @keydown.enter="unsyncHiddenTabsCloseAll" v-text="lang('actionHiddenUnSyncTabsCloseAll')"></a>
                             </li>
                         </ul>
                     </p>
@@ -1465,7 +1467,7 @@
                         <div v-for="tab in unSyncTabs" :key="tab.id"
                             @contextmenu="$refs.contextMenuTab.open($event, {tab})"
                             @click.stop="($event.ctrlKey || $event.metaKey || $event.shiftKey) ? clickOnTab($event, tab) : unsyncHiddenTabsShowTabIntoCurrentWindow(tab)"
-                            @keyup.enter="($event.ctrlKey || $event.metaKey || $event.shiftKey) ? clickOnTab($event, tab) : unsyncHiddenTabsShowTabIntoCurrentWindow(tab)"
+                            @keydown.enter="($event.ctrlKey || $event.metaKey || $event.shiftKey) ? clickOnTab($event, tab) : unsyncHiddenTabsShowTabIntoCurrentWindow(tab)"
                             @keydown.delete="removeTab(tab)"
                             @mousedown.middle.prevent
                             @mouseup.middle.prevent="removeTab(tab)"
@@ -1509,7 +1511,7 @@
 
             <!-- GROUP -->
             <div v-if="section === SECTION_GROUP_TABS" class="tabs-list">
-                <div class="item is-unselectable" tabindex="0" @click="showSectionDefault" @keyup.enter="showSectionDefault">
+                <div class="item is-unselectable" tabindex="0" @click="showSectionDefault" @keydown.enter="showSectionDefault">
                     <span class="item-icon">
                         <img class="size-16" src="/icons/arrow-left.svg" />
                     </span>
@@ -1535,16 +1537,16 @@
                         <span class="group-title" v-text="getGroupTitle(groupToShow)"></span>
                     </div>
                     <div class="item-action is-unselectable">
-                        <span tabindex="0" @click="openGroupSettings(groupToShow)" @keyup.enter="openGroupSettings(groupToShow)" class="size-16 cursor-pointer" :title="lang('groupSettings')">
+                        <span tabindex="0" @click="openGroupSettings(groupToShow)" @keydown.enter="openGroupSettings(groupToShow)" class="size-16 cursor-pointer" :title="lang('groupSettings')">
                             <img src="/icons/settings.svg" />
                         </span>
-                        <span tabindex="0" @click="removeGroup(groupToShow)" @keyup.enter="removeGroup(groupToShow)" class="size-16 cursor-pointer" :title="lang('deleteGroup')">
+                        <span tabindex="0" @click="removeGroup(groupToShow)" @keydown.enter="removeGroup(groupToShow)" class="size-16 cursor-pointer" :title="lang('deleteGroup')">
                             <img src="/icons/group-delete.svg" />
                         </span>
                     </div>
                 </div>
 
-                <div class="archive-tabs-scollable" v-if="groupToShow.isArchive">
+                <div class="archive-tabs-scrollable no-outline" v-if="groupToShow.isArchive">
                     <div
                         v-for="(tab, tabIndex) in groupToShow.tabs"
                         :key="tabIndex"
@@ -1569,14 +1571,14 @@
                 </div>
 
                 <template v-else>
-                    <div class="tabs-scollable">
+                    <div class="tabs-scrollable no-outline">
                         <div
                             v-for="(tab, tabIndex) in groupToShow.tabs"
                             :key="tabIndex"
                             :data-tab-id="tab.id"
                             @contextmenu="$refs.contextMenuTab.open($event, {tab, group: groupToShow})"
                             @click.stop="clickOnTab($event, tab, groupToShow)"
-                            @keyup.enter="clickOnTab($event, tab, groupToShow)"
+                            @keydown.enter="clickOnTab($event, tab, groupToShow)"
                             @keydown.left="showSectionDefault"
                             @keydown.up="focusToNextElement"
                             @keydown.down="focusToNextElement"
@@ -1632,7 +1634,7 @@
                     <hr>
 
                     <div class="create-new-tab">
-                        <div class="item" tabindex="0" @contextmenu="$refs.contextMenuTabNew.open($event, {group: groupToShow})" @click="addTab(groupToShow)" @keyup.enter="addTab(groupToShow)">
+                        <div class="item" tabindex="0" @contextmenu="$refs.contextMenuTabNew.open($event, {group: groupToShow})" @click="addTab(groupToShow)" @keydown.enter="addTab(groupToShow)">
                             <div class="item-icon">
                                 <img class="size-16" src="/icons/tab-new.svg">
                             </div>
@@ -1644,7 +1646,7 @@
         </main>
 
         <footer class="is-flex is-unselectable mt-indent">
-            <div tabindex="0" class="is-flex is-align-items-center manage-groups is-full-height is-full-width" @click="openManageGroups" @keyup.enter="openManageGroups" :title="lang('manageGroupsTitle')">
+            <div tabindex="0" class="is-flex is-align-items-center manage-groups is-full-height is-full-width" @click="openManageGroups" @keydown.enter="openManageGroups" :title="lang('manageGroupsTitle')">
                 <img class="size-16" src="/icons/icon.svg" />
                 <span class="h-margin-left-10" v-text="lang('manageGroupsTitle')"></span>
             </div>
@@ -1653,7 +1655,7 @@
                 tabindex="0"
                 class="is-flex is-align-items-center is-full-height"
                 @click="openOptionsPage"
-                @keyup.enter="openOptionsPage"
+                @keydown.enter="openOptionsPage"
                 :title="lang('openSettings')"
                 @contextmenu="$refs.settingsContextMenu.open($event)"
                 >
@@ -1744,7 +1746,7 @@
                 }]
             ">
             <div class="control is-expanded">
-                <input v-model.trim="promptValue" type="text" class="input" ref="promptInput" @keyup.enter.stop="promptResolveFunc(true)" maxlength="256" />
+                <input v-model.trim="promptValue" type="text" class="input" ref="promptInput" @keydown.enter.stop="promptResolveFunc(true)" maxlength="256" />
             </div>
         </popup>
 
@@ -2017,12 +2019,12 @@
             scrollbar-width: thin;
             overflow-y: auto;
         }
-        .archive-tabs-scollable {
+        .archive-tabs-scrollable {
             max-height: calc(var(--max-popup-height) - var(--footer-height) - 150px);
             scrollbar-width: thin;
             overflow-y: auto;
         }
-        .tabs-scollable {
+        .tabs-scrollable {
             max-height: calc(var(--max-popup-height) - var(--footer-height) - 210px);
             scrollbar-width: thin;
             overflow-y: auto;
@@ -2037,6 +2039,11 @@
     .group,
     .tab {
         position: relative;
+    }
+
+    .tab:not(.drag-over),
+    .group:not(.drag-over) {
+        outline: none;
     }
 
     .group .tabs-text {

@@ -17,7 +17,7 @@
 <template>
     <div id="editGroupPopup">
         <div class="popup-back-toolbar">
-            <div tabindex="0" class="back-button" @click="$emit('close-popup')" @keyup.enter="$emit('close-popup')" :title="lang('goBackButtonTitle')">
+            <div tabindex="0" class="back-button" @click="$emit('close-popup')" @keydown.enter="$emit('close-popup')" :title="lang('goBackButtonTitle')">
                 <img class="size-16" src="/icons/arrow-left.svg" />
             </div>
             <div class="text" v-text="lang('groupSettings')"></div>

@@ -10,6 +10,8 @@ const POPUP_ID = 'stg-move-tab-to-group-popup-wrapper';
 
 browser.runtime.onMessage.addListener(changeHotkeysListener);
 
+window.addEventListener('unload', unsubscribeFromAllEvents);
+
 init();
 
 async function init() {

@@ -60,7 +60,7 @@
                         .filter(node => 'LI' === node.nodeName && !node.classList.contains('is-disabled'))
                         .forEach(function(node) {
                             node.tabIndex = 0;
-                            node.addEventListener('keyup', function(event) {
+                            node.addEventListener('keydown', function(event) {
                                 if (KeyEvent.DOM_VK_RETURN === event.keyCode) {
                                     event.stopPropagation();
                                     event.stopImmediatePropagation();
