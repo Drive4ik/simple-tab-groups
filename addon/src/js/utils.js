@@ -768,6 +768,10 @@
         return self.indexOf(value) === index;
     }
 
+    function onlyUniqueFilterLast(value, index, self) {
+        return self.lastIndexOf(value) === index;
+    }
+
     function assignKeys(toObj, fromObj, keys) {
         keys.forEach(key => toObj[key] = fromObj[key]);
         return toObj;
@@ -871,6 +875,7 @@
         extractKeys,
         arrayToObj,
         onlyUniqueFilter,
+        onlyUniqueFilterLast,
 
         safeHtml,
         unSafeHtml,

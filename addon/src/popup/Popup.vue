@@ -1744,7 +1744,7 @@
                 }]
             ">
             <div class="control is-expanded">
-                <input v-model.trim="promptValue" type="text" class="input" ref="promptInput" @keyup.enter.stop="promptResolveFunc(true)" />
+                <input v-model.trim="promptValue" type="text" class="input" ref="promptInput" @keyup.enter.stop="promptResolveFunc(true)" maxlength="256" />
             </div>
         </popup>
 

@@ -22,7 +22,9 @@ let options = {},
 
         return {
             next(groups) {
-                groupIds = groupIds.filter(groupId => groups.some(group => group.id === groupId));
+                groupIds = groupIds
+                    .filter(groupId => groups.some(group => group.id === groupId))
+                    .filter(utils.onlyUniqueFilterLast);
 
                 if (!groupIds[index + 1]) {
                     return;
@@ -31,7 +33,9 @@ let options = {},
                 return groupIds[++index];
             },
             prev(groups) {
-                groupIds = groupIds.filter(groupId => groups.some(group => group.id === groupId));
+                groupIds = groupIds
+                    .filter(groupId => groups.some(group => group.id === groupId))
+                    .filter(utils.onlyUniqueFilterLast);
 
                 if (!groupIds[index - 1]) {
                     return;
