@@ -145,35 +145,28 @@
     }
 
     async function remove(groupId) {
+        let groupWindowId = cache.getWindowId(groupId);
+
+        if (cache.getWindowId(groupId)) {
+            let result = await unload(groupId);
+
+            if (!result) {
+                return;
+            }
+        }
+
         let {group, groups, groupIndex} = await load(groupId, true);
-// todo made unload group
+
         BG.addUndoRemoveGroupItem(group);
 
         groups.splice(groupIndex, 1);
 
         await save(groups);
 
-        let groupWindowId = cache.getWindowId(groupId);
-
         if (!group.isArchive) {
-            if (groupWindowId) {
-                BG.setBrowserAction(groupWindowId, 'loading');
-                await cache.removeWindowSession(groupWindowId);
-            }
-
-            if (group.tabs.length) {
-                if (groupWindowId) {
-                    await Tabs.createTempActiveTab(groupWindowId, false);
-                }
-
-                await Tabs.remove(group.tabs);
-            }
+            await Tabs.remove(group.tabs);
 
             BG.updateMoveTabMenus();
-
-            if (groupWindowId) {
-                BG.updateBrowserActionData(null, groupWindowId);
-            }
 
             if (group.isMain) {
                 utils.notify(['thisGroupWasMain'], 7);
