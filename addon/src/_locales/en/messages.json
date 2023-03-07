@@ -87,6 +87,10 @@
         "message": "Close popup after changing group",
         "description": "Close popup after changing group"
     },
+    "closePopupAfterSelectTab": {
+        "message": "Close the popup window after selecting a tab",
+        "description": "Close the popup window after selecting a tab"
+    },
     "openManageGroupsInTab": {
         "message": "Open \"Manage Groups\" in new tab",
         "description": "Open \"Manage Groups\" in new tab"

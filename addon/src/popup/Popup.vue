@@ -887,6 +887,12 @@
 
                     let loadGroupPromise = BG.applyGroup(this.currentWindow.id, group.id, tab?.id);
 
+                    if (!isSidebar && this.options.closePopupAfterSelectTab && tab) {
+                        this.someGroupAreLoading = false;
+                        this.closeWindow();
+                        return;
+                    }
+
                     if (this.options.closePopupAfterChangeGroup) {
                         if (!isCurrentGroup) {
                             this.closeWindow();

@@ -811,6 +811,12 @@
             </div>
             <div class="field">
                 <label class="checkbox">
+                    <input v-model="options.closePopupAfterSelectTab" type="checkbox" />
+                    <span v-text="lang('closePopupAfterSelectTab')"></span>
+                </label>
+            </div>
+            <div class="field">
+                <label class="checkbox">
                     <input v-model="options.fullPopupWidth" type="checkbox" />
                     <span v-text="lang('fullPopupWidth')"></span>
                 </label>

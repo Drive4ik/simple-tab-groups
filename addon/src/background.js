@@ -3312,6 +3312,8 @@ async function runMigrateForData(data) {
                     group.showNotificationAfterMovingTabIntoThisGroup = data.showNotificationAfterMoveTab;
                     group.showOnlyActiveTabAfterMovingItIntoThisGroup = false;
                 });
+
+                data.closePopupAfterSelectTab = false;
             },
         },
     ];

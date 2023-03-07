@@ -83,6 +83,10 @@
         "message": "Закрыть всплывающее окно после смены группы",
         "description": "Close popup after changing group"
     },
+    "closePopupAfterSelectTab": {
+        "message": "Закрыть всплывающее окно после выбора вкладки",
+        "description": "Close the popup window after selecting a tab"
+    },
     "openManageGroupsInTab": {
         "message": "Открывать \"Управление группами\" в новой вкладке",
         "description": "Open \"Manage Groups\" in new tab"
