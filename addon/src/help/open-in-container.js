@@ -43,6 +43,10 @@ function loadConflictedExt(id) {
     return browser.management.get(id).catch(function() {})
 }
 
+function applyContainerStyles(parentNode, container) {
+    parentNode.querySelector('container-name').classList = `identity-icon-${container.icon} identity-color-${container.color}`;
+}
+
 async function init() {
     currentTab = await browser.tabs.getCurrent();
 
@@ -125,12 +129,15 @@ async function init() {
     }
 
     $('#helpPageOpenInContainerMainTitle')[INNER_HTML] = lang('helpPageOpenInContainerMainTitle', safeHtml(destContainer.name));
+    applyContainerStyles($('#helpPageOpenInContainerMainTitle'), destContainer);
     $('#redirect-url').innerText = url;
     $('#helpPageOpenInContainerDesc1')[INNER_HTML] = lang('helpPageOpenInContainerDesc1', [safeHtml(group.title), safeHtml(destContainer.name)]);
-    // $('#another-addon-img').src = Management.getExtensionIcon(conflictedExt); // can't have permission to read other addon icon :((
+    applyContainerStyles($('#helpPageOpenInContainerDesc1'), destContainer);
+    // $('#another-addon-img').src = Management.getExtensionIcon(conflictedExt);//can't have permission to read other addon icon :((
     $('#another-addon-img').src = '/icons/extension-generic.svg';
     $('#another-addon-name').innerText = conflictedExt.name;
     $('#helpPageOpenInContainerDesc3')[INNER_HTML] = lang('helpPageOpenInContainerDesc3', [safeHtml(anotherContainer.name), safeHtml(conflictedExt.name)]);
+    applyContainerStyles($('#helpPageOpenInContainerDesc3'), anotherContainer);
 
     // load favicon
     $('#redirect-img').src = 'https://www.google.com/s2/favicons?sz=16&domain_url=' + encodeURIComponent(new URL(url).origin);
@@ -143,7 +150,11 @@ async function init() {
     $('#deny')[INNER_HTML] = lang('helpPageOpenInContainerOpenInContainer', safeHtml(anotherContainer.name));
     $('#confirm')[INNER_HTML] = lang('helpPageOpenInContainerOpenInContainer', safeHtml(destContainer.name));
 
+    applyContainerStyles($('#deny'), anotherContainer);
+    applyContainerStyles($('#confirm'), destContainer);
+
     $('#helpPageOpenInContainerExcludeContainerToGroup')[INNER_HTML] = lang('helpPageOpenInContainerExcludeContainerToGroup', [safeHtml(anotherContainer.name), safeHtml(group.title)]);
+    applyContainerStyles($('#helpPageOpenInContainerExcludeContainerToGroup'), anotherContainer);
 
     $('#helpPageOpenInContainerIgnoreAppForSession')[INNER_HTML] = lang('helpPageOpenInContainerIgnoreAppForSession', safeHtml(conflictedExt.name));
 

@@ -1,5 +1,6 @@
 @import "chrome://global/skin/aboutNetError.css"; /* sometimes "global" folder */
 @import "chrome://browser/skin/aboutNetError.css"; /* sometimes "browser" ¯\_(ツ)_/¯ */
+@import "chrome://browser/content/usercontext/usercontext.css";
 
 :root {
     --stg-icon: url("/icons/icon.svg");

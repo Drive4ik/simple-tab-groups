@@ -1101,13 +1101,13 @@
             },
 
             scrollToActiveElement(event) {
-                if (-1 == event.target.tabIndex) {
+                if (-1 == event.target.tabIndex || this.multipleTabIds.length) {
                     return;
                 }
 
                 setTimeout(() => {
                     this.$nextTick(() => {
-                        if (this.groupToEdit || this.dragData) {
+                        if (this.groupToEdit || this.dragData || this.multipleTabIds.length) {
                             return;
                         }
 
@@ -1252,11 +1252,7 @@
                                     </figure>
                                 </div>
                                 <div class="item-title clip-text">
-                                    <figure v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID" class="image is-16x16">
-                                        <img
-                                            :src="containers[group.newTabContainer].iconUrl"
-                                            :style="{fill: containers[group.newTabContainer].colorCode}" />
-                                    </figure>
+                                    <span v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID" :class="`size-16 userContext-icon identity-icon-${containers[group.newTabContainer]?.icon} identity-color-${containers[group.newTabContainer]?.color}`"></span>
                                     <figure v-if="group.isArchive" class="image is-16x16">
                                         <img src="/icons/archive.svg" />
                                     </figure>
@@ -1271,11 +1267,10 @@
                                             class="align-text-bottom" />
                                     </figure>
                                     <span v-text="getGroupTitle(group)"></span>
-                                    <span
-                                        v-if="options.showExtendGroupsPopupWithActiveTabs && !group.isArchive"
-                                        :class="['tab-title', {bordered: getLastActiveTabContainer(group.tabs)}]"
-                                        :style="{borderColor: getLastActiveTabContainer(group.tabs, 'colorCode')}"
-                                        v-text="getLastActiveTabTitle(group.tabs)"></span>
+                                    <span v-if="options.showExtendGroupsPopupWithActiveTabs && !group.isArchive" class="tab-title">
+                                        <span v-if="getLastActiveTabContainer(group.tabs)" :title="getLastActiveTabContainer(group.tabs, 'name')" :class="`size-16 userContext-icon identity-icon-${getLastActiveTabContainer(group.tabs, 'icon')} identity-color-${getLastActiveTabContainer(group.tabs, 'color')}`"></span>
+                                        <span v-text="getLastActiveTabTitle(group.tabs)"></span>
+                                    </span>
                                 </div>
                                 <div class="item-action bold-hover is-unselectable" @click.stop="showSectionGroupTabs(group)">
                                     <img class="size-16 rotate-180" src="/icons/arrow-left.svg" />
@@ -1292,14 +1287,8 @@
                                     <img :src="tab.favIconUrl" class="size-16" loading="lazy" decoding="async" />
                                 </div>
                                 <div class="item-title clip-text">
-                                    <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                        <template v-if="tab.container">
-                                            <span :title="tab.container.name">
-                                                <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" loading="lazy" decoding="async" />
-                                            </span>
-                                        </template>
-                                        <span class="tab-discarded" v-text="getTabTitle(tab)"></span>
-                                    </span>
+                                    <span v-if="tab.container" :title="tab.container?.name" :class="`size-16 userContext-icon identity-icon-${tab.container?.icon} identity-color-${tab.container?.color}`"></span>
+                                    <span class="tab-discarded" v-text="getTabTitle(tab)"></span>
                                 </div>
                             </div>
                         </template>
@@ -1326,21 +1315,12 @@
                                     <img v-else :src="tab.favIconUrl" class="size-16" loading="lazy" decoding="async" />
                                 </div>
                                 <div class="item-title clip-text">
-                                    <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                        <span
-                                            v-if="showMuteIconTab(tab)"
-                                            @click.stop="toggleMuteTab(tab)"
-                                            :title="tab.audible ? lang('muteTab') : lang('unMuteTab')"
-                                            >
-                                            <img :src="tab.audible ? '/icons/audio.svg' : '/icons/audio-mute.svg'" class="size-16 align-text-bottom" />
-                                        </span>
-                                        <template v-if="tab.container">
-                                            <span :title="tab.container.name">
-                                                <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" loading="lazy" decoding="async" />
-                                            </span>
-                                        </template>
-                                        <span :class="{'tab-discarded': tab.discarded}" v-text="getTabTitle(tab)"></span>
+                                    <span v-if="showMuteIconTab(tab)" @click.stop="toggleMuteTab(tab)"
+                                        :title="tab.audible ? lang('muteTab') : lang('unMuteTab')">
+                                        <img :src="tab.audible ? '/icons/audio.svg' : '/icons/audio-mute.svg'" class="size-16 align-text-bottom" />
                                     </span>
+                                    <span v-if="tab.container" :title="tab.container?.name" :class="`size-16 userContext-icon identity-icon-${tab.container?.icon} identity-color-${tab.container?.color}`"></span>
+                                    <span :class="{'tab-discarded': tab.discarded}" v-text="getTabTitle(tab)"></span>
                                 </div>
                                 <div class="item-action flex-on-hover">
                                     <span class="size-16 cursor-pointer" @click.stop="removeTab(tab)" :title="lang('deleteTab')">
@@ -1396,11 +1376,7 @@
                                 </figure>
                             </div>
                             <div class="item-title clip-text">
-                                <figure class="image is-16x16" v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID">
-                                    <img
-                                        :src="containers[group.newTabContainer].iconUrl"
-                                        :style="{fill: containers[group.newTabContainer].colorCode}" />
-                                </figure>
+                                <span v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID" :title="containers[group.newTabContainer]?.name" :class="`size-16 userContext-icon identity-icon-${containers[group.newTabContainer]?.icon} identity-color-${containers[group.newTabContainer]?.color}`"></span>
                                 <figure v-if="group.isArchive" class="image is-16x16">
                                     <img src="/icons/archive.svg" />
                                 </figure>
@@ -1415,11 +1391,10 @@
                                         class="align-text-bottom" />
                                 </figure>
                                 <span v-text="getGroupTitle(group)"></span>
-                                <span
-                                    v-if="options.showExtendGroupsPopupWithActiveTabs && !group.isArchive"
-                                    :class="['tab-title', {bordered: getLastActiveTabContainer(group.tabs)}]"
-                                    :style="{borderColor: getLastActiveTabContainer(group.tabs, 'colorCode')}"
-                                    v-text="getLastActiveTabTitle(group.tabs)"></span>
+                                <span v-if="options.showExtendGroupsPopupWithActiveTabs && !group.isArchive" class="tab-title">
+                                    <span v-if="getLastActiveTabContainer(group.tabs)" :title="getLastActiveTabContainer(group.tabs, 'name')" :class="`size-16 userContext-icon identity-icon-${getLastActiveTabContainer(group.tabs, 'icon')} identity-color-${getLastActiveTabContainer(group.tabs, 'color')}`"></span>
+                                    <span v-text="getLastActiveTabTitle(group.tabs)"></span>
+                                </span>
                             </div>
                             <div class="item-action bold-hover is-unselectable" @click.stop="showSectionGroupTabs(group)">
                                 <img class="size-16 rotate-180" src="/icons/arrow-left.svg" />
@@ -1488,21 +1463,12 @@
                                 <img v-else :src="tab.favIconUrl" class="size-16" loading="lazy" decoding="async" />
                             </div>
                             <div class="item-title clip-text">
-                                <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                    <span
-                                        v-if="showMuteIconTab(tab)"
-                                        @click.stop="toggleMuteTab(tab)"
-                                        :title="tab.audible ? lang('muteTab') : lang('unMuteTab')"
-                                        >
-                                        <img :src="tab.audible ? '/icons/audio.svg' : '/icons/audio-mute.svg'" class="size-16 align-text-bottom" />
-                                    </span>
-                                    <template v-if="tab.container">
-                                        <span :title="tab.container.name">
-                                            <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" />
-                                        </span>
-                                    </template>
-                                    <span :class="{'tab-discarded': tab.discarded}" v-text="getTabTitle(tab)"></span>
+                                <span v-if="showMuteIconTab(tab)" @click.stop="toggleMuteTab(tab)"
+                                    :title="tab.audible ? lang('muteTab') : lang('unMuteTab')">
+                                    <img :src="tab.audible ? '/icons/audio.svg' : '/icons/audio-mute.svg'" class="size-16 align-text-bottom" />
                                 </span>
+                                <span v-if="tab.container" :title="tab.container?.name" :class="`size-16 userContext-icon identity-icon-${tab.container?.icon} identity-color-${tab.container?.color}`"></span>
+                                <span :class="{'tab-discarded': tab.discarded}" v-text="getTabTitle(tab)"></span>
                             </div>
                             <div class="item-action flex-on-hover">
                                 <span class="size-16 cursor-pointer" @click.stop="removeTab(tab)" :title="lang('deleteTab')">
@@ -1531,14 +1497,7 @@
                         <img :src="groupToShow.iconUrlToDisplay" class="is-inline-block size-16" />
                     </div>
                     <div class="item-title clip-text">
-                        <template v-if="groupToShow.newTabContainer !== DEFAULT_COOKIE_STORE_ID">
-                            <img
-                                :src="containers[groupToShow.newTabContainer].iconUrl"
-                                :style="{fill: containers[groupToShow.newTabContainer].colorCode}"
-                                :title="containers[groupToShow.newTabContainer].name"
-                                class="size-16"
-                                />
-                        </template>
+                        <span v-if="groupToShow.newTabContainer !== DEFAULT_COOKIE_STORE_ID" :title="containers[groupToShow.newTabContainer]?.name" :class="`size-16 userContext-icon identity-icon-${containers[groupToShow.newTabContainer]?.icon} identity-color-${containers[groupToShow.newTabContainer]?.color}`"></span>
                         <img v-if="groupToShow.isArchive" src="/icons/archive.svg" class="size-16" />
                         <span class="group-title" v-text="getGroupTitle(groupToShow)"></span>
                     </div>
@@ -1564,14 +1523,8 @@
                             <img :src="tab.favIconUrl" class="size-16" loading="lazy" decoding="async" />
                         </div>
                         <div class="item-title clip-text">
-                            <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                <template v-if="tab.container">
-                                    <span :title="tab.container.name">
-                                        <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" loading="lazy" decoding="async" />
-                                    </span>
-                                </template>
-                                <span class="tab-discarded" v-text="getTabTitle(tab)"></span>
-                            </span>
+                            <span v-if="tab.container" :title="tab.container?.name" :class="`size-16 userContext-icon identity-icon-${tab.container?.icon} identity-color-${tab.container?.color}`"></span>
+                            <span class="tab-discarded" v-text="getTabTitle(tab)"></span>
                         </div>
                     </div>
                 </div>
@@ -1597,7 +1550,9 @@
                                 'drag-moving': tab.isMoving,
                                 'drag-over': tab.isOver,
                                 'is-multiple-tab-to-move': multipleTabIds.includes(tab.id),
-                            }]"
+                            },
+                                tab.container && `identity-color-${tab.container?.color}`,
+                            ]"
                             :title="getTabTitle(tab, true)"
 
                             draggable="true"
@@ -1613,21 +1568,15 @@
                                 <img v-else :src="tab.favIconUrl" class="size-16" loading="lazy" decoding="async" />
                             </div>
                             <div class="item-title clip-text">
-                                <span :class="{bordered: !!tab.container}" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                    <span
-                                        v-if="showMuteIconTab(tab)"
-                                        @click.stop="toggleMuteTab(tab)"
-                                        :title="tab.audible ? lang('muteTab') : lang('unMuteTab')"
-                                        >
-                                        <img :src="tab.audible ? '/icons/audio.svg' : '/icons/audio-mute.svg'" class="size-16 align-text-bottom" />
-                                    </span>
-                                    <template v-if="tab.container">
-                                        <span :title="tab.container.name">
-                                            <img :src="tab.container.iconUrl" class="size-16 align-text-bottom" :style="{fill: tab.container.colorCode}" />
-                                        </span>
-                                    </template>
-                                    <span :class="{'tab-discarded': tab.discarded}" v-text="getTabTitle(tab)"></span>
+                                <span
+                                    v-if="showMuteIconTab(tab)"
+                                    @click.stop="toggleMuteTab(tab)"
+                                    :title="tab.audible ? lang('muteTab') : lang('unMuteTab')"
+                                    >
+                                    <img :src="tab.audible ? '/icons/audio.svg' : '/icons/audio-mute.svg'" class="size-16 align-text-bottom" />
                                 </span>
+                                <span v-if="tab.container" :title="tab.container?.name" :class="`size-16 userContext-icon identity-icon-${tab.container?.icon} identity-color-${tab.container?.color}`"></span>
+                                <span :class="{'tab-discarded': tab.discarded}" v-text="getTabTitle(tab)"></span>
                             </div>
                             <div class="item-action flex-on-hover">
                                 <span class="size-16 cursor-pointer" @click.stop="removeTab(tab)" :title="lang('deleteTab')">
@@ -1937,7 +1886,7 @@
             &.is-multiple-tab-to-move:before {
                 content: '';
                 position: absolute;
-                background-color: var(--in-content-border-focus);
+                background-color: var(--identity-tab-color, var(--in-content-border-focus));
                 left: 0;
                 top: 0;
                 bottom: 0;
@@ -1976,18 +1925,24 @@
                 flex-grow: 1;
                 white-space: nowrap;
                 overflow: hidden;
-                padding-left: 5px;
-                padding-right: 5px;
+                padding-left: calc(var(--indent) / 2);
+                padding-right: calc(var(--indent) / 2);
                 cursor: default;
                 display: flex;
                 align-items: center;
 
                 > * + * {
-                    margin-left: 5px;
+                    margin-left: calc(var(--indent) / 2);
                 }
 
                 .tab-title {
+                    display: flex;
+                    align-items: center;
                     color: var(--discarded-text-color);
+
+                    > * + * {
+                        margin-left: calc(var(--indent) / 2);
+                    }
                 }
             }
 
@@ -1995,12 +1950,12 @@
                 display: flex;
                 align-items: center;
                 align-self: stretch;
-                padding-left: 5px;
+                padding-left: calc(var(--indent) / 2);
                 white-space: nowrap;
             }
 
             .item-action > :not(:first-child) {
-                margin-left: 3px;
+                margin-left: var(--indent);
             }
 
             .flex-on-hover {
@@ -2061,16 +2016,6 @@
         min-width: 75px;
         overflow: hidden;
         text-align: center;
-    }
-
-    .bordered {
-        border-bottom-right-radius: 5px;
-        border-bottom-left-radius: 5px;
-        border-bottom-width: 1px;
-        border-bottom-style: solid;
-        max-width: 100%;
-        overflow: hidden;
-        vertical-align: middle;
     }
 
     .not-sync-tabs > p {

@@ -1026,13 +1026,7 @@
                             </figure>
                         </div>
                         <div class="other-icon" v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID">
-                            <figure class="image is-16x16">
-                                <img
-                                    :src="containers[group.newTabContainer].iconUrl"
-                                    :style="{fill: containers[group.newTabContainer].colorCode}"
-                                    class="size-16"
-                                    />
-                            </figure>
+                            <span :class="`size-16 userContext-icon identity-icon-${containers[group.newTabContainer]?.icon} identity-color-${containers[group.newTabContainer]?.color}`"></span>
                         </div>
                         <div class="other-icon" v-if="group.isArchive">
                             <figure class="image is-16x16">
@@ -1074,7 +1068,9 @@
                                 'has-thumbnail': options.showTabsWithThumbnailsInManageGroups && tab.thumbnail,
                                 'drag-moving': tab.isMoving,
                                 'drag-over': tab.isOver,
-                            }]"
+                            },
+                                tab.container && `identity-color-${tab.container?.color}`
+                            ]"
                             :title="getTabTitle(tab, true)"
                             @contextmenu.stop.prevent="!group.isArchive && $refs.contextMenuTab.open($event, {tab, group})"
 
@@ -1089,36 +1085,33 @@
                             @dragend="dragHandle($event, 'tab', ['tab', 'group'], {item: tab, group})"
                             >
                             <template v-if="options.showTabsWithThumbnailsInManageGroups">
-                                <div class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                <div class="tab-icon">
                                     <img class="size-16" :src="tab.favIconUrl" loading="lazy" decoding="async" />
                                 </div>
-                                <div v-if="isTabLoading(tab)" class="refresh-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                <div v-if="isTabLoading(tab)" class="refresh-icon">
                                     <img class="spin size-16" src="/icons/refresh.svg"/>
                                 </div>
                             </template>
                             <template v-else>
-                                <div class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                <div class="tab-icon">
                                     <img v-if="isTabLoading(tab)" class="spin size-16" src="/icons/refresh.svg"/>
                                     <img v-else class="size-16" :src="tab.favIconUrl" loading="lazy" decoding="async" />
                                 </div>
                             </template>
-                            <template v-if="tab.container">
-                                <div class="cookie-container" :title="tab.container.name" :style="{borderColor: tab.container.colorCode}">
-                                    <img class="size-16" :src="tab.container.iconUrl" :style="{fill: tab.container.colorCode}" loading="lazy" decoding="async">
-                                </div>
-                            </template>
-                            <div v-if="options.showTabsWithThumbnailsInManageGroups" class="screenshot" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                            <div v-if="tab.cookieStoreId && tab.cookieStoreId !== DEFAULT_COOKIE_STORE_ID" class="cookie-container">
+                                <span :title="tab.container?.name" :class="`is-inline-block size-16 userContext-icon identity-icon-${tab.container?.icon} identity-color-${tab.container?.color}`"></span>
+                            </div>
+                            <div v-if="options.showTabsWithThumbnailsInManageGroups" class="screenshot">
                                 <img v-if="tab.thumbnail" :src="tab.thumbnail" loading="lazy" decoding="async">
                             </div>
                             <div
                                 @mousedown.middle.prevent
                                 @mouseup.middle.prevent="!group.isArchive && removeTab(tab)"
                                 class="tab-title clip-text"
-                                :style="tab.container ? {borderColor: tab.container.colorCode} : false"
                                 v-text="getTabTitle(tab, false, 0, !group.isArchive && !tab.discarded)"></div>
 
-                            <div v-if="!group.isArchive" class="delete-tab-button" @click.stop="removeTab(tab)" :title="lang('deleteTab')" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                <img class="size-14" src="/icons/close.svg" />
+                            <div v-if="!group.isArchive" class="delete-tab-button" @click.stop="removeTab(tab)" :title="lang('deleteTab')">
+                                <img class="size-16" src="/icons/close.svg" />
                             </div>
                         </div>
 
@@ -1156,7 +1149,9 @@
                                 'is-in-multiple-drop': multipleTabIds.includes(tab.id),
                                 'has-thumbnail': options.showTabsWithThumbnailsInManageGroups && tab.thumbnail,
                                 'drag-moving': tab.isMoving,
-                            }]"
+                            },
+                                tab.container && `identity-color-${tab.container?.color}`
+                            ]"
                             :title="getTabTitle(tab, true)"
                             @contextmenu.stop.prevent="$refs.contextMenuTab.open($event, {tab})"
 
@@ -1167,36 +1162,33 @@
                             @dragend="dragHandle($event, 'tab', ['tab', 'group'], {item: tab})"
                             >
                             <template v-if="options.showTabsWithThumbnailsInManageGroups">
-                                <div class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                <div class="tab-icon">
                                     <img class="size-16" :src="tab.favIconUrl" loading="lazy" decoding="async" />
                                 </div>
-                                <div v-if="isTabLoading(tab)" class="refresh-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                <div v-if="isTabLoading(tab)" class="refresh-icon">
                                     <img class="spin size-16" src="/icons/refresh.svg"/>
                                 </div>
                             </template>
                             <template v-else>
-                                <div class="tab-icon" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                                <div class="tab-icon">
                                     <img v-if="isTabLoading(tab)" class="spin size-16" src="/icons/refresh.svg"/>
-                                    <img class="size-16" :src="tab.favIconUrl" loading="lazy" decoding="async" />
+                                    <img v-else class="size-16" :src="tab.favIconUrl" loading="lazy" decoding="async" />
                                 </div>
                             </template>
-                            <template v-if="tab.container">
-                                <div class="cookie-container" :title="tab.container.name" :style="{borderColor: tab.container.colorCode}">
-                                    <img class="size-16" :src="tab.container.iconUrl" :style="{fill: tab.container.colorCode}" loading="lazy" decoding="async">
-                                </div>
-                            </template>
-                            <div v-if="options.showTabsWithThumbnailsInManageGroups" class="screenshot" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
+                            <div v-if="tab.cookieStoreId && tab.cookieStoreId !== DEFAULT_COOKIE_STORE_ID" class="cookie-container">
+                                <span :title="tab.container?.name" :class="`is-inline-block size-16 userContext-icon identity-icon-${tab.container?.icon} identity-color-${tab.container?.color}`"></span>
+                            </div>
+                            <div v-if="options.showTabsWithThumbnailsInManageGroups" class="screenshot">
                                 <img v-if="tab.thumbnail" :src="tab.thumbnail" loading="lazy" decoding="async">
                             </div>
                             <div
                                 @mousedown.middle.prevent
                                 @mouseup.middle.prevent="removeTab(tab)"
                                 class="tab-title clip-text"
-                                :style="tab.container ? {borderColor: tab.container.colorCode} : false"
                                 v-text="getTabTitle(tab, false, 0, !tab.discarded)"></div>
 
-                            <div class="delete-tab-button" @click.stop="removeTab(tab)" :title="lang('deleteTab')" :style="tab.container ? {borderColor: tab.container.colorCode} : false">
-                                <img class="size-14" src="/icons/close.svg" />
+                            <div class="delete-tab-button" @click.stop="removeTab(tab)" :title="lang('deleteTab')">
+                                <img class="size-16" src="/icons/close.svg" />
                             </div>
                         </div>
                     </div>
@@ -1340,9 +1332,11 @@
         --is-in-multiple-drop-text-color: #ffffff;
         --border-radius: 3px;
 
-        --group-active-shadow: 0 0 0 3.5px rgba(3, 102, 214, 0.3);
-        --group-active-border: 1px solid #2188ff;
         --group-bg-color: #f5f5f5;
+        --group-active-shadow-color: rgba(3, 102, 214, 0.3);
+        --group-active-shadow: 0 0 0 3.5px var(--group-active-shadow-color);
+        --group-active-border-color: #2188ff;
+        --group-active-border: 1px solid var(--group-active-border-color);
 
         --tab-active-shadow: var(--group-active-shadow);
         --tab-active-border: var(--group-active-border);
@@ -1361,11 +1355,8 @@
         --text-color: #e0e0e0;
 
         --group-bg-color: #444444;
-        --group-active-shadow: 0 0 0 3.5px rgba(255, 255, 255, 0.3);
-        --group-active-border: 1px solid #e0e0e0;
-
-        --tab-active-shadow: var(--group-active-shadow);
-        --tab-active-border: var(--group-active-border);
+        --group-active-shadow-color: rgba(255, 255, 255, 0.3);
+        --group-active-border-color: #e0e0e0;
 
         --discarded-text-color: #979797;
     }
@@ -1512,7 +1503,7 @@
                 border-radius: var(--border-radius);
 
                 > * {
-                    border: 0 solid var(--tab-inner-border-color);
+                    border: 0 solid var(--identity-tab-color, var(--tab-inner-border-color));
                     background-color: var(--group-bg-color);
                 }
 
@@ -1546,7 +1537,8 @@
                 }
 
                 > .delete-tab-button {
-                    display: none;
+                    display: flex;
+                    visibility: hidden;
                     align-items: start;
                     justify-content: right;
                     top: var(--tab-inner-padding);
@@ -1560,7 +1552,7 @@
                 }
 
                 &:hover > .delete-tab-button {
-                    display: flex;
+                    visibility: visible;
                 }
 
                 > .cookie-container {
@@ -1574,6 +1566,7 @@
                     border-right-width: var(--tab-border-width);
                     border-top-width: var(--tab-border-width);
                     border-top-right-radius: var(--tab-buttons-radius);
+                    padding-bottom: 1px;
                 }
 
                 > .refresh-icon {
@@ -1698,6 +1691,8 @@
 
                 > .cookie-container {
                     padding-left: var(--margin);
+                    display: flex;
+                    align-items: center;
                 }
 
                 > .refresh-icon {
@@ -1708,13 +1703,11 @@
                 > .tab-title {
                     flex-grow: 1;
                     padding: 0 var(--margin);
-                    border-radius: var(--border-radius);
-                    border-bottom: 1px solid transparent;
                     white-space: nowrap;
                 }
 
                 &.is-active-element {
-                    outline: var(--tab-active-border);
+                    outline: 1px solid var(--identity-tab-color, var(--group-active-border-color));
                     outline-offset: -1px;
                     -moz-outline-radius: var(--border-radius);
                 }

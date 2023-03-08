@@ -13,6 +13,21 @@
             font-weight: bold;
         }
 
+        container-name[class]::before {
+            content: "";
+            display: inline-block;
+            height: 1em;
+            width: 1em;
+            background-image: var(--identity-icon);
+            -moz-context-properties: fill;
+            fill: var(--identity-icon-color);
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            margin-right: 5px;
+            margin-left: 2px;
+        }
+
         .button-container > button {
             min-inline-size: 240px;
         }
