@@ -488,16 +488,16 @@ const onUpdatedTab = utils.catchFunc(async function(tabId, changeInfo, tab) {
         winGroupId = cache.getWindowGroup(tab.windowId);
 
     if (changeInfo.favIconUrl && (tabGroupId || winGroupId)) {
-        cache.setTabFavIcon(tab.id, changeInfo.favIconUrl);
+        cache.setTabFavIcon(tab.id, changeInfo.favIconUrl).catch(noop);
     }
 
     if (changeInfo.hasOwnProperty('pinned') || changeInfo.hasOwnProperty('hidden')) {
         if (changeInfo.pinned || changeInfo.hidden) {
-            cache.removeTabGroup(tab.id);
+            cache.removeTabGroup(tab.id).catch(noop);
         } else {
 
             if (false === changeInfo.pinned) {
-                cache.setTabGroup(tab.id, winGroupId);
+                cache.setTabGroup(tab.id, winGroupId).catch(noop);
             } else if (false === changeInfo.hidden) {
                 if (tabGroupId) {
                     if (winGroupId) {
@@ -527,7 +527,7 @@ const onUpdatedTab = utils.catchFunc(async function(tabId, changeInfo, tab) {
 
                     Tabs.safeHide(tab).catch(noop);
                 } else {
-                    cache.setTabGroup(tab.id, winGroupId);
+                    cache.setTabGroup(tab.id, winGroupId).catch(noop);
                 }
             }
         }

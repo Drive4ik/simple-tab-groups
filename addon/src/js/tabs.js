@@ -68,9 +68,7 @@
 
         BG.groupIdForNextTab = null;
 
-        newTab = await cache.setTabSession(newTab);
-
-        return newTab;
+        return cache.setTabSession(newTab);
     }
 
     async function createUrlOnce(url, windowId) {
@@ -283,15 +281,15 @@
 
                 img.src = thumbnailBase64;
             });
+
+            await cache.setTabThumbnail(tab.id, thumbnail);
+
+            BG.sendMessage({
+                action: 'thumbnail-updated',
+                tabId: tab.id,
+                thumbnail: thumbnail,
+            });
         } catch (e) {}
-
-        cache.setTabThumbnail(tab.id, thumbnail);
-
-        BG.sendMessage({
-            action: 'thumbnail-updated',
-            tabId: tab.id,
-            thumbnail: thumbnail,
-        });
     }
 
     async function move(tabIds, groupId, {
