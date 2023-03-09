@@ -433,6 +433,10 @@
                             break;
                         case 'thumbnail-updated':
                             let foundTab = this.groups.some(group => {
+                                if (group.isArchive) {
+                                    return;
+                                }
+
                                 let tab = group.tabs.find(tab => tab.id === request.tabId);
 
                                 if (tab) {
@@ -550,7 +554,12 @@
                     }
                 }
 
-                await Groups.add(undefined, tabIds, newGroupTitle, showTabAfterMovingItIntoThisGroup);
+                let newGroupWindowId = showTabAfterMovingItIntoThisGroup ? this.currentWindow.id : undefined,
+                    newGroup = await Groups.add(newGroupWindowId, tabIds, newGroupTitle);
+
+                if (showTabAfterMovingItIntoThisGroup) {
+                    this.applyGroup(newGroup, {id: tabId});
+                }
 
                 if (loadUnsync) {
                     this.loadUnsyncedTabs();
@@ -651,9 +660,7 @@
                 tab.isMoving = false;
                 tab.isOver = false;
 
-                return this.allTabs[tab.id] = new Vue({
-                    data: tab,
-                });
+                return this.allTabs[tab.id] = Vue.observable(tab);
             },
 
             mapTabContainer(tab) {
@@ -693,7 +700,7 @@
                 Tabs.remove(this.getTabIdsForMove(tab.id));
             },
             updateTabThumbnail({id}) {
-                Tabs.updateThumbnail(id, true);
+                Tabs.updateThumbnail(id);
             },
             discardTab(tab) {
                 Tabs.discard(this.getTabIdsForMove(tab.id));

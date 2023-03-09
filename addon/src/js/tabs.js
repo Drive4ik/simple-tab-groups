@@ -159,15 +159,17 @@
 
         let tabs = await browser.tabs.query(query);
 
-        tabs = tabs
-            .filter(tab => !cache.removedTabs.has(tab.id))
-            .map(utils.normalizeTabUrl);
-
-        let result = query.pinned ? tabs : await Promise.all(tabs.map(tab => cache.loadTabSession(tab, includeFavIconUrl, includeThumbnail)));
+        if (!query.pinned) {
+            tabs = await Promise.all(
+                tabs
+                    .map(utils.normalizeTabUrl)
+                    .map(tab => cache.loadTabSession(tab, includeFavIconUrl, includeThumbnail).catch(noop))
+            );
+        }
 
         console.log('STOP Tabs.get');
 
-        return result;
+        return tabs.filter(Boolean);
     }
 
     async function getOne(id) {
@@ -180,9 +182,14 @@
     }
 
     async function getList(tabIds, includeFavIconUrl, includeThumbnail) {
-        let tabs = await Promise.all(tabIds.map(getOne));
+        let tabs = await Promise.all(tabIds.map(id => {
+            return browser.tabs.get(id)
+                .then(utils.normalizeTabUrl)
+                .then(tab => cache.loadTabSession(tab, includeFavIconUrl, includeThumbnail))
+                .catch(noop);
+        }));
 
-        return Promise.all(tabs.filter(Boolean).map(tab => cache.loadTabSession(tab, includeFavIconUrl, includeThumbnail)));
+        return tabs.filter(Boolean);
     }
 
     async function setMute(tabs, muted) {
@@ -238,7 +245,7 @@
         }
     }
 
-    async function updateThumbnail(tabId, force) {
+    async function updateThumbnail(tabId) {
         if (!BG.options.showTabsWithThumbnailsInManageGroups) {
             return;
         }
@@ -250,10 +257,6 @@
         }
 
         if (!utils.isTabLoaded(tab)) {
-            return;
-        }
-
-        if (!force && cache.getTabThumbnail(tab.id)) {
             return;
         }
 
@@ -350,18 +353,22 @@
                     let differentWindows = activeTab.windowId !== windowId,
                         otherHiddenAndVisibleTabsInActiveTabWindow = allTabsInActiveTabWindow.filter(excludeMovingTabs),
                         activeTabIsLastInSrcGroup = false,
-                        activeTabIsInLoadedGroup = false;
+                        activeTabIsInLoadedGroup = false,
+                        activeTabNotInGroup = false;
 
                     if (activeTab.groupId) {
                         activeTabIsLastInSrcGroup = !otherHiddenAndVisibleTabsInActiveTabWindow
                             .some(tab => tab.groupId === activeTab.groupId);
 
                         activeTabIsInLoadedGroup = activeTab.groupId === cache.getWindowGroup(activeTab.windowId);
+                    } else {
+                        activeTabNotInGroup = !cache.getWindowGroup(activeTab.windowId);
                     }
 
                     if (
                         (differentWindows && !otherHiddenAndVisibleTabsInActiveTabWindow.length) ||
-                        (activeTabIsLastInSrcGroup && activeTabIsInLoadedGroup)
+                        (activeTabIsLastInSrcGroup && activeTabIsInLoadedGroup) ||
+                        (activeTabNotInGroup)
                     ) {
                         await createTempActiveTab(activeTab.windowId, false);
                     }

@@ -3,7 +3,6 @@
 
     let tabs = {},
         lastTabsState = {}, // bug https://bugzilla.mozilla.org/show_bug.cgi?id=1818392
-        removedTabs = new Set,
         windows = {};
 
     function setLastTabState({id, url, title, status, hidden, pinned, favIconUrl}) {
@@ -29,7 +28,6 @@
     function clear() {
         tabs = {};
         lastTabsState = {};
-        removedTabs.clear();
         windows = {};
     }
 
@@ -64,7 +62,6 @@
     }
 
     function removeTab(tabId) {
-        removedTabs.add(tabId);
         delete tabs[tabId];
         delete lastTabsState[tabId];
     }
@@ -362,7 +359,6 @@
         removeTabSession,
 
         getTabsSessionAndRemove,
-        removedTabs,
 
         // windows
         removeWindow,

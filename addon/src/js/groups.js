@@ -90,10 +90,22 @@
         };
     }
 
-    async function add(windowId, tabIds = [], title = null, showTabsAfterMoving) {
-        tabIds = Array.isArray(tabIds) ? tabIds.slice() : [];
+    async function add(windowId, tabIds = [], title = null) {
+        tabIds = tabIds?.slice?.() || [];
+        title = title?.slice(0, 256);
 
-        title = title ? title.slice(0, 256) : null;
+        console.debug('Groups.add', {windowId, tabIds, title});
+
+        let windowGroupId = cache.getWindowGroup(windowId);
+
+        if (windowGroupId) {
+            let result = await unload(windowGroupId);
+
+            if (!result) {
+                console.warn('Groups.add cant unload exist group in window');
+                return;
+            }
+        }
 
         let {lastCreatedGroupPosition} = await storage.get('lastCreatedGroupPosition');
 
@@ -118,23 +130,20 @@
         BG.updateMoveTabMenus();
 
         if (windowId && !tabIds.length) {
-            let tabs = await Tabs.get(windowId);
-            tabIds = tabs.map(utils.keyId);
+            tabIds = await Tabs.get(windowId).then(tabs => tabs.map(utils.keyId));
         }
 
         if (tabIds.length) {
             newGroup.tabs = await Tabs.move(tabIds, newGroup.id, {
                 ...newGroup,
-                showTabAfterMovingItIntoThisGroup: showTabsAfterMoving,
+                showNotificationAfterMovingTabIntoThisGroup: false,
             });
         }
 
-        if (!showTabsAfterMoving) {
-            BG.sendMessage({
-                action: 'group-added',
-                group: newGroup,
-            });
-        }
+        BG.sendMessage({
+            action: 'group-added',
+            group: newGroup,
+        });
 
         BG.sendExternalMessage({
             action: 'group-added',

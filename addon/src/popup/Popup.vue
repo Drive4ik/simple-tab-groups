@@ -698,7 +698,7 @@
                 });
             },
 
-            async createNewGroup(tabIds, showTabAfterMovingItIntoThisGroup, proposalTitle, windowId) {
+            async createNewGroup(tabIds, proposalTitle, applyGroupWithTabId) {
                 let newGroupTitle = '';
 
                 if (this.options.alwaysAskNewGroupName) {
@@ -711,7 +711,12 @@
                     }
                 }
 
-                Groups.add(windowId, tabIds, newGroupTitle, showTabAfterMovingItIntoThisGroup);
+                let newGroupWindowId = cache.getWindowGroup(this.currentWindow.id) ? undefined : this.currentWindow.id,
+                    newGroup = await Groups.add(newGroupWindowId, tabIds, newGroupTitle);
+
+                if (applyGroupWithTabId) {
+                    this.applyGroup(newGroup, {id: applyGroupWithTabId});
+                }
             },
 
             async renameGroup({id, title}) {
@@ -927,16 +932,14 @@
                 this.loadGroups();
             },
             async unsyncHiddenWindowTabsCreateNewGroup() {
-                await this.createNewGroup(this.unSyncWindowTabs.map(utils.keyId), undefined, this.unSyncWindowTabs[0].title, this.currentWindow.id);
+                await this.createNewGroup(this.unSyncWindowTabs.map(utils.keyId), utils.getLastActiveTab(this.unSyncWindowTabs).title);
 
                 this.loadUnsyncedTabs();
             },
             async unsyncHiddenTabsCreateNewGroupAll() {
-                let groupCreated = await this.createNewGroup(this.unSyncTabs.map(utils.keyId), undefined, this.unSyncTabs[0].title);
+                await this.createNewGroup(this.unSyncTabs.map(utils.keyId), utils.getLastActiveTab(this.unSyncTabs).title);
 
-                if (groupCreated !== false) {
-                    this.unSyncTabs = [];
-                }
+                this.unSyncTabs = [];
             },
             unsyncHiddenTabsCloseAll() {
                 BG.Tabs.remove(this.unSyncTabs.map(utils.keyId));
@@ -1011,8 +1014,8 @@
                     this.loadUnsyncedTabs();
                 }
             },
-            async moveTabToNewGroup(tabId, loadUnsync, showTabAfterMoving) {
-                await this.createNewGroup(this.getTabIdsForMove(tabId), showTabAfterMoving);
+            async moveTabToNewGroup(tabId, loadUnsync, doApplyGroup) {
+                await this.createNewGroup(this.getTabIdsForMove(tabId), undefined, doApplyGroup ? tabId : false);
 
                 if (loadUnsync) {
                     this.loadUnsyncedTabs();

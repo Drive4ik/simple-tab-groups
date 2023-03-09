@@ -345,7 +345,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                 groupToHide.tabs.forEach(tab => tab.url === manageTabsPageUrl && tabsIdsToRemove.push(tab.id));
             }
 
-            Tabs.remove(tabsIdsToRemove);
+            Tabs.remove(tabsIdsToRemove).catch(noop);
 
             updateMoveTabMenus();
 
@@ -487,7 +487,7 @@ const onUpdatedTab = utils.catchFunc(async function(tabId, changeInfo, tab) {
     let tabGroupId = cache.getTabGroup(tab.id),
         winGroupId = cache.getWindowGroup(tab.windowId);
 
-    if (changeInfo.favIconUrl && (tabGroupId || winGroupId)) {
+    if (changeInfo.favIconUrl/*  && (tabGroupId || winGroupId) */) {
         cache.setTabFavIcon(tab.id, changeInfo.favIconUrl).catch(noop);
     }
 
@@ -1258,7 +1258,7 @@ async function createMoveTabMenus() {
                 action: 'add-new-group',
                 proposalTitle: tab.title,
                 tabIds: tabIds,
-                showTabsAfterMoving: setActive,
+                windowId: setActive ? tab.windowId : undefined,
             });
         }),
     }));
@@ -2152,7 +2152,7 @@ async function runAction(data, sender = {}) {
                 break;
             case 'add-new-group':
                 if (!options.alwaysAskNewGroupName || data.title) {
-                    let newGroup = await Groups.add(undefined, data.tabIds, data.title, data.showTabsAfterMoving);
+                    let newGroup = await Groups.add(data.windowId, data.tabIds, data.title);
 
                     result.ok = true;
                     result.group = Groups.mapForExternalExtension(newGroup);
@@ -2172,7 +2172,7 @@ async function runAction(data, sender = {}) {
                                 action: 'add-new-group',
                                 title: title,
                                 tabIds: data.tabIds,
-                                showTabsAfterMoving: data.showTabsAfterMoving,
+                                windowId: data.windowId,
                             }, sender);
                         } else {
                             result.error = 'title in empty - skip create group';
@@ -2182,7 +2182,7 @@ async function runAction(data, sender = {}) {
                             action: 'add-new-group',
                             title: data.proposalTitle || browser.i18n.getMessage('newGroupTitle', lastCreatedGroupPosition + 1),
                             tabIds: data.tabIds,
-                            showTabsAfterMoving: data.showTabsAfterMoving,
+                            windowId: data.windowId,
                         }, sender);
 
                         if (options.alwaysAskNewGroupName) {
