@@ -839,6 +839,7 @@ const onCreatedWindow = utils.catchFunc(async function(win) {
     grandRestoringPromise = GrandRestoreWindows(win, needRestoreMissedTabsMap);
     try {
         await grandRestoringPromise;
+        grandRestoringPromise = null;
     } catch (e) {
         return;
     }
@@ -893,6 +894,7 @@ const onRemovedWindow = utils.catchFunc(async function(windowId) {
 
         restoringMissedTabsPromise = tryRestoreMissedTabs();
         await restoringMissedTabsPromise.catch(noop);
+        restoringMissedTabsPromise = null;
     }
 });
 
