@@ -8,7 +8,7 @@ if (2 == window.localStorage.enableDebug) { // if debug was auto-enabled - disab
 }
 console.restart();
 
-const manageTabsPageUrl = browser.runtime.getURL(MANAGE_TABS_URL);
+const manageTabsPageUrl = getURL(MANAGE_TABS_URL);
 
 let options = {},
     reCreateTabsOnRemoveWindow = [],
@@ -100,15 +100,9 @@ async function createTabsSafe(tabs, tryRestoreOpeners, hideTabs = true) {
 
     newTabs = await Promise.all(newTabs.map(cache.setTabSession));
 
-    let beforeTabsLength = newTabs.length;
-
     newTabs = await Tabs.moveNative(newTabs, {
         index: -1,
     });
-
-    if (newTabs.length !== beforeTabsLength) {
-        throw Error('tabs length after creating are not equals');
-    }
 
     if (hideTabs) {
         let tabsToHide = newTabs.filter(tab => !tab.pinned && tab.groupId && !cache.getWindowId(tab.groupId));
@@ -146,17 +140,25 @@ function sendExternalMessage(data) {
         });
 }
 
-let _loadingGroupInWindow = {}; // windowId: true;
+let _loadingGroupInWindow = new Set; // windowId: true;
 async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = false) {
     windowId = windowId || await Windows.getLastFocusedNormalWindow();
 
-    if (_loadingGroupInWindow[windowId]) {
+    if (_loadingGroupInWindow.has(windowId)) {
         return false;
     }
 
     console.log('applyGroup args groupId: %s, windowId: %s, activeTab: %s', groupId, windowId, activeTabId);
 
-    _loadingGroupInWindow[windowId] = true;
+    if (groupId && (!Number.isFinite(groupId) || groupId < 1)) {
+        throw Error(`Invalid group id: ${groupId}`);
+    }
+
+    if (activeTabId && (!Number.isFinite(activeTabId) || activeTabId < 1)) {
+        activeTabId = null;
+    }
+
+    _loadingGroupInWindow.add(windowId);
 
     let groupWindowId = cache.getWindowId(groupId);
 
@@ -232,7 +234,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
 
                 if (groupToHide) {
                     if (groupToHide.muteTabsWhenGroupCloseAndRestoreWhenOpen) {
-                        Tabs.setMute(tabs, true);
+                        Tabs.setMute(tabs, true).catch(noop);
                     }
 
                     if (options.discardTabsAfterHide && !groupToHide.dontDiscardTabsAfterHideThisGroup) {
@@ -240,7 +242,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                             tabs = tabs.filter(tab => !tab.audible);
                         }
 
-                        Tabs.discard(tabs);
+                        Tabs.discard(tabs).catch(noop);
                     }
                 }
             }
@@ -386,7 +388,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
         }
     }
 
-    delete _loadingGroupInWindow[windowId];
+    _loadingGroupInWindow.delete(windowId);
 
     console.timeEnd('load-group-' + groupId);
 
@@ -583,7 +585,6 @@ async function GrandRestoreWindows({id}, needRestoreMissedTabsMap) {
 
     if (grandRestoringPromise) {
         await grandRestoringPromise;
-        grandRestoringPromise = null;
         return;
     }
 
@@ -841,6 +842,7 @@ const onCreatedWindow = utils.catchFunc(async function(win) {
         await grandRestoringPromise;
         grandRestoringPromise = null;
     } catch (e) {
+        grandRestoringPromise = null;
         return;
     }
 
@@ -1714,8 +1716,8 @@ async function updateBrowserActionData(groupId, windowId) {
 async function prependWindowTitle(windowId, title) {
     if (options.prependGroupTitleToWindowTitle && windowId) {
         await browser.windows.update(windowId, {
-            titlePreface: title ? ('[' + utils.sliceText(title, 35) + '] ') : '',
-        });
+            titlePreface: title ? `[${utils.sliceText(title, 35)}] ` : ''
+        }).catch(noop);
     }
 }
 
@@ -1834,7 +1836,7 @@ const onBeforeTabRequest = utils.catchFunc(async function({tabId, url, cookieSto
             params.asInfo = true;
         }
 
-        return utils.setUrlSearchParams(browser.runtime.getURL('/help/open-in-container.html'), params);
+        return utils.setUrlSearchParams(getURL('open-in-container', true), params);
     }
 
     if (IGNORE_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER.includes(originExt?.id) && originExt.enabled) {
@@ -1961,7 +1963,7 @@ async function openManageGroups() {
         if (popupWindow) {
             await Windows.setFocus(popupWindow.id);
         } else {
-            await Windows.create({
+            await browser.windows.create({
                 url: manageTabsPageUrl,
                 type: browser.windows.CreateType.POPUP,
                 width: Number(window.localStorage.manageGroupsWindowWidth) || 1000,
@@ -1980,6 +1982,8 @@ browser.commands.onCommand.addListener(runAction);
 browser.runtime.onMessage.addListener(runAction);
 
 browser.runtime.onMessageExternal.addListener(async function(request, sender) {
+    console.log('onMessageExternal', {request, sender, BGinited: window.BG.inited});
+
     if (request?.action === 'ignore-ext-for-reopen-container') {
         ignoreExtForReopenContainer.add(sender.id);
         return {
@@ -1990,7 +1994,7 @@ browser.runtime.onMessageExternal.addListener(async function(request, sender) {
     if (!window.BG.inited) {
         return {
             ok: false,
-            error: '[STG] I am not yet loaded',
+            error: `[STG] I'm not loaded yet.`,
         };
     }
 
@@ -2027,6 +2031,7 @@ async function runAction(data, sender = {}) {
 
     if (!data.action) {
         result.error = '[STG] "action" is empty';
+        console.warn(result.error);
         return result;
     }
 
@@ -2107,7 +2112,7 @@ async function runAction(data, sender = {}) {
                 }
                 break;
             case 'load-custom-group':
-                if (Number.isFinite(data.groupId) && 0 < data.groupId) {
+                if (Number.isFinite(data.groupId) && data.groupId > 0) {
                     let groupToLoad = groups.find(group => group.id === data.groupId);
 
                     if (groupToLoad) {
@@ -2115,7 +2120,18 @@ async function runAction(data, sender = {}) {
                             result.error = browser.i18n.getMessage('groupIsArchived', groupToLoad.title);
                             utils.notify(result.error, 7, 'groupIsArchived');
                         } else {
-                            result.ok = await applyGroup(currentWindow.id, data.groupId);
+                            if (data.windowId) {
+                                if (data.windowId === 'new') {
+                                    await Windows.create(data.groupId, data.tabId);
+                                    result.ok = true;
+                                } else if (Number.isFinite(data.windowId) && data.windowId > 0) {
+                                    result.ok = await applyGroup(data.windowId, data.groupId, data.tabId);
+                                } else {
+                                    result.error = 'Invalid window id';
+                                }
+                            } else {
+                                result.ok = await applyGroup(currentWindow.id, data.groupId, data.tabId);
+                            }
                         }
                     } else {
                         delete data.groupId;
@@ -3235,7 +3251,11 @@ async function runMigrateForData(data) {
                         .forEach(key => !group.hasOwnProperty(key) && (group[key] = utils.clone(latestExampleGroup[key])));
                 });
 
-                await restoreOldExtensionUrls(function(url, cookieStoreId) {
+                await restoreOldExtensionUrls(function({url, cookieStoreId}) {
+                    if (!url.includes('open-in-container')) {
+                        return url;
+                    }
+
                     let urlObj = new URL(url),
                         uuid = urlObj.searchParams.get('uuid');
 
@@ -3434,7 +3454,6 @@ let restoringMissedTabsPromise = null; // need when remove window
 async function tryRestoreMissedTabs() {
     if (restoringMissedTabsPromise) {
         await restoringMissedTabsPromise.catch(noop);
-        restoringMissedTabsPromise = null;
     }
 
     let [
@@ -3554,20 +3573,21 @@ function normalizeContainersInGroups(groups) {
 
 async function restoreOldExtensionUrls(parseUrlFunc) {
     let tabs = await browser.tabs.query({
-        url: 'moz-extension://*/help/open-in-container.html*',
-    });
+            url: STG_HELP_PAGES.map(page => `moz-extension://*/help/${page}.html*`),
+        }),
+        addonUrlPrefixLength = addonUrlPrefix.length;
 
     await Promise.all(tabs
-        .map(async function({id, url, cookieStoreId}) {
+        .map(async function({id, url}) {
             let oldUrl = url;
 
             if (parseUrlFunc) {
-                url = parseUrlFunc(url, cookieStoreId);
+                url = parseUrlFunc(arguments[0]);
             }
 
             if (!url.startsWith(addonUrlPrefix) || oldUrl !== url) {
                 await browser.tabs.update(id, {
-                    url: addonUrlPrefix + url.slice(addonUrlPrefix.length),
+                    url: addonUrlPrefix + url.slice(addonUrlPrefixLength),
                     loadReplace: true,
                 }).catch(noop);
             }
@@ -3758,6 +3778,7 @@ async function init() {
                 await Promise.all(windows.map(async win => {
                     grandRestoringPromise = GrandRestoreWindows(win);
                     await grandRestoringPromise;
+                    grandRestoringPromise = null;
                 }));
             } catch (e) {
                 browser.runtime.reload();

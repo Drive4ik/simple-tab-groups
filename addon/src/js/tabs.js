@@ -1,11 +1,17 @@
 (function() {
     'use strict';
 
+    const UNSUPPORTED_URL_PREFIX = getURL('stg-unsupported-url', true);
+
     async function createNative({url, active, pinned, title, index, windowId, openerTabId, cookieStoreId, newTabContainer, ifDifferentContainerReOpen, excludeContainersForReOpen, groupId, favIconUrl, thumbnail}) {
         let tab = {};
 
-        if (utils.isUrlAllowToCreate(url)) { // TODO create page for unsupported urls
-            tab.url = url;
+        if (url) {
+            if (utils.isUrlAllowToCreate(url)) {
+                tab.url = url;
+            } else if (url !== 'about:newtab') {
+                tab.url = UNSUPPORTED_URL_PREFIX + '#' + url;
+            }
         }
 
         tab.active = !!active;

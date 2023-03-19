@@ -254,6 +254,10 @@
             },
             'options.hotkeys': {
                 handler(hotkeys, oldValue) {
+                    if (!hotkeys) {
+                        return;
+                    }
+
                     let beforeLength = hotkeys.length,
                         hasChange = false;
 

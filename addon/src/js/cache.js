@@ -311,9 +311,9 @@
 
     async function loadWindowSession(win) {
         if (!windows[win.id]) {
-            windows[win.id] = {
-                groupId: await browser.sessions.getWindowValue(win.id, 'groupId'),
-            };
+            let groupId = await browser.sessions.getWindowValue(win.id, 'groupId');
+
+            windows[win.id] ??= {groupId}; // set if it not yet exist
         }
 
         if (windows[win.id]?.groupId) {

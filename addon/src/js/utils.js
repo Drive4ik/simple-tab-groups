@@ -41,7 +41,7 @@
             },
             extensions: extensions
                 .filter(({id, enabled, type}) => !id.endsWith('@search.mozilla.org') && enabled && type === browser.management.ExtensionType.EXTENSION)
-                .map(({id, name, version}) => ({id, name, version})),
+                .map(({id, name, version, hostPermissions}) => ({id, name, version, hostPermissions})),
             UUID: browser.runtime.getURL(''),
             permissions: {
                 bookmarks: permissionBookmarks,
@@ -785,11 +785,8 @@
         return newObj;
     }
 
-    function arrayToObj(arr, primaryKey) {
-        return arr.reduce(function(acc, obj) {
-            acc[obj[primaryKey]] = obj;
-            return acc;
-        }, {});
+    function arrayToObj(arr, primaryKey = 'id', accum = {}) {
+        return arr.reduce((acc, obj) => (acc[obj[primaryKey]] = obj, acc), accum);
     }
 
     function wait(ms = 200) {
@@ -856,6 +853,10 @@
         let isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
         return (theme === 'auto' && isDark) ? 'dark' : theme;
+    }
+
+    function sendAction(action, data = {}) {
+        return browser.runtime.sendMessage({action, ...data});
     }
 
     window.utils = {
@@ -946,6 +947,8 @@
         safeReloadAddon,
 
         getThemeApply,
+
+        sendAction,
     };
 
 })();

@@ -34,31 +34,26 @@
         return cache.loadWindowSession(win);
     }
 
-    async function create(createData = {}, groupId, activeTabId) {
-        if (groupId) {
-            let groupWindowId = cache.getWindowId(groupId);
+    async function create(groupId, activeTabId) {
+        console.log('START Window.create', {groupId, activeTabId});
 
-            if (groupWindowId) {
-                BG.applyGroup(groupWindowId, groupId, activeTabId);
-                return null;
-            }
+        if (!groupId) {
+            throw Error('Window.create No group id');
+        }
 
+        let groupWindowId = cache.getWindowId(groupId);
+
+        if (groupWindowId) {
+            await BG.applyGroup(groupWindowId, groupId, activeTabId);
+            console.log('STOP Window.create load exist window', groupWindowId);
+        } else {
             BG.skipAddGroupToNextNewWindow = true;
+
+            let win = await browser.windows.create();
+
+            await BG.applyGroup(win.id, groupId, activeTabId);
+            console.log('STOP Window.create load new window', win.id);
         }
-
-        let win = await browser.windows.create(createData);
-
-        console.log('created window', win);
-
-        if (utils.isWindowAllow(win)) {
-            if (groupId) {
-                await BG.applyGroup(win.id, groupId, activeTabId);
-            }
-
-            win = await cache.loadWindowSession(win);
-        }
-
-        return win;
     }
 
     function setFocus(windowId) {

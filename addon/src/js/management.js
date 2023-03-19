@@ -6,60 +6,30 @@
     async function init() {
         console.log('START management.init');
 
-        let addons = await browser.management.getAll();
+        await reloadExtensions();
 
-        addons
-            .filter(({type}) => type === browser.management.ExtensionType.EXTENSION)
-            .forEach(ext => extensions[ext.id] = ext);
-
-        browser.management.onEnabled.addListener(onEnabled);
-        browser.management.onDisabled.addListener(onDisabled);
-        browser.management.onInstalled.addListener(onInstalled);
-        browser.management.onUninstalled.addListener(onUninstalled);
+        browser.management.onEnabled.addListener(onChanged);
+        browser.management.onDisabled.addListener(onChanged);
+        browser.management.onInstalled.addListener(onChanged);
+        browser.management.onUninstalled.addListener(onChanged);
 
         console.log('STOP management.init');
     }
 
-    async function onEnabled({id, type}) {
-        if (type !== browser.management.ExtensionType.EXTENSION) {
-            return;
-        }
-
-        extensions[id].enabled = true;
-
+    async function reloadExtensions() {
         await utils.wait(100);
 
-        extensions[id] = await browser.management.get(id);
+        let addons = await browser.management.getAll(),
+            _extensions = addons.filter(({type}) => type === browser.management.ExtensionType.EXTENSION);
 
-        detectConflictedExtensions();
+        extensions = utils.arrayToObj(_extensions, 'id');
     }
 
-    function onDisabled({id, type}) {
-        if (type !== browser.management.ExtensionType.EXTENSION) {
-            return;
+    async function onChanged({type}) {
+        if (type === browser.management.ExtensionType.EXTENSION) {
+            await reloadExtensions();
+            await detectConflictedExtensions();
         }
-
-        extensions[id].enabled = false;
-    }
-
-    async function onInstalled({id, type}) {
-        if (type !== browser.management.ExtensionType.EXTENSION) {
-            return;
-        }
-
-        await utils.wait(100);
-
-        extensions[id] = await browser.management.get(id);
-
-        detectConflictedExtensions();
-    }
-
-    function onUninstalled({id, type}) {
-        if (type !== browser.management.ExtensionType.EXTENSION) {
-            return;
-        }
-
-        delete extensions[id];
     }
 
     function isEnabled(id) {

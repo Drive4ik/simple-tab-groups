@@ -890,7 +890,10 @@
                 } else {
                     this.someGroupAreLoading = true;
 
-                    let loadGroupPromise = BG.applyGroup(this.currentWindow.id, group.id, tab?.id);
+                    let loadGroupPromise = utils.sendAction('load-custom-group', {
+                        groupId: group.id,
+                        tabId: tab?.id,
+                    });
 
                     if (!isSidebar && this.options.closePopupAfterSelectTab && tab) {
                         this.someGroupAreLoading = false;
@@ -961,8 +964,12 @@
                 }
             },
 
-            openGroupInNewWindow(group, tab = {}) {
-                BG.Windows.create(undefined, group.id, tab.id); // BG need because this popup will unload after win open and code not work
+            openGroupInNewWindow(group, tab) {
+                utils.sendAction('load-custom-group', {
+                    groupId: group.id,
+                    tabId: tab?.id,
+                    windowId: 'new',
+                });
             },
 
             openGroupSettings(group) {

@@ -46,7 +46,6 @@ html {
 .block-content {
     display: flex;
     align-items: center;
-    font-weight: bold;
     word-break: break-word;
     background: #efedf0; /* Grey 20 */
     border-radius: 2px;

@@ -16,6 +16,14 @@ const AUTO_BACKUP_INTERVAL_KEY = Object.freeze({
     days: 'days',
 });
 
+const STG_HELP_PAGES = Object.freeze([
+    'db-error-reinstall',
+    'extensions-that-conflict-with-stg',
+    'open-in-container',
+    'stg-unsupported-url',
+    'welcome-v4',
+]);
+
 // permission "<all_urls>" need for tab thumbnails and webRequestBlocking
 const PERMISSIONS = Object.freeze({
     BOOKMARKS: {

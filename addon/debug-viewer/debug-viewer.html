@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug viewer</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.1/svgs/solid/bug.svg"/>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.4/css/bulma.min.css"/>
+</head>
+<body>
+    <div id="app" class="container is-fluid pt-4" style="margin-bottom: 200px;" v-cloak>
+        <div class="field">
+            <div class="columns">
+                <div class="column">
+                    <label>
+                        Select debug file
+                        <input type="file" @change="changeFile" />
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div v-if="file" class="field">
+            <h1 class="title has-text-centered">info</h1>
+            <div class="columns">
+                <div class="column is-narrow">
+                    Version: <span class="tag is-info">{{info.version}}</span><br>
+                    UP time: {{upTime}}<br>
+                    UUID: {{info.UUID}}<br>
+                    <div v-for="(val, key) in info.permissions" :key="key" class="control">
+                        <div class="tags has-addons">
+                            <span class="tag">{{key}}</span>
+                            <span class="tag is-info">{{val}}</span>
+                        </div>
+                    </div>
+                    <div v-for="(val, key) in info.options" :key="key">
+                        <template v-if="isBool(val)">
+                            <input type="checkbox" onclick="return false" :checked="val"> {{key}}
+                        </template>
+                        <template v-if="isString(val) || isNumber(val)">
+                            {{key}}: "{{val}}"
+                        </template>
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="field is-grouped is-grouped-multiline">
+                        <div v-for="(val, key) in info.browserAndOS" :key="key" class="control">
+                            <div class="tags has-addons">
+                                <span class="tag">{{key}}</span>
+                                <span class="tag is-info">{{val}}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr style="width: 100%;" class="mb-2 mt-0">
+
+                    <h2 class="subtitle">Addons</h2>
+                    <div class="field is-grouped is-grouped-multiline is-flex-direction-column">
+                        <div v-for="ext in info.extensions" :key="ext.id" class="control">
+                            <div class="tags has-addons">
+                                <span class="tag">
+                                    <img v-if="ext.icon_url" class="image is-16x16 mr-2" :src="ext.icon_url">
+                                    <a :href="ext.url" target="_blank">{{ext.name}} {{ext.version}}</a>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <h1 id="windows-title" class="title has-text-centered">windows</h1>
+            <pre v-for="win in file.windows" :key="win.id" class="field">{{win | json(true)}}</pre>
+
+
+            <h1 id="logs-title" class="title has-text-centered">logs</h1>
+            <div v-for="(log, i) in logs" :key="i + 'log'" class="field log" :style="{marginLeft: getLogIndent(log)}">
+                <span class="is-size-7">{{log.time}}</span>
+                <span v-html="getLogTitle(log)"></span>
+            </div>
+
+
+            <h1 id="errors-title" class="title has-text-centered">ERRORS</h1>
+            <div v-for="(e, i) in errors" :key="i + 'error'" class="field log">
+                <span class="is-size-7">{{e.time}}</span>
+                {{e.message}}
+            </div>
+
+
+            <div class="to-top buttons are-medium is-flex is-flex-direction-column">
+                <button class="button is-light" @click="scrollTo('input[type=file]')">top</button>
+                <button class="button is-light" @click="scrollTo('#windows-title', 'start')">windows</button>
+                <button class="button is-light" @click="scrollTo('#logs-title', 'start')">logs</button>
+                <button class="button is-light" @click="scrollTo('.tag.is-danger')">error</button>
+                <button class="button is-light" @click="scrollTo('#errors-title')">errors</button>
+            </div>
+
+        </div>
+    </div>
+
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+
+        .to-top {
+            position: fixed;
+            right: 20px;
+            top: 30vh;
+        }
+
+        .log {
+            word-wrap: anywhere;
+        }
+
+        pre {
+            padding: 0.25rem 0.5rem;
+        }
+    </style>
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.7.14/vue.js"></script>
+    <script type="text/javascript" src="./debug-viewer.js"></script>
+</body>
+</html>

@@ -57,6 +57,10 @@
         "message": "Отмена",
         "description": "Cancel"
     },
+    "close": {
+        "message": "Закрыть",
+        "description": "Close"
+    },
     "searchPlaceholder": {
         "message": "Поиск",
         "description": "Search placeholder"
@@ -1192,5 +1196,13 @@
     "group": {
         "message": "Группа",
         "description": "Group"
+    },
+    "helpPageUnsupportedUrlTitle": {
+        "message": "Неподдерживаемый URL-адрес",
+        "description": "Unsupported URL"
+    },
+    "copyURL": {
+        "message": "Копировать URL",
+        "description": "Copy URL"
     }
 }

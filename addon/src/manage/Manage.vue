@@ -733,11 +733,11 @@
                     });
                 }
 
-                if (openInNewWindow) {
-                    await BG.Windows.create(undefined, groupId, tabId);
-                } else {
-                    await BG.applyGroup(null, groupId, tabId);
-                }
+                await utils.sendAction('load-custom-group', {
+                    groupId,
+                    tabId,
+                    windowId: openInNewWindow ? 'new' : null,
+                });
 
                 if (!this.isCurrentWindowIsAllow) {
                     this.closeThisWindow();

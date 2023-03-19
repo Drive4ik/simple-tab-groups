@@ -1,7 +1,8 @@
 (function() {
     'use strict';
 
-    window.addonUrlPrefix = browser.runtime.getURL('');
+    window.getURL = (url, isHelp) => browser.runtime.getURL(isHelp ? `/help/${url}.html` : url);
+    window.addonUrlPrefix = getURL('');
     window.manifest = browser.runtime.getManifest();
     window.noop = function() {};
     window.openUrl = async function(url, asWindow = true) {
@@ -19,9 +20,7 @@
             active: true,
         }).catch(noop);
     };
-    window.openHelp = async function(page, asWindow) {
-        return openUrl(browser.runtime.getURL(`/help/${page}.html`), asWindow);
-    };
+    window.openHelp = (page, asWindow) => openUrl(getURL(page, true), asWindow);
 
     const isBackgroundPage = window.location.pathname.includes('background');
 

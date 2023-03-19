@@ -61,6 +61,10 @@
         "message": "Cancel",
         "description": "Cancel"
     },
+    "close": {
+        "message": "Close",
+        "description": "Close"
+    },
     "searchPlaceholder": {
         "message": "Search",
         "description": "Search placeholder"
@@ -1196,5 +1200,13 @@
     "group": {
         "message": "Group",
         "description": "Group"
+    },
+    "helpPageUnsupportedUrlTitle": {
+        "message": "Unsupported URL",
+        "description": "Unsupported URL"
+    },
+    "copyURL": {
+        "message": "Copy URL",
+        "description": "Copy URL"
     }
 }
