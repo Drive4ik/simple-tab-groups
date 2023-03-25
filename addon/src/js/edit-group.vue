@@ -47,6 +47,7 @@
 
                 options: {
                     discardTabsAfterHide: BG.options.discardTabsAfterHide,
+                    defaultGroupIconViewType: BG.options.defaultGroupIconViewType,
                 },
             };
         },
@@ -165,7 +166,7 @@
                 this.group.iconColor = utils.randomColor();
 
                 if (!this.group.iconViewType) {
-                    this.group.iconViewType = BG.options.defaultGroupIconViewType;
+                    this.group.iconViewType = this.options.defaultGroupIconViewType;
                 }
             },
 

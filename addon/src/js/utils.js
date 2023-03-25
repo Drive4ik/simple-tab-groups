@@ -13,6 +13,8 @@
 
     const INNER_HTML = 'innerHTML';
 
+    function noop() {}
+
     async function getInfo() {
         let [
             background,
@@ -26,14 +28,14 @@
             browser.runtime.getBrowserInfo(),
             browser.runtime.getPlatformInfo(),
             browser.permissions.contains(PERMISSIONS.BOOKMARKS),
-            storage.get(ALL_OPTIONS_KEYS).catch(e => String(e)),
+            browser.storage.local.get(ALL_OPTIONS_KEYS).catch(e => String(e)),
             browser.management.getAll(),
         ]);
 
         let startTime = background?.START_TIME || window.START_TIME;
 
         return {
-            version: manifest.version,
+            version: browser.runtime.getManifest().version,
             upTime: startTime ? Math.ceil((Date.now() - startTime) / 1000) + ' sec' : 'unknown',
             browserAndOS: {
                 ...platformInfo,
@@ -64,12 +66,13 @@
 
     function catchFunc(asyncFunc) {
         let fromStack = new Error().stack;
-        return async function(...args) {
+        return async function(a,b) {
             try {
-                return await asyncFunc(...args);
+                return await asyncFunc(...Array.from(arguments));
             } catch (e) {
+                e.message = `[catchFunc]: ${e.message}`;
                 e.stack = fromStack + e.stack;
-                e.message += '      called args: ' + stringify(args);
+                e.arguments = clone(Array.from(arguments));
                 window.errorEventHandler(e);
             }
         };
@@ -230,7 +233,7 @@
     }
 
     function isAllowExternalRequestAndSender(request, sender, extensionRules = {}) {
-        if (sender.id.startsWith('test-stg-action')) {
+        if (sender?.id?.startsWith('test-stg-action')) {
             return true;
         }
 
@@ -370,7 +373,7 @@
             return null;
         }
 
-        return Containers.get(tab.cookieStoreId, key);
+        return BG.Containers.get(tab.cookieStoreId, key);
     }
 
     const emojiRegExp = /\p{RI}\p{RI}|\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?(\u{200D}\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?)+|\p{EPres}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?|\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})/u;
@@ -389,11 +392,11 @@
         }
 
         if (withContainer && newTabContainer !== DEFAULT_COOKIE_STORE_ID) {
-            beforeTitle.push('[' + Containers.get(newTabContainer, 'name') + ']');
+            beforeTitle.push('[' + BG.Containers.get(newTabContainer, 'name') + ']');
         }
 
         if (withActiveGroup) {
-            if (cache.getWindowId(id)) {
+            if (BG.cache.getWindowId(id)) {
                 beforeTitle.push(ACTIVE_SYMBOL);
             } else if (isArchive) {
                 beforeTitle.push(DISCARDED_SYMBOL);
@@ -427,8 +430,8 @@
         }
 
         if (window.localStorage.enableDebug) {
-            let windowId = cache.getWindowId(id) || tabs[0]?.windowId || 'no window';
-            title = `${windowId} #${id} ${title}`;
+            let windowId = BG.cache.getWindowId(id) || tabs[0]?.windowId || 'no window';
+            title = `#${windowId}:@${id} ${title}`;
         }
 
         return title;
@@ -448,7 +451,13 @@
         if (window.localStorage.enableDebug && id) {
             let lastDate = new Date(lastAccessed);
 
-            title = `#${windowId}:${id}:${index} (${lastDate.getMinutes()}:${lastDate.getSeconds()}.${lastDate.getMilliseconds()}) ${title}`;
+            if (lastDate.getTime()) {
+                lastDate = `(${lastDate.getMinutes()}:${lastDate.getSeconds()}.${lastDate.getMilliseconds()})${title}`;
+            } else {
+                lastDate = '';
+            }
+
+            title = `#${windowId}:@${id}:i${index} ${lastDate} ${title}`;
         }
 
         return sliceLength ? sliceText(title, sliceLength) : title;
@@ -839,14 +848,8 @@
         return 0;
     }
 
-    function safeReloadAddon(sec = 10) {
-        let interval = setInterval(function() {
-            if (console.lastUsage < (Date.now() - 1000 * sec)) {
-                browser.runtime.reload();
-            }
-        }, 1000);
-
-        return interval;
+    function safeReloadAddon(sec = 3) {
+        return setTimeout(() => browser.runtime.reload(), sec * 1000);
     }
 
     function getThemeApply(theme) {
@@ -855,9 +858,36 @@
         return (theme === 'auto' && isDark) ? 'dark' : theme;
     }
 
-    function sendAction(action, data = {}) {
-        return browser.runtime.sendMessage({action, ...data});
-    }
+    // async function sendMessage(action, data = {}) {
+    //     const log = self.logger?.start(['info', 'send event'], action);
+
+    //     // if (!window.BG.inited) {
+    //     //     let error = 'addon not yet loaded';
+    //     //     log?.warn(error);
+    //     //     log?.stop();
+    //     //     return {error};
+    //     // }
+
+    //     data = {
+    //         action,
+    //         ...data, // clone ???
+    //     };
+
+    //     if (this?.addStack) {
+    //         data.fromStack = self.Logger?.nativeErrorToObj(new Error);
+    //     }
+    //     log.info('utils sendMessage ', data)
+
+    //     let result = await new Promise(res => browser.runtime.sendMessage(data).then(res, () => {}));
+
+    //     // let result = await browser.runtime.sendMessage(data).catch(() => {});
+    //     log.warn('utils sendMessage result', result)
+    //     log?.stop();
+
+    //     return result;
+    // }
+
+    // window.sendMessage = sendMessage;
 
     window.utils = {
         BROWSER_PAGES_STARTS,
@@ -947,8 +977,6 @@
         safeReloadAddon,
 
         getThemeApply,
-
-        sendAction,
     };
 
 })();

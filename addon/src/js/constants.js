@@ -21,6 +21,7 @@ const STG_HELP_PAGES = Object.freeze([
     'extensions-that-conflict-with-stg',
     'open-in-container',
     'stg-unsupported-url',
+    'stg-debug',
     'welcome-v4',
 ]);
 

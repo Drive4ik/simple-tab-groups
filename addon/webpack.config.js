@@ -92,7 +92,8 @@ const config = {
 
                 // js
                 'background.js',
-                'js/console.js',
+                'js/logger.js',
+                'js/messages.js',
                 'js/constants.js',
                 'js/startup.js',
                 'js/utils.js',
@@ -104,7 +105,6 @@ const config = {
                 'js/tabs.js',
                 'js/windows.js',
                 'js/management.js',
-                'js/error-handler.js',
 
                 // pages
                 'popup/popup.html',

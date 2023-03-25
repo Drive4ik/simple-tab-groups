@@ -1,10 +1,14 @@
 (function() {
     'use strict';
 
+    function noop() {}
+
+    const logger = new Logger('Management');
+
     let extensions = {};
 
     async function init() {
-        console.log('START management.init');
+        const log = logger.start('init');
 
         await reloadExtensions();
 
@@ -13,16 +17,19 @@
         browser.management.onInstalled.addListener(onChanged);
         browser.management.onUninstalled.addListener(onChanged);
 
-        console.log('STOP management.init');
+        log.stop();
     }
 
     async function reloadExtensions() {
+        const log = logger.start('reloadExtensions');
         await utils.wait(100);
 
         let addons = await browser.management.getAll(),
             _extensions = addons.filter(({type}) => type === browser.management.ExtensionType.EXTENSION);
 
         extensions = utils.arrayToObj(_extensions, 'id');
+
+        log.stop();
     }
 
     async function onChanged({type}) {

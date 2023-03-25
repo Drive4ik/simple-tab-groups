@@ -6,6 +6,95 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.1/svgs/solid/bug.svg"/>
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.4/css/bulma.min.css"/>
+
+    <style>
+        details {
+            border: 1px solid #aaa;
+            border-radius: 4px;
+            padding: 0.5em 0.5em 0;
+        }
+
+        summary {
+            font-weight: bold;
+            margin: -0.5em -0.5em 0;
+            padding: 0.5em;
+        }
+
+        details[open] {
+            padding: 0.5em;
+        }
+
+        details[open] summary {
+            border-bottom: 1px solid #aaa;
+            margin-bottom: 0.5em;
+        }
+
+        .host:not(:first-child) {
+            margin-left: 1.5rem;
+        }
+
+        .stack-icon {
+            background-repeat: no-repeat;
+            background-image: url("https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.3.0/svgs/solid/layer-group.svg");
+        }
+
+        .highlight-icon {
+            background-repeat: no-repeat;
+            background-image: url("https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.3.0/svgs/solid/highlighter.svg");
+        }
+
+        .log.indent-line[data-action="START"]::before {
+            content: "";
+            display: block;
+            position: absolute;
+            left: 0;
+            top: 100%;
+            width: 2px;
+            height: var(--indent-line-height, 20px);
+            border-left: 2px dotted red;
+        }
+
+        #page-navigation > *,
+        #logs-indent > * {
+            border: 1px solid #363636;
+        }
+
+        code {
+            word-break: break-all;
+        }
+
+        code + code {
+            margin-left: 10px;
+        }
+
+        [v-cloak] {
+            display: none;
+        }
+
+        #page-navigation {
+            position: fixed;
+            right: 20px;
+            top: 70px;
+        }
+
+        #logs-indent {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+        }
+
+        .log {
+            word-wrap: anywhere;
+        }
+
+        pre {
+            padding: 0.25rem 0.5rem;
+        }
+
+        .v-middle {
+            vertical-align: middle;
+        }
+    </style>
 </head>
 <body>
     <div id="app" class="container is-fluid pt-4" style="margin-bottom: 200px;" v-cloak>
@@ -24,12 +113,12 @@
             <div class="columns">
                 <div class="column is-narrow">
                     Version: <span class="tag is-info">{{info.version}}</span><br>
-                    UP time: {{upTime}}<br>
-                    UUID: {{info.UUID}}<br>
-                    <div v-for="(val, key) in info.permissions" :key="key" class="control">
+                    UP time: <code>{{upTime}}</code><br>
+                    UUID: <code>{{info.UUID}}</code><br>
+                    <div v-for="(val, key) in info.permissions" :key="key" class="control mt-1">
                         <div class="tags has-addons">
                             <span class="tag">{{key}}</span>
-                            <span class="tag is-info">{{val}}</span>
+                            <span :class="['tag', val ? 'is-success' : 'is-info']">{{val}}</span>
                         </div>
                     </div>
                     <div v-for="(val, key) in info.options" :key="key">
@@ -46,7 +135,7 @@
                         <div v-for="(val, key) in info.browserAndOS" :key="key" class="control">
                             <div class="tags has-addons">
                                 <span class="tag">{{key}}</span>
-                                <span class="tag is-info">{{val}}</span>
+                                <span class="tag is-info is-light">{{val}}</span>
                             </div>
                         </div>
                     </div>
@@ -56,11 +145,17 @@
                     <h2 class="subtitle">Addons</h2>
                     <div class="field is-grouped is-grouped-multiline is-flex-direction-column">
                         <div v-for="ext in info.extensions" :key="ext.id" class="control">
-                            <div class="tags has-addons">
-                                <span class="tag">
-                                    <img v-if="ext.icon_url" class="image is-16x16 mr-2" :src="ext.icon_url">
-                                    <a :href="ext.url" target="_blank">{{ext.name}} {{ext.version}}</a>
-                                </span>
+                            <div class="columns">
+                                <div class="column is-narrow">
+                                    <span class="tag">
+                                        <img v-if="ext.icon_url" class="image is-16x16 mr-2" :src="ext.icon_url">
+                                        <a v-if="ext.url" :href="ext.url" target="_blank">{{ext.name}} {{ext.version}}</a>
+                                        <span v-else>{{ext.name}} {{ext.version}}</span>
+                                    </span>
+                                </div>
+                                <div class="column">
+                                    <code class="host" v-for="host in ext.hostPermissions" :key="host" v-text="host"></code>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -69,53 +164,76 @@
 
 
             <h1 id="windows-title" class="title has-text-centered">windows</h1>
-            <pre v-for="win in file.windows" :key="win.id" class="field">{{win | json(true)}}</pre>
+            <details v-for="win in file.windows" :key="win.id">
+                <summary>windowId: {{win.id}}</summary>
+                <pre class="field">{{win | json}}</pre>
+            </details>
 
 
-            <h1 id="logs-title" class="title has-text-centered">logs</h1>
-            <div v-for="(log, i) in logs" :key="i + 'log'" class="field log" :style="{marginLeft: getLogIndent(log)}">
-                <span class="is-size-7">{{log.time}}</span>
-                <span v-html="getLogTitle(log)"></span>
+            <h1 id="logs-title" class="title has-text-centered mt-5">logs</h1>
+            <div class="is-relative" :style="{
+                    marginLeft: logsIndent + 'px',
+                }">
+                <div v-for="(log, i) in logs" :key="i + 'log'" :data-action="log.action" :data-key="log.key"
+                    :class="['is-relative field log p-1', {
+                        'has-background-success has-text-black indent-line': isHighlighted(log),
+                    }]"
+                    :style="{
+                        marginLeft: log.indent,
+                        '--indent-line-height': log.indentLineHeight,
+                    }">
+                    <span class="is-size-7 v-middle" v-html="formatTime(log)"></span>
+
+                    <button @click="toggleShowStack(log)" class="button is-small is-warning">
+                        <span class="stack-icon icon"></span>
+                    </button>
+                    <button v-if="log.action" @click="toggleHighlight(log)" class="button is-small">
+                        <span class="highlight-icon icon"></span>
+                    </button>
+
+                    <span class="v-middle" v-html="getLogTitle(log)"></span>
+                    <div v-if="log.showStack">
+                        <pre v-for="stack in log.stacks" class="mt-3">{{stack | json}}</pre>
+                    </div>
+                </div>
             </div>
 
 
             <h1 id="errors-title" class="title has-text-centered">ERRORS</h1>
-            <div v-for="(e, i) in errors" :key="i + 'error'" class="field log">
-                <span class="is-size-7">{{e.time}}</span>
-                {{e.message}}
+            <div v-for="(log, i) in errorLogs" :key="i + 'error'" class="field log p-1">
+                <span class="is-size-7" v-html="formatTime(log)"></span>
+
+                <button @click="toggleShowStack(log)" class="button is-small is-warning">
+                    <span class="stack-icon icon"></span>
+                </button>
+                <!-- <button v-if="log.action" @click="toggleHighlight(log)" class="button is-small">
+                    <span class="highlight-icon icon"></span>
+                </button> -->
+
+                <span v-html="getLogTitle(log)"></span>
+                <div v-if="log.showStack">
+                    <pre v-for="stack in log.stacks" class="mt-3">{{stack | json}}</pre>
+                </div>
             </div>
 
 
-            <div class="to-top buttons are-medium is-flex is-flex-direction-column">
-                <button class="button is-light" @click="scrollTo('input[type=file]')">top</button>
-                <button class="button is-light" @click="scrollTo('#windows-title', 'start')">windows</button>
-                <button class="button is-light" @click="scrollTo('#logs-title', 'start')">logs</button>
-                <button class="button is-light" @click="scrollTo('.tag.is-danger')">error</button>
-                <button class="button is-light" @click="scrollTo('#errors-title')">errors</button>
+            <div id="logs-indent" class="buttons are-small">
+                <button class="button is-light" @click="logsIndent -= 50">◁</button>
+                <button class="button is-light" @click="logsIndent += 50">▷</button>
+            </div>
+
+            <div id="page-navigation" class="is-flex is-flex-direction-column is-align-items-end">
+                <button class="button is-light field" @click="scrollTo('input[type=file]')">top</button>
+                <button class="button is-light field" @click="scrollTo('#windows-title', 'start')">windows</button>
+                <button class="button is-light field" @click="scrollTo('#logs-title', 'start')">logs</button>
+                <button class="button is-light field" title="Right click - prev error"
+                    @click="scrollTo('.tag.is-danger', undefined, true)"
+                    @contextmenu.prevent.stop="scrollTo('.tag.is-danger', undefined, true, true)">🛑 error</button>
+                <button class="button is-light field" @click="scrollTo('#errors-title')">errors</button>
             </div>
 
         </div>
     </div>
-
-    <style>
-        [v-cloak] {
-            display: none;
-        }
-
-        .to-top {
-            position: fixed;
-            right: 20px;
-            top: 30vh;
-        }
-
-        .log {
-            word-wrap: anywhere;
-        }
-
-        pre {
-            padding: 0.25rem 0.5rem;
-        }
-    </style>
 
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.7.14/vue.js"></script>
     <script type="text/javascript" src="./debug-viewer.js"></script>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title data-i18n-id="helpPageStgDebugTitle"></title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="browser-style.css"/>
+
+    <style>
+        .debug-record {
+            fill: red;
+            animation: blink 1s ease-out infinite;
+        }
+
+        @keyframes blink {
+            0% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        #debugStatus {
+            display: flex;
+            align-items: center;
+            margin-top: 20px;
+            height: 20px;
+        }
+
+        #debugStatus > :not(:first-child) {
+            margin-left: 5px;
+        }
+
+        #debugStatus:not(.enabled):not(.auto-enabled) {
+            visibility: hidden;
+        }
+
+        #debugStatus > .enabled,
+        #debugStatus > .auto-enabled {
+            display: none;
+        }
+
+        #debugStatus.enabled > .enabled,
+        #debugStatus.auto-enabled > .auto-enabled {
+            display: inline-block;
+        }
+
+        .size-16 {
+            width: 16px;
+            height: 16px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <div class="title">
+            <h1 id="mainTitle" class="title-text" data-i18n-id="helpPageStgDebugTitle"></h1>
+        </div>
+        <div>
+            <div data-i18n-id="loggingDescription"></div>
+
+            <div id="debugStatus">
+                <img class="size-16 debug-record" src="resource://usercontext-content/circle.svg">
+                <span class="enabled" data-i18n-id="loggingIsEnabledTitle"></span>
+                <span class="auto-enabled" data-i18n-id="loggingIsAutoEnabledTitle"></span>
+            </div>
+
+
+            <div class="button-container">
+                <button id="enableDebug" class="primary hidden" data-i18n-id="enableDebugTitle">Enable Debug</button>
+                <button id="disableDebug" class="primary" data-i18n-id="disableDebugTitle">Disable Debug</button>
+                <button id="closePage" data-i18n-id="close">Close</button>
+            </div>
+        <div>
+    <main>
+
+    <script type="text/javascript" src="/js/constants.js"></script>
+    <script type="text/javascript" src="/js/messages.js"></script>
+    <script type="text/javascript" src="/js/logger.js"></script>
+    <script type="text/javascript" src="/js/cache.js"></script>
+    <script type="text/javascript" src="/js/utils.js"></script>
+    <script type="text/javascript" src="/js/file.js"></script>
+
+    <!-- <script type="module" src="translate-help-pages.js"></script> -->
+    <script type="module" src="stg-debug.js"></script>
+</body>
+
+</html>

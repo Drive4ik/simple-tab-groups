@@ -10,17 +10,21 @@
     import contextMenuTabNew from '../components/context-menu-tab-new.vue';
     import contextMenuGroup from '../components/context-menu-group.vue';
 
+    window.logger = new Logger('Manage');
+
     // import dnd from '../js/dnd';
     // import { Drag, Drop } from 'vue-drag-drop';
     // import draggable from 'vuedraggable';
 
     document.title = browser.i18n.getMessage('manageGroupsTitle');
 
-    Vue.config.errorHandler = errorEventHandler;
+    Vue.config.errorHandler = errorEventHandler.bind(window.logger);
 
     const VIEW_GRID = 'grid',
         VIEW_DEFAULT = VIEW_GRID,
         availableTabKeys = new Set(['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'thumbnail']);
+
+    const extractTabId = tab => tab.id;
 
     let loadPromise = null;
 
@@ -104,7 +108,7 @@
             'options.theme': 'updateTheme',
             'options.showTabsWithThumbnailsInManageGroups': function(value, oldValue) {
                 if (null != oldValue) {
-                    BG.saveOptions({
+                    Messages.sendMessageModule('BG.saveOptions', {
                             showTabsWithThumbnailsInManageGroups: value,
                         })
                         .then(() => value && window.location.reload());
@@ -167,14 +171,14 @@
             },
 
             async loadWindows() {
-                this.currentWindow = await Windows.get();
-                this.openedWindows = await Windows.load();
+                this.currentWindow = await Messages.sendMessageModule('Windows.get');
+                this.openedWindows = await Messages.sendMessageModule('Windows.load');
             },
 
             setupListeners() {
                 this
                     .$on('drag-move-group', function(from, to) {
-                        Groups.move(from.data.item.id, this.groups.indexOf(to.data.item));
+                        Messages.sendMessageModule('Groups.move', from.data.item.id, this.groups.indexOf(to.data.item));
                     })
                     .$on('drag-move-tab', function(from, to) {
                         if ('new-group' === to.data.item.id) {
@@ -184,7 +188,7 @@
                                 groupId = this.isGroup(to.data.item) ? to.data.item.id : to.data.group.id,
                                 index = this.isGroup(to.data.item) ? undefined : to.data.item.index;
 
-                            BG.Tabs.move(tabIds, groupId, {newTabIndex: index});
+                            Messages.sendMessageModule('Tabs.move', tabIds, groupId, {newTabIndex: index});
                         }
                     })
                     .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
@@ -390,67 +394,67 @@
                     }
                 };
 
-                const onMessage = utils.catchFunc(async request => {
-                    switch (request.action) {
-                        case 'group-updated':
-                            let group = this.groups.find(gr => gr.id === request.group.id);
-                            Object.assign(group, request.group);
-                            break;
-                        case 'group-added':
-                            if (!this.groups.some(gr => gr.id === request.group.id)) {
-                                this.groups.push(this.mapGroup(request.group));
-                                this.$emit('group-added');
-                            }
-                            break;
-                        case 'group-removed':
-                            let groupIndex = this.groups.findIndex(gr => gr.id === request.groupId);
+                const listeners = {
+                    'group-updated': (request) => {
+                        let group = this.groups.find(gr => gr.id === request.group.id);
+                        Object.assign(group, request.group);
+                    },
+                    'group-added': (request) => {
+                        if (!this.groups.some(gr => gr.id === request.group.id)) {
+                            this.groups.push(this.mapGroup(request.group));
+                            this.$emit('group-added');
+                        }
+                    },
+                    'group-removed': (request) => {
+                        let groupIndex = this.groups.findIndex(gr => gr.id === request.groupId);
 
-                            if (-1 !== groupIndex) {
-                                this.groups.splice(groupIndex, 1);
+                        if (-1 !== groupIndex) {
+                            this.groups.splice(groupIndex, 1);
+                        }
+                    },
+                    'groups-updated': () => listeners['group-unloaded'](),
+                    'group-unloaded': () => {
+                        this.loadGroups();
+                        this.loadUnsyncedTabs();
+                        this.loadWindows();
+                    },
+                    'group-loaded': () => listeners['window-closed'](),
+                    'window-closed': () => {
+                        this.loadWindows();
+                    },
+                    'options-updated': () => {
+                        this.loadOptions();
+                    },
+                    'containers-updated': () => {
+                        this.containers = Containers.getAll(true);
+                        Object.values(this.allTabs).forEach(this.mapTabContainer);
+                    },
+                    'lock-addon': () => {
+                        this.isLoading = true;
+                        removeEvents();
+                    },
+                    'thumbnail-updated': (request) => {
+                        let foundTab = this.groups.some(group => {
+                            if (group.isArchive) {
+                                return;
                             }
 
-                            break;
-                        case 'groups-updated':
-                        case 'group-unloaded':
-                            this.loadGroups();
+                            let tab = group.tabs.find(tab => tab.id === request.tabId);
+
+                            if (tab) {
+                                tab.thumbnail = request.thumbnail;
+                                return true;
+                            }
+                        });
+
+                        if (!foundTab) {
                             this.loadUnsyncedTabs();
-                            this.loadWindows();
-                            break;
-                        case 'group-loaded':
-                        case 'window-closed':
-                            this.loadWindows();
-                            break;
-                        case 'options-updated':
-                            this.loadOptions();
-                            break;
-                        case 'containers-updated':
-                            this.containers = Containers.getAll(true);
-                            Object.values(this.allTabs).forEach(this.mapTabContainer);
-                            break;
-                        case 'lock-addon':
-                            this.isLoading = true;
-                            removeEvents();
-                            break;
-                        case 'thumbnail-updated':
-                            let foundTab = this.groups.some(group => {
-                                if (group.isArchive) {
-                                    return;
-                                }
+                        }
+                    },
+                };
 
-                                let tab = group.tabs.find(tab => tab.id === request.tabId);
-
-                                if (tab) {
-                                    tab.thumbnail = request.thumbnail;
-                                    return true;
-                                }
-                            });
-
-                            if (!foundTab) {
-                                this.loadUnsyncedTabs();
-                            }
-
-                            break;
-                    }
+                const onMessage = utils.catchFunc(async request => {
+                    await listeners[request.action](request);
                 });
 
                 browser.tabs.onCreated.addListener(onCreatedTab);
@@ -469,7 +473,8 @@
                 browser.tabs.onMoved.addListener(onMovedTab);
                 browser.tabs.onDetached.addListener(onDetachedTab);
                 browser.tabs.onAttached.addListener(onAttachedTab);
-                browser.runtime.onMessage.addListener(onMessage);
+
+                const {disconnect} = Messages.connectToBackground(logger.prefixes.join('.'), Object.keys(listeners), onMessage);
 
                 function removeEvents() {
                     browser.tabs.onCreated.removeListener(onCreatedTab);
@@ -479,7 +484,7 @@
                     browser.tabs.onMoved.removeListener(onMovedTab);
                     browser.tabs.onDetached.removeListener(onDetachedTab);
                     browser.tabs.onAttached.removeListener(onAttachedTab);
-                    browser.runtime.onMessage.removeListener(onMessage);
+                    disconnect();
                 }
 
                 window.addEventListener('unload', removeEvents);
@@ -502,7 +507,7 @@
                     if (!group.isArchive) {
                         group.tabs.forEach(function(tab) {
                             if (!tab.thumbnail && !tab.discarded && utils.isTabLoaded(tab)) {
-                                Tabs.updateThumbnail(tab.id);
+                                Messages.sendMessageModule('Tabs.updateThumbnail', tab.id);
                             }
                         });
                     }
@@ -510,7 +515,7 @@
             },
 
             async loadGroupTabs(groupId) {
-                let {group: {tabs}} = await Groups.load(groupId, true, true, true),
+                let {group: {tabs}} = await Messages.sendMessageModule('Groups.load', groupId, true, true, true),
                     group = this.groups.find(gr => gr.id === groupId);
 
                 group.tabs = tabs.map(this.mapTab, this);
@@ -530,10 +535,10 @@
             async moveTabs(tabId, groupId, loadUnsync = false, showTabAfterMovingItIntoThisGroup, discardTabs) {
                 let tabIds = this.getTabIdsForMove(tabId);
 
-                await BG.Tabs.move(tabIds, groupId, {showTabAfterMovingItIntoThisGroup});
+                await Messages.sendMessageModule('Tabs.move', tabIds, groupId, {showTabAfterMovingItIntoThisGroup});
 
                 if (discardTabs) {
-                    Tabs.discard(tabIds);
+                    Messages.sendMessageModule('Tabs.discard', tabIds);
                 }
 
                 if (loadUnsync) {
@@ -545,7 +550,7 @@
                     tabIds = this.getTabIdsForMove(tabId);
 
                 if (this.options.alwaysAskNewGroupName) {
-                    newGroupTitle = await Groups.getNextTitle();
+                    newGroupTitle = await Messages.sendMessageModule('Groups.getNextTitle');
 
                     newGroupTitle = await this.showPrompt(this.lang('createNewGroup'), newGroupTitle);
 
@@ -555,7 +560,7 @@
                 }
 
                 let newGroupWindowId = showTabAfterMovingItIntoThisGroup ? this.currentWindow.id : undefined,
-                    newGroup = await Groups.add(newGroupWindowId, tabIds, newGroupTitle);
+                    newGroup = await Messages.sendMessageModule('Groups.add', newGroupWindowId, tabIds, newGroupTitle);
 
                 if (showTabAfterMovingItIntoThisGroup) {
                     this.applyGroup(newGroup, {id: tabId});
@@ -624,7 +629,7 @@
                     data: group,
                     watch: {
                         title: function(title) {
-                            Groups.update(this.id, {
+                            Messages.sendMessageModule('Groups.update', this.id, {
                                 title: utils.createGroupTitle(title, this.id),
                             });
                         },
@@ -669,14 +674,14 @@
             },
 
             async loadGroups() {
-                let {groups} = await Groups.load(null, true, true, this.options.showTabsWithThumbnailsInManageGroups);
+                let {groups} = await Messages.sendMessageModule('Groups.load', null, true, true, this.options.showTabsWithThumbnailsInManageGroups);
 
                 this.groups = groups.map(this.mapGroup, this);
 
                 this.multipleTabIds = [];
             },
             async loadUnsyncedTabs() {
-                let windows = await Windows.load(true, true, true);
+                let windows = await Messages.sendMessageModule('Windows.load', true, true, true);
 
                 this.unSyncTabs = windows
                     .reduce(function(acc, win) {
@@ -690,23 +695,23 @@
                     this.$nextTick(() => [...document.querySelectorAll('input[type="text"]')].pop().select());
                 });
 
-                Groups.add();
+                Messages.sendMessageModule('Groups.add');
             },
 
             addTab(group, cookieStoreId) {
-                Tabs.add(group.id, cookieStoreId);
+                Messages.sendMessageModule('Tabs.add', group.id, cookieStoreId);
             },
             removeTab(tab) {
-                Tabs.remove(this.getTabIdsForMove(tab.id));
+                Messages.sendMessageModule('Tabs.remove', this.getTabIdsForMove(tab.id));
             },
             updateTabThumbnail({id}) {
-                Tabs.updateThumbnail(id);
+                Messages.sendMessageModule('Tabs.updateThumbnail', id);
             },
             discardTab(tab) {
-                Tabs.discard(this.getTabIdsForMove(tab.id));
+                Messages.sendMessageModule('Tabs.discard', this.getTabIdsForMove(tab.id));
             },
             discardGroup({tabs}) {
-                Tabs.discard(tabs);
+                Messages.sendMessageModule('Tabs.discard', tabs);
             },
             discardOtherGroups(groupExclude) {
                 let tabs = this.groups.reduce((acc, gr) => {
@@ -717,13 +722,13 @@
                     return acc;
                 }, []);
 
-                Tabs.discard(tabs);
+                Messages.sendMessageModule('Tabs.discard', tabs);
             },
             reloadTab(tab, bypassCache) {
-                Tabs.reload(this.getTabIdsForMove(tab.id), bypassCache);
+                Messages.sendMessageModule('Tabs.reload', this.getTabIdsForMove(tab.id), bypassCache);
             },
             reloadAllTabsInGroup(group, bypassCache) {
-                Tabs.reload(group.tabs, bypassCache);
+                Messages.sendMessageModule('Tabs.reload', group.tabs.map(extractTabId), bypassCache);
             },
 
             async applyGroup({id: groupId}, {id: tabId} = {}, openInNewWindow = false) {
@@ -733,7 +738,7 @@
                     });
                 }
 
-                await utils.sendAction('load-custom-group', {
+                await Messages.sendMessage('load-custom-group', {
                     groupId,
                     tabId,
                     windowId: openInNewWindow ? 'new' : null,
@@ -757,7 +762,7 @@
                     }
                 } else if (event.shiftKey) {
                     if (this.multipleTabIds.length) {
-                        let tabIds = group ? group.filteredTabs.map(utils.keyId) : this.filteredUnSyncTabs.map(utils.keyId),
+                        let tabIds = group ? group.filteredTabs.map(extractTabId) : this.filteredUnSyncTabs.map(extractTabId),
                             tabIndex = tabIds.indexOf(tab.id),
                             lastTabIndex = -1;
 
@@ -786,12 +791,12 @@
                 } else if (group) {
                     this.applyGroup(group, tab);
                 } else if (this.isCurrentWindowIsAllow) {
-                    await Tabs.moveNative([tab], {
+                    await Messages.sendMessageModule('Tabs.moveNative', [tab.id], {
                         windowId: this.currentWindow.id,
                         index: -1,
                     });
 
-                    await Tabs.show(tab.id);
+                    await Messages.sendMessageModule('Tabs.show', tab.id);
 
                     this.loadUnsyncedTabs();
                 }
@@ -811,10 +816,10 @@
 
                 this.groups.splice(this.groups.indexOf(group), 1);
 
-                BG.Groups.remove(group.id);
+                Messages.sendMessageModule('Groups.remove', group.id);
             },
             setTabIconAsGroupIcon({favIconUrl}, group) {
-                Groups.setIconUrl(group.id, favIconUrl);
+                Messages.sendMessageModule('Groups.setIconUrl', group.id, favIconUrl);
             },
 
             getTabTitle: utils.getTabTitle,
@@ -827,13 +832,15 @@
             },
 
             sortGroups(vector) {
-                Groups.sort(vector);
+                Messages.sendMessageModule('Groups.sort', vector);
             },
-            exportGroupToBookmarks({id}) {
-                BG.exportGroupToBookmarks(id);
+            exportGroupToBookmarks(group) {
+                Messages.sendMessage('export-group-to-bookmarks', {
+                    groupId: group.id,
+                });
             },
             unloadGroup({id}) {
-                BG.Groups.unload(id);
+                Messages.sendMessageModule('Groups.unload', id);
             },
 
             async toggleArchiveGroup({id, title, isArchive}) {
@@ -845,7 +852,7 @@
 
                 if (ok) {
                     this.isLoading = true;
-                    await BG.Groups.archiveToggle(id);
+                    await Messages.sendMessageModule('Groups.archiveToggle', id);
                     this.isLoading = false;
                 }
             },
@@ -921,8 +928,8 @@
 
             async closeThisWindow() {
                 if (this.isCurrentWindowIsAllow) {
-                    let tab = await Tabs.getActive();
-                    Tabs.remove(tab.id);
+                    let tab = await Messages.sendMessageModule('Tabs.getActive');
+                    Messages.sendMessageModule('Tabs.remove', tab.id);
                 } else {
                     browser.windows.remove(this.currentWindow.id); // close manage groups POPUP window
                 }

@@ -181,8 +181,7 @@ async function init() {
 async function openTab(url, cookieStoreId = DEFAULT_COOKIE_STORE_ID, buttonId = null, groupId = null, conflictedExtId = null) {
     try {
         if (buttonId === 'deny' && $('#exclude-container').checked) {
-            let result = await browser.runtime.sendMessage({
-                action: 'exclude-container-for-group',
+            let result = await sendMessage('exclude-container-for-group', {
                 cookieStoreId,
                 groupId,
             });
@@ -195,8 +194,7 @@ async function openTab(url, cookieStoreId = DEFAULT_COOKIE_STORE_ID, buttonId = 
         }
 
         if (buttonId === 'confirm' && $('#ignore-origin-id-for-session').checked) {
-            let result = await browser.runtime.sendMessage({
-                action: 'ignore-ext-for-reopen-container',
+            let result = await sendMessage('ignore-ext-for-reopen-container', {
                 id: conflictedExtId,
             });
 

@@ -51,8 +51,6 @@
 
         window.BG = background.BG;
 
-        Object.assign(window.console, background.console);
-        // window.console = background.console;
         window.cache = background.cache;
         window.Containers = background.Containers;
     }

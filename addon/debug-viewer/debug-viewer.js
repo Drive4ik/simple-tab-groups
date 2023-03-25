@@ -1,6 +1,6 @@
 
+const $ = document.querySelector.bind(document);
 const INDENT_PX = 30;
-let logIndentCount = 0;
 
 function secondsToHHMMSS(sec) {
     let sec_num = parseInt(sec, 10),
@@ -12,21 +12,75 @@ function secondsToHHMMSS(sec) {
 }
 
 function errorEventHandler(event) {
+    console.error(event);
     alert(event)
 }
 
 window.addEventListener('error', errorEventHandler);
 Vue.config.errorHandler = errorEventHandler;
 
+function getConsoleKey(log) {
+    return Object.keys(log).find(k => k.includes('console'));
+}
+
+const indentConfig = {
+    // indentSymbol: '   ',
+    startSymbol: '▷', // 🔻⚡️
+    stopSymbol: '◁', // 🔺⭕️
+    index: 0,
+    indexByKey: {},
+    regExp: /(START|STOP|SCOPE) (\d+)/,
+};
+const getIndent = function(log) {
+    let indentCount = this.index,
+        {action, key} = getLogAction(log);
+
+    if (action === 'START') {
+        indentCount = this.indexByKey[key] = this.index++;
+    } else if (action === 'STOP') {
+        indentCount = this.indexByKey[key];
+
+        if (this.index > 0) {
+            this.index--;
+        }
+    } else if (action === 'SCOPE') {
+        indentCount = this.indexByKey[key];
+    }
+
+    return indentCount * INDENT_PX;
+}.bind(indentConfig);
+
+const getLogAction = function(log) {
+    let action, key;
+
+    log[log.consoleKey].some(arg => {
+        [, action, key] = this.regExp.exec(arg) || [];
+        return action;
+    });
+
+    return {action, key};
+}.bind(indentConfig)
+
+const excludeExtensions = new Set([
+    'addons-search-detection@mozilla.com',
+]);
+
 new Vue({
     el: '#app',
     data: {
         file: null,
+
+        logsIndent: 0,
+
+        highlightedLogs: [],
     },
     filters: {
-        json(value, expanded) {
+        json(value, expanded = true) {
             return expanded ? JSON.stringify(value, null, 4) : JSON.stringify(value);
         },
+    },
+    watch: {
+        logsIndent: 'calculateIndentLineHeight',
     },
     computed: {
         info() {
@@ -38,64 +92,97 @@ new Vue({
             return sec ? secondsToHHMMSS(sec) : this.info.upTime;
         },
         logs() {
-            let lastLogIndex = this.file.logs.findIndex(l => typeof l === 'string');
-            return this.file.logs.slice(0, lastLogIndex - 1);
+            return this.file.logs;
         },
-        errors() {
-            let lastLogIndex = this.file.logs.findIndex(l => typeof l === 'string');
-            return this.file.logs.slice(lastLogIndex + 1);
+        errorLogs() {
+            return this.file.errorLogs;
         },
     },
     methods: {
-        getConsoleKey(log) {
-            return Object.keys(log).find(k => k.includes('console'));
-        },
         getLogTitle(log) {
-            let consoleKey = this.getConsoleKey(log),
-                title;
+            let title = [],
+                consoleFuncStr = log.consoleKey.split('.').pop();
 
-            if (log[consoleKey]) {
-                title = [log[consoleKey][0]];
+            if (consoleFuncStr === 'info') {
+                title.push(`<span class="tag is-info">INFO</span> `);
+            } else if (consoleFuncStr === 'warn') {
+                title.push(`<span class="tag is-warning">WARN</span> `);
+            } else if (consoleFuncStr === 'error' || consoleFuncStr === 'assert') {
+                title.push(`<span class="tag is-danger">${consoleFuncStr.toUpperCase()}</span> `);
+            }
 
-                for (let i = 1, k; i < log[consoleKey].length; i++) {
-                    k = log[consoleKey][i];
+            for (let i = 0, k; i < log[log.consoleKey].length; i++) {
+                k = log[log.consoleKey][i];
 
-                    if (Number.isFinite(k) || k === null || this.isBool(k)) {
-                        title.push(`<code>${k}</code>`);
-                    } else if (typeof k === 'object') {
+                if (Number.isFinite(k) || k === null || this.isBool(k)) {
+                    title.push(`<code>${k}</code>`);
+                } else if (typeof k === 'object' && k.stack !== undefined) {
+                    try {
+                        let err = JSON.parse(k.message);
+                        title.push(err.message,
+                            'file:',
+                            `${err.fileName}:${err.lineNumber}:${err.columnNumber}`,
+                            'stack:',
+                            err.stack.split('\n').join(` ◁ `) || '<em>[empty]</em>'
+                        );
+                    } catch {
                         title.push(JSON.stringify(k));
-                    } else {
-                        title.push(k);
                     }
+                } else if (typeof k === 'object') {
+                    title.push('<code>' + JSON.stringify(k).replaceAll(this.file.info.UUID, '') + '</code>');
+                } else if (k?.startsWith?.('START')) {
+                    title.push(indentConfig.startSymbol);
+                } else if (k?.startsWith?.('STOP')) {
+                    title.push(indentConfig.stopSymbol);
+                } else if (k?.startsWith?.('SCOPE')) {
+                    // do nothing
+                } else {
+                    title.push(k);
                 }
-
-                title = title.join(' ');
-            } else {
-                title = log.message;
             }
 
-            if (consoleKey?.includes('info')) {
-                title = `<span class="tag is-info">INFO</span> ` + title;
-            } else if (consoleKey?.includes('warn')) {
-                title = `<span class="tag is-warning">WARN</span> ` + title;
-            } else if (!consoleKey || consoleKey.includes('error')) {
-                title = `<span class="tag is-danger">ERROR</span> ` + title;
-            }
-
-            return title;
+            return title.join(' ');
         },
-        getLogIndent(log) {
-            let consoleKey = this.getConsoleKey(log),
-                indentCount = logIndentCount;
+        formatTime({time}) {
+            let [hms, ms] = time.slice(11, -1).split('.');
+            return `${hms} <span class="is-size-6 has-text-weight-semibold is-family-monospace">${ms}</span>`;
+        },
 
-            if (log[consoleKey]?.[0]?.startsWith?.('START')) {
-                logIndentCount++;
-            } else if (log[consoleKey]?.[0]?.startsWith?.('STOP')) {
-                logIndentCount--;
-                indentCount--;
+        toggleShowStack(log) {
+            log.showStack = !log.showStack;
+            this.calculateIndentLineHeight();
+        },
+        isHighlighted(log) {
+            return this.highlightedLogs.includes(log.key);
+        },
+        toggleHighlight(log) {
+            if (this.highlightedLogs.includes(log.key)) {
+                this.highlightedLogs.splice(this.highlightedLogs.indexOf(log.key), 1);
+            } else {
+                this.highlightedLogs.push(log.key);
+
+                this.calculateIndentLineHeight();
             }
+        },
+        calculateIndentLineHeight() {
+            this.$nextTick(() => {
+                this.highlightedLogs.forEach(key => {
+                    const log = this.logs.find(l => l.key === key && l.action === 'START');
 
-            return (indentCount * INDENT_PX) + 'px';
+                    if (!log) {
+                        return;
+                    }
+
+                    let startNode = $(`.log[data-action="START"][data-key="${log.key}"]`),
+                        stopNode = $(`.log[data-action="STOP"][data-key="${log.key}"]`);
+
+                    if (!startNode || !stopNode) {
+                        return;
+                    }
+
+                    log.indentLineHeight = (stopNode.offsetTop - startNode.offsetTop - startNode.clientHeight) + 'px';
+                });
+            });
         },
 
         async changeFile({target}) {
@@ -120,16 +207,58 @@ new Vue({
                 reader.readAsText(file, 'utf-8');
             });
 
-            await Promise.all(file.info.extensions.map(async ext => {
-                let req = await fetch(`https://services.addons.mozilla.org/api/v4/addons/addon/${ext.id}/?lang=en-US`);
+            this.logsIndent = 0;
+            indentConfig.index = 0;
+            indentConfig.indexByKey = {};
 
-                if (req.ok) {
-                    ({
-                        url: ext.url,
-                        icon_url: ext.icon_url,
-                    } = await req.json());
+            file.info.extensions = await Promise.all(file.info.extensions
+                .filter(ext => !excludeExtensions.has(ext.id))
+                .map(async ext => {
+                    let req = await fetch(`https://services.addons.mozilla.org/api/v4/addons/addon/${ext.id}/?lang=en-US`);
+
+                    if (req.ok) {
+                        ({
+                            url: ext.url,
+                            icon_url: ext.icon_url,
+                        } = await req.json());
+                    }
+
+                    return ext;
+                })
+            );
+
+            function formatLog(log) {
+                log.showStack = false;
+                log.consoleKey = getConsoleKey(log);
+                log.indent = getIndent(log) + 'px';
+                log.indentLineHeight = 0;
+
+                let {action, key} = getLogAction(log);
+                log.action = action || false;
+                log.key = key || false;
+
+                let messages = [],
+                    stacks = [];
+
+                log[log.consoleKey].forEach(consoleValue => {
+                    if (consoleValue?.message !== undefined && consoleValue?.time !== undefined && consoleValue?.fileName !== undefined) {
+                        stacks.push(consoleValue);
+                    } else {
+                        messages.push(consoleValue);
+                    }
+                });
+
+                log[log.consoleKey] = messages;
+
+                if (stacks.length) {
+                    log.stacks = ['From message:', ...stacks, 'Native:', log.stack];
+                } else {
+                    log.stacks = [log.stack];
                 }
-            }));
+            }
+
+            file.logs.forEach(formatLog);
+            file.errorLogs.forEach(formatLog);
 
             this.file = file;
         },
@@ -144,13 +273,30 @@ new Vue({
             return typeof val === 'number';
         },
 
-        scrollTo(query, block = 'center') {
-            let errorNode = document.querySelector(query);
+        scrollTo: function(query, block = 'center', round, negative) {
+            let errorNode = null;
+
+            if (round) {
+                let nodes = document.querySelectorAll(query),
+                    nextIndex = negative ? --this.selectorNodeIndex[query] : ++this.selectorNodeIndex[query];
+
+                if (nodes[nextIndex]) {
+                    this.selectorNodeIndex[query] = nextIndex;
+                } else {
+                    this.selectorNodeIndex[query] = negative ? nodes.length - 1 : 0;
+                }
+
+                errorNode = nodes[this.selectorNodeIndex[query]];
+            } else {
+                errorNode = document.querySelector(query);
+            }
 
             errorNode?.scrollIntoView({
                 block,
                 behavior: 'smooth',
             });
-        },
+        }.bind({
+            selectorNodeIndex: {},
+        }),
     },
 });

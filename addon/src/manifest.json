@@ -75,7 +75,8 @@
     "background": {
         "scripts": [
             "js/constants.js",
-            "js/console.js",
+            "js/messages.js",
+            "js/logger.js",
             "js/startup.js",
             "js/utils.js",
             "js/containers.js",
@@ -86,7 +87,6 @@
             "js/tabs.js",
             "js/windows.js",
             "js/management.js",
-            "js/error-handler.js",
             "background.js"
         ]
     },

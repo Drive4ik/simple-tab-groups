@@ -1,9 +1,13 @@
 (function() {
     'use strict';
 
+    function noop() {}
+
+    const logger = new Logger('Storage');
+
     window.storage = {
         async get(keys, errorCounter = 0) {
-            !errorCounter && console.log('START storage.get', keys);
+            const log = logger.start('get', keys, {errorCounter});
 
             let keysData;
             if (!keys) {
@@ -25,21 +29,19 @@
 
                 if (errorCounter > 100) {
                     openHelp('db-error-reinstall');
-                    throw e;
+                    log.throwError('db-error-reinstall', e);
                 }
 
-                console.error("Error: storage.get errorCounter: %s, can't read keys", errorCounter, keys);
+                log.error("can't read keys");
 
                 await utils.wait(200);
                 return this.get(keys, errorCounter);
             }
 
-            console.log('STOP storage.get');
-
-            return result;
+            return log.stop(), result;
         },
         async set(data) {
-            console.log('START storage.set');
+            const log = logger.start('set', Object.keys(data));
 
             if (data.groups) {
                 data.groups.forEach(group => !group.isArchive && (group.tabs = []));
@@ -47,9 +49,7 @@
 
             let result = await browser.storage.local.set(data);
 
-            console.log('STOP storage.set');
-
-            return result;
+            return log.stop(), result;
         },
         remove: browser.storage.local.remove,
         clear: browser.storage.local.clear,

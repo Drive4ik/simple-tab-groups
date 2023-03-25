@@ -1,8 +1,14 @@
 (function() {
     'use strict';
 
+    function noop() {}
+
+    const logger = new Logger('Groups');
+
     // if set return {group, groups, groupIndex}
     async function load(groupId = null, withTabs = false, includeFavIconUrl, includeThumbnail) {
+        const log = logger.start('load', groupId, {withTabs, includeFavIconUrl, includeThumbnail});
+
         let [allTabs, {groups}] = await Promise.all([
             withTabs ? Tabs.get(null, false, null, undefined, includeFavIconUrl, includeThumbnail) : false,
             storage.get('groups')
@@ -31,23 +37,27 @@
             });
         }
 
+        log.stop();
+
         let groupIndex = groups.findIndex(group => group.id === groupId);
 
         return {
             group: groups[groupIndex],
             groups,
             groupIndex,
+            archivedGroups: groups.filter(group => group.isArchive),
+            notArchivedGroups: groups.filter(group => !group.isArchive),
         };
     }
 
     async function save(groups, withMessage = false) {
+        const log = logger.start('save', {withMessage});
+
         if (!Array.isArray(groups)) {
-            throw Error('groups has invalid type');
+            log.throwError('groups has invalid type');
         }
 
-        await storage.set({
-            groups,
-        });
+        await storage.set({groups});
 
         if (isNeedBlockBeforeRequest(groups)) {
             BG.addListenerOnBeforeRequest();
@@ -56,10 +66,10 @@
         }
 
         if (withMessage) {
-            BG.sendMessage({
-                action: 'groups-updated',
-            });
+            sendMessage('groups-updated');
         }
+
+        log.stop();
 
         return groups;
     }
@@ -94,7 +104,7 @@
         tabIds = tabIds?.slice?.() || [];
         title = title?.slice(0, 256);
 
-        console.debug('Groups.add', {windowId, tabIds, title});
+        const log = logger.start('add', {windowId, tabIds, title});
 
         let windowGroupId = cache.getWindowGroup(windowId);
 
@@ -102,7 +112,7 @@
             let result = await unload(windowGroupId);
 
             if (!result) {
-                console.warn('Groups.add cant unload exist group in window');
+                log.stopError('cant unload');
                 return;
             }
         }
@@ -118,19 +128,17 @@
 
         await save(groups);
 
-        await storage.set({
-            lastCreatedGroupPosition,
-        });
+        await storage.set({lastCreatedGroupPosition});
 
         if (windowId) {
             await cache.setWindowGroup(windowId, newGroup.id);
-            BG.updateBrowserActionData(newGroup.id);
+            await BG.updateBrowserActionData(newGroup.id).catch(log.onCatch(newGroup.id));
         }
 
         BG.updateMoveTabMenus();
 
         if (windowId && !tabIds.length) {
-            tabIds = await Tabs.get(windowId).then(tabs => tabs.map(utils.keyId));
+            tabIds = await Tabs.get(windowId).then(tabs => tabs.map(Tabs.extractId));
         }
 
         if (tabIds.length) {
@@ -140,8 +148,7 @@
             });
         }
 
-        BG.sendMessage({
-            action: 'group-added',
+        sendMessage('group-added', {
             group: newGroup,
         });
 
@@ -150,16 +157,19 @@
             group: mapForExternalExtension(newGroup),
         });
 
-        return newGroup;
+        return log.stop(newGroup);
     }
 
     async function remove(groupId) {
+        const log = logger.start('remove', groupId);
+
         let groupWindowId = cache.getWindowId(groupId);
 
         if (cache.getWindowId(groupId)) {
             let result = await unload(groupId);
 
             if (!result) {
+                log.stopError('cant unload');
                 return;
             }
         }
@@ -184,8 +194,7 @@
 
         BG.removeGroupBookmark(group);
 
-        BG.sendMessage({
-            action: 'group-removed',
+        sendMessage('group-removed', {
             groupId: groupId,
             windowId: groupWindowId,
         });
@@ -195,13 +204,17 @@
             groupId: groupId,
             windowId: groupWindowId,
         });
+
+        log.stop();
     }
 
     async function update(groupId, updateData) {
+        const log = logger.start('update', {groupId, updateData});
+
         let {group, groups} = await load(groupId);
 
         if (!group) {
-            throw Error(`group ${groupId} not found for update it`);
+            log.throwError(['group', groupId, 'not found for update it']);
         }
 
         updateData = utils.clone(updateData); // clone need for fix bug: dead object after close tab which create object
@@ -216,7 +229,7 @@
         }
 
         if (!Object.keys(updateData).length) {
-            return;
+            return log.stop(null, 'no updateData keys to update');
         }
 
         if (updateData.isMain) {
@@ -227,8 +240,7 @@
 
         await save(groups);
 
-        BG.sendMessage({
-            action: 'group-updated',
+        sendMessage('group-updated', {
             group: {
                 id: groupId,
                 ...updateData,
@@ -247,15 +259,19 @@
         if (['title', 'iconUrl', 'iconColor', 'iconViewType', 'isArchive', 'isSticky'].some(key => updateData.hasOwnProperty(key))) {
             BG.updateMoveTabMenus();
 
-            BG.updateBrowserActionData(groupId);
+            await BG.updateBrowserActionData(groupId);
         }
 
         if (updateData.hasOwnProperty('title')) {
             BG.updateGroupBookmarkTitle(group);
         }
+
+        log.stop();
     }
 
     async function move(groupId, newGroupIndex) {
+        const log = logger.start('move', {groupId, newGroupIndex});
+
         let {groups, groupIndex} = await load(groupId);
 
         groups.splice(newGroupIndex, 0, groups.splice(groupIndex, 1)[0]);
@@ -263,11 +279,15 @@
         await save(groups, true);
 
         BG.updateMoveTabMenus();
+
+        log.stop();
     }
 
     async function sort(vector = 'asc') {
+        const log = logger.start('sort', vector);
+
         if (!['asc', 'desc'].includes(vector)) {
-            throw Error(`invalid sort vector: ${vector}`);
+            log.throwError(`invalid sort vector: ${vector}`);
         }
 
         let {groups} = await load();
@@ -281,36 +301,40 @@
         await save(groups, true);
 
         BG.updateMoveTabMenus();
+
+        log.stop();
     }
 
     async function unload(groupId) {
+        const log = logger.start('unload', groupId);
+
         if (!groupId) {
             utils.notify(['groupNotFound'], 7, 'groupNotFound');
-            return false;
+            return log.stopError(false, 'groupNotFound');
         }
 
         let windowId = cache.getWindowId(groupId);
 
         if (!windowId) {
             utils.notify(['groupNotLoaded'], 7, 'groupNotLoaded');
-            return false;
+            return log.stopError(false, 'groupNotLoaded');
         }
 
         let {group} = await load(groupId, true);
 
         if (!group) {
             utils.notify(['groupNotFound'], 7, 'groupNotFound');
-            return false;
+            return log.stopError(false, 'groupNotFound');
         }
 
         if (group.isArchive) {
             utils.notify(['groupIsArchived', group.title], 7, 'groupIsArchived');
-            return false;
+            return log.stopError(false, 'groupIsArchived');
         }
 
         if (group.tabs.some(utils.isTabCanNotBeHidden)) {
             utils.notify(['notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera']);
-            return false;
+            return log.stopError(false, 'some Tab Can Not Be Hidden');
         }
 
         await BG.loadingBrowserAction(true, windowId);
@@ -331,15 +355,15 @@
         await BG.Tabs.safeHide(group.tabs);
 
         if (BG.options.discardTabsAfterHide && !group.dontDiscardTabsAfterHideThisGroup) {
-            BG.Tabs.discard(group.tabs);
+            log.log('run discard tabs');
+            BG.Tabs.discard(group.tabs).catch(log.onCatch(['Tabs.discard', group.tabs]));
         }
 
-        BG.updateBrowserActionData(null, windowId);
+        await BG.updateBrowserActionData(null, windowId).catch(log.onCatch(['updateBrowserActionData', windowId]));
 
         BG.updateMoveTabMenus();
 
-        BG.sendMessage({
-            action: 'group-unloaded',
+        sendMessage('group-unloaded', {
             groupId,
             windowId,
         });
@@ -350,14 +374,18 @@
             windowId,
         });
 
-        return true;
+        return log.stop(true);
     }
 
     async function archiveToggle(groupId) {
+        const log = logger.start('archiveToggle', groupId);
+
         await BG.loadingBrowserAction();
 
         let {group, groups} = await load(groupId, true),
             tabIdsToRemove = [];
+
+        log.log('group.isArchive', group.isArchive);
 
         if (group.isArchive) {
             group.isArchive = false;
@@ -370,13 +398,13 @@
                 let result = await unload(groupId);
 
                 if (!result) {
-                    return;
+                    return log.stopError(null, 'cant unload group');
                 }
 
                 ({group, groups} = await load(groupId, true));
             }
 
-            tabIdsToRemove = group.tabs.map(utils.keyId);
+            tabIdsToRemove = group.tabs.map(Tabs.extractId);
 
             group.isArchive = true;
             group.tabs = Tabs.prepareForSave(group.tabs, false, true, true);
@@ -395,18 +423,18 @@
             BG.removeExcludeTabIds(tabIdsToRemove);
         }
 
-        BG.sendMessage({
-            action: 'groups-updated',
-        });
+        sendMessage('groups-updated');
 
         BG.sendExternalMessage({
             action: 'group-updated',
             group: mapForExternalExtension(group),
         });
 
-        BG.loadingBrowserAction(false);
+        BG.loadingBrowserAction(false).catch(log.onCatch('loadingBrowserAction'));
 
         BG.updateMoveTabMenus();
+
+        log.stop();
     }
 
     function mapForExternalExtension(group) {

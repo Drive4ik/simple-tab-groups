@@ -845,6 +845,10 @@
         "message": "Включить логирование (DEBUG)",
         "description": "Enable DEBUG"
     },
+    "disableDebugTitle": {
+        "message": "Выключить логирование (DEBUG)",
+        "description": "Disable DEBUG"
+    },
     "loggingIsEnabledTitle": {
         "message": "логирование включено",
         "description": "logging is enabled"
@@ -1204,5 +1208,13 @@
     "copyURL": {
         "message": "Копировать URL",
         "description": "Copy URL"
+    },
+    "helpPageStgDebugTitle": {
+        "message": "Страница отладки STG",
+        "description": "STG debug page"
+    },
+    "helpPageStgDebugAutoDebugMainTitle": {
+        "message": "Произошла ошибка в аддоне",
+        "description": "An error occurred in the addon"
     }
 }

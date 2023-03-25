@@ -8,7 +8,9 @@
     import manageAddonBackup from './manage-addon-backup';
     import 'vue-swatches/dist/vue-swatches.css';
 
-    Vue.config.errorHandler = errorEventHandler;
+    window.logger = new Logger('Options');
+
+    Vue.config.errorHandler = errorEventHandler.bind(window.logger);
 
     const SECTION_GENERAL = 'general',
         SECTION_HOTKEYS = 'hotkeys',
@@ -130,8 +132,6 @@
                 showLoadingMessage: false,
 
                 showClearAddonConfirmPopup: false,
-
-                enableDebug: window.localStorage.enableDebug || false,
             };
         },
         components: {
@@ -174,16 +174,11 @@
                             return;
                         }
 
-                        BG.saveOptions({
+                        Messages.sendMessageModule('BG.saveOptions', {
                             [option]: value,
                         });
                     });
                 });
-        },
-        mounted() {
-            if (this.enableDebug === '2') {
-                setTimeout(() => this.scrollToLoggingDesc(), 1000);
-            }
         },
         watch: {
             section(section) {
@@ -202,7 +197,7 @@
                     value = '';
                 }
 
-                BG.saveOptions({
+                Messages.sendMessageModule('BG.saveOptions', {
                     autoBackupFolderName: value,
                 });
             },
@@ -238,7 +233,7 @@
                     value = 1;
                 }
 
-                BG.saveOptions({
+                Messages.sendMessageModule('BG.saveOptions', {
                     autoBackupIntervalValue: value,
                 });
             },
@@ -248,7 +243,7 @@
                     return;
                 }
 
-                BG.saveOptions({
+                Messages.sendMessageModule('BG.saveOptions', {
                     temporaryContainerTitle,
                 });
             },
@@ -286,7 +281,7 @@
                         return;
                     }
 
-                    BG?.saveOptions({
+                    Messages.sendMessageModule('BG.saveOptions', {
                         hotkeys: hotkeys,
                     });
                 },
@@ -299,26 +294,6 @@
 
                 if (!value) {
                     this.includeTabThumbnailsIntoBackup = this.options.autoBackupIncludeTabThumbnails = false;
-                }
-            },
-            async enableDebug(enableDebug) {
-                let wasAutoDebug = null;
-
-                if (enableDebug) {
-                    window.localStorage.enableDebug = 1;
-                } else {
-                    wasAutoDebug = window.localStorage.enableDebug == 2;
-                    delete window.localStorage.enableDebug;
-                }
-
-                console.restart();
-
-                if (!window.localStorage.enableDebug) {
-                    await this.saveConsoleLogs();
-
-                    if (wasAutoDebug) {
-                        utils.safeReloadAddon();
-                    }
                 }
             },
         },
@@ -341,12 +316,6 @@
 
             updateTheme() {
                 document.documentElement.dataset.theme = utils.getThemeApply(this.options.theme);
-            },
-
-            scrollToLoggingDesc() {
-                this.section = SECTION_GENERAL;
-
-                this.$nextTick(() => utils.scrollTo('#logging-description'));
             },
 
             openBackupFolder: file.openBackupFolder,
@@ -383,11 +352,14 @@
 
                 this.showLoadingMessage = true;
 
-                BG.restoreBackup(data, clearAddonData);
+                Messages.sendMessageModule('BG.restoreBackup', data, clearAddonData);
             },
 
             exportAddonSettings() {
-                BG.createBackup(this.includeTabFavIconsIntoBackup, this.includeTabThumbnailsIntoBackup);
+                Messages.sendMessage('create-backup',{
+                    includeTabFavIconsIntoBackup: this.includeTabFavIconsIntoBackup,
+                    includeTabThumbnailsIntoBackup: this.includeTabThumbnailsIntoBackup,
+                });
             },
 
             async importAddonSettings() {
@@ -405,10 +377,12 @@
                     return;
                 }
 
-                try {
-                    await BG.runMigrateForData(data); // run migration for data
-                } catch (e) {
-                    utils.notify(e);
+                const resultMigrate = await Messages.sendMessageModule('BG.runMigrateForData', data);
+
+                if (resultMigrate.migrated) {
+                    data = resultMigrate.data;
+                } else if (resultMigrate.error) {
+                    utils.notify(resultMigrate.error);
                     return;
                 }
 
@@ -629,7 +603,7 @@
             runClearAddonConfirm() {
                 this.showClearAddonConfirmPopup = false;
                 this.showLoadingMessage = true;
-                BG.clearAddon();
+                Messages.sendMessageModule('BG.clearAddon');
             },
 
             getIconTypeUrl(iconType) {
@@ -660,8 +634,6 @@
                 }
 
                 this.loadBookmarksParents();
-
-                BG.updateMoveTabMenus();
             },
 
             async loadBookmarksParents() {
@@ -680,47 +652,8 @@
                 return utils.getGroupIconUrl(group);
             },
 
-            async saveConsoleLogs() {
-                let urls = {},
-                    index = 1;
-
-                let logs = console.getLogs();
-
-                function normalize(obj) {
-                    if (Array.isArray(obj)) {
-                        return obj.map(normalize);
-                    } else if ('object' === utils.type(obj)) {
-                        for (let key in obj) {
-                            if (['title', 'icon', 'icons', 'iconUrl', 'favIconUrl', 'thumbnail', 'filename', 'catchTabRules'].includes(key)) {
-                                obj[key] = obj[key] ? ('some ' + key) : obj[key];
-                            } else {
-                                obj[key] = normalize(obj[key]);
-                            }
-                        }
-
-                        return obj;
-                    } else if (String(obj).startsWith('data:image')) {
-                        return 'some data:image';
-                    } else if (String(obj).startsWith('http')) {
-                        return urls[obj] || (urls[obj] = 'URL_' + index++);
-                    } else if (String(obj).startsWith('file:')) {
-                        return urls[obj] || (urls[obj] = 'FILE_' + index++);
-                    }
-
-                    return obj;
-                }
-
-                let [{groups}, windows] = await Promise.all([Groups.load(null, true), Windows.load()]),
-                    tabKeys = ['id', 'url', 'hidden', 'cookieStoreId'];
-
-                groups.forEach(group => group.tabs = group.tabs.map(tab => utils.assignKeys({}, tab, tabKeys)));
-
-                await file.save({
-                    info: await utils.getInfo(),
-                    windows: normalize(windows),
-                    groups: normalize(groups),
-                    logs: normalize(logs),
-                }, 'STG-debug-logs.json');
+            openDebugPage() {
+                openHelp('stg-debug');
             },
         },
     }
@@ -728,10 +661,6 @@
 
 <template>
     <div id="stg-options">
-        <div id="logging-notification" @click="scrollToLoggingDesc" v-if="enableDebug === '2'">
-            <span v-html="lang('loggingIsAutoEnabledTitle')"></span>
-        </div>
-
         <div class="tabs is-boxed is-fullwidth">
             <ul>
                 <li :class="{'is-active': section === SECTION_GENERAL}">
@@ -981,20 +910,9 @@
 
             <hr/>
 
-            <div class="field is-grouped is-grouped-multiline">
-                <div class="control">
-                    <label class="checkbox">
-                        <input type="checkbox" v-model="enableDebug" />
-                        <span v-text="lang('enableDebugTitle')"></span>
-                    </label>
-                </div>
-                <div v-if="enableDebug" class="control">
-                    <img class="size-16 debug-record" src="resource://usercontext-content/circle.svg">
-                    <span v-text="enableDebug === '2' ? lang('loggingIsAutoEnabledTitle') : lang('loggingIsEnabledTitle')"></span>
-                </div>
+            <div class="mt-5">
+                <button class="button is-warning" @click="openDebugPage" v-text="lang('helpPageStgDebugTitle')"></button>
             </div>
-
-            <div id="logging-description" class="field" v-html="lang('loggingDescription')"></div>
         </div>
 
         <div v-show="section === SECTION_HOTKEYS">
@@ -1329,17 +1247,6 @@
         // background-color: #f9f9fa;
         transition: background-color ease .2s;
         font-size: 14px;
-    }
-
-    #logging-notification {
-        display: flex;
-        height: 30px;
-        background-color: rgba(255, 123, 123, 0.5);
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        margin-bottom: 10px;
-        border-radius: 5px;
     }
 
     #stg-options {

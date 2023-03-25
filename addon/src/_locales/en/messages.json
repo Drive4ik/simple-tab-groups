@@ -849,6 +849,10 @@
         "message": "Enable DEBUG",
         "description": "Enable DEBUG"
     },
+    "disableDebugTitle": {
+        "message": "Disable DEBUG",
+        "description": "Disable DEBUG"
+    },
     "loggingIsEnabledTitle": {
         "message": "logging is enabled",
         "description": "logging is enabled"
@@ -1208,5 +1212,13 @@
     "copyURL": {
         "message": "Copy URL",
         "description": "Copy URL"
+    },
+    "helpPageStgDebugTitle": {
+        "message": "STG debug page",
+        "description": "STG debug page"
+    },
+    "helpPageStgDebugAutoDebugMainTitle": {
+        "message": "An error occurred in the addon",
+        "description": "An error occurred in the addon"
     }
 }

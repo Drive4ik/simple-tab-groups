@@ -1,6 +1,10 @@
 (function() {
     'use strict';
 
+    function noop() {}
+
+    const logger = new Logger('File');
+
     async function load(accept = '.json', readAs = 'json') { // readAs: json, text, url
         if (!['json', 'text', 'url'].includes(readAs)) {
             throw Error('wrong readAs parameter');
@@ -58,7 +62,10 @@
         return result;
     }
 
-    async function save(data, fileName = 'file-name', saveAs = true, clearOnComplete = false, tryCount = 0) { // data : Object/Array/Text
+    // data : Object/Array/Text
+    async function save(data, fileName = 'file-name', saveAs = true, clearOnComplete = false, tryCount = 0) {
+        const log = logger.start('save', {fileName, saveAs, clearOnComplete, tryCount});
+
         let body = null,
             type = null;
 
@@ -73,8 +80,6 @@
         let blob = new Blob([body], {type}),
             url = URL.createObjectURL(blob);
 
-        console.log('start save file', {fileName, saveAs, clearOnComplete, tryCount});
-
         try {
             let id = await browser.downloads.download({
                 filename: fileName,
@@ -82,6 +87,8 @@
                 saveAs: saveAs,
                 conflictAction: browser.downloads.FilenameConflictAction.OVERWRITE,
             });
+
+            log.log('id download', id);
 
             let {state, error} = await utils.waitDownload(id);
 
@@ -106,10 +113,11 @@
                 throw error;
             }
 
-            return id;
+            return log.stop(id);
         } catch (e) {
-            console.error(e);
-            utils.notify(e);
+            log.runError(String(e), e);
+            log.stopError();
+            // utils.notify(e);
         } finally {
             URL.revokeObjectURL(url);
         }

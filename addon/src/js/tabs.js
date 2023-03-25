@@ -1,6 +1,10 @@
 (function() {
     'use strict';
 
+    function noop() {}
+
+    const logger = new Logger('Tabs');
+
     const UNSUPPORTED_URL_PREFIX = getURL('stg-unsupported-url', true);
 
     async function createNative({url, active, pinned, title, index, windowId, openerTabId, cookieStoreId, newTabContainer, ifDifferentContainerReOpen, excludeContainersForReOpen, groupId, favIconUrl, thumbnail}) {
@@ -63,7 +67,7 @@
         return cache.applySession(newTab, {groupId, favIconUrl, thumbnail});
     }
 
-    async function create(tab, sendMessage = true) {
+    async function create(tab) {
         BG.groupIdForNextTab = tab.groupId;
 
         BG.skipCreateTab = true;
@@ -92,6 +96,8 @@
     }
 
     async function setActive(tabId = null, tabs = []) {
+        const log = logger.start('setActive', tabId, 'from tabs:', tabs.map(extractId));
+
         let tabToActive = null;
 
         if (tabId) {
@@ -109,10 +115,10 @@
 
             await browser.tabs.update(tabToActive.id, {
                 active: true,
-            });
+            }).catch(log.onCatch(tabToActive.id));
         }
 
-        return tabToActive;
+        return log.stop(tabToActive);
     }
 
     async function getActive(windowId = browser.windows.WINDOW_ID_CURRENT) {
@@ -136,7 +142,7 @@
             }
         }
 
-        return tabs.map(utils.keyId);
+        return tabs.map(extractId);
     }
 
     async function get(
@@ -161,20 +167,17 @@
             }
         }
 
-        console.log('START Tabs.get', {query});
+        const log = logger.start('get', query);
 
         let tabs = await browser.tabs.query(query);
 
         if (!query.pinned) {
             tabs = await Promise.all(
-                tabs
-                    .map(utils.normalizeTabUrl)
-                    .map(tab => cache.loadTabSession(tab, includeFavIconUrl, includeThumbnail).catch(noop))
+                tabs.map(tab => cache.loadTabSession(utils.normalizeTabUrl(tab), includeFavIconUrl, includeThumbnail).catch(noop))
             );
         }
 
-        console.log('STOP Tabs.get');
-
+        log.stop();
         return tabs.filter(Boolean);
     }
 
@@ -190,35 +193,25 @@
     async function getList(tabIds, includeFavIconUrl, includeThumbnail) {
         let tabs = await Promise.all(tabIds.map(id => {
             return browser.tabs.get(id)
-                .then(utils.normalizeTabUrl)
-                .then(tab => cache.loadTabSession(tab, includeFavIconUrl, includeThumbnail))
+                .then(tab => cache.loadTabSession(utils.normalizeTabUrl(tab), includeFavIconUrl, includeThumbnail))
                 .catch(noop);
         }));
 
         return tabs.filter(Boolean);
     }
 
-    async function setMute(tabs, muted) {
-        return Promise.all(
-            tabs
-            .filter(tab => muted ? tab.audible : tab.mutedInfo.muted)
-            .map(function(tab) {
-                tab.audible = !muted;
-                tab.mutedInfo.muted = muted;
-
-                return browser.tabs.update(tab.id, {muted});
-            })
-        );
-    }
-
     async function createTempActiveTab(windowId, createPinnedTab = true, newTabUrl) {
+        const log = logger.start('createTempActiveTab', {windowId, createPinnedTab, newTabUrl});
+
         let pinnedTabs = await get(windowId, true, null);
 
         if (pinnedTabs.length) {
             if (!pinnedTabs.some(tab => tab.active)) {
                 await setActive(utils.getLastActiveTab(pinnedTabs).id);
-            }
+                log.stop('setActive pinned');
+            } else log.stop('pinned is active');
         } else {
+            log.stop('createNative');
             return createNative({
                 url: createPinnedTab ? (newTabUrl || 'about:blank') : (newTabUrl || 'about:newtab'),
                 pinned: createPinnedTab,
@@ -229,6 +222,7 @@
     }
 
     async function add(groupId, cookieStoreId, url, title) {
+        const log = logger.start('add', {groupId, cookieStoreId, url, title});
         let {group} = await Groups.load(groupId),
             [tab] = await BG.createTabsSafe([{
                 url,
@@ -237,18 +231,7 @@
                 ...Groups.getNewTabParams(group),
             }]);
 
-        return tab;
-    }
-
-    async function remove(...tabs) { // id or ids or tabs
-        tabs = tabs.flat();
-
-        if (tabs.length) {
-            console.log('Tabs.remove before');
-            tabs = await filterExist(tabs, true);
-            await browser.tabs.remove(tabs);
-            console.log('Tabs.remove after');
-        }
+        return log.stop(), tab;
     }
 
     async function updateThumbnail(tabId) {
@@ -293,8 +276,7 @@
 
             await cache.setTabThumbnail(tab.id, thumbnail);
 
-            BG.sendMessage({
-                action: 'thumbnail-updated',
+            sendMessage('thumbnail-updated', {
                 tabId: tab.id,
                 thumbnail: thumbnail,
             });
@@ -307,15 +289,21 @@
         showOnlyActiveTabAfterMovingItIntoThisGroup: showOnlyActiveTabAfterMovingItIntoThisGroup = false,
         showNotificationAfterMovingTabIntoThisGroup: showNotificationAfterMovingTabIntoThisGroup = false,
     } = {}) {
+        const log = logger.start('move', tabIds, {groupId}, {
+            newTabIndex,
+            showTabAfterMovingItIntoThisGroup,
+            showOnlyActiveTabAfterMovingItIntoThisGroup,
+            showNotificationAfterMovingTabIntoThisGroup,
+        });
+
         let tabs = await getList(tabIds.slice());
 
         if (tabs.length) {
-            tabIds = tabs.map(utils.keyId);
+            tabIds = tabs.map(extractId);
         } else {
+            log.stop('tabs are empty');
             return [];
         }
-
-        console.info('moveTabs', {tabIds, groupId, newTabIndex, showTabAfterMovingItIntoThisGroup, showNotificationAfterMovingTabIntoThisGroup});
 
         BG.addExcludeTabIds(tabIds);
 
@@ -326,16 +314,21 @@
             windowId = groupWindowId || (group.tabs[0]?.windowId) || await Windows.getLastFocusedNormalWindow(),
             activeTabs = [];
 
+        log.log('vars', {groupWindowId, windowId});
+        log.log('filter active');
+
         tabs = tabs.filter(function(tab) {
             if (tab.pinned) {
                 showPinnedMessage = true;
                 BG.excludeTabIds.delete(tab.id);
+                log.log('tab pinned', tab);
                 return false;
             }
 
             if (utils.isTabCanNotBeHidden(tab)) {
                 tabsCantHide.add(utils.getTabTitle(tab, false, 20));
                 BG.excludeTabIds.delete(tab.id);
+                log.log('cant move tab', tab);
                 return false;
             }
 
@@ -346,6 +339,8 @@
             return true;
         });
 
+        log.log('active tabs', activeTabs);
+
         if (tabs.length) {
             const excludeMovingTabs = tab => !tabs.some(t => t.id === tab.id);
 
@@ -354,6 +349,7 @@
                     tabsToActive = allTabsInActiveTabWindow.filter(tab => !tab.hidden && excludeMovingTabs(tab));
 
                 if (tabsToActive.length) {
+                    log.log('set active some other');
                     await setActive(undefined, tabsToActive);
                 } else { // if not found other visible (include pinned) tabs in window
                     let differentWindows = activeTab.windowId !== windowId,
@@ -371,11 +367,20 @@
                         activeTabNotInGroup = !cache.getWindowGroup(activeTab.windowId);
                     }
 
+                    log.log('create condition', {
+                        differentWindows,
+                        otherHiddenAndVisibleTabsInActiveTabWindow,
+                        activeTabIsLastInSrcGroup,
+                        activeTabIsInLoadedGroup,
+                        activeTabNotInGroup,
+                    });
+
                     if (
                         (differentWindows && !otherHiddenAndVisibleTabsInActiveTabWindow.length) ||
                         (activeTabIsLastInSrcGroup && activeTabIsInLoadedGroup) ||
                         (activeTabNotInGroup)
                     ) {
+                        log.log('create temp')
                         await createTempActiveTab(activeTab.windowId, false);
                     }
                 }
@@ -400,6 +405,8 @@
                 } else {
                     tab.cookieStoreId = newTabContainer;
                 }
+
+                log.log('create new tab with newTabContainer', newTabContainer);
 
                 tabIdsToRemove.push(tab.id);
 
@@ -445,20 +452,23 @@
 
             BG.removeExcludeTabIds(tabIds);
 
-            BG.sendMessage({
-                action: 'groups-updated',
-            });
+            window.sendMessage('groups-updated');
+
+            log.log('end moving');
         }
 
         if (showPinnedMessage) {
+            log.log('notify pinnedTabsAreNotSupported')
             utils.notify(['pinnedTabsAreNotSupported']);
         }
 
         if (tabsCantHide.size) {
+            log.log('notify thisTabsCanNotBeHidden')
             utils.notify(['thisTabsCanNotBeHidden', Array.from(tabsCantHide).join(', ')]);
         }
 
         if (!tabs.length) {
+            log.stop('empty tabs');
             return [];
         }
 
@@ -467,16 +477,19 @@
         if (showTabAfterMovingItIntoThisGroup) {
             if (showOnlyActiveTabAfterMovingItIntoThisGroup) {
                 if (activeTabs.length) {
+                    log.log('applyGroup', windowId, groupId, firstTab.id)
                     await BG.applyGroup(windowId, groupId, firstTab.id);
                     showNotificationAfterMovingTabIntoThisGroup = false;
                 }
             } else {
+                log.log('applyGroup 2', windowId, groupId, firstTab.id)
                 await BG.applyGroup(windowId, groupId, firstTab.id);
                 showNotificationAfterMovingTabIntoThisGroup = false;
             }
         }
 
         if (!showNotificationAfterMovingTabIntoThisGroup) {
+            log.stop(tabs, 'no notify');
             return tabs;
         }
 
@@ -500,40 +513,58 @@
             if (group && tab) {
                 let winId = cache.getWindowId(groupId) || await Windows.getLastFocusedNormalWindow();
 
-                BG.applyGroup(winId, groupId, tabId);
+                BG.applyGroup(winId, groupId, tabId).catch(log.onCatch(['applyGroup from notif', winId, groupId, tabId]));
             }
         }.bind(null, groupId, firstTab.id));
 
+        log.stop(tabs, 'with notify');
         return tabs;
     }
 
     async function filterExist(tabs, returnTabIds = false) {
-        let returnFunc = returnTabIds ? t => t.id : t => t;
-        tabs = await Promise.all(tabs.map(tabOrId => browser.tabs.get(tabOrId.id || tabOrId).then(returnFunc, noop)));
-        return tabs.filter(Boolean);
+        const tabIds = tabs.map(extractId);
+        const log = logger.start('filterExist', tabIds, {returnTabIds});
+
+        let lengthBefore = tabIds.length,
+            returnFunc = returnTabIds ? t => t.id : t => t;
+
+        tabs = await Promise.all(tabIds.map(tabId => {
+            return browser.tabs.get(extractId(tabId))
+                .then(returnFunc, log.onCatch(['not found tab', tabId], false));
+        }));
+        tabs = tabs.filter(Boolean);
+
+        log.assert(lengthBefore === tabs.length, 'tabs length after filter are not equal. not found tabs:',
+            tabIds.filter(tabId => !tabs.some(tab => tab.id === tabId)));
+
+        log.stop();
+        return tabs;
     }
 
     async function moveNative(tabs, moveProperties = {}) {
-        console.log('Tabs.moveNative called args', {tabs, moveProperties});
+        let tabIds = tabs.map(extractId),
+            openerTabIds = [];
 
-        let openerTabIds = moveProperties.windowId ? tabs.map(tab => tab.openerTabId) : [],
-            tabIds = await filterExist(tabs, true);
+        const log = logger.start('moveNative', tabIds, {moveProperties});
 
-        console.assert(tabIds.length === tabs.length, `Tabs.moveNative tabs length after filter are not equal: ${tabs.length}`, tabIds);
+        if (moveProperties.windowId) { // try fix bug when tab lose it's openerTabId after moving between windows
+            tabs = await filterExist(tabIds);
+            openerTabIds = tabs.map(tab => tab.openerTabId);
+            tabIds = tabs.map(extractId);
+        } else {
+            tabIds = await filterExist(tabIds, true);
+        }
 
         if (!tabIds.length) {
+            log.stop('tabs are empty');
             return [];
         }
 
-        console.log('Tabs.moveNative before');
+        let movedTabs = await browser.tabs.move(tabIds, moveProperties).catch(log.onCatch(['move', tabIds])),
+            movedTabsObj = utils.arrayToObj(movedTabs, 'id'),
+            movedTabIdsSet = new Set(tabIds);
 
-        let movedTabs = await browser.tabs.move(tabIds, moveProperties),
-            movedTabsObj = utils.arrayToObj(movedTabs, 'id');
-
-        console.log('Tabs.moveNative after');
-
-        let movedTabIdsSet = new Set(tabIds);
-
+        log.stop(tabIds);
         return tabs
             .map(function(tab, index) {
                 if (!movedTabIdsSet.has(tab.id)) {
@@ -563,14 +594,52 @@
             .filter(Boolean);
     }
 
+    async function setMute(tabs, muted) {
+        const tabIds = tabs.map(extractId);
+        muted = !!muted;
+        const log = logger.start('setMute', tabIds, 'muted:', muted);
+
+        tabs = await getList(tabIds);
+
+        await Promise.all(
+            tabs
+            .filter(tab => muted ? tab.audible : tab.mutedInfo.muted)
+            .map(tab =>
+                browser.tabs.update(tab.id, {muted})
+                    .catch(log.onCatch(['mute tab', tab], false))
+            )
+        );
+
+        log.stop();
+    }
+
+    async function remove(...tabs) { // id or ids or tabs
+        tabs = tabs.flat();
+
+        if (tabs.length) {
+            const log = logger.start('remove', tabs.map(extractId));
+
+            await Promise.all(tabs.map(tab =>
+                browser.tabs.remove(extractId(tab))
+                    .catch(log.onCatch(['remove tab', tab], false))
+            ));
+
+            log.stop();
+        }
+    }
+
     async function show(...tabs) {
         tabs = tabs.flat();
 
         if (tabs.length) {
-            console.log('Tabs.show before');
-            tabs = await filterExist(tabs, true);
-            await browser.tabs.show(tabs);
-            console.log('Tabs.show after');
+            const log = logger.start('show', tabs.map(extractId));
+
+            await Promise.all(tabs.map(tab =>
+                browser.tabs.show(extractId(tab))
+                    .catch(log.onCatch(['show tab', tab], false))
+            ));
+
+            log.stop()
         }
     }
 
@@ -578,25 +647,14 @@
         tabs = tabs.flat();
 
         if (tabs.length) {
-            console.log('Tabs.hide before');
-            tabs = await filterExist(tabs, true);
-            await browser.tabs.hide(tabs);
-            console.log('Tabs.hide after');
-        }
-    }
+            const log = logger.start('hide', tabs.map(extractId));
 
-    async function discard(...tabs) { // ids or tabs
-        tabs = tabs.flat();
+            await Promise.all(tabs.map(tab =>
+                browser.tabs.hide(extractId(tab))
+                    .catch(log.onCatch(['hide tab', tab], false))
+            ));
 
-        if (tabs.length) {
-            console.log('Tabs.discard before');
-            tabs = await filterExist(tabs);
-            tabs = tabs
-                .filter(tab => !tab.url.startsWith(utils.BROWSER_PAGES_STARTS))
-                .map(utils.keyId);
-
-            await browser.tabs.discard(tabs);
-            console.log('Tabs.discard after');
+            log.stop();
         }
     }
 
@@ -604,20 +662,46 @@
         tabs = tabs.flat();
 
         if (tabs.length) {
-            let tabIds = tabs.map(tab => tab.id || tab);
+            let tabIds = tabs.map(extractId);
+
+            const log = logger.start('safeHide', tabIds);
 
             BG.addExcludeTabIds(tabIds);
-            try {
-                console.log('Tabs.safeHide before');
-                await hide(tabIds);
-                console.log('Tabs.safeHide after');
-                BG.removeExcludeTabIds(tabIds);
-            } catch (e) {
-                BG.removeExcludeTabIds(tabIds);
-                throw e;
-            }
+            await hide(tabIds);
+            BG.removeExcludeTabIds(tabIds);
 
             tabs.forEach(tab => tab.hidden = true);
+            log.stop();
+        }
+    }
+
+    async function discard(...tabs) { // ids or tabs
+        tabs = tabs.flat();
+
+        if (tabs.length) {
+            const log = logger.start('discard', tabs.map(extractId));
+
+            await Promise.all(tabs.map(tab =>
+                browser.tabs.discard(extractId(tab))
+                    .catch(log.onCatch(['discard tab', tab], false))
+            ));
+
+            log.stop();
+        }
+    }
+
+    async function reload(tabs = [], bypassCache = false) { // ids or tabs
+        tabs = tabs.flat();
+
+        if (tabs.length) {
+            const log = logger.start('reload', tabs.map(extractId));
+
+            await Promise.all(tabs.map(tab =>
+                browser.tabs.reload(extractId(tab), {bypassCache})
+                    .catch(log.onCatch(['reload tab', tab], false))
+            ));
+
+            log.stop();
         }
     }
 
@@ -635,16 +719,14 @@
         return !extensionsWebextensionsRestrictedDomains.some(host => (new RegExp('^https?://' + host).test(url)));
     }
 
+    function extractId(tab) {
+        return tab.id || tab;
+    }
+
     function sendMessage(tabId, message) {
         message.theme = BG.options.theme;
 
         return browser.tabs.sendMessage(tabId, message).catch(noop);
-    }
-
-    async function reload(tabs = [], bypassCache = false) { // ids or tabs
-        if (tabs.length) {
-            await Promise.all(tabs.map(tab => browser.tabs.reload((tab.id || tab), {bypassCache}).catch(noop)));
-        }
     }
 
     function prepareForSave(tabs, includeGroupId = false, includeFavIconUrl = false, includeThumbnail = false) {
@@ -721,6 +803,7 @@
         discard,
         safeHide,
         isCanSendMessage,
+        extractId,
         sendMessage,
         reload,
         prepareForSave,

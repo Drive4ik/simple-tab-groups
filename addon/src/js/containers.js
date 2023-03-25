@@ -1,6 +1,10 @@
 (function() {
     'use strict';
 
+    function noop() {}
+
+    const logger = new Logger('Containers');
+
     const temporaryContainerDefaultTitle = browser.i18n.getMessage('temporaryContainerTitle'),
         defaultContainerOptions = {
             cookieStoreId: DEFAULT_COOKIE_STORE_ID,
@@ -23,7 +27,7 @@
         mappedContainerCookieStoreId = {};
 
     async function init(temporaryContainerTitle) {
-        console.log('START containers.init');
+        const log = logger.start('init', {temporaryContainerTitle});
 
         setTemporaryContainerTitle(temporaryContainerTitle);
 
@@ -43,7 +47,7 @@
         browser.contextualIdentities.onUpdated.addListener(onUpdated);
         browser.contextualIdentities.onRemoved.addListener(utils.catchFunc(onRemoved));
 
-        console.log('STOP containers.init');
+        log.stop();
     }
 
     function onCreated({contextualIdentity}) {
@@ -53,9 +57,7 @@
             return;
         }
 
-        BG.sendMessage({
-            action: 'containers-updated',
-        });
+        sendMessage('containers-updated');
     }
 
     function onUpdated({contextualIdentity}) {
@@ -76,21 +78,22 @@
             return;
         }
 
-        BG.sendMessage({
-            action: 'containers-updated',
-        });
+        sendMessage('containers-updated');
     }
 
     async function onRemoved({contextualIdentity}) {
+        const log = logger.create('onRemoved', contextualIdentity)
         let isTemporaryContainer = isTemporary(contextualIdentity.cookieStoreId);
 
         delete containers[contextualIdentity.cookieStoreId];
 
         if (isTemporaryContainer) {
+            log.stop('isTemporaryContainer');
             return;
         }
 
         if (!BG.inited) {
+            log.stopError('background not inited');
             return;
         }
 
@@ -101,9 +104,8 @@
             await Groups.save(groups);
         }
 
-        BG.sendMessage({
-            action: 'containers-updated',
-        });
+        await sendMessage('containers-updated');
+        log.stop();
     }
 
 
@@ -264,9 +266,7 @@
 
             browser.contextualIdentities.onUpdated.addListener(onUpdated);
 
-            BG.sendMessage({ // update container temporary name on tabs will work only on not archived groups
-                action: 'containers-updated',
-            });
+            sendMessage('containers-updated'); // update container temporary name on tabs will work only on not archived groups
         }
     }
 

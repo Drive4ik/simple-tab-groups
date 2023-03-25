@@ -845,6 +845,10 @@
         "message": "Включити налагодження (DEBUG)",
         "description": "Enable DEBUG"
     },
+    "disableDebugTitle": {
+        "message": "Вымкнути налагодження (DEBUG)",
+        "description": "Disable DEBUG"
+    },
     "loggingIsEnabledTitle": {
         "message": "Налагодження включене",
         "description": "logging is enabled"
@@ -1204,5 +1208,13 @@
     "copyURL": {
         "message": "Скопіювати URL",
         "description": "Copy URL"
+    },
+    "helpPageStgDebugTitle": {
+        "message": "Сторінка налагодження STG",
+        "description": "STG debug page"
+    },
+    "helpPageStgDebugAutoDebugMainTitle": {
+        "message": "Сталася помилка в аддоні",
+        "description": "An error occurred in the addon"
     }
 }
