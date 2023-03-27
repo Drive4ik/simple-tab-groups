@@ -1,12 +1,23 @@
 <script>
     'use strict';
 
+    import '../js/page-need-BG.js';
+
     import Vue from 'vue';
 
     import popup from '../js/popup.vue';
     import swatches from 'vue-swatches';
     import manageAddonBackup from './manage-addon-backup';
     import 'vue-swatches/dist/vue-swatches.css';
+
+    import * as Constants from '../js/constants.js';
+    import Messages from '../js/messages.js';
+    import Logger from '../js/logger.js';
+    import * as Utils from '../js/utils.js';
+    import * as Storage from '../js/storage.js';
+    import * as File from '../js/file.js';
+    import * as Urls from '../js/urls.js';
+    import JSON from '../js/json.js';
 
     window.logger = new Logger('Options');
 
@@ -29,11 +40,11 @@
 
                 section: window.localStorage.optionsSection || SECTION_GENERAL,
 
-                HOTKEY_ACTIONS,
-                HOTKEY_ACTIONS_WITH_CUSTOM_GROUP,
+                HOTKEY_ACTIONS: Constants.HOTKEY_ACTIONS,
+                HOTKEY_ACTIONS_WITH_CUSTOM_GROUP: Constants.HOTKEY_ACTIONS_WITH_CUSTOM_GROUP,
 
-                GROUP_ICON_VIEW_TYPES,
-                AUTO_BACKUP_INTERVAL_KEY,
+                GROUP_ICON_VIEW_TYPES: Constants.GROUP_ICON_VIEW_TYPES,
+                AUTO_BACKUP_INTERVAL_KEY: Constants.AUTO_BACKUP_INTERVAL_KEY,
 
                 contextMenuTabTitles: {
                     'open-in-new-window': {
@@ -145,13 +156,13 @@
 
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.updateTheme());
 
-            let data = await storage.get();
+            let data = await Storage.get();
 
-            let options = utils.assignKeys({}, data, ALL_OPTIONS_KEYS);
+            let options = Utils.assignKeys({}, data, Constants.ALL_OPTIONS_KEYS);
 
-            options.autoBackupFolderName = await file.getAutoBackupFolderName();
+            options.autoBackupFolderName = await File.getAutoBackupFolderName();
 
-            this.permissions.bookmarks = await browser.permissions.contains(PERMISSIONS.BOOKMARKS);
+            this.permissions.bookmarks = await browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS);
 
             this.groups = data.groups; // set before for watch hotkeys
             this.options = options;
@@ -159,7 +170,7 @@
             this.loadBookmarksParents();
 
             [
-                ...ONLY_BOOL_OPTION_KEYS,
+                ...Constants.ONLY_BOOL_OPTION_KEYS,
                 'defaultBookmarksParent',
                 'defaultGroupIconViewType',
                 'defaultGroupIconColor',
@@ -226,9 +237,9 @@
 
                 if (
                     value < 1 ||
-                    (AUTO_BACKUP_INTERVAL_KEY.minutes === this.options.autoBackupIntervalKey && value > 59) ||
-                    (AUTO_BACKUP_INTERVAL_KEY.hours === this.options.autoBackupIntervalKey && value > 24) ||
-                    (AUTO_BACKUP_INTERVAL_KEY.days === this.options.autoBackupIntervalKey && value > 30)
+                    (Constants.AUTO_BACKUP_INTERVAL_KEY.minutes === this.options.autoBackupIntervalKey && value > 59) ||
+                    (Constants.AUTO_BACKUP_INTERVAL_KEY.hours === this.options.autoBackupIntervalKey && value > 24) ||
+                    (Constants.AUTO_BACKUP_INTERVAL_KEY.days === this.options.autoBackupIntervalKey && value > 30)
                     ) {
                     value = 1;
                 }
@@ -269,7 +280,7 @@
                             return false;
                         }
 
-                        if (HOTKEY_ACTIONS_WITH_CUSTOM_GROUP.includes(hotkey.action) && hotkey.groupId && !this.groups.some(gr => gr.id === hotkey.groupId)) {
+                        if (Constants.HOTKEY_ACTIONS_WITH_CUSTOM_GROUP.includes(hotkey.action) && hotkey.groupId && !this.groups.some(gr => gr.id === hotkey.groupId)) {
                             hotkey.groupId = 0;
                             hasChange = true;
                         }
@@ -307,18 +318,18 @@
                 return false;
             },
             showEnableDarkThemeNotification() {
-                return utils.getThemeApply(this.options.theme) === 'dark';
+                return Utils.getThemeApply(this.options.theme) === 'dark';
             },
         },
         methods: {
             lang: browser.i18n.getMessage,
-            getHotkeyActionTitle: action => browser.i18n.getMessage('hotkeyActionTitle' + utils.capitalize(utils.toCamelCase(action))),
+            getHotkeyActionTitle: action => browser.i18n.getMessage('hotkeyActionTitle' + Utils.capitalize(Utils.toCamelCase(action))),
 
             updateTheme() {
-                document.documentElement.dataset.theme = utils.getThemeApply(this.options.theme);
+                document.documentElement.dataset.theme = Utils.getThemeApply(this.options.theme);
             },
 
-            openBackupFolder: file.openBackupFolder,
+            openBackupFolder: File.openBackupFolder,
 
             saveHotkeyKeyCodeAndStopEvent(hotkey, event, withKeyCode) {
                 event.preventDefault();
@@ -366,14 +377,14 @@
                 let data = null;
 
                 try {
-                    data = await file.load();
+                    data = await File.load();
                 } catch (e) {
-                    utils.notify(e);
+                    Utils.notify(e);
                     return;
                 }
 
-                if ('object' !== utils.type(data) || !Array.isArray(data.groups) || !Number.isInteger(data.lastCreatedGroupPosition)) {
-                    utils.notify('This is wrong backup!');
+                if ('object' !== Utils.type(data) || !Array.isArray(data.groups) || !Number.isInteger(data.lastCreatedGroupPosition)) {
+                    Utils.notify('This is wrong backup!');
                     return;
                 }
 
@@ -382,7 +393,7 @@
                 if (resultMigrate.migrated) {
                     data = resultMigrate.data;
                 } else if (resultMigrate.error) {
-                    utils.notify(resultMigrate.error);
+                    Utils.notify(resultMigrate.error);
                     return;
                 }
 
@@ -393,14 +404,14 @@
                 let oldOptions = null;
 
                 try {
-                    oldOptions = await file.load();
+                    oldOptions = await File.load();
                 } catch (e) {
-                    utils.notify(e);
+                    Utils.notify(e);
                     return;
                 }
 
                 if (!oldOptions || !Array.isArray(oldOptions.windows) || !oldOptions.session) {
-                    utils.notify('This is not "Tab Groups" backup!');
+                    Utils.notify('This is not "Tab Groups" backup!');
                     return;
                 }
 
@@ -416,13 +427,13 @@
                     try {
                         oldGroups = JSON.parse(win.extData['tabview-group']);
                     } catch (e) {
-                        utils.notify('Error: cannot parse backup file - ' + e);
+                        Utils.notify('Error: cannot parse backup file - ' + e);
                         return;
                     }
 
                     Object.values(oldGroups).forEach(function({id, title, catchRules}) {
                         groups[id] = {
-                            title: utils.createGroupTitle(title, id),
+                            title: Utils.createGroupTitle(title, id),
                             tabs: [],
                             catchTabRules: catchRules || '',
                         };
@@ -432,9 +443,9 @@
                         let tabData = {},
                             tab = oldTab.entries.pop();
 
-                        tab = utils.normalizeTabUrl(tab);
+                        tab = Utils.normalizeTabUrl(tab);
 
-                        if (!utils.isUrlAllowToCreate(tab.url)) {
+                        if (!Utils.isUrlAllowToCreate(tab.url)) {
                             return;
                         }
 
@@ -453,7 +464,7 @@
                                 return;
                             }
                         } catch (e) {
-                            return utils.notify('Cannot parse groups: ' + e);
+                            return Utils.notify('Cannot parse groups: ' + e);
                         }
 
                         if (groups[tabData.groupID]) {
@@ -475,14 +486,14 @@
                 let panoramaOptions = null;
 
                 try {
-                    panoramaOptions = await file.load();
+                    panoramaOptions = await File.load();
                 } catch (e) {
-                    utils.notify(e);
+                    Utils.notify(e);
                     return;
                 }
 
                 if (!panoramaOptions || !panoramaOptions.file || 'panoramaView' !== panoramaOptions.file.type || !Array.isArray(panoramaOptions.windows)) {
-                    utils.notify('This is not "Panorama View" backup!');
+                    Utils.notify('This is not "Panorama View" backup!');
                     return;
                 }
 
@@ -497,15 +508,15 @@
 
                         win.groups.forEach(function({id, name}) {
                             groups[id] = {
-                                title: utils.createGroupTitle(name, id),
+                                title: Utils.createGroupTitle(name, id),
                                 tabs: [],
                             };
                         });
 
                         win.tabs.forEach(function({url, title, pinned, groupId}) {
-                            url = utils.normalizeUrl(url);
+                            url = Utils.normalizeUrl(url);
 
-                            if (utils.isUrlAllowToCreate(url)) {
+                            if (Utils.isUrlAllowToCreate(url)) {
                                 if (pinned) {
                                     data.pinnedTabs.push({url, title, pinned});
                                 } else if (groups[groupId]) {
@@ -522,31 +533,31 @@
                             let groupTabs = [];
 
                             tabs.forEach(function({url, title}) {
-                                url = utils.normalizeUrl(url);
+                                url = Utils.normalizeUrl(url);
 
-                                if (utils.isUrlAllowToCreate(url)) {
+                                if (Utils.isUrlAllowToCreate(url)) {
                                     groupTabs.push({url, title});
                                 }
                             });
 
                             if (groupTabs.length) {
                                 data.groups.push({
-                                    title: utils.createGroupTitle(title, groupTabs.length),
+                                    title: Utils.createGroupTitle(title, groupTabs.length),
                                     tabs: groupTabs,
                                 });
                             }
                         });
 
                         win.pinnedTabs?.forEach(function({url, title}) {
-                            url = utils.normalizeUrl(url);
+                            url = Utils.normalizeUrl(url);
 
-                            if (utils.isUrlAllowToCreate(url)) {
+                            if (Utils.isUrlAllowToCreate(url)) {
                                 data.pinnedTabs.push({url, title});
                             }
                         });
                     });
                 } else {
-                    utils.notify('"Panorama View" backup has unsupported version');
+                    Utils.notify('"Panorama View" backup has unsupported version');
                     return;
                 }
 
@@ -557,19 +568,19 @@
                 let syncTabOptions = null;
 
                 try {
-                    syncTabOptions = await file.load();
+                    syncTabOptions = await File.load();
                 } catch (e) {
-                    utils.notify(e);
+                    Utils.notify(e);
                     return;
                 }
 
                 if (!syncTabOptions || !syncTabOptions.version || 'syncTabGroups' !== syncTabOptions.version[0] || !Array.isArray(syncTabOptions.groups)) {
-                    utils.notify('This is not "Sync Tab Groups" backup!');
+                    Utils.notify('This is not "Sync Tab Groups" backup!');
                     return;
                 }
 
                 if (1 !== syncTabOptions.version[1]) {
-                    utils.notify('"Sync Tab Groups" backup has unsupported version');
+                    Utils.notify('"Sync Tab Groups" backup has unsupported version');
                     return;
                 }
 
@@ -581,16 +592,16 @@
                 syncTabOptions.groups.forEach(function({id, title, tabs}) {
                     tabs = tabs
                         .map(function({url, title, favIconUrl, pinned}) {
-                            url = utils.normalizeUrl(url);
+                            url = Utils.normalizeUrl(url);
 
-                            if (utils.isUrlAllowToCreate(url)) {
+                            if (Utils.isUrlAllowToCreate(url)) {
                                 return {url, title, favIconUrl, pinned};
                             }
                         })
                         .filter(Boolean);
 
                     data.groups.push({
-                        title: utils.createGroupTitle(title, id),
+                        title: Utils.createGroupTitle(title, id),
                         tabs: tabs.filter(tab => !tab.pinned),
                     });
 
@@ -607,7 +618,7 @@
             },
 
             getIconTypeUrl(iconType) {
-                return utils.getGroupIconUrl({
+                return Utils.getGroupIconUrl({
                     iconViewType: iconType,
                     iconColor: this.options.defaultGroupIconColor || 'rgb(66, 134, 244)',
                 });
@@ -628,9 +639,9 @@
 
             async setPermissionsBookmarks(event) {
                 if (event.target.checked) {
-                    this.permissions.bookmarks = await browser.permissions.request(PERMISSIONS.BOOKMARKS);
+                    this.permissions.bookmarks = await browser.permissions.request(Constants.PERMISSIONS.BOOKMARKS);
                 } else {
-                    await browser.permissions.remove(PERMISSIONS.BOOKMARKS);
+                    await browser.permissions.remove(Constants.PERMISSIONS.BOOKMARKS);
                 }
 
                 this.loadBookmarksParents();
@@ -641,19 +652,19 @@
                     return;
                 }
 
-                this.permissions.bookmarks = await browser.permissions.contains(PERMISSIONS.BOOKMARKS);
+                this.permissions.bookmarks = await browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS);
 
                 if (this.permissions.bookmarks) {
-                    this.defaultBookmarksParents = await browser.bookmarks.get(DEFAULT_BOOKMARKS_PARENTS);
+                    this.defaultBookmarksParents = await browser.bookmarks.get(Constants.DEFAULT_BOOKMARKS_PARENTS);
                 }
             },
 
             getGroupIconUrl(group) {
-                return utils.getGroupIconUrl(group);
+                return Utils.getGroupIconUrl(group);
             },
 
             openDebugPage() {
-                openHelp('stg-debug');
+                Urls.openHelp('stg-debug');
             },
         },
     }

@@ -1,85 +1,83 @@
-(function() {
-    'use strict';
+import Logger from './logger.js';
+import * as Constants from './constants.js';
+import * as Utils from './utils.js';
+import * as Urls from './urls.js';
 
-    function noop() {}
+const logger = new Logger('Management');
 
-    const logger = new Logger('Management');
+const extensions = self.cacheStorage.extensions;
 
-    let extensions = {};
+export async function init() {
+    const log = logger.start('init');
 
-    async function init() {
-        const log = logger.start('init');
+    await reloadExtensions();
 
+    browser.management.onEnabled.addListener(onChanged);
+    browser.management.onDisabled.addListener(onChanged);
+    browser.management.onInstalled.addListener(onChanged);
+    browser.management.onUninstalled.addListener(onChanged);
+
+    log.stop();
+}
+
+async function reloadExtensions() {
+    const log = logger.start('reloadExtensions');
+    await Utils.wait(100);
+
+    clearExtensions();
+
+    let addons = await browser.management.getAll();
+
+    addons.forEach(addon => {
+        if (addon.type === browser.management.ExtensionType.EXTENSION) {
+            extensions[addon.id] = addon;
+        }
+    });
+
+    log.stop();
+}
+
+function clearExtensions() {
+    for (let extId in extensions) delete extensions[extId];
+}
+
+async function onChanged({type}) {
+    if (type === browser.management.ExtensionType.EXTENSION) {
         await reloadExtensions();
+        await detectConflictedExtensions();
+    }
+}
 
-        browser.management.onEnabled.addListener(onChanged);
-        browser.management.onDisabled.addListener(onChanged);
-        browser.management.onInstalled.addListener(onChanged);
-        browser.management.onUninstalled.addListener(onChanged);
+export function isEnabled(id) {
+    return extensions[id]?.enabled;
+}
 
-        log.stop();
+export async function detectConflictedExtensions() {
+    if (Constants.CONFLICTED_EXTENSIONS.some(isEnabled)) {
+        await Urls.openHelp('extensions-that-conflict-with-stg');
+    }
+}
+
+// can't have permission to read other addon icon :((
+/* export function getExtensionIcon({icons} = {}) {
+    if (Array.isArray(icons)) {
+        let maxSize = Math.max(...icons.map(({size}) => size)),
+            {url} = icons.find(icon => icon.size === maxSize);
+
+        return url;
     }
 
-    async function reloadExtensions() {
-        const log = logger.start('reloadExtensions');
-        await utils.wait(100);
+    return '/icons/extension-generic.svg';
+} */
 
-        let addons = await browser.management.getAll(),
-            _extensions = addons.filter(({type}) => type === browser.management.ExtensionType.EXTENSION);
-
-        extensions = utils.arrayToObj(_extensions, 'id');
-
-        log.stop();
+export function getExtensionByUUID(uuid) {
+    if (!uuid) {
+        return;
     }
 
-    async function onChanged({type}) {
-        if (type === browser.management.ExtensionType.EXTENSION) {
-            await reloadExtensions();
-            await detectConflictedExtensions();
+    for (let i in extensions) {
+        if (extensions[i]?.hostPermissions?.some(url => url.includes(uuid))) {
+            return extensions[i];
         }
     }
-
-    function isEnabled(id) {
-        return extensions[id]?.enabled;
-    }
-
-    async function detectConflictedExtensions() {
-        if (CONFLICTED_EXTENSIONS.some(isEnabled)) {
-            await openHelp('extensions-that-conflict-with-stg');
-        }
-    }
-
-    // can't have permission to read other addon icon :((
-    /* function getExtensionIcon({icons} = {}) {
-        if (Array.isArray(icons)) {
-            let maxSize = Math.max(...icons.map(({size}) => size)),
-                {url} = icons.find(icon => icon.size === maxSize);
-
-            return url;
-        }
-
-        return '/icons/extension-generic.svg';
-    } */
-
-    function getExtensionByUUID(uuid) {
-        if (!uuid) {
-            return;
-        }
-
-        for (let i in extensions) {
-            if (extensions[i]?.hostPermissions?.some(url => url.includes(uuid))) {
-                return extensions[i];
-            }
-        }
-    }
-
-    window.Management = {
-        init,
-
-        isEnabled,
-        detectConflictedExtensions,
-        // getExtensionIcon,
-        getExtensionByUUID,
-    };
-
-})();
+}

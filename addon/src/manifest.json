@@ -73,22 +73,7 @@
     },
 
     "background": {
-        "scripts": [
-            "js/constants.js",
-            "js/messages.js",
-            "js/logger.js",
-            "js/startup.js",
-            "js/utils.js",
-            "js/containers.js",
-            "js/storage.js",
-            "js/cache.js",
-            "js/file.js",
-            "js/groups.js",
-            "js/tabs.js",
-            "js/windows.js",
-            "js/management.js",
-            "background.js"
-        ]
+        "page": "stg-background.html"
     },
 
     "content_security_policy": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data:; script-src 'self'",

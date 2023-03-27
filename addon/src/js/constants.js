@@ -1,22 +1,26 @@
-'use strict';
 
-const MANAGE_TABS_URL = '/manage/manage.html';
-const ACTIVE_SYMBOL = '〇';
-const DISCARDED_SYMBOL = '✱';
-const STICKY_SYMBOL = '📌';
+export const MANIFEST = Object.freeze(browser.runtime.getManifest());
+export const STG_BASE_URL = browser.runtime.getURL('');
+export const MANAGE_TABS_URL = browser.runtime.getURL('/manage/manage.html');
 
-const TEMPORARY_CONTAINER = 'temporary-container';
-const DEFAULT_COOKIE_STORE_ID = 'firefox-default';
+export const IS_BACKGROUND_PAGE = self.location.href.startsWith(MANIFEST.background.page);
 
-const CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP = 'stg-undo-remove-group-id-';
+export const ACTIVE_SYMBOL = '〇';
+export const DISCARDED_SYMBOL = '✱';
+export const STICKY_SYMBOL = '📌';
 
-const AUTO_BACKUP_INTERVAL_KEY = Object.freeze({
+export const TEMPORARY_CONTAINER = 'temporary-container';
+export const DEFAULT_COOKIE_STORE_ID = 'firefox-default';
+
+export const CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP = 'stg-undo-remove-group-id-';
+
+export const AUTO_BACKUP_INTERVAL_KEY = Object.freeze({
     minutes: 'minutes',
     hours: 'hours',
     days: 'days',
 });
 
-const STG_HELP_PAGES = Object.freeze([
+export const STG_HELP_PAGES = Object.freeze([
     'db-error-reinstall',
     'extensions-that-conflict-with-stg',
     'open-in-container',
@@ -26,13 +30,13 @@ const STG_HELP_PAGES = Object.freeze([
 ]);
 
 // permission "<all_urls>" need for tab thumbnails and webRequestBlocking
-const PERMISSIONS = Object.freeze({
+export const PERMISSIONS = Object.freeze({
     BOOKMARKS: {
         permissions: ['bookmarks'],
     },
 });
 
-const GROUP_ICON_VIEW_TYPES = Object.freeze([
+export const GROUP_ICON_VIEW_TYPES = Object.freeze([
     'main-squares',
     'circle',
     'squares',
@@ -40,13 +44,13 @@ const GROUP_ICON_VIEW_TYPES = Object.freeze([
     'title',
 ]);
 
-const DEFAULT_BOOKMARKS_PARENTS = Object.freeze([
+export const DEFAULT_BOOKMARKS_PARENTS = Object.freeze([
     'toolbar_____',
     'menu________',
     'unfiled_____',
 ]);
 
-const HOTKEY_ACTIONS = Object.freeze([
+export const HOTKEY_ACTIONS = Object.freeze([
     'load-next-group',
     'load-prev-group',
     'load-next-unloaded-group',
@@ -68,19 +72,19 @@ const HOTKEY_ACTIONS = Object.freeze([
     'reload-all-tabs-in-current-group',
 ]);
 
-const HOTKEY_ACTIONS_WITH_CUSTOM_GROUP = Object.freeze([
+export const HOTKEY_ACTIONS_WITH_CUSTOM_GROUP = Object.freeze([
     'load-custom-group',
     'move-selected-tabs-to-custom-group',
     'discard-group',
     'rename-group',
 ]);
 
-const TREE_TABS_EXTENSIONS = Object.freeze([
+export const TREE_TABS_EXTENSIONS = Object.freeze([
     'treestyletab@piro.sakura.ne.jp',
     '{8d808887-ed13-4931-9f5a-4c0bff979a5a}',
 ]);
 
-const IGNORE_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER = Object.freeze([
+export const IGNORE_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER = Object.freeze([
     '@testpilot-containers', // https://addons.mozilla.org/firefox/addon/multi-account-containers/
     '@contain-google', // https://addons.mozilla.org/firefox/addon/google-container/
     '@contain-facebook', // https://addons.mozilla.org/firefox/addon/facebook-container/
@@ -91,7 +95,7 @@ const IGNORE_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER = Object.freeze([
     'containerise@kinte.sh', // https://addons.mozilla.org/firefox/addon/containerise/
 ]);
 
-const CONFLICTED_EXTENSIONS = Object.freeze([
+export const CONFLICTED_EXTENSIONS = Object.freeze([
     'tab_open_close_control@felix-kolbe.de', // https://addons.mozilla.org/firefox/addon/tab-open-close-control/
     'extension@one-tab.com', // https://addons.mozilla.org/firefox/addon/onetab/
     '{dcdaadfa-21f1-4853-9b34-aad681fff6f3}', // https://addons.mozilla.org/firefox/addon/tiled-tab-groups/
@@ -108,7 +112,7 @@ const CONFLICTED_EXTENSIONS = Object.freeze([
     'sync-tab-groups@eric.masseran', // Sync Tab Groups
 ]);
 
-const EXTENSIONS_WHITE_LIST = Object.freeze({
+export const EXTENSIONS_WHITE_LIST = Object.freeze({
     'stg-plugin-create-new-group@drive4ik': {
         title: '[STG plugin] Create new group',
         url: 'https://addons.mozilla.org/firefox/addon/stg-plugin-create-new-group/',
@@ -251,7 +255,7 @@ const EXTENSIONS_WHITE_LIST = Object.freeze({
     },
 });
 
-const DEFAULT_OPTIONS = Object.freeze({
+export const DEFAULT_OPTIONS = Object.freeze({
     version: '1.0',
     groups: [],
     lastCreatedGroupPosition: 0,
@@ -324,7 +328,7 @@ const DEFAULT_OPTIONS = Object.freeze({
             altKey: false,
             metaKey: false,
             key: '`',
-            keyCode: 192,
+            keyCode: 192, // TODO
             action: 'load-next-group',
             groupId: 0,
         },
@@ -341,19 +345,19 @@ const DEFAULT_OPTIONS = Object.freeze({
     ],
 });
 
-const ONLY_BOOL_OPTION_KEYS = Object.freeze(Object.keys(DEFAULT_OPTIONS).filter(key => 'boolean' === typeof DEFAULT_OPTIONS[key]));
+export const ONLY_BOOL_OPTION_KEYS = Object.freeze(Object.keys(DEFAULT_OPTIONS).filter(key => 'boolean' === typeof DEFAULT_OPTIONS[key]));
 
-const ALL_OPTIONS_KEYS = Object.freeze(Object.keys(DEFAULT_OPTIONS).filter(key => !['version', 'groups', 'lastCreatedGroupPosition'].includes(key)));
+export const ALL_OPTIONS_KEYS = Object.freeze(Object.keys(DEFAULT_OPTIONS).filter(key => !['version', 'groups', 'lastCreatedGroupPosition'].includes(key)));
 
-const MINUTE_SEC = 60;
-const HOUR_SEC = 60 * MINUTE_SEC;
-const DAY_SEC = 24 * HOUR_SEC;
+export const MINUTE_SEC = 60;
+export const HOUR_SEC = 60 * MINUTE_SEC;
+export const DAY_SEC = 24 * HOUR_SEC;
 
-const ON_UPDATED_TAB_PROPERTIES = Object.freeze([
+export const ON_UPDATED_TAB_PROPERTIES = browser.tabs ? Object.freeze([ // browser.tabs not defined into web page scripts
     browser.tabs.UpdatePropertyName.TITLE, // for cache
     browser.tabs.UpdatePropertyName.STATUS, // for check update url and thumbnail
     // browser.tabs.UpdatePropertyName.URL, // for check update url and thumbnail
     browser.tabs.UpdatePropertyName.FAVICONURL, // for session
     browser.tabs.UpdatePropertyName.HIDDEN,
     browser.tabs.UpdatePropertyName.PINNED,
-]);
+]) : null;

@@ -1,6 +1,7 @@
 'use strict';
 
 import './move-tab-popup.scss';
+import Messages from '../js/messages.js';
 
 let errorCounter = 0,
     hotkeys = [],
@@ -10,12 +11,12 @@ const POPUP_ID = 'stg-move-tab-to-group-popup-wrapper';
 
 browser.runtime.onMessage.addListener(changeHotkeysListener);
 
-window.addEventListener('unload', unsubscribeFromAllEvents);
+window.addEventListener('unload', unsubscribeAllListeners);
 
 init();
 
 async function init() {
-    resetWindowEvents();
+    removeWindowListeners();
 
     let result = null;
 
@@ -41,7 +42,7 @@ async function init() {
     hotkeys = result.hotkeys;
 
     if (hotkeys.length) {
-        addWindowEvents();
+        addWindowListeners();
     }
 }
 
@@ -51,22 +52,22 @@ function changeHotkeysListener(request) {
     } else if (request.action === 'show-groups-popup') {
         showGroupsPopup(request);
     } else if (request.action === 'show-prompt') {
-        return showPrompt(request);
+        showPrompt(request);
     }
 }
 
-function resetWindowEvents() {
+function removeWindowListeners() {
     window.removeEventListener('keydown', checkKey);
     window.removeEventListener('keyup', resetFoundHotKey);
 }
 
-function addWindowEvents() {
+function addWindowListeners() {
     window.addEventListener('keydown', checkKey);
     window.addEventListener('keyup', resetFoundHotKey);
 }
 
-function unsubscribeFromAllEvents() {
-    resetWindowEvents();
+function unsubscribeAllListeners() {
+    removeWindowListeners();
     browser.runtime.onMessage.removeListener(changeHotkeysListener);
 }
 
@@ -93,8 +94,7 @@ function checkKey(e) {
 
             stopEvent(e);
 
-            browser.runtime.sendMessage({
-                    action: hotkey.action,
+            Messages.sendMessage(hotkey.action, {
                     groupId: hotkey.groupId,
                 })
                 .then(() => foundHotKey = false);
@@ -215,7 +215,7 @@ function showGroupsPopup(data) {
             groupNode.onmouseover = () => groupsWrapper.contains(document.activeElement) && header.focus();
 
             groupNode.onclick = function(sendData) {
-                browser.runtime.sendMessage(sendData).catch(e => console.error(e));
+                Messages.sendMessage(sendData).catch(e => console.error(e));
                 closeGroupsPopup();
             }.bind(null, {
                 ...data,
@@ -228,14 +228,14 @@ function showGroupsPopup(data) {
                     return;
                 }
 
-                if ([KeyEvent.DOM_VK_RETURN, KeyEvent.DOM_VK_SPACE].includes(e.keyCode)) {
+                if (e.key === 'Enter' || e.code === 'Space') {
                     stopEvent(e);
                     groupNode.click();
-                } else if (KeyEvent.DOM_VK_TAB === e.keyCode) {
+                } else if (e.key === 'Tab') {
                     setFocusToNextElement(groupNode, e.shiftKey ? 'up' : 'down', e);
-                } else if (KeyEvent.DOM_VK_DOWN === e.keyCode) {
+                } else if (e.key === 'ArrowDown') {
                     setFocusToNextElement(groupNode, 'down', e);
-                } else if (KeyEvent.DOM_VK_UP === e.keyCode) {
+                } else if (e.key === 'ArrowUp') {
                     setFocusToNextElement(groupNode, 'up', e);
                 }
             };

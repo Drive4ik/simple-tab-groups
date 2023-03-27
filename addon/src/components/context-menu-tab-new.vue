@@ -1,5 +1,7 @@
 <script>
 import contextMenu from './context-menu.vue';
+import * as Constants from '../js/constants.js';
+import * as Containers from '../js/containers.js';
 
 export default {
     components: {
@@ -19,7 +21,7 @@ export default {
                 containers = containers.filter(container => {
                     return group.excludeContainersForReOpen.includes(container.cookieStoreId) ||
                         group.newTabContainer === container.cookieStoreId ||
-                        container.cookieStoreId === TEMPORARY_CONTAINER;
+                        container.cookieStoreId === Constants.TEMPORARY_CONTAINER;
                 });
             }
 

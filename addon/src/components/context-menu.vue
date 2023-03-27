@@ -45,7 +45,8 @@
             close() {
                 this.top = this.left = this.data = null;
                 this.show = false;
-                document.querySelectorAll('.is-context-active').forEach(node => node.classList.remove('is-context-active'));
+                document.querySelectorAll('.is-context-active')
+                    .forEach(node => node.classList.remove('is-context-active'));
             },
 
             open(event, data = null) {
@@ -61,7 +62,7 @@
                         .forEach(function(node) {
                             node.tabIndex = 0;
                             node.addEventListener('keydown', function(event) {
-                                if (KeyEvent.DOM_VK_RETURN === event.keyCode) {
+                                if (event.key === 'Enter') {
                                     event.stopPropagation();
                                     event.stopImmediatePropagation();
                                     node.click();

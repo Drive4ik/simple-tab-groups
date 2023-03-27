@@ -1,193 +1,201 @@
-(function() {
-    'use strict';
 
-    function noop() {}
+import Logger from './logger.js';
+import JSON from './json.js';
+import * as Utils from './utils.js';
+import * as Storage from './storage.js';
 
-    const logger = new Logger('File');
+const logger = new Logger('File');
 
-    async function load(accept = '.json', readAs = 'json') { // readAs: json, text, url
-        if (!['json', 'text', 'url'].includes(readAs)) {
-            throw Error('wrong readAs parameter');
+export async function load(accept = '.json', readAs = 'json') { // readAs: json, text, url
+    if (!['json', 'text', 'url'].includes(readAs)) {
+        throw Error('wrong readAs parameter');
+    }
+
+    let result = await new Promise(function(resolve, reject) {
+        let fileInput = document.createElement('input');
+
+        fileInput.type = 'file';
+        fileInput.accept = accept;
+
+        if ('json' === readAs || 'text' === readAs) {
+            fileInput.acceptCharset = 'utf-8';
         }
 
-        let result = await new Promise(function(resolve, reject) {
-            let fileInput = document.createElement('input');
+        fileInput.initialValue = fileInput.value;
 
-            fileInput.type = 'file';
-            fileInput.accept = accept;
+        fileInput.onchange = function() {
+            if (fileInput.value === fileInput.initialValue) {
+                reject('no changes');
+                return;
+            }
+
+            let file = fileInput.files[0];
+
+            if (0 === file.size) {
+                reject('empty file');
+                return;
+            }
+
+            if (file.size > 500e6) {
+                reject('500MB backup? I don\'t believe you');
+                return;
+            }
+
+            let reader = new FileReader();
+
+            reader.addEventListener('loadend', () => resolve(reader.result));
+            reader.addEventListener('error', reject);
 
             if ('json' === readAs || 'text' === readAs) {
-                fileInput.acceptCharset = 'utf-8';
+                reader.readAsText(file, 'utf-8');
+            } else if ('url' === readAs) {
+                reader.readAsDataURL(file);
             }
+        };
 
-            fileInput.initialValue = fileInput.value;
+        fileInput.click();
+    });
 
-            fileInput.onchange = function() {
-                if (fileInput.value === fileInput.initialValue) {
-                    reject('no changes');
-                    return;
-                }
+    if ('json' === readAs) {
+        return JSON.parse(result);
+    }
 
-                let file = fileInput.files[0];
+    return result;
+}
 
-                if (0 === file.size) {
-                    reject('empty file');
-                    return;
-                }
+// data : Object/Array/Text
+export async function save(data, fileName = 'file-name', saveAs = true, clearOnComplete = false, tryCount = 0) {
+    const log = logger.start('save', {fileName, saveAs, clearOnComplete, tryCount});
 
-                if (file.size > 500e6) {
-                    reject('500MB backup? I don\'t believe you');
-                    return;
-                }
+    let body = null,
+        type = null;
 
-                let reader = new FileReader();
+    if ('string' === typeof data) {
+        type = 'text/plain';
+        body = data;
+    } else {
+        type = 'application/json';
+        body = JSON.stringify(data, 4);
+    }
 
-                reader.addEventListener('loadend', () => resolve(reader.result));
-                reader.addEventListener('error', reject);
+    let blob = new Blob([body], {type}),
+        url = URL.createObjectURL(blob);
 
-                if ('json' === readAs || 'text' === readAs) {
-                    reader.readAsText(file, 'utf-8');
-                } else if ('url' === readAs) {
-                    reader.readAsDataURL(file);
-                }
-            };
-
-            fileInput.click();
+    try {
+        let id = await browser.downloads.download({
+            filename: fileName,
+            url: url,
+            saveAs: saveAs,
+            conflictAction: browser.downloads.FilenameConflictAction.OVERWRITE,
         });
 
-        if ('json' === readAs) {
-            return JSON.parse(result);
+        log.log('id download', id);
+
+        let {state, error} = await waitDownload(id);
+
+        if (!state) {
+            state = browser.downloads.State.INTERRUPTED;
+            error = `Download ID not found, id: ${id}`;
         }
 
-        return result;
-    }
-
-    // data : Object/Array/Text
-    async function save(data, fileName = 'file-name', saveAs = true, clearOnComplete = false, tryCount = 0) {
-        const log = logger.start('save', {fileName, saveAs, clearOnComplete, tryCount});
-
-        let body = null,
-            type = null;
-
-        if ('string' === typeof data) {
-            type = 'text/plain';
-            body = data;
-        } else {
-            type = 'application/json';
-            body = utils.stringify(data, 4);
+        if (error) {
+            error = `Error save file:\n${fileName}\nerror: ${error}`;
         }
 
-        let blob = new Blob([body], {type}),
-            url = URL.createObjectURL(blob);
-
-        try {
-            let id = await browser.downloads.download({
-                filename: fileName,
-                url: url,
-                saveAs: saveAs,
-                conflictAction: browser.downloads.FilenameConflictAction.OVERWRITE,
-            });
-
-            log.log('id download', id);
-
-            let {state, error} = await utils.waitDownload(id);
-
-            if (!state) {
-                state = browser.downloads.State.INTERRUPTED;
-                error = `Download ID not found, id: ${id}`;
-            }
-
-            if (error) {
-                error = `Error save file:\n${fileName}\nerror: ${error}`;
-            }
-
-            if (browser.downloads.State.COMPLETE === state) {
-                if (clearOnComplete) {
-                    await browser.downloads.erase({id});
-                }
-            } else if (browser.downloads.State.INTERRUPTED === state && !saveAs && tryCount < 5) {
+        if (browser.downloads.State.COMPLETE === state) {
+            if (clearOnComplete) {
                 await browser.downloads.erase({id});
-                URL.revokeObjectURL(url);
-                return save(data, fileName, saveAs, clearOnComplete, tryCount + 1);
-            } else {
-                throw error;
             }
-
-            return log.stop(id);
-        } catch (e) {
-            log.runError(String(e), e);
-            log.stopError();
-            // utils.notify(e);
-        } finally {
-            URL.revokeObjectURL(url);
-        }
-    }
-
-    async function backup(data, isAutoBackup, byDayIndex) {
-        let fileName = generateBackupFileName(isAutoBackup, byDayIndex);
-
-        if (isAutoBackup) {
-            let autoBackupFolderName = await getAutoBackupFolderName();
-            fileName = autoBackupFolderName + '/' + fileName;
-        }
-
-        return save(data, fileName, !isAutoBackup, isAutoBackup);
-    }
-
-    async function openBackupFolder() {
-        let autoBackupFolderName = await getAutoBackupFolderName(),
-            id = await save('temp file', autoBackupFolderName + '/tmp.tmp', false);
-
-        if (id) {
-            await browser.downloads.show(id);
-            await utils.wait(750);
-            await browser.downloads.removeFile(id);
+        } else if (browser.downloads.State.INTERRUPTED === state && !saveAs && tryCount < 5) {
             await browser.downloads.erase({id});
+            URL.revokeObjectURL(url);
+            log.stopError('cant download id:', id, 'tryCount:', tryCount);
+            return save(data, fileName, saveAs, clearOnComplete, tryCount + 1);
+        } else {
+            throw error;
+        }
+
+        return log.stop(id);
+    } catch (e) {
+        log.runError(String(e), e);
+        log.stopError();
+        // Utils.notify(e);
+    } finally {
+        URL.revokeObjectURL(url);
+    }
+}
+
+export async function backup(data, isAutoBackup, byDayIndex) {
+    let fileName = generateBackupFileName(isAutoBackup, byDayIndex);
+
+    if (isAutoBackup) {
+        let autoBackupFolderName = await getAutoBackupFolderName();
+        fileName = autoBackupFolderName + '/' + fileName;
+    }
+
+    return save(data, fileName, !isAutoBackup, isAutoBackup);
+}
+
+export async function openBackupFolder() {
+    let autoBackupFolderName = await getAutoBackupFolderName(),
+        id = await save('temp file', autoBackupFolderName + '/tmp.tmp', false);
+
+    if (id) {
+        await browser.downloads.show(id);
+        await Utils.wait(750);
+        await browser.downloads.removeFile(id);
+        await browser.downloads.erase({id});
+    }
+}
+
+export async function getAutoBackupFolderName() {
+    let {autoBackupFolderName} = await Storage.get('autoBackupFolderName');
+
+    if (
+        !autoBackupFolderName.length ||
+        /^STG\-backups\-FF\-[a-z\d\.]+$/.test(autoBackupFolderName) ||
+        /^STG\-backups\-(win|linux|mac|openbsd)\-\d+$/.test(autoBackupFolderName)
+    ) {
+        let {version} = await browser.runtime.getBrowserInfo(),
+            newAutoBackupFolderName = `STG-backups-FF-${version}`;
+
+        if (autoBackupFolderName !== newAutoBackupFolderName) {
+            autoBackupFolderName = newAutoBackupFolderName;
+
+            await Storage.set({autoBackupFolderName});
         }
     }
 
-    async function getAutoBackupFolderName() {
-        let {autoBackupFolderName} = await storage.get('autoBackupFolderName');
+    return autoBackupFolderName;
+}
 
-        if (
-            !autoBackupFolderName.length ||
-            /^STG\-backups\-FF\-[a-z\d\.]+$/.test(autoBackupFolderName) ||
-            /^STG\-backups\-(win|linux|mac|openbsd)\-\d+$/.test(autoBackupFolderName)
-        ) {
-            let {version} = await browser.runtime.getBrowserInfo(),
-                newAutoBackupFolderName = `STG-backups-FF-${version}`;
+function generateBackupFileName(isAutoBackup, byDayIndex = false) {
+    let now = new Date(),
+        day = _intToStr(now.getDate()),
+        month = _intToStr(now.getMonth() + 1),
+        year = now.getFullYear(),
+        type = isAutoBackup ? 'auto' : 'manual',
+        dateOrDayIndex = (isAutoBackup && byDayIndex) ? `day-of-month-${day}` : `${year}-${month}-${day}`;
 
-            if (autoBackupFolderName !== newAutoBackupFolderName) {
-                autoBackupFolderName = newAutoBackupFolderName;
+    return `${type}-stg-backup-${dateOrDayIndex}@drive4ik.json`;
+}
 
-                await storage.set({autoBackupFolderName});
-            }
+function _intToStr(i) {
+    return ('0' + i).slice(-2);
+}
+
+export async function waitDownload(id, maxWaitSec = 10) {
+    let downloadObj = null;
+
+    for (let i = 0; i < maxWaitSec * 5; i++) {
+        [downloadObj] = await browser.downloads.search({id});
+
+        if (downloadObj && browser.downloads.State.IN_PROGRESS !== downloadObj.state) {
+            break;
         }
 
-        return autoBackupFolderName;
+        await Utils.wait(200);
     }
 
-    function generateBackupFileName(isAutoBackup, byDayIndex = false) {
-        let now = new Date(),
-            day = _intToStr(now.getDate()),
-            month = _intToStr(now.getMonth() + 1),
-            year = now.getFullYear(),
-            type = isAutoBackup ? 'auto' : 'manual',
-            dateOrDayIndex = (isAutoBackup && byDayIndex) ? `day-of-month-${day}` : `${year}-${month}-${day}`;
-
-        return `${type}-stg-backup-${dateOrDayIndex}@drive4ik.json`;
-    }
-
-    function _intToStr(i) {
-        return ('0' + i).substr(-2);
-    }
-
-    window.file = {
-        load,
-        save,
-        backup,
-        openBackupFolder,
-        getAutoBackupFolderName,
-    };
-
-})();
+    return downloadObj || {};
+}

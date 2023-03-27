@@ -24,42 +24,21 @@ function getConsoleKey(log) {
 }
 
 const indentConfig = {
-    // indentSymbol: '   ',
     startSymbol: '▷', // 🔻⚡️
     stopSymbol: '◁', // 🔺⭕️
-    index: 0,
-    indexByKey: {},
     regExp: /(START|STOP|SCOPE) (\d+)/,
 };
-const getIndent = function(log) {
-    let indentCount = this.index,
-        {action, key} = getLogAction(log);
 
-    if (action === 'START') {
-        indentCount = this.indexByKey[key] = this.index++;
-    } else if (action === 'STOP') {
-        indentCount = this.indexByKey[key];
-
-        if (this.index > 0) {
-            this.index--;
-        }
-    } else if (action === 'SCOPE') {
-        indentCount = this.indexByKey[key];
-    }
-
-    return indentCount * INDENT_PX;
-}.bind(indentConfig);
-
-const getLogAction = function(log) {
+function getLogAction(log) {
     let action, key;
 
     log[log.consoleKey].some(arg => {
-        [, action, key] = this.regExp.exec(arg) || [];
+        [, action, key] = indentConfig.regExp.exec(arg) || [];
         return action;
     });
 
     return {action, key};
-}.bind(indentConfig)
+}
 
 const excludeExtensions = new Set([
     'addons-search-detection@mozilla.com',
@@ -136,6 +115,15 @@ new Vue({
                     title.push(indentConfig.stopSymbol);
                 } else if (k?.startsWith?.('SCOPE')) {
                     // do nothing
+                } else if (k?.startsWith?.('ACTION#')) {
+                    title.push(`
+                    <div class="is-inline-block">
+                        <div class="tags has-addons">
+                            <span class="tag">action</span>
+                            <span class="tag is-success">${k.split('#').pop()}</span>
+                        </div>
+                    </div>
+                    `);
                 } else {
                     title.push(k);
                 }
@@ -144,7 +132,7 @@ new Vue({
             return title.join(' ');
         },
         formatTime({time}) {
-            let [hms, ms] = time.slice(11, -1).split('.');
+            let [hms, ms] = new Date(time).toISOString().slice(11, -1).split('.');
             return `${hms} <span class="is-size-6 has-text-weight-semibold is-family-monospace">${ms}</span>`;
         },
 
@@ -208,8 +196,6 @@ new Vue({
             });
 
             this.logsIndent = 0;
-            indentConfig.index = 0;
-            indentConfig.indexByKey = {};
 
             file.info.extensions = await Promise.all(file.info.extensions
                 .filter(ext => !excludeExtensions.has(ext.id))
@@ -230,7 +216,7 @@ new Vue({
             function formatLog(log) {
                 log.showStack = false;
                 log.consoleKey = getConsoleKey(log);
-                log.indent = getIndent(log) + 'px';
+                log.indent = (log.indentIndex * INDENT_PX) + 'px';
                 log.indentLineHeight = 0;
 
                 let {action, key} = getLogAction(log);
@@ -257,8 +243,18 @@ new Vue({
                 }
             }
 
-            file.logs.forEach(formatLog);
-            file.errorLogs.forEach(formatLog);
+            function sortTime(a, b) {
+                if (a.time < b.time) {
+                    return -1;
+                } else if (a.time > b.time) {
+                    return 1;
+                }
+
+                return 0;
+            }
+
+            file.logs.sort(sortTime).forEach(formatLog);
+            file.errorLogs.sort(sortTime).forEach(formatLog);
 
             this.file = file;
         },

@@ -1,4 +1,10 @@
 
+import './translate-help-pages.js';
+
+import Messages from '/js/messages.js';
+import * as Constants from '/js/constants.js';
+import * as Storage from '/js/storage.js';
+
 const INNER_HTML = 'innerHTML',
     $ = window.document.querySelector.bind(window.document),
     tagsToReplace = {
@@ -26,9 +32,9 @@ function getContainer(cookieStoreId) {
         return {notFound: true};
     }
 
-    if (cookieStoreId === TEMPORARY_CONTAINER) {
+    if (cookieStoreId === Constants.TEMPORARY_CONTAINER) {
         return {name: lang('temporaryContainerTitle')};
-    } else if (cookieStoreId === DEFAULT_COOKIE_STORE_ID) {
+    } else if (cookieStoreId === Constants.DEFAULT_COOKIE_STORE_ID) {
         return {name: lang('noContainerTitle')};
     } else {
         return browser.contextualIdentities.get(cookieStoreId).catch(() => ({name: cookieStoreId, notFound: true}));
@@ -36,11 +42,9 @@ function getContainer(cookieStoreId) {
 }
 
 function loadConflictedExt(id) {
-    if (!id) {
-        return;
+    if (id) {
+        return browser.management.get(id).catch(() => {});
     }
-
-    return browser.management.get(id).catch(function() {})
 }
 
 function applyContainerStyles(parentNode, container) {
@@ -64,7 +68,7 @@ async function init() {
     document.title += ' ' + url;
 
     async function loadGroup(id) {
-        let {groups} = await browser.storage.local.get('groups');
+        let {groups} = await Storage.get('groups');
         return groups.find(group => group.id === id);
     }
 
@@ -178,10 +182,10 @@ async function init() {
     $('#ignore-origin-id-for-session').dispatchEvent(new Event('change'))
 }
 
-async function openTab(url, cookieStoreId = DEFAULT_COOKIE_STORE_ID, buttonId = null, groupId = null, conflictedExtId = null) {
+async function openTab(url, cookieStoreId = Constants.DEFAULT_COOKIE_STORE_ID, buttonId = null, groupId = null, conflictedExtId = null) {
     try {
         if (buttonId === 'deny' && $('#exclude-container').checked) {
-            let result = await sendMessage('exclude-container-for-group', {
+            let result = await Messages.sendMessage('exclude-container-for-group', {
                 cookieStoreId,
                 groupId,
             });
@@ -194,7 +198,7 @@ async function openTab(url, cookieStoreId = DEFAULT_COOKIE_STORE_ID, buttonId = 
         }
 
         if (buttonId === 'confirm' && $('#ignore-origin-id-for-session').checked) {
-            let result = await sendMessage('ignore-ext-for-reopen-container', {
+            let result = await Messages.sendMessage('ignore-ext-for-reopen-container', {
                 id: conflictedExtId,
             });
 

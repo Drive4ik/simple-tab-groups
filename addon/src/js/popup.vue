@@ -1,5 +1,5 @@
 <script>
-    'use strict';
+    import JSON from './json.js';
 
     export default {
         props: {
@@ -14,7 +14,7 @@
         },
         data() {
             return {
-                buttonsClone: utils.clone(this.buttons),
+                buttonsClone: JSON.clone(this.buttons),
             };
         },
         methods: {

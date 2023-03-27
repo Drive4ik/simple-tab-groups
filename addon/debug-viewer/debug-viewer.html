@@ -184,7 +184,7 @@
                     }">
                     <span class="is-size-7 v-middle" v-html="formatTime(log)"></span>
 
-                    <button @click="toggleShowStack(log)" class="button is-small is-warning">
+                    <button @click="toggleShowStack(log)" class="button is-small">
                         <span class="stack-icon icon"></span>
                     </button>
                     <button v-if="log.action" @click="toggleHighlight(log)" class="button is-small">
@@ -203,7 +203,7 @@
             <div v-for="(log, i) in errorLogs" :key="i + 'error'" class="field log p-1">
                 <span class="is-size-7" v-html="formatTime(log)"></span>
 
-                <button @click="toggleShowStack(log)" class="button is-small is-warning">
+                <button @click="toggleShowStack(log)" class="button is-small">
                     <span class="stack-icon icon"></span>
                 </button>
                 <!-- <button v-if="log.action" @click="toggleHighlight(log)" class="button is-small">

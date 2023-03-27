@@ -1,6 +1,11 @@
 <script>
     'use strict';
 
+    import * as Constants from '/js/constants.js';
+    import * as Utils from '/js/utils.js';
+    import JSON from '/js/json.js';
+    import * as Containers from '/js/containers.js';
+
     export default {
         props: {
             data: {
@@ -36,7 +41,7 @@
                 return this.data.pinnedTabs && this.data.pinnedTabs.length > 0;
             },
             showGeneral() {
-                return Object.keys(this.data).some(key => key !== 'hotkeys' && ALL_OPTIONS_KEYS.includes(key));
+                return Object.keys(this.data).some(key => key !== 'hotkeys' && Constants.ALL_OPTIONS_KEYS.includes(key));
             },
             showHotkeys() {
                 return this.data.hotkeys && this.data.hotkeys.length > 0;
@@ -49,8 +54,8 @@
             let filteredGroups = this.disableEmptyGroups ? this.data.groups.filter(group => group.tabs.length) : this.data.groups;
 
             return {
-                TEMPORARY_CONTAINER,
-                DEFAULT_COOKIE_STORE_ID,
+                TEMPORARY_CONTAINER: Constants.TEMPORARY_CONTAINER,
+                DEFAULT_COOKIE_STORE_ID: Constants.DEFAULT_COOKIE_STORE_ID,
                 allContainers: Containers.getAll(),
 
                 filteredGroups,
@@ -70,7 +75,7 @@
         methods: {
             lang: browser.i18n.getMessage,
 
-            getGroupIconUrl: utils.getGroupIconUrl,
+            getGroupIconUrl: Utils.getGroupIconUrl,
 
             getData() {
                 let result = {
@@ -91,7 +96,7 @@
 
                 if (this.showGeneral && this.includeGeneral) {
                     for (let key in this.data) {
-                        if (key !== 'hotkeys' && ALL_OPTIONS_KEYS.includes(key)) {
+                        if (key !== 'hotkeys' && Constants.ALL_OPTIONS_KEYS.includes(key)) {
                             result[key] = this.data[key];
                         }
                     }
@@ -101,7 +106,7 @@
                     result.hotkeys = this.data.hotkeys;
                 }
 
-                return utils.clone(result);
+                return JSON.clone(result);
             },
         },
     }

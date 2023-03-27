@@ -91,15 +91,20 @@ const config = {
                 'css',
 
                 // js
-                'background.js',
+                'stg-background.js',
+                'stg-background.html',
+
                 'js/logger.js',
                 'js/messages.js',
                 'js/constants.js',
-                'js/startup.js',
+                'js/page-need-BG.js',
                 'js/utils.js',
+                'js/json.js',
+                'js/urls.js',
                 'js/containers.js',
                 'js/storage.js',
                 'js/cache.js',
+                'js/cache-storage.js',
                 'js/file.js',
                 'js/groups.js',
                 'js/tabs.js',

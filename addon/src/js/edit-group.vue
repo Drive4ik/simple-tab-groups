@@ -7,6 +7,13 @@
     import swatches from 'vue-swatches';
     import 'vue-swatches/dist/vue-swatches.css';
 
+    import * as Constants from './constants.js';
+    import Messages from './messages.js';
+    import * as Containers from './containers.js';
+    import * as File from './file.js';
+    import * as Tabs from './tabs.js';
+    import * as Utils from './utils.js';
+
     export default {
         name: 'edit-group',
         props: {
@@ -28,14 +35,14 @@
 
             return {
                 containers,
-                containersExcludeTemp: Object.values(containers).filter(c => c.cookieStoreId !== TEMPORARY_CONTAINER),
-                TEMPORARY_CONTAINER,
-                DEFAULT_COOKIE_STORE_ID,
+                containersExcludeTemp: Object.values(containers).filter(c => c.cookieStoreId !== Constants.TEMPORARY_CONTAINER),
+                TEMPORARY_CONTAINER: Constants.TEMPORARY_CONTAINER,
+                DEFAULT_COOKIE_STORE_ID: Constants.DEFAULT_COOKIE_STORE_ID,
                 disabledContainers: {},
 
                 showMessageCantLoadFile: false,
 
-                GROUP_ICON_VIEW_TYPES,
+                GROUP_ICON_VIEW_TYPES: Constants.GROUP_ICON_VIEW_TYPES,
 
                 group: null,
 
@@ -85,13 +92,13 @@
             },
         },
         async created() {
-            let {group, groups} = await Groups.load(this.groupId);
+            let {group, groups} = await Messages.sendMessageModule('Groups.load', this.groupId);
 
             this.group = new Vue({
                 data: group,
                 computed: {
                     iconUrlToDisplay() {
-                        return utils.getGroupIconUrl({
+                        return Utils.getGroupIconUrl({
                             title: this.title,
                             iconUrl: this.iconUrl,
                             iconColor: this.iconColor,
@@ -123,8 +130,14 @@
                     }
                 });
             }
+            console.time('load active tab')
+            let currentTab = await Messages.sendMessageModule('Tabs.getActive');
+            console.timeEnd('load active tab')
 
-            let currentTab = await Tabs.getActive();
+            console.time('load active tab 2')
+            currentTab = await Tabs.getActive();
+            console.timeEnd('load active tab 2')
+            // let currentTab = await Tabs.getActive();
 
             if (currentTab && currentTab.url.startsWith('http')) {
                 this.currentTabUrl = new URL(currentTab.url);
@@ -163,7 +176,7 @@
 
             setRandomColor() {
                 this.group.iconUrl = null;
-                this.group.iconColor = utils.randomColor();
+                this.group.iconColor = Utils.randomColor();
 
                 if (!this.group.iconViewType) {
                     this.group.iconViewType = this.options.defaultGroupIconViewType;
@@ -171,7 +184,7 @@
             },
 
             getIconTypeUrl(iconType) {
-                return utils.getGroupIconUrl({
+                return Utils.getGroupIconUrl({
                     title: this.group.title,
                     iconViewType: iconType,
                     iconColor: this.group.iconColor || 'rgb(66, 134, 244)',
@@ -188,13 +201,13 @@
                     return;
                 }
 
-                let iconUrl = await file.load('.ico,.png,.jpg,.svg', 'url');
+                let iconUrl = await File.load('.ico,.png,.jpg,.svg', 'url');
 
                 try {
-                    iconUrl = await utils.normalizeGroupIcon(iconUrl);
+                    iconUrl = await Utils.normalizeGroupIcon(iconUrl);
                     this.setIconUrl(iconUrl);
                 } catch (e) {
-                    utils.notify(e);
+                    Utils.notify(e);
                 }
             },
 
@@ -205,7 +218,7 @@
                     this.changedKeys.forEach(key => group[key] = this.group[key]);
 
                     if (this.changedKeys.includes('title')) {
-                        group.title = utils.createGroupTitle(group.title, this.groupId);
+                        group.title = Utils.createGroupTitle(group.title, this.groupId);
                     }
 
                     if (this.changedKeys.includes('catchTabRules')) {
@@ -216,12 +229,12 @@
                                 try {
                                     new RegExp(regExpStr);
                                 } catch (e) {
-                                    utils.notify(['invalidRegExpRuleTitle', regExpStr]);
+                                    Utils.notify(['invalidRegExpRuleTitle', regExpStr]);
                                 }
                             });
                     }
 
-                    await Groups.update(this.groupId, group);
+                    await Messages.sendMessageModule('Groups.update', this.groupId, group);
                 }
 
                 this.$emit('saved');

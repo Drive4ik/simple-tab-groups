@@ -1,4 +1,8 @@
 
+import './translate-help-pages.js';
+
+import * as Constants from '/js/constants.js';
+
 const $ = window.document.querySelector.bind(window.document);
 
 function createExtensionBlock(ext) {
@@ -22,7 +26,7 @@ function createExtensionBlock(ext) {
 
 async function showConflictedExtensions() {
     let addons = await browser.management.getAll(),
-        conflictedExtensions = addons.filter(addon => CONFLICTED_EXTENSIONS.includes(addon.id)),
+        conflictedExtensions = addons.filter(addon => Constants.CONFLICTED_EXTENSIONS.includes(addon.id)),
         $enabledExt = $('#enabled-conflicted-extensions'),
         $disabledExt = $('#disabled-conflicted-extensions');
 

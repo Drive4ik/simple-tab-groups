@@ -1,4 +1,6 @@
 
+import './translate-help-pages.js';
+
 const $ = document.querySelector.bind(document);
 const UNSUPPORTED_URL = location.hash.slice(1).trim();
 
