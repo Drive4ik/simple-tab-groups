@@ -3,7 +3,7 @@
 
     import * as Constants from 'constants';
     import * as Containers from 'containers';
-    import * as Utils from 'utils';
+    import * as Groups from 'groups';
     import JSON from 'json';
 
     export default {
@@ -75,7 +75,7 @@
         methods: {
             lang: browser.i18n.getMessage,
 
-            getGroupIconUrl: Utils.getGroupIconUrl,
+            getGroupIconUrl: Groups.getIconUrl,
 
             getData() {
                 let result = {

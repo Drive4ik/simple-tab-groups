@@ -157,14 +157,14 @@
                     groups = this.showArchivedGroupsInManageGroups ? this.groups : this.groups.filter(group => !group.isArchive);
 
                 return groups.map(group => {
-                    group.filteredTabs = group.tabs.filter(tab => Utils.mySearchFunc(searchStr, Utils.getTabTitle(tab, true), this.extendedSearch));
+                    group.filteredTabs = group.tabs.filter(tab => Utils.mySearchFunc(searchStr, Tabs.getTitle(tab, true), this.extendedSearch));
                     return group;
                 });
             },
             filteredUnSyncTabs() {
                 let searchStr = this.search.toLowerCase();
 
-                return this.unSyncTabs.filter(tab => Utils.mySearchFunc(searchStr, Utils.getTabTitle(tab, true), this.extendedSearch));
+                return this.unSyncTabs.filter(tab => Utils.mySearchFunc(searchStr, Tabs.getTitle(tab, true), this.extendedSearch));
             },
             isCurrentWindowIsAllow() {
                 return this.currentWindow && Utils.isWindowAllow(this.currentWindow);
@@ -649,13 +649,13 @@
                     watch: {
                         title: function(title) {
                             Groups.update(this.id, {
-                                title: Utils.createGroupTitle(title, this.id),
+                                title: Groups.createTitle(title, this.id),
                             });
                         },
                     },
                     computed: {
                         iconUrlToDisplay() {
-                            return Utils.getGroupIconUrl({
+                            return Groups.getIconUrl({
                                 title: this.title,
                                 iconUrl: this.iconUrl,
                                 iconColor: this.iconColor,
@@ -845,10 +845,10 @@
                 Groups.setIconUrl(group.id, favIconUrl);
             },
 
-            getTabTitle: Utils.getTabTitle,
-            getGroupTitle: Utils.getGroupTitle,
+            getTabTitle: Tabs.getTitle,
+            // getGroupTitle: Groups.getTitle,
             isTabLoading: Utils.isTabLoading,
-            groupTabsCountMessage: Utils.groupTabsCountMessage,
+            groupTabsCountMessage: Groups.tabsCountMessage,
 
             isGroup(obj) {
                 return obj.hasOwnProperty('tabs');

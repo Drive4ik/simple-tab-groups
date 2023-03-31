@@ -1,18 +1,3 @@
-<template>
-    <div
-        class="v-context-menu no-outline"
-        v-show="show"
-        :style="style"
-        tabindex="-1"
-        @blur="onblur"
-        @click="close"
-        @keydown.esc.stop="close"
-        @contextmenu.prevent="close"
-        >
-        <slot :data="data"></slot>
-    </div>
-</template>
-
 <script>
     export default {
         props: {
@@ -86,6 +71,21 @@
         }
     }
 </script>
+
+<template>
+    <div
+        class="v-context-menu no-outline"
+        v-show="show"
+        :style="style"
+        tabindex="-1"
+        @blur="onblur"
+        @click="close"
+        @keydown.esc.stop="close"
+        @contextmenu.prevent="close"
+        >
+        <slot :data="data"></slot>
+    </div>
+</template>
 
 <style lang="scss" scoped>
     .v-context-menu {

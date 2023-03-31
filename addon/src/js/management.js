@@ -2,13 +2,11 @@ import Logger from './logger.js';
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
 import * as Urls from './urls.js';
-import cacheStorage from './cache-storage.js';
+import cacheStorage, {createStorage} from './cache-storage.js';
 
 const logger = new Logger('Management');
 
-cacheStorage.extensions ??= {};
-
-const extensions = cacheStorage.extensions;
+const extensions = cacheStorage.extensions ??= createStorage({});
 
 export async function init() {
     const log = logger.start('init');

@@ -57,4 +57,6 @@ if (Constants.IS_BACKGROUND_PAGE) {
     }
 }
 
+export {createDeepCloneObjProxy as createStorage};
+
 export default _cacheStorage;

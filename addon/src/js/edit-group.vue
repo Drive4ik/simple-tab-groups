@@ -13,6 +13,7 @@
     import Messages from 'messages';
     import * as File from 'file';
     import * as Tabs from 'tabs';
+    import * as Groups from 'groups';
     import * as Utils from 'utils';
 
     export default {
@@ -99,7 +100,7 @@
                 data: group,
                 computed: {
                     iconUrlToDisplay() {
-                        return Utils.getGroupIconUrl({
+                        return Groups.getIconUrl({
                             title: this.title,
                             iconUrl: this.iconUrl,
                             iconColor: this.iconColor,
@@ -185,7 +186,7 @@
             },
 
             getIconTypeUrl(iconType) {
-                return Utils.getGroupIconUrl({
+                return Groups.getIconUrl({
                     title: this.group.title,
                     iconViewType: iconType,
                     iconColor: this.group.iconColor || 'rgb(66, 134, 244)',
@@ -219,7 +220,7 @@
                     this.changedKeys.forEach(key => group[key] = this.group[key]);
 
                     if (this.changedKeys.includes('title')) {
-                        group.title = Utils.createGroupTitle(group.title, this.groupId);
+                        group.title = Groups.createTitle(group.title, this.groupId);
                     }
 
                     if (this.changedKeys.includes('catchTabRules')) {

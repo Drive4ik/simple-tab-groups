@@ -1,6 +1,6 @@
 <script>
 import contextMenu from './context-menu.vue';
-import * as Utils from 'utils';
+import * as Groups from 'groups';
 
 export default {
     props: {
@@ -31,7 +31,7 @@ export default {
     },
     methods: {
         lang: browser.i18n.getMessage,
-        getGroupTitle: Utils.getGroupTitle,
+        getGroupTitle: Groups.getTitle,
         open(...args) {
             this.$refs.contextMenu.open(...args);
         },

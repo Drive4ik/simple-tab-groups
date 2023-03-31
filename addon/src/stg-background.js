@@ -1,5 +1,4 @@
 import './js/cache-storage.js';
-
 import * as Constants from './js/constants.js';
 import * as Messages from './js/messages.js';
 import Logger from './js/logger.js';
@@ -989,7 +988,7 @@ async function addUndoRemoveGroupItem(groupToRemove) {
         id: Constants.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + groupToRemove.id,
         title: browser.i18n.getMessage('undoRemoveGroupItemTitle', groupToRemove.title),
         contexts: [browser.menus.ContextType.BROWSER_ACTION],
-        icons: Utils.getGroupIconUrl(groupToRemove, 16),
+        icons: Groups.getIconUrl(groupToRemove, 16),
         onclick: restoreGroup,
     });
 
@@ -1190,8 +1189,8 @@ async function createMoveTabMenus() {
         }
 
         let groupId = group.id,
-            groupIcon = Utils.getGroupIconUrl(group, 16),
-            groupTitle = String(Utils.getGroupTitle(group, 'withSticky withActiveGroup withContainer'));
+            groupIcon = Groups.getIconUrl(group, 16),
+            groupTitle = String(Groups.getTitle(group, 'withSticky withActiveGroup withContainer'));
 
         options.showContextMenuOnTabs && menuIds.push(browser.menus.create({
             title: groupTitle,
@@ -1758,7 +1757,7 @@ async function updateBrowserActionData(groupId, windowId) {
 
     if (group) {
         log.log('group found');
-        await setBrowserAction(windowId, Utils.sliceText(Utils.getGroupTitle(group, 'withContainer'), 43) + ' - STG', Utils.getGroupIconUrl(group), true, group.isSticky); // todo make this args as obj
+        await setBrowserAction(windowId, Utils.sliceText(Groups.getTitle(group, 'withContainer'), 43) + ' - STG', Groups.getIconUrl(group), true, group.isSticky); // todo make this args as obj
         await prependWindowTitle(windowId, group.title);
     } else {
         log.log('group NOT found');
@@ -3328,7 +3327,7 @@ async function runMigrateForData(data) {
                     });
                 });
 
-                let allTabs = Utils.getTabs(windows);
+                let allTabs = Utils.concatTabs(windows);
 
                 if (allTabs.length) {
                     await Tabs.hide(allTabs);
@@ -4003,7 +4002,7 @@ async function init() {
             }
         }));
 
-        let tabs = Utils.getTabs(windows);
+        let tabs = Utils.concatTabs(windows);
 
         await Containers.removeUnusedTemporaryContainers(tabs);
 

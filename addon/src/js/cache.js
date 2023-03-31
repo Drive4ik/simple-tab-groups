@@ -2,13 +2,13 @@
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
 import backgroundSelf from './background.js';
-import cacheStorage from './cache-storage.js';
+import cacheStorage, {createStorage} from './cache-storage.js';
 
-cacheStorage.cacheTabs ??= {
+cacheStorage.cacheTabs ??= createStorage({
     tabs: {},
     lastTabsState: {},
     windows: {},
-}
+});
 
 const tabs = cacheStorage.cacheTabs.tabs;
 const lastTabsState = cacheStorage.cacheTabs.lastTabsState; // bug https://bugzilla.mozilla.org/show_bug.cgi?id=1818392

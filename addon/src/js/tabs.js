@@ -10,8 +10,6 @@ import * as Windows from './windows.js';
 
 const logger = new Logger('Tabs');
 
-const HELP_PAGE_UNSUPPORTED_URL = Urls.getURL('stg-unsupported-url');
-
 export async function createNative({url, active, pinned, title, index, windowId, openerTabId, cookieStoreId, newTabContainer, ifDifferentContainerReOpen, excludeContainersForReOpen, groupId, favIconUrl, thumbnail}) {
     let tab = {};
 
@@ -19,7 +17,7 @@ export async function createNative({url, active, pinned, title, index, windowId,
         if (Utils.isUrlAllowToCreate(url)) {
             tab.url = url;
         } else if (url !== 'about:newtab') {
-            tab.url = HELP_PAGE_UNSUPPORTED_URL + '#' + url;
+            tab.url = Urls.HELP_PAGE_UNSUPPORTED_URL + '#' + url;
         }
     }
 
@@ -178,8 +176,10 @@ export async function get(
         );
     }
 
-    log.stop();
-    return tabs.filter(Boolean);
+    tabs = tabs.filter(Boolean);
+
+    log.stop('found tabs count:', tabs.length);
+    return tabs;
 }
 
 export async function getOne(id) {
@@ -327,7 +327,7 @@ export async function move(tabIds, groupId, {
         }
 
         if (Utils.isTabCanNotBeHidden(tab)) {
-            tabsCantHide.add(Utils.getTabTitle(tab, false, 20));
+            tabsCantHide.add(getTitle(tab, false, 20));
             backgroundSelf.excludeTabIds.delete(tab.id);
             log.log('cant move tab', tab);
             return false;
@@ -499,9 +499,9 @@ export async function move(tabIds, groupId, {
 
     if (tabs.length > 1) {
         message = ['moveMultipleTabsToGroupMessage', tabs.length];
-        iconUrl = Utils.getGroupIconUrl(group);
+        iconUrl = Groups.getIconUrl(group);
     } else {
-        let tabTitle = Utils.getTabTitle(firstTab, false, 50);
+        let tabTitle = getTitle(firstTab, false, 50);
         message = ['moveTabToGroupMessage', [group.title, tabTitle]];
         firstTab = Utils.normalizeTabFavIcon(firstTab);
         iconUrl = firstTab.favIconUrl;
@@ -779,4 +779,30 @@ export function getNewTabContainer(
     }
 
     return Containers.isDefault(cookieStoreId) ? newTabContainer : cookieStoreId;
+}
+
+export function getTitle({id, index, title, url, discarded, windowId, lastAccessed}, withUrl = false, sliceLength = 0, withActiveTab = false) {
+    title = title || url || 'about:blank';
+
+    if (withUrl && url && title !== url) {
+        title += '\n' + url;
+    }
+
+    if (withActiveTab && id) {
+        title = (discarded ? Constants.DISCARDED_SYMBOL : Constants.ACTIVE_SYMBOL) + ' ' + title;
+    }
+
+    if (window.localStorage.enableDebug && id) {
+        let lastDate = new Date(lastAccessed);
+
+        if (lastDate.getTime()) {
+            lastDate = `(${lastDate.getMinutes()}:${lastDate.getSeconds()}.${lastDate.getMilliseconds()})${title}`;
+        } else {
+            lastDate = '';
+        }
+
+        title = `@${windowId}:#${id}:i${index} ${lastDate} ${title}`;
+    }
+
+    return sliceLength ? Utils.sliceText(title, sliceLength) : title;
 }

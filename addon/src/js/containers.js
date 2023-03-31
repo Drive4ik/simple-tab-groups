@@ -4,38 +4,36 @@ import * as Utils from './utils.js';
 import * as Groups from './groups.js';
 import JSON from './json.js';
 import backgroundSelf from './background.js';
-import cacheStorage from './cache-storage.js';
+import cacheStorage, {createStorage} from './cache-storage.js';
 
 const logger = new Logger('Containers');
 
 // init storage
-cacheStorage.containers ??= {
+cacheStorage.containers ??= createStorage({
     containers: {},
     mappedContainerCookieStoreId: {},
     defaultContainerOptions: {
         cookieStoreId: Constants.DEFAULT_COOKIE_STORE_ID,
         name: browser.i18n.getMessage('noContainerTitle'),
     },
-};
-
-const temporaryContainerDefaultTitle = browser.i18n.getMessage('temporaryContainerTitle'),
-    containerIdRegExp = /\d+$/,
-    tmpContainerTimeStamp = Date.now();
+});
 
 const containers = cacheStorage.containers.containers;
 const mappedContainerCookieStoreId = cacheStorage.containers.mappedContainerCookieStoreId;
 const defaultContainerOptions = cacheStorage.containers.defaultContainerOptions;
 
-containers[Constants.TEMPORARY_CONTAINER] ??= {
+const temporaryContainerDefaultTitle = browser.i18n.getMessage('temporaryContainerTitle'),
+    containerIdRegExp = /\d+$/,
+    tmpContainerTimeStamp = Date.now();
+
+const temporaryContainerOptions = containers[Constants.TEMPORARY_CONTAINER] ??= createStorage({
     color: 'toolbar',
     colorCode: false,
     cookieStoreId: Constants.TEMPORARY_CONTAINER,
     icon: 'chill',
     iconUrl: 'resource://usercontext-content/chill.svg',
     name: temporaryContainerDefaultTitle,
-};
-
-const temporaryContainerOptions = containers[Constants.TEMPORARY_CONTAINER];
+});
 
 export async function init(temporaryContainerTitle) {
     const log = logger.start('init', {temporaryContainerTitle});

@@ -15,6 +15,7 @@
     import * as Storage from 'storage';
     import * as File from 'file';
     import * as Urls from 'urls';
+    import * as Groups from 'groups';
     import JSON from 'json';
 
     window.logger = new Logger('Options');
@@ -431,7 +432,7 @@
 
                     Object.values(oldGroups).forEach(function({id, title, catchRules}) {
                         groups[id] = {
-                            title: Utils.createGroupTitle(title, id),
+                            title: Groups.createTitle(title, id),
                             tabs: [],
                             catchTabRules: catchRules || '',
                         };
@@ -506,7 +507,7 @@
 
                         win.groups.forEach(function({id, name}) {
                             groups[id] = {
-                                title: Utils.createGroupTitle(name, id),
+                                title: Groups.createTitle(name, id),
                                 tabs: [],
                             };
                         });
@@ -540,7 +541,7 @@
 
                             if (groupTabs.length) {
                                 data.groups.push({
-                                    title: Utils.createGroupTitle(title, groupTabs.length),
+                                    title: Groups.createTitle(title, groupTabs.length),
                                     tabs: groupTabs,
                                 });
                             }
@@ -599,7 +600,7 @@
                         .filter(Boolean);
 
                     data.groups.push({
-                        title: Utils.createGroupTitle(title, id),
+                        title: Groups.createTitle(title, id),
                         tabs: tabs.filter(tab => !tab.pinned),
                     });
 
@@ -616,7 +617,7 @@
             },
 
             getIconTypeUrl(iconType) {
-                return Utils.getGroupIconUrl({
+                return Groups.getIconUrl({
                     iconViewType: iconType,
                     iconColor: this.options.defaultGroupIconColor || 'rgb(66, 134, 244)',
                 });
@@ -658,7 +659,7 @@
             },
 
             getGroupIconUrl(group) {
-                return Utils.getGroupIconUrl(group);
+                return Groups.getIconUrl(group);
             },
 
             openDebugPage() {

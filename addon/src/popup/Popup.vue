@@ -196,7 +196,7 @@
                             filteredGroups.push(group);
                         }
                     } else {
-                        group.filteredTabs = group.tabs.filter(tab => Utils.mySearchFunc(searchStr, Utils.getTabTitle(tab, true), this.extendedSearch));
+                        group.filteredTabs = group.tabs.filter(tab => Utils.mySearchFunc(searchStr, Tabs.getTitle(tab, true), this.extendedSearch));
 
                         if (group.filteredTabs.length || Utils.mySearchFunc(searchStr, group.title, this.extendedSearch)) {
                             group.filteredTabs.sort(this.$_simpleSortTabs.bind(null, searchStr));
@@ -598,8 +598,8 @@
             },
 
             $_simpleSortTabs(searchStr, a, b) {
-                let aIncludes = Utils.getTabTitle(a, true).toLowerCase().includes(searchStr),
-                    bIncludes = Utils.getTabTitle(b, true).toLowerCase().includes(searchStr);
+                let aIncludes = Tabs.getTitle(a, true).toLowerCase().includes(searchStr),
+                    bIncludes = Tabs.getTitle(b, true).toLowerCase().includes(searchStr);
 
                 if (aIncludes && !bIncludes) { // move up
                     return -1;
@@ -626,7 +626,7 @@
                     data: group,
                     computed: {
                         iconUrlToDisplay() {
-                            return Utils.getGroupIconUrl({
+                            return Groups.getIconUrl({
                                 title: this.title,
                                 iconUrl: this.iconUrl,
                                 iconColor: this.iconColor,
@@ -1070,12 +1070,16 @@
             setTabIconAsGroupIcon({favIconUrl}) {
                 Groups.setIconUrl(this.groupToShow.id, favIconUrl);
             },
+            getLastActiveTabTitle(tabs) {
+                let tab = Utils.getLastActiveTab(tabs);
 
-            getTabTitle: Utils.getTabTitle,
+                return tab ? Tabs.getTitle(tab, undefined, undefined, true) : '';
+            },
+
+            getTabTitle: Tabs.getTitle,
             isTabLoading: Utils.isTabLoading,
-            getGroupTitle: Utils.getGroupTitle,
-            getLastActiveTabTitle: Utils.getLastActiveTabTitle,
-            groupTabsCountMessage: Utils.groupTabsCountMessage,
+            getGroupTitle: Groups.getTitle,
+            groupTabsCountMessage: Groups.tabsCountMessage,
             getLastActiveTabContainer(tabs, key = null) {
                 let tab = Utils.getLastActiveTab(tabs);
 
@@ -1084,7 +1088,7 @@
 
             openOptionsPage() {
                 delete window.localStorage.optionsSection;
-                Urls.openOptionsPage();
+                Messages.sendMessage('open-options-page');
                 this.closeWindow();
             },
             openManageGroups() {

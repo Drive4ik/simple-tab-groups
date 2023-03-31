@@ -83,7 +83,7 @@ export async function save(groups, withMessage = false) {
 export function create(id, title) {
     return {
         id: id,
-        title: Utils.createGroupTitle(title, id),
+        title: createTitle(title, id),
         iconColor: backgroundSelf.options.defaultGroupIconColor || Utils.randomColor(),
         iconUrl: null,
         iconViewType: backgroundSelf.options.defaultGroupIconViewType,
@@ -442,10 +442,10 @@ export async function archiveToggle(groupId) {
 export function mapForExternalExtension(group) {
     return {
         id: group.id,
-        title: Utils.getGroupTitle(group),
+        title: getTitle(group),
         isArchive: group.isArchive,
         isSticky: group.isSticky,
-        iconUrl: Utils.getGroupIconUrl(group),
+        iconUrl: getIconUrl(group),
         contextualIdentity: Containers.get(group.newTabContainer),
         windowId: Cache.getWindowId(group.id) || null,
     };
@@ -463,7 +463,7 @@ export function setNewTabsParams(tabs, group) {
 
 export async function getNextTitle() {
     let {lastCreatedGroupPosition} = await Storage.get('lastCreatedGroupPosition');
-    return Utils.createGroupTitle(null, lastCreatedGroupPosition + 1);
+    return createTitle(null, lastCreatedGroupPosition + 1);
 }
 
 function isCatchedUrl(url, catchTabRules) {
@@ -573,4 +573,174 @@ export async function setIconUrl(groupId, iconUrl) {
     } catch (e) {
         Utils.notify(e);
     }
+}
+
+const emojiRegExp = /\p{RI}\p{RI}|\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?(\u{200D}\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?)+|\p{EPres}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?|\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})/u;
+const firstCharEmojiRegExp = new RegExp(`^(${emojiRegExp.source})`, emojiRegExp.flags);
+
+export function getIconUrl(group = {iconViewType: Constants.DEFAULT_OPTIONS.defaultGroupIconViewType}, keyInObj = null) {
+    let result = null;
+
+    if (group.iconUrl) {
+        result = group.iconUrl;
+    } else {
+        if (!group.iconColor) {
+            group.iconColor = 'transparent';
+        }
+
+        let stroke = 'transparent' === group.iconColor ? 'stroke="#606060" stroke-width="1"' : '',
+            title = null,
+            emoji = null;
+
+        if (group.iconViewType === 'title') {
+            title = group?.title || browser.i18n.getMessage('title');
+
+            [emoji] = firstCharEmojiRegExp.exec(title) || [];
+
+            title = emoji || title;
+        }
+
+        let icons = {
+            'main-squares': `
+            <svg width="128" height="128" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+                <g fill="context-fill" fill-opacity="context-fill-opacity">
+                    <rect height="32" width="32" />
+                    <rect height="32" width="32" x="48" />
+                    <rect height="32" width="32" x="96" y="48" />
+                    <rect height="32" width="32" y="48" />
+                    <rect height="32" width="32" x="48" y="48" />
+                    <rect height="32" width="32" x="96" />
+                    <rect height="32" width="32" y="96" />
+                    <rect height="32" width="32" x="48" y="96" />
+                    <rect height="32" width="32" x="96" y="96" />
+                    <path transform="rotate(-90, 73, 71)" fill="${group.iconColor}" d="m16.000351,126.001527l0,-110.000003l108.999285,110.000003l-108.999285,0z"/>
+                </g>
+            </svg>
+        `,
+            circle: `
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+                <circle fill="${group.iconColor}" cx="8" cy="8" r="8" ${stroke} />
+            </svg>
+        `,
+            squares: `
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+                <g fill="context-fill" fill-opacity="context-fill-opacity">
+                    <rect x="1" y="1" width="6" height="6" rx="1" ry="1"></rect>
+                    <rect x="9" y="1" width="6" height="6" rx="1" ry="1"></rect>
+                    <rect x="1" y="9" width="6" height="6" rx="1" ry="1"></rect>
+                    <rect x="9" y="9" width="6" height="6" rx="1" ry="1" fill="${group.iconColor}"></rect>
+                </g>
+            </svg>
+        `,
+            'old-tab-groups': `
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+                <g fill="context-fill" fill-opacity="context-fill-opacity">
+                    <rect width="9" height="6" x="1" y="1" rx="1"></rect>
+                    <rect width="4" height="6" x="11" y="1" rx="1"></rect>
+                    <rect width="5" height="7" x="1" y="8" rx="1"></rect>
+                    <rect width="8" height="7" x="7" y="8" rx="1" fill="${group.iconColor}"></rect>
+                </g>
+            </svg>
+        `,
+            'title': `
+            <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg">
+                <text ${emoji ? 'text-anchor="middle" x="50%"' : 'x="0"'} y="13" fill="${group.iconColor}" font-family="Segoe UI, Verdana, Arial, sans-serif" font-size="12px">${title}</text>
+            </svg>
+        `,
+        };
+
+        try {
+            result = Utils.convertSvgToUrl(icons[group.iconViewType].trim());
+        } catch (e) {
+            result = getIconUrl({
+                title: '❓',
+                iconViewType: 'title',
+                iconColor: 'gray',
+            });
+        }
+    }
+
+    if (keyInObj) {
+        return {
+            [keyInObj]: result,
+        };
+    }
+
+    return result;
+}
+
+export function createTitle(title, groupId) {
+    return String(title || browser.i18n.getMessage('newGroupTitle', groupId));
+}
+
+export function getTitle({id, title, isArchive, isSticky, tabs, iconViewType, newTabContainer}, args = '') {
+    let withActiveGroup = args.includes('withActiveGroup'),
+        withCountTabs = args.includes('withCountTabs'),
+        withContainer = args.includes('withContainer'),
+        withSticky = args.includes('withSticky'),
+        withTabs = args.includes('withTabs'),
+        beforeTitle = [];
+
+    if (withSticky && isSticky) {
+        beforeTitle.push(Constants.STICKY_SYMBOL);
+    }
+
+    if (withContainer && newTabContainer !== Constants.DEFAULT_COOKIE_STORE_ID) {
+        beforeTitle.push('[' + Containers.get(newTabContainer, 'name') + ']');
+    }
+
+    if (withActiveGroup) {
+        if (Cache.getWindowId(id)) {
+            beforeTitle.push(Constants.ACTIVE_SYMBOL);
+        } else if (isArchive) {
+            beforeTitle.push(Constants.DISCARDED_SYMBOL);
+        }
+    }
+
+    // replace first emoji to empty string
+    if (iconViewType === 'title') {
+        title = title.replace(firstCharEmojiRegExp, '');
+    }
+
+    if (beforeTitle.length) {
+        title = beforeTitle.join(' ') + ' ' + title;
+    }
+
+    tabs = tabs.slice();
+
+    if (withCountTabs) {
+        title += ' (' + tabsCountMessage(tabs, isArchive) + ')';
+    }
+
+    if (withTabs && tabs.length) {
+        title += ':\n' + tabs
+            .slice(0, 30)
+            .map(tab => Tabs.getTitle(tab, false, 70, !isArchive))
+            .join('\n');
+
+        if (tabs.length > 30) {
+            title += '\n...';
+        }
+    }
+
+    if (window.localStorage.enableDebug) {
+        let windowId = Cache.getWindowId(id) || tabs[0]?.windowId || 'no window';
+        title = `@${windowId}:#${id} ${title}`;
+    }
+
+    return title;
+}
+
+export function tabsCountMessage(tabs, groupIsArchived, lang = true) {
+    if (groupIsArchived) {
+        return lang ? browser.i18n.getMessage('groupTabsCount', tabs.length) : tabs.length;
+    }
+
+    let activeTabsCount = tabs.filter(tab => !tab.discarded).length;
+
+    if (lang) {
+        return browser.i18n.getMessage('groupTabsCountActive', [activeTabsCount, tabs.length]);
+    }
+
+    return activeTabsCount ? (activeTabsCount + '/' + tabs.length) : tabs.length;
 }

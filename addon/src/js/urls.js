@@ -5,6 +5,7 @@ import * as Tabs from './tabs.js';
 import * as Windows from './windows.js';
 
 export const MANAGE_TABS_URL = getURL('/manage/manage.html');
+export const HELP_PAGE_UNSUPPORTED_URL = getURL('stg-unsupported-url');
 
 export function getURL(page) {
     return browser.runtime.getURL(Constants.STG_HELP_PAGES.includes(page) ? `/help/${page}.html` : page);
@@ -39,15 +40,15 @@ function loadPopupWindows() {
 
 export async function openManageGroups() {
     if (backgroundSelf.options.openManageGroupsInTab) {
-        await Tabs.createUrlOnce(Constants.MANAGE_TABS_URL);
+        await Tabs.createUrlOnce(MANAGE_TABS_URL);
     } else {
         let allPopupWindows = await loadPopupWindows(),
-            win = allPopupWindows.find(win => win.tabs[0].url.startsWith(Constants.MANAGE_TABS_URL));
+            win = allPopupWindows.find(win => win.tabs[0].url.startsWith(MANAGE_TABS_URL));
 
         if (win) {
             await Windows.setFocus(win.id);
         } else {
-            await Windows.createPopup(Constants.MANAGE_TABS_URL, {
+            await Windows.createPopup(MANAGE_TABS_URL, {
                 width: Number(window.localStorage.manageGroupsWindowWidth) || 1000,
                 height: Number(window.localStorage.manageGroupsWindowHeight) || 700,
             });
