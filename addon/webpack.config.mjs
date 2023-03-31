@@ -122,6 +122,7 @@ const config = {
                 'js/constants.js',
                 'js/utils.js',
                 'js/json.js',
+                'js/menus.js',
                 'js/urls.js',
                 'js/containers.js',
                 'js/storage.js',

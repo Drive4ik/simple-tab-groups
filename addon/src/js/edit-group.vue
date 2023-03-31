@@ -7,7 +7,7 @@
     import swatches from 'vue-swatches';
     import 'vue-swatches/dist/vue-swatches.css';
 
-    import backgroundSelf from './background.js';
+    import backgroundSelf from 'background';
     import * as Constants from 'constants';
     import * as Containers from 'containers';
     import Messages from 'messages';
