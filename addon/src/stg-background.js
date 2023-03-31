@@ -988,7 +988,7 @@ async function addUndoRemoveGroupItem(groupToRemove) {
     Menus.create({
         id: Constants.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + groupToRemove.id,
         title: browser.i18n.getMessage('undoRemoveGroupItemTitle', groupToRemove.title),
-        contexts: [Menus.ContextType.BROWSER_ACTION],
+        contexts: [Menus.ContextType.ACTION],
         icons: Groups.getIconUrl(groupToRemove, 16),
         onClick: restoreGroup,
     });
@@ -1395,7 +1395,7 @@ async function createMoveTabMenus() {
     hasBookmarksPermission && menuIds.push(Menus.create({
         title: browser.i18n.getMessage('exportAllGroupsToBookmarks'),
         icon: '/icons/bookmark.svg',
-        contexts: [Menus.ContextType.BROWSER_ACTION],
+        contexts: [Menus.ContextType.ACTION],
         async onClick() {
             await exportAllGroupsToBookmarks(true);
         },
@@ -1404,7 +1404,7 @@ async function createMoveTabMenus() {
     menuIds.push(Menus.create({
         title: browser.i18n.getMessage('reopenTabsWithTemporaryContainersInNew'),
         icon: 'resource://usercontext-content/chill.svg',
-        contexts: [Menus.ContextType.BROWSER_ACTION],
+        contexts: [Menus.ContextType.ACTION],
         async onClick(info) {
             const allTabs = await Tabs.get(null, null, null, undefined, true, true),
                 tabsToCreate = [];
@@ -1681,10 +1681,14 @@ async function setBrowserAction(windowId, title, icon, enable, isSticky) {
         }
     }
 
+    const manifestAction = Constants.MANIFEST.manifest_version === 3
+        ? Constants.MANIFEST.action
+        : Constants.MANIFEST.browser_action;
+
     await Promise.all([
         browser.browserAction.setTitle({
             ...winObj,
-            title: title || Constants.MANIFEST.browser_action.default_title,
+            title: title || manifestAction.default_title,
         }).catch(log.onCatch('setTitle')),
         browser.browserAction.setBadgeText({
             ...winObj,
@@ -1692,7 +1696,7 @@ async function setBrowserAction(windowId, title, icon, enable, isSticky) {
         }).catch(log.onCatch('setBadgeText')),
         browser.browserAction.setIcon({
             ...winObj,
-            path: icon || Constants.MANIFEST.browser_action.default_icon,
+            path: icon || manifestAction.default_icon,
         }).catch(log.onCatch('setIcon')),
     ]);
 

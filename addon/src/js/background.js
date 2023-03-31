@@ -6,7 +6,7 @@ let backgroundSelf;
 if (Constants.IS_BACKGROUND_PAGE) {
     backgroundSelf = self;
 } else {
-    backgroundSelf = browser.extension.getBackgroundPage();
+    backgroundSelf = await browser.extension.getBackgroundPage();
 }
 
 export default backgroundSelf;

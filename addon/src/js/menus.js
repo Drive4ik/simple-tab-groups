@@ -1,4 +1,5 @@
 
+import * as Constants from './constants.js';
 import Logger from './logger.js';
 import * as Utils from './utils.js';
 
@@ -106,7 +107,12 @@ export function disable(id) {
     log.stop();
 }
 
-export const ContextType = browser.menus.ContextType;
+export const ContextType = {
+    ...browser.menus.ContextType,
+    ACTION: Constants.MANIFEST.manifest_version === 3
+        ? browser.menus.ContextType.ACTION
+        : browser.menus.ContextType.BROWSER_ACTION,
+};
 export const ItemType = browser.menus.ItemType;
 
 // export const LEFT_BUTTON = 0;
