@@ -1,10 +1,10 @@
 <script>
     'use strict';
 
-    import * as Constants from '/js/constants.js';
-    import * as Utils from '/js/utils.js';
-    import JSON from '/js/json.js';
-    import * as Containers from '/js/containers.js';
+    import * as Constants from 'constants';
+    import * as Containers from 'containers';
+    import * as Utils from 'utils';
+    import JSON from 'json';
 
     export default {
         props: {

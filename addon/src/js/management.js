@@ -2,10 +2,13 @@ import Logger from './logger.js';
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
 import * as Urls from './urls.js';
+import cacheStorage from './cache-storage.js';
 
 const logger = new Logger('Management');
 
-const extensions = self.cacheStorage.extensions;
+cacheStorage.extensions ??= {};
+
+const extensions = cacheStorage.extensions;
 
 export async function init() {
     const log = logger.start('init');
@@ -54,7 +57,7 @@ export function isEnabled(id) {
 
 export async function detectConflictedExtensions() {
     if (Constants.CONFLICTED_EXTENSIONS.some(isEnabled)) {
-        await Urls.openHelp('extensions-that-conflict-with-stg');
+        await Urls.openUrl('extensions-that-conflict-with-stg', true);
     }
 }
 

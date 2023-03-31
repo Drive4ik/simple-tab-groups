@@ -7,7 +7,6 @@ const consoleKeys = ['log', 'info', 'warn', 'error', 'debug', 'assert'];
 
 const connectToBG = function(log) {
     let prefixes = log?.prefixes.join(' ') || '';
-
     return this.messagePort ??= Messages.connectToBackground(`${prefixes} Logger`);
 }.bind({
     messagePort: null,
@@ -81,6 +80,12 @@ function setLoggerFuncs() {
 
             let args = [...[message].flat(), normalizeError(error)];
 
+            if (window.localStorage.enableDebug && !this.fromErrorEventHandler) {
+                throwError = true;
+            }
+
+            delete this.fromErrorEventHandler;
+
             if (throwError && this.stopMessage) {
                 args.unshift(this.stopMessage);
             }
@@ -152,7 +157,7 @@ Logger.prototype.addLog = function(cKey, ...args) {
 }
 
 Logger.prototype.showLog = function(log, {cKey, args}) {
-    if (self.localStorage.enableDebug || self.IS_TEMPORARY || self.BG?.IS_TEMPORARY) {
+    if (self.localStorage.enableDebug || self.IS_TEMPORARY) {
         let argsToConsole = cKey === 'assert'
             ? [args[0], this.prefixes.join('.'), ...args.slice(1)]
             : log[`console.${cKey}`].slice();
@@ -173,24 +178,25 @@ Logger.prototype.showLog = function(log, {cKey, args}) {
     }
 }
 
+function getAction(args) {
+    let action, key,
+        argIndex = args.findIndex(arg => {
+            [, action, key] = scopeActionRegExp.exec(arg) || [];
+            return action;
+        });
+
+    return {action, key, argIndex};
+}
+
 const indentConfig = {
     indentSymbol: '   ',
     startSymbol: '▷', // 🔻⚡️
     stopSymbol: '◁', // 🔺⭕️
     index: 0,
     indexByKey: {},
-    regExp: /(START|STOP|SCOPE) (\d+)/,
 };
 
-function getAction(args) {
-    let action, key,
-        argIndex = args.findIndex(arg => {
-            [, action, key] = this.regExp.exec(arg) || [];
-            return action;
-        });
-
-    return {action, key, argIndex};
-}
+const scopeActionRegExp = /(START|STOP|SCOPE) (\d+)/;
 
 function calcIndent(args) {
     let {action, key} = getAction.call(this, args),
@@ -201,9 +207,9 @@ function calcIndent(args) {
     } else if (action === 'STOP') {
         indentCount = this.indexByKey[key];
 
-        // if (this.index > 0) { // TODO
+        if (this.index > 0) {
             this.index--;
-        // }
+        }
     } else if (action === 'SCOPE') {
         indentCount = this.indexByKey[key];
     }
@@ -257,12 +263,13 @@ function normalizeError(event) {
 
     if (
         !nativeError ||
+        typeof nativeError === 'string' ||
         !String(nativeError?.name).toLowerCase().includes('error') ||
         nativeError.fileName === 'undefined' ||
         !nativeError.stack?.length
     ) {
         let {stack = ''} = nativeError;
-        nativeError = new Error(nativeErrorToObj(nativeError));
+        nativeError = new Error(JSON.stringify(nativeErrorToObj(nativeError)));
         if (!stack.length) {
             nativeError.stack = stack + `\nFORCE STACK\n` + nativeError.stack;
         }
@@ -275,7 +282,6 @@ function normalizeError(event) {
     };
 }
 
-Logger.nativeErrorToObj = nativeErrorToObj;
 function nativeErrorToObj(nativeError) {
     return {
         message: nativeError.message,
@@ -291,28 +297,23 @@ function errorEventHandler(event) {
     event.preventDefault?.();
     event.stopImmediatePropagation?.();
 
-    self.localStorage.enableDebug ??= 2;
+    self.localStorage.enableDebug = 2;
 
-    let logger = null;
+    const logger = this instanceof Logger ? this : self.logger;
 
-    if (this instanceof Logger) {
-        this.runError(String(event), event);
-        logger = this;
-    } else if (self.logger) {
-        self.logger.runError(String(event), event);
-        logger = self.logger;
+    if (logger) {
+        logger.fromErrorEventHandler = true;
+        logger.runError(event.message, event);
     } else {
-        console.error(event.message, event)
+        console.error(event.message, event);
     }
 
-    // if (false !== data.showNotification) {
-        showErrorNotificationMessage(logger);
-    // }
+    showErrorNotificationMessage(logger);
 }
 
 function showErrorNotificationMessage(logger) {
     if (Constants.IS_BACKGROUND_PAGE) {
-        self.onBackgroundMessage('show-error-notification');
+        self.onBackgroundMessage('show-error-notification', self);
     } else {
         connectToBG(logger).sendMessage('show-error-notification');
     }
@@ -337,7 +338,7 @@ const UNNECESSARY_LOG_STRINGS = [
 
 function getStack(e, start = 0, to = 50) {
     return UNNECESSARY_LOG_STRINGS
-        .reduce((str, strToDel) => str.replaceAll(strToDel, ''), e.stack)
+        .reduce((str, strToDel) => String(str).replaceAll(strToDel, ''), e.stack)
         .trim()
         .split('\n')
         .filter(Boolean)

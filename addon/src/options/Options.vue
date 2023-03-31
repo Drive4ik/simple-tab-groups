@@ -1,8 +1,6 @@
 <script>
     'use strict';
 
-    import '../js/page-need-BG.js';
-
     import Vue from 'vue';
 
     import popup from '../js/popup.vue';
@@ -10,14 +8,14 @@
     import manageAddonBackup from './manage-addon-backup';
     import 'vue-swatches/dist/vue-swatches.css';
 
-    import * as Constants from '../js/constants.js';
-    import Messages from '../js/messages.js';
-    import Logger from '../js/logger.js';
-    import * as Utils from '../js/utils.js';
-    import * as Storage from '../js/storage.js';
-    import * as File from '../js/file.js';
-    import * as Urls from '../js/urls.js';
-    import JSON from '../js/json.js';
+    import * as Constants from 'constants';
+    import Messages from 'messages';
+    import Logger from 'logger';
+    import * as Utils from 'utils';
+    import * as Storage from 'storage';
+    import * as File from 'file';
+    import * as Urls from 'urls';
+    import JSON from 'json';
 
     window.logger = new Logger('Options');
 
@@ -664,7 +662,7 @@
             },
 
             openDebugPage() {
-                Urls.openHelp('stg-debug');
+                Urls.openDebugPage();
             },
         },
     }

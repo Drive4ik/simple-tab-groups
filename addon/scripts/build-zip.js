@@ -1,16 +1,18 @@
 #!/usr/bin/env node
 
-const fse = require('fs-extra');
-const path = require('path');
-const ZipAFolder = require('zip-a-folder');
+import fse from 'fs-extra';
+import path from 'path';
+import ZipAFolder from 'zip-a-folder';
+import { fileURLToPath } from 'url';
+import manifest from '../src/manifest.json' assert { type: 'json' };
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function setPath(folderName) {
-    return path.join(__dirname, '../' + folderName);
+    return path.resolve(__dirname, '../' + folderName);
 }
 
 function extractExtensionData() {
-    let manifest = require('../src/manifest.json');
-
     return {
         name: manifest.browser_specific_settings.gecko.id,
         version: manifest.version,
@@ -22,7 +24,7 @@ function buildZip(src, dist, zipFilename) {
 
     fse.ensureDirSync(dist);
 
-    return ZipAFolder.zip(src, path.join(dist, zipFilename));
+    return ZipAFolder.zip(src, path.resolve(dist, zipFilename));
 };
 
 function init() {
@@ -34,17 +36,17 @@ function init() {
     if (process.env.IS_PRODUCTION) {
         buildZip(setPath('dist'), distZipPath, zipFilename)
             .then(() => console.info('\nBuild ZIP OK'))
-            .catch(console.err);
+            .catch(console.error.bind(console, 'can\'t buildZip PROD'));
     } else {
         let devPath = setPath('dev'),
-            setDevPath = path.join.bind(path, devPath);
+            setDevPath = path.resolve.bind(path, devPath);
 
         fse.copySync(setPath('src'), setDevPath('src'));
         fse.copySync(setPath('scripts'), setDevPath('scripts'));
         fse.copySync(setPath('README.md'), setDevPath('README.md'));
         fse.copySync(setPath('package.json'), setDevPath('package.json'));
         fse.copySync(setPath('package-lock.json'), setDevPath('package-lock.json'));
-        fse.copySync(setPath('webpack.config.js'), setDevPath('webpack.config.js'));
+        fse.copySync(setPath('webpack.config.mjs'), setDevPath('webpack.config.mjs'));
 
         buildZip(devPath, distZipPath, zipFilename)
             .then(function() {
@@ -52,7 +54,7 @@ function init() {
 
                 console.info('\nBuild ZIP OK');
             })
-            .catch(console.err);
+            .catch(console.error.bind(console, 'can\'t buildZip DEV'));
     }
 
 };

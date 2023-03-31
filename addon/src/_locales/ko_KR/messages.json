@@ -813,11 +813,11 @@
         "message": "백업을 복원하기 전에 모든 확장 프로그램 데이터 및 설정을 삭제합니다",
         "description": "Delete all addon data and settings before restoring backup"
     },
-    "helpPageWelcomeV4Title": {
-        "message": "심플 탭 그룹 v4 이용을 환영합니다",
-        "description": "Welcome to Simple Tab Groups v4"
+    "helpPageWelcomeTitle": {
+        "message": "심플 탭 그룹 이용을 환영합니다",
+        "description": "Welcome to Simple Tab Groups"
     },
-    "helpPageWelcomeV4Description": {
+    "helpPageWelcomeDescription": {
         "message": "브라우저 설정에서 \"이전 세션 복원\"을 활성화하십시오.<br>이는 그룹과 탭 간의 통신을 유지하는 데 필요합니다. 그렇지 않으면 <br>브라우저가 시작될 때 탭이 열리지 않고 확장 프로그램에서 손실됩니다. > 확장 프로그램이 작동을 멈춥니다.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },

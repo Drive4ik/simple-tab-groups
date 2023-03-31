@@ -1,8 +1,6 @@
 <script>
     'use strict';
 
-    import '../js/page-need-BG.js';
-
     import Vue from 'vue';
 
     import popup from '../js/popup.vue';
@@ -13,16 +11,18 @@
     import contextMenuTabNew from '../components/context-menu-tab-new.vue';
     import contextMenuGroup from '../components/context-menu-group.vue';
 
-    import * as Constants from '../js/constants.js';
-    import Messages from '../js/messages.js';
-    import Logger from '../js/logger.js';
-    import * as Containers from '../js/containers.js';
-    import * as Cache from '../js/cache.js';
-    import * as Groups from '../js/groups.js';
-    import * as Windows from '../js/windows.js';
-    import * as Tabs from '../js/tabs.js';
-    import * as Utils from '../js/utils.js';
-    import JSON from '../js/json.js';
+    import backgroundSelf from 'background';
+    import * as Constants from 'constants';
+    import Messages from 'messages';
+    import Logger from 'logger';
+    import * as Containers from 'containers';
+    import * as Urls from 'urls';
+    import * as Cache from 'cache';
+    import * as Groups from 'groups';
+    import * as Windows from 'windows';
+    import * as Tabs from 'tabs';
+    import * as Utils from 'utils';
+    import JSON from 'json';
 
     const isSidebar = '#sidebar' === window.location.hash;
 
@@ -45,8 +45,6 @@
         SECTION_GROUP_TABS = 'groupTabs',
         SECTION_DEFAULT = SECTION_GROUPS_LIST,
         availableTabKeys = new Set(['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'lastAccessed', 'audible', 'mutedInfo', 'windowId']);
-
-    let loadPromise = null;
 
     export default {
         data() {
@@ -113,22 +111,23 @@
             'context-menu-group': contextMenuGroup,
         },
         created() {
-            logger.info('created')
             this.loadOptions();
 
-            if (!isSidebar && BG.options.fullPopupWidth) {
+            if (!isSidebar && backgroundSelf.options.fullPopupWidth) {
                 document.documentElement.classList.add('full-popup-width');
             }
 
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.updateTheme());
-
-            loadPromise = Promise.all([this.loadWindows(), this.loadGroups(), this.loadUnsyncedTabs()]);
         },
         async mounted() {
-            const log = logger.start('mounted')
-            await loadPromise;
+            const log = logger.start('mounted');
+            const startUpData = await backgroundSelf.startUpData();
 
-            log.log('loaded')
+            this.loadWindows(startUpData);
+            this.loadGroups(startUpData);
+            this.loadUnsyncedTabs(startUpData);
+
+            log.log('loaded');
 
             this.$nextTick(function() {
                 fullLoading(false);
@@ -212,7 +211,7 @@
                 return this.currentWindow ? this.unSyncTabs.filter(tab => tab.windowId === this.currentWindow.id) : [];
             },
             countWindowsUnSyncTabs() {
-                return this.unSyncTabs.map(tab => tab.windowId).filter(Utils.onlyUniqueFilter);
+                return this.unSyncTabs.map(tab => tab.windowId).filter(Utils.onlyUniqueFilter).length;
             },
             allTabsCount() {
                 return Object.keys(this.allTabs).length;
@@ -225,13 +224,13 @@
                 document.documentElement.dataset.theme = Utils.getThemeApply(this.options.theme);
             },
 
-            async loadWindows() {
-                this.currentWindow = await Windows.get();
-                this.openedWindows = await Windows.load();
+            async loadWindows({currendWindow, windows} = {}) {
+                this.currentWindow = currendWindow || await Windows.get();
+                this.openedWindows = windows || await Windows.load();
             },
 
             loadOptions() {
-                this.options = JSON.clone(BG.options);
+                this.options = JSON.clone(backgroundSelf.options);
             },
 
             setFocusOnSearch() {
@@ -333,8 +332,8 @@
                         return;
                     }
 
-                    if (BG.groupIdForNextTab) {
-                        lazyAddTab(tab, BG.groupIdForNextTab);
+                    if (backgroundSelf.groupIdForNextTab) {
+                        lazyAddTab(tab, backgroundSelf.groupIdForNextTab);
                         return;
                     }
 
@@ -394,7 +393,7 @@
                         this.allTabs[tab.id].lastAccessed = tab.lastAccessed;
                     }
 
-                    if (BG.excludeTabIds.has(tab.id)) {
+                    if (backgroundSelf.excludeTabIds.has(tab.id)) {
                         return;
                     }
 
@@ -446,7 +445,7 @@
 
                 let onDetachedTabTimer = 0;
                 const onDetachedTab = (tabId, {oldWindowId}) => { // notice: call before onAttached
-                    if (BG.excludeTabIds.has(tabId)) {
+                    if (backgroundSelf.excludeTabIds.has(tabId)) {
                         return;
                     }
 
@@ -461,7 +460,7 @@
                 let onAttachedTabTimer = 0,
                     onAttachedUnsyncTabTimer = 0;
                 const onAttachedTab = (tabId, {newWindowId}) => {
-                    if (BG.excludeTabIds.has(tabId)) {
+                    if (backgroundSelf.excludeTabIds.has(tabId)) {
                         return;
                     }
 
@@ -662,15 +661,19 @@
                 return this.openedWindows.some(win => win.groupId === id);
             },
 
-            async loadGroups() {
-                let {groups} = await Groups.load(null, true);
+            async loadGroups({groups} = {}) {
+                ({groups} = groups ? {groups} : await Groups.load(null, true, true));
 
                 this.groups = groups.map(this.mapGroup, this);
 
                 this.multipleTabIds = [];
             },
-            async loadUnsyncedTabs() {
-                let windows = await Windows.load(true);
+            async loadUnsyncedTabs({unSyncTabs} = {}) {
+                if (unSyncTabs) {
+                    return this.unSyncTabs = unSyncTabs.map(this.mapTab, this);
+                }
+
+                let windows = await Windows.load(true, true);
 
                 this.unSyncTabs = windows
                     .reduce(function(acc, win) {
@@ -950,7 +953,11 @@
                 if (this.currentGroup) {
                     this.unSyncTabs = [];
 
-                    await Messages.sendMessageModule('Tabs.move', tabsIds, this.currentGroup.id, this.currentGroup);
+                    await Messages.sendMessageModule('Tabs.move', tabsIds, this.currentGroup.id, {
+                        showTabAfterMovingItIntoThisGroup: this.currentGroup.showTabAfterMovingItIntoThisGroup,
+                        showOnlyActiveTabAfterMovingItIntoThisGroup: this.currentGroup.showOnlyActiveTabAfterMovingItIntoThisGroup,
+                        showNotificationAfterMovingTabIntoThisGroup: this.currentGroup.showNotificationAfterMovingTabIntoThisGroup,
+                    });
                 } else {
                     await Messages.sendMessageModule('Tabs.moveNative', tabsIds, {
                         windowId: this.currentWindow.id,
@@ -1077,7 +1084,7 @@
 
             openOptionsPage() {
                 delete window.localStorage.optionsSection;
-                Messages.sendMessage('open-options-page');
+                Urls.openOptionsPage();
                 this.closeWindow();
             },
             openManageGroups() {
@@ -1481,7 +1488,7 @@
                             <li>
                                 <a tabindex="0" @click="unsyncHiddenTabsMoveToCurrentGroup" @keydown.enter="unsyncHiddenTabsMoveToCurrentGroup" v-text="lang('actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup')"></a>
                             </li>
-                            <li v-if="unSyncWindowTabs.length && countWindowsUnSyncTabs.length > 1">
+                            <li v-if="unSyncWindowTabs.length && countWindowsUnSyncTabs > 1">
                                 <a tabindex="0" @click="unsyncHiddenWindowTabsCreateNewGroup" @keydown.enter="unsyncHiddenWindowTabsCreateNewGroup" v-text="lang('actionHiddenUnSyncWindowTabsCreateGroup')"></a>
                             </li>
                             <li>

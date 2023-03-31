@@ -1,29 +1,37 @@
 import './translate-help-pages.js';
-import '/js/page-need-BG.js';
 
 import Messages from '/js/messages.js';
-// import Logger from '/js/logger.js';
 import * as Constants from '/js/constants.js';
-import * as Cache from '/js/cache.js';
 import * as File from '/js/file.js';
-import * as Utils from '/js/utils.js';
-
-// window.logger = new Logger('stg-debug');
+import * as Cache from '/js/cache.js';
 
 const $ = document.querySelector.bind(document),
-    wasAutoDebug = window.localStorage.enableDebug == 2,
+    wasAutoDebug = isAutoDebug(),
     debugStatus = $('#debugStatus'),
     enableDebugButton = $('#enableDebug'),
     disableDebugButton = $('#disableDebug');
 
-enableDebugButton.classList.toggle('hidden', !!window.localStorage.enableDebug);
-disableDebugButton.classList.toggle('hidden', !window.localStorage.enableDebug);
+reloadState();
 
-if (wasAutoDebug) {
-    debugStatus.classList.add('auto-enabled');
-    $('#mainTitle').innerText = browser.i18n.getMessage('helpPageStgDebugAutoDebugMainTitle');
-} else if (window.localStorage.enableDebug) {
-    debugStatus.classList.add('enabled');
+Messages.connectToBackground('stg-debug', 'show-error-notification', () => {
+    reloadState();
+    browser.windows.update(browser.windows.WINDOW_ID_CURRENT, {focused: true});
+});
+
+function reloadState() {
+    enableDebugButton.classList.toggle('hidden', !!window.localStorage.enableDebug);
+    disableDebugButton.classList.toggle('hidden', !window.localStorage.enableDebug);
+
+    if (wasAutoDebug || isAutoDebug()) {
+        debugStatus.classList = 'auto-enabled';
+        $('#mainTitle').innerText = browser.i18n.getMessage('helpPageStgDebugAutoDebugMainTitle');
+    } else if (window.localStorage.enableDebug) {
+        debugStatus.classList = 'enabled';
+    }
+}
+
+function isAutoDebug() {
+    return window.localStorage.enableDebug == 2;
 }
 
 function enableDebug() {
@@ -41,15 +49,15 @@ async function disableDebug() {
     await saveConsoleLogs();
 }
 
-const normalizeAndClear = function(obj) {
+const normalizeAndClear = function(obj, objKey) {
     if (Array.isArray(obj)) {
         return obj.map(normalizeAndClear);
-    } else if ('object' === Utils.type(obj)) {
+    } else if (typeof obj === 'object') {
         for (let key in obj) {
             if (['title', 'icon', 'icons', 'iconUrl', 'favIconUrl', 'thumbnail', 'filename', 'catchTabRules'].includes(key)) {
                 obj[key] = obj[key] ? ('some ' + key) : obj[key];
             } else {
-                obj[key] = normalizeAndClear(obj[key]);
+                obj[key] = normalizeAndClear(obj[key], key);
             }
         }
 
@@ -60,7 +68,7 @@ const normalizeAndClear = function(obj) {
         return this.urls[obj] || (this.urls[obj] = 'URL_' + this.urlIndex++);
     } else if (String(obj).startsWith('file:')) {
         return this.urls[obj] || (this.urls[obj] = 'FILE_' + this.urlIndex++);
-    } else if (typeof obj === 'string' && obj.includes(Constants.STG_BASE_URL)) {
+    } else if (typeof obj === 'string' && obj.includes(Constants.STG_BASE_URL) && objKey !== 'UUID') {
         return obj.replaceAll(Constants.STG_BASE_URL, '');
     }
 
@@ -70,47 +78,109 @@ const normalizeAndClear = function(obj) {
     urlIndex: 1,
 });
 
+let CRITICAL_ERRORS = [];
+function onCatch(message, resultObjType, ...args) {
+    return nativeError => {
+        const ERROR = {
+            error: {
+                message: `can't load ${message}: ` + nativeError?.message,
+                errorFileName: nativeError?.fileName,
+                lineNumber: nativeError?.lineNumber,
+                columnNumber: nativeError?.columnNumber,
+                stack: nativeError?.stack?.split?.('\n'),
+            },
+            args,
+        };
+
+        CRITICAL_ERRORS.push(ERROR);
+
+        if (resultObjType === Array) {
+            return [ERROR];
+        }
+
+        return ERROR;
+    }
+}
+
 async function saveConsoleLogs() {
-    let [
-            info,
-            {logs, errorLogs},
-            {groupsList: groups},
-            windows
+    const [
+            background,
+            browserInfo,
+            platformInfo,
+            extensions,
+            storage,
+            permissionBookmarks,
+            windows,
+            tabs,
         ] = await Promise.all([
-            Utils.getInfo(),
-            Messages.sendMessage('get-logger-logs'),
-            Messages.sendMessage('get-groups-list'),
+            browser.runtime.getBackgroundPage().catch(onCatch('getBackgroundPage', Object)),
+            browser.runtime.getBrowserInfo().catch(onCatch('getBrowserInfo', Object)),
+            browser.runtime.getPlatformInfo().catch(onCatch('getPlatformInfo', Object)),
+            browser.management.getAll().catch(onCatch('management', Array)),
+            browser.storage.local.get().catch(onCatch('storage', Object)),
+            browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS).catch(onCatch('permissions BOOKMARKS', Object)),
             browser.windows.getAll({
                 windowTypes: [browser.windows.WindowType.NORMAL],
-                populate: true,
-            }),
+            }).catch(onCatch('windows', Array)),
+            browser.tabs.query({}).catch(onCatch('tabs', Array)),
         ]);
 
-    await Promise.all(windows.map(async win => {
-        await Cache.loadWindowSession(win);
+    const Logger = background?.logger?.constructor;
 
-        await Promise.all(win.tabs.map(tab => Cache.loadTabSession(tab, false, false)));
-    }));
+    const logs = Logger?.logs;
+    const errorLogs = Logger?.getErrors();
 
-    const tabKeys = ['id', 'url', 'hidden', 'discarded', 'pinned', 'status', 'cookieStoreId', 'groupId'];
+    const loadedWindows = await Promise.all(
+        windows.map(win => win?.id && Cache.loadWindowSession(win).catch(onCatch('window', Object, win)))
+    );
 
-    windows.forEach(win => win.tabs = win.tabs.map(tab => Utils.assignKeys({}, tab, tabKeys)));
+    const loadedTabs = await Promise.all(
+        tabs.map(tab => tab?.id && Cache.loadTabSession(tab, false, false).catch(onCatch('tab', Object, tab)))
+    );
 
-    let savedId = await File.save({
-        info,
-        windows: normalizeAndClear(windows),
-        groups: normalizeAndClear(groups),
-        logs: normalizeAndClear(logs),
-        errorLogs: normalizeAndClear(errorLogs),
-    }, 'STG-debug-logs.json');
+    const filteredExtensions = (function() {
+        try {
+            return extensions
+                .filter(({id, enabled, type}) => !id.endsWith('@search.mozilla.org') && enabled && type === browser.management.ExtensionType.EXTENSION)
+                .map(({id, name, version, hostPermissions}) => ({id, name, version, hostPermissions}))
+        } catch (e) {
+            return onCatch('filter extensions', Array, extensions)(e);
+        }
+    })();
+
+    const LOGS_OBJ = normalizeAndClear({
+        CRITICAL_ERRORS,
+        addon: {
+            version: Constants.MANIFEST.version,
+            upTime: background?.START_TIME ? Math.ceil((Date.now() - background.START_TIME) / 1000) + ' sec' : 'unknown',
+            UUID: Constants.STG_BASE_URL,
+            permissions: {
+                bookmarks: permissionBookmarks,
+            },
+            storage,
+        },
+        browserInfo: {
+            browserAndOS: {
+                ...platformInfo,
+                ...browserInfo,
+            },
+            extensions: filteredExtensions,
+        },
+        windows: loadedWindows,
+        tabs: loadedTabs,
+        logs,
+        errorLogs,
+    });
+
+    let savedId = await File.save(LOGS_OBJ, 'STG-debug-logs.json');
 
     if (savedId) {
-        Messages.sendMessage('clear-logger-logs');
+        Logger?.clearLogs();
     }
 }
 
 function onClosePage() {
-    if (wasAutoDebug) {
+    if (wasAutoDebug || isAutoDebug()) {
         delete window.localStorage.enableDebug;
         Messages.sendMessage('safe-reload-addon');
     }

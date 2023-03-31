@@ -1,5 +1,5 @@
 
-function normalizeSendData(action, data = {}) {
+export function normalizeSendData(action, data = {}) {
     if (typeof action === 'object' && arguments.length === 1) {
         return action;
     }
@@ -14,6 +14,21 @@ export async function sendMessage(...args) {
 
     return browser.runtime.sendMessage(message)
         .catch(self.logger?.onCatch(['sendMessage', message]));
+}
+
+export function sendMessageModule(ModuleFunc, ...args) {
+    return sendMessage(ModuleFunc, {
+        args,
+        from: new Error,
+    });
+}
+
+export function sendExternalMessage(exId, ...args) {
+    const message = normalizeSendData(...args);
+
+    self.logger?.info('sending', `SEND-EXTERNAL-MESSAGE#${message.action}`, 'to:', exId);
+
+    browser.runtime.sendMessage(exId, message).catch(() => {});
 }
 
 export function connectToBackground(name, listeners = null, callback = null) {
@@ -52,14 +67,19 @@ function onConnectedBackground(onMessageListener, port) {
     }
 }
 
-async function sendMessageFromBackground(...args) {
+function sendMessageFromBackground(...args) {
     const message = normalizeSendData(...args);
+
+    let sended = false;
 
     CSPorts.forEach(({port, listeners}) => {
         if (listeners?.includes('*') || listeners?.includes(message.action)) {
             port.postMessage(message);
+            sended = true;
         }
     });
+
+    return sended;
 }
 
 export function initBackground(onMessageListener) {
@@ -68,14 +88,11 @@ export function initBackground(onMessageListener) {
     return sendMessageFromBackground;
 }
 
-export function sendMessageModule(ModuleFunc, ...args) {
-    // let from = (new Error).stack;
-    return sendMessage(ModuleFunc, {args, from: new Error});
-}
-
 export default {
+    normalizeSendData,
     sendMessage,
     sendMessageModule,
+    sendExternalMessage,
     initBackground,
     connectToBackground,
 }

@@ -44,6 +44,8 @@ const excludeExtensions = new Set([
     'addons-search-detection@mozilla.com',
 ]);
 
+const htmlTagArgumentRegExp = /^[A-Z\d\-\_]+#[a-z\-]+$/;
+
 new Vue({
     el: '#app',
     data: {
@@ -62,13 +64,24 @@ new Vue({
         logsIndent: 'calculateIndentLineHeight',
     },
     computed: {
-        info() {
-            return this.file.info;
+        addon() {
+            return this.file.addon;
         },
         upTime() {
-            let [sec] = /\d+/.exec(this.info.upTime) || [];
+            let [sec] = /\d+/.exec(this.addon.upTime) || [];
 
-            return sec ? secondsToHHMMSS(sec) : this.info.upTime;
+            return sec ? secondsToHHMMSS(sec) : this.addon.upTime;
+        },
+        options() {
+            return Object.keys(this.addon.storage)
+                .filter(key => key !== 'groups')
+                .reduce((acc, key) => (acc[key] = this.addon.storage[key], acc), {});
+        },
+        groups() {
+            return this.addon.storage.groups;
+        },
+        tabsWithoutGroup() {
+            return this.file.tabs.filter(t => !t?.groupId);
         },
         logs() {
             return this.file.logs;
@@ -108,19 +121,20 @@ new Vue({
                         title.push(JSON.stringify(k));
                     }
                 } else if (typeof k === 'object') {
-                    title.push('<code>' + JSON.stringify(k).replaceAll(this.file.info.UUID, '') + '</code>');
+                    title.push('<code>' + JSON.stringify(k).replaceAll(this.file.addon.UUID, '') + '</code>');
                 } else if (k?.startsWith?.('START')) {
                     title.push(indentConfig.startSymbol);
                 } else if (k?.startsWith?.('STOP')) {
                     title.push(indentConfig.stopSymbol);
                 } else if (k?.startsWith?.('SCOPE')) {
                     // do nothing
-                } else if (k?.startsWith?.('ACTION#')) {
+                } else if (htmlTagArgumentRegExp.test(k)) {
+                    let [action, message] = k.split('#');
                     title.push(`
                     <div class="is-inline-block">
                         <div class="tags has-addons">
-                            <span class="tag">action</span>
-                            <span class="tag is-success">${k.split('#').pop()}</span>
+                            <span class="tag">${action}</span>
+                            <span class="tag is-success">${message}</span>
                         </div>
                     </div>
                     `);
@@ -173,9 +187,9 @@ new Vue({
             });
         },
 
-        async changeFile({target}) {
-            let file = await new Promise((resolve, reject) => {
-                let file = target.files[0];
+        async readFile(inputTag) {
+            const result = await new Promise((resolve, reject) => {
+                let file = inputTag.files[0];
 
                 if (0 === file.size) {
                     reject('empty file');
@@ -189,15 +203,30 @@ new Vue({
 
                 let reader = new FileReader();
 
-                reader.addEventListener('loadend', () => resolve(JSON.parse(reader.result)));
+                reader.addEventListener('loadend', () => resolve(reader.result));
                 reader.addEventListener('error', reject);
 
                 reader.readAsText(file, 'utf-8');
             });
 
+            return JSON.parse(result);
+        },
+
+        async changeFile({target}) {
+            let file;
+
+            try {
+                file = await this.readFile(target);
+            } catch (e) {
+                alert(`can't read JSON log file: ${e}`);
+                console.log(e);
+                return;
+            }
+
             this.logsIndent = 0;
 
-            file.info.extensions = await Promise.all(file.info.extensions
+            file.browserInfo.extensions = await Promise.all(
+                file.browserInfo.extensions
                 .filter(ext => !excludeExtensions.has(ext.id))
                 .map(async ext => {
                     let req = await fetch(`https://services.addons.mozilla.org/api/v4/addons/addon/${ext.id}/?lang=en-US`);
@@ -212,6 +241,28 @@ new Vue({
                     return ext;
                 })
             );
+
+            try {
+                file.windows.forEach(win => {
+                    win.tabs = file.tabs.filter(tab => tab?.windowId === win.id);
+                });
+            } catch (e) {
+                alert(e);
+                file.windows = [e.message, file.windows].flat();
+            }
+
+            try {
+                file.addon.storage ??= {};
+
+                file.addon.storage.groups.forEach(group => {
+                    if (!group.isArchive) {
+                        group.tabs = file.tabs.filter(tab => tab?.groupId === group.id);
+                    }
+                });
+            } catch (e) {
+                alert(e);
+                file.addon.storage.groups = [e.message, file.addon.storage.groups].flat();
+            }
 
             function formatLog(log) {
                 log.showStack = false;
@@ -234,6 +285,10 @@ new Vue({
                     }
                 });
 
+                if (stacks.length) {
+                    messages.push(`<span class="tag is-danger is-light">additional stack</span>`);
+                }
+
                 log[log.consoleKey] = messages;
 
                 if (stacks.length) {
@@ -253,8 +308,8 @@ new Vue({
                 return 0;
             }
 
-            file.logs.sort(sortTime).forEach(formatLog);
-            file.errorLogs.sort(sortTime).forEach(formatLog);
+            (file.logs || []).sort(sortTime).forEach(formatLog);
+            (file.errorLogs || []).sort(sortTime).forEach(formatLog);
 
             this.file = file;
         },

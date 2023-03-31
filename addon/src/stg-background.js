@@ -15,28 +15,22 @@ import * as Tabs from './js/tabs.js';
 import * as Windows from './js/windows.js';
 import * as Management from './js/management.js';
 
-window.START_TIME = Date.now();
-window.IS_TEMPORARY = false;
+self.START_TIME = Date.now();
+self.IS_TEMPORARY = false;
 
-if (2 == window.localStorage.enableDebug) { // if debug was auto-enabled - disable on next start addon/browser
-    delete window.localStorage.enableDebug;
+if (self.localStorage.enableDebug == 2) { // if debug was auto-enabled - disable on next start addon/browser
+    delete self.localStorage.enableDebug;
 }
 
 self.logger = new Logger('BG');
 
 self.sendMessage = Messages.initBackground(onBackgroundMessage);
 
-self.BG = {
-    inited: false,
+self.inited = false;
 
-    get IS_TEMPORARY() {
-        return IS_TEMPORARY;
-    },
-};
+self.options = {};
 
-
-let options = {},
-    reCreateTabsOnRemoveWindow = [],
+let reCreateTabsOnRemoveWindow = [],
     menuIds = [],
     excludeTabIds = new Set,
     ignoreExtForReopenContainer = new Set,
@@ -93,7 +87,7 @@ async function createTabsSafe(tabs, tryRestoreOpeners, hideTabs = true) {
         groupIdForNextTabs = (groupIds.length === 1 && groupIds[0]) ? groupIds[0] : null;
 
     if (groupIdForNextTabs) {
-        BG.groupIdForNextTab = groupIdForNextTabs;
+        self.groupIdForNextTab = groupIdForNextTabs;
     }
 
     let isEnabledTreeTabsExt = Constants.TREE_TABS_EXTENSIONS.some(Management.isEnabled),
@@ -106,7 +100,7 @@ async function createTabsSafe(tabs, tryRestoreOpeners, hideTabs = true) {
         delete tab.windowId;
     });
 
-    BG.skipCreateTab = true;
+    self.skipCreateTab = true;
 
     if (tryRestoreOpeners && isEnabledTreeTabsExt && tabs.some(tab => tab.openerTabId)) {
         log.log('tryRestoreOpeners');
@@ -129,9 +123,9 @@ async function createTabsSafe(tabs, tryRestoreOpeners, hideTabs = true) {
         newTabs = await Promise.all(tabs.map(Tabs.createNative));
     }
 
-    BG.skipCreateTab = false;
+    self.skipCreateTab = false;
 
-    BG.groupIdForNextTab = null;
+    self.groupIdForNextTab = null;
 
     newTabs = await Promise.all(newTabs.map(Cache.setTabSession));
 
@@ -150,25 +144,22 @@ async function createTabsSafe(tabs, tryRestoreOpeners, hideTabs = true) {
     return newTabs;
 }
 
-function sendExternalMessage(data) {
-    const log = logger.start(['info', 'send event external'], data);
-
-    if (!BG.inited) {
-        log.warn('addon not yet loaded');
-        return log.stop();
+function sendExternalMessage(...args) {
+    if (!self.inited) {
+        logger.warn('sendExternalMessage addon not yet loaded');
+        return;
     }
+
+    const message = Messages.normalizeSendData(...args);
 
     Object.keys(Constants.EXTENSIONS_WHITE_LIST).forEach(exId => {
         if (
-            Constants.EXTENSIONS_WHITE_LIST[exId].postActions.includes(data.action) &&
+            Constants.EXTENSIONS_WHITE_LIST[exId].postActions.includes(message.action) &&
             Management.isEnabled(exId)
         ) {
-            browser.runtime.sendMessage(exId, data).catch(() => {});
-            log.log('sending to', exId);
+            Messages.sendExternalMessage(exId, message);
         }
     });
-
-    log.stop();
 }
 
 let _loadingGroupInWindow = new Set; // windowId: true;
@@ -192,25 +183,26 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
 
     _loadingGroupInWindow.add(windowId);
 
-    let groupWindowId = Cache.getWindowId(groupId),
-        result = null;
+    const groupWindowId = Cache.getWindowId(groupId);
+
+    let result = null;
 
     try {
         let addTabs = [];
 
         if (groupWindowId) {
             if (activeTabId) {
-                Tabs.setActive(activeTabId).catch(log.onCatch('Tabs.setActive'));
+                Tabs.setActive(activeTabId);
             }
 
-            Windows.setFocus(groupWindowId).catch(log.onCatch(['Windows.setFocus', groupWindowId]));
+            Windows.setFocus(groupWindowId);
         } else {
             // magic
 
-            let {group: groupToShow, groups} = await Groups.load(groupId, true),
+            const {group: groupToShow, groups} = await Groups.load(groupId, true),
                 oldGroupId = Cache.getWindowGroup(windowId),
                 groupToHide = groups.find(gr => gr.id === oldGroupId),
-                tabsIdsToRemove = [];
+                tabsIdsToRemove = new Set;
 
             if (!groupToShow) {
                 log.throwError('groupToShow not found');
@@ -300,7 +292,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                     tabs = tabs.filter(tab => !tab.groupId);
 
                     if (tabs.length === 1 && Utils.isUrlEmpty(tabs[0].url)) {
-                        tabsIdsToRemove.push(tabs[0].id);
+                        tabsIdsToRemove.add(tabs[0].id);
                     } else {
                         await hideUnSyncTabs(tabs);
                     }
@@ -347,7 +339,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
 
                         // if has one empty tab - remove it
                         if (tabs.length === 1 && Utils.isUrlEmpty(tabs[0].url)) {
-                            tabsIdsToRemove.push(tabs[0].id);
+                            tabsIdsToRemove.add(tabs[0].id);
                         } else {
                             await hideUnSyncTabs(tabs);
                         }
@@ -373,14 +365,14 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                     await hideTabs([activeTabGroupToHide]);
                 }
 
-                groupToHide.tabs.forEach(tab => tab.url === Constants.MANAGE_TABS_URL && tabsIdsToRemove.push(tab.id));
+                groupToHide.tabs.forEach(tab => tab.url === Urls.MANAGE_TABS_URL && tabsIdsToRemove.add(tab.id));
             }
 
-            Tabs.remove(tabsIdsToRemove);
+            await Tabs.remove(Array.from(tabsIdsToRemove));
 
-            updateMoveTabMenus();
+            await updateMoveTabMenus();
 
-            await updateBrowserActionData(groupToShow.id).catch(log.onCatch('updateBrowserActionData'));
+            await updateBrowserActionData(groupToShow.id);
 
             if (!applyFromHistory) {
                 groupsHistory.add(groupId);
@@ -393,8 +385,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
             addTabs,
         });
 
-        sendExternalMessage({
-            action: 'group-loaded',
+        sendExternalMessage('group-loaded', {
             groupId,
             windowId,
         });
@@ -406,7 +397,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
         if (e) {
             errorEventHandler.call(log, e);
 
-            updateBrowserActionData(null, windowId).catch(log.onCatch('updateBrowserActionData', false));
+            await updateBrowserActionData(null, windowId);
 
             if (!groupWindowId) {
                 excludeTabIds.clear();
@@ -416,11 +407,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
 
     _loadingGroupInWindow.delete(windowId);
 
-    if (result) {
-        log.stop(result);
-    } else {
-        log.stopError(result);
-    }
+    result ? log.stop() : log.stopError();
 
     return result;
 }
@@ -465,7 +452,7 @@ const onCreatedTab = Utils.catchFunc(async function(tab) {
 
     Cache.setTab(tab);
 
-    if (BG.skipCreateTab) {
+    if (self.skipCreateTab) {
         return log.stop('skip tab', tab.id);
     }
 
@@ -560,7 +547,7 @@ const onUpdatedTab = Utils.catchFunc(async function(tabId, changeInfo, tab) {
                         }
                     }
 
-                    Tabs.safeHide(tab).catch(log.onCatch(['Tabs.safeHide', tab.id]));
+                    Tabs.safeHide(tab);
                 } else {
                     Cache.setTabGroup(tab.id, winGroupId).catch(log.onCatch(['Cache.setTabGroup', tab.id, 'winGroupId', winGroupId]));
                 }
@@ -858,10 +845,10 @@ async function GrandRestoreWindows({id}, needRestoreMissedTabsMap) {
 }
 
 const onCreatedWindow = Utils.catchFunc(async function(win) {
-    const log = logger.start(['info', 'onCreatedWindow'], win.id, 'skip created:', BG.skipAddGroupToNextNewWindow);
+    const log = logger.start(['info', 'onCreatedWindow'], win.id, 'skip created:', self.skipAddGroupToNextNewWindow);
 
-    if (BG.skipAddGroupToNextNewWindow) {
-        BG.skipAddGroupToNextNewWindow = false;
+    if (self.skipAddGroupToNextNewWindow) {
+        self.skipAddGroupToNextNewWindow = false;
         log.stop();
         return;
     }
@@ -909,7 +896,7 @@ const onCreatedWindow = Utils.catchFunc(async function(win) {
 });
 
 function onFocusChangedWindow(windowId) {
-    logger.log('onFocusChangedWindow', windowId);
+    !self.IS_TEMPORARY && logger.log('onFocusChangedWindow', windowId);
 
     if (browser.windows.WINDOW_ID_NONE !== windowId && options.showContextMenuOnTabs) {
         browser.menus.update('set-tab-icon-as-group-icon', {
@@ -968,7 +955,7 @@ async function loadingBrowserAction(start = true, windowId) {
 }
 
 async function addUndoRemoveGroupItem(groupToRemove) {
-    let restoreGroup = Utils.catchFunc(async function(group) {
+    const restoreGroup = Utils.catchFunc(async function(group) {
         browser.menus.remove(Constants.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id);
         browser.notifications.clear(Constants.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id);
 
@@ -984,7 +971,7 @@ async function addUndoRemoveGroupItem(groupToRemove) {
 
         await Groups.save(groups);
 
-        updateMoveTabMenus();
+        await updateMoveTabMenus();
 
         if (tabs.length && !group.isArchive) {
             await loadingBrowserAction();
@@ -1024,7 +1011,10 @@ async function updateMoveTabMenus() {
 
 async function removeMoveTabMenus() {
     if (menuIds.length) {
-        await Promise.all(menuIds.map(id => browser.menus.remove(id).catch(() => {})));
+        await Promise.all(menuIds.map(id =>
+            browser.menus.remove(id)
+                .catch(logger.onCatch(['removeMoveTabMenus', id], false))
+        ));
         menuIds = [];
     }
 }
@@ -1035,6 +1025,8 @@ async function createMoveTabMenus() {
     if (!options.showContextMenuOnTabs && !options.showContextMenuOnLinks && !hasBookmarksPermission) {
         return;
     }
+
+    const log = logger.start('createMoveTabMenus')
 
     await removeMoveTabMenus();
 
@@ -1312,7 +1304,7 @@ async function createMoveTabMenus() {
                 proposalTitle: tab.title,
                 tabIds: tabIds,
                 windowId: setActive ? tab.windowId : undefined,
-            });
+            }, self);
         }),
     }));
 
@@ -1333,7 +1325,7 @@ async function createMoveTabMenus() {
                 {ok, group} = await onBackgroundMessage({
                     action: 'add-new-group',
                     proposalTitle: info.linkText,
-                });
+                }, self);
 
             if (!ok) {
                 group = await Groups.add(undefined, undefined, info.linkText);
@@ -1375,7 +1367,7 @@ async function createMoveTabMenus() {
                     {ok, group} = await onBackgroundMessage({
                         action: 'add-new-group',
                         proposalTitle: bookmark.title,
-                    });
+                    }, self);
 
                 if (!ok) {
                     group = await Groups.add(undefined, undefined, bookmark.title);
@@ -1468,11 +1460,11 @@ async function createMoveTabMenus() {
                 await loadingBrowserAction();
 
                 // create tabs
-                BG.skipCreateTab = true;
+                self.skipCreateTab = true;
 
                 let newTabs = await Promise.all(tabsToCreate.map(Tabs.createNative));
 
-                BG.skipCreateTab = false;
+                self.skipCreateTab = false;
 
                 newTabs = await Promise.all(newTabs.map(Cache.setTabSession));
 
@@ -1492,6 +1484,8 @@ async function createMoveTabMenus() {
             }
         }),
     }));
+
+    log.stop();
 }
 
 async function findGroupBookmark(group, parentId, createIfNeed) {
@@ -1567,7 +1561,7 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
     let hasBookmarksPermission = await browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS);
 
     if (!hasBookmarksPermission) {
-        showMessages && Utils.notify(['noAccessToBookmarks'], undefined, undefined, undefined, () => browser.runtime.openOptionsPage());
+        showMessages && Utils.notify(['noAccessToBookmarks'], undefined, undefined, undefined, Urls.openOptionsPage);
         return false;
     }
 
@@ -2050,30 +2044,6 @@ function removeEvents() {
 
 window.addEventListener('unload', removeEvents);
 
-async function openManageGroups() {
-    if (options.openManageGroupsInTab) {
-        await Tabs.createUrlOnce(Constants.MANAGE_TABS_URL);
-    } else {
-        let allWindows = await browser.windows.getAll({
-            populate: true,
-            windowTypes: [browser.windows.WindowType.POPUP],
-        });
-
-        let popupWindow = allWindows.find(win => browser.windows.WindowType.POPUP === win.type && 1 === win.tabs.length && Constants.MANAGE_TABS_URL === win.tabs[0].url);
-
-        if (popupWindow) {
-            await Windows.setFocus(popupWindow.id);
-        } else {
-            await browser.windows.create({
-                url: Constants.MANAGE_TABS_URL,
-                type: browser.windows.CreateType.POPUP,
-                width: Number(window.localStorage.manageGroupsWindowWidth) || 1000,
-                height: Number(window.localStorage.manageGroupsWindowHeight) || 700,
-            });
-        }
-    }
-}
-
 function openNotSupportedUrlHelper() {
     Tabs.createUrlOnce('https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/Content_scripts');
 }
@@ -2083,7 +2053,7 @@ browser.commands.onCommand.addListener(onBackgroundMessage);
 browser.runtime.onMessage.addListener(onBackgroundMessage);
 
 browser.runtime.onMessageExternal.addListener(async function(request, sender) {
-    const log = logger.start(['info', 'onMessageExternal'], {request, sender});
+    const log = logger.start(['info', 'onMessageExternal'], `RECEIVED-EXTERNAL-ACTION#${request?.action}`, {request, sender});
 
     if (request?.action === 'ignore-ext-for-reopen-container') {
         ignoreExtForReopenContainer.add(sender.id);
@@ -2093,8 +2063,8 @@ browser.runtime.onMessageExternal.addListener(async function(request, sender) {
         };
     }
 
-    if (!BG.inited) {
-        log.stop('BG not inited');
+    if (!self.inited) {
+        log.stop('background not inited');
         return {
             ok: false,
             error: `[STG] I'm not loaded yet.`,
@@ -2128,17 +2098,18 @@ browser.runtime.onMessageExternal.addListener(async function(request, sender) {
 });
 
 const INTERNAL_MODULES_NAMES = new Set([
-    'Windows',
-    'Groups',
-    'Tabs',
     'BG.saveOptions',
     'BG.restoreBackup',
     'BG.clearAddon',
     'BG.runMigrateForData',
+    'BG.startUpData',
+    'Tabs',
+    'Groups',
+    'Windows',
 ]);
 
 const INTERNAL_MODULES = {
-    BG,
+    BG: self,
     Tabs,
     Groups,
     Windows,
@@ -2159,10 +2130,17 @@ self.BG.callModule = async function(moduleName, ...args) {
     }
 } */
 
+function isStgSender(sender) {
+    return sender === self ||
+        sender.id === browser.runtime.id ||
+        sender.sender?.id === browser.runtime.id;
+}
+
 self.onBackgroundMessage = onBackgroundMessage;
 
-async function onBackgroundMessage(message, sender, sendResponse) {
-    const isSTGMessage = !sender || sender.envType === 'addon_child' || sender.id === browser.runtime.id || sender.sender?.envType === 'addon_child' || sender.sender?.id === browser.runtime.id;
+async function onBackgroundMessage(message, sender) {
+    const isSTGMessage = isStgSender(sender);
+    const senderToLogs = isSTGMessage ? browser.runtime.id : sender;
 
     let result = {
         ok: false,
@@ -2172,14 +2150,14 @@ async function onBackgroundMessage(message, sender, sendResponse) {
 
     if (!data?.action) {
         result.error = '[STG] invalid "action"';
-        logger.warn('onBackgroundMessage', result.error, data, sender);
+        logger.error('onBackgroundMessage', result.error, data, senderToLogs);
         return result;
     }
 
     // simple messages
     switch (data.action) {
         case 'are-you-here':
-            result.ok = BG.inited;
+            result.ok = self.inited;
             return result;
 
         case 'save-log':
@@ -2188,25 +2166,17 @@ async function onBackgroundMessage(message, sender, sendResponse) {
             result.ok = true;
             return result;
 
-        case 'get-logger-logs':
-            result.logs = Logger.logs;
-            result.errorLogs = Logger.getErrors();
-            result.ok = true;
-            return result;
-
-        case 'clear-logger-logs':
-            Logger.clearLogs();
-            result.ok = true;
-            return result;
-
         case 'show-error-notification':
+            const isMessageSended = sendMessage('show-error-notification');
+
             Utils.notify(
                 ['whatsWrongMessage'],
                 undefined,
                 'whatsWrongMessage',
                 '/icons/exclamation-triangle-yellow.svg',
-                () => Urls.openHelp('stg-debug')
+                () => !isMessageSended && Urls.openDebugPage()
             ).catch(() => {});
+
             result.ok = true;
             return result;
 
@@ -2227,7 +2197,7 @@ async function onBackgroundMessage(message, sender, sendResponse) {
         let [module, funcName] = data.action.split('.');
 
         if (INTERNAL_MODULES_NAMES.has(module) || INTERNAL_MODULES_NAMES.has(data.action)) {
-            logger.log('onBackgroundMessage internal module', data.action, Logger.normalizeError(data.from));
+            logger.log('onBackgroundMessage internal module', data.action);
 
             try {
                 return await INTERNAL_MODULES[module][funcName](...data.args);
@@ -2235,15 +2205,16 @@ async function onBackgroundMessage(message, sender, sendResponse) {
                 logger.throwError([
                     'onBackgroundMessage call internal module:', data.action,
                     'args:', data.args,
-                    'sender:', sender,
+                    'sender:', senderToLogs,
+                    'from stack:', Logger.normalizeError(data.from),
                 ], e);
             }
         }
     }
 
     const log = logger.start(
-        [isSTGMessage ? 'info' : 'warn', 'onBackgroundMessage'],
-        ...(isSTGMessage ? [`ACTION#${data.action}`] : [data, sender])
+        ['info', 'onBackgroundMessage'],
+        ...(isSTGMessage ? [`ACTION#${data.action}`] : [sender.id, `RECEIVED-EXTERNAL-ACTION#${data.action}`, data])
     );
 
     try {
@@ -2253,6 +2224,8 @@ async function onBackgroundMessage(message, sender, sendResponse) {
                 groups,
                 notArchivedGroups,
             } = await Groups.load(currentWindow.groupId);
+
+        log.log('check action');
 
         switch (data.action) {
             case 'get-groups-list':
@@ -2513,11 +2486,11 @@ async function onBackgroundMessage(message, sender, sendResponse) {
 
                 break;
             case 'open-manage-groups':
-                await openManageGroups();
+                await Urls.openManageGroups();
                 result.ok = true;
                 break;
             case 'open-options-page':
-                await browser.runtime.openOptionsPage().catch(log.onCatch('open options page'));
+                await Urls.openOptionsPage();
                 result.ok = true;
                 break;
             case 'move-selected-tabs-to-custom-group':
@@ -2671,7 +2644,7 @@ async function onBackgroundMessage(message, sender, sendResponse) {
 
     } catch (e) {
         result.error = '[STG] ' + String(e);
-        log.runError(String(e), e);
+        log.runError(e.message || e, e);
     }
 
     result.error ? log.stopError() : log.stop();
@@ -2682,7 +2655,7 @@ async function onBackgroundMessage(message, sender, sendResponse) {
 async function saveOptions(_options) {
     const log = logger.start('saveOptions', _options);
 
-    if (!BG.inited) {
+    if (!self.inited) {
         log.stopError('background not yet inited');
         return null;
     }
@@ -2719,7 +2692,7 @@ async function saveOptions(_options) {
 
         await Promise.all(windows.map(async win => {
             if (options.prependGroupTitleToWindowTitle) {
-                await updateBrowserActionData(null, win.id).catch(log.onCatch(['prependGroupTitleToWindowTitle', win.id]));
+                await updateBrowserActionData(null, win.id);
             } else {
                 await browser.windows.update(win.id, {
                     titlePreface: '',
@@ -3091,43 +3064,69 @@ async function exportAllGroupsToBookmarks(showFinishMessage) {
     }
 }
 
-self.BG.options = options;
-self.BG.saveOptions = saveOptions;
+self.startUpData = async function(includeThumbnail) {
+    const log = logger.start('startUpData', {includeThumbnail});
 
-self.BG.createTabsSafe = createTabsSafe;
+    const [
+        windows,
+        currendWindow,
+        {groups},
+    ] = await Promise.all([
+        Windows.load(true, true, includeThumbnail),
+        Windows.get(),
+        Groups.load(null, true, true, includeThumbnail),
+    ]);
 
-self.BG.addUndoRemoveGroupItem = addUndoRemoveGroupItem;
+    const unSyncTabs = windows
+        .reduce((acc, win) => {
+            win.tabs.forEach(tab => !tab.groupId && acc.push(tab));
+            delete win.tabs;
+            return acc;
+        }, []);
 
-self.BG.excludeTabIds = excludeTabIds;
-self.BG.addExcludeTabIds = addExcludeTabIds;
-self.BG.removeExcludeTabIds = removeExcludeTabIds;
+    log.stop();
 
-// self.BG.sendMessage = self.sendMessage;
-self.BG.sendExternalMessage = sendExternalMessage;
+    return {
+        windows,
+        currendWindow,
+        groups,
+        unSyncTabs,
+    };
+}
 
-self.BG.updateBrowserActionData = updateBrowserActionData;
-self.BG.updateMoveTabMenus = updateMoveTabMenus;
+self.saveOptions = saveOptions;
 
-self.BG.loadingBrowserAction = loadingBrowserAction;
+self.createTabsSafe = createTabsSafe;
 
-self.BG.updateGroupBookmarkTitle = updateGroupBookmarkTitle;
-self.BG.removeGroupBookmark = removeGroupBookmark;
-self.BG.applyGroup = applyGroup;
+self.addUndoRemoveGroupItem = addUndoRemoveGroupItem;
 
-self.BG.addListenerOnBeforeRequest = addListenerOnBeforeRequest;
-self.BG.removeListenerOnBeforeRequest = removeListenerOnBeforeRequest;
+self.excludeTabIds = excludeTabIds;
+self.addExcludeTabIds = addExcludeTabIds;
+self.removeExcludeTabIds = removeExcludeTabIds;
 
-self.BG.runMigrateForData = runMigrateForData;
+self.sendExternalMessage = sendExternalMessage;
 
-self.BG.restoreBackup = restoreBackup;
-self.BG.clearAddon = clearAddon;
+self.updateBrowserActionData = updateBrowserActionData;
+self.updateMoveTabMenus = updateMoveTabMenus;
 
-self.BG.groupIdForNextTab = null;
+self.loadingBrowserAction = loadingBrowserAction;
 
-self.BG.skipCreateTab = false;
-self.BG.skipAddGroupToNextNewWindow = false;
+self.updateGroupBookmarkTitle = updateGroupBookmarkTitle;
+self.removeGroupBookmark = removeGroupBookmark;
+self.applyGroup = applyGroup;
 
-// self.BG.logger = logger;
+self.addListenerOnBeforeRequest = addListenerOnBeforeRequest;
+self.removeListenerOnBeforeRequest = removeListenerOnBeforeRequest;
+
+self.runMigrateForData = runMigrateForData;
+
+self.restoreBackup = restoreBackup;
+self.clearAddon = clearAddon;
+
+self.groupIdForNextTab = null;
+
+self.skipCreateTab = false;
+self.skipAddGroupToNextNewWindow = false;
 
 
 async function runMigrateForData(data) {
@@ -3792,20 +3791,20 @@ browser.runtime.onInstalled.addListener(function onInstalled({previousVersion, r
 
     browser.runtime.onInstalled.removeListener(onInstalled);
 
-    // if (!window.BG.inited) {
+    // if (!self.inited) {
     //     setTimeout(onInstalled, 150, {previousVersion, reason, temporary});
-    //     return log.stop('BG not inited');
+    //     return log.stop('background not inited');
     // }
 
     if (temporary) {
-        window.IS_TEMPORARY = true;
+        self.IS_TEMPORARY = true;
         return log.stop('addon is temp');
     }
 
     if (browser.runtime.OnInstalledReason.INSTALL === reason ||
-        (browser.runtime.OnInstalledReason.UPDATE === reason && -1 === Utils.compareVersions(previousVersion, '4.0'))) {
+        (browser.runtime.OnInstalledReason.UPDATE === reason && -1 === Utils.compareVersions(previousVersion, '5.0'))) {
         log.log('open welcome');
-        Urls.openHelp('welcome-v4', false);
+        Urls.openUrl('welcome');
     }
 
     log.stop();
@@ -3994,21 +3993,19 @@ async function init() {
 
         windows = await Windows.load(true);
 
-        await initializeGroupWindows(windows, data.groups.map(Tabs.extractId));
+        await initializeGroupWindows(windows, data.groups.map(g => g.id));
 
-        windows.forEach(function(win) {
-            updateBrowserActionData(null, win.id)
-                .then(function() {
-                    if (win.groupId) {
-                        groupsHistory.add(win.groupId);
-                    }
-                })
-                .catch(() => {});
-        });
+        await Promise.all(windows.map(async win => {
+            await updateBrowserActionData(null, win.id);
+
+            if (win.groupId) {
+                groupsHistory.add(win.groupId);
+            }
+        }));
 
         let tabs = Utils.getTabs(windows);
 
-        Containers.removeUnusedTemporaryContainers(tabs);
+        await Containers.removeUnusedTemporaryContainers(tabs);
 
         log.log('Containers.removeUnusedTemporaryContainers finish');
 
@@ -4042,21 +4039,21 @@ async function init() {
             color: 'transparent',
         });
 
-        BG.inited = true;
+        self.inited = true;
 
         // send message for addon pages if it's open
         sendMessage('i-am-back');
 
         // send message for addon plugins
-        sendExternalMessage({
-            action: 'i-am-back',
-        });
+        sendExternalMessage('i-am-back');
 
         log.stop();
 
-        // console.clear()
+        if (self.IS_TEMPORARY && !Logger.logs.some(l => l['console.error'])) {
+            // console.clear();
+        }
 
-        // openUrl('/popup/popup.html#sidebar', false);
+        // Urls.openUrl('/popup/popup.html#sidebar');
     } catch (e) {
         setActionToReloadAddon();
 

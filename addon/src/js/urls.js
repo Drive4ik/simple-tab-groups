@@ -1,28 +1,68 @@
 
+import backgroundSelf from './background.js';
 import * as Constants from './constants.js';
+import * as Tabs from './tabs.js';
+import * as Windows from './windows.js';
 
-// export {STG_BASE_URL, MANAGE_TABS_URL, STG_HELP_PAGES, IS_BACKGROUND_PAGE} from './constants.js';
+export const MANAGE_TABS_URL = getURL('/manage/manage.html');
 
-export function getURL(url) {
-    return browser.runtime.getURL(Constants.STG_HELP_PAGES.includes(url) ? `/help/${url}.html` : url);
+export function getURL(page) {
+    return browser.runtime.getURL(Constants.STG_HELP_PAGES.includes(page) ? `/help/${page}.html` : page);
 }
 
-export async function openUrl(url, asWindow = true) {
+export async function openUrl(page, asWindow = false) {
+    const url = getURL(page);
+
     if (asWindow) {
-        return browser.windows.create({
-            focused: true,
-            type: browser.windows.CreateType.POPUP,
-            state:  browser.windows.WindowState.MAXIMIZED,
-            url,
-        }).catch(() => {});
+        return Windows.createPopup(url);
     }
 
     return browser.tabs.create({
         url,
         active: true,
+        cookieStoreId: Constants.DEFAULT_COOKIE_STORE_ID,
     }).catch(() => {});
 };
 
-export function openHelp(page, asWindow) {
-    return openUrl(getURL(page), asWindow);
+export function openOptionsPage() {
+    return browser.runtime.openOptionsPage()
+        .catch(self.logger?.onCatch('openOptionsPage', false))
+        .catch(() => {});
+}
+
+function loadPopupWindows() {
+    return browser.windows.getAll({
+        windowTypes: [browser.windows.WindowType.POPUP],
+        populate: true,
+    });
+}
+
+export async function openManageGroups() {
+    if (backgroundSelf.options.openManageGroupsInTab) {
+        await Tabs.createUrlOnce(Constants.MANAGE_TABS_URL);
+    } else {
+        let allPopupWindows = await loadPopupWindows(),
+            win = allPopupWindows.find(win => win.tabs[0].url.startsWith(Constants.MANAGE_TABS_URL));
+
+        if (win) {
+            await Windows.setFocus(win.id);
+        } else {
+            await Windows.createPopup(Constants.MANAGE_TABS_URL, {
+                width: Number(window.localStorage.manageGroupsWindowWidth) || 1000,
+                height: Number(window.localStorage.manageGroupsWindowHeight) || 700,
+            });
+        }
+    }
+}
+
+export async function openDebugPage() {
+    let allPopupWindows = await loadPopupWindows(),
+        debugPageUrl = getURL('stg-debug'),
+        win = allPopupWindows.find(win => win.tabs[0].url.startsWith(debugPageUrl));
+
+    if (win) {
+        await Windows.setFocus(win.id);
+    } else {
+        await Windows.createPopup(debugPageUrl);
+    }
 }

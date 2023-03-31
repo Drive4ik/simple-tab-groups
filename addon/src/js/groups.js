@@ -1,8 +1,10 @@
 import Logger from './logger.js';
+import backgroundSelf from './background.js';
 import * as Constants from './constants.js';
 import * as Storage from './storage.js';
 import * as Cache from './cache.js';
 import * as Containers from './containers.js';
+// import Messages from './messages.js';
 import JSON from './json.js';
 import * as Tabs from './tabs.js';
 import * as Utils from './utils.js';
@@ -64,13 +66,13 @@ export async function save(groups, withMessage = false) {
     await Storage.set({groups});
 
     if (isNeedBlockBeforeRequest(groups)) {
-        BG.addListenerOnBeforeRequest();
+        backgroundSelf.addListenerOnBeforeRequest();
     } else {
-        BG.removeListenerOnBeforeRequest();
+        backgroundSelf.removeListenerOnBeforeRequest();
     }
 
     if (withMessage) {
-        sendMessage('groups-updated');
+        backgroundSelf.sendMessage('groups-updated');
     }
 
     log.stop();
@@ -82,9 +84,9 @@ export function create(id, title) {
     return {
         id: id,
         title: Utils.createGroupTitle(title, id),
-        iconColor: BG.options.defaultGroupIconColor || Utils.randomColor(),
+        iconColor: backgroundSelf.options.defaultGroupIconColor || Utils.randomColor(),
         iconUrl: null,
-        iconViewType: BG.options.defaultGroupIconViewType,
+        iconViewType: backgroundSelf.options.defaultGroupIconViewType,
         tabs: [],
         isArchive: false,
         newTabContainer: Constants.DEFAULT_COOKIE_STORE_ID,
@@ -136,10 +138,10 @@ export async function add(windowId, tabIds = [], title = null) {
 
     if (windowId) {
         await Cache.setWindowGroup(windowId, newGroup.id);
-        await BG.updateBrowserActionData(newGroup.id).catch(log.onCatch(newGroup.id));
+        await backgroundSelf.updateBrowserActionData(newGroup.id);
     }
 
-    BG.updateMoveTabMenus();
+    backgroundSelf.updateMoveTabMenus();
 
     if (windowId && !tabIds.length) {
         tabIds = await Tabs.get(windowId).then(tabs => tabs.map(Tabs.extractId));
@@ -152,12 +154,11 @@ export async function add(windowId, tabIds = [], title = null) {
         });
     }
 
-    sendMessage('group-added', {
+    backgroundSelf.sendMessage('group-added', {
         group: newGroup,
     });
 
-    BG.sendExternalMessage({
-        action: 'group-added',
+    backgroundSelf.sendExternalMessage('group-added', {
         group: mapForExternalExtension(newGroup),
     });
 
@@ -180,7 +181,7 @@ export async function remove(groupId) {
 
     let {group, groups, groupIndex} = await load(groupId, true);
 
-    BG.addUndoRemoveGroupItem(group);
+    backgroundSelf.addUndoRemoveGroupItem(group);
 
     groups.splice(groupIndex, 1);
 
@@ -189,22 +190,21 @@ export async function remove(groupId) {
     if (!group.isArchive) {
         await Tabs.remove(group.tabs);
 
-        BG.updateMoveTabMenus();
+        backgroundSelf.updateMoveTabMenus();
 
         if (group.isMain) {
             Utils.notify(['thisGroupWasMain'], 7);
         }
     }
 
-    BG.removeGroupBookmark(group);
+    backgroundSelf.removeGroupBookmark(group);
 
-    sendMessage('group-removed', {
+    backgroundSelf.sendMessage('group-removed', {
         groupId: groupId,
         windowId: groupWindowId,
     });
 
-    BG.sendExternalMessage({
-        action: 'group-removed',
+    backgroundSelf.sendExternalMessage('group-removed', {
         groupId: groupId,
         windowId: groupWindowId,
     });
@@ -244,7 +244,7 @@ export async function update(groupId, updateData) {
 
     await save(groups);
 
-    sendMessage('group-updated', {
+    backgroundSelf.sendMessage('group-updated', {
         group: {
             id: groupId,
             ...updateData,
@@ -254,20 +254,19 @@ export async function update(groupId, updateData) {
     let externalGroup = mapForExternalExtension(group);
 
     if (Object.keys(externalGroup).some(key => updateData.hasOwnProperty(key))) {
-        BG.sendExternalMessage({
-            action: 'group-updated',
+        backgroundSelf.sendExternalMessage('group-updated', {
             group: externalGroup,
         });
     }
 
     if (['title', 'iconUrl', 'iconColor', 'iconViewType', 'isArchive', 'isSticky'].some(key => updateData.hasOwnProperty(key))) {
-        BG.updateMoveTabMenus();
+        backgroundSelf.updateMoveTabMenus();
 
-        await BG.updateBrowserActionData(groupId);
+        await backgroundSelf.updateBrowserActionData(groupId);
     }
 
     if (updateData.hasOwnProperty('title')) {
-        BG.updateGroupBookmarkTitle(group);
+        backgroundSelf.updateGroupBookmarkTitle(group);
     }
 
     log.stop();
@@ -282,7 +281,7 @@ export async function move(groupId, newGroupIndex) {
 
     await save(groups, true);
 
-    BG.updateMoveTabMenus();
+    backgroundSelf.updateMoveTabMenus();
 
     log.stop();
 }
@@ -304,7 +303,7 @@ export async function sort(vector = 'asc') {
 
     await save(groups, true);
 
-    BG.updateMoveTabMenus();
+    backgroundSelf.updateMoveTabMenus();
 
     log.stop();
 }
@@ -341,7 +340,7 @@ export async function unload(groupId) {
         return log.stopError(false, 'some Tab Can Not Be Hidden');
     }
 
-    await BG.loadingBrowserAction(true, windowId);
+    await backgroundSelf.loadingBrowserAction(true, windowId);
 
     await Cache.removeWindowSession(windowId);
 
@@ -358,22 +357,21 @@ export async function unload(groupId) {
 
     await Tabs.safeHide(group.tabs);
 
-    if (BG.options.discardTabsAfterHide && !group.dontDiscardTabsAfterHideThisGroup) {
+    if (backgroundSelf.options.discardTabsAfterHide && !group.dontDiscardTabsAfterHideThisGroup) {
         log.log('run discard tabs');
         Tabs.discard(group.tabs).catch(log.onCatch(['Tabs.discard', group.tabs]));
     }
 
-    await BG.updateBrowserActionData(null, windowId).catch(log.onCatch(['updateBrowserActionData', windowId]));
+    await backgroundSelf.updateBrowserActionData(null, windowId).catch(log.onCatch(['updateBrowserActionData', windowId]));
 
-    BG.updateMoveTabMenus();
+    backgroundSelf.updateMoveTabMenus();
 
-    sendMessage('group-unloaded', {
+    backgroundSelf.sendMessage('group-unloaded', {
         groupId,
         windowId,
     });
 
-    BG.sendExternalMessage({
-        action: 'group-unloaded',
+    backgroundSelf.sendExternalMessage('group-unloaded', {
         groupId,
         windowId,
     });
@@ -384,7 +382,7 @@ export async function unload(groupId) {
 export async function archiveToggle(groupId) {
     const log = logger.start('archiveToggle', groupId);
 
-    await BG.loadingBrowserAction();
+    await backgroundSelf.loadingBrowserAction();
 
     let {group, groups} = await load(groupId, true),
         tabIdsToRemove = [];
@@ -394,7 +392,7 @@ export async function archiveToggle(groupId) {
     if (group.isArchive) {
         group.isArchive = false;
 
-        await BG.createTabsSafe(setNewTabsParams(group.tabs, group), true);
+        await backgroundSelf.createTabsSafe(setNewTabsParams(group.tabs, group), true);
 
         group.tabs = [];
     } else {
@@ -402,7 +400,8 @@ export async function archiveToggle(groupId) {
             let result = await unload(groupId);
 
             if (!result) {
-                return log.stopError(null, 'cant unload group');
+                log.stopError('cant unload group');
+                return null;
             }
 
             ({group, groups} = await load(groupId, true));
@@ -422,21 +421,20 @@ export async function archiveToggle(groupId) {
     await save(groups);
 
     if (tabIdsToRemove.length) {
-        BG.addExcludeTabIds(tabIdsToRemove);
+        backgroundSelf.addExcludeTabIds(tabIdsToRemove);
         await Tabs.remove(tabIdsToRemove);
-        BG.removeExcludeTabIds(tabIdsToRemove);
+        backgroundSelf.removeExcludeTabIds(tabIdsToRemove);
     }
 
-    sendMessage('groups-updated');
+    backgroundSelf.sendMessage('groups-updated');
 
-    BG.sendExternalMessage({
-        action: 'group-updated',
+    backgroundSelf.sendExternalMessage('group-updated', {
         group: mapForExternalExtension(group),
     });
 
-    BG.loadingBrowserAction(false).catch(log.onCatch('loadingBrowserAction'));
+    backgroundSelf.loadingBrowserAction(false).catch(log.onCatch('loadingBrowserAction'));
 
-    BG.updateMoveTabMenus();
+    backgroundSelf.updateMoveTabMenus();
 
     log.stop();
 }
@@ -500,7 +498,7 @@ export function normalizeContainersInGroups(groups) {
         ) {
             hasChanges = true;
 
-            sendMessage('group-updated', {
+            backgroundSelf.sendMessage('group-updated', {
                 group: {
                     id: group.id,
                     newTabContainer: group.newTabContainer,

@@ -1,10 +1,18 @@
 
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
+import backgroundSelf from './background.js';
+import cacheStorage from './cache-storage.js';
 
-const tabs = self.cacheStorage.tabs;
-const lastTabsState = self.cacheStorage.lastTabsState; // bug https://bugzilla.mozilla.org/show_bug.cgi?id=1818392
-const windows = self.cacheStorage.windows;
+cacheStorage.cacheTabs ??= {
+    tabs: {},
+    lastTabsState: {},
+    windows: {},
+}
+
+const tabs = cacheStorage.cacheTabs.tabs;
+const lastTabsState = cacheStorage.cacheTabs.lastTabsState; // bug https://bugzilla.mozilla.org/show_bug.cgi?id=1818392
+const windows = cacheStorage.cacheTabs.windows;
 
 export function setLastTabState({id, url, title, status, hidden, pinned, favIconUrl}) {
     lastTabsState[id] = {id, url, title, status, hidden, pinned, favIconUrl};
@@ -127,7 +135,7 @@ export async function removeTabFavIcon(tabId) {
 
 // thumbnail
 async function loadTabThumbnail(tabId) {
-    if (self.BG.options.showTabsWithThumbnailsInManageGroups && tabs[tabId]) {
+    if (backgroundSelf.options.showTabsWithThumbnailsInManageGroups && tabs[tabId]) {
         if (tabs[tabId].thumbnail) {
             return tabs[tabId].thumbnail;
         }
@@ -137,7 +145,7 @@ async function loadTabThumbnail(tabId) {
 }
 
 export async function setTabThumbnail(tabId, thumbnail) {
-    if (self.BG.options.showTabsWithThumbnailsInManageGroups && thumbnail) {
+    if (backgroundSelf.options.showTabsWithThumbnailsInManageGroups && thumbnail) {
         if (tabs[tabId]) {
             tabs[tabId].thumbnail = thumbnail;
         } else {

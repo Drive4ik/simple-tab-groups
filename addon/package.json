@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "description": "Create, modify and quickly change tab groups",
     "author": "Drive4ik <drive4ik+stg@protonmail.com>",
+    "type": "module",
     "scripts": {
         "build": "webpack --mode development",
         "build-prod": "cross-env IS_PRODUCTION=true webpack --mode production",
@@ -26,7 +27,6 @@
         "vue-template-compiler": "^2.7.14",
         "webpack": "^5.75.0",
         "webpack-cli": "^5.0.1",
-        "webpack-shell-plugin-next": "^2.3.1",
         "zip-a-folder": "^1.1.5"
     }
 }

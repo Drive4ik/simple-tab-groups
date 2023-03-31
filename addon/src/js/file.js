@@ -1,7 +1,5 @@
 
 import Logger from './logger.js';
-import JSON from './json.js';
-import * as Utils from './utils.js';
 import * as Storage from './storage.js';
 
 const logger = new Logger('File');
@@ -75,7 +73,7 @@ export async function save(data, fileName = 'file-name', saveAs = true, clearOnC
         body = data;
     } else {
         type = 'application/json';
-        body = JSON.stringify(data, 4);
+        body = JSON.stringify(data, null, 4);
     }
 
     let blob = new Blob([body], {type}),
@@ -109,17 +107,21 @@ export async function save(data, fileName = 'file-name', saveAs = true, clearOnC
         } else if (browser.downloads.State.INTERRUPTED === state && !saveAs && tryCount < 5) {
             await browser.downloads.erase({id});
             URL.revokeObjectURL(url);
-            log.stopError('cant download id:', id, 'tryCount:', tryCount);
+            log.stopError('cant download id:', id, 'tryCount:', tryCount, error);
             return save(data, fileName, saveAs, clearOnComplete, tryCount + 1);
         } else {
             throw error;
         }
 
+        URL.revokeObjectURL(url);
+
         return log.stop(id);
     } catch (e) {
-        log.runError(String(e), e);
-        log.stopError();
-        // Utils.notify(e);
+        URL.revokeObjectURL(url);
+        if (!String(e.message || e).includes('canceled by the user')) {
+            log.runError(e.message || e, e);
+            log.stopError();
+        }
     } finally {
         URL.revokeObjectURL(url);
     }
@@ -142,7 +144,7 @@ export async function openBackupFolder() {
 
     if (id) {
         await browser.downloads.show(id);
-        await Utils.wait(750);
+        await new Promise(res => setTimeout(res, 750));
         await browser.downloads.removeFile(id);
         await browser.downloads.erase({id});
     }
@@ -194,7 +196,7 @@ export async function waitDownload(id, maxWaitSec = 10) {
             break;
         }
 
-        await Utils.wait(200);
+        await new Promise(res => setTimeout(res, 200));
     }
 
     return downloadObj || {};

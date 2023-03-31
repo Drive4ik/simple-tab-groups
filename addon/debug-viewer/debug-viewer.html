@@ -109,19 +109,24 @@
             </div>
         </div>
         <div v-if="file" class="field">
+            <template v-if="file.CRITICAL_ERRORS.length">
+                <h1 class="title has-text-centered has-background-danger">CRITICAL_ERRORS</h1>
+                <pre class="field">{{file.CRITICAL_ERRORS | json}}</pre>
+            </template>
+
             <h1 class="title has-text-centered">info</h1>
             <div class="columns">
                 <div class="column is-narrow">
-                    Version: <span class="tag is-info">{{info.version}}</span><br>
+                    Version: <span class="tag is-info">{{addon.version}}</span><br>
                     UP time: <code>{{upTime}}</code><br>
-                    UUID: <code>{{info.UUID}}</code><br>
-                    <div v-for="(val, key) in info.permissions" :key="key" class="control mt-1">
+                    UUID: <code>{{addon.UUID}}</code><br>
+                    <div v-for="(val, key) in addon.permissions" :key="key + 'perm'" class="control mt-1">
                         <div class="tags has-addons">
                             <span class="tag">{{key}}</span>
                             <span :class="['tag', val ? 'is-success' : 'is-info']">{{val}}</span>
                         </div>
                     </div>
-                    <div v-for="(val, key) in info.options" :key="key">
+                    <div v-for="(val, key) in options" :key="key + 'opt'">
                         <template v-if="isBool(val)">
                             <input type="checkbox" onclick="return false" :checked="val"> {{key}}
                         </template>
@@ -132,7 +137,7 @@
                 </div>
                 <div class="column">
                     <div class="field is-grouped is-grouped-multiline">
-                        <div v-for="(val, key) in info.browserAndOS" :key="key" class="control">
+                        <div v-for="(val, key) in file.browserInfo.browserAndOS" :key="key + 'browser'" class="control">
                             <div class="tags has-addons">
                                 <span class="tag">{{key}}</span>
                                 <span class="tag is-info is-light">{{val}}</span>
@@ -144,7 +149,7 @@
 
                     <h2 class="subtitle">Addons</h2>
                     <div class="field is-grouped is-grouped-multiline is-flex-direction-column">
-                        <div v-for="ext in info.extensions" :key="ext.id" class="control">
+                        <div v-for="(ext, i) in file.browserInfo.extensions" :key="i + 'ext'" class="control">
                             <div class="columns">
                                 <div class="column is-narrow">
                                     <span class="tag">
@@ -154,7 +159,7 @@
                                     </span>
                                 </div>
                                 <div class="column">
-                                    <code class="host" v-for="host in ext.hostPermissions" :key="host" v-text="host"></code>
+                                    <code class="host" v-for="(host, i) in ext.hostPermissions" :key="i + 'host'" v-text="host"></code>
                                 </div>
                             </div>
                         </div>
@@ -164,9 +169,21 @@
 
 
             <h1 id="windows-title" class="title has-text-centered">windows</h1>
-            <details v-for="win in file.windows" :key="win.id">
-                <summary>windowId: {{win.id}}</summary>
+            <details v-for="(win, i) in file.windows" :key="i + 'win'" class="field">
+                <summary>windowId: {{win?.id}} {{win?.groupId && `(groupId: ${win.groupId})`}}</summary>
                 <pre class="field">{{win | json}}</pre>
+            </details>
+
+            <h1 id="tabsWithoutGroup-title" class="title has-text-centered">tabs without group</h1>
+            <details class="field">
+                <summary>tabs without group count: {{tabsWithoutGroup.length}}</summary>
+                <pre class="field">{{tabsWithoutGroup | json}}</pre>
+            </details>
+
+            <h1 id="groups-title" class="title has-text-centered">groups</h1>
+            <details v-for="(group, i) in groups" :key="i + 'group'" class="field">
+                <summary>groupId: {{group?.id}} {{ group?.isArchive ? '(archived)' : ''}}</summary>
+                <pre class="field">{{group | json}}</pre>
             </details>
 
 
@@ -193,7 +210,7 @@
 
                     <span class="v-middle" v-html="getLogTitle(log)"></span>
                     <div v-if="log.showStack">
-                        <pre v-for="stack in log.stacks" class="mt-3">{{stack | json}}</pre>
+                        <pre v-for="(stack, i) in log.stacks" :key="i + 'stack' + stack[0]" class="mt-3">{{stack | json}}</pre>
                     </div>
                 </div>
             </div>
@@ -212,7 +229,7 @@
 
                 <span v-html="getLogTitle(log)"></span>
                 <div v-if="log.showStack">
-                    <pre v-for="stack in log.stacks" class="mt-3">{{stack | json}}</pre>
+                    <pre v-for="stack in log.stacks" :key="i + 'stack2' + stack[0]" class="mt-3">{{stack | json}}</pre>
                 </div>
             </div>
 
@@ -225,10 +242,11 @@
             <div id="page-navigation" class="is-flex is-flex-direction-column is-align-items-end">
                 <button class="button is-light field" @click="scrollTo('input[type=file]')">top</button>
                 <button class="button is-light field" @click="scrollTo('#windows-title', 'start')">windows</button>
+                <button class="button is-light field" @click="scrollTo('#groups-title', 'start')">groups</button>
                 <button class="button is-light field" @click="scrollTo('#logs-title', 'start')">logs</button>
                 <button class="button is-light field" title="Right click - prev error"
-                    @click="scrollTo('.tag.is-danger', undefined, true)"
-                    @contextmenu.prevent.stop="scrollTo('.tag.is-danger', undefined, true, true)">🛑 error</button>
+                    @click="scrollTo('.tag.is-danger, .has-background-danger', undefined, true)"
+                    @contextmenu.prevent.stop="scrollTo('.tag.is-danger, .has-background-danger', undefined, true, true)">🛑 error</button>
                 <button class="button is-light field" @click="scrollTo('#errors-title')">errors</button>
             </div>
 

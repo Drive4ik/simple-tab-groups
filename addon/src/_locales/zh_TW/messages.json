@@ -797,11 +797,11 @@
         "message": "回復備份之前先刪除所有套件資料與設定",
         "description": "Delete all addon data and settings before restoring backup"
     },
-    "helpPageWelcomeV4Title": {
-        "message": "歡迎使用 Simple Tab Groups v4",
-        "description": "Welcome to Simple Tab Groups v4"
+    "helpPageWelcomeTitle": {
+        "message": "歡迎使用 Simple Tab Groups",
+        "description": "Welcome to Simple Tab Groups"
     },
-    "helpPageWelcomeV4Description": {
+    "helpPageWelcomeDescription": {
         "message": "請啟用瀏覽器設定中的 \"回復瀏覽狀態\" 功能。<br>在群組與分頁切換之間需要打開此功能，<br>否則當打開瀏覽器之後，所有分頁將無法開啟並遺失，套件也會停止執行。",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },

@@ -7,12 +7,13 @@
     import swatches from 'vue-swatches';
     import 'vue-swatches/dist/vue-swatches.css';
 
-    import * as Constants from './constants.js';
-    import Messages from './messages.js';
-    import * as Containers from './containers.js';
-    import * as File from './file.js';
-    import * as Tabs from './tabs.js';
-    import * as Utils from './utils.js';
+    import backgroundSelf from './background.js';
+    import * as Constants from 'constants';
+    import * as Containers from 'containers';
+    import Messages from 'messages';
+    import * as File from 'file';
+    import * as Tabs from 'tabs';
+    import * as Utils from 'utils';
 
     export default {
         name: 'edit-group',
@@ -53,8 +54,8 @@
                 currentTabUrl: null,
 
                 options: {
-                    discardTabsAfterHide: BG.options.discardTabsAfterHide,
-                    defaultGroupIconViewType: BG.options.defaultGroupIconViewType,
+                    discardTabsAfterHide: backgroundSelf.options.discardTabsAfterHide,
+                    defaultGroupIconViewType: backgroundSelf.options.defaultGroupIconViewType,
                 },
             };
         },

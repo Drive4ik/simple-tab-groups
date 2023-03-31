@@ -1,13 +1,15 @@
-const path = require('path');
-const fse = require('fs-extra');
-// const webpack = require('webpack');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const WebpackShellPluginNext = require('webpack-shell-plugin-next');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
-const { VueLoaderPlugin } = require('vue-loader');
+import path from 'path';
+import fse from 'fs-extra';
+// import webpack from 'webpack';
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import CopyWebpackPlugin from 'copy-webpack-plugin';
+import { VueLoaderPlugin } from 'vue-loader';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function setPath(folderName) {
-    return path.join(__dirname, folderName);
+    return path.resolve(__dirname, folderName);
 }
 
 function copy(path) {
@@ -24,21 +26,43 @@ function multipleCopy(paths) {
 const config = {
     context: setPath('src'),
     entry: {
-        // 'background': './background.js',
         'popup/popup': './popup/popup.js',
         'options/options': './options/options.js',
         'manage/manage': './manage/manage.js',
         'web/hotkeys': './web/hotkeys.js',
     },
+    experiments: {
+        outputModule: true,
+        // topLevelAwait: true,
+    },
     output: {
         path: setPath('dist'),
         filename: '[name].js',
+        module: true,
+        chunkFormat: 'module',
     },
+    externals: {
+        vue: '/js/vue.runtime.esm.min.js',
+        background: '/js/background.js',
+        'wait-background': '/js/wait-background.js',
+        constants: '/js/constants.js',
+        messages: '/js/messages.js',
+        logger: '/js/logger.js',
+        containers: '/js/containers.js',
+        file: '/js/file.js',
+        urls: '/js/urls.js',
+        cache: '/js/cache.js',
+        groups: '/js/groups.js',
+        windows: '/js/windows.js',
+        management: '/js/management.js',
+        tabs: '/js/tabs.js',
+        utils: '/js/utils.js',
+        json: '/js/json.js',
+        storage: '/js/storage.js',
+    },
+    externalsType: 'module',
     resolve: {
         extensions: ['.js', '.vue'],
-    },
-    node: {
-        // setImmediate: false,
     },
     watchOptions: {
         ignored: /node_modules/,
@@ -51,10 +75,6 @@ const config = {
     devtool: false,
     optimization: {
         minimize: false,
-    },
-    performance: {
-        maxEntrypointSize: 1024000,
-        maxAssetSize: 1024000,
     },
     module: {
         rules: [
@@ -94,10 +114,12 @@ const config = {
                 'stg-background.js',
                 'stg-background.html',
 
+                'js/vue.runtime.esm.min.js',
+                'js/background.js',
+                'js/wait-background.js',
                 'js/logger.js',
                 'js/messages.js',
                 'js/constants.js',
-                'js/page-need-BG.js',
                 'js/utils.js',
                 'js/json.js',
                 'js/urls.js',
@@ -120,24 +142,10 @@ const config = {
                 'manifest.json',
             ]),
         }),
-
-        new WebpackShellPluginNext({
-            onBuildStart:{
-                // scripts: ['echo "Webpack Start"'],
-                // blocking: true,
-                // parallel: false,
-            },
-            onBuildEnd: {
-                scripts: ['node scripts/remove-evals.js'],
-                blocking: false,
-                parallel: true,
-            },
-        }),
     ],
 };
 
-// module.exports = config;
-module.exports = function(env, options) {
+export default function(env, options) {
     let isProduction = options.mode === 'production';
 
     if (isProduction) {

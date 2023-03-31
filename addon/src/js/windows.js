@@ -1,5 +1,5 @@
 import Logger from './logger.js';
-// import * as Constants from './constants.js';
+import backgroundSelf from './background.js';
 import * as Tabs from './tabs.js';
 import * as Utils from './utils.js';
 import * as Cache from './cache.js';
@@ -30,8 +30,9 @@ export async function get(windowId = browser.windows.WINDOW_ID_CURRENT) {
     const log = logger.start('get', {windowId});
     let win = await browser.windows.get(windowId);
 
-    log.stop(win);
-    return Cache.loadWindowSession(win);
+    await Cache.loadWindowSession(win);
+
+    return log.stop(win);
 }
 
 export async function create(groupId, activeTabId) {
@@ -44,14 +45,14 @@ export async function create(groupId, activeTabId) {
     let groupWindowId = Cache.getWindowId(groupId);
 
     if (groupWindowId) {
-        await BG.applyGroup(groupWindowId, groupId, activeTabId);
+        await backgroundSelf.applyGroup(groupWindowId, groupId, activeTabId);
         log.stop('load exist window', groupWindowId);
     } else {
-        BG.skipAddGroupToNextNewWindow = true;
+        backgroundSelf.skipAddGroupToNextNewWindow = true;
 
         let win = await browser.windows.create();
 
-        await BG.applyGroup(win.id, groupId, activeTabId);
+        await backgroundSelf.applyGroup(win.id, groupId, activeTabId);
         log.stop('load new window', win.id);
     }
 }
@@ -59,7 +60,7 @@ export async function create(groupId, activeTabId) {
 export function setFocus(windowId) {
     return browser.windows.update(windowId, {
         focused: true,
-    }).catch(logger.onCatch(windowId));
+    }).catch(logger.onCatch(['setFocus', windowId]));
 }
 
 export async function getLastFocusedNormalWindow(returnId = true) {
@@ -82,4 +83,26 @@ export async function getLastFocusedNormalWindow(returnId = true) {
 
     log.stop('windowId:', win.id);
     return returnId ? win.id : win;
+}
+
+export async function createPopup(url, createData = {}) {
+    const log = logger.start('createPopup', url, {createData});
+
+    createData = {
+        url,
+        focused: true,
+        type: browser.windows.CreateType.POPUP,
+        state: browser.windows.WindowState.MAXIMIZED,
+        ...createData,
+    };
+
+    for(let key in createData) {
+        if (createData[key] === null) {
+            delete createData[key];
+        }
+    }
+
+    const win = await browser.windows.create(createData).catch(log.onCatch(['create popup window', createData]));
+
+    return log.stop(win, 'is created popup window');
 }

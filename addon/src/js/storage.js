@@ -27,7 +27,7 @@ export async function get(keys, errorCounter = 0) {
         errorCounter++;
 
         if (errorCounter > 100) {
-            Urls.openHelp('db-error-reinstall');
+            Urls.openUrl('db-error-reinstall', true);
             log.throwError('db-error-reinstall', e);
         }
 

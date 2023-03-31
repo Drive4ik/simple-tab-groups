@@ -1,8 +1,6 @@
 <script>
     'use strict';
 
-    import '../js/page-need-BG.js';
-
     import Vue from 'vue';
 
     import popup from '../js/popup.vue';
@@ -12,16 +10,18 @@
     import contextMenuTabNew from '../components/context-menu-tab-new.vue';
     import contextMenuGroup from '../components/context-menu-group.vue';
 
-    import * as Constants from '../js/constants.js';
-    import Messages from '../js/messages.js';
-    import Logger from '../js/logger.js';
-    import * as Containers from '../js/containers.js';
-    import * as Cache from '../js/cache.js';
-    import * as Groups from '../js/groups.js';
-    import * as Windows from '../js/windows.js';
-    import * as Tabs from '../js/tabs.js';
-    import * as Utils from '../js/utils.js';
-    import JSON from '../js/json.js';
+    import backgroundSelf from 'background';
+    import * as Constants from 'constants';
+    import Messages from 'messages';
+    import Logger from 'logger';
+    import * as Containers from 'containers';
+    import * as Urls from 'urls';
+    import * as Cache from 'cache';
+    import * as Groups from 'groups';
+    import * as Windows from 'windows';
+    import * as Tabs from 'tabs';
+    import * as Utils from 'utils';
+    import JSON from 'json';
 
     window.logger = new Logger('Manage');
 
@@ -99,11 +99,16 @@
             this.loadOptions();
 
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.updateTheme());
-
-            loadPromise = Promise.all([this.loadWindows(), this.loadGroups(), this.loadUnsyncedTabs()]);
         },
         async mounted() {
-            await loadPromise;
+            const log = logger.start('mounted');
+            const startUpData = await backgroundSelf.startUpData(this.options.showTabsWithThumbnailsInManageGroups);
+
+            this.loadWindows(startUpData);
+            this.loadGroups(startUpData);
+            this.loadUnsyncedTabs(startUpData);
+
+            log.log('loaded');
 
             this.$nextTick(function() {
                 this.isLoading = false;
@@ -113,6 +118,8 @@
                 if (this.options.showTabsWithThumbnailsInManageGroups) {
                     this.loadAvailableTabThumbnails();
                 }
+
+                log.stop();
             });
         },
         watch: {
@@ -178,12 +185,12 @@
             },
 
             loadOptions() {
-                this.options = JSON.clone(BG.options);
+                this.options = JSON.clone(backgroundSelf.options);
             },
 
-            async loadWindows() {
-                this.currentWindow = await Windows.get();
-                this.openedWindows = await Windows.load();
+            async loadWindows({currendWindow, windows} = {}) {
+                this.currentWindow = currendWindow || await Windows.get();
+                this.openedWindows = windows || await Windows.load();
             },
 
             setupListeners() {
@@ -267,8 +274,8 @@
                         return;
                     }
 
-                    if (BG.groupIdForNextTab) {
-                        lazyAddTab(tab, BG.groupIdForNextTab);
+                    if (backgroundSelf.groupIdForNextTab) {
+                        lazyAddTab(tab, backgroundSelf.groupIdForNextTab);
                         return;
                     }
 
@@ -319,7 +326,7 @@
                         this.allTabs[tab.id].lastAccessed = tab.lastAccessed;
                     }
 
-                    if (BG.excludeTabIds.has(tab.id)) {
+                    if (backgroundSelf.excludeTabIds.has(tab.id)) {
                         return;
                     }
 
@@ -371,7 +378,7 @@
 
                 let onDetachedTabTimer = 0;
                 const onDetachedTab = (tabId, {oldWindowId}) => { // notice: call before onAttached
-                    if (BG.excludeTabIds.has(tabId)) {
+                    if (backgroundSelf.excludeTabIds.has(tabId)) {
                         return;
                     }
 
@@ -387,7 +394,7 @@
                     onAttachedUnsyncTabTimer = 0,
                     onAttachedTabWinTimer = 0;
                 const onAttachedTab = (tabId, {newWindowId}) => {
-                    if (BG.excludeTabIds.has(tabId)) {
+                    if (backgroundSelf.excludeTabIds.has(tabId)) {
                         return;
                     }
 
@@ -465,6 +472,7 @@
                 };
 
                 const onMessage = Utils.catchFunc(async request => {
+                    logger.info('take message', request.action);
                     await listeners[request.action](request);
                 });
 
@@ -684,14 +692,18 @@
                 return tab;
             },
 
-            async loadGroups() {
-                let {groups} = await Groups.load(null, true, true, this.options.showTabsWithThumbnailsInManageGroups);
+            async loadGroups({groups} = {}) {
+                ({groups} = groups ? {groups} : await Groups.load(null, true, true, this.options.showTabsWithThumbnailsInManageGroups));
 
                 this.groups = groups.map(this.mapGroup, this);
 
                 this.multipleTabIds = [];
             },
-            async loadUnsyncedTabs() {
+            async loadUnsyncedTabs({unSyncTabs} = {}) {
+                if (unSyncTabs) {
+                    return this.unSyncTabs = unSyncTabs.map(this.mapTab, this);
+                }
+
                 let windows = await Windows.load(true, true, true);
 
                 this.unSyncTabs = windows
@@ -939,8 +951,8 @@
 
             async closeThisWindow() {
                 if (this.isCurrentWindowIsAllow) {
-                    let tab = await Messages.sendMessageModule('Tabs.getActive');
-                    Messages.sendMessageModule('Tabs.remove', tab.id);
+                    let tab = await Tabs.getActive();
+                    Tabs.remove(tab.id);
                 } else {
                     browser.windows.remove(this.currentWindow.id); // close manage groups POPUP window
                 }
@@ -948,7 +960,7 @@
 
             openOptionsPage() {
                 delete window.localStorage.optionsSection;
-                browser.runtime.openOptionsPage();
+                Urls.openOptionsPage();
             },
         },
     }

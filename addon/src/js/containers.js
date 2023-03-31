@@ -3,20 +3,28 @@ import Logger from './logger.js';
 import * as Utils from './utils.js';
 import * as Groups from './groups.js';
 import JSON from './json.js';
+import backgroundSelf from './background.js';
+import cacheStorage from './cache-storage.js';
 
 const logger = new Logger('Containers');
+
+// init storage
+cacheStorage.containers ??= {
+    containers: {},
+    mappedContainerCookieStoreId: {},
+    defaultContainerOptions: {
+        cookieStoreId: Constants.DEFAULT_COOKIE_STORE_ID,
+        name: browser.i18n.getMessage('noContainerTitle'),
+    },
+};
 
 const temporaryContainerDefaultTitle = browser.i18n.getMessage('temporaryContainerTitle'),
     containerIdRegExp = /\d+$/,
     tmpContainerTimeStamp = Date.now();
 
-const containers = self.cacheStorage.containers;
-const mappedContainerCookieStoreId = self.cacheStorage.mappedContainerCookieStoreId;
-const defaultContainerOptions = self.cacheStorage.defaultContainerOptions;
-
-// во избежание DeadObject
-defaultContainerOptions.cookieStoreId ??= Constants.DEFAULT_COOKIE_STORE_ID;
-defaultContainerOptions.name ??= browser.i18n.getMessage('noContainerTitle');
+const containers = cacheStorage.containers.containers;
+const mappedContainerCookieStoreId = cacheStorage.containers.mappedContainerCookieStoreId;
+const defaultContainerOptions = cacheStorage.containers.defaultContainerOptions;
 
 containers[Constants.TEMPORARY_CONTAINER] ??= {
     color: 'toolbar',
@@ -70,7 +78,7 @@ function onCreated({contextualIdentity}) {
         return;
     }
 
-    sendMessage('containers-updated');
+    backgroundSelf.sendMessage('containers-updated');
 }
 
 function onUpdated({contextualIdentity}) {
@@ -91,7 +99,7 @@ function onUpdated({contextualIdentity}) {
         return;
     }
 
-    sendMessage('containers-updated');
+    backgroundSelf.sendMessage('containers-updated');
 }
 
 async function onRemoved({contextualIdentity}) {
@@ -105,7 +113,7 @@ async function onRemoved({contextualIdentity}) {
         return;
     }
 
-    if (!BG.inited) {
+    if (!backgroundSelf.inited) {
         log.stopError('background not inited');
         return;
     }
@@ -117,7 +125,7 @@ async function onRemoved({contextualIdentity}) {
         await Groups.save(groups);
     }
 
-    sendMessage('containers-updated');
+    backgroundSelf.sendMessage('containers-updated');
     log.stop();
 }
 
@@ -178,6 +186,7 @@ export async function normalize(cookieStoreId, containerData) {
         return cookieStoreId;
     }
 
+    // TODO надо ли очищать mappedContainerCookieStoreId ????
     if (!mappedContainerCookieStoreId[cookieStoreId]) {
         if (containerData) {
             for (let csId in containers) {
@@ -249,12 +258,24 @@ export function getAll(withDefaultContainer) {
 }
 
 export async function removeUnusedTemporaryContainers(tabs) {
-    let tabContainers = tabs.map(tab => tab.cookieStoreId).filter(Utils.onlyUniqueFilter);
+    const log = logger.start('removeUnusedTemporaryContainers');
+    let tabContainers = new Set(tabs.map(tab => tab.cookieStoreId));
 
-    return remove(
+    let tempContainersToRemove = Object.keys(containers)
+        .filter(cookieStoreId => isTemporary(cookieStoreId, null, true) && !tabContainers.has(cookieStoreId));
+
+    if (!tempContainersToRemove.length) {
+        return log.stop();
+    }
+
+    log.log('removing temp containers');
+
+    await remove(
         Object.keys(containers)
-        .filter(cookieStoreId => isTemporary(cookieStoreId, null, true) && !tabContainers.includes(cookieStoreId))
+        .filter(cookieStoreId => isTemporary(cookieStoreId, null, true) && !tabContainers.has(cookieStoreId))
     );
+
+    log.stop();
 }
 
 export async function updateTemporaryContainerTitle(temporaryContainerTitle) {
@@ -275,6 +296,6 @@ export async function updateTemporaryContainerTitle(temporaryContainerTitle) {
 
         browser.contextualIdentities.onUpdated.addListener(onUpdated);
 
-        sendMessage('containers-updated'); // update container temporary name on tabs will work only on not archived groups
+        backgroundSelf.sendMessage('containers-updated'); // update container temporary name on tabs will work only on not archived groups
     }
 }

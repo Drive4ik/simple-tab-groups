@@ -793,11 +793,11 @@
         "message": "Odstranit všechna data a nastavení doplňku před obnovením zálohy",
         "description": "Delete all addon data and settings before restoring backup"
     },
-    "helpPageWelcomeV4Title": {
-        "message": "Vítejte v Simple Tab Groups v4",
-        "description": "Welcome to Simple Tab Groups v4"
+    "helpPageWelcomeTitle": {
+        "message": "Vítejte v Simple Tab Groups",
+        "description": "Welcome to Simple Tab Groups"
     },
-    "helpPageWelcomeV4Description": {
+    "helpPageWelcomeDescription": {
         "message": "V nastavení prohlížeče povolte prosím možnost \"Otevřít panely z minula\".\n<br>Je to nutné pro udržení komunikace mezi panely a skupinami, <br>v opačném případě nebudou panely při příštím spuštění prohlížeče obnoveny a spárovány s doplňkem -<br>doplněk přestane pracovat",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },

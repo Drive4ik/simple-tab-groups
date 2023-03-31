@@ -813,11 +813,11 @@
         "message": "Supprimer toutes les données et les paramètres de l'application avant de restaurer la sauvegarde",
         "description": "Delete all addon data and settings before restoring backup"
     },
-    "helpPageWelcomeV4Title": {
-        "message": "Bienvenue dans Simple Tab Groups v4",
-        "description": "Welcome to Simple Tab Groups v4"
+    "helpPageWelcomeTitle": {
+        "message": "Bienvenue dans Simple Tab Groups",
+        "description": "Welcome to Simple Tab Groups"
     },
-    "helpPageWelcomeV4Description": {
+    "helpPageWelcomeDescription": {
         "message": "Veuillez activer le paramètre \"Restaurer la session précédente\" dans les options du navigateur.<br>C'est nécessaire pour maintenir la communication entre les groupes et les onglets.,<br>sinon les onglets ne s'ouvriront pas au redémarrage du navigateur et seront perdus pour l'extension -<br>l'extension cessera de fonctionner.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },

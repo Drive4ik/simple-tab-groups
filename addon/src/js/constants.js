@@ -1,7 +1,6 @@
 
 export const MANIFEST = Object.freeze(browser.runtime.getManifest());
 export const STG_BASE_URL = browser.runtime.getURL('');
-export const MANAGE_TABS_URL = browser.runtime.getURL('/manage/manage.html');
 
 export const IS_BACKGROUND_PAGE = self.location.href.startsWith(MANIFEST.background.page);
 
@@ -26,7 +25,7 @@ export const STG_HELP_PAGES = Object.freeze([
     'open-in-container',
     'stg-unsupported-url',
     'stg-debug',
-    'welcome-v4',
+    'welcome',
 ]);
 
 // permission "<all_urls>" need for tab thumbnails and webRequestBlocking

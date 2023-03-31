@@ -16,43 +16,6 @@ const tagsToReplace = {
 
 const INNER_HTML = 'innerHTML';
 
-export async function getInfo() {
-    let [
-        background,
-        browserInfo,
-        platformInfo,
-        permissionBookmarks,
-        options,
-        extensions,
-    ] = await Promise.all([
-        browser.runtime.getBackgroundPage(),
-        browser.runtime.getBrowserInfo(),
-        browser.runtime.getPlatformInfo(),
-        browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS),
-        browser.storage.local.get(Constants.ALL_OPTIONS_KEYS).catch(e => String(e)),
-        browser.management.getAll(),
-    ]);
-
-    let startTime = background?.START_TIME || window.START_TIME;
-
-    return {
-        version: Constants.MANIFEST.version,
-        upTime: startTime ? Math.ceil((Date.now() - startTime) / 1000) + ' sec' : 'unknown',
-        browserAndOS: {
-            ...platformInfo,
-            ...browserInfo,
-        },
-        extensions: extensions
-            .filter(({id, enabled, type}) => !id.endsWith('@search.mozilla.org') && enabled && type === browser.management.ExtensionType.EXTENSION)
-            .map(({id, name, version, hostPermissions}) => ({id, name, version, hostPermissions})),
-        UUID: Constants.STG_BASE_URL,
-        permissions: {
-            bookmarks: permissionBookmarks,
-        },
-        options: options,
-    };
-}
-
 export function unixNow() {
     return Math.round(Date.now() / 1000);
 }
@@ -89,13 +52,7 @@ export function catchFunc(asyncFunc) {
 } */
 
 function objectReplaceKeyValue(obj) {
-    let result = {};
-
-    Object.keys(obj).forEach(function(key) {
-        result[obj[key]] = key;
-    });
-
-    return result;
+    return Object.keys(obj).reduce((acc, key) => (acc[obj[key]] = key, acc), {});
 }
 
 export function safeHtml(html) {

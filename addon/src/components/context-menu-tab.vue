@@ -1,6 +1,6 @@
 <script>
 import contextMenu from './context-menu.vue';
-import * as Utils from '../js/utils.js';
+import * as Utils from 'utils';
 
 export default {
     props: {

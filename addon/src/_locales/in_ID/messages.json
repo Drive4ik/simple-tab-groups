@@ -813,11 +813,11 @@
         "message": "Hapus semua data dan pengaturan addon sebelum memulihkan cadangan",
         "description": "Delete all addon data and settings before restoring backup"
     },
-    "helpPageWelcomeV4Title": {
-        "message": "Selamat datang di \"Simple Tab Group\" v4",
-        "description": "Welcome to Simple Tab Groups v4"
+    "helpPageWelcomeTitle": {
+        "message": "Selamat datang di \"Simple Tab Group\"",
+        "description": "Welcome to Simple Tab Groups"
     },
-    "helpPageWelcomeV4Description": {
+    "helpPageWelcomeDescription": {
         "message": "Harap aktifkan \"Pulihkan sesi sebelumnya\" di setelan browser.<br>Ini diperlukan untuk menjaga komunikasi antara grup dan tab, <br>jika tidak, tab tidak akan terbuka saat browser dimulai dan akan hilang dari addon -<br > addon akan berhenti bekerja.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },

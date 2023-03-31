@@ -1,7 +1,7 @@
 <script>
 import contextMenu from './context-menu.vue';
-import * as Constants from '../js/constants.js';
-import * as Containers from '../js/containers.js';
+import * as Constants from 'constants';
+import * as Containers from 'containers';
 
 export default {
     components: {

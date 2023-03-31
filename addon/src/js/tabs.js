@@ -1,4 +1,5 @@
 import Logger from './logger.js';
+import backgroundSelf from './background.js';
 import * as Constants from './constants.js';
 import * as Urls from './urls.js';
 import * as Utils from './utils.js';
@@ -68,15 +69,15 @@ export async function createNative({url, active, pinned, title, index, windowId,
 }
 
 export async function create(tab) {
-    BG.groupIdForNextTab = tab.groupId;
+    backgroundSelf.groupIdForNextTab = tab.groupId;
 
-    BG.skipCreateTab = true;
+    backgroundSelf.skipCreateTab = true;
 
     let newTab = await createNative(tab);
 
-    BG.skipCreateTab = false;
+    backgroundSelf.skipCreateTab = false;
 
-    BG.groupIdForNextTab = null;
+    backgroundSelf.groupIdForNextTab = null;
 
     return Cache.setTabSession(newTab);
 }
@@ -89,8 +90,8 @@ export async function createUrlOnce(url, windowId) {
     } else {
         return createNative({
             active: true,
-            url: url,
-            windowId: windowId,
+            url,
+            windowId,
         });
     }
 }
@@ -224,7 +225,7 @@ export async function createTempActiveTab(windowId, createPinnedTab = true, newT
 export async function add(groupId, cookieStoreId, url, title) {
     const log = logger.start('add', {groupId, cookieStoreId, url, title});
     let {group} = await Groups.load(groupId),
-        [tab] = await BG.createTabsSafe([{
+        [tab] = await backgroundSelf.createTabsSafe([{
             url,
             title,
             cookieStoreId,
@@ -235,7 +236,7 @@ export async function add(groupId, cookieStoreId, url, title) {
 }
 
 export async function updateThumbnail(tabId) {
-    if (!BG.options.showTabsWithThumbnailsInManageGroups) {
+    if (!backgroundSelf.options.showTabsWithThumbnailsInManageGroups) {
         return;
     }
 
@@ -276,7 +277,7 @@ export async function updateThumbnail(tabId) {
 
         await Cache.setTabThumbnail(tab.id, thumbnail);
 
-        self.sendMessage('thumbnail-updated', {
+        backgroundSelf.sendMessage('thumbnail-updated', {
             tabId: tab.id,
             thumbnail: thumbnail,
         });
@@ -305,7 +306,7 @@ export async function move(tabIds, groupId, {
         return [];
     }
 
-    BG.addExcludeTabIds(tabIds);
+    backgroundSelf.addExcludeTabIds(tabIds);
 
     let showPinnedMessage = false,
         tabsCantHide = new Set,
@@ -320,14 +321,14 @@ export async function move(tabIds, groupId, {
     tabs = tabs.filter(function(tab) {
         if (tab.pinned) {
             showPinnedMessage = true;
-            BG.excludeTabIds.delete(tab.id);
+            backgroundSelf.excludeTabIds.delete(tab.id);
             log.log('tab pinned', tab);
             return false;
         }
 
         if (Utils.isTabCanNotBeHidden(tab)) {
             tabsCantHide.add(Utils.getTabTitle(tab, false, 20));
-            BG.excludeTabIds.delete(tab.id);
+            backgroundSelf.excludeTabIds.delete(tab.id);
             log.log('cant move tab', tab);
             return false;
         }
@@ -390,9 +391,9 @@ export async function move(tabIds, groupId, {
         let tabIdsToRemove = [],
             newTabParams = Groups.getNewTabParams(group);
 
-        BG.groupIdForNextTab = group.id;
+        backgroundSelf.groupIdForNextTab = group.id;
 
-        BG.skipCreateTab = true;
+        backgroundSelf.skipCreateTab = true;
 
         tabs = await Promise.all(tabs.map(async function(tab) {
             let newTabContainer = getNewTabContainer(tab, group);
@@ -426,14 +427,14 @@ export async function move(tabIds, groupId, {
             }
 
             tabIds.push(newTab.id);
-            BG.excludeTabIds.add(newTab.id);
+            backgroundSelf.excludeTabIds.add(newTab.id);
 
             return Cache.setTabSession(newTab);
         }));
 
-        BG.skipCreateTab = false;
+        backgroundSelf.skipCreateTab = false;
 
-        BG.groupIdForNextTab = null;
+        backgroundSelf.groupIdForNextTab = null;
 
         await remove(tabIdsToRemove);
 
@@ -450,9 +451,9 @@ export async function move(tabIds, groupId, {
 
         await Promise.all(tabs.map(tab => Cache.setTabGroup(tab.id, groupId)));
 
-        BG.removeExcludeTabIds(tabIds);
+        backgroundSelf.removeExcludeTabIds(tabIds);
 
-        self.sendMessage('groups-updated');
+        backgroundSelf.sendMessage('groups-updated');
 
         log.log('end moving');
     }
@@ -478,12 +479,12 @@ export async function move(tabIds, groupId, {
         if (showOnlyActiveTabAfterMovingItIntoThisGroup) {
             if (activeTabs.length) {
                 log.log('applyGroup', windowId, groupId, firstTab.id)
-                await BG.applyGroup(windowId, groupId, firstTab.id);
+                await backgroundSelf.applyGroup(windowId, groupId, firstTab.id);
                 showNotificationAfterMovingTabIntoThisGroup = false;
             }
         } else {
             log.log('applyGroup 2', windowId, groupId, firstTab.id)
-            await BG.applyGroup(windowId, groupId, firstTab.id);
+            await backgroundSelf.applyGroup(windowId, groupId, firstTab.id);
             showNotificationAfterMovingTabIntoThisGroup = false;
         }
     }
@@ -513,7 +514,7 @@ export async function move(tabIds, groupId, {
         if (group && tab) {
             let winId = Cache.getWindowId(groupId) || await Windows.getLastFocusedNormalWindow();
 
-            BG.applyGroup(winId, groupId, tabId).catch(log.onCatch(['applyGroup from notif', winId, groupId, tabId]));
+            backgroundSelf.applyGroup(winId, groupId, tabId).catch(log.onCatch(['applyGroup from notif', winId, groupId, tabId]));
         }
     }.bind(null, groupId, firstTab.id));
 
@@ -528,9 +529,9 @@ async function filterExist(tabs, returnTabIds = false) {
     let lengthBefore = tabIds.length,
         returnFunc = returnTabIds ? t => t.id : t => t;
 
-    tabs = await Promise.all(tabIds.map(tabId => {
-        return browser.tabs.get(extractId(tabId))
-            .then(returnFunc, log.onCatch(['not found tab', tabId], false));
+    tabs = await Promise.all(tabs.map(tab => {
+        return browser.tabs.get(extractId(tab))
+            .then(returnFunc, log.onCatch(['not found tab', tab], false));
     }));
     tabs = tabs.filter(Boolean);
 
@@ -666,11 +667,10 @@ export async function safeHide(...tabs) { // ids or tabs
 
         const log = logger.start('safeHide', tabIds);
 
-        BG.addExcludeTabIds(tabIds);
+        backgroundSelf.addExcludeTabIds(tabIds);
         await hide(tabIds);
-        BG.removeExcludeTabIds(tabIds);
+        backgroundSelf.removeExcludeTabIds(tabIds);
 
-        tabs.forEach(tab => tab.hidden = true);
         log.stop();
     }
 }
@@ -724,7 +724,7 @@ export function extractId(tab) {
 }
 
 export function sendMessage(tabId, message) {
-    message.theme = BG.options.theme;
+    message.theme = backgroundSelf.options.theme;
 
     return browser.tabs.sendMessage(tabId, message).catch(() => {});
 }
