@@ -988,7 +988,7 @@ async function addUndoRemoveGroupItem(groupToRemove) {
     Menus.create({
         id: Constants.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + groupToRemove.id,
         title: browser.i18n.getMessage('undoRemoveGroupItemTitle', groupToRemove.title),
-        contexts: [Menus.ContextType.ACTION],
+        contexts: [Menus.ContextType.BROWSER_ACTION],
         icons: Groups.getIconUrl(groupToRemove, 16),
         onClick: restoreGroup,
     });
@@ -1395,7 +1395,7 @@ async function createMoveTabMenus() {
     hasBookmarksPermission && menuIds.push(Menus.create({
         title: browser.i18n.getMessage('exportAllGroupsToBookmarks'),
         icon: '/icons/bookmark.svg',
-        contexts: [Menus.ContextType.ACTION],
+        contexts: [Menus.ContextType.BROWSER_ACTION],
         async onClick() {
             await exportAllGroupsToBookmarks(true);
         },
@@ -1404,7 +1404,7 @@ async function createMoveTabMenus() {
     menuIds.push(Menus.create({
         title: browser.i18n.getMessage('reopenTabsWithTemporaryContainersInNew'),
         icon: 'resource://usercontext-content/chill.svg',
-        contexts: [Menus.ContextType.ACTION],
+        contexts: [Menus.ContextType.BROWSER_ACTION],
         async onClick(info) {
             const allTabs = await Tabs.get(null, null, null, undefined, true, true),
                 tabsToCreate = [];
