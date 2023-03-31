@@ -61,7 +61,7 @@ async function onMenuClick(info, tab) {
 }
 
 export function remove(id) {
-    const log = logger.start('remove', id, createProperties);
+    const log = logger.start('remove', id);
 
     if (!menusMap.has(id)) {
         log.throwError([id, 'doesn\'t exist']);
