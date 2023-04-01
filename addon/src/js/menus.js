@@ -7,7 +7,7 @@ const logger = new Logger('Menus');
 
 const menusMap = new Map;
 
-export function create(createProperties) {
+export async function create(createProperties) {
     const id = createProperties.id ??= String(Utils.getRandomInt(100000,  Number.MAX_SAFE_INTEGER));
 
     const log = logger.start('create', createProperties);
@@ -26,7 +26,7 @@ export function create(createProperties) {
         createProperties.icons = {16: icon};
     }
 
-    browser.menus.create(createProperties);
+    await browser.menus.create(createProperties);
 
     const menuListenerOptions = {
         id,
@@ -60,7 +60,7 @@ async function onMenuClick(info, tab) {
     }
 }
 
-export function remove(id) {
+export async function remove(id) {
     const log = logger.start('remove', id);
 
     if (!menusMap.has(id)) {
@@ -68,13 +68,15 @@ export function remove(id) {
         return;
     }
 
+    await browser.menus.remove(id);
+
     browser.menus.onClicked.removeListener(menusMap.get(id).onMenuClick);
     menusMap.delete(id);
 
     return log.stop(id);
 }
 
-export function update(id, updateProperties) {
+export async function update(id, updateProperties) {
     const log = logger.start('update', id, updateProperties);
 
     if (!menusMap.has(id)) {
@@ -82,27 +84,23 @@ export function update(id, updateProperties) {
         return;
     }
 
-    browser.menus.update(id, updateProperties);
+    await browser.menus.update(id, updateProperties);
 
     log.stop();
 }
 
-export function enable(id) {
+export async function enable(id) {
     const log = logger.start('enable', id);
 
-    update(id, {
-        enabled: true,
-    });
+    await update(id, {enabled: true});
 
     log.stop();
 }
 
-export function disable(id) {
+export async function disable(id) {
     const log = logger.start('disable', id);
 
-    update(id, {
-        enabled: false,
-    });
+    await update(id, {enabled: false});
 
     log.stop();
 }

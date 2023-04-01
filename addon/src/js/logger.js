@@ -232,29 +232,27 @@ function getIndentAndRemoveScope(indentCount, args) {
 };
 
 const Errors = {
-    get(clearAfter) {
-        let errorLogs = JSON.parse(self.localStorage.errorLogs || null) || [];
-
-        if (clearAfter) {
-            delete self.localStorage.errorLogs;
-        }
-
-        return errorLogs;
+    get() {
+        return JSON.parse(self.localStorage.errorLogs || null) || [];
     },
     set(error) {
-        let errorLogs = this.get();
+        let errorLogs = Errors.get();
 
         errorLogs.push(error);
 
         self.localStorage.errorLogs = JSON.stringify(errorLogs.slice(-50));
     },
+    clear() {
+        delete self.localStorage.errorLogs;
+    },
 };
 
-Logger.getErrors = Errors.get.bind(Errors);
+Logger.getErrors = Errors.get;
+Logger.clearErrors = Errors.clear;
 
 Logger.clearLogs = () => {
-    Logger.logs = Logger.logs.slice(-150);
-    Logger.getErrors(true);
+    Logger.logs = Logger.logs.slice(-400);
+    Logger.clearErrors();
 };
 
 Logger.normalizeError = normalizeError;
@@ -325,12 +323,12 @@ const DELETE_LOG_STARTS_WITH = [
     'setLoggerFuncs',
     'sendMessage',
     'sendExternalMessage',
-    './js/logger.js',
 ];
 
 const UNNECESSARY_LOG_STRINGS = [
     Constants.STG_BASE_URL,
     'async*',
+    'Async*',
     '../node_modules/vue-loader/lib/index.js??vue-loader-options!./popup/Popup.vue?vue&type=script&lang=js&',
     '../node_modules/vue-loader/lib/index.js??vue-loader-options!./manage/Manage.vue?vue&type=script&lang=js&',
     '../node_modules/vue-loader/lib/index.js??vue-loader-options!./options/Options.vue?vue&type=script&lang=js&',

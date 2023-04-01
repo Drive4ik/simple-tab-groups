@@ -2018,11 +2018,12 @@
             }
 
             .flex-on-hover {
-                display: none;
+                display: flex;
+                visibility: hidden;
             }
 
             &:hover .flex-on-hover {
-                display: flex;
+                visibility: visible;
             }
         }
 

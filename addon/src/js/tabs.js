@@ -178,7 +178,7 @@ export async function get(
 
     tabs = tabs.filter(Boolean);
 
-    log.stop('found tabs count:', tabs.length);
+    log.stop('found tabs count:', backgroundSelf.IS_TEMPORARY ? tabs : tabs.length);
     return tabs;
 }
 
@@ -251,7 +251,7 @@ export async function updateThumbnail(tabId) {
     }
 
     if (tab.discarded) {
-        reload([tab]);
+        reload(tab.id);
         return;
     }
 
@@ -690,8 +690,8 @@ export async function discard(...tabs) { // ids or tabs
     }
 }
 
-export async function reload(tabs = [], bypassCache = false) { // ids or tabs
-    tabs = tabs.flat();
+export async function reload(tabs, bypassCache = false) { // ids or tabs
+    tabs = [tabs].flat();
 
     if (tabs.length) {
         const log = logger.start('reload', tabs.map(extractId));

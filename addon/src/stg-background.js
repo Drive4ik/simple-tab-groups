@@ -504,7 +504,7 @@ const onUpdatedTab = Utils.catchFunc(async function(tabId, changeInfo, tab) {
         winGroupId = Cache.getWindowGroup(tab.windowId);
 
     if (changeInfo.favIconUrl/*  && (tabGroupId || winGroupId) */) {
-        Cache.setTabFavIcon(tab.id, changeInfo.favIconUrl).catch(() => {});
+        await Cache.setTabFavIcon(tab.id, changeInfo.favIconUrl).catch(log.onCatch(['cant set favIcon'], false));
     }
 
     if (changeInfo.hasOwnProperty('pinned') || changeInfo.hasOwnProperty('hidden')) {
@@ -515,8 +515,13 @@ const onUpdatedTab = Utils.catchFunc(async function(tabId, changeInfo, tab) {
         } else {
 
             if (false === changeInfo.pinned) {
-                log.log('set group for unhidden tab', tab.id);
-                Cache.setTabGroup(tab.id, winGroupId);
+                if (winGroupId) {
+                    log.log('set group', winGroupId,' for unhidden tab', tab.id);
+                    Cache.setTabGroup(tab.id, winGroupId);
+                } else {
+                    log.log('remove group for unhidden tab', tab.id);
+                    Cache.removeTabGroup(tab.id);
+                }
             } else if (false === changeInfo.hidden) {
                 log.log('tab is showing', tab.id);
 
@@ -547,9 +552,15 @@ const onUpdatedTab = Utils.catchFunc(async function(tabId, changeInfo, tab) {
                         }
                     }
 
-                    Tabs.safeHide(tab);
+                    await Tabs.safeHide(tab);
                 } else {
-                    Cache.setTabGroup(tab.id, winGroupId).catch(log.onCatch(['Cache.setTabGroup', tab.id, 'winGroupId', winGroupId]));
+                    if (winGroupId) {
+                        log.log('set group', winGroupId,' for unhidden tab', tab.id);
+                        await Cache.setTabGroup(tab.id, winGroupId);
+                    } else {
+                        log.log('remove group for unhidden tab', tab.id);
+                        await Cache.removeTabGroup(tab.id);
+                    }
                 }
             }
         }
@@ -558,7 +569,7 @@ const onUpdatedTab = Utils.catchFunc(async function(tabId, changeInfo, tab) {
     }
 
     if (Utils.isTabLoaded(changeInfo)/*  && (tabGroupId || winGroupId) */) {
-        Tabs.updateThumbnail(tab.id);
+        await Tabs.updateThumbnail(tab.id);
     }
 
     log.stop();
@@ -595,9 +606,17 @@ function onAttachedTab(tabId, {newWindowId}) {
         return;
     }
 
-    logger.log('onAttachedTab', {tabId, newWindowId});
+    const newTabGroupId = Cache.getWindowGroup(newWindowId);
 
-    Cache.setTabGroup(tabId, Cache.getWindowGroup(newWindowId));
+    if (newTabGroupId) {
+        logger.log('onAttachedTab', {tabId, newWindowId, newTabGroupId});
+
+        Cache.setTabGroup(tabId, Cache.getWindowGroup(newWindowId));
+    } else {
+        logger.log('onAttachedTab remove tab group', {tabId, newWindowId, newTabGroupId});
+
+        Cache.removeTabGroup(tabId);
+    }
 }
 
 let windowIdsForRestoring = new Set,
@@ -642,7 +661,7 @@ async function GrandRestoreWindows({id}, needRestoreMissedTabsMap) {
                     return;
                 }
 
-                let group = JSON.clone(gr);
+                const group = JSON.clone(gr);
 
                 group.tabs = win.tabs.filter(tab => tab.groupId === group.id);
 
@@ -692,7 +711,7 @@ async function GrandRestoreWindows({id}, needRestoreMissedTabsMap) {
                 return;
             }
 
-            let lastAccessGroup = new Map;
+            const lastAccessGroup = new Map;
 
             // ищем востанавливаемую группу в всех окнах
             windows.forEach(win => {
@@ -708,12 +727,12 @@ async function GrandRestoreWindows({id}, needRestoreMissedTabsMap) {
 
             // ищем группу с минимальным значением доступа,
             // именно группа этого окна (и все её вкладки) и будет оставлена
-            let minGroupLastAccessed = Math.min(...lastAccessGroup.keys());
+            const minGroupLastAccessed = Math.min(...lastAccessGroup.keys());
 
             groupToKeep = lastAccessGroup.get(minGroupLastAccessed);
 
             lastAccessGroup.delete(minGroupLastAccessed);
-            let otherGroups = lastAccessGroup;
+            const otherGroups = lastAccessGroup;
 
             // ищем вкладки в других окнах, которых нет в окне результующей группы (по урле, не уникально)
             for (let otherGroup of otherGroups.values()) {
@@ -744,7 +763,7 @@ async function GrandRestoreWindows({id}, needRestoreMissedTabsMap) {
 
             // удаляем вкладки ресторед группы которых нет в других группах
             if (otherGroups.size) {
-                let allOtherTabs = Array.from(otherGroups.values()).reduce((acc, otherGroup) => [...acc, ...otherGroup.tabs], []);
+                let allOtherTabs = Utils.concatTabs(Array.from(otherGroups.values()));
 
                 groupToKeep.tabs.forEach(tab => {
                     // если вкладка из другого окна - пропускаем
@@ -985,7 +1004,7 @@ async function addUndoRemoveGroupItem(groupToRemove) {
 
     }.bind(null, JSON.clone(groupToRemove));
 
-    Menus.create({
+    await Menus.create({
         id: Constants.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + groupToRemove.id,
         title: browser.i18n.getMessage('undoRemoveGroupItemTitle', groupToRemove.title),
         contexts: [Menus.ContextType.ACTION],
@@ -1030,25 +1049,25 @@ async function createMoveTabMenus() {
     const {groups} = await Groups.load(),
         temporaryContainer = Containers.get(Constants.TEMPORARY_CONTAINER);
 
-    hasBookmarksPermission && menuIds.push(Menus.create({
+    hasBookmarksPermission && menuIds.push(await Menus.create({
         id: 'stg-open-bookmark-parent',
         title: browser.i18n.getMessage('openBookmarkInGroup'),
         contexts: [Menus.ContextType.BOOKMARK],
     }));
 
-    options.showContextMenuOnTabs && menuIds.push(Menus.create({
+    options.showContextMenuOnTabs && menuIds.push(await Menus.create({
         id: 'stg-move-tab-parent',
         title: browser.i18n.getMessage('moveTabToGroupDisabledTitle'),
         contexts: [Menus.ContextType.TAB],
     }));
 
-    options.showContextMenuOnLinks && menuIds.push(Menus.create({
+    options.showContextMenuOnLinks && menuIds.push(await Menus.create({
         id: 'stg-open-link-parent',
         title: browser.i18n.getMessage('openLinkInGroupDisabledTitle'),
         contexts: [Menus.ContextType.LINK],
     }));
 
-    options.showContextMenuOnTabs && menuIds.push(Menus.create({
+    options.showContextMenuOnTabs && menuIds.push(await Menus.create({
         title: temporaryContainer.name,
         icon: temporaryContainer.iconUrl,
         parentId: 'stg-move-tab-parent',
@@ -1067,7 +1086,7 @@ async function createMoveTabMenus() {
         },
     }));
 
-    options.showContextMenuOnTabs && menuIds.push(Menus.create({
+    options.showContextMenuOnTabs && menuIds.push(await Menus.create({
         id: 'set-tab-icon-as-group-icon',
         title: browser.i18n.getMessage('setTabIconAsGroupIcon'),
         icon: '/icons/image.svg',
@@ -1089,13 +1108,13 @@ async function createMoveTabMenus() {
         },
     }));
 
-    options.showContextMenuOnTabs && groups.length && menuIds.push(Menus.create({
+    options.showContextMenuOnTabs && groups.length && menuIds.push(await Menus.create({
         type: Menus.ItemType.SEPARATOR,
         parentId: 'stg-move-tab-parent',
         contexts: [Menus.ContextType.TAB],
     }));
 
-    options.showContextMenuOnLinks && menuIds.push(Menus.create({
+    options.showContextMenuOnLinks && menuIds.push(await Menus.create({
         title: temporaryContainer.name,
         icon: temporaryContainer.iconUrl,
         parentId: 'stg-open-link-parent',
@@ -1119,13 +1138,13 @@ async function createMoveTabMenus() {
         },
     }));
 
-    options.showContextMenuOnLinks && groups.length && menuIds.push(Menus.create({
+    options.showContextMenuOnLinks && groups.length && menuIds.push(await Menus.create({
         type: Menus.ItemType.SEPARATOR,
         parentId: 'stg-open-link-parent',
         contexts: [Menus.ContextType.LINK],
     }));
 
-    hasBookmarksPermission && menuIds.push(Menus.create({
+    hasBookmarksPermission && menuIds.push(await Menus.create({
         title: temporaryContainer.name,
         icon: temporaryContainer.iconUrl,
         parentId: 'stg-open-bookmark-parent',
@@ -1157,13 +1176,13 @@ async function createMoveTabMenus() {
         },
     }));
 
-    hasBookmarksPermission && groups.length && menuIds.push(Menus.create({
+    hasBookmarksPermission && groups.length && menuIds.push(await Menus.create({
         type: Menus.ItemType.SEPARATOR,
         parentId: 'stg-open-bookmark-parent',
         contexts: [Menus.ContextType.BOOKMARK],
     }));
 
-    groups.forEach(function(group) {
+    await Promise.all(groups.map(async group => {
         if (group.isArchive) {
             return;
         }
@@ -1172,7 +1191,7 @@ async function createMoveTabMenus() {
             groupIcon = Groups.getIconUrl(group),
             groupTitle = String(Groups.getTitle(group, 'withSticky withActiveGroup withContainer'));
 
-        options.showContextMenuOnTabs && menuIds.push(Menus.create({
+        options.showContextMenuOnTabs && menuIds.push(await Menus.create({
             title: groupTitle,
             icon: groupIcon,
             parentId: 'stg-move-tab-parent',
@@ -1191,7 +1210,7 @@ async function createMoveTabMenus() {
             },
         }));
 
-        options.showContextMenuOnLinks && menuIds.push(Menus.create({
+        options.showContextMenuOnLinks && menuIds.push(await Menus.create({
             title: groupTitle,
             icon: groupIcon,
             parentId: 'stg-open-link-parent',
@@ -1210,7 +1229,7 @@ async function createMoveTabMenus() {
             },
         }));
 
-        hasBookmarksPermission && menuIds.push(Menus.create({
+        hasBookmarksPermission && menuIds.push(await Menus.create({
             title: groupTitle,
             icon: groupIcon,
             parentId: 'stg-open-bookmark-parent',
@@ -1262,9 +1281,9 @@ async function createMoveTabMenus() {
                 }
             },
         }));
-    });
+    }));
 
-    options.showContextMenuOnTabs && menuIds.push(Menus.create({
+    options.showContextMenuOnTabs && menuIds.push(await Menus.create({
         title: browser.i18n.getMessage('createNewGroup'),
         icon: '/icons/group-new.svg',
         parentId: 'stg-move-tab-parent',
@@ -1281,7 +1300,7 @@ async function createMoveTabMenus() {
         },
     }));
 
-    options.showContextMenuOnLinks && menuIds.push(Menus.create({
+    options.showContextMenuOnLinks && menuIds.push(await Menus.create({
         title: browser.i18n.getMessage('createNewGroup'),
         icon: '/icons/group-new.svg',
         parentId: 'stg-open-link-parent',
@@ -1312,7 +1331,7 @@ async function createMoveTabMenus() {
         },
     }));
 
-    hasBookmarksPermission && menuIds.push(Menus.create({
+    hasBookmarksPermission && menuIds.push(await Menus.create({
         title: browser.i18n.getMessage('createNewGroup'),
         icon: '/icons/group-new.svg',
         parentId: 'stg-open-bookmark-parent',
@@ -1392,7 +1411,7 @@ async function createMoveTabMenus() {
         },
     }));
 
-    hasBookmarksPermission && menuIds.push(Menus.create({
+    hasBookmarksPermission && menuIds.push(await Menus.create({
         title: browser.i18n.getMessage('exportAllGroupsToBookmarks'),
         icon: '/icons/bookmark.svg',
         contexts: [Menus.ContextType.ACTION],
@@ -1401,7 +1420,7 @@ async function createMoveTabMenus() {
         },
     }));
 
-    menuIds.push(Menus.create({
+    menuIds.push(await Menus.create({
         title: browser.i18n.getMessage('reopenTabsWithTemporaryContainersInNew'),
         icon: 'resource://usercontext-content/chill.svg',
         contexts: [Menus.ContextType.ACTION],
@@ -1848,6 +1867,8 @@ const onBeforeTabRequest = Utils.catchFunc(async function({tabId, url, cookieSto
                 return {};
             }
 
+            tab.url = url;
+            tab.status = browser.tabs.TabStatus.COMPLETE;
             Cache.setTab(tab);
 
             log.stop('move tab from groupId:', tabGroup.id, 'to groupId:', destGroup.id);
@@ -3754,10 +3775,10 @@ async function restoreOldExtensionUrls(parseUrlFunc) {
 
 // { reason: "update", previousVersion: "3.0.1", temporary: true }
 // { reason: "install", temporary: true }
-browser.runtime.onInstalled.addListener(function onInstalled({previousVersion, reason, temporary}) {
-    const log = logger.start('onInstalled', {previousVersion, reason, temporary});
+browser.runtime.onInstalled.addListener(function({reason, previousVersion, temporary}) {
+    const log = logger.start('onInstalled', {reason, previousVersion, temporary});
 
-    browser.runtime.onInstalled.removeListener(onInstalled);
+    // browser.runtime.onInstalled.removeListener(onInstalled);
 
     // if (!self.inited) {
     //     setTimeout(onInstalled, 150, {previousVersion, reason, temporary});
@@ -3766,11 +3787,14 @@ browser.runtime.onInstalled.addListener(function onInstalled({previousVersion, r
 
     if (temporary) {
         self.IS_TEMPORARY = true;
-        return log.stop('addon is temp');
-    }
-
-    if (browser.runtime.OnInstalledReason.INSTALL === reason ||
-        (browser.runtime.OnInstalledReason.UPDATE === reason && -1 === Utils.compareVersions(previousVersion, '5.0'))) {
+        log.log('addon is temp');
+    } else if (
+        reason === browser.runtime.OnInstalledReason.INSTALL ||
+        (
+            reason === browser.runtime.OnInstalledReason.UPDATE &&
+            Utils.compareVersions(previousVersion, '5.0') === -1
+        )
+    ) {
         log.log('open welcome');
         Urls.openUrl('welcome');
     }
@@ -4017,9 +4041,9 @@ async function init() {
 
         log.stop();
 
-        if (self.IS_TEMPORARY && !Logger.logs.some(l => l['console.error'])) {
-            // console.clear();
-        }
+        // if (self.IS_TEMPORARY && !Logger.logs.some(l => l['console.error'])) {
+        //     console.clear();
+        // }
 
         // Urls.openUrl('/popup/popup.html#sidebar');
     } catch (e) {

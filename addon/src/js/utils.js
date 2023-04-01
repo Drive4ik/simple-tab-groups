@@ -1,10 +1,6 @@
 
 import * as Constants from './constants.js';
 import JSON from './json.js';
-import * as Cache from './cache.js';
-import * as Containers from './containers.js';
-
-export const BROWSER_PAGES_STARTS = 'about:';
 
 const tagsToReplace = {
     '<': '&lt;',
@@ -163,12 +159,16 @@ export function getSupportedExternalExtensionName(extId) {
     return Constants.EXTENSIONS_WHITE_LIST[extId] ? Constants.EXTENSIONS_WHITE_LIST[extId].title : 'Unknown';
 }
 
+const cspUrls = [
+    'chrome://mozapps/skin/',
+    'chrome://devtools/skin/images/profiler-stopwatch.svg',
+];
 export function isAvailableFavIconUrl(favIconUrl) {
     if (!favIconUrl) {
         return false;
     }
 
-    return !favIconUrl.startsWith('chrome://mozapps/skin/');
+    return !cspUrls.some(url => favIconUrl.startsWith(url));
 }
 
 export function normalizeTabFavIcon(tab) {

@@ -8,10 +8,6 @@ function reloadPageOnAddonReady() {
 }
 
 if (backgroundSelf) {
-    // self.BG = backgroundSelf.BG;
-    // self._cacheStorage = backgroundSelf._cacheStorage;
-    // self.sendMessage = backgroundSelf.sendMessage;
-
     if (!backgroundSelf.inited) {
         reloadPageOnAddonReady();
     }
