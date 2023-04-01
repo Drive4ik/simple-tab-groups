@@ -411,11 +411,9 @@ export async function move(tabIds, groupId, {
 
             tabIdsToRemove.push(tab.id);
 
-            tab.url = Cache.getTabSession(tab.id, 'url');
-            tab.title = Cache.getTabSession(tab.id, 'title');
-
             let newTab = await createNative({
                 ...tab,
+                ...Cache.getTabSession(tab.id), // apply session, because we can move tab from onBeforeTabRequest
                 active: false,
                 openerTabId: null,
                 windowId,

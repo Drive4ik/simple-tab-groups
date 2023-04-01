@@ -54,10 +54,7 @@ export function setTab({id, url, title, favIconUrl, cookieStoreId, openerTabId, 
 
     tabs[id].url = url;
     tabs[id].title = title || url;
-
-    if (Utils.isAvailableFavIconUrl(favIconUrl)) {
-        tabs[id].favIconUrl = favIconUrl;
-    }
+    tabs[id].favIconUrl = Utils.isAvailableFavIconUrl(favIconUrl) ? favIconUrl : null;
 }
 
 export function hasTab(tabId) {
@@ -97,7 +94,7 @@ export function getTabGroup(tabId) {
 }
 
 export async function removeTabGroup(tabId) {
-    delete tabs[tabId].groupId;
+    delete tabs[tabId]?.groupId;
     return browser.sessions.removeTabValue(tabId, 'groupId').catch(() => {});
 }
 
@@ -129,7 +126,7 @@ export function getTabFavIcon(tabId) {
 }
 
 export async function removeTabFavIcon(tabId) {
-    delete tabs[tabId].favIconUrl;
+    delete tabs[tabId]?.favIconUrl;
     return browser.sessions.removeTabValue(tabId, 'favIconUrl').catch(() => {});
 }
 
@@ -161,7 +158,7 @@ export function getTabThumbnail(tabId) {
 }
 
 export async function removeTabThumbnail(tabId) {
-    delete tabs[tabId].thumbnail;
+    delete tabs[tabId]?.thumbnail;
     return browser.sessions.removeTabValue(tabId, 'thumbnail').catch(() => {});
 }
 

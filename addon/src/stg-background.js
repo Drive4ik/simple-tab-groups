@@ -1795,7 +1795,7 @@ let canceledRequests = new Set;
 const onBeforeTabRequest = Utils.catchFunc(async function({tabId, url, cookieStoreId, originUrl, requestId, frameId}) {
     const log = logger.start('onBeforeTabRequest', {tabId, url, cookieStoreId, originUrl, requestId, frameId});
 
-    if (frameId !== 0 || tabId === -1 || Containers.isTemporary(cookieStoreId)) {
+    if (frameId !== 0 || tabId === browser.tabs.TAB_ID_NONE || Containers.isTemporary(cookieStoreId)) {
         log.stop();
         return {};
     }
@@ -1865,6 +1865,11 @@ const onBeforeTabRequest = Utils.catchFunc(async function({tabId, url, cookieSto
             if (!tab) {
                 log.stopError('tab not found', tabId);
                 return {};
+            }
+
+            if (new URL(tab.url).origin !== new URL(url).origin) {
+                tab.favIconUrl = null;
+                Cache.removeTabThumbnail(tab.id);
             }
 
             tab.url = url;
