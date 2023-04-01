@@ -57,6 +57,10 @@
         "message": "Отказ",
         "description": "Cancel"
     },
+    "close": {
+        "message": "Затваряне",
+        "description": "Close"
+    },
     "searchPlaceholder": {
         "message": "Търсене",
         "description": "Search placeholder"
@@ -82,6 +86,10 @@
     "closePopupAfterChangeGroup": {
         "message": "Затваряне на менюто при смяна на група",
         "description": "Close popup after changing group"
+    },
+    "closePopupAfterSelectTab": {
+        "message": "Затваряне на изскачащото меню след избор на раздел",
+        "description": "Close the popup window after selecting a tab"
     },
     "openManageGroupsInTab": {
         "message": "Отваряне на „Управление на групи“ в раздел",
@@ -464,6 +472,14 @@
     "showTabAfterMovingItIntoThisGroup": {
         "message": "Отваряне на раздела след автоматично преместване",
         "description": "Show the tab after auto-moving it into this group"
+    },
+    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
+        "message": "Само ако текущият раздел е преместван",
+        "description": "Only if the active tab has been moved"
+    },
+    "showNotificationAfterMovingTabIntoThisGroup": {
+        "message": "Показване на известие, когато раздели биват преместени в тази група",
+        "description": "Show a notification when tabs are moved to this group"
     },
     "tabMoving": {
         "message": "Преместване на раздели",
@@ -1180,5 +1196,13 @@
     "group": {
         "message": "Група",
         "description": "Group"
+    },
+    "helpPageUnsupportedUrlTitle": {
+        "message": "Неподдържан адрес",
+        "description": "Unsupported URL"
+    },
+    "copyURL": {
+        "message": "Копиране на адреса",
+        "description": "Copy URL"
     }
 }
