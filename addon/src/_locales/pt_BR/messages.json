@@ -57,6 +57,10 @@
         "message": "Cancelar",
         "description": "Cancel"
     },
+    "close": {
+        "message": "Fechar",
+        "description": "Close"
+    },
     "searchPlaceholder": {
         "message": "Pesquisar",
         "description": "Search placeholder"
@@ -80,19 +84,23 @@
         "description": "Free arrange"
     },
     "closePopupAfterChangeGroup": {
-        "message": "Fechar o pop-up depois da mudança de grupo",
+        "message": "Fechar o pop-up após mudar de grupo",
         "description": "Close popup after changing group"
+    },
+    "closePopupAfterSelectTab": {
+        "message": "Fechar o pop-up após selecionar uma aba",
+        "description": "Close the popup window after selecting a tab"
     },
     "openManageGroupsInTab": {
         "message": "Abrir \"Gerenciar Grupos\" em nova aba",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
-        "message": "Exibir diálogo de confirmação antes de deletar o grupo",
+        "message": "Pedir confirmação antes de deletar o grupo",
         "description": "Show confirmation dialog before deleting the group"
     },
     "showConfirmDialogBeforeGroupArchiving": {
-        "message": "Exibir diálogo de confirmação antes de arquivar o grupo",
+        "message": "Pedir confirmação antes de arquivar o grupo",
         "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
@@ -100,7 +108,7 @@
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
-        "message": "Exportar seus grupos de abas em um arquivo de backup para manter seguro, assim você pode restaura-lo quando for necessario no futuro.",
+        "message": "Por segurança, exporte seus grupos de abas para um arquivo de backup, assim, caso seja necessário, você poderá restaurá-las no futuro.",
         "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
     },
     "exportAddonSettingsButton": {
@@ -124,15 +132,15 @@
         "description": "Restore backup"
     },
     "importSettingsOldTabGroupsAddonTitle": {
-        "message": "Restaurar do \"Tab Groups\" do Quicksaver",
+        "message": "Restaurar \"Tab Groups\" do Quicksaver",
         "description": "Restore Quicksaver's \"Tab Groups\""
     },
     "importSettingsOldTabGroupsAddonDescription": {
-        "message": "Abrir um arquivo de bakcup da antiga extenção \"Tab Group\" do Quicksaver.",
+        "message": "Abrir um arquivo de backup de uma versão antiga da extensão \"Tab Groups\"",
         "description": "Load a backup file old \"Tab Groups\" addon."
     },
     "openGroupAfterChange": {
-        "message": "Abrir grupo depois de muda-lo",
+        "message": "Abrir a lista de abas de um grupo quando mudar para ele.",
         "description": "Open group after changing to it"
     },
     "newGroupTitle": {
@@ -176,7 +184,7 @@
         "description": "Delete group"
     },
     "confirmDeleteGroup": {
-        "message": "Você quer deletar o grupo \"$grouptitle$\" ?<br>Removendo o grupo também fechará abas e janela amarrada se estiver aberta agora!",
+        "message": "Você quer deletar o grupo \"$grouptitle$\" ?<br>Remover o grupo também fechará as abas e janelas ligadas a ele!",
         "description": "Delete group?",
         "placeholders": {
             "grouptitle": {
@@ -242,7 +250,7 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Desculpe, você não pode carregar os ícones personalizados do grupo neste pop-up. Para isso, dirija-se a \"Gerenciar grupos\".\nAbrir \"Gerenciar grupos\"?",
+        "message": "Desculpe, mas você não pode carregar ícones personalizados neste pop-up. Para isso, dirija-se a \"Gerenciar grupos\".\nAbrir \"Gerenciar grupos\"?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -829,6 +837,10 @@
         "message": "Habilitar DEBUG",
         "description": "Enable DEBUG"
     },
+    "disableDebugTitle": {
+        "message": "Desabilitar DEBUG",
+        "description": "Disable DEBUG"
+    },
     "loggingIsEnabledTitle": {
         "message": "O log de dados está habilitado",
         "description": "logging is enabled"
@@ -1180,5 +1192,17 @@
     "group": {
         "message": "Grupo",
         "description": "Group"
+    },
+    "helpPageUnsupportedUrlTitle": {
+        "message": "URL não suportado",
+        "description": "Unsupported URL"
+    },
+    "copyURL": {
+        "message": "Copiar URL",
+        "description": "Copy URL"
+    },
+    "helpPageStgDebugTitle": {
+        "message": "Página de debug do STG",
+        "description": "STG debug page"
     }
 }
