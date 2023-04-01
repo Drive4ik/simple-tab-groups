@@ -1,26 +1,26 @@
 {
     "extensionDescription": {
-        "message": "新建、编辑和快速切换标签页群组",
+        "message": "建立、编辑并快速切换标签页群组",
         "description": "Description of the extension."
     },
     "openSettings": {
-        "message": "配置",
+        "message": "设置",
         "description": "Settings context button title"
     },
     "manageGroupsTitle": {
-        "message": "群组管理",
+        "message": "管理群组",
         "description": "Manage groups"
     },
     "setTabIconAsGroupIcon": {
-        "message": "使用标签页图标为群组图标",
+        "message": "将标签页的图标设为群组的图标",
         "description": "Set tab icon as group icon"
     },
     "moveTabToGroupDisabledTitle": {
-        "message": "移动标签页到群组",
+        "message": "将标签页移到群组",
         "description": "Move tab to group title"
     },
     "moveTabToGroupMessage": {
-        "message": "标签页 \"$tabtitle$\" 已移至群组 \"$grouptitle$\"。\n\n点击这里显示该标签页。",
+        "message": "已将标签页 \"$tabtitle$\" 移到群组 \"$grouptitle$\"。\n\n点这里显示该标签页。",
         "description": "Tab moved popup title",
         "placeholders": {
             "grouptitle": {
@@ -42,7 +42,7 @@
         "description": "Success!"
     },
     "ok": {
-        "message": "确认",
+        "message": "好的",
         "description": "OK button"
     },
     "save": {
@@ -57,12 +57,16 @@
         "message": "取消",
         "description": "Cancel"
     },
+    "close": {
+        "message": "关闭",
+        "description": "Close"
+    },
     "searchPlaceholder": {
         "message": "搜索",
         "description": "Search placeholder"
     },
     "invalidRegExpRuleTitle": {
-        "message": "无效的正则表达式 '$regexp$' 将被忽略。",
+        "message": "正则表达式 '$regexp$' 有语法错误，将被忽略。",
         "description": "Invalid rule description",
         "placeholders": {
             "regexp": {
@@ -72,7 +76,7 @@
         }
     },
     "manageGroupViewGrid": {
-        "message": "网格排布",
+        "message": "网格显示",
         "description": "Grid display"
     },
     "manageGroupViewFreeArrange": {
@@ -83,8 +87,12 @@
         "message": "切换群组后关闭弹出框",
         "description": "Close popup after changing group"
     },
+    "closePopupAfterSelectTab": {
+        "message": "选择标签页后关闭弹出窗口",
+        "description": "Close the popup window after selecting a tab"
+    },
     "openManageGroupsInTab": {
-        "message": "在新标签页里打开”群组管理“",
+        "message": "在新标签页里打开”管理群组“",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
@@ -96,31 +104,31 @@
         "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
-        "message": "备份你的配置",
+        "message": "备份你的“Simple Tab Groups”",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
-        "message": "导出配置到备份文件。",
+        "message": "把你的标签页群组导出到一个备份文件里，以便你在需要时能够恢复它们。",
         "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
     },
     "exportAddonSettingsButton": {
-        "message": "新建备份",
+        "message": "创建备份",
         "description": "Create backup"
     },
     "includeTabThumbnailsIntoBackup": {
-        "message": "在备份中包括缩略图（会增大备份文件）",
+        "message": "在备份中包括缩略图（会让备份文件更大）",
         "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "导入配置备份",
+        "message": "恢复“Simple Tab Groups”",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
-        "message": "导入配置备份，恢复你的标签页群组。",
+        "message": "加载一个备份文件，以恢复你的标签页群组。",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
     "importAddonSettingsButton": {
-        "message": "导入备份",
+        "message": "恢复备份",
         "description": "Restore backup"
     },
     "importSettingsOldTabGroupsAddonTitle": {
@@ -136,7 +144,7 @@
         "description": "Open group after changing to it"
     },
     "newGroupTitle": {
-        "message": "群组 \"$id$\"",
+        "message": "群组\"$id$\"",
         "description": "group id",
         "placeholders": {
             "id": {
@@ -156,11 +164,11 @@
         }
     },
     "sortGroupsAZ": {
-        "message": "群组排序：升序",
+        "message": "排序群组：升序",
         "description": "Sort groups [A-Z]"
     },
     "sortGroupsZA": {
-        "message": "群组排序：降序",
+        "message": "排序群组：降序",
         "description": "Sort groups [Z-A]"
     },
     "generalTitle": {
@@ -168,7 +176,7 @@
         "description": "General"
     },
     "groupSettings": {
-        "message": "群组配置",
+        "message": "群组设置",
         "description": "Group settings"
     },
     "deleteGroup": {
@@ -186,7 +194,7 @@
         }
     },
     "groupTabsCount": {
-        "message": "$count$ 个标签页",
+        "message": "$count$个标签页",
         "description": "Group tabs count",
         "placeholders": {
             "count": {
@@ -196,7 +204,7 @@
         }
     },
     "groupTabsCountActive": {
-        "message": "$active$/$count$ 个激活的标签页",
+        "message": "$active$/$count$ 个标签页活动",
         "description": "Group tabs count active",
         "placeholders": {
             "active": {
@@ -218,7 +226,7 @@
         "description": "Open new tab"
     },
     "createNewGroup": {
-        "message": "新建群组",
+        "message": "建立新群组",
         "description": "Create new group"
     },
     "goBackButtonTitle": {
@@ -242,7 +250,7 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "不能在该弹出框内加载自定义图标，但在“群组管理”里可以加载自定义图标。\n是否“群组管理”？",
+        "message": "抱歉，你不能在这个弹出层里加载自定义图标，但在“管理群组”里可以。\n打开“管理群组”吗？",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -254,7 +262,7 @@
         "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
-        "message": "匹配标签页标题的正则表达式",
+        "message": "用来捕捉标签页的正则表达式",
         "description": "Regular expressions for catch tabs"
     },
     "regexpForTabsPlaceholder": {
@@ -286,7 +294,7 @@
         "description": "Press key here"
     },
     "selectAction": {
-        "message": "选择激活",
+        "message": "选择行为",
         "description": "Select action"
     },
     "selectGroup": {
@@ -308,6 +316,14 @@
     "hotkeyActionTitleLoadPrevUnloadedGroup": {
         "message": "加载上一个未加载群组",
         "description": "Load previous unloaded group"
+    },
+    "hotkeyActionTitleLoadNextNonEmptyGroup": {
+        "message": "加载下一个非空群组",
+        "description": "Load next non-empty group"
+    },
+    "hotkeyActionTitleLoadPrevNonEmptyGroup": {
+        "message": "加载上一个非空群组",
+        "description": "Load previous non-empty group"
     },
     "hotkeyActionTitleLoadHistoryNextGroup": {
         "message": "加载下一个未加载群组",
@@ -346,11 +362,11 @@
         "description": "Move selected tabs to custom group"
     },
     "hotkeyActionTitleDiscardGroup": {
-        "message": "丢弃群组",
+        "message": "冻结群组",
         "description": "Hotkey action Discard group"
     },
     "hotkeyActionTitleDiscardOtherGroups": {
-        "message": "丢弃其它群组",
+        "message": "冻结其它群组",
         "description": "Hotkey action Discard other groups"
     },
     "hotkeyActionTitleReloadAllTabsInCurrentGroup": {
@@ -398,8 +414,12 @@
         "description": "Icon style"
     },
     "discardTabsAfterHide": {
-        "message": "隐藏后丢弃标签页（该操作节省内存）",
+        "message": "隐藏后冻结标签页（该操作节省内存）",
         "description": "Discard tabs after hide (this will save the RAM)"
+    },
+    "discardAfterHideExcludeAudioTabs": {
+        "message": "排除有声标签页",
+        "description": "Exclude tabs with sound"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "无法更改群组，因为在打开的标签页中，有一个共用了麦克风或摄像头",
@@ -535,6 +555,10 @@
         "message": "创建备份每：",
         "description": "Create backup every:"
     },
+    "autoBackupIntervalKeyMinutes": {
+        "message": "分钟",
+        "description": "minute(s)"
+    },
     "autoBackupIntervalKeyHours": {
         "message": "小时",
         "description": "hour(s)"
@@ -552,7 +576,7 @@
         "description": "Enable dark theme"
     },
     "enableDarkThemeNotification": {
-        "message": "要完整支持暗色主题，在 <code>about:config</code> 页面修改 <code>svg.context-properties.content.enabled</code> 参数为 <code>true</code><br><a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">怎么做？</a>",
+        "message": "要完整支持暗色主题，在<br><code>about:config</code> 页面修改<br><code>svg.context-properties.content.enabled</code> 参数为 <code>true</code><br><br><a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">怎么做？</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {
@@ -668,7 +692,7 @@
         "description": "All groups successfully exported to bookmarks"
     },
     "discardTabTitle": {
-        "message": "丢弃标签页",
+        "message": "冻结标签页",
         "description": "Discard tab"
     },
     "autoBackupGroupsToFile": {
@@ -692,7 +716,7 @@
         "description": "Show other tabs"
     },
     "dontDiscardTabsAfterHideThisGroup": {
-        "message": "隐藏标签页后不要丢弃它到这个群组",
+        "message": "隐藏标签页后不要冻结它到这个群组",
         "description": "Don't discard tabs into this group after hide"
     },
     "showNotificationAfterGroupDelete": {
@@ -923,6 +947,10 @@
             }
         }
     },
+    "helpPageOpenInContainerDesc2": {
+        "message": "另一个扩展，UUID：",
+        "description": "Another addon:"
+    },
     "helpPageOpenInContainerDesc3": {
         "message": "尝试在<container-name>$containerName$</container-name>身份标签页容器中打开链接。移动标签页到其它分组或禁止扩展<strong>$addonName$</strong>执行该操作。",
         "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
@@ -1019,28 +1047,38 @@
             }
         }
     },
+    "helpPageOpenInContainerIgnoreAppForSession": {
+        "message": "忽略扩展 \"<strong>$addonName$</strong>\"直到浏览器关闭",
+        "description": "Ignore addon for session",
+        "placeholders": {
+            "addonName": {
+                "content": "$1",
+                "example": "Facebook Container"
+            }
+        }
+    },
     "hotkeysDescription2": {
-        "message": "您也可以在<a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">页面配置快捷键。它们可以在浏览器的所有窗口和页面工作。",
+        "message": "您也可以在<a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">页面配置快捷键。它们可以在所有窗口和浏览器页面工作。",
         "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "muteTab": {
-        "message": "标签页静音",
+        "message": "静音标签页",
         "description": "Mute tab"
     },
     "unMuteTab": {
-        "message": "取消标签页静音",
+        "message": "取消静音标签页",
         "description": "Unmute tab"
     },
     "muteGroup": {
-        "message": "群组静音",
+        "message": "静音群组",
         "description": "Mute group"
     },
     "unMuteGroup": {
-        "message": "取消群组静音",
+        "message": "取消静音群组",
         "description": "Unmute group"
     },
     "fullPopupWidth": {
-        "message": "使用完整宽度的弹出框",
+        "message": "使用完全的弹出宽度",
         "description": "Use full popup width"
     },
     "showArchivedGroups": {
@@ -1052,15 +1090,15 @@
         "description": "Database error in Simple Tab Groups"
     },
     "helpPageDbErrorReinstallDescription": {
-        "message": "很不幸，从Firefox数据库中读取STG数据时出现错误。此时，扩展已被停止。为重新载入该扩展，需执行以下操作：",
+        "message": "很不幸，从Firefox数据库中读取STG数据时出现错误。此时，扩展无法工作。为恢复扩展，以做以下操作：",
         "description": "Unfortunately, an error occurred while reading data from the STG addon from the Firefox database. At the moment, the addon is stopped. To resume the add-on, do the following:"
     },
     "helpPageDbErrorReinstallDescription2": {
-        "message": "重启 Firefox 浏览器（在 Linux 和 Mac OS 中会终止进程）",
+        "message": "重启 Firefox 浏览器（Linux 和 Mac OS 要结束进程）",
         "description": "Restart Firefox Browser (for Linux and Mac OS with process termination)"
     },
     "helpPageDbErrorReinstallDescription3": {
-        "message": "如果再次看到该窗口，试着重新安装扩展：",
+        "message": "如果您又看到该窗口，试着重新安装扩展：",
         "description": "If you see this window again, try reinstalling the addon:"
     },
     "helpPageDbErrorReinstallDescription4": {
@@ -1068,7 +1106,7 @@
         "description": "Remove STG Addon"
     },
     "helpPageDbErrorReinstallDescription5": {
-        "message": "重启 Firefox 浏览器",
+        "message": "重新 Firefox 浏览器",
         "description": "Restart Firefox Browser"
     },
     "helpPageDbErrorReinstallDescription6": {
@@ -1084,7 +1122,71 @@
         "description": "Open Firefox downloads folder"
     },
     "eraseAndImportAddonBackupButton": {
-        "message": "清空后导入备份",
+        "message": "擦除并恢复备份",
         "description": "Erase and restore backup"
+    },
+    "searchOnlyGroups": {
+        "message": "仅群组",
+        "description": "Only groups"
+    },
+    "autoBackupByDayIndexTitle": {
+        "message": "以月份日期作为备份数量",
+        "description": "Backup number as day of month"
+    },
+    "autoBackupByDayIndexDescription": {
+        "message": "它可以帮助您在下载文件夹中减少大量的备份文件。备份文件看起来像这样“auto-stg-backup-day-of-month-22@drive4ik.json”",
+        "description": "Backup by day description"
+    },
+    "clickHereForInfo": {
+        "message": "点击此处获取更多信息",
+        "description": "Click here for more info"
+    },
+    "enabled": {
+        "message": "启用",
+        "description": "Enabled text"
+    },
+    "disabled": {
+        "message": "禁用",
+        "description": "Disabled text"
+    },
+    "helpPageExtensionsThatConflictWithStgTitle": {
+        "message": "与STG扩展冲突的扩展",
+        "description": "Extensions that conflict with STG"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc1": {
+        "message": "Simple Tab Groups 扩展与以下启用的扩展冲突：",
+        "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc2": {
+        "message": "为了避免丢失标签页或它们在窗口中的位置和所在群组，强烈建议关闭或移除与 Simple Tab Groups 冲突的已启用的扩展。您可以在扩展设置页面 \"about:addons\"或以快捷键 <code>Ctrl+Shift+A</code>完成",
+        "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
+    },
+    "theme": {
+        "message": "主题",
+        "description": "Select theme"
+    },
+    "themeAuto": {
+        "message": "系统主题 — 自动",
+        "description": "Auto theme"
+    },
+    "themeLight": {
+        "message": "明亮",
+        "description": "Light theme"
+    },
+    "themeDark": {
+        "message": "深邃",
+        "description": "Dark theme"
+    },
+    "contextMenuEditor": {
+        "message": "主题菜单编辑器",
+        "description": "Context menu editor"
+    },
+    "tab": {
+        "message": "标签页",
+        "description": "Tab"
+    },
+    "group": {
+        "message": "群组",
+        "description": "Group"
     }
 }

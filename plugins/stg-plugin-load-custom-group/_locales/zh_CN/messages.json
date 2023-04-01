@@ -1,0 +1,22 @@
+{
+    "extensionDescription": {
+        "message": "在 Simple Tab Groups 扩展中加载自定义群组",
+        "description": "Extension description"
+    },
+    "needInstallSTGExtension": {
+        "message": "需要安装 Simple Tab Groups 扩展\n点击此处打开 Simple Tab Groups 主页",
+        "description": "Need install Simple Tab Groups extention\n\nClick here to open Simple Tab Groups home page"
+    },
+    "openSettings": {
+        "message": "设置",
+        "description": "Settings context button title"
+    },
+    "needSelectGroup": {
+        "message": "请选择群组",
+        "description": "Please, select group"
+    },
+    "defaultBrowserActionTitle": {
+        "message": "这里会显示群组名称 - [STG plugin]",
+        "description": "Group title will be here - [STG plugin]"
+    }
+}

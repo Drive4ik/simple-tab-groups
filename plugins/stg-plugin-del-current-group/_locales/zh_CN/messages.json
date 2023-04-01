@@ -1,0 +1,14 @@
+{
+    "extensionDescription": {
+        "message": "在容器中创建中创建新标签页，在 Simple Tab Groups v4.5.2+ 扩展中",
+        "description": "Extension description"
+    },
+    "needInstallSTGExtension": {
+        "message": "需要安装 Simple Tab Groups 扩展\n点击此处打开 Simple Tab Groups 主页",
+        "description": "Need install Simple Tab Groups extention\n\nClick here to open Simple Tab Groups home page"
+    },
+    "defaultBrowserActionTitle": {
+        "message": "删除当前群组 - [STG plugin]",
+        "description": "Delete current group - [STG plugin]"
+    }
+}

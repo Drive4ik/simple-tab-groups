@@ -1,0 +1,48 @@
+{
+    "extensionDescription": {
+        "message": "为群组建立笔记",
+        "description": "Extension description"
+    },
+    "needInstallSTGExtension": {
+        "message": "需要安装 Simple Tab Groups 扩展\n点击此处打开 Simple Tab Groups 主页",
+        "description": "Need install Simple Tab Groups extention\nClick here to open Simple Tab Groups home page"
+    },
+    "openPopupTitle": {
+        "message": "打开弹出笔记",
+        "description": "Open popup with group notes"
+    },
+    "openSidebarTitle": {
+        "message": "打开笔记侧边栏",
+        "description": "Open notes sidebar"
+    },
+    "windowNotHaveGroup": {
+        "message": "该窗口未加载群组",
+        "description": "This window does not have a loaded group."
+    },
+    "openInTab": {
+        "message": "在标签页中打开笔记",
+        "description": "Open notes in a tab"
+    },
+    "notesPlaceholder": {
+        "message": "在此输入...",
+        "description": "Type here..."
+    },
+    "groupAndWindowTitle": {
+        "message": "$grouptitle$ - 笔记",
+        "description": "Group and window title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 1"
+            }
+        }
+    },
+    "importBackup": {
+        "message": "加载笔记备份",
+        "description": "Load notes backup"
+    },
+    "exportBackup": {
+        "message": "保存笔记备份",
+        "description": "Save notes backup"
+    }
+}
