@@ -57,6 +57,10 @@
         "message": "Cancelar",
         "description": "Cancel"
     },
+    "close": {
+        "message": "Cerrar",
+        "description": "Close"
+    },
     "searchPlaceholder": {
         "message": "Buscar",
         "description": "Search placeholder"
@@ -82,6 +86,10 @@
     "closePopupAfterChangeGroup": {
         "message": "Cerrar ventana emergente luego de cambiar de grupo",
         "description": "Close popup after changing group"
+    },
+    "closePopupAfterSelectTab": {
+        "message": "Cerrar la ventana emergente tras seleccionar una pestaña",
+        "description": "Close the popup window after selecting a tab"
     },
     "openManageGroupsInTab": {
         "message": "Abrir \"Administrar Grupos\" en una nueva pestaña",
@@ -465,6 +473,14 @@
         "message": "Mostrar la pestaña una vez que se mueva automáticamente a este grupo",
         "description": "Show the tab after auto-moving it into this group"
     },
+    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
+        "message": "Sólo si se ha movido la pestaña activa",
+        "description": "Only if the active tab has been moved"
+    },
+    "showNotificationAfterMovingTabIntoThisGroup": {
+        "message": "Mostrar una notificación cuando las pestañas se mueven a este grupo",
+        "description": "Show a notification when tabs are moved to this group"
+    },
     "tabMoving": {
         "message": "Desplazamiento de pestañas",
         "description": "Tab moving"
@@ -829,6 +845,10 @@
         "message": "Activar DEPURACIÓN",
         "description": "Enable DEBUG"
     },
+    "disableDebugTitle": {
+        "message": "Desactivar DEBUG",
+        "description": "Disable DEBUG"
+    },
     "loggingIsEnabledTitle": {
         "message": "el registro está habilitado",
         "description": "logging is enabled"
@@ -1180,5 +1200,21 @@
     "group": {
         "message": "Grupo",
         "description": "Group"
+    },
+    "helpPageUnsupportedUrlTitle": {
+        "message": "URL no compatible",
+        "description": "Unsupported URL"
+    },
+    "copyURL": {
+        "message": "Copiar URL",
+        "description": "Copy URL"
+    },
+    "helpPageStgDebugTitle": {
+        "message": "Página de depuración STG",
+        "description": "STG debug page"
+    },
+    "helpPageStgDebugAutoDebugMainTitle": {
+        "message": "Se ha producido un error en la extensión",
+        "description": "An error occurred in the addon"
     }
 }
