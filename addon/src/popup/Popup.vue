@@ -113,7 +113,7 @@
         created() {
             this.loadOptions();
 
-            if (!isSidebar && backgroundSelf.options.fullPopupWidth) {
+            if (!isSidebar && this.options.fullPopupWidth) {
                 document.documentElement.classList.add('full-popup-width');
             }
 
@@ -643,6 +643,10 @@
                 tab = Utils.normalizeTabFavIcon(tab);
 
                 tab = this.mapTabContainer(tab);
+
+                if (tab.url === window.location.href) {
+                    tab.status = browser.tabs.TabStatus.COMPLETE;
+                }
 
                 tab.isMoving = false;
                 tab.isOver = false;

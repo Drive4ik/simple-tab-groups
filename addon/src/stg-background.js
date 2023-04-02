@@ -89,7 +89,7 @@ async function createTabsSafe(tabs, tryRestoreOpeners, hideTabs = true) {
         self.groupIdForNextTab = groupIdForNextTabs;
     }
 
-    let isEnabledTreeTabsExt = Constants.TREE_TABS_EXTENSIONS.some(Management.isEnabled),
+    let isEnabledTreeTabsExt = Constants.TREE_TABS_EXTENSIONS.some(id => Management.isEnabled(id)),
         oldNewTabIds = {},
         newTabs = [];
 
@@ -1931,8 +1931,6 @@ const onBeforeTabRequest = catchFunc(async function({tabId, url, cookieStoreId, 
     canceledRequests.add(requestId);
     setTimeout(requestId => canceledRequests.delete(requestId), 2000, requestId);
 
-    Tabs.remove(tab.id);
-
     Promise.resolve().then(async () => {
         let newTabParams = {
             ...tab,
@@ -1952,6 +1950,9 @@ const onBeforeTabRequest = catchFunc(async function({tabId, url, cookieStoreId, 
         }
 
         let newTab = await Tabs.create(newTabParams);
+
+        Tabs.remove(tab.id);
+
         if (tab.hidden) {
             Tabs.safeHide(newTab);
         }

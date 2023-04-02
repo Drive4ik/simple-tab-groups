@@ -6,7 +6,7 @@ import * as Urls from './urls.js';
 const logger = new Logger('Storage');
 
 export async function get(keys, errorCounter = 0) {
-    const log = logger.start('get', keys, {errorCounter});
+    const log = logger.start('get', keys);
 
     let keysData;
     if (!keys) {
@@ -31,7 +31,7 @@ export async function get(keys, errorCounter = 0) {
             log.throwError('db-error-reinstall', e);
         }
 
-        log.error("can't read keys");
+        log.error("can't read keys", {errorCounter});
 
         await new Promise(resolve => setTimeout(resolve, 200));
         return get(keys, errorCounter);

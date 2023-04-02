@@ -1,4 +1,15 @@
 
+// reset styles
+#stg-move-tab-to-group-popup-wrapper,
+#stg-move-tab-to-group-popup-wrapper div {
+    width: unset;
+    margin: unset;
+    padding: unset;
+    border-radius: unset;
+    background-color: unset;
+    box-shadow: unset;
+}
+
 #stg-move-tab-to-group-popup-wrapper {
     position: fixed;
     left: 0;
@@ -9,7 +20,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    -moz-user-select: none;
+    user-select: none;
     z-index: 2147483647;
 
     --text-color: #000;
@@ -26,12 +37,14 @@
         --fill-group-icon-color: var(--text-color);
     }
 
+    --font-size: 16px;
+
     .stg-popup-has-text {
         color: var(--text-color) !important;
         font-family: Arial, sans-serif;
-        font-size: 1rem;
+        font-size: var(--font-size) !important;
         font-weight: normal;
-        line-height: 1.5rem;
+        line-height: calc(var(--font-size) * 1.5) !important;
         overflow: hidden;
         text-overflow: ellipsis;
     }
@@ -53,12 +66,13 @@
             overflow-y: auto;
             min-height: 150px;
             max-height: calc(100vh - 100px);
+            scrollbar-width: thin;
 
             .stg-popup-group {
                 display: flex;
                 align-items: center;
-                height: 2rem;
-                margin-top: 4px;
+                height: calc(var(--font-size) * 2);
+                margin: 4px 0 0 0;
                 padding: 0 5px;
                 border-radius: 3px;
                 cursor: default;

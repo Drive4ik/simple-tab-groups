@@ -50,14 +50,17 @@ export async function init(temporaryContainerTitle) {
 }
 
 async function load(containersStorage = containers) {
-    for(let cookieStoreId in containersStorage) {
+    const log = logger.start('load');
+
+    const loadedContainers = await browser.contextualIdentities.query({}).catch(log.onCatch('cant load containers'));
+
+    for(const cookieStoreId in containersStorage) {
         if (cookieStoreId !== Constants.TEMPORARY_CONTAINER) {
             delete containersStorage[cookieStoreId];
         }
     }
 
-    let loadedContainers = await browser.contextualIdentities.query({});
-
+    log.stop();
     return Utils.arrayToObj(loadedContainers, 'cookieStoreId', containersStorage);
 }
 

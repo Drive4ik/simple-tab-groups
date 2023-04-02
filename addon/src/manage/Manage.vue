@@ -37,8 +37,6 @@
         VIEW_DEFAULT = VIEW_GRID,
         availableTabKeys = new Set(['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'thumbnail', 'windowId']);
 
-    let loadPromise = null;
-
     export default {
         data() {
             return {
@@ -129,7 +127,7 @@
                     Messages.sendMessageModule('BG.saveOptions', {
                             showTabsWithThumbnailsInManageGroups: value,
                         })
-                        .then(() => value && window.location.reload());
+                        .then(() => value && this.loadAvailableTabThumbnails());
                 }
             },
             showArchivedGroupsInManageGroups(value) {
@@ -1502,7 +1500,6 @@
             }
 
             > .body {
-                -moz-user-select: none;
                 user-select: none;
 
                 overflow-y: auto;

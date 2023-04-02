@@ -1,6 +1,5 @@
 import Logger from './logger.js';
 import * as Constants from './constants.js';
-import * as Utils from './utils.js';
 import * as Urls from './urls.js';
 import cacheStorage, {createStorage} from './cache-storage.js';
 
@@ -11,7 +10,7 @@ const extensions = cacheStorage.extensions ??= createStorage({});
 export async function init() {
     const log = logger.start('init');
 
-    await reloadExtensions();
+    await load();
 
     browser.management.onEnabled.addListener(onChanged);
     browser.management.onDisabled.addListener(onChanged);
@@ -21,40 +20,39 @@ export async function init() {
     log.stop();
 }
 
-async function reloadExtensions() {
-    const log = logger.start('reloadExtensions');
-    await Utils.wait(100);
-
-    clearExtensions();
-
-    let addons = await browser.management.getAll();
-
-    addons.forEach(addon => {
-        if (addon.type === browser.management.ExtensionType.EXTENSION) {
-            extensions[addon.id] = addon;
-        }
-    });
-
-    log.stop();
-}
-
-function clearExtensions() {
-    for (let extId in extensions) delete extensions[extId];
-}
-
 async function onChanged({type}) {
     if (type === browser.management.ExtensionType.EXTENSION) {
-        await reloadExtensions();
+        await load();
         await detectConflictedExtensions();
     }
 }
 
-export function isEnabled(id) {
-    return extensions[id]?.enabled;
+async function load(extensionsStorage = extensions) {
+    const log = logger.start('load');
+
+    await new Promise(res => setTimeout(res, 100));
+
+    const addons = await browser.management.getAll().catch(log.onCatch('cant load extensions'));
+
+    for (const id in extensionsStorage) delete extensionsStorage[id];
+
+    addons.forEach(addon => {
+        if (addon.type === browser.management.ExtensionType.EXTENSION) {
+            extensionsStorage[addon.id] = addon;
+        }
+    });
+
+    log.stop();
+
+    return extensionsStorage;
 }
 
-export async function detectConflictedExtensions() {
-    if (Constants.CONFLICTED_EXTENSIONS.some(isEnabled)) {
+export function isEnabled(id, extensionsStorage = extensions) {
+    return extensionsStorage[id]?.enabled;
+}
+
+export async function detectConflictedExtensions(extensionsStorage = extensions) {
+    if (Constants.CONFLICTED_EXTENSIONS.some(id => isEnabled(id, extensionsStorage))) {
         await Urls.openUrl('extensions-that-conflict-with-stg', true);
     }
 }
@@ -71,14 +69,14 @@ export async function detectConflictedExtensions() {
     return '/icons/extension-generic.svg';
 } */
 
-export function getExtensionByUUID(uuid) {
+export function getExtensionByUUID(uuid, extensionsStorage = extensions) {
     if (!uuid) {
         return;
     }
 
-    for (let i in extensions) {
-        if (extensions[i]?.hostPermissions?.some(url => url.includes(uuid))) {
-            return extensions[i];
+    for (let i in extensionsStorage) {
+        if (extensionsStorage[i]?.hostPermissions?.some(url => url.includes(uuid))) {
+            return extensionsStorage[i];
         }
     }
 }

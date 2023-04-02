@@ -42,7 +42,6 @@ body {
 
 img {
     pointer-events: none;
-    -moz-user-select: none;
     user-select: none;
     vertical-align: middle;
 }
@@ -119,7 +118,6 @@ hr {
 
 /*BULMA REWRITE*/
 .checkbox {
-    -moz-user-select: none;
     user-select: none;
     display: inline-flex;
     align-items: center;
