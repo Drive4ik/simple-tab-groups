@@ -121,7 +121,16 @@ new Vue({
                         title.push(JSON.stringify(k));
                     }
                 } else if (typeof k === 'object') {
-                    title.push('<code>' + JSON.stringify(k).replaceAll(this.file.addon.UUID, '') + '</code>');
+                    let jsoned = JSON.stringify(k),
+                        isBig = jsoned.length > 70,
+                        codeAttrs = '';
+
+                    if (isBig) {
+                        jsoned = JSON.stringify(k, null, 4);
+                        codeAttrs = ' class="expanded-on-focus" tabindex="-1"';
+                    }
+
+                    title.push(`<code ${codeAttrs}>` + jsoned.replaceAll(this.file.addon.UUID, '') + '</code>');
                 } else if (k?.startsWith?.('START')) {
                     title.push(indentConfig.startSymbol);
                 } else if (k?.startsWith?.('STOP')) {

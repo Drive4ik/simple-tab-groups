@@ -94,6 +94,23 @@
         .v-middle {
             vertical-align: middle;
         }
+
+        code.expanded-on-focus:not(:focus) {
+            max-width: 500px;
+            display: inline-block;
+            max-height: 2em;
+            overflow: hidden;
+            vertical-align: bottom;
+        }
+        code.expanded-on-focus:not(:focus)::before {
+            content: "(click to expand)";
+            display: inline-block;
+        }
+        code.expanded-on-focus:focus {
+            white-space: pre;
+            display: block;
+            margin-top: 1em;
+        }
     </style>
 </head>
 <body>
