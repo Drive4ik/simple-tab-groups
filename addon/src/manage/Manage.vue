@@ -13,7 +13,7 @@
     import backgroundSelf from 'background';
     import * as Constants from 'constants';
     import Messages from 'messages';
-    import Logger from 'logger';
+    import Logger, {catchFunc} from 'logger';
     import * as Containers from 'containers';
     import * as Urls from 'urls';
     import * as Cache from 'cache';
@@ -471,7 +471,7 @@
                     },
                 };
 
-                const onMessage = Utils.catchFunc(async request => {
+                const onMessage = catchFunc(async request => {
                     logger.info('take message', request.action);
                     await listeners[request.action](request);
                 });

@@ -1,14 +1,15 @@
 
-import * as Constants from './constants.js';
-import Logger from './logger.js';
+// import * as Constants from './constants.js';
+import {MENU_ITEM_BUTTON, MenusContextType, MenusItemType} from './browser-constants.js';
+import Logger, {catchFunc} from './logger.js';
 import * as Utils from './utils.js';
 
-const logger = new Logger('Menus');
+const logger = new Logger('Menus').disable();
 
 const menusMap = new Map;
 
 export async function create(createProperties) {
-    const id = createProperties.id ??= String(Utils.getRandomInt(100000,  Number.MAX_SAFE_INTEGER));
+    const id = createProperties.id ??= String(Utils.getRandomInt(100000));
 
     const log = logger.start('create', createProperties);
 
@@ -30,7 +31,7 @@ export async function create(createProperties) {
 
     const menuListenerOptions = {
         id,
-        onClick: onClick ? Utils.catchFunc(onClick) : null,
+        onClick: onClick ? catchFunc(onClick) : null,
     };
 
     menuListenerOptions.onMenuClick = onMenuClick.bind(menuListenerOptions);
@@ -49,9 +50,9 @@ async function onMenuClick(info, tab) {
         info.button ??= 0;
 
         info.button = {
-            LEFT: info.button === 0,
-            MIDDLE: info.button === 1,
-            RIGHT: info.button === 2,
+            LEFT: info.button === MENU_ITEM_BUTTON.LEFT,
+            MIDDLE: info.button === MENU_ITEM_BUTTON.MIDDLE,
+            RIGHT: info.button === MENU_ITEM_BUTTON.RIGHT,
         };
 
         await this.onClick?.(info, tab);
@@ -105,14 +106,7 @@ export async function disable(id) {
     log.stop();
 }
 
-export const ContextType = {
-    ...browser.menus.ContextType,
-    ACTION: Constants.MANIFEST.manifest_version === 3
-        ? browser.menus.ContextType.ACTION
-        : browser.menus.ContextType.BROWSER_ACTION,
-};
-export const ItemType = browser.menus.ItemType;
-
-// export const LEFT_BUTTON = 0;
-// export const MIDDLE_BUTTON = 1;
-// export const RIGHT_BUTTON = 2;
+export {
+    MenusContextType as ContextType,
+    MenusItemType as ItemType,
+}

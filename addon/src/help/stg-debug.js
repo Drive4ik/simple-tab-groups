@@ -1,7 +1,9 @@
 import './translate-help-pages.js';
 
 import Messages from '/js/messages.js';
+import backgroundSelf from '/js/background.js';
 import * as Constants from '/js/constants.js';
+import * as BrowserConstants from '/js/browser-constants.js';
 import * as File from '/js/file.js';
 import * as Cache from '/js/cache.js';
 
@@ -10,6 +12,8 @@ const $ = document.querySelector.bind(document),
     debugStatus = $('#debugStatus'),
     enableDebugButton = $('#enableDebug'),
     disableDebugButton = $('#disableDebug');
+
+$('#debugStatusIcon').src = BrowserConstants.getContainerIconUrl('circle');
 
 reloadState();
 
@@ -104,7 +108,6 @@ function onCatch(message, resultObjType, ...args) {
 
 async function saveConsoleLogs() {
     const [
-            background,
             browserInfo,
             platformInfo,
             extensions,
@@ -113,7 +116,6 @@ async function saveConsoleLogs() {
             windows,
             tabs,
         ] = await Promise.all([
-            browser.runtime.getBackgroundPage().catch(onCatch('getBackgroundPage', Object)),
             browser.runtime.getBrowserInfo().catch(onCatch('getBrowserInfo', Object)),
             browser.runtime.getPlatformInfo().catch(onCatch('getPlatformInfo', Object)),
             browser.management.getAll().catch(onCatch('management', Array)),
@@ -125,10 +127,10 @@ async function saveConsoleLogs() {
             browser.tabs.query({}).catch(onCatch('tabs', Array)),
         ]);
 
-    const Logger = background?.logger?.constructor;
+    const Logger = backgroundSelf.logger.constructor;
 
-    const logs = Logger?.logs;
-    const errorLogs = Logger?.getErrors();
+    const logs = Logger.logs.slice(-500);
+    const errorLogs = Logger.getErrors();
 
     const loadedWindows = await Promise.all(
         windows.map(win => win?.id && Cache.loadWindowSession(win).catch(onCatch('window', Object, win)))
@@ -152,7 +154,9 @@ async function saveConsoleLogs() {
         CRITICAL_ERRORS,
         addon: {
             version: Constants.MANIFEST.version,
-            upTime: background?.START_TIME ? Math.ceil((Date.now() - background.START_TIME) / 1000) + ' sec' : 'unknown',
+            upTime: self.localStorage.START_TIME
+                ? Math.ceil((Date.now() - self.localStorage.START_TIME) / 1000) + ' sec'
+                : 'unknown',
             UUID: Constants.STG_BASE_URL,
             permissions: {
                 bookmarks: permissionBookmarks,
@@ -175,7 +179,7 @@ async function saveConsoleLogs() {
     let savedId = await File.save(LOGS_OBJ, 'STG-debug-logs.json');
 
     if (savedId) {
-        Logger?.clearLogs();
+        Logger.clearLogs();
     }
 }
 

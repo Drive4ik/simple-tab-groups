@@ -1,5 +1,4 @@
 
-import backgroundSelf from './background.js';
 import * as Constants from './constants.js';
 import * as Tabs from './tabs.js';
 import * as Windows from './windows.js';
@@ -39,6 +38,8 @@ function loadPopupWindows() {
 }
 
 export async function openManageGroups() {
+    const {default: backgroundSelf} = await import('./background.js');
+
     if (backgroundSelf.options.openManageGroupsInTab) {
         await Tabs.createUrlOnce(MANAGE_TABS_URL);
     } else {

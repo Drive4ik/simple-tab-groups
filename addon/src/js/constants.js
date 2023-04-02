@@ -9,6 +9,7 @@ export const DISCARDED_SYMBOL = '✱';
 export const STICKY_SYMBOL = '📌';
 
 export const TEMPORARY_CONTAINER = 'temporary-container';
+export const TEMPORARY_CONTAINER_ICON = 'chill';
 export const DEFAULT_COOKIE_STORE_ID = 'firefox-default';
 
 export const CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP = 'stg-undo-remove-group-id-';

@@ -1,7 +1,7 @@
 import './js/cache-storage.js';
 import * as Constants from './js/constants.js';
 import * as Messages from './js/messages.js';
-import Logger from './js/logger.js';
+import Logger, {catchFunc} from './js/logger.js';
 import * as Utils from './js/utils.js';
 import JSON from './js/json.js';
 import * as Urls from './js/urls.js';
@@ -15,7 +15,6 @@ import * as Tabs from './js/tabs.js';
 import * as Windows from './js/windows.js';
 import * as Management from './js/management.js';
 
-self.START_TIME = Date.now();
 self.IS_TEMPORARY = false;
 
 if (self.localStorage.enableDebug == 2) { // if debug was auto-enabled - disable on next start addon/browser
@@ -447,7 +446,7 @@ const onActivatedTab = function(activeInfo) {
     logger.log('onActivated', activeInfo)
 }
 
-const onCreatedTab = Utils.catchFunc(async function(tab) {
+const onCreatedTab = catchFunc(async function(tab) {
     const log = logger.start('onCreatedTab', tab);
 
     Cache.setTab(tab);
@@ -477,7 +476,7 @@ function removeExcludeTabIds(tabIds) {
     tabIds.forEach(excludeTabIds.delete, excludeTabIds);
 }
 
-const onUpdatedTab = Utils.catchFunc(async function(tabId, changeInfo, tab) {
+const onUpdatedTab = catchFunc(async function(tabId, changeInfo, tab) {
     if (excludeTabIds.has(tab.id)) {
         Cache.setTab(tab);
         logger.log('onUpdatedTab 🛑 tab was excluded', tab.id);
@@ -863,7 +862,7 @@ async function GrandRestoreWindows({id}, needRestoreMissedTabsMap) {
     windowIdsForRestoring.clear();
 }
 
-const onCreatedWindow = Utils.catchFunc(async function(win) {
+const onCreatedWindow = catchFunc(async function(win) {
     const log = logger.start(['info', 'onCreatedWindow'], win.id, 'skip created:', self.skipAddGroupToNextNewWindow);
 
     if (self.skipAddGroupToNextNewWindow) {
@@ -924,7 +923,7 @@ function onFocusChangedWindow(windowId) {
     }
 }
 
-const onRemovedWindow = Utils.catchFunc(async function(windowId) {
+const onRemovedWindow = catchFunc(async function(windowId) {
     const log = logger.start(['info', 'onRemovedWindow'], windowId);
 
     let groupId = Cache.getWindowGroup(windowId);
@@ -1422,7 +1421,7 @@ async function createMoveTabMenus() {
 
     menuIds.push(await Menus.create({
         title: browser.i18n.getMessage('reopenTabsWithTemporaryContainersInNew'),
-        icon: 'resource://usercontext-content/chill.svg',
+        icon: Containers.temporaryContainerOptions.iconUrl,
         contexts: [Menus.ContextType.ACTION],
         async onClick(info) {
             const allTabs = await Tabs.get(null, null, null, undefined, true, true),
@@ -1694,9 +1693,9 @@ async function setBrowserAction(windowId, title, icon, enable, isSticky) {
 
     if (undefined !== enable) {
         if (enable) {
-            browser.browserAction.enable();
+            await browser.browserAction.enable();
         } else {
-            browser.browserAction.disable();
+            await browser.browserAction.disable();
         }
     }
 
@@ -1772,7 +1771,7 @@ function addTabToLazyMove(tabId, groupId) {
 
     _tabsLazyMovingMap.set(tabId, groupId);
 
-    _tabsLazyMovingTimer = window.setTimeout(Utils.catchFunc(async function() {
+    _tabsLazyMovingTimer = window.setTimeout(catchFunc(async function() {
         let tabsEntries = Array.from(_tabsLazyMovingMap.entries());
 
         _tabsLazyMovingMap.clear();
@@ -1792,11 +1791,11 @@ function addTabToLazyMove(tabId, groupId) {
 }
 
 let canceledRequests = new Set;
-const onBeforeTabRequest = Utils.catchFunc(async function({tabId, url, cookieStoreId, originUrl, requestId, frameId}) {
+const onBeforeTabRequest = catchFunc(async function({tabId, url, cookieStoreId, originUrl, requestId, frameId}) {
     const log = logger.start('onBeforeTabRequest', {tabId, url, cookieStoreId, originUrl, requestId, frameId});
 
     if (frameId !== 0 || tabId === browser.tabs.TAB_ID_NONE || Containers.isTemporary(cookieStoreId)) {
-        log.stop();
+        log.stop('exclude');
         return {};
     }
 
@@ -1810,7 +1809,7 @@ const onBeforeTabRequest = Utils.catchFunc(async function({tabId, url, cookieSto
     originUrl = originUrl || '';
 
     if (originUrl.startsWith(Constants.STG_BASE_URL)) {
-        originUrl = 'this_addon';
+        originUrl = 'stg://';
     }
 
     if (excludeTabIds.has(tabId)) {
@@ -1876,8 +1875,8 @@ const onBeforeTabRequest = Utils.catchFunc(async function({tabId, url, cookieSto
             tab.status = browser.tabs.TabStatus.COMPLETE;
             Cache.setTab(tab);
 
-            log.stop('move tab from groupId:', tabGroup.id, 'to groupId:', destGroup.id);
             addTabToLazyMove(tab.id, destGroup.id);
+            log.stop('move tab from groupId:', tabGroup.id, 'to groupId:', destGroup.id);
             return {};
         }
     }
@@ -1964,7 +1963,7 @@ const onBeforeTabRequest = Utils.catchFunc(async function({tabId, url, cookieSto
     };
 });
 
-const onPermissionsChanged = Utils.catchFunc(async function({origins, permissions}) {
+const onPermissionsChanged = catchFunc(async function({origins, permissions}) {
     logger.log('onPermissionsChanged', {origins, permissions});
     await updateMoveTabMenus(); // TODO ???
 });
@@ -2959,12 +2958,14 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
     data.lastCreatedGroupPosition = lastCreatedGroupPosition;
 
     if (data.containers) {
+        const containersStorageMap = new Map;
+
         for (let cookieStoreId in data.containers) {
             if (!neededConteiners.has(cookieStoreId)) {
                 continue;
             }
 
-            let newCookieStoreId = await Containers.normalize(cookieStoreId, data.containers[cookieStoreId]);
+            let newCookieStoreId = await Containers.findExistOrCreateSimilar(cookieStoreId, data.containers[cookieStoreId], containersStorageMap);
 
             if (newCookieStoreId !== cookieStoreId) {
                 data.groups.forEach(function(group) {
@@ -3605,6 +3606,8 @@ async function runMigrateForData(data) {
 async function syncTabs(groups, allTabs) {
     logger.info('syncTabs');
 
+    const containersStorageMap = new Map;
+
     for (let group of groups) {
         if (group.isArchive) {
             continue;
@@ -3617,7 +3620,7 @@ async function syncTabs(groups, allTabs) {
         for (let tab of group.tabs) {
             tab.groupId = group.id;
 
-            tab.cookieStoreId = await Containers.normalize(tab.cookieStoreId);
+            tab.cookieStoreId = await Containers.findExistOrCreateSimilar(tab.cookieStoreId, null, containersStorageMap);
 
             let winTabIndex = allTabs.findIndex(winTab => winTab.url === tab.url && winTab.cookieStoreId === tab.cookieStoreId);
 
@@ -3858,7 +3861,7 @@ async function initializeGroupWindows(windows, currentGroupIds) {
                 }
             } else if (win.groupId) {
                 if (!tab.hidden) {
-                    if (Utils.isTabLoading(tab) || tab.url.startsWith('file:') || tab.lastAccessed > START_TIME) {
+                    if (Utils.isTabLoading(tab) || tab.url.startsWith('file:') || tab.lastAccessed > self.localStorage.START_TIME) {
                         tab.groupId = win.groupId;
                         Cache.setTabGroup(tab.id, win.groupId);
                     } else {
@@ -3917,6 +3920,8 @@ async function initializeGroupWindows(windows, currentGroupIds) {
 
 async function init() {
     const log = logger.start(['info', '[init]']);
+
+    self.localStorage.START_TIME = Date.now();
 
     try {
         let data = await Storage.get(),

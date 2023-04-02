@@ -1,5 +1,6 @@
 import * as Constants from './constants.js';
-import Logger from './logger.js';
+import * as BrowserConstants from '/js/browser-constants.js';
+import Logger, {catchFunc} from './logger.js';
 import * as Utils from './utils.js';
 import * as Groups from './groups.js';
 import JSON from './json.js';
@@ -8,37 +9,28 @@ import cacheStorage, {createStorage} from './cache-storage.js';
 
 const logger = new Logger('Containers');
 
-// init storage
-cacheStorage.containers ??= createStorage({
-    containers: {},
-    mappedContainerCookieStoreId: {},
-    defaultContainerOptions: {
-        cookieStoreId: Constants.DEFAULT_COOKIE_STORE_ID,
-        name: browser.i18n.getMessage('noContainerTitle'),
-    },
-});
+const containers = cacheStorage.containers ??= createStorage({});
 
-const containers = cacheStorage.containers.containers;
-const mappedContainerCookieStoreId = cacheStorage.containers.mappedContainerCookieStoreId;
-const defaultContainerOptions = cacheStorage.containers.defaultContainerOptions;
+const defaultContainerOptions = {
+    cookieStoreId: Constants.DEFAULT_COOKIE_STORE_ID,
+    name: browser.i18n.getMessage('noContainerTitle'),
+};
 
-const temporaryContainerDefaultTitle = browser.i18n.getMessage('temporaryContainerTitle'),
-    containerIdRegExp = /\d+$/,
-    tmpContainerTimeStamp = Date.now();
-
-const temporaryContainerOptions = containers[Constants.TEMPORARY_CONTAINER] ??= createStorage({
+export const temporaryContainerOptions = containers[Constants.TEMPORARY_CONTAINER] ??= createStorage({
     color: 'toolbar',
     colorCode: false,
     cookieStoreId: Constants.TEMPORARY_CONTAINER,
-    icon: 'chill',
-    iconUrl: 'resource://usercontext-content/chill.svg',
-    name: temporaryContainerDefaultTitle,
+    icon: Constants.TEMPORARY_CONTAINER_ICON,
+    iconUrl: BrowserConstants.getContainerIconUrl(Constants.TEMPORARY_CONTAINER_ICON),
+    name: browser.i18n.getMessage('temporaryContainerTitle'),
 });
+
+const tmpUniq = Utils.getRandomInt();
 
 export async function init(temporaryContainerTitle) {
     const log = logger.start('init', {temporaryContainerTitle});
 
-    temporaryContainerOptions.name = temporaryContainerTitle;
+    setTemporaryContainerTitle(temporaryContainerTitle);
 
     // CONTAINER PROPS:
     // color: "blue"
@@ -52,27 +44,27 @@ export async function init(temporaryContainerTitle) {
 
     browser.contextualIdentities.onCreated.addListener(onCreated);
     browser.contextualIdentities.onUpdated.addListener(onUpdated);
-    browser.contextualIdentities.onRemoved.addListener(Utils.catchFunc(onRemoved));
+    browser.contextualIdentities.onRemoved.addListener(catchFunc(onRemoved));
 
     log.stop();
 }
 
-async function load() {
-    for(let cookieStoreId in containers) {
+async function load(containersStorage = containers) {
+    for(let cookieStoreId in containersStorage) {
         if (cookieStoreId !== Constants.TEMPORARY_CONTAINER) {
-            delete containers[cookieStoreId];
+            delete containersStorage[cookieStoreId];
         }
     }
 
-    let _containers = await browser.contextualIdentities.query({});
+    let loadedContainers = await browser.contextualIdentities.query({});
 
-    _containers.forEach(container => containers[container.cookieStoreId] = container);
+    return Utils.arrayToObj(loadedContainers, 'cookieStoreId', containersStorage);
 }
 
 function onCreated({contextualIdentity}) {
     containers[contextualIdentity.cookieStoreId] = contextualIdentity;
 
-    if (contextualIdentity.name === (temporaryContainerOptions.name + tmpContainerTimeStamp)) {
+    if (contextualIdentity.name === (temporaryContainerOptions.name + tmpUniq)) {
         return;
     }
 
@@ -80,8 +72,8 @@ function onCreated({contextualIdentity}) {
 }
 
 function onUpdated({contextualIdentity}) {
-    let {cookieStoreId} = contextualIdentity,
-        isOldContainerNameAreTmp = containers[cookieStoreId].name === (temporaryContainerOptions.name + tmpContainerTimeStamp);
+    const {cookieStoreId} = contextualIdentity,
+        isOldContainerNameAreTmp = containers[cookieStoreId].name === (temporaryContainerOptions.name + tmpUniq);
 
     if (!isOldContainerNameAreTmp && containers[cookieStoreId].name !== contextualIdentity.name) {
         if (isTemporary(cookieStoreId) && !isTemporary(null, contextualIdentity)) {
@@ -132,7 +124,7 @@ export function isDefault(cookieStoreId) {
     return Constants.DEFAULT_COOKIE_STORE_ID === cookieStoreId || !cookieStoreId;
 }
 
-export function isTemporary(cookieStoreId, contextualIdentity, excludeMainTemporaryContainerName = false) {
+export function isTemporary(cookieStoreId, contextualIdentity, excludeMainTemporaryContainerName = false, containersStorage = containers) {
     if (cookieStoreId === Constants.TEMPORARY_CONTAINER) {
         if (excludeMainTemporaryContainerName) {
             return false;
@@ -142,7 +134,7 @@ export function isTemporary(cookieStoreId, contextualIdentity, excludeMainTempor
     }
 
     if (!contextualIdentity) {
-        contextualIdentity = containers[cookieStoreId];
+        contextualIdentity = containersStorage[cookieStoreId];
     }
 
     if (!contextualIdentity) {
@@ -152,76 +144,90 @@ export function isTemporary(cookieStoreId, contextualIdentity, excludeMainTempor
     return contextualIdentity.name === getTemporaryContainerName(contextualIdentity.cookieStoreId);
 }
 
+const containerIdRegExp = /\d+$/;
 function getTemporaryContainerName(cookieStoreId) {
     let [containerId] = containerIdRegExp.exec(cookieStoreId);
     return temporaryContainerOptions.name + ' ' + containerId;
 }
 
-export async function createTemporaryContainer() {
-    let {cookieStoreId} = await browser.contextualIdentities.create({
-        name: temporaryContainerOptions.name + tmpContainerTimeStamp,
+export async function createTemporaryContainer(containersStorage = containers) {
+    let {cookieStoreId} = await create({
+        name: temporaryContainerOptions.name + tmpUniq,
         color: temporaryContainerOptions.color,
         icon: temporaryContainerOptions.icon,
-    });
+    }, containersStorage);
 
-    await browser.contextualIdentities.update(cookieStoreId, {
+    await update(cookieStoreId, {
         name: getTemporaryContainerName(cookieStoreId),
-    });
+    }, containersStorage);
 
     return cookieStoreId;
 }
 
-export function remove(cookieStoreIds) {
-    return Promise.all(cookieStoreIds.map(cookieStoreId => browser.contextualIdentities.remove(cookieStoreId).catch(() => {})));
+export async function update(cookieStoreId, details, containersStorage = containers) {
+    Object.assign(containersStorage[cookieStoreId], details);
+    const contextualIdentity = await browser.contextualIdentities.update(cookieStoreId, details);
+    containersStorage[cookieStoreId] = contextualIdentity;
+    return contextualIdentity;
 }
 
-export async function normalize(cookieStoreId, containerData) {
+export async function remove(cookieStoreIds, containersStorage = containers) {
+    await Promise.all(cookieStoreIds.map(async cookieStoreId => {
+        delete containersStorage[cookieStoreId];
+        await browser.contextualIdentities.remove(cookieStoreId).catch(() => {});
+    }));
+}
+
+export async function create(details, containersStorage = containers) {
+    const contextualIdentity = await browser.contextualIdentities.create(details);
+    containersStorage[contextualIdentity.cookieStoreId] = contextualIdentity;
+    return contextualIdentity;
+}
+
+export async function findExistOrCreateSimilar(cookieStoreId, containerData = null, storageMap = new Map, containersStorage = containers) {
     if (isDefault(cookieStoreId)) {
         return Constants.DEFAULT_COOKIE_STORE_ID;
     }
 
-    if (containers[cookieStoreId]) {
+    if (containersStorage[cookieStoreId]) {
         return cookieStoreId;
     }
 
-    // TODO надо ли очищать mappedContainerCookieStoreId ????
-    if (!mappedContainerCookieStoreId[cookieStoreId]) {
+    if (!storageMap.has(cookieStoreId)) {
         if (containerData) {
-            for (let csId in containers) {
+            for (const csId in containersStorage) {
                 if (
-                    !isTemporary(csId) &&
-                    containerData.name === containers[csId].name &&
-                    containerData.color === containers[csId].color &&
-                    containerData.icon === containers[csId].icon
+                    !isTemporary(csId, undefined, undefined, containersStorage) &&
+                    containerData.name === containersStorage[csId].name &&
+                    containerData.color === containersStorage[csId].color &&
+                    containerData.icon === containersStorage[csId].icon
                 ) {
-                    mappedContainerCookieStoreId[cookieStoreId] = csId;
+                    storageMap.set(cookieStoreId, csId);
                     break;
                 }
             }
 
-            if (!mappedContainerCookieStoreId[cookieStoreId]) {
-                let {cookieStoreId: csId} = await browser.contextualIdentities.create({
+            if (!storageMap.has(cookieStoreId)) {
+                const {cookieStoreId: csId} = await create({
                     name: containerData.name,
                     color: containerData.color,
                     icon: containerData.icon,
-                });
-                mappedContainerCookieStoreId[cookieStoreId] = csId;
+                }, containersStorage);
+                storageMap.set(cookieStoreId, csId);
             }
         } else {
-            mappedContainerCookieStoreId[cookieStoreId] = await createTemporaryContainer();
+            storageMap.set(cookieStoreId, await createTemporaryContainer(containersStorage));
         }
     }
 
-    return mappedContainerCookieStoreId[cookieStoreId];
+    return storageMap.get(cookieStoreId);
 }
 
-export function get(cookieStoreId, key = null, withDefaultContainer = false) {
+export function get(cookieStoreId, key = null, withDefaultContainer = false, containersStorage = containers) {
     let result = null;
 
-    if (containers[cookieStoreId]) {
-        result = containers[cookieStoreId];
-    } else if (containers[mappedContainerCookieStoreId[cookieStoreId]]) {
-        result = containers[mappedContainerCookieStoreId[cookieStoreId]];
+    if (containersStorage[cookieStoreId]) {
+        result = containersStorage[cookieStoreId];
     } else if (withDefaultContainer) {
         result = defaultContainerOptions;
     }
@@ -233,66 +239,77 @@ export function get(cookieStoreId, key = null, withDefaultContainer = false) {
     return null;
 }
 
-export function getAll(withDefaultContainer) {
-    let _containers = JSON.clone(containers);
+export function getAll(withDefaultContainer, containersStorage = containers) {
+    let containers = JSON.clone(containersStorage);
 
-    for (let cookieStoreId in _containers) {
-        if (isTemporary(cookieStoreId)) {
-            delete _containers[cookieStoreId];
+    for (const cookieStoreId in containers) {
+        if (isTemporary(cookieStoreId, undefined, undefined, containersStorage)) {
+            delete containers[cookieStoreId];
         }
     }
 
     if (withDefaultContainer) {
-        _containers = {
+        containers = {
             [Constants.DEFAULT_COOKIE_STORE_ID]: {...defaultContainerOptions},
-            ..._containers,
+            ...containers,
         };
     }
 
     // add temporary container to end of obj
-    _containers[Constants.TEMPORARY_CONTAINER] = {...temporaryContainerOptions, name: temporaryContainerDefaultTitle};
+    containers[Constants.TEMPORARY_CONTAINER] = {...temporaryContainerOptions};
 
-    return _containers;
+    return containers;
 }
 
-export async function removeUnusedTemporaryContainers(tabs) {
+export async function removeUnusedTemporaryContainers(tabs, containersStorage = containers) {
     const log = logger.start('removeUnusedTemporaryContainers');
-    let tabContainers = new Set(tabs.map(tab => tab.cookieStoreId));
 
-    let tempContainersToRemove = Object.keys(containers)
-        .filter(cookieStoreId => isTemporary(cookieStoreId, null, true) && !tabContainers.has(cookieStoreId));
+    const tabContainers = new Set(tabs.map(tab => tab.cookieStoreId));
+
+    const tempContainersToRemove = Object.keys(containersStorage)
+        .filter(cookieStoreId => isTemporary(cookieStoreId, null, true, containersStorage) && !tabContainers.has(cookieStoreId));
 
     if (!tempContainersToRemove.length) {
-        return log.stop();
+        return log.stop('not found');
     }
 
-    log.log('removing temp containers');
+    log.log('removing temp containers...');
 
-    await remove(
-        Object.keys(containers)
-        .filter(cookieStoreId => isTemporary(cookieStoreId, null, true) && !tabContainers.has(cookieStoreId))
-    );
+    await remove(tempContainersToRemove, containersStorage);
 
-    log.stop();
+    log.stop('removed:', tempContainersToRemove.length);
 }
 
-export async function updateTemporaryContainerTitle(temporaryContainerTitle) {
-    let cookieStoreIds = Object.keys(containers).filter(cookieStoreId => isTemporary(cookieStoreId, null, true));
-
+export function setTemporaryContainerTitle(temporaryContainerTitle) {
     temporaryContainerOptions.name = temporaryContainerTitle;
+}
+
+export function getTemporaryContainerTitle() {
+    return temporaryContainerOptions.name;
+}
+
+export async function updateTemporaryContainerTitle(temporaryContainerTitle, containersStorage = containers) {
+    const cookieStoreIds = Object.keys(containersStorage)
+        .filter(cookieStoreId => isTemporary(cookieStoreId, null, true, containersStorage));
+
+    setTemporaryContainerTitle(temporaryContainerTitle);
 
     if (cookieStoreIds.length) {
-        browser.contextualIdentities.onUpdated.removeListener(onUpdated);
+        const isInternalStorage = containersStorage === containers;
 
-        await Promise.all(cookieStoreIds.map(function(cookieStoreId) {
-            containers[cookieStoreId].name = getTemporaryContainerName(cookieStoreId);
+        if (isInternalStorage) {
+            browser.contextualIdentities.onUpdated.removeListener(onUpdated);
+        }
 
-            return browser.contextualIdentities.update(cookieStoreId, {
-                name: containers[cookieStoreId].name,
-            });
+        await Promise.all(cookieStoreIds.map(async cookieStoreId => {
+            await update(cookieStoreId, {
+                name: getTemporaryContainerName(cookieStoreId),
+            }, containersStorage);
         }));
 
-        browser.contextualIdentities.onUpdated.addListener(onUpdated);
+        if (isInternalStorage) {
+            browser.contextualIdentities.onUpdated.addListener(onUpdated);
+        }
 
         backgroundSelf.sendMessage('containers-updated'); // update container temporary name on tabs will work only on not archived groups
     }

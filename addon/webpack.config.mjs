@@ -120,6 +120,7 @@ const config = {
                 'js/logger.js',
                 'js/messages.js',
                 'js/constants.js',
+                'js/browser-constants.js',
                 'js/utils.js',
                 'js/json.js',
                 'js/menus.js',

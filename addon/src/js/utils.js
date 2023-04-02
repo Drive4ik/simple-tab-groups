@@ -21,20 +21,6 @@ export function type(obj) {
     return Object.prototype.toString.call(obj).replace(TYPE_REGEXP, '').toLowerCase();
 }
 
-export function catchFunc(asyncFunc) {
-    let fromStack = new Error().stack;
-    return async function() {
-        try {
-            return await asyncFunc(...Array.from(arguments));
-        } catch (e) {
-            e.message = `[catchFunc]: ${e.message}`;
-            e.stack = fromStack + e.stack;
-            e.arguments = JSON.clone(Array.from(arguments));
-            self.errorEventHandler(e);
-        }
-    };
-}
-
 /* function formatBytes(bytes, decimals = 2) {
     if (0 === bytes) {
         return '0 Bytes';
@@ -332,12 +318,27 @@ export function isElementVisible(element) {
     // return isVisible;
 }
 
-export function getRandomInt(min, max) {
-    return Math.floor(Math.random() * (max - min + 1) + min);
+export function getRandomInt(min = 1, max = Number.MAX_SAFE_INTEGER, step = 1) {
+    const randomBuffer = new Uint32Array(1);
+
+    self.crypto.getRandomValues(randomBuffer);
+
+    let randomNumber = randomBuffer[0] / (0xffffffff + 1);
+
+    min = Math.ceil(min);
+    max = Math.floor(max);
+
+    const result = Math.floor(randomNumber * (max - min + 1)) + min;
+
+    if ((result % step) !== 0 && min <= step && max >= step) {
+        return getRandomInt(min, max, step);
+    }
+
+    return result;
 }
 
 export function randomColor() {
-    return 'hsla(' + getRandomInt(0, 360) + ', 100%, 50%, 1)';
+    return 'hsla(' + getRandomInt(0, 360, 10) + ', 100%, 50%, 1)';
 }
 
 export function safeColor(color) {
@@ -487,7 +488,8 @@ export function extractKeys(obj, keys, useClone = false) {
 }
 
 export function arrayToObj(arr, primaryKey = 'id', accum = {}) {
-    return arr.reduce((acc, obj) => (acc[obj[primaryKey]] = obj, acc), accum);
+    arr.forEach(obj => accum[obj[primaryKey]] = obj);
+    return accum;
 }
 
 export function wait(ms = 200) {

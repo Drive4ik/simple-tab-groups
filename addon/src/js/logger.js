@@ -1,6 +1,7 @@
 
 import * as Constants from './constants.js';
 import JSON from './json.js';
+import * as Utils from './utils.js';
 import Messages from './messages.js';
 
 const consoleKeys = ['log', 'info', 'warn', 'error', 'debug', 'assert'];
@@ -19,6 +20,7 @@ export default function Logger(prefix, prefixes = []) {
         this.scope = null;
         this.stopMessage = null;
         this.prefixes ??= prefixes;
+        this.enabled = true;
 
         if (prefix) {
             this.prefixes.push(prefix);
@@ -45,9 +47,10 @@ function setLoggerFuncs() {
             startArgs = [...startArgs[0], ...startArgs.slice(1)];
         }
 
-        const uniq = getRandomInt(),
+        const uniq = Utils.getRandomInt(),
             logger = new Logger(startArgs.shift(), this.prefixes.slice());
 
+        logger.enabled = this.enabled;
         logger.scope = uniq;
         logger.stopMessage = `STOP ${logger.scope}`;
 
@@ -84,6 +87,8 @@ function setLoggerFuncs() {
                 throwError = true;
             }
 
+            this.enable();
+
             delete this.fromErrorEventHandler;
 
             if (throwError && this.stopMessage) {
@@ -105,23 +110,39 @@ function setLoggerFuncs() {
     }.bind(this);
 
     this.throwError = function(message, error) {
-        return this.onError(message, true)(error);
+        this.onError(message, true)(error);
+        return this;
     }.bind(this);
 
     this.runError = function(message, error) {
-        return this.onError(message, false)(error);
+        this.onError(message, false)(error);
+        return this;
+    }.bind(this);
+
+    this.isEnabled = function(cKey) {
+        return this.enabled || !!localStorage.enableDebug || cKey === 'error' || cKey === 'assert';
+    }.bind(this);
+
+    this.enable = function() {
+        this.enabled = true;
+        return this;
+    }.bind(this);
+
+    this.disable = function() {
+        this.enabled = false;
+        return this;
     }.bind(this);
 
     return this;
 }
 
 Logger.prototype.addLog = function(cKey, ...args) {
-    if (!Array.isArray(this.prefixes)) {
-        return console.error('invalid logger scope');
+    if (!this.isEnabled(cKey)) {
+        return this;
     }
 
     if (cKey === 'assert' && args[0]) {
-        return;
+        return this;
     }
 
     const argsToLog = [this.prefixes.join('.'), ...args];
@@ -154,9 +175,15 @@ Logger.prototype.addLog = function(cKey, ...args) {
             },
         });
     }
+
+    return this;
 }
 
 Logger.prototype.showLog = function(log, {cKey, args}) {
+    if (!this.isEnabled(cKey)) {
+        return this;
+    }
+
     if (self.localStorage.enableDebug || self.IS_TEMPORARY) {
         let argsToConsole = cKey === 'assert'
             ? [args[0], this.prefixes.join('.'), ...args.slice(1)]
@@ -176,6 +203,8 @@ Logger.prototype.showLog = function(log, {cKey, args}) {
 
         console[cKey].call(console, ...argsToConsole);
     }
+
+    return this;
 }
 
 function getAction(args) {
@@ -280,10 +309,25 @@ function normalizeError(event) {
     };
 }
 
+export function catchFunc(asyncFunc) {
+    const fromStack = new Error().stack;
+
+    return async function() {
+        try {
+            return await asyncFunc(...Array.from(arguments));
+        } catch (e) {
+            e.message = `[catchFunc]: ${e.message}`;
+            e.stack = [fromStack, 'Native error stack:', e.stack].join('\n');
+            e.arguments = JSON.clone(Array.from(arguments));
+            self.errorEventHandler(e);
+        }
+    };
+}
+
 function nativeErrorToObj(nativeError) {
     return {
         message: nativeError.message,
-        fileName: nativeError.fileName?.replace(Constants.STG_BASE_URL, ''),
+        fileName: removeUnnecessaryStrings(nativeError.fileName),
         lineNumber: nativeError.lineNumber,
         columnNumber: nativeError.columnNumber,
         stack: getStack(nativeError).join('\n'),
@@ -317,14 +361,6 @@ function showErrorNotificationMessage(logger) {
     }
 }
 
-const DELETE_LOG_STARTS_WITH = [
-    'Logger',
-    'normalizeError',
-    'setLoggerFuncs',
-    'sendMessage',
-    'sendExternalMessage',
-];
-
 const UNNECESSARY_LOG_STRINGS = [
     Constants.STG_BASE_URL,
     'async*',
@@ -334,27 +370,26 @@ const UNNECESSARY_LOG_STRINGS = [
     '../node_modules/vue-loader/lib/index.js??vue-loader-options!./options/Options.vue?vue&type=script&lang=js&',
 ];
 
-function getStack(e, start = 0, to = 50) {
+function removeUnnecessaryStrings(str) {
     return UNNECESSARY_LOG_STRINGS
-        .reduce((str, strToDel) => String(str).replaceAll(strToDel, ''), e.stack)
+        .reduce((s, strToDel) => s.replaceAll(strToDel, ''), String(str));
+}
+
+const DELETE_LOG_STARTS_WITH = [
+    'Logger',
+    'normalizeError',
+    'setLoggerFuncs',
+    'sendMessage',
+    'sendExternalMessage',
+];
+
+function getStack(e, start = 0, to = 50) {
+    return removeUnnecessaryStrings(e.stack)
         .trim()
         .split('\n')
         .filter(Boolean)
         .filter(str => !DELETE_LOG_STARTS_WITH.some(unlogStr => str.startsWith(unlogStr)))
         .slice(start, to);
-}
-
-function getRandomInt(min = 1, max = Number.MAX_SAFE_INTEGER) {
-    const randomBuffer = new Uint32Array(1);
-
-    self.crypto.getRandomValues(randomBuffer);
-
-    let randomNumber = randomBuffer[0] / (0xffffffff + 1);
-
-    min = Math.ceil(min);
-    max = Math.floor(max);
-
-    return Math.floor(randomNumber * (max - min + 1)) + min;
 }
 
 self.errorEventHandler = errorEventHandler; // add to self if need remove Listener
