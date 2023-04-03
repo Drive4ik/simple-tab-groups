@@ -1,6 +1,4 @@
 import path from 'path';
-import fse from 'fs-extra';
-// import webpack from 'webpack';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { VueLoaderPlugin } from 'vue-loader';
@@ -23,7 +21,7 @@ function multipleCopy(paths) {
     return paths.map(copy);
 }
 
-const config = {
+export default {
     context: setPath('src'),
     entry: {
         'popup/popup': './popup/popup.js',
@@ -75,6 +73,10 @@ const config = {
     devtool: false,
     optimization: {
         minimize: false,
+    },
+    performance: {
+        maxEntrypointSize: 1024000,
+        maxAssetSize: 1024000,
     },
     module: {
         rules: [
@@ -145,18 +147,4 @@ const config = {
             ]),
         }),
     ],
-};
-
-export default function(env, options) {
-    let isProduction = options.mode === 'production';
-
-    if (isProduction) {
-        fse.removeSync(config.output.path);
-    }
-
-    // config.plugins.push(new webpack.DefinePlugin({
-    //     IS_PRODUCTION: isProduction,
-    // }));
-
-    return config;
-};
+}

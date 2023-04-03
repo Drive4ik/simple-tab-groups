@@ -4038,10 +4038,6 @@ async function init() {
 
         await setBrowserAction(undefined, undefined, undefined, true);
 
-        await browser.browserAction.setBadgeBackgroundColor({
-            color: 'transparent',
-        });
-
         self.inited = true;
 
         // send message for addon pages if it's open
@@ -4078,6 +4074,10 @@ function setActionToReloadAddon() {
 
     browser.browserAction.onClicked.addListener(() => browser.runtime.reload());
 }
+
+browser.browserAction.setBadgeBackgroundColor({
+    color: 'transparent',
+});
 
 setBrowserAction(undefined, 'loading', undefined, false);
 

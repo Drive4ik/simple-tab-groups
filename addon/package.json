@@ -5,11 +5,9 @@
     "author": "Drive4ik <drive4ik+stg@protonmail.com>",
     "type": "module",
     "scripts": {
-        "build": "webpack --mode development",
-        "build-prod": "cross-env IS_PRODUCTION=true webpack --mode production",
+        "build": "webpack --mode production",
         "watch": "npm run build -- --watch",
-        "watch-prod": "npm run build-prod -- --watch",
-        "build-zip": "node scripts/build-zip.js && npm run build-prod && cross-env IS_PRODUCTION=true node scripts/build-zip.js"
+        "build-zip": "node scripts/build-zip.js"
     },
     "dependencies": {
         "vue": "^2.7.14",
@@ -17,7 +15,6 @@
     },
     "devDependencies": {
         "copy-webpack-plugin": "^11.0.0",
-        "cross-env": "^7.0.0",
         "css-loader": "^6.7.3",
         "fs-extra": "^11.1.0",
         "mini-css-extract-plugin": "^2.7.2",
