@@ -1,11 +1,15 @@
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
 
-browser.action.onClicked.addListener(async function() {
+browser.action.onClicked.addListener(async () => {
     try {
-        await Utils.sendExternalMessage('create-temp-tab', {
+        const responce = await Utils.sendExternalMessage('create-temp-tab', {
             active: true,
         });
+
+        if (!responce.ok) {
+            Utils.notify('error', responce.error);
+        }
     } catch (e) {
         Utils.notify('needInstallSTGExtension', browser.i18n.getMessage('needInstallSTGExtension'), {
             timerSec: 10,

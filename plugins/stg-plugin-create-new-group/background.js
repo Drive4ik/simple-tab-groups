@@ -20,3 +20,19 @@ browser.action.onClicked.addListener(async () => {
         });
     }
 });
+
+async function updateActionTitle() {
+    const [{shortcut}] = await browser.commands.getAll();
+
+    const titleParts = [browser.i18n.getMessage('createNewGroupTitle')];
+
+    if (shortcut) {
+        titleParts.push(`(${shortcut})`);
+    }
+
+    await browser.action.setTitle({
+        title: titleParts.join(' '),
+    });
+}
+
+updateActionTitle();

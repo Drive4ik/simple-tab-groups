@@ -8,7 +8,7 @@
         "description": "Need install Simple Tab Groups extention\n\nClick here to open home page Simple Tab Groups"
     },
     "createNewGroupTitle": {
-        "message": "Создать новую группу - [STG plugin]",
+        "message": "Создать новую группу",
         "description": "Create new group"
     }
 }

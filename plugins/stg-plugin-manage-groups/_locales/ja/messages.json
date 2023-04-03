@@ -8,7 +8,7 @@
         "description": "Need install Simple Tab Groups extention\n\nClick here to open Simple Tab Groups home page"
     },
     "defaultBrowserActionTitle": {
-        "message": "グループの管理 - [STG plugin]",
-        "description": "Open Manage groups - [STG plugin]"
+        "message": "グループの管理",
+        "description": "Open Manage groups"
     }
 }

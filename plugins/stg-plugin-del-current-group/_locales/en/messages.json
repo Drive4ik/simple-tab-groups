@@ -12,7 +12,7 @@
         "description": "Need install Simple Tab Groups extention\n\nClick here to open Simple Tab Groups home page"
     },
     "defaultBrowserActionTitle": {
-        "message": "Delete current group - [STG plugin]",
-        "description": "Delete current group - [STG plugin]"
+        "message": "Delete current group",
+        "description": "Delete current group"
     }
 }
