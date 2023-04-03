@@ -173,6 +173,7 @@ export const EXTENSIONS_WHITE_LIST = Object.freeze({
         postActions: [
             'i-am-back',
             'group-loaded',
+            'group-unloaded',
             'group-updated',
             'group-removed',
         ],

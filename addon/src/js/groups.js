@@ -232,7 +232,9 @@ export async function update(groupId, updateData) {
         updateData.title = updateData.title.slice(0, 256);
     }
 
-    if (!Object.keys(updateData).length) {
+    const updateDataKeys = Object.keys(updateData);
+
+    if (!updateDataKeys.length) {
         return log.stop(null, 'no updateData keys to update');
     }
 
@@ -251,11 +253,9 @@ export async function update(groupId, updateData) {
         },
     });
 
-    let externalGroup = mapForExternalExtension(group);
-
-    if (Object.keys(externalGroup).some(key => updateData.hasOwnProperty(key))) {
+    if (updateDataKeys.some(key => ExternalExtensionGroupDependentKeys.has(key))) {
         backgroundSelf.sendExternalMessage('group-updated', {
-            group: externalGroup,
+            group: mapForExternalExtension(group),
         });
     }
 
@@ -438,6 +438,16 @@ export async function archiveToggle(groupId) {
 
     log.stop();
 }
+
+const ExternalExtensionGroupDependentKeys = new Set([
+    'title',
+    'isArchive',
+    'isSticky',
+    'iconColor',
+    'iconUrl',
+    'iconViewType',
+    'newTabContainer',
+]);
 
 export function mapForExternalExtension(group) {
     return {

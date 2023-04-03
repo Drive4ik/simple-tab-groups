@@ -2219,6 +2219,10 @@ async function onBackgroundMessage(message, sender) {
                 notArchivedGroups,
             } = await Groups.load(currentWindow.groupId);
 
+        if (data.windowId === browser.windows.WINDOW_ID_CURRENT) {
+            data.windowId = currentWindow.id;
+        }
+
         log.log('check action');
 
         switch (data.action) {
@@ -2601,13 +2605,13 @@ async function onBackgroundMessage(message, sender) {
             case 'get-current-group':
                 if (data.windowId) {
                     let groupId = Cache.getWindowGroup(data.windowId),
-                        group = groups.find(gr => gr.id === groupId) || null;
+                        group = groups.find(gr => gr.id === groupId);
 
                     if (group) {
                         group = Groups.mapForExternalExtension(group);
                     }
 
-                    result.group = group;
+                    result.group = group || null;
                     result.ok = true;
                 } else {
                     throw Error('windowId is required');

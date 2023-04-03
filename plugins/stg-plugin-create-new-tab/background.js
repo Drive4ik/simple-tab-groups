@@ -1,190 +1,148 @@
-(async function() {
-    'use strict';
 
-    const STG_ID = 'simple-tab-groups@drive4ik',
-        STG_HOME_PAGE = 'https://addons.mozilla.org/firefox/addon/simple-tab-groups/',
-        TEMPORARY_CONTAINER = 'temporary-container';
+import * as Utils from './utils.js';
 
-    let windowContextualIdentity = {},
-        icons = {};
+const STG_ID = 'simple-tab-groups@drive4ik',
+    STG_HOME_PAGE = 'https://addons.mozilla.org/firefox/addon/simple-tab-groups/',
+    SUPPORTED_STG_ACTIONS = new Set(['i-am-back', 'group-loaded', 'group-unloaded', 'group-updated', 'group-removed']),
+    TEMPORARY_CONTAINER = 'temporary-container';
 
-    browser.runtime.onMessageExternal.addListener(function(request, sender, sendResponse) {
-        if (sender.id !== STG_ID) {
-            console.error(`Only STG support`);
-            return;
-        }
-
-        if (['i-am-back', 'group-loaded', 'group-updated', 'group-removed'].includes(request.action)) {
-            loadContextualIdentityGroupsAndUpdateBrowserAction();
-        } else {
-            throw Error(`unknown action: ${request.action}`);
-        }
-    });
-
-    async function loadContextualIdentityGroupsAndUpdateBrowserAction() {
-        let windows = await browser.windows.getAll({
-                windowTypes: [browser.windows.WindowType.NORMAL],
-            }),
-            [{shortcut}] = await browser.commands.getAll();
-
-        await Promise.all(windows.map(async function(win) {
-            let {group} = await sendExternalMessage({
-                action: 'get-current-group',
-                windowId: win.id,
-            });
-
-            windowContextualIdentity[win.id] = group ? group.contextualIdentity : null;
-
-            // update browser action
-            let title = browser.i18n.getMessage('newTabTitle');
-
-            if (windowContextualIdentity[win.id]) {
-                title += ` [${windowContextualIdentity[win.id].name}]`;
-            }
-
-            if (shortcut) {
-                title += ` (${shortcut})`;
-            }
-
-            browser.browserAction.setTitle({
-                title: title,
-                windowId: win.id,
-            });
-
-            browser.browserAction.setIcon({
-                path: await getIcon(windowContextualIdentity[win.id]),
-                windowId: win.id,
-            });
-        }));
+browser.runtime.onMessageExternal.addListener((request, sender) => {
+    if (sender.id !== STG_ID) {
+        console.error(`Only STG support`);
+        return;
     }
 
-    function sendExternalMessage(data) {
-        return new Promise(function(resolve, reject) {
-            browser.runtime.sendMessage(STG_ID, data, function(responce) {
-                if (responce && responce.ok) {
-                    resolve(responce);
-                } else {
-                    reject(responce);
-                }
-            });
-        });
+    if (SUPPORTED_STG_ACTIONS.has(request.action)) {
+        reloadWindowActions();
+    } else {
+        throw Error(`unknown action: ${request.action}`);
     }
+});
 
-    async function notify(message, timer = 20000, id = null, iconUrl = null, onClick = null, onClose = null) {
-        if (id) {
-            await browser.notifications.clear(id);
-        } else {
-            id = String(Date.now());
-        }
+browser.action.onClicked.addListener(async () => {
+    const currentGroupContainer = await getWindowGroupContainer(browser.windows.WINDOW_ID_CURRENT);
 
-        // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/notifications/NotificationOptions
-        // Only 'type', 'iconUrl', 'title', and 'message' are supported.
-        await browser.notifications.create(id, {
-            type: 'basic',
-            iconUrl: iconUrl || '/icons/icon.svg',
-            title: browser.i18n.getMessage('extensionName'),
-            message: String(message),
-        });
-
-        let rejectTimer = null,
-            listener = function(id, calledId) {
-                if (id !== calledId) {
-                    return;
-                }
-
-                browser.notifications.onClicked.removeListener(listener);
-                browser.notifications.onClosed.removeListener(onClosedListener);
-
-                clearTimeout(rejectTimer);
-                onClick && onClick(id);
-            }.bind(null, id),
-            onClosedListener = function(id, calledId, calledBy) {
-                if (id !== calledId) {
-                    return;
-                }
-
-                browser.notifications.onClicked.removeListener(listener);
-                browser.notifications.onClosed.removeListener(onClosedListener);
-                browser.notifications.clear(id);
-
-                if (calledBy !== 'timeout') {
-                    clearTimeout(rejectTimer);
-                    onClose && onClose(id);
-                }
-            }.bind(null, id);
-
-        rejectTimer = setTimeout(onClosedListener, timer, id, 'timeout');
-
-        browser.notifications.onClicked.addListener(listener);
-        browser.notifications.onClosed.addListener(onClosedListener);
-
-        return id;
-    }
-
-    browser.browserAction.onClicked.addListener(async function() {
-        let win = await browser.windows.getCurrent();
-
-        if (windowContextualIdentity[win.id]) {
-            if (TEMPORARY_CONTAINER === windowContextualIdentity[win.id].cookieStoreId) {
-                try {
-                    await sendExternalMessage({
-                        action: 'create-temp-tab',
-                    });
-                } catch (e) {
-                    notify(browser.i18n.getMessage('needInstallSTGExtension'), undefined, 'needInstallSTGExtension', function() {
-                        browser.tabs.create({
-                            url: STG_HOME_PAGE,
-                        });
-                    });
-                }
-            } else {
-                browser.tabs.create({
-                    active: true,
-                    cookieStoreId: windowContextualIdentity[win.id].cookieStoreId,
+    if (currentGroupContainer) {
+        if (TEMPORARY_CONTAINER === currentGroupContainer.cookieStoreId) {
+            try {
+                await sendExternalMessage({
+                    action: 'create-temp-tab',
+                });
+            } catch (e) {
+                Utils.notify('needInstallSTGExtension', browser.i18n.getMessage('needInstallSTGExtension'), {
+                    timerSec: 10,
+                    onClick: {
+                        action: 'open-tab',
+                        url: STG_HOME_PAGE,
+                    },
                 });
             }
         } else {
-            browser.tabs.create({
-                active: true,
+            createNewTab({
+                cookieStoreId: currentGroupContainer.cookieStoreId,
             });
         }
+    } else {
+        createNewTab();
+    }
+});
+
+async function createNewTab(createParams = {}) {
+    await browser.tabs.create({
+        active: true,
+        ...createParams,
+    });
+}
+
+async function getWindowGroup(windowId) {
+    const {ok, error, group} = await sendExternalMessage({
+        action: 'get-current-group',
+        windowId,
     });
 
-    // https://dxr.mozilla.org/mozilla-central/source/browser/components/contextualidentity/content
-    async function getIcon(container) {
-        if (!container) {
-            return browser.runtime.getURL('/icons/icon.svg');
-        }
+    if (ok) {
+        return group;
+    } else if (error) {
+        Utils.notify(windowId, error);
+    }
+}
 
-        let {icon, colorCode, cookieStoreId} = container,
-            svg = icons[icon];
+async function getWindowGroupContainer(windowId) {
+    const currentGroup = await getWindowGroup(windowId);
 
-        if (!svg) {
-            let request = await fetch(`/icons/${icon}.svg`);
-            svg = icons[icon] = await request.text();
-        }
+    return currentGroup?.contextualIdentity;
+}
 
-        if (cookieStoreId !== TEMPORARY_CONTAINER) {
-            svg = svg.replace('context-fill', colorCode);
-        }
+async function updateAction(windowId, group) {
+    const groupContainer = group?.contextualIdentity;
+    const [{shortcut}] = await browser.commands.getAll();
 
-        return convertSvgToUrl(svg);
+    let titleParts = [browser.i18n.getMessage('newTabTitle')];
+
+    if (groupContainer) {
+        titleParts.push(`[${groupContainer.name}]`);
     }
 
-    function convertSvgToUrl(svg) {
-        return 'data:image/svg+xml;base64,' + b64EncodeUnicode(svg);
+    if (shortcut) {
+        titleParts.push(`(${shortcut})`);
     }
 
-    function b64EncodeUnicode(str) {
-        // first we use encodeURIComponent to get percent-encoded UTF-8,
-        // then we convert the percent encodings into raw bytes which
-        // can be fed into btoa.
-        return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
-            function toSolidBytes(match, p1) {
-                return String.fromCharCode('0x' + p1);
-            }));
+    await browser.action.setIcon({
+        path: await getIcon(groupContainer),
+        windowId,
+    });
+
+    await browser.action.setTitle({
+        title: titleParts.join(' '),
+        windowId,
+    });
+}
+
+async function reloadWindowActions() {
+    const windows = await browser.windows.getAll({
+        windowTypes: [browser.windows.WindowType.NORMAL],
+    });
+
+    await Promise.all(windows.map(async win => {
+        const group = await getWindowGroup(win.id);
+
+        await updateAction(win.id, group);
+    }));
+}
+
+function sendExternalMessage(data) {
+    return browser.runtime.sendMessage(STG_ID, data);
+}
+
+// https://dxr.mozilla.org/mozilla-central/source/browser/components/contextualidentity/content
+async function getIcon(container) {
+    if (!container) {
+        return browser.runtime.getURL('/icons/icon.svg');
     }
 
-    loadContextualIdentityGroupsAndUpdateBrowserAction();
+    const {icon, colorCode, cookieStoreId} = container;
 
-})();
+    let svg = await fetch(`/icons/${icon}.svg`).then(req => req.text());
+
+    if (cookieStoreId !== TEMPORARY_CONTAINER) {
+        svg = svg.replaceAll('context-fill', colorCode);
+    }
+
+    return convertSvgToUrl(svg);
+}
+
+function convertSvgToUrl(svg) {
+    return 'data:image/svg+xml;base64,' + b64EncodeUnicode(svg);
+}
+
+function b64EncodeUnicode(str) {
+    // first we use encodeURIComponent to get percent-encoded UTF-8,
+    // then we convert the percent encodings into raw bytes which
+    // can be fed into btoa.
+    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+        function toSolidBytes(match, p1) {
+            return String.fromCharCode('0x' + p1);
+        }));
+}
+
+reloadWindowActions();
