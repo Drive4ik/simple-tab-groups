@@ -4,7 +4,7 @@
     "browser_specific_settings": {
         "gecko": {
             "id": "stg-plugin-create-new-group@drive4ik",
-            "strict_min_version": "102.0"
+            "strict_min_version": "111.0"
         }
     },
 
