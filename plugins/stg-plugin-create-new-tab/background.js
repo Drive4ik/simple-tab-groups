@@ -1,13 +1,12 @@
 
+import * as Constants from './constants.js';
 import * as Utils from './utils.js';
 
-const STG_ID = 'simple-tab-groups@drive4ik',
-    STG_HOME_PAGE = 'https://addons.mozilla.org/firefox/addon/simple-tab-groups/',
-    SUPPORTED_STG_ACTIONS = new Set(['i-am-back', 'group-loaded', 'group-unloaded', 'group-updated', 'group-removed']),
+const SUPPORTED_STG_ACTIONS = new Set(['i-am-back', 'group-loaded', 'group-unloaded', 'group-updated', 'group-removed']),
     TEMPORARY_CONTAINER = 'temporary-container';
 
 browser.runtime.onMessageExternal.addListener((request, sender) => {
-    if (sender.id !== STG_ID) {
+    if (sender.id !== Constants.STG_ID) {
         console.error(`Only STG support`);
         return;
     }
@@ -25,15 +24,13 @@ browser.action.onClicked.addListener(async () => {
     if (currentGroupContainer) {
         if (TEMPORARY_CONTAINER === currentGroupContainer.cookieStoreId) {
             try {
-                await sendExternalMessage({
-                    action: 'create-temp-tab',
-                });
+                await Utils.sendExternalMessage('create-temp-tab');
             } catch (e) {
                 Utils.notify('needInstallSTGExtension', browser.i18n.getMessage('needInstallSTGExtension'), {
                     timerSec: 10,
                     onClick: {
                         action: 'open-tab',
-                        url: STG_HOME_PAGE,
+                        url: Constants.STG_HOME_PAGE,
                     },
                 });
             }
@@ -55,8 +52,7 @@ async function createNewTab(createParams = {}) {
 }
 
 async function getWindowGroup(windowId) {
-    const {ok, error, group} = await sendExternalMessage({
-        action: 'get-current-group',
+    const {ok, error, group} = await Utils.sendExternalMessage('get-current-group', {
         windowId,
     });
 
@@ -77,7 +73,7 @@ async function updateAction(windowId, group) {
     const groupContainer = group?.contextualIdentity;
     const [{shortcut}] = await browser.commands.getAll();
 
-    let titleParts = [browser.i18n.getMessage('newTabTitle')];
+    const titleParts = [browser.i18n.getMessage('newTabTitle')];
 
     if (groupContainer) {
         titleParts.push(`[${groupContainer.name}]`);
@@ -110,10 +106,6 @@ async function reloadWindowActions() {
     }));
 }
 
-function sendExternalMessage(data) {
-    return browser.runtime.sendMessage(STG_ID, data);
-}
-
 // https://dxr.mozilla.org/mozilla-central/source/browser/components/contextualidentity/content
 async function getIcon(container) {
     if (!container) {
@@ -128,21 +120,7 @@ async function getIcon(container) {
         svg = svg.replaceAll('context-fill', colorCode);
     }
 
-    return convertSvgToUrl(svg);
-}
-
-function convertSvgToUrl(svg) {
-    return 'data:image/svg+xml;base64,' + b64EncodeUnicode(svg);
-}
-
-function b64EncodeUnicode(str) {
-    // first we use encodeURIComponent to get percent-encoded UTF-8,
-    // then we convert the percent encodings into raw bytes which
-    // can be fed into btoa.
-    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
-        function toSolidBytes(match, p1) {
-            return String.fromCharCode('0x' + p1);
-        }));
+    return Utils.convertSvgToUrl(svg);
 }
 
 reloadWindowActions();

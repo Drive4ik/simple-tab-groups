@@ -1,4 +1,5 @@
 
+import * as Constants from './constants.js';
 import ls, {TYPE_SESSION} from './ls.js';
 
 const notificationsStorage = ls.create('notify', TYPE_SESSION);
@@ -54,4 +55,25 @@ export async function notify(notificationId, message, {
     if (onClick.action) {
         notificationsStorage.set(notificationId, onClick, timerSec);
     }
+}
+
+export function sendExternalMessage(action, data = {}) {
+    return browser.runtime.sendMessage(Constants.STG_ID, {
+        action,
+        ...data,
+    });
+}
+
+export function convertSvgToUrl(svg) {
+    return 'data:image/svg+xml;base64,' + b64EncodeUnicode(svg);
+}
+
+function b64EncodeUnicode(str) {
+    // first we use encodeURIComponent to get percent-encoded UTF-8,
+    // then we convert the percent encodings into raw bytes which
+    // can be fed into btoa.
+    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+        function toSolidBytes(match, p1) {
+            return String.fromCharCode('0x' + p1);
+        }));
 }
