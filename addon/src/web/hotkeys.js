@@ -52,7 +52,7 @@ function changeHotkeysListener(request) {
     } else if (request.action === 'show-groups-popup') {
         showGroupsPopup(request);
     } else if (request.action === 'show-prompt') {
-        showPrompt(request);
+        return showPrompt(request);
     }
 }
 
