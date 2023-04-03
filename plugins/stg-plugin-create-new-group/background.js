@@ -1,38 +1,22 @@
-
-const STG_ID = 'simple-tab-groups@drive4ik',
-    STG_HOME_PAGE = 'https://addons.mozilla.org/firefox/addon/simple-tab-groups/';
-
-browser.notifications.onClicked.addListener(() => {
-    browser.tabs.create({
-        url: STG_HOME_PAGE,
-    });
-});
+import * as Constants from './constants.js';
+import * as Utils from './utils.js';
 
 browser.action.onClicked.addListener(async () => {
-    const responce = await browser.runtime.sendMessage(STG_ID, {
-        action: 'add-new-group',
-    }).catch(() => {});
+    try {
+        const responce = await Utils.sendExternalMessage('add-new-group');
 
-    if (responce) {
         if (responce.ok) {
-            browser.runtime.sendMessage(STG_ID, {
-                action: 'load-last-group',
-            });
+            Utils.sendExternalMessage('load-last-group');
         } else {
-            browser.notifications.create({
-                type: 'basic',
-                iconUrl: '/icons/icon.svg',
-                title: browser.i18n.getMessage('extensionName'),
-                message: responce.error,
-            });
+            Utils.notify('error', responce.error);
         }
-    } else {
-        browser.notifications.create({
-            type: 'basic',
-            iconUrl: '/icons/icon.svg',
-            title: browser.i18n.getMessage('extensionName'),
-            message: browser.i18n.getMessage('needInstallSTGExtension'),
+    } catch (e) {
+        Utils.notify('needInstallSTGExtension', browser.i18n.getMessage('needInstallSTGExtension'), {
+            timerSec: 10,
+            onClick: {
+                action: 'open-tab',
+                url: Constants.STG_HOME_PAGE,
+            },
         });
     }
-
 });

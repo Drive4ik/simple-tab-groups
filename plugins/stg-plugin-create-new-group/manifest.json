@@ -4,7 +4,7 @@
     "browser_specific_settings": {
         "gecko": {
             "id": "stg-plugin-create-new-group@drive4ik",
-            "strict_min_version": "111.0"
+            "strict_min_version": "112.0"
         }
     },
 
@@ -12,7 +12,7 @@
 
     "name": "__MSG_extensionName__",
     "description": "__MSG_extensionDescription__",
-    "version": "2.0",
+    "version": "2.1",
     "author": "Drive4ik",
     "homepage_url": "https://github.com/drive4ik/simple-tab-groups",
 
@@ -31,9 +31,17 @@
     ],
 
     "background": {
-        "scripts": ["background.js"]
+        "scripts": ["background.js"],
+        "type": "module"
     },
 
-    "default_locale": "en"
+    "default_locale": "en",
+
+    "commands": {
+        "_execute_action": {
+            "description": "__MSG_createNewGroupTitle__"
+        }
+    }
+
 
 }
