@@ -4,7 +4,7 @@
         <rect x="24" y="0" width="8" height="8" />
         <rect x="0" y="24" width="8" height="8" />
         <rect x="24" y="24" width="8" height="8" />
-        <line x1="2" y1="16" x2="30" y2="16" stroke="context-fill" stroke-width="4" stroke-linecap="round"/>
-        <line x1="16" y1="2" x2="16" y2="30" stroke="context-fill" stroke-width="4" stroke-linecap="round"/>
+        <rect x="0" width="32" height="5" y="13.5" rx="2"/>
+        <rect y="0" height="32" width="5" x="13.5" rx="2"/>
     </g>
 </svg>
