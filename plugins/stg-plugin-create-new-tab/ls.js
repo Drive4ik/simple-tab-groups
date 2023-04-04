@@ -21,7 +21,13 @@ function _localStorage(method, key, value) {
     const type = this?.type || TYPE_LOCAL;
     const prefix = this?.prefix;
 
-    const args = [prefix, key].filter(Boolean);
+    const args = [];
+
+    if (prefix) {
+        args.push(`${prefix}_${key}`);
+    } else {
+        args.push(`${key}`);
+    }
 
     if (value !== undefined) {
         args.push(value);

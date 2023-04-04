@@ -16,7 +16,7 @@
         "description": "Please, select group"
     },
     "defaultBrowserActionTitle": {
-        "message": "Eliminar grupo actual - [plugin STG]",
-        "description": "Group title will be here - [STG plugin]"
+        "message": "Eliminar grupo actual",
+        "description": "Group title will be here"
     }
 }

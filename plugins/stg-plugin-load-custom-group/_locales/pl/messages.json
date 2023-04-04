@@ -16,7 +16,7 @@
         "description": "Please, select group"
     },
     "defaultBrowserActionTitle": {
-        "message": "Tytuł grupy [wtyczka STG]",
-        "description": "Group title will be here - [STG plugin]"
+        "message": "Tytuł grupy",
+        "description": "Group title will be here"
     }
 }

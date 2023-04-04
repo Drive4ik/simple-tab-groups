@@ -1,10 +1,10 @@
 {
-    "manifest_version": 2,
+    "manifest_version": 3,
 
-    "applications": {
+    "browser_specific_settings": {
         "gecko": {
             "id": "stg-plugin-load-custom-group@drive4ik",
-            "strict_min_version": "91.0"
+            "strict_min_version": "112.0"
         }
     },
 
@@ -12,7 +12,7 @@
 
     "name": "__MSG_extensionName__",
     "description": "__MSG_extensionDescription__",
-    "version": "1.2.5",
+    "version": "2.0",
     "author": "Drive4ik",
     "homepage_url": "https://github.com/drive4ik/simple-tab-groups",
 
@@ -20,7 +20,7 @@
         "96": "/icons/icon.svg"
     },
 
-    "browser_action": {
+    "action": {
         "default_area": "tabstrip",
         "default_icon": "/icons/icon.svg",
         "default_title": "__MSG_defaultBrowserActionTitle__"
@@ -33,13 +33,21 @@
     ],
 
     "background": {
-        "scripts": ["background.js"]
+        "scripts": ["background.js"],
+        "type": "module"
     },
 
     "options_ui": {
         "page": "options/options.html"
     },
 
-    "default_locale": "en"
+    "default_locale": "en",
+
+    "commands": {
+        "_execute_action": {
+            "description": "__MSG_defaultBrowserActionTitle__"
+        }
+    }
+
 
 }

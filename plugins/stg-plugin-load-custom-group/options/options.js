@@ -1,91 +1,63 @@
-(async function() {
-    'use strict';
+import * as Constants from '../constants.js';
+import * as Utils from '../utils.js';
 
-    let $ = document.querySelector.bind(document),
-        BG = browser.extension.getBackgroundPage(),
-        groupsSelect = $('#groups-select'),
-        selectGroupHeader = $('#select-group-header');
+const $ = document.querySelector.bind(document),
+    groupsSelect = $('#groups-select'),
+    emptyOption = $('#empty-option'),
+    needInstallSTGExtension = $('#notification-install-STG');
 
-    selectGroupHeader.innerText = browser.i18n.getMessage('needSelectGroup');
+emptyOption.innerText = browser.i18n.getMessage('needSelectGroup');
 
-    try {
-        await init();
-    } catch (e) {
-        let a = document.createElement('a');
-        a.innerText = browser.i18n.getMessage('needInstallSTGExtension').replace(/\n+/, '\n');
-        a.id = 'notificationInstallSTG';
-        a.href = BG.STG_HOME_PAGE;
-        a.target = '_blank';
-        selectGroupHeader.parentNode.insertBefore(a, selectGroupHeader);
+groupsSelect.addEventListener('change', async function() {
+    const groupId = parseInt(groupsSelect.value, 10);
+
+    await browser.storage.local.set({groupId});
+
+    const backgroundSelf = await browser.runtime.getBackgroundPage();
+
+    backgroundSelf?.updateBrowserAction();
+});
+
+browser.runtime.onMessageExternal.addListener(async (request, sender) => {
+    if (sender.id !== Constants.STG_ID) {
         return;
     }
 
-    groupsSelect.addEventListener('change', async function() {
-        let groupId = parseInt(groupsSelect.value, 10);
+    const backgroundSelf = await browser.runtime.getBackgroundPage();
 
-        if (groupsSelect.children[0].dataset.isEmpty) {
-            groupsSelect.children[0].remove();
-        }
+    if (backgroundSelf?.SUPPORTED_STG_ACTIONS.has(request?.action)) {
+        init();
+    }
+});
 
-        await browser.storage.local.set({
-            groupId: groupId,
-        });
+try {
+    await init();
+} catch (e) {
+    needInstallSTGExtension.innerText = browser.i18n.getMessage('needInstallSTGExtension').replace(/\n+/, '\n');
+    needInstallSTGExtension.href = Constants.STG_HOME_PAGE;
+    needInstallSTGExtension.classList = 'showing';
+}
 
-        BG.updateBrowserAction();
-    });
+async function init() {
+    needInstallSTGExtension.classList = '';
 
-    browser.runtime.onMessageExternal.addListener(function(request, sender, sendResponse) {
-        if (sender.id !== BG.STG_ID) {
-            return;
-        }
+    const {groupId} = await browser.storage.local.get('groupId'),
+        {groupsList} = await Utils.sendExternalMessage('get-groups-list');
 
-        switch (request.action) {
-            case 'group-added':
-            case 'group-updated':
-            case 'group-removed':
-                init();
-                break;
-        }
-    });
+    emptyOption.selected = true;
 
-    async function init() {
-        let { groupId } = await browser.storage.local.get('groupId'),
-            { groupsList } = await BG.sendExternalMessage({
-                action: 'get-groups-list',
-            });
-
-        while (groupsSelect.firstElementChild) {
-            groupsSelect.firstElementChild.remove();
-        }
-
-        let notificationInstallSTG = $('#notificationInstallSTG');
-        if (notificationInstallSTG) {
-            notificationInstallSTG.remove();
-        }
-
-        let foundSelected = false;
-
-        groupsList.forEach(function(group) {
-            let option = document.createElement('option');
-
-            option.value = group.id;
-            option.innerText = group.title;
-
-            if (group.id === groupId) {
-                foundSelected = true;
-                option.selected = true;
-            }
-
-            groupsSelect.append(option);
-        });
-
-        if (!foundSelected) {
-            let emptyOption = document.createElement('option');
-            emptyOption.innerText = browser.i18n.getMessage('needSelectGroup');
-            emptyOption.selected = true;
-            emptyOption.dataset.isEmpty = true;
-            groupsSelect.prepend(emptyOption);
-        }
+    while (emptyOption.nextElementSibling) {
+        emptyOption.nextElementSibling.remove();
     }
 
-})()
+    groupsList.forEach(group => {
+        const option = document.createElement('option');
+
+        option.value = group.id;
+        option.innerText = group.title;
+        option.selected = group.id === groupId;
+
+        groupsSelect.append(option);
+    });
+
+}

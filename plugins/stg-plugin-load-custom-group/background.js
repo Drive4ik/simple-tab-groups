@@ -1,162 +1,123 @@
-(async function() {
-    'use strict';
+import * as Constants from './constants.js';
+import * as Utils from './utils.js';
 
-    const STG_ID = 'simple-tab-groups@drive4ik',
-        STG_HOME_PAGE = 'https://addons.mozilla.org/firefox/addon/simple-tab-groups/',
-        MANIFEST = browser.runtime.getManifest();
+const SUPPORTED_STG_ACTIONS = new Set(['i-am-back', 'group-added', 'group-updated', 'group-removed']);
 
-    function sendExternalMessage(data) {
-        return new Promise(function(resolve, reject) {
-            browser.runtime.sendMessage(STG_ID, data, function(responce) {
-                if (responce && responce.ok) {
-                    resolve(responce);
-                } else {
-                    reject(responce);
-                }
-            });
-        });
+browser.runtime.onMessageExternal.addListener(async (request, sender) => {
+    if (sender.id !== Constants.STG_ID) {
+        console.error(`Only STG support`);
+        return;
     }
 
-    function notify(message, timer = 20000) {
-        let id = String(Date.now());
+    if (SUPPORTED_STG_ACTIONS.has(request?.action)) {
+        const {groupId} = await browser.storage.local.get('groupId');
 
-        // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/notifications/NotificationOptions
-        // Only 'type', 'iconUrl', 'title', and 'message' are supported.
-        browser.notifications.create(id, {
-            type: 'basic',
-            iconUrl: '/icons/icon.svg',
-            title: browser.i18n.getMessage('extensionName'),
-            message: String(message),
-        });
+        if (request.action === 'i-am-back') {
+            await updateBrowserAction();
+        } else if (request.action === 'group-updated' && groupId === request.group.id) {
+            await updateBrowserAction(request.group);
+        } else if (request.action === 'group-removed' && groupId === request.groupId) {
+            await resetState();
+        }
+    } else {
+        throw Error(`unknown action: ${request.action}`);
+    }
+});
 
-        setTimeout(browser.notifications.clear, timer, id);
+browser.action.onClicked.addListener(async () => {
+    try {
+        const {groupId} = await browser.storage.local.get('groupId');
 
-        return new Promise(function(resolve, reject) {
-            let called = false,
-                listener = function(id, notificationId) {
-                    if (id === notificationId) {
-                        browser.notifications.onClicked.removeListener(listener);
-                        called = true;
-                        resolve(id);
-                    }
-                }.bind(null, id);
+        if (groupId) {
+            const responce = await Utils.sendExternalMessage('load-custom-group', {groupId});
 
-            setTimeout(() => !called && reject(), timer, id);
-
-            browser.notifications.onClicked.addListener(listener);
+            if (!responce.ok) {
+                Utils.notify('error', responce.error);
+            }
+        } else {
+            browser.runtime.openOptionsPage();
+        }
+    } catch (e) {
+        Utils.notify('needInstallSTGExtension', browser.i18n.getMessage('needInstallSTGExtension'), {
+            timerSec: 10,
+            onClick: {
+                action: 'open-tab',
+                url: Constants.STG_HOME_PAGE,
+            },
         });
     }
+});
 
-    async function showInstallSTGNotification() {
-        await notify(browser.i18n.getMessage('needInstallSTGExtension'));
-        browser.tabs.create({
-            url: STG_HOME_PAGE,
-        });
-    }
+browser.menus.onClicked.addListener(menusOnClickedListener);
 
-    async function showSelectGroupNotification() {
-        await notify(browser.i18n.getMessage('needSelectGroup'));
+function menusOnClickedListener(info) {
+    if (info.menuItemId === 'openSettings') {
         browser.runtime.openOptionsPage();
     }
+}
 
-    browser.runtime.onMessageExternal.addListener(async function(request, sender, sendResponse) {
-        if (sender.id !== STG_ID) {
-            return;
+browser.menus.create({
+    id: 'openSettings',
+    title: browser.i18n.getMessage('openSettings'),
+    contexts: [browser.menus.ContextType.ACTION],
+    icons: {
+        16: 'icons/settings.svg',
+    },
+});
+
+async function updateBrowserAction(group = null) {
+    try {
+        if (!group) {
+            const {groupId} = await browser.storage.local.get('groupId'),
+                {groupsList} = await Utils.sendExternalMessage('get-groups-list');
+
+            group = groupsList.find(gr => gr.id === groupId);
         }
 
-        let { groupId } = await browser.storage.local.get('groupId');
+        await setBrowserAction(group?.title, group?.iconUrl);
+    } catch (e) {
+        await setBrowserAction();
+    }
+}
 
-        if (!groupId || !request.action) {
-            return;
-        }
+async function setBrowserAction(title = null, iconUrl = null) {
+    const [{shortcut}] = await browser.commands.getAll();
 
-        if (request.action === 'group-updated' && request.group.id === groupId) {
-            updateBrowserAction();
-        } else if (request.action === 'group-removed' && request.groupId === groupId) {
-            resetBrowserAction();
-        } else if (request.action === 'i-am-back') {
-            updateBrowserAction();
-        }
+    title = title || browser.i18n.getMessage('defaultBrowserActionTitle');
+
+    const titleParts = [title];
+
+    if (shortcut) {
+        titleParts.push(`(${shortcut})`);
+    }
+
+    await browser.action.setIcon({
+        path: iconUrl || 'icons/icon.svg',
     });
 
-    async function updateBrowserAction(resetGroupInStorage) {
-        try {
-            let { groupId } = await browser.storage.local.get('groupId'),
-                { groupsList } = await sendExternalMessage({
-                    action: 'get-groups-list',
-                }),
-                group = groupsList.find(gr => gr.id === groupId);
-
-            if (group) {
-                setBrowserAction(group.title, group.iconUrl || undefined);
-            } else {
-                resetBrowserAction(resetGroupInStorage);
-            }
-        } catch (e) {
-            resetBrowserAction(resetGroupInStorage);
-        }
-    }
-
-    function resetBrowserAction(resetGroupInStorage) {
-        setBrowserAction();
-
-        if (false !== resetGroupInStorage) {
-            browser.storage.local.remove('groupId');
-            showSelectGroupNotification();
-        }
-    }
-
-    function setBrowserAction(title, iconUrl = MANIFEST.browser_action.default_icon) {
-        browser.browserAction.setTitle({
-            title: title ? title + ' - [STG plugin]' : MANIFEST.browser_action.default_title,
-        });
-
-        browser.browserAction.setIcon({
-            path: iconUrl,
-        });
-    }
-
-    browser.browserAction.onClicked.addListener(async function() {
-        let { groupId } = await browser.storage.local.get('groupId');
-
-        try {
-            await sendExternalMessage({
-                action: 'are-you-here',
-            });
-
-            if (!groupId) {
-                browser.runtime.openOptionsPage();
-                return;
-            }
-
-            try {
-                await sendExternalMessage({
-                    action: 'load-custom-group',
-                    groupId: groupId,
-                });
-            } catch (e) {
-                browser.runtime.openOptionsPage();
-            }
-        } catch (e) {
-            showInstallSTGNotification();
-        }
+    await browser.action.setTitle({
+        title: titleParts.join(' '),
     });
 
-    browser.menus.create({
-        id: 'openSettings',
-        title: browser.i18n.getMessage('openSettings'),
-        onclick: () => browser.runtime.openOptionsPage(),
-        contexts: ['browser_action'],
-        icons: {
-            16: '/icons/settings.svg',
+    await browser.commands.update({
+        name: '_execute_action',
+        description: title,
+    });
+}
+
+async function resetState() {
+    await browser.storage.local.remove('groupId');
+
+    await setBrowserAction();
+
+    await Utils.notify('needSelectGroup', browser.i18n.getMessage('needSelectGroup'), {
+        onClick: {
+            action: 'open-options',
         },
     });
+}
 
-    window.STG_ID = STG_ID;
-    window.STG_HOME_PAGE = STG_HOME_PAGE;
-    window.sendExternalMessage = sendExternalMessage;
-    window.updateBrowserAction = updateBrowserAction;
+updateBrowserAction();
 
-    updateBrowserAction(false);
-
-})()
+self.updateBrowserAction = updateBrowserAction;
+self.SUPPORTED_STG_ACTIONS = SUPPORTED_STG_ACTIONS;

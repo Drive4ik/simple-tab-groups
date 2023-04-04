@@ -16,7 +16,7 @@
         "description": "Please, select group"
     },
     "defaultBrowserActionTitle": {
-        "message": "刪除正在使用中的分頁群組 - [STG plugin]",
-        "description": "Group title will be here - [STG plugin]"
+        "message": "刪除正在使用中的分頁群組",
+        "description": "Group title will be here"
     }
 }

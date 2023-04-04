@@ -14,6 +14,8 @@ function notificationsOnClickedListener(notificationId) {
             active: onClick.active === undefined ? true : onClick.active,
             url: onClick.url,
         });
+    } else if (onClick?.action === 'open-options') {
+        browser.runtime.openOptionsPage();
     } else if (onClick?.action) {
         console.error('invalid notifications action:', onClick.action);
     }
@@ -44,13 +46,19 @@ export async function notify(notificationId, message, {
         message,
     });
 
-    if (timerSec > 25) {
-        timerSec = 25;
-    } else if (timerSec < 3) {
-        timerSec = 3;
+    if (Number.isFinite(timerSec)) {
+        if (timerSec > 25) {
+            timerSec = 25;
+        } else if (timerSec < 3) {
+            timerSec = 3;
+        }
+    } else {
+        timerSec = undefined;
     }
 
-    setTimeout(notificationId => browser.notifications.clear(notificationId), timerSec * 1000, notificationId);
+    if (timerSec) {
+        setTimeout(notificationId => browser.notifications.clear(notificationId), timerSec * 1000, notificationId);
+    }
 
     if (onClick.action) {
         notificationsStorage.set(notificationId, onClick, timerSec);

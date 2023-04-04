@@ -16,7 +16,7 @@
         "description": "Please, select group"
     },
     "defaultBrowserActionTitle": {
-        "message": "这里会显示群组名称 - [STG plugin]",
-        "description": "Group title will be here - [STG plugin]"
+        "message": "这里会显示群组名称",
+        "description": "Group title will be here"
     }
 }

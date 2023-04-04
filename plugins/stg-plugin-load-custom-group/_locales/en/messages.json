@@ -20,7 +20,7 @@
         "description": "Please, select group"
     },
     "defaultBrowserActionTitle": {
-        "message": "Group title will be here - [STG plugin]",
-        "description": "Group title will be here - [STG plugin]"
+        "message": "Group title will be here",
+        "description": "Group title will be here"
     }
 }

@@ -3,20 +3,35 @@ html {
 }
 
 * {
-    font-size: 15px;
+    font-size: 16px;
 }
 
 body {
-    padding-top: 10px;
+    padding: 10px;
+    margin: 0;
 }
 
 #groups-select {
-    margin-left: 5px;
     min-width: 200px;
+    width: auto;
 }
 
-#notificationInstallSTG {
-    display: block;
+@media screen and (max-width: 700px) {
+    #groups-select {
+        width: 100%;
+    }
+}
+
+#notification-install-STG {
+    display: none;
     font-size: 18px;
     margin-bottom: 20px;
+}
+
+#notification-install-STG.showing {
+    display: block;
+}
+
+#notification-install-STG.showing ~ * {
+    display: none;
 }
