@@ -1,5 +1,5 @@
 <svg width="96" height="96" xmlns="http://www.w3.org/2000/svg">
-    <g fill="context-fill" fill-opacity="context-fill-opacity">
+    <g fill="context-fill #4e4f50" fill-opacity="context-fill-opacity">
         <rect height="24" width="24" y="0" x="0" />
         <rect height="24" width="24" y="0" x="36" />
         <rect height="24" width="24" y="36" x="0" />

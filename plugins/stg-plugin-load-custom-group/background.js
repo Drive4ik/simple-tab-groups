@@ -38,6 +38,7 @@ browser.action.onClicked.addListener(async () => {
             browser.runtime.openOptionsPage();
         }
     } catch (e) {
+        setBrowserAction();
         Utils.notify('needInstallSTGExtension', browser.i18n.getMessage('needInstallSTGExtension'), {
             timerSec: 10,
             onClick: {
