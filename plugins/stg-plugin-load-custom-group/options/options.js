@@ -1,12 +1,10 @@
-import * as Constants from '../constants.js';
-import * as Utils from '../utils.js';
+import '/translate-page.js';
+import * as Constants from '/constants.js';
+import * as Utils from '/utils.js';
 
 const $ = document.querySelector.bind(document),
     groupsSelect = $('#groups-select'),
-    emptyOption = $('#empty-option'),
-    needInstallSTGExtension = $('#notification-install-STG');
-
-emptyOption.innerText = browser.i18n.getMessage('needSelectGroup');
+    needInstallSTGExtension = $('#needInstallSTGExtension');
 
 groupsSelect.addEventListener('change', async function() {
     const groupId = parseInt(groupsSelect.value, 10);
@@ -33,7 +31,6 @@ browser.runtime.onMessageExternal.addListener(async (request, sender) => {
 try {
     await init();
 } catch (e) {
-    needInstallSTGExtension.innerText = browser.i18n.getMessage('needInstallSTGExtension').replace(/\n+/, '\n');
     needInstallSTGExtension.href = Constants.STG_HOME_PAGE;
     needInstallSTGExtension.classList = 'showing';
 }
@@ -44,10 +41,10 @@ async function init() {
     const {groupId} = await browser.storage.local.get('groupId'),
         {groupsList} = await Utils.sendExternalMessage('get-groups-list');
 
-    emptyOption.selected = true;
+    groupsSelect.firstElementChild.selected = true;
 
-    while (emptyOption.nextElementSibling) {
-        emptyOption.nextElementSibling.remove();
+    while (groupsSelect.firstElementChild.nextElementSibling) {
+        groupsSelect.firstElementChild.nextElementSibling.remove();
     }
 
     groupsList.forEach(group => {

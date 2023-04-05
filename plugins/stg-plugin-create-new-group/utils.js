@@ -23,7 +23,7 @@ function notificationsOnClickedListener(notificationId) {
 
 export async function notify(notificationId, message, {
         title = browser.i18n.getMessage('extensionName'),
-        iconUrl = '/icons/icon.svg',
+        iconUrl = 'icons/icon.svg',
         timerSec = 25,
         onClick = {},
     } = {}) {
@@ -65,15 +65,49 @@ export async function notify(notificationId, message, {
     }
 }
 
-export function sendExternalMessage(action, data = {}) {
-    return browser.runtime.sendMessage(Constants.STG_ID, {
-        action,
-        ...data,
+function normalizeSendData(action, data = {}) {
+    if (typeof action === 'object' && arguments.length === 1) {
+        return action;
+    }
+
+    return {action, ...data};
+}
+
+export function sendMessage(...args) {
+    return browser.runtime.sendMessage(normalizeSendData(...args));
+}
+
+export function sendExternalMessage(...args) {
+    return browser.runtime.sendMessage(Constants.STG_ID, normalizeSendData(...args));
+}
+
+export async function createMenu(createProperties) {
+    return new Promise((resolve, reject) => {
+        const {icon} = createProperties;
+
+        delete createProperties.icon;
+
+        if (icon) {
+            createProperties.icons = {16: icon};
+        }
+
+        browser.menus.create(createProperties, () => {
+            if (browser.runtime.lastError) {
+                console.error('error creating menu item:', browser.runtime.lastError);
+                reject(browser.runtime.lastError);
+            } else {
+                resolve();
+            }
+        })
     });
 }
 
 export function convertSvgToUrl(svg) {
-    return 'data:image/svg+xml;base64,' + b64EncodeUnicode(svg);
+    return toBase64(svg, 'image/svg+xml');
+}
+
+export function toBase64(str, type) {
+    return `data:${type};base64,` + b64EncodeUnicode(str);
 }
 
 function b64EncodeUnicode(str) {
@@ -84,4 +118,25 @@ function b64EncodeUnicode(str) {
         function toSolidBytes(match, p1) {
             return String.fromCharCode('0x' + p1);
         }));
+}
+
+export async function readFileAsText(fileNode) {
+    return new Promise((resolve, reject) => {
+        if (0 === fileNode.size) {
+            reject('empty file');
+            return;
+        }
+
+        if (fileNode.size > 700e6) {
+            reject('700MB backup? I don\'t believe you');
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.addEventListener('loadend', () => resolve(reader.result));
+        reader.addEventListener('error', reject);
+
+        reader.readAsText(fileNode, 'utf-8');
+    });
 }

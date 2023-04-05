@@ -1,204 +1,117 @@
-(async function() {
-    'use strict';
+import * as Constants from './constants.js';
+import * as Utils from './utils.js';
+import * as MainUtils from './main-utils.js';
 
-    const STG_ID = 'simple-tab-groups@drive4ik',
-        STG_HOME_PAGE = 'https://addons.mozilla.org/firefox/addon/simple-tab-groups/';
-
-    document.title = browser.i18n.getMessage('extensionName') + ' - ' + browser.i18n.getMessage('importBackup');
-    document.getElementById('importBackupText').innerText = browser.i18n.getMessage('importBackup');
-
-    let fileInput = document.getElementById('importBackupFile');
-    fileInput.onchange = function() {
-        new Promise(function(resolve, reject) {
-                let file = fileInput.files[0];
-
-                if (0 === file.size) {
-                    reject('empty file');
-                    return;
-                }
-
-                if (file.size > 700e6) {
-                    reject('700MB backup? I don\'t believe you');
-                    return;
-                }
-
-                let reader = new FileReader();
-
-                reader.addEventListener('loadend', () => resolve(reader.result));
-                reader.addEventListener('error', reject);
-
-                reader.readAsText(file, 'utf-8');
-            })
-            .then(async function(result) {
-                let backup = JSON.parse(result);
-
-                if (Object.keys(backup).every(key => Number(key).toString() === key && backup[key].hasOwnProperty('notes'))) {
-                    await browser.storage.local.set(backup);
-
-                    let {id} = await browser.tabs.getCurrent();
-                    await browser.tabs.remove(id);
-
-                    browser.runtime.reload();
-                } else {
-                    throw Error('Invalid backup');
-                }
-            })
-            .catch(alert);
-    };
-
-    browser.menus.create({
-        id: 'openInTab',
-        title: browser.i18n.getMessage('openInTab'),
-        onclick: function() {
-            browser.tabs.create({
-                active: true,
-                pinned: true,
-                url: browser.runtime.getURL('popup/popup.html#tab'),
-            });
-        },
-        contexts: [browser.menus.ContextType.BROWSER_ACTION],
-        icons: {
-            16: '/icons/icon.svg',
-        },
-    });
-
-    browser.menus.create({
-        type: 'separator',
-        contexts: [browser.menus.ContextType.BROWSER_ACTION],
-    });
-
-    browser.menus.create({
-        id: 'importBackup',
-        title: browser.i18n.getMessage('importBackup'),
-        onclick: function() {
-            browser.tabs.create({
-                url: window.location.href,
-                active: true,
-            });
-        },
-        contexts: [browser.menus.ContextType.BROWSER_ACTION],
-        icons: {
-            16: '/icons/upload.svg',
-        },
-    });
-
-    browser.menus.create({
-        id: 'exportBackup',
-        title: browser.i18n.getMessage('exportBackup'),
-        onclick: async function() {
-            let notes = await browser.storage.local.get(),
-                notesStr = JSON.stringify(notes, null, 4),
-                blob = new Blob([notesStr], {type: 'application/json'}),
-                url = URL.createObjectURL(blob);
-
-            try {
-                let id = await browser.downloads.download({
-                    filename: 'notes-backup-' + (new Date).toLocaleDateString().replace(/[\\/]/g, '-') + '.json',
-                    url: url,
-                    saveAs: true,
-                });
-
-                await waitDownload(id);
-            } catch (e) {
-                //
-            } finally {
-                URL.revokeObjectURL(url);
-            }
-        },
-        contexts: [browser.menus.ContextType.BROWSER_ACTION],
-        icons: {
-            16: '/icons/download.svg',
-        },
-    });
-
-    async function waitDownload(id, maxWaitSec = 10) {
-        let downloadObj = null;
-
-        for (let i = 0; i < maxWaitSec * 5; i++) {
-            [downloadObj] = await browser.downloads.search({id});
-
-            if (downloadObj && browser.downloads.State.IN_PROGRESS !== downloadObj.state) {
-                break;
-            }
-
-            await new Promise(resolve => setTimeout(resolve, 200));
-        }
-
-        return downloadObj || {};
+browser.runtime.onMessageExternal.addListener(async (request, sender) => {
+    if (sender.id !== Constants.STG_ID) {
+        console.error(`Only STG support`);
+        return;
     }
 
-    function sendExternalMessage(data) {
-        return new Promise(function(resolve, reject) {
-            browser.runtime.sendMessage(STG_ID, data, function(responce) {
-                if (responce && responce.ok) {
-                    resolve(responce);
-                } else {
-                    reject(responce);
-                }
-            });
+    const requestGroupKey = MainUtils.getGroupKey(request.groupId);
+
+    switch (request.action) {
+        case 'i-am-back':
+            Utils.sendExternalMessage('ignore-ext-for-reopen-container');
+            init();
+            break;
+        case 'group-loaded':
+            const {[requestGroupKey]: notes} = await browser.storage.local.get(requestGroupKey);
+            MainUtils.setBadge(notes?.notes?.trim(), request.windowId);
+            break;
+        case 'group-unloaded':
+            MainUtils.setBadge(false, request.windowId);
+            break;
+        case 'group-removed':
+            MainUtils.setBadge(false, request.windowId);
+            browser.storage.local.remove(requestGroupKey);
+            break;
+        case 'get-backup':
+            return {
+                backup: await browser.storage.local.get(),
+            };
+        case 'set-backup':
+            await browser.storage.local.clear();
+            await browser.storage.local.set(request.backup);
+            browser.runtime.reload();
+            break;
+    }
+});
+
+browser.menus.onClicked.addListener(async info => {
+    if (info.menuItemId === 'openInTab') {
+        browser.tabs.create({
+            active: true,
+            pinned: true,
+            url: browser.runtime.getURL('popup/popup.html#tab'),
         });
+    } else if (info.menuItemId === 'openOptions') {
+        browser.runtime.openOptionsPage();
+    } else {
+        throw Error(`unknown menu id: ${info.menuItemId}`);
     }
+});
 
-    function setBadge(show, windowId) {
-        windowId && browser.browserAction.setBadgeText({
-            text: show ? '⭐️' : '',
-            windowId,
-        });
-    }
+async function init() {
+    const {groupsList} = await Utils.sendExternalMessage('get-groups-list'),
+        notes = await browser.storage.local.get();
 
-    async function init() {
-        let {groupsList} = await sendExternalMessage({
-                action: 'get-groups-list',
-            }),
-            notes = await browser.storage.local.get(null);
+    groupsList.forEach(({id, windowId}) => MainUtils.setBadge(notes[MainUtils.getGroupKey(id)]?.notes.trim(), windowId));
+}
 
-        groupsList.forEach(function({id, windowId}) {
-            if (windowId && notes[id]?.notes.trim()) {
-                setBadge(true, windowId);
-            }
-        });
-    }
-
-    init();
-
-    browser.runtime.onMessageExternal.addListener(async function(request, sender) {
-        if (sender.id !== STG_ID) {
-            return;
-        }
-
-        switch (request.action) {
-            case 'i-am-back':
-                init();
-                sendExternalMessage({
-                    action: 'ignore-ext-for-reopen-container',
-                });
-                break;
-            case 'group-loaded':
-                let {[request.groupId]: notes} = await browser.storage.local.get(String(request.groupId));
-
-                setBadge(notes?.notes?.trim(), request.windowId);
-                break;
-            case 'group-unloaded':
-                setBadge(false, request.windowId);
-                break;
-            case 'group-removed':
-                setBadge(false, request.windowId);
-                browser.storage.local.remove(`${request.groupId}`);
-                break;
-        }
-    });
-
-    browser.browserAction.setBadgeBackgroundColor({
+async function setup() {
+    await browser.action.setBadgeBackgroundColor({
         color: 'transparent',
     });
 
-    sendExternalMessage({
-        action: 'ignore-ext-for-reopen-container',
+    init();
+
+    await Utils.createMenu({
+        id: 'openInTab',
+        title: browser.i18n.getMessage('openInTab'),
+        contexts: [browser.menus.ContextType.ACTION],
+        icon: 'icons/icon.svg',
     });
 
-    window.STG_ID = STG_ID;
-    window.STG_HOME_PAGE = STG_HOME_PAGE;
-    window.sendExternalMessage = sendExternalMessage;
-    window.setBadge = setBadge;
+    await Utils.createMenu({
+        id: browser.menus.ItemType.SEPARATOR,
+        type: browser.menus.ItemType.SEPARATOR,
+        contexts: [browser.menus.ContextType.ACTION],
+    });
 
-})()
+    await Utils.createMenu({
+        id: 'openOptions',
+        title: browser.i18n.getMessage('openOptions'),
+        contexts: [browser.menus.ContextType.ACTION],
+        icon: 'icons/gear-solid.svg',
+    });
+}
+
+browser.runtime.onStartup.addListener(setup);
+browser.runtime.onInstalled.addListener(async ({reason, previousVersion}) => {
+    if (reason === browser.runtime.OnInstalledReason.UPDATE) {
+        const [major] = previousVersion.split('.');
+
+        if (major == 1) {
+            const oldStorage = await browser.storage.local.get();
+            const newStorage = MainUtils.migrateStrorageToV2(oldStorage);
+
+            await browser.storage.local.clear();
+            await browser.storage.local.set(newStorage);
+        }
+    }
+
+    try {
+        await Utils.sendExternalMessage('ignore-ext-for-reopen-container');
+    } catch (e) {
+        Utils.notify('needInstallSTGExtension', browser.i18n.getMessage('needInstallSTGExtension'), {
+            timerSec: 10,
+            onClick: {
+                action: 'open-tab',
+                url: Constants.STG_HOME_PAGE,
+            },
+        });
+    }
+
+    setup();
+});

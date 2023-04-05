@@ -8,8 +8,8 @@
         "description": "Extension description"
     },
     "needInstallSTGExtension": {
-        "message": "Need install Simple Tab Groups extention or change container in addon settings\n\nClick here to open Simple Tab Groups home page",
-        "description": "Need install Simple Tab Groups extention or change container in addon settings\n\nClick here to open Simple Tab Groups home page"
+        "message": "Need install Simple Tab Groups extention or change container in addon settings\nClick here to open Simple Tab Groups home page",
+        "description": "Need install Simple Tab Groups extention or change container in addon settings\nClick here to open Simple Tab Groups home page"
     },
     "newTabTitle": {
         "message": "Open a new tab",

@@ -9,18 +9,22 @@ browser.runtime.onMessageExternal.addListener(async (request, sender) => {
         return;
     }
 
-    if (SUPPORTED_STG_ACTIONS.has(request?.action)) {
-        const {groupId} = await browser.storage.local.get('groupId');
+    const {groupId} = await browser.storage.local.get('groupId');
 
-        if (request.action === 'i-am-back') {
+    switch (request.action) {
+        case 'i-am-back':
             await updateBrowserAction();
-        } else if (request.action === 'group-updated' && groupId === request.group.id) {
-            await updateBrowserAction(request.group);
-        } else if (request.action === 'group-removed' && groupId === request.groupId) {
-            await resetState();
-        }
-    } else {
-        throw Error(`unknown action: ${request.action}`);
+            break;
+        case 'group-updated':
+            if (groupId === request.group.id) {
+                await updateBrowserAction(request.group);
+            }
+            break;
+        case 'group-removed':
+            if (groupId === request.groupId) {
+                await resetState();
+            }
+            break;
     }
 });
 
@@ -49,21 +53,10 @@ browser.action.onClicked.addListener(async () => {
     }
 });
 
-browser.menus.onClicked.addListener(menusOnClickedListener);
-
-function menusOnClickedListener(info) {
+browser.menus.onClicked.addListener(info => {
     if (info.menuItemId === 'openSettings') {
         browser.runtime.openOptionsPage();
     }
-}
-
-browser.menus.create({
-    id: 'openSettings',
-    title: browser.i18n.getMessage('openSettings'),
-    contexts: [browser.menus.ContextType.ACTION],
-    icons: {
-        16: 'icons/settings.svg',
-    },
 });
 
 async function updateBrowserAction(group = null) {
@@ -118,7 +111,19 @@ async function resetState() {
     });
 }
 
-updateBrowserAction();
+async function setup() {
+    updateBrowserAction();
+
+    await Utils.createMenu({
+        id: 'openSettings',
+        title: browser.i18n.getMessage('openSettings'),
+        contexts: [browser.menus.ContextType.ACTION],
+        icon: 'icons/settings.svg',
+    });
+}
+
+browser.runtime.onStartup.addListener(setup);
+browser.runtime.onInstalled.addListener(setup);
 
 self.updateBrowserAction = updateBrowserAction;
 self.SUPPORTED_STG_ACTIONS = SUPPORTED_STG_ACTIONS;

@@ -24,7 +24,9 @@ browser.action.onClicked.addListener(async () => {
     if (currentGroupContainer) {
         if (TEMPORARY_CONTAINER === currentGroupContainer.cookieStoreId) {
             try {
-                await Utils.sendExternalMessage('create-temp-tab');
+                await Utils.sendExternalMessage('create-temp-tab', {
+                    active: true,
+                });
             } catch (e) {
                 Utils.notify('needInstallSTGExtension', browser.i18n.getMessage('needInstallSTGExtension'), {
                     timerSec: 10,
@@ -109,7 +111,7 @@ async function reloadWindowActions() {
 // https://dxr.mozilla.org/mozilla-central/source/browser/components/contextualidentity/content
 async function getIcon(container) {
     if (!container) {
-        return browser.runtime.getURL('/icons/icon.svg');
+        return browser.runtime.getURL('icons/icon.svg');
     }
 
     const {icon, colorCode, cookieStoreId} = container;
@@ -123,4 +125,9 @@ async function getIcon(container) {
     return Utils.convertSvgToUrl(svg);
 }
 
-reloadWindowActions();
+async function setup() {
+    reloadWindowActions();
+}
+
+browser.runtime.onStartup.addListener(setup);
+browser.runtime.onInstalled.addListener(setup);

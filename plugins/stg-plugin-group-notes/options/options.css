@@ -1,0 +1,31 @@
+html {
+    font-family: Segoe UI, Arial;
+}
+
+* {
+    font-size: 14px;
+}
+
+body {
+    padding: 10px;
+    margin: 0;
+}
+
+.image {
+    width: 16px;
+    height: 16px;
+    margin-right: 2px;
+}
+
+button {
+    padding: 5px 10px;
+}
+
+#backup-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+#backup-wrapper > :not(:last-child) {
+    margin-bottom: 10px;
+}

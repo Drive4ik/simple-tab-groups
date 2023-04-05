@@ -4,7 +4,7 @@
         "description": "Extension description"
     },
     "needInstallSTGExtension": {
-        "message": "Necesitas instalar la extensión Simple Tab Groups\n\nHacé clic acá para abrir la página de inicio de Simple Tab Groups",
+        "message": "Necesitas instalar la extensión Simple Tab Groups\nHacé clic acá para abrir la página de inicio de Simple Tab Groups",
         "description": "Need install Simple Tab Groups extention\nClick here to open Simple Tab Groups home page"
     },
     "openPopupTitle": {

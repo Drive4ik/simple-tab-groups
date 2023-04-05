@@ -3,28 +3,28 @@
 <head>
     <title></title>
     <meta charset="utf-8" />
-    <link rel="stylesheet" type="text/css" href="/easymde/easymde.min.css">
-    <link rel="stylesheet" type="text/css" href="popup.css">
     <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+    <link rel="stylesheet" type="text/css" href="/easymde/easymde.min.css">
+    <link rel="stylesheet" type="text/css" href="/fontawesome/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="popup.css">
 </head>
 <body>
 
 <div id="root">
-    <a id="needInstallSTGExtension" href="#" target="_blank" style="display: none;"></a>
-    <span id="windowNotHaveGroup" style="display: none;"></span>
+    <a id="needInstallSTGExtension" href="#" target="_blank" class="hidden" data-i18n-id="needInstallSTGExtension"></a>
+    <span id="windowNotHaveGroup" class="hidden" data-i18n-id="windowNotHaveGroup"></span>
 
-    <div class="group" style="display: none;">
+    <div id="group-wrapper">
         <div class="icon">
             <img id="groupIcon" src="">
         </div>
         <div id="groupTitle" class="title"></div>
     </div>
-    <div class="notes" style="display: none;">
+    <div id="notes-wrapper">
         <textarea id="group-notes"></textarea>
     </div>
 </div>
 
-<script type="text/javascript" src="/easymde/easymde.min.js"></script>
-<script type="text/javascript" src="popup.js"></script>
+<script type="module" src="popup.js"></script>
 </body>
 </html>

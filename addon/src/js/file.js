@@ -196,7 +196,7 @@ export async function waitDownload(id, maxWaitSec = 10) {
             break;
         }
 
-        await new Promise(res => setTimeout(res, 200));
+        await new Promise(resolve => setTimeout(resolve, 200));
     }
 
     return downloadObj || {};

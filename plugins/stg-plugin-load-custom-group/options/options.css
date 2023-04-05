@@ -22,16 +22,16 @@ body {
     }
 }
 
-#notification-install-STG {
+#needInstallSTGExtension {
     display: none;
     font-size: 18px;
     margin-bottom: 20px;
 }
 
-#notification-install-STG.showing {
+#needInstallSTGExtension.showing {
     display: block;
 }
 
-#notification-install-STG.showing ~ * {
+#needInstallSTGExtension.showing ~ * {
     display: none;
 }

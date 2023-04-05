@@ -1,206 +1,212 @@
-(function() {
-    'use strict';
+import '/translate-page.js';
+import '/easymde/easymde.min.js';
+import * as Constants from '/constants.js';
+import * as Utils from '/utils.js';
+import * as MainUtils from '/main-utils.js';
 
-    const BG = browser.extension.getBackgroundPage(),
-        manifest = browser.runtime.getManifest(),
-        isSidebar = '#sidebar' === window.location.hash,
-        isTab = '#tab' === window.location.hash;
+const isSidebar = self.location.hash === '#sidebar',
+    isTab = self.location.hash === '#tab';
 
-    (isSidebar || isTab) && document.documentElement.classList.add('fluid');
+if (isSidebar || isTab) {
+    document.documentElement.classList.add('fluid');
+}
 
-    let $ = document.querySelector.bind(document),
-        $$ = document.querySelectorAll.bind(document),
-        rootNode = $('#root'),
-        groupTitleNode = $('#groupTitle'),
-        groupIconNode = $('#groupIcon'),
-        needInstallSTGExtensionNode = $('#needInstallSTGExtension'),
-        windowNotHaveGroupNode = $('#windowNotHaveGroup'),
-        groupNotesNodes = $$('.group, .notes'),
-        easyMDE = new EasyMDE({
-            element: $('#group-notes'),
-            indentWithTabs: false,
-            tabSize: 4,
-            status: false,
-            toolbar: ['bold', 'italic', 'strikethrough', 'heading', '|', 'horizontal-rule', 'code', 'quote', 'link', 'image', '|', 'unordered-list', 'ordered-list', 'table', '|', 'preview', 'side-by-side', '|', 'guide']
-                .filter(bar => isSidebar ? !['guide', 'side-by-side', 'table', 'image', 'horizontal-rule', 'quote'].includes(bar) : true),
-            styleSelectedText: false,
-            sideBySideFullscreen: false,
-            shortcuts: {
-                toggleFullScreen: null,
-            },
-            spellChecker: false,
-            placeholder: browser.i18n.getMessage('notesPlaceholder'),
-        }),
-        previewButtonNode = $('.editor-toolbar button.preview'),
-        sideBySideButtonNode = $('.editor-toolbar button.side-by-side'),
-        currentGroupId = null,
-        currentWindow = null,
-        saveTimer = 0;
+if (!isSidebar && !isTab) {
+    // fix bug a lot of window resize event, which makes it impossible to select text on preview side-by-side. Replicate only on popup ¯\_(ツ)_/¯
+    window.addEventListener('resize', e => e.stopImmediatePropagation(), true);
+}
 
-    // fix bug with empty statusbar
-    easyMDE.gui.statusbar = document.createElement('div');
+const $ = document.querySelector.bind(document),
+    groupTitleNode = $('#groupTitle'),
+    groupIconNode = $('#groupIcon'),
+    needInstallSTGExtensionNode = $('#needInstallSTGExtension'),
+    windowNotHaveGroupNode = $('#windowNotHaveGroup'),
+    easyMDE = new EasyMDE({
+        element: $('#group-notes'),
+        indentWithTabs: false,
+        autoDownloadFontAwesome: false,
+        status: false,
+        toolbar: ['bold', 'italic', 'strikethrough', 'heading', '|', 'horizontal-rule', 'code', 'quote', 'link', 'image', '|', 'unordered-list', 'ordered-list', 'table', '|', 'preview', 'side-by-side', '|', 'guide'],
+        hideIcons: isSidebar ? ['guide', 'side-by-side', 'table', 'image', 'horizontal-rule', 'quote'] : [],
+        styleSelectedText: false,
+        sideBySideFullscreen: false,
+        shortcuts: {
+            toggleFullScreen: null,
+        },
+        spellChecker: false,
+        placeholder: browser.i18n.getMessage('notesPlaceholder'),
+    }),
+    previewButtonNode = $('.editor-toolbar button.preview'),
+    sideBySideButtonNode = isSidebar ? null : $('.editor-toolbar button.side-by-side');
 
-    function lazySaveCurrentGroupNotes() {
-        clearTimeout(saveTimer);
-        saveTimer = setTimeout(saveCurrentGroupNotes, 500);
-    }
+let currentGroupId = null,
+    currentWindow = null,
+    saveTimer = 0;
 
-    previewButtonNode.addEventListener('click', e => e.isTrusted && setTimeout(saveCurrentGroupNotes, 50));
+if (!isSidebar) {
     sideBySideButtonNode.addEventListener('click', e => e.isTrusted && setTimeout(saveCurrentGroupNotes, 50));
+}
+previewButtonNode.addEventListener('click', e => e.isTrusted && setTimeout(saveCurrentGroupNotes, 50));
 
-    needInstallSTGExtensionNode.href = BG.STG_HOME_PAGE;
-    needInstallSTGExtensionNode.innerText = browser.i18n.getMessage('needInstallSTGExtension');
-    windowNotHaveGroupNode.innerText = browser.i18n.getMessage('windowNotHaveGroup');
+needInstallSTGExtensionNode.href = Constants.STG_HOME_PAGE;
 
-    init().catch(function(e) {
-        console.warn(e);
-        setGroup('needInstallSTGExtension');
-    });
+if (isTab) {
+    const currentTab = await browser.tabs.getCurrent().catch(() => {});
+    if (currentTab) {
+        browser.tabs.onAttached.addListener(tabId => tabId === currentTab.id && init());
+    }
+}
 
-    async function init() {
-        let group = await loadCurrentGroup();
+init();
+
+async function init() {
+    try {
+        const group = await loadCurrentGroup();
 
         if (group) {
             setGroup(group);
 
             loadCurrentGroupNotes().then(setGroupNotes);
         } else {
-            setGroup('windowNotHaveGroup');
+            setGroup(null, 'windowNotHaveGroup');
         }
+    } catch (e) {
+        console.error(e);
+        setGroup(null, 'needInstallSTGExtension');
+    }
+}
+
+function setGroup(group = null, idErrorMessage = null) {
+    let tabTitle;
+
+    if (group) {
+        tabTitle = groupTitleNode.innerText = browser.i18n.getMessage('groupAndWindowTitle', group.title);
+        groupIconNode.src = group.iconUrl;
+        currentGroupId = group.id;
+    } else {
+        tabTitle = browser.i18n.getMessage('extensionName') + ' - ' + $('#' + idErrorMessage).innerText;
+        currentGroupId = null;
     }
 
-    function setGroup(group) {
-        let title = '';
-
-        if (group && group.id) {
-            groupTitleNode.innerText = title = browser.i18n.getMessage('groupAndWindowTitle', group.title);
-            groupIconNode.src = group.iconUrl;
-            currentGroupId = group.id;
-        } else {
-            title = browser.i18n.getMessage('extensionName') + ' - ' + $('#' + group).innerText;
-            currentGroupId = null;
-        }
-
-        groupNotesNodes.forEach(function(node) {
-            node.style.display = ['needInstallSTGExtension', 'windowNotHaveGroup'].includes(group) ? 'none' : '';
-        });
-        needInstallSTGExtensionNode.style.display = group === 'needInstallSTGExtension' ? '' : 'none';
-        windowNotHaveGroupNode.style.display = group === 'windowNotHaveGroup' ? '' : 'none';
-
-        document.title = title;
+    if (isTab) {
+        document.title = tabTitle;
     }
 
-    function setGroupNotes({notes, preview, sideBySide = false}) {
-        easyMDE.codemirror.off('change', lazySaveCurrentGroupNotes);
+    needInstallSTGExtensionNode.classList.toggle('hidden', idErrorMessage !== 'needInstallSTGExtension');
+    windowNotHaveGroupNode.classList.toggle('hidden', idErrorMessage !== 'windowNotHaveGroup');
+}
 
-        easyMDE.value(notes);
+function lazySaveCurrentGroupNotes() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveCurrentGroupNotes, 500);
+}
 
-        if (
-            (sideBySide && !easyMDE.isSideBySideActive()) ||
-            (!sideBySide && easyMDE.isSideBySideActive())
-        ) {
-            easyMDE.toggleSideBySide();
-        } else if (
-            (preview && !easyMDE.isPreviewActive()) ||
-            (!preview && easyMDE.isPreviewActive())
-        ) {
-            easyMDE.togglePreview();
-        }
+function setGroupNotes({notes, preview, sideBySide = false}) {
+    easyMDE.codemirror.off('change', lazySaveCurrentGroupNotes);
 
+    easyMDE.value(notes);
+
+    if (
+        (sideBySide && !easyMDE.isSideBySideActive()) ||
+        (!sideBySide && easyMDE.isSideBySideActive())
+    ) {
+        easyMDE.toggleSideBySide();
+    } else if (
+        (preview && !easyMDE.isPreviewActive()) ||
+        (!preview && easyMDE.isPreviewActive())
+    ) {
+        easyMDE.togglePreview();
+    }
+
+    if (!isSidebar) {
         sideBySideButtonNode.classList.toggle('active', sideBySide);
-        previewButtonNode.classList.toggle('active', preview);
-
-        easyMDE.codemirror.on('change', lazySaveCurrentGroupNotes);
     }
+    previewButtonNode.classList.toggle('active', preview);
 
-    async function saveCurrentGroupNotes() {
-        if (currentGroupId) {
-            let notes = easyMDE.value();
+    easyMDE.codemirror.on('change', lazySaveCurrentGroupNotes);
+}
 
-            await browser.storage.local.set({
-                [currentGroupId]: {
-                    notes,
-                    preview: easyMDE.isPreviewActive(),
-                    sideBySide: easyMDE.isSideBySideActive(),
-                },
-            });
+async function saveCurrentGroupNotes() {
+    if (currentGroupId) {
+        const groupKey = MainUtils.getGroupKey(currentGroupId);
+        const notes = easyMDE.value();
 
-            BG.setBadge(notes.trim(), currentWindow.id);
-
-            browser.runtime.sendMessage({
-                    notesUpdatedForGroupId: currentGroupId,
-                })
-                .catch(function() {});
-        }
-    }
-
-    async function loadCurrentGroupNotes() {
-        let notes = await browser.storage.local.get({
-            [currentGroupId]: {
-                notes: '',
-                preview: false,
-                sideBySide: false,
+        await browser.storage.local.set({
+            [groupKey]: {
+                notes,
+                preview: easyMDE.isPreviewActive(),
+                sideBySide: easyMDE.isSideBySideActive(),
             },
         });
 
-        return notes[currentGroupId];
+        MainUtils.setBadge(notes.trim(), currentWindow.id);
+
+        Utils.sendMessage('notes-updated', {currentGroupId}).catch(() => {});
     }
+}
 
-    async function loadCurrentGroup() {
-        let {groupsList} = await BG.sendExternalMessage({
-            action: 'get-groups-list',
-        });
-
-        currentWindow = await browser.windows.getCurrent();
-
-        return groupsList.find(group => group.windowId === currentWindow.id);
-    }
-
-    browser.runtime.onMessage.addListener(function(message, sender) {
-        if (sender.id !== manifest.applications.gecko.id) {
-            return;
-        }
-
-        if (message && message.notesUpdatedForGroupId === currentGroupId) {
-            loadCurrentGroupNotes().then(setGroupNotes);
-        }
+async function loadCurrentGroupNotes() {
+    const groupKey = MainUtils.getGroupKey(currentGroupId);
+    const notes = await browser.storage.local.get({
+        [groupKey]: {
+            notes: '',
+            preview: false,
+            sideBySide: false,
+        },
     });
 
-    browser.runtime.onMessageExternal.addListener(async function(request, sender) {
-        if (sender.id !== BG.STG_ID) {
-            return;
-        }
+    return notes[groupKey];
+}
 
-        switch (request.action) {
-            case 'i-am-back':
+async function loadCurrentGroup() {
+    const {groupsList} = await Utils.sendExternalMessage('get-groups-list');
+
+    currentWindow = await browser.windows.getCurrent();
+
+    return groupsList.find(group => group.windowId === currentWindow.id);
+}
+
+browser.runtime.onMessage.addListener((message, sender) => {
+    if (sender.id !== browser.runtime.id) {
+        return;
+    }
+
+    switch (message.action) {
+        case 'notes-updated':
+            if (message.currentGroupId === currentGroupId) {
+                loadCurrentGroupNotes().then(setGroupNotes);
+            }
+            break;
+    }
+
+});
+
+browser.runtime.onMessageExternal.addListener(async (request, sender) => {
+    if (sender.id !== Constants.STG_ID) {
+        return;
+    }
+
+    switch (request.action) {
+        case 'i-am-back':
+            init();
+            break;
+        case 'group-loaded':
+        case 'group-unloaded':
+            currentWindow = await browser.windows.getCurrent();
+
+            if (currentWindow.id === request.windowId) {
                 init();
-                break;
-            case 'group-loaded':
-            case 'group-unloaded':
-                currentWindow = await browser.windows.getCurrent();
-
-                if (currentWindow.id === request.windowId) {
-                    init();
-                }
-                break;
-            case 'group-updated':
-                if (currentGroupId === request.group.id) {
-                    setGroup(request.group);
-                }
-                break;
-            case 'group-removed':
-                if (currentGroupId === request.groupId) {
-                    init();
-                }
-                break;
-        }
-    });
-
-    // if isTab
-    browser.tabs.getCurrent()
-        .then(function(currentTab) {
-            currentTab && browser.tabs.onAttached.addListener(tabId => tabId === currentTab.id && init());
-        })
-        .catch(e => console.error(e));
-
-})()
+            }
+            break;
+        case 'group-updated':
+            if (currentGroupId === request.group.id) {
+                setGroup(request.group);
+            }
+            break;
+        case 'group-removed':
+            if (currentGroupId === request.groupId) {
+                init();
+            }
+            break;
+    }
+});

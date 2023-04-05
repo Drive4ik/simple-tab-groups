@@ -35,4 +35,9 @@ async function updateActionTitle() {
     });
 }
 
-updateActionTitle();
+async function setup() {
+    updateActionTitle();
+}
+
+browser.runtime.onStartup.addListener(setup);
+browser.runtime.onInstalled.addListener(setup);

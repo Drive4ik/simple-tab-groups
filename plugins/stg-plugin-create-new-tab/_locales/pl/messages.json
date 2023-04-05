@@ -5,7 +5,7 @@
     },
     "needInstallSTGExtension": {
         "message": "Zainstaluj dodatek Simple Tab Groups\nNaciśnij tu aby przejść do strony domowej Simple Tab Groups",
-        "description": "Need install Simple Tab Groups extention or change container in addon settings\n\nClick here to open Simple Tab Groups home page"
+        "description": "Need install Simple Tab Groups extention or change container in addon settings\nClick here to open Simple Tab Groups home page"
     },
     "newTabTitle": {
         "message": "Otwórz nową zakładkę",

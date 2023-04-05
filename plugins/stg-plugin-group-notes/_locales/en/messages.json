@@ -41,6 +41,10 @@
             }
         }
     },
+    "openOptions": {
+        "message": "Options",
+        "description": "Options"
+    },
     "importBackup": {
         "message": "Load notes backup",
         "description": "Load notes backup"

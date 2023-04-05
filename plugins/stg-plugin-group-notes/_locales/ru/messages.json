@@ -37,6 +37,10 @@
             }
         }
     },
+    "openOptions": {
+        "message": "Настройки",
+        "description": "Options"
+    },
     "importBackup": {
         "message": "Загрузить резервную копию заметок",
         "description": "Load notes backup"

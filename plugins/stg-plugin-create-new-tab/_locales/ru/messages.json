@@ -4,8 +4,8 @@
         "description": "Extension description"
     },
     "needInstallSTGExtension": {
-        "message": "Необходимо установить расширение Simple Tab Groups или измените контейнер в настройках аддона\n\nНажмите здесь чтобы открыть домашнюю страницу Simple Tab Groups",
-        "description": "Need install Simple Tab Groups extention or change container in addon settings\n\nClick here to open Simple Tab Groups home page"
+        "message": "Необходимо установить расширение Simple Tab Groups или измените контейнер в настройках аддона\nНажмите здесь чтобы открыть домашнюю страницу Simple Tab Groups",
+        "description": "Need install Simple Tab Groups extention or change container in addon settings\nClick here to open Simple Tab Groups home page"
     },
     "newTabTitle": {
         "message": "Открыть новую вкладку",
