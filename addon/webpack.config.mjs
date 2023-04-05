@@ -40,7 +40,7 @@ export default {
         chunkFormat: 'module',
     },
     externals: {
-        vue: '/js/vue.runtime.esm.min.js',
+        vue: '/js/vue.runtime.esm.js',
         background: '/js/background.js',
         'wait-background': '/js/wait-background.js',
         constants: '/js/constants.js',
@@ -116,7 +116,8 @@ export default {
                 'stg-background.js',
                 'stg-background.html',
 
-                'js/vue.runtime.esm.min.js',
+                'js/layer-to-load-vue.js',
+                'js/vue.runtime.esm.js',
                 'js/background.js',
                 'js/wait-background.js',
                 'js/logger.js',
