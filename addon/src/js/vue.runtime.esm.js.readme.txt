@@ -1,0 +1,9 @@
+The Vue framework does not have an official CDN. So I took the file "vue.runtime.esm.js" from the CDN which is listed on their official website:
+https://v2.vuejs.org/v2/guide/installation.html#CDN
+
+The file "vue.runtime.esm.js" has version 2.7.14, and downloaded from:
+https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.runtime.esm.js
+
+This is the stable Production version.
+
+Best regards.
