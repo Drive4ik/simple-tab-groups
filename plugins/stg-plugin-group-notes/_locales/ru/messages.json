@@ -50,7 +50,7 @@
         "description": "Save notes backup"
     },
     "tabFaviconAsGroup": {
-        "message": "Установите значок группы в качестве значка вкладки заметок",
+        "message": "Установить значок группы как значок вкладки заметок",
         "description": "Set the group icon as the notes tab icon"
     },
     "editorLineNumbers": {
