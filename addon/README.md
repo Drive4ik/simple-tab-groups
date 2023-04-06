@@ -1,4 +1,4 @@
-## Instructions for Mozilla reviewers
+### Instructions for Mozilla reviewers
 
 I have the source code in the vue and js files. With the command `npm run build` you create a build on pure js which is located in the dist folder.
 The `npm run build-zip` command will create 2 zip archives in the `dist-zip` folder.
@@ -24,9 +24,20 @@ $ npm run build
 ```
 This code will be located in the `dist` folder.
 
-
 Create ZIP archives:
 ```bash
 $ npm install
 $ npm run build-zip
 ```
+
+### Third-party libraries
+This addon uses the third-party javascript library - Vue.
+The Vue framework does not have an official CDN. So I took the file "vue.runtime.esm.js" from the CDN which is listed on their official website:
+https://v2.vuejs.org/v2/guide/installation.html#CDN
+
+The file `src/js/vue.runtime.esm.js` has version `2.7.14`, and downloaded from:
+https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.runtime.esm.js
+
+This is the stable production version.
+
+Best regards.
