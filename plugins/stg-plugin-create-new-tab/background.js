@@ -119,7 +119,7 @@ async function getIcon(container) {
     let svg = await fetch(`/icons/${icon}.svg`).then(req => req.text());
 
     if (cookieStoreId !== TEMPORARY_CONTAINER) {
-        svg = svg.replaceAll('context-fill', colorCode);
+        svg = svg.replaceAll('fill="context-fill', `fill="${colorCode}`);
     }
 
     return Utils.convertSvgToUrl(svg);
