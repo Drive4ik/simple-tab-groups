@@ -48,5 +48,21 @@
     "exportBackup": {
         "message": "Сохранить резервную копию заметок",
         "description": "Save notes backup"
+    },
+    "tabFaviconAsGroup": {
+        "message": "Установите значок группы в качестве значка вкладки заметок",
+        "description": "Set the group icon as the notes tab icon"
+    },
+    "editorLineNumbers": {
+        "message": "Номера строк",
+        "description": "Show line numbers"
+    },
+    "editorLineWrapping": {
+        "message": "Перенос строк",
+        "description": "Line wrapping"
+    },
+    "editorUseRTLDirection": {
+        "message": "Использовать направление RTL",
+        "description": "Use RTL direction"
     }
 }

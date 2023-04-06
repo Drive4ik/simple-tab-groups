@@ -1,4 +1,11 @@
 
+export const defaultOptions = Object.freeze({
+    tabFaviconAsGroup: false,
+    editorLineNumbers: false,
+    editorLineWrapping: true,
+    editorUseRTLDirection: false,
+});
+
 const BADGE_SYMBOL = '⭐️';
 
 export async function setBadge(show, windowId) {
@@ -22,4 +29,21 @@ export function migrateStrorageToV2(oldStorage) {
     }
 
     return newStorage;
+}
+
+export async function openInTab() {
+    const [tab] = await browser.tabs.query({
+        url: browser.runtime.getURL('popup/popup.html'),
+        windowId: browser.windows.WINDOW_ID_CURRENT,
+    });
+
+    if (tab) {
+        browser.tabs.update(tab.id, {active: true});
+    } else {
+        browser.tabs.create({
+            active: true,
+            pinned: true,
+            url: browser.runtime.getURL('popup/popup.html#tab'),
+        }).catch(() => {});
+    }
 }

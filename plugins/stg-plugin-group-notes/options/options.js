@@ -2,6 +2,35 @@ import '/translate-page.js';
 import * as Utils from '/utils.js';
 import * as MainUtils from '/main-utils.js';
 
+async function loadOptions() {
+    const options = await browser.storage.local.get(MainUtils.defaultOptions);
+
+    for(const [optionId, optionValue] of Object.entries(options)) {
+        if (typeof optionValue === 'boolean') {
+            document.getElementById(optionId).checked = optionValue;
+        }
+    }
+}
+
+function setOptionInputEvents() {
+    for(const [optionId, optionValue] of Object.entries(MainUtils.defaultOptions)) {
+        if (typeof optionValue === 'boolean') {
+            document.getElementById(optionId).addEventListener('change', e => saveOption(e.target.id, e.target.checked));
+        }
+    }
+}
+
+async function saveOption(optionId, value) {
+    await browser.storage.local.set({
+        [optionId]: value,
+    });
+
+    Utils.sendMessage('options-updated').catch(() => {});
+}
+
+loadOptions().then(setOptionInputEvents);
+
+
 const fileInput = document.createElement('input');
 fileInput.type = 'file';
 fileInput.accept = '.json';

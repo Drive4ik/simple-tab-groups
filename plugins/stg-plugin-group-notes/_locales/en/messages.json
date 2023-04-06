@@ -52,5 +52,21 @@
     "exportBackup": {
         "message": "Save notes backup",
         "description": "Save notes backup"
+    },
+    "tabFaviconAsGroup": {
+        "message": "Set the group icon as the notes tab icon",
+        "description": "Set the group icon as the notes tab icon"
+    },
+    "editorLineNumbers": {
+        "message": "Show line numbers",
+        "description": "Show line numbers"
+    },
+    "editorLineWrapping": {
+        "message": "Line wrapping",
+        "description": "Line wrapping"
+    },
+    "editorUseRTLDirection": {
+        "message": "Use RTL direction",
+        "description": "Use RTL direction"
     }
 }

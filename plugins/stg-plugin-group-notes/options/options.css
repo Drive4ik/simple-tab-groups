@@ -21,11 +21,6 @@ button {
     padding: 5px 10px;
 }
 
-#backup-wrapper {
-    display: flex;
-    flex-direction: column;
-}
-
-#backup-wrapper > :not(:last-child) {
+.field:not(:last-child) {
     margin-bottom: 10px;
 }

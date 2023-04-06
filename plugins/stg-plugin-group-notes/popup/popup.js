@@ -16,15 +16,23 @@ if (!isSidebar && !isTab) {
     window.addEventListener('resize', e => e.stopImmediatePropagation(), true);
 }
 
+const options = await browser.storage.local.get(MainUtils.defaultOptions);
+
 const $ = document.querySelector.bind(document),
     groupTitleNode = $('#groupTitle'),
     groupIconNode = $('#groupIcon'),
+    tabFavicon = $('head link[rel~="icon"]'),
+    DEFAULT_FAVICON_HREF = tabFavicon.href,
     needInstallSTGExtensionNode = $('#needInstallSTGExtension'),
     windowNotHaveGroupNode = $('#windowNotHaveGroup'),
     easyMDE = new EasyMDE({
         element: $('#group-notes'),
         indentWithTabs: false,
         autoDownloadFontAwesome: false,
+        lineNumbers: options.editorLineNumbers,
+        lineWrapping: options.editorLineWrapping,
+        direction: options.editorUseRTLDirection ? 'rtl' : 'ltr',
+        autofocus: true,
         status: false,
         toolbar: ['bold', 'italic', 'strikethrough', 'heading', '|', 'horizontal-rule', 'code', 'quote', 'link', 'image', '|', 'unordered-list', 'ordered-list', 'table', '|', 'preview', 'side-by-side', '|', 'guide'],
         hideIcons: isSidebar ? ['guide', 'side-by-side', 'table', 'image', 'horizontal-rule', 'quote'] : [],
@@ -49,6 +57,12 @@ if (!isSidebar) {
 previewButtonNode.addEventListener('click', e => e.isTrusted && setTimeout(saveCurrentGroupNotes, 50));
 
 needInstallSTGExtensionNode.href = Constants.STG_HOME_PAGE;
+if (isTab) {
+    $('#openInTab').remove();
+} else {
+    $('#openInTab').addEventListener('click', MainUtils.openInTab);
+}
+$('#openOptions').addEventListener('click', () => browser.runtime.openOptionsPage());
 
 if (isTab) {
     const currentTab = await browser.tabs.getCurrent().catch(() => {});
@@ -61,6 +75,8 @@ init();
 
 async function init() {
     try {
+        currentWindow = await browser.windows.getCurrent();
+
         const group = await loadCurrentGroup();
 
         if (group) {
@@ -82,9 +98,15 @@ function setGroup(group = null, idErrorMessage = null) {
     if (group) {
         tabTitle = groupTitleNode.innerText = browser.i18n.getMessage('groupAndWindowTitle', group.title);
         groupIconNode.src = group.iconUrl;
+        if (isTab && options.tabFaviconAsGroup) {
+            tabFavicon.href = group.iconUrl;
+        }
         currentGroupId = group.id;
     } else {
         tabTitle = browser.i18n.getMessage('extensionName') + ' - ' + $('#' + idErrorMessage).innerText;
+        if (isTab && options.tabFaviconAsGroup) {
+            tabFavicon.href = DEFAULT_FAVICON_HREF;
+        }
         currentGroupId = null;
     }
 
@@ -161,8 +183,6 @@ async function loadCurrentGroupNotes() {
 async function loadCurrentGroup() {
     const {groupsList} = await Utils.sendExternalMessage('get-groups-list');
 
-    currentWindow = await browser.windows.getCurrent();
-
     return groupsList.find(group => group.windowId === currentWindow.id);
 }
 
@@ -177,8 +197,10 @@ browser.runtime.onMessage.addListener((message, sender) => {
                 loadCurrentGroupNotes().then(setGroupNotes);
             }
             break;
+        case 'options-updated':
+            self.location.reload();
+            break;
     }
-
 });
 
 browser.runtime.onMessageExternal.addListener(async (request, sender) => {
@@ -192,8 +214,6 @@ browser.runtime.onMessageExternal.addListener(async (request, sender) => {
             break;
         case 'group-loaded':
         case 'group-unloaded':
-            currentWindow = await browser.windows.getCurrent();
-
             if (currentWindow.id === request.windowId) {
                 init();
             }

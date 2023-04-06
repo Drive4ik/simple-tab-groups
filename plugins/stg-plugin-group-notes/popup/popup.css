@@ -49,19 +49,23 @@ html.fluid .EasyMDEContainer .fullscreen ~ .editor-preview {
     margin-left: 5px;
 }
 
-#group-wrapper .icon {
-    line-height: 0;
-}
-
 #group-wrapper .title {
     overflow-wrap: anywhere;
+    flex-grow: 1;
 }
 
-#groupIcon {
+.icon {
+    line-height: 0;
+}
+.icon > img {
     max-height: 16px;
     max-width: 16px;
     width: 16px;
     height: 16px;
+}
+
+.clickable {
+    cursor: pointer;
 }
 
 .hidden {
@@ -97,6 +101,7 @@ html.fluid .EasyMDEContainer .fullscreen ~ .editor-preview {
 }
 
 .CodeMirror-vscrollbar,
+.CodeMirror-hscrollbar,
 .editor-preview {
     scrollbar-width: thin;
 }

@@ -40,11 +40,7 @@ browser.runtime.onMessageExternal.addListener(async (request, sender) => {
 
 browser.menus.onClicked.addListener(async info => {
     if (info.menuItemId === 'openInTab') {
-        browser.tabs.create({
-            active: true,
-            pinned: true,
-            url: browser.runtime.getURL('popup/popup.html#tab'),
-        });
+        MainUtils.openInTab();
     } else if (info.menuItemId === 'openOptions') {
         browser.runtime.openOptionsPage();
     } else {
