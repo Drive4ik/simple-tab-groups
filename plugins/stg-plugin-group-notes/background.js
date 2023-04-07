@@ -52,7 +52,7 @@ async function init() {
     const {groupsList} = await Utils.sendExternalMessage('get-groups-list'),
         notes = await browser.storage.local.get();
 
-    groupsList.forEach(({id, windowId}) => MainUtils.setBadge(notes[MainUtils.getGroupKey(id)]?.notes.trim(), windowId));
+    groupsList?.forEach(({id, windowId}) => MainUtils.setBadge(notes[MainUtils.getGroupKey(id)]?.notes.trim(), windowId));
 }
 
 async function setup() {

@@ -183,7 +183,7 @@ async function loadCurrentGroupNotes() {
 async function loadCurrentGroup() {
     const {groupsList} = await Utils.sendExternalMessage('get-groups-list');
 
-    return groupsList.find(group => group.windowId === currentWindow.id);
+    return groupsList?.find(group => group.windowId === currentWindow.id);
 }
 
 browser.runtime.onMessage.addListener((message, sender) => {
