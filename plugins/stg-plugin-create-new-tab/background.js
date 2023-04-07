@@ -2,8 +2,7 @@
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
 
-const SUPPORTED_STG_ACTIONS = new Set(['i-am-back', 'group-loaded', 'group-unloaded', 'group-updated', 'group-removed']),
-    TEMPORARY_CONTAINER = 'temporary-container';
+const TEMPORARY_CONTAINER = 'temporary-container';
 
 browser.runtime.onMessageExternal.addListener((request, sender) => {
     if (sender.id !== Constants.STG_ID) {
@@ -11,38 +10,54 @@ browser.runtime.onMessageExternal.addListener((request, sender) => {
         return;
     }
 
-    if (SUPPORTED_STG_ACTIONS.has(request.action)) {
-        reloadWindowActions();
-    } else {
-        throw Error(`unknown action: ${request.action}`);
+    switch(request.action) {
+        case 'i-am-back':
+            reloadWindowActions();
+            break;
+        case 'group-updated':
+            if (request.group.windowId) {
+                setWindowAction(request.group.windowId);
+            }
+            break;
+        case 'group-loaded':
+        case 'group-unloaded':
+        case 'group-removed':
+            setWindowAction(request.windowId);
+            break;
     }
 });
 
 browser.action.onClicked.addListener(async () => {
-    const currentGroupContainer = await getWindowGroupContainer(browser.windows.WINDOW_ID_CURRENT);
+    try {
+        const {ok, error, group} = await getWindowGroup(browser.windows.WINDOW_ID_CURRENT);
 
-    if (currentGroupContainer) {
-        if (TEMPORARY_CONTAINER === currentGroupContainer.cookieStoreId) {
-            try {
-                await Utils.sendExternalMessage('create-temp-tab', {
-                    active: true,
-                });
-            } catch (e) {
-                Utils.notify('needInstallSTGExtension', browser.i18n.getMessage('needInstallSTGExtension'), {
-                    timerSec: 10,
-                    onClick: {
-                        action: 'open-tab',
-                        url: Constants.STG_HOME_PAGE,
-                    },
-                });
+        if (ok) {
+            if (group.contextualIdentity) {
+                if (TEMPORARY_CONTAINER === group.contextualIdentity.cookieStoreId) {
+                    await Utils.sendExternalMessage('create-temp-tab', {
+                        active: true,
+                    });
+                } else {
+                    createNewTab({
+                        cookieStoreId: group.contextualIdentity.cookieStoreId,
+                    });
+                }
+            } else {
+                createNewTab();
             }
         } else {
-            createNewTab({
-                cookieStoreId: currentGroupContainer.cookieStoreId,
-            });
+            createNewTab();
+            Utils.notify('error', error);
         }
-    } else {
+    } catch (e) {
         createNewTab();
+        Utils.notify('needInstallSTGExtension', browser.i18n.getMessage('needInstallSTGExtension'), {
+            timerSec: 10,
+            onClick: {
+                action: 'open-tab',
+                url: Constants.STG_HOME_PAGE,
+            },
+        });
     }
 });
 
@@ -54,24 +69,19 @@ async function createNewTab(createParams = {}) {
 }
 
 async function getWindowGroup(windowId) {
-    const {ok, error, group} = await Utils.sendExternalMessage('get-current-group', {
-        windowId,
+    return Utils.sendExternalMessage('get-current-group', {windowId});
+}
+
+async function reloadWindowActions() {
+    const windows = await browser.windows.getAll({
+        windowTypes: [browser.windows.WindowType.NORMAL],
     });
 
-    if (ok) {
-        return group;
-    } else if (error) {
-        Utils.notify(windowId, error);
-    }
+    await Promise.all(windows.map(win => setWindowAction(win.id)));
 }
 
-async function getWindowGroupContainer(windowId) {
-    const currentGroup = await getWindowGroup(windowId);
-
-    return currentGroup?.contextualIdentity;
-}
-
-async function updateAction(windowId, group) {
+async function setWindowAction(windowId) {
+    const {group} = await getWindowGroup(windowId).catch(() => ({}));
     const groupContainer = group?.contextualIdentity;
     const [{shortcut}] = await browser.commands.getAll();
 
@@ -94,18 +104,6 @@ async function updateAction(windowId, group) {
         title: titleParts.join(' '),
         windowId,
     });
-}
-
-async function reloadWindowActions() {
-    const windows = await browser.windows.getAll({
-        windowTypes: [browser.windows.WindowType.NORMAL],
-    });
-
-    await Promise.all(windows.map(async win => {
-        const group = await getWindowGroup(win.id);
-
-        await updateAction(win.id, group);
-    }));
 }
 
 // https://dxr.mozilla.org/mozilla-central/source/browser/components/contextualidentity/content
