@@ -1216,5 +1216,9 @@
     "helpPageStgDebugAutoDebugMainTitle": {
         "message": "Сталася помилка в аддоні",
         "description": "An error occurred in the addon"
+    },
+    "windowNotHaveGroup": {
+        "message": "Це вікно немає завантаженої групи",
+        "description": "This window does not have a loaded group"
     }
 }

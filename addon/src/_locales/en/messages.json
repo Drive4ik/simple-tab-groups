@@ -1220,5 +1220,9 @@
     "helpPageStgDebugAutoDebugMainTitle": {
         "message": "An error occurred in the addon",
         "description": "An error occurred in the addon"
+    },
+    "windowNotHaveGroup": {
+        "message": "This window does not have a loaded group",
+        "description": "This window does not have a loaded group"
     }
 }

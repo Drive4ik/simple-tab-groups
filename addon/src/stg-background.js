@@ -2480,6 +2480,8 @@ async function onBackgroundMessage(message, sender) {
                     }
 
                     result.ok = true;
+                } else {
+                    result.error = browser.i18n.getMessage('windowNotHaveGroup');
                 }
 
                 break;
