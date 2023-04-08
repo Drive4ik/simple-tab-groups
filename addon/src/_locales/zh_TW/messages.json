@@ -57,12 +57,16 @@
         "message": "取消",
         "description": "Cancel"
     },
+    "close": {
+        "message": "關閉",
+        "description": "Close"
+    },
     "searchPlaceholder": {
         "message": "搜尋分頁...",
         "description": "Search placeholder"
     },
     "invalidRegExpRuleTitle": {
-        "message": "正規表述式 '$regexp$' 語法有誤，將忽略之。",
+        "message": "正規表示式 '$regexp$' 語法錯誤。",
         "description": "Invalid rule description",
         "placeholders": {
             "regexp": {
@@ -82,6 +86,10 @@
     "closePopupAfterChangeGroup": {
         "message": "切換分頁群組後關閉彈出框",
         "description": "Close popup after changing group"
+    },
+    "closePopupAfterSelectTab": {
+        "message": "點選分頁後關閉彈出框",
+        "description": "Close the popup window after selecting a tab"
     },
     "openManageGroupsInTab": {
         "message": "在新分頁開啟「管理分頁群組」",
@@ -108,7 +116,7 @@
         "description": "Create backup"
     },
     "includeTabThumbnailsIntoBackup": {
-        "message": "備份分頁縮圖 (會讓備份檔變大)",
+        "message": "備份分頁縮圖 (會讓備份檔稍大)",
         "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
@@ -254,15 +262,15 @@
         "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
-        "message": "捕捉分頁的正規表述式",
+        "message": "捕捉分頁的正規表示式",
         "description": "Regular expressions for catch tabs"
     },
     "regexpForTabsPlaceholder": {
-        "message": "一或多條正規表述式",
+        "message": "一或多條正規表示式",
         "description": "Regular expressions"
     },
     "regexpForTabsHelp": {
-        "message": "在這裡輸入正規表述式，網址與之相符的分頁會被自動移到此分頁群組。\n每行一條規則，可設定多條規則。\n例如：\ngithub\\.com/drive4ik/simple-tab-groups - 捕捉此套件版本庫的所有頁面\nbugzilla\\.mozilla\\.org - 捕捉 Firefox 錯誤回報的頁面\n(facebook|twitter|youtube)\\.com - 捕捉社群網站頁面",
+        "message": "在這裡輸入正規表示式，網址與之相符的分頁會被自動移到此分頁群組。\n每行一條規則，可設定多條規則。\n例如：\ngithub\\.com/drive4ik/simple-tab-groups - 捕捉此附加元件版本庫的所有頁面\nbugzilla\\.mozilla\\.org - 捕捉 Firefox 錯誤回報的頁面\n(facebook|twitter|youtube)\\.com - 捕捉社群網站頁面",
         "description": "Regular exceptions helper"
     },
     "hotkeysTitle": {
@@ -308,6 +316,14 @@
     "hotkeyActionTitleLoadPrevUnloadedGroup": {
         "message": "載入上一個已卸載分頁群組",
         "description": "Load previous unloaded group"
+    },
+    "hotkeyActionTitleLoadNextNonEmptyGroup": {
+        "message": "載入下一個非空的群組",
+        "description": "Load next non-empty group"
+    },
+    "hotkeyActionTitleLoadPrevNonEmptyGroup": {
+        "message": "載入上一個非空的群組",
+        "description": "Load previous non-empty group"
     },
     "hotkeyActionTitleLoadHistoryNextGroup": {
         "message": "從歷史資料載入下一個群組",
@@ -398,8 +414,12 @@
         "description": "Icon style"
     },
     "discardTabsAfterHide": {
-        "message": "隱藏後廢棄分頁 (這將能夠節省記憶體)",
+        "message": "隱藏後廢棄(休眠)分頁 (可減少記憶體浪費)",
         "description": "Discard tabs after hide (this will save the RAM)"
+    },
+    "discardAfterHideExcludeAudioTabs": {
+        "message": "不包括發出聲音的分頁",
+        "description": "Exclude tabs with sound"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "無法變更分頁群組，因為其中一個開啟的分頁正在分享麥克風或是攝影機。",
@@ -430,7 +450,7 @@
         "description": "Update thumbnail for this tab"
     },
     "notFoundWindowsAddonStoppedWorking": {
-        "message": "錯誤：找不到任何正常的非隱私/匿名/彈出式視窗。\n套件停止運作，請重新啟動瀏覽器。",
+        "message": "錯誤：找不到任何正常的非隱私/匿名/彈出式視窗。\n附加元件停止運作，請重新啟動瀏覽器。",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
     },
     "ffFailedAndLostDataMessage": {
@@ -446,23 +466,31 @@
         "description": "Open group in new window"
     },
     "muteTabsWhenGroupCloseAndRestoreWhenOpen": {
-        "message": "當分頁群組關閉的時候靜音分頁，還原分頁時取消分頁靜音",
+        "message": "當分頁群組關閉的時候，將全數分頁靜音，且在重開該分頁時解除靜音",
         "description": "Mute tabs when group close and restore when open"
     },
     "showTabAfterMovingItIntoThisGroup": {
         "message": "分頁自動移動到此分頁群組後，顯示此分頁",
         "description": "Show the tab after auto-moving it into this group"
     },
+    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
+        "message": "活動中分頁被移動才顯示",
+        "description": "Only if the active tab has been moved"
+    },
+    "showNotificationAfterMovingTabIntoThisGroup": {
+        "message": "當分頁被移到此群組時顯示通知",
+        "description": "Show a notification when tabs are moved to this group"
+    },
     "tabMoving": {
         "message": "正在移動分頁",
         "description": "Tab moving"
     },
     "includeTabFavIconsIntoBackup": {
-        "message": "在備份中儲存分頁網站圖示（會讓備份檔變得更大）",
+        "message": "在備份中儲存分頁網站圖示（會讓備份檔變得稍大）",
         "description": "Include tab fav-icons in backup (makes backup file size bigger)"
     },
     "groupRemovedByExtension": {
-        "message": "分頁群組\"$group$\" 被套件\"$extension$\"移除",
+        "message": "分頁群組\"$group$\" 被附加元件\"$extension$\"移除",
         "description": "Group \"$group$\" removed by extension: $extension$",
         "placeholders": {
             "group": {
@@ -476,11 +504,11 @@
         }
     },
     "clickHereToReloadAddon": {
-        "message": "出現錯誤，點選這裡重新載入 STG 套件",
+        "message": "出現錯誤，點選這裡重新載入 STG 附加元件",
         "description": "Something went wrong, click here to reload STG addon"
     },
     "extendedTabSearch": {
-        "message": "套件搜尋",
+        "message": "附加元件搜尋",
         "description": "Extended search"
     },
     "movingMultipleTabsText": {
@@ -535,6 +563,10 @@
         "message": "建立備份每：",
         "description": "Create backup every:"
     },
+    "autoBackupIntervalKeyMinutes": {
+        "message": "分鐘",
+        "description": "minute(s)"
+    },
     "autoBackupIntervalKeyHours": {
         "message": "小時",
         "description": "hour(s)"
@@ -552,7 +584,7 @@
         "description": "Enable dark theme"
     },
     "enableDarkThemeNotification": {
-        "message": "要完整支援深色主題，在 <code>about:config</code> 頁面變更 <code>svg.context-properties.content.enabled</code> 參數為 <code>true</code><br><a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">怎麼做？</a>",
+        "message": "要完整支援深色主題，在<br><code>about:config</code> 頁面變更<br><code>svg.context-properties.content.enabled</code> 參數為 <code>true</code><br><br><a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">怎麼做？</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {
@@ -560,7 +592,7 @@
         "description": "Restore photodiode's \"Panorama View\""
     },
     "importSettingsPanoramaViewAddonDescription": {
-        "message": "載入 “Panorama View”套件的備份檔。",
+        "message": "載入 “Panorama View” 附加元件的備份檔。",
         "description": "Load a backup file from \"Panorama View\" addon."
     },
     "importSettingsSyncTabGroupsAddonTitle": {
@@ -568,7 +600,7 @@
         "description": "Restore Morikko's \"Sync Tab Groups\""
     },
     "importSettingsSyncTabGroupsAddonDescription": {
-        "message": "載入 “Sync Tab Groups”套件的備份檔。",
+        "message": "載入 “Sync Tab Groups” 附加元件的備份檔。",
         "description": "Load a backup file from \"Sync Tab Groups\" addon."
     },
     "browseFileTitle": {
@@ -588,7 +620,7 @@
         "description": "Prepend group title to window title"
     },
     "allowAccessToBookmarks": {
-        "message": "允許套件存取書籤",
+        "message": "允許附加元件存取書籤",
         "description": "Allow access to bookmarks"
     },
     "openBookmarkInGroup": {
@@ -626,7 +658,7 @@
         "description": "No groups created"
     },
     "noAccessToBookmarks": {
-        "message": "無書籤存取權限。請在套件設定中啟用",
+        "message": "無書籤存取權限，請在附加元件管理中設定權限。",
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
     "exportGroupToMainBookmarkFolder": {
@@ -692,7 +724,7 @@
         "description": "Show other tabs"
     },
     "dontDiscardTabsAfterHideThisGroup": {
-        "message": "背景群組不捨棄分頁",
+        "message": "背景群組不捨棄(休眠)分頁",
         "description": "Don't discard tabs into this group after hide"
     },
     "showNotificationAfterGroupDelete": {
@@ -762,7 +794,7 @@
         }
     },
     "importAddonSettings": {
-        "message": "導入套件設定記錄檔",
+        "message": "導入附加元件設定記錄檔",
         "description": "Import addon settings"
     },
     "importGroups": {
@@ -782,11 +814,11 @@
         "description": "Clear"
     },
     "deleteAllAddonDataAndSettings": {
-        "message": "刪除所有套件資料與設定",
+        "message": "刪除所有 STG 附加元件資料與設定",
         "description": "Delete all addon data and settings"
     },
     "warningAllDataWillRemove": {
-        "message": "警告！確定刪除所有套件資料？",
+        "message": "警告！確定刪除所有 STG 附加元件資料？",
         "description": "Warning! Removing ALL addon data! Are you really sure?"
     },
     "ifDifferentContainerReOpen": {
@@ -794,7 +826,7 @@
         "description": "If the container is different from the selected one - change the container"
     },
     "deleteAllAddonDataAndSettingsBeforeRestoringBackup": {
-        "message": "回復備份之前先刪除所有套件資料與設定",
+        "message": "回復備份之前先刪除所有 STG 附加元件資料與設定",
         "description": "Delete all addon data and settings before restoring backup"
     },
     "helpPageWelcomeTitle": {
@@ -802,7 +834,7 @@
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "請啟用瀏覽器設定中的 \"回復瀏覽狀態\" 功能。<br>在群組與分頁切換之間需要打開此功能，<br>否則當打開瀏覽器之後，所有分頁將無法開啟並遺失，套件也會停止執行。",
+        "message": "請勾選瀏覽器設定中的「開啟先前的視窗與分頁 」。\n這是本附加元件順利運作的必要先決條件，否則下次開啟\n瀏覽器將喪失所有曾經開啟的分頁，本附加元件也無法運作。",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
     "leaveBookmarksOfClosedTabs": {
@@ -813,16 +845,20 @@
         "message": "啟用除錯模式",
         "description": "Enable DEBUG"
     },
+    "disableDebugTitle": {
+        "message": "關閉除錯模式",
+        "description": "Disable DEBUG"
+    },
     "loggingIsEnabledTitle": {
         "message": "啟用除錯訊息紀錄",
         "description": "logging is enabled"
     },
     "loggingIsAutoEnabledTitle": {
-        "message": "因插件發生錯誤，已自動啟用除錯訊息紀錄",
+        "message": "因附加元件發生錯誤，已自動啟用除錯訊息紀錄",
         "description": "logging was auto-enabled due to an error in addon"
     },
     "loggingDescription": {
-        "message": "請在必須紀錄臭蟲及傳送紀錄給我時才啟用這項功能。一旦啟用後會導致插件明顯變慢，因為所有動作及資訊都會被記錄下來。完成問題重現後就請關閉，插件會提示紀錄存檔。此功能可能因插件發生錯誤而自動被啟用。建議關閉此項功能並存檔。<br>請 Email 紀錄檔給我：<a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com</a><br> <span class=\"has-text-danger\">注意！記錄檔不會包含任何個資、密碼、書籤...等資訊！</span><br> 只會包含重現問題的必要資訊，也才能藉此除錯及修復。<br> 以上",
+        "message": "請在必須紀錄臭蟲及傳送紀錄給我時才啟用這項功能。一旦啟用後會導致附加元件明顯變慢，因為所有動作及資訊都會被記錄下來。重現問題後就請關閉，附加元件會提示紀錄存檔。此功能可能因附加元件發生錯誤而自動被啟用。建議關閉此項功能並存檔。<br>請 Email 紀錄檔給我：<a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com</a><br> <span class=\"has-text-danger\">注意！記錄檔不會包含任何個資、密碼、書籤...等資訊！</span><br> 只會包含重現問題的必要資訊，也才能藉此除錯及修復。<br> 以上",
         "description": "logging description"
     },
     "archiveGroup": {
@@ -854,7 +890,7 @@
         }
     },
     "updateAddonToLatestVersion": {
-        "message": "請先更新套件版本",
+        "message": "請先更新附加元件版本",
         "description": "Please, update addon to latest version"
     },
     "hotkeyActionTitleRenameGroup": {
@@ -906,7 +942,7 @@
         }
     },
     "helpPageOpenInContainerSubTitle": {
-        "message": "插件無法開啟 URL：",
+        "message": "附加元件無法開啟 URL：",
         "description": "addon can't open URL:"
     },
     "helpPageOpenInContainerDesc1": {
@@ -923,8 +959,12 @@
             }
         }
     },
+    "helpPageOpenInContainerDesc2": {
+        "message": "另一個附加元件已使用此：",
+        "description": "Another addon:"
+    },
     "helpPageOpenInContainerDesc3": {
-        "message": "嘗試於 <container-name>$containerName$</container-name> 容器中開啟這個 URL。將分頁移至其他群組，或禁止 <strong>$addonName$</strong> 插件執行此動作。",
+        "message": "嘗試於 <container-name>$containerName$</container-name> 容器中開啟這個 URL。將分頁移至其他群組，或禁止 <strong>$addonName$</strong> 附加元件執行此動作。",
         "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
         "placeholders": {
             "containerName": {
@@ -960,7 +1000,7 @@
         "description": "Unload the group"
     },
     "tabsInThisWindowWereHidden": {
-        "message": "本視窗中的分頁已隱藏。可於插件彈出視窗底部找到他們。",
+        "message": "本視窗中的分頁已隱藏。可於附加元件彈出視窗底部找到他們。",
         "description": "Tabs in this window were hidden. You can find them at the bottom of the popup window of the addon."
     },
     "searchOrGoToActive": {
@@ -980,7 +1020,7 @@
         "description": "Notice\nThis group was marked as the main"
     },
     "moveToMainIfNotInCatchTabRules": {
-        "message": "將此群組內與正規表述式不相符的分頁移至主要群組 \"$grouptitle$\"",
+        "message": "將此群組內與正規表示式不相符的分頁移至主要群組 \"$grouptitle$\"",
         "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
         "placeholders": {
             "grouptitle": {
@@ -1019,6 +1059,16 @@
             }
         }
     },
+    "helpPageOpenInContainerIgnoreAppForSession": {
+        "message": "忽略附加元件 \"<strong>$addonName$</strong>\" 直至瀏覽器關閉",
+        "description": "Ignore addon for session",
+        "placeholders": {
+            "addonName": {
+                "content": "$1",
+                "example": "Facebook Container"
+            }
+        }
+    },
     "hotkeysDescription2": {
         "message": "也可以在 <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Manage extension shortcuts in Firefox</a> 設定全域快速鍵。",
         "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
@@ -1028,7 +1078,7 @@
         "description": "Mute tab"
     },
     "unMuteTab": {
-        "message": "分頁取消靜音",
+        "message": "分頁解除靜音",
         "description": "Unmute tab"
     },
     "muteGroup": {
@@ -1036,7 +1086,7 @@
         "description": "Mute group"
     },
     "unMuteGroup": {
-        "message": "群組取消靜音",
+        "message": "群組解除靜音",
         "description": "Unmute group"
     },
     "fullPopupWidth": {
@@ -1052,7 +1102,7 @@
         "description": "Database error in Simple Tab Groups"
     },
     "helpPageDbErrorReinstallDescription": {
-        "message": "很不幸地，STG 套件嘗試從 Firefox 資料庫內讀取設定資料時發生錯誤。此時套件已停止，請照下列步驟繼續使用：",
+        "message": "很不幸地，STG 附加元件嘗試從 Firefox 資料庫內讀取設定資料時發生錯誤。此時附加元件已停止，請照下列步驟繼續使用：",
         "description": "Unfortunately, an error occurred while reading data from the STG addon from the Firefox database. At the moment, the addon is stopped. To resume the add-on, do the following:"
     },
     "helpPageDbErrorReinstallDescription2": {
@@ -1060,11 +1110,11 @@
         "description": "Restart Firefox Browser (for Linux and Mac OS with process termination)"
     },
     "helpPageDbErrorReinstallDescription3": {
-        "message": "若重複出現此視窗，請重新安裝套件：",
+        "message": "若重複出現此視窗，請重新安裝附加元件：",
         "description": "If you see this window again, try reinstalling the addon:"
     },
     "helpPageDbErrorReinstallDescription4": {
-        "message": "移除 STG 套件",
+        "message": "移除 STG 附加元件",
         "description": "Remove STG Addon"
     },
     "helpPageDbErrorReinstallDescription5": {
@@ -1072,11 +1122,11 @@
         "description": "Restart Firefox Browser"
     },
     "helpPageDbErrorReinstallDescription6": {
-        "message": "安裝 STG 套件",
+        "message": "安裝 STG 附加元件",
         "description": "Install STG Addon"
     },
     "helpPageDbErrorReinstallDescription7": {
-        "message": "還原存放於 Firefox 下載目錄 \"STG-backups\" 中的最新一份備份檔。可以從套件設定中還原備份檔",
+        "message": "還原存放於 Firefox 下載目錄 \"STG-backups\" 中的最新一份備份檔，可以從附加元件設定中還原備份檔。",
         "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".<br>You can restore backup in addon settings"
     },
     "helpPageDbErrorReinstallOpenFFDownloadsFolder": {
@@ -1086,5 +1136,85 @@
     "eraseAndImportAddonBackupButton": {
         "message": "清除並還原備份",
         "description": "Erase and restore backup"
+    },
+    "searchOnlyGroups": {
+        "message": "只限群組",
+        "description": "Only groups"
+    },
+    "autoBackupByDayIndexTitle": {
+        "message": "以天數為備份檔名每月循環覆蓋",
+        "description": "Backup number as day of month"
+    },
+    "autoBackupByDayIndexDescription": {
+        "message": "避免產生一大堆備份檔案難以管理，循環備份檔名會長得像這樣: \"auto-stg-backup-day-of-month-22@drive4ik.json\"。",
+        "description": "Backup by day description"
+    },
+    "clickHereForInfo": {
+        "message": "點這裡看更多資訊",
+        "description": "Click here for more info"
+    },
+    "enabled": {
+        "message": "啟用",
+        "description": "Enabled text"
+    },
+    "disabled": {
+        "message": "禁用",
+        "description": "Disabled text"
+    },
+    "helpPageExtensionsThatConflictWithStgTitle": {
+        "message": "有其他附加元件干擾 STG",
+        "description": "Extensions that conflict with STG"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc1": {
+        "message": "有類似性質的分頁管理(如下)附加元件干擾 STG:",
+        "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc2": {
+        "message": "為免遺失所有分頁與群組設定，強烈建議關閉或移除干擾 STG 的其他附加元件，可以到 \"about:addons\" 或按 <code>Ctrl+Shift+A</code> 設定。",
+        "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
+    },
+    "theme": {
+        "message": "主題",
+        "description": "Select theme"
+    },
+    "themeAuto": {
+        "message": "系統主題(自動)",
+        "description": "Auto theme"
+    },
+    "themeLight": {
+        "message": "淺色",
+        "description": "Light theme"
+    },
+    "themeDark": {
+        "message": "深色",
+        "description": "Dark theme"
+    },
+    "contextMenuEditor": {
+        "message": "子選單編輯器",
+        "description": "Context menu editor"
+    },
+    "tab": {
+        "message": "分頁",
+        "description": "Tab"
+    },
+    "group": {
+        "message": "群組",
+        "description": "Group"
+    },
+    "helpPageUnsupportedUrlTitle": {
+        "message": "不支援的網址",
+        "description": "Unsupported URL"
+    },
+    "copyURL": {
+        "message": "複製網址",
+        "description": "Copy URL"
+    },
+    "helpPageStgDebugTitle": {
+        "message": "STG 除錯頁面",
+        "description": "STG debug page"
+    },
+    "helpPageStgDebugAutoDebugMainTitle": {
+        "message": "附加元件發生錯誤",
+        "description": "An error occurred in the addon"
     }
 }
