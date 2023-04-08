@@ -25,7 +25,11 @@ export function migrateStrorageToV2(oldStorage) {
     const newStorage = {};
 
     for(const [groupId, notes] of Object.entries(oldStorage)) {
-        newStorage[getGroupKey(groupId)] = notes;
+        if (Number(groupId) == groupId) {
+            newStorage[getGroupKey(groupId)] = notes;
+        } else {
+            newStorage[groupId] = notes;
+        }
     }
 
     return newStorage;

@@ -8,6 +8,7 @@ All these commands and their execution are described in the `package.json` file.
 How the build is going and with what settings you can also see in the file `webpack.config.mjs`
 
 I use Windows 10 x64
+
 ```
 $ node -v
 v18.15.0
@@ -22,15 +23,18 @@ Build code:
 $ npm install
 $ npm run build
 ```
+
 This code will be located in the `dist` folder.
 
 Create ZIP archives:
+
 ```bash
 $ npm install
 $ npm run build-zip
 ```
 
 ### Third-party libraries
+
 This addon uses the third-party javascript library - Vue.
 The Vue framework does not have an official CDN. So I took the file "vue.runtime.esm.js" from the CDN which is listed on their official website:
 https://v2.vuejs.org/v2/guide/installation.html#CDN
