@@ -662,7 +662,7 @@
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
     "exportGroupToMainBookmarkFolder": {
-        "message": "匯出分頁群組到書籤資料夾“STG bookmarks”",
+        "message": "匯出分頁群組到書籤資料夾 \"STG bookmarks\"",
         "description": "Export groups to \"STG bookmarks\" bookmark folder"
     },
     "exportGroupToBookmarks": {
@@ -960,11 +960,11 @@
         }
     },
     "helpPageOpenInContainerDesc2": {
-        "message": "另一個附加元件已使用此：",
+        "message": "另一個附加元件：",
         "description": "Another addon:"
     },
     "helpPageOpenInContainerDesc3": {
-        "message": "嘗試於 <container-name>$containerName$</container-name> 容器中開啟這個 URL。將分頁移至其他群組，或禁止 <strong>$addonName$</strong> 附加元件執行此動作。",
+        "message": "嘗試於 <container-name>$containerName$</container-name> 容器中開啟這個 URL。將分頁移至其他群組，或禁止附加元件 <strong>$addonName$</strong> 執行此動作。",
         "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
         "placeholders": {
             "containerName": {
