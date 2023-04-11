@@ -1,6 +1,6 @@
 {
     "extensionDescription": {
-        "message": "Erzeuge, verändere und wechsle schnell Tab-Gruppen.",
+        "message": "Erzeuge, bearbeite und wechsle schnell zwischen Tab-Gruppen.",
         "description": "Description of the extension."
     },
     "openSettings": {
@@ -57,6 +57,10 @@
         "message": "Abbrechen",
         "description": "Cancel"
     },
+    "close": {
+        "message": "Schließen",
+        "description": "Close"
+    },
     "searchPlaceholder": {
         "message": "Tab suchen",
         "description": "Search placeholder"
@@ -76,12 +80,16 @@
         "description": "Grid display"
     },
     "manageGroupViewFreeArrange": {
-        "message": "Freie Anordnung (in zukünftigen Versionen)",
+        "message": "Freie Anordnung (verfügbar in zukünftigen Versionen)",
         "description": "Free arrange"
     },
     "closePopupAfterChangeGroup": {
-        "message": "Schließe Pop-Up nach Wechsel der Gruppe",
+        "message": "Schließe Popup nach Wechsel der Gruppe",
         "description": "Close popup after changing group"
+    },
+    "closePopupAfterSelectTab": {
+        "message": "Popup Fenster nach Tabauswahl schließen",
+        "description": "Close the popup window after selecting a tab"
     },
     "openManageGroupsInTab": {
         "message": "Öffne \"Gruppen verwalten\" in einem neuem Tab",
@@ -242,7 +250,7 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Entschuldigung, du kannst in diesem Pop-Up kein benutzerdefiniertes Symbol wählen. Stattdessen kannst du ein benutzerdefiniertes Gruppensymbol in \"Gruppen verwalten\" wählen.\n\"Gruppen verwalten\" öffnen?",
+        "message": "Entschuldigung, du kannst in diesem Popup kein benutzerdefiniertes Symbol wählen. Stattdessen kannst du ein benutzerdefiniertes Gruppensymbol in \"Gruppen verwalten\" wählen.\n\"Gruppen verwalten\" öffnen?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -442,7 +450,7 @@
         "description": "Update thumbnail for this tab"
     },
     "notFoundWindowsAddonStoppedWorking": {
-        "message": "Fehler: Es wurden keine normalen nicht privaten/Inkognito/Pop-Up-Fenster gefunden.\nAdd-On funktioniert nicht mehr - bitte den Browser neu starten.",
+        "message": "Fehler: Es wurden keine normalen nicht privaten/Inkognito/Popup-Fenster gefunden.\nAdd-On funktioniert nicht mehr - bitte den Browser neu starten.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
     },
     "ffFailedAndLostDataMessage": {
@@ -464,6 +472,14 @@
     "showTabAfterMovingItIntoThisGroup": {
         "message": "Zeige Tab, nachdem er automatisch in diese Gruppe verschoben wurde",
         "description": "Show the tab after auto-moving it into this group"
+    },
+    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
+        "message": "Nur wenn der aktive Tab bewegt wurde",
+        "description": "Only if the active tab has been moved"
+    },
+    "showNotificationAfterMovingTabIntoThisGroup": {
+        "message": "Zeige eine Benachrichtigung, wenn Tabs in diese Gruppe bewegt werden",
+        "description": "Show a notification when tabs are moved to this group"
     },
     "tabMoving": {
         "message": "Tab verschieben",
@@ -724,7 +740,7 @@
         "description": "This tab is not supported"
     },
     "showExtendGroupsPopupWithActiveTabs": {
-        "message": "Zeige aktive Tabs in Gruppen-Pop-Up",
+        "message": "Zeige aktive Tabs in Gruppen-Popup",
         "description": "Show active tabs in groups popup"
     },
     "reloadAllTabsInGroup": {
@@ -829,6 +845,10 @@
         "message": "Aktiviere die Fehlerprotokollierung (DEBUG)",
         "description": "Enable DEBUG"
     },
+    "disableDebugTitle": {
+        "message": "DEBUG deaktivieren",
+        "description": "Disable DEBUG"
+    },
     "loggingIsEnabledTitle": {
         "message": "Die Fehlerprotokollierung ist aktiviert",
         "description": "logging is enabled"
@@ -900,7 +920,7 @@
         }
     },
     "openPopupTitle": {
-        "message": "Pop-Up öffnen",
+        "message": "Popup öffnen",
         "description": "Open popup"
     },
     "openSidebarTitle": {
@@ -980,7 +1000,7 @@
         "description": "Unload the group"
     },
     "tabsInThisWindowWereHidden": {
-        "message": "Die Tabs in diesem Fenster wurden ausgeblendet. Du findest sie am unteren Rand des Pop-Up-Fensters des Add-On.",
+        "message": "Die Tabs in diesem Fenster wurden ausgeblendet. Du findest sie am unteren Rand des Popup-Fensters des Add-On.",
         "description": "Tabs in this window were hidden. You can find them at the bottom of the popup window of the addon."
     },
     "searchOrGoToActive": {
@@ -1070,7 +1090,7 @@
         "description": "Unmute group"
     },
     "fullPopupWidth": {
-        "message": "Nutze die volle Breite des Pop-Up",
+        "message": "Nutze die volle Breite des Popup",
         "description": "Use full popup width"
     },
     "showArchivedGroups": {
@@ -1180,5 +1200,21 @@
     "group": {
         "message": "Gruppe",
         "description": "Group"
+    },
+    "helpPageUnsupportedUrlTitle": {
+        "message": "Nicht unterstützte URL",
+        "description": "Unsupported URL"
+    },
+    "copyURL": {
+        "message": "URL kopieren",
+        "description": "Copy URL"
+    },
+    "helpPageStgDebugAutoDebugMainTitle": {
+        "message": "Im Addon ist ein Fehler unterlaufen",
+        "description": "An error occurred in the addon"
+    },
+    "windowNotHaveGroup": {
+        "message": "Dieses Fenster hat keine geladenen Gruppe",
+        "description": "This window does not have a loaded group"
     }
 }
