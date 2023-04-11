@@ -57,6 +57,10 @@
         "message": "Anuluj",
         "description": "Cancel"
     },
+    "close": {
+        "message": "Zamknij",
+        "description": "Close"
+    },
     "searchPlaceholder": {
         "message": "Wyszukaj zakładkę...",
         "description": "Search placeholder"
@@ -82,6 +86,10 @@
     "closePopupAfterChangeGroup": {
         "message": "Zamknij okno pop-up po zmianie grupy",
         "description": "Close popup after changing group"
+    },
+    "closePopupAfterSelectTab": {
+        "message": "Zamknij okienko po wybraniu zakładki",
+        "description": "Close the popup window after selecting a tab"
     },
     "openManageGroupsInTab": {
         "message": "Otwórz \"Menadżer grup\" w nowej karcie",
@@ -309,6 +317,14 @@
         "message": "Wczytaj poprzednią ukrytą grupę",
         "description": "Load previous unloaded group"
     },
+    "hotkeyActionTitleLoadNextNonEmptyGroup": {
+        "message": "Wczytaj następną niepustą grupę",
+        "description": "Load next non-empty group"
+    },
+    "hotkeyActionTitleLoadPrevNonEmptyGroup": {
+        "message": "Wczytaj poprzednią niepustą grupę",
+        "description": "Load previous non-empty group"
+    },
     "hotkeyActionTitleLoadHistoryNextGroup": {
         "message": "Wczytaj następną grupę z historii",
         "description": "Load next group from history"
@@ -401,6 +417,10 @@
         "message": "Zamknij karty po ich ukryciu (to zmniejszy użycie pamięci RAM)",
         "description": "Discard tabs after hide (this will save the RAM)"
     },
+    "discardAfterHideExcludeAudioTabs": {
+        "message": "Wyklucz zakładki odtwarzające dźwięki",
+        "description": "Exclude tabs with sound"
+    },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Nie można zmienić grupy, ponieważ jedna z otwartych kart współdzieli mikrofon lub kamerę",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
@@ -452,6 +472,14 @@
     "showTabAfterMovingItIntoThisGroup": {
         "message": "Pokaż kartę po auto-przeniesieniu jej do nowej grupy",
         "description": "Show the tab after auto-moving it into this group"
+    },
+    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
+        "message": "Tylko gdy aktywna zakładka została przesunięta",
+        "description": "Only if the active tab has been moved"
+    },
+    "showNotificationAfterMovingTabIntoThisGroup": {
+        "message": "Pokazuj powiadomienia gdy zakłady zostały przeniesione do tej grupy",
+        "description": "Show a notification when tabs are moved to this group"
     },
     "tabMoving": {
         "message": "Przenoszenie kart",
@@ -534,6 +562,10 @@
     "autoBackupCreateEveryTitle": {
         "message": "Utwórz kopię co:",
         "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyMinutes": {
+        "message": "minutę(y)",
+        "description": "minute(s)"
     },
     "autoBackupIntervalKeyHours": {
         "message": "godzin(ę)",
@@ -813,6 +845,10 @@
         "message": "Włącz tryb DEBUG",
         "description": "Enable DEBUG"
     },
+    "disableDebugTitle": {
+        "message": "Wyłącz tryb DEBUG",
+        "description": "Disable DEBUG"
+    },
     "loggingIsEnabledTitle": {
         "message": "zapisywanie zdarzeń w dzienniku jest włączone",
         "description": "logging is enabled"
@@ -923,6 +959,10 @@
             }
         }
     },
+    "helpPageOpenInContainerDesc2": {
+        "message": "Kolejny dodatek:",
+        "description": "Another addon:"
+    },
     "helpPageOpenInContainerDesc3": {
         "message": "próbuje otworzyć ten adres w kontekście <container-name>$containerName$</container-name>. Przenieś kartę do innej grupy albo zabroń rozszerzeniu <strong>$addonName$</strong> wykonania tej akcji.",
         "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
@@ -993,6 +1033,10 @@
         "message": "Brak kontekstu",
         "description": "No container"
     },
+    "reopenTabsWithTemporaryContainersInNew": {
+        "message": "Otwórz ponownie zakładki z tymczasowymi kontekstami w nowym",
+        "description": "Reopen tabs with temporary containers in new"
+    },
     "temporaryContainerTitleDescription": {
         "message": "Prefiks tytułu tymczasowego kontekstu",
         "description": "Prefix of the temporary container title"
@@ -1012,6 +1056,16 @@
             "groupTitle": {
                 "content": "$2",
                 "example": "Group 1"
+            }
+        }
+    },
+    "helpPageOpenInContainerIgnoreAppForSession": {
+        "message": "Ignoruj rozszerzenie \"<strong>$addonName$</strong>\" dopóki przeglądarka nie zostanie zamknieta",
+        "description": "Ignore addon for session",
+        "placeholders": {
+            "addonName": {
+                "content": "$1",
+                "example": "Facebook Container"
             }
         }
     },
@@ -1082,5 +1136,89 @@
     "eraseAndImportAddonBackupButton": {
         "message": "Wyczyść lub przywróć kopię zapasową",
         "description": "Erase and restore backup"
+    },
+    "searchOnlyGroups": {
+        "message": "Tylko grupy",
+        "description": "Only groups"
+    },
+    "autoBackupByDayIndexTitle": {
+        "message": "Oznaczenie kopii = dzień miesiąca",
+        "description": "Backup number as day of month"
+    },
+    "autoBackupByDayIndexDescription": {
+        "message": "To ułatwia pozbycie się dużej ilości kopii zapasowych z folderu. Plik z kopią ma nazwę w stylu: \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
+        "description": "Backup by day description"
+    },
+    "clickHereForInfo": {
+        "message": "Naciśnij tu aby uzyskać więcej informacji",
+        "description": "Click here for more info"
+    },
+    "enabled": {
+        "message": "Włączone",
+        "description": "Enabled text"
+    },
+    "disabled": {
+        "message": "Wyłączone",
+        "description": "Disabled text"
+    },
+    "helpPageExtensionsThatConflictWithStgTitle": {
+        "message": "Rozszerzenie jest w konflikcie z STG",
+        "description": "Extensions that conflict with STG"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc1": {
+        "message": "Dodatek Simple Tab Groups jest w konflikcie z następującymi aktywnymi rozszerzeniami:",
+        "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc2": {
+        "message": "Aby uniknąć ryzyka utraty zakładek lub ich lokalizacji w grupach zaleca się wyłączenie lub usunięcie rozszerzeń, które są w konflikcie z dodatkiem Simple Tab Groups <code>Ctrl+Shift+A</code>",
+        "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
+    },
+    "theme": {
+        "message": "Motyw",
+        "description": "Select theme"
+    },
+    "themeAuto": {
+        "message": "Automatyczny - ustawienia systemu",
+        "description": "Auto theme"
+    },
+    "themeLight": {
+        "message": "Jasny",
+        "description": "Light theme"
+    },
+    "themeDark": {
+        "message": "Ciemny",
+        "description": "Dark theme"
+    },
+    "contextMenuEditor": {
+        "message": "Menu kontekstowe",
+        "description": "Context menu editor"
+    },
+    "tab": {
+        "message": "Zakładka",
+        "description": "Tab"
+    },
+    "group": {
+        "message": "Grupa",
+        "description": "Group"
+    },
+    "helpPageUnsupportedUrlTitle": {
+        "message": "Niewspierany URL",
+        "description": "Unsupported URL"
+    },
+    "copyURL": {
+        "message": "Kopiuj URL",
+        "description": "Copy URL"
+    },
+    "helpPageStgDebugTitle": {
+        "message": "STG - strona debugowania",
+        "description": "STG debug page"
+    },
+    "helpPageStgDebugAutoDebugMainTitle": {
+        "message": "Błąd wystąpił w dodatku",
+        "description": "An error occurred in the addon"
+    },
+    "windowNotHaveGroup": {
+        "message": "Okno nie zawiera załadowanej grupy",
+        "description": "This window does not have a loaded group"
     }
 }
