@@ -834,7 +834,7 @@
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "Моля, отметнете „Възстановяване на предишната сесия“ в настройките на четеца.<br>Това е необходимо, за да бъде запазена връзката между групите и разделите<br>В противен случай при отваряне на четеца разделите няма да бъдат заредени<br>и ще бъдат недостъпни за добавката и ще спре да работи.",
+        "message": "Oтметнете „Възстановяване на предишната сесия“ в настройките на четеца.<br>Това е необходимо, за да бъде запазена връзката между групите и разделите.<br>В противен случай при отваряне на четеца разделите няма да бъдат заредени<br>и ще бъдат недостъпни за добавката и тя ще спре да работи.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
     "leaveBookmarksOfClosedTabs": {
@@ -845,16 +845,20 @@
         "message": "Включване на режим DEBUG",
         "description": "Enable DEBUG"
     },
+    "disableDebugTitle": {
+        "message": "Изключване на режим DEBUG",
+        "description": "Disable DEBUG"
+    },
     "loggingIsEnabledTitle": {
         "message": "записване в журнал",
         "description": "logging is enabled"
     },
     "loggingIsAutoEnabledTitle": {
-        "message": "автоматично записване в журнал поради грешка в добавката",
+        "message": "автоматично записване в дневник поради грешка в добавката",
         "description": "logging was auto-enabled due to an error in addon"
     },
     "loggingDescription": {
-        "message": "Моля, отметнете полето само ако трябва да пресъздадете грешка и да изпратите журнала на автора. Отмятането на това поле ще доведе до чувствително намаляване на производителността на добавката, тъй като всички нейни действия се отразяват в журнала. След като успешно пресъздадете грешката махнете отметката и добавката ще ви предложи да запазите журнала във файл. В случай на грешка добавката сама може да отметне това поле. В този случай трябва да махнете отметката и пак да запазите журнала във файл.<br>Моля, изпратете този файл по имейл на <a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com</a><br><span class=\"has-text-danger\">Внимание! Журналът не съдържа лична информация като пароли, отметки и т.н.</span><br>Той е необходим за пресъздаване на проблема и неговото отстраняване от автора.<br>Поздрави!",
+        "message": "Отметнете полето само ако трябва да пресъздадете грешка и да изпратите дневника на автора. Отмятането му ще доведе до чувствително намаляване на производителността на добавката, тъй като всички нейни действия бъдат отразени в дневника. След като успешно пресъздадете грешката махнете отметката и добавката ще ви предложи да запазите дневника във файл. В случай на грешка добавката сама може да отметне това поле. В този случай трябва да махнете отметката и пак да запазите дневника във файл.<br>Изпратете файл по електронна поща на <a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com</a><br><span class=\"has-text-danger\">Внимание! Дневникът не съдържа лична информация като пароли, отметки и т.н.</span><br>Той е необходим за пресъздаване на проблема и неговото отстраняване от автора.<br>Поздрави!",
         "description": "logging description"
     },
     "archiveGroup": {
@@ -886,7 +890,7 @@
         }
     },
     "updateAddonToLatestVersion": {
-        "message": "Моля, обновете добавката до последното ѝ издание.",
+        "message": "Обновете добавката до последното ѝ издание.",
         "description": "Please, update addon to latest version"
     },
     "hotkeyActionTitleRenameGroup": {
@@ -1098,7 +1102,7 @@
         "description": "Database error in Simple Tab Groups"
     },
     "helpPageDbErrorReinstallDescription": {
-        "message": "За съжаление има грешка при прочитане на данните на добавката STG от банката от данни на Firefox. В момента добавката е спряна. За да подновите работа с нея, направете следното:",
+        "message": "За съжаление възникна грешка при прочитане на данните на добавката STG от хранилището на Firefox. В момента добавката е спряна. За да подновите работа с нея, направете следното:",
         "description": "Unfortunately, an error occurred while reading data from the STG addon from the Firefox database. At the moment, the addon is stopped. To resume the add-on, do the following:"
     },
     "helpPageDbErrorReinstallDescription2": {
@@ -1106,7 +1110,7 @@
         "description": "Restart Firefox Browser (for Linux and Mac OS with process termination)"
     },
     "helpPageDbErrorReinstallDescription3": {
-        "message": "Ако виждате повторно този прозорец преинсталирайте добавката:",
+        "message": "Ако виждате повторно този прозорец инсталирайте добавката отново:",
         "description": "If you see this window again, try reinstalling the addon:"
     },
     "helpPageDbErrorReinstallDescription4": {
@@ -1122,7 +1126,7 @@
         "description": "Install STG Addon"
     },
     "helpPageDbErrorReinstallDescription7": {
-        "message": "Възстановете последното резервно копие от данните на добавката STG, намиращо се в папката за изтегляния на Firefox, наречена „STG-Backups„.<br>Можете да го направите в настройките на добавката",
+        "message": "Възстановете последното резервно копие на данните на добавката STG, намиращо се в папката за изтегляния на Firefox, наречена „STG-Backups“.<br>Можете да го направите в настройките на добавката",
         "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".<br>You can restore backup in addon settings"
     },
     "helpPageDbErrorReinstallOpenFFDownloadsFolder": {
@@ -1138,7 +1142,7 @@
         "description": "Only groups"
     },
     "autoBackupByDayIndexTitle": {
-        "message": "Номера на резервното копие е деня от месеца",
+        "message": "Номерът на резервното копие е деня от месеца",
         "description": "Backup number as day of month"
     },
     "autoBackupByDayIndexDescription": {
@@ -1204,5 +1208,13 @@
     "copyURL": {
         "message": "Копиране на адреса",
         "description": "Copy URL"
+    },
+    "helpPageStgDebugTitle": {
+        "message": "Страница на STG за отстраняване на дефекти",
+        "description": "STG debug page"
+    },
+    "helpPageStgDebugAutoDebugMainTitle": {
+        "message": "В добавката възникна грешка",
+        "description": "An error occurred in the addon"
     }
 }
