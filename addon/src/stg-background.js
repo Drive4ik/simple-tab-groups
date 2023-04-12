@@ -503,22 +503,22 @@ const onUpdatedTab = catchFunc(async function(tabId, changeInfo, tab) {
         winGroupId = Cache.getWindowGroup(tab.windowId);
 
     if (changeInfo.favIconUrl/*  && (tabGroupId || winGroupId) */) {
-        await Cache.setTabFavIcon(tab.id, changeInfo.favIconUrl).catch(log.onCatch(['cant set favIcon'], false));
+        await Cache.setTabFavIcon(tab.id, changeInfo.favIconUrl).catch(log.onCatch(['cant set favIcon', tab, changeInfo], false));
     }
 
     if (changeInfo.hasOwnProperty('pinned') || changeInfo.hasOwnProperty('hidden')) {
         if (changeInfo.pinned || changeInfo.hidden) {
-            changeInfo.pinned && log.log('remove group for pinned tab', tab.id);
-            changeInfo.hidden && log.log('remove group for hidden tab', tab.id);
+            changeInfo.pinned && log.log('remove group', tabGroupId, 'for pinned tab', tab.id);
+            changeInfo.hidden && log.log('remove group', tabGroupId, 'for hidden tab', tab.id);
             Cache.removeTabGroup(tab.id);
         } else {
 
             if (false === changeInfo.pinned) {
                 if (winGroupId) {
-                    log.log('set group', winGroupId,' for unhidden tab', tab.id);
+                    log.log('set group', winGroupId, ' for unhidden tab', tab.id);
                     Cache.setTabGroup(tab.id, winGroupId);
                 } else {
-                    log.log('remove group for unhidden tab', tab.id);
+                    log.log('remove group', tabGroupId, 'for unhidden tab', tab.id);
                     Cache.removeTabGroup(tab.id);
                 }
             } else if (false === changeInfo.hidden) {
@@ -554,10 +554,10 @@ const onUpdatedTab = catchFunc(async function(tabId, changeInfo, tab) {
                     await Tabs.safeHide(tab);
                 } else {
                     if (winGroupId) {
-                        log.log('set group', winGroupId,' for unhidden tab', tab.id);
+                        log.log('set group', winGroupId, ' for unhidden tab', tab.id);
                         await Cache.setTabGroup(tab.id, winGroupId);
                     } else {
-                        log.log('remove group for unhidden tab', tab.id);
+                        log.log('remove group', tabGroupId, 'for unhidden tab', tab.id);
                         await Cache.removeTabGroup(tab.id);
                     }
                 }
