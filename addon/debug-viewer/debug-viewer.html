@@ -208,8 +208,6 @@
             <h1 id="logs-title" class="title has-text-centered mt-5">logs (count: {{logs.length}})</h1>
             <div class="is-relative" :style="{
                     marginLeft: logsIndent + 'px',
-                    overflow: 'auto',
-                    maxHeight: '1000px',
                 }">
                 <div v-for="(log, i) in logs" :key="i + 'log'" :data-action="log.action" :data-key="log.key"
                     :class="['is-relative field log p-1', {
