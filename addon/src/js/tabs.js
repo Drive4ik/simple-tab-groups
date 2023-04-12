@@ -176,7 +176,10 @@ export async function get(
 
     if (!query.pinned) {
         tabs = await Promise.all(
-            tabs.map(tab => Cache.loadTabSession(Utils.normalizeTabUrl(tab), includeFavIconUrl, includeThumbnail).catch(() => {}))
+            tabs.map(tab =>
+                Cache.loadTabSession(Utils.normalizeTabUrl(tab), includeFavIconUrl, includeThumbnail)
+                .catch(log.onCatch(['cant load tab session', tab], false))
+            )
         );
     }
 

@@ -110,6 +110,7 @@ export const CONFLICTED_EXTENSIONS = Object.freeze([
     'power-tabs@rapptz-addons.com', // https://addons.mozilla.org/firefox/addon/power-tabs/
     '{644e8eb0-c710-47e9-b81c-5dd69bfcf86b}', // https://addons.mozilla.org/firefox/addon/tabs-aside/
     'sync-tab-groups@eric.masseran', // Sync Tab Groups
+    'Tab-Session-Manager@sienori', // https://addons.mozilla.org/firefox/addon/tab-session-manager/
 ]);
 
 export const EXTENSIONS_WHITE_LIST = Object.freeze({

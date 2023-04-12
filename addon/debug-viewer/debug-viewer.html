@@ -85,6 +85,7 @@
 
         .log {
             word-wrap: anywhere;
+            width: 100%;
         }
 
         pre {
@@ -191,15 +192,15 @@
                 <pre class="field">{{win | json}}</pre>
             </details>
 
-            <h1 id="tabsWithoutGroup-title" class="title has-text-centered">tabs without group (count: {{tabsWithoutGroup.length}})</h1>
+            <h1 id="tabsWithoutGroup-title" class="title has-text-centered">tabs without group</h1>
             <details class="field">
-                <summary>tabs without group</summary>
+                <summary>tabs without group (count: {{tabsWithoutGroup.length}})</summary>
                 <pre class="field">{{tabsWithoutGroup | json}}</pre>
             </details>
 
-            <h1 id="groups-title" class="title has-text-centered">groups</h1>
+            <h1 id="groups-title" class="title has-text-centered">groups (count: {{groups.length}})</h1>
             <details v-for="(group, i) in groups" :key="i + 'group'" class="field">
-                <summary>groupId: {{group?.id}} {{ group?.isArchive ? '(archived)' : ''}}</summary>
+                <summary>groupId: {{group?.id}} {{ group?.isArchive ? '(archived)' : ''}} (tabs: {{group.tabs.length}})</summary>
                 <pre class="field">{{group | json}}</pre>
             </details>
 
@@ -207,6 +208,8 @@
             <h1 id="logs-title" class="title has-text-centered mt-5">logs (count: {{logs.length}})</h1>
             <div class="is-relative" :style="{
                     marginLeft: logsIndent + 'px',
+                    overflow: 'auto',
+                    maxHeight: '1000px',
                 }">
                 <div v-for="(log, i) in logs" :key="i + 'log'" :data-action="log.action" :data-key="log.key"
                     :class="['is-relative field log p-1', {
