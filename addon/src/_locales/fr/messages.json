@@ -57,6 +57,10 @@
         "message": "Annuler",
         "description": "Cancel"
     },
+    "close": {
+        "message": "Fermer",
+        "description": "Close"
+    },
     "searchPlaceholder": {
         "message": "Chercher un onglet...",
         "description": "Search placeholder"
@@ -82,6 +86,10 @@
     "closePopupAfterChangeGroup": {
         "message": "Fermer la pop-up après avoir changé de groupe",
         "description": "Close popup after changing group"
+    },
+    "closePopupAfterSelectTab": {
+        "message": "Fermer la pop-up après avoir sélectionné un onglet",
+        "description": "Close the popup window after selecting a tab"
     },
     "openManageGroupsInTab": {
         "message": "Ouvrir \"Gérer les groupes\" dans un nouvel onglet",
@@ -465,6 +473,14 @@
         "message": "Afficher l'onglet après l'avoir déplacé automatiquement vers ce groupe",
         "description": "Show the tab after auto-moving it into this group"
     },
+    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
+        "message": "Seulement si l'onglet actif a été déplacé",
+        "description": "Only if the active tab has been moved"
+    },
+    "showNotificationAfterMovingTabIntoThisGroup": {
+        "message": "Afficher une notification quand des onglets sont déplacés vers ce groupe",
+        "description": "Show a notification when tabs are moved to this group"
+    },
     "tabMoving": {
         "message": "Déplacement des onglets",
         "description": "Tab moving"
@@ -818,7 +834,7 @@
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "Veuillez activer le paramètre \"Restaurer la session précédente\" dans les options du navigateur.<br>C'est nécessaire pour maintenir la communication entre les groupes et les onglets.,<br>sinon les onglets ne s'ouvriront pas au redémarrage du navigateur et seront perdus pour l'extension -<br>l'extension cessera de fonctionner.",
+        "message": "Veuillez activer \"Ouvrir les fenêtres et onglets précédents\" dans les paramètres du navigateur.<br>C'est nécessaire pour maintenir la communication entre les groupes et les onglets, <br>sinon les onglets ne s'ouvriront au redémarrage du navigateur et ils seront perdus pour l'extension-<br>l'extension cessera de fonctionner.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
     "leaveBookmarksOfClosedTabs": {
@@ -828,6 +844,10 @@
     "enableDebugTitle": {
         "message": "Activer le mode DEBUG",
         "description": "Enable DEBUG"
+    },
+    "disableDebugTitle": {
+        "message": "Désactiver le mode DEBUG",
+        "description": "Disable DEBUG"
     },
     "loggingIsEnabledTitle": {
         "message": "la journalisation est activée",
@@ -1180,5 +1200,25 @@
     "group": {
         "message": "Groupe",
         "description": "Group"
+    },
+    "helpPageUnsupportedUrlTitle": {
+        "message": "URL non supportée",
+        "description": "Unsupported URL"
+    },
+    "copyURL": {
+        "message": "Copier l'URL",
+        "description": "Copy URL"
+    },
+    "helpPageStgDebugTitle": {
+        "message": "Page de debug de STG",
+        "description": "STG debug page"
+    },
+    "helpPageStgDebugAutoDebugMainTitle": {
+        "message": "Une erreur est survenue dans cette extension",
+        "description": "An error occurred in the addon"
+    },
+    "windowNotHaveGroup": {
+        "message": "Cette fenêtre ne contient pas de groupe chargé",
+        "description": "This window does not have a loaded group"
     }
 }
