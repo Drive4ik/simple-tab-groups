@@ -92,7 +92,7 @@ export async function createPopup(url, createData = {}) {
         url,
         focused: true,
         type: browser.windows.CreateType.POPUP,
-        state: browser.windows.WindowState.MAXIMIZED,
+        state: browser.windows.WindowState.NORMAL,
         ...createData,
     };
 

@@ -1,4 +1,6 @@
 
+import {nativeErrorToObj} from './logger-utils.js';
+
 export function normalizeSendData(action, data = {}) {
     if (typeof action === 'object' && arguments.length === 1) {
         return action;
@@ -19,7 +21,7 @@ export async function sendMessage(...args) {
 export function sendMessageModule(ModuleFunc, ...args) {
     return sendMessage(ModuleFunc, {
         args,
-        from: new Error,
+        from: nativeErrorToObj(new Error),
     });
 }
 

@@ -263,9 +263,10 @@
                         Groups.move(from.data.item.id, this.groups.indexOf(to.data.item));
                     })
                     .$on('drag-move-tab', function(from, to) {
-                        let tabIds = this.getTabIdsForMove(from.data.item.id);
+                        const tabIds = this.getTabIdsForMove(from.data.item.id),
+                            newTabIndex = to.data.item.index;
 
-                        Messages.sendMessageModule('Tabs.move', tabIds, to.data.group.id, {newTabIndex: to.data.item.index});
+                        Messages.sendMessageModule('Tabs.move', tabIds, to.data.group.id, {newTabIndex});
                     })
                     .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
                     .$on('drag-over', (item, isOver) => item.isOver = isOver);
@@ -1040,14 +1041,14 @@
                     this.multipleTabIds.push(tabId);
                 }
 
-                let tabs = this.multipleTabIds;
+                const tabs = this.multipleTabIds;
 
                 this.multipleTabIds = [];
 
-                return tabs;
+                return [...tabs];
             },
             async moveTabs(tabId, groupId, loadUnsync = false, showTabAfterMovingItIntoThisGroup, discardTabs) {
-                let tabIds = this.getTabIdsForMove(tabId),
+                const tabIds = this.getTabIdsForMove(tabId),
                     group = this.groups.find(gr => gr.id === groupId);
 
                 await Messages.sendMessageModule('Tabs.move', tabIds, groupId, {

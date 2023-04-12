@@ -3,6 +3,7 @@ import * as Constants from './constants.js';
 import JSON from './json.js';
 import * as Utils from './utils.js';
 import Messages from './messages.js';
+import {normalizeError, getStack} from './logger-utils.js';
 
 const consoleKeys = ['log', 'info', 'warn', 'error', 'debug', 'assert'];
 
@@ -81,7 +82,7 @@ function setLoggerFuncs() {
 
             error ??= typeof message === 'object' ? new Error(JSON.stringify(message)) : new Error(message);
 
-            let args = [...[message].flat(), normalizeError(error)];
+            const args = [...[message].flat(), normalizeError(error)];
 
             if (window.localStorage.enableDebug && !this.fromErrorEventHandler) {
                 throwError = true;
@@ -284,31 +285,6 @@ Logger.clearLogs = () => {
     Logger.clearErrors();
 };
 
-Logger.normalizeError = normalizeError;
-function normalizeError(event) {
-    let nativeError = event.error || event;
-
-    if (
-        !nativeError ||
-        typeof nativeError === 'string' ||
-        !String(nativeError?.name).toLowerCase().includes('error') ||
-        nativeError.fileName === 'undefined' ||
-        !nativeError.stack?.length
-    ) {
-        let {stack = ''} = nativeError;
-        nativeError = new Error(JSON.stringify(nativeErrorToObj(nativeError)));
-        if (!stack.length) {
-            nativeError.stack = stack + `\nFORCE STACK\n` + nativeError.stack;
-        }
-    }
-
-    return {
-        time: (new Date).toISOString(),
-        ...nativeErrorToObj(nativeError),
-        stack: getStack(nativeError),
-    };
-}
-
 export function catchFunc(asyncFunc) {
     const fromStack = new Error().stack;
 
@@ -321,17 +297,6 @@ export function catchFunc(asyncFunc) {
             e.arguments = JSON.clone(Array.from(arguments));
             self.errorEventHandler(e);
         }
-    };
-}
-
-function nativeErrorToObj(nativeError) {
-    return {
-        message: nativeError.message,
-        fileName: removeUnnecessaryStrings(nativeError.fileName),
-        lineNumber: nativeError.lineNumber,
-        columnNumber: nativeError.columnNumber,
-        stack: getStack(nativeError).join('\n'),
-        arguments: nativeError.arguments,
     };
 }
 
@@ -359,37 +324,6 @@ function showErrorNotificationMessage(logger) {
     } else {
         connectToBG(logger).sendMessage('show-error-notification');
     }
-}
-
-const UNNECESSARY_LOG_STRINGS = [
-    Constants.STG_BASE_URL,
-    'async*',
-    'Async*',
-    '../node_modules/vue-loader/lib/index.js??vue-loader-options!./popup/Popup.vue?vue&type=script&lang=js&',
-    '../node_modules/vue-loader/lib/index.js??vue-loader-options!./manage/Manage.vue?vue&type=script&lang=js&',
-    '../node_modules/vue-loader/lib/index.js??vue-loader-options!./options/Options.vue?vue&type=script&lang=js&',
-];
-
-function removeUnnecessaryStrings(str) {
-    return UNNECESSARY_LOG_STRINGS
-        .reduce((s, strToDel) => s.replaceAll(strToDel, ''), String(str));
-}
-
-const DELETE_LOG_STARTS_WITH = [
-    'Logger',
-    'normalizeError',
-    'setLoggerFuncs',
-    'sendMessage',
-    'sendExternalMessage',
-];
-
-function getStack(e, start = 0, to = 50) {
-    return removeUnnecessaryStrings(e.stack)
-        .trim()
-        .split('\n')
-        .filter(Boolean)
-        .filter(str => !DELETE_LOG_STARTS_WITH.some(unlogStr => str.startsWith(unlogStr)))
-        .slice(start, to);
 }
 
 self.errorEventHandler = errorEventHandler; // add to self if need remove Listener

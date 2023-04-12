@@ -11,7 +11,7 @@ import * as Windows from './windows.js';
 const logger = new Logger('Tabs');
 
 export async function createNative({url, active, pinned, title, index, windowId, openerTabId, cookieStoreId, newTabContainer, ifDifferentContainerReOpen, excludeContainersForReOpen, groupId, favIconUrl, thumbnail}) {
-    let tab = {};
+    const tab = {};
 
     if (url) {
         if (Utils.isUrlAllowToCreate(url)) {
@@ -59,11 +59,15 @@ export async function createNative({url, active, pinned, title, index, windowId,
         tab.cookieStoreId = Containers.get(tab.cookieStoreId, 'cookieStoreId', true);
     }
 
-    let newTab = await browser.tabs.create(tab);
+    const newTab = await browser.tabs.create(tab);
 
     Cache.setTab(newTab);
 
-    return Cache.applySession(newTab, {groupId, favIconUrl, thumbnail});
+    Cache.applySession(newTab, {groupId, favIconUrl, thumbnail});
+
+    logger.log('createNative', newTab);
+
+    return newTab;
 }
 
 export async function create(tab) {
@@ -71,7 +75,7 @@ export async function create(tab) {
 
     backgroundSelf.skipCreateTab = true;
 
-    let newTab = await createNative(tab);
+    const newTab = await createNative(tab);
 
     backgroundSelf.skipCreateTab = false;
 
@@ -81,7 +85,7 @@ export async function create(tab) {
 }
 
 export async function createUrlOnce(url, windowId) {
-    let [tab] = await get(windowId, null, null, {url});
+    const [tab] = await get(windowId, null, null, {url});
 
     if (tab) {
         return setActive(tab.id);
@@ -121,7 +125,7 @@ export async function setActive(tabId = null, tabs = []) {
 }
 
 export async function getActive(windowId = browser.windows.WINDOW_ID_CURRENT) {
-    let [activeTab] = await get(windowId, null, null, {
+    const [activeTab] = await get(windowId, null, null, {
         active: true,
     });
 
@@ -212,13 +216,14 @@ export async function createTempActiveTab(windowId, createPinnedTab = true, newT
             log.stop('setActive pinned');
         } else log.stop('pinned is active');
     } else {
-        log.stop('createNative');
-        return createNative({
+        const tempTab = await createNative({
             url: createPinnedTab ? (newTabUrl || 'about:blank') : (newTabUrl || 'about:newtab'),
             pinned: createPinnedTab,
             active: true,
             windowId: windowId,
         });
+        log.stop('created temp tab', tempTab);
+        return tempTab;
     }
 }
 
@@ -627,18 +632,32 @@ export async function remove(...tabs) { // id or ids or tabs
     }
 }
 
+async function browserTabs(funcName, tabs, log) {
+    const tabIds = tabs.map(extractId);
+
+    try {
+        await browser.tabs[funcName](tabIds);
+    } catch (e) {
+        log.runError(e.message, e);
+
+        log.warn(funcName, 'tabs one by one', tabIds);
+
+        await Promise.all(tabs.map(tab =>
+            browser.tabs[funcName](extractId(tab))
+                .catch(log.onCatch([funcName, 'tab', tab], false))
+        ));
+    }
+}
+
 export async function show(...tabs) {
     tabs = tabs.flat();
 
     if (tabs.length) {
         const log = logger.start('show', tabs.map(extractId));
 
-        await Promise.all(tabs.map(tab =>
-            browser.tabs.show(extractId(tab))
-                .catch(log.onCatch(['show tab', tab], false))
-        ));
+        await browserTabs('show', tabs, log);
 
-        log.stop()
+        log.stop();
     }
 }
 
@@ -648,10 +667,7 @@ export async function hide(...tabs) {
     if (tabs.length) {
         const log = logger.start('hide', tabs.map(extractId));
 
-        await Promise.all(tabs.map(tab =>
-            browser.tabs.hide(extractId(tab))
-                .catch(log.onCatch(['hide tab', tab], false))
-        ));
+        await browserTabs('hide', tabs, log);
 
         log.stop();
     }

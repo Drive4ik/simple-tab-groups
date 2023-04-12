@@ -237,7 +237,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                 removeExcludeTabIds(tabIds);
 
                 if (groupToShow.muteTabsWhenGroupCloseAndRestoreWhenOpen) {
-                    Tabs.setMute(groupToShow.tabs, false);
+                    Tabs.setMute(groupToShow.tabs, false).catch(log.onCatch('Tabs.setMute', false));;
                 }
             }
 
@@ -262,7 +262,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                             tabs = tabs.filter(tab => !tab.audible);
                         }
 
-                        Tabs.discard(tabs);
+                        Tabs.discard(tabs).catch(log.onCatch('Tabs.discard', false));
                     }
                 }
             }
@@ -2200,7 +2200,7 @@ async function onBackgroundMessage(message, sender) {
                     'onBackgroundMessage call internal module:', data.action,
                     'args:', data.args,
                     'sender:', senderToLogs,
-                    'from stack:', Logger.normalizeError(data.from),
+                    'from stack:', data.from,
                 ], e);
             }
         }

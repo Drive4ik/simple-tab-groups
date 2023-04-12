@@ -121,6 +121,7 @@ export default {
                 'js/background.js',
                 'js/wait-background.js',
                 'js/logger.js',
+                'js/logger-utils.js',
                 'js/messages.js',
                 'js/constants.js',
                 'js/browser-constants.js',

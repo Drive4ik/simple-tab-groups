@@ -129,7 +129,7 @@ async function saveConsoleLogs() {
 
     const Logger = backgroundSelf.logger.constructor;
 
-    const logs = Logger.logs.slice(-500);
+    const logs = Logger.logs.slice(-3000);
     const errorLogs = Logger.getErrors();
 
     const loadedWindows = await Promise.all(

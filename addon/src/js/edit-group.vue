@@ -94,7 +94,7 @@
             },
         },
         async created() {
-            let {group, groups} = await Messages.sendMessageModule('Groups.load', this.groupId);
+            const {group, groups} = await Messages.sendMessageModule('Groups.load', this.groupId);
 
             this.group = new Vue({
                 data: group,
@@ -112,14 +112,16 @@
 
             this.mainGroup = groups.find(gr => gr.isMain);
 
-            for (let key in group) {
-                let unwatch = this.$watch(`group.${key}`, function() {
-                    this.changedKeys.push(key);
-                    unwatch();
-                }, {
-                    deep: true,
-                });
-            };
+            this.$nextTick(() => {
+                for (let key in group) {
+                    let unwatch = this.$watch(`group.${key}`, function() {
+                        this.changedKeys.push(key);
+                        unwatch();
+                    }, {
+                        deep: true,
+                    });
+                };
+            });
 
             for (let cookieStoreId in this.containers) {
                 groups.forEach(gr => {
@@ -132,16 +134,10 @@
                     }
                 });
             }
-            console.time('load active tab')
-            let currentTab = await Messages.sendMessageModule('Tabs.getActive');
-            console.timeEnd('load active tab')
 
-            console.time('load active tab 2')
-            currentTab = await Tabs.getActive();
-            console.timeEnd('load active tab 2')
-            // let currentTab = await Tabs.getActive();
+            const currentTab = await Messages.sendMessageModule('Tabs.getActive');
 
-            if (currentTab && currentTab.url.startsWith('http')) {
+            if (currentTab?.url.startsWith('http')) {
                 this.currentTabUrl = new URL(currentTab.url);
             }
         },
@@ -215,7 +211,7 @@
 
             async saveGroup() {
                 if (this.changedKeys.length) {
-                    let group = {};
+                    const group = {};
 
                     this.changedKeys.forEach(key => group[key] = this.group[key]);
 

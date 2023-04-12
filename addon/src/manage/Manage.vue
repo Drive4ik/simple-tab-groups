@@ -200,11 +200,11 @@
                         if ('new-group' === to.data.item.id) {
                             this.moveTabToNewGroup(null, true);
                         } else {
-                            let tabIds = this.getTabIdsForMove(),
+                            const tabIds = this.getTabIdsForMove(),
                                 groupId = this.isGroup(to.data.item) ? to.data.item.id : to.data.group.id,
-                                index = this.isGroup(to.data.item) ? undefined : to.data.item.index;
+                                newTabIndex = this.isGroup(to.data.item) ? undefined : to.data.item.index;
 
-                            Messages.sendMessageModule('Tabs.move', tabIds, groupId, {newTabIndex: index});
+                            Messages.sendMessageModule('Tabs.move', tabIds, groupId, {newTabIndex});
                         }
                     })
                     .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
@@ -547,7 +547,7 @@
 
                 this.multipleTabIds = [];
 
-                return tabs;
+                return [...tabs];
             },
             async moveTabs(tabId, groupId, loadUnsync = false, showTabAfterMovingItIntoThisGroup, discardTabs) {
                 let tabIds = this.getTabIdsForMove(tabId);
