@@ -413,11 +413,7 @@
         "message": "Symbolstil",
         "description": "Icon style"
     },
-    "discardTabsAfterHide": {
-        "message": "Verwerfe Tabs nach dem Verstecken (reduziert die Arbeitsspeichernutzung)",
-        "description": "Discard tabs after hide (this will save the RAM)"
-    },
-    "discardAfterHideExcludeAudioTabs": {
+    "discardExcludeAudioTabs": {
         "message": "Tabs mit Ton ausschließen",
         "description": "Exclude tabs with sound"
     },
@@ -456,10 +452,6 @@
     "ffFailedAndLostDataMessage": {
         "message": "Firefox hatte einen Fehler und alle Gruppen sind verloren gegangen.\nFalls du ein Backup hast, kannst du die Daten daraus wiederherstellen.",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
-    },
-    "enterDefaultGroupIconViewTypeTitle": {
-        "message": "Symbolstil für eine neue Gruppe",
-        "description": "Icon style for a new group"
     },
     "openGroupInNewWindow": {
         "message": "Öffne Gruppe in neuem Fenster",
@@ -615,7 +607,7 @@
         "message": "Erstelle eine neue Gruppe, wenn ein neues Fenster geöffnet wird",
         "description": "Create a new group when opening a new window"
     },
-    "prependGroupTitleToWindowTitle": {
+    "prependTitleToWindow": {
         "message": "Gruppentitel vor den Fenstertitel setzen",
         "description": "Prepend group title to window title"
     },
@@ -661,10 +653,6 @@
         "message": "Du hast keinen Zugriff auf die Lesezeichen. Bitte den Zugriff in den Add-On-Einstellungen gewähren.",
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
-    "exportGroupToMainBookmarkFolder": {
-        "message": "Exportiere Gruppen in den Lesezeichen-Ordner \"STG bookmarks\"",
-        "description": "Export groups to \"STG bookmarks\" bookmark folder"
-    },
     "exportGroupToBookmarks": {
         "message": "Exportiere Gruppen in Lesezeichen",
         "description": "Export group to bookmarks"
@@ -687,10 +675,6 @@
         "message": "Diese Gruppe hat keine Tabs",
         "description": "This group has no tabs"
     },
-    "autoBackupGroupsToBookmarks": {
-        "message": "Automatische Sicherung aller Gruppen als Lesezeichen",
-        "description": "Auto backup all groups to bookmarks"
-    },
     "exportAllGroupsToBookmarks": {
         "message": "Alle Gruppen als Lesezeichen exportieren",
         "description": "Export all groups to bookmarks"
@@ -702,10 +686,6 @@
     "discardTabTitle": {
         "message": "Tab verwerfen",
         "description": "Discard tab"
-    },
-    "autoBackupGroupsToFile": {
-        "message": "Alle Gruppen automatisch als Datei sichern (im Ordner Downloads)",
-        "description": "Auto backup all groups to file (into downloads folder)"
     },
     "folderNameTitle": {
         "message": "Ordnername",
@@ -722,10 +702,6 @@
     "showOtherTabs": {
         "message": "Andere Tabs anzeigen",
         "description": "Show other tabs"
-    },
-    "dontDiscardTabsAfterHideThisGroup": {
-        "message": "Tabs in dieser Gruppe nicht verwerfen, nachdem sie ausgeblendet wurden",
-        "description": "Don't discard tabs into this group after hide"
     },
     "showNotificationAfterGroupDelete": {
         "message": "Benachrichtigung anzeigen, nachdem Gruppe gelöscht wurde",
@@ -838,8 +814,8 @@
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
     "leaveBookmarksOfClosedTabs": {
-        "message": "Erzeuge Lesezeichen wenn Tabs geschlossen werden (Lesezeichen werden den Platzlasser teilen)",
-        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+        "message": "Erzeuge Lesezeichen wenn Tabs geschlossen werden",
+        "description": "Leave bookmarks of closed tabs"
     },
     "enableDebugTitle": {
         "message": "Aktiviere die Fehlerprotokollierung (DEBUG)",

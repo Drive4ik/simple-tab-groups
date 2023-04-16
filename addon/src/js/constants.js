@@ -44,6 +44,8 @@ export const GROUP_ICON_VIEW_TYPES = Object.freeze([
     'title',
 ]);
 
+export const DEFAULT_GROUP_ICON_VIEW_TYPE = GROUP_ICON_VIEW_TYPES[0];
+
 export const DEFAULT_BOOKMARKS_PARENTS = Object.freeze([
     'toolbar_____',
     'menu________',
@@ -265,13 +267,14 @@ export const DEFAULT_OPTIONS = Object.freeze({
     lastCreatedGroupPosition: 0,
 
     // options
-    discardTabsAfterHide: false,
-    discardAfterHideExcludeAudioTabs: false,
+
+    /* changed group keys with the exception: id, tabs */
+    defaultGroupProps: {},
+
     closePopupAfterChangeGroup: true,
     closePopupAfterSelectTab: false,
     openGroupAfterChange: false,
     alwaysAskNewGroupName: true,
-    prependGroupTitleToWindowTitle: false,
     createNewGroupWhenOpenNewWindow: false,
     openManageGroupsInTab: true,
     showConfirmDialogBeforeGroupArchiving: true,
@@ -279,9 +282,7 @@ export const DEFAULT_OPTIONS = Object.freeze({
     showNotificationAfterGroupDelete: true,
     showContextMenuOnTabs: true,
     showContextMenuOnLinks: true,
-    exportGroupToMainBookmarkFolder: true,
     defaultBookmarksParent: DEFAULT_BOOKMARKS_PARENTS[0],
-    leaveBookmarksOfClosedTabs: false,
     showExtendGroupsPopupWithActiveTabs: false,
     showTabsWithThumbnailsInManageGroups: false,
     fullPopupWidth: false,
@@ -309,17 +310,12 @@ export const DEFAULT_OPTIONS = Object.freeze({
         'reload-all-tabs',
     ],
 
-    defaultGroupIconViewType: GROUP_ICON_VIEW_TYPES[0],
-    defaultGroupIconColor: '',
-
     autoBackupEnable: true,
     autoBackupLastBackupTimeStamp: 1,
     autoBackupIntervalKey: AUTO_BACKUP_INTERVAL_KEY.days, // minutes, hours, days
     autoBackupIntervalValue: 1,
     autoBackupIncludeTabThumbnails: true,
     autoBackupIncludeTabFavIcons: true,
-    autoBackupGroupsToBookmarks: true,
-    autoBackupGroupsToFile: true,
     autoBackupFolderName: '',
     autoBackupByDayIndex: true,
 

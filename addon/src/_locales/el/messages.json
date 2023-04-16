@@ -347,10 +347,6 @@
         "message": "Στυλ εικονιδίου",
         "description": "Icon style"
     },
-    "discardTabsAfterHide": {
-        "message": "Απόρριψη των tabs μετά την απόκρυψη (εξοικονόμηση μνήμης)",
-        "description": "Discard tabs after hide (this will save the RAM)"
-    },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Δεν είναι δυνατόν να αλλάξετε το group, γιατί ένα από τα ανοικτά tabs χρησιμοποιούν το μικρόφωνο ή την camera",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
@@ -382,10 +378,6 @@
     "ffFailedAndLostDataMessage": {
         "message": "Το FF 'κράσαρε' και όλα τα groups έχουν χαθεί!\nΑν έχετε αντίγραφο ασφαλείας (backup), μπορείτε να επαναφέρετε τα groups  από αυτό",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
-    },
-    "enterDefaultGroupIconViewTypeTitle": {
-        "message": "Στυλ εικονιδίου για νέο group",
-        "description": "Icon style for a new group"
     },
     "openGroupInNewWindow": {
         "message": "Άνοιγμα ομάδας σε νέο παράθυρο",

@@ -68,3 +68,7 @@ export async function openDebugPage() {
         await Windows.createPopup(debugPageUrl);
     }
 }
+
+export function openNotSupportedUrlHelper() {
+    Tabs.createUrlOnce('https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/Content_scripts');
+}

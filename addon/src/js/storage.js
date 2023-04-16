@@ -2,15 +2,18 @@
 import * as Constants from './constants.js';
 import Logger from './logger.js';
 import * as Urls from './urls.js';
+import JSON from './json.js';
 
 const logger = new Logger('Storage');
 
-export async function get(keys, errorCounter = 0) {
+export async function get(keys, errorCounter = 0, forMigrate = false) {
     const log = logger.start('get', keys);
 
     let keysData;
     if (!keys) {
-        keysData = Constants.DEFAULT_OPTIONS;
+        if (!forMigrate) {
+            keysData = Constants.DEFAULT_OPTIONS;
+        }
     } else if (Array.isArray(keys)) {
         keysData = keys.reduce((acc, key) => (acc[key] = Constants.DEFAULT_OPTIONS[key], acc), {});
     } else if (typeof keys === 'string') {
@@ -37,6 +40,13 @@ export async function get(keys, errorCounter = 0) {
         return get(keys, errorCounter);
     }
 
+    if (!keys && forMigrate) {
+        result = {
+            ...JSON.clone(Constants.DEFAULT_OPTIONS),
+            ...result,
+        };
+    }
+
     log.stop();
     return result;
 }
@@ -48,7 +58,7 @@ export async function set(data) {
         data.groups.forEach(group => !group.isArchive && (group.tabs = []));
     }
 
-    let result = await browser.storage.local.set(data);
+    const result = await browser.storage.local.set(data);
 
     log.stop();
 

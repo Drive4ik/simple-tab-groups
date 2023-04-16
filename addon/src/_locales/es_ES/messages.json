@@ -413,11 +413,7 @@
         "message": "Estilo del icono",
         "description": "Icon style"
     },
-    "discardTabsAfterHide": {
-        "message": "Descartar pestañas luego de ocultarlas (esto ahorrará memoria RAM)",
-        "description": "Discard tabs after hide (this will save the RAM)"
-    },
-    "discardAfterHideExcludeAudioTabs": {
+    "discardExcludeAudioTabs": {
         "message": "Excluye la pestaña con sonido",
         "description": "Exclude tabs with sound"
     },
@@ -456,10 +452,6 @@
     "ffFailedAndLostDataMessage": {
         "message": "FF falló y todos los grupos se perdieron.\nSi tienes un respaldo, puedes restaurar los datos desde allí",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
-    },
-    "enterDefaultGroupIconViewTypeTitle": {
-        "message": "Estilo de ícono para un nuevo grupo",
-        "description": "Icon style for a new group"
     },
     "openGroupInNewWindow": {
         "message": "Abrir grupo en una nueva ventana",
@@ -615,7 +607,7 @@
         "message": "Crear un nuevo grupo cuando se abra una nueva ventana",
         "description": "Create a new group when opening a new window"
     },
-    "prependGroupTitleToWindowTitle": {
+    "prependTitleToWindow": {
         "message": "Anteponer el título del grupo al título de la ventana",
         "description": "Prepend group title to window title"
     },
@@ -661,10 +653,6 @@
         "message": "No tienes acceso a los marcadores. Habilítalo en la configuración del complemento",
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
-    "exportGroupToMainBookmarkFolder": {
-        "message": "Exportar grupos a la carpeta de marcadores \"STG bookmarks\"",
-        "description": "Export groups to \"STG bookmarks\" bookmark folder"
-    },
     "exportGroupToBookmarks": {
         "message": "Exportar grupo a marcadores",
         "description": "Export group to bookmarks"
@@ -687,10 +675,6 @@
         "message": "Este grupo no tiene pestañas",
         "description": "This group has no tabs"
     },
-    "autoBackupGroupsToBookmarks": {
-        "message": "Respaldar automáticamente todos los grupos a marcadores",
-        "description": "Auto backup all groups to bookmarks"
-    },
     "exportAllGroupsToBookmarks": {
         "message": "Exportar todos los grupos a marcadores",
         "description": "Export all groups to bookmarks"
@@ -702,10 +686,6 @@
     "discardTabTitle": {
         "message": "Descartar pestaña",
         "description": "Discard tab"
-    },
-    "autoBackupGroupsToFile": {
-        "message": "Respaldar automáticamente todos los grupos a un archivo (en la carpeta de descargas)",
-        "description": "Auto backup all groups to file (into downloads folder)"
     },
     "folderNameTitle": {
         "message": "Nombre de la carpeta",
@@ -722,10 +702,6 @@
     "showOtherTabs": {
         "message": "Mostrar las otras pestañas",
         "description": "Show other tabs"
-    },
-    "dontDiscardTabsAfterHideThisGroup": {
-        "message": "No descartar pestañas de este grupo luego de esconderlo",
-        "description": "Don't discard tabs into this group after hide"
     },
     "showNotificationAfterGroupDelete": {
         "message": "Mostrar una notificación luego de borrar un grupo",
@@ -838,8 +814,8 @@
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
     "leaveBookmarksOfClosedTabs": {
-        "message": "Mantener marcadores de pestañas cerradas (estos serán separados por un separador)",
-        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+        "message": "Mantener marcadores de pestañas cerradas",
+        "description": "Leave bookmarks of closed tabs"
     },
     "enableDebugTitle": {
         "message": "Activar DEPURACIÓN",

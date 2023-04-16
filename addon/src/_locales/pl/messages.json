@@ -413,11 +413,7 @@
         "message": "Styl ikony",
         "description": "Icon style"
     },
-    "discardTabsAfterHide": {
-        "message": "Zamknij karty po ich ukryciu (to zmniejszy użycie pamięci RAM)",
-        "description": "Discard tabs after hide (this will save the RAM)"
-    },
-    "discardAfterHideExcludeAudioTabs": {
+    "discardExcludeAudioTabs": {
         "message": "Wyklucz zakładki odtwarzające dźwięki",
         "description": "Exclude tabs with sound"
     },
@@ -456,10 +452,6 @@
     "ffFailedAndLostDataMessage": {
         "message": "Firefox uległ awarii i wszystkie grupy zostały utracone.\nJeśli masz kopię zapasową, możesz przywrócić z niej dane",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
-    },
-    "enterDefaultGroupIconViewTypeTitle": {
-        "message": "Styl ikon dla nowej grupy",
-        "description": "Icon style for a new group"
     },
     "openGroupInNewWindow": {
         "message": "Otwórz grupę w nowym oknie",
@@ -615,7 +607,7 @@
         "message": "Utwórz nową grupę podczas otwierania nowego okna",
         "description": "Create a new group when opening a new window"
     },
-    "prependGroupTitleToWindowTitle": {
+    "prependTitleToWindow": {
         "message": "Pokaż nazwę grupy jako prefiks w tytule okna",
         "description": "Prepend group title to window title"
     },
@@ -661,10 +653,6 @@
         "message": "Nie masz dostępu do zakładek. Włącz je w ustawieniach dodatku.",
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
-    "exportGroupToMainBookmarkFolder": {
-        "message": "Wyeksportuj grupę do folderu zakładek \"STG bookmarks\"",
-        "description": "Export groups to \"STG bookmarks\" bookmark folder"
-    },
     "exportGroupToBookmarks": {
         "message": "Eksportuj grupę do zakładek",
         "description": "Export group to bookmarks"
@@ -687,10 +675,6 @@
         "message": "Ta grupa nie zawiera żadnych kart",
         "description": "This group has no tabs"
     },
-    "autoBackupGroupsToBookmarks": {
-        "message": "Automatyczna kopia zapasowa wszystkich grup",
-        "description": "Auto backup all groups to bookmarks"
-    },
     "exportAllGroupsToBookmarks": {
         "message": "Eksportuj wszystkie grupy do zakładek",
         "description": "Export all groups to bookmarks"
@@ -702,10 +686,6 @@
     "discardTabTitle": {
         "message": "Porzuć kartę",
         "description": "Discard tab"
-    },
-    "autoBackupGroupsToFile": {
-        "message": "Automatyczna kopia zapasowa wszystkich grup do pliku (w folderze pobierania)",
-        "description": "Auto backup all groups to file (into downloads folder)"
     },
     "folderNameTitle": {
         "message": "Nazwa folderu",
@@ -722,10 +702,6 @@
     "showOtherTabs": {
         "message": "Pokaż inne karty",
         "description": "Show other tabs"
-    },
-    "dontDiscardTabsAfterHideThisGroup": {
-        "message": "Nie rozdzielaj kart między grupy po ukryciu",
-        "description": "Don't discard tabs into this group after hide"
     },
     "showNotificationAfterGroupDelete": {
         "message": "Pokaż powiadomienie po usunięciu grupy",
@@ -838,8 +814,8 @@
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
     "leaveBookmarksOfClosedTabs": {
-        "message": "Pozostaw zakładki zamkniętych kart (zakładki będą rozdzielone separatorem)",
-        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+        "message": "Pozostaw zakładki zamkniętych kart",
+        "description": "Leave bookmarks of closed tabs"
     },
     "enableDebugTitle": {
         "message": "Włącz tryb DEBUG",

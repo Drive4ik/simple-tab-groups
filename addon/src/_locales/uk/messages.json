@@ -414,10 +414,10 @@
         "description": "Icon style"
     },
     "discardTabsAfterHide": {
-        "message": "Вивантажувати вкладки з пам'яті після зміни групи (дозволяє заощадити ОЗУ)",
-        "description": "Discard tabs after hide (this will save the RAM)"
+        "message": "Вивантажувати вкладки з пам'яті після закриття групи",
+        "description": "Unload tabs from memory after closing a group"
     },
-    "discardAfterHideExcludeAudioTabs": {
+    "discardExcludeAudioTabs": {
         "message": "Залишати вкладки зі звуком",
         "description": "Exclude tabs with sound"
     },
@@ -456,10 +456,6 @@
     "ffFailedAndLostDataMessage": {
         "message": "Firefox завершив свою роботу з помилкою і всі групи були загублені.\nЯкщо у Вас є резервна копія, Ви можете відновити дані з неї",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
-    },
-    "enterDefaultGroupIconViewTypeTitle": {
-        "message": "Стиль значка для нової групи",
-        "description": "Icon style for a new group"
     },
     "openGroupInNewWindow": {
         "message": "Відкрити групу в новому вікні",
@@ -615,7 +611,7 @@
         "message": "Створювати нову групу при відкритті нового вікна",
         "description": "Create a new group when opening a new window"
     },
-    "prependGroupTitleToWindowTitle": {
+    "prependTitleToWindow": {
         "message": "Додати заголовок групи до заголовку вікна",
         "description": "Prepend group title to window title"
     },
@@ -661,10 +657,6 @@
         "message": "У вас немає доступу до закладок. Включіть його в налаштуваннях доповнення",
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
-    "exportGroupToMainBookmarkFolder": {
-        "message": "Експорт груп в \"STG bookmarks\" теку закладок",
-        "description": "Export groups to \"STG bookmarks\" bookmark folder"
-    },
     "exportGroupToBookmarks": {
         "message": "Експорт групи в закладки",
         "description": "Export group to bookmarks"
@@ -687,10 +679,6 @@
         "message": "В цій групі нема вкладок",
         "description": "This group has no tabs"
     },
-    "autoBackupGroupsToBookmarks": {
-        "message": "Автоматичний експорт всіх груп в закладки",
-        "description": "Auto backup all groups to bookmarks"
-    },
     "exportAllGroupsToBookmarks": {
         "message": "Експорт всіх груп в закладки",
         "description": "Export all groups to bookmarks"
@@ -702,10 +690,6 @@
     "discardTabTitle": {
         "message": "Вивантажити вкладку з пам'яті",
         "description": "Discard tab"
-    },
-    "autoBackupGroupsToFile": {
-        "message": "Автоматичний експорт всіх груп в файл (в теці завантажень)",
-        "description": "Auto backup all groups to file (into downloads folder)"
     },
     "folderNameTitle": {
         "message": "Ім'я теки",
@@ -722,10 +706,6 @@
     "showOtherTabs": {
         "message": "Показати інші вкладки",
         "description": "Show other tabs"
-    },
-    "dontDiscardTabsAfterHideThisGroup": {
-        "message": "Не вивантажувати з пам'яті вкладки групи після її закриття",
-        "description": "Don't discard tabs into this group after hide"
     },
     "showNotificationAfterGroupDelete": {
         "message": "Показати повідомлення після видалення групи",
@@ -837,9 +817,13 @@
         "message": "Будь ласка, включіть опцію \"Відкрити попередні вікна та вкладки\" в налаштуваннях браузера. <br>Це необхідно для підтримки зв'язку між групою і вкладкою, інакше вкладки з минулій сесії не будуть відкриватися при завантаженні браузера і будуть втрачені із доповнення - аддон перестане правильно працювати.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
+    "exportToBookmarksWhenAutoBackup": {
+        "message": "Зберегти групу в закладках під час автоматичного резервного копіювання",
+        "description": "Save the group to bookmarks when auto backup"
+    },
     "leaveBookmarksOfClosedTabs": {
-        "message": "Залишити закладки закритих вкладок (закладки буде розділяти роздільник)",
-        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+        "message": "Залишити закладки закритих вкладок",
+        "description": "Leave bookmarks of closed tabs"
     },
     "enableDebugTitle": {
         "message": "Включити налагодження (DEBUG)",
@@ -1220,5 +1204,9 @@
     "windowNotHaveGroup": {
         "message": "Це вікно немає завантаженої групи",
         "description": "This window does not have a loaded group"
+    },
+    "defaultGroup": {
+        "message": "Група за замовчуванням",
+        "description": "Default group"
     }
 }

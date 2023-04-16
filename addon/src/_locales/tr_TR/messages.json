@@ -405,11 +405,7 @@
         "message": "Ikon stili",
         "description": "Icon style"
     },
-    "discardTabsAfterHide": {
-        "message": "Gizledikten sonra sekmeleri ıskartaya çıkar (RAM kullanımını azaltır)",
-        "description": "Discard tabs after hide (this will save the RAM)"
-    },
-    "discardAfterHideExcludeAudioTabs": {
+    "discardExcludeAudioTabs": {
         "message": "Sesli sekmeleri hariç tut",
         "description": "Exclude tabs with sound"
     },
@@ -448,10 +444,6 @@
     "ffFailedAndLostDataMessage": {
         "message": "FF başarısız oldu ve tüm gruplar kaybedildi.\nBir yedeğiniz varsa, ondan verileri geri yükleyebilirsiniz.",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
-    },
-    "enterDefaultGroupIconViewTypeTitle": {
-        "message": "Yeni bir grup için ikon stili",
-        "description": "Icon style for a new group"
     },
     "openGroupInNewWindow": {
         "message": "Grubu yeni pencerede aç",

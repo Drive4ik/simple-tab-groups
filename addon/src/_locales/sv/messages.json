@@ -347,10 +347,6 @@
         "message": "Ikonstil",
         "description": "Icon style"
     },
-    "discardTabsAfterHide": {
-        "message": "Kassera flikar i grupper som göms (minskar på minnesanvändningen)",
-        "description": "Discard tabs after hide (this will save the RAM)"
-    },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Det är inte möjligt att byta grupp, eftersom en av de öppna flikarna använder mikrofonen eller kameran",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
@@ -382,10 +378,6 @@
     "ffFailedAndLostDataMessage": {
         "message": "Firefox tappade bort alla flikgrupper.\nOm du har en säkerhetskopia kan du återställa data från den.",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
-    },
-    "enterDefaultGroupIconViewTypeTitle": {
-        "message": "Ikonstil för en ny grupp",
-        "description": "Icon style for a new group"
     },
     "openGroupInNewWindow": {
         "message": "Öppna flikgrupp i ett nytt fönster",

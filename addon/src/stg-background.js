@@ -1,7 +1,7 @@
 import './js/cache-storage.js';
 import * as Constants from './js/constants.js';
 import * as Messages from './js/messages.js';
-import Logger, {catchFunc} from './js/logger.js';
+import Logger, {catchFunc, addLog, showLog, getLogs, clearLogs, getErrors, clearErrors} from './js/logger.js';
 import * as Utils from './js/utils.js';
 import JSON from './js/json.js';
 import * as Urls from './js/urls.js';
@@ -23,6 +23,13 @@ if (self.localStorage.enableDebug == 2) { // if debug was auto-enabled - disable
 
 self.logger = new Logger('BG');
 
+self.loggerFuncs = {
+    getLogs,
+    clearLogs,
+    getErrors,
+    clearErrors,
+};
+
 self.sendMessage = Messages.initBackground(onBackgroundMessage);
 
 self.inited = false;
@@ -38,28 +45,30 @@ let reCreateTabsOnRemoveWindow = [],
         let index = -1,
             groupIds = [];
 
+        function normalize(groups) {
+            groupIds = groupIds
+                .filter(groupId => groups.some(group => group.id === groupId))
+                .filter(Utils.onlyUniqueFilterLast);
+
+            if (index > groupIds.length - 1) {
+                index = groupIds.length - 1;
+            }
+        }
+
         return {
             next(groups) {
-                groupIds = groupIds
-                    .filter(groupId => groups.some(group => group.id === groupId))
-                    .filter(Utils.onlyUniqueFilterLast);
+                normalize(groups);
 
-                if (!groupIds[index + 1]) {
-                    return;
+                if (groupIds[index + 1]) {
+                    return groupIds[++index];
                 }
-
-                return groupIds[++index];
             },
             prev(groups) {
-                groupIds = groupIds
-                    .filter(groupId => groups.some(group => group.id === groupId))
-                    .filter(Utils.onlyUniqueFilterLast);
+                normalize(groups);
 
-                if (!groupIds[index - 1]) {
-                    return;
+                if (groupIds[index - 1]) {
+                    return groupIds[--index];
                 }
-
-                return groupIds[--index];
             },
             add(groupId) {
                 index = groupIds.push(groupId) - 1;
@@ -172,11 +181,11 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
         return false;
     }
 
-    if (groupId && (!Number.isFinite(groupId) || groupId < 1)) {
+    if (groupId && (!Number.isSafeInteger(groupId) || groupId < 1)) {
         log.throwError(['Invalid group id:', groupId]);
     }
 
-    if (activeTabId && (!Number.isFinite(activeTabId) || activeTabId < 1)) {
+    if (activeTabId && (!Number.isSafeInteger(activeTabId) || activeTabId < 1)) {
         activeTabId = null;
     }
 
@@ -254,11 +263,11 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
 
                 if (groupToHide) {
                     if (groupToHide.muteTabsWhenGroupCloseAndRestoreWhenOpen) {
-                        Tabs.setMute(tabs, true);
+                        Tabs.setMute(tabs, true).catch(log.onCatch('Tabs.setMute', false));
                     }
 
-                    if (options.discardTabsAfterHide && !groupToHide.dontDiscardTabsAfterHideThisGroup) {
-                        if (options.discardAfterHideExcludeAudioTabs) {
+                    if (groupToHide.discardTabsAfterHide) {
+                        if (groupToHide.discardExcludeAudioTabs) {
                             tabs = tabs.filter(tab => !tab.audible);
                         }
 
@@ -1493,7 +1502,7 @@ async function findGroupBookmark(group, parentId, createIfNeed) {
 }
 
 async function getGroupBookmark(group, createIfNeed) {
-    let hasBookmarksPermission = await browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS);
+    const hasBookmarksPermission = await browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS);
 
     if (!hasBookmarksPermission) {
         return;
@@ -1503,26 +1512,24 @@ async function getGroupBookmark(group, createIfNeed) {
         id: options.defaultBookmarksParent,
     };
 
-    if (options.exportGroupToMainBookmarkFolder) {
-        let likeGroup = {
-            title: 'STG bookmarks',
-            bookmarkId: window.localStorage.mainBookmarksFolderId,
-        };
+    let likeGroup = {
+        title: browser.i18n.getMessage('extensionName'),
+        bookmarkId: window.localStorage.mainBookmarksFolderId,
+    };
 
-        rootBookmark = await findGroupBookmark(likeGroup, rootBookmark.id, createIfNeed);
+    rootBookmark = await findGroupBookmark(likeGroup, rootBookmark.id, createIfNeed);
 
-        if (!rootBookmark) {
-            return;
-        }
-
-        window.localStorage.mainBookmarksFolderId = rootBookmark.id;
+    if (!rootBookmark) {
+        return;
     }
+
+    window.localStorage.mainBookmarksFolderId = rootBookmark.id;
 
     return findGroupBookmark(group, rootBookmark.id, createIfNeed);
 }
 
 async function removeGroupBookmark(group) {
-    let groupBookmarkFolder = await getGroupBookmark(group);
+    const groupBookmarkFolder = await getGroupBookmark(group);
 
     if (groupBookmarkFolder) {
         await browser.bookmarks.removeTree(groupBookmarkFolder.id);
@@ -1530,7 +1537,7 @@ async function removeGroupBookmark(group) {
 }
 
 async function updateGroupBookmarkTitle(group) {
-    let groupBookmarkFolder = await getGroupBookmark(group);
+    const groupBookmarkFolder = await getGroupBookmark(group);
 
     if (groupBookmarkFolder) {
         await browser.bookmarks.update(groupBookmarkFolder.id, {
@@ -1540,23 +1547,27 @@ async function updateGroupBookmarkTitle(group) {
 }
 
 async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
-    let hasBookmarksPermission = await browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS);
+    const hasBookmarksPermission = await browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS);
 
     if (!hasBookmarksPermission) {
         showMessages && Utils.notify(['noAccessToBookmarks'], undefined, undefined, undefined, Urls.openOptionsPage);
+        logger.log('exportGroupToBookmarks no bookmarks permission');
         return false;
     }
 
+    const log = logger.start('exportGroupToBookmarks', {groupId: group?.id || group, showMessages});
+
     if (!group) {
-        throw TypeError('group has invalid type');
+        log.throwError('group has invalid type');
     }
 
-    if (Number.isFinite(group)) {
+    if (Number.isSafeInteger(group)) {
         ({group, groupIndex} = await Groups.load(group, true));
     }
 
     if (!group) {
         showMessages && Utils.notify(['groupNotFound']);
+        log.stopError('group not found');
         return false;
     }
 
@@ -1566,20 +1577,18 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
 
     const {BOOKMARK, FOLDER, SEPARATOR} = browser.bookmarks.BookmarkTreeNodeType;
 
-    let {bookmarkId: oldGroupGookmarkId} = group,
+    const {bookmarkId: oldGroupGookmarkId} = group,
         groupBookmarkFolder = await getGroupBookmark(group, true);
 
-    if (options.exportGroupToMainBookmarkFolder) {
-        if (groupBookmarkFolder.parentId === window.localStorage.mainBookmarksFolderId && groupBookmarkFolder.index !== groupIndex) {
-            await browser.bookmarks.move(groupBookmarkFolder.id, {
-                index: groupIndex,
-            });
-        }
+    if (groupBookmarkFolder.parentId === window.localStorage.mainBookmarksFolderId && groupBookmarkFolder.index !== groupIndex) {
+        await browser.bookmarks.move(groupBookmarkFolder.id, {
+            index: groupIndex,
+        });
     }
 
-    let bookmarksToRemove = [];
+    const bookmarksToRemove = [];
 
-    if (options.leaveBookmarksOfClosedTabs) {
+    if (group.leaveBookmarksOfClosedTabs) {
         group.tabs.forEach(function(tab) {
             groupBookmarkFolder.children = groupBookmarkFolder.children.filter(function(bookmark) {
                 if (bookmark.type === BOOKMARK) {
@@ -1670,13 +1679,13 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
         Utils.notify(['groupExportedToBookmarks', group.title], 7);
     }
 
+    log.stop();
+
     return true;
 }
 
 async function setBrowserAction(windowId, title, icon, enable, isSticky) {
     const log = logger.start('setBrowserAction', {windowId, title, icon, enable, isSticky});
-
-    let winObj = windowId ? {windowId} : {};
 
     if ('loading' === title) {
         title = 'lang:loading';
@@ -1702,6 +1711,8 @@ async function setBrowserAction(windowId, title, icon, enable, isSticky) {
     const manifestAction = Constants.MANIFEST.manifest_version === 3
         ? Constants.MANIFEST.action
         : Constants.MANIFEST.browser_action;
+
+    const winObj = windowId ? {windowId} : {};
 
     await Promise.all([
         browser.browserAction.setTitle({
@@ -1736,7 +1747,7 @@ async function updateBrowserActionData(groupId, windowId) {
 
     log.log({groupId, windowId})
 
-    let group = null;
+    let group;
 
     if (groupId) {
         ({group} = await Groups.load(groupId));
@@ -1745,21 +1756,32 @@ async function updateBrowserActionData(groupId, windowId) {
     if (group) {
         log.log('group found');
         await setBrowserAction(windowId, Utils.sliceText(Groups.getTitle(group, 'withContainer'), 43) + ' - STG', Groups.getIconUrl(group), true, group.isSticky); // todo make this args as obj
-        await prependWindowTitle(windowId, group.title);
     } else {
         log.log('group NOT found');
         await setBrowserAction(windowId, undefined, undefined, true);
-        await prependWindowTitle(windowId);
     }
+
+    await prependWindowTitle(windowId, group);
 
     log.stop();
 }
 
-async function prependWindowTitle(windowId, title) {
-    if (options.prependGroupTitleToWindowTitle && windowId) {
-        await browser.windows.update(windowId, {
-            titlePreface: title ? `[${Utils.sliceText(title, 35)}] ` : ''
-        }).catch(logger.onCatch(['prependWindowTitle', {windowId, title}], false));
+async function prependWindowTitle(windowId, group = null) {
+    if (windowId) {
+        let titlePreface = '';
+
+        if (group?.prependTitleToWindow) {
+            const emoji = Groups.getEmojiIcon(group);
+
+            if (emoji) {
+                titlePreface = `${emoji} - `;
+            } else {
+                titlePreface = `${Utils.sliceText(group.title, 12)} - `;
+            }
+        }
+
+        await browser.windows.update(windowId, {titlePreface})
+            .catch(logger.onCatch(['prependWindowTitle', {windowId, titlePreface}]));
     }
 }
 
@@ -2038,11 +2060,9 @@ function removeEvents() {
 
 window.addEventListener('unload', removeEvents);
 
-function openNotSupportedUrlHelper() {
-    Tabs.createUrlOnce('https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/Content_scripts');
-}
-
-browser.commands.onCommand.addListener(onBackgroundMessage);
+browser.commands.onCommand.addListener(function(name) {
+    onBackgroundMessage(name, self);
+});
 
 browser.runtime.onMessage.addListener(onBackgroundMessage);
 
@@ -2065,7 +2085,7 @@ browser.runtime.onMessageExternal.addListener(async function(request, sender) {
         };
     }
 
-    let extensionRules = {};
+    const extensionRules = {};
 
     if (!Utils.isAllowExternalRequestAndSender(request, sender, extensionRules)) {
         log.stop('sender is not allowed');
@@ -2084,7 +2104,7 @@ browser.runtime.onMessageExternal.addListener(async function(request, sender) {
         };
     }
 
-    let result = await onBackgroundMessage(request, sender);
+    const result = await onBackgroundMessage(request, sender);
 
     log.stop();
 
@@ -2155,8 +2175,8 @@ async function onBackgroundMessage(message, sender) {
             return result;
 
         case 'save-log':
-            Logger.logs.push(data.log);
-            Logger.prototype.showLog.call(data.logger, data.log, data.options);
+            addLog(data.log);
+            showLog.call(data.logger, data.log, data.options);
             result.ok = true;
             return result;
 
@@ -2273,7 +2293,7 @@ async function onBackgroundMessage(message, sender) {
                 }
                 break;
             case 'load-custom-group':
-                if (Number.isFinite(data.groupId) && data.groupId > 0) {
+                if (Number.isSafeInteger(data.groupId) && data.groupId > 0) {
                     let groupToLoad = groups.find(group => group.id === data.groupId);
 
                     if (groupToLoad) {
@@ -2285,7 +2305,7 @@ async function onBackgroundMessage(message, sender) {
                                 if (data.windowId === 'new') {
                                     await Windows.create(data.groupId, data.tabId);
                                     result.ok = true;
-                                } else if (Number.isFinite(data.windowId) && data.windowId > 0) {
+                                } else if (Number.isSafeInteger(data.windowId) && data.windowId > 0) {
                                     result.ok = await applyGroup(data.windowId, data.groupId, data.tabId);
                                 } else {
                                     result.error = 'Invalid window id';
@@ -2322,7 +2342,7 @@ async function onBackgroundMessage(message, sender) {
                         result.ok = true;
                     } else {
                         result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleLoadCustomGroup')]);
-                        Utils.notify(result.error, 15, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
+                        Utils.notify(result.error, 15, 'impossibleToAskUserAboutAction', undefined, Urls.openNotSupportedUrlHelper);
                     }
                 }
                 break;
@@ -2368,7 +2388,7 @@ async function onBackgroundMessage(message, sender) {
 
                         if (options.alwaysAskNewGroupName) {
                             result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('createNewGroup')]);
-                            Utils.notify(result.error, 15, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
+                            Utils.notify(result.error, 15, 'impossibleToAskUserAboutAction', undefined, Urls.openNotSupportedUrlHelper);
                         }
                     }
                 }
@@ -2393,7 +2413,7 @@ async function onBackgroundMessage(message, sender) {
                         result.ok = true;
                     } else {
                         result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleRenameGroup')]);
-                        Utils.notify(result.error, 15, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
+                        Utils.notify(result.error, 15, 'impossibleToAskUserAboutAction', undefined, Urls.openNotSupportedUrlHelper);
                     }
                 } else if (data.groupId && !data.title) {
                     let groupToRename = groups.find(group => group.id === data.groupId);
@@ -2416,7 +2436,7 @@ async function onBackgroundMessage(message, sender) {
                             }
                         } else {
                             result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleRenameGroup')]);
-                            Utils.notify(result.error, 15, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
+                            Utils.notify(result.error, 15, 'impossibleToAskUserAboutAction', undefined, Urls.openNotSupportedUrlHelper);
                         }
                     } else {
                         result = await onBackgroundMessage('rename-group', sender);
@@ -2467,7 +2487,7 @@ async function onBackgroundMessage(message, sender) {
                         result.ok = true;
                     } else {
                         result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleRenameGroup')]);
-                        Utils.notify(result.error, 15, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
+                        Utils.notify(result.error, 15, 'impossibleToAskUserAboutAction', undefined, Urls.openNotSupportedUrlHelper);
                     }
                 }
                 break;
@@ -2497,7 +2517,7 @@ async function onBackgroundMessage(message, sender) {
                 let activeTab = await Tabs.getActive(),
                     tabIds = await Tabs.getHighlightedIds(activeTab.windowId, undefined, null);
 
-                if (Number.isFinite(data.groupId) && 0 < data.groupId) {
+                if (Number.isSafeInteger(data.groupId) && 0 < data.groupId) {
                     let groupMoveTo = groups.find(group => group.id === data.groupId);
 
                     if (groupMoveTo) {
@@ -2534,7 +2554,7 @@ async function onBackgroundMessage(message, sender) {
                         result.ok = true;
                     } else {
                         result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleMoveSelectedTabsToCustomGroup')]);
-                        Utils.notify(result.error, 15, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
+                        Utils.notify(result.error, 15, 'impossibleToAskUserAboutAction', undefined, Urls.openNotSupportedUrlHelper);
                     }
                 }
                 break;
@@ -2567,7 +2587,7 @@ async function onBackgroundMessage(message, sender) {
                         result.ok = true;
                     } else {
                         result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleDiscardGroup')]);
-                        Utils.notify(result.error, 15, 'impossibleToAskUserAboutAction', undefined, openNotSupportedUrlHelper);
+                        Utils.notify(result.error, 15, 'impossibleToAskUserAboutAction', undefined, Urls.openNotSupportedUrlHelper);
                     }
                 }
                 break;
@@ -2673,7 +2693,7 @@ async function saveOptions(_options) {
     await Storage.set(_options);
 
     if (optionsKeys.includes('hotkeys')) {
-        let tabs = await Tabs.get(null, null, null, {
+        const tabs = await Tabs.get(null, null, null, {
                 discarded: false,
             }),
             actionData = {
@@ -2685,20 +2705,6 @@ async function saveOptions(_options) {
 
     if (optionsKeys.some(key => ['autoBackupEnable', 'autoBackupIntervalKey', 'autoBackupIntervalValue'].includes(key))) {
         resetAutoBackup();
-    }
-
-    if (optionsKeys.includes('prependGroupTitleToWindowTitle')) {
-        let windows = await Windows.load();
-
-        await Promise.all(windows.map(async win => {
-            if (options.prependGroupTitleToWindowTitle) {
-                await updateBrowserActionData(null, win.id);
-            } else {
-                await browser.windows.update(win.id, {
-                    titlePreface: '',
-                }).catch(log.onCatch(['try update window', win.id, 'for clear window titlePreface']));
-            }
-        }));
     }
 
     if (optionsKeys.includes('temporaryContainerTitle')) {
@@ -2775,7 +2781,13 @@ async function resetAutoBackup() {
 }
 
 async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBackup = false) {
-    let [data, {groups}] = await Promise.all([Storage.get(), Groups.load(null, true, includeTabFavIcons, includeTabThumbnails)]);
+    const [
+        data,
+        {groups},
+    ] = await Promise.all([
+        Storage.get(),
+        Groups.load(null, true, includeTabFavIcons, includeTabThumbnails),
+    ]);
 
     if (isAutoBackup && (!groups.length || groups.every(gr => !gr.tabs.length))) {
         logger.warn('skip create auto backup, groups are empty');
@@ -2794,13 +2806,13 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
         data.pinnedTabs = Tabs.prepareForSave(pinnedTabs);
     }
 
-    let containersToExport = new Set;
+    const containersToExport = new Set;
 
-    data.groups = groups.map(function(group) {
+    data.groups = groups.map(group => {
         group.tabs = Tabs.prepareForSave(group.tabs, false, includeTabFavIcons, includeTabThumbnails);
 
-        group.tabs.forEach(function({cookieStoreId}) {
-            if (!Containers.isDefault(cookieStoreId) && !Containers.isTemporary(cookieStoreId)) {
+        group.tabs.forEach(({cookieStoreId}) => {
+            if (cookieStoreId && !Containers.isTemporary(cookieStoreId)) {
                 containersToExport.add(cookieStoreId);
             }
         });
@@ -2816,22 +2828,20 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
         return group;
     });
 
-    let allContainers = Containers.getAll();
+    if (containersToExport.size) {
+        const allContainers = Containers.getAll();
 
-    data.containers = {};
+        data.containers = {};
 
-    containersToExport.forEach(cookieStoreId => data.containers[cookieStoreId] = allContainers[cookieStoreId]);
+        containersToExport.forEach(cookieStoreId => data.containers[cookieStoreId] = allContainers[cookieStoreId]);
+    }
 
     if (isAutoBackup) {
         data.autoBackupLastBackupTimeStamp = options.autoBackupLastBackupTimeStamp = Utils.unixNow();
 
-        if (options.autoBackupGroupsToFile) {
-            File.backup(data, true, options.autoBackupByDayIndex);
-        }
+        File.backup(data, true, options.autoBackupByDayIndex);
 
-        if (options.autoBackupGroupsToBookmarks) {
-            exportAllGroupsToBookmarks();
-        }
+        exportAllGroupsToBookmarks(false, true);
 
         Storage.set({
             autoBackupLastBackupTimeStamp: data.autoBackupLastBackupTimeStamp,
@@ -2850,10 +2860,11 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
 
     await loadingBrowserAction();
 
-    let {os} = await browser.runtime.getPlatformInfo(),
+    const {os} = await browser.runtime.getPlatformInfo(),
         isMac = os === browser.runtime.PlatformOs.MAC,
-        {lastCreatedGroupPosition} = await Storage.get('lastCreatedGroupPosition'),
         currentData = {};
+
+    let {lastCreatedGroupPosition} = await Storage.get('lastCreatedGroupPosition');
 
     if (!lastCreatedGroupPosition) {
         clearAddonDataBeforeRestore = true;
@@ -2863,7 +2874,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         lastCreatedGroupPosition = 0;
     }
 
-    if (!Number.isInteger(data.lastCreatedGroupPosition)) {
+    if (!Number.isSafeInteger(data.lastCreatedGroupPosition)) {
         data.lastCreatedGroupPosition = 0;
     }
 
@@ -2872,7 +2883,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
     if (clearAddonDataBeforeRestore) {
         await clearAddon(false);
 
-        await Utils.wait(1000);
+        // await Utils.wait(1000);
     } else {
         data.groups.forEach(group => group.isMain = false);
     }
@@ -2893,8 +2904,9 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         currentData.groups = [];
         currentData.hotkeys = [];
     } else {
-        currentData = await Storage.get('hotkeys'),
-        ({groups: currentData.groups} = await Groups.load(null, true, true, options.showTabsWithThumbnailsInManageGroups));
+        currentData = await Storage.get('hotkeys');
+        const {groups} = await Groups.load(null, true, true, options.showTabsWithThumbnailsInManageGroups);
+        currentData.groups = groups;
     }
 
     if (!Array.isArray(data.hotkeys)) {
@@ -2903,7 +2915,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         data.hotkeys.forEach(hotkey => hotkey.metaKey = false);
     }
 
-    let neededConteiners = new Set;
+    const neededConteiners = new Set;
 
     function prepareTab(newTabParams, tab) {
         delete tab.active;
@@ -2918,10 +2930,12 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         Object.assign(tab, newTabParams);
     }
 
-    data.groups = data.groups.map(function(group) {
+    const defaultGroupProps = clearAddonDataBeforeRestore ? data.defaultGroupProps : options.defaultGroupProps;
+
+    data.groups = data.groups.map(group => {
         let newGroupId = null;
 
-        if (Number.isInteger(group.id)) {
+        if (Number.isSafeInteger(group.id)) {
             if (group.id > lastCreatedGroupPosition) {
                 lastCreatedGroupPosition = group.id;
             }
@@ -2931,7 +2945,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
             newGroupId = ++lastCreatedGroupPosition;
         }
 
-        let newGroup = Groups.create(newGroupId, group.title);
+        const newGroup = Groups.create(newGroupId, group.title, defaultGroupProps);
 
         if (group.id) {
             data.hotkeys.forEach(hotkey => hotkey.groupId === group.id ? (hotkey.groupId = newGroup.id) : null);
@@ -2939,13 +2953,13 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
 
         delete group.id;
 
-        for (let key in group) {
+        for (const key in group) {
             if (newGroup.hasOwnProperty(key)) {
                 newGroup[key] = group[key];
             }
         }
 
-        let newTabParams = Groups.getNewTabParams(newGroup);
+        const newTabParams = Groups.getNewTabParams(newGroup);
         newGroup.tabs.forEach(prepareTab.bind(null, newTabParams));
 
         return newGroup;
@@ -2954,8 +2968,12 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
     data.groups = [...currentData.groups, ...data.groups];
     data.hotkeys = [...currentData.hotkeys, ...data.hotkeys];
 
-    data.hotkeys = data.hotkeys.filter(function(hotkey, index, self) {
-        if (Constants.HOTKEY_ACTIONS_WITH_CUSTOM_GROUP.includes(hotkey.action) && hotkey.groupId && !data.groups.some(gr => gr.id === hotkey.groupId)) {
+    data.hotkeys = data.hotkeys.filter((hotkey, index, self) => {
+        if (
+            Constants.HOTKEY_ACTIONS_WITH_CUSTOM_GROUP.includes(hotkey.action) &&
+            hotkey.groupId &&
+            !data.groups.some(gr => gr.id === hotkey.groupId)
+        ) {
             hotkey.groupId = 0;
         }
 
@@ -2967,15 +2985,15 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
     if (data.containers) {
         const containersStorageMap = new Map;
 
-        for (let cookieStoreId in data.containers) {
+        for (const [cookieStoreId, value] of Object.entries(data.containers)) {
             if (!neededConteiners.has(cookieStoreId)) {
                 continue;
             }
 
-            let newCookieStoreId = await Containers.findExistOrCreateSimilar(cookieStoreId, data.containers[cookieStoreId], containersStorageMap);
+            const newCookieStoreId = await Containers.findExistOrCreateSimilar(cookieStoreId, value, containersStorageMap);
 
             if (newCookieStoreId !== cookieStoreId) {
-                data.groups.forEach(function(group) {
+                data.groups.forEach(group => {
                     if (group.newTabContainer === cookieStoreId) {
                         group.newTabContainer = newCookieStoreId;
                     }
@@ -2988,12 +3006,12 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
 
     delete data.containers;
 
-    let allTabs = await Tabs.get(null, false, null, undefined, true, options.showTabsWithThumbnailsInManageGroups);
+    const allTabs = await Tabs.get(null, false, null, undefined, true, options.showTabsWithThumbnailsInManageGroups);
 
     await syncTabs(data.groups, allTabs);
 
     if (Array.isArray(data.pinnedTabs)) {
-        let currentPinnedTabs = await Tabs.get(null, true, null);
+        const currentPinnedTabs = await Tabs.get(null, true, null);
 
         data.pinnedTabs = data.pinnedTabs.filter(function(tab) {
             delete tab.groupId;
@@ -3026,7 +3044,7 @@ async function clearAddon(reloadAddonOnFinish = true) {
 
     removeEvents();
 
-    let [tabs, windows] = await Promise.all([Tabs.get(null, null, null), Windows.load()]);
+    const [tabs, windows] = await Promise.all([Tabs.get(null, null, null), Windows.load()]);
 
     await Promise.all(tabs.map(tab => Cache.removeTabSession(tab.id)));
     await Promise.all(windows.map(win => Cache.removeWindowSession(win.id)));
@@ -3042,21 +3060,29 @@ async function clearAddon(reloadAddonOnFinish = true) {
     }
 }
 
-async function exportAllGroupsToBookmarks(showFinishMessage) {
-    let hasBookmarksPermission = await browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS);
+async function exportAllGroupsToBookmarks(showFinishMessage, isAutoBackup) {
+    const hasBookmarksPermission = await browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS);
 
     if (!hasBookmarksPermission) {
+        logger.log('exportAllGroupsToBookmarks no bookmarks permission');
         return;
     }
+
+    const log = logger.start('exportAllGroupsToBookmarks', {showFinishMessage, isAutoBackup});
 
     if (showFinishMessage) {
         await loadingBrowserAction();
     }
 
-    let {groups} = await Groups.load(null, true);
+    const {groups} = await Groups.load(null, true);
 
-    for (let groupIndex in groups) {
-        await exportGroupToBookmarks(groups[groupIndex], Number(groupIndex), false);
+    for (const [groupIndex, group] of groups.entries()) {
+        if (isAutoBackup && !group.exportToBookmarksWhenAutoBackup) {
+            log.log('skip group', group.id);
+            continue;
+        }
+
+        await exportGroupToBookmarks(group, groupIndex, false);
     }
 
     if (showFinishMessage) {
@@ -3064,6 +3090,8 @@ async function exportAllGroupsToBookmarks(showFinishMessage) {
 
         Utils.notify(['allGroupsExportedToBookmarks']);
     }
+
+    log.stop();
 }
 
 self.startUpData = async function(includeThumbnail) {
@@ -3132,6 +3160,8 @@ self.skipAddGroupToNextNewWindow = false;
 
 
 async function runMigrateForData(data) {
+    const log = logger.create('runMigrateForData');
+
     const currentVersion = Constants.MANIFEST.version;
 
     const resultMigrate = {
@@ -3141,16 +3171,18 @@ async function runMigrateForData(data) {
     };
 
     if (data.version === currentVersion) {
+        log.stop('data.version === currentVersion');
         return resultMigrate;
     }
 
     if (data.version === Constants.DEFAULT_OPTIONS.version) {
         data.version = currentVersion;
         resultMigrate.migrated = true;
+        log.stop('data.version === Constants.DEFAULT_OPTIONS.version');
         return resultMigrate;
     }
 
-    let migrations = [
+    const migrations = [
         {
             version: '1.8.1',
             remove: ['windowsGroup'],
@@ -3463,7 +3495,7 @@ async function runMigrateForData(data) {
         {
             version: '4.7.1',
             async migration() {
-                let latestExampleGroup = Groups.create(0),
+                let latestExampleGroup = Groups.create(),
                     latestExampleGroupKeys = Object.keys(latestExampleGroup).filter(key => !['id', 'title', 'tabs'].includes(key));
 
                 data.groups.forEach(function(group) {
@@ -3558,35 +3590,85 @@ async function runMigrateForData(data) {
                 data.closePopupAfterSelectTab = false;
             },
         },
+        {
+            version: '5.1',
+            remove: [
+                'defaultGroupIconViewType',
+                'defaultGroupIconColor',
+                'discardTabsAfterHide',
+                'discardAfterHideExcludeAudioTabs',
+                'prependGroupTitleToWindowTitle',
+                'autoBackupGroupsToFile',
+                'autoBackupGroupsToBookmarks',
+                'leaveBookmarksOfClosedTabs',
+            ],
+            async migration() {
+                data.groups.forEach(group => {
+                    group.discardTabsAfterHide = !!data.discardTabsAfterHide && !group.dontDiscardTabsAfterHideThisGroup;
+                    delete group.dontDiscardTabsAfterHideThisGroup;
+
+                    group.discardExcludeAudioTabs = !!group.discardTabsAfterHide && !!data.discardAfterHideExcludeAudioTabs;
+
+                    group.prependTitleToWindow = !!data.prependGroupTitleToWindowTitle;
+
+                    group.exportToBookmarksWhenAutoBackup = !!data.autoBackupGroupsToBookmarks;
+                    group.leaveBookmarksOfClosedTabs = !!data.leaveBookmarksOfClosedTabs;
+                });
+
+                data.defaultGroupProps = {};
+
+                if (data.defaultGroupIconViewType && data.defaultGroupIconViewType !== Constants.DEFAULT_GROUP_ICON_VIEW_TYPE) {
+                    data.defaultGroupProps.iconViewType = data.defaultGroupIconViewType;
+                }
+
+                if (data.defaultGroupIconColor && data.defaultGroupIconColor !== '') {
+                    data.defaultGroupProps.iconColor = data.defaultGroupIconColor;
+                }
+
+                if (data.discardTabsAfterHide) {
+                    data.defaultGroupProps.discardTabsAfterHide = true;
+                }
+
+                if (data.discardTabsAfterHide && data.discardAfterHideExcludeAudioTabs) {
+                    data.defaultGroupProps.discardExcludeAudioTabs = true;
+                }
+
+                if (data.prependGroupTitleToWindowTitle) {
+                    data.defaultGroupProps.prependTitleToWindow = true;
+                }
+
+                if (data.autoBackupGroupsToBookmarks) {
+                    data.defaultGroupProps.exportToBookmarksWhenAutoBackup = true;
+                }
+
+                if (data.autoBackupGroupsToBookmarks && data.leaveBookmarksOfClosedTabs) {
+                    data.defaultGroupProps.leaveBookmarksOfClosedTabs = true;
+                }
+            },
+        },
     ];
 
     // start migration
-    let keysToRemoveFromStorage = [];
+    const keysToRemoveFromStorage = new Set;
 
     // if data version < required latest migrate version then need migration
     if (-1 === Utils.compareVersions(data.version, migrations[migrations.length - 1].version)) {
 
-        for (let migration of migrations) {
+        for (const migration of migrations) {
             if (-1 === Utils.compareVersions(data.version, migration.version)) {
+                log.log('start migration to version', migration.version);
+
                 await migration.migration();
 
-                if (Array.isArray(migration.remove)) {
-                    keysToRemoveFromStorage.push(...migration.remove);
-                }
+                log.log('stop migration to version', migration.version);
+
+                migration.remove?.forEach(keysToRemoveFromStorage.add, keysToRemoveFromStorage);
             }
         }
 
     } else if (1 === Utils.compareVersions(data.version, currentVersion)) {
-        let [currentMajor, currentMinor, currentPatch] = currentVersion.split('.'),
-            [dataMajor, dataMinor, dataPatch] = data.version.split('.');
-
-        if (!currentPatch) {
-            currentPatch = 0;
-        }
-
-        if (!dataPatch) {
-            dataPatch = 0;
-        }
+        const [currentMajor, currentMinor = 0, currentPatch = 0] = currentVersion.split('.'),
+            [dataMajor, dataMinor = 0, dataPatch = 0] = data.version.split('.');
 
         if (
             dataMajor > currentMajor ||
@@ -3594,19 +3676,22 @@ async function runMigrateForData(data) {
             (dataMajor == currentMajor && dataMinor == currentMinor && dataPatch > currentPatch)
         ) {
             resultMigrate.error = browser.i18n.getMessage('updateAddonToLatestVersion');
+            log.stopError('migrated', false, resultMigrate.error, 'data.version', data.version, 'currentVersion', currentVersion);
             return resultMigrate;
         }
     }
 
     data.version = currentVersion;
 
-    if (keysToRemoveFromStorage.length) {
+    if (keysToRemoveFromStorage.size) {
         keysToRemoveFromStorage.forEach(key => delete data[key]);
-        await Storage.remove(keysToRemoveFromStorage);
+        log.log('remove keys in storage', Array.from(keysToRemoveFromStorage));
+        await Storage.remove(Array.from(keysToRemoveFromStorage));
     }
     // end migration
 
     resultMigrate.migrated = true;
+    log.stop('migrated', true);
     return resultMigrate;
 }
 
@@ -3931,16 +4016,16 @@ async function init() {
     self.localStorage.START_TIME = Date.now();
 
     try {
-        let data = await Storage.get(),
+        let data = await Storage.get(undefined, undefined, true),
             dataChanged = new Set;
 
-        if (!Array.isArray(data.groups)) {
-            Utils.notify(['ffFailedAndLostDataMessage']);
+        // if (!Array.isArray(data.groups)) {
+        //     Utils.notify(['ffFailedAndLostDataMessage']);
 
-            data.groups = [];
-            dataChanged.add(true);
-        }
-
+        //     data.groups = [];
+        //     dataChanged.add(true);
+        // }
+        log.log('data.temporaryContainerTitle', data.temporaryContainerTitle)
         await Containers.init(data.temporaryContainerTitle);
 
         log.log('containers inited');

@@ -393,10 +393,6 @@
         "message": "Styl ikony",
         "description": "Icon style"
     },
-    "discardTabsAfterHide": {
-        "message": "Uvolnit panely z paměti po přepnutí na jinou skupinu (tím se sníží využití paměti RAM)",
-        "description": "Discard tabs after hide (this will save the RAM)"
-    },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Není možné změnit skupinu, protože jeden z otevřených panelů sdílí mikrofon nebo kameru",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
@@ -432,10 +428,6 @@
     "ffFailedAndLostDataMessage": {
         "message": "FF spadl a došlo ke ztrátě všech skupin.\nPokud máte zálohu, obnovte ji.",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
-    },
-    "enterDefaultGroupIconViewTypeTitle": {
-        "message": "Styl ikony pro nové skupiny",
-        "description": "Icon style for a new group"
     },
     "openGroupInNewWindow": {
         "message": "Otevřít skupinu v novém okně",
@@ -579,7 +571,7 @@
         "message": "Vytvořit novou skupinu při otevření nového okna",
         "description": "Create a new group when opening a new window"
     },
-    "prependGroupTitleToWindowTitle": {
+    "prependTitleToWindow": {
         "message": "Připojit název skupiny k názvu okna",
         "description": "Prepend group title to window title"
     },
@@ -625,10 +617,6 @@
         "message": "Nemáte umožněn přístup do záložek. Povolte ho v nastavení doplňku.",
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
-    "exportGroupToMainBookmarkFolder": {
-        "message": "Exportovat skupiny do složky záložek: \"STG bookmarks\"",
-        "description": "Export groups to \"STG bookmarks\" bookmark folder"
-    },
     "exportGroupToBookmarks": {
         "message": "Exportovat skupinu do záložek",
         "description": "Export group to bookmarks"
@@ -651,10 +639,6 @@
         "message": "V této skupině se nenachází žádné panely",
         "description": "This group has no tabs"
     },
-    "autoBackupGroupsToBookmarks": {
-        "message": "Automaticky zálohovat skupiny do záložek",
-        "description": "Auto backup all groups to bookmarks"
-    },
     "exportAllGroupsToBookmarks": {
         "message": "Exportovat všechny skupiny do záložek",
         "description": "Export all groups to bookmarks"
@@ -666,10 +650,6 @@
     "discardTabTitle": {
         "message": "Uvolnit panel z paměti",
         "description": "Discard tab"
-    },
-    "autoBackupGroupsToFile": {
-        "message": "Automaticky zálohovat všechny skupiny do souboru (do stažených souborů)",
-        "description": "Auto backup all groups to file (into downloads folder)"
     },
     "folderNameTitle": {
         "message": "Název složky",
@@ -686,10 +666,6 @@
     "showOtherTabs": {
         "message": "Ukázat ostatní panely",
         "description": "Show other tabs"
-    },
-    "dontDiscardTabsAfterHideThisGroup": {
-        "message": "Po přepnutí na jinou skupinu neuvolňovat tuto skupinu z paměti",
-        "description": "Don't discard tabs into this group after hide"
     },
     "showNotificationAfterGroupDelete": {
         "message": "Ukázat upozornění po smazání skupiny",
@@ -802,8 +778,8 @@
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
     "leaveBookmarksOfClosedTabs": {
-        "message": "Ponechat v záložkách již zavřené panely (budou oddělené oddělovačem)",
-        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+        "message": "Ponechat v záložkách již zavřené panely",
+        "description": "Leave bookmarks of closed tabs"
     },
     "enableDebugTitle": {
         "message": "Umožnit ladění",

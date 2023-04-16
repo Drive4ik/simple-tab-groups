@@ -413,11 +413,7 @@
         "message": "Пиктограма",
         "description": "Icon style"
     },
-    "discardTabsAfterHide": {
-        "message": "Освобождаване на памет от скрити раздели",
-        "description": "Discard tabs after hide (this will save the RAM)"
-    },
-    "discardAfterHideExcludeAudioTabs": {
+    "discardExcludeAudioTabs": {
         "message": "С изключение на разделите със звук",
         "description": "Exclude tabs with sound"
     },
@@ -456,10 +452,6 @@
     "ffFailedAndLostDataMessage": {
         "message": "Firefox се срина и всички групи от раздели са загубени.\nАко имате резервно копие възстановете групите от него.",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
-    },
-    "enterDefaultGroupIconViewTypeTitle": {
-        "message": "Пиктограма на нова група",
-        "description": "Icon style for a new group"
     },
     "openGroupInNewWindow": {
         "message": "Отваряне на групата в прозорец",
@@ -615,7 +607,7 @@
         "message": "Създаване на група при отваряне на прозорец",
         "description": "Create a new group when opening a new window"
     },
-    "prependGroupTitleToWindowTitle": {
+    "prependTitleToWindow": {
         "message": "Добавяне на името на групата към името на прозореца",
         "description": "Prepend group title to window title"
     },
@@ -661,10 +653,6 @@
         "message": "Добавката няма достъп до отметките. Разрешете достъпа в настройките на добавката",
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
-    "exportGroupToMainBookmarkFolder": {
-        "message": "Изнасяне на групите в папка „STG bookmarks“ в отметките",
-        "description": "Export groups to \"STG bookmarks\" bookmark folder"
-    },
     "exportGroupToBookmarks": {
         "message": "Изнасяне на групата в отметките",
         "description": "Export group to bookmarks"
@@ -687,10 +675,6 @@
         "message": "Групата не съдържа раздели",
         "description": "This group has no tabs"
     },
-    "autoBackupGroupsToBookmarks": {
-        "message": "Създаване на резервно копие на групите в отметките",
-        "description": "Auto backup all groups to bookmarks"
-    },
     "exportAllGroupsToBookmarks": {
         "message": "Изнасяне на групите в отметките",
         "description": "Export all groups to bookmarks"
@@ -702,10 +686,6 @@
     "discardTabTitle": {
         "message": "Освобождаване на памет от раздела",
         "description": "Discard tab"
-    },
-    "autoBackupGroupsToFile": {
-        "message": "Автоматични резервни копия на групите във файл (в папката за изтегляния)",
-        "description": "Auto backup all groups to file (into downloads folder)"
     },
     "folderNameTitle": {
         "message": "Име на папката",
@@ -722,10 +702,6 @@
     "showOtherTabs": {
         "message": "Показване на другите раздели",
         "description": "Show other tabs"
-    },
-    "dontDiscardTabsAfterHideThisGroup": {
-        "message": "Без освобождаване на памет от разделите в групата след смяната ѝ",
-        "description": "Don't discard tabs into this group after hide"
     },
     "showNotificationAfterGroupDelete": {
         "message": "Показване на известие след изтриване на група",
@@ -838,8 +814,8 @@
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
     "leaveBookmarksOfClosedTabs": {
-        "message": "Запазване на отметките на затворени раздели (под разделителя)",
-        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+        "message": "Запазване на отметките на затворени раздели",
+        "description": "Leave bookmarks of closed tabs"
     },
     "enableDebugTitle": {
         "message": "Включване на режим DEBUG",

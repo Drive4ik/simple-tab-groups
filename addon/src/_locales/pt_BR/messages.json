@@ -413,11 +413,7 @@
         "message": "Estilo do ícone",
         "description": "Icon style"
     },
-    "discardTabsAfterHide": {
-        "message": "Descartar abas depois de desaparecer (isso vai economizar RAM)",
-        "description": "Discard tabs after hide (this will save the RAM)"
-    },
-    "discardAfterHideExcludeAudioTabs": {
+    "discardExcludeAudioTabs": {
         "message": "Excluir abas com som",
         "description": "Exclude tabs with sound"
     },
@@ -456,10 +452,6 @@
     "ffFailedAndLostDataMessage": {
         "message": "FF falhou e todos os grupos foram perdidos.\nSe você tiver um backup, você pode restaurar os dados a partir dele",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
-    },
-    "enterDefaultGroupIconViewTypeTitle": {
-        "message": "Estilo do ícone para novo grupo",
-        "description": "Icon style for a new group"
     },
     "openGroupInNewWindow": {
         "message": "Abrir o grupo em nova janela",
@@ -607,7 +599,7 @@
         "message": "Criar novo grupo ao abrir uma nova janela",
         "description": "Create a new group when opening a new window"
     },
-    "prependGroupTitleToWindowTitle": {
+    "prependTitleToWindow": {
         "message": "Adicionar título do grupo ao título da janela",
         "description": "Prepend group title to window title"
     },
@@ -653,10 +645,6 @@
         "message": "Você não tem acesso aos favoritos. Ative a permissão nas configurações da extensão.",
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
-    "exportGroupToMainBookmarkFolder": {
-        "message": "Exportar grupos para a pasta de favoritos \"STG bookmarks\"",
-        "description": "Export groups to \"STG bookmarks\" bookmark folder"
-    },
     "exportGroupToBookmarks": {
         "message": "Exportar grupos para favoritos",
         "description": "Export group to bookmarks"
@@ -679,10 +667,6 @@
         "message": "Este grupo não tem abas",
         "description": "This group has no tabs"
     },
-    "autoBackupGroupsToBookmarks": {
-        "message": "Fazer backup automático de todos os grupos para os favoritos",
-        "description": "Auto backup all groups to bookmarks"
-    },
     "exportAllGroupsToBookmarks": {
         "message": "Exportar todos os grupos para os favoritos",
         "description": "Export all groups to bookmarks"
@@ -694,10 +678,6 @@
     "discardTabTitle": {
         "message": "Descartar aba",
         "description": "Discard tab"
-    },
-    "autoBackupGroupsToFile": {
-        "message": "Fazer backup automático de todos os grupos num arquivo (para a pasta Downloads)",
-        "description": "Auto backup all groups to file (into downloads folder)"
     },
     "folderNameTitle": {
         "message": "Nome da pasta",
@@ -714,10 +694,6 @@
     "showOtherTabs": {
         "message": "Mostrar outras abas",
         "description": "Show other tabs"
-    },
-    "dontDiscardTabsAfterHideThisGroup": {
-        "message": "Não descarte abas a este grupo após esconder",
-        "description": "Don't discard tabs into this group after hide"
     },
     "showNotificationAfterGroupDelete": {
         "message": "Mostrar notificação após exclusão do grupo",
@@ -830,8 +806,8 @@
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
     "leaveBookmarksOfClosedTabs": {
-        "message": "Deixe os favoritos das abas fechadas (os favoritos separarão o separador)",
-        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+        "message": "Deixe os favoritos das abas fechadas",
+        "description": "Leave bookmarks of closed tabs"
     },
     "enableDebugTitle": {
         "message": "Habilitar DEBUG",

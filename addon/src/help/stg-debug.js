@@ -127,10 +127,10 @@ async function saveConsoleLogs() {
             browser.tabs.query({}).catch(onCatch('tabs', Array)),
         ]);
 
-    const Logger = backgroundSelf.logger.constructor;
+    const loggerFuncs = backgroundSelf.loggerFuncs;
 
-    const logs = Logger.logs.slice(-3000);
-    const errorLogs = Logger.getErrors();
+    const logs = loggerFuncs.getLogs();
+    const errorLogs = loggerFuncs.getErrors();
 
     const loadedWindows = await Promise.all(
         windows.map(win => win?.id && Cache.loadWindowSession(win).catch(onCatch('window', Object, win)))
@@ -179,7 +179,8 @@ async function saveConsoleLogs() {
     let savedId = await File.save(LOGS_OBJ, 'STG-debug-logs.json');
 
     if (savedId) {
-        Logger.clearLogs();
+        loggerFuncs.clearLogs();
+        loggerFuncs.clearErrors();
     }
 }
 

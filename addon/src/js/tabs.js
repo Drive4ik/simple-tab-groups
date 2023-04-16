@@ -35,17 +35,17 @@ export async function createNative({url, active, pinned, title, index, windowId,
         tab.title = title;
     }
 
-    if (Number.isFinite(index) && index >= 0) {
+    if (Number.isSafeInteger(index) && index >= 0) {
         tab.index = index;
     }
 
     windowId = Cache.getWindowId(groupId) || windowId;
 
-    if (Number.isFinite(windowId) && windowId >= 1) {
+    if (Number.isSafeInteger(windowId) && windowId >= 1) {
         tab.windowId = windowId;
     }
 
-    if (Number.isFinite(openerTabId) && openerTabId >= 1) {
+    if (Number.isSafeInteger(openerTabId) && openerTabId >= 1) {
         tab.openerTabId = openerTabId;
     }
 
@@ -185,7 +185,7 @@ export async function get(
 
     tabs = tabs.filter(Boolean);
 
-    log.stop('found tabs count:', backgroundSelf.IS_TEMPORARY ? tabs : tabs.length);
+    log.stop('found tabs count:', tabs.length);
     return tabs;
 }
 
@@ -748,7 +748,7 @@ export function sendMessage(tabId, message) {
 
 export function prepareForSave(tabs, includeGroupId = false, includeFavIconUrl = false, includeThumbnail = false) {
     return tabs.map(function({id, url, title, cookieStoreId, favIconUrl, openerTabId, groupId, thumbnail}) {
-        let tab = {url, title};
+        const tab = {url, title};
 
         if (!Containers.isDefault(cookieStoreId)) {
             tab.cookieStoreId = Containers.isTemporary(cookieStoreId) ? Constants.TEMPORARY_CONTAINER : cookieStoreId;

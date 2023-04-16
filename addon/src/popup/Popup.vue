@@ -24,6 +24,8 @@
     import * as Utils from 'utils';
     import JSON from 'json';
 
+    import defaultGroupMixin from 'default-group.mixin';
+
     const isSidebar = '#sidebar' === window.location.hash;
 
     window.logger = new Logger(isSidebar ? 'Sidebar' : 'Popup');
@@ -47,6 +49,7 @@
         availableTabKeys = new Set(['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'lastAccessed', 'audible', 'mutedInfo', 'windowId']);
 
     export default {
+        mixins: [defaultGroupMixin],
         data() {
             return {
                 isSidebar: isSidebar,
@@ -1109,6 +1112,14 @@
                 });
             },
 
+            saveEditedGroup(groupId, changes) {
+                this.groupToEdit = null;
+
+                if (changes) {
+                    Messages.sendMessageModule('Groups.update', groupId, changes);
+                }
+            },
+
             // allowTypes: Array ['groups', 'tabs']
             dragHandle(event, itemType, allowTypes, data) {
                 if (event.type !== 'dragstart' && (!this.dragData || !this.dragData.allowTypes.includes(itemType))) {
@@ -1248,7 +1259,7 @@
 <template>
     <div
         id="stg-popup"
-        :class="['no-outline', {'edit-group-popup': !!groupToEdit, 'is-sidebar': isSidebar}]"
+        :class="['no-outline', {'edit-group-popup': !!groupToEdit || openEditDefaultGroup, 'is-sidebar': isSidebar}]"
         @contextmenu="mainContextMenu"
         @click="multipleTabIds = []"
         @wheel.ctrl.prevent
@@ -1471,7 +1482,10 @@
                 <hr>
 
                 <div class="create-new-group">
-                    <div class="item" tabindex="0" @click="createNewGroup()" @keydown.enter="createNewGroup()">
+                    <div class="item" tabindex="0"
+                        @click="createNewGroup()"
+                        @keydown.enter="createNewGroup()"
+                        @contextmenu="$refs.newGroupContextMenu.open($event)">
                         <div class="item-icon">
                             <img class="size-16" src="/icons/group-new.svg" />
                         </div>
@@ -1691,6 +1705,15 @@
             </ul>
         </context-menu>
 
+        <context-menu ref="newGroupContextMenu">
+            <ul class="is-unselectable">
+                <li @click="openDefaultGroup">
+                    <img src="/icons/icon.svg" class="size-16" />
+                    <span v-text="lang('defaultGroup')"></span>
+                </li>
+            </ul>
+        </context-menu>
+
         <context-menu-tab-new ref="contextMenuTabNew" @add="addTab"></context-menu-tab-new>
 
         <context-menu-group ref="contextMenuGroup"
@@ -1737,14 +1760,41 @@
                 }]
             "
             @close-popup="groupToEdit = null"
-            @save-group="() => $refs.editGroup.saveGroup()"
+            @save-group="() => $refs.editGroup.triggerChanges()"
             >
             <edit-group
                 ref="editGroup"
-                :groupId="groupToEdit.id"
+                :group-to-edit="groupToEdit.$data"
+                :group-to-compare="groupToEdit.$data"
                 :can-load-file="isSidebar"
-                @saved="groupToEdit = null"
-                @open-manage-groups="openManageGroups"/>
+                @changes="changes => saveEditedGroup(groupToEdit.id, changes)"
+                @open-manage-groups="openManageGroups"></edit-group>
+        </edit-group-popup>
+
+        <edit-group-popup
+            v-if="openEditDefaultGroup"
+            title="defaultGroup"
+            :buttons="
+                [{
+                    event: 'save-group',
+                    classList: 'is-success',
+                    lang: 'save',
+                }, {
+                    event: 'close-popup',
+                    lang: 'cancel',
+                }]
+            "
+            @close-popup="openEditDefaultGroup = false"
+            @save-group="() => $refs.editDefaultGroup.triggerChanges()"
+            >
+            <edit-group
+                ref="editDefaultGroup"
+                :group-to-edit="defaultGroup"
+                :is-default-group="true"
+                :group-to-compare="defaultCleanGroup"
+                :can-load-file="isSidebar"
+                @changes="saveDefaultGroup"
+                @open-manage-groups="openManageGroups"></edit-group>
         </edit-group-popup>
 
         <popup
@@ -1828,6 +1878,7 @@
     }
 
     html {
+        scrollbar-width: thin;
         width: var(--popup-width);
         min-height: var(--min-popup-height);
         max-width: var(--max-popup-width);

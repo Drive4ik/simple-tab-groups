@@ -4,9 +4,8 @@
     import Vue from 'vue';
 
     import popup from '../js/popup.vue';
-    import swatches from 'vue-swatches';
+    import editGroup from '../js/edit-group.vue';
     import manageAddonBackup from './manage-addon-backup';
-    import 'vue-swatches/dist/vue-swatches.css';
 
     import * as Constants from 'constants';
     import Messages from 'messages';
@@ -17,6 +16,8 @@
     import * as Urls from 'urls';
     import * as Groups from 'groups';
     import JSON from 'json';
+
+    import defaultGroupMixin from 'default-group.mixin';
 
     window.logger = new Logger('Options');
 
@@ -31,6 +32,7 @@
     document.title = browser.i18n.getMessage('openSettings');
 
     export default {
+        mixins: [defaultGroupMixin],
         data() {
             return {
                 SECTION_GENERAL,
@@ -146,18 +148,16 @@
         },
         components: {
             popup: popup,
-            swatches: swatches,
+            'edit-group': editGroup,
             'manage-addon-backup': manageAddonBackup,
         },
         async created() {
-            let {os} = await browser.runtime.getPlatformInfo();
+            const {os} = await browser.runtime.getPlatformInfo();
             this.isMac = os === browser.runtime.PlatformOs.MAC;
 
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.updateTheme());
+            const data = await Storage.get();
 
-            let data = await Storage.get();
-
-            let options = Utils.assignKeys({}, data, Constants.ALL_OPTIONS_KEYS);
+            const options = Utils.assignKeys({}, data, Constants.ALL_OPTIONS_KEYS);
 
             options.autoBackupFolderName = await File.getAutoBackupFolderName();
 
@@ -166,13 +166,13 @@
             this.groups = data.groups; // set before for watch hotkeys
             this.options = options;
 
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.updateTheme());
+
             this.loadBookmarksParents();
 
             [
                 ...Constants.ONLY_BOOL_OPTION_KEYS,
                 'defaultBookmarksParent',
-                'defaultGroupIconViewType',
-                'defaultGroupIconColor',
                 'autoBackupIntervalKey',
                 'theme',
                 'contextMenuTab',
@@ -210,24 +210,6 @@
                 Messages.sendMessageModule('BG.saveOptions', {
                     autoBackupFolderName: value,
                 });
-            },
-            'options.autoBackupGroupsToFile': function(value, oldValue) {
-                if (null == oldValue) {
-                    return;
-                }
-
-                if (!value && !this.options.autoBackupGroupsToBookmarks) {
-                    this.options.autoBackupGroupsToBookmarks = true;
-                }
-            },
-            'options.autoBackupGroupsToBookmarks': function(value, oldValue) {
-                if (null == oldValue) {
-                    return;
-                }
-
-                if (!value && !this.options.autoBackupGroupsToFile) {
-                    this.options.autoBackupGroupsToFile = true;
-                }
             },
             'options.autoBackupIntervalValue': function(value, oldValue) {
                 if (!value || null == oldValue) {
@@ -308,14 +290,6 @@
             },
         },
         computed: {
-            isDisabledAutoBackupGroupsToFile() {
-                if (!this.permissions.bookmarks) {
-                    this.options.autoBackupGroupsToFile = true;
-                    return true;
-                }
-
-                return false;
-            },
             showEnableDarkThemeNotification() {
                 return Utils.getThemeApply(this.options.theme) === 'dark';
             },
@@ -366,9 +340,9 @@
             },
 
             exportAddonSettings() {
-                Messages.sendMessage('create-backup',{
-                    includeTabFavIconsIntoBackup: this.includeTabFavIconsIntoBackup,
-                    includeTabThumbnailsIntoBackup: this.includeTabThumbnailsIntoBackup,
+                Messages.sendMessage('create-backup', {
+                    includeTabFavIcons: this.includeTabFavIconsIntoBackup,
+                    includeTabThumbnails: this.includeTabThumbnailsIntoBackup,
                 });
             },
 
@@ -382,7 +356,7 @@
                     return;
                 }
 
-                if ('object' !== Utils.type(data) || !Array.isArray(data.groups) || !Number.isInteger(data.lastCreatedGroupPosition)) {
+                if ('object' !== Utils.type(data) || !Array.isArray(data.groups) || !Number.isSafeInteger(data.lastCreatedGroupPosition)) {
                     Utils.notify('This is wrong backup!');
                     return;
                 }
@@ -616,13 +590,6 @@
                 Messages.sendMessageModule('BG.clearAddon');
             },
 
-            getIconTypeUrl(iconType) {
-                return Groups.getIconUrl({
-                    iconViewType: iconType,
-                    iconColor: this.options.defaultGroupIconColor || 'rgb(66, 134, 244)',
-                });
-            },
-
             createHotkey() {
                 return {
                     ctrlKey: false,
@@ -720,20 +687,6 @@
                     </div>
                 </div>
             </div>
-            <div class="field h-margin-left-10">
-                <label class="checkbox" :disabled="!permissions.bookmarks">
-                    <input v-if="permissions.bookmarks" v-model="options.exportGroupToMainBookmarkFolder" type="checkbox" />
-                    <input v-else disabled="" type="checkbox" />
-                    <span v-text="lang('exportGroupToMainBookmarkFolder')"></span>
-                </label>
-            </div>
-            <div class="field h-margin-left-10">
-                <label class="checkbox" :disabled="!permissions.bookmarks">
-                    <input v-if="permissions.bookmarks" v-model="options.leaveBookmarksOfClosedTabs" type="checkbox" />
-                    <input v-else disabled="" type="checkbox" />
-                    <span v-text="lang('leaveBookmarksOfClosedTabs')"></span>
-                </label>
-            </div>
             <div class="field">
                 <label class="checkbox">
                     <input v-model="options.showContextMenuOnTabs" type="checkbox" />
@@ -790,25 +743,6 @@
             </div>
             <div class="field">
                 <label class="checkbox">
-                    <input v-model="options.prependGroupTitleToWindowTitle" type="checkbox" />
-                    <span v-text="lang('prependGroupTitleToWindowTitle')"></span>
-                </label>
-            </div>
-            <div class="field">
-                <label class="checkbox">
-                    <input v-model="options.discardTabsAfterHide" type="checkbox" />
-                    <span v-text="lang('discardTabsAfterHide')"></span>
-                </label>
-            </div>
-            <div class="field h-margin-left-10">
-                <label class="checkbox" :disabled="!options.discardTabsAfterHide">
-                    <input v-if="options.discardTabsAfterHide" v-model="options.discardAfterHideExcludeAudioTabs" type="checkbox" />
-                    <input v-else disabled="" type="checkbox" />
-                    <span v-text="lang('discardAfterHideExcludeAudioTabs')"></span>
-                </label>
-            </div>
-            <div class="field">
-                <label class="checkbox">
                     <input v-model="options.openManageGroupsInTab" type="checkbox" />
                     <span v-text="lang('openManageGroupsInTab')"></span>
                 </label>
@@ -838,6 +772,14 @@
                 </label>
             </div>
             <div class="field">
+                <button class="button is-success" @click="openDefaultGroup">
+                    <span class="icon">
+                        <img class="size-16" src="/icons/icon.svg" />
+                    </span>
+                    <span class="h-margin-left-5" v-text="lang('defaultGroup')"></span>
+                </button>
+            </div>
+            <div class="field">
                 <label class="label" v-text="lang('temporaryContainerTitleDescription')"></label>
                 <div class="control">
                     <input v-model.lazy.trim="options.temporaryContainerTitle" class="input tmp-container-input" type="text" :placeholder="lang('temporaryContainerTitle')">
@@ -858,29 +800,6 @@
             </div>
 
             <div v-if="showEnableDarkThemeNotification" class="field mb-6" v-html="lang('enableDarkThemeNotification')"></div>
-
-            <div class="field">
-                <label class="label" v-text="lang('enterDefaultGroupIconViewTypeTitle')"></label>
-                <div class="field is-grouped">
-                    <div class="control">
-                        <swatches v-model.trim="options.defaultGroupIconColor" :title="lang('iconColor')" swatches="text-advanced" popover-x="right" show-fallback :trigger-style="{
-                            width: '36px',
-                            height: '27px',
-                            borderRadius: '4px',
-                        }" />
-                    </div>
-                    <div v-for="iconViewType in GROUP_ICON_VIEW_TYPES" :key="iconViewType" class="control">
-                        <button
-                            @click="options.defaultGroupIconViewType = iconViewType"
-                            :class="['button', {'is-focused': options.defaultGroupIconViewType === iconViewType}]"
-                            >
-                            <figure class="image is-16x16 is-inline-block">
-                                <img :src="getIconTypeUrl(iconViewType)" />
-                            </figure>
-                        </button>
-                    </div>
-                </div>
-            </div>
 
             <hr/>
 
@@ -1077,30 +996,17 @@
 
                     <!-- files -->
                     <div class="field">
-                        <label class="checkbox" :disabled="isDisabledAutoBackupGroupsToFile">
-                            <input v-model="options.autoBackupGroupsToFile" :disabled="isDisabledAutoBackupGroupsToFile" type="checkbox" />
-                            <span v-text="lang('autoBackupGroupsToFile')"></span>
-                        </label>
                         <div class="field is-grouped is-align-items-center">
                             <div class="control">
                                 <label class="field" v-text="lang('folderNameTitle') + ':'"></label>
                             </div>
                             <div class="control">
-                                <input type="text" v-model.trim="options.autoBackupFolderName" :disabled="!options.autoBackupGroupsToFile" maxlength="200" class="input" />
+                                <input type="text" v-model.trim="options.autoBackupFolderName" maxlength="200" class="input" />
                             </div>
                             <div class="control">
                                 <button class="button" @click="openBackupFolder" v-text="lang('openBackupFolder')"></button>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- bookmarks -->
-                    <div class="field">
-                        <label class="checkbox" :disabled="!permissions.bookmarks">
-                            <input v-if="permissions.bookmarks" v-model="options.autoBackupGroupsToBookmarks" type="checkbox" />
-                            <input v-else disabled="" type="checkbox" />
-                            <span v-text="lang('autoBackupGroupsToBookmarks')"></span>
-                        </label>
                     </div>
                 </div>
             </div>
@@ -1179,7 +1085,7 @@
                     <div class="control">
                         <button @click="showClearAddonConfirmPopup = true" class="button is-danger">
                             <span class="icon">
-                                <img class="size-16" src="/icons/close.svg" style="fill: #ffffff" />
+                                <img class="size-16" src="/icons/close.svg" />
                             </span>
                             <span class="h-margin-left-5" v-text="lang('clear')"></span>
                         </button>
@@ -1188,6 +1094,30 @@
             </div>
 
         </div>
+
+        <popup
+            v-if="openEditDefaultGroup"
+            :title="lang('defaultGroup')"
+            :buttons="
+                [{
+                    event: 'save-group',
+                    classList: 'is-success',
+                    lang: 'save',
+                }, {
+                    event: 'close-popup',
+                    lang: 'cancel',
+                }]
+            "
+            @save-group="() => $refs.editDefaultGroup.triggerChanges()"
+            @close-popup="openEditDefaultGroup = false"
+            >
+            <edit-group
+                ref="editDefaultGroup"
+                :group-to-edit="defaultGroup"
+                :is-default-group="true"
+                :group-to-compare="defaultCleanGroup"
+                @changes="saveDefaultGroup"></edit-group>
+        </popup>
 
         <popup v-if="showLoadingMessage" :buttons="
                 [{
@@ -1256,7 +1186,12 @@
     body {
         // background-color: #f9f9fa;
         transition: background-color ease .2s;
-        font-size: 14px;
+    }
+
+    .button.is-info,
+    .button.is-danger,
+    .button.is-success {
+        --fill-color: #fff;
     }
 
     #stg-options {
@@ -1264,6 +1199,10 @@
         max-width: 1024px;
         margin: 0 auto;
         padding: 10px 20px 50px;
+
+        .field:not(:last-child) {
+            margin-bottom: .5rem;
+        }
 
         .backup-time-input {
             width: 100px;

@@ -413,11 +413,7 @@
         "message": "图标类型",
         "description": "Icon style"
     },
-    "discardTabsAfterHide": {
-        "message": "隐藏后冻结标签页（该操作节省内存）",
-        "description": "Discard tabs after hide (this will save the RAM)"
-    },
-    "discardAfterHideExcludeAudioTabs": {
+    "discardExcludeAudioTabs": {
         "message": "排除有声标签页",
         "description": "Exclude tabs with sound"
     },
@@ -456,10 +452,6 @@
     "ffFailedAndLostDataMessage": {
         "message": "FF出错，所有标签页群组丢失。\n如果你创建了备份，可以从中恢复数据",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
-    },
-    "enterDefaultGroupIconViewTypeTitle": {
-        "message": "新群组的图标样式",
-        "description": "Icon style for a new group"
     },
     "openGroupInNewWindow": {
         "message": "在新窗口打开群组",
@@ -607,7 +599,7 @@
         "message": "打开新窗口时创建新群组",
         "description": "Create a new group when opening a new window"
     },
-    "prependGroupTitleToWindowTitle": {
+    "prependTitleToWindow": {
         "message": "在窗口标题前添加群组标题",
         "description": "Prepend group title to window title"
     },
@@ -653,10 +645,6 @@
         "message": "无书签访问权限。请在扩展设置中启用",
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
-    "exportGroupToMainBookmarkFolder": {
-        "message": "导出群组到主书签文件夹“STG bookmarks”",
-        "description": "Export groups to \"STG bookmarks\" bookmark folder"
-    },
     "exportGroupToBookmarks": {
         "message": "导出群组到书签",
         "description": "Export group to bookmarks"
@@ -679,10 +667,6 @@
         "message": "该群组没有标签页",
         "description": "This group has no tabs"
     },
-    "autoBackupGroupsToBookmarks": {
-        "message": "自动备份所有群组到书签",
-        "description": "Auto backup all groups to bookmarks"
-    },
     "exportAllGroupsToBookmarks": {
         "message": "导出所有群组到书签",
         "description": "Export all groups to bookmarks"
@@ -694,10 +678,6 @@
     "discardTabTitle": {
         "message": "冻结标签页",
         "description": "Discard tab"
-    },
-    "autoBackupGroupsToFile": {
-        "message": "自动备份所有群组到文件（位于下载文件夹）",
-        "description": "Auto backup all groups to file (into downloads folder)"
     },
     "folderNameTitle": {
         "message": "文件夹名称",
@@ -714,10 +694,6 @@
     "showOtherTabs": {
         "message": "显示其它标签页",
         "description": "Show other tabs"
-    },
-    "dontDiscardTabsAfterHideThisGroup": {
-        "message": "隐藏标签页后不要冻结它到这个群组",
-        "description": "Don't discard tabs into this group after hide"
     },
     "showNotificationAfterGroupDelete": {
         "message": "删除群组后显示通知",
@@ -830,8 +806,8 @@
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
     "leaveBookmarksOfClosedTabs": {
-        "message": "关闭标签页留下书签（书签将分隔开分隔符）",
-        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+        "message": "关闭标签页留下书签",
+        "description": "Leave bookmarks of closed tabs"
     },
     "enableDebugTitle": {
         "message": "启用调试",

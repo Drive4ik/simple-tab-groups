@@ -413,11 +413,7 @@
         "message": "圖示樣式",
         "description": "Icon style"
     },
-    "discardTabsAfterHide": {
-        "message": "隱藏後廢棄(休眠)分頁 (可減少記憶體浪費)",
-        "description": "Discard tabs after hide (this will save the RAM)"
-    },
-    "discardAfterHideExcludeAudioTabs": {
+    "discardExcludeAudioTabs": {
         "message": "不包括發出聲音的分頁",
         "description": "Exclude tabs with sound"
     },
@@ -456,10 +452,6 @@
     "ffFailedAndLostDataMessage": {
         "message": "Firefox 發生了錯誤，將遺失所有分頁群組。\n若擁有備份檔，請從備份檔還原分頁群組資料。",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
-    },
-    "enterDefaultGroupIconViewTypeTitle": {
-        "message": "新分頁群組的圖示樣式",
-        "description": "Icon style for a new group"
     },
     "openGroupInNewWindow": {
         "message": "在新視窗開啟分頁群組",
@@ -615,7 +607,7 @@
         "message": "開啟新視窗時建立新分頁群組",
         "description": "Create a new group when opening a new window"
     },
-    "prependGroupTitleToWindowTitle": {
+    "prependTitleToWindow": {
         "message": "於視窗名稱前顯示群組名稱",
         "description": "Prepend group title to window title"
     },
@@ -661,10 +653,6 @@
         "message": "無書籤存取權限，請在附加元件管理中設定權限。",
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
-    "exportGroupToMainBookmarkFolder": {
-        "message": "匯出分頁群組到書籤資料夾 \"STG bookmarks\"",
-        "description": "Export groups to \"STG bookmarks\" bookmark folder"
-    },
     "exportGroupToBookmarks": {
         "message": "匯出分頁群組到書籤",
         "description": "Export group to bookmarks"
@@ -687,10 +675,6 @@
         "message": "此分頁群組沒有任何分頁",
         "description": "This group has no tabs"
     },
-    "autoBackupGroupsToBookmarks": {
-        "message": "自動備份所有群組到書籤",
-        "description": "Auto backup all groups to bookmarks"
-    },
     "exportAllGroupsToBookmarks": {
         "message": "匯出所有群組到書籤",
         "description": "Export all groups to bookmarks"
@@ -702,10 +686,6 @@
     "discardTabTitle": {
         "message": "廢棄(休眠)分頁",
         "description": "Discard tab"
-    },
-    "autoBackupGroupsToFile": {
-        "message": "自動備份所有群組至檔案（位於下載資料夾）",
-        "description": "Auto backup all groups to file (into downloads folder)"
     },
     "folderNameTitle": {
         "message": "資料夾名稱",
@@ -722,10 +702,6 @@
     "showOtherTabs": {
         "message": "顯示其他分頁",
         "description": "Show other tabs"
-    },
-    "dontDiscardTabsAfterHideThisGroup": {
-        "message": "背景群組不捨棄(休眠)分頁",
-        "description": "Don't discard tabs into this group after hide"
     },
     "showNotificationAfterGroupDelete": {
         "message": "群組刪除後顯示通知",
@@ -838,8 +814,8 @@
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
     "leaveBookmarksOfClosedTabs": {
-        "message": "在書籤中保留已關閉的分頁(書籤會用分隔號分開)",
-        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+        "message": "在書籤中保留已關閉的分頁",
+        "description": "Leave bookmarks of closed tabs"
     },
     "enableDebugTitle": {
         "message": "啟用除錯模式",

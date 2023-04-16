@@ -128,7 +128,8 @@
                 }
 
                 > img,
-                > figure.image {
+                > figure.image,
+                > span.userContext-icon {
                     margin-right: var(--main-inden);
                 }
 

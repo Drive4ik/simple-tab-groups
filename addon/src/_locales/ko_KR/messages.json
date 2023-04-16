@@ -405,11 +405,7 @@
         "message": "아이콘 스타일",
         "description": "Icon style"
     },
-    "discardTabsAfterHide": {
-        "message": "숨기기 후 탭을 삭제합니다. (RAM을 절약함)",
-        "description": "Discard tabs after hide (this will save the RAM)"
-    },
-    "discardAfterHideExcludeAudioTabs": {
+    "discardExcludeAudioTabs": {
         "message": "소리가 있는 탭 제외",
         "description": "Exclude tabs with sound"
     },
@@ -448,10 +444,6 @@
     "ffFailedAndLostDataMessage": {
         "message": "FF가 실패하고 모든 그룹이 손실되었습니다.\n백업이 있는 경우 백업에서 데이터를 복원할 수 있습니다.",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
-    },
-    "enterDefaultGroupIconViewTypeTitle": {
-        "message": "새 그룹의 아이콘 스타일",
-        "description": "Icon style for a new group"
     },
     "openGroupInNewWindow": {
         "message": "새 창에서 그룹 열기",
@@ -599,7 +591,7 @@
         "message": "새 창을 열 때 새 그룹 만들기",
         "description": "Create a new group when opening a new window"
     },
-    "prependGroupTitleToWindowTitle": {
+    "prependTitleToWindow": {
         "message": "창 제목 앞에 그룹 제목 추가",
         "description": "Prepend group title to window title"
     },
@@ -645,10 +637,6 @@
         "message": "북마크에 대한 액세스 권한이 없습니다. 확장 프로그램 설정에서 활성화",
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
-    "exportGroupToMainBookmarkFolder": {
-        "message": "그룹을 \"STG 책갈피\" 책갈피 폴더로 가져가기",
-        "description": "Export groups to \"STG bookmarks\" bookmark folder"
-    },
     "exportGroupToBookmarks": {
         "message": "북마크로 그룹 내보내기",
         "description": "Export group to bookmarks"
@@ -671,10 +659,6 @@
         "message": "이 그룹에는 탭이 없습니다.",
         "description": "This group has no tabs"
     },
-    "autoBackupGroupsToBookmarks": {
-        "message": "모든 그룹을 북마크로 자동 백업",
-        "description": "Auto backup all groups to bookmarks"
-    },
     "exportAllGroupsToBookmarks": {
         "message": "모든 그룹을 북마크로 내보내기",
         "description": "Export all groups to bookmarks"
@@ -686,10 +670,6 @@
     "discardTabTitle": {
         "message": "탭 버리기",
         "description": "Discard tab"
-    },
-    "autoBackupGroupsToFile": {
-        "message": "모든 그룹을 파일로 자동 백업 (다운로드 폴더로)",
-        "description": "Auto backup all groups to file (into downloads folder)"
     },
     "folderNameTitle": {
         "message": "폴더 제목",
@@ -706,10 +686,6 @@
     "showOtherTabs": {
         "message": "다른 탭 표시",
         "description": "Show other tabs"
-    },
-    "dontDiscardTabsAfterHideThisGroup": {
-        "message": "숨김 후에 이 그룹에 탭을 버리지 마세요",
-        "description": "Don't discard tabs into this group after hide"
     },
     "showNotificationAfterGroupDelete": {
         "message": "그룹 삭제 후 알림 표시",
@@ -822,8 +798,8 @@
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
     "leaveBookmarksOfClosedTabs": {
-        "message": "닫힌 탭의 북마크 유지(북마크는 구분 기호를 구분합니다)",
-        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+        "message": "닫힌 탭의 북마크 유지",
+        "description": "Leave bookmarks of closed tabs"
     },
     "enableDebugTitle": {
         "message": "디버그 활성화",

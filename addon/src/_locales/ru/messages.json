@@ -414,10 +414,10 @@
         "description": "Icon style"
     },
     "discardTabsAfterHide": {
-        "message": "Выгружать вкладки из памяти после смены группы (позволяет сэкономить ОЗУ)",
-        "description": "Discard tabs after hide (this will save the RAM)"
+        "message": "Выгружать вкладки из памяти после закрытия группы",
+        "description": "Unload tabs from memory after closing a group"
     },
-    "discardAfterHideExcludeAudioTabs": {
+    "discardExcludeAudioTabs": {
         "message": "Исключить вкладки со звуком",
         "description": "Exclude tabs with sound"
     },
@@ -456,10 +456,6 @@
     "ffFailedAndLostDataMessage": {
         "message": "Firefox завершил свою работу с ошибкой и все группы были утеряны.\nЕсли у Вас имеется резервная копия, Вы можете восстановить данные из нее",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
-    },
-    "enterDefaultGroupIconViewTypeTitle": {
-        "message": "Стиль значка для новой группы",
-        "description": "Icon style for a new group"
     },
     "openGroupInNewWindow": {
         "message": "Открыть группу в новом окне",
@@ -615,7 +611,7 @@
         "message": "Создавать новую группу при открытии нового окна",
         "description": "Create a new group when opening a new window"
     },
-    "prependGroupTitleToWindowTitle": {
+    "prependTitleToWindow": {
         "message": "Добавить заголовок группы к заголовку окна",
         "description": "Prepend group title to window title"
     },
@@ -661,10 +657,6 @@
         "message": "У вас нет доступа к закладкам. Включить его в настройках аддона",
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
-    "exportGroupToMainBookmarkFolder": {
-        "message": "Экспорт групп в \"STG bookmarks\" папку закладок",
-        "description": "Export groups to \"STG bookmarks\" bookmark folder"
-    },
     "exportGroupToBookmarks": {
         "message": "Экспорт группы в закладки",
         "description": "Export group to bookmarks"
@@ -687,10 +679,6 @@
         "message": "В этой группе нет вкладок",
         "description": "This group has no tabs"
     },
-    "autoBackupGroupsToBookmarks": {
-        "message": "Автоматический экспорт всех групп в закладки",
-        "description": "Auto backup all groups to bookmarks"
-    },
     "exportAllGroupsToBookmarks": {
         "message": "Экспорт всех групп в закладки",
         "description": "Export all groups to bookmarks"
@@ -702,10 +690,6 @@
     "discardTabTitle": {
         "message": "Выгрузить вкладку из памяти",
         "description": "Discard tab"
-    },
-    "autoBackupGroupsToFile": {
-        "message": "Автоматический экспорт всех групп в файл (в папке загрузок)",
-        "description": "Auto backup all groups to file (into downloads folder)"
     },
     "folderNameTitle": {
         "message": "Имя папки",
@@ -722,10 +706,6 @@
     "showOtherTabs": {
         "message": "Показать другие вкладки",
         "description": "Show other tabs"
-    },
-    "dontDiscardTabsAfterHideThisGroup": {
-        "message": "Не выгружать из памяти вкладки группы после её закрытия",
-        "description": "Don't discard tabs into this group after hide"
     },
     "showNotificationAfterGroupDelete": {
         "message": "Показать уведомление после удаления группы",
@@ -837,9 +817,13 @@
         "message": "Пожалуйста, включите опцию \"Открыть предыдущие окна и вкладки\" в настройках браузера. <br>Это необходимо для поддержания связи между группой и вкладкой, иначе вкладки с прошлой сессии не будут открываться при запуске браузера и будут потеряны из дополнения - аддон перестанет правильно работать.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
+    "exportToBookmarksWhenAutoBackup": {
+        "message": "Сохранить группу в закладки при автоматическом резервном копировании",
+        "description": "Save the group to bookmarks when auto backup"
+    },
     "leaveBookmarksOfClosedTabs": {
-        "message": "Оставить закладки закрытых вкладок (закладки будет разделять разделитель)",
-        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+        "message": "Оставить закладки закрытых вкладок",
+        "description": "Leave bookmarks of closed tabs"
     },
     "enableDebugTitle": {
         "message": "Включить логирование (DEBUG)",
@@ -1220,5 +1204,9 @@
     "windowNotHaveGroup": {
         "message": "Это окно не имеет загруженной группы",
         "description": "This window does not have a loaded group"
+    },
+    "defaultGroup": {
+        "message": "Группа по умолчанию",
+        "description": "Default group"
     }
 }

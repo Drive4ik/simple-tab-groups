@@ -49,7 +49,7 @@ export async function init(temporaryContainerTitle) {
     log.stop();
 }
 
-async function load(containersStorage = containers) {
+export async function load(containersStorage = containers) {
     const log = logger.start('load');
 
     const loadedContainers = await browser.contextualIdentities.query({}).catch(log.onCatch('cant load containers'));
@@ -97,7 +97,7 @@ function onUpdated({contextualIdentity}) {
 
 async function onRemoved({contextualIdentity}) {
     const log = logger.create('onRemoved', contextualIdentity)
-    let isTemporaryContainer = isTemporary(contextualIdentity.cookieStoreId);
+    let isTemporaryContainer = isTemporary(contextualIdentity.cookieStoreId, contextualIdentity);
 
     delete containers[contextualIdentity.cookieStoreId];
 
@@ -276,7 +276,7 @@ export async function removeUnusedTemporaryContainers(tabs, containersStorage = 
         return log.stop('not found');
     }
 
-    log.log('removing temp containers...');
+    log.log('removing...');
 
     await remove(tempContainersToRemove, containersStorage);
 

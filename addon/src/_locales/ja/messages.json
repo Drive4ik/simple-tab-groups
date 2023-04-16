@@ -397,10 +397,6 @@
         "message": "アイコンスタイル",
         "description": "Icon style"
     },
-    "discardTabsAfterHide": {
-        "message": "タブが隠れた後に破棄する (メモリーを節約します)",
-        "description": "Discard tabs after hide (this will save the RAM)"
-    },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "開いているタブの中にマイクかカメラを使用しているものがあるためグループを変更できません",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
@@ -436,10 +432,6 @@
     "ffFailedAndLostDataMessage": {
         "message": "致命的なエラーが発生したためすべてのグループが失われました。\nバックアップがもしあれば、そのデータを復元可能です。",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
-    },
-    "enterDefaultGroupIconViewTypeTitle": {
-        "message": "新しいグループのアイコンスタイル",
-        "description": "Icon style for a new group"
     },
     "openGroupInNewWindow": {
         "message": "グループを新しいウィンドウで開く",
@@ -587,7 +579,7 @@
         "message": "新しいウィンドウを開く時に新しいグループを作成する",
         "description": "Create a new group when opening a new window"
     },
-    "prependGroupTitleToWindowTitle": {
+    "prependTitleToWindow": {
         "message": "ウィンドウのタイトルの前にグループのタイトルを追加して表示する",
         "description": "Prepend group title to window title"
     },
@@ -633,10 +625,6 @@
         "message": "ブックマークにアクセスできません。アドオン設定でアクセスを有効にしてください",
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
-    "exportGroupToMainBookmarkFolder": {
-        "message": "グループをブックマークのフォルダ \"STG bookmarks\" へエクスポートします",
-        "description": "Export groups to \"STG bookmarks\" bookmark folder"
-    },
     "exportGroupToBookmarks": {
         "message": "グループをブックマークへエクスポートします",
         "description": "Export group to bookmarks"
@@ -659,10 +647,6 @@
         "message": "このグループにはタブがありません",
         "description": "This group has no tabs"
     },
-    "autoBackupGroupsToBookmarks": {
-        "message": "全てのグループをブックマークへ自動でバックアップします",
-        "description": "Auto backup all groups to bookmarks"
-    },
     "exportAllGroupsToBookmarks": {
         "message": "全てのグループをブックマークへエクスポートする",
         "description": "Export all groups to bookmarks"
@@ -674,10 +658,6 @@
     "discardTabTitle": {
         "message": "タブを破棄する",
         "description": "Discard tab"
-    },
-    "autoBackupGroupsToFile": {
-        "message": "全てのグループを (ダウンロードフォルダ内の) ファイルへ自動でバックアップします",
-        "description": "Auto backup all groups to file (into downloads folder)"
     },
     "folderNameTitle": {
         "message": "フォルダー名",
@@ -694,10 +674,6 @@
     "showOtherTabs": {
         "message": "他のタブを表示",
         "description": "Show other tabs"
-    },
-    "dontDiscardTabsAfterHideThisGroup": {
-        "message": "このグループでは非表示にしたタブを破棄しない",
-        "description": "Don't discard tabs into this group after hide"
     },
     "showNotificationAfterGroupDelete": {
         "message": "グループの削除時に通知を表示する",
@@ -810,8 +786,8 @@
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
     "leaveBookmarksOfClosedTabs": {
-        "message": "閉じたタブのブックマークを残す (ブックマークはセパレーターで分けられます)",
-        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+        "message": "閉じたタブのブックマークを残す",
+        "description": "Leave bookmarks of closed tabs"
     },
     "enableDebugTitle": {
         "message": "DEBUG を有効にする",

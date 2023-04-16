@@ -23,6 +23,8 @@
     import * as Utils from 'utils';
     import JSON from 'json';
 
+    import defaultGroupMixin from 'default-group.mixin';
+
     window.logger = new Logger('Manage');
 
     // import dnd from '../js/dnd';
@@ -38,6 +40,7 @@
         availableTabKeys = new Set(['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'thumbnail', 'windowId']);
 
     export default {
+        mixins: [defaultGroupMixin],
         data() {
             return {
                 DEFAULT_COOKIE_STORE_ID: Constants.DEFAULT_COOKIE_STORE_ID,
@@ -864,6 +867,14 @@
                 Messages.sendMessageModule('Groups.unload', id);
             },
 
+            saveEditedGroup(groupId, changes) {
+                this.groupToEdit = null;
+
+                if (changes) {
+                    Messages.sendMessageModule('Groups.update', groupId, changes);
+                }
+            },
+
             async toggleArchiveGroup({id, title, isArchive}) {
                 let ok = true;
 
@@ -997,7 +1008,7 @@
                 </div>
             </span>
             <div class="is-full-width has-text-right">
-                <button class="button" @click="addGroup">
+                <button class="button" @click="addGroup" @contextmenu="$refs.newGroupContextMenu.open($event)">
                     <span class="icon">
                         <img class="size-16" src="/icons/group-new.svg">
                     </span>
@@ -1290,6 +1301,39 @@
             @move-tab-new-group="moveTabToNewGroup"
             ></context-menu-tab>
 
+        <context-menu ref="newGroupContextMenu">
+            <ul class="is-unselectable">
+                <li @click="openDefaultGroup">
+                    <img src="/icons/icon.svg" class="size-16" />
+                    <span v-text="lang('defaultGroup')"></span>
+                </li>
+            </ul>
+        </context-menu>
+
+        <popup
+            v-if="openEditDefaultGroup"
+            :title="lang('defaultGroup')"
+            :buttons="
+                [{
+                    event: 'save-group',
+                    classList: 'is-success',
+                    lang: 'save',
+                }, {
+                    event: 'close-popup',
+                    lang: 'cancel',
+                }]
+            "
+            @save-group="() => $refs.editDefaultGroup.triggerChanges()"
+            @close-popup="openEditDefaultGroup = false"
+            >
+            <edit-group
+                ref="editDefaultGroup"
+                :group-to-edit="defaultGroup"
+                :is-default-group="true"
+                :group-to-compare="defaultCleanGroup"
+                @changes="saveDefaultGroup"></edit-group>
+        </popup>
+
         <popup
             v-if="groupToEdit"
             :title="lang('groupSettings')"
@@ -1304,12 +1348,13 @@
                 }]
             "
             @close-popup="groupToEdit = null"
-            @save-group="() => $refs.editGroup.saveGroup()"
+            @save-group="() => $refs.editGroup.triggerChanges()"
             >
             <edit-group
                 ref="editGroup"
-                :groupId="groupToEdit.id"
-                @saved="groupToEdit = null"></edit-group>
+                :group-to-edit="groupToEdit.$data"
+                :group-to-compare="groupToEdit.$data"
+                @changes="changes => saveEditedGroup(groupToEdit.id, changes)"></edit-group>
         </popup>
 
         <popup

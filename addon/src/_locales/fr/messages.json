@@ -413,11 +413,7 @@
         "message": "Style d’icônes",
         "description": "Icon style"
     },
-    "discardTabsAfterHide": {
-        "message": "Décharger les onglets lorsqu'ils sont masqués (ceci libérera de la RAM)",
-        "description": "Discard tabs after hide (this will save the RAM)"
-    },
-    "discardAfterHideExcludeAudioTabs": {
+    "discardExcludeAudioTabs": {
         "message": "Exclure les onglet avec du son",
         "description": "Exclude tabs with sound"
     },
@@ -456,10 +452,6 @@
     "ffFailedAndLostDataMessage": {
         "message": "FireFox a planté et tous les groupes ont été perdus.\nSi vous avez une sauvegarde, vous pouvez effectuer une restauration à partir de celle-ci.",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
-    },
-    "enterDefaultGroupIconViewTypeTitle": {
-        "message": "Style de l’icône pour les nouveaux groupes",
-        "description": "Icon style for a new group"
     },
     "openGroupInNewWindow": {
         "message": "Ouvrir le groupe dans une nouvelle fenêtre",
@@ -615,7 +607,7 @@
         "message": "Créer un nouveau groupe lorsque vous ouvrez une nouvelle fenêtre",
         "description": "Create a new group when opening a new window"
     },
-    "prependGroupTitleToWindowTitle": {
+    "prependTitleToWindow": {
         "message": "Ajouter le nom du groupe au nom de la fenêtre",
         "description": "Prepend group title to window title"
     },
@@ -661,10 +653,6 @@
         "message": "Vous n'avez pas accès aux marque-pages. Activez-le dans les préférences de l'extension",
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
-    "exportGroupToMainBookmarkFolder": {
-        "message": "Exporter les groupes dans le dossier \"STG bookmarks\"",
-        "description": "Export groups to \"STG bookmarks\" bookmark folder"
-    },
     "exportGroupToBookmarks": {
         "message": "Exporter le groupe vers les marque-pages",
         "description": "Export group to bookmarks"
@@ -687,10 +675,6 @@
         "message": "Ce groupe n'a pas d'onglet",
         "description": "This group has no tabs"
     },
-    "autoBackupGroupsToBookmarks": {
-        "message": "Sauvegarder automatiquement tous les groupes vers les marque-pages",
-        "description": "Auto backup all groups to bookmarks"
-    },
     "exportAllGroupsToBookmarks": {
         "message": "Exporter tous les groupes vers les marque-pages",
         "description": "Export all groups to bookmarks"
@@ -702,10 +686,6 @@
     "discardTabTitle": {
         "message": "Décharger l'onglet de la mémoire",
         "description": "Discard tab"
-    },
-    "autoBackupGroupsToFile": {
-        "message": "Sauvegarder automatiquement tous les groupes vers un fichier (dans le dossier des téléchargements)",
-        "description": "Auto backup all groups to file (into downloads folder)"
     },
     "folderNameTitle": {
         "message": "Nom du dossier",
@@ -722,10 +702,6 @@
     "showOtherTabs": {
         "message": "Montrer d'autres onglets",
         "description": "Show other tabs"
-    },
-    "dontDiscardTabsAfterHideThisGroup": {
-        "message": "Ne pas décharger les onglets de ce groupe lorsqu'ils sont masqués",
-        "description": "Don't discard tabs into this group after hide"
     },
     "showNotificationAfterGroupDelete": {
         "message": "Afficher une notification après la suppression d'un groupe",
@@ -838,8 +814,8 @@
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
     "leaveBookmarksOfClosedTabs": {
-        "message": "Conserver les marque-pages des onglets fermés (mais ils seront séparés des autres marque-pages)",
-        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+        "message": "Conserver les marque-pages des onglets fermés",
+        "description": "Leave bookmarks of closed tabs"
     },
     "enableDebugTitle": {
         "message": "Activer le mode DEBUG",

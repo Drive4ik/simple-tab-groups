@@ -38,13 +38,13 @@
         },
         computed: {
             showPinnedTabs() {
-                return this.data.pinnedTabs && this.data.pinnedTabs.length > 0;
+                return this.data.pinnedTabs?.length > 0;
             },
             showGeneral() {
                 return Object.keys(this.data).some(key => key !== 'hotkeys' && Constants.ALL_OPTIONS_KEYS.includes(key));
             },
             showHotkeys() {
-                return this.data.hotkeys && this.data.hotkeys.length > 0;
+                return this.data.hotkeys?.length > 0;
             },
         },
         mounted() {
@@ -78,15 +78,19 @@
             getGroupIconUrl: Groups.getIconUrl,
 
             getData() {
-                let result = {
+                const result = {
                     groups: this.groups,
                 };
 
-                if (this.data.containers) {
+                if (typeof this.data.version === 'string' && this.data.version.length) {
+                    result.version = this.data.version;
+                }
+
+                if (this.data.containers && result.groups.length) {
                     result.containers = this.data.containers;
                 }
 
-                if (Number.isInteger(this.data.lastCreatedGroupPosition)) {
+                if (Number.isSafeInteger(this.data.lastCreatedGroupPosition)) {
                     result.lastCreatedGroupPosition = this.data.lastCreatedGroupPosition;
                 }
 
@@ -177,11 +181,7 @@
                             <img :src="allContainers[TEMPORARY_CONTAINER].iconUrl" class="size-16 fill-context" />
                         </figure>
                         <figure v-else-if="data.containers && data.containers[group.newTabContainer] && data.containers[group.newTabContainer].iconUrl" class="image is-16x16 is-inline-block">
-                            <img
-                                :src="data.containers[group.newTabContainer].iconUrl"
-                                :style="{fill: data.containers[group.newTabContainer].colorCode}"
-                                class="size-16 fill-context"
-                                />
+                            <span :class="`size-16 userContext-icon identity-icon-${data.containers[group.newTabContainer].icon} identity-color-${data.containers[group.newTabContainer].color}`"></span>
                         </figure>
                         &nbsp;
                     </template>

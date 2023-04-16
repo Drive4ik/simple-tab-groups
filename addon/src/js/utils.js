@@ -21,6 +21,72 @@ export function type(obj) {
     return Object.prototype.toString.call(obj).replace(TYPE_REGEXP, '').toLowerCase();
 }
 
+const DEFAULT_BRACKETS = ['{', '}'];
+// if last element is Boolean true - remove empty keys, else
+// aaa {a!b} ccc => aaa b ccc
+export function format(str, ...args) {
+    const lastArg = args[args.length - 1];
+
+    let removeEmptyKeys = false,
+        beforeValueFunc = value => value;
+
+    if (lastArg === true) {
+        removeEmptyKeys = true;
+        args.pop();
+    } else if (typeof lastArg === 'function') { // if last argument is function = call this func for every value in set
+        beforeValueFunc = lastArg;
+        args.pop();
+    }
+
+    args = args.map(function(arg, key) {
+        if (arg !== Object(arg)) { // if primitive type: string, integer, float, null, undefined
+            return {
+                [key]: arg,
+            };
+        }
+
+        return arg;
+    });
+
+    const [bracketStart, bracketEnd] = Array.isArray(this) ? this : DEFAULT_BRACKETS,
+        replaceRegExp = new RegExp(bracketStart + '(.+?)' + bracketEnd, 'g'), // /{\s*(.+?)\s*}/g
+        result = str
+            .replace(replaceRegExp, function(match, key) {
+                const [clearKey, defaultKeyValue] = key.split('!'),
+                    keyParts = clearKey.trim().split('.'),
+                    res = args.reduce(function(accum, arg) {
+                        if (false !== accum) {
+                            return accum;
+                        }
+
+                        return keyParts.reduce(function(keyAcc, k) {
+                            if (keyAcc === Object(keyAcc) && undefined !== keyAcc[k]) {
+                                return beforeValueFunc(false === keyAcc[k] ? 'false' : keyAcc[k]);
+                            }
+
+                            return false;
+                        }, arg);
+                    }, false);
+
+                if (false === res) {
+                    if (removeEmptyKeys) {
+                        return defaultKeyValue === undefined ? '' : defaultKeyValue;
+                    } else {
+                        return defaultKeyValue === undefined ? bracketStart + key + bracketEnd : defaultKeyValue;
+                    }
+                }
+
+                return res !== Object(res) ? res : JSON.stringify(res);
+            });
+
+    return result;
+}
+
+export function isEqualPrimitiveArrays(array1, array2) {
+    const array2Sorted = array2.slice().sort();
+    return array1.length === array2.length && array1.slice().sort().every((value, index) => value === array2Sorted[index]);
+}
+
 /* function formatBytes(bytes, decimals = 2) {
     if (0 === bytes) {
         return '0 Bytes';

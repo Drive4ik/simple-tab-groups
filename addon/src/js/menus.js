@@ -78,16 +78,16 @@ export async function remove(id) {
 }
 
 export async function update(id, updateProperties) {
-    const log = logger.start('update', id, updateProperties);
+    // const log = logger.start('update', id, updateProperties);
 
     if (!menusMap.has(id)) {
-        log.throwError([id, 'doesn\'t exist']);
+        // log.throwError([id, 'doesn\'t exist']);
         return;
     }
 
     await browser.menus.update(id, updateProperties);
 
-    log.stop();
+    // log.stop();
 }
 
 export async function enable(id) {

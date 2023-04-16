@@ -1,7 +1,7 @@
 <script>
     'use strict';
 
-    import Vue from 'vue';
+    // import Vue from 'vue';
 
     import popup from './popup.vue';
     import swatches from 'vue-swatches';
@@ -10,18 +10,28 @@
     import backgroundSelf from 'background';
     import * as Constants from 'constants';
     import * as Containers from 'containers';
+    import * as Storage from 'storage';
     import Messages from 'messages';
     import * as File from 'file';
     import * as Tabs from 'tabs';
     import * as Groups from 'groups';
     import * as Utils from 'utils';
+    import JSON from 'json';
 
     export default {
         name: 'edit-group',
         props: {
-            groupId: {
+            groupToEdit: {
+                type: Object,
                 required: true,
-                type: Number,
+            },
+            groupToCompare: {
+                type: Object,
+                required: true,
+            },
+            isDefaultGroup: {
+                type: Boolean,
+                default: false,
             },
             canLoadFile: {
                 type: Boolean,
@@ -33,11 +43,16 @@
             swatches: swatches,
         },
         data() {
-            let containers = Containers.getAll(true);
+            // const containers = Containers.getAll(true);
 
             return {
-                containers,
-                containersExcludeTemp: Object.values(containers).filter(c => c.cookieStoreId !== Constants.TEMPORARY_CONTAINER),
+                show: false,
+
+                containersWithDefault: {},
+                containersExcludeTemp: {},
+
+                // containers,
+                // containersExcludeTemp: Object.values(containers).filter(c => c.cookieStoreId !== Constants.TEMPORARY_CONTAINER),
                 TEMPORARY_CONTAINER: Constants.TEMPORARY_CONTAINER,
                 DEFAULT_COOKIE_STORE_ID: Constants.DEFAULT_COOKIE_STORE_ID,
                 disabledContainers: {},
@@ -50,22 +65,27 @@
 
                 mainGroup: null,
 
-                changedKeys: [],
-
                 currentTabUrl: null,
 
-                options: {
-                    discardTabsAfterHide: backgroundSelf.options.discardTabsAfterHide,
-                    defaultGroupIconViewType: backgroundSelf.options.defaultGroupIconViewType,
+                permissions: {
+                    bookmarks: false,
                 },
             };
         },
         watch: {
-            'group.newTabContainer': function(newTabContainer) {
+            'group.newTabContainer'(newTabContainer) {
                 this.group.excludeContainersForReOpen = this.group.excludeContainersForReOpen.filter(cookieStoreId => cookieStoreId !== newTabContainer);
             },
         },
         computed: {
+            iconUrlToDisplay() {
+                return Groups.getIconUrl({
+                    title: this.group.title,
+                    iconUrl: this.group.iconUrl,
+                    iconColor: this.group.iconColor,
+                    iconViewType: this.group.iconViewType,
+                });
+            },
             currentDomainRegexp() {
                 if (this.currentTabUrl) {
                     let currentDomainRegexp = this.currentTabUrl.hostname.replace(/\./g, '\\.');
@@ -94,65 +114,67 @@
             },
         },
         async created() {
-            const {group, groups} = await Messages.sendMessageModule('Groups.load', this.groupId);
+            const [
+                {groups},
+                bookmarksPermission,
+            ] = await Promise.all([
+                Storage.get('groups'),
+                browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS),
+                this.loadContainers(),
+            ]);
 
-            this.group = new Vue({
-                data: group,
-                computed: {
-                    iconUrlToDisplay() {
-                        return Groups.getIconUrl({
-                            title: this.title,
-                            iconUrl: this.iconUrl,
-                            iconColor: this.iconColor,
-                            iconViewType: this.iconViewType,
-                        });
-                    },
-                },
-            });
+            this.permissions.bookmarks = bookmarksPermission;
+
+            const newGroup = {...this.groupToEdit};
+
+            delete newGroup.tabs;
+            delete newGroup.filteredTabs;
+
+            if (newGroup.exportToBookmarksWhenAutoBackup) {
+                newGroup.exportToBookmarksWhenAutoBackup = this.permissions.bookmarks;
+            }
+
+            this.$set(this, 'group', JSON.clone(newGroup));
 
             this.mainGroup = groups.find(gr => gr.isMain);
 
-            this.$nextTick(() => {
-                for (let key in group) {
-                    let unwatch = this.$watch(`group.${key}`, function() {
-                        this.changedKeys.push(key);
-                        unwatch();
-                    }, {
-                        deep: true,
+            if (!this.isDefaultGroup) {
+                for (const cookieStoreId in this.containersWithDefault) {
+                    groups.forEach(gr => {
+                        if (gr.id === this.group.id) {
+                            return;
+                        }
+
+                        if (gr.catchTabContainers.includes(cookieStoreId)) {
+                            this.disabledContainers[cookieStoreId] = gr.title;
+                        }
                     });
-                };
-            });
+                }
 
-            for (let cookieStoreId in this.containers) {
-                groups.forEach(gr => {
-                    if (gr.id === this.groupId) {
-                        return;
-                    }
+                const currentTab = await Messages.sendMessageModule('Tabs.getActive');
 
-                    if (gr.catchTabContainers.includes(cookieStoreId)) {
-                        this.$set(this.disabledContainers, cookieStoreId, gr.title);
-                    }
-                });
+                if (currentTab?.url.startsWith('http')) {
+                    this.currentTabUrl = new URL(currentTab.url);
+                }
             }
 
-            const currentTab = await Messages.sendMessageModule('Tabs.getActive');
+            this.show = true;
 
-            if (currentTab?.url.startsWith('http')) {
-                this.currentTabUrl = new URL(currentTab.url);
-            }
-        },
-        mounted() {
-            if (this.group) {
-                this.setFocus();
-            } else {
-                let unwatch = this.$watch('group', function() {
-                    this.setFocus();
-                    unwatch();
-                });
-            }
+            this.setFocus();
         },
         methods: {
             lang: browser.i18n.getMessage,
+
+            async loadContainers() {
+                Containers.setTemporaryContainerTitle(backgroundSelf.options.temporaryContainerTitle)
+                const containersStorage = await Containers.load({});
+                const containersWithDefault = Containers.getAll(true, containersStorage);
+                const containersExcludeTemp = {...containersWithDefault};
+                delete containersExcludeTemp[Constants.TEMPORARY_CONTAINER];
+
+                this.containersWithDefault = containersWithDefault;
+                this.containersExcludeTemp = containersExcludeTemp;
+            },
 
             addCurrentDomain(domainRegexpStr) {
                 this.group.catchTabRules += (this.group.catchTabRules.length ? '\n' : '') + domainRegexpStr;
@@ -177,7 +199,7 @@
                 this.group.iconColor = Utils.randomColor();
 
                 if (!this.group.iconViewType) {
-                    this.group.iconViewType = this.options.defaultGroupIconViewType;
+                    this.group.iconViewType = Constants.GROUP_ICON_VIEW_TYPES[0];
                 }
             },
 
@@ -190,7 +212,7 @@
             },
 
             isDisabledContainer({cookieStoreId}) {
-                return !this.group.catchTabContainers.includes(cookieStoreId) && this.disabledContainers.hasOwnProperty(cookieStoreId);
+                return this.isDefaultGroup || !this.group.catchTabContainers.includes(cookieStoreId) && this.disabledContainers.hasOwnProperty(cookieStoreId);
             },
 
             async selectUserGroupIcon() {
@@ -209,47 +231,61 @@
                 }
             },
 
-            async saveGroup() {
-                if (this.changedKeys.length) {
-                    const group = {};
+            async setPermissionsBookmarks(event, groupOptionKey) {
+                if (!this.permissions.bookmarks && event.target.checked) {
+                    this.permissions.bookmarks = await browser.permissions.request(Constants.PERMISSIONS.BOOKMARKS);
+                    this[groupOptionKey] = this.permissions.bookmarks;
+                }
+            },
 
-                    this.changedKeys.forEach(key => group[key] = this.group[key]);
+            triggerChanges() {
+                const changes = {};
 
-                    if (this.changedKeys.includes('title')) {
-                        group.title = Groups.createTitle(group.title, this.groupId);
+                for(const [key, value] of Object.entries(this.group)) {
+                    const defaultValue = this.groupToCompare[key];
+
+                    if (value !== Object(value)) { // is primitive
+                        if (value !== defaultValue) {
+                            changes[key] = value;
+                        }
+                    } else if (Array.isArray(value)) {
+                        if (!Utils.isEqualPrimitiveArrays(value, defaultValue)) {
+                            changes[key] = value.slice();
+                        }
                     }
-
-                    if (this.changedKeys.includes('catchTabRules')) {
-                        group.catchTabRules
-                            .split(/\s*\n\s*/)
-                            .filter(Boolean)
-                            .forEach(function(regExpStr) {
-                                try {
-                                    new RegExp(regExpStr);
-                                } catch (e) {
-                                    Utils.notify(['invalidRegExpRuleTitle', regExpStr]);
-                                }
-                            });
-                    }
-
-                    await Messages.sendMessageModule('Groups.update', this.groupId, group);
                 }
 
-                this.$emit('saved');
+                if (changes.hasOwnProperty('title')) {
+                    const groupId = this.isDefaultGroup ? null : this.group.id;
+                    changes.title = Groups.createTitle(changes.title, groupId);
+                }
+
+                changes.catchTabRules
+                    ?.split(/\s*\n\s*/)
+                    .filter(Boolean)
+                    .forEach(regExpStr => {
+                        try {
+                            new RegExp(regExpStr);
+                        } catch (e) {
+                            Utils.notify(['invalidRegExpRuleTitle', regExpStr]);
+                        }
+                    });
+
+                this.$emit('changes', changes);
             },
         }
     }
 </script>
 
 <template>
-    <div v-if="group" @keydown.stop.enter="saveGroup" @keyup.stop tabindex="-1" class="no-outline edit-group">
+    <div v-if="show" @keydown.stop.enter="triggerChanges" @keyup.stop tabindex="-1" class="no-outline edit-group">
         <div class="field">
             <label class="label" v-text="lang('title')"></label>
             <div class="control has-icons-left">
                 <input ref="groupTitle" v-model.trim="group.title" type="text" maxlength="256" class="input" :placeholder="lang('title')" />
                 <span class="icon is-small is-left">
                     <figure class="image is-16x16 is-inline-block">
-                        <img :src="group.iconUrlToDisplay" />
+                        <img :src="iconUrlToDisplay" />
                     </figure>
                 </span>
             </div>
@@ -259,11 +295,22 @@
             <label class="label" v-text="lang('iconStyle')"></label>
             <div class="field is-grouped icon-buttons">
                 <div class="control">
-                    <swatches v-model.trim="group.iconColor" :title="lang('iconColor')" swatches="text-advanced" popover-x="right" show-fallback :trigger-style="{
-                        width: '36px',
-                        height: '27px',
-                        borderRadius: '4px',
-                    }" />
+                    <swatches
+                        v-model.trim="group.iconColor"
+                        :title="lang('iconColor')"
+                        swatches="text-advanced"
+                        popover-x="right"
+                        show-fallback
+                        :trigger-style="{
+                            width: '41px',
+                            height: '30px',
+                            borderRadius: '4px',
+                            borderWidth: '1px',
+                            borderColor: '#dbdbdb',
+                        }"
+                        @keydown.native.enter.stop
+                        @keypress.native.enter.stop
+                        @keyup.native.enter.stop></swatches>
                 </div>
                 <div v-for="iconViewType in GROUP_ICON_VIEW_TYPES" :key="iconViewType" class="control">
                     <button @click="setIconView(iconViewType)" :class="['button', {'is-focused': !group.iconUrl && iconViewType === group.iconViewType}]">
@@ -285,17 +332,56 @@
             </div>
         </div>
 
-        <div class="field">
+        <div class="small-field">
+            <div class="control">
+                <label class="checkbox">
+                    <input type="checkbox" v-model="group.discardTabsAfterHide" />
+                    <span v-text="lang('discardTabsAfterHide')"></span>
+                </label>
+            </div>
+        </div>
+        <div class="small-field ml-3">
+            <div class="control">
+                <label class="checkbox" :disabled="!group.discardTabsAfterHide">
+                    <input v-model="group.discardExcludeAudioTabs" :disabled="!group.discardTabsAfterHide" type="checkbox" />
+                    <span v-text="lang('discardExcludeAudioTabs')"></span>
+                </label>
+            </div>
+        </div>
+        <div class="small-field">
             <div class="control">
                 <label class="checkbox">
                     <input type="checkbox" v-model="group.muteTabsWhenGroupCloseAndRestoreWhenOpen" />
                     <span v-text="lang('muteTabsWhenGroupCloseAndRestoreWhenOpen')"></span>
                 </label>
             </div>
-            <div v-if="options.discardTabsAfterHide" class="control">
+        </div>
+
+        <div class="small-field">
+            <div class="control">
                 <label class="checkbox">
-                    <input type="checkbox" v-model="group.dontDiscardTabsAfterHideThisGroup" />
-                    <span v-text="lang('dontDiscardTabsAfterHideThisGroup')"></span>
+                    <input type="checkbox" v-model="group.prependTitleToWindow" />
+                    <span v-text="lang('prependTitleToWindow')"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="small-field">
+            <div class="control">
+                <label class="checkbox">
+                    <input
+                        v-model="group.exportToBookmarksWhenAutoBackup"
+                        @click="$event => setPermissionsBookmarks($event, 'exportToBookmarksWhenAutoBackup')"
+                        type="checkbox" />
+                    <span v-text="lang('exportToBookmarksWhenAutoBackup')"></span>
+                </label>
+            </div>
+        </div>
+        <div class="small-field ml-3">
+            <div class="control">
+                <label class="checkbox" :disabled="!group.exportToBookmarksWhenAutoBackup">
+                    <input v-model="group.leaveBookmarksOfClosedTabs" :disabled="!group.exportToBookmarksWhenAutoBackup" type="checkbox" />
+                    <span v-text="lang('leaveBookmarksOfClosedTabs')"></span>
                 </label>
             </div>
         </div>
@@ -303,10 +389,10 @@
         <div class="field">
             <label class="label" v-text="lang('alwaysOpenTabsInContainer')"></label>
             <div class="containers-wrapper">
-                <div v-for="container in containers" :key="container.cookieStoreId" class="control">
+                <div v-for="container in containersWithDefault" :key="container.cookieStoreId + 'open'" class="control">
                     <label class="radio indent-children">
                         <input type="radio" :value="container.cookieStoreId" v-model="group.newTabContainer" />
-                        <img v-if="container.iconUrl" :src="container.iconUrl" class="size-16 fill-context" :style="{fill: container.colorCode}" />
+                        <span v-if="container.iconUrl" :class="`size-16 userContext-icon identity-icon-${container.icon} identity-color-${container.color}`"></span>
                         <span class="word-break-all" v-text="container.name"></span>
                     </label>
                 </div>
@@ -320,7 +406,7 @@
             <div v-if="group.ifDifferentContainerReOpen" class="field h-margin-top-10">
                 <label class="label" v-text="lang('excludeContainersForReOpen')"></label>
                 <div class="containers-wrapper">
-                    <div v-for="container in containersExcludeTemp" :key="container.cookieStoreId" class="control">
+                    <div v-for="container in containersExcludeTemp" :key="container.cookieStoreId + 'reopen'" class="control">
                         <label
                             class="checkbox indent-children"
                             :disabled="container.cookieStoreId === group.newTabContainer">
@@ -329,7 +415,7 @@
                                 :disabled="container.cookieStoreId === group.newTabContainer"
                                 :value="container.cookieStoreId"
                                 v-model="group.excludeContainersForReOpen" />
-                            <img v-if="container.iconUrl" :src="container.iconUrl" class="size-16 fill-context" :style="{fill: container.colorCode}" />
+                            <span v-if="container.iconUrl" :class="`size-16 userContext-icon identity-icon-${container.icon} identity-color-${container.color}`"></span>
                             <span class="word-break-all" v-text="container.name"></span>
                         </label>
                     </div>
@@ -339,7 +425,7 @@
 
         <hr>
 
-        <div class="field">
+        <div class="small-field">
             <label class="label" v-text="lang('tabMoving')"></label>
             <div class="control is-inline-flex indent-children">
                 <label class="checkbox">
@@ -350,18 +436,24 @@
                     <img class="size-18" src="/icons/help.svg" />
                 </span>
             </div>
+        </div>
+        <div class="small-field">
             <div class="control">
                 <label class="checkbox">
                     <input type="checkbox" v-model="group.showTabAfterMovingItIntoThisGroup" />
                     <span v-text="lang('showTabAfterMovingItIntoThisGroup')"></span>
                 </label>
             </div>
-            <div class="control ml-indent">
+        </div>
+        <div class="small-field ml-3">
+            <div class="control">
                 <label class="checkbox" :disabled="!group.showTabAfterMovingItIntoThisGroup">
                     <input type="checkbox" :disabled="!group.showTabAfterMovingItIntoThisGroup" v-model="group.showOnlyActiveTabAfterMovingItIntoThisGroup" />
                     <span v-text="lang('showOnlyActiveTabAfterMovingItIntoThisGroup')"></span>
                 </label>
             </div>
+        </div>
+        <div class="small-field">
             <div class="control">
                 <label class="checkbox">
                     <input type="checkbox" v-model="group.showNotificationAfterMovingTabIntoThisGroup" />
@@ -373,10 +465,10 @@
         <div class="field">
             <label class="label" v-text="lang('catchTabContainers')"></label>
             <div class="containers-wrapper">
-                <div v-for="container in containersExcludeTemp" :key="container.cookieStoreId" class="control">
+                <div v-for="container in containersExcludeTemp" :key="container.cookieStoreId + 'catch'" class="control">
                     <label class="checkbox indent-children" :disabled="isDisabledContainer(container)">
                         <input type="checkbox" :disabled="isDisabledContainer(container)" :value="container.cookieStoreId" v-model="group.catchTabContainers" />
-                        <img v-if="container.iconUrl" :src="container.iconUrl" class="size-16 fill-context" :style="{fill: container.colorCode}" />
+                        <span v-if="container.iconUrl" :class="`size-16 userContext-icon identity-icon-${container.icon} identity-color-${container.color}`"></span>
                         <span class="word-break-all" v-text="container.name"></span>
                         <i class="word-break-all" v-if="disabledContainers.hasOwnProperty(container.cookieStoreId)">({{ disabledContainers[container.cookieStoreId] }})</i>
                     </label>
@@ -408,7 +500,14 @@
 
         <div class="field h-margin-bottom-10">
             <div class="control">
-                <textarea class="textarea reg-exp" :rows="canLoadFile ? false : 2" @keydown.enter.stop @keypress.enter.stop @keyup.enter.stop v-model.trim="group.catchTabRules" :placeholder="lang('regexpForTabsPlaceholder')"></textarea>
+                <textarea class="textarea reg-exp"
+                    :rows="canLoadFile ? false : 2"
+                    @keydown.enter.stop
+                    @keypress.enter.stop
+                    @keyup.enter.stop
+                    v-model.trim="group.catchTabRules"
+                    :disabled="isDefaultGroup"
+                    :placeholder="lang('regexpForTabsPlaceholder')"></textarea>
             </div>
         </div>
 
@@ -454,6 +553,10 @@
 
 <style lang="scss">
     .edit-group {
+        .small-field:not(:last-child) {
+            margin-bottom: .25rem;
+        }
+
         .word-break-all {
             word-break: break-word;
         }

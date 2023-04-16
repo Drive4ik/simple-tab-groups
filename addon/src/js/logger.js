@@ -14,7 +14,7 @@ const connectToBG = function(log) {
     messagePort: null,
 })
 
-Logger.logs = [];
+const logs = [];
 
 export default function Logger(prefix, prefixes = []) {
     if (this) { // create new logger with prefix
@@ -33,12 +33,16 @@ export default function Logger(prefix, prefixes = []) {
 
         return this;
     } else {
-        Logger.prototype.addLog.apply(new Logger, Array.from(arguments));
+        Log.apply(new Logger, Array.from(arguments));
     }
 }
 
 function setLoggerFuncs() {
-    consoleKeys.forEach(cKey => this[cKey] = Logger.prototype.addLog.bind(this, cKey));
+    if (consoleKeys.every(cKey => typeof this[cKey] === 'function')) {
+        return;
+    }
+
+    consoleKeys.forEach(cKey => this[cKey] = Log.bind(this, cKey));
 
     this.start = function(...startArgs) {
         let cKey = 'log';
@@ -133,17 +137,17 @@ function setLoggerFuncs() {
         this.enabled = false;
         return this;
     }.bind(this);
-
-    return this;
 }
 
-Logger.prototype.addLog = function(cKey, ...args) {
+function Log(cKey, ...args) {
+    setLoggerFuncs.call(this);
+
     if (!this.isEnabled(cKey)) {
-        return this;
+        return;
     }
 
     if (cKey === 'assert' && args[0]) {
-        return this;
+        return;
     }
 
     const argsToLog = [this.prefixes.join('.'), ...args];
@@ -160,12 +164,12 @@ Logger.prototype.addLog = function(cKey, ...args) {
     };
 
     if (cKey === 'error') {
-        Errors.set(log);
+        Errors.add(log);
     }
 
     if (Constants.IS_BACKGROUND_PAGE) {
-        Logger.logs.push(log);
-        Logger.prototype.showLog.call(this, log, {cKey, args});
+        addLog(log);
+        showLog.call(this, log, {cKey, args});
     } else {
         connectToBG(this).sendMessage('save-log', {
             log,
@@ -176,13 +180,17 @@ Logger.prototype.addLog = function(cKey, ...args) {
             },
         });
     }
-
-    return this;
 }
 
-Logger.prototype.showLog = function(log, {cKey, args}) {
+export function addLog(log) {
+    logs.push(log);
+}
+
+export function showLog(log, {cKey, args}) {
+    setLoggerFuncs.call(this);
+
     if (!this.isEnabled(cKey)) {
-        return this;
+        return;
     }
 
     if (self.localStorage.enableDebug || self.IS_TEMPORARY) {
@@ -204,8 +212,6 @@ Logger.prototype.showLog = function(log, {cKey, args}) {
 
         console[cKey].call(console, ...argsToConsole);
     }
-
-    return this;
 }
 
 function getAction(args) {
@@ -245,7 +251,7 @@ function calcIndent(args) {
     }
 
     return indentCount;
-};
+}
 
 function getIndentAndRemoveScope(indentCount, args) {
     let {action, argIndex} = getAction.call(this, args);
@@ -259,14 +265,14 @@ function getIndentAndRemoveScope(indentCount, args) {
     }
 
     return this.indentSymbol.repeat(indentCount);
-};
+}
 
 const Errors = {
     get() {
         return JSON.parse(self.localStorage.errorLogs || null) || [];
     },
-    set(error) {
-        let errorLogs = Errors.get();
+    add(error) {
+        const errorLogs = Errors.get();
 
         errorLogs.push(error);
 
@@ -277,13 +283,21 @@ const Errors = {
     },
 };
 
-Logger.getErrors = Errors.get;
-Logger.clearErrors = Errors.clear;
+export function getErrors() {
+    return Errors.get();
+}
 
-Logger.clearLogs = () => {
-    Logger.logs = Logger.logs.slice(-400);
-    Logger.clearErrors();
-};
+export function clearErrors() {
+    Errors.clear();
+}
+
+export function getLogs() {
+    return logs.slice(-3000);
+}
+
+export function clearLogs() {
+    logs.length = 0;
+}
 
 export function catchFunc(asyncFunc) {
     const fromStack = new Error().stack;

@@ -276,6 +276,10 @@ new Vue({
             function formatLog(log) {
                 log.showStack = false;
                 log.consoleKey = getConsoleKey(log);
+                if (!log.consoleKey) {
+                    log.consoleKey = 'console.error';
+                    log[log.consoleKey] = [];
+                }
                 log.indent = (log.indentIndex * INDENT_PX) + 'px';
                 log.indentLineHeight = 0;
 

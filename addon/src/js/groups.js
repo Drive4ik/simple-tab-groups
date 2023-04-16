@@ -80,19 +80,24 @@ export async function save(groups, withMessage = false) {
     return groups;
 }
 
-export function create(id, title) {
-    return {
-        id: id,
-        title: createTitle(title, id),
-        iconColor: backgroundSelf.options.defaultGroupIconColor || Utils.randomColor(),
+export function create(id, title, defaultGroupProps = {}) {
+    const group = {
+        id,
+        title: null,
+        iconColor: null,
         iconUrl: null,
-        iconViewType: backgroundSelf.options.defaultGroupIconViewType,
+        iconViewType: Constants.DEFAULT_GROUP_ICON_VIEW_TYPE,
         tabs: [],
         isArchive: false,
+        discardTabsAfterHide: false,
+        discardExcludeAudioTabs: false,
+        prependTitleToWindow: false,
+        exportToBookmarksWhenAutoBackup: true,
+        leaveBookmarksOfClosedTabs: false,
         newTabContainer: Constants.DEFAULT_COOKIE_STORE_ID,
         ifDifferentContainerReOpen: false,
         excludeContainersForReOpen: [],
-        isMain: false,
+        isMain: false, // to remove
         isSticky: false,
         catchTabContainers: [],
         catchTabRules: '',
@@ -101,9 +106,49 @@ export function create(id, title) {
         showTabAfterMovingItIntoThisGroup: false,
         showOnlyActiveTabAfterMovingItIntoThisGroup: false,
         showNotificationAfterMovingTabIntoThisGroup: true,
-        dontDiscardTabsAfterHideThisGroup: false,
         bookmarkId: null,
+
+        ...defaultGroupProps,
     };
+
+    if (id) { // create title for group
+        group.title = createTitle(title, id, defaultGroupProps);
+    } else { // create title for default group, if needed
+        group.title ??= createTitle(title, id, defaultGroupProps);
+    }
+
+    group.iconColor ??= Utils.randomColor();
+
+    return group;
+}
+
+export async function getDefaults() {
+    const {defaultGroupProps} = await Storage.get('defaultGroupProps');
+
+    const defaultGroup = create(undefined, undefined, defaultGroupProps);
+    const defaultCleanGroup = create(undefined, undefined, {});
+
+    delete defaultGroup.id;
+    delete defaultGroup.tabs;
+
+    delete defaultCleanGroup.id;
+    delete defaultCleanGroup.tabs;
+
+    defaultGroup.iconColor = defaultGroupProps.iconColor || '';
+    defaultCleanGroup.iconColor = '';
+
+    return {
+        defaultGroup,
+        defaultCleanGroup,
+    };
+}
+
+export async function saveDefault(defaultGroupProps) {
+    const log = logger.start('saveDefault', defaultGroupProps);
+
+    await Storage.set({defaultGroupProps});
+
+    log.stop();
 }
 
 export async function add(windowId, tabIds = [], title = null) {
@@ -123,12 +168,18 @@ export async function add(windowId, tabIds = [], title = null) {
         }
     }
 
-    let {lastCreatedGroupPosition} = await Storage.get('lastCreatedGroupPosition');
+    let {
+        lastCreatedGroupPosition,
+        defaultGroupProps,
+    } = await Storage.get([
+        'lastCreatedGroupPosition',
+        'defaultGroupProps',
+    ]);
 
     lastCreatedGroupPosition++;
 
     let {groups} = await load(),
-        newGroup = create(lastCreatedGroupPosition, title);
+        newGroup = create(lastCreatedGroupPosition, title, defaultGroupProps);
 
     groups.push(newGroup);
 
@@ -215,27 +266,27 @@ export async function remove(groupId) {
 export async function update(groupId, updateData) {
     const log = logger.start('update', {groupId, updateData});
 
-    let {group, groups} = await load(groupId);
-
-    if (!group) {
-        log.throwError(['group', groupId, 'not found for update it']);
-    }
-
-    updateData = JSON.clone(updateData); // clone need for fix bug: dead object after close tab which create object
-
-    if (updateData.iconUrl && updateData.iconUrl.startsWith('chrome:')) {
+    if (updateData.iconUrl?.startsWith('chrome:')) {
         Utils.notify('Icon not supported');
         delete updateData.iconUrl;
-    }
-
-    if (updateData.title) {
-        updateData.title = updateData.title.slice(0, 256);
     }
 
     const updateDataKeys = Object.keys(updateData);
 
     if (!updateDataKeys.length) {
         return log.stop(null, 'no updateData keys to update');
+    }
+
+    const {group, groups} = await load(groupId);
+
+    if (!group) {
+        log.throwError(['group', groupId, 'not found for update it']);
+    }
+
+    // updateData = JSON.clone(updateData); // clone need for fix bug: dead object after close tab which create object
+
+    if (updateData.title) {
+        updateData.title = updateData.title.slice(0, 256);
     }
 
     if (updateData.isMain) {
@@ -259,7 +310,7 @@ export async function update(groupId, updateData) {
         });
     }
 
-    if (['title', 'iconUrl', 'iconColor', 'iconViewType', 'isArchive', 'isSticky'].some(key => updateData.hasOwnProperty(key))) {
+    if (KEYS_RESPONSIBLE_VIEW.some(key => updateData.hasOwnProperty(key))) {
         backgroundSelf.updateMoveTabMenus();
 
         await backgroundSelf.updateBrowserActionData(groupId);
@@ -271,6 +322,16 @@ export async function update(groupId, updateData) {
 
     log.stop();
 }
+
+const KEYS_RESPONSIBLE_VIEW = Object.freeze([
+    'title',
+    'iconUrl',
+    'iconColor',
+    'iconViewType',
+    'isArchive',
+    'isSticky',
+    'prependTitleToWindow',
+]);
 
 export async function move(groupId, newGroupIndex) {
     const log = logger.start('move', {groupId, newGroupIndex});
@@ -316,14 +377,14 @@ export async function unload(groupId) {
         return log.stopError(false, 'groupNotFound');
     }
 
-    let windowId = Cache.getWindowId(groupId);
+    const windowId = Cache.getWindowId(groupId);
 
     if (!windowId) {
         Utils.notify(['groupNotLoaded'], 7, 'groupNotLoaded');
         return log.stopError(false, 'groupNotLoaded');
     }
 
-    let {group} = await load(groupId, true);
+    const {group} = await load(groupId, true);
 
     if (!group) {
         Utils.notify(['groupNotFound'], 7, 'groupNotFound');
@@ -339,6 +400,8 @@ export async function unload(groupId) {
         Utils.notify(['notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera']);
         return log.stopError(false, 'some Tab Can Not Be Hidden');
     }
+
+    log.log('windowId', windowId);
 
     await backgroundSelf.loadingBrowserAction(true, windowId);
 
@@ -357,12 +420,23 @@ export async function unload(groupId) {
 
     await Tabs.safeHide(group.tabs);
 
-    if (backgroundSelf.options.discardTabsAfterHide && !group.dontDiscardTabsAfterHideThisGroup) {
+    if (group.discardTabsAfterHide) {
         log.log('run discard tabs');
-        Tabs.discard(group.tabs).catch(log.onCatch(['Tabs.discard', group.tabs]));
+
+        let tabs = group.tabs;
+
+        if (group.discardExcludeAudioTabs) {
+            tabs = group.tabs.filter(tab => !tab.audible);
+        }
+
+        Tabs.discard(tabs).catch(log.onCatch(['Tabs.discard from unload group', tabs]));
     }
 
-    await backgroundSelf.updateBrowserActionData(null, windowId).catch(log.onCatch(['updateBrowserActionData', windowId]));
+    // if (group.prependTitleToWindow) {
+    //     await browser.windows.update(windowId, {titlePreface: ''});
+    // }
+
+    await backgroundSelf.updateBrowserActionData(null, windowId);
 
     backgroundSelf.updateMoveTabMenus();
 
@@ -472,8 +546,15 @@ export function setNewTabsParams(tabs, group) {
 }
 
 export async function getNextTitle() {
-    let {lastCreatedGroupPosition} = await Storage.get('lastCreatedGroupPosition');
-    return createTitle(null, lastCreatedGroupPosition + 1);
+    const {
+        lastCreatedGroupPosition,
+        defaultGroupProps,
+    } = await Storage.get([
+        'lastCreatedGroupPosition',
+        'defaultGroupProps',
+    ]);
+
+    return createTitle(null, lastCreatedGroupPosition + 1, defaultGroupProps);
 }
 
 function isCatchedUrl(url, catchTabRules) {
@@ -588,7 +669,19 @@ export async function setIconUrl(groupId, iconUrl) {
 const emojiRegExp = /\p{RI}\p{RI}|\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?(\u{200D}\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?)+|\p{EPres}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?|\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})/u;
 const firstCharEmojiRegExp = new RegExp(`^(${emojiRegExp.source})`, emojiRegExp.flags);
 
-export function getIconUrl(group = {iconViewType: Constants.DEFAULT_OPTIONS.defaultGroupIconViewType}, keyInObj = null) {
+export function getEmojiIcon(group) {
+    if (group.iconViewType === 'title') {
+        const [emoji] = firstCharEmojiRegExp.exec(group.title) || [];
+        return emoji;
+    }
+}
+
+export function getIconUrl(group, keyInObj = null) {
+    group ??= {
+        iconViewType: Constants.DEFAULT_GROUP_ICON_VIEW_TYPE,
+        title: browser.i18n.getMessage('title'),
+    };
+
     let result = null;
 
     if (group.iconUrl) {
@@ -599,15 +692,11 @@ export function getIconUrl(group = {iconViewType: Constants.DEFAULT_OPTIONS.defa
         }
 
         let stroke = 'transparent' === group.iconColor ? 'stroke="#606060" stroke-width="1"' : '',
-            title = null,
-            emoji = null;
+            title = group.title || browser.i18n.getMessage('title'),
+            emoji = getEmojiIcon(group);
 
-        if (group.iconViewType === 'title') {
-            title = group?.title || browser.i18n.getMessage('title');
-
-            [emoji] = firstCharEmojiRegExp.exec(title) || [];
-
-            title = emoji || title;
+        if (emoji) {
+            title = emoji;
         }
 
         let icons = {
@@ -679,8 +768,18 @@ export function getIconUrl(group = {iconViewType: Constants.DEFAULT_OPTIONS.defa
     return result;
 }
 
-export function createTitle(title, groupId) {
-    return String(title || browser.i18n.getMessage('newGroupTitle', groupId));
+export function createTitle(title = null, groupId = null, defaultGroupProps = {}) {
+    if (title) {
+        return String(title);
+    }
+
+    if (defaultGroupProps.title && groupId) {
+        return Utils.format(defaultGroupProps.title, {
+            index: groupId,
+        });
+    }
+
+    return browser.i18n.getMessage('newGroupTitle', groupId || '{index}');
 }
 
 export function getTitle({id, title, isArchive, isSticky, tabs, iconViewType, newTabContainer}, args = '') {

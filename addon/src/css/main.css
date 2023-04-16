@@ -196,6 +196,7 @@ hr {
     height: 16px;
     min-width: 16px;
     line-height: 1;
+    display: inline-block;
 }
 
 .size-18 {

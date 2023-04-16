@@ -57,6 +57,9 @@ export default {
         utils: '/js/utils.js',
         json: '/js/json.js',
         storage: '/js/storage.js',
+
+        // vue mixins
+        'default-group.mixin': '/js/mixins/default-group.mixin.js',
     },
     externalsType: 'module',
     resolve: {
@@ -138,6 +141,8 @@ export default {
                 'js/tabs.js',
                 'js/windows.js',
                 'js/management.js',
+
+                'js/mixins',
 
                 // pages
                 'popup/popup.html',
