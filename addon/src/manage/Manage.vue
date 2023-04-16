@@ -649,7 +649,7 @@
                     data: group,
                     watch: {
                         title: function(title) {
-                            Groups.update(this.id, {
+                            Messages.sendMessageModule('Groups.update', this.id, {
                                 title: Groups.createTitle(title, this.id),
                             });
                         },
@@ -870,7 +870,7 @@
             saveEditedGroup(groupId, changes) {
                 this.groupToEdit = null;
 
-                if (changes) {
+                if (Object.keys(changes).length) {
                     Messages.sendMessageModule('Groups.update', groupId, changes);
                 }
             },

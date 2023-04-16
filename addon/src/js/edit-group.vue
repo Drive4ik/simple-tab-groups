@@ -43,16 +43,12 @@
             swatches: swatches,
         },
         data() {
-            // const containers = Containers.getAll(true);
-
             return {
                 show: false,
 
                 containersWithDefault: {},
                 containersExcludeTemp: {},
 
-                // containers,
-                // containersExcludeTemp: Object.values(containers).filter(c => c.cookieStoreId !== Constants.TEMPORARY_CONTAINER),
                 TEMPORARY_CONTAINER: Constants.TEMPORARY_CONTAINER,
                 DEFAULT_COOKIE_STORE_ID: Constants.DEFAULT_COOKIE_STORE_ID,
                 disabledContainers: {},
@@ -199,7 +195,7 @@
                 this.group.iconColor = Utils.randomColor();
 
                 if (!this.group.iconViewType) {
-                    this.group.iconViewType = Constants.GROUP_ICON_VIEW_TYPES[0];
+                    this.group.iconViewType = Constants.DEFAULT_GROUP_ICON_VIEW_TYPE;
                 }
             },
 

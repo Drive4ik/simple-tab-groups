@@ -2915,7 +2915,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         data.hotkeys.forEach(hotkey => hotkey.metaKey = false);
     }
 
-    const neededConteiners = new Set;
+    const neededContainers = new Set;
 
     function prepareTab(newTabParams, tab) {
         delete tab.active;
@@ -2924,7 +2924,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         delete tab.pinned;
 
         if (tab.cookieStoreId && !Containers.isTemporary(tab.cookieStoreId)) {
-            neededConteiners.add(tab.cookieStoreId);
+            neededContainers.add(tab.cookieStoreId);
         }
 
         Object.assign(tab, newTabParams);
@@ -2986,7 +2986,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         const containersStorageMap = new Map;
 
         for (const [cookieStoreId, value] of Object.entries(data.containers)) {
-            if (!neededConteiners.has(cookieStoreId)) {
+            if (!neededContainers.has(cookieStoreId)) {
                 continue;
             }
 
@@ -4025,7 +4025,7 @@ async function init() {
         //     data.groups = [];
         //     dataChanged.add(true);
         // }
-        log.log('data.temporaryContainerTitle', data.temporaryContainerTitle)
+
         await Containers.init(data.temporaryContainerTitle);
 
         log.log('containers inited');

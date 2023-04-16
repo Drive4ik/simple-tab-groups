@@ -432,10 +432,6 @@ export async function unload(groupId) {
         Tabs.discard(tabs).catch(log.onCatch(['Tabs.discard from unload group', tabs]));
     }
 
-    // if (group.prependTitleToWindow) {
-    //     await browser.windows.update(windowId, {titlePreface: ''});
-    // }
-
     await backgroundSelf.updateBrowserActionData(null, windowId);
 
     backgroundSelf.updateMoveTabMenus();
@@ -692,7 +688,7 @@ export function getIconUrl(group, keyInObj = null) {
         }
 
         let stroke = 'transparent' === group.iconColor ? 'stroke="#606060" stroke-width="1"' : '',
-            title = group.title || browser.i18n.getMessage('title'),
+            title = group.title,
             emoji = getEmojiIcon(group);
 
         if (emoji) {

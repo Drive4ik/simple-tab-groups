@@ -759,7 +759,7 @@
                 title = await this.showPrompt(this.lang('hotkeyActionTitleRenameGroup'), title);
 
                 if (title) {
-                    Groups.update(id, {title});
+                    Messages.sendMessageModule('Groups.update', id, {title});
                 }
             },
 
@@ -1115,7 +1115,7 @@
             saveEditedGroup(groupId, changes) {
                 this.groupToEdit = null;
 
-                if (changes) {
+                if (Object.keys(changes).length) {
                     Messages.sendMessageModule('Groups.update', groupId, changes);
                 }
             },
