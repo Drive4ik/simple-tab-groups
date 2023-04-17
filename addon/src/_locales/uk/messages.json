@@ -991,28 +991,6 @@
         "message": "Пошук або стрілку вправо для переходу до активної вкладки/групи",
         "description": "Search or right arrow to focus on active tab/group"
     },
-    "thisGroupIsMain": {
-        "message": "Ця група помічена як основна",
-        "description": "This group is marked as main"
-    },
-    "setGroupAsMain": {
-        "message": "Сробити цю групу основною",
-        "description": "Set this group as main"
-    },
-    "thisGroupWasMain": {
-        "message": "Примітка\nЦя група була позначена як основна",
-        "description": "Notice\nThis group was marked as the main"
-    },
-    "moveToMainIfNotInCatchTabRules": {
-        "message": "Переміщувати вкладки з цієї групи в групу \"$grouptitle$\", якщо жодне з правил регулярних виразів не спрацювало",
-        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
-        "placeholders": {
-            "grouptitle": {
-                "content": "$1",
-                "example": "My main group"
-            }
-        }
-    },
     "noContainerTitle": {
         "message": "Без контейнера",
         "description": "No container"
@@ -1208,5 +1186,23 @@
     "defaultGroup": {
         "message": "Група за замовчуванням",
         "description": "Default group"
+    },
+    "moveToGroupIfNoneCatchTabRules": {
+        "message": "Якщо жоден із регулярних виразів не відповідає вкладці, перемістити її в групу:",
+        "description": "If none of the regular expressions match the tab, move it to the group:"
+    },
+    "dontMove": {
+        "message": "Не переміщати",
+        "description": "Don't move"
+    },
+    "groupArchivedTitle": {
+        "message": "$groupName$ (архівна)",
+        "description": "My group (archived)",
+        "placeholders": {
+            "groupName": {
+                "content": "$1",
+                "example": "My group"
+            }
+        }
     }
 }

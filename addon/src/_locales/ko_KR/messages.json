@@ -963,28 +963,6 @@
         "message": "활성 탭/그룹에 초점을 맞추려면 검색 또는 오른쪽 화살표",
         "description": "Search or right arrow to focus on active tab/group"
     },
-    "thisGroupIsMain": {
-        "message": "이 그룹은 메인으로 표시됩니다.",
-        "description": "This group is marked as main"
-    },
-    "setGroupAsMain": {
-        "message": "이 그룹을 기본으로 설정",
-        "description": "Set this group as main"
-    },
-    "thisGroupWasMain": {
-        "message": "알림\n이 그룹은 기본 그룹으로 표시되었습니다.",
-        "description": "Notice\nThis group was marked as the main"
-    },
-    "moveToMainIfNotInCatchTabRules": {
-        "message": "Move tabs from this group to the \"$grouptitle$\" group if none of the regular expression rules matches (미번역)",
-        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
-        "placeholders": {
-            "grouptitle": {
-                "content": "$1",
-                "example": "My main group"
-            }
-        }
-    },
     "noContainerTitle": {
         "message": "기본 설정",
         "description": "No container"

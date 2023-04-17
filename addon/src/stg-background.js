@@ -986,15 +986,13 @@ async function addUndoRemoveGroupItem(groupToRemove) {
         Menus.remove(Constants.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id);
         browser.notifications.clear(Constants.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id);
 
-        let {groups} = await Groups.load();
-
-        group.isMain = false;
+        const {groups} = await Groups.load();
 
         groups.push(group);
 
         Groups.normalizeContainersInGroups(groups);
 
-        let tabs = group.tabs;
+        const tabs = group.tabs;
 
         await Groups.save(groups);
 
@@ -1875,45 +1873,46 @@ const onBeforeTabRequest = catchFunc(async function({tabId, url, cookieStoreId, 
 
     log.log(tab);
 
-    let {group: tabGroup, groups} = await Groups.load(tab.groupId);
+    const {
+        group: tabGroup,
+        notArchivedGroups,
+    } = await Groups.load(tab.groupId);
 
-    if (!tabGroup.isSticky) {
-        let destGroup = Groups.getCatchedForTab(groups, tabGroup, tab);
+    const destGroup = Groups.getCatchedForTab(notArchivedGroups, tabGroup, tab);
 
-        if (destGroup) {
-            tab = await Tabs.getOne(tabId);
+    if (destGroup) {
+        tab = await Tabs.getOne(tabId);
 
-            if (!tab) {
-                log.stopError('tab not found', tabId);
-                return {};
-            }
-
-            if (new URL(tab.url).origin !== new URL(url).origin) {
-                tab.favIconUrl = null;
-                Cache.removeTabThumbnail(tab.id);
-            }
-
-            tab.url = url;
-            tab.status = browser.tabs.TabStatus.COMPLETE;
-            Cache.setTab(tab);
-
-            addTabToLazyMove(tab.id, destGroup.id);
-            log.stop('move tab from groupId:', tabGroup.id, 'to groupId:', destGroup.id);
+        if (!tab) {
+            log.stopError('tab not found', tabId);
             return {};
         }
+
+        if (new URL(tab.url).origin !== new URL(url).origin) {
+            tab.favIconUrl = null;
+            Cache.removeTabThumbnail(tab.id);
+        }
+
+        tab.url = url;
+        tab.status = browser.tabs.TabStatus.COMPLETE;
+        Cache.setTab(tab);
+
+        addTabToLazyMove(tab.id, destGroup.id);
+        log.stop('move tab from groupId:', tabGroup.id, 'to groupId:', destGroup.id);
+        return {};
     }
 
-    let newTabContainer = Tabs.getNewTabContainer(tab, tabGroup);
+    const newTabContainer = Tabs.getNewTabContainer(tab, tabGroup);
 
     if (tab.cookieStoreId === newTabContainer) {
         log.stop('cookieStoreId is equal');
         return {};
     }
 
-    let originExt = Management.getExtensionByUUID(originUrl.slice(0, 50));
+    const originExt = Management.getExtensionByUUID(originUrl.slice(0, 50)) || {};
 
     function getNewAddonTabUrl(asInfo) {
-        let params = {
+        const params = {
             url: tab.url,
             anotherCookieStoreId: tab.cookieStoreId,
             destCookieStoreId: newTabContainer,
@@ -1928,7 +1927,7 @@ const onBeforeTabRequest = catchFunc(async function({tabId, url, cookieStoreId, 
         return Utils.setUrlSearchParams(Urls.getURL('open-in-container', true), params);
     }
 
-    if (Constants.IGNORE_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER.includes(originExt?.id) && originExt.enabled) {
+    if (Constants.IGNORE_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER.includes(originExt.id) && originExt.enabled) {
         let showNotif = +window.localStorage.ignoreExtensionsForReopenTabInContainer || 0;
 
         if (showNotif < 10) {
@@ -1954,7 +1953,7 @@ const onBeforeTabRequest = catchFunc(async function({tabId, url, cookieStoreId, 
     setTimeout(requestId => canceledRequests.delete(requestId), 2000, requestId);
 
     Promise.resolve().then(async () => {
-        let newTabParams = {
+        const newTabParams = {
             ...tab,
             cookieStoreId: newTabContainer,
             ...Groups.getNewTabParams(tabGroup),
@@ -1964,18 +1963,20 @@ const onBeforeTabRequest = catchFunc(async function({tabId, url, cookieStoreId, 
             if (tab.hidden) {
                 //
             } else {
-                if (!ignoreExtForReopenContainer.has(originExt?.id) && originExt?.enabled) {
+                if (!ignoreExtForReopenContainer.has(originExt.id) && originExt.enabled) {
                     newTabParams.active = true;
                     newTabParams.url = getNewAddonTabUrl();
                 }
             }
         }
 
-        let newTab = await Tabs.create(newTabParams);
+        const newTab = await Tabs.create(newTabParams);
 
-        Tabs.remove(tab.id);
+        log.log('remove tab', tab);
+        Tabs.remove(tab);
 
         if (tab.hidden) {
+            log.log('hide tab', newTab);
             Tabs.safeHide(newTab);
         }
     });
@@ -2884,8 +2885,6 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         await clearAddon(false);
 
         // await Utils.wait(1000);
-    } else {
-        data.groups.forEach(group => group.isMain = false);
     }
 
     if (data.temporaryContainerTitle) {
@@ -2914,6 +2913,12 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
     } else if (!isMac) {
         data.hotkeys.forEach(hotkey => hotkey.metaKey = false);
     }
+
+    data.groups.forEach(groupToRestore => {
+        if (!currentData.groups.some(currentGroup => currentGroup.id === groupToRestore.moveToGroupIfNoneCatchTabRules)) {
+            groupToRestore.moveToGroupIfNoneCatchTabRules = null;
+        }
+    });
 
     const neededContainers = new Set;
 
@@ -3644,6 +3649,23 @@ async function runMigrateForData(data) {
                 if (data.autoBackupGroupsToBookmarks && data.leaveBookmarksOfClosedTabs) {
                     data.defaultGroupProps.leaveBookmarksOfClosedTabs = true;
                 }
+            },
+        },
+        {
+            version: '5.1.1',
+            async migration() {
+                const mainGroupId = data.groups.find(group => group.isMain)?.id;
+
+                data.groups.forEach(group => {
+                    if (group.moveToMainIfNotInCatchTabRules && mainGroupId) {
+                        group.moveToGroupIfNoneCatchTabRules = mainGroupId;
+                    } else {
+                        group.moveToGroupIfNoneCatchTabRules = null;
+                    }
+
+                    delete group.isMain;
+                    delete group.moveToMainIfNotInCatchTabRules;
+                });
             },
         },
     ];

@@ -60,7 +60,7 @@
 
         .body {
             flex-grow: 1;
-            padding: 0 var(--indent);
+            padding: 0 var(--indent) var(--indent);
             overflow-y: auto;
             scrollbar-width: thin;
         }

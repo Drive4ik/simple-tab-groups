@@ -59,7 +59,7 @@
 
                 group: null,
 
-                mainGroup: null,
+                groupsMoveToIfNoneCatchTabRules: [],
 
                 currentTabUrl: null,
 
@@ -108,6 +108,11 @@
                     }
                 }
             },
+            selectedMoveGroupToImage() {
+                const group = this.groupsMoveToIfNoneCatchTabRules.find(group => group.id === this.group.moveToGroupIfNoneCatchTabRules);
+
+                return group ? Groups.getIconUrl(group) : null;
+            },
         },
         async created() {
             const [
@@ -132,7 +137,15 @@
 
             this.$set(this, 'group', JSON.clone(newGroup));
 
-            this.mainGroup = groups.find(gr => gr.isMain);
+            this.groupsMoveToIfNoneCatchTabRules = groups.filter(group => {
+                group.titleToView = Groups.getTitle(group);
+
+                if (this.group.moveToGroupIfNoneCatchTabRules === group.id) {
+                    return true;
+                }
+
+                return !group.isArchive;
+            });
 
             if (!this.isDefaultGroup) {
                 for (const cookieStoreId in this.containersWithDefault) {
@@ -147,11 +160,12 @@
                     });
                 }
 
-                const currentTab = await Messages.sendMessageModule('Tabs.getActive');
-
-                if (currentTab?.url.startsWith('http')) {
-                    this.currentTabUrl = new URL(currentTab.url);
-                }
+                Messages.sendMessageModule('Tabs.getActive')
+                    .then(currentTab => {
+                        if (currentTab?.url.startsWith('http')) {
+                            this.currentTabUrl = new URL(currentTab.url);
+                        }
+                    });
             }
 
             this.show = true;
@@ -507,26 +521,24 @@
             </div>
         </div>
 
-        <template v-if="!group.isArchive">
-            <div class="field">
-                <div class="control">
-                    <button
-                        :disabled="group.isMain"
-                        :class="['button', {'is-info': !group.isMain}]"
-                        @click="group.isMain = true"
-                        v-text="group.isMain ? lang('thisGroupIsMain') : lang('setGroupAsMain')"
-                        >
-                    </button>
+        <div class="field">
+            <label class="label" v-text="lang('moveToGroupIfNoneCatchTabRules')"></label>
+            <div :class="['control', group.moveToGroupIfNoneCatchTabRules && 'has-icons-left']">
+                <div class="select is-fullwidth">
+                    <select v-model="group.moveToGroupIfNoneCatchTabRules">
+                        <option :value="null" v-text="lang('dontMove')"></option>
+                        <option
+                            v-for="group in groupsMoveToIfNoneCatchTabRules"
+                            :key="group.id + 'catch'"
+                            :value="group.id"
+                            v-text="group.isArchive ? lang('groupArchivedTitle', group.titleToView) : group.titleToView"></option>
+                    </select>
                 </div>
+                <span v-if="group.moveToGroupIfNoneCatchTabRules" class="icon is-left">
+                    <img :src="selectedMoveGroupToImage" alt="" class="size-16" />
+                </span>
             </div>
-
-            <div class="field" v-if="!group.isMain && mainGroup">
-                <label class="checkbox" :disabled="!group.catchTabRules || group.isSticky">
-                    <input type="checkbox" :disabled="!group.catchTabRules || group.isSticky" v-model="group.moveToMainIfNotInCatchTabRules" />
-                    <span v-text="lang('moveToMainIfNotInCatchTabRules', mainGroup.title)"></span>
-                </label>
-            </div>
-        </template>
+        </div>
 
         <popup
             v-if="showMessageCantLoadFile"

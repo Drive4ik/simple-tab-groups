@@ -983,28 +983,6 @@
         "message": "Busca o presiona la flecha derecha para enfocar la pestaña/grupo activo",
         "description": "Search or right arrow to focus on active tab/group"
     },
-    "thisGroupIsMain": {
-        "message": "Este grupo está marcado como principal",
-        "description": "This group is marked as main"
-    },
-    "setGroupAsMain": {
-        "message": "Establecer a este grupo como principal",
-        "description": "Set this group as main"
-    },
-    "thisGroupWasMain": {
-        "message": "Aviso\nEste grupo fue marcado como principal",
-        "description": "Notice\nThis group was marked as the main"
-    },
-    "moveToMainIfNotInCatchTabRules": {
-        "message": "Mover pestañas desde este grupo al grupo \"$grouptitle$\" si ninguna de las expresiones regulares coincide",
-        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
-        "placeholders": {
-            "grouptitle": {
-                "content": "$1",
-                "example": "My main group"
-            }
-        }
-    },
     "noContainerTitle": {
         "message": "Sin contenedor",
         "description": "No container"

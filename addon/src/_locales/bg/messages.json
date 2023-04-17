@@ -983,28 +983,6 @@
         "message": "Търсене или дясна стрелка за посочване на активния раздел/група",
         "description": "Search or right arrow to focus on active tab/group"
     },
-    "thisGroupIsMain": {
-        "message": "Групата е избрана като главна",
-        "description": "This group is marked as main"
-    },
-    "setGroupAsMain": {
-        "message": "Избиране за главна група",
-        "description": "Set this group as main"
-    },
-    "thisGroupWasMain": {
-        "message": "Предупреждение\nГрупата е избрана за главна",
-        "description": "Notice\nThis group was marked as the main"
-    },
-    "moveToMainIfNotInCatchTabRules": {
-        "message": "Преместване на разделите от тази група в „$grouptitle$“ ако не съвпадат с никой от регулярните изрази",
-        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
-        "placeholders": {
-            "grouptitle": {
-                "content": "$1",
-                "example": "My main group"
-            }
-        }
-    },
     "noContainerTitle": {
         "message": "Без изолатор",
         "description": "No container"

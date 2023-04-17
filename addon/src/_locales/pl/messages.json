@@ -983,28 +983,6 @@
         "message": "Wyszukaj i użyj strzałek aby wybrać i uaktywnić kartę/grupę",
         "description": "Search or right arrow to focus on active tab/group"
     },
-    "thisGroupIsMain": {
-        "message": "Ta grupa jest oznaczona jako główna",
-        "description": "This group is marked as main"
-    },
-    "setGroupAsMain": {
-        "message": "Ustaw tę grupę jako główną",
-        "description": "Set this group as main"
-    },
-    "thisGroupWasMain": {
-        "message": "Informacja\nTa grupa została oznaczona jako główna",
-        "description": "Notice\nThis group was marked as the main"
-    },
-    "moveToMainIfNotInCatchTabRules": {
-        "message": "Przenieś karty z tej grupy do grupy \"$grouptitle$\" jeśli nie pasują do żadnego z wyrażeń regularnych",
-        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
-        "placeholders": {
-            "grouptitle": {
-                "content": "$1",
-                "example": "My main group"
-            }
-        }
-    },
     "noContainerTitle": {
         "message": "Brak kontekstu",
         "description": "No container"

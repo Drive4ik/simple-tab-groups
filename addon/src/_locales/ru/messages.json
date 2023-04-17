@@ -991,28 +991,6 @@
         "message": "Поиск или стрелку вправо для перехода к активной вкладке/группе",
         "description": "Search or right arrow to focus on active tab/group"
     },
-    "thisGroupIsMain": {
-        "message": "Эта группа помечена как основная",
-        "description": "This group is marked as main"
-    },
-    "setGroupAsMain": {
-        "message": "Сделать эту группу основной",
-        "description": "Set this group as main"
-    },
-    "thisGroupWasMain": {
-        "message": "Примечание\nЭта группа была помечена как основная",
-        "description": "Notice\nThis group was marked as the main"
-    },
-    "moveToMainIfNotInCatchTabRules": {
-        "message": "Перемещать вкладки из этой группы в группу \"$grouptitle$\", если ни одно из правил регулярных выражений не соответствует",
-        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
-        "placeholders": {
-            "grouptitle": {
-                "content": "$1",
-                "example": "My main group"
-            }
-        }
-    },
     "noContainerTitle": {
         "message": "Без контейнера",
         "description": "No container"
@@ -1208,5 +1186,23 @@
     "defaultGroup": {
         "message": "Группа по умолчанию",
         "description": "Default group"
+    },
+    "moveToGroupIfNoneCatchTabRules": {
+        "message": "Если ни одно из регулярных выражений не соответствует вкладке, переместить её в группу:",
+        "description": "If none of the regular expressions match the tab, move it to the group:"
+    },
+    "dontMove": {
+        "message": "Не перемещать",
+        "description": "Don't move"
+    },
+    "groupArchivedTitle": {
+        "message": "$groupName$ (архивная)",
+        "description": "My group (archived)",
+        "placeholders": {
+            "groupName": {
+                "content": "$1",
+                "example": "My group"
+            }
+        }
     }
 }

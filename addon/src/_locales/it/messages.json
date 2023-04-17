@@ -963,28 +963,6 @@
         "message": "Cerca o premi la freccia destra per mostrare la scheda o il gruppo attivi",
         "description": "Search or right arrow to focus on active tab/group"
     },
-    "thisGroupIsMain": {
-        "message": "Questo gruppo è stato impostato come principale",
-        "description": "This group is marked as main"
-    },
-    "setGroupAsMain": {
-        "message": "Imposta questo gruppo come principale",
-        "description": "Set this group as main"
-    },
-    "thisGroupWasMain": {
-        "message": "Informazione\nQuesto gruppo è stato impostato come principale",
-        "description": "Notice\nThis group was marked as the main"
-    },
-    "moveToMainIfNotInCatchTabRules": {
-        "message": "Sposta le schede di questo gruppo nel gruppo \"$grouptitle$\" se nessuna delle espressioni regolari combacia",
-        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
-        "placeholders": {
-            "grouptitle": {
-                "content": "$1",
-                "example": "My main group"
-            }
-        }
-    },
     "noContainerTitle": {
         "message": "Nessun contenitore",
         "description": "No container"

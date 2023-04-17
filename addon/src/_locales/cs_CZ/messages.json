@@ -929,28 +929,6 @@
         "message": "Vyhledejte nebo pomocí šipek vyberte panel/skupinu",
         "description": "Search or right arrow to focus on active tab/group"
     },
-    "thisGroupIsMain": {
-        "message": "Tato skupina je vybrána jako hlavní",
-        "description": "This group is marked as main"
-    },
-    "setGroupAsMain": {
-        "message": "Nastavit tuto skupinu jako hlavní",
-        "description": "Set this group as main"
-    },
-    "thisGroupWasMain": {
-        "message": "Upozornění\nTato skupina byla označena jako hlavní",
-        "description": "Notice\nThis group was marked as the main"
-    },
-    "moveToMainIfNotInCatchTabRules": {
-        "message": "Pokud žádné pravidlo nebylo splněno, přesunout panely z této skupiny do skupiny \"$grouptitle$\"",
-        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
-        "placeholders": {
-            "grouptitle": {
-                "content": "$1",
-                "example": "My main group"
-            }
-        }
-    },
     "noContainerTitle": {
         "message": "Žádný",
         "description": "No container"

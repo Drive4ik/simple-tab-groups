@@ -983,28 +983,6 @@
         "message": "Recherche ou Flèche droite pour mettre le focus sur l'onglet/groupe actif",
         "description": "Search or right arrow to focus on active tab/group"
     },
-    "thisGroupIsMain": {
-        "message": "Ce groupe est défini comme groupe principal",
-        "description": "This group is marked as main"
-    },
-    "setGroupAsMain": {
-        "message": "Définir ce groupe comme groupe principal",
-        "description": "Set this group as main"
-    },
-    "thisGroupWasMain": {
-        "message": "Information\nCe groupe était défini comme groupe principal",
-        "description": "Notice\nThis group was marked as the main"
-    },
-    "moveToMainIfNotInCatchTabRules": {
-        "message": "Déplacer les onglets de ce groupe vers le groupe \"$grouptitle$\" si aucune des expressions régulières n'est valide.",
-        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
-        "placeholders": {
-            "grouptitle": {
-                "content": "$1",
-                "example": "My main group"
-            }
-        }
-    },
     "noContainerTitle": {
         "message": "Aucun contexte",
         "description": "No container"

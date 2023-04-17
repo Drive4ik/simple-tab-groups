@@ -963,28 +963,6 @@
         "message": "Cari atau panah kanan untuk fokus pada tab/grup yang aktif",
         "description": "Search or right arrow to focus on active tab/group"
     },
-    "thisGroupIsMain": {
-        "message": "Grup ini ditandai sebagai utama",
-        "description": "This group is marked as main"
-    },
-    "setGroupAsMain": {
-        "message": "Tetapkan grup ini sebagai utama",
-        "description": "Set this group as main"
-    },
-    "thisGroupWasMain": {
-        "message": "Pemberitahuan\nGrup ini ditandai sebagai utama",
-        "description": "Notice\nThis group was marked as the main"
-    },
-    "moveToMainIfNotInCatchTabRules": {
-        "message": "Pindahkan tab dari grup ini ke grup \"$grouptitle$\" jika tidak ada aturan ekspresi reguler yang cocok",
-        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
-        "placeholders": {
-            "grouptitle": {
-                "content": "$1",
-                "example": "My main group"
-            }
-        }
-    },
     "noContainerTitle": {
         "message": "Bawaan",
         "description": "No container"

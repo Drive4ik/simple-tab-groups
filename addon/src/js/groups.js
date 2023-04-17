@@ -5,7 +5,7 @@ import * as Storage from './storage.js';
 import * as Cache from './cache.js';
 import * as Containers from './containers.js';
 // import Messages from './messages.js';
-import JSON from './json.js';
+// import JSON from './json.js';
 import * as Tabs from './tabs.js';
 import * as Utils from './utils.js';
 
@@ -45,7 +45,7 @@ export async function load(groupId = null, withTabs = false, includeFavIconUrl, 
 
     log.stop();
 
-    let groupIndex = groups.findIndex(group => group.id === groupId);
+    const groupIndex = groups.findIndex(group => group.id === groupId);
 
     return {
         group: groups[groupIndex],
@@ -97,11 +97,10 @@ export function create(id, title, defaultGroupProps = {}) {
         newTabContainer: Constants.DEFAULT_COOKIE_STORE_ID,
         ifDifferentContainerReOpen: false,
         excludeContainersForReOpen: [],
-        isMain: false, // to remove
         isSticky: false,
         catchTabContainers: [],
         catchTabRules: '',
-        moveToMainIfNotInCatchTabRules: false,
+        moveToGroupIfNoneCatchTabRules: null,
         muteTabsWhenGroupCloseAndRestoreWhenOpen: false,
         showTabAfterMovingItIntoThisGroup: false,
         showOnlyActiveTabAfterMovingItIntoThisGroup: false,
@@ -140,6 +139,7 @@ export async function getDefaults() {
     return {
         defaultGroup,
         defaultCleanGroup,
+        defaultGroupProps,
     };
 }
 
@@ -157,10 +157,10 @@ export async function add(windowId, tabIds = [], title = null) {
 
     const log = logger.start('add', {windowId, tabIds, title});
 
-    let windowGroupId = Cache.getWindowGroup(windowId);
+    const windowGroupId = Cache.getWindowGroup(windowId);
 
     if (windowGroupId) {
-        let result = await unload(windowGroupId);
+        const result = await unload(windowGroupId);
 
         if (!result) {
             log.stopError('cant unload');
@@ -168,17 +168,17 @@ export async function add(windowId, tabIds = [], title = null) {
         }
     }
 
-    let {
-        lastCreatedGroupPosition,
-        defaultGroupProps,
-    } = await Storage.get([
-        'lastCreatedGroupPosition',
-        'defaultGroupProps',
+    let [
+        {lastCreatedGroupPosition},
+        {defaultGroupProps},
+    ] = await Promise.all([
+        Storage.get('lastCreatedGroupPosition'),
+        getDefaults(),
     ]);
 
     lastCreatedGroupPosition++;
 
-    let {groups} = await load(),
+    const {groups} = await load(),
         newGroup = create(lastCreatedGroupPosition, title, defaultGroupProps);
 
     groups.push(newGroup);
@@ -219,10 +219,12 @@ export async function add(windowId, tabIds = [], title = null) {
 export async function remove(groupId) {
     const log = logger.start('remove', groupId);
 
-    let groupWindowId = Cache.getWindowId(groupId);
+    const groupWindowId = Cache.getWindowId(groupId);
 
-    if (Cache.getWindowId(groupId)) {
-        let result = await unload(groupId);
+    log.log('groupWindowId', groupWindowId);
+
+    if (groupWindowId) {
+        const result = await unload(groupId);
 
         if (!result) {
             log.stopError('cant unload');
@@ -230,25 +232,45 @@ export async function remove(groupId) {
         }
     }
 
-    let {group, groups, groupIndex} = await load(groupId, true);
+    const [
+        {group, groups, groupIndex},
+        {defaultGroupProps},
+    ] = await Promise.all([
+        load(groupId, true),
+        getDefaults(),
+    ]);
+
+    if (!group) {
+        log.stopError('groupId', groupId, 'not found');
+        return;
+    }
 
     backgroundSelf.addUndoRemoveGroupItem(group);
 
     groups.splice(groupIndex, 1);
 
+    groups.forEach(gr => {
+        if (gr.moveToGroupIfNoneCatchTabRules === group.id) {
+            gr.moveToGroupIfNoneCatchTabRules = null;
+            log.log('remove moveToGroupIfNoneCatchTabRules from group', gr.id);
+        }
+    });
+
     await save(groups);
+
+    if (defaultGroupProps.moveToGroupIfNoneCatchTabRules === group.id) {
+        log.log('remove moveToGroupIfNoneCatchTabRules from default group props');
+        delete defaultGroupProps.moveToGroupIfNoneCatchTabRules;
+        await saveDefault(defaultGroupProps);
+    }
 
     if (!group.isArchive) {
         await Tabs.remove(group.tabs);
 
         backgroundSelf.updateMoveTabMenus();
-
-        if (group.isMain) {
-            Utils.notify(['thisGroupWasMain'], 7);
-        }
     }
 
-    backgroundSelf.removeGroupBookmark(group);
+    backgroundSelf.removeGroupBookmark(group).catch(log.onCatch('cant remove group bookmark', false));
 
     backgroundSelf.sendMessage('group-removed', {
         groupId: groupId,
@@ -287,10 +309,6 @@ export async function update(groupId, updateData) {
 
     if (updateData.title) {
         updateData.title = updateData.title.slice(0, 256);
-    }
-
-    if (updateData.isMain) {
-        groups.forEach(gr => gr.isMain = gr.id === groupId);
     }
 
     Object.assign(group, updateData);
@@ -455,9 +473,9 @@ export async function archiveToggle(groupId) {
     await backgroundSelf.loadingBrowserAction();
 
     let {group, groups} = await load(groupId, true),
-        tabIdsToRemove = [];
+        tabsToRemove = [];
 
-    log.log('group.isArchive', group.isArchive);
+    log.log('group.isArchive', group.isArchive, '=>', !group.isArchive);
 
     if (group.isArchive) {
         group.isArchive = false;
@@ -467,7 +485,7 @@ export async function archiveToggle(groupId) {
         group.tabs = [];
     } else {
         if (Cache.getWindowId(groupId)) {
-            let result = await unload(groupId);
+            const result = await unload(groupId);
 
             if (!result) {
                 log.stopError('cant unload group');
@@ -477,23 +495,18 @@ export async function archiveToggle(groupId) {
             ({group, groups} = await load(groupId, true));
         }
 
-        tabIdsToRemove = group.tabs.map(Tabs.extractId);
+        tabsToRemove = group.tabs;
 
         group.isArchive = true;
         group.tabs = Tabs.prepareForSave(group.tabs, false, true, true);
-
-        if (group.isMain) {
-            group.isMain = false;
-            Utils.notify(['thisGroupWasMain'], 7);
-        }
     }
 
     await save(groups);
 
-    if (tabIdsToRemove.length) {
-        backgroundSelf.addExcludeTabIds(tabIdsToRemove);
-        await Tabs.remove(tabIdsToRemove);
-        backgroundSelf.removeExcludeTabIds(tabIdsToRemove);
+    if (tabsToRemove.length) {
+        backgroundSelf.addExcludeTabIds(tabsToRemove);
+        await Tabs.remove(tabsToRemove);
+        backgroundSelf.removeExcludeTabIds(tabsToRemove);
     }
 
     backgroundSelf.sendMessage('groups-updated');
@@ -542,12 +555,12 @@ export function setNewTabsParams(tabs, group) {
 }
 
 export async function getNextTitle() {
-    const {
-        lastCreatedGroupPosition,
-        defaultGroupProps,
-    } = await Storage.get([
-        'lastCreatedGroupPosition',
-        'defaultGroupProps',
+    const [
+        {lastCreatedGroupPosition},
+        {defaultGroupProps},
+    ] = await Promise.all([
+        Storage.get('lastCreatedGroupPosition'),
+        getDefaults(),
     ]);
 
     return createTitle(null, lastCreatedGroupPosition + 1, defaultGroupProps);
@@ -558,7 +571,7 @@ function isCatchedUrl(url, catchTabRules) {
         .split(/\s*\n\s*/)
         .map(regExpStr => regExpStr.trim())
         .filter(Boolean)
-        .some(function(regExpStr) {
+        .some(regExpStr => {
             try {
                 return new RegExp(regExpStr).test(url);
             } catch (e) {};
@@ -599,38 +612,32 @@ export function normalizeContainersInGroups(groups) {
     return hasChanges;
 }
 
-export function getCatchedForTab(groups, currentGroup, {cookieStoreId, url}) {
-    groups = groups.filter(group => !group.isArchive);
+export function getCatchedForTab(notArchivedGroups, currentGroup, {cookieStoreId, url}) {
+    if (currentGroup.isSticky) {
+        return;
+    }
 
-    let destGroup = groups.find(function({catchTabContainers, catchTabRules}) {
+    const destGroup = notArchivedGroups.find(({catchTabContainers, catchTabRules}) => {
         if (catchTabContainers.includes(cookieStoreId)) {
             return true;
         }
 
-        if (catchTabRules && isCatchedUrl(url, catchTabRules)) {
+        if (isCatchedUrl(url, catchTabRules)) {
             return true;
         }
     });
 
     if (destGroup) {
         if (destGroup.id === currentGroup.id) {
-            return false;
+            return;
         }
 
         return destGroup;
     }
 
-    if (!currentGroup.moveToMainIfNotInCatchTabRules || !currentGroup.catchTabRules) {
-        return false;
+    if (currentGroup.catchTabRules && currentGroup.moveToGroupIfNoneCatchTabRules) {
+        return notArchivedGroups.find(group => group.id === currentGroup.moveToGroupIfNoneCatchTabRules);
     }
-
-    let mainGroup = groups.find(group => group.isMain);
-
-    if (!mainGroup || mainGroup.id === currentGroup.id) {
-        return false;
-    }
-
-    return mainGroup;
 }
 
 export function isNeedBlockBeforeRequest(groups) {
@@ -687,15 +694,11 @@ export function getIconUrl(group, keyInObj = null) {
             group.iconColor = 'transparent';
         }
 
-        let stroke = 'transparent' === group.iconColor ? 'stroke="#606060" stroke-width="1"' : '',
-            title = group.title,
-            emoji = getEmojiIcon(group);
+        const stroke = 'transparent' === group.iconColor ? 'stroke="#606060" stroke-width="1"' : '',
+            emoji = getEmojiIcon(group),
+            title = emoji || group.title;
 
-        if (emoji) {
-            title = emoji;
-        }
-
-        let icons = {
+        const icons = {
             'main-squares': `
             <svg width="128" height="128" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
                 <g fill="context-fill" fill-opacity="context-fill-opacity">

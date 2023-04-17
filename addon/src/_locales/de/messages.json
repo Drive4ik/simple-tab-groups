@@ -983,28 +983,6 @@
         "message": "Suche oder nutze den > Rechtspfeil um die aktive Gruppe zu fokussieren",
         "description": "Search or right arrow to focus on active tab/group"
     },
-    "thisGroupIsMain": {
-        "message": "Die Gruppe ist als Hauptgruppe markiert",
-        "description": "This group is marked as main"
-    },
-    "setGroupAsMain": {
-        "message": "Gruppe zur Hauptgruppe machen",
-        "description": "Set this group as main"
-    },
-    "thisGroupWasMain": {
-        "message": "Hinweis\nDiese Gruppe wurde als Hauptgruppe markiert.",
-        "description": "Notice\nThis group was marked as the main"
-    },
-    "moveToMainIfNotInCatchTabRules": {
-        "message": "Verschiebe die Tabs von dieser Gruppe in die Gruppe \"$grouptitle$\", wenn keine der angewandten regulären Ausdrücke zutrifft.",
-        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
-        "placeholders": {
-            "grouptitle": {
-                "content": "$1",
-                "example": "My main group"
-            }
-        }
-    },
     "noContainerTitle": {
         "message": "Kein Container",
         "description": "No container"

@@ -971,28 +971,6 @@
         "message": "搜索或右箭以聚焦于归档的标签页/群组",
         "description": "Search or right arrow to focus on active tab/group"
     },
-    "thisGroupIsMain": {
-        "message": "该群组已设置为主要",
-        "description": "This group is marked as main"
-    },
-    "setGroupAsMain": {
-        "message": "设置该群组为主要",
-        "description": "Set this group as main"
-    },
-    "thisGroupWasMain": {
-        "message": "注意\n该群组已设置为主要",
-        "description": "Notice\nThis group was marked as the main"
-    },
-    "moveToMainIfNotInCatchTabRules": {
-        "message": "如果没有正则表达式匹配则移动标签页至群组“$grouptitle$”",
-        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
-        "placeholders": {
-            "grouptitle": {
-                "content": "$1",
-                "example": "My main group"
-            }
-        }
-    },
     "noContainerTitle": {
         "message": "无身份",
         "description": "No container"

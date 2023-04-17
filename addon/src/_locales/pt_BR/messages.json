@@ -975,28 +975,6 @@
         "message": "Pesquisa ou seta para a direita para focar na guia/grupo ativo",
         "description": "Search or right arrow to focus on active tab/group"
     },
-    "thisGroupIsMain": {
-        "message": "Este grupo é marcado como principal",
-        "description": "This group is marked as main"
-    },
-    "setGroupAsMain": {
-        "message": "Fixar grupo como principal",
-        "description": "Set this group as main"
-    },
-    "thisGroupWasMain": {
-        "message": "Aviso\nEste grupo foi fixado como o principal",
-        "description": "Notice\nThis group was marked as the main"
-    },
-    "moveToMainIfNotInCatchTabRules": {
-        "message": "Mova as guias deste grupo para o grupo \"$grouptitle$\" se nenhuma das regras de expressão regular corresponder",
-        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
-        "placeholders": {
-            "grouptitle": {
-                "content": "$1",
-                "example": "My main group"
-            }
-        }
-    },
     "noContainerTitle": {
         "message": "Nenhum contêiner",
         "description": "No container"
