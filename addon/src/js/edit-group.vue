@@ -5,6 +5,7 @@
 
     import popup from './popup.vue';
     import swatches from 'vue-swatches';
+    import contextMenu from '../components/context-menu.vue';
     import 'vue-swatches/dist/vue-swatches.css';
 
     import backgroundSelf from 'background';
@@ -41,21 +42,23 @@
         components: {
             popup: popup,
             swatches: swatches,
+            'context-menu': contextMenu,
         },
         data() {
+            this.TEMPORARY_CONTAINER = Constants.TEMPORARY_CONTAINER;
+            this.DEFAULT_COOKIE_STORE_ID = Constants.DEFAULT_COOKIE_STORE_ID;
+            this.GROUP_ICON_VIEW_TYPES = Constants.GROUP_ICON_VIEW_TYPES;
+            this.TITLE_VARIABLES = Groups.TITLE_VARIABLES;
+
             return {
                 show: false,
 
                 containersWithDefault: {},
                 containersExcludeTemp: {},
 
-                TEMPORARY_CONTAINER: Constants.TEMPORARY_CONTAINER,
-                DEFAULT_COOKIE_STORE_ID: Constants.DEFAULT_COOKIE_STORE_ID,
                 disabledContainers: {},
 
                 showMessageCantLoadFile: false,
-
-                GROUP_ICON_VIEW_TYPES: Constants.GROUP_ICON_VIEW_TYPES,
 
                 group: null,
 
@@ -248,6 +251,13 @@
                 }
             },
 
+            insertValueToGroupTitle(value) {
+                const {selectionStart, selectionEnd} = this.$refs.groupTitle,
+                    title = this.group.title;
+
+                this.group.title = title.slice(0, selectionStart) + value + title.slice(selectionEnd, title.length);
+            },
+
             triggerChanges() {
                 const changes = {};
 
@@ -289,17 +299,32 @@
 
 <template>
     <div v-if="show" @keydown.stop.enter="triggerChanges" @keyup.stop tabindex="-1" class="no-outline edit-group">
-        <div class="field">
-            <label class="label" v-text="lang('title')"></label>
-            <div class="control has-icons-left">
+        <label class="label" v-text="lang('title')"></label>
+        <div :class="['field', isDefaultGroup && 'has-addons']">
+            <div class="control is-expanded has-icons-left">
                 <input ref="groupTitle" v-model.trim="group.title" type="text" maxlength="256" class="input" :placeholder="lang('title')" />
-                <span class="icon is-small is-left">
+                <span class="icon is-left">
                     <figure class="image is-16x16 is-inline-block">
                         <img :src="iconUrlToDisplay" />
                     </figure>
                 </span>
             </div>
+            <div v-if="isDefaultGroup" class="control">
+                <button class="button" @click="$refs.groupNameVariables.open($event)">
+                    <span class="icon">
+                        <img src="/icons/help.svg" class="size-16" />
+                    </span>
+                </button>
+            </div>
         </div>
+
+        <context-menu ref="groupNameVariables">
+            <ul class="is-unselectable">
+                <li v-for="(value, key) in TITLE_VARIABLES" :key="key" @click="insertValueToGroupTitle(`{${key}}`)">
+                    <span v-text="`{${key}} - ` + value"></span>
+                </li>
+            </ul>
+        </context-menu>
 
         <div class="field">
             <label class="label" v-text="lang('iconStyle')"></label>
