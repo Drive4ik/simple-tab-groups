@@ -725,11 +725,7 @@ export async function reload(tabs, bypassCache = false) { // ids or tabs
 const extensionsWebextensionsRestrictedDomains = ['accounts-static.cdn.mozilla.net', 'accounts.firefox.com', 'addons.cdn.mozilla.net', 'addons.mozilla.org', 'api.accounts.firefox.com', 'content.cdn.mozilla.net', 'discovery.addons.mozilla.org', 'install.mozilla.org', 'oauth.accounts.firefox.com', 'profile.accounts.firefox.com', 'support.mozilla.org', 'sync.services.mozilla.com'];
 
 export function isCanSendMessage({url}) {
-    if (url === 'about:blank') {
-        return true;
-    }
-
-    if (url.startsWith('moz-extension') || url.startsWith('about:')) {
+    if (url.startsWith('about:') || url.startsWith('moz-extension')) {
         return false;
     }
 

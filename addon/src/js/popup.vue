@@ -56,7 +56,13 @@
                 <slot></slot>
             </section>
             <footer v-if="buttonsClone.length" class="modal-card-foot">
-                <button v-for="button in buttonsClone" :key="button.lang" @click="button.event && $emit(button.event)" :class="['button', button.classList]" v-text="lang(button.lang)"></button>
+                <button
+                    v-for="button in buttonsClone"
+                    :key="button.lang"
+                    :disabled="button.disabled"
+                    @click="button.event && $emit(button.event)"
+                    :class="['button', button.classList]"
+                    v-text="lang(button.lang)"></button>
             </footer>
         </div>
     </div>

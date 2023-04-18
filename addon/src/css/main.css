@@ -107,7 +107,7 @@ img,
 }
 
 .indent-children > * + * {
-    margin-left: 6px;
+    margin-left: .5em;
 }
 
 hr {

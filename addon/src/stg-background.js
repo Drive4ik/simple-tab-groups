@@ -91,11 +91,11 @@ async function createTabsSafe(tabs, tryRestoreOpeners, hideTabs = true) {
         return [];
     }
 
-    let groupIds = tabs.map(tab => tab.groupId).filter(Utils.onlyUniqueFilter),
-        groupIdForNextTabs = (groupIds.length === 1 && groupIds[0]) ? groupIds[0] : null;
+    const groupIds = tabs.map(tab => tab.groupId).filter(Utils.onlyUniqueFilter),
+        groupIdForNextTab = (groupIds.length === 1 && groupIds[0]) ? groupIds[0] : null;
 
-    if (groupIdForNextTabs) {
-        self.groupIdForNextTab = groupIdForNextTabs;
+    if (groupIdForNextTab) {
+        self.groupIdForNextTab = groupIdForNextTab;
     }
 
     let isEnabledTreeTabsExt = Constants.TREE_TABS_EXTENSIONS.some(id => Management.isEnabled(id)),
@@ -142,7 +142,9 @@ async function createTabsSafe(tabs, tryRestoreOpeners, hideTabs = true) {
     });
 
     if (hideTabs) {
-        let tabsToHide = newTabs.filter(tab => !tab.pinned && tab.groupId && !Cache.getWindowId(tab.groupId));
+        const tabsToHide = newTabs.filter(tab => !tab.pinned && tab.groupId && !Cache.getWindowId(tab.groupId));
+
+        log.log('hide tabs', tabsToHide);
 
         await Tabs.safeHide(tabsToHide);
     }
@@ -2067,7 +2069,7 @@ browser.commands.onCommand.addListener(function(name) {
 
 browser.runtime.onMessage.addListener(onBackgroundMessage);
 
-browser.runtime.onMessageExternal.addListener(async function(request, sender) {
+browser.runtime.onMessageExternal.addListener(async function onMessageExternal(request, sender) {
     const log = logger.start(['info', 'onMessageExternal'], `RECEIVED-EXTERNAL-ACTION#${request?.action}`, {request, sender});
 
     if (request?.action === 'ignore-ext-for-reopen-container') {
@@ -2903,14 +2905,19 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         currentData.groups = [];
         currentData.hotkeys = [];
     } else {
-        currentData = await Storage.get('hotkeys');
-        const {groups} = await Groups.load(null, true, true, options.showTabsWithThumbnailsInManageGroups);
-        currentData.groups = groups;
+        [
+            {hotkeys: currentData.hotkeys},
+            {groups: currentData.groups},
+        ] = await Promise.all([
+            Storage.get('hotkeys'),
+            Groups.load(null, true, true, options.showTabsWithThumbnailsInManageGroups),
+        ]);
     }
 
-    if (!Array.isArray(data.hotkeys)) {
-        data.hotkeys = [];
-    } else if (!isMac) {
+    data.groups ??= [];
+    data.hotkeys ??= [];
+
+    if (!isMac) {
         data.hotkeys.forEach(hotkey => hotkey.metaKey = false);
     }
 
@@ -3033,7 +3040,17 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
 
     window.localStorage.isBackupRestoring = 1;
 
-    await Storage.set(data);
+    let result;
+
+    if (clearAddonDataBeforeRestore) {
+        const defaultOptions = JSON.clone(Constants.DEFAULT_OPTIONS);
+
+        result = Object.assign(defaultOptions, data);
+    } else {
+        result = data;
+    }
+
+    await Storage.set(result);
 
     await Utils.wait(200);
 
@@ -3176,15 +3193,10 @@ async function runMigrateForData(data) {
     };
 
     if (data.version === currentVersion) {
-        log.stop('data.version === currentVersion');
+        log.stop('data.version === currentVersion', currentVersion);
         return resultMigrate;
-    }
-
-    if (data.version === Constants.DEFAULT_OPTIONS.version) {
-        data.version = currentVersion;
-        resultMigrate.migrated = true;
-        log.stop('data.version === Constants.DEFAULT_OPTIONS.version');
-        return resultMigrate;
+    } else if (!data.version) {
+        log.throwError('invalid data version');
     }
 
     const migrations = [
@@ -3193,7 +3205,7 @@ async function runMigrateForData(data) {
             remove: ['windowsGroup'],
             migration() {
                 data.groups = data.groups.map(function(group) {
-                    group.windowId = data.windowsGroup[win.id] === group.id ? win.id : null;
+                    group.windowId = null;
 
                     group.catchTabRules = group.moveNewTabsToThisGroupByRegExp || '';
                     delete group.moveNewTabsToThisGroupByRegExp;
@@ -3698,7 +3710,7 @@ async function runMigrateForData(data) {
             (dataMajor == currentMajor && dataMinor == currentMinor && dataPatch > currentPatch)
         ) {
             resultMigrate.error = browser.i18n.getMessage('updateAddonToLatestVersion');
-            log.stopError('migrated', false, resultMigrate.error, 'data.version', data.version, 'currentVersion', currentVersion);
+            log.stopError(resultMigrate.error, 'data.version:', data.version, 'currentVersion:', currentVersion);
             return resultMigrate;
         }
     }
@@ -3722,7 +3734,7 @@ async function syncTabs(groups, allTabs) {
 
     const containersStorageMap = new Map;
 
-    for (let group of groups) {
+    for (const group of groups) {
         if (group.isArchive) {
             continue;
         }
@@ -3731,15 +3743,15 @@ async function syncTabs(groups, allTabs) {
             newTabs = [],
             newTabParams = Groups.getNewTabParams(group);
 
-        for (let tab of group.tabs) {
+        for (const tab of group.tabs) {
             tab.groupId = group.id;
 
             tab.cookieStoreId = await Containers.findExistOrCreateSimilar(tab.cookieStoreId, null, containersStorageMap);
 
-            let winTabIndex = allTabs.findIndex(winTab => winTab.url === tab.url && winTab.cookieStoreId === tab.cookieStoreId);
+            const winTabIndex = allTabs.findIndex(winTab => winTab.url === tab.url && winTab.cookieStoreId === tab.cookieStoreId);
 
             if (winTabIndex !== -1) {
-                let [winTab] = allTabs.splice(winTabIndex, 1);
+                const [winTab] = allTabs.splice(winTabIndex, 1);
 
                 Cache.applySession(winTab, tab);
 
@@ -4038,15 +4050,9 @@ async function init() {
     self.localStorage.START_TIME = Date.now();
 
     try {
-        let data = await Storage.get(undefined, undefined, true),
-            dataChanged = new Set;
+        let data = await Storage.getForMigrate();
 
-        // if (!Array.isArray(data.groups)) {
-        //     Utils.notify(['ffFailedAndLostDataMessage']);
-
-        //     data.groups = [];
-        //     dataChanged.add(true);
-        // }
+        const dataChanged = new Set;
 
         await Containers.init(data.temporaryContainerTitle);
 

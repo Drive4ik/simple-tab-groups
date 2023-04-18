@@ -15,7 +15,7 @@ function removeUnnecessaryStrings(str) {
 }
 
 const DELETE_LOG_STARTS_WITH = [
-    'Logger',
+    'Log',
     'normalizeError',
     'setLoggerFuncs',
     'sendMessage',

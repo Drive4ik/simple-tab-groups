@@ -25,6 +25,9 @@
             clearAddonData(value) {
                 this.$emit('clear-addon-data-update', value);
             },
+            enableGetData(value) {
+                this.$emit('enable-get-data', value);
+            },
             groups({length}) {
                 if (!length) {
                     this.checkAllGroups = false;
@@ -41,17 +44,41 @@
                 return this.data.pinnedTabs?.length > 0;
             },
             showGeneral() {
-                return Object.keys(this.data).some(key => key !== 'hotkeys' && Constants.ALL_OPTIONS_KEYS.includes(key));
+                return Object.keys(this.data).some(this.isGeneralOptionsKey, this);
             },
             showHotkeys() {
                 return this.data.hotkeys?.length > 0;
+            },
+            readyPinnedTabs() {
+                return this.showPinnedTabs && this.includePinnedTabs;
+            },
+            getGeneral() {
+                return this.showGeneral && this.includeGeneral;
+            },
+            getHotkeys() {
+                return this.showHotkeys && this.includeHotkeys;
+            },
+            getGroups() {
+                return this.groups.length > 0;
+            },
+            enableGetData() {
+                return this.getGeneral || this.getHotkeys || this.getGroups;
             },
         },
         mounted() {
             this.$nextTick(() => this.$emit('clear-addon-data-update', this.allowClearAddonData));
         },
         data() {
-            let filteredGroups = this.disableEmptyGroups ? this.data.groups.filter(group => group.tabs.length) : this.data.groups;
+            let filteredGroups,
+                disabledGroups;
+
+            if (this.disableEmptyGroups) {
+                filteredGroups = this.data.groups.filter(group => group.tabs.length);
+                disabledGroups = this.data.groups.filter(group => !group.tabs.length);
+            } else {
+                filteredGroups = this.data.groups;
+                disabledGroups = [];
+            }
 
             return {
                 TEMPORARY_CONTAINER: Constants.TEMPORARY_CONTAINER,
@@ -60,7 +87,7 @@
 
                 filteredGroups,
 
-                clearAddonData: this.allowClearAddonData ? true : false,
+                clearAddonData: this.allowClearAddonData,
 
                 includePinnedTabs: true,
                 includeGeneral: true,
@@ -69,7 +96,7 @@
                 checkAllGroups: true,
 
                 groups: filteredGroups.slice(),
-                disabledGroups: this.disableEmptyGroups ? this.data.groups.filter(group => !group.tabs.length) : [],
+                disabledGroups,
             };
         },
         methods: {
@@ -77,36 +104,42 @@
 
             getGroupIconUrl: Groups.getIconUrl,
 
+            isGeneralOptionsKey(key) {
+                if (key === 'hotkeys') {
+                    return false;
+                }
+
+                return Constants.ALL_OPTIONS_KEYS.includes(key);
+            },
+
             getData() {
-                const result = {
-                    groups: this.groups,
-                };
+                const result = {};
 
-                if (typeof this.data.version === 'string' && this.data.version.length) {
-                    result.version = this.data.version;
+                if (this.getGroups) {
+                    result.groups = this.groups;
+
+                    if (this.data.containers) {
+                        result.containers = this.data.containers;
+                    }
+
+                    if (this.data.lastCreatedGroupPosition) {
+                        result.lastCreatedGroupPosition = this.data.lastCreatedGroupPosition;
+                    }
+
+                    if (this.readyPinnedTabs) {
+                        result.pinnedTabs = this.data.pinnedTabs;
+                    }
                 }
 
-                if (this.data.containers && result.groups.length) {
-                    result.containers = this.data.containers;
-                }
-
-                if (Number.isSafeInteger(this.data.lastCreatedGroupPosition)) {
-                    result.lastCreatedGroupPosition = this.data.lastCreatedGroupPosition;
-                }
-
-                if (this.showPinnedTabs && this.includePinnedTabs && this.data.pinnedTabs && this.data.pinnedTabs.length) {
-                    result.pinnedTabs = this.data.pinnedTabs;
-                }
-
-                if (this.showGeneral && this.includeGeneral) {
-                    for (let key in this.data) {
-                        if (key !== 'hotkeys' && Constants.ALL_OPTIONS_KEYS.includes(key)) {
+                if (this.getGeneral) {
+                    for (const key in this.data) {
+                        if (this.isGeneralOptionsKey(key)) {
                             result[key] = this.data[key];
                         }
                     }
                 }
 
-                if (this.showHotkeys && this.includeHotkeys) {
+                if (this.getHotkeys) {
                     result.hotkeys = this.data.hotkeys;
                 }
 

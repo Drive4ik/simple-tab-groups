@@ -367,7 +367,7 @@
             </div>
         </div>
 
-        <div class="small-field">
+        <div class="field">
             <div class="control">
                 <label class="checkbox">
                     <input type="checkbox" v-model="group.discardTabsAfterHide" />
@@ -375,7 +375,7 @@
                 </label>
             </div>
         </div>
-        <div class="small-field ml-3">
+        <div class="field ml-3">
             <div class="control">
                 <label class="checkbox" :disabled="!group.discardTabsAfterHide">
                     <input v-model="group.discardExcludeAudioTabs" :disabled="!group.discardTabsAfterHide" type="checkbox" />
@@ -383,7 +383,7 @@
                 </label>
             </div>
         </div>
-        <div class="small-field">
+        <div class="field">
             <div class="control">
                 <label class="checkbox">
                     <input type="checkbox" v-model="group.muteTabsWhenGroupCloseAndRestoreWhenOpen" />
@@ -392,7 +392,7 @@
             </div>
         </div>
 
-        <div class="small-field">
+        <div class="field">
             <div class="control">
                 <label class="checkbox">
                     <input type="checkbox" v-model="group.prependTitleToWindow" />
@@ -401,7 +401,7 @@
             </div>
         </div>
 
-        <div class="small-field">
+        <div class="field">
             <div class="control">
                 <label class="checkbox">
                     <input
@@ -412,7 +412,7 @@
                 </label>
             </div>
         </div>
-        <div class="small-field ml-3">
+        <div class="field ml-3">
             <div class="control">
                 <label class="checkbox" :disabled="!group.exportToBookmarksWhenAutoBackup">
                     <input v-model="group.leaveBookmarksOfClosedTabs" :disabled="!group.exportToBookmarksWhenAutoBackup" type="checkbox" />
@@ -433,7 +433,7 @@
                 </div>
             </div>
             <div class="control h-margin-top-10">
-                <label class="checkbox indent-children">
+                <label class="checkbox">
                     <input type="checkbox" v-model="group.ifDifferentContainerReOpen" />
                     <span v-text="lang('ifDifferentContainerReOpen')"></span>
                 </label>
@@ -460,7 +460,7 @@
 
         <hr>
 
-        <div class="small-field">
+        <div class="field">
             <label class="label" v-text="lang('tabMoving')"></label>
             <div class="control is-inline-flex indent-children">
                 <label class="checkbox">
@@ -472,7 +472,7 @@
                 </span>
             </div>
         </div>
-        <div class="small-field">
+        <div class="field">
             <div class="control">
                 <label class="checkbox">
                     <input type="checkbox" v-model="group.showTabAfterMovingItIntoThisGroup" />
@@ -480,7 +480,7 @@
                 </label>
             </div>
         </div>
-        <div class="small-field ml-3">
+        <div class="field ml-3">
             <div class="control">
                 <label class="checkbox" :disabled="!group.showTabAfterMovingItIntoThisGroup">
                     <input type="checkbox" :disabled="!group.showTabAfterMovingItIntoThisGroup" v-model="group.showOnlyActiveTabAfterMovingItIntoThisGroup" />
@@ -488,7 +488,7 @@
                 </label>
             </div>
         </div>
-        <div class="small-field">
+        <div class="field">
             <div class="control">
                 <label class="checkbox">
                     <input type="checkbox" v-model="group.showNotificationAfterMovingTabIntoThisGroup" />
@@ -499,7 +499,7 @@
 
         <div class="field">
             <label class="label" v-text="lang('catchTabContainers')"></label>
-            <div class="containers-wrapper">
+            <div :class="['containers-wrapper', isDefaultGroup && 'no-y-scroll']">
                 <div v-for="container in containersExcludeTemp" :key="container.cookieStoreId + 'catch'" class="control">
                     <label class="checkbox indent-children" :disabled="isDisabledContainer(container)">
                         <input type="checkbox" :disabled="isDisabledContainer(container)" :value="container.cookieStoreId" v-model="group.catchTabContainers" />
@@ -586,10 +586,6 @@
 
 <style lang="scss">
     .edit-group {
-        .small-field:not(:last-child) {
-            margin-bottom: .25rem;
-        }
-
         .word-break-all {
             word-break: break-word;
         }
@@ -616,11 +612,14 @@
         .radio {
             display: flex;
             align-items: center;
-            line-height: 1.4;
         }
 
         .reg-exp {
             font-family: Monaco, Consolas, Andale Mono, Lucida Console;
+        }
+
+        .no-y-scroll {
+            overflow-y: hidden;
         }
     }
 

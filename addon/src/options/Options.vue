@@ -1161,6 +1161,7 @@
                     event: 'save',
                     lang: 'eraseAndImportAddonBackupButton',
                     classList: 'is-danger',
+                    disabled: false,
                 }, {
                     event: 'close-popup',
                     lang: 'cancel',
@@ -1171,6 +1172,7 @@
                 :disable-empty-groups="manageAddonSettingsDisableEmptyGroups"
                 :allow-clear-addon-data="manageAddonSettingsAllowClearAddonDataBeforeRestore"
                 ref="manageAddonBackup"
+                @enable-get-data="value => $refs.mng.buttonsClone[0].disabled = !value"
                 @clear-addon-data-update="value =>
                     Object.assign($refs.mng.buttonsClone[0], value ?
                         {lang: 'eraseAndImportAddonBackupButton', classList: 'is-danger'} :

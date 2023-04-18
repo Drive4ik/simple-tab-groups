@@ -262,7 +262,7 @@ export const EXTENSIONS_WHITE_LIST = Object.freeze({
 });
 
 export const DEFAULT_OPTIONS = Object.freeze({
-    version: '1.0',
+    version: MANIFEST.version,
     groups: [],
     lastCreatedGroupPosition: 0,
 

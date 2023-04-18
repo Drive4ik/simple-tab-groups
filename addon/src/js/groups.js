@@ -579,11 +579,12 @@ function isCatchedUrl(url, catchTabRules) {
 }
 
 export function normalizeContainersInGroups(groups) {
-    let allContainers = Containers.getAll(true),
-        hasChanges = false;
+    const allContainers = Containers.getAll(true);
 
-    groups.forEach(function(group) {
-        let oldNewTabContainer = group.newTabContainer,
+    let hasChanges = false;
+
+    groups.forEach(group => {
+        const oldNewTabContainer = group.newTabContainer,
             oldCatchTabContainersLength = group.catchTabContainers.length,
             oldExcludeContainersForReOpenLength = group.excludeContainersForReOpen.length;
 
@@ -598,14 +599,16 @@ export function normalizeContainersInGroups(groups) {
         ) {
             hasChanges = true;
 
-            backgroundSelf.sendMessage('group-updated', {
-                group: {
-                    id: group.id,
-                    newTabContainer: group.newTabContainer,
-                    catchTabContainers: group.catchTabContainers,
-                    excludeContainersForReOpen: group.excludeContainersForReOpen,
-                },
-            });
+            if (backgroundSelf.inited) {
+                backgroundSelf.sendMessage('group-updated', {
+                    group: {
+                        id: group.id,
+                        newTabContainer: group.newTabContainer,
+                        catchTabContainers: group.catchTabContainers,
+                        excludeContainersForReOpen: group.excludeContainersForReOpen,
+                    },
+                });
+            }
         }
     });
 
