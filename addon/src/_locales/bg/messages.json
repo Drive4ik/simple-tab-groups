@@ -413,6 +413,10 @@
         "message": "Пиктограма",
         "description": "Icon style"
     },
+    "discardTabsAfterHide": {
+        "message": "Освобождаване на памет от скрити раздели",
+        "description": "Unload tabs from memory after closing a group"
+    },
     "discardExcludeAudioTabs": {
         "message": "С изключение на разделите със звук",
         "description": "Exclude tabs with sound"
@@ -813,8 +817,12 @@
         "message": "Oтметнете „Възстановяване на предишната сесия“ в настройките на четеца.<br>Това е необходимо, за да бъде запазена връзката между групите и разделите.<br>В противен случай при отваряне на четеца разделите няма да бъдат заредени<br>и ще бъдат недостъпни за добавката и тя ще спре да работи.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
+    "exportToBookmarksWhenAutoBackup": {
+        "message": "Запазване на групите в отметките при автоматично резервно копие",
+        "description": "Save the group to bookmarks when auto backup"
+    },
     "leaveBookmarksOfClosedTabs": {
-        "message": "Запазване на отметките на затворени раздели",
+        "message": "Преместване на отметките на затворените раздели под разделителя",
         "description": "Leave bookmarks of closed tabs"
     },
     "enableDebugTitle": {
@@ -1170,5 +1178,31 @@
     "helpPageStgDebugAutoDebugMainTitle": {
         "message": "В добавката възникна грешка",
         "description": "An error occurred in the addon"
+    },
+    "windowNotHaveGroup": {
+        "message": "Този прозорец няма заредена група",
+        "description": "This window does not have a loaded group"
+    },
+    "defaultGroup": {
+        "message": "Група по подразбиране",
+        "description": "Default group"
+    },
+    "moveToGroupIfNoneCatchTabRules": {
+        "message": "Ако никой от регулярните изрази не съвпада с раздела, да бъде преместен в група:",
+        "description": "If none of the regular expressions match the tab, move it to the group:"
+    },
+    "dontMove": {
+        "message": "Без преместване",
+        "description": "Don't move"
+    },
+    "groupArchivedTitle": {
+        "message": "$groupName$ (архивна)",
+        "description": "My group (archived)",
+        "placeholders": {
+            "groupName": {
+                "content": "$1",
+                "example": "My group"
+            }
+        }
     }
 }
