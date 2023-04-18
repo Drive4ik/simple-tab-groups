@@ -574,7 +574,7 @@ function isCatchedUrl(url, catchTabRules) {
         .some(regExpStr => {
             try {
                 return new RegExp(regExpStr).test(url);
-            } catch (e) {};
+            } catch (e) {}
         });
 }
 

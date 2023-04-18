@@ -118,7 +118,7 @@ function handle(itemType, allowItemTypes, data, bus, event) {
             break;
 
     }
-};
+}
 
 
 

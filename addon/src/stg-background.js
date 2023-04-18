@@ -248,7 +248,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                 removeExcludeTabIds(tabIds);
 
                 if (groupToShow.muteTabsWhenGroupCloseAndRestoreWhenOpen) {
-                    Tabs.setMute(groupToShow.tabs, false).catch(log.onCatch('Tabs.setMute', false));;
+                    Tabs.setMute(groupToShow.tabs, false).catch(log.onCatch('Tabs.setMute', false));
                 }
             }
 
@@ -854,7 +854,7 @@ async function GrandRestoreWindows({id}, needRestoreMissedTabsMap) {
         } else {
             await Tabs.hide(groupToKeep.tabs);
         }
-    };
+    }
     removeExcludeTabIds(excludeTabIds);
 
     await Tabs.remove(Array.from(tabsToDelete.keys()));

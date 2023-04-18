@@ -22,7 +22,7 @@ export async function openUrl(page, asWindow = false) {
         active: true,
         cookieStoreId: Constants.DEFAULT_COOKIE_STORE_ID,
     }).catch(() => {});
-};
+}
 
 export function openOptionsPage() {
     return browser.runtime.openOptionsPage()
