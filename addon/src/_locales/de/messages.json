@@ -278,8 +278,8 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Hier kannst du Hotkeys hinzufügen.<br>Beschränkungen:<br>1. Diese Hotkeys funktionieren nur auf regulären Webseiten (<code>http://</code>, <code>https://</code>). Auf den Browserseiten (<code>about:</code>) funktionieren sie nicht (die WebExtensions-API verhindert das).<br>2. Einige Hotkeys funktionieren nicht mit allen Tastatur-Layouts. Wird zum Beispiel der Shortcut <code>Ctrl + ~</code> mit englischem Layout erstellt, funktioniert er nicht im russischen Layout, da im russischen Layout diese Taste mit einem anderen Code belegt ist. Um dies zu beheben, erzeuge einen neuen Hotkey im russischen Layout: <code>Ctrl + Ё</code>.",
-        "description": "Hotkeys description"
+        "message": "Du kannst außerdem Tastenkürzel auf der Seite <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Manage extension shortcuts in Firefox</a> einrichten. Sie funktionieren auf allen Seiten und Fenstern.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
         "message": "Hotkey hinzufügen",
@@ -1022,10 +1022,6 @@
                 "example": "Facebook Container"
             }
         }
-    },
-    "hotkeysDescription2": {
-        "message": "Du kannst außerdem Tastenkürzel auf der Seite <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Manage extension shortcuts in Firefox</a> einrichten. Sie funktionieren auf allen Seiten und Fenstern.",
-        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "muteTab": {
         "message": "Tab stummschalten",

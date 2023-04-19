@@ -251,10 +251,6 @@
         "message": "Snabbval",
         "description": "Hotkeys"
     },
-    "hotkeysDescription": {
-        "message": "Här kan du ange snabbval.<br>Begränsningar<br>1. Snabbbvalen fungerar endast på webbsidor (http://, https://). På grund av begränsningar i WebExtensions API:t fungerar de inte på webbläsarens egna sidor (about:).<br>2. Alla snabbvalskombinationer fungerar inte med alla typer av tangentbordslayouter. Till exempel: snabbvalet <code>Ctrl + ~</code> skapat för engelsk layout fungerar inte med ett tangentbord med rysk layout, eftersom kombinationen med ett ryskt tangentbord ger en annan kod.",
-        "description": "Hotkeys description"
-    },
     "addHotKeyButton": {
         "message": "Lägg till snabbval",
         "description": "Add hotkey"

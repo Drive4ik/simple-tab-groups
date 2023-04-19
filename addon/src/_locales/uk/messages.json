@@ -278,8 +278,8 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Тут ви можете управляти гарячими клавішами для плагіна.<br>Обмеження:<br>1. Ці гарячі клавіші будуть працювати тільки на веб сторінках (http:, https:). На захищених сторінках браузера (about: addons наприклад) вони працювати не будуть. Це обмеження WebExtensions API. <br>2. Можливо деякі гарячі клавіші можуть не працювати на різних розкладках клавіатури. Наприклад у вас є гаряча клавіша <code>Ctrl + Е</ code> створена на англійській розкладці клавіатури, але в українській розкладці вона працювати не буде, тому що клавіша Е в ній має інший код. Для вирішення цієї проблеми досить створити таку ж гарячу клавішу з тією ж дією, тільки вже в українській розкладці - <code>Ctrl + Е</code>.",
-        "description": "Hotkeys description"
+        "message": "Ви також можете налаштувати гарячі клавіші на сторінці <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\"> Управління гарячими клавішами в розширеннях Firefox </a>. Вони будуть працювати на всіх вікнах і сторінках браузера.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
         "message": "Додати гарячу клавішу",
@@ -1030,10 +1030,6 @@
                 "example": "Facebook Container"
             }
         }
-    },
-    "hotkeysDescription2": {
-        "message": "Ви також можете налаштувати гарячі клавіші на сторінці <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\"> Управління гарячими клавішами в розширеннях Firefox </a>. Вони будуть працювати на всіх вікнах і сторінках браузера.",
-        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "muteTab": {
         "message": "Вимкнути звук вкладки",

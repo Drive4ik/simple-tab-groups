@@ -270,8 +270,8 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Di sini Anda dapat menambahkan hotkey.<br>Pembatasan:<br>1. Tombol pintas ini hanya akan berfungsi di halaman web (http:, https:), bukan di halaman browser (about:), karena API WebExtensions tidak mengizinkan ini.<br>2. Beberapa tombol pintas tidak akan berfungsi dengan semua tata letak keyboard. Misalnya, pintasan <code>Ctrl + ~</code> yang dibuat dengan tata letak bahasa Inggris tidak akan berfungsi dengan keyboard dengan tata letak Rusia, karena dalam tata letak Rusia tombol ini memiliki kode lain. Untuk memperbaikinya, cukup buat hotkey lain dengan tata letak Rusia: <code>Ctrl + </code>",
-        "description": "Hotkeys description"
+        "message": "Anda juga dapat mengonfigurasi tombol pintas di halaman <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Kelola pintasan ekstensi di Firefox</a>. Mereka akan bekerja di semua jendela dan halaman browser.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
         "message": "Tambahkan hotkey",
@@ -1002,10 +1002,6 @@
                 "example": "Facebook Container"
             }
         }
-    },
-    "hotkeysDescription2": {
-        "message": "Anda juga dapat mengonfigurasi tombol pintas di halaman <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Kelola pintasan ekstensi di Firefox</a>. Mereka akan bekerja di semua jendela dan halaman browser.",
-        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "muteTab": {
         "message": "Bisukan tab",

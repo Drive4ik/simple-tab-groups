@@ -278,8 +278,8 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Aquí puede añadir atajos de teclado. <br>Restricciones:<br>1. Estos atajos solo funcionarán en páginas web (http:, https:), no en las páginas del mismo navegador (about:), ya que el API WebExtensions no lo permite. <br>2. Algunos atajos no funcionarán con todas las distribuciones de teclado. Por ejemplo, un atajo <code>Ctrl + ~</code> creado con un teclado con distribución en Inglés no funcionará en un teclado con distribución en Ruso, ya que en Ruso este atajo tiene otro código. Para corregirlo, solo cree otro atajo con la distribución de teclado en Ruso: <code>Ctrl + Ë</code>",
-        "description": "Hotkeys description"
+        "message": "También puedes configurar los atajos en la página <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Gestionar atajos de teclado de extensiones en Firefox.</a> Funcionarán en todas las ventanas y páginas del navegador.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
         "message": "Añadir atajo",
@@ -1022,10 +1022,6 @@
                 "example": "Facebook Container"
             }
         }
-    },
-    "hotkeysDescription2": {
-        "message": "También puedes configurar los atajos en la página <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Gestionar atajos de teclado de extensiones en Firefox.</a> Funcionarán en todas las ventanas y páginas del navegador.",
-        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "muteTab": {
         "message": "Silenciar pestaña",

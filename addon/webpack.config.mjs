@@ -27,7 +27,7 @@ export default {
         'popup/popup': './popup/popup.js',
         'options/options': './options/options.js',
         'manage/manage': './manage/manage.js',
-        'web/hotkeys': './web/hotkeys.js',
+        'web/content-script': './web/content-script.js',
     },
     experiments: {
         outputModule: true,
@@ -57,6 +57,7 @@ export default {
         utils: '/js/utils.js',
         json: '/js/json.js',
         storage: '/js/storage.js',
+        hotkeys: '/js/hotkeys.js',
 
         // vue mixins
         'default-group.mixin': '/js/mixins/default-group.mixin.js',
@@ -141,6 +142,7 @@ export default {
                 'js/tabs.js',
                 'js/windows.js',
                 'js/management.js',
+                'js/hotkeys.js',
 
                 'js/mixins',
 

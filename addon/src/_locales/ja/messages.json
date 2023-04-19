@@ -270,8 +270,8 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "ホットキーを追加できます。<br>制限事項<br>1. これらのホットキーはウェブページ (http:, https:) でのみ機能します。ブラウザーページ  (about:) では機能しません。WebExtensions API の制限によるもです。<br>2. いくつかのホットキーは English layout 以外のキーボードレイアウトでは機能しません。例えば、English layout で作成したホットキー <code>Ctrl + ~</code> は Russian layout では動作しません。この問題を解決するには、別のホットキーを新たに作成してください。例：Russian layout にて <code>Ctrl + Ё</code> を作成する",
-        "description": "Hotkeys description"
+        "message": "ホットキーは、<a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Firefox のショートカットキーの管理</a> ページでも設定できます。これらはすべてのウィンドウとブラウザーページで動作します。",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
         "message": "ホットキーの追加",
@@ -976,10 +976,6 @@
                 "example": "Group 1"
             }
         }
-    },
-    "hotkeysDescription2": {
-        "message": "ホットキーは、<a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Firefox のショートカットキーの管理</a> ページでも設定できます。これらはすべてのウィンドウとブラウザーページで動作します。",
-        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "muteTab": {
         "message": "タブをミュート",

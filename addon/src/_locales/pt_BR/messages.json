@@ -278,8 +278,8 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Aqui você pode adicionar teclas de atalho.<br>Restrições:<br>1. Estas teclas de atalho vão funcionar somente em paginas web (http:, https:). Em páginas do navegador (about:) - não vai funcionar, o WebExtensions API não permite isso.<br>2. Algumas teclas de atalho não vão funcioanr em teclados diferentes. Por exemplo, o atalho criado no layout Ingles <code>Ctrl + ~</code> não vai funcionar no layout Russo, porque no layout Russo essa tecla tem outro código. Para corrigir isso, apenas crie outro atalho no layout russo: <code>Ctrl + Ё</code>",
-        "description": "Hotkeys description"
+        "message": "Você também pode configurar teclas de atalho na página <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Gerenciar atalhos de extensão no Firefox</a>. Eles funcionarão em todas as janelas e páginas do navegador.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
         "message": "Adicionar tecla de atalho",
@@ -1014,10 +1014,6 @@
                 "example": "Facebook Container"
             }
         }
-    },
-    "hotkeysDescription2": {
-        "message": "Você também pode configurar teclas de atalho na página <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Gerenciar atalhos de extensão no Firefox</a>. Eles funcionarão em todas as janelas e páginas do navegador.",
-        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "muteTab": {
         "message": "Mutar aba",

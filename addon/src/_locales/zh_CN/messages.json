@@ -278,8 +278,8 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "在这里，你可以添加快捷键。<br>【限制】<br>1. 这些快捷键只在网页中生效(网址协议为http:、https:)。而在浏览器页面(about:)则无法工作，因为 WebExtensions 的 API 不允许如此。<br>2. 某些快捷键会在不同的键盘布局中无法工作。例如，在英语布局中创建的 <code>Ctrl + ~</code> ，在俄语布局中则无法工作，因为在后者中这个按键有另外的编码。要修复这个问题，你只要在后者中再创建一个快捷键 <code>Ctrl + Ё</code>。",
-        "description": "Hotkeys description"
+        "message": "您也可以在<a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">页面配置快捷键。它们可以在所有窗口和浏览器页面工作。",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
         "message": "添加快捷键",
@@ -1010,10 +1010,6 @@
                 "example": "Facebook Container"
             }
         }
-    },
-    "hotkeysDescription2": {
-        "message": "您也可以在<a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">页面配置快捷键。它们可以在所有窗口和浏览器页面工作。",
-        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "muteTab": {
         "message": "静音标签页",

@@ -4,6 +4,8 @@ export const STG_BASE_URL = browser.runtime.getURL('');
 
 export const IS_BACKGROUND_PAGE = self.location.href.startsWith(MANIFEST.background.page);
 
+export const IS_MAC = (navigator.userAgentData?.platform || navigator.platform || '').toLowerCase().includes('mac');
+
 export const ACTIVE_SYMBOL = '〇';
 export const DISCARDED_SYMBOL = '✱';
 export const STICKY_SYMBOL = '📌';
@@ -323,22 +325,11 @@ export const DEFAULT_OPTIONS = Object.freeze({
 
     hotkeys: [
         {
-            ctrlKey: true,
-            shiftKey: false,
-            altKey: false,
-            metaKey: false,
-            key: '`',
-            keyCode: 192, // TODO
+            value: `${IS_MAC ? 'Mac' : ''}Ctrl+Backquote`,
             action: 'load-next-group',
             groupId: 0,
-        },
-        {
-            ctrlKey: true,
-            shiftKey: true,
-            altKey: false,
-            metaKey: false,
-            key: '`',
-            keyCode: 192,
+        }, {
+            value: `${IS_MAC ? 'Mac' : ''}Ctrl+Shift+Backquote`,
             action: 'load-prev-group',
             groupId: 0,
         },

@@ -278,8 +278,8 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Тук се добавят клавишни комбинации.<br>Ограничения:<br>1. Тези клавишни комбинации ще работят само в страници от интернет (http:, https:), а не в служебните (about:) страници на четеца, защото ППИ на WebExtensions не го позволява.<br>2. Някои комбинации няма да работят с всички клавиатурни подредби. Например, комбинацията <code>Ctrl + ~</code>, създадена с актива английска подредба няма да работи ако в момента е активна българската, защото в българската подредба този клавиш има друг код. За да заобиколите този недостатък просто създайте същата комбинация докато е активна българска клавиатурна подредба: <code>Ctrl + Ю</code>.",
-        "description": "Hotkeys description"
+        "message": "Също така можете да настроите клавишни комбинации на страницата <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Управление на клавишни комбинации на разширения</a>. Ще работят във всички прозорци и на всички страници.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
         "message": "Нова комбинация",
@@ -1030,10 +1030,6 @@
                 "example": "Facebook Container"
             }
         }
-    },
-    "hotkeysDescription2": {
-        "message": "Също така можете да настроите клавишни комбинации на страницата <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Управление на клавишни комбинации на разширения</a>. Ще работят във всички прозорци и на всички страници.",
-        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "muteTab": {
         "message": "Спиране звука на раздела",

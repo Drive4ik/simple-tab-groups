@@ -233,10 +233,6 @@
         "message": "Sneltoetsen",
         "description": "Hotkeys"
     },
-    "hotkeysDescription": {
-        "message": "Hier kan je sneltoetsen toevoegen.<br>Beperkingen:<br>1. Deze sneltoetsen zullen alleen werken op webpagina's (http:, https:). Op de browserpagina's (about:) werken ze niet: de WebExtensions API staat dit niet toe.<br>2. Sommige sneltoetsen werken niet op bepaalde toetsenbordindelingen. Bijvoorbeeld: de sneltoets <code>Ctrl + ~</code> aangemaakt met een Engelse toetsenbordindeling zal niet werken met een Russische toetsenbordindeling, omdat deze toets daar een andere code heeft. Om dit op te lossen, voeg je een sneltoets toe met de Russische toetsenbordindeling: <code>Ctrl + Ё</code>",
-        "description": "Hotkeys description"
-    },
     "addHotKeyButton": {
         "message": "Sneltoets toevoegen",
         "description": "Add hotkey"

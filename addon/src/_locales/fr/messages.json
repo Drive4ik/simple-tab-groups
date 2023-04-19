@@ -278,8 +278,8 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Ici vous pouvez ajouter des raccourcis.<br>Restrictions :<br>1. Ces raccourcis ne fonctionneront que sur des pages web (http:, https:). Sur des pages du navigateur (about:) - cela ne fonctionne pas, l'API WebExtensions ne l'autorise pas.<br>2. Certains raccourcis ne fonctionneront pas sur différentes dispositions de clavier. Par exemple, le raccourci <code>Ctrl + ~</code> créé dans la disposition US  ne fonctionnera pas sur la disposition RU, car la disposition russe a un autre code pour cette touche. Pour contourner ce problème, créez simplement un autre raccourci avec la disposition russe : <code>Ctrl + Ё</code>",
-        "description": "Hotkeys description"
+        "message": "Vous pouvez aussi configurer les raccourcis sur la page <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Gérer les raccourcis d'extension</a>. Ceci s'appliquera à toutes les fenêtres et toutes les pages du navigateur.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
         "message": "Ajouter un raccourci",
@@ -1022,10 +1022,6 @@
                 "example": "Facebook Container"
             }
         }
-    },
-    "hotkeysDescription2": {
-        "message": "Vous pouvez aussi configurer les raccourcis sur la page <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Gérer les raccourcis d'extension</a>. Ceci s'appliquera à toutes les fenêtres et toutes les pages du navigateur.",
-        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "muteTab": {
         "message": "Rendre l'onglet silencieux",

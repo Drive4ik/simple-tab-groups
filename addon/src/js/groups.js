@@ -846,25 +846,25 @@ export function getTitle({id, title, isArchive, isSticky, tabs, iconViewType, ne
         title = beforeTitle.join(' ') + ' ' + title;
     }
 
-    tabs = tabs.slice();
-
     if (withCountTabs) {
-        title += ' (' + tabsCountMessage(tabs, isArchive) + ')';
+        title += ' (' + tabsCountMessage(tabs.slice(), isArchive) + ')';
     }
 
-    if (withTabs && tabs.length) {
-        title += ':\n' + tabs
-            .slice(0, 30)
-            .map(tab => Tabs.getTitle(tab, false, 70, !isArchive))
-            .join('\n');
+    if (withTabs) {
+        if (tabs.length) {
+            title += ':\n' + tabs
+                .slice(0, 30)
+                .map(tab => Tabs.getTitle(tab, false, 70, !isArchive))
+                .join('\n');
 
-        if (tabs.length > 30) {
-            title += '\n...';
+            if (tabs.length > 30) {
+                title += '\n...';
+            }
         }
     }
 
     if (window.localStorage.enableDebug) {
-        let windowId = Cache.getWindowId(id) || tabs[0]?.windowId || 'no window';
+        let windowId = Cache.getWindowId(id) || tabs?.[0]?.windowId || 'no window';
         title = `@${windowId}:#${id} ${title}`;
     }
 

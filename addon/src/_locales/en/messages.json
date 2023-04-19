@@ -282,8 +282,8 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Here you can add hotkeys.<br>Restrictions:<br>1. These hotkeys will only work on web pages (http:, https:), not on the browser pages (about:), because the WebExtensions API does not allow this.<br>2. Some hotkeys will not work with all keyboard layouts. For example, a <code>Ctrl + ~</code> shortcut created with an English layout will not work with a keyboard with Russian layout, because in the Russian layout this key has another code. To fix this, just create another hotkey with the Russian layout: <code>Ctrl + Ё</code>",
-        "description": "Hotkeys description"
+        "message": "You can also configure hotkeys on the <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Manage extension shortcuts in Firefox</a> page. They will work on all windows and browser pages.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
         "message": "Add hotkey",
@@ -1034,10 +1034,6 @@
                 "example": "Facebook Container"
             }
         }
-    },
-    "hotkeysDescription2": {
-        "message": "You can also configure hotkeys on the <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Manage extension shortcuts in Firefox</a> page. They will work on all windows and browser pages.",
-        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "muteTab": {
         "message": "Mute tab",

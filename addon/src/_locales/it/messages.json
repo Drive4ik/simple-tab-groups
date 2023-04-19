@@ -270,8 +270,8 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Qui puoi aggiungere le scorciatoie. <br>Limitazioni:<br>1. Queste scorciatoie funzioneranno solamente nelle pagine web (http:, https:). Sulle pagine del browser (about:) non funzionano a causa delle limitazioni imposte delle WebExtension API. <br>2. Alcune delle scorciatoie non funzioneranno con alcuni configurazioni della tastiera. La scorciatoia creata con la tastiera inglese <code>Ctrl + ~</code> non funziona sulla tastiera russa, perché questo tasto ha un altro codice. Per sistemare questo problema, crea una scorciatoia con un altro tasto: per il caso precedente, aggiungi la scorciatoia <code> Ctrl + Ё</code>.",
-        "description": "Hotkeys description"
+        "message": "Puoi modificare le scorciatoie sulla pagina <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Gestire le scorciatoie da tastiera per i componenti aggiuntivi in Firefox</a>. Funzioneranno su tutte le finestre e le pagine del browser.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
         "message": "Aggiungi una scorciatoia",
@@ -1002,10 +1002,6 @@
                 "example": "Facebook Container"
             }
         }
-    },
-    "hotkeysDescription2": {
-        "message": "Puoi modificare le scorciatoie sulla pagina <a href=\"https://support.mozilla.org/it/kb/gestire-scorciatoie-componenti-aggiuntivi-firefox\" target=\"_blank\">Gestire le scorciatoie da tastiera per i componenti aggiuntivi in Firefox</a>. Funzioneranno su tutte le finestre e le pagine del browser.",
-        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "muteTab": {
         "message": "Silenzia la scheda",

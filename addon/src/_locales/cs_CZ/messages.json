@@ -266,8 +266,8 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Zde můžete přidat klávesové zkratky.<br>Omezení:<br>1. Tyto zkratky fungují pouze na webových stránkách (http:, https:). Nefungují na stránkách prohlížeče (about:) - WebExtensions API to neumožňuje.<br>2. Některé zkratky nebudou fungovat na všech klávesnicích. Například: zkratka vytvořená na anglické klávesnici <code>Ctrl + ~</code> nebude fungovat na ruské klávesnici, protože tato klávesa má na ruské jiný kód. Pro opravu prostě vytvořte novou klávesovou zkratku na ruské klávesnici <code>Ctrl + Ё</code>",
-        "description": "Hotkeys description"
+        "message": "Klávesové zkratky lze také nastavit <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">ve správě doplňků ve Firefoxu.</a> Tyto zkratky fungují na všech stránkách.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
         "message": "Přidat zkratku",
@@ -958,10 +958,6 @@
                 "example": "Group 1"
             }
         }
-    },
-    "hotkeysDescription2": {
-        "message": "Klávesové zkratky lze také nastavit <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">ve správě doplňků ve Firefoxu.</a> Tyto zkratky fungují na všech stránkách.",
-        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "muteTab": {
         "message": "Ztlumit zvuk panelu",

@@ -270,8 +270,8 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Acá podes agregar atajos rápidos.<br>Restricciones:<br>1. Estos atajos rápidos solo funcionan en paginas web (http:, https:),no en las paginas del navegador (about:), porque la API WebExtensions no lo permite.<br>2. Algunos atajos rápidos no funcionarán con todas las distribuciones de teclados. Por ejemplo, el atajo <code>Ctrl + ~</code> creado en un teclado en Inglés no funcionará en un teclado en Ruso, porque en el diseño Ruso esta tecla tiene otro código. Para corregir esto, creá un atajo rápido con el teclado en Ruso <code>Ctrl + Ё</code>",
-        "description": "Hotkeys description"
+        "message": "Además podes configurar atajos rápidos en la página <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Gestionar atajos de teclado de extensiones en Firefox</a>. Estos funcionarán en todas las ventanas y páginas del navegador.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
         "message": "Agregar atajo rápido",
@@ -1002,10 +1002,6 @@
                 "example": "Facebook Container"
             }
         }
-    },
-    "hotkeysDescription2": {
-        "message": "Además podes configurar atajos rápidos en la página <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Gestionar atajos de teclado de extensiones en Firefox</a>. Estos funcionarán en todas las ventanas y páginas del navegador.",
-        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "muteTab": {
         "message": "Mutear pestaña",

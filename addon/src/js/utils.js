@@ -12,6 +12,8 @@ const tagsToReplace = {
 
 const INNER_HTML = 'innerHTML';
 
+export const IS_MAC = (navigator.userAgentData?.platform || navigator.platform || '').toLowerCase().includes('mac');
+
 export function unixNow() {
     return Math.round(Date.now() / 1000);
 }
@@ -470,7 +472,7 @@ export function normalizeGroupIcon(iconUrl) {
 }
 
 export function resizeImage(img, height, width, useTransparency = true, ...canvasParams) { // img: new Image()
-    let canvas = document.createElement('canvas'),
+    const canvas = document.createElement('canvas'),
         context = canvas.getContext('2d');
 
     if (!useTransparency) {
@@ -486,7 +488,7 @@ export function resizeImage(img, height, width, useTransparency = true, ...canva
 }
 
 function isCanvasBlank(canvas, useTransparency, ...canvasParams) {
-    let blank = document.createElement('canvas'),
+    const blank = document.createElement('canvas'),
         canvasDataUrl = canvas.toDataURL(...canvasParams);
 
     if (!useTransparency) {
@@ -499,7 +501,7 @@ function isCanvasBlank(canvas, useTransparency, ...canvasParams) {
     let isEmpty = canvasDataUrl === blank.toDataURL(...canvasParams);
 
     if (!isEmpty) {
-        let blankContext = blank.getContext('2d');
+        const blankContext = blank.getContext('2d');
 
         blankContext.fillStyle = 'rgb(255, 255, 255)';
         blankContext.fillRect(0, 0, blank.width, blank.height);
@@ -570,20 +572,20 @@ export function compareVersions(a, b) {
         return 0;
     }
 
-    let regExStrip0 = /(\.0+)+$/,
+    const regExStrip0 = /(\.0+)+$/,
         segmentsA = a.replace(regExStrip0, '').split('.'),
         segmentsB = b.replace(regExStrip0, '').split('.'),
         l = Math.min(segmentsA.length, segmentsB.length);
 
     for (let i = 0; i < l; i++) {
-        let diff = parseInt(segmentsA[i], 10) - parseInt(segmentsB[i], 10);
+        const diff = parseInt(segmentsA[i], 10) - parseInt(segmentsB[i], 10);
 
         if (diff) {
             return diff > 0 ? 1 : -1;
         }
     }
 
-    let diff = segmentsA.length - segmentsB.length;
+    const diff = segmentsA.length - segmentsB.length;
 
     if (diff) {
         return diff > 0 ? 1 : -1;

@@ -278,8 +278,8 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "可以在這裡新增快速鍵。<br>限制：<br>1. 這些快速鍵只適用於網頁 (http:, https:)，不適用於瀏覽器頁面 (about:)，因 WebExtension 的 API 不允許。<br>2. 有些快速鍵在不同的鍵盤配置可能無法運作。例如英文配置下設定的快速鍵 <code>Ctrl + ~</code> 在俄羅斯文配置下無法運作，因為此按鍵在後者有不同的按鍵碼；在俄羅斯文配置下設定快速鍵 <code>Ctrl +Ё</code> 即可修復此問題。",
-        "description": "Hotkeys description"
+        "message": "也可以在 <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Manage extension shortcuts in Firefox</a> 設定全域快速鍵。",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
         "message": "新增快速鍵",
@@ -1022,10 +1022,6 @@
                 "example": "Facebook Container"
             }
         }
-    },
-    "hotkeysDescription2": {
-        "message": "也可以在 <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Manage extension shortcuts in Firefox</a> 設定全域快速鍵。",
-        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "muteTab": {
         "message": "分頁靜音",

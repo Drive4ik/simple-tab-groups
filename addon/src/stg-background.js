@@ -14,6 +14,7 @@ import * as Groups from './js/groups.js';
 import * as Tabs from './js/tabs.js';
 import * as Windows from './js/windows.js';
 import * as Management from './js/management.js';
+import * as Hotkeys from './js/hotkeys.js';
 
 self.IS_TEMPORARY = false;
 
@@ -2699,9 +2700,10 @@ async function saveOptions(_options) {
         const tabs = await Tabs.get(null, null, null, {
                 discarded: false,
             }),
-            actionData = {
+            actionData = JSON.clone({
                 action: 'update-hotkeys',
-            };
+                hotkeys: options.hotkeys,
+            });
 
         tabs.forEach(tab => Tabs.sendMessage(tab.id, actionData));
     }
@@ -2863,9 +2865,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
 
     await loadingBrowserAction();
 
-    const {os} = await browser.runtime.getPlatformInfo(),
-        isMac = os === browser.runtime.PlatformOs.MAC,
-        currentData = {};
+    const currentData = {};
 
     let {lastCreatedGroupPosition} = await Storage.get('lastCreatedGroupPosition');
 
@@ -2917,9 +2917,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
     data.groups ??= [];
     data.hotkeys ??= [];
 
-    if (!isMac) {
-        data.hotkeys.forEach(hotkey => hotkey.metaKey = false);
-    }
+    data.hotkeys.forEach(hotkey => hotkey.value = Hotkeys.nomalizeValueForPlatform(hotkey.value));
 
     data.groups.forEach(groupToRestore => {
         if (!currentData.groups.some(currentGroup => currentGroup.id === groupToRestore.moveToGroupIfNoneCatchTabRules)) {
@@ -3666,6 +3664,7 @@ async function runMigrateForData(data) {
         {
             version: '5.1.1',
             async migration() {
+                // migrate groups
                 const mainGroupId = data.groups.find(group => group.isMain)?.id;
 
                 data.groups.forEach(group => {
@@ -3677,6 +3676,62 @@ async function runMigrateForData(data) {
 
                     delete group.isMain;
                     delete group.moveToMainIfNotInCatchTabRules;
+                });
+
+                // migrate hotkeys
+                const keysMap = new Map([
+                    [110, 'Decimal'],
+                    [109, 'Subtract'],
+                    [106, 'Multiply'],
+                    [111, 'Divide'],
+                    [222, 'Quote'],
+                    [192, 'Backquote'],
+                    [13, 'Enter'],
+                    [191, 'Slash'],
+                    [220, 'Backslash'],
+                    [61, 'Equal'],
+                    [173, 'Minus'],
+                    [32, 'Space'],
+                    [188, 'Comma'],
+                    [190, 'Period'],
+                    [59, 'Semicolon'],
+
+                    ...['Home', 'End', 'PageUp', 'PageDown', 'Insert', 'Delete', 'Enter'].map(value => [value, value]),
+                ]);
+
+                function normalizeHotkeyKey({key, keyCode}) {
+                    return keysMap.get(keyCode) || keysMap.get(key) || key.toUpperCase();
+                }
+
+                data.hotkeys.forEach(hotkey => {
+                    const valueParts = [];
+
+                    if (hotkey.ctrlKey) {
+                        valueParts.push(IS_MAC ? 'MacCtrl' : 'Ctrl');
+                    }
+
+                    if (hotkey.metaKey) {
+                        valueParts.push('Command');
+                    }
+
+                    if (hotkey.altKey) {
+                        valueParts.push('Alt');
+                    }
+
+                    if (hotkey.shiftKey) {
+                        valueParts.push('Shift');
+                    }
+
+                    valueParts.push(normalizeHotkeyKey(hotkey));
+
+                    hotkey.value = valueParts.join('+');
+
+                    delete hotkey.ctrlKey;
+                    delete hotkey.shiftKey;
+                    delete hotkey.altKey;
+                    delete hotkey.metaKey;
+                    delete hotkey.key;
+                    delete hotkey.keyCode;
                 });
             },
         },

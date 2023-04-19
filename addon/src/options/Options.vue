@@ -15,6 +15,7 @@
     import * as File from 'file';
     import * as Urls from 'urls';
     import * as Groups from 'groups';
+    import {isValidHotkeyEvent, isValidHotkeyValue, eventToHotkeyValue} from 'hotkeys';
     import JSON from 'json';
 
     import defaultGroupMixin from 'default-group.mixin';
@@ -26,7 +27,6 @@
     const SECTION_GENERAL = 'general',
         SECTION_HOTKEYS = 'hotkeys',
         SECTION_BACKUP = 'backup',
-        funcKeys = [...Array(12).keys()].map(n => KeyEvent[`DOM_VK_F${n + 1}`]),
         folderNameRegExp = /[\<\>\:\"\/\\\|\?\*\x00-\x1F]|^(?:aux|con|nul|prn|com\d|lpt\d)$|^\.+|\.+$/gi;
 
     document.title = browser.i18n.getMessage('openSettings');
@@ -34,18 +34,17 @@
     export default {
         mixins: [defaultGroupMixin],
         data() {
+            this.HOTKEY_ACTIONS = Constants.HOTKEY_ACTIONS;
+            this.HOTKEY_ACTIONS_WITH_CUSTOM_GROUP = Constants.HOTKEY_ACTIONS_WITH_CUSTOM_GROUP;
+            this.GROUP_ICON_VIEW_TYPES = Constants.GROUP_ICON_VIEW_TYPES;
+            this.AUTO_BACKUP_INTERVAL_KEY = Constants.AUTO_BACKUP_INTERVAL_KEY;
+
+            this.SECTION_GENERAL = SECTION_GENERAL;
+            this.SECTION_HOTKEYS = SECTION_HOTKEYS;
+            this.SECTION_BACKUP = SECTION_BACKUP;
+
             return {
-                SECTION_GENERAL,
-                SECTION_HOTKEYS,
-                SECTION_BACKUP,
-
                 section: window.localStorage.optionsSection || SECTION_GENERAL,
-
-                HOTKEY_ACTIONS: Constants.HOTKEY_ACTIONS,
-                HOTKEY_ACTIONS_WITH_CUSTOM_GROUP: Constants.HOTKEY_ACTIONS_WITH_CUSTOM_GROUP,
-
-                GROUP_ICON_VIEW_TYPES: Constants.GROUP_ICON_VIEW_TYPES,
-                AUTO_BACKUP_INTERVAL_KEY: Constants.AUTO_BACKUP_INTERVAL_KEY,
 
                 contextMenuTabTitles: {
                     'open-in-new-window': {
@@ -128,7 +127,6 @@
 
                 options: {},
                 groups: [],
-                isMac: false,
 
                 manageAddonSettings: null,
                 manageAddonSettingsTitle: '',
@@ -152,9 +150,6 @@
             'manage-addon-backup': manageAddonBackup,
         },
         async created() {
-            const {os} = await browser.runtime.getPlatformInfo();
-            this.isMac = os === browser.runtime.PlatformOs.MAC;
-
             const data = await Storage.get();
 
             const options = Utils.assignKeys({}, data, Constants.ALL_OPTIONS_KEYS);
@@ -241,41 +236,36 @@
             },
             'options.hotkeys': {
                 handler(hotkeys, oldValue) {
-                    if (!hotkeys) {
-                        return;
-                    }
-
-                    let beforeLength = hotkeys.length,
-                        hasChange = false;
+                    let hasChange = false;
 
                     hotkeys = hotkeys.filter((hotkey, index, self) => {
-                        if (!hotkey.action) {
+                        if (!hotkey.action || !isValidHotkeyValue(hotkey.value)) {
                             return false;
                         }
 
-                        if (!hotkey.keyCode && !hotkey.key) {
-                            return false;
-                        }
-
-                        if (!(hotkey.ctrlKey || hotkey.shiftKey || hotkey.altKey || hotkey.metaKey || funcKeys.includes(hotkey.keyCode))) {
-                            return false;
-                        }
-
-                        if (Constants.HOTKEY_ACTIONS_WITH_CUSTOM_GROUP.includes(hotkey.action) && hotkey.groupId && !this.groups.some(gr => gr.id === hotkey.groupId)) {
+                        if (
+                            Constants.HOTKEY_ACTIONS_WITH_CUSTOM_GROUP.includes(hotkey.action) &&
+                            hotkey.groupId &&
+                            !this.groups.some(gr => gr.id === hotkey.groupId)
+                        ) {
                             hotkey.groupId = 0;
                             hasChange = true;
                         }
 
-                        return self.findIndex(h => Object.keys(hotkey).every(key => hotkey[key] === h[key])) === index;
+                        const leaveHotkey = self.findIndex(h => h.value === hotkey.value) === index;
+
+                        if (!leaveHotkey) {
+                            hasChange = true;
+                        }
+
+                        return leaveHotkey;
                     });
 
-                    if (!oldValue && hotkeys.length === beforeLength && !hasChange) {
+                    if (!hasChange) {
                         return;
                     }
 
-                    Messages.sendMessageModule('BG.saveOptions', {
-                        hotkeys: hotkeys,
-                    });
+                    Messages.sendMessageModule('BG.saveOptions', {hotkeys});
                 },
                 deep: true,
             },
@@ -303,19 +293,34 @@
             },
 
             openBackupFolder: File.openBackupFolder,
+            getGroupTitle: Groups.getTitle,
+
+            getHotkeyParentNode(event) {
+                return event.target.closest('.control');
+            },
+
+            onBlurHotkey(event) {
+                const inputParent = this.getHotkeyParentNode(event);
+
+                inputParent.classList.remove('key-success');
+            },
 
             saveHotkeyKeyCodeAndStopEvent(hotkey, event, withKeyCode) {
                 event.preventDefault();
                 event.stopPropagation();
                 event.stopImmediatePropagation();
 
-                if (!event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey) {
-                    hotkey.key = event.key.length === 1 ? event.key.toUpperCase() : event.key;
+                const inputParent = this.getHotkeyParentNode(event);
 
-                    if (withKeyCode) {
-                        hotkey.keyCode = event.keyCode;
-                    }
+                if (isValidHotkeyEvent(event)) {
+                    inputParent.classList.add('key-success');
+                    inputParent.classList.remove('key-error');
+                } else {
+                    inputParent.classList.add('key-error');
+                    inputParent.classList.remove('key-success');
                 }
+
+                hotkey.value = eventToHotkeyValue(event);
             },
 
             setManageAddonSettings(data, popupTitle, disableEmptyGroups = false, allowClearAddonDataBeforeRestore = false) {
@@ -592,12 +597,7 @@
 
             createHotkey() {
                 return {
-                    ctrlKey: false,
-                    shiftKey: false,
-                    altKey: false,
-                    metaKey: false,
-                    key: '',
-                    keyCode: 0,
+                    value: '',
                     action: '',
                     groupId: 0,
                 };
@@ -625,7 +625,8 @@
                 }
             },
 
-            getGroupIconUrl(group) {
+            getGroupIconUrl(groupId) {
+                const group = this.groups.find(gr => gr.id === groupId);
                 return Groups.getIconUrl(group);
             },
 
@@ -847,30 +848,11 @@
         <div v-show="section === SECTION_HOTKEYS">
             <label class="has-text-weight-bold" v-text="lang('hotkeysTitle')"></label>
             <div class="h-margin-bottom-10" v-html="lang('hotkeysDescription')"></div>
-            <div class="h-margin-bottom-10" v-html="lang('hotkeysDescription2')"></div>
             <div class="hotkeys">
                 <div v-for="(hotkey, hotkeyIndex) in options.hotkeys" :key="hotkeyIndex" class="field">
                     <div class="is-flex is-align-items-center">
-                        <label class="checkbox">
-                            <input v-model="hotkey.ctrlKey" type="checkbox" />
-                            <span v-if="isMac">Control</span>
-                            <span v-else>Ctrl</span>
-                        </label>
-                        <label class="checkbox">
-                            <input v-model="hotkey.shiftKey" type="checkbox" />
-                            <span>Shift</span>
-                        </label>
-                        <label class="checkbox">
-                            <input v-model="hotkey.altKey" type="checkbox" />
-                            <span v-if="isMac">Option</span>
-                            <span v-else>Alt</span>
-                        </label>
-                        <label v-if="isMac" class="checkbox">
-                            <input v-model="hotkey.metaKey" type="checkbox" />
-                            <span>Command</span>
-                        </label>
                         <div class="control input-command">
-                            <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(hotkey, $event, true)" :value="hotkey.key" autocomplete="off" class="input" :placeholder="lang('hotkeyPlaceholder')" tabindex="-1" />
+                            <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(hotkey, $event)" @blur="onBlurHotkey" :value="hotkey.value" autocomplete="off" class="input" :placeholder="lang('hotkeyPlaceholder')" tabindex="-1" />
                         </div>
                         <div class="select">
                             <select v-model="hotkey.action">
@@ -886,15 +868,15 @@
                     </div>
 
                     <div v-if="HOTKEY_ACTIONS_WITH_CUSTOM_GROUP.includes(hotkey.action)" class="is-flex is-align-items-center custom-group">
-                        <div :class="['control', {'has-icons-left': groups.some(gr => gr.id === hotkey.groupId)}]">
+                        <div :class="['control', {'has-icons-left': hotkey.groupId}]">
                             <div class="select">
                                 <select v-model.number="hotkey.groupId">
                                     <option :value="0" v-text="lang('selectGroup')"></option>
-                                    <option v-for="group in groups" :key="group.id" :value="group.id" v-text="group.title"></option>
+                                    <option v-for="group in groups" :key="group.id" :value="group.id" v-text="getGroupTitle(group)"></option>
                                 </select>
                             </div>
-                            <span class="icon is-left" v-if="groups.some(gr => gr.id === hotkey.groupId)">
-                                <img class="size-16" :src="getGroupIconUrl(groups.find(gr => gr.id === hotkey.groupId))">
+                            <span class="icon is-left" v-if="hotkey.groupId">
+                                <img class="size-16" :src="getGroupIconUrl(hotkey.groupId)">
                             </span>
                         </div>
                     </div>
@@ -1212,6 +1194,25 @@
 
         .tmp-container-input {
             width: 300px;
+        }
+
+        .hotkeys {
+            .control .input {
+                width: 15em;
+                ime-mode: disabled;
+            }
+            .control:not(.key-success):not(.key-error) .input:focus {
+                --in-content-border-focus: transparent;
+                outline: 2px solid dodgerblue;
+            }
+            .control.key-success .input:focus {
+                --in-content-border-focus: transparent;
+                outline: 2px solid limegreen;
+            }
+            .control.key-error .input {
+                --in-content-border-focus: transparent;
+                outline: 2px solid orangered;
+            }
         }
 
         .hotkeys > .field {

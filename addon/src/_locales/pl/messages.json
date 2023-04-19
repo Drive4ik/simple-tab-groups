@@ -278,8 +278,8 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Tutaj możesz dodać skróty klawiszowe.<br>Ograniczenia:<br>1. Skróty te działają tylko na stronach internetowych (http:, https:). Na stronach przeglądarki np. (about:) - to nie działa, interfejs WebExtensions API na to nie zezwala.<br>2. Niektóre skróty klawiszowe nie działają w różnych układach klawiatury. Na przykład skrót utworzony w angielskim układzie <code>Ctrl + ~</code> nie będzie działał na rosyjskim układzie, ponieważ w rosyjskim układzie ten klucz ma inny kod. Aby to naprawić, po prostu utwórz kolejny skrót w rosyjskim układzie: <code>Ctrl + Ё</code>",
-        "description": "Hotkeys description"
+        "message": "Możesz również skonfigurować skróty klawiszowe na stronie <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Zarządzanie skrótami klawiaturowymi w Firefox</a>. Będą one działać we wszystkich oknach i stronach przeglądarki.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
         "message": "Dodaj skrót",
@@ -1022,10 +1022,6 @@
                 "example": "Facebook Container"
             }
         }
-    },
-    "hotkeysDescription2": {
-        "message": "Możesz również skonfigurować skróty klawiszowe na stronie <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Zarządzanie skrótami klawiaturowymi w Firefox</a>. Będą one działać we wszystkich oknach i stronach przeglądarki.",
-        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "muteTab": {
         "message": "Wycisz kartę",

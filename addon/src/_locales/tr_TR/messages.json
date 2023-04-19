@@ -269,10 +269,6 @@
         "message": "Kısayollar",
         "description": "Hotkeys"
     },
-    "hotkeysDescription": {
-        "message": "Burada kısayol tuşları ekleyebilirsiniz. <br> Kısıtlamalar: <br> 1. Bu kısayol tuşları yalnızca web sayfalarında çalışır (http:, https:), tarayıcı sayfalarında değil (about:) çünkü WebExtensions API buna izin vermiyor. <br> 2. Bazı kısayol tuşları tüm klavye düzenleriyle çalışmayacaktır. Örneğin, İngilizce bir düzende oluşturulmuş bir <code>Ctrl + ~</code> kısayolu, Rusça yerleşimli bir klavyede çalışmaz, çünkü Rusça düzeninde bu tuşun başka bir kodu vardır. Bunu düzeltmek için, Rusça düzen ile başka bir kısayol tuşu oluşturun: <code>Ctrl + Ё</code>",
-        "description": "Hotkeys description"
-    },
     "addHotKeyButton": {
         "message": "Kısayol ekle",
         "description": "Add hotkey"

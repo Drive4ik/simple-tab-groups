@@ -1,7 +1,7 @@
 
 // reset styles
-#stg-move-tab-to-group-popup-wrapper,
-#stg-move-tab-to-group-popup-wrapper div {
+#stg-select-group-popup-wrapper,
+#stg-select-group-popup-wrapper div {
     width: unset;
     margin: unset;
     padding: unset;
@@ -10,7 +10,7 @@
     box-shadow: unset;
 }
 
-#stg-move-tab-to-group-popup-wrapper {
+#stg-select-group-popup-wrapper {
     position: fixed;
     left: 0;
     top: 0;

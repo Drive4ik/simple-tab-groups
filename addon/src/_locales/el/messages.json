@@ -251,10 +251,6 @@
         "message": "Hotkeys",
         "description": "Hotkeys"
     },
-    "hotkeysDescription": {
-        "message": "Εδώ μπορείτε να προσθέσετε hot keys.<br>Περιορισμοί:<br>1. Τα hotkeys λειτουργούν μόνο σε σελίδες web (http:, https:). Δεν λειτουργούν σε σελίδες browser (about:) - το WebExtensions API δεν το επιτρέπει.<br>2. Μερικά hotkeys δεν θα λειτουργούν σε κάποιες γλώσσες πληκτρολογίου. Για παράδειγμα, η συντόμευση  (δημιουργημένη σε Αγγλικό πληκτρολόγιο) <code>Ctrl + ~</code> δεν θα λειτουργεί στο Ρωσσικό πληκτρολόγιο, γιατί εκεί αυτό το πλήκτρο έχει άλλον κωδικό. Για να το ξεπεράσετε, απλά δημιουργείστε ένα άλλο hotkey στο Ρωσσικό πληκτρολόγιο: <code>Ctrl + Ё</code>",
-        "description": "Hotkeys description"
-    },
     "addHotKeyButton": {
         "message": "Προσθήκη hotkey",
         "description": "Add hotkey"

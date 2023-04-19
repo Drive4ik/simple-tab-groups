@@ -253,14 +253,6 @@
         "message": "컨테이너가 있는 탭을 끌어 이 그룹으로 이동",
         "description": "Catch and move tabs with containers to this group"
     },
-    "regexpForTabsTitle": {
-        "message": "Regular expressions for catch tabs [미번역]",
-        "description": "Regular expressions for catch tabs"
-    },
-    "regexpForTabsPlaceholder": {
-        "message": "Regular expressions [미번역]",
-        "description": "Regular expressions"
-    },
     "regexpForTabsHelp": {
         "message": "여기에 웹 주소에 대한 정규식을 삽입하십시오. 일치하는 탭은 자동으로 이 그룹으로 이동됩니다.\n규칙당 한 줄을 사용합니다. 원하는 만큼 사용할 수 있습니다.\n예:\ngithub\\.com/drive4ik/simple-tab-groups - 애드온 저장소의 모든 페이지를 캐치\nbugzilla\\.mozilla\\.org - Firefox 버그 보고서를 캐치\n(facebook|twitter|youtube)\\.com - 모든 소셜 페이지",
         "description": "Regular exceptions helper"
@@ -268,10 +260,6 @@
     "hotkeysTitle": {
         "message": "단축키",
         "description": "Hotkeys"
-    },
-    "hotkeysDescription": {
-        "message": "여기에서 단축키를 추가할 수 있습니다.<br>제한:<br>1. 이 단축키는 WebExtensions API가 이를 허용하지 않기 때문에 브라우저 페이지(about:)가 아닌 웹 페이지(http:, https:)에서만 작동합니다.<br>2. 일부 단축키는 모든 키보드 레이아웃에서 작동하지 않습니다. 예를 들어, 영어 레이아웃으로 생성된 <code>Ctrl + ~</code> 단축키는 러시아어 레이아웃의 키보드에서 작동하지 않습니다. 러시아어 레이아웃에서 이 키에 다른 코드가 있기 때문입니다. 이 문제를 해결하려면 러시아어 레이아웃으로 다른 핫키를 만드세요. <code>Ctrl + Ё</code>",
-        "description": "Hotkeys description"
     },
     "addHotKeyButton": {
         "message": "단축키 추가",
@@ -887,61 +875,13 @@
         "message": "컨테이너에서 URL을 열 수 없습니다",
         "description": "Can't open URL in container"
     },
-    "helpPageOpenInContainerMainTitle": {
-        "message": "Can't open the URL into <container-name>$containerName$</container-name> container (미번역)",
-        "description": "Can't open the URL into Personal container",
-        "placeholders": {
-            "containerName": {
-                "content": "$1",
-                "example": "Personal"
-            }
-        }
-    },
     "helpPageOpenInContainerSubTitle": {
         "message": "확장 프로그램이 URL을 열 수 없습니다:",
         "description": "addon can't open URL:"
     },
-    "helpPageOpenInContainerDesc1": {
-        "message": "Group <strong>$groupTitle$</strong> was assigned to open tabs in <container-name>$containerName$</container-name> container. (미번역)",
-        "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
-        "placeholders": {
-            "groupTitle": {
-                "content": "$1",
-                "example": "Group 1"
-            },
-            "containerName": {
-                "content": "$2",
-                "example": "Personal"
-            }
-        }
-    },
     "helpPageOpenInContainerDesc2": {
         "message": "또 다른 확장 프로그램:",
         "description": "Another addon:"
-    },
-    "helpPageOpenInContainerDesc3": {
-        "message": "tries to open this URL in <container-name>$containerName$</container-name> container. Move the tab to another group or forbid the addon <strong>$addonName$</strong> to perform this action. (미번역)",
-        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
-        "placeholders": {
-            "containerName": {
-                "content": "$1",
-                "example": "Business"
-            },
-            "addonName": {
-                "content": "$2",
-                "example": "Facebook Container"
-            }
-        }
-    },
-    "helpPageOpenInContainerOpenInContainer": {
-        "message": "Open in <container-name>$containerName$</container-name> container (미번역)",
-        "description": "Open in Personal container",
-        "placeholders": {
-            "containerName": {
-                "content": "$1",
-                "example": "Personal"
-            }
-        }
     },
     "groupNotLoaded": {
         "message": "그룹이 로드되지 않았습니다",
@@ -978,34 +918,6 @@
     "excludeContainersForReOpen": {
         "message": "이 컨테이너를 제외하고",
         "description": "excluding these containers"
-    },
-    "helpPageOpenInContainerExcludeContainerToGroup": {
-        "message": "Exclude <container-name>$containerName$</container-name> container for group <strong>$groupTitle$</strong> (미번역)",
-        "description": "Exclude Personal container for group Group 1",
-        "placeholders": {
-            "containerName": {
-                "content": "$1",
-                "example": "Personal"
-            },
-            "groupTitle": {
-                "content": "$2",
-                "example": "Group 1"
-            }
-        }
-    },
-    "helpPageOpenInContainerIgnoreAppForSession": {
-        "message": "Ignore extension \"<strong>$addonName$</strong>\" until the browser is closed (미번역)",
-        "description": "Ignore addon for session",
-        "placeholders": {
-            "addonName": {
-                "content": "$1",
-                "example": "Facebook Container"
-            }
-        }
-    },
-    "hotkeysDescription2": {
-        "message": "You can also configure hotkeys on the <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Manage extension shortcuts in Firefox</a> page. They will work on all windows and browser pages. (미번역)",
-        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "muteTab": {
         "message": "탭 음소거",

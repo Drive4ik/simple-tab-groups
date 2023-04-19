@@ -278,8 +278,8 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Здесь вы можете управлять горячими клавишами для плагина.<br>Ограничения:<br>1. Эти горячие клавиши будут работать только на веб страницах (http:, https:). На защищенных страницах браузера (about:addons например) они работать не будут. Это ограничение WebExtensions API.<br>2. Возможно некоторые горячие клавиши могут не работать на разных раскладках клавиатуры. Например у вас есть горячая клавиша <code>Ctrl + ~</code> создана на английской раскладке клавиатуры, но на русской раскладке она работать не будет, потому что клавиша Ё там имеет другой код. Для решения этой проблемы достаточно создать такую же горячую клавишу с тем же действием, только уже на русской раскладке - <code>Ctrl + Ё</code>.",
-        "description": "Hotkeys description"
+        "message": "Вы также можете настроить горячие клавиши на странице <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Управление горячими клавишами в расширениях Firefox</a>. Они будут работать на всех окнах и страницах браузера.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
         "message": "Добавить горячую клавишу",
@@ -1030,10 +1030,6 @@
                 "example": "Facebook Container"
             }
         }
-    },
-    "hotkeysDescription2": {
-        "message": "Вы также можете настроить горячие клавиши на странице <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Управление горячими клавишами в расширениях Firefox</a>. Они будут работать на всех окнах и страницах браузера.",
-        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "muteTab": {
         "message": "Убрать звук вкладки",
