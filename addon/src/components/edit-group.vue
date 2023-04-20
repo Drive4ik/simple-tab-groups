@@ -310,9 +310,11 @@
                 </span>
             </div>
             <div v-if="isDefaultGroup" class="control">
-                <button class="button" @click="$refs.groupNameVariables.open($event)">
+                <button class="button"
+                    @click="$refs.groupNameVariables.open($event)"
+                    @contextmenu.prevent="$refs.groupNameVariables.open($event)">
                     <span class="icon">
-                        <img src="/icons/help.svg" class="size-16" />
+                        <img src="/icons/circle-info-solid.svg" class="size-16" />
                     </span>
                 </button>
             </div>
