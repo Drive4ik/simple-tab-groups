@@ -3,28 +3,28 @@
 
     import Vue from 'vue';
 
-    import popup from '../js/popup.vue';
+    import popup from '../components/popup.vue';
     import editGroupPopup from './edit-group-popup.vue';
-    import editGroup from '../js/edit-group.vue';
+    import editGroup from '../components/edit-group.vue';
     import contextMenu from '../components/context-menu.vue';
     import contextMenuTab from '../components/context-menu-tab.vue';
     import contextMenuTabNew from '../components/context-menu-tab-new.vue';
     import contextMenuGroup from '../components/context-menu-group.vue';
 
-    import backgroundSelf from 'background';
-    import * as Constants from 'constants';
-    import Messages from 'messages';
-    import Logger, {catchFunc} from 'logger';
-    import * as Containers from 'containers';
-    import * as Urls from 'urls';
-    import * as Cache from 'cache';
-    import * as Groups from 'groups';
-    import * as Windows from 'windows';
-    import * as Tabs from 'tabs';
-    import * as Utils from 'utils';
-    import JSON from 'json';
+    import backgroundSelf from 'js/background.js';
+    import * as Constants from 'js/constants.js';
+    import Messages from 'js/messages.js';
+    import Logger, {catchFunc} from 'js/logger.js';
+    import * as Containers from 'js/containers.js';
+    import * as Urls from 'js/urls.js';
+    import * as Cache from 'js/cache.js';
+    import * as Groups from 'js/groups.js';
+    import * as Windows from 'js/windows.js';
+    import * as Tabs from 'js/tabs.js';
+    import * as Utils from 'js/utils.js';
+    import JSON from 'js/json.js';
 
-    import defaultGroupMixin from 'default-group.mixin';
+    import defaultGroupMixin from 'js/mixins/default-group.mixin.js';
 
     const isSidebar = '#sidebar' === window.location.hash;
 

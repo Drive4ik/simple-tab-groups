@@ -10,16 +10,20 @@ function setPath(folderName) {
     return path.resolve(__dirname, folderName);
 }
 
-function copy(path) {
-    return {
-        from: path,
-        to: path,
-    };
+function copyPathObj(path) {
+    if (typeof path === 'string') {
+        return {
+            from: path,
+            to: path,
+        };
+    }
+
+    return path;
 }
 
-function multipleCopy(paths) {
-    return paths.map(copy);
-}
+const THIRD_PARTY_LIBRARIES = new Map([
+    ['vue', '/js/vue.runtime.esm.js'],
+]);
 
 export default {
     context: setPath('src'),
@@ -39,29 +43,17 @@ export default {
         module: true,
         chunkFormat: 'module',
     },
-    externals: {
-        vue: '/js/vue.runtime.esm.js',
-        background: '/js/background.js',
-        'wait-background': '/js/wait-background.js',
-        constants: '/js/constants.js',
-        messages: '/js/messages.js',
-        logger: '/js/logger.js',
-        containers: '/js/containers.js',
-        file: '/js/file.js',
-        urls: '/js/urls.js',
-        cache: '/js/cache.js',
-        groups: '/js/groups.js',
-        windows: '/js/windows.js',
-        management: '/js/management.js',
-        tabs: '/js/tabs.js',
-        utils: '/js/utils.js',
-        json: '/js/json.js',
-        storage: '/js/storage.js',
-        hotkeys: '/js/hotkeys.js',
-
-        // vue mixins
-        'default-group.mixin': '/js/mixins/default-group.mixin.js',
-    },
+    externals: [
+        function ({request}, callback) {
+            if (request.startsWith('js')) {
+                callback(null, '/' + request);
+            } else if (THIRD_PARTY_LIBRARIES.has(request)) {
+                callback(null, THIRD_PARTY_LIBRARIES.get(request));
+            } else {
+                callback();
+            }
+        },
+    ],
     externalsType: 'module',
     resolve: {
         extensions: ['.js', '.vue'],
@@ -109,7 +101,7 @@ export default {
         }),
 
         new CopyWebpackPlugin({
-            patterns: multipleCopy([
+            patterns: [
                 // folders
                 'icons',
                 'help',
@@ -117,34 +109,9 @@ export default {
                 'css',
 
                 // js
+                'js',
                 'stg-background.js',
                 'stg-background.html',
-
-                'js/layer-to-load-vue.js',
-                'js/vue.runtime.esm.js',
-                'js/background.js',
-                'js/wait-background.js',
-                'js/logger.js',
-                'js/logger-utils.js',
-                'js/messages.js',
-                'js/constants.js',
-                'js/browser-constants.js',
-                'js/utils.js',
-                'js/json.js',
-                'js/menus.js',
-                'js/urls.js',
-                'js/containers.js',
-                'js/storage.js',
-                'js/cache.js',
-                'js/cache-storage.js',
-                'js/file.js',
-                'js/groups.js',
-                'js/tabs.js',
-                'js/windows.js',
-                'js/management.js',
-                'js/hotkeys.js',
-
-                'js/mixins',
 
                 // pages
                 'popup/popup.html',
@@ -153,7 +120,7 @@ export default {
 
                 // manifest
                 'manifest.json',
-            ]),
+            ].map(copyPathObj),
         }),
     ],
 }

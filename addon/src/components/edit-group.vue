@@ -8,16 +8,16 @@
     import contextMenu from '../components/context-menu.vue';
     import 'vue-swatches/dist/vue-swatches.css';
 
-    import backgroundSelf from 'background';
-    import * as Constants from 'constants';
-    import * as Containers from 'containers';
-    import * as Storage from 'storage';
-    import Messages from 'messages';
-    import * as File from 'file';
-    import * as Tabs from 'tabs';
-    import * as Groups from 'groups';
-    import * as Utils from 'utils';
-    import JSON from 'json';
+    import backgroundSelf from 'js/background.js';
+    import * as Constants from 'js/constants.js';
+    import * as Containers from 'js/containers.js';
+    import * as Storage from 'js/storage.js';
+    import Messages from 'js/messages.js';
+    import * as File from 'js/file.js';
+    import * as Tabs from 'js/tabs.js';
+    import * as Groups from 'js/groups.js';
+    import * as Utils from 'js/utils.js';
+    import JSON from 'js/json.js';
 
     export default {
         name: 'edit-group',

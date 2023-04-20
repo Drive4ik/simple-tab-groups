@@ -3,22 +3,22 @@
 
     import Vue from 'vue';
 
-    import popup from '../js/popup.vue';
-    import editGroup from '../js/edit-group.vue';
+    import popup from '../components/popup.vue';
+    import editGroup from '../components/edit-group.vue';
     import manageAddonBackup from './manage-addon-backup';
 
-    import * as Constants from 'constants';
-    import Messages from 'messages';
-    import Logger from 'logger';
-    import * as Utils from 'utils';
-    import * as Storage from 'storage';
-    import * as File from 'file';
-    import * as Urls from 'urls';
-    import * as Groups from 'groups';
-    import {isValidHotkeyEvent, isValidHotkeyValue, eventToHotkeyValue} from 'hotkeys';
-    import JSON from 'json';
+    import * as Constants from 'js/constants.js';
+    import Messages from 'js/messages.js';
+    import Logger from 'js/logger.js';
+    import * as Utils from 'js/utils.js';
+    import * as Storage from 'js/storage.js';
+    import * as File from 'js/file.js';
+    import * as Urls from 'js/urls.js';
+    import * as Groups from 'js/groups.js';
+    import {isValidHotkeyEvent, isValidHotkeyValue, eventToHotkeyValue} from 'js/hotkeys.js';
+    import JSON from 'js/json.js';
 
-    import defaultGroupMixin from 'default-group.mixin';
+    import defaultGroupMixin from 'js/mixins/default-group.mixin.js';
 
     window.logger = new Logger('Options');
 

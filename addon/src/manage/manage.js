@@ -1,5 +1,5 @@
-import 'wait-background';
-import backgroundSelf from 'background';
+import 'js/wait-background.js';
+import backgroundSelf from 'js/background.js';
 import Vue from 'vue';
 import Manage from './Manage.vue';
 
