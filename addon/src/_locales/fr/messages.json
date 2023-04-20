@@ -413,6 +413,10 @@
         "message": "Style d’icônes",
         "description": "Icon style"
     },
+    "discardTabsAfterHide": {
+        "message": "Décharger les onglets de la mémoire à la fermeture d'un groupe",
+        "description": "Unload tabs from memory after closing a group"
+    },
     "discardExcludeAudioTabs": {
         "message": "Exclure les onglet avec du son",
         "description": "Exclude tabs with sound"
@@ -813,6 +817,10 @@
         "message": "Veuillez activer \"Ouvrir les fenêtres et onglets précédents\" dans les paramètres du navigateur.<br>C'est nécessaire pour maintenir la communication entre les groupes et les onglets, <br>sinon les onglets ne s'ouvriront au redémarrage du navigateur et ils seront perdus pour l'extension-<br>l'extension cessera de fonctionner.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
+    "exportToBookmarksWhenAutoBackup": {
+        "message": "Sauver le groupe dans les marque-pages pendant la sauvegarde automatique",
+        "description": "Save the group to bookmarks when auto backup"
+    },
     "leaveBookmarksOfClosedTabs": {
         "message": "Conserver les marque-pages des onglets fermés",
         "description": "Leave bookmarks of closed tabs"
@@ -1170,5 +1178,27 @@
     "windowNotHaveGroup": {
         "message": "Cette fenêtre ne contient pas de groupe chargé",
         "description": "This window does not have a loaded group"
+    },
+    "defaultGroup": {
+        "message": "Groupe par défaut",
+        "description": "Default group"
+    },
+    "moveToGroupIfNoneCatchTabRules": {
+        "message": "Si aucune des expressions régulières ne correspond à l'onglet, déplacer celui-ci vers le groupe :",
+        "description": "If none of the regular expressions match the tab, move it to the group:"
+    },
+    "dontMove": {
+        "message": "Ne pas déplacer",
+        "description": "Don't move"
+    },
+    "groupArchivedTitle": {
+        "message": "$groupName$ (archivé)",
+        "description": "My group (archived)",
+        "placeholders": {
+            "groupName": {
+                "content": "$1",
+                "example": "My group"
+            }
+        }
     }
 }
