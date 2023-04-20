@@ -7,18 +7,18 @@
     import editGroup from '../components/edit-group.vue';
     import manageAddonBackup from './manage-addon-backup';
 
-    import * as Constants from 'js/constants.js';
-    import Messages from 'js/messages.js';
-    import Logger from 'js/logger.js';
-    import * as Utils from 'js/utils.js';
-    import * as Storage from 'js/storage.js';
-    import * as File from 'js/file.js';
-    import * as Urls from 'js/urls.js';
-    import * as Groups from 'js/groups.js';
-    import {isValidHotkeyEvent, isValidHotkeyValue, eventToHotkeyValue} from 'js/hotkeys.js';
-    import JSON from 'js/json.js';
+    import * as Constants from '/js/constants.js';
+    import Messages from '/js/messages.js';
+    import Logger from '/js/logger.js';
+    import * as Utils from '/js/utils.js';
+    import * as Storage from '/js/storage.js';
+    import * as File from '/js/file.js';
+    import * as Urls from '/js/urls.js';
+    import * as Groups from '/js/groups.js';
+    import {isValidHotkeyEvent, isValidHotkeyValue, eventToHotkeyValue} from '/js/hotkeys.js';
+    import JSON from '/js/json.js';
 
-    import defaultGroupMixin from 'js/mixins/default-group.mixin.js';
+    import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
 
     window.logger = new Logger('Options');
 

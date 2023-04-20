@@ -1,5 +1,5 @@
 <script>
-    import JSON from 'js/json.js';
+    import JSON from '/js/json.js';
 
     export default {
         props: {

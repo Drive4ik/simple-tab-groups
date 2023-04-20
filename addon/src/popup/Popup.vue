@@ -11,20 +11,20 @@
     import contextMenuTabNew from '../components/context-menu-tab-new.vue';
     import contextMenuGroup from '../components/context-menu-group.vue';
 
-    import backgroundSelf from 'js/background.js';
-    import * as Constants from 'js/constants.js';
-    import Messages from 'js/messages.js';
-    import Logger, {catchFunc} from 'js/logger.js';
-    import * as Containers from 'js/containers.js';
-    import * as Urls from 'js/urls.js';
-    import * as Cache from 'js/cache.js';
-    import * as Groups from 'js/groups.js';
-    import * as Windows from 'js/windows.js';
-    import * as Tabs from 'js/tabs.js';
-    import * as Utils from 'js/utils.js';
-    import JSON from 'js/json.js';
+    import backgroundSelf from '/js/background.js';
+    import * as Constants from '/js/constants.js';
+    import Messages from '/js/messages.js';
+    import Logger, {catchFunc} from '/js/logger.js';
+    import * as Containers from '/js/containers.js';
+    import * as Urls from '/js/urls.js';
+    import * as Cache from '/js/cache.js';
+    import * as Groups from '/js/groups.js';
+    import * as Windows from '/js/windows.js';
+    import * as Tabs from '/js/tabs.js';
+    import * as Utils from '/js/utils.js';
+    import JSON from '/js/json.js';
 
-    import defaultGroupMixin from 'js/mixins/default-group.mixin.js';
+    import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
 
     const isSidebar = '#sidebar' === window.location.hash;
 

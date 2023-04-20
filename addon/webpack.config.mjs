@@ -45,8 +45,8 @@ export default {
     },
     externals: [
         function ({request}, callback) {
-            if (request.startsWith('js')) {
-                callback(null, '/' + request);
+            if (request.startsWith('/js/')) {
+                callback(null, request);
             } else if (THIRD_PARTY_LIBRARIES.has(request)) {
                 callback(null, THIRD_PARTY_LIBRARIES.get(request));
             } else {
