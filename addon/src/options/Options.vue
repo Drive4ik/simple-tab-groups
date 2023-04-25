@@ -5,7 +5,8 @@
 
     import popup from '../components/popup.vue';
     import editGroup from '../components/edit-group.vue';
-    import manageAddonBackup from './manage-addon-backup';
+    import manageAddonBackup from './manage-addon-backup.vue';
+    import githubGist from './github-gist.vue';
 
     import * as Constants from '/js/constants.js';
     import Messages from '/js/messages.js';
@@ -148,6 +149,7 @@
             popup: popup,
             'edit-group': editGroup,
             'manage-addon-backup': manageAddonBackup,
+            'github-gist': githubGist,
         },
         async created() {
             const data = await Storage.get();
@@ -238,7 +240,7 @@
                 handler(hotkeys, oldValue) {
                     let hasChange = false;
 
-                    hotkeys = hotkeys.filter((hotkey, index, self) => {
+                    const filteredHotkeys = hotkeys.filter((hotkey, index, self) => {
                         if (!hotkey.action || !isValidHotkeyValue(hotkey.value)) {
                             return false;
                         }
@@ -261,11 +263,11 @@
                         return leaveHotkey;
                     });
 
-                    if (!hasChange) {
-                        return;
+                    if (hasChange || filteredHotkeys.length !== hotkeys.length) {
+                        Messages.sendMessageModule('BG.saveOptions', {
+                            hotkeys: filteredHotkeys,
+                        });
                     }
-
-                    Messages.sendMessageModule('BG.saveOptions', {hotkeys});
                 },
                 deep: true,
             },
@@ -660,7 +662,7 @@
                 <li :class="{'is-active': section === SECTION_BACKUP}">
                     <a @click="section = SECTION_BACKUP" @keydown.enter="section = SECTION_BACKUP" tabindex="0">
                         <span class="icon">
-                            <img class="size-16" src="/icons/cloud-upload.svg">
+                            <img class="size-16" src="/icons/cloud-arrow-up-solid.svg">
                         </span>
                         <span v-text="lang('exportAddonSettingsTitle')"></span>
                     </a>
@@ -953,7 +955,7 @@
                     </div>
 
                     <div class="field is-flex is-align-items-center indent-children">
-                        <div class="h-margin-right-5" v-html="lang('autoBackupCreateEveryTitle')"></div>
+                        <div v-html="lang('autoBackupCreateEveryTitle')"></div>
                         <div class="field has-addons">
                             <div class="control">
                                 <input type="number" class="input backup-time-input" v-model.number="options.autoBackupIntervalValue" min="1" max="20" />
@@ -990,6 +992,45 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <hr>
+
+            <div class="field">
+                <div class="field">
+                    <label class="checkbox">
+                        <input v-model="options.autoBackupCloudEnable" type="checkbox" />
+                        <span v-text="lang('autoBackupCloudEnableTitle')"></span>
+                    </label>
+                </div>
+                <div v-if="options.autoBackupCloudEnable" class="field">
+                    <div class="field">
+                        <label class="checkbox">
+                            <input v-model="options.autoBackupCloudIncludeTabFavIcons" type="checkbox" />
+                            <span v-text="lang('includeTabFavIconsIntoBackup')"></span>
+                        </label>
+                    </div>
+
+                    <div class="field is-flex is-align-items-center indent-children">
+                        <div v-html="lang('autoBackupCreateEveryTitle')"></div>
+                        <div class="field has-addons">
+                            <div class="control">
+                                <input type="number" class="input backup-time-input" v-model.number="options.autoBackupCloudIntervalValue" min="1" max="20" />
+                            </div>
+                            <div class="control">
+                                <div class="select">
+                                    <select v-model="options.autoBackupCloudIntervalKey">
+                                        <option :value="AUTO_BACKUP_INTERVAL_KEY.minutes" v-text="lang('autoBackupIntervalKeyMinutes')"></option>
+                                        <option :value="AUTO_BACKUP_INTERVAL_KEY.hours" v-text="lang('autoBackupIntervalKeyHours')"></option>
+                                        <option :value="AUTO_BACKUP_INTERVAL_KEY.days" v-text="lang('autoBackupIntervalKeyDays')"></option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <github-gist></github-gist>
                 </div>
             </div>
 
@@ -1184,10 +1225,6 @@
         margin: 0 auto;
         padding: 10px 20px 50px;
 
-        .field:not(:last-child) {
-            margin-bottom: .5rem;
-        }
-
         .backup-time-input {
             width: 100px;
         }
@@ -1246,23 +1283,6 @@
             .delete-button {
                 line-height: 1;
             }
-        }
-    }
-
-    .debug-record {
-        fill: red;
-        animation: blink 1s ease-out infinite;
-    }
-
-    @keyframes blink {
-        0% {
-            opacity: 1;
-        }
-        50% {
-            opacity: 0;
-        }
-        100% {
-            opacity: 1;
         }
     }
 

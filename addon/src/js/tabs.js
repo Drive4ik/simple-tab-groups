@@ -156,7 +156,7 @@ export async function get(
         includeFavIconUrl = false,
         includeThumbnail = false
     ) {
-    let query = {
+    const query = {
         windowId,
         pinned,
         hidden,
@@ -164,7 +164,7 @@ export async function get(
         ...otherProps,
     };
 
-    for (let key in query) {
+    for (const key in query) {
         if (null === query[key]) {
             delete query[key];
         }

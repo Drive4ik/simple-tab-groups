@@ -263,6 +263,13 @@ export const EXTENSIONS_WHITE_LIST = Object.freeze({
     },
 });
 
+export const DEFAULT_SYNC_OPTIONS = Object.freeze({
+    version: MANIFEST.version,
+    githubGistToken: '',
+    githubGistFileName: 'STG-backup.json',
+    githubGistId: '',
+});
+
 export const DEFAULT_OPTIONS = Object.freeze({
     version: MANIFEST.version,
     groups: [],
@@ -320,6 +327,13 @@ export const DEFAULT_OPTIONS = Object.freeze({
     autoBackupIncludeTabFavIcons: true,
     autoBackupFolderName: '',
     autoBackupByDayIndex: true,
+
+    autoBackupCloudEnable: true,
+    autoBackupCloudTimeStamp: 1,
+    autoBackupCloudIntervalKey: AUTO_BACKUP_INTERVAL_KEY.days, // minutes, hours, days
+    autoBackupCloudIntervalValue: 1,
+    autoBackupCloudIncludeTabFavIcons: true,
+    // ...DEFAULT_SYNC_OPTIONS,
 
     theme: 'auto', // auto, light, dark
 

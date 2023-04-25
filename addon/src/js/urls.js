@@ -24,7 +24,9 @@ export async function openUrl(page, asWindow = false) {
     }).catch(() => {});
 }
 
-export function openOptionsPage() {
+export function openOptionsPage(section = 'general') {
+    window.localStorage.optionsSection = section;
+
     return browser.runtime.openOptionsPage()
         .catch(self.logger?.onCatch('openOptionsPage', false))
         .catch(() => {});

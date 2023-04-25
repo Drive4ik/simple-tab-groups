@@ -279,10 +279,10 @@ function getUUIDFromUrl(url) {
 }*/
 
 export function setUrlSearchParams(url, params = {}) {
-    let urlObj = new URL(url, Constants.STG_BASE_URL);
+    const urlObj = new URL(url, Constants.STG_BASE_URL);
 
-    for (let i in params) {
-        urlObj.searchParams.set(i, params[i]);
+    for (const [key, value] of Object.entries(params)) {
+        urlObj.searchParams.set(key, value);
     }
 
     return urlObj.href;

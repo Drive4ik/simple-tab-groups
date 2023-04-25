@@ -25,6 +25,7 @@
     import JSON from '/js/json.js';
 
     import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
+    import syncCloudMixin from '/js/mixins/sync-cloud.mixin.js';
 
     const isSidebar = '#sidebar' === window.location.hash;
 
@@ -49,7 +50,7 @@
         availableTabKeys = new Set(['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'lastAccessed', 'audible', 'mutedInfo', 'windowId']);
 
     export default {
-        mixins: [defaultGroupMixin],
+        mixins: [defaultGroupMixin, syncCloudMixin],
         data() {
             return {
                 isSidebar: isSidebar,
@@ -1095,7 +1096,6 @@
             },
 
             openOptionsPage() {
-                delete window.localStorage.optionsSection;
                 Messages.sendMessage('open-options-page');
                 this.closeWindow();
             },
@@ -1682,6 +1682,16 @@
             <div tabindex="0" class="is-flex is-align-items-center manage-groups is-full-height is-full-width" @click="openManageGroups" @keydown.enter="openManageGroups" :title="lang('manageGroupsTitle')">
                 <img class="size-16" src="/icons/icon.svg" />
                 <span class="h-margin-left-10" v-text="lang('manageGroupsTitle')"></span>
+            </div>
+            <div class="is-flex is-align-items-center is-vertical-separator"></div>
+            <div
+                tabindex="0"
+                class="is-flex is-align-items-center is-full-height"
+                @click="syncCloud"
+                @keydown.enter="syncCloud"
+                :title="lang('openSettings')"
+                >
+                <img class="size-16" src="/icons/cloud-arrow-up-solid.svg" />
             </div>
             <div class="is-flex is-align-items-center is-vertical-separator"></div>
             <div

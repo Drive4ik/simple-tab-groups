@@ -18,6 +18,8 @@ import * as Hotkeys from './js/hotkeys.js';
 
 self.IS_TEMPORARY = false;
 
+self.localStorage.START_TIME = Date.now();
+
 if (self.localStorage.enableDebug == 2) { // if debug was auto-enabled - disable on next start addon/browser
     delete self.localStorage.enableDebug;
 }
@@ -1551,7 +1553,7 @@ async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
     const hasBookmarksPermission = await browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS);
 
     if (!hasBookmarksPermission) {
-        showMessages && Utils.notify(['noAccessToBookmarks'], undefined, undefined, undefined, Urls.openOptionsPage);
+        showMessages && Utils.notify(['noAccessToBookmarks'], undefined, undefined, undefined, () => Urls.openOptionsPage());
         logger.log('exportGroupToBookmarks no bookmarks permission');
         return false;
     }
@@ -2514,7 +2516,7 @@ async function onBackgroundMessage(message, sender) {
                 result.ok = true;
                 break;
             case 'open-options-page':
-                await Urls.openOptionsPage();
+                await Urls.openOptionsPage(data.section);
                 result.ok = true;
                 break;
             case 'move-selected-tabs-to-custom-group':
@@ -4102,8 +4104,6 @@ async function initializeGroupWindows(windows, currentGroupIds) {
 async function init() {
     const log = logger.start(['info', '[init]']);
 
-    self.localStorage.START_TIME = Date.now();
-
     try {
         let data = await Storage.getForMigrate();
 
@@ -4227,6 +4227,8 @@ async function init() {
         // }
 
         // Urls.openUrl('/popup/popup.html#sidebar');
+
+        Urls.openOptionsPage('backup');
     } catch (e) {
         setActionToReloadAddon();
 

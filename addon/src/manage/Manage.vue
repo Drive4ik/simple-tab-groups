@@ -968,7 +968,6 @@
             },
 
             openOptionsPage() {
-                delete window.localStorage.optionsSection;
                 Urls.openOptionsPage();
             },
         },
