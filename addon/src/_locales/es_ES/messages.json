@@ -290,8 +290,8 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Presiona el atajo aquí",
-        "description": "Press key here"
+        "message": "Introducir tecla de acceso rápido",
+        "description": "Type a shortcut"
     },
     "selectAction": {
         "message": "Selecciona una acción",

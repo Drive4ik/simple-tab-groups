@@ -282,8 +282,8 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Premere i tasti",
-        "description": "Press key here"
+        "message": "Inserisci il tasto di scelta rapida",
+        "description": "Type a shortcut"
     },
     "selectAction": {
         "message": "Seleziona l'azione",

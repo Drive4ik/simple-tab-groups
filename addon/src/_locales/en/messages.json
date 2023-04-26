@@ -294,8 +294,8 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Press key here",
-        "description": "Press key here"
+        "message": "Type a shortcut",
+        "description": "Type a shortcut"
     },
     "selectAction": {
         "message": "Select action",

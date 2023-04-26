@@ -290,8 +290,8 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Натиснете комбинация",
-        "description": "Press key here"
+        "message": "Въведете клавишна комбинация",
+        "description": "Type a shortcut"
     },
     "selectAction": {
         "message": "Избиране",

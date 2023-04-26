@@ -270,8 +270,8 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "여기에 키를 누르십시오.",
-        "description": "Press key here"
+        "message": "단축키 입력",
+        "description": "Type a shortcut"
     },
     "selectAction": {
         "message": "작업 선택",

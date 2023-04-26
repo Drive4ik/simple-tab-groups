@@ -169,7 +169,6 @@ function Log(cKey, ...args) {
 
     if (Constants.IS_BACKGROUND_PAGE) {
         addLog(log);
-        showLog.call(this, log, {cKey, args});
     } else {
         connectToBG(this).sendMessage('save-log', {
             log,
@@ -180,6 +179,8 @@ function Log(cKey, ...args) {
             },
         });
     }
+
+    showLog.call(this, log, {cKey, args});
 }
 
 export function addLog(log) {

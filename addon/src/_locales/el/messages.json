@@ -260,8 +260,8 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Πιέστε τα πλήκτρα που θέλετε",
-        "description": "Press key here"
+        "message": "Εισαγάγετε το πλήκτρο πρόσβασης",
+        "description": "Type a shortcut"
     },
     "selectAction": {
         "message": "Επιλέξτε δράση",
