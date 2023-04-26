@@ -282,8 +282,8 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "このキーを押してください",
-        "description": "Press key here"
+        "message": "ホットキーを入力",
+        "description": "Type a shortcut"
     },
     "selectAction": {
         "message": "アクションを選択してください",

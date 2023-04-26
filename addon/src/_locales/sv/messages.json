@@ -260,8 +260,8 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Välj snabbval",
-        "description": "Press key here"
+        "message": "Enter snabbtangent",
+        "description": "Type a shortcut"
     },
     "selectAction": {
         "message": "Välj funktion",

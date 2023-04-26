@@ -282,8 +282,8 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Tekan tombol di sini",
-        "description": "Press key here"
+        "message": "Masukkan hotkey",
+        "description": "Type a shortcut"
     },
     "selectAction": {
         "message": "Pilih aksi",

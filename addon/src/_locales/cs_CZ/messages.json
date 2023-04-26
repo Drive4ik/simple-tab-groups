@@ -278,8 +278,8 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Stiskni klávesu",
-        "description": "Press key here"
+        "message": "Zadejte klávesovou zkratku",
+        "description": "Type a shortcut"
     },
     "selectAction": {
         "message": "Vybrat akci",

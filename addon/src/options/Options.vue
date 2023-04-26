@@ -239,10 +239,6 @@
                     let hasChange = false;
 
                     hotkeys = hotkeys.filter((hotkey, index, self) => {
-                        if (!hotkey.action || !isValidHotkeyValue(hotkey.value)) {
-                            return false;
-                        }
-
                         if (
                             Constants.HOTKEY_ACTIONS_WITH_CUSTOM_GROUP.includes(hotkey.action) &&
                             hotkey.groupId &&
@@ -252,20 +248,14 @@
                             hasChange = true;
                         }
 
-                        const leaveHotkey = self.findIndex(h => h.value === hotkey.value) === index;
-
-                        if (!leaveHotkey) {
-                            hasChange = true;
-                        }
-
-                        return leaveHotkey;
+                        return self.findIndex(h => h.value === hotkey.value) === index;
                     });
 
-                    if (!hasChange) {
-                        return;
-                    }
+                    const hotheysIsValid = hotkeys.every(hotkey => hotkey.action && isValidHotkeyValue(hotkey.value));
 
-                    Messages.sendMessageModule('BG.saveOptions', {hotkeys});
+                    if (hotheysIsValid && (hasChange || oldValue)) {
+                        Messages.sendMessageModule('BG.saveOptions', {hotkeys});
+                    }
                 },
                 deep: true,
             },
@@ -294,6 +284,10 @@
 
             openBackupFolder: File.openBackupFolder,
             getGroupTitle: Groups.getTitle,
+
+            hasEqualHotkeys(hotkey) {
+                return this.options.hotkeys.filter(h => h.value && h.value === hotkey.value).length > 1;
+            },
 
             getHotkeyParentNode(event) {
                 return event.target.closest('.control');
@@ -850,7 +844,7 @@
             <div class="h-margin-bottom-10" v-html="lang('hotkeysDescription')"></div>
             <div class="hotkeys">
                 <div v-for="(hotkey, hotkeyIndex) in options.hotkeys" :key="hotkeyIndex" class="field">
-                    <div class="is-flex is-align-items-center">
+                    <div class="is-flex is-align-items-center" :class="hasEqualHotkeys(hotkey) && 'key-error'">
                         <div class="control input-command">
                             <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(hotkey, $event)" @blur="onBlurHotkey" :value="hotkey.value" autocomplete="off" class="input" :placeholder="lang('hotkeyPlaceholder')" tabindex="-1" />
                         </div>
@@ -1205,11 +1199,11 @@
                 --in-content-border-focus: transparent;
                 outline: 2px solid dodgerblue;
             }
-            .control.key-success .input:focus {
+            :not(.key-error) > .control.key-success .input:focus {
                 --in-content-border-focus: transparent;
                 outline: 2px solid limegreen;
             }
-            .control.key-error .input {
+            .key-error .input {
                 --in-content-border-focus: transparent;
                 outline: 2px solid orangered;
             }

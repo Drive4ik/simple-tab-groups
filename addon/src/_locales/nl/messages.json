@@ -242,8 +242,8 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Druk toetsen in",
-        "description": "Press key here"
+        "message": "Voer sneltoets in",
+        "description": "Type a shortcut"
     },
     "selectAction": {
         "message": "Selecteer actie",

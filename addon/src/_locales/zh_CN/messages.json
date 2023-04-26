@@ -290,8 +290,8 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "在这里按键",
-        "description": "Press key here"
+        "message": "输入热键",
+        "description": "Type a shortcut"
     },
     "selectAction": {
         "message": "选择行为",
