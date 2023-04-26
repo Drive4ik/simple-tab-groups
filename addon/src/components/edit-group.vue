@@ -96,6 +96,8 @@
                         return currentDomainRegexp;
                     }
                 }
+
+                return null;
             },
             currentDomainWithSubdomainsRegexp() {
                 if (this.currentTabUrl) {
@@ -113,6 +115,8 @@
                         }
                     }
                 }
+
+                return null;
             },
             selectedMoveGroupToImage() {
                 const group = this.groupsMoveToIfNoneCatchTabRules.find(group => group.id === this.group.moveToGroupIfNoneCatchTabRules);

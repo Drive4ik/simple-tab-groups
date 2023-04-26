@@ -25,6 +25,7 @@
     import JSON from '/js/json.js';
 
     import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
+    import startUpData from '/js/mixins/start-up-data.mixin.js';
 
     const isSidebar = '#sidebar' === window.location.hash;
 
@@ -49,7 +50,8 @@
         availableTabKeys = new Set(['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'lastAccessed', 'audible', 'mutedInfo', 'windowId']);
 
     export default {
-        mixins: [defaultGroupMixin],
+        name: 'popup-page',
+        mixins: [defaultGroupMixin, startUpData],
         data() {
             return {
                 isSidebar: isSidebar,
@@ -124,7 +126,7 @@
         },
         async mounted() {
             const log = logger.start('mounted');
-            const startUpData = await backgroundSelf.startUpData();
+            const startUpData = await this.startUpData();
 
             this.loadWindows(startUpData);
             this.loadGroups(startUpData);

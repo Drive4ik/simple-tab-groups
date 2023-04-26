@@ -80,7 +80,7 @@ export async function save(data, fileName = 'file-name', saveAs = true, clearOnC
         url = URL.createObjectURL(blob);
 
     try {
-        let id = await browser.downloads.download({
+        const id = await browser.downloads.download({
             filename: fileName,
             url: url,
             saveAs: saveAs,
@@ -89,16 +89,12 @@ export async function save(data, fileName = 'file-name', saveAs = true, clearOnC
 
         log.log('id download', id);
 
-        let {state, error} = await waitDownload(id);
+        let {
+            state: state = browser.downloads.State.INTERRUPTED,
+            error: error = `Download ID not found, id: ${id}`,
+        } = await waitDownload(id);
 
-        if (!state) {
-            state = browser.downloads.State.INTERRUPTED;
-            error = `Download ID not found, id: ${id}`;
-        }
-
-        if (error) {
-            error = `Error save file:\n${fileName}\nerror: ${error}`;
-        }
+        error = `Error save file:\n${fileName}\nerror: ${String(error)}`;
 
         if (browser.downloads.State.COMPLETE === state) {
             if (clearOnComplete) {
@@ -107,7 +103,7 @@ export async function save(data, fileName = 'file-name', saveAs = true, clearOnC
         } else if (browser.downloads.State.INTERRUPTED === state && !saveAs && tryCount < 5) {
             await browser.downloads.erase({id});
             URL.revokeObjectURL(url);
-            log.stopError('cant download id:', id, 'tryCount:', tryCount, error);
+            log.stopWarn('cant download id:', id, 'tryCount:', tryCount, error);
             return save(data, fileName, saveAs, clearOnComplete, tryCount + 1);
         } else {
             throw error;
@@ -118,9 +114,11 @@ export async function save(data, fileName = 'file-name', saveAs = true, clearOnC
         return log.stop(id);
     } catch (e) {
         URL.revokeObjectURL(url);
-        if (!String(e.message || e).includes('canceled by the user')) {
+        if (!String(e.message || e).toLowerCase().includes('canceled')) {
             log.runError(e.message || e, e);
             log.stopError();
+        } else {
+            log.stop();
         }
     } finally {
         URL.revokeObjectURL(url);

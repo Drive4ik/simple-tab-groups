@@ -2,6 +2,7 @@
     import JSON from '/js/json.js';
 
     export default {
+        name: 'popup-dialog',
         props: {
             title: {
                 type: String,

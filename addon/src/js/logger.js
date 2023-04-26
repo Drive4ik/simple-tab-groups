@@ -66,6 +66,11 @@ function setLoggerFuncs() {
             return args[0];
         };
 
+        logger.stopWarn = (...args) => {
+            logger.warn.call(logger, logger.stopMessage, ...args);
+            return args[0];
+        };
+
         logger.stopError = (...args) => {
             logger.error.call(logger, logger.stopMessage, ...args);
             return args[0];
@@ -77,6 +82,20 @@ function setLoggerFuncs() {
     this.create = this.start; // alias
 
     this.onCatch = function(message, throwError = true) {
+        if (Array.isArray(message)) {
+            message = message.map(value => {
+                if (Array.isArray(value)) {
+                    return value.slice();
+                } else if (value === Object(value)) {
+                    return cloneObjectOnlyPrimitiveValues(value);
+                }
+
+                return value;
+            });
+        } else if (message === Object(message)) {
+            message = cloneObjectOnlyPrimitiveValues(message);
+        }
+
         return (error) => {
             if (typeof message === 'string') {
                 message = `Catch error on: ${message}`;
@@ -137,6 +156,16 @@ function setLoggerFuncs() {
         this.enabled = false;
         return this;
     }.bind(this);
+}
+
+function cloneObjectOnlyPrimitiveValues(obj) {
+    const result = {};
+    for (const key in obj) {
+        if (typeof obj[key] !== 'object') {
+            result[key] = obj[key];
+        }
+    }
+    return result;
 }
 
 function Log(cKey, ...args) {
@@ -277,7 +306,9 @@ const Errors = {
 
         errorLogs.push(error);
 
-        self.localStorage.errorLogs = JSON.stringify(errorLogs.slice(-50));
+        try {
+            self.localStorage.errorLogs = JSON.stringify(errorLogs.slice(-50));
+        } catch (e) {}
     },
     clear() {
         delete self.localStorage.errorLogs;

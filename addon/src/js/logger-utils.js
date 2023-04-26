@@ -33,6 +33,7 @@ export function getStack(e, start = 0, to = 50) {
 
 export function nativeErrorToObj(nativeError) {
     return {
+        name: nativeError.name,
         message: nativeError.message,
         fileName: removeUnnecessaryStrings(nativeError.fileName),
         lineNumber: nativeError.lineNumber,

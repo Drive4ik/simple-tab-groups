@@ -1719,15 +1719,15 @@ async function setBrowserAction(windowId, title, icon, enable, isSticky) {
         browser.browserAction.setTitle({
             ...winObj,
             title: title || manifestAction.default_title,
-        }).catch(log.onCatch('setTitle')),
+        }).catch(log.onCatch('setTitle', false)),
         browser.browserAction.setBadgeText({
             ...winObj,
             text: isSticky ? Constants.STICKY_SYMBOL : '',
-        }).catch(log.onCatch('setBadgeText')),
+        }).catch(log.onCatch('setBadgeText', false)),
         browser.browserAction.setIcon({
             ...winObj,
             path: icon || manifestAction.default_icon,
-        }).catch(log.onCatch('setIcon')),
+        }).catch(log.onCatch('setIcon', false)),
     ]);
 
     log.stop();
@@ -1777,12 +1777,12 @@ async function prependWindowTitle(windowId, group = null) {
             if (emoji) {
                 titlePreface = `${emoji} - `;
             } else {
-                titlePreface = `${Utils.sliceText(group.title, 12)} - `;
+                titlePreface = `${Utils.sliceText(group.title, 25)} - `;
             }
         }
 
         await browser.windows.update(windowId, {titlePreface})
-            .catch(logger.onCatch(['prependWindowTitle', {windowId, titlePreface}]));
+            .catch(logger.onCatch(['prependWindowTitle', {windowId, titlePreface}], false));
     }
 }
 
@@ -1852,7 +1852,7 @@ const onBeforeTabRequest = catchFunc(async function({tabId, url, cookieStoreId, 
     let tab = await Tabs.getOne(tabId);
 
     if (!tab) {
-        log.stopError('tab not found', tabId);
+        log.stopWarn('tab not found', tabId);
         return {};
     }
 
@@ -1887,7 +1887,7 @@ const onBeforeTabRequest = catchFunc(async function({tabId, url, cookieStoreId, 
         tab = await Tabs.getOne(tabId);
 
         if (!tab) {
-            log.stopError('tab not found', tabId);
+            log.stopWarn('tab not found', tabId);
             return {};
         }
 
@@ -2120,7 +2120,6 @@ const INTERNAL_MODULES_NAMES = new Set([
     'BG.restoreBackup',
     'BG.clearAddon',
     'BG.runMigrateForData',
-    'BG.startUpData',
     'Tabs',
     'Groups',
     'Windows',
@@ -3110,36 +3109,6 @@ async function exportAllGroupsToBookmarks(showFinishMessage, isAutoBackup) {
     }
 
     log.stop();
-}
-
-self.startUpData = async function(includeThumbnail) {
-    const log = logger.start('startUpData', {includeThumbnail});
-
-    const [
-        windows,
-        currendWindow,
-        {groups},
-    ] = await Promise.all([
-        Windows.load(true, true, includeThumbnail),
-        Windows.get(),
-        Groups.load(null, true, true, includeThumbnail),
-    ]);
-
-    const unSyncTabs = windows
-        .reduce((acc, win) => {
-            win.tabs.forEach(tab => !tab.groupId && acc.push(tab));
-            delete win.tabs;
-            return acc;
-        }, []);
-
-    log.stop();
-
-    return {
-        windows,
-        currendWindow,
-        groups,
-        unSyncTabs,
-    };
 }
 
 self.saveOptions = saveOptions;

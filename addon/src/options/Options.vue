@@ -32,6 +32,7 @@
     document.title = browser.i18n.getMessage('openSettings');
 
     export default {
+        name: 'options-page',
         mixins: [defaultGroupMixin],
         data() {
             this.HOTKEY_ACTIONS = Constants.HOTKEY_ACTIONS;

@@ -148,8 +148,11 @@
                         <template v-if="isBool(val)">
                             <input type="checkbox" onclick="return false" :checked="val"> {{key}}
                         </template>
-                        <template v-if="isString(val) || isNumber(val)">
+                        <template v-else-if="isString(val) || isNumber(val)">
                             {{key}}: "{{val}}"
+                        </template>
+                        <template v-else>
+                            {{key}}: <pre>{{val | json(true)}}</pre>
                         </template>
                     </div>
                 </div>
@@ -228,7 +231,7 @@
 
                     <span class="v-middle" v-html="getLogTitle(log)"></span>
                     <div v-if="log.showStack">
-                        <pre v-for="(stack, i) in log.stacks" :key="i + 'stack' + stack[0]" class="mt-3">{{stack | json}}</pre>
+                        <pre v-for="(stack, i) in log.stacks" :key="i + 'stack' + stack[0]" class="mt-3" v-text="getStackToView(stack)"></pre>
                     </div>
                 </div>
             </div>
@@ -236,7 +239,7 @@
 
             <h1 id="errors-title" class="title has-text-centered">ERRORS</h1>
             <div v-for="(log, i) in errorLogs" :key="i + 'error'" class="field log p-1">
-                <span class="is-size-7" v-html="formatTime(log)"></span>
+                <span class="is-size-7" v-html="formatTime(log, true)"></span>
 
                 <button @click="toggleShowStack(log)" class="button is-small">
                     <span class="stack-icon icon"></span>
@@ -247,7 +250,7 @@
 
                 <span v-html="getLogTitle(log)"></span>
                 <div v-if="log.showStack">
-                    <pre v-for="stack in log.stacks" :key="i + 'stack2' + stack[0]" class="mt-3">{{stack | json}}</pre>
+                    <pre v-for="stack in log.stacks" :key="i + 'stack2' + stack[0]" class="mt-3" v-text="getStackToView(stack)"></pre>
                 </div>
             </div>
 
@@ -263,8 +266,8 @@
                 <button class="button is-light field" @click="scrollTo('#groups-title', 'start')">groups</button>
                 <button class="button is-light field" @click="scrollTo('#logs-title', 'start')">logs</button>
                 <button class="button is-light field" title="Right click - prev error"
-                    @click="scrollTo('.tag.is-danger, .has-background-danger', undefined, true)"
-                    @contextmenu.prevent.stop="scrollTo('.tag.is-danger, .has-background-danger', undefined, true, true)">🛑 error</button>
+                    @click="scrollTo('.tag.is-danger:not(.is-light), .has-background-danger', undefined, true)"
+                    @contextmenu.prevent.stop="scrollTo('.tag.is-danger:not(.is-light), .has-background-danger', undefined, true, true)">🛑 error</button>
                 <button class="button is-light field" @click="scrollTo('#errors-title')">errors</button>
             </div>
 
