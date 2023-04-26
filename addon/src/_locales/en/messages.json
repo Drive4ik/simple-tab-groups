@@ -305,6 +305,10 @@
         "message": "Select group",
         "description": "Select group"
     },
+    "unknownGroup": {
+        "message": "Unknown group",
+        "description": "Unknown group"
+    },
     "hotkeyActionTitleLoadNextGroup": {
         "message": "Load next group",
         "description": "Load next group"

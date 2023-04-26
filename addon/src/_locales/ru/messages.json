@@ -301,6 +301,10 @@
         "message": "Выберите группу",
         "description": "Select group"
     },
+    "unknownGroup": {
+        "message": "Неизвестная группа",
+        "description": "Unknown group"
+    },
     "hotkeyActionTitleLoadNextGroup": {
         "message": "Загрузить следующую группу",
         "description": "Load next group"
