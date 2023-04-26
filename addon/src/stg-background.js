@@ -2917,8 +2917,6 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
     data.groups ??= [];
     data.hotkeys ??= [];
 
-    data.hotkeys.forEach(hotkey => hotkey.value = Hotkeys.nomalizeValueForPlatform(hotkey.value));
-
     data.groups.forEach(groupToRestore => {
         if (!currentData.groups.some(currentGroup => currentGroup.id === groupToRestore.moveToGroupIfNoneCatchTabRules)) {
             groupToRestore.moveToGroupIfNoneCatchTabRules = null;

@@ -64,17 +64,6 @@ export function isValidHotkeyValue(value) {
     return (parts.length >= 2 && parts.every(key => key)) || isFuncKeyValue(value);
 }
 
-// Command ???? хз
-export function nomalizeValueForPlatform(value) {
-    if (IS_MAC && value.startsWith('Ctrl')) {
-        return value.replace('Ctrl', 'MacCtrl');
-    } else if (!IS_MAC && value.startsWith('MacCtrl')) {
-        return value.replace('MacCtrl', 'Ctrl');
-    }
-
-    return value;
-}
-
 export function eventToHotkeyValue(event) {
     const valueParts = [];
 
