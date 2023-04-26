@@ -603,3 +603,68 @@ export function getThemeApply(theme) {
 
     return (theme === 'auto' && isDark) ? 'dark' : theme;
 }
+
+export const UI_LANG = browser.i18n.getUILanguage();
+
+export const DATE_LOCALE_VARIABLES = Object.freeze({
+    get 'date-full'() {
+        return (new Date).toLocaleString(UI_LANG, {dateStyle: 'full'});
+    },
+    get 'date-medium'() {
+        return (new Date).toLocaleString(UI_LANG, {dateStyle: 'medium'});
+    },
+    get 'date-short'() {
+        return (new Date).toLocaleString(UI_LANG, {dateStyle: 'short'});
+    },
+    get 'time-medium'() {
+        return (new Date).toLocaleString(UI_LANG, {timeStyle: 'medium'});
+    },
+    get 'time-short'() {
+        return (new Date).toLocaleString(UI_LANG, {timeStyle: 'short'});
+    },
+    get 'year-numeric'() {
+        return (new Date).toLocaleString(UI_LANG, {year: 'numeric'});
+    },
+    get 'year-2-digit'() {
+        return (new Date).toLocaleString(UI_LANG, {year: '2-digit'});
+    },
+    get 'month-numeric'() {
+        return (new Date).toLocaleString(UI_LANG, {month: 'numeric'});
+    },
+    get 'month-long'() {
+        return (new Date).toLocaleString(UI_LANG, {month: 'long'});
+    },
+    get 'month-short'() {
+        return (new Date).toLocaleString(UI_LANG, {month: 'short'});
+    },
+    get 'weekday'() {
+        return (new Date).toLocaleString(UI_LANG, {weekday: 'long'});
+    },
+    get 'weekday-short'() {
+        return (new Date).toLocaleString(UI_LANG, {weekday: 'short'});
+    },
+    get 'day-numeric'() {
+        return (new Date).toLocaleString(UI_LANG, {day: 'numeric'});
+    },
+    get 'day-2-digit'() {
+        return (new Date).toLocaleString(UI_LANG, {day: '2-digit'});
+    },
+    get 'day-period'() {
+        return (new Date).toLocaleString(UI_LANG, {dayPeriod: 'long'});
+    },
+    get 'hour-numeric'() {
+        return (new Date).toLocaleString(UI_LANG, {hour: 'numeric'});
+    },
+    get 'hour-2-digit'() {
+        return (new Date).toLocaleString(UI_LANG, {hour: '2-digit'});
+    },
+    get 'hour-minute-ampm'() {
+        return (new Date).toLocaleString(UI_LANG, {hour: 'numeric', minute: 'numeric', hour12: true});
+    },
+    get 'minute'() {
+        return (new Date).toLocaleString(UI_LANG, {minute: '2-digit'});
+    },
+    get 'second'() {
+        return (new Date).toLocaleString(UI_LANG, {second: '2-digit'});
+    },
+});

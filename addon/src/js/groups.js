@@ -770,44 +770,13 @@ export function getIconUrl(group, keyInObj = null) {
     return result;
 }
 
-export const TITLE_VARIABLES = Object.freeze({
-    index: '{index}',
-    get fullDateTime() {
-        return (new Date).toLocaleString();
-    },
-    get fullDate() {
-        return (new Date).toLocaleDateString();
-    },
-    get fullDate2() {
-        return (new Date).toDateString();
-    },
-    get fullTime() {
-        return (new Date).toLocaleTimeString();
-    },
-    get date() {
-        return (new Date).getDate();
-    },
-    get month() {
-        return (new Date).getMonth();
-    },
-    get year() {
-        return (new Date).getFullYear();
-    },
-    get hours() {
-        return (new Date).getHours();
-    },
-    get seconds() {
-        return (new Date).getSeconds();
-    },
-});
-
 export function createTitle(title = null, groupId = null, defaultGroupProps = {}) {
     if (title) {
         return String(title);
     }
 
     if (defaultGroupProps.title && groupId) {
-        return Utils.format(defaultGroupProps.title, {index: groupId}, TITLE_VARIABLES);
+        return Utils.format(defaultGroupProps.title, {index: groupId}, Utils.DATE_LOCALE_VARIABLES);
     }
 
     return browser.i18n.getMessage('newGroupTitle', groupId || '{index}');

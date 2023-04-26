@@ -48,7 +48,10 @@
             this.TEMPORARY_CONTAINER = Constants.TEMPORARY_CONTAINER;
             this.DEFAULT_COOKIE_STORE_ID = Constants.DEFAULT_COOKIE_STORE_ID;
             this.GROUP_ICON_VIEW_TYPES = Constants.GROUP_ICON_VIEW_TYPES;
-            this.TITLE_VARIABLES = Groups.TITLE_VARIABLES;
+            this.TITLE_VARIABLES = {
+                index: '{index}',
+                ...Utils.DATE_LOCALE_VARIABLES,
+            };
 
             return {
                 show: false,
