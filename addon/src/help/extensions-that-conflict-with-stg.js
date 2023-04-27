@@ -59,8 +59,6 @@ function createExtensionBlock(ext) {
         });
 
         buttons.appendChild(button);
-    } else {
-        Management.dontIgnoreConflictedExtension(ext.id);
     }
 
     if (buttons.children.length) {
