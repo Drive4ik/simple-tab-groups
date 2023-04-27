@@ -53,9 +53,13 @@ export function isEnabled(id, extensionsStorage = extensions) {
 
 export function detectConflictedExtensions(extensionsStorage = extensions) {
     Constants.CONFLICTED_EXTENSIONS.some(id => {
-        if (isEnabled(id, extensionsStorage) && !isIgnoredConflictedExtension(id)) {
-            Urls.openUrl('extensions-that-conflict-with-stg', true);
-            return true;
+        if (isEnabled(id, extensionsStorage)) {
+            if (!isIgnoredConflictedExtension(id)) {
+                Urls.openUrl('extensions-that-conflict-with-stg', true);
+                return true;
+            }
+        } else if (extensionsStorage[id] && isIgnoredConflictedExtension(id)) {
+            dontIgnoreConflictedExtension(id);
         }
     });
 }
