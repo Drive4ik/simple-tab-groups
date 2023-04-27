@@ -290,7 +290,7 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Wprowadź klawisz skrótu",
+        "message": "Wprowadź skrót",
         "description": "Type a shortcut"
     },
     "selectAction": {

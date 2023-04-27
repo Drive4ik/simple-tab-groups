@@ -242,7 +242,7 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Voer sneltoets in",
+        "message": "Typ een sneltoets",
         "description": "Type a shortcut"
     },
     "selectAction": {

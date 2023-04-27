@@ -282,7 +282,7 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Inserisci il tasto di scelta rapida",
+        "message": "Inserisci una scorciatoia",
         "description": "Type a shortcut"
     },
     "selectAction": {

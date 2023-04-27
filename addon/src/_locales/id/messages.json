@@ -282,7 +282,7 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Masukkan hotkey",
+        "message": "Ketikkan pintasan",
         "description": "Type a shortcut"
     },
     "selectAction": {

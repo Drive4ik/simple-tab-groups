@@ -260,7 +260,7 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Enter snabbtangent",
+        "message": "Skapa en genväg",
         "description": "Type a shortcut"
     },
     "selectAction": {
