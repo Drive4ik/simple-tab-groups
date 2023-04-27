@@ -104,6 +104,8 @@
 
             getGroupIconUrl: Groups.getIconUrl,
 
+            getGroupTitle: Groups.getTitle,
+
             isGeneralOptionsKey(key) {
                 if (key === 'hotkeys') {
                     return false;
@@ -195,35 +197,44 @@
         </div>
 
         <div class="field">
-            <label class="label checkbox">
-                <input type="checkbox" v-model="checkAllGroups" />
-                <span v-text="lang('importGroups')"></span>
-            </label>
+            <div class="field">
+                <div class="control">
+                    <label class="label checkbox">
+                        <input type="checkbox" v-model="checkAllGroups" />
+                        <span v-text="lang('importGroups')"></span>
+                    </label>
+                </div>
+            </div>
 
-            <div class="control" v-for="group in data.groups" :key="group.id">
-                <label class="checkbox" :disabled="disabledGroups.includes(group)">
-                    <input type="checkbox" v-model="groups" :value="group" :disabled="disabledGroups.includes(group)" />
-                    <template v-if="group.iconUrl || group.iconColor">
-                        <figure class="image is-16x16 is-inline-block">
+            <div class="field" v-for="group in data.groups" :key="group.id">
+                <div class="control">
+                    <label class="checkbox indent-children" :disabled="disabledGroups.includes(group)">
+                        <input type="checkbox" v-model="groups" :value="group" :disabled="disabledGroups.includes(group)" />
+
+                        <figure v-if="group.iconUrl || group.iconColor" class="image is-16x16 is-inline-block">
                             <img :src="getGroupIconUrl(group)" />
                         </figure>
-                        &nbsp;
-                    </template>
-                    <template v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID">
-                        <figure v-if="group.newTabContainer === TEMPORARY_CONTAINER" class="image is-16x16 is-inline-block">
-                            <img :src="allContainers[TEMPORARY_CONTAINER].iconUrl" class="size-16 fill-context" />
+
+                        <figure v-if="group.isArchive" class="image is-16x16">
+                            <img src="/icons/archive.svg" />
                         </figure>
-                        <figure v-else-if="data.containers && data.containers[group.newTabContainer] && data.containers[group.newTabContainer].iconUrl" class="image is-16x16 is-inline-block">
-                            <span :class="`size-16 userContext-icon identity-icon-${data.containers[group.newTabContainer].icon} identity-color-${data.containers[group.newTabContainer].color}`"></span>
-                        </figure>
-                        &nbsp;
-                    </template>
-                    <span class="group-title" v-text="group.title"></span>
-                    &nbsp;
-                    <small class="is-italic">
-                        (<span v-text="lang('groupTabsCount', group.tabs.length)"></span>)
-                    </small>
-                </label>
+
+                        <template v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID">
+                            <figure v-if="group.newTabContainer === TEMPORARY_CONTAINER" class="image is-16x16 is-inline-block">
+                                <img :src="allContainers[TEMPORARY_CONTAINER].iconUrl" class="size-16 fill-context" />
+                            </figure>
+                            <figure v-else-if="data.containers && data.containers[group.newTabContainer] && data.containers[group.newTabContainer].iconUrl" class="image is-16x16 is-inline-block">
+                                <span :class="`size-16 userContext-icon identity-icon-${data.containers[group.newTabContainer].icon} identity-color-${data.containers[group.newTabContainer].color}`"></span>
+                            </figure>
+                        </template>
+
+                        <span class="group-title" v-text="getGroupTitle(group)"></span>
+
+                        <small class="is-italic">
+                            (<span v-text="lang('groupTabsCount', group.tabs.length)"></span>)
+                        </small>
+                    </label>
+                </div>
             </div>
         </div>
 
@@ -232,10 +243,6 @@
 
 <style lang="scss">
     #manageAddonBackup {
-        .image.is-16x16 {
-            min-width: 16px;
-        }
-
         .group-title {
             word-wrap: anywhere;
         }

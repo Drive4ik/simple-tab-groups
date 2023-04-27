@@ -1172,10 +1172,6 @@
         margin: 0 auto;
         padding: 10px 20px 50px;
 
-        .field:not(:last-child) {
-            margin-bottom: .5rem;
-        }
-
         .backup-time-input {
             width: 100px;
         }

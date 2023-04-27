@@ -682,11 +682,14 @@ export function getEmojiIcon(group) {
     }
 }
 
+const UNKNOWN_GROUP_ICON_PROPS = {
+    title: '❓',
+    iconViewType: 'title',
+    iconColor: 'gray',
+};
+
 export function getIconUrl(group, keyInObj = null) {
-    group ??= {
-        iconViewType: Constants.DEFAULT_GROUP_ICON_VIEW_TYPE,
-        title: browser.i18n.getMessage('title'),
-    };
+    group ??= UNKNOWN_GROUP_ICON_PROPS;
 
     let result = null;
 
@@ -753,11 +756,7 @@ export function getIconUrl(group, keyInObj = null) {
         try {
             result = Utils.convertSvgToUrl(icons[group.iconViewType].trim());
         } catch (e) {
-            result = getIconUrl({
-                title: '❓',
-                iconViewType: 'title',
-                iconColor: 'gray',
-            });
+            result = getIconUrl(UNKNOWN_GROUP_ICON_PROPS);
         }
     }
 

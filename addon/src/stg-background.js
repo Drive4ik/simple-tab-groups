@@ -2976,15 +2976,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
     data.hotkeys = [...currentData.hotkeys, ...data.hotkeys];
 
     data.hotkeys = data.hotkeys.filter((hotkey, index, self) => {
-        if (
-            Constants.HOTKEY_ACTIONS_WITH_CUSTOM_GROUP.includes(hotkey.action) &&
-            hotkey.groupId &&
-            !data.groups.some(gr => gr.id === hotkey.groupId)
-        ) {
-            hotkey.groupId = 0;
-        }
-
-        return self.findIndex(h => Object.keys(hotkey).every(key => hotkey[key] === h[key])) === index;
+        return self.findIndex(h => h.value === hotkey.value) === index;
     });
 
     data.lastCreatedGroupPosition = lastCreatedGroupPosition;
@@ -3674,7 +3666,7 @@ async function runMigrateForData(data) {
                     const valueParts = [];
 
                     if (hotkey.ctrlKey) {
-                        valueParts.push(IS_MAC ? 'MacCtrl' : 'Ctrl');
+                        valueParts.push(Utils.IS_MAC ? 'MacCtrl' : 'Ctrl');
                     }
 
                     if (hotkey.metaKey) {
