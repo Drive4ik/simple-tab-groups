@@ -3621,7 +3621,7 @@ async function runMigrateForData(data) {
             },
         },
         {
-            version: '5.1.1',
+            version: '5.2',
             async migration() {
                 // migrate groups
                 const mainGroupId = data.groups.find(group => group.isMain)?.id;
