@@ -4076,7 +4076,7 @@ async function init() {
 
         log.log('Management inited');
 
-        await Management.detectConflictedExtensions();
+        Management.detectConflictedExtensions();
 
         const resultMigrate = await runMigrateForData(data);
 

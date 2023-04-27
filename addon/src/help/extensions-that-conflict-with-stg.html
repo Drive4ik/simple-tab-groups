@@ -21,6 +21,35 @@
         #disabled-conflicted-extensions:empty + * {
             display: none;
         }
+
+        .block-content-buttons {
+            flex-grow: 1;
+            text-align: right;
+        }
+
+        .block-content-buttons > button {
+            margin: 0;
+        }
+
+        .block-content-buttons > button:not(:last-child) {
+            margin-right: 5px;
+        }
+
+        .ignored-text {
+            margin-left: 5px;
+        }
+
+        .ignored-text::before {
+            content: "(";
+        }
+
+        .ignored-text::after {
+            content: ")";
+        }
+
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 
