@@ -47,9 +47,17 @@ let reCreateTabsOnRemoveWindow = [],
             groupIds = [];
 
         function normalize(groups) {
-            groupIds = groupIds
-                .filter(groupId => groups.some(group => group.id === groupId))
-                .filter(Utils.onlyUniqueFilterLast);
+            groupIds = groupIds.filter((groupId, groupIndex) => {
+                const found = groups.some(group => group.id === groupId);
+
+                if (!found) {
+                    if (groupIndex < index) {
+                        index--;
+                    }
+                }
+
+                return found;
+            });
 
             if (index > groupIds.length - 1) {
                 index = groupIds.length - 1;
@@ -72,7 +80,9 @@ let reCreateTabsOnRemoveWindow = [],
                 }
             },
             add(groupId) {
-                index = groupIds.push(groupId) - 1;
+                const nextIndex = index + 1;
+                groupIds.splice(nextIndex, groupIds.length - index, groupId);
+                index = nextIndex;
             },
         };
     })();
