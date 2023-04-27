@@ -301,6 +301,10 @@
         "message": "Виберіть групу",
         "description": "Select group"
     },
+    "unknownGroup": {
+        "message": "Невідома група",
+        "description": "Unknown group"
+    },
     "hotkeyActionTitleLoadNextGroup": {
         "message": "Завантажити наступну групу",
         "description": "Load next group"
@@ -1130,6 +1134,22 @@
     "helpPageExtensionsThatConflictWithStgDesc2": {
         "message": "Щоб уникнути втрати вкладок або їх розташування у вікнах і групах, настійно рекомендуємо вимкнути або видалити увімкнені розширення, які конфліктують з додатком Simple Tab Groups. Ви можете зробити це на сторінці налаштувань додатків \"about:addons\" або натиснувши комбінацію клавіш <code>Ctrl+Shift+A</code>",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
+    },
+    "ignoreConflictedExtIgnore": {
+        "message": "Ігнорувати це розширення",
+        "description": "Ignore conflicted extension"
+    },
+    "ignoreConflictedExtDontIgnore": {
+        "message": "Не ігнорувати це розширення",
+        "description": "Don't ignore this extension"
+    },
+    "ignoreConflictedExtIgnoredText": {
+        "message": "ігнорується",
+        "description": "Extension is ignored"
+    },
+    "ignoreConflictedExtConfirm": {
+        "message": "Це розширення втручається в роботу STG, що може призвести до втрати вкладок.\nІгнорувати його?",
+        "description": "This addon will interfere with the STG, which may cause you to lose tabs.\nStill ignore it?"
     },
     "theme": {
         "message": "Тема",

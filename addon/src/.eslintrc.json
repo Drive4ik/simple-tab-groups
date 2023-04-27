@@ -8,6 +8,9 @@
     "ecmaVersion": 2022,
     "sourceType": "module"
   },
+  "extends": [
+    "plugin:vue/essential"
+  ],
   "rules": {
     "no-const-assign": 1,
     "no-extra-semi": 1,

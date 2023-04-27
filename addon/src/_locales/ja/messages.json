@@ -282,7 +282,7 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "ホットキーを入力",
+        "message": "ショートカットキーを入力",
         "description": "Type a shortcut"
     },
     "selectAction": {

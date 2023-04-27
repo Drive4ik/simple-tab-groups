@@ -278,7 +278,7 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Kısayol girin",
+        "message": "Bir kısayol girin",
         "description": "Type a shortcut"
     },
     "selectAction": {

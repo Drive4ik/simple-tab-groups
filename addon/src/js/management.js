@@ -23,7 +23,7 @@ export async function init() {
 async function onChanged({type}) {
     if (type === browser.management.ExtensionType.EXTENSION) {
         await load();
-        await detectConflictedExtensions();
+        detectConflictedExtensions();
     }
 }
 
@@ -51,10 +51,39 @@ export function isEnabled(id, extensionsStorage = extensions) {
     return extensionsStorage[id]?.enabled;
 }
 
-export async function detectConflictedExtensions(extensionsStorage = extensions) {
-    if (Constants.CONFLICTED_EXTENSIONS.some(id => isEnabled(id, extensionsStorage))) {
-        await Urls.openUrl('extensions-that-conflict-with-stg', true);
+export function detectConflictedExtensions(extensionsStorage = extensions) {
+    Constants.CONFLICTED_EXTENSIONS.some(id => {
+        if (isEnabled(id, extensionsStorage)) {
+            if (!isIgnoredConflictedExtension(id)) {
+                Urls.openUrl('extensions-that-conflict-with-stg', true);
+                return true;
+            }
+        } else if (extensionsStorage[id] && isIgnoredConflictedExtension(id)) {
+            dontIgnoreConflictedExtension(id);
+        }
+    });
+}
+
+export function isIgnoredConflictedExtension(extId) {
+    return getIgnoredConflictedExtensions().includes(extId);
+}
+
+export function ignoreConflictedExtension(extId) {
+    const ignored = getIgnoredConflictedExtensions();
+    if (!ignored.includes(extId)) {
+        ignored.push(extId);
     }
+    localStorage.ignoredConflictedExtensions = JSON.stringify(ignored);
+}
+
+export function dontIgnoreConflictedExtension(extId) {
+    let ignored = getIgnoredConflictedExtensions();
+    ignored = ignored.filter(id => id !== extId);
+    localStorage.ignoredConflictedExtensions = JSON.stringify(ignored);
+}
+
+export function getIgnoredConflictedExtensions() {
+    return JSON.parse(localStorage.ignoredConflictedExtensions || null) || [];
 }
 
 // can't have permission to read other addon icon :((

@@ -282,7 +282,7 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Introducir tecla de acceso rápido",
+        "message": "Escriba un atajo",
         "description": "Type a shortcut"
     },
     "selectAction": {

@@ -260,7 +260,7 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Εισαγάγετε το πλήκτρο πρόσβασης",
+        "message": "Πληκτρολογήστε μια συντόμευση",
         "description": "Type a shortcut"
     },
     "selectAction": {

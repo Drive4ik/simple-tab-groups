@@ -290,7 +290,7 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Digite a tecla de atalho",
+        "message": "Digite um atalho",
         "description": "Type a shortcut"
     },
     "selectAction": {

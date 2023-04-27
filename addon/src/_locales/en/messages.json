@@ -305,6 +305,10 @@
         "message": "Select group",
         "description": "Select group"
     },
+    "unknownGroup": {
+        "message": "Unknown group",
+        "description": "Unknown group"
+    },
     "hotkeyActionTitleLoadNextGroup": {
         "message": "Load next group",
         "description": "Load next group"
@@ -1134,6 +1138,22 @@
     "helpPageExtensionsThatConflictWithStgDesc2": {
         "message": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page \"about:addons\" or by pressing the key combination <code>Ctrl+Shift+A</code>",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
+    },
+    "ignoreConflictedExtIgnore": {
+        "message": "Ignore this extension",
+        "description": "Ignore conflicted extension"
+    },
+    "ignoreConflictedExtDontIgnore": {
+        "message": "Don't ignore this extension",
+        "description": "Don't ignore this extension"
+    },
+    "ignoreConflictedExtIgnoredText": {
+        "message": "ignored",
+        "description": "Extension is ignored"
+    },
+    "ignoreConflictedExtConfirm": {
+        "message": "This addon will interfere with the STG, which may cause you to lose tabs.\nStill ignore it?",
+        "description": "This addon will interfere with the STG, which may cause you to lose tabs.\nStill ignore it?"
     },
     "theme": {
         "message": "Theme",

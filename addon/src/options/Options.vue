@@ -33,6 +33,7 @@
     document.title = browser.i18n.getMessage('openSettings');
 
     export default {
+        name: 'options-page',
         mixins: [defaultGroupMixin],
         data() {
             this.HOTKEY_ACTIONS = Constants.HOTKEY_ACTIONS;
@@ -238,24 +239,13 @@
             },
             'options.hotkeys': {
                 handler(hotkeys, oldValue) {
-                    let hasChange = false;
-
                     hotkeys = hotkeys.filter((hotkey, index, self) => {
-                        if (
-                            Constants.HOTKEY_ACTIONS_WITH_CUSTOM_GROUP.includes(hotkey.action) &&
-                            hotkey.groupId &&
-                            !this.groups.some(gr => gr.id === hotkey.groupId)
-                        ) {
-                            hotkey.groupId = 0;
-                            hasChange = true;
-                        }
-
                         return self.findIndex(h => h.value === hotkey.value) === index;
                     });
 
                     const hotheysIsValid = hotkeys.every(hotkey => hotkey.action && isValidHotkeyValue(hotkey.value));
 
-                    if (hotheysIsValid && (hasChange || oldValue)) {
+                    if (hotheysIsValid && oldValue) {
                         Messages.sendMessageModule('BG.saveOptions', {hotkeys});
                     }
                 },
@@ -274,6 +264,9 @@
         computed: {
             showEnableDarkThemeNotification() {
                 return Utils.getThemeApply(this.options.theme) === 'dark';
+            },
+            groupIds() {
+                return this.groups.map(group => group.id);
             },
         },
         methods: {
@@ -852,7 +845,7 @@
                         </div>
                         <div class="select">
                             <select v-model="hotkey.action">
-                                <option v-if="!hotkey.action" selected disabled value="" v-text="lang('selectAction')"></option>
+                                <option v-if="!hotkey.action" disabled value="" v-text="lang('selectAction')"></option>
                                 <option v-for="action in HOTKEY_ACTIONS" :key="action" :value="action" v-text="getHotkeyActionTitle(action)"></option>
                             </select>
                         </div>
@@ -868,6 +861,7 @@
                             <div class="select">
                                 <select v-model.number="hotkey.groupId">
                                     <option :value="0" v-text="lang('selectGroup')"></option>
+                                    <option v-if="hotkey.groupId && !groupIds.includes(hotkey.groupId)" disabled :value="hotkey.groupId" v-text="lang('unknownGroup')"></option>
                                     <option v-for="group in groups" :key="group.id" :value="group.id" v-text="getGroupTitle(group)"></option>
                                 </select>
                             </div>

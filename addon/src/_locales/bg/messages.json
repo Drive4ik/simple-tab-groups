@@ -218,7 +218,7 @@
         }
     },
     "deleteTab": {
-        "message": "Изтриване на раздел",
+        "message": "Изтриване на раздела",
         "description": "Delete tab"
     },
     "createNewTab": {
@@ -270,7 +270,7 @@
         "description": "Regular expressions"
     },
     "regexpForTabsHelp": {
-        "message": "Въведете регулярни изрази за адреси от мрежата. При съвпадение разделът автоматично ще бъде премесен в тази група.\nПо едно правило на ред, но може да има неограничен брой правила.\nПримери:\ngithub\\.com/drive4ik/simple-tab-groups - прехваща страниците от хранилището на добавката\nbugzilla\\.mozilla\\.org - прехваща страници от дефектите на Firefox\n(facebook|twitter|youtube)\\.com - прехваща страници от социалните мрежи",
+        "message": "Въведете регулярни изрази за адреси в интернет. При съвпадение разделът автоматично ще бъде премесен в тази група.\nПо едно правило на ред, но може да има неограничен брой правила.\nПримери:\ngithub\\.com/drive4ik/simple-tab-groups - прехваща страниците от хранилището на добавката\nbugzilla\\.mozilla\\.org - прехваща страници от дефектите на Firefox\n(facebook|twitter|youtube)\\.com - прехваща страници от социални мрежи",
         "description": "Regular exceptions helper"
     },
     "hotkeysTitle": {
@@ -290,16 +290,20 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Въведете клавишна комбинация",
+        "message": "Натиснете клавиши",
         "description": "Type a shortcut"
     },
     "selectAction": {
-        "message": "Избиране",
+        "message": "Изберете действие",
         "description": "Select action"
     },
     "selectGroup": {
         "message": "Избор на група",
         "description": "Select group"
+    },
+    "unknownGroup": {
+        "message": "Непозната група",
+        "description": "Unknown group"
     },
     "hotkeyActionTitleLoadNextGroup": {
         "message": "Отваря следващата група",
@@ -362,11 +366,11 @@
         "description": "Move selected tabs to custom group"
     },
     "hotkeyActionTitleDiscardGroup": {
-        "message": "Освобождава памет от разделите в групата",
+        "message": "Освобождаване на памет от разделите в групата",
         "description": "Hotkey action Discard group"
     },
     "hotkeyActionTitleDiscardOtherGroups": {
-        "message": "Освобождава памет от разделите в другите групи",
+        "message": "Освобождаване на памет от разделите в другите групи",
         "description": "Hotkey action Discard other groups"
     },
     "hotkeyActionTitleReloadAllTabsInCurrentGroup": {
@@ -878,7 +882,7 @@
         "description": "Please, update addon to latest version"
     },
     "hotkeyActionTitleRenameGroup": {
-        "message": "Преименуване на група",
+        "message": "Преименуване на групата",
         "description": "Rename group"
     },
     "noGroupsAvailable": {

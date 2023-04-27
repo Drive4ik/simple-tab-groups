@@ -24,6 +24,7 @@
     import JSON from '/js/json.js';
 
     import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
+    import startUpData from '/js/mixins/start-up-data.mixin.js';
 
     window.logger = new Logger('Manage');
 
@@ -40,7 +41,8 @@
         availableTabKeys = new Set(['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'thumbnail', 'windowId']);
 
     export default {
-        mixins: [defaultGroupMixin],
+        name: 'manage-page',
+        mixins: [defaultGroupMixin, startUpData],
         data() {
             return {
                 DEFAULT_COOKIE_STORE_ID: Constants.DEFAULT_COOKIE_STORE_ID,
@@ -103,7 +105,7 @@
         },
         async mounted() {
             const log = logger.start('mounted');
-            const startUpData = await backgroundSelf.startUpData(this.options.showTabsWithThumbnailsInManageGroups);
+            const startUpData = await this.startUpData(this.options.showTabsWithThumbnailsInManageGroups);
 
             this.loadWindows(startUpData);
             this.loadGroups(startUpData);

@@ -154,9 +154,27 @@ new Vue({
 
             return title.join(' ');
         },
-        formatTime({time}) {
-            let [hms, ms] = new Date(time).toISOString().slice(11, -1).split('.');
+        formatTime({time}, full = false) {
+            let hms, ms,
+                date = new Date(time),
+                ISOStr = date.toISOString().slice(0, -1);
+
+            if (full) {
+                hms = ISOStr.slice(0, -4).split('T').join(' ');
+                ms = ISOStr.slice(-3);
+            } else {
+                [hms, ms] = ISOStr.slice(11).split('.');
+            }
             return `${hms} <span class="is-size-6 has-text-weight-semibold is-family-monospace">${ms}</span>`;
+        },
+        getStackToView(stack) {
+            try {
+                const oldStack = stack.stack;
+                Object.assign(stack, JSON.parse(stack.message));
+                stack.stack = ['From message:', ...stack.stack.split('\n'), ...oldStack];
+            } catch (e) { }
+
+            return JSON.stringify(stack, null, 4);
         },
 
         toggleShowStack(log) {

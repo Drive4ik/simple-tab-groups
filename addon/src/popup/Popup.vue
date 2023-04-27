@@ -25,6 +25,7 @@
     import JSON from '/js/json.js';
 
     import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
+    import startUpData from '/js/mixins/start-up-data.mixin.js';
     import syncCloudMixin from '/js/mixins/sync-cloud.mixin.js';
 
     const isSidebar = '#sidebar' === window.location.hash;
@@ -50,7 +51,8 @@
         availableTabKeys = new Set(['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'lastAccessed', 'audible', 'mutedInfo', 'windowId']);
 
     export default {
-        mixins: [defaultGroupMixin, syncCloudMixin],
+        name: 'popup-page',
+        mixins: [defaultGroupMixin, startUpData, syncCloudMixin],
         data() {
             return {
                 isSidebar: isSidebar,
@@ -125,7 +127,7 @@
         },
         async mounted() {
             const log = logger.start('mounted');
-            const startUpData = await backgroundSelf.startUpData();
+            const startUpData = await this.startUpData();
 
             this.loadWindows(startUpData);
             this.loadGroups(startUpData);
@@ -1327,10 +1329,10 @@
                                     </figure>
                                 </div>
                                 <div class="item-title clip-text">
-                                    <span v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID" :class="`size-16 userContext-icon identity-icon-${containers[group.newTabContainer]?.icon} identity-color-${containers[group.newTabContainer]?.color}`"></span>
                                     <figure v-if="group.isArchive" class="image is-16x16">
                                         <img src="/icons/archive.svg" />
                                     </figure>
+                                    <span v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID" :class="`size-16 userContext-icon identity-icon-${containers[group.newTabContainer]?.icon} identity-color-${containers[group.newTabContainer]?.color}`"></span>
                                     <figure
                                         v-if="showMuteIconGroup(group)"
                                         class="image is-16x16"
@@ -1451,10 +1453,10 @@
                                 </figure>
                             </div>
                             <div class="item-title clip-text">
-                                <span v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID" :title="containers[group.newTabContainer]?.name" :class="`size-16 userContext-icon identity-icon-${containers[group.newTabContainer]?.icon} identity-color-${containers[group.newTabContainer]?.color}`"></span>
                                 <figure v-if="group.isArchive" class="image is-16x16">
                                     <img src="/icons/archive.svg" />
                                 </figure>
+                                <span v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID" :title="containers[group.newTabContainer]?.name" :class="`size-16 userContext-icon identity-icon-${containers[group.newTabContainer]?.icon} identity-color-${containers[group.newTabContainer]?.color}`"></span>
                                 <figure
                                     v-if="showMuteIconGroup(group)"
                                     class="image is-16x16"
@@ -1575,8 +1577,10 @@
                         <img :src="groupToShow.iconUrlToDisplay" class="is-inline-block size-16" />
                     </div>
                     <div class="item-title clip-text">
+                        <figure v-if="groupToShow.isArchive" class="image is-16x16">
+                            <img src="/icons/archive.svg" />
+                        </figure>
                         <span v-if="groupToShow.newTabContainer !== DEFAULT_COOKIE_STORE_ID" :title="containers[groupToShow.newTabContainer]?.name" :class="`size-16 userContext-icon identity-icon-${containers[groupToShow.newTabContainer]?.icon} identity-color-${containers[groupToShow.newTabContainer]?.color}`"></span>
-                        <img v-if="groupToShow.isArchive" src="/icons/archive.svg" class="size-16" />
                         <span class="group-title" v-text="getGroupTitle(groupToShow)"></span>
                     </div>
                     <div class="item-action is-unselectable">
