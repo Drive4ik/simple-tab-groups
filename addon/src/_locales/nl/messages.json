@@ -1,6 +1,6 @@
 {
     "extensionDescription": {
-        "message": "Creëer, verander en wissel snel tussen tabgroepen",
+        "message": "Creëer en wijzig tabgroepen en wissel er snel tussen",
         "description": "Description of the extension."
     },
     "openSettings": {
@@ -12,7 +12,7 @@
         "description": "Manage groups"
     },
     "setTabIconAsGroupIcon": {
-        "message": "Stel tabbladicoon in als groepicoon",
+        "message": "Stel tabbladicoon in als groepsicoon",
         "description": "Set tab icon as group icon"
     },
     "moveTabToGroupDisabledTitle": {
@@ -20,7 +20,7 @@
         "description": "Move tab to group title"
     },
     "moveTabToGroupMessage": {
-        "message": "Tabblad \"$tabtitle$\" is verplaatst naar groep \"$grouptitle$\".\n\nKlik hier om deze tabblad te tonen.",
+        "message": "Tabblad \"$tabtitle$\" is verplaatst naar groep \"$grouptitle$\".\n\nKlik hier om dit tabblad te tonen.",
         "description": "Tab moved popup title",
         "placeholders": {
             "grouptitle": {
@@ -57,6 +57,10 @@
         "message": "Annuleren",
         "description": "Cancel"
     },
+    "searchPlaceholder": {
+        "message": "Zoeken",
+        "description": "Search placeholder"
+    },
     "invalidRegExpRuleTitle": {
         "message": "Regel '$regexp$' is niet geldig en zal worden overgeslagen.",
         "description": "Invalid rule description",
@@ -72,11 +76,11 @@
         "description": "Grid display"
     },
     "manageGroupViewFreeArrange": {
-        "message": "Vrij plaatsen (in toekomstige versies)",
+        "message": "Vrij positioneren (in toekomstige versies)",
         "description": "Free arrange"
     },
     "closePopupAfterChangeGroup": {
-        "message": "Sluit popup na het wisselen van groep",
+        "message": "Sluit pop-up na het wisselen van groep",
         "description": "Close popup after changing group"
     },
     "openManageGroupsInTab": {
@@ -84,8 +88,12 @@
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
-        "message": "Toon dialoogvenster om verwijderen van een groep te bevestigen",
-        "description": "Show confirm dialog before group delete"
+        "message": "Toon dialoogvenster om verwijderen van de groep te bevestigen",
+        "description": "Show confirmation dialog before deleting the group"
+    },
+    "showConfirmDialogBeforeGroupArchiving": {
+        "message": "Toon dialoogvenster om archiveren van de groep te bevestigen",
+        "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
         "message": "Maak reservekopie van Simple Tab Groups",
@@ -100,15 +108,15 @@
         "description": "Create backup"
     },
     "includeTabThumbnailsIntoBackup": {
-        "message": "Voorbeeld van tabbladen toevoegen aan reservekopie (produceert een groter bestand)",
-        "description": "Include tab thumbnails into backup (make backup file size bigger)"
+        "message": "Voorbeeld van tabbladen toevoegen aan reservekopie (maakt bestand groter)",
+        "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "Simple Tab Groups herstellen",
+        "message": "Simple Tab Groups herstellen vanuit reservekopie",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
-        "message": "Laadt een reservekopie van de tabgroepen die je wilt herstellen.",
+        "message": "Laad een reservekopie van de tabgroepen die je wilt herstellen.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
     "importAddonSettingsButton": {
@@ -116,15 +124,15 @@
         "description": "Restore backup"
     },
     "importSettingsOldTabGroupsAddonTitle": {
-        "message": "Herstel Quicksaver's \"Tab Groups\"",
+        "message": "Herstel Quicksavers \"Tab Groups\"",
         "description": "Restore Quicksaver's \"Tab Groups\""
     },
     "importSettingsOldTabGroupsAddonDescription": {
-        "message": "Laadt een reservekopie van de oude \"Tab Groups\" add-on.",
+        "message": "Laad een reservekopie van de oude \"Tab Groups\" add-on.",
         "description": "Load a backup file old \"Tab Groups\" addon."
     },
     "openGroupAfterChange": {
-        "message": "Open groep nadat er naartoe gewisseld is",
+        "message": "Open groep nadat er naar gewisseld is",
         "description": "Open group after changing to it"
     },
     "newGroupTitle": {
@@ -137,6 +145,16 @@
             }
         }
     },
+    "searchNotFoundTitle": {
+        "message": "Geen resultaten gevonden voor \"$search$\"",
+        "description": "No results found",
+        "placeholders": {
+            "search": {
+                "content": "$1",
+                "example": "mail"
+            }
+        }
+    },
     "sortGroupsAZ": {
         "message": "Sorteer groepen [A–Z]",
         "description": "Sort groups [A-Z]"
@@ -145,8 +163,12 @@
         "message": "Sorteer groepen [Z–A]",
         "description": "Sort groups [Z-A]"
     },
+    "generalTitle": {
+        "message": "Algemeen",
+        "description": "General"
+    },
     "groupSettings": {
-        "message": "Instellingen voor groepen",
+        "message": "Groepsinstellingen",
         "description": "Group settings"
     },
     "deleteGroup": {
@@ -154,7 +176,7 @@
         "description": "Delete group"
     },
     "confirmDeleteGroup": {
-        "message": "Wil je de groep \"$grouptitle$\" verwijderen?<br>Het verwijderen van de groep sluit ook de tabbladen en verbonden venster als deze open is.",
+        "message": "Wil je groep \"$grouptitle$\" verwijderen?<br>Het verwijderen van een groep sluit ook de bijhorende, openstaande tabbladen en vensters!",
         "description": "Delete group?",
         "placeholders": {
             "grouptitle": {
@@ -173,6 +195,20 @@
             }
         }
     },
+    "groupTabsCountActive": {
+        "message": "$active$/$count$ tabbladen actief",
+        "description": "Group tabs count active",
+        "placeholders": {
+            "active": {
+                "content": "$1",
+                "example": "2"
+            },
+            "count": {
+                "content": "$2",
+                "example": "4"
+            }
+        }
+    },
     "deleteTab": {
         "message": "Verwijder tabblad",
         "description": "Delete tab"
@@ -182,7 +218,7 @@
         "description": "Open new tab"
     },
     "createNewGroup": {
-        "message": "Creëer nieuwe tabgroep",
+        "message": "Maak nieuwe tabgroep aan",
         "description": "Create new group"
     },
     "goBackButtonTitle": {
@@ -206,7 +242,7 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Excuses, je kunt geen aangepast icoon laden in deze popup, maar je kunt een aangepast groepicoon laden in \"Groepen beheren\".\n\"Groepen beheren\" openen?",
+        "message": "Sorry, je kan geen aangepast icoon laden in deze pop-up, maar je kan een aangepast groepsicoon laden via \"Groepen beheren\".\n\"Groepen beheren\" openen?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -214,19 +250,19 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Pak tabbladen met containers beet en verplaats ze naar deze groep",
+        "message": "Vang containertabbladen en verplaats ze naar deze groep",
         "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
-        "message": "Regular expression voor tabbladen beetpakken",
+        "message": "Reguliere expressies voor het vangen van tabbladen",
         "description": "Regular expressions for catch tabs"
     },
     "regexpForTabsPlaceholder": {
-        "message": "Regular expression",
+        "message": "Reguliere expressies",
         "description": "Regular expressions"
     },
     "regexpForTabsHelp": {
-        "message": "Voer een regular expression voor een webadres in. Tabbladen die hieraan voldoen zullen automatisch naar deze groep worden verplaatst.\nGebruik een regel per regular expression, je kunt er zo veel gebruiken als je wilt.\nBijvoorbeeld:\ngithub\\.com/drive4ik/simple-tab-groups - pakt alle pagina's in de repository van deze add-on beet \nbugzilla\\.mozilla\\.org - pakt Firefox bug reports beet\n(facebook|twitter|youtube)\\.com - pakt sociale media websites beet",
+        "message": "Voer hier reguliere expressies voor webadressen in. Tabbladen die hieraan voldoen zullen automatisch naar deze groep worden verplaatst.\nGebruik één lijn per regel, je kunt er zoveel gebruiken als je wilt.\nVoorbeelden:\ngithub\\.com/drive4ik/simple-tab-groups - vangt alle pagina's in de repository van deze add-on \nbugzilla\\.mozilla\\.org - vangt bugrapporten van Firefox\n(facebook|twitter|youtube)\\.com - vangt al je socialemediapagina's",
         "description": "Regular exceptions helper"
     },
     "hotkeysTitle": {
@@ -261,6 +297,30 @@
         "message": "Laad vorige groep",
         "description": "Load previous group"
     },
+    "hotkeyActionTitleLoadNextUnloadedGroup": {
+        "message": "Laad volgende niet-geladen groep",
+        "description": "Load next unloaded group"
+    },
+    "hotkeyActionTitleLoadPrevUnloadedGroup": {
+        "message": "Laad vorige niet-geladen groep",
+        "description": "Load previous unloaded group"
+    },
+    "hotkeyActionTitleLoadNextNonEmptyGroup": {
+        "message": "Laad volgende niet-lege groep",
+        "description": "Load next non-empty group"
+    },
+    "hotkeyActionTitleLoadPrevNonEmptyGroup": {
+        "message": "Laad vorige niet-lege groep",
+        "description": "Load previous non-empty group"
+    },
+    "hotkeyActionTitleLoadHistoryNextGroup": {
+        "message": "Laad volgende groep uit geschiedenis",
+        "description": "Load next group from history"
+    },
+    "hotkeyActionTitleLoadHistoryPrevGroup": {
+        "message": "Laad vorige groep uit geschiedenis",
+        "description": "Load previous group from history"
+    },
     "hotkeyActionTitleLoadFirstGroup": {
         "message": "Laad eerste groep",
         "description": "Load first group"
@@ -282,11 +342,27 @@
         "description": "Delete current group"
     },
     "hotkeyActionTitleOpenManageGroups": {
-        "message": "Open \"Beheer groepen\"",
+        "message": "Open \"Groepen beheren\"",
         "description": "Open manage groups"
     },
+    "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
+        "message": "Verplaats geselecteerde tabs naar aangepaste groep",
+        "description": "Move selected tabs to custom group"
+    },
+    "hotkeyActionTitleDiscardGroup": {
+        "message": "Verwijder groep uit werkgeheugen",
+        "description": "Hotkey action Discard group"
+    },
+    "hotkeyActionTitleDiscardOtherGroups": {
+        "message": "Verwijder andere groepen uit werkgeheugen",
+        "description": "Hotkey action Discard other groups"
+    },
+    "hotkeyActionTitleReloadAllTabsInCurrentGroup": {
+        "message": "Vernieuw alle tabbladen in huidige groep",
+        "description": "Reload all tabs in current group"
+    },
     "whatsWrongMessage": {
-        "message": "Wat is er mis…\nNeem alsjeblieft contact op met de ontwikkelaar met het e-mailadres voor ondersteuning en voeg de meest recente foutlogboeken toe (knop onderaan opties)",
+        "message": "Wat is er mis…\nNeem a.u.b. contact op met de ontwikkelaar via het e-mailadres voor ondersteuning en voeg de meest recente foutlogboeken toe (zie knop onderaan de \"Opties\" pagina)\nKlik hier om verder te gaan...",
         "description": "Whats wrong...\nPlease contact with developer by support email with last error logs (exist button at bottom of options)"
     },
     "saveErrorLogsIntoFile": {
@@ -295,12 +371,748 @@
     },
     "undoRemoveGroupItemTitle": {
         "message": "Verwijderen groep \"$grouptitle$\" ongedaan maken",
-        "description": "Undo remove group menu title",
+        "description": "Undelete a group menu title",
         "placeholders": {
             "grouptitle": {
                 "content": "$1",
                 "example": "Group 2"
             }
         }
+    },
+    "undoRemoveGroupNotification": {
+        "message": "Klik hier om de verwijdering van groep \"$grouptitle$\" te annuleren",
+        "description": "Click here to cancel the deletion of the group title",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group 2"
+            }
+        }
+    },
+    "isStickyGroupTitle": {
+        "message": "Kleverige groep",
+        "description": "Sticky group"
+    },
+    "isStickyGroupHelp": {
+        "message": "Tabs in deze groep zullen nooit automatisch naar een andere groep verplaatst worden",
+        "description": "Tabs in this group will never be automatically moved to another group"
+    },
+    "iconStyle": {
+        "message": "Icoonstijl",
+        "description": "Icon style"
+    },
+    "discardTabsAfterHide": {
+        "message": "Verwijder tabs uit werkgeheugen na het verbergen ervan",
+        "description": "Unload tabs from memory after closing a group"
+    },
+    "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
+        "message": "Het is niet mogelijk om van groep te wisselen omdat één van de geopende tabs de microfoon of camera deelt",
+        "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
+    },
+    "foundHiddenUnSyncTabsDescription": {
+        "message": "Verborgen, niet-gesynchroniseerde tabs gevonden. Klik op de tab om deze in de huidige groep/venster te tonen, of:",
+        "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
+    },
+    "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
+        "message": "Verplaats al deze tabs naar de huidige groep/venster",
+        "description": "Move all of these tabs into current group/window"
+    },
+    "actionHiddenUnSyncWindowTabsCreateGroup": {
+        "message": "Maak een nieuwe groep aan met enkel tabs van het huidige venster",
+        "description": "Create new group with tabs only from the current window"
+    },
+    "actionHiddenUnSyncTabsCreateGroup": {
+        "message": "Maak een nieuwe groep aan met al deze tabs",
+        "description": "Create new group with all of these tabs"
+    },
+    "actionHiddenUnSyncTabsCloseAll": {
+        "message": "Sluit al deze tabs",
+        "description": "Close all of these tabs"
+    },
+    "updateTabThumbnail": {
+        "message": "Voorbeeld van deze tab bijwerken",
+        "description": "Update thumbnail for this tab"
+    },
+    "notFoundWindowsAddonStoppedWorking": {
+        "message": "Fout: geen enkel normaal (niet: privé/incognito/pop-up) venster gevonden.\nAdd-on is gestopt met werken. Herstart de browser a.u.b.",
+        "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
+    },
+    "ffFailedAndLostDataMessage": {
+        "message": "Er trad een fout op in FF en alle groepen gingen verloren.\nAls u een reservekopie heeft, kunt u de data daaruit herstellen.",
+        "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
+    },
+    "openGroupInNewWindow": {
+        "message": "Open de groep in een nieuw venster",
+        "description": "Open group in new window"
+    },
+    "muteTabsWhenGroupCloseAndRestoreWhenOpen": {
+        "message": "Tabs dempen bij het sluiten van de groep en herstellen bij het openen ervan",
+        "description": "Mute tabs when group close and restore when open"
+    },
+    "showTabAfterMovingItIntoThisGroup": {
+        "message": "Toon de tab na het automatisch verplaatsen ervan naar deze groep",
+        "description": "Show the tab after auto-moving it into this group"
+    },
+    "tabMoving": {
+        "message": "Tab wordt verplaatst",
+        "description": "Tab moving"
+    },
+    "includeTabFavIconsIntoBackup": {
+        "message": "Tab favicons toevoegen aan reservekopie (maakt bestand groter)",
+        "description": "Include tab fav-icons in backup (makes backup file size bigger)"
+    },
+    "groupRemovedByExtension": {
+        "message": "Groep \"$group$\" verwijderd door extensie: $extension$",
+        "description": "Group \"$group$\" removed by extension: $extension$",
+        "placeholders": {
+            "group": {
+                "content": "$1",
+                "example": "group title"
+            },
+            "extension": {
+                "content": "$2",
+                "example": "external extension title"
+            }
+        }
+    },
+    "clickHereToReloadAddon": {
+        "message": "Er ging iets fout, klik hier om de STG add-on opnieuw in te laden",
+        "description": "Something went wrong, click here to reload STG addon"
+    },
+    "extendedTabSearch": {
+        "message": "Uitgebreid zoeken",
+        "description": "Extended search"
+    },
+    "movingMultipleTabsText": {
+        "message": "$count$ tabs worden verplaatst",
+        "description": "Moving $count$ tabs",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "7"
+            }
+        }
+    },
+    "pinnedTabsAreNotSupported": {
+        "message": "Vastgemaakte tabs worden niet ondersteund",
+        "description": "Pinned tabs are not supported"
+    },
+    "thisUrlsAreNotSupported": {
+        "message": "Deze URL's \"$urls$\" worden niet ondersteund",
+        "description": "This urls \"$urls$\" are not supported",
+        "placeholders": {
+            "urls": {
+                "content": "$1",
+                "example": "about:addons, file://..."
+            }
+        }
+    },
+    "thisTabsCanNotBeHidden": {
+        "message": "Deze tabs kunnen niet verborgen worden omdat ze vastgemaakt zijn, de microfoon of camera gebruiken of het scherm delen: \"$titles$\"",
+        "description": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
+        "placeholders": {
+            "titles": {
+                "content": "$1",
+                "example": "some titles"
+            }
+        }
+    },
+    "moveMultipleTabsToGroupMessage": {
+        "message": "$tabscount$ tabs werden verplaatst.\nKlik hier om de eerste tab te openen",
+        "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "autoBackupEnableTitle": {
+        "message": "Automatische reservekopieën activeren",
+        "description": "Enable auto backup"
+    },
+    "autoBackupCreateEveryTitle": {
+        "message": "Maak een reservekopie aan elke:",
+        "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyMinutes": {
+        "message": "minu(u)t(en)",
+        "description": "minute(s)"
+    },
+    "autoBackupIntervalKeyHours": {
+        "message": "uur",
+        "description": "hour(s)"
+    },
+    "autoBackupIntervalKeyDays": {
+        "message": "dag(en)",
+        "description": "day(s)"
+    },
+    "autoBackupLastBackupTitle": {
+        "message": "Laatste reservekopie:",
+        "description": "Last backup:"
+    },
+    "enableDarkTheme": {
+        "message": "Donker thema activeren",
+        "description": "Enable dark theme"
+    },
+    "enableDarkThemeNotification": {
+        "message": "Voor een volledige ondersteuning van het donkere thema, zet u parameter <code>svg.context-properties.content.enabled</code> op <code>true</code> via de <code>about:config</code> pagina<br><a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">Configuratie-editor voor Firefox</a>",
+        "description": "Fully support the dark theme text"
+    },
+    "importSettingsPanoramaViewAddonTitle": {
+        "message": "Herstel photodiodes \"Panorama View\"",
+        "description": "Restore photodiode's \"Panorama View\""
+    },
+    "importSettingsPanoramaViewAddonDescription": {
+        "message": "Laad een reservekopie uit de \"Panorama View\"-add-on",
+        "description": "Load a backup file from \"Panorama View\" addon."
+    },
+    "importSettingsSyncTabGroupsAddonTitle": {
+        "message": "Herstel Morikkos \"Sync Tab Groups\"",
+        "description": "Restore Morikko's \"Sync Tab Groups\""
+    },
+    "importSettingsSyncTabGroupsAddonDescription": {
+        "message": "Laad een reservekopie uit de \"Sync Tab Groups\"-add-on",
+        "description": "Load a backup file from \"Sync Tab Groups\" addon."
+    },
+    "browseFileTitle": {
+        "message": "Bladeren...",
+        "description": "Browse..."
+    },
+    "openBackupFolder": {
+        "message": "Open de map met reservekopieën",
+        "description": "Open backup folder"
+    },
+    "createNewGroupWhenOpenNewWindow": {
+        "message": "Maak een nieuwe groep aan bij het openen van een nieuw venster",
+        "description": "Create a new group when opening a new window"
+    },
+    "allowAccessToBookmarks": {
+        "message": "Geef toegang tot bladwijzers",
+        "description": "Allow access to bookmarks"
+    },
+    "openBookmarkInGroup": {
+        "message": "Open bladwijzer in groep",
+        "description": "Open bookmark in group"
+    },
+    "bookmarkNotAllowed": {
+        "message": "Deze bladwijzer is niet toegelaten",
+        "description": "This bookmark is not allowed"
+    },
+    "openLinkInGroupDisabledTitle": {
+        "message": "Open link in groep",
+        "description": "Open link in group title"
+    },
+    "showContextMenuOnTabs": {
+        "message": "Toon contextmenu op tabs",
+        "description": "Show context menu on tabs"
+    },
+    "showContextMenuOnLinks": {
+        "message": "Toon contextmenu op links",
+        "description": "Show context menu on links"
+    },
+    "groupsCreatedCount": {
+        "message": "$groupscount$ groepen aangemaakt",
+        "description": "Groups created count",
+        "placeholders": {
+            "groupscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "noGroupsCreated": {
+        "message": "Geen groepen aangemaakt",
+        "description": "No groups created"
+    },
+    "noAccessToBookmarks": {
+        "message": "U heeft geen toegang tot bladwijzers. Activeer deze via de add-oninstellingen",
+        "description": "You do not have access to bookmarks. Enable it on in addon settings"
+    },
+    "exportGroupToBookmarks": {
+        "message": "Exporteer groep naar bladwijzers",
+        "description": "Export group to bookmarks"
+    },
+    "defaultBookmarkFolderLocation": {
+        "message": "Standaardlocatie voor de bladwijzermap",
+        "description": "Default bookmark folder location"
+    },
+    "groupExportedToBookmarks": {
+        "message": "Groep '$grouptitle$' succesvol geëxporteerd naar bladwijzers",
+        "description": "Group '$grouptitle$' successfully exported to bookmarks",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "groupWithoutTabs": {
+        "message": "Deze groep heeft geen tabs",
+        "description": "This group has no tabs"
+    },
+    "exportAllGroupsToBookmarks": {
+        "message": "Exporteer alle groepen naar bladwijzers",
+        "description": "Export all groups to bookmarks"
+    },
+    "allGroupsExportedToBookmarks": {
+        "message": "Alle groepen succesvol geëxporteerd naar bladwijzers",
+        "description": "All groups successfully exported to bookmarks"
+    },
+    "discardTabTitle": {
+        "message": "Verwijder tab uit werkgeheugen",
+        "description": "Discard tab"
+    },
+    "folderNameTitle": {
+        "message": "Mapnaam",
+        "description": "Folder name title"
+    },
+    "backupSuccessfullyRestored": {
+        "message": "Reservekopie succesvol hersteld!",
+        "description": "Backup successfully restored"
+    },
+    "loading": {
+        "message": "Aan het laden, gelieve te wachten...",
+        "description": "Loading, please wait..."
+    },
+    "showOtherTabs": {
+        "message": "Toon andere tabs",
+        "description": "Show other tabs"
+    },
+    "showNotificationAfterGroupDelete": {
+        "message": "Toon notificatie na het verwijderen van een groep",
+        "description": "Show notification after group delete"
+    },
+    "reloadTab": {
+        "message": "Tab vernieuwen",
+        "description": "Reload tab"
+    },
+    "thisTabIsNotSupported": {
+        "message": "Deze tab wordt niet ondersteund",
+        "description": "This tab is not supported"
+    },
+    "showExtendGroupsPopupWithActiveTabs": {
+        "message": "Toon actieve tabs in groepspop-up",
+        "description": "Show active tabs in groups popup"
+    },
+    "reloadAllTabsInGroup": {
+        "message": "Alle tabs in groep vernieuwen",
+        "description": "Reload all tabs in group"
+    },
+    "tabsCreatedCount": {
+        "message": "$tabscount$ tabs aangemaakt",
+        "description": "Tabs created count",
+        "placeholders": {
+            "tabscount": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "tabsNotCreated": {
+        "message": "Tabs niet aangemaakt",
+        "description": "Tabs not created"
+    },
+    "showTabsWithThumbnailsInManageGroups": {
+        "message": "Toon tabs met voorbeelden op \"Groepen beheren\"-pagina",
+        "description": "Show tabs with thumbnails in \"Manage groups\" page"
+    },
+    "alwaysOpenTabsInContainer": {
+        "message": "Tabs altijd in container openen",
+        "description": "Always open tabs in container"
+    },
+    "temporaryContainerTitle": {
+        "message": "⌚ Tijdelijke container",
+        "description": "⌚Temporary Container"
+    },
+    "thisContainerIsNotTemporary": {
+        "message": "Deze container '$containerName$' is niet langer tijdelijk",
+        "description": "This container '$containerName$' is no longer temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "my container"
+            }
+        }
+    },
+    "thisContainerNowIsTemporary": {
+        "message": "Deze container '$containerName$' is nu tijdelijk geworden",
+        "description": "This container '$containerName$' has now become temporary",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "⌚Temporary Container 5"
+            }
+        }
+    },
+    "importAddonSettings": {
+        "message": "Add-oninstellingen importeren",
+        "description": "Import addon settings"
+    },
+    "importGroups": {
+        "message": "Groepen importeren",
+        "description": "Import groups"
+    },
+    "pinnedTabs": {
+        "message": "Vastgemaakte tabs",
+        "description": "Pinned tabs"
+    },
+    "eraseAddonSettingsWarningTitle": {
+        "message": "Deze actie zal alle bestaande instellingen en groepen <b>VOLLEDIG WISSEN</b>!<br>Tabs zullen niet beïnvloed worden.",
+        "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
+    },
+    "clear": {
+        "message": "Wissen",
+        "description": "Clear"
+    },
+    "deleteAllAddonDataAndSettings": {
+        "message": "Alle add-on-data en -instellingen verwijderen",
+        "description": "Delete all addon data and settings"
+    },
+    "warningAllDataWillRemove": {
+        "message": "Waarschuwing! ALLE add-on-data worden verwijderd! Bent u heel zeker?",
+        "description": "Warning! Removing ALL addon data! Are you really sure?"
+    },
+    "ifDifferentContainerReOpen": {
+        "message": "Als de container verschilt van de geselecteerde - verander de container",
+        "description": "If the container is different from the selected one - change the container"
+    },
+    "deleteAllAddonDataAndSettingsBeforeRestoringBackup": {
+        "message": "Verwijder alle add-on-data en -instellingen vóór het herstellen van een reservekopie",
+        "description": "Delete all addon data and settings before restoring backup"
+    },
+    "leaveBookmarksOfClosedTabs": {
+        "message": "Behoud bladwijzers van gesloten tabs (bladwijzers zullen het scheidingsteken scheiden)",
+        "description": "Leave bookmarks of closed tabs"
+    },
+    "enableDebugTitle": {
+        "message": "DEBUGGEN activeren",
+        "description": "Enable DEBUG"
+    },
+    "loggingIsEnabledTitle": {
+        "message": "loggen is geactiveerd",
+        "description": "logging is enabled"
+    },
+    "loggingIsAutoEnabledTitle": {
+        "message": "loggen werd automatisch geactiveerd door een fout in de add-on",
+        "description": "logging was auto-enabled due to an error in addon"
+    },
+    "loggingDescription": {
+        "message": "Gelieve dit keuzevakje enkel aan te vinken wanneer u bugs wil registreren en logbestanden naar mij wil doorsturen. Dit keuzevakje aanvinken zal tot een merkbare vertraging van de add-on leiden, aangezien alle acties gelogd worden. Vink het keuzevakje uit wanneer u de fout gereproduceerd heeft, en de add-on zal aanbieden het logbestand op te slaan. Deze optie kan vanzelf geactiveerd worden indien een fout optreedt. U moet het keuzevakje DEBUGGEN uitvinken en het logbestand opslaan.<br> Gelieve het logbestand per e-mail naar mij te sturen: <a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com</a><br> <span class=\"has-text-danger\">Aandacht! Er worden geen persoonlijke data, wachtwoorden, bladwijzers enz. in dit logbestand opgeslagen!</span><br> Het bestand is nodig om het probleem te reproduceren en dit te proberen oplossen.<br> Vriendelijke groeten",
+        "description": "logging description"
+    },
+    "archiveGroup": {
+        "message": "Archiveren",
+        "description": "Archive"
+    },
+    "confirmArchiveGroup": {
+        "message": "Wilt u de groep \"$grouptitle$\" archiveren?<br>Wanneer u een groep archiveert, worden de tabs opgeslagen in de databank van de add-on en verwijderd uit de browser.",
+        "description": "Do you want to archive the group",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "unArchiveGroup": {
+        "message": "Dearchiveren",
+        "description": "Unarchive"
+    },
+    "groupIsArchived": {
+        "message": "Niet in staat om de actie te voltooien, de groep \"$grouptitle$\" bevindt zich in het archief",
+        "description": "Unable to complete the action, the group is in the archive",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
+    },
+    "updateAddonToLatestVersion": {
+        "message": "Gelieve de add-on naar de laatste versie te updaten",
+        "description": "Please, update addon to latest version"
+    },
+    "hotkeyActionTitleRenameGroup": {
+        "message": "Groep hernoemen",
+        "description": "Rename group"
+    },
+    "noGroupsAvailable": {
+        "message": "U heeft geen groepen",
+        "description": "You have no groups"
+    },
+    "alwaysAskNewGroupName": {
+        "message": "Altijd om een nieuwe groepsnaam vragen",
+        "description": "Always ask for a new group name"
+    },
+    "impossibleToAskUserAboutAction": {
+        "message": "Op pagina \"$page$\" is het niet mogelijk om naar \"$action$\" te vragen\n\nKlik hier voor info",
+        "description": "On page \"$page$\" it is impossible to ask about \"$action$\"",
+        "placeholders": {
+            "page": {
+                "content": "$1",
+                "example": "Add-ons for Firefox"
+            },
+            "action": {
+                "content": "$2",
+                "example": "some action"
+            }
+        }
+    },
+    "openPopupTitle": {
+        "message": "Pop-up openen",
+        "description": "Open popup"
+    },
+    "openSidebarTitle": {
+        "message": "Zijbalk openen",
+        "description": "Open sidebar"
+    },
+    "helpPageOpenInContainerTitle": {
+        "message": "Kan URL niet openen in container",
+        "description": "Can't open URL in container"
+    },
+    "helpPageOpenInContainerMainTitle": {
+        "message": "Kan URL niet openen in <container-name>$containerName$</container-name> container",
+        "description": "Can't open the URL into Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerSubTitle": {
+        "message": "Add-on kan URL niet openen:",
+        "description": "addon can't open URL:"
+    },
+    "helpPageOpenInContainerDesc1": {
+        "message": "Groep <strong>$groupTitle$</strong> werd toegewezen aan geopende tabs in <container-name>$containerName$</container-name> container.",
+        "description": "Group 'Group 1' was assigned to open tabs in Personal container.",
+        "placeholders": {
+            "groupTitle": {
+                "content": "$1",
+                "example": "Group 1"
+            },
+            "containerName": {
+                "content": "$2",
+                "example": "Personal"
+            }
+        }
+    },
+    "helpPageOpenInContainerDesc2": {
+        "message": "Een andere add-on:",
+        "description": "Another addon:"
+    },
+    "helpPageOpenInContainerDesc3": {
+        "message": "probeert deze URL te openen in <container-name>$containerName$</container-name> container. Verplaats de tab naar een andere groep of verbied de add-on <strong>$addonName$</strong> deze actie uit te voeren.",
+        "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Business"
+            },
+            "addonName": {
+                "content": "$2",
+                "example": "Facebook Container"
+            }
+        }
+    },
+    "helpPageOpenInContainerOpenInContainer": {
+        "message": "Open in <container-name>$containerName$</container-name> container.",
+        "description": "Open in Personal container",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            }
+        }
+    },
+    "groupNotLoaded": {
+        "message": "Groep niet ingeladen",
+        "description": "Group not loaded"
+    },
+    "groupNotFound": {
+        "message": "Groep niet gevonden",
+        "description": "Group not found"
+    },
+    "unloadGroup": {
+        "message": "Groep ontladen",
+        "description": "Unload the group"
+    },
+    "tabsInThisWindowWereHidden": {
+        "message": "Tabs in dit venster waren verborgen. U kan ze vinden onderaan het pop-upvenster van de add-on.",
+        "description": "Tabs in this window were hidden. You can find them at the bottom of the popup window of the addon."
+    },
+    "searchOrGoToActive": {
+        "message": "Zoeken of pijl naar rechts om te focussen op de actieve tab/groep",
+        "description": "Search or right arrow to focus on active tab/group"
+    },
+    "noContainerTitle": {
+        "message": "Standaard",
+        "description": "No container"
+    },
+    "reopenTabsWithTemporaryContainersInNew": {
+        "message": "Heropen tabs met tijdelijke containers in nieuw",
+        "description": "Reopen tabs with temporary containers in new"
+    },
+    "temporaryContainerTitleDescription": {
+        "message": "Voorvoegsel van de \"tijdelijke container\"-titel",
+        "description": "Prefix of the temporary container title"
+    },
+    "excludeContainersForReOpen": {
+        "message": "deze containers uitsluitend",
+        "description": "excluding these containers"
+    },
+    "helpPageOpenInContainerExcludeContainerToGroup": {
+        "message": "Sluit <container-name>$containerName$</container-name> container uit van groep <strong>$groupTitle$</strong>",
+        "description": "Exclude Personal container for group Group 1",
+        "placeholders": {
+            "containerName": {
+                "content": "$1",
+                "example": "Personal"
+            },
+            "groupTitle": {
+                "content": "$2",
+                "example": "Group 1"
+            }
+        }
+    },
+    "helpPageOpenInContainerIgnoreAppForSession": {
+        "message": "Negeer extensie \"<strong>$addonName$</strong>\" tot de browser gesloten is",
+        "description": "Ignore addon for session",
+        "placeholders": {
+            "addonName": {
+                "content": "$1",
+                "example": "Facebook Container"
+            }
+        }
+    },
+    "muteTab": {
+        "message": "Tab dempen",
+        "description": "Mute tab"
+    },
+    "unMuteTab": {
+        "message": "Tab dempen opheffen",
+        "description": "Unmute tab"
+    },
+    "muteGroup": {
+        "message": "Groep dempen",
+        "description": "Mute group"
+    },
+    "unMuteGroup": {
+        "message": "Groep dempen opheffen",
+        "description": "Unmute group"
+    },
+    "fullPopupWidth": {
+        "message": "Volledige pop-upbreedte gebruiken",
+        "description": "Use full popup width"
+    },
+    "showArchivedGroups": {
+        "message": "Gearchiveerde groepen tonen",
+        "description": "Show archived groups"
+    },
+    "helpPageDbErrorReinstallTitle": {
+        "message": "Databankfout in Simple Tab Groups",
+        "description": "Database error in Simple Tab Groups"
+    },
+    "helpPageDbErrorReinstallDescription": {
+        "message": "Helaas heeft zich een fout voorgedaan bij het lezen van data van de STG add-on uit de Firefox-databank. Op dit moment is de add-on gestopt. Om de add-on te herstarten, doe het volgende:",
+        "description": "Unfortunately, an error occurred while reading data from the STG addon from the Firefox database. At the moment, the addon is stopped. To resume the add-on, do the following:"
+    },
+    "helpPageDbErrorReinstallDescription2": {
+        "message": "Herstart Firefox Browser (bij Linux en Mac OS met procesbeëindiging)",
+        "description": "Restart Firefox Browser (for Linux and Mac OS with process termination)"
+    },
+    "helpPageDbErrorReinstallDescription3": {
+        "message": "Als u dit venster opnieuw ziet, probeer de add-on te herinstalleren:",
+        "description": "If you see this window again, try reinstalling the addon:"
+    },
+    "helpPageDbErrorReinstallDescription4": {
+        "message": "Verwijder de STG add-on",
+        "description": "Remove STG Addon"
+    },
+    "helpPageDbErrorReinstallDescription5": {
+        "message": "Herstart Firefox Browser",
+        "description": "Restart Firefox Browser"
+    },
+    "helpPageDbErrorReinstallDescription6": {
+        "message": "Installeer de STG add-on",
+        "description": "Install STG Addon"
+    },
+    "helpPageDbErrorReinstallDescription7": {
+        "message": "Herstel de laatste STG add-on reservekopie, die te vinden is in de Firefox downloadmap \"STG-backups\".<br>U kan de reservekopie herstellen via de instellingen van de add-on",
+        "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".<br>You can restore backup in addon settings"
+    },
+    "helpPageDbErrorReinstallOpenFFDownloadsFolder": {
+        "message": "Open de Firefox downloadmap",
+        "description": "Open Firefox downloads folder"
+    },
+    "eraseAndImportAddonBackupButton": {
+        "message": "Wissen en reservekopie herstellen",
+        "description": "Erase and restore backup"
+    },
+    "searchOnlyGroups": {
+        "message": "Enkel groepen",
+        "description": "Only groups"
+    },
+    "autoBackupByDayIndexTitle": {
+        "message": "Reservekopienummer als dag van de maand",
+        "description": "Backup number as day of month"
+    },
+    "autoBackupByDayIndexDescription": {
+        "message": "Dit helpt om verlost te zijn van een groot aantal reservekopiebestanden in de downloadmap. Het reservekopiebestand zal er zo uitzien: \"auto-stg-backup-dag-van-maand-22@drive4ik.json\"",
+        "description": "Backup by day description"
+    },
+    "clickHereForInfo": {
+        "message": "Klik hier voor meer info",
+        "description": "Click here for more info"
+    },
+    "enabled": {
+        "message": "Geactiveerd",
+        "description": "Enabled text"
+    },
+    "disabled": {
+        "message": "Uitgeschakeld",
+        "description": "Disabled text"
+    },
+    "helpPageExtensionsThatConflictWithStgTitle": {
+        "message": "Extensies die conflicteren met STG",
+        "description": "Extensions that conflict with STG"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc1": {
+        "message": "Simple Tab Groups add-on conflicteert met de volgende ingeschakelde extensies:",
+        "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc2": {
+        "message": "Om het verlies van tabs of hun locatie in vensters en groepen te vermijden, wordt sterk aanbevolen om ingeschakelde extensies die conflicteren met de Simple Tab Groups add-on uit te schakelen of te verwijderen. U kan dit doen via de instellingenpagina voor add-ons \"about:addons\" of door op de toetsencombinatie <code>Ctrl+Shift+A</code> te drukken",
+        "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
+    },
+    "theme": {
+        "message": "Thema",
+        "description": "Select theme"
+    },
+    "themeAuto": {
+        "message": "Systeemthema - automatisch",
+        "description": "Auto theme"
+    },
+    "themeLight": {
+        "message": "Licht",
+        "description": "Light theme"
+    },
+    "themeDark": {
+        "message": "Donker",
+        "description": "Dark theme"
+    },
+    "contextMenuEditor": {
+        "message": "Contextmenu-bewerker",
+        "description": "Context menu editor"
+    },
+    "tab": {
+        "message": "Tab",
+        "description": "Tab"
+    },
+    "group": {
+        "message": "Groep",
+        "description": "Group"
     }
 }
