@@ -205,7 +205,7 @@ export function applyTabSession(tab) {
     return applySession(tab, tabs[tab.id] || {});
 }
 
-export function removeTabSession(tabId) {
+export async function removeTabSession(tabId) {
     return Promise.all([
         removeTabGroup(tabId),
         removeTabFavIcon(tabId),
@@ -231,7 +231,7 @@ export function getTabsSessionAndRemove(tabIds) {
 }
 
 // WINDOWS
-export function setWindowGroup(windowId, groupId) {
+export async function setWindowGroup(windowId, groupId) {
     windows[windowId] ??= {};
     windows[windowId].groupId = groupId;
 
@@ -254,7 +254,7 @@ export function removeWindow(windowId) {
     delete windows[windowId];
 }
 
-export function removeWindowGroup(windowId) {
+export async function removeWindowGroup(windowId) {
     delete windows[windowId].groupId;
     return browser.sessions.removeWindowValue(windowId, 'groupId').catch(() => {});
 }

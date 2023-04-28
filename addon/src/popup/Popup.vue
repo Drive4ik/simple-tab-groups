@@ -44,6 +44,27 @@
         }
     }
 
+    function showDebugMode() {
+        if (localStorage.enableDebug) {
+            const div = document.createElement('div');
+            div.innerText = browser.i18n.getMessage('loggingIsEnabledTitle');
+            Object.assign(div.style, {
+                position: 'fixed',
+                backgroundColor: 'coral',
+                padding: '0 4px',
+                borderRadius: '3px',
+                top: 0,
+                left: '50%',
+                transform: 'translate(-50%)',
+                cursor: 'pointer',
+            });
+            div.addEventListener('click', () => Messages.sendMessage('open-options-page', 'general'));
+            document.body.appendChild(div);
+        }
+    }
+
+    showDebugMode();
+
     const SECTION_SEARCH = 'search',
         SECTION_GROUPS_LIST = 'groupsList',
         SECTION_GROUP_TABS = 'groupTabs',

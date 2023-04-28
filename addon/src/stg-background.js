@@ -49,9 +49,17 @@ let reCreateTabsOnRemoveWindow = [],
             groupIds = [];
 
         function normalize(groups) {
-            groupIds = groupIds
-                .filter(groupId => groups.some(group => group.id === groupId))
-                .filter(Utils.onlyUniqueFilterLast);
+            groupIds = groupIds.filter((groupId, groupIndex) => {
+                const found = groups.some(group => group.id === groupId);
+
+                if (!found) {
+                    if (groupIndex < index) {
+                        index--;
+                    }
+                }
+
+                return found;
+            });
 
             if (index > groupIds.length - 1) {
                 index = groupIds.length - 1;
@@ -74,7 +82,9 @@ let reCreateTabsOnRemoveWindow = [],
                 }
             },
             add(groupId) {
-                index = groupIds.push(groupId) - 1;
+                const nextIndex = index + 1;
+                groupIds.splice(nextIndex, groupIds.length - index, groupId);
+                index = nextIndex;
             },
         };
     })();
@@ -649,6 +659,8 @@ async function GrandRestoreWindows({ id }, needRestoreMissedTabsMap) {
         return;
     }
 
+    const log = logger.start('GrandRestoreWindows restore windows:', Array.from(windowIdsForRestoring));
+
     let [
         windows,
         { groups },
@@ -876,9 +888,11 @@ async function GrandRestoreWindows({ id }, needRestoreMissedTabsMap) {
         }
     }
 
-    await Promise.all(windows.map(win => loadingBrowserAction(false, win.id)));
+    await Promise.all(windows.map(win => loadingBrowserAction(false, win.id).catch(() => {})));
 
     windowIdsForRestoring.clear();
+
+    log.stop();
 }
 
 const onCreatedWindow = catchFunc(async function (win) {
@@ -3958,6 +3972,8 @@ browser.runtime.onInstalled.addListener(function ({ reason, previousVersion, tem
 });
 
 async function initializeGroupWindows(windows, currentGroupIds) {
+    const log = logger.start('initializeGroupWindows windows count:', windows.length);
+
     let tabsToShow = [],
         tabsToHide = [],
         moveTabsToWin = {};
@@ -3971,14 +3987,14 @@ async function initializeGroupWindows(windows, currentGroupIds) {
 
             duplicateGroupWindows.forEach(function (w) {
                 delete w.groupId;
-                Cache.removeWindowSession(w.id);
+                Cache.removeWindowSession(w.id).catch(log.onCatch(['cant removeWindowSession', w.id], false));
             });
         }
 
         win.tabs.forEach(function (tab) {
             if (tab.groupId && !currentGroupIds.includes(tab.groupId)) {
                 delete tab.groupId;
-                Cache.removeTabGroup(tab.id);
+                Cache.removeTabGroup(tab.id).catch(log.onCatch(['cant removeTabGroup', tab.id], false));
             }
 
             if (tab.groupId) {
@@ -4010,7 +4026,7 @@ async function initializeGroupWindows(windows, currentGroupIds) {
                 if (!tab.hidden) {
                     if (Utils.isTabLoading(tab) || tab.url.startsWith('file:') || tab.lastAccessed > self.localStorage.START_TIME) {
                         tab.groupId = win.groupId;
-                        Cache.setTabGroup(tab.id, win.groupId);
+                        Cache.setTabGroup(tab.id, win.groupId).catch(log.onCatch(['cant setTabGroup', tab.id, 'group', win.groupId], false));
                     } else {
                         tabsToHide.push(tab);
                     }
@@ -4031,7 +4047,7 @@ async function initializeGroupWindows(windows, currentGroupIds) {
             windowId: windowId,
         });
 
-        logger.log('[initializeGroupWindows] moveTabsToWin length', moveTabsToWin[windowId].length);
+        log.log('moveTabsToWin length', moveTabsToWin[windowId].length);
     }
 
     if (tabsToShow.length) {
@@ -4039,7 +4055,7 @@ async function initializeGroupWindows(windows, currentGroupIds) {
 
         tabsToShow.forEach(tab => tab.hidden = false);
 
-        logger.log('[initializeGroupWindows] tabsToShow length', tabsToShow.length);
+        log.log('tabsToShow length', tabsToShow.length);
     }
 
     if (tabsToHide.length) {
@@ -4061,8 +4077,10 @@ async function initializeGroupWindows(windows, currentGroupIds) {
 
         await Tabs.hide(tabsToHide);
 
-        logger.log('[initializeGroupWindows] tabsToHide length', tabsToHide.length);
+        log.log('tabsToHide length', tabsToHide.length);
     }
+
+    log.stop();
 }
 
 async function init() {
@@ -4137,11 +4155,13 @@ async function init() {
         await initializeGroupWindows(windows, data.groups.map(g => g.id));
 
         await Promise.all(windows.map(async win => {
-            await updateBrowserActionData(null, win.id);
+            try {
+                await updateBrowserActionData(null, win.id);
 
-            if (win.groupId) {
-                groupsHistory.add(win.groupId);
-            }
+                if (win.groupId) {
+                    groupsHistory.add(win.groupId);
+                }
+            } catch (e) {}
         }));
 
         let tabs = Utils.concatTabs(windows);

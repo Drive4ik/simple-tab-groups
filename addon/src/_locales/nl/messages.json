@@ -57,6 +57,10 @@
         "message": "Annuleren",
         "description": "Cancel"
     },
+    "close": {
+        "message": "Sluiten",
+        "description": "Close"
+    },
     "searchPlaceholder": {
         "message": "Zoeken",
         "description": "Search placeholder"
@@ -80,8 +84,12 @@
         "description": "Free arrange"
     },
     "closePopupAfterChangeGroup": {
-        "message": "Sluit pop-up na het wisselen van groep",
+        "message": "Sluit het pop-upvenster na het wisselen van groep",
         "description": "Close popup after changing group"
+    },
+    "closePopupAfterSelectTab": {
+        "message": "Sluit het pop-upvenster na het selecteren van een tab",
+        "description": "Close the popup window after selecting a tab"
     },
     "openManageGroupsInTab": {
         "message": "Open \"Groepen beheren\" in nieuw tabblad",
@@ -269,6 +277,10 @@
         "message": "Sneltoetsen",
         "description": "Hotkeys"
     },
+    "hotkeysDescription": {
+        "message": "U kan de sneltoetsen ook configureren op de pagina <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Extensiesneltoetsen in Firefox beheren</a>. Deze zullen werken in alle vensters en op alle browserpagina's.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
+    },
     "addHotKeyButton": {
         "message": "Sneltoets toevoegen",
         "description": "Add hotkey"
@@ -288,6 +300,10 @@
     "selectGroup": {
         "message": "Selecteer groep",
         "description": "Select group"
+    },
+    "unknownGroup": {
+        "message": "Onbekende groep",
+        "description": "Unknown group"
     },
     "hotkeyActionTitleLoadNextGroup": {
         "message": "Laad volgende groep",
@@ -405,6 +421,10 @@
         "message": "Verwijder tabs uit werkgeheugen na het verbergen ervan",
         "description": "Unload tabs from memory after closing a group"
     },
+    "discardExcludeAudioTabs": {
+        "message": "Tabbladen met geluid uitsluiten",
+        "description": "Exclude tabs with sound"
+    },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Het is niet mogelijk om van groep te wisselen omdat één van de geopende tabs de microfoon of camera deelt",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
@@ -453,12 +473,20 @@
         "message": "Toon de tab na het automatisch verplaatsen ervan naar deze groep",
         "description": "Show the tab after auto-moving it into this group"
     },
+    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
+        "message": "Alleen als het actieve tabblad verplaatst werd",
+        "description": "Only if the active tab has been moved"
+    },
+    "showNotificationAfterMovingTabIntoThisGroup": {
+        "message": "Toon een notificatie wanneer tabbladen naar deze groep verplaatst worden",
+        "description": "Show a notification when tabs are moved to this group"
+    },
     "tabMoving": {
-        "message": "Tab wordt verplaatst",
+        "message": "Tabblad wordt verplaatst",
         "description": "Tab moving"
     },
     "includeTabFavIconsIntoBackup": {
-        "message": "Tab favicons toevoegen aan reservekopie (maakt bestand groter)",
+        "message": "Tabblad-favicons toevoegen aan reservekopie (maakt bestand groter)",
         "description": "Include tab fav-icons in backup (makes backup file size bigger)"
     },
     "groupRemovedByExtension": {
@@ -586,6 +614,10 @@
     "createNewGroupWhenOpenNewWindow": {
         "message": "Maak een nieuwe groep aan bij het openen van een nieuw venster",
         "description": "Create a new group when opening a new window"
+    },
+    "prependTitleToWindow": {
+        "message": "Voeg de groepstitel vooraan toe aan de venstertitel",
+        "description": "Prepend group title to window title"
     },
     "allowAccessToBookmarks": {
         "message": "Geef toegang tot bladwijzers",
@@ -781,6 +813,18 @@
         "message": "Verwijder alle add-on-data en -instellingen vóór het herstellen van een reservekopie",
         "description": "Delete all addon data and settings before restoring backup"
     },
+    "helpPageWelcomeTitle": {
+        "message": "Welkom bij Simple Tab Groups",
+        "description": "Welcome to Simple Tab Groups"
+    },
+    "helpPageWelcomeDescription": {
+        "message": "Gelieve \"Eerdere vensters en tabbladen openen\" te activeren in de browserinstellingen.<br>Dit is nodig om de communicatie tussen de groep en het tabblad te onderhouden, <br> zoniet zullen de tabbladen niet openen wanneer de browser opstart en zullen deze verloren gaan uit de add-on -<br>de add-on zal stoppen met werken.",
+        "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
+    },
+    "exportToBookmarksWhenAutoBackup": {
+        "message": "De groep opslaan als bladwijzers bij automatische back-up",
+        "description": "Save the group to bookmarks when auto backup"
+    },
     "leaveBookmarksOfClosedTabs": {
         "message": "Behoud bladwijzers van gesloten tabs (bladwijzers zullen het scheidingsteken scheiden)",
         "description": "Leave bookmarks of closed tabs"
@@ -788,6 +832,10 @@
     "enableDebugTitle": {
         "message": "DEBUGGEN activeren",
         "description": "Enable DEBUG"
+    },
+    "disableDebugTitle": {
+        "message": "DEBUGGEN uitschakelen",
+        "description": "Disable DEBUG"
     },
     "loggingIsEnabledTitle": {
         "message": "loggen is geactiveerd",
@@ -1087,6 +1135,22 @@
         "message": "Om het verlies van tabs of hun locatie in vensters en groepen te vermijden, wordt sterk aanbevolen om ingeschakelde extensies die conflicteren met de Simple Tab Groups add-on uit te schakelen of te verwijderen. U kan dit doen via de instellingenpagina voor add-ons \"about:addons\" of door op de toetsencombinatie <code>Ctrl+Shift+A</code> te drukken",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     },
+    "ignoreConflictedExtIgnore": {
+        "message": "Deze extensie negeren",
+        "description": "Ignore conflicted extension"
+    },
+    "ignoreConflictedExtDontIgnore": {
+        "message": "Deze extensie niet negeren",
+        "description": "Don't ignore this extension"
+    },
+    "ignoreConflictedExtIgnoredText": {
+        "message": "Genegeerd",
+        "description": "Extension is ignored"
+    },
+    "ignoreConflictedExtConfirm": {
+        "message": "Deze add-on zal interfereren met STG, waardoor u tabbladen kan verliezen.\nWilt u deze nog steeds negeren?",
+        "description": "This addon will interfere with the STG, which may cause you to lose tabs.\nStill ignore it?"
+    },
     "theme": {
         "message": "Thema",
         "description": "Select theme"
@@ -1114,5 +1178,47 @@
     "group": {
         "message": "Groep",
         "description": "Group"
+    },
+    "helpPageUnsupportedUrlTitle": {
+        "message": "Niet-ondersteunde URL",
+        "description": "Unsupported URL"
+    },
+    "copyURL": {
+        "message": "URL kopiëren",
+        "description": "Copy URL"
+    },
+    "helpPageStgDebugTitle": {
+        "message": "STG debugpagina",
+        "description": "STG debug page"
+    },
+    "helpPageStgDebugAutoDebugMainTitle": {
+        "message": "Er trad een fout op in de add-on",
+        "description": "An error occurred in the addon"
+    },
+    "windowNotHaveGroup": {
+        "message": "Dit venster heeft geen ingeladen groep",
+        "description": "This window does not have a loaded group"
+    },
+    "defaultGroup": {
+        "message": "Standaard groep",
+        "description": "Default group"
+    },
+    "moveToGroupIfNoneCatchTabRules": {
+        "message": "Als geen enkele van de reguliere expressies matcht met het tabblad, verplaats het naar de groep:",
+        "description": "If none of the regular expressions match the tab, move it to the group:"
+    },
+    "dontMove": {
+        "message": "Niet verplaatsen",
+        "description": "Don't move"
+    },
+    "groupArchivedTitle": {
+        "message": "$groupName$ (gearchiveerd)",
+        "description": "My group (archived)",
+        "placeholders": {
+            "groupName": {
+                "content": "$1",
+                "example": "My group"
+            }
+        }
     }
 }
