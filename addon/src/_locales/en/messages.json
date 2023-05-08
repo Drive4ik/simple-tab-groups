@@ -157,6 +157,16 @@
             }
         }
     },
+    "newParentTitle": {
+        "message": "Parent $id$",
+        "description": "parent id",
+        "placeholders": {
+            "id": {
+                "content": "$1",
+                "example": "1"
+            }
+        }
+    },
     "searchNotFoundTitle": {
         "message": "No results found for \"$search$\"",
         "description": "No results found",
@@ -221,6 +231,30 @@
             }
         }
     },
+    "parentGroupsCount": {
+        "message": "$count$ groups",
+        "description": "Parent group count",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "parentGroupsCountActive": {
+        "message": "$active$/$count$ groups active",
+        "description": "Parent groups count active",
+        "placeholders": {
+            "active": {
+                "content": "$1",
+                "example": "2"
+            },
+            "count": {
+                "content": "$2",
+                "example": "4"
+            }
+        }
+    },
     "deleteTab": {
         "message": "Delete tab",
         "description": "Delete tab"
@@ -232,6 +266,10 @@
     "createNewGroup": {
         "message": "Create new group",
         "description": "Create new group"
+    },
+    "createNewParent": {
+        "message": "Create new parent group",
+        "description": "Create new parent group"
     },
     "goBackButtonTitle": {
         "message": "Go back",

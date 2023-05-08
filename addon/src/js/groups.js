@@ -23,7 +23,7 @@ export async function load(groupId = null, withTabs = false, includeFavIconUrl, 
     if (withTabs) {
         let groupTabs = groups.reduce((acc, group) => (acc[group.id] = [], acc), {});
 
-        await Promise.all(allTabs.map(async function(tab) {
+        await Promise.all(allTabs.map(async function (tab) {
             if (tab.groupId) {
                 if (groupTabs[tab.groupId]) {
                     groupTabs[tab.groupId].push(tab);
@@ -34,7 +34,7 @@ export async function load(groupId = null, withTabs = false, includeFavIconUrl, 
             }
         }));
 
-        groups = groups.map(function(group) {
+        groups = groups.map(function (group) {
             if (!group.isArchive) {
                 group.tabs = groupTabs[group.id].sort(Utils.sortBy('index'));
             }
@@ -80,7 +80,7 @@ export async function save(groups, withMessage = false) {
     return groups;
 }
 
-export function create(id, title, defaultGroupProps = {}) {
+export function create(id, title, defaultGroupProps = {}, parentId = null) {
     const group = {
         id,
         title: null,
@@ -106,6 +106,7 @@ export function create(id, title, defaultGroupProps = {}) {
         showOnlyActiveTabAfterMovingItIntoThisGroup: false,
         showNotificationAfterMovingTabIntoThisGroup: true,
         bookmarkId: null,
+        parentId,
 
         ...defaultGroupProps,
     };
@@ -151,7 +152,12 @@ export async function saveDefault(defaultGroupProps) {
     log.stop();
 }
 
-export async function add(windowId, tabIds = [], title = null) {
+export async function addUnderParent(parentId) {
+    const log = logger.start('addUnderParent', parentId);
+    return add(null, [], null, parentId);
+}
+
+export async function add(windowId, tabIds = [], title = null, parentId = null) {
     tabIds = tabIds?.slice?.() || [];
     title = title?.slice(0, 256);
 
@@ -179,7 +185,7 @@ export async function add(windowId, tabIds = [], title = null) {
     lastCreatedGroupPosition++;
 
     const {groups} = await load(),
-        newGroup = create(lastCreatedGroupPosition, title, defaultGroupProps);
+        newGroup = create(lastCreatedGroupPosition, title, defaultGroupProps, parentId);
 
     groups.push(newGroup);
 
@@ -574,7 +580,8 @@ function isCatchedUrl(url, catchTabRules) {
         .some(regExpStr => {
             try {
                 return new RegExp(regExpStr).test(url);
-            } catch (e) {}
+            } catch (e) {
+            }
         });
 }
 
@@ -644,7 +651,13 @@ export function getCatchedForTab(notArchivedGroups, currentGroup, {cookieStoreId
 }
 
 export function isNeedBlockBeforeRequest(groups) {
-    return groups.some(function({isArchive, catchTabContainers, catchTabRules, ifDifferentContainerReOpen, newTabContainer}) {
+    return groups.some(function ({
+                                     isArchive,
+                                     catchTabContainers,
+                                     catchTabRules,
+                                     ifDifferentContainerReOpen,
+                                     newTabContainer
+                                 }) {
         if (isArchive) {
             return false;
         }

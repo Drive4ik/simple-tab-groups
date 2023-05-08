@@ -266,6 +266,7 @@ export const EXTENSIONS_WHITE_LIST = Object.freeze({
 export const DEFAULT_OPTIONS = Object.freeze({
     version: MANIFEST.version,
     groups: [],
+    parents: [],
     lastCreatedGroupPosition: 0,
 
     // options
