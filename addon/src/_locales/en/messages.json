@@ -23,6 +23,10 @@
         "message": "Move tab to group",
         "description": "Move tab to group title"
     },
+    "moveGroupToParentDisabledTitle": {
+        "message": "Move group to parent",
+        "description": "Move group to parent title"
+    },
     "moveTabToGroupMessage": {
         "message": "Tab \"$tabtitle$\" was moved to group \"$grouptitle$\".\n\nClick here to show this tab.",
         "description": "Tab moved popup title",
@@ -506,6 +510,10 @@
     "openGroupInNewWindow": {
         "message": "Open group in new window",
         "description": "Open group in new window"
+    },
+    "switchToContext": {
+        "message": "Switch to Context",
+        "description": "Switch to this parent group"
     },
     "muteTabsWhenGroupCloseAndRestoreWhenOpen": {
         "message": "Mute tabs when group close and restore when open",

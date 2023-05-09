@@ -9,14 +9,7 @@ import contextMenu from '../components/context-menu.vue';
 import contextMenuTab from '../components/context-menu-tab.vue';
 import contextMenuTabNew from '../components/context-menu-tab-new.vue';
 import contextMenuGroup from '../components/context-menu-group.vue';
-import {
-    VsaList,
-    VsaItem,
-    VsaHeading,
-    VsaContent,
-    VsaIcon
-} from "vue-simple-accordion/src/components";
-// import 'vue-simple-accordion/dist/vue-simple-accordion.css';
+import contextMenuParent from "../components/context-menu-parent.vue";
 
 import backgroundSelf from '/js/background.js';
 import * as Constants from '/js/constants.js';
@@ -129,11 +122,7 @@ export default {
         'context-menu-tab': contextMenuTab,
         'context-menu-tab-new': contextMenuTabNew,
         'context-menu-group': contextMenuGroup,
-        VsaList,
-        VsaItem,
-        VsaHeading,
-        VsaContent,
-        VsaIcon,
+        'context-menu-parent': contextMenuParent,
     },
     created() {
         this.loadOptions();
@@ -614,6 +603,10 @@ export default {
                 this.loadUnsyncedTabs();
             }
         },
+        async moveGroup(group, parent, loadUnsync = false) {
+            console.log('moveGroup', group.id, parent.id);
+            await Groups.update(group.id, {parentId: parent.id});
+        },
         async moveTabToNewGroup(tabId, loadUnsync, showTabAfterMovingItIntoThisGroup) {
             let newGroupTitle = '',
                 tabIds = this.getTabIdsForMove(tabId);
@@ -638,6 +631,9 @@ export default {
             if (loadUnsync) {
                 this.loadUnsyncedTabs();
             }
+        },
+        async moveGroupToNewParent() {
+
         },
 
         showPrompt(title, value) {
@@ -1115,7 +1111,7 @@ export default {
 
         <main id="result" v-show="!isLoading">
             <template v-for="parent in parents">
-                <button class="parent" @click="clickOnParent">
+                <button class="parent" @click="clickOnParent" @contextmenu="$refs.contextMenuParent.open($event, {parent})">
                     {{parent.title}} ({{filteredGroups.filter(it => it.parentId === parent.id).length}} groups)
                 </button>
                 <div class="content">
@@ -1365,9 +1361,14 @@ export default {
 
         <context-menu-tab-new ref="contextMenuTabNew" @add="addTab"></context-menu-tab-new>
 
+        <context-menu-parent ref="contextMenuParent"
+                            :menu="options.contextMenuParent"
+                            @switch-to-context=""
+        ></context-menu-parent>
         <context-menu-group ref="contextMenuGroup"
                             :menu="options.contextMenuGroup"
                             :groups="groups"
+                            :parents="parents"
                             :opened-windows="openedWindows"
                             :show-rename="false"
                             :show-settings="false"
@@ -1381,6 +1382,8 @@ export default {
                             @archive="toggleArchiveGroup"
                             @unarchive="toggleArchiveGroup"
                             @reload-all-tabs="reloadAllTabsInGroup"
+                            @move-group="moveGroup"
+                            @move-group-new-parent="moveGroupToNewParent"
         ></context-menu-group>
 
         <context-menu-tab ref="contextMenuTab"

@@ -1,5 +1,6 @@
 <script>
 import contextMenu from './context-menu.vue';
+import * as Parents from '/js/parents.js';
 
 export default {
     props: {
@@ -8,6 +9,10 @@ export default {
             required: true,
         },
         groups: {
+            type: Array,
+            required: true,
+        },
+        parents: {
             type: Array,
             required: true,
         },
@@ -116,6 +121,35 @@ export default {
                         <img src="/icons/refresh.svg" class="size-16" />
                         <span v-text="lang('reloadAllTabsInGroup')"></span>
                     </li>
+                </template>
+
+                <template v-if="menu.includes('move-group-to-parent')">
+                    <hr>
+
+                    <li class="is-disabled">
+                        <img class="size-16" />
+                        <span v-text="lang('moveGroupToParentDisabledTitle') + ':'"></span>
+                    </li>
+
+                    <li
+                      v-for="parent in parents"
+                      v-if="parent.id !== data.group.parentId"
+                      :key="parent.id"
+                      @click="$emit('move-group',       data.group, parent, $event.ctrlKey || $event.metaKey)"
+                      @contextmenu="$emit('move-group', data.group, parent, true)"
+                    >
+                        <figure :class="['image is-16x16']">
+                            <img src="/icons/parent-new.svg" />
+                        </figure>
+                        <span v-text="parent.title"></span>
+                    </li>
+
+<!--                    <li-->
+<!--                      @click="$emit('move-group-new-parent', data.tab.id, !data.group)"-->
+<!--                      @contextmenu="$emit('move-group-new-parent', data.tab.id, !data.group, true)">-->
+<!--                        <img src="/icons/new.svg" class="size-16" />-->
+<!--                        <span v-text="lang('createNewParent')"></span>-->
+<!--                    </li>-->
                 </template>
 
                 <template v-if="showSettings || showRemove">

@@ -311,6 +311,10 @@ export const DEFAULT_OPTIONS = Object.freeze({
         'archive',
         'rename',
         'reload-all-tabs',
+        'move-group-to-parent',
+    ],
+    contextMenuParent: [
+        'switch-to-context',
     ],
 
     autoBackupEnable: true,
