@@ -358,12 +358,13 @@ const KEYS_RESPONSIBLE_VIEW = Object.freeze([
     'prependTitleToWindow',
 ]);
 
-export async function move(groupId, newGroupIndex) {
+export async function move(groupId, newGroupIndex, newParentId) {
     const log = logger.start('move', {groupId, newGroupIndex});
 
     let {groups, groupIndex} = await load(groupId);
-
-    groups.splice(newGroupIndex, 0, groups.splice(groupIndex, 1)[0]);
+    let group = groups.splice(groupIndex, 1)[0];
+    group.parentId = newParentId;
+    groups.splice(newGroupIndex, 0, group);
 
     await save(groups, true);
 
@@ -515,6 +516,33 @@ export async function archiveToggle(groupId) {
         await Tabs.remove(tabsToRemove);
         backgroundSelf.removeExcludeTabIds(tabsToRemove);
     }
+
+    backgroundSelf.sendMessage('groups-updated');
+
+    backgroundSelf.sendExternalMessage('group-updated', {
+        group: mapForExternalExtension(group),
+    });
+
+    backgroundSelf.loadingBrowserAction(false).catch(log.onCatch('loadingBrowserAction'));
+
+    backgroundSelf.updateMoveTabMenus();
+
+    log.stop();
+}
+
+export async function transcendToggle(groupId) {
+    const log = logger.start('transcendToggle', groupId);
+
+    await backgroundSelf.loadingBrowserAction();
+
+    let {group, groups} = await load(groupId, true),
+        tabsToRemove = [];
+
+    log.log('group.isTranscend', group.isTranscend, '=>', !group.isTranscend);
+
+    group.isTranscend = !group.isTranscend;
+
+    await save(groups);
 
     backgroundSelf.sendMessage('groups-updated');
 

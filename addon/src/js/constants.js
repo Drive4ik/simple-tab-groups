@@ -312,6 +312,7 @@ export const DEFAULT_OPTIONS = Object.freeze({
         'rename',
         'reload-all-tabs',
         'move-group-to-parent',
+        'transcend-group',
     ],
     contextMenuParent: [
         'open-in-new-windows',

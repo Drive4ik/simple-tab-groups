@@ -23,8 +23,12 @@
         "message": "Move tab to group",
         "description": "Move tab to group title"
     },
+    "transcendGroup": {
+        "message": "Transcend",
+        "description": "Transcend group"
+    },
     "moveGroupToParentDisabledTitle": {
-        "message": "Move group to parent",
+        "message": "Move group to parent group",
         "description": "Move group to parent title"
     },
     "moveTabToGroupMessage": {

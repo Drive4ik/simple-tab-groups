@@ -227,7 +227,7 @@ export default {
         setupListeners() {
             this
                 .$on('drag-move-group', function (from, to) {
-                    Groups.move(from.data.item.id, this.groups.indexOf(to.data.item));
+                    Groups.move(from.data.item.id, this.groups.indexOf(to.data.item), to.data.item?.parentId);
                 })
                 .$on('drag-move-tab', function (from, to) {
                     if ('new-group' === to.data.item.id) {
@@ -812,7 +812,7 @@ export default {
         },
 
         async openGroups(groups, openInNewWindow = false) {
-            const promises = groups.map(gr => this.applyGroup(gr, {}, openInNewWindow));
+            const promises = groups.filter(gr => !this.isOpenedGroup(gr)).map(gr => this.applyGroup(gr, {}, openInNewWindow));
             await Promise.all(promises);
         },
 
@@ -827,6 +827,7 @@ export default {
             const groups = this.groups.filter(gr => gr.parentId === parent.id);
             await this.openGroups(groups, true)
         },
+
         async applyGroup({id: groupId}, {id: tabId} = {}, openInNewWindow = false) {
             if (!this.isCurrentWindowIsAllow) {
                 await browser.windows.update(this.currentWindow.id, {
@@ -975,6 +976,9 @@ export default {
             }
         },
 
+        async toggleTranscendGroup({id}) {
+            await Messages.sendMessageModule('Groups.transcendToggle', id);
+        },
 
         // allowTypes: Array ['groups', 'tabs']
         dragHandle(event, itemType, allowTypes, data) {
@@ -1152,7 +1156,7 @@ export default {
                                 @dragenter="dragHandle($event, 'group', ['group'], {item: group})"
                                 @dragover="dragHandle($event, 'group', ['group'], {item: group})"
                                 @dragleave="dragHandle($event, 'group', ['group'], {item: group})"
-                                @drop="dragHandle($event, 'group', ['group'], {item: group})"
+                                @drop="dragHandle($event, 'group', ['group'], {item: group, parentId: parent.id})"
                                 @dragend="dragHandle($event, 'group', ['group'], {item: group})"
 
                         >
@@ -1517,7 +1521,7 @@ export default {
                         </div>
 
                         <div class="group new cursor-pointer"
-                             @click="addGroup(parent.id)"
+                             @click="addGroup(undefined)"
                              draggable="true"
                              @dragover="dragHandle($event, 'tab', ['tab'])"
                              @drop="dragHandle($event, 'tab', ['tab'], {item: {id: 'new-group'}})"
@@ -1568,6 +1572,7 @@ export default {
                             @reload-all-tabs="reloadAllTabsInGroup"
                             @move-group="moveGroup"
                             @move-group-new-parent="moveGroupToNewParent"
+                            @transcend-group="toggleTranscendGroup"
         ></context-menu-group>
 
         <context-menu-tab ref="contextMenuTab"

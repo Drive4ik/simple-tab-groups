@@ -113,6 +113,14 @@ export default {
                     <img src="/icons/edit.svg" class="size-16" />
                     <span v-text="lang('hotkeyActionTitleRenameGroup') + ' (F2)'"></span>
                 </li>
+                <li
+                  v-if="menu.includes('transcend-group')"
+                  @click="$emit('transcend-group', data.group)">
+                    <img src="/icons/check-square.svg" class="size-16"/>
+                    <span v-text="lang('transcendGroup')"></span>
+                    <img :src="data.group.isTranscend === true && '/icons/check.svg'" class="size-16 ml-2"/>
+                </li>
+
 
                 <template v-if="menu.includes('reload-all-tabs') && !data.group.isArchive">
                     <hr>
