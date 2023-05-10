@@ -107,6 +107,7 @@ export function create(id, title, defaultGroupProps = {}, parentId = null) {
         showNotificationAfterMovingTabIntoThisGroup: true,
         bookmarkId: null,
         parentId,
+        isTranscend: false,
 
         ...defaultGroupProps,
     };

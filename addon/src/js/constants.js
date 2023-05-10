@@ -314,6 +314,7 @@ export const DEFAULT_OPTIONS = Object.freeze({
         'move-group-to-parent',
     ],
     contextMenuParent: [
+        'open-in-new-windows',
         'switch-to-context',
     ],
 

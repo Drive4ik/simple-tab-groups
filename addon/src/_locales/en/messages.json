@@ -511,6 +511,10 @@
         "message": "Open group in new window",
         "description": "Open group in new window"
     },
+    "openParentInNewWindows": {
+        "message": "Open group in new windows",
+        "description": "Open parent group in new windows"
+    },
     "switchToContext": {
         "message": "Switch to Context",
         "description": "Switch to this parent group"

@@ -30,6 +30,12 @@ export default {
         <template v-slot="{data}">
             <ul v-if="data" class="is-unselectable">
                 <li
+                  v-if="menu.includes('open-in-new-windows') && !data.parent.isArchive"
+                  @click="$emit('open-in-new-windows', data.parent)">
+                    <img src="/icons/window-new.svg" class="size-16" />
+                    <span v-text="lang('openParentInNewWindows')"></span>
+                </li>
+                <li
                     v-if="menu.includes('switch-to-context') && !data.parent.isArchive"
                     @click="$emit('switch-to-context', data.parent)">
                     <img src="/icons/settings.svg" class="size-16" />
