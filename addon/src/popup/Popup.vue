@@ -531,10 +531,10 @@ export default {
                     }
                 },
                 'parent-added': (request) => {
-                    if (!this.parents.some(pr => pr.id === request.parent.id)) {
-                        this.parents.push(request.parent);
-                        this.$emit('parent-added');
-                    }
+                    // if (!this.parents.some(pr => pr.id === request.parent.id)) {
+                    //     this.parents.push(request.parent);
+                    //     this.$emit('parent-added');
+                    // }
 
                     this.loadParents();
                 },
@@ -631,9 +631,8 @@ export default {
             group.tabs = tabs.map(this.mapTab, this);
         },
 
-        async loadParents({parents}) {
-            ({parents} = parents ? {parents} : await Parents.load(null));
-
+        async loadParents(options) {
+            const {parents} = await Parents.load(null);
             this.parents = parents;
         },
 

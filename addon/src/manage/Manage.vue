@@ -455,10 +455,10 @@ export default {
                     }
                 },
                 'parent-added': (request) => {
-                    if (!this.parents.some(pr => pr.id === request.parent.id)) {
-                        this.parents.push(request.parent);
-                        this.$emit('parent-added');
-                    }
+                    // if (!this.parents.some(pr => pr.id === request.parent.id)) {
+                    //     this.parents.push(request.parent);
+                    //     this.$emit('parent-added');
+                    // }
 
                     this.loadParents();
                 },
@@ -738,9 +738,8 @@ export default {
             return tab;
         },
 
-        async loadParents({parents}) {
-            ({parents} = parents ? {parents} : await Parents.load(null));
-
+        async loadParents(options) {
+            const {parents} = await Parents.load(null);
             this.parents = parents;
         },
 
@@ -772,10 +771,14 @@ export default {
 
             Groups.addUnderParent(parentId);
         },
-        addParent() {
-            this.$once('parent-added', () => {
-            });
-            Parents.add()
+        async addParent() {
+            let newGroupTitle = '';
+            newGroupTitle = await this.showPrompt(this.lang('createNewParent'), 'Parent Group ');
+
+            if (!newGroupTitle) {
+                return false;
+            }
+            Parents.add(undefined, [], newGroupTitle);
         },
 
         addTab(group, cookieStoreId) {
