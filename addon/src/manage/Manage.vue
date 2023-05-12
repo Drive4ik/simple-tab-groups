@@ -886,7 +886,7 @@ export default {
                     this.multipleTabIds.push(tab.id);
                 }
             } else if (group) {
-                this.applyGroup(group, tab);
+                this.applyGroup(group, tab, !this.isOpenedGroup({id: group.id}));
             } else if (this.isCurrentWindowIsAllow) {
                 await Messages.sendMessageModule('Tabs.moveNative', [tab.id], {
                     windowId: this.currentWindow.id,
@@ -1286,7 +1286,7 @@ export default {
                              @click="addGroup(parent.id)"
                              draggable="true"
                              @dragover="dragHandle($event, 'tab', ['tab'])"
-                             @drop="dragHandle($event, 'tab', ['tab'], {item: {id: 'new-group'}})"
+                             @drop="dragHandle($event, 'tab', ['tab'], {item: {id: 'new-group', parentId: parent.id}})"
                         >
                             <div class="body">
                                 <img src="/icons/group-new.svg">
@@ -1297,6 +1297,7 @@ export default {
                 </div>
             </template>
 
+            <!-- ROOT GROUP [WITHOUT PARENT] -->
             <template>
                 <button class="parent" @click="clickOnParent"
                         @contextmenu="$refs.contextMenuParent.open($event, {parent})">
