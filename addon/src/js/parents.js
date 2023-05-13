@@ -127,7 +127,9 @@ export async function add(parentId, groupIds = [], title = null) {
         parent: mapForExternalExtension(newParent),
     });
 
-    return log.stop(newParent);
+    log.stop(newParent);
+
+    return newParent;
 }
 
 export async function remove(parentId) {

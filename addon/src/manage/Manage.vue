@@ -4,6 +4,7 @@
 import Vue from 'vue';
 
 import popup from '../components/popup.vue';
+import popupParent from '../components/popup-parent.vue';
 import editGroup from '../components/edit-group.vue';
 import contextMenu from '../components/context-menu.vue';
 import contextMenuTab from '../components/context-menu-tab.vue';
@@ -76,6 +77,7 @@ export default {
             view: VIEW_DEFAULT,
 
             showPromptPopup: false,
+            showPromptPopupParent: false,
             promptTitle: null,
             promptValue: '',
             promptResolveFunc: null,
@@ -117,6 +119,7 @@ export default {
     },
     components: {
         popup: popup,
+        'popup-parent': popupParent,
         'edit-group': editGroup,
         'context-menu': contextMenu,
         'context-menu-tab': contextMenuTab,
@@ -659,6 +662,29 @@ export default {
             });
         },
 
+        showPromptParent(title, value) {
+            if (this.showPromptPopupParent) {
+                return Promise.resolve(false);
+            }
+
+            return new Promise(resolve => {
+                this.promptTitle = title;
+                this.promptValue = value;
+
+                this.promptResolveFunc = (ok, groups) => {
+                    this.showPromptPopupParent = false;
+
+                    if (ok && this.promptValue.length) {
+                        resolve([this.promptValue, groups]);
+                    } else {
+                        resolve([false]);
+                    }
+                };
+
+                this.showPromptPopupParent = true;
+            });
+        },
+
         showConfirm(title, text, confirmLang = 'ok', confirmClass = 'is-success') {
             if (this.showConfirmPopup) {
                 return Promise.resolve(false);
@@ -772,13 +798,15 @@ export default {
             Groups.addUnderParent(parentId);
         },
         async addParent() {
-            let newGroupTitle = '';
-            newGroupTitle = await this.showPrompt(this.lang('createNewParent'), 'Parent Group ');
+            let newGroupTitle = '', groups = [];
+            [newGroupTitle, groups] = await this.showPromptParent(this.lang('createNewParent'), 'Parent Group ');
 
             if (!newGroupTitle) {
                 return false;
             }
-            Parents.add(undefined, [], newGroupTitle);
+
+            const newParent = await Parents.add(undefined, [], newGroupTitle);
+            await Promise.all(groups.map(gr => this.moveGroup(gr, newParent)));
         },
 
         addTab(group, cookieStoreId) {
@@ -1672,6 +1700,29 @@ export default {
                        @keydown.enter.stop="promptResolveFunc(true)"/>
             </div>
         </popup>
+        <popup-parent
+                v-if="showPromptPopupParent"
+                :title="promptTitle"
+                :groups="groups.filter(gr => !gr.parentId)"
+                @resolve="(groups) => promptResolveFunc(true, groups)"
+                @close-popup-parent="(groups) => promptResolveFunc(false, groups)"
+                @show-popup="$refs.promptInput.focus(); $refs.promptInput.select()"
+                :buttons="
+                [{
+                    event: 'resolve',
+                    classList: 'is-success',
+                    lang: 'ok',
+                    focused: false,
+                }, {
+                    event: 'close-popup-parent',
+                    lang: 'cancel',
+                }]
+            ">
+            <div class="control is-expanded">
+                <input v-model.trim="promptValue" type="text" class="input" ref="promptInput"
+                       @keydown.enter.stop="promptResolveFunc(true)"/>
+            </div>
+        </popup-parent>
 
         <popup
                 v-if="showConfirmPopup"

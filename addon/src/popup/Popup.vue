@@ -4,6 +4,7 @@
 import Vue from 'vue';
 
 import popup from '../components/popup.vue';
+import popupParent from '../components/popup-parent.vue';
 import editGroupPopup from './edit-group-popup.vue';
 import editGroup from '../components/edit-group.vue';
 import contextMenu from '../components/context-menu.vue';
@@ -91,6 +92,7 @@ export default {
             section: SECTION_DEFAULT,
 
             showPromptPopup: false,
+            showPromptPopupParent: false,
             promptTitle: null,
             promptValue: '',
             promptResolveFunc: null,
@@ -135,6 +137,7 @@ export default {
     },
     components: {
         popup: popup,
+        'popup-parent': popupParent,
         'edit-group-popup': editGroupPopup,
         'edit-group': editGroup,
         'context-menu': contextMenu,
@@ -768,6 +771,29 @@ export default {
             });
         },
 
+        showPromptParent(title, value) {
+            if (this.showPromptPopupParent) {
+                return Promise.resolve(false);
+            }
+
+            return new Promise(resolve => {
+                this.promptTitle = title;
+                this.promptValue = value;
+
+                this.promptResolveFunc = (ok, groups) => {
+                    this.showPromptPopupParent = false;
+
+                    if (ok && this.promptValue.length) {
+                        resolve([this.promptValue, groups]);
+                    } else {
+                        resolve([false]);
+                    }
+                };
+
+                this.showPromptPopupParent = true;
+            });
+        },
+
         showConfirm(title, text, confirmLang = 'ok', confirmClass = 'is-success') {
             if (this.showConfirmPopup) {
                 return Promise.resolve(false);
@@ -789,13 +815,15 @@ export default {
         },
 
         async addParent() {
-            let newGroupTitle = '';
-            newGroupTitle = await this.showPrompt(this.lang('createNewParent'), 'Parent Group ');
+            let newGroupTitle = '', groups = [];
+            [newGroupTitle, groups] = await this.showPromptParent(this.lang('createNewParent'), 'Parent Group ');
 
             if (!newGroupTitle) {
                 return false;
             }
-            Parents.add(undefined, [], newGroupTitle);
+
+            const newParent = await Parents.add(undefined, [], newGroupTitle);
+            await Promise.all(groups.map(gr => this.moveGroup(gr, newParent)));
         },
         async createNewGroup(tabIds, proposalTitle, applyGroupWithTabId, parentId) {
             let newGroupTitle = '';
@@ -1588,7 +1616,7 @@ export default {
                     </button>
                     <div class="content" :id="'content-'+parent.id">
                         <div
-                                v-for="group in filteredGroups"
+                                v-for="group in groups"
                                 v-if="group.parentId === parent.id"
                                 :key="group.id"
                                 :class="['group item is-unselectable', {
@@ -1668,8 +1696,103 @@ export default {
                         </div>
                     </div>
                 </div>
+                <hr>
+                <div>
+                    <button class="parent" @click="clickOnParent" data-id="/"
+                    >
+                        <span data-id="/">
+                            <img src="/icons/parent-new.svg"
+                                 class="size-16"/>
+                            /
+                        </span>
+                        <span class="parent-indicator" data-id="/">
+                            <img :src="expandedParents['/'] ? '/icons/arrow-down.svg' : '/icons/arrow-right.svg'"
+                                 class="size-12"/>
+                            {{groups.filter(it => !it.parentId).length}}
+                        </span>
+                    </button>
+                    <div class="content" id="content-/">
+                        <div
+                          v-for="group in groups"
+                          v-if="!group.parentId"
+                          :key="group.id"
+                          :class="['group item is-unselectable', {
+                            'drag-moving': group.isMoving,
+                            'drag-over': group.isOver,
+                            'is-active-element': group === currentGroup,
+                            'is-opened': isOpenedGroup(group),
+                        }]"
 
+                          draggable="true"
+                          @dragstart="dragHandle($event, 'group', ['group'], {item: group})"
+                          @dragenter="dragHandle($event, 'group', ['group'], {item: group})"
+                          @dragover="dragHandle($event, 'group', ['group'], {item: group})"
+                          @dragleave="dragHandle($event, 'group', ['group'], {item: group})"
+                          @drop="dragHandle($event, 'group', ['group'], {item: group})"
+                          @dragend="dragHandle($event, 'group', ['group'], {item: group})"
 
+                          @contextmenu="$refs.contextMenuGroup.open($event, {group})"
+                          @click="!group.isArchive && applyGroup(group)"
+                          @keydown.enter="!group.isArchive && applyGroup(group, undefined, true)"
+                          @keydown.right.stop="showSectionGroupTabs(group);"
+                          @keydown.up="focusToNextElement"
+                          @keydown.down="focusToNextElement"
+                          @keydown.f2.stop="renameGroup(group)"
+                          tabindex="0"
+                          :title="getGroupTitle(group, 'withCountTabs withTabs withContainer')"
+                        >
+                            <div class="item-icon">
+                                <!--                                <figure :class="['image is-16x16', {'is-sticky': group.isSticky}]">-->
+                                <img :src="group.iconUrlToDisplay"  :class="['image is-16x16', {'is-sticky': group.isSticky}]"/>
+                                <!--                                </figure>-->
+                            </div>
+                            <div class="item-title clip-text">
+                                <figure v-if="group.isArchive" class="image is-16x16">
+                                    <img src="/icons/archive.svg"/>
+                                </figure>
+                                <span v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID"
+                                      :title="containers[group.newTabContainer]?.name"
+                                      :class="`size-16 userContext-icon identity-icon-${containers[group.newTabContainer]?.icon} identity-color-${containers[group.newTabContainer]?.color}`"></span>
+                                <figure
+                                  v-if="showMuteIconGroup(group)"
+                                  class="image is-16x16"
+                                  @click.stop="toggleMuteGroup(group)"
+                                  :title="group.tabs.some(tab => tab.audible) ? lang('muteGroup') : lang('unMuteGroup')"
+                                >
+                                    <img
+                                      :src="group.tabs.some(tab => tab.audible) ? '/icons/audio.svg' : '/icons/audio-mute.svg'"
+                                      class="align-text-bottom"/>
+                                </figure>
+                                <span v-text="getGroupTitle(group)" class="group-title"></span>
+                                <span v-if="options.showExtendGroupsPopupWithActiveTabs && !group.isArchive"
+                                      class="tab-title">
+                                    <span v-if="getLastActiveTabContainer(group.tabs)"
+                                          :title="getLastActiveTabContainer(group.tabs, 'name')"
+                                          :class="`size-16 userContext-icon identity-icon-${getLastActiveTabContainer(group.tabs, 'icon')} identity-color-${getLastActiveTabContainer(group.tabs, 'color')}`"></span>
+                                    <span v-text="getLastActiveTabTitle(group.tabs)"></span>
+                                </span>
+                            </div>
+                            <div class="item-action bold-hover is-unselectable"
+                                 @click.stop="showSectionGroupTabs(group)">
+                                <img class="size-16 rotate-180" src="/icons/arrow-left.svg"/>
+                                <span class="tabs-text"
+                                      v-text="groupTabsCountMessage(group.tabs, group.isArchive, false)"></span>
+                            </div>
+                        </div>
+
+                        <div class="create-new-group">
+                            <div class="group item" tabindex="0"
+                                 @click="createNewGroup(undefined, undefined, true, undefined)"
+                                 @keydown.enter="createNewGroup(undefined, undefined, true, undefined)"
+                                 @contextmenu="$refs.newGroupContextMenu.open($event)">
+                                <div class="item-icon">
+                                    <img class="size-16" src="/icons/group-new.svg"/>
+                                </div>
+                                <div class="item-title" v-text="lang('createNewGroup')"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <hr>
                 <div class="create-new-group">
                     <div class="item" tabindex="0"
@@ -2048,6 +2171,30 @@ export default {
                        @keydown.enter.stop="promptResolveFunc(true)" maxlength="256"/>
             </div>
         </popup>
+
+        <popup-parent
+          v-if="showPromptPopupParent"
+          :title="promptTitle"
+          :groups="groups.filter(gr => !gr.parentId)"
+          @resolve="(groups) => promptResolveFunc(true, groups)"
+          @close-popup-parent="(groups) => promptResolveFunc(false, groups)"
+          @show-popup="$refs.promptInput.focus(); $refs.promptInput.select()"
+          :buttons="
+                [{
+                    event: 'resolve',
+                    classList: 'is-success',
+                    lang: 'ok',
+                    focused: false,
+                }, {
+                    event: 'close-popup-parent',
+                    lang: 'cancel',
+                }]
+            ">
+            <div class="control is-expanded">
+                <input v-model.trim="promptValue" type="text" class="input" ref="promptInput"
+                       @keydown.enter.stop="promptResolveFunc(true)"/>
+            </div>
+        </popup-parent>
 
         <popup
                 v-if="showConfirmPopup"
