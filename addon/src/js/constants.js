@@ -317,6 +317,8 @@ export const DEFAULT_OPTIONS = Object.freeze({
     contextMenuParent: [
         'open-in-new-windows',
         'switch-to-context',
+        'rename',
+        'remove',
     ],
 
     autoBackupEnable: true,

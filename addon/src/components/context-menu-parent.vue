@@ -41,6 +41,18 @@ export default {
                     <img src="/icons/settings.svg" class="size-16" />
                     <span v-text="lang('switchToContext')"></span>
                 </li>
+                <li
+                    v-if="menu.includes('rename') && !data.parent.isArchive"
+                    @click="$emit('rename', data.parent)">
+                    <img src="/icons/edit.svg" class="size-16" />
+                    <span v-text="lang('rename')"></span>
+                </li>
+                <li
+                    v-if="menu.includes('remove') && !data.parent.isArchive"
+                    @click="$emit('remove', data.parent)">
+                    <img src="/icons/delete.svg" class="size-16" />
+                    <span v-text="lang('delete')"></span>
+                </li>
             </ul>
         </template>
     </context-menu>

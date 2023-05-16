@@ -123,7 +123,7 @@ export default {
             options: {},
             groups: [],
             parents: [],
-            expandedParents: [],
+            expandedParents: {},
 
             allTabs: {},
 
@@ -825,6 +825,17 @@ export default {
             const newParent = await Parents.add(undefined, [], newGroupTitle);
             await Promise.all(groups.map(gr => this.moveGroup(gr, newParent)));
         },
+        async renameParent(parent) {
+            let newGroupTitle = '';
+            newGroupTitle = await this.showPrompt(this.lang('renameParent'), parent.title);
+
+            if (!newGroupTitle) {
+                return false;
+            }
+
+            await Parents.update(parent.id, {title: newGroupTitle});
+            this.loadParents();
+        },
         async createNewGroup(tabIds, proposalTitle, applyGroupWithTabId, parentId) {
             let newGroupTitle = '';
 
@@ -986,7 +997,6 @@ export default {
             event.target.classList.toggle('active')
             const id = event.target.getAttribute('data-id');
 
-            // alert(this.expandedParents[id])
             const expandedParents = {...this.expandedParents}
             if (expandedParents[id] === true) {
                 expandedParents[id] = false;
@@ -995,18 +1005,7 @@ export default {
             }
             this.expandedParents = expandedParents;
             let content = document.getElementById("content-" + id);
-            // alert(content?.innerText)
-            if (content) {
-                if (content.style.minHeight) {
-                    content.style.minHeight = null;
-                    content.style.maxHeight = 0;
-                    content.style.height = '0';
-                } else {
-                    content.style.minHeight = content.scrollHeight + "px";
-                    content.style.maxHeight = null;
-                    content.style.height = 'auto';
-                }
-            }
+            content?.classList.toggle('expanded');
         },
 
         closeWindow() {
@@ -1160,6 +1159,21 @@ export default {
                 this.loadUnsyncedTabs();
             }
         },
+        async removeParent(parent) {
+            if (this.options.showConfirmDialogBeforeGroupDelete) {
+                let ok = await this.showConfirm(this.lang('deleteParent'), this.lang('confirmDeleteParent', Utils.safeHtml(parent.title)), 'delete', 'is-danger');
+
+                if (!ok) {
+                    return;
+                }
+            }
+
+            this.groups.filter(gr => gr.parentId === parent.id).map(gr => {
+                Messages.sendMessageModule('Groups.remove', gr.id);
+            })
+            await Parents.remove(parent.id);
+            this.loadParents();
+        },
         getTabIdsForMove(tabId) {
             if (tabId && !this.multipleTabIds.includes(tabId)) {
                 this.multipleTabIds.push(tabId);
@@ -1236,6 +1250,10 @@ export default {
         getTabTitle: Tabs.getTitle,
         isTabLoading: Utils.isTabLoading,
         getGroupTitle: Groups.getTitle,
+        getParentTitle(parentId) {
+            let parent = this.parents.find(p => p.id === parentId);
+            return parent ? parent.title : 'Tab Groups';
+        },
         groupTabsCountMessage: Groups.tabsCountMessage,
         getLastActiveTabContainer(tabs, key = null) {
             let tab = Utils.getLastActiveTab(tabs);
@@ -1454,8 +1472,10 @@ export default {
         <main id="result" :class="['is-full-width', dragData ? 'drag-' + dragData.itemType : false]">
             <!-- SEARCH TABS -->
             <div v-if="section === SECTION_SEARCH">
+                <hr/>
+                <h3 class="divider">Parent Groups</h3>
                 <div v-for="parent in parents">
-                    <button class="parent" @click="clickOnParent" :data-id="parent.id"
+                    <button class="parent active" @click="clickOnParent" :data-id="parent.id"
                             @contextmenu="$refs.contextMenuParent.open($event, {parent})"
                     >
                         <span :data-id="parent.id">
@@ -1464,12 +1484,12 @@ export default {
                             {{parent.title}}
                         </span>
                         <span class="parent-indicator" :data-id="parent.id">
-                            <img :src="expandedParents[parent.id] ? '/icons/arrow-down.svg' : '/icons/arrow-right.svg'"
+                            <img :src="!expandedParents[parent.id] ? '/icons/arrow-down.svg' : '/icons/arrow-right.svg'"
                                  class="size-12"/>
                             {{filteredGroups.filter(it => it.parentId === parent.id).length}}
                         </span>
                     </button>
-                    <div class="content" :id="'content-'+parent.id">
+                    <div class="content expanded" :id="'content-'+parent.id">
                         <div v-if="filteredGroups.length" class="search-scrollable no-outline">
                             <div v-for="group in filteredGroups" :key="group.id" v-if="group.parentId === parent.id">
                                 <div
@@ -1598,9 +1618,11 @@ export default {
 
             <!-- GROUPS LIST -->
             <div v-if="section === SECTION_GROUPS_LIST">
+                <hr/>
+                <h3 class="divider">Parent Groups</h3>
                 <!-- Parents -->
                 <div v-for="parent in parents">
-                    <button class="parent" @click="clickOnParent" :data-id="parent.id"
+                    <button class="parent active" @click="clickOnParent" :data-id="parent.id"
                             @contextmenu="$refs.contextMenuParent.open($event, {parent})"
                     >
                         <span :data-id="parent.id">
@@ -1609,12 +1631,12 @@ export default {
                             {{parent.title}}
                         </span>
                         <span class="parent-indicator" :data-id="parent.id">
-                            <img :src="expandedParents[parent.id] ? '/icons/arrow-down.svg' : '/icons/arrow-right.svg'"
+                            <img :src="!expandedParents[parent.id] ? '/icons/arrow-down.svg' : '/icons/arrow-right.svg'"
                                  class="size-12"/>
                             {{groups.filter(it => it.parentId === parent.id).length}}
                         </span>
                     </button>
-                    <div class="content" :id="'content-'+parent.id">
+                    <div class="content expanded" :id="'content-'+parent.id">
                         <div
                                 v-for="group in groups"
                                 v-if="group.parentId === parent.id"
@@ -1645,9 +1667,10 @@ export default {
                                 :title="getGroupTitle(group, 'withCountTabs withTabs withContainer')"
                         >
                             <div class="item-icon">
-<!--                                <figure :class="['image is-16x16', {'is-sticky': group.isSticky}]">-->
-                                    <img :src="group.iconUrlToDisplay"  :class="['image is-16x16', {'is-sticky': group.isSticky}]"/>
-<!--                                </figure>-->
+                                <!--                                <figure :class="['image is-16x16', {'is-sticky': group.isSticky}]">-->
+                                <img :src="group.iconUrlToDisplay"
+                                     :class="['image is-16x16', {'is-sticky': group.isSticky}]"/>
+                                <!--                                </figure>-->
                             </div>
                             <div class="item-title clip-text">
                                 <figure v-if="group.isArchive" class="image is-16x16">
@@ -1696,54 +1719,55 @@ export default {
                         </div>
                     </div>
                 </div>
-                <hr>
+                <hr/>
                 <div>
-                    <button class="parent" @click="clickOnParent" data-id="/"
+                    <button class="parent active" @click="clickOnParent" data-id="/"
                     >
                         <span data-id="/">
                             <img src="/icons/parent-new.svg"
                                  class="size-16"/>
-                            /
+                            Tab Groups
                         </span>
                         <span class="parent-indicator" data-id="/">
-                            <img :src="expandedParents['/'] ? '/icons/arrow-down.svg' : '/icons/arrow-right.svg'"
+                            <img :src="!expandedParents['/'] ? '/icons/arrow-down.svg' : '/icons/arrow-right.svg'"
                                  class="size-12"/>
                             {{groups.filter(it => !it.parentId).length}}
                         </span>
                     </button>
-                    <div class="content" id="content-/">
+                    <div class="content expanded" id="content-/">
                         <div
-                          v-for="group in groups"
-                          v-if="!group.parentId"
-                          :key="group.id"
-                          :class="['group item is-unselectable', {
+                                v-for="group in groups"
+                                v-if="!group.parentId"
+                                :key="group.id"
+                                :class="['group item is-unselectable', {
                             'drag-moving': group.isMoving,
                             'drag-over': group.isOver,
                             'is-active-element': group === currentGroup,
                             'is-opened': isOpenedGroup(group),
                         }]"
 
-                          draggable="true"
-                          @dragstart="dragHandle($event, 'group', ['group'], {item: group})"
-                          @dragenter="dragHandle($event, 'group', ['group'], {item: group})"
-                          @dragover="dragHandle($event, 'group', ['group'], {item: group})"
-                          @dragleave="dragHandle($event, 'group', ['group'], {item: group})"
-                          @drop="dragHandle($event, 'group', ['group'], {item: group})"
-                          @dragend="dragHandle($event, 'group', ['group'], {item: group})"
+                                draggable="true"
+                                @dragstart="dragHandle($event, 'group', ['group'], {item: group})"
+                                @dragenter="dragHandle($event, 'group', ['group'], {item: group})"
+                                @dragover="dragHandle($event, 'group', ['group'], {item: group})"
+                                @dragleave="dragHandle($event, 'group', ['group'], {item: group})"
+                                @drop="dragHandle($event, 'group', ['group'], {item: group})"
+                                @dragend="dragHandle($event, 'group', ['group'], {item: group})"
 
-                          @contextmenu="$refs.contextMenuGroup.open($event, {group})"
-                          @click="!group.isArchive && applyGroup(group)"
-                          @keydown.enter="!group.isArchive && applyGroup(group, undefined, true)"
-                          @keydown.right.stop="showSectionGroupTabs(group);"
-                          @keydown.up="focusToNextElement"
-                          @keydown.down="focusToNextElement"
-                          @keydown.f2.stop="renameGroup(group)"
-                          tabindex="0"
-                          :title="getGroupTitle(group, 'withCountTabs withTabs withContainer')"
+                                @contextmenu="$refs.contextMenuGroup.open($event, {group})"
+                                @click="!group.isArchive && applyGroup(group)"
+                                @keydown.enter="!group.isArchive && applyGroup(group, undefined, true)"
+                                @keydown.right.stop="showSectionGroupTabs(group);"
+                                @keydown.up="focusToNextElement"
+                                @keydown.down="focusToNextElement"
+                                @keydown.f2.stop="renameGroup(group)"
+                                tabindex="0"
+                                :title="getGroupTitle(group, 'withCountTabs withTabs withContainer')"
                         >
                             <div class="item-icon">
                                 <!--                                <figure :class="['image is-16x16', {'is-sticky': group.isSticky}]">-->
-                                <img :src="group.iconUrlToDisplay"  :class="['image is-16x16', {'is-sticky': group.isSticky}]"/>
+                                <img :src="group.iconUrlToDisplay"
+                                     :class="['image is-16x16', {'is-sticky': group.isSticky}]"/>
                                 <!--                                </figure>-->
                             </div>
                             <div class="item-title clip-text">
@@ -1754,14 +1778,14 @@ export default {
                                       :title="containers[group.newTabContainer]?.name"
                                       :class="`size-16 userContext-icon identity-icon-${containers[group.newTabContainer]?.icon} identity-color-${containers[group.newTabContainer]?.color}`"></span>
                                 <figure
-                                  v-if="showMuteIconGroup(group)"
-                                  class="image is-16x16"
-                                  @click.stop="toggleMuteGroup(group)"
-                                  :title="group.tabs.some(tab => tab.audible) ? lang('muteGroup') : lang('unMuteGroup')"
+                                        v-if="showMuteIconGroup(group)"
+                                        class="image is-16x16"
+                                        @click.stop="toggleMuteGroup(group)"
+                                        :title="group.tabs.some(tab => tab.audible) ? lang('muteGroup') : lang('unMuteGroup')"
                                 >
                                     <img
-                                      :src="group.tabs.some(tab => tab.audible) ? '/icons/audio.svg' : '/icons/audio-mute.svg'"
-                                      class="align-text-bottom"/>
+                                            :src="group.tabs.some(tab => tab.audible) ? '/icons/audio.svg' : '/icons/audio-mute.svg'"
+                                            class="align-text-bottom"/>
                                 </figure>
                                 <span v-text="getGroupTitle(group)" class="group-title"></span>
                                 <span v-if="options.showExtendGroupsPopupWithActiveTabs && !group.isArchive"
@@ -1907,7 +1931,8 @@ export default {
                         <span v-if="groupToShow.newTabContainer !== DEFAULT_COOKIE_STORE_ID"
                               :title="containers[groupToShow.newTabContainer]?.name"
                               :class="`size-16 userContext-icon identity-icon-${containers[groupToShow.newTabContainer]?.icon} identity-color-${containers[groupToShow.newTabContainer]?.color}`"></span>
-                        <span class="group-title" v-text="getGroupTitle(groupToShow)"></span>
+                        <span class="group-title"
+                              v-text="getParentTitle(groupToShow.parentId) + ' - ' + getGroupTitle(groupToShow)"></span>
                     </div>
                     <div class="item-action is-unselectable">
                         <span tabindex="0" @click="openGroupSettings(groupToShow)"
@@ -2063,6 +2088,8 @@ export default {
                              :menu="options.contextMenuParent"
                              @switch-to-context="switchToContext"
                              @open-in-new-windows="openParentInNewWindows"
+                             @rename="renameParent"
+                             @remove="removeParent"
         ></context-menu-parent>
         <context-menu-group ref="contextMenuGroup"
                             :menu="options.contextMenuGroup"
@@ -2173,13 +2200,13 @@ export default {
         </popup>
 
         <popup-parent
-          v-if="showPromptPopupParent"
-          :title="promptTitle"
-          :groups="groups.filter(gr => !gr.parentId)"
-          @resolve="(groups) => promptResolveFunc(true, groups)"
-          @close-popup-parent="(groups) => promptResolveFunc(false, groups)"
-          @show-popup="$refs.promptInput.focus(); $refs.promptInput.select()"
-          :buttons="
+                v-if="showPromptPopupParent"
+                :title="promptTitle"
+                :groups="groups.filter(gr => !gr.parentId)"
+                @resolve="(groups) => promptResolveFunc(true, groups)"
+                @close-popup-parent="(groups) => promptResolveFunc(false, groups)"
+                @show-popup="$refs.promptInput.focus(); $refs.promptInput.select()"
+                :buttons="
                 [{
                     event: 'resolve',
                     classList: 'is-success',
@@ -2515,20 +2542,28 @@ html[data-theme="dark"] {
 
 .content {
   padding: 0;
-  min-height: 0;
   height: 0;
   overflow: hidden;
   transition: min-height 0.2s ease-out, max-height 0.2s ease-out;
   background-color: #2c2c2c;
 }
 
+.content.expanded {
+  height: auto;
+}
+
+.divider {
+  //border-bottom: 1px solid lightgray;
+  margin-bottom: 5px;
+}
+
 .group.item {
-    //background-color: red;
-    //display: flex;
+  //background-color: red;
+  //display: flex;
 }
 
 .item-icon {
-    //border: 1px solid white;
+  //border: 1px solid white;
 }
 
 .group-title {

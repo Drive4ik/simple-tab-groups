@@ -808,7 +808,17 @@ export default {
             const newParent = await Parents.add(undefined, [], newGroupTitle);
             await Promise.all(groups.map(gr => this.moveGroup(gr, newParent)));
         },
+        async renameParent(parent) {
+            let newGroupTitle = '';
+            newGroupTitle = await this.showPrompt(this.lang('renameParent'), parent.title);
 
+            if (!newGroupTitle) {
+                return false;
+            }
+
+            await Parents.update(parent.id, {title: newGroupTitle});
+            this.loadParents();
+        },
         addTab(group, cookieStoreId) {
             Messages.sendMessageModule('Tabs.add', group.id, cookieStoreId);
         },
@@ -849,10 +859,18 @@ export default {
 
         async switchToContext(parent) {
             const groups = this.groups.filter(gr => gr.parentId === parent.id);
-            await this.openGroups(groups, false);
+            const transcendentGroups = this.groups.filter(gr => gr.isTranscend === true && gr.parentId !== parent.id);
+            let groupsToOpen = [...groups, ...transcendentGroups]
+                .filter(gr => !this.isOpenedGroup(gr));
+            this.openGroups(groupsToOpen, true);
+            // await this.closeAllOtherWindows(groupsToOpen.map(gr => gr.id));
 
-            const transcendentGroups = this.groups.filter(gr => gr.isTranscend === true);
-            await this.openGroups(transcendentGroups, true);
+            // let promises = []
+            // for (let i = 0; i < mergedGroups.length; i++) {
+            //     const group = mergedGroups[i];
+            //     promises.push(this.applyGroup(group, {}, i !== 0))
+            // }
+            // await Promise.all(promises);
         },
         async openParentInNewWindows(parent) {
             const groups = this.groups.filter(gr => gr.parentId === parent.id);
@@ -933,15 +951,7 @@ export default {
         clickOnParent(event) {
             let content = event.target.nextElementSibling;
             event.target.classList.toggle('active')
-            if (content.style.minHeight) {
-                content.style.minHeight = null;
-                content.style.maxHeight = 0;
-                content.style.height = '0';
-            } else {
-                content.style.minHeight = content.scrollHeight + "px";
-                content.style.maxHeight = null;
-                content.style.height = 'auto';
-            }
+            content?.classList.toggle('expanded')
         },
 
         openGroupSettings(group) {
@@ -959,6 +969,21 @@ export default {
             this.groups.splice(this.groups.indexOf(group), 1);
 
             Messages.sendMessageModule('Groups.remove', group.id);
+        },
+        async removeParent(parent) {
+            if (this.options.showConfirmDialogBeforeGroupDelete) {
+                let ok = await this.showConfirm(this.lang('deleteParent'), this.lang('confirmDeleteParent', Utils.safeHtml(parent.title)), 'delete', 'is-danger');
+
+                if (!ok) {
+                    return;
+                }
+            }
+
+            this.groups.filter(gr => gr.parentId === parent.id).map(gr => {
+                Messages.sendMessageModule('Groups.remove', gr.id);
+            })
+            await Parents.remove(parent.id);
+            this.loadParents();
         },
         setTabIconAsGroupIcon({favIconUrl}, group) {
             Groups.setIconUrl(group.id, favIconUrl);
@@ -1088,6 +1113,18 @@ export default {
             }
         },
 
+        async closeAllOtherWindows(groupIdsToExclude = []) {
+            try {
+                const otherWindowsIds = this.groups
+                    .filter(it => !groupIdsToExclude.includes(it.id) && it.tabs?.length > 0)
+                    .map(it => it.tabs[0].windowId)
+                console.log('closeAllOtherWindows', otherWindowsIds)
+                // await Promise.all(otherWindowsIds.map(it => browser.windows.remove(it)));
+            } catch (e) {
+                console.error('close-all-windows', e.message);
+            }
+        },
+
         openOptionsPage() {
             delete window.localStorage.optionsSection;
             Urls.openOptionsPage();
@@ -1161,12 +1198,14 @@ export default {
         </header>
 
         <main id="result" v-show="!isLoading">
+            <h3>Parent Groups</h3>
+            <hr/>
             <template v-for="parent in parents">
-                <button class="parent" @click="clickOnParent"
+                <button class="parent active" @click="clickOnParent"
                         @contextmenu="$refs.contextMenuParent.open($event, {parent})">
                     {{parent.title}} ({{filteredGroups.filter(it => it.parentId === parent.id).length}} groups)
                 </button>
-                <div class="content">
+                <div class="content expanded">
                     <!-- GRID -->
                     <div v-if="view === VIEW_GRID"
                          :class="['grid', dragData ? 'drag-' + dragData.itemType : false,]">
@@ -1328,14 +1367,15 @@ export default {
                 </div>
             </template>
 
+            <h3>Tab Groups</h3>
+            <hr/>
             <!-- ROOT GROUP [WITHOUT PARENT] -->
             <template>
-                <button class="parent" @click="clickOnParent"
-                        @contextmenu="$refs.contextMenuParent.open($event, {parent})">
-                    / ({{filteredGroups.filter(it => !it.parentId).length}}
+                <button class="parent active" @click="clickOnParent">
+                    Tab Groups ({{filteredGroups.filter(it => !it.parentId).length}}
                     {{filteredGroups.filter(it => !it.parentId).length > 1 ? 'groups' : 'group'}})
                 </button>
-                <div class="content">
+                <div class="content expanded">
                     <!-- GRID -->
                     <div v-if="view === VIEW_GRID"
                          :class="['grid', dragData ? 'drag-' + dragData.itemType : false,]">
@@ -1584,6 +1624,8 @@ export default {
                              :menu="options.contextMenuParent"
                              @switch-to-context="switchToContext"
                              @open-in-new-windows="openParentInNewWindows"
+                             @rename="renameParent"
+                             @remove="removeParent"
         ></context-menu-parent>
         <context-menu-group ref="contextMenuGroup"
                             :menu="options.contextMenuGroup"
@@ -1866,13 +1908,16 @@ html[data-theme="dark"] {
     width: 20px;
   }
 
-  .active:after {
+  .parent.active:after {
     content: url("/icons/arrow-down.svg");
+  }
+
+  .content.expanded {
+    height: auto;
   }
 
   .content {
     padding: 0;
-    min-height: 0;
     height: 0;
     overflow: hidden;
     transition: min-height 0.2s ease-out, max-height 0.2s ease-out;
@@ -2235,6 +2280,8 @@ html[data-theme="dark"] {
       opacity: 0.4;
     }
   }
+
+
 }
 
 </style>

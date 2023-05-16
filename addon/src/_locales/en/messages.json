@@ -61,6 +61,14 @@
         "message": "Save",
         "description": "Save"
     },
+    "rename": {
+        "message": "Rename",
+        "description": "Rename"
+    },
+    "renameParent": {
+        "message": "Rename Parent Group",
+        "description": "Rename Parent Group"
+    },
     "delete": {
         "message": "Delete",
         "description": "Delete"
@@ -212,6 +220,20 @@
             "grouptitle": {
                 "content": "$1",
                 "example": "Group #4"
+            }
+        }
+    },
+    "deleteParent": {
+        "message": "Delete parent group",
+        "description": "Delete parent group"
+    },
+    "confirmDeleteParent": {
+        "message": "Do you want to delete parent group \"$parenttitle$\" ?<br>Removing parent group also removes all its tab groups!",
+        "description": "Delete parent group?",
+        "placeholders": {
+            "parenttitle": {
+                "content": "$1",
+                "example": "Parent Group #4"
             }
         }
     },

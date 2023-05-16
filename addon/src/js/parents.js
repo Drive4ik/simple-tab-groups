@@ -135,34 +135,17 @@ export async function add(parentId, groupIds = [], title = null) {
 export async function remove(parentId) {
     const log = logger.start('remove', parentId);
 
-    const [
-        {parent, parents, parentIndex},
-        {defaultParentProps},
-    ] = await Promise.all([
-        load(parentId),
-        getDefaults(),
-    ]);
+    const {parent, parents, parentIndex} = await load(parentId);
 
     if (!parent) {
         log.stopError('parentId', parentId, 'not found');
         return;
     }
 
-    parent.groupIds.map(groupId => {
-        Groups.remove(groupId).catch(log.onCatch('cant remove group', false));
-    })
-
     parents.splice(parentIndex, 1);
 
 
     await save(parents);
-
-    if (!parent.isArchive) {
-        parent.groupIds.map(groupId => Groups.remove(groupId).catch(log.onCatch('cant remove group', false)));
-        backgroundSelf.updateMoveTabMenus();
-    }
-
-    backgroundSelf.removeGroupBookmark(parent).catch(log.onCatch('cant remove parent bookmark', false));
 
     backgroundSelf.sendMessage('parent-removed', {
         parentId: parentId,
