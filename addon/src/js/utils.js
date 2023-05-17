@@ -237,7 +237,7 @@ export function isWindowAllow({type}) {
     return browser.windows.WindowType.NORMAL === type;
 }
 
-const createTabUrlRegexp = /^((http|ftp|moz-extension)|about:blank)/,
+export const createTabUrlRegexp = /^((http|ftp|moz-extension)|about:blank)/,
     emptyUrlsArray = new Set(['about:blank', 'about:newtab', 'about:home']);
 
 export function isUrlEmpty(url) {

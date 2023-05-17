@@ -7,6 +7,7 @@ import * as Cache from './cache.js';
 import * as Containers from './containers.js';
 import * as Groups from './groups.js';
 import * as Windows from './windows.js';
+import {emptyUrlsArray} from "./utils.js";
 
 const logger = new Logger('Tabs');
 
@@ -16,7 +17,7 @@ export async function createNative({url, active, pinned, title, index, windowId,
     if (url) {
         if (Utils.isUrlAllowToCreate(url)) {
             tab.url = url;
-        } else if (url !== 'about:newtab') {
+        } else if (!emptyUrlsArray.has(url)) {
             tab.url = Urls.HELP_PAGE_UNSUPPORTED_URL + '#' + url;
         }
     }

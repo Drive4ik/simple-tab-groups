@@ -1203,11 +1203,31 @@ export default {
             await Promise.all(promises);
         },
         async switchToContext(parent) {
-            const groups = this.groups.filter(gr => gr.parentId === parent.id);
-            await this.openGroups(groups, true);
+            await this.loadWindows()
+            let groupsToOpen = [], currentWindowId = this.currentWindow.id, openedWindows = this.openedWindows
+            for (let group of this.groups) {
+                if (group.parentId === parent.id || group.isTranscend) {
+                    console.log('group-to-open', group.id)
+                    if (openedWindows.some(w => w.groupId === group.id)) {
+                        console.log('group-is-opened', group.id)
+                        continue
+                    }
+                    if (group.windowId === currentWindowId) {
+                        console.log('group-is-current', group.id)
+                        continue
+                    }
+                    groupsToOpen.push(group)
+                }
+            }
+            for (let window of openedWindows) {
+                if (groupsToOpen.some(group => group.id === window.groupId) || window.id === currentWindowId) {
+                    console.log('window-to-keep')
+                } else {
+                    await browser.windows.remove(window.id)
+                }
+            }
 
-            const transcendentGroups = this.groups.filter(gr => gr.isTranscend === true);
-            await this.openGroups(transcendentGroups, true);
+            await this.openGroups(groupsToOpen, true)
         },
         async openParentInNewWindows(parent) {
             const groups = this.groups.filter(gr => gr.parentId === parent.id);

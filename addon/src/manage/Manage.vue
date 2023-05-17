@@ -858,19 +858,31 @@ export default {
         },
 
         async switchToContext(parent) {
-            const groups = this.groups.filter(gr => gr.parentId === parent.id);
-            const transcendentGroups = this.groups.filter(gr => gr.isTranscend === true && gr.parentId !== parent.id);
-            let groupsToOpen = [...groups, ...transcendentGroups]
-                .filter(gr => !this.isOpenedGroup(gr));
-            this.openGroups(groupsToOpen, true);
-            // await this.closeAllOtherWindows(groupsToOpen.map(gr => gr.id));
+            await this.loadWindows()
+            let groupsToOpen = [], currentWindowId = this.currentWindow.id, openedWindows = this.openedWindows
+            for (let group of this.groups) {
+                if (group.parentId === parent.id || group.isTranscend) {
+                    console.log('group-to-open', group.id)
+                    if (openedWindows.some(w => w.groupId === group.id)) {
+                        console.log('group-is-opened', group.id)
+                        continue
+                    }
+                    if (group.windowId === currentWindowId) {
+                        console.log('group-is-current', group.id)
+                        continue
+                    }
+                    groupsToOpen.push(group)
+                }
+            }
+            for (let window of openedWindows) {
+                if (groupsToOpen.some(group => group.id === window.groupId) || window.id === currentWindowId) {
+                    console.log('window-to-keep')
+                } else {
+                    await browser.windows.remove(window.id)
+                }
+            }
 
-            // let promises = []
-            // for (let i = 0; i < mergedGroups.length; i++) {
-            //     const group = mergedGroups[i];
-            //     promises.push(this.applyGroup(group, {}, i !== 0))
-            // }
-            // await Promise.all(promises);
+            await this.openGroups(groupsToOpen, true)
         },
         async openParentInNewWindows(parent) {
             const groups = this.groups.filter(gr => gr.parentId === parent.id);
@@ -1112,19 +1124,6 @@ export default {
                 browser.windows.remove(this.currentWindow.id); // close manage groups POPUP window
             }
         },
-
-        async closeAllOtherWindows(groupIdsToExclude = []) {
-            try {
-                const otherWindowsIds = this.groups
-                    .filter(it => !groupIdsToExclude.includes(it.id) && it.tabs?.length > 0)
-                    .map(it => it.tabs[0].windowId)
-                console.log('closeAllOtherWindows', otherWindowsIds)
-                // await Promise.all(otherWindowsIds.map(it => browser.windows.remove(it)));
-            } catch (e) {
-                console.error('close-all-windows', e.message);
-            }
-        },
-
         openOptionsPage() {
             delete window.localStorage.optionsSection;
             Urls.openOptionsPage();
