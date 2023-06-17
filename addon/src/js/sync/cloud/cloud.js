@@ -63,8 +63,7 @@ async function syncGroups(localData, cloudData, sourceOfTruth, localChanges) {
         const localTabsToRemove = new Set;
 
         cloudGroups.forEach(cloudGroup => {
-            const resultCloudGroup = cloudGroup;
-            let resultLocalGroup;
+            let localGroup;
 
             // if first sync - add cloud group as new. This will duplicate groups, sorry ¯\_(ツ)_/¯
             // it is impossible otherwise, because the id of the group on one computer
@@ -73,29 +72,37 @@ async function syncGroups(localData, cloudData, sourceOfTruth, localChanges) {
                 // nevertheless, we are trying to find a group with the same name and the same id,
                 // this will happen when restoring groups from a backup on different computers with data cleansing
                 // (then the id of the groups are saved)
-                resultLocalGroup = localGroups.find(localGroup => localGroup.id === cloudGroup.id && localGroup.title === cloudGroup.title);
+                localGroup = localGroups.find(localGroup => localGroup.id === cloudGroup.id && localGroup.title === cloudGroup.title);
             } else {
                 // found local group
-                resultLocalGroup = localGroups.find(localGroup => localGroup.id === cloudGroup.id);
+                localGroup = localGroups.find(localGroup => localGroup.id === cloudGroup.id);
             }
 
             // if not found, create it
-            if (!resultLocalGroup) {
+            if (!localGroup) {
                 // TODO work with group id => to random
-                resultLocalGroup = {...cloudGroup};
+                localGroup = {...cloudGroup};
                 /* localChanges.tabsToCreate.push({
-                    tabs: Groups.setNewTabsParams(resultLocalGroup.tabs, resultLocalGroup),
+                    tabs: Groups.setNewTabsParams(localGroup.tabs, localGroup),
                     hideTabs: true,
                 }); */
             }
 
+            const resultCloudGroup = cloudGroup;
+            const resultLocalGroup = localGroup;
+
             // const tabsToCreate = [];
 
             if (cloudGroup.isArchive !== resultLocalGroup.isArchive) {
-                //
+                if (cloudGroup.isArchive) {
+                    //
+                } else if (resultLocalGroup.isArchive) {
+                    //
+                }
             } else if (cloudGroup.isArchive && resultLocalGroup.isArchive) {
                 //
             } else if (!cloudGroup.isArchive && !resultLocalGroup.isArchive) {
+                const resultCloudTabs = cloudGroup.tabs;
                 const resultLocalTabs = [];
 
                 cloudGroup.tabs.forEach(cloudTab => {
@@ -108,6 +115,7 @@ async function syncGroups(localData, cloudData, sourceOfTruth, localChanges) {
                             return false;
                         }
 
+                        // temporary containers must be different beetween different computers
                         if (Containers.isTemporary(localTab.cookieStoreId)) {
                             return cloudTab.cookieStoreId === Constants.TEMPORARY_CONTAINER;
                         }
@@ -121,9 +129,24 @@ async function syncGroups(localData, cloudData, sourceOfTruth, localChanges) {
                     resultLocalTabs.push(localTab);
                 });
 
-                resultLocalGroup.tabs.forEach(localTab => {
-                    if (localTab.new || resultLocalTabs.includes(localTab)) {
+                resultLocalGroup.tabs.forEach((localTab, localTabIndex) => {
+                    if (resultLocalTabs.includes(localTab)) {
                         return;
+                    }
+
+                    // decide which tabs to delete locally and which to keep and add to the cloud
+
+                    // if tab has sync id equal with last local sync id
+                    // delete the tab, it was already in the cloud and on another computer
+                    if (localTab.syncId === localData.autoBackupCloudTimeStamp) {
+                        localTabsToRemove.add(localTab);
+                    } else if (!localTab.syncId) {
+                        // if a tab has no sync id, it means it has not yet been in the cloud and on another computer
+                        // i.e. it is new. leave it and add it to the cloud
+
+                        // it may be necessary to check in the future if the insertion position can be improved
+                        resultCloudTabs.splice(localTabIndex, 0, localTab);
+                        resultLocalTabs.splice(localTabIndex, 0, localTab);
                     }
 
                     if (localTab.lastAccessed < cloudData.autoBackupCloudTimeStamp) {
