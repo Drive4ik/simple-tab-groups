@@ -23,7 +23,7 @@ export async function load(groupId = null, withTabs = false, includeFavIconUrl, 
     if (withTabs) {
         let groupTabs = groups.reduce((acc, group) => (acc[group.id] = [], acc), {});
 
-        await Promise.all(allTabs.map(async function(tab) {
+        await Promise.all(allTabs.map(async function (tab) {
             if (tab.groupId) {
                 if (groupTabs[tab.groupId]) {
                     groupTabs[tab.groupId].push(tab);
@@ -34,7 +34,7 @@ export async function load(groupId = null, withTabs = false, includeFavIconUrl, 
             }
         }));
 
-        groups = groups.map(function(group) {
+        groups = groups.map(function (group) {
             if (!group.isArchive) {
                 group.tabs = groupTabs[group.id].sort(Utils.sortBy('index'));
             }
@@ -80,7 +80,7 @@ export async function save(groups, withMessage = false) {
     return groups;
 }
 
-export function create(id, title, defaultGroupProps = {}) {
+export function create(id, title, defaultGroupProps = {}, parentId = null) {
     const group = {
         id,
         title: null,
@@ -106,6 +106,8 @@ export function create(id, title, defaultGroupProps = {}) {
         showOnlyActiveTabAfterMovingItIntoThisGroup: false,
         showNotificationAfterMovingTabIntoThisGroup: true,
         bookmarkId: null,
+        parentId,
+        isTranscend: false,
 
         ...defaultGroupProps,
     };
@@ -151,7 +153,12 @@ export async function saveDefault(defaultGroupProps) {
     log.stop();
 }
 
-export async function add(windowId, tabIds = [], title = null) {
+export async function addUnderParent(parentId) {
+    const log = logger.start('addUnderParent', parentId);
+    return add(null, [], null, parentId);
+}
+
+export async function add(windowId, tabIds = [], title = null, parentId = null) {
     tabIds = tabIds?.slice?.() || [];
     title = title?.slice(0, 256);
 
@@ -179,7 +186,7 @@ export async function add(windowId, tabIds = [], title = null) {
     lastCreatedGroupPosition++;
 
     const {groups} = await load(),
-        newGroup = create(lastCreatedGroupPosition, title, defaultGroupProps);
+        newGroup = create(lastCreatedGroupPosition, title, defaultGroupProps, parentId);
 
     groups.push(newGroup);
 
@@ -351,12 +358,13 @@ const KEYS_RESPONSIBLE_VIEW = Object.freeze([
     'prependTitleToWindow',
 ]);
 
-export async function move(groupId, newGroupIndex) {
+export async function move(groupId, newGroupIndex, newParentId) {
     const log = logger.start('move', {groupId, newGroupIndex});
 
     let {groups, groupIndex} = await load(groupId);
-
-    groups.splice(newGroupIndex, 0, groups.splice(groupIndex, 1)[0]);
+    let group = groups.splice(groupIndex, 1)[0];
+    group.parentId = newParentId;
+    groups.splice(newGroupIndex, 0, group);
 
     await save(groups, true);
 
@@ -522,6 +530,33 @@ export async function archiveToggle(groupId) {
     log.stop();
 }
 
+export async function transcendToggle(groupId) {
+    const log = logger.start('transcendToggle', groupId);
+
+    await backgroundSelf.loadingBrowserAction();
+
+    let {group, groups} = await load(groupId, true),
+        tabsToRemove = [];
+
+    log.log('group.isTranscend', group.isTranscend, '=>', !group.isTranscend);
+
+    group.isTranscend = !group.isTranscend;
+
+    await save(groups);
+
+    backgroundSelf.sendMessage('groups-updated');
+
+    backgroundSelf.sendExternalMessage('group-updated', {
+        group: mapForExternalExtension(group),
+    });
+
+    backgroundSelf.loadingBrowserAction(false).catch(log.onCatch('loadingBrowserAction'));
+
+    backgroundSelf.updateMoveTabMenus();
+
+    log.stop();
+}
+
 const ExternalExtensionGroupDependentKeys = new Set([
     'title',
     'isArchive',
@@ -574,7 +609,8 @@ function isCatchedUrl(url, catchTabRules) {
         .some(regExpStr => {
             try {
                 return new RegExp(regExpStr).test(url);
-            } catch (e) {}
+            } catch (e) {
+            }
         });
 }
 
@@ -644,7 +680,13 @@ export function getCatchedForTab(notArchivedGroups, currentGroup, {cookieStoreId
 }
 
 export function isNeedBlockBeforeRequest(groups) {
-    return groups.some(function({isArchive, catchTabContainers, catchTabRules, ifDifferentContainerReOpen, newTabContainer}) {
+    return groups.some(function ({
+                                     isArchive,
+                                     catchTabContainers,
+                                     catchTabRules,
+                                     ifDifferentContainerReOpen,
+                                     newTabContainer
+                                 }) {
         if (isArchive) {
             return false;
         }

@@ -266,6 +266,7 @@ export const EXTENSIONS_WHITE_LIST = Object.freeze({
 export const DEFAULT_OPTIONS = Object.freeze({
     version: MANIFEST.version,
     groups: [],
+    parents: [],
     lastCreatedGroupPosition: 0,
 
     // options
@@ -310,6 +311,14 @@ export const DEFAULT_OPTIONS = Object.freeze({
         'archive',
         'rename',
         'reload-all-tabs',
+        'move-group-to-parent',
+        'transcend-group',
+    ],
+    contextMenuParent: [
+        'open-in-new-windows',
+        'switch-to-context',
+        'rename',
+        'remove',
     ],
 
     autoBackupEnable: true,

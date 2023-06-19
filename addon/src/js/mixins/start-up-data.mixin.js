@@ -1,6 +1,7 @@
 
 import * as Windows from '/js/windows.js';
 import * as Groups from '/js/groups.js';
+import * as Parents from '/js/parents.js';
 
 export default {
     methods: {
@@ -11,10 +12,12 @@ export default {
                 windows,
                 currendWindow,
                 {groups},
+                {parents},
             ] = await Promise.all([
                 Windows.load(true, true, includeThumbnail),
                 Windows.get(),
                 Groups.load(null, true, true, includeThumbnail),
+                Parents.load(null)
             ]);
 
             const unSyncTabs = windows
@@ -30,6 +33,7 @@ export default {
                 windows,
                 currendWindow,
                 groups,
+                parents,
                 unSyncTabs,
             };
         }

@@ -23,6 +23,14 @@
         "message": "Move tab to group",
         "description": "Move tab to group title"
     },
+    "transcendGroup": {
+        "message": "Transcend",
+        "description": "Transcend group"
+    },
+    "moveGroupToParentDisabledTitle": {
+        "message": "Move group to parent group",
+        "description": "Move group to parent title"
+    },
     "moveTabToGroupMessage": {
         "message": "Tab \"$tabtitle$\" was moved to group \"$grouptitle$\".\n\nClick here to show this tab.",
         "description": "Tab moved popup title",
@@ -52,6 +60,14 @@
     "save": {
         "message": "Save",
         "description": "Save"
+    },
+    "rename": {
+        "message": "Rename",
+        "description": "Rename"
+    },
+    "renameParent": {
+        "message": "Rename Parent Group",
+        "description": "Rename Parent Group"
     },
     "delete": {
         "message": "Delete",
@@ -157,6 +173,16 @@
             }
         }
     },
+    "newParentTitle": {
+        "message": "Parent $id$",
+        "description": "parent id",
+        "placeholders": {
+            "id": {
+                "content": "$1",
+                "example": "1"
+            }
+        }
+    },
     "searchNotFoundTitle": {
         "message": "No results found for \"$search$\"",
         "description": "No results found",
@@ -197,6 +223,20 @@
             }
         }
     },
+    "deleteParent": {
+        "message": "Delete parent group",
+        "description": "Delete parent group"
+    },
+    "confirmDeleteParent": {
+        "message": "Do you want to delete parent group \"$parenttitle$\" ?<br>Removing parent group also removes all its tab groups!",
+        "description": "Delete parent group?",
+        "placeholders": {
+            "parenttitle": {
+                "content": "$1",
+                "example": "Parent Group #4"
+            }
+        }
+    },
     "groupTabsCount": {
         "message": "$count$ tabs",
         "description": "Group tabs count",
@@ -221,6 +261,30 @@
             }
         }
     },
+    "parentGroupsCount": {
+        "message": "$count$ groups",
+        "description": "Parent group count",
+        "placeholders": {
+            "count": {
+                "content": "$1",
+                "example": "4"
+            }
+        }
+    },
+    "parentGroupsCountActive": {
+        "message": "$active$/$count$ groups active",
+        "description": "Parent groups count active",
+        "placeholders": {
+            "active": {
+                "content": "$1",
+                "example": "2"
+            },
+            "count": {
+                "content": "$2",
+                "example": "4"
+            }
+        }
+    },
     "deleteTab": {
         "message": "Delete tab",
         "description": "Delete tab"
@@ -232,6 +296,10 @@
     "createNewGroup": {
         "message": "Create new group",
         "description": "Create new group"
+    },
+    "createNewParent": {
+        "message": "Create new parent group",
+        "description": "Create new parent group"
     },
     "goBackButtonTitle": {
         "message": "Go back",
@@ -468,6 +536,14 @@
     "openGroupInNewWindow": {
         "message": "Open group in new window",
         "description": "Open group in new window"
+    },
+    "openParentInNewWindows": {
+        "message": "Open group in new windows",
+        "description": "Open parent group in new windows"
+    },
+    "switchToContext": {
+        "message": "Switch to Context",
+        "description": "Switch to this parent group"
     },
     "muteTabsWhenGroupCloseAndRestoreWhenOpen": {
         "message": "Mute tabs when group close and restore when open",
