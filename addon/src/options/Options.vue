@@ -988,14 +988,14 @@
             <div class="field">
                 <div class="field">
                     <label class="checkbox">
-                        <input v-model="options.autoBackupCloudEnable" type="checkbox" />
-                        <span v-text="lang('autoBackupCloudEnableTitle')"></span>
+                        <input v-model="options.syncEnable" type="checkbox" />
+                        <span v-text="lang('syncEnableTitle')"></span>
                     </label>
                 </div>
-                <div v-if="options.autoBackupCloudEnable" class="field">
+                <div v-if="options.syncEnable" class="field">
                     <div class="field">
                         <label class="checkbox">
-                            <input v-model="options.autoBackupCloudIncludeTabFavIcons" type="checkbox" />
+                            <input v-model="options.syncTabFavIcons" type="checkbox" />
                             <span v-text="lang('includeTabFavIconsIntoBackup')"></span>
                         </label>
                     </div>
@@ -1004,11 +1004,11 @@
                         <div v-html="lang('autoBackupCreateEveryTitle')"></div>
                         <div class="field has-addons">
                             <div class="control">
-                                <input type="number" class="input backup-time-input" v-model.number="options.autoBackupCloudIntervalValue" min="1" max="20" />
+                                <input type="number" class="input backup-time-input" v-model.number="options.syncIntervalValue" min="1" max="20" />
                             </div>
                             <div class="control">
                                 <div class="select">
-                                    <select v-model="options.autoBackupCloudIntervalKey">
+                                    <select v-model="options.syncIntervalKey">
                                         <option :value="AUTO_BACKUP_INTERVAL_KEY.minutes" v-text="lang('autoBackupIntervalKeyMinutes')"></option>
                                         <option :value="AUTO_BACKUP_INTERVAL_KEY.hours" v-text="lang('autoBackupIntervalKeyHours')"></option>
                                         <option :value="AUTO_BACKUP_INTERVAL_KEY.days" v-text="lang('autoBackupIntervalKeyDays')"></option>

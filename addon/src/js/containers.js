@@ -264,6 +264,34 @@ export function getAll(withDefaultContainer, containersStorage = containers) {
     return containers;
 }
 
+export function getToExport(storageData, containersStorage = containers) {
+    const containersToExport = new Set;
+
+    storageData.groups.forEach(group => {
+        group.tabs.forEach(tab => {
+            if (!isTemporary(tab.cookieStoreId, undefined, undefined, containersStorage)) {
+                containersToExport.add(tab.cookieStoreId);
+            }
+        });
+
+        containersToExport.add(group.newTabContainer);
+
+        group.catchTabContainers.forEach(cookieStoreId => containersToExport.add(cookieStoreId));
+        group.excludeContainersForReOpen.forEach(cookieStoreId => containersToExport.add(cookieStoreId));
+    });
+
+    containersToExport.delete(Constants.DEFAULT_COOKIE_STORE_ID);
+    containersToExport.delete(Constants.TEMPORARY_CONTAINER);
+
+    const result = {};
+
+    [...containersToExport]
+        .filter(Boolean)
+        .forEach(cookieStoreId => result[cookieStoreId] = {...containersStorage[cookieStoreId]});
+
+    return result;
+}
+
 export async function removeUnusedTemporaryContainers(tabs, containersStorage = containers) {
     const log = logger.start('removeUnusedTemporaryContainers');
 

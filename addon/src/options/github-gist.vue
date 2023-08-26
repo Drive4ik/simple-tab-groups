@@ -1,127 +1,149 @@
 <script>
 
+import GithubGistFields from './github-gist-fields.vue';
+
 import * as Constants from '/js/constants.js';
 import Logger from '/js/logger.js';
 import * as Storage from '/js/storage.js';
 import * as SyncStorage from '/js/sync/sync-storage.js';
-import {GithubGist} from '/js/sync/cloud/cloud.js';
-
-const GithubGistCloud = new GithubGist();
-
-const FILE_NAME_PARTS = Object.freeze({
-    start: 'STG-',
-    end: '.json',
-});
+import GithubGist from '/js/sync/cloud/githubgist.js';
+// import GithubGist from './githubgist.js';
 
 export default {
     data() {
+        this.SYNC_STORAGE_FSYNC = Constants.SYNC_STORAGE_FSYNC;
+        this.SYNC_STORAGE_LOCAL = Constants.SYNC_STORAGE_LOCAL;
         // this.SYNC_STORAGE_IS_AVAILABLE = false;
         this.SYNC_STORAGE_IS_AVAILABLE = SyncStorage.IS_AVAILABLE;
-        this.FILE_NAME_PARTS = FILE_NAME_PARTS;
 
         return {
             isActiveHelp: false,
 
-            isCheckingToken: false,
-            tokenIsValid: null,
+            browserInfo: {
+                name: null,
+                version: null,
+            },
 
-            isSearchingId: false,
-            searchOrCreateSuccess: null,
-
-            browserInfo: null,
-
-            options: {},
+            sync: {
+                loading: false,
+                options: {...Constants.DEFAULT_SYNC_OPTIONS},
+                load: this.loadSyncOptions.bind(this),
+                save: this.saveSyncOptions.bind(this),
+                error: '',
+            },
+            local: {
+                loading: false,
+                options: {...Constants.DEFAULT_SYNC_OPTIONS, syncOptionsLocation: Constants.DEFAULT_OPTIONS.syncOptionsLocation},
+                load: this.loadLocalOptions.bind(this),
+                save: this.saveLocalOptions.bind(this),
+                error: '',
+            },
         };
     },
+    components: {
+        GithubGistFields,
+    },
     watch: {
-        options: {
-            handler({githubGistToken, githubGistFileName, githubGistId}) {
-                GithubGistCloud.token = githubGistToken;
-                GithubGistCloud.fileName = githubGistFileName;
-                GithubGistCloud.gistId = githubGistId;
-            },
-            deep: true,
+        'local.options.syncOptionsLocation'(syncOptionsLocation) {
+            Storage.set({syncOptionsLocation});
         },
     },
     computed: {
-        fileName: {
-            get() {
-                return this.options.githubGistFileName?.slice(FILE_NAME_PARTS.start.length, - FILE_NAME_PARTS.end.length);
-            },
-            set(value) {
-                this.options.githubGistFileName = FILE_NAME_PARTS.start + value + FILE_NAME_PARTS.end;
-            },
-        },
         browserName() {
-            return `${this.browserInfo?.name} v${this.browserInfo?.version}`;
+            return `${this.browserInfo.name} v${this.browserInfo.version}`;
         },
     },
-    async created() {
-        if (this.SYNC_STORAGE_IS_AVAILABLE) {
-            await this.loadSyncOptions();
-        } else {
-            await this.loadOptions();
-            this.browserInfo = await browser.runtime.getBrowserInfo();
-        }
+    created() {
+        this.sync.load();
+        this.local.load();
+        this.loadBrowserInfo();
     },
     methods: {
         lang: browser.i18n.getMessage,
 
+        async loadBrowserInfo() {
+            Object.assign(this.browserInfo, await browser.runtime.getBrowserInfo());
+        },
+
+        // SYNC
         async loadSyncOptions() {
-            this.options = await SyncStorage.get();
+            if (this.SYNC_STORAGE_IS_AVAILABLE) {
+                Object.assign(this.sync.options, await SyncStorage.get());
+            }
         },
 
         async saveSyncOptions() {
-            const syncOptions = {...this.options};
-            await SyncStorage.set(syncOptions);
+            await SyncStorage.set({...this.sync.options});
         },
 
-        async loadOptions() {
-            this.options = await Storage.get(Constants.DEFAULT_SYNC_OPTIONS);
+        // LOCAL
+        async loadLocalOptions() {
+            Object.assign(this.local.options, await Storage.get(this.local.options));
         },
 
-        async saveOptions() {
-            const options = {...this.options};
-            delete options.version;
-            await Storage.set(options);
+        async saveLocalOptions() {
+            await Storage.set({...this.local.options});
         },
 
-        async checkToken() {
-            this.isCheckingToken = true;
+        // MAIN
+        async save(area) {
+            area.error = '';
+            area.loading = true;
+
+            await area.save();
 
             try {
-                await GithubGistCloud.checkToken();
-                this.tokenIsValid = true;
-            } catch (e) {
-                this.tokenIsValid = false;
-            }
+                const result = await this.createBackup(area.options);
 
-            this.isCheckingToken = false;
-        },
-        async searchOrCreateId() {
-            this.isSearchingId = true;
+                console.debug('result', result)
 
-            function getBackupForCloud() {}
+                if (result.newGistId) {
+                    area.options.githubGistId = result.newGistId;
 
-            try {
-                const gistId = await GithubGistCloud.findGistId();
-
-                if (gistId) {
-                    this.options.githubGistId = gistId;
-                    this.searchOrCreateSuccess = true;
-                } else {
-                    const content = await getBackupForCloud();
-                    const description = browser.i18n.getMessage('githubGistBackupDescription');
-                    // await GithubGistCloud.createGist(description, content);
-                    this.searchOrCreateSuccess = false;
+                    await area.save();
                 }
-
             } catch (e) {
-                this.searchOrCreateSuccess = false;
+                area.error = e.message;
+            } finally {
+                area.loading = false;
+            }
+        },
+
+        async createBackup({githubGistToken, githubGistFileName, githubGistId}) {
+            const GithubGistCloud = new GithubGist(githubGistToken, githubGistFileName, githubGistId);
+
+            const result = {};
+
+            await GithubGistCloud.checkToken();
+
+            if (GithubGistCloud.gistId) {
+                const gist = await GithubGistCloud.getGist().catch(() => {});
+
+                if (!gist) {
+                    result.newGistId = await GithubGistCloud.findGistId().catch(() => {});
+                }
+            } else {
+                result.newGistId = await GithubGistCloud.findGistId().catch(() => {});
             }
 
-            this.isSearchingId = false;
+
+            function getBackupForCloud() {
+                return {"version": "44"}
+            }
+
+            const content = await getBackupForCloud();
+
+            if (GithubGistCloud.gistId) { // update backup
+                await GithubGistCloud.updateGist(content);
+            } else {
+                const gist = await GithubGistCloud.createGist(content, browser.i18n.getMessage('githubGistBackupDescription'));
+
+                result.newGistId = gist.id;
+            }
+
+            return result;
         },
+
     },
 };
 
@@ -129,10 +151,10 @@ export default {
 
 <template>
     <div class="box">
-        <div class="level">
+        <div class="field level">
             <div class="level-left">
                 <div class="level-item">
-                    <div class="subtitle mb-0">GitHub gist</div>
+                    <div class="subtitle">GitHub Gist cloud settings</div>
                 </div>
             </div>
             <div class="level-right">
@@ -159,113 +181,113 @@ export default {
             </div>
         </div>
 
-        <div class="field is-horizontal">
-            <div class="field-label is-normal">
-                <label class="label" v-text="lang('githubGistTokenTitle') + ':'"></label>
-            </div>
-            <div class="field-body">
-                <div class="field has-addons">
-                    <div :class="['control is-expanded has-icons-left', {
-                        'is-loading': isCheckingToken,
-                        'has-icons-right': !isCheckingToken && tokenIsValid !== null,
-                        }]">
-                        <input type="text" v-model.trim="options.githubGistToken" maxlength="40" class="input" />
-
-                        <span class="icon is-left">
-                            <img class="size-16" src="/icons/key-solid.svg">
-                        </span>
-                        <span v-if="!isCheckingToken && tokenIsValid !== null" class="icon is-right">
-                            <img v-if="tokenIsValid" class="size-16" src="/icons/check.svg">
-                            <img v-else class="size-16" src="/icons/close.svg">
-                        </span>
-                    </div>
-                    <div class="control">
-                        <button class="button" @click="checkToken" :disabled="isCheckingToken" v-text="lang('checkGithubGistToken')"></button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="field is-horizontal">
-            <div class="field-label is-normal">
-                <label class="label" v-text="lang('fileNameTitle') + ':'"></label>
-            </div>
-            <div class="field-body">
-                <div class="field has-addons">
-                    <div class="control">
-                        <a class="button is-static" v-text="FILE_NAME_PARTS.start"></a>
-                    </div>
-                    <div class="control is-expanded">
-                        <input type="text" v-model.trim="fileName" maxlength="100" class="input" />
-                    </div>
-                    <div class="control">
-                        <a class="button is-static" v-text="FILE_NAME_PARTS.end"></a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="field is-horizontal">
-            <div class="field-label is-normal">
-                <label class="label" v-text="lang('githubGistIdTitle') + ':'"></label>
-            </div>
-            <div class="field-body">
-                <div class="field has-addons">
-                    <div :class="['control is-expanded', {
-                        'is-loading': isSearchingId,
-                        'has-icons-right': !isSearchingId && searchOrCreateSuccess !== null,
-                        }]">
-                        <input type="text" v-model.trim="options.githubGistId" maxlength="32" class="input" />
-
-                        <span v-if="!isSearchingId && searchOrCreateSuccess !== null" class="icon is-right">
-                            <img v-if="searchOrCreateSuccess" class="size-16" src="/icons/check.svg">
-                            <img v-else class="size-16" src="/icons/close.svg">
-                        </span>
-                    </div>
-                    <div class="control">
-                        <button class="button" @click="searchOrCreateId" :disabled="isSearchingId" v-text="lang('findOrCreateGithubGistId')"></button>
-                    </div>
-                </div>
-            </div>
+        <div v-if="!SYNC_STORAGE_IS_AVAILABLE" class="field">
+            <p class="field">Your browser is: {{browserName}}, it doesn't support <a href="https://www.mozilla.org/firefox/sync/" target="_blank" class="is-underlined">Firefox Sync</a></p>
+            <p class="field">
+                <a class="button is-link" href="https://www.mozilla.org/firefox/new/" target="_blank">
+                    <span class="icon">
+                        <img class="size-16" src="/icons/firefox-logo.svg">
+                    </span>
+                    <span>Download Firefox</span>
+                </a>
+            </p>
         </div>
 
-        <hr>
+        <fieldset class="field" :disabled="!SYNC_STORAGE_IS_AVAILABLE || sync.loading">
+            <legend>
+                <label class="label">
+                    <input type="radio" v-model="local.options.syncOptionsLocation" :value="SYNC_STORAGE_FSYNC" :disabled="!SYNC_STORAGE_IS_AVAILABLE">
+                    Use settings that are in Firefox Sync
+                </label>
+            </legend>
 
-        <div class="subtitle">Firefox Sync</div>
-        <div class="columns">
-            <div class="column">
-                <div class="field">
-                    <button class="button is-info" :disabled="!SYNC_STORAGE_IS_AVAILABLE" @click="loadSyncOptions">
+            <github-gist-fields
+                class="field"
+                :token.sync="sync.options.githubGistToken"
+                :file-name.sync="sync.options.githubGistFileName"
+                :gistId.sync="sync.options.githubGistId"
+                :error="sync.error"
+            ></github-gist-fields>
+
+            <div class="field is-grouped is-grouped-right">
+                <div class="control">
+                    <button class="button is-info" @click="sync.load">
                         <span class="icon">
                             <img class="size-16" src="/icons/cloud-arrow-down-solid.svg">
                         </span>
-                        <span>Download GitHub gist settings from Firefox Sync Cloud</span>
+                        <span>Load</span>
                     </button>
                 </div>
-                <div v-if="!SYNC_STORAGE_IS_AVAILABLE" class="field">
-                    <p>Your browser is: {{browserName}}, it doesn't support <a href="https://www.mozilla.org/firefox/sync/" target="_blank" class="is-underlined">Firefox Sync</a></p>
-                    <p>
-                        <a class="button is-link mt-3" href="https://www.mozilla.org/firefox/new/" target="_blank">
-                            <span class="icon">
-                                <img class="size-16" src="/icons/firefox-logo.svg">
-                            </span>
-                            <span>Download Firefox</span>
-                        </a>
-                    </p>
+                <div class="control">
+                    <button :class="['button is-success', {'is-loading': sync.loading}]" @click="save(sync)">
+                        <span class="icon">
+                            <img class="size-16" src="/icons/cloud-arrow-up-solid.svg">
+                        </span>
+                        <span v-if="sync.options.githubGistId">Save settings</span>
+                        <span v-else>Save settings and create/update backup</span>
+                    </button>
                 </div>
             </div>
-            <div class="column has-text-right">
-                <button v-if="SYNC_STORAGE_IS_AVAILABLE" class="button is-success" @click="saveSyncOptions">
-                    <span class="icon">
-                        <img class="size-16" src="/icons/cloud-arrow-up-solid.svg">
-                    </span>
-                    <span>Upload GitHub gist settings to Firefox Sync Cloud</span>
-                </button>
-                <button v-else class="button is-success" @click="saveOptions">
-                    <span class="icon">
-                        <img class="size-16" src="/icons/floppy-disk-solid.svg">
-                    </span>
-                    <span>Save GitHub gist settings to local storage</span>
-                </button>
+        </fieldset>
+
+        <fieldset class="field" :disabled="local.loading">
+            <legend>
+                <label class="label">
+                    <input type="radio" v-model="local.options.syncOptionsLocation" :value="SYNC_STORAGE_LOCAL">
+                    Use settings that are on the local computer (this $browserName$ profile)
+                </label>
+            </legend>
+
+            <github-gist-fields
+                class="field"
+                :token.sync="local.options.githubGistToken"
+                :file-name.sync="local.options.githubGistFileName"
+                :gistId.sync="local.options.githubGistId"
+                :error="local.error"
+            ></github-gist-fields>
+
+            <div class="field is-grouped is-grouped-right">
+                <div class="control">
+                    <button class="button is-info" @click="local.load">
+                        <span class="icon">
+                            <img class="size-16" src="/icons/arrow-down.svg">
+                        </span>
+                        <span>Load</span>
+                    </button>
+                </div>
+                <div class="control">
+                    <button :class="['button is-success', {'is-loading': local.loading}]" @click="save(local)">
+                        <span class="icon">
+                            <img class="size-16" src="/icons/floppy-disk-solid.svg">
+                        </span>
+                        <span v-if="local.options.githubGistId">Save settings</span>
+                        <span v-else>Save settings and create/update backup</span>
+                    </button>
+                </div>
             </div>
-        </div>
+        </fieldset>
+
     </div>
 </template>
+
+
+<style scoped>
+html[data-theme="dark"] .box {
+    color: unset;
+    background-color: #313131;
+}
+html[data-theme="dark"] .box .subtitle {
+    color: #cecece;
+}
+
+fieldset {
+    padding: .75rem;
+    border: 1px solid;
+}
+
+legend {
+    padding: 0 calc(.75rem / 2);
+    margin: 0 .75rem;
+}
+
+</style>

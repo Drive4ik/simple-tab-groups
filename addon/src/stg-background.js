@@ -1,20 +1,21 @@
-import './js/cache-storage.js';
-import * as Constants from './js/constants.js';
-import * as Messages from './js/messages.js';
-import Logger, { catchFunc, addLog, showLog, getLogs, clearLogs, getErrors, clearErrors } from './js/logger.js';
-import * as Utils from './js/utils.js';
-import JSON from './js/json.js';
-import * as Urls from './js/urls.js';
-import * as Containers from './js/containers.js';
-import * as Storage from './js/storage.js';
-import * as Cache from './js/cache.js';
-import * as File from './js/file.js';
-import * as Menus from './js/menus.js';
-import * as Groups from './js/groups.js';
-import * as Tabs from './js/tabs.js';
-import * as Windows from './js/windows.js';
-import * as Management from './js/management.js';
-import * as Hotkeys from './js/hotkeys.js';
+import '/js/cache-storage.js';
+import * as Constants from '/js/constants.js';
+import * as Messages from '/js/messages.js';
+import Logger, { catchFunc, addLog, showLog, getLogs, clearLogs, getErrors, clearErrors } from '/js/logger.js';
+import * as Utils from '/js/utils.js';
+import JSON from '/js/json.js';
+import * as Urls from '/js/urls.js';
+import * as Containers from '/js/containers.js';
+import * as Storage from '/js/storage.js';
+import * as Cache from '/js/cache.js';
+import * as File from '/js/file.js';
+import * as Menus from '/js/menus.js';
+import * as Groups from '/js/groups.js';
+import * as Tabs from '/js/tabs.js';
+import * as Windows from '/js/windows.js';
+import * as Management from '/js/management.js';
+import * as Hotkeys from '/js/hotkeys.js';
+import {sync, CloudError} from '/js/sync/cloud/cloud.js';
 
 self.IS_TEMPORARY = false;
 
@@ -2141,6 +2142,7 @@ const INTERNAL_MODULES_NAMES = new Set([
     'BG.restoreBackup',
     'BG.clearAddon',
     'BG.runMigrateForData',
+    'BG.cloudSync',
     'Tabs',
     'Groups',
     'Windows',
@@ -2828,38 +2830,40 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
     pinnedTabs = pinnedTabs.filter(tab => Utils.isUrlAllowToCreate(tab.url));
 
     if (pinnedTabs.length) {
-        data.pinnedTabs = Tabs.prepareForSave(pinnedTabs);
+        data.pinnedTabs = Tabs.prepareForSave(pinnedTabs); // TODO remove from all
     }
 
-    const containersToExport = new Set;
+    // const containersToExport = new Set;
 
     data.groups = groups.map(group => {
         group.tabs = Tabs.prepareForSave(group.tabs, false, includeTabFavIcons, includeTabThumbnails);
 
-        group.tabs.forEach(({ cookieStoreId }) => {
-            if (cookieStoreId && !Containers.isTemporary(cookieStoreId)) {
-                containersToExport.add(cookieStoreId);
-            }
-        });
+        // group.tabs.forEach(({ cookieStoreId }) => {
+        //     if (cookieStoreId && !Containers.isTemporary(cookieStoreId)) {
+        //         containersToExport.add(cookieStoreId);
+        //     }
+        // });
 
-        if (group.newTabContainer !== Constants.TEMPORARY_CONTAINER &&
-            group.newTabContainer !== Constants.DEFAULT_COOKIE_STORE_ID
-        ) {
-            containersToExport.add(group.newTabContainer);
-        }
+        // if (group.newTabContainer !== Constants.TEMPORARY_CONTAINER &&
+        //     group.newTabContainer !== Constants.DEFAULT_COOKIE_STORE_ID
+        // ) {
+        //     containersToExport.add(group.newTabContainer);
+        // }
 
-        group.catchTabContainers.forEach(containersToExport.add, containersToExport);
+        // group.catchTabContainers.forEach(containersToExport.add, containersToExport);
 
         return group;
     });
 
-    if (containersToExport.size) {
-        const allContainers = Containers.getAll();
+    // if (containersToExport.size) {
+    //     const allContainers = Containers.getAll();
 
-        data.containers = {};
+    //     data.containers = {};
 
-        containersToExport.forEach(cookieStoreId => data.containers[cookieStoreId] = allContainers[cookieStoreId]);
-    }
+    //     containersToExport.forEach(cookieStoreId => data.containers[cookieStoreId] = allContainers[cookieStoreId]);
+    // }
+
+    data.containers = Containers.getToExport(data);
 
     if (isAutoBackup) {
         data.autoBackupLastBackupTimeStamp = options.autoBackupLastBackupTimeStamp = Utils.unixNow();
@@ -3090,6 +3094,26 @@ async function clearAddon(reloadAddonOnFinish = true) {
     }
 }
 
+async function cloudSync() {
+    const log = logger.start('cloudSync');
+
+    try {
+        const result = await sync();
+
+        console.debug('result', result)
+    } catch (e) {
+        if (e instanceof CloudError) {
+            //
+        } else {
+            log.throwError('cant sync', e);
+        }
+    }
+
+
+
+    log.stop();
+}
+
 async function exportAllGroupsToBookmarks(showFinishMessage, isAutoBackup) {
     const hasBookmarksPermission = await browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS);
 
@@ -3152,6 +3176,8 @@ self.runMigrateForData = runMigrateForData;
 
 self.restoreBackup = restoreBackup;
 self.clearAddon = clearAddon;
+
+self.cloudSync = cloudSync;
 
 self.groupIdForNextTab = null;
 
@@ -4211,8 +4237,9 @@ async function init() {
         // }
 
         // Urls.openUrl('/popup/popup.html#sidebar');
+        Urls.openUrl('/popup/popup.html');
 
-        Urls.openOptionsPage('backup');
+        // Urls.openOptionsPage('backup');
     } catch (e) {
         setActionToReloadAddon();
 

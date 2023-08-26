@@ -1230,7 +1230,7 @@
                 }
 
                 if (!textPosition) {
-                    throw Error('wrong key for this func');
+                    throw Error('wrong key for this function');
                 }
 
                 if (-1 !== focusedNodeIndex) {

@@ -11,7 +11,7 @@ export function getKeysData(keys, defaultData) {
     } else if (typeof keys === 'string') {
         keysData = {[keys]: defaultData[keys]};
     } else { // if keys is object
-        keysData = keys;
+        keysData = {...keys};
     }
 
     return keysData;

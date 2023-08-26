@@ -56,7 +56,7 @@ async function github(method, url, token, body, headers = {}) {
 
     message = message.slice(0, 150);
 
-    const errorMessage = `GitHub Gist error: ${response.status}: ${response.statusText}\n${message}`;
+    const errorMessage = `GitHub Gist error: ${response.status} ${response.statusText}\n${message}`;
 
     console.error(errorMessage);
 
@@ -83,6 +83,7 @@ GithubGist.prototype.checkToken = async function() {
 }
 
 GithubGist.prototype.findGistId = async function() {
+    this.gistId = null;
     return this.gistId = await findGistId(this.token, this.fileName);
 }
 
@@ -126,7 +127,7 @@ GithubGist.prototype.getGist = async function() {
     };
 }
 
-GithubGist.prototype.createGist = async function(description, content) {
+GithubGist.prototype.createGist = async function(content, description = '') {
     return github('post', GISTS_URL, this.token, {
         public: false,
         description,

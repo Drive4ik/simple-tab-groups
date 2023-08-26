@@ -85,8 +85,12 @@ export function format(str, ...args) {
 }
 
 export function isEqualPrimitiveArrays(array1, array2) {
-    const array2Sorted = array2.slice().sort();
-    return array1.length === array2.length && array1.slice().sort().every((value, index) => value === array2Sorted[index]);
+    return array1.length === array2.length
+        && JSON.stringify(array1.slice().sort()) === JSON.stringify(array2.slice().sort());
+}
+
+export function isPrimitive(value) {
+    return value !== Object(value);
 }
 
 /* function formatBytes(bytes, decimals = 2) {

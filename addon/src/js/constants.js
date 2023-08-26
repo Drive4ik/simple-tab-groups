@@ -263,17 +263,26 @@ export const EXTENSIONS_WHITE_LIST = Object.freeze({
     },
 });
 
+export const GIT_GIST_FILE_NAME_PARTS = Object.freeze({
+    start: 'STG-',
+    end: '.json',
+});
+
 export const DEFAULT_SYNC_OPTIONS = Object.freeze({
     version: MANIFEST.version,
     githubGistToken: '',
-    githubGistFileName: 'STG-backup.json',
+    githubGistFileName: GIT_GIST_FILE_NAME_PARTS.start + 'backup' + GIT_GIST_FILE_NAME_PARTS.end,
     githubGistId: '',
 });
+
+const IS_AVAILABLE_SYNC_STORAGE = browser.storage.sync instanceof Object;
+export const SYNC_STORAGE_FSYNC = 'ff-sync';
+export const SYNC_STORAGE_LOCAL = 'local';
 
 export const DEFAULT_OPTIONS = Object.freeze({
     version: MANIFEST.version,
     groups: [],
-    lastCreatedGroupPosition: 0,
+    lastCreatedGroupPosition: 0, // TODO remove
 
     // options
 
@@ -328,12 +337,12 @@ export const DEFAULT_OPTIONS = Object.freeze({
     autoBackupFolderName: '',
     autoBackupByDayIndex: true,
 
-    autoBackupCloudEnable: true,
-    autoBackupCloudTimeStamp: 1,
-    autoBackupCloudIntervalKey: AUTO_BACKUP_INTERVAL_KEY.days, // minutes, hours, days
-    autoBackupCloudIntervalValue: 1,
-    autoBackupCloudIncludeTabFavIcons: true,
-    // ...DEFAULT_SYNC_OPTIONS,
+    syncEnable: true,
+    syncOptionsLocation: IS_AVAILABLE_SYNC_STORAGE ? SYNC_STORAGE_FSYNC : SYNC_STORAGE_LOCAL,
+    syncId: 1,
+    syncIntervalKey: AUTO_BACKUP_INTERVAL_KEY.days, // minutes, hours, days
+    syncIntervalValue: 1,
+    syncTabFavIcons: true,
 
     theme: 'auto', // auto, light, dark
 

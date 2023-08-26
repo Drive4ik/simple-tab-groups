@@ -1233,7 +1233,7 @@
         "message": "Help",
         "description": "Help"
     },
-    "autoBackupCloudEnableTitle": {
+    "syncEnableTitle": {
         "message": "Enable auto backup to the cloud",
         "description": "Enable auto backup to the cloud"
     },
@@ -1244,14 +1244,6 @@
     "checkGithubGistToken": {
         "message": "Check token",
         "description": "Check Github gist personal access token"
-    },
-    "githubGistIdTitle": {
-        "message": "Github backup gist Id",
-        "description": "Github backup gist Id"
-    },
-    "findOrCreateGithubGistId": {
-        "message": "Find or create gist Id",
-        "description": "Find or create gist Id"
     },
     "githubGistBackupDescription": {
         "message": "Simple Tab Groups backup file for cloud sync",
