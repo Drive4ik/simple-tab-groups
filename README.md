@@ -46,11 +46,11 @@ This allows for easy switching between active and pre-loaded tabs across multipl
 
 ### This extension has these plugins:
 
- * **NEW** [Group notes](https://addons.mozilla.org/firefox/addon/stg-plugin-group-notes/)
  * [Create new group](https://addons.mozilla.org/firefox/addon/stg-plugin-create-new-group/)
  * [Create new tab](https://addons.mozilla.org/firefox/addon/stg-plugin-create-new-tab/)
  * [Create new tab in temporary container](https://addons.mozilla.org/firefox/addon/stg-plugin-create-temp-tab/)
  * [Delete current group](https://addons.mozilla.org/firefox/addon/stg-plugin-del-current-group/)
+ * [Group notes](https://addons.mozilla.org/firefox/addon/stg-plugin-group-notes/)
  * [Load custom group](https://addons.mozilla.org/firefox/addon/stg-plugin-load-custom-group/)
  * [Open Manage groups](https://addons.mozilla.org/firefox/addon/stg-plugin-manage-groups/)
 
