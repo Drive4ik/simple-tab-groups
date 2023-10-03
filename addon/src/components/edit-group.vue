@@ -82,7 +82,7 @@
         computed: {
             iconUrlToDisplay() {
                 return Groups.getIconUrl({
-                    title: this.group.title,
+                    title: this.group.iconText || this.group.title,
                     iconUrl: this.group.iconUrl,
                     iconColor: this.group.iconColor,
                     iconViewType: this.group.iconViewType,
@@ -225,7 +225,7 @@
 
             getIconTypeUrl(iconType) {
                 return Groups.getIconUrl({
-                    title: this.group.title,
+                    title: this.group.iconText || this.group.title,
                     iconViewType: iconType,
                     iconColor: this.group.iconColor || 'rgb(66, 134, 244)',
                 });
@@ -373,6 +373,12 @@
                         <img src="/icons/image.svg" class="size-16" />
                     </button>
                 </div>
+            </div>
+        </div>
+        <div class="field" v-if="group.iconViewType === 'title'">
+            <label class="label" v-text="'Icon Text'"></label>
+            <div class="control is-expanded">
+                <input v-model.trim="group.iconText" type="text" maxlength="16" class="input" placeholder="Customize icon text other than using title"/>
             </div>
         </div>
 
