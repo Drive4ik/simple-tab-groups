@@ -84,6 +84,7 @@ export function create(id, title, defaultGroupProps = {}) {
     const group = {
         id,
         title: null,
+        iconText: null,
         iconColor: null,
         iconUrl: null,
         iconViewType: Constants.DEFAULT_GROUP_ICON_VIEW_TYPE,
@@ -343,6 +344,7 @@ export async function update(groupId, updateData) {
 
 const KEYS_RESPONSIBLE_VIEW = Object.freeze([
     'title',
+    'iconText',
     'iconUrl',
     'iconColor',
     'iconViewType',
@@ -526,6 +528,7 @@ const ExternalExtensionGroupDependentKeys = new Set([
     'title',
     'isArchive',
     'isSticky',
+    'iconText',
     'iconColor',
     'iconUrl',
     'iconViewType',
@@ -538,6 +541,7 @@ export function mapForExternalExtension(group) {
         title: getTitle(group),
         isArchive: group.isArchive,
         isSticky: group.isSticky,
+        iconText: group.iconText,
         iconUrl: getIconUrl(group),
         contextualIdentity: Containers.get(group.newTabContainer),
         windowId: Cache.getWindowId(group.id) || null,
@@ -676,7 +680,7 @@ const emojiRegExp = /\p{RI}\p{RI}|\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E002
 const firstCharEmojiRegExp = new RegExp(`^(${emojiRegExp.source})`, emojiRegExp.flags);
 
 export function getEmojiIcon(group) {
-    if (group.iconViewType === 'title') {
+    if (group.iconViewType === 'title' && !group.iconText) {
         const [emoji] = firstCharEmojiRegExp.exec(group.title) || [];
         return emoji;
     }
@@ -702,7 +706,7 @@ export function getIconUrl(group, keyInObj = null) {
 
         const stroke = 'transparent' === group.iconColor ? 'stroke="#606060" stroke-width="1"' : '',
             emoji = getEmojiIcon(group),
-            title = emoji || group.title;
+            title = emoji || group.iconText || group.title;
 
         const icons = {
             'main-squares': `

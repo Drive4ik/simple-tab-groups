@@ -9,3 +9,5 @@
 /addon/dist/
 /addon/dist-zip/
 /addon/package-lock.json
+
+.DS_Store
