@@ -45,6 +45,7 @@
         "default_icon": "icons/icon.svg",
         "default_title": "__MSG_extensionName__",
         "default_popup": "popup/popup.html",
+        "default_area": "navbar",
         "browser_style": false
     },
 
