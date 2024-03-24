@@ -7,6 +7,7 @@ import Logger from '/js/logger.js';
 import * as Storage from '/js/storage.js';
 import * as SyncStorage from '/js/sync/sync-storage.js';
 import GithubGist from '/js/sync/cloud/githubgist.js';
+import * as Cloud from '/js/sync/cloud/cloud.js';
 // import GithubGist from './githubgist.js';
 
 export default {
@@ -93,15 +94,16 @@ export default {
             await area.save();
 
             try {
-                const result = await this.createBackup(area.options);
+                const result = await Cloud.sync();
+                // const result = await this.createBackup(area.options);
 
                 console.debug('result', result)
 
-                if (result.newGistId) {
-                    area.options.githubGistId = result.newGistId;
+                // if (result.newGistId) {
+                //     area.options.githubGistId = result.newGistId;
 
-                    await area.save();
-                }
+                //     await area.save();
+                // }
             } catch (e) {
                 area.error = e.message;
             } finally {

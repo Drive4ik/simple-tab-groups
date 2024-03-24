@@ -746,36 +746,53 @@ export function sendMessage(tabId, message) {
     return browser.tabs.sendMessage(tabId, message).catch(() => {});
 }
 
-export function prepareForSave(tabs, includeGroupId = false, includeFavIconUrl = false, includeThumbnail = false) {
-    return tabs.map(function({id, url, title, cookieStoreId, favIconUrl, openerTabId, groupId, thumbnail}) {
-        const tab = {url, title};
+export function prepareForSave(tabs, ...prepareArgs) {
+    return tabs.map(tab => prepareForSaveTab(tab, ...prepareArgs));
+}
 
-        if (!Containers.isDefault(cookieStoreId)) {
-            tab.cookieStoreId = Containers.isTemporary(cookieStoreId) ? Constants.TEMPORARY_CONTAINER : cookieStoreId;
+export function prepareForSaveTab(
+        {id, url, title, cookieStoreId, favIconUrl, openerTabId, groupId, thumbnail, sync},
+        includeGroupId = false,
+        includeFavIconUrl = false,
+        includeThumbnail = false,
+        includeId = true,
+        includeNoSyncById = null
+    ) {
+    const tab = {url};
+
+    if (includeId && id) {
+        tab.id = id;
+
+        if (openerTabId) {
+            tab.openerTabId = openerTabId;
         }
+    }
 
-        if (id) {
-            tab.id = id;
+    if (title) {
+        tab.title = title;
+    }
 
-            if (openerTabId) {
-                tab.openerTabId = openerTabId;
-            }
-        }
+    if (!Containers.isDefault(cookieStoreId)) {
+        tab.cookieStoreId = Containers.isTemporary(cookieStoreId) ? Constants.TEMPORARY_CONTAINER : cookieStoreId;
+    }
 
-        if (includeGroupId && groupId) {
-            tab.groupId = groupId;
-        }
+    if (includeGroupId && groupId) {
+        tab.groupId = groupId;
+    }
 
-        if (includeFavIconUrl && favIconUrl?.startsWith('data:')) {
-            tab.favIconUrl = favIconUrl;
-        }
+    if (includeFavIconUrl && favIconUrl?.startsWith('data:')) {
+        tab.favIconUrl = favIconUrl;
+    }
 
-        if (includeThumbnail && thumbnail) {
-            tab.thumbnail = thumbnail;
-        }
+    if (includeThumbnail && thumbnail) {
+        tab.thumbnail = thumbnail;
+    }
 
-        return tab;
-    });
+    if (includeNoSyncById && !isSynced(includeNoSyncById, {sync, url})) {
+        tab.noSync = true;
+    }
+
+    return tab;
 }
 
 export function getNewTabContainer(
@@ -823,3 +840,15 @@ export function getTitle({id, index, title, url, discarded, windowId, lastAccess
 
     return sliceLength ? Utils.sliceText(title, sliceLength) : title;
 }
+
+export function isSynced(optionsSyncId, tab) {
+    return tab.sync === `${optionsSyncId}${tab.url}`;
+}
+
+// const TIMESTAMP_LENGTH = 13;
+// export function getTabSync(tab) {
+//     return {
+//         id: Number(tab.sync?.slice(0, TIMESTAMP_LENGTH)) || null,
+//         url: tab.sync?.slice(TIMESTAMP_LENGTH) || null,
+//     };
+// }

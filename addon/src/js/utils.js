@@ -410,7 +410,7 @@ export function getRandomInt(min = 1, max = Number.MAX_SAFE_INTEGER, step = 1) {
 }
 
 export function randomColor() {
-    return 'hsla(' + getRandomInt(0, 360, 10) + ', 100%, 50%, 1)';
+    return 'hsl(' + getRandomInt(0, 360, 10) + ', 100%, 50%)';
 }
 
 export function safeColor(color) {
