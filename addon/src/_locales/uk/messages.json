@@ -453,6 +453,10 @@
         "message": "Оновити ескіз для цієї вкладки",
         "description": "Update thumbnail for this tab"
     },
+    "disableWindowNotFoundNotifications": {
+        "message": "Не відображати сповіщення про помилки, коли звичайні вікна не знайдені (наприклад, у приватному режимі/режимі анонімного перегляду)",
+        "description": "Do not display error notifications when normal windows are not found (e.g. in private/incognito mode)"
+    },
     "notFoundWindowsAddonStoppedWorking": {
         "message": "Помилка: не знайдено звичайних вікон, тільки приватні або спливаючі. Доповнення припиняє роботу.\nБудь ласка, перезавантажте браузер.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."

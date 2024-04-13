@@ -445,6 +445,10 @@
         "message": "Aktualisiere das Vorschaubild dieses Tabs",
         "description": "Update thumbnail for this tab"
     },
+    "disableWindowNotFoundNotifications": {
+        "message": "Keine Fehlermeldungen anzeigen, wenn normale Fenster nicht gefunden werden (z. B. im privaten/Inkognito-Modus)",
+        "description": "Do not display error notifications when normal windows are not found (e.g. in private/incognito mode)"
+    },
     "notFoundWindowsAddonStoppedWorking": {
         "message": "Fehler: Es wurden keine normalen nicht privaten/Inkognito/Popup-Fenster gefunden.\nAdd-On funktioniert nicht mehr - bitte den Browser neu starten.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."

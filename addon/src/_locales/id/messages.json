@@ -437,6 +437,10 @@
         "message": "Perbarui gambar mini untuk tab ini",
         "description": "Update thumbnail for this tab"
     },
+    "disableWindowNotFoundNotifications": {
+        "message": "Jangan tampilkan pemberitahuan kesalahan ketika jendela normal tidak ditemukan (misalnya dalam mode pribadi/penyamaran)",
+        "description": "Do not display error notifications when normal windows are not found (e.g. in private/incognito mode)"
+    },
     "notFoundWindowsAddonStoppedWorking": {
         "message": "Kesalahan: tidak ditemukan jendela tidak pribadi/penyamaran/popup normal.\nAddon berhenti bekerja. Silakan, restart browser.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."

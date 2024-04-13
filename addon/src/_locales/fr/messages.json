@@ -449,6 +449,10 @@
         "message": "Mettre à jour la capture de cet onglet",
         "description": "Update thumbnail for this tab"
     },
+    "disableWindowNotFoundNotifications": {
+        "message": "Ne pas afficher les notifications d'erreur lorsque les fenêtres normales sont introuvables (par exemple en mode privé/incognito)",
+        "description": "Do not display error notifications when normal windows are not found (e.g. in private/incognito mode)"
+    },
     "notFoundWindowsAddonStoppedWorking": {
         "message": "Erreur : aucun onglet normal n'a été trouvé (ni privé, ni navigation privée, ni fenêtre pop-up). L'extension a cessé de fonctionner. Veuillez redémarrer le navigateur.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."

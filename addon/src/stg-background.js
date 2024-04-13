@@ -4131,7 +4131,9 @@ async function init() {
         if (!windows.length) {
             log.error('no windows found');
             window.localStorage.notFoundWindowsAddonStoppedWorking = 1;
-            Utils.notify(['notFoundWindowsAddonStoppedWorking']);
+            if(false == options.disableWindowNotFoundNotifications) {
+                Utils.notify(['notFoundWindowsAddonStoppedWorking']);
+            }
             browser.windows.onCreated.addListener(() => browser.runtime.reload());
             throw '';
         } else if (window.localStorage.notFoundWindowsAddonStoppedWorking) {

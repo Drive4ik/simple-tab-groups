@@ -445,6 +445,10 @@
         "message": "Atualizar miniatura desta aba",
         "description": "Update thumbnail for this tab"
     },
+    "disableWindowNotFoundNotifications": {
+        "message": "Não exibir notificações de erro quando janelas normais não forem encontradas (por exemplo, no modo privado/incógnito)",
+        "description": "Do not display error notifications when normal windows are not found (e.g. in private/incognito mode)"
+    },
     "notFoundWindowsAddonStoppedWorking": {
         "message": "Erro: não foi encontrada nenhuma janela normal não privativa/incógnito/pop-up.\nExtensão parou de funcionar. Por favor, reinicie o navegador.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."

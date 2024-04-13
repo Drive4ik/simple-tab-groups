@@ -755,6 +755,12 @@
             </div>
             <div class="field">
                 <label class="checkbox">
+                    <input v-model="options.disableWindowNotFoundNotifications" type="checkbox" />
+                    <span v-text="lang('disableWindowNotFoundNotifications')"></span>
+                </label>
+            </div>
+            <div class="field">
+                <label class="checkbox">
                     <input v-model="options.showTabsWithThumbnailsInManageGroups" type="checkbox" />
                     <span v-text="lang('showTabsWithThumbnailsInManageGroups')"></span>
                 </label>

@@ -453,6 +453,10 @@
         "message": "Обновяване на миниатюрата на раздела",
         "description": "Update thumbnail for this tab"
     },
+    "disableWindowNotFoundNotifications": {
+        "message": "Не показвайте известия за грешки, когато не се намират нормални прозорци (например в частен/инкогнито режим)",
+        "description": "Do not display error notifications when normal windows are not found (e.g. in private/incognito mode)"
+    },
     "notFoundWindowsAddonStoppedWorking": {
         "message": "Грешка: не са намерени обикновени или поверителни/инкогнито/изскачащи прозорци.\nДобавката е спряла да работи. Рестартирайте мрежовия четец.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."

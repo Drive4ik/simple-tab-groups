@@ -437,6 +437,10 @@
         "message": "Aggiorna l'anteprima per questa scheda",
         "description": "Update thumbnail for this tab"
     },
+    "disableWindowNotFoundNotifications": {
+        "message": "Non visualizzare le notifiche di errore quando non vengono trovate le finestre normali (ad esempio in modalità privata/in incognito)",
+        "description": "Do not display error notifications when normal windows are not found (e.g. in private/incognito mode)"
+    },
     "notFoundWindowsAddonStoppedWorking": {
         "message": "Errore: non è stato possibile trovare nessuna finestra privata, in incognito o pop-up.\nL'estensione ha smesso di funzionare correttamente. Per favore, riavviare il browser.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."

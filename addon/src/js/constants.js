@@ -275,6 +275,7 @@ export const DEFAULT_OPTIONS = Object.freeze({
 
     closePopupAfterChangeGroup: true,
     closePopupAfterSelectTab: false,
+    disableWindowNotFoundNotifications: false,
     openGroupAfterChange: false,
     alwaysAskNewGroupName: true,
     createNewGroupWhenOpenNewWindow: false,

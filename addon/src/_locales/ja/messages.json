@@ -425,6 +425,10 @@
         "message": "このタブのサムネイルを更新する",
         "description": "Update thumbnail for this tab"
     },
+    "disableWindowNotFoundNotifications": {
+        "message": "通常のウィンドウが見つからない場合 (プライベート/シークレット モードなど) にエラー通知を表示しません。",
+        "description": "Do not display error notifications when normal windows are not found (e.g. in private/incognito mode)"
+    },
     "notFoundWindowsAddonStoppedWorking": {
         "message": "エラー: 通常のウィンドウ (非プライベート / 匿名 / ポップアップ) が見つかりませんでした。\nアドオンが動作を停止しました。ブラウザーを再起動してください。",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."

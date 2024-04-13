@@ -449,6 +449,10 @@
         "message": "更新此分頁之縮圖",
         "description": "Update thumbnail for this tab"
     },
+    "disableWindowNotFoundNotifications": {
+        "message": "未找到正常視窗時不顯示錯誤通知（例如在私人/隱身模式下）",
+        "description": "Do not display error notifications when normal windows are not found (e.g. in private/incognito mode)"
+    },
     "notFoundWindowsAddonStoppedWorking": {
         "message": "錯誤：找不到任何正常的非隱私/匿名/彈出窗。\n附加元件停止運作，請重新啟動瀏覽器。",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."

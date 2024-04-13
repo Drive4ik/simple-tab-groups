@@ -453,6 +453,10 @@
         "message": "Voorbeeld van deze tab bijwerken",
         "description": "Update thumbnail for this tab"
     },
+    "disableWindowNotFoundNotifications": {
+        "message": "Geef geen foutmeldingen weer als normale vensters niet worden gevonden (bijvoorbeeld in privé-/incognitomodus)",
+        "description": "Do not display error notifications when normal windows are not found (e.g. in private/incognito mode)"
+    },
     "notFoundWindowsAddonStoppedWorking": {
         "message": "Fout: geen enkel normaal (niet: privé/incognito/pop-up) venster gevonden.\nAdd-on is gestopt met werken. Herstart de browser a.u.b.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."

@@ -445,6 +445,10 @@
         "message": "Zaktualizuj miniaturę dla tej karty",
         "description": "Update thumbnail for this tab"
     },
+    "disableWindowNotFoundNotifications": {
+        "message": "Nie wyświetlaj powiadomień o błędach, gdy nie znaleziono normalnego okna (np. w trybie prywatnym/incognito)",
+        "description": "Do not display error notifications when normal windows are not found (e.g. in private/incognito mode)"
+    },
     "notFoundWindowsAddonStoppedWorking": {
         "message": "Błąd: nie znaleziono żadnych okien typu nie prywatne, pop-up lub incognito\nDodatek przestał działać. Uruchom ponownie przeglądarkę.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."

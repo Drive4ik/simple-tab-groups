@@ -457,6 +457,10 @@
         "message": "Update thumbnail for this tab",
         "description": "Update thumbnail for this tab"
     },
+    "disableWindowNotFoundNotifications": {
+        "message": "Do not display error notifications when normal windows are not found (e.g. in private/incognito mode)",
+        "description": "Do not display error notifications when normal windows are not found (e.g. in private/incognito mode)"
+    },
     "notFoundWindowsAddonStoppedWorking": {
         "message": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
