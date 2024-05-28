@@ -1,4 +1,4 @@
-
+import backgroundSelf from './background.js';
 import * as Constants from './constants.js';
 import JSON from './json.js';
 
@@ -138,6 +138,12 @@ export function sliceText(text, length = 50) {
 }
 
 export async function notify(message, sec = 20, id = null, iconUrl = null, onClick = null, onClose = null) {
+	try {
+		if (backgroundSelf.options.disableAllNotifications) {
+			return;
+		}
+	} catch(err) { /* ignore */ }
+
     if (id) {
         await browser.notifications.clear(id);
     } else {

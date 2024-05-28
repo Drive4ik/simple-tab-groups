@@ -707,6 +707,10 @@
         "message": "Benachrichtigung anzeigen, nachdem Gruppe gelöscht wurde",
         "description": "Show notification after group delete"
     },
+    "disableAllNotifications": {
+        "message": "Deaktivieren Sie alle Benachrichtigungen vollständig (Hinweis: Dadurch werden möglicherweise wichtige Warnungen/Fehler ausgeblendet)",
+        "description": "Completely disable all notifications (note: this may hide important warnings/errors)"
+    },
     "reloadTab": {
         "message": "Tab neu laden",
         "description": "Reload tab"

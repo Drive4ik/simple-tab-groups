@@ -282,6 +282,7 @@ export const DEFAULT_OPTIONS = Object.freeze({
     showConfirmDialogBeforeGroupArchiving: true,
     showConfirmDialogBeforeGroupDelete: true,
     showNotificationAfterGroupDelete: true,
+    disableAllNotifications: false,
     showContextMenuOnTabs: true,
     showContextMenuOnLinks: true,
     defaultBookmarksParent: DEFAULT_BOOKMARKS_PARENTS[0],

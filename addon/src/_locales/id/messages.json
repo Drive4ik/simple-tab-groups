@@ -691,6 +691,10 @@
         "message": "Tampilkan notifikasi setelah grup dihapus",
         "description": "Show notification after group delete"
     },
+    "disableAllNotifications": {
+        "message": "Nonaktifkan sepenuhnya semua notifikasi (catatan: ini mungkin menyembunyikan peringatan/kesalahan penting)",
+        "description": "Completely disable all notifications (note: this may hide important warnings/errors)"
+    },
     "reloadTab": {
         "message": "Muat ulang tab",
         "description": "Reload tab"

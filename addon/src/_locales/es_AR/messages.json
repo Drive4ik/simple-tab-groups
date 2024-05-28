@@ -691,6 +691,10 @@
         "message": "Mostrar notificación tras la eliminación de un grupo",
         "description": "Show notification after group delete"
     },
+    "disableAllNotifications": {
+        "message": "Desactive completamente todas las notificaciones (nota: esto puede ocultar advertencias/errores importantes)",
+        "description": "Completely disable all notifications (note: this may hide important warnings/errors)"
+    },
     "reloadTab": {
         "message": "Recargar pestaña",
         "description": "Reload tab"

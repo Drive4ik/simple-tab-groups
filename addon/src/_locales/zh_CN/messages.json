@@ -699,6 +699,10 @@
         "message": "删除群组后显示通知",
         "description": "Show notification after group delete"
     },
+    "disableAllNotifications": {
+        "message": "完全禁用所有通知（注意：这可能会隐藏重要的警告/错误）",
+        "description": "Completely disable all notifications (note: this may hide important warnings/errors)"
+    },
     "reloadTab": {
         "message": "重新加载标签页",
         "description": "Reload tab"

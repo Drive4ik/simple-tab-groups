@@ -707,6 +707,10 @@
         "message": "Pokaż powiadomienie po usunięciu grupy",
         "description": "Show notification after group delete"
     },
+    "disableAllNotifications": {
+        "message": "Całkowicie wyłącz wszystkie powiadomienia (uwaga: może to ukryć ważne ostrzeżenia/błędy)",
+        "description": "Completely disable all notifications (note: this may hide important warnings/errors)"
+    },
     "reloadTab": {
         "message": "Odśwież kartę",
         "description": "Reload tab"

@@ -711,6 +711,10 @@
         "message": "Afficher une notification après la suppression d'un groupe",
         "description": "Show notification after group delete"
     },
+    "disableAllNotifications": {
+        "message": "Désactivez complètement toutes les notifications (remarque : cela peut masquer des avertissements/erreurs importants)",
+        "description": "Completely disable all notifications (note: this may hide important warnings/errors)"
+    },
     "reloadTab": {
         "message": "Recharger l'onglet",
         "description": "Reload tab"

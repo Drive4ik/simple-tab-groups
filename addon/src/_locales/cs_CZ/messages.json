@@ -671,6 +671,10 @@
         "message": "Ukázat upozornění po smazání skupiny",
         "description": "Show notification after group delete"
     },
+    "disableAllNotifications": {
+        "message": "Zcela deaktivujte všechna upozornění (poznámka: toto může skrýt důležitá varování/chyby)",
+        "description": "Completely disable all notifications (note: this may hide important warnings/errors)"
+    },
     "reloadTab": {
         "message": "Obnovit panel",
         "description": "Reload tab"

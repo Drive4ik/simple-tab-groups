@@ -679,6 +679,10 @@
         "message": "グループの削除時に通知を表示する",
         "description": "Show notification after group delete"
     },
+    "disableAllNotifications": {
+        "message": "すべての通知を完全に無効にします (注: これにより、重要な警告/エラーが非表示になる可能性があります)",
+        "description": "Completely disable all notifications (note: this may hide important warnings/errors)"
+    },
     "reloadTab": {
         "message": "タブを再読み込み",
         "description": "Reload tab"

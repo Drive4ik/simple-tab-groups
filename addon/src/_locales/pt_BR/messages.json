@@ -699,6 +699,10 @@
         "message": "Mostrar notificação após exclusão do grupo",
         "description": "Show notification after group delete"
     },
+    "disableAllNotifications": {
+        "message": "Desative completamente todas as notificações (nota: isso pode ocultar avisos/erros importantes)",
+        "description": "Completely disable all notifications (note: this may hide important warnings/errors)"
+    },
     "reloadTab": {
         "message": "Recarregar aba",
         "description": "Reload tab"
