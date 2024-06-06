@@ -109,17 +109,17 @@ async function loadSyncId(tabId) {
     }
 }
 
-export async function setSyncId(tabId, syncId) {
-    if (syncId) {
-        if (tabs[tabId]) {
-            tabs[tabId].syncId = syncId;
-        } else {
-            tabs[tabId] = {syncId};
-        }
+// export async function setSyncId(tabId, syncId) {
+//     if (syncId) {
+//         if (tabs[tabId]) {
+//             tabs[tabId].syncId = syncId;
+//         } else {
+//             tabs[tabId] = {syncId};
+//         }
 
-        return browser.sessions.setTabValue(tabId, 'syncId', syncId);
-    }
-}
+//         return browser.sessions.setTabValue(tabId, 'syncId', syncId);
+//     }
+// }
 
 export async function removeSyncId(tabId) {
     delete tabs[tabId]?.syncId;

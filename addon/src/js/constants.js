@@ -275,7 +275,7 @@ export const DEFAULT_SYNC_OPTIONS = Object.freeze({
     githubGistId: '',
 });
 
-const IS_AVAILABLE_SYNC_STORAGE = browser.storage.sync instanceof Object;
+export const IS_AVAILABLE_SYNC_STORAGE = browser.storage.sync instanceof Object;
 export const SYNC_STORAGE_FSYNC = 'ff-sync';
 export const SYNC_STORAGE_LOCAL = 'local';
 

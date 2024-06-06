@@ -11,7 +11,7 @@ const logger = new Logger('SyncStorage');
 // const MAX_ITEMS = Math.floor((browser.storage.sync.MAX_ITEMS || 512) * ratio) & ~(chunkCountPerFetch - 1);
 // const QUOTA_BYTES_PER_ITEM = Math.floor((browser.storage.sync.QUOTA_BYTES_PER_ITEM || 8192) * ratio);
 
-export const IS_AVAILABLE = browser.storage.sync instanceof Object;
+export const IS_AVAILABLE = Constants.IS_AVAILABLE_SYNC_STORAGE;
 /*
 const MAX_ITEMS = browser.storage.sync?.MAX_ITEMS || 512;
 const QUOTA_BYTES_PER_ITEM = browser.storage.sync?.QUOTA_BYTES_PER_ITEM || 8192;

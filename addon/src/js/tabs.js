@@ -751,12 +751,12 @@ export function prepareForSave(tabs, ...prepareArgs) {
 }
 
 export function prepareForSaveTab(
-        {id, url, title, cookieStoreId, favIconUrl, openerTabId, groupId, thumbnail, sync},
+        {id, url, title, cookieStoreId, favIconUrl, openerTabId, groupId, thumbnail, lastAccessed},
         includeGroupId = false,
         includeFavIconUrl = false,
         includeThumbnail = false,
         includeId = true,
-        includeNoSyncById = null
+        includeLastAccessed = true
     ) {
     const tab = {url};
 
@@ -788,8 +788,8 @@ export function prepareForSaveTab(
         tab.thumbnail = thumbnail;
     }
 
-    if (includeNoSyncById && !isSynced(includeNoSyncById, {sync, url})) {
-        tab.noSync = true;
+    if (includeLastAccessed && lastAccessed) {
+        tab.lastAccessed = lastAccessed;
     }
 
     return tab;
@@ -841,7 +841,7 @@ export function getTitle({id, index, title, url, discarded, windowId, lastAccess
     return sliceLength ? Utils.sliceText(title, sliceLength) : title;
 }
 
-export function isSynced(optionsSyncId, tab) {
+export function isSynced(optionsSyncId, tab) { // TODO remove this function
     return tab.sync === `${optionsSyncId}${tab.url}`;
 }
 

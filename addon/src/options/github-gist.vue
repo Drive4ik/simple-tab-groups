@@ -12,10 +12,10 @@ import * as Cloud from '/js/sync/cloud/cloud.js';
 
 export default {
     data() {
+        this.SYNC_STORAGE_IS_AVAILABLE = SyncStorage.IS_AVAILABLE;
+        // this.SYNC_STORAGE_IS_AVAILABLE = false;
         this.SYNC_STORAGE_FSYNC = Constants.SYNC_STORAGE_FSYNC;
         this.SYNC_STORAGE_LOCAL = Constants.SYNC_STORAGE_LOCAL;
-        // this.SYNC_STORAGE_IS_AVAILABLE = false;
-        this.SYNC_STORAGE_IS_AVAILABLE = SyncStorage.IS_AVAILABLE;
 
         return {
             isActiveHelp: false,

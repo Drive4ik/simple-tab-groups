@@ -3103,7 +3103,7 @@ async function cloudSync() {
         console.debug('result', result)
     } catch (e) {
         if (e instanceof CloudError) {
-            //
+            log.log(e);
         } else {
             log.throwError('cant sync', e);
         }

@@ -3,14 +3,14 @@ import * as Constants from '/js/constants.js';
 import * as Containers from '/js/containers.js';
 import * as Tabs from '/js/tabs.js';
 import * as Groups from '/js/groups.js';
-import * as Cache from '/js/cache.js';
+// import * as Cache from '/js/cache.js';
 import * as Utils from '/js/utils.js';
 import JSON from '/js/json.js';
 import Logger from '/js/logger.js';
 import GithubGist from './githubgist.js';
 import * as SyncStorage from '../sync-storage.js';
 import * as Storage from '/js/storage.js';
-import backgroundSelf from '../../background.js';
+import backgroundSelf from '/js/background.js';
 // export {
 //     default as GithubGist,
 // } from './githubgist.js';
@@ -18,6 +18,7 @@ import backgroundSelf from '../../background.js';
 const logger = new Logger('Cloud');
 
 export function CloudError(langId) {
+    console.error(langId)
     this.id = langId;
     this.message = browser.i18n.getMessage(langId);
     this.toString = () => 'CloudError: ' + this.message;
@@ -101,7 +102,7 @@ export async function sync() {
 
     console.debug('syncResult', syncResult);
 
-    if (syncResult.changes.localChanged) {
+    if (syncResult.changes.local) {
         for (const group of syncResult.localData.groups) {
             if (group.isArchive) {
                 continue;
@@ -137,36 +138,24 @@ export async function sync() {
         await Tabs.remove(Array.from(syncResult.changes.tabsToRemove));
     }
 
-    const allTabIds = syncResult.localData.groups.reduce((acc, group) => {
-        if (group.isArchive) {
-            return acc;
-        }
+    // const allTabIds = syncResult.localData.groups.reduce((acc, group) => {
+    //     if (group.isArchive) {
+    //         return acc;
+    //     }
 
-        return [...acc, ...group.tabs.map(Tabs.extractId)];
-    }, []);
+    //     return [...acc, ...group.tabs.map(Tabs.extractId)];
+    // }, []);
 
 
-    let syncId/* ,
-        hasChanges */;
+    let syncId;
 
     if (syncResult.sourceOfTruth === TRUTH_CLOUD) {
-        // hasChanges = checkChanges(syncResult.localData, syncResult.cloudData);
-
-        syncId = syncResult.changes.cloudChanged ? Date.now() : syncResult.cloudData.syncId;
-
-        // if (syncResult.changes.cloudChanged) {
-        //     syncId = Date.now();
-        // } else {
-        //     syncId = syncResult.cloudData.syncId;
-        // }
+        syncId = syncResult.changes.cloud ? Date.now() : syncResult.cloudData.syncId;
     } else {
-        // hasChanges = true;
         syncId = Date.now();
     }
 
     syncResult.cloudData.syncId = syncResult.localData.syncId = syncId;
-
-    // await Promise.all(allTabIds.map(tabId => )); // TODO last stop here
 
     // TODO syncData for all tabs: Date.now() + tab.url
     // await Promise.all(allTabIds.map(tabId => Cache.setSyncId(tabId, syncId)));
@@ -208,10 +197,10 @@ async function syncData(localData, cloudData = null) {
     const sourceOfTruth = cloudData.syncId > localData.syncId ? TRUTH_CLOUD : TRUTH_LOCAL;
 
     const changes = {
-        nextSyncId: Date.now(),
+        // nextSyncId: Date.now(),
         tabsToRemove: new Set,
-        localChanged: false,
-        cloudChanged: !hasCloudData,
+        local: false,
+        cloud: !hasCloudData,
     };
 
     await mapContainers(localData, cloudData);
@@ -256,16 +245,29 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
 
     // const START_TIME = +self.localStorage.START_TIME;
 
+    function prepareForSaveTab(tab, includeLastAccessed) {
+        // include includeLastAccessed, tab id and openerId only for local tabs
+        const includeId = includeLastAccessed;
+        return Tabs.prepareForSaveTab(tab, false, localData.syncTabFavIcons, false, includeId, includeLastAccessed);
+    }
+
+    function prepareForSave(tabs, includeLastAccessed) {
+        return tabs.map(tab => prepareForSaveTab(tab, includeLastAccessed));
+    }
+
     if (sourceOfTruth === TRUTH_LOCAL) {
         localGroups.forEach(localGroup => {
-            if (localGroup.dontUploadToCloud) { // TODO check & do this on all code
+            const resultLocalGroup = localGroup;
+            const resultCloudGroup = {...localGroup}; // unlink tabs key
+
+            if (resultLocalGroup.dontUploadToCloud) { // TODO check & do this on all code
+                resultLocalGroups.push(resultLocalGroup);
                 return;
             }
 
-            const resultLocalGroup = localGroup;
-            const resultCloudGroup = {...localGroup}; // unlink tabs array
+            resultCloudGroup.tabs = prepareForSave(resultLocalGroup.tabs, false);
 
-            if (resultCloudGroup.isArchive) {
+            /* if (resultCloudGroup.isArchive) {
                 resultCloudGroup.tabs = resultLocalGroup.tabs.map(tab => {
                     const tabToCloud = {...tab};
 
@@ -273,13 +275,17 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
                     delete tabToCloud.openerTabId;
                     delete tabToCloud.thumbnail;
                     delete tabToCloud.groupId; // ???? TODO check need it?
-                    delete tabToCloud.noSync;
+                    // delete tabToCloud.noSync; // TODO remove it ????
+
+                    if (!localData.syncTabFavIcons) {
+                        delete tabToCloud.favIconUrl;
+                    }
 
                     return tabToCloud;
                 });
             } else {
                 resultCloudGroup.tabs = Tabs.prepareForSave(resultLocalGroup.tabs, false, localData.syncTabFavIcons, false, false);
-            }
+            } */
 
             resultLocalGroups.push(resultLocalGroup);
             resultCloudGroups.push(resultCloudGroup);
@@ -299,13 +305,19 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
                 // (then the id of the groups are saved)
                 localGroup = localGroups.find(localGroup => localGroup.id === cloudGroup.id && localGroup.title === cloudGroup.title);
             } else {
-                // found local group
+                // find local group
                 localGroup = localGroups.find(localGroup => localGroup.id === cloudGroup.id);
+            }
+
+            if (localGroup?.dontUploadToCloud) { // TODO check & do this on all code
+                resultLocalGroups.push(localGroup); // leave group in local
+                resultCloudGroups.push(cloudGroup); // leave in cloud, beacause other comp. can sync with this group
+                return;
             }
 
             // if not found, create it
             if (!localGroup) {
-                changes.localChanged = true;
+                changes.local = true;
 
                 log.log('create/clone new local group from cloud:', cloudGroup.id);
                 // TODO work with group id => to timestamp
@@ -326,15 +338,11 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
             log.log('group:', cloudGroup.id);
             log.log('group archive state local:', resultLocalGroup.isArchive, 'cloud:', resultCloudGroup.isArchive);
 
-            function findNotSyncLocalTab(cloudTab, skipTabFunc, excludeTabs = []) {
+            function findEqualLocalTab(cloudTab, excludeTabs = []) {
                 const cloudCookieStoreId = cloudTab.cookieStoreId || Constants.DEFAULT_COOKIE_STORE_ID;
 
                 const localTab = resultLocalGroup.tabs.find(localTab => {
                     if (excludeTabs.includes(localTab)) {
-                        return false;
-                    }
-
-                    if (skipTabFunc(localTab)) {
                         return false;
                     }
 
@@ -344,148 +352,146 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
 
                     const localCookieStoreId = localTab.cookieStoreId || Constants.DEFAULT_COOKIE_STORE_ID;
 
-                    return localCookieStoreId === cloudCookieStoreId;
+                    if (localCookieStoreId !== cloudCookieStoreId) {
+                        return false;
+                    }
+
+                    return true;
                 });
 
                 return [localTab, resultLocalGroup.tabs.indexOf(localTab)];
             }
 
-            function syncTabs(skipTabFunc, prepareFoundLocalTabFunc, eachNotPreparedLocalTabFunc) {
+            function syncTabs(prepareFoundLocalTabFunc, eachNotPreparedLocalTabFunc) {
                 const resultLocalTabs = [];
                 const resultCloudTabs = resultCloudGroup.tabs;
 
                 resultCloudGroup.tabs.forEach((cloudTab, cloudIndex) => {
-                    const [localTab, localIndex] = findNotSyncLocalTab(cloudTab, skipTabFunc, resultLocalTabs);
+                    const [localTab, localIndex] = findEqualLocalTab(cloudTab, resultLocalTabs);
 
                     const preparedLocalTab = prepareFoundLocalTabFunc(localTab, cloudTab, localIndex, cloudIndex);
 
                     resultLocalTabs.push(preparedLocalTab);
                 });
 
+                let offset = 0;
+
                 resultLocalGroup.tabs.forEach((localTab, localTabIndex) => {
                     // skip tabs that remain locally
+                    // or if tab is new from cloud
                     if (resultLocalTabs.includes(localTab)) {
                         return;
                     }
 
-                    eachNotPreparedLocalTabFunc(localTab, localTabIndex, resultLocalTabs, resultCloudTabs);
+                    let addOffset = eachNotPreparedLocalTabFunc(localTab, localTabIndex + offset, resultLocalTabs, resultCloudTabs);
+
+                    if (addOffset === true) {
+                        offset++;
+                    } else if (addOffset === false) {
+                        offset--;
+                    }
                 });
 
                 resultLocalGroup.tabs = resultLocalTabs;
                 resultCloudGroup.tabs = resultCloudTabs;
             }
 
+            /* TODO
+            убрать всякие noSync и syncId у вкладок, и переделать по системе:
+            если lastAccessed у вкладки меньше чем cloudData.syncId - тогда удаляем эти вкладки,
+            если больше оставляем их. будет проблема с активной вкладкой, её lastAccessed всегда текущее время, поэтому оставляем её, синкаем как новую вкладку. если пользователь захочет узалить её из облака вообще - удаляет локально и тут же нажимает синк. на другом компе её уже нет, и удалять нечего.
+            */
+
             // sync tabs:
             if (resultCloudGroup.isArchive !== resultLocalGroup.isArchive) {
-                // changes.localChanged = true;
+                // changes.local = true; // set when sync group keys
 
                 if (resultCloudGroup.isArchive) { // make local group an archive
                     // remove all local tabs, because group makes an archive
                     resultLocalGroup.tabs.forEach(tabToRemove => changes.tabsToRemove.add(tabToRemove));
-
-                    const isUnSyncTab = localTab => !Tabs.isSynced(localData.syncId, localTab);
-
-                    syncTabs(
-                        isUnSyncTab,
-                        (localTab, cloudTab) => {
-                            return localTab ?? {...cloudTab};
-                        },
-                        (localTab, localTabIndex, resultLocalTabs, resultCloudTabs) => {
-                            if (isUnSyncTab(localTab)) {
-                                // if a tab not synced, it means it has not yet been in the cloud and on another computer
-                                // i.e. it is new. leave it and add it to the cloud
-
-                                // it may be necessary to check in the future if the insertion position can be improved
-                                const cloudTab = Tabs.prepareForSaveTab(localTab, false, localData.syncTabFavIcons, false, false);
-                                resultLocalTabs.splice(localTabIndex, 0, cloudTab);
-                                resultCloudTabs.splice(localTabIndex, 0, {...cloudTab});
-                                changes.cloudChanged = true;
-                            }
-                        }
-                    );
-
-                } else if (resultLocalGroup.isArchive) { // UN archive local group
-                    const isUnSyncTab = localTab => localTab.noSync;
-
-                    syncTabs(
-                        isUnSyncTab,
-                        (localTab, cloudTab) => {
-                            const preparedLocalTab = localTab ?? {...cloudTab};
-                            preparedLocalTab.new = true;
-
-                            return preparedLocalTab;
-                        },
-                        (localTab, localTabIndex, resultLocalTabs, resultCloudTabs) => {
-                            if (isUnSyncTab(localTab)) {
-                                delete localTab.noSync;
-                                delete localTab.id;
-                                delete localTab.openerTabId;
-
-                                resultLocalTabs.splice(localTabIndex, 0, {...localTab, new: true});
-                                resultCloudTabs.splice(localTabIndex, 0, {...localTab});
-
-                                changes.cloudChanged = true;
-                            }
-                        }
-                    );
                 }
-            } else if (resultCloudGroup.isArchive && resultLocalGroup.isArchive) {
-                const isUnSyncTab = localTab => localTab.noSync;
 
                 syncTabs(
-                    isUnSyncTab,
+                    (localTab, cloudTab) => {
+                        return localTab ?? cloudTab;
+                    },
+                    (localTab, localTabIndex, resultLocalTabs, resultCloudTabs) => {
+                        // if first time sync archive group (I didn't save lastAccessed key in archived group before)
+                        localTab.lastAccessed ??= cloudData.syncId + 1;
+
+                        if (localTab.lastAccessed > cloudData.syncId) {
+                            // если вкладка имеет последний доступ больше чем последний syncId облака
+                            // значит вкладку открывали после синка, а значит она нужна, иначе удаляем её
+
+                            resultLocalTabs.splice(localTabIndex, 0, localTab);
+                            resultCloudTabs.splice(localTabIndex, 0, localTab);
+
+                            changes.cloud = true;
+                            return true;
+                        }
+                    }
+                );
+
+                resultLocalGroup.tabs = prepareForSave(resultLocalGroup.tabs);
+                resultCloudGroup.tabs = prepareForSave(resultCloudGroup.tabs, false);
+
+                if (resultLocalGroup.isArchive) { // UN archive local group
+                    resultLocalGroup.tabs.forEach(tab => tab.new = true);
+                }
+
+            } else if (resultCloudGroup.isArchive && resultLocalGroup.isArchive) {
+
+                syncTabs(
                     (localTab, cloudTab, localIndex, cloudIndex) => {
                         if (localIndex !== cloudIndex) {
-                            changes.localChanged = true;
+                            changes.local = true;
                         }
 
                         return localTab ?? {...cloudTab};
                     },
                     (localTab, localTabIndex, resultLocalTabs, resultCloudTabs) => {
-                        if (isUnSyncTab(localTab)) {
-                            delete localTab.noSync;
+                        // if first time sync archive group (I didn't save lastAccessed key in archived group before)
+                        localTab.lastAccessed ??= cloudData.syncId + 1;
 
+                        if (localTab.lastAccessed > cloudData.syncId) {
                             resultLocalTabs.splice(localTabIndex, 0, localTab);
 
-                            const cloudTab = {...localTab};
-                            delete cloudTab.id;
-                            delete cloudTab.openerTabId;
-
+                            const cloudTab = prepareForSaveTab(localTab, false);
                             resultCloudTabs.splice(localTabIndex, 0, cloudTab);
 
-                            changes.cloudChanged = true;
+                            changes.cloud = true;
+                            return true;
                         }
                     }
                 );
+
             } else if (!resultCloudGroup.isArchive && !resultLocalGroup.isArchive) {
-                const isUnSyncTab = localTab => !Tabs.isSynced(localData.syncId, localTab);
 
                 syncTabs(
-                    isUnSyncTab,
                     (localTab, cloudTab, localIndex, cloudIndex) => {
                         if (!localTab) {
                             localTab = {...cloudTab, new: true};
-                            changes.localChanged = true;
+                            changes.local = true;
                         } else if (localIndex !== cloudIndex) {
-                            changes.localChanged = true;
+                            changes.local = true;
                         }
 
                         return localTab;
                     },
                     (localTab, localTabIndex, resultLocalTabs, resultCloudTabs) => {
-                        if (isUnSyncTab(localTab)) {
-                            // if a tab not synced, it means it has not yet been in the cloud and on another computer
-                            // i.e. it is new. leave it and add it to the cloud
-
-                            // it may be necessary to check in the future if the insertion position can be improved
-                            const cloudTab = Tabs.prepareForSaveTab(localTab, false, localData.syncTabFavIcons, false, false);
+                        if (localTab.lastAccessed > cloudData.syncId) {
                             resultLocalTabs.splice(localTabIndex, 0, localTab);
+
+                            const cloudTab = prepareForSaveTab(localTab, false);
                             resultCloudTabs.splice(localTabIndex, 0, cloudTab);
-                            changes.cloudChanged = true;
+
+                            changes.cloud = true;
+                            return true;
                         } else {
-                            // delete a synced tab that was deleted on another computer
+                            // delete old tab, which doensn't exist in cloud, that means it was deleted into another computer
                             changes.tabsToRemove.add(localTab);
-                            changes.localChanged = true;
+                            changes.local = true;
+                            return false;
                         }
                     }
                 );
@@ -498,7 +504,7 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
             resultCloudGroups.push(resultCloudGroup);
         });
 
-        // remove groups that are not in the cloud
+        // remove groups which are not in the cloud
         localGroups.forEach(localGroup => {
             if (localGroup.isArchive) {
                 return;
@@ -507,7 +513,7 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
             const keepLocalGroup = resultLocalGroups.some(group => localGroup.id === group.id);
 
             if (!keepLocalGroup) {
-                changes.localChanged = true;
+                changes.local = true;
                 localGroup.tabs.forEach(tabToRemove => changes.tabsToRemove.add(tabToRemove));
             }
         });
@@ -515,8 +521,6 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
 
     localData.groups = resultLocalGroups;
     cloudData.groups = resultCloudGroups;
-
-    // cloudData.syncId = localData.syncId = Date.now();
 
     log.stop();
 }
@@ -548,7 +552,7 @@ function assignGroupKeys(localGroup, cloudGroup, sourceOfTruth, changes) {
         }
 
         if (sourceOfTruth === TRUTH_LOCAL) {
-            changes.cloudChanged = true;
+            changes.cloud = true;
 
             if (isDefaultGroup) {
                 if (localValue === undefined) {
@@ -562,7 +566,7 @@ function assignGroupKeys(localGroup, cloudGroup, sourceOfTruth, changes) {
 
             log.log('cloud group key changed:', key);
         } else if (sourceOfTruth === TRUTH_CLOUD) {
-            changes.localChanged = true;
+            changes.local = true;
 
             if (isDefaultGroup) {
                 if (cloudValue === undefined) {
@@ -599,11 +603,11 @@ async function syncOptions(localData, cloudData, sourceOfTruth, changes) {
         if (jsonLocalValue !== jsonCloudValue) {
             if (sourceOfTruth === TRUTH_LOCAL) {
                 cloudData[key] = JSON.parse(jsonLocalValue);
-                changes.cloudChanged = true;
+                changes.cloud = true;
                 log.log('cloudChanged:', key);
             } else if (sourceOfTruth === TRUTH_CLOUD) {
                 localData[key] = JSON.parse(jsonCloudValue);
-                changes.localChanged = true;
+                changes.local = true;
                 log.log('localChanged:', key);
             }
         }
@@ -682,7 +686,7 @@ async function mapContainers(localData, cloudData) {
         }
     }
 
-    // no need map func, it is never call
+    // no need map func, it is never be called
     await mapDataContainers(localData, null, localData.containers.map);
 
 

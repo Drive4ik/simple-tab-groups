@@ -32,6 +32,6 @@ export async function nativeGet(area, keysData, log, errorCounter = 0) {
 
         await new Promise(resolve => setTimeout(resolve, 200));
 
-        return nativeLocalGet(area, keysData, log, errorCounter);
+        return nativeGet(area, keysData, log, errorCounter);
     }
 }
