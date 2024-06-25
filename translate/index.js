@@ -16,15 +16,18 @@
     }
 
     async function load(url, defaultValue = {}) {
-        let blob = await fetch(url),
-            result = await blob.json();
+        try {
+            const blob = await fetch(url);
 
-        if (!blob.ok) {
-            notify(`GitHub error: ${blob.status} ${blob.statusText}. Please wait a few minutes and try again.\n${result.message}`);
-            result = defaultValue;
+            if (!blob.ok) {
+                notify(`GitHub error: ${blob.status} ${blob.statusText}. Please wait a few minutes and try again.\n${result.message}`);
+                throw blob;
+            }
+
+            return await blob.json();
+        } catch (e) {
+            return defaultValue;
         }
-
-        return result;
     }
 
     new Vue({
@@ -135,7 +138,16 @@
         methods: {
             async init() {
                 let plugins = await load(this.pluginsApiUrl, []);
-                this.components = [this.components[0]].concat(plugins.filter(element => 'dir' === element.type));
+
+                plugins = plugins.filter(element => {
+                    if ('dir' !== element.type) {
+                        return false;
+                    }
+
+                    return ['simple-', 'stg-'].some(str => element.name.startsWith(str));
+                });
+
+                this.components = [this.components[0], ...plugins];
 
                 await this.loadComponentData();
             },
