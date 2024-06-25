@@ -301,6 +301,10 @@
         "message": "Wähle Gruppe",
         "description": "Select group"
     },
+    "unknownGroup": {
+        "message": "Unbekannte Gruppe",
+        "description": "Unknown group"
+    },
     "hotkeyActionTitleLoadNextGroup": {
         "message": "Lade nächste Gruppe",
         "description": "Load next group"
@@ -412,6 +416,10 @@
     "iconStyle": {
         "message": "Symbolstil",
         "description": "Icon style"
+    },
+    "discardTabsAfterHide": {
+        "message": "Entferne Tabs aus Arbeitsspeicher nach Schließen einer Gruppe",
+        "description": "Unload tabs from memory after closing a group"
     },
     "discardExcludeAudioTabs": {
         "message": "Tabs mit Ton ausschließen",
@@ -813,6 +821,10 @@
         "message": "Bitte aktiviere die Browsereinstellung \"Vorherige Sitzung wiederherstellen\". Dies ist nötig um die Kommunikation zwischen den Tabs und ihren Gruppen aufrecht zu erhalten, <br>andernfalls werden sich keine Tabs beim Browserstart öffnen und ihre Daten sind verloren -<br> das Addon wird funktionsunfähig.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
+    "exportToBookmarksWhenAutoBackup": {
+        "message": "Gruppe in Lesezeichen speichern falls Auto-Backup aktiv ist",
+        "description": "Save the group to bookmarks when auto backup"
+    },
     "leaveBookmarksOfClosedTabs": {
         "message": "Erzeuge Lesezeichen wenn Tabs geschlossen werden",
         "description": "Leave bookmarks of closed tabs"
@@ -1123,6 +1135,22 @@
         "message": "Um einen Verlust von Tabs oder Tab-Positionen in Fenstern und Gruppen zu vermeiden, wird dringlichst empfohlen Erweiterungen zu deaktivieren oder zu entfernen, die im Konflikt mit \"Simple Tab Groups\" stehen. Dies ist auf der Erweiterungseinstellungsseite möglich, diese ist unter \"about:addons\" oder durch die Tastenkombination <code>Strg+Shift+A</code> zu erreichen.",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     },
+    "ignoreConflictedExtIgnore": {
+        "message": "Diese Erweiterung ignorieren",
+        "description": "Ignore conflicted extension"
+    },
+    "ignoreConflictedExtDontIgnore": {
+        "message": "Diese Erweiterung nicht ignorieren",
+        "description": "Don't ignore this extension"
+    },
+    "ignoreConflictedExtIgnoredText": {
+        "message": "ignoriert",
+        "description": "Extension is ignored"
+    },
+    "ignoreConflictedExtConfirm": {
+        "message": "Diese Erweiterung stört die Funktion von STG, was dazu führen kann, dass Tabs verloren gehen. Trotzdem ignorieren?",
+        "description": "This addon will interfere with the STG, which may cause you to lose tabs.\nStill ignore it?"
+    },
     "theme": {
         "message": "Thema",
         "description": "Select theme"
@@ -1159,6 +1187,10 @@
         "message": "URL kopieren",
         "description": "Copy URL"
     },
+    "helpPageStgDebugTitle": {
+        "message": "STG Debug-Seite",
+        "description": "STG debug page"
+    },
     "helpPageStgDebugAutoDebugMainTitle": {
         "message": "Im Addon ist ein Fehler unterlaufen",
         "description": "An error occurred in the addon"
@@ -1166,5 +1198,27 @@
     "windowNotHaveGroup": {
         "message": "Dieses Fenster hat keine geladenen Gruppe",
         "description": "This window does not have a loaded group"
+    },
+    "defaultGroup": {
+        "message": "Standard-Gruppe",
+        "description": "Default group"
+    },
+    "moveToGroupIfNoneCatchTabRules": {
+        "message": "Falls keiner der regulären Ausdrücke (regular expressions) zum Tab passt, verschiebe ihn in die Gruppe:",
+        "description": "If none of the regular expressions match the tab, move it to the group:"
+    },
+    "dontMove": {
+        "message": "nicht verschieben",
+        "description": "Don't move"
+    },
+    "groupArchivedTitle": {
+        "message": "$groupName$ (archiviert)",
+        "description": "My group (archived)",
+        "placeholders": {
+            "groupName": {
+                "content": "$1",
+                "example": "My group"
+            }
+        }
     }
 }
