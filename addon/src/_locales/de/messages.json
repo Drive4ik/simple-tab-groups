@@ -418,7 +418,7 @@
         "description": "Icon style"
     },
     "discardTabsAfterHide": {
-        "message": "Entferne Tabs aus Arbeitsspeicher nach Schließen einer Gruppe",
+        "message": "Tabs nach dem Schließen einer Gruppe aus dem Speicher entladen",
         "description": "Unload tabs from memory after closing a group"
     },
     "discardExcludeAudioTabs": {
@@ -822,7 +822,7 @@
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
     "exportToBookmarksWhenAutoBackup": {
-        "message": "Gruppe in Lesezeichen speichern falls Auto-Backup aktiv ist",
+        "message": "Speichere die Gruppe in den Lesezeichen bei einer automatischen Sicherung",
         "description": "Save the group to bookmarks when auto backup"
     },
     "leaveBookmarksOfClosedTabs": {
@@ -1148,7 +1148,7 @@
         "description": "Extension is ignored"
     },
     "ignoreConflictedExtConfirm": {
-        "message": "Diese Erweiterung stört die Funktion von STG, was dazu führen kann, dass Tabs verloren gehen. Trotzdem ignorieren?",
+        "message": "Dieses Addon hat Wechselwirkungen mit STG, was zu Verlust von Tabs führen kann. Dennoch ignorieren?",
         "description": "This addon will interfere with the STG, which may cause you to lose tabs.\nStill ignore it?"
     },
     "theme": {
@@ -1200,15 +1200,15 @@
         "description": "This window does not have a loaded group"
     },
     "defaultGroup": {
-        "message": "Standard-Gruppe",
+        "message": "Standardgruppe",
         "description": "Default group"
     },
     "moveToGroupIfNoneCatchTabRules": {
-        "message": "Falls keiner der regulären Ausdrücke (regular expressions) zum Tab passt, verschiebe ihn in die Gruppe:",
+        "message": "Wenn keiner der regulären Ausdrücke zutrifft, verschiebe zu Gruppe:",
         "description": "If none of the regular expressions match the tab, move it to the group:"
     },
     "dontMove": {
-        "message": "nicht verschieben",
+        "message": "Nicht verschieben",
         "description": "Don't move"
     },
     "groupArchivedTitle": {
