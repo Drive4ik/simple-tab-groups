@@ -79,12 +79,20 @@
                 </div>
                 <div class="column">
                     <p class="subtitle">Save locale:</p>
-                    <button type="button" class="button is-info is-fullwidth" @click="clickSaveLocaleFileButton" :disabled="!componentName">
-                        <span class="icon">
-                            <i class="fa fa-download" aria-hidden="true"></i>
-                        </span>
-                        <span>Save translation file</span>
-                    </button>
+                    <div class="buttons">
+                        <button type="button" class="button is-info is-fullwidth" @click="clickSaveLocaleFileButton" :disabled="!componentName">
+                            <span class="icon">
+                                <i class="fa fa-download" aria-hidden="true"></i>
+                            </span>
+                            <span>Save translation file</span>
+                        </button>
+                        <button v-if="isAdmin" type="button" class="button is-fullwidth" @click="clickCopyLocaleFileButton" :disabled="!componentName">
+                            <span class="icon">
+                                <i class="fa fa-download" aria-hidden="true"></i>
+                            </span>
+                            <span>Copy to clipboard</span>
+                        </button>
+                    </div>
                     <br>
                     <span>Please send this file to <a :href="emailHref" target="_blank">email</a></span>
                 </div>

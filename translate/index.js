@@ -30,6 +30,7 @@
     new Vue({
         el: '#content',
         data: {
+            isAdmin: !!localStorage.isAdmin,
             notAllowedKeys: ['branch', 'component', 'locale', 'version', 'polyglot', 'extensionName'],
 
             branchesLoading: true,
@@ -218,8 +219,29 @@
                 }
             },
             clickSaveLocaleFileButton() {
+                const [localeToSave, fileName] = this.getLocaleToSave();
+
+                if (localeToSave) {
+                    this.exportToFile(localeToSave, fileName);
+                }
+            },
+            clickCopyLocaleFileButton() {
+                const [localeToSave] = this.getLocaleToSave();
+
+                if (localeToSave) {
+                    delete localeToSave.branch;
+                    delete localeToSave.component;
+                    delete localeToSave.locale;
+                    delete localeToSave.version;
+                    delete localeToSave.polyglot;
+
+                    this.setClipboard(JSON.stringify(localeToSave, null, 4));
+                }
+            },
+            getLocaleToSave() {
                 if (!this.locale.locale) {
-                    return alert('Please, enter locale code');
+                    alert('Please, enter locale code');
+                    return [];
                 }
 
                 let localeToSave = {
@@ -252,7 +274,13 @@
                     }
                 }, this);
 
-                this.exportToFile(localeToSave, fileName);
+                return [localeToSave, fileName];
+            },
+            async setClipboard(text) {
+                const type = "text/plain";
+                const blob = new Blob([text], {type});
+                const data = [new ClipboardItem({[type]: blob})];
+                await navigator.clipboard.write(data);
             },
 
             importFromFile() {
@@ -295,7 +323,7 @@
             },
 
             exportToFile(data, fileName) { // data : Object
-                let text = JSON.stringify(data, null, '    '),
+                let text = JSON.stringify(data, null, 4),
                     a = document.createElement('a');
 
                 a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(text);
