@@ -26,18 +26,32 @@ export default {
             },
 
             sync: {
+                title: 'Use settings located in Firefox synchronisation',
+                disabled: !this.SYNC_STORAGE_IS_AVAILABLE,
                 loading: false,
+                value: this.SYNC_STORAGE_FSYNC,
                 options: {...Constants.DEFAULT_SYNC_OPTIONS},
                 load: this.loadSyncOptions.bind(this),
                 save: this.saveSyncOptions.bind(this),
                 error: '',
+                icon: {
+                    load: '/icons/cloud-arrow-down-solid.svg',
+                    save: '/icons/cloud-arrow-up-solid.svg',
+                },
             },
             local: {
+                title: 'Use settings located locally in the current browser profile',
+                disabled: false,
                 loading: false,
+                value: this.SYNC_STORAGE_LOCAL,
                 options: {...Constants.DEFAULT_SYNC_OPTIONS, syncOptionsLocation: Constants.DEFAULT_OPTIONS.syncOptionsLocation},
                 load: this.loadLocalOptions.bind(this),
                 save: this.saveLocalOptions.bind(this),
                 error: '',
+                icon: {
+                    load: '/icons/arrow-down.svg',
+                    save: '/icons/floppy-disk-solid.svg',
+                },
             },
         };
     },
@@ -52,6 +66,12 @@ export default {
     computed: {
         browserName() {
             return `${this.browserInfo.name} v${this.browserInfo.version}`;
+        },
+        areas() {
+            return [this.sync, this.local];
+        },
+        area() {
+            return this.areas.find(area => area.value === this.local.options.syncOptionsLocation);
         },
     },
     created() {
@@ -88,16 +108,18 @@ export default {
 
         // MAIN
         async save(area) {
-            area.error = '';
-            area.loading = true;
-
-            await area.save();
-
             try {
+                area.error = '';
+                area.loading = true;
+
+                await area.save();
+
                 const result = await Cloud.sync();
                 // const result = await this.createBackup(area.options);
 
                 console.debug('result', result)
+
+                await area.load();
 
                 // if (result.newGistId) {
                 //     area.options.githubGistId = result.newGistId;
@@ -183,7 +205,20 @@ export default {
             </div>
         </div>
 
-        <div v-if="!SYNC_STORAGE_IS_AVAILABLE" class="field">
+        <div class="field">
+            <div class="control has-icons-left">
+                <div class="select">
+                    <select v-model="local.options.syncOptionsLocation">
+                        <option v-for="area in areas" :key="area.value" :value="area.value" v-text="area.title"></option>
+                    </select>
+                </div>
+                <span class="icon is-left">
+                    <img class="size-16" :src="area.icon.save">
+                </span>
+            </div>
+        </div>
+
+        <div v-if="area === sync && sync.disabled" class="field">
             <p class="field">Your browser is: {{browserName}}, it doesn't support <a href="https://www.mozilla.org/firefox/sync/" target="_blank" class="is-underlined">Firefox Sync</a></p>
             <p class="field">
                 <a class="button is-link" href="https://www.mozilla.org/firefox/new/" target="_blank">
@@ -195,74 +230,30 @@ export default {
             </p>
         </div>
 
-        <fieldset class="field" :disabled="!SYNC_STORAGE_IS_AVAILABLE || sync.loading">
-            <legend>
-                <label class="label">
-                    <input type="radio" v-model="local.options.syncOptionsLocation" :value="SYNC_STORAGE_FSYNC" :disabled="!SYNC_STORAGE_IS_AVAILABLE">
-                    Use settings that are in Firefox Sync
-                </label>
-            </legend>
-
+        <fieldset class="field" :disabled="area.disabled || area.loading">
             <github-gist-fields
                 class="field"
-                :token.sync="sync.options.githubGistToken"
-                :file-name.sync="sync.options.githubGistFileName"
-                :gistId.sync="sync.options.githubGistId"
-                :error="sync.error"
+                :token.sync="area.options.githubGistToken"
+                :file-name.sync="area.options.githubGistFileName"
+                :gistId.sync="area.options.githubGistId"
+                :error.sync="area.error"
             ></github-gist-fields>
 
             <div class="field is-grouped is-grouped-right">
                 <div class="control">
-                    <button class="button is-info" @click="sync.load">
+                    <button class="button is-info" @click="area.load">
                         <span class="icon">
-                            <img class="size-16" src="/icons/cloud-arrow-down-solid.svg">
+                            <img class="size-16" :src="area.icon.load">
                         </span>
                         <span>Load</span>
                     </button>
                 </div>
                 <div class="control">
-                    <button :class="['button is-success', {'is-loading': sync.loading}]" @click="save(sync)">
+                    <button :class="['button is-success', {'is-loading': area.loading}]" @click="save(area)">
                         <span class="icon">
-                            <img class="size-16" src="/icons/cloud-arrow-up-solid.svg">
+                            <img class="size-16" :src="area.icon.save">
                         </span>
-                        <span v-if="sync.options.githubGistId">Save settings</span>
-                        <span v-else>Save settings and create/update backup</span>
-                    </button>
-                </div>
-            </div>
-        </fieldset>
-
-        <fieldset class="field" :disabled="local.loading">
-            <legend>
-                <label class="label">
-                    <input type="radio" v-model="local.options.syncOptionsLocation" :value="SYNC_STORAGE_LOCAL">
-                    Use settings that are on the local computer (this $browserName$ profile)
-                </label>
-            </legend>
-
-            <github-gist-fields
-                class="field"
-                :token.sync="local.options.githubGistToken"
-                :file-name.sync="local.options.githubGistFileName"
-                :gistId.sync="local.options.githubGistId"
-                :error="local.error"
-            ></github-gist-fields>
-
-            <div class="field is-grouped is-grouped-right">
-                <div class="control">
-                    <button class="button is-info" @click="local.load">
-                        <span class="icon">
-                            <img class="size-16" src="/icons/arrow-down.svg">
-                        </span>
-                        <span>Load</span>
-                    </button>
-                </div>
-                <div class="control">
-                    <button :class="['button is-success', {'is-loading': local.loading}]" @click="save(local)">
-                        <span class="icon">
-                            <img class="size-16" src="/icons/floppy-disk-solid.svg">
-                        </span>
-                        <span v-if="local.options.githubGistId">Save settings</span>
+                        <span v-if="area.options.githubGistId">Save settings</span>
                         <span v-else>Save settings and create/update backup</span>
                     </button>
                 </div>
@@ -280,16 +271,6 @@ html[data-theme="dark"] .box {
 }
 html[data-theme="dark"] .box .subtitle {
     color: #cecece;
-}
-
-fieldset {
-    padding: .75rem;
-    border: 1px solid;
-}
-
-legend {
-    padding: 0 calc(.75rem / 2);
-    margin: 0 .75rem;
 }
 
 </style>

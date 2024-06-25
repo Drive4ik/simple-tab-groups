@@ -67,18 +67,19 @@ export default {
         lang: browser.i18n.getMessage,
 
         async checkToken() {
-            this.tokenLoading = true;
-
             try {
+                this.tokenLoading = true;
                 this.tokenCheched = null;
                 this.GithubGistCloud.token = this.token;
                 await this.GithubGistCloud.checkToken();
                 this.tokenCheched = true;
+                this.$emit('update:error', '');
             } catch (e) {
+                this.$emit('update:error', e.message);
                 this.tokenCheched = false;
+            } finally {
+                this.tokenLoading = false;
             }
-
-            this.tokenLoading = false;
         },
     },
 }
@@ -97,7 +98,7 @@ export default {
                     'is-loading': tokenLoading,
                     'has-icons-right': tokenCheched !== null,
                     }]">
-                    <input type="text" v-model.trim="internalToken" maxlength="512" class="input" />
+                    <input type="text" v-model.trim="internalToken" maxlength="40" class="input" />
 
                     <span class="icon is-left">
                         <img class="size-16" src="/icons/key-solid.svg">
@@ -136,6 +137,7 @@ export default {
     </div>
     <div class="field error-field">
         <p class="has-text-danger has-text-right" v-text="error"></p>
+        <!-- <p class="has-text-danger has-text-right" v-text="lang(error)"></p> TODO need lang -->
     </div>
 </div>
 </template>

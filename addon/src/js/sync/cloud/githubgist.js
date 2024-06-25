@@ -12,19 +12,116 @@ const GISTS_GLOBAL_HEADERS = {
     'Content-Type': 'application/json',
 };
 
-async function github(method, url, token, body, headers = {}) {
+export default function GithubGist(token, fileName, gistId = null) {
+    this.token = token;
+    this.fileName = fileName;
+    this.gistId = gistId;
+}
+
+GithubGist.prototype.checkToken = async function() {
+    await this.request('get', GITHUB_API_URL);
+}
+
+GithubGist.prototype.findGistId = async function() {
+    this.gistId = null;
+    return this.gistId = await findGistId.call(this, this.fileName);
+}
+
+async function findGistId(fileName, page = 1) {
+    const gists = await this.request('get', GISTS_URL, {
+            page,
+            per_page: GISTS_PER_PAGE,
+        }),
+        gist = gists.find(g => !g.public && g.files.hasOwnProperty(fileName));
+
+    if (gist?.id) {
+        return gist.id;
+    } else if (gists.length === GISTS_PER_PAGE) {
+        if ((page * GISTS_PER_PAGE) > 1000) {
+            throw Error('You have too many gists.\nCreate gist and write id in addon options'); // TODO move to lang
+        }
+
+        return findGistId.call(this, fileName, ++page);
+    }
+
+    return null;
+}
+
+GithubGist.prototype.getGist = async function() {
+    if (!this.gistId) {
+        throw Error('githubNotFound');
+    }
+
+    const data = await this.request('get', `${GISTS_URL}/${this.gistId}`, undefined, {cache: 'no-store'}),
+        file = data.files[this.fileName];
+
+    if (file?.truncated) {
+        file.content = await fetch(file.raw_url).then(res => res.json());
+    }
+
+    if (!file?.content) {
+        throw Error('githubNotFound');
+    }
+
+    return {
+        content: file.content,
+        updated_at: data.updated_at,
+    };
+}
+
+GithubGist.prototype.createGist = async function(content, description = '') {
+    return this.request('post', GISTS_URL, {
+        public: false,
+        description,
+        files: {
+            [this.fileName]: {content},
+        },
+    });
+}
+
+GithubGist.prototype.updateGist = async function(content) {
+    return this.request('patch', `${GISTS_URL}/${this.gistId}`, {
+        files: {
+            [this.fileName]: {content},
+        },
+    });
+}
+
+GithubGist.prototype.renameGist = async function(newFileName) {
+    const result = await this.request('patch', `${GISTS_URL}/${this.gistId}`, {
+        files: {
+            [this.fileName]: {newFileName},
+        },
+    });
+
+    this.fileName = newFileName;
+
+    return result;
+}
+
+GithubGist.prototype.request = async function(method, url, body = {}, reqOptions = {}) {
+    if (!this.token) {
+        throw Error('githubInvalidToken');
+    }
+
     method = method.toUpperCase();
+
+    const headers = reqOptions.headers ?? {};
+    delete reqOptions.headers;
 
     const options = {
         method,
         headers: {
             ...GISTS_GLOBAL_HEADERS,
+            Authorization: `token ${this.token}`,
             ...headers,
-            Authorization: `token ${token}`,
         },
+        ...reqOptions,
     };
 
-    if (method !== 'GET' && body) {
+    if (method === 'GET') {
+        url = Utils.setUrlSearchParams(url, body);
+    } else if (body) {
         if (body.files) {
             for (const value of Object.values(body.files)) {
                 if (value.content && typeof value.content !== 'string') {
@@ -36,123 +133,38 @@ async function github(method, url, token, body, headers = {}) {
         options.body = JSON.stringify(body);
     }
 
-    if (Array.isArray(url)) {
-        url = Utils.setUrlSearchParams(url[0], url[1]);
-    }
-
     const response = await fetch(url, options);
+
+    const hasGistAccess = response.headers.get('x-oauth-scopes')?.split(/\s*,\s*/).includes('gist');
+
+    if (!hasGistAccess) {
+        throw Error('githubTokenNoAccess');
+    }
 
     if (response.ok) {
         return response.json();
     }
 
-    let message = null;
-
-    if (response.headers.get('content-type')?.includes('json')) {
-        ({message} = await response.json());
-    } else {
-        message = await response.text();
+    if (response.status === 404) {
+        throw Error('githubNotFound');
     }
 
-    message = message.slice(0, 150);
+    throw Error('githubInvalidToken');
 
-    const errorMessage = `GitHub Gist error: ${response.status} ${response.statusText}\n${message}`;
+    // TMP
+    // let message = null;
 
-    console.error(errorMessage);
+    // if (response.headers.get('content-type')?.includes('json')) {
+    //     ({message} = await response.json());
+    // } else {
+    //     message = await response.text();
+    // }
 
-    throw Error(errorMessage);
-}
+    // message = message.slice(0, 150);
 
-export default function GithubGist(token, fileName, gistId = null) {
-    this.token = token;
-    this.fileName = fileName;
-    this.gistId = gistId;
-}
+    // const errorMessage = `GitHub Gist error: ${response.status} ${response.statusText}\n${message}`;
 
-GithubGist.prototype.checkToken = async function() {
-    if (!this.token) {
-        throw Error('token is invalid');
-    }
+    // console.error(errorMessage);
 
-    await github('get', [GISTS_URL, {
-        page: 1,
-        per_page: 1,
-    }], this.token);
-
-    return true;
-}
-
-GithubGist.prototype.findGistId = async function() {
-    this.gistId = null;
-    return this.gistId = await findGistId(this.token, this.fileName);
-}
-
-async function findGistId(token, fileName, page = 1) {
-    const gists = await github('get', [GISTS_URL, {
-            page,
-            per_page: GISTS_PER_PAGE,
-        }], token, {
-            // cache: 'no-store',
-        }),
-        gist = gists.find(g => !g.public && g.files.hasOwnProperty(fileName));
-
-    if (gist?.id) {
-        return gist.id;
-    } else if (gists.length === GISTS_PER_PAGE) {
-        if ((page * GISTS_PER_PAGE) > 1000) {
-            throw Error('You have too many gists.\nCreate gist and write id in addon options');
-        }
-
-        return findGistId(token, fileName, ++page);
-    }
-
-    return null;
-}
-
-GithubGist.prototype.getGist = async function() {
-    const data = await github('get', `${GISTS_URL}/${this.gistId}`, this.token),
-        file = data.files[this.fileName];
-
-    if (!file?.content) {
-        throw Error('File in gist not found');
-    }
-
-    if (file.truncated) {
-        file.content = await fetch(file.raw_url).then(res => res.json());
-    }
-
-    return {
-        content: file.content,
-        updated_at: data.updated_at,
-    };
-}
-
-GithubGist.prototype.createGist = async function(content, description = '') {
-    return github('post', GISTS_URL, this.token, {
-        public: false,
-        description,
-        files: {
-            [this.fileName]: {content},
-        },
-    });
-}
-
-GithubGist.prototype.updateGist = async function(content) {
-    return github('patch', `${GISTS_URL}/${this.gistId}`, this.token, {
-        files: {
-            [this.fileName]: {content},
-        },
-    });
-}
-
-GithubGist.prototype.renameGist = async function(newFileName) {
-    const result = await github('patch', `${GISTS_URL}/${this.gistId}`, this.token, {
-        files: {
-            [this.fileName]: {newFileName},
-        },
-    });
-
-    this.fileName = newFileName;
-
-    return result;
+    // throw Error(errorMessage);
 }

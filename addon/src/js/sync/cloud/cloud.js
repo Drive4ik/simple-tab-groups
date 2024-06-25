@@ -18,9 +18,14 @@ import backgroundSelf from '/js/background.js';
 const logger = new Logger('Cloud');
 
 export function CloudError(langId) {
-    console.error(langId)
+    console.error('CloudError:', langId)
     this.id = langId;
     this.message = browser.i18n.getMessage(langId);
+
+    if (!this.message) {
+        this.message = langId;
+    }
+
     this.toString = () => 'CloudError: ' + this.message;
 }
 
@@ -44,25 +49,29 @@ export async function sync() {
 
     const GithubGistCloud = new GithubGist(syncOptions.githubGistToken, syncOptions.githubGistFileName, syncOptions.githubGistId);
 
-    try {
-        await GithubGistCloud.checkToken();
-    } catch (e) {
-        throw new CloudError('invalidGithubToken');
-    }
+    // try {
+    //     await GithubGistCloud.checkToken();
+    // } catch (e) {
+    //     throw new CloudError(e.message);
+    // }
 
     // throw error only on invalid json content
     async function getGistData() {
-        const gist = await GithubGistCloud.getGist().catch(() => {});
+        try {
+            const gist = await GithubGistCloud.getGist();
 
-        if (gist) {
             try {
                 return JSON.parse(gist.content);
             } catch (e) {
-                throw new CloudError('invalidGithubGistContent');
+                throw Error('githubInvalidGistContent');
             }
-        }
+        } catch ({message}) {
+            if (message === 'githubNotFound') {
+                return null;
+            }
 
-        return null;
+            throw new CloudError(message);
+        }
     }
 
     let cloudData = await getGistData(),
@@ -89,10 +98,6 @@ export async function sync() {
     const localData = await Promise.all([Storage.get(), Groups.load(null, true)])
         .then(([data, {groups}]) => {
             data.groups = groups;
-            // data.groups = groups.map(group => {
-            //     group.tabs = Tabs.prepareForSave(group.tabs, false, data.syncTabFavIcons);
-            //     return group;
-            // });
             data.containers = Containers.getToExport(data);
             return data;
         });
@@ -138,45 +143,65 @@ export async function sync() {
         await Tabs.remove(Array.from(syncResult.changes.tabsToRemove));
     }
 
-    // const allTabIds = syncResult.localData.groups.reduce((acc, group) => {
-    //     if (group.isArchive) {
-    //         return acc;
-    //     }
+    // let syncId;
+    log.debug('before cloud syncId:', syncResult.cloudData.syncId);
+    log.debug('before local syncId:', syncResult.localData.syncId);
 
-    //     return [...acc, ...group.tabs.map(Tabs.extractId)];
-    // }, []);
-
-
-    let syncId;
-
-    if (syncResult.sourceOfTruth === TRUTH_CLOUD) {
-        syncId = syncResult.changes.cloud ? Date.now() : syncResult.cloudData.syncId;
-    } else {
-        syncId = Date.now();
+    if (syncResult.changes.cloud) {
+        syncResult.changes.local = true; // syncId must be equal in cloud and local
+        syncResult.localData.syncId = syncResult.cloudData.syncId = Date.now();
+    } else if (syncResult.changes.local) { // will be true if syncResult.sourceOfTruth === TRUTH_CLOUD
+        syncResult.localData.syncId = syncResult.cloudData.syncId;
     }
 
-    syncResult.cloudData.syncId = syncResult.localData.syncId = syncId;
+
+    // if (syncResult.sourceOfTruth === TRUTH_CLOUD) {
+    //     if (syncResult.changes.cloud) {
+    //         syncResult.localData.syncId = syncResult.cloudData.syncId = Date.now();
+    //     } else {
+    //         // syncResult.changes.local = true; // TODO check if its needed
+    //         syncResult.localData.syncId = syncResult.cloudData.syncId;
+    //     }
+    // } else if (syncResult.sourceOfTruth === TRUTH_LOCAL) {
+
+    //     // syncResult.changes.local never be TRUE,
+    //     // ONLY (!!!) if local options key doesn't exist, than it clone from cloud
+
+    //     if (syncResult.changes.cloud) {
+    //         syncResult.localData.syncId = syncResult.cloudData.syncId = Date.now();
+    //     }
+    // }
+
+    log.debug('trust:', syncResult.sourceOfTruth);
+    log.debug('changes.cloud:', syncResult.changes.cloud, syncResult.cloudData.syncId);
+    log.debug('changes.local:', syncResult.changes.local, syncResult.localData.syncId);
+
+    // syncResult.cloudData.syncId = syncResult.localData.syncId = syncId;
 
     // TODO syncData for all tabs: Date.now() + tab.url
     // await Promise.all(allTabIds.map(tabId => Cache.setSyncId(tabId, syncId)));
 
     if (GithubGistCloud.gistId) {
-        try {
-            await GithubGistCloud.updateGist(syncResult.cloudData);
-        } catch (e) {
-            throw new CloudError('cantUploadBackupToGithubGist');
+        if (syncResult.changes.cloud) {
+            try {
+                await GithubGistCloud.updateGist(syncResult.cloudData);
+            } catch (e) {
+                throw new CloudError('githubCantUploadBackupToGist');
+            }
         }
     } else {
         try {
             const result = await GithubGistCloud.createGist(syncResult.cloudData, 'Simple Tab Groups backup');
             await saveNewGistId(result.id);
         } catch (e) {
-            throw new CloudError('cantCreateBackupIntoGithubGist');
+            throw new CloudError('githubCantCreateBackupIntoGist');
         }
     }
 
-    // TODO normal save options
-    await Storage.set(syncResult.localData);
+    if (syncResult.changes.local) {
+        // TODO normal save options
+        await Storage.set(syncResult.localData);
+    }
 
     log.stop();
 
@@ -202,6 +227,8 @@ async function syncData(localData, cloudData = null) {
         local: false,
         cloud: !hasCloudData,
     };
+
+    // don't care if cloudData not exist before, and it's clone of local data
 
     await mapContainers(localData, cloudData);
 
@@ -262,34 +289,22 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
 
             if (resultLocalGroup.dontUploadToCloud) { // TODO check & do this on all code
                 resultLocalGroups.push(resultLocalGroup);
-                return;
-            }
-
-            resultCloudGroup.tabs = prepareForSave(resultLocalGroup.tabs, false);
-
-            /* if (resultCloudGroup.isArchive) {
-                resultCloudGroup.tabs = resultLocalGroup.tabs.map(tab => {
-                    const tabToCloud = {...tab};
-
-                    delete tabToCloud.id;
-                    delete tabToCloud.openerTabId;
-                    delete tabToCloud.thumbnail;
-                    delete tabToCloud.groupId; // ???? TODO check need it?
-                    // delete tabToCloud.noSync; // TODO remove it ????
-
-                    if (!localData.syncTabFavIcons) {
-                        delete tabToCloud.favIconUrl;
-                    }
-
-                    return tabToCloud;
-                });
             } else {
-                resultCloudGroup.tabs = Tabs.prepareForSave(resultLocalGroup.tabs, false, localData.syncTabFavIcons, false, false);
-            } */
+                resultCloudGroup.tabs = prepareForSave(resultLocalGroup.tabs, false);
 
-            resultLocalGroups.push(resultLocalGroup);
-            resultCloudGroups.push(resultCloudGroup);
+                resultLocalGroups.push(resultLocalGroup);
+                resultCloudGroups.push(resultCloudGroup);
+            }
         });
+
+        if (!changes.cloud) {
+            changes.cloud = resultCloudGroups.length !== cloudGroups.length;
+        }
+
+        if (!changes.cloud) {
+            changes.cloud = JSON.stringify(resultCloudGroups) !== JSON.stringify(cloudGroups);
+        }
+
     } else if (sourceOfTruth === TRUTH_CLOUD) {
         // const localTabsToRemove = new Set;
 
@@ -586,29 +601,59 @@ function assignGroupKeys(localGroup, cloudGroup, sourceOfTruth, changes) {
 async function syncOptions(localData, cloudData, sourceOfTruth, changes) {
     const log = logger.start('syncOptions', {sourceOfTruth});
 
-    const EXCLUDE_OPTION_KEYS = [
+    const EXCLUDE_OPTION_KEY_STARTS_WITH = [
         'defaultGroupProps',
         'autoBackup',
         'sync',
     ];
 
     for (const key of Constants.ALL_OPTIONS_KEYS) {
-        if (EXCLUDE_OPTION_KEYS.some(exKey => key.startsWith(exKey))) {
+        if (EXCLUDE_OPTION_KEY_STARTS_WITH.some(exKey => key.startsWith(exKey))) {
             continue;
         }
 
+        // this code below used for "number", "strings", "array" option values,
+        // and can be used for object values without any changes
         const jsonLocalValue = JSON.stringify(localData[key]);
         const jsonCloudValue = JSON.stringify(cloudData[key]);
+
+        if (jsonLocalValue === undefined || jsonCloudValue === undefined) {
+            if (jsonLocalValue === undefined) {
+                log.warn(`local options key "${key}" is undefined. creating it.`);
+
+                if (sourceOfTruth === TRUTH_LOCAL || jsonCloudValue === undefined) {
+                    localData[key] = JSON.clone(Constants.DEFAULT_OPTIONS[key]);
+                } else {
+                    localData[key] = JSON.parse(jsonCloudValue);
+                }
+
+                changes.local = true;
+            }
+
+            if (jsonCloudValue === undefined) {
+                log.warn(`cloud options key "${key}" is undefined. creating it.`);
+
+                if (sourceOfTruth === TRUTH_CLOUD || jsonLocalValue === undefined) {
+                    cloudData[key] = JSON.clone(Constants.DEFAULT_OPTIONS[key]);
+                } else {
+                    cloudData[key] = JSON.parse(jsonLocalValue);
+                }
+
+                changes.cloud = true;
+            }
+
+            continue;
+        }
 
         if (jsonLocalValue !== jsonCloudValue) {
             if (sourceOfTruth === TRUTH_LOCAL) {
                 cloudData[key] = JSON.parse(jsonLocalValue);
                 changes.cloud = true;
-                log.log('cloudChanged:', key);
+                log.log('cloud has changed options key:', key);
             } else if (sourceOfTruth === TRUTH_CLOUD) {
                 localData[key] = JSON.parse(jsonCloudValue);
                 changes.local = true;
-                log.log('localChanged:', key);
+                log.log('local has changed options key:', key);
             }
         }
     }
