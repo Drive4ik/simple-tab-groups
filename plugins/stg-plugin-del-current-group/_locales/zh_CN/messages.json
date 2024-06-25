@@ -1,6 +1,6 @@
 {
     "extensionDescription": {
-        "message": "在容器中创建中创建新标签页，在 Simple Tab Groups v4.5.2+ 扩展中",
+        "message": "在 Simple Tab Groups 扩展中删除当前群组",
         "description": "Extension description"
     },
     "needInstallSTGExtension": {
