@@ -57,6 +57,10 @@
         "message": "キャンセル",
         "description": "Cancel"
     },
+    "close": {
+        "message": "閉じる",
+        "description": "Close"
+    },
     "searchPlaceholder": {
         "message": "タブを検索",
         "description": "Search placeholder"
@@ -82,6 +86,10 @@
     "closePopupAfterChangeGroup": {
         "message": "グループを変更後にポップアップを閉じる",
         "description": "Close popup after changing group"
+    },
+    "closePopupAfterSelectTab": {
+        "message": "タブを選択後にポップアップウィンドウを閉じる",
+        "description": "Close the popup window after selecting a tab"
     },
     "openManageGroupsInTab": {
         "message": "[グループの管理] を新しいタブで開く",
@@ -293,6 +301,10 @@
         "message": "グループを選択",
         "description": "Select group"
     },
+    "unknownGroup": {
+        "message": "不明なグループ",
+        "description": "Unknown group"
+    },
     "hotkeyActionTitleLoadNextGroup": {
         "message": "次のグループを読み込む",
         "description": "Load next group"
@@ -308,6 +320,14 @@
     "hotkeyActionTitleLoadPrevUnloadedGroup": {
         "message": "前の未読み込みのグループを読み込む",
         "description": "Load previous unloaded group"
+    },
+    "hotkeyActionTitleLoadNextNonEmptyGroup": {
+        "message": "次の空でないグループを読み込む",
+        "description": "Load next non-empty group"
+    },
+    "hotkeyActionTitleLoadPrevNonEmptyGroup": {
+        "message": "前の空でないグループを読み込む",
+        "description": "Load previous non-empty group"
     },
     "hotkeyActionTitleLoadHistoryNextGroup": {
         "message": "履歴から次のグループを読み込む",
@@ -397,6 +417,14 @@
         "message": "アイコンスタイル",
         "description": "Icon style"
     },
+    "discardTabsAfterHide": {
+        "message": "グループを閉じた後メモリからタブをアンロードする",
+        "description": "Unload tabs from memory after closing a group"
+    },
+    "discardExcludeAudioTabs": {
+        "message": "サウンド付きタブを除く",
+        "description": "Exclude tabs with sound"
+    },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "開いているタブの中にマイクかカメラを使用しているものがあるためグループを変更できません",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
@@ -444,6 +472,14 @@
     "showTabAfterMovingItIntoThisGroup": {
         "message": "このグループにタブが自動的に移動した場合そのタブを表示する",
         "description": "Show the tab after auto-moving it into this group"
+    },
+    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
+        "message": "アクティブなタブが移動した場合のみ",
+        "description": "Only if the active tab has been moved"
+    },
+    "showNotificationAfterMovingTabIntoThisGroup": {
+        "message": "タブがこのグループに移動したときに通知を表示する",
+        "description": "Show a notification when tabs are moved to this group"
     },
     "tabMoving": {
         "message": "タブ移動",
@@ -785,6 +821,10 @@
         "message": "ブラウザーの設定で [以前のセッションを復元する] を有効にしてください。<br>これはグループとタブの間の通信を管理するために必要です。<br>これが無効になっている場合、ブラウザーの起動時にタブが開かず、アドオンからタブの情報が失われます。<br>つまり、アドオンの動作が停止するでしょう。",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
+    "exportToBookmarksWhenAutoBackup": {
+        "message": "自動バックアップ時にブックマークにグループを保存",
+        "description": "Save the group to bookmarks when auto backup"
+    },
     "leaveBookmarksOfClosedTabs": {
         "message": "閉じたタブのブックマークを残す",
         "description": "Leave bookmarks of closed tabs"
@@ -792,6 +832,10 @@
     "enableDebugTitle": {
         "message": "DEBUG を有効にする",
         "description": "Enable DEBUG"
+    },
+    "disableDebugTitle": {
+        "message": "DEBUG を無効にする",
+        "description": "Disable DEBUG"
     },
     "loggingIsEnabledTitle": {
         "message": "ログが有効です",
@@ -903,6 +947,10 @@
             }
         }
     },
+    "helpPageOpenInContainerDesc2": {
+        "message": "別のアドオン",
+        "description": "Another addon:"
+    },
     "helpPageOpenInContainerDesc3": {
         "message": "この URL を <container-name>$containerName$</container-name> コンテナーに開こうとしています。タブを別のグループへ移動するか、アドオン <strong>$addonName$</strong> のこのアクションを禁止してください。",
         "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
@@ -974,6 +1022,16 @@
             "groupTitle": {
                 "content": "$2",
                 "example": "Group 1"
+            }
+        }
+    },
+    "helpPageOpenInContainerIgnoreAppForSession": {
+        "message": "ブラウザを閉じるまで拡張子\"<strong>$addonName$</strong>\"を無視する",
+        "description": "Ignore addon for session",
+        "placeholders": {
+            "addonName": {
+                "content": "$1",
+                "example": "Facebook Container"
             }
         }
     },
@@ -1052,5 +1110,99 @@
     "autoBackupByDayIndexDescription": {
         "message": "ダウンロードフォルダー内にある数多くのバックアップファイルを整理するのに役立ちます。バックアップファイル名は次のようになります: \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
         "description": "Backup by day description"
+    },
+    "clickHereForInfo": {
+        "message": "詳細はこちら",
+        "description": "Click here for more info"
+    },
+    "helpPageExtensionsThatConflictWithStgTitle": {
+        "message": "STGと競合する拡張機能",
+        "description": "Extensions that conflict with STG"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc1": {
+        "message": "Simple Tab Groupsアドオンは以下の有効な拡張機能と競合しています",
+        "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc2": {
+        "message": "ウィンドウやグループ内のタブの位置がわからなくなるのを防ぐため、Simple Tab Groups アドオンと競合する有効な拡張機能をオフにするか、削除することを強くお勧めします。これはアドオンの設定ページ\"about:addons\"で行うか、<code>Ctrl+Shift+A</code>キーを押すことで行えます",
+        "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
+    },
+    "ignoreConflictedExtIgnore": {
+        "message": "この拡張機能を無視する",
+        "description": "Ignore conflicted extension"
+    },
+    "ignoreConflictedExtDontIgnore": {
+        "message": "この拡張機能を無視しない",
+        "description": "Don't ignore this extension"
+    },
+    "ignoreConflictedExtConfirm": {
+        "message": "このアドオンはSTGに干渉し、タブを失う可能性があります。\nそれでも無視しますか？",
+        "description": "This addon will interfere with the STG, which may cause you to lose tabs.\nStill ignore it?"
+    },
+    "theme": {
+        "message": "テーマ",
+        "description": "Select theme"
+    },
+    "themeAuto": {
+        "message": "システムテーマ（自動）",
+        "description": "Auto theme"
+    },
+    "themeLight": {
+        "message": "ライト",
+        "description": "Light theme"
+    },
+    "themeDark": {
+        "message": "ダーク",
+        "description": "Dark theme"
+    },
+    "tab": {
+        "message": "タブ",
+        "description": "Tab"
+    },
+    "group": {
+        "message": "グループ",
+        "description": "Group"
+    },
+    "helpPageUnsupportedUrlTitle": {
+        "message": "サポートされていないURL",
+        "description": "Unsupported URL"
+    },
+    "copyURL": {
+        "message": "URLをコピー",
+        "description": "Copy URL"
+    },
+    "helpPageStgDebugTitle": {
+        "message": "STGデバッグページ",
+        "description": "STG debug page"
+    },
+    "helpPageStgDebugAutoDebugMainTitle": {
+        "message": "アドオンでエラーが発生しました",
+        "description": "An error occurred in the addon"
+    },
+    "windowNotHaveGroup": {
+        "message": "このウィンドウにはロードされたグループはありません",
+        "description": "This window does not have a loaded group"
+    },
+    "defaultGroup": {
+        "message": "デフォルトのグループ",
+        "description": "Default group"
+    },
+    "moveToGroupIfNoneCatchTabRules": {
+        "message": "どの正規表現もタブにマッチしない場合は、そのタブをグループに移動する",
+        "description": "If none of the regular expressions match the tab, move it to the group:"
+    },
+    "dontMove": {
+        "message": "移動しない",
+        "description": "Don't move"
+    },
+    "groupArchivedTitle": {
+        "message": "$groupName$（アーカイブ済み）",
+        "description": "My group (archived)",
+        "placeholders": {
+            "groupName": {
+                "content": "$1",
+                "example": "My group"
+            }
+        }
     }
 }
