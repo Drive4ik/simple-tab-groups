@@ -270,7 +270,7 @@
         "description": "Regular expressions"
     },
     "regexpForTabsHelp": {
-        "message": "Insérez ici des expressions régulières pour des adresses web. Les onglets correspondants seront automatiquement transférés dans ce groupe.\nN'utilisez qu'une ligne par règle, avec autant de règles que vous souhaitez.\nExemples :\ngithub\\.com/drive4ik/simple-tab-groups - récupère toutes les pages dans le répertoire de l'extension\nbugzilla\\.mozilla\\.org - récupère les rapports de bug firefox\n(facebook|twitter|youtube)\\.com - récupère toutes vos pages sociales",
+        "message": "Insérez ici des expressions régulières pour des adresses web. Les onglets correspondants seront automatiquement transférés dans ce groupe.\nN'utilisez qu'une ligne par règle, avec autant de règles que vous souhaitez.\nExemples:\ngithub\\.com/drive4ik/simple-tab-groups - récupère toutes les pages dans le répertoire de l'extension\nbugzilla\\.mozilla\\.org - récupère les rapports de bug firefox\n(facebook|twitter|youtube)\\.com - récupère toutes vos pages sociales",
         "description": "Regular exceptions helper"
     },
     "hotkeysTitle": {
@@ -300,6 +300,10 @@
     "selectGroup": {
         "message": "Sélectionner le groupe",
         "description": "Select group"
+    },
+    "unknownGroup": {
+        "message": "Groupe inconnu",
+        "description": "Unknown group"
     },
     "hotkeyActionTitleLoadNextGroup": {
         "message": "Afficher le groupe suivant",
@@ -426,7 +430,7 @@
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
     },
     "foundHiddenUnSyncTabsDescription": {
-        "message": "Des onglet non synchronisés ont été trouvés. Cliquez sur l'onglet pour l'ouvrir dans le groupe ou la fenêtre courante ou :",
+        "message": "Des onglet non synchronisés ont été trouvés. Cliquez sur l'onglet pour l'ouvrir dans le groupe ou la fenêtre courante ou:",
         "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
     },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
@@ -450,7 +454,7 @@
         "description": "Update thumbnail for this tab"
     },
     "notFoundWindowsAddonStoppedWorking": {
-        "message": "Erreur : aucun onglet normal n'a été trouvé (ni privé, ni navigation privée, ni fenêtre pop-up). L'extension a cessé de fonctionner. Veuillez redémarrer le navigateur.",
+        "message": "Erreur: aucun onglet normal n'a été trouvé (ni privé, ni navigation privée, ni fenêtre pop-up). L'extension a cessé de fonctionner. Veuillez redémarrer le navigateur.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
     },
     "ffFailedAndLostDataMessage": {
@@ -486,7 +490,7 @@
         "description": "Include tab fav-icons in backup (makes backup file size bigger)"
     },
     "groupRemovedByExtension": {
-        "message": "Le groupe \"$group$\" a été supprimé par l'extension : $extension$",
+        "message": "Le groupe \"$group$\" a été supprimé par l'extension: $extension$",
         "description": "Group \"$group$\" removed by extension: $extension$",
         "placeholders": {
             "group": {
@@ -532,7 +536,7 @@
         }
     },
     "thisTabsCanNotBeHidden": {
-        "message": "Les onglets suivants ne peuvent être masqués car ils sont épinglés, utilisent le microphone ou la caméra, ou sont partagés : \"$titles$\"",
+        "message": "Les onglets suivants ne peuvent être masqués car ils sont épinglés, utilisent le microphone ou la caméra, ou sont partagés: \"$titles$\"",
         "description": "These tabs can not be hidden because they are pinned, using a microphone, camera or shared screen: \"$titles$\"",
         "placeholders": {
             "titles": {
@@ -556,7 +560,7 @@
         "description": "Enable auto backup"
     },
     "autoBackupCreateEveryTitle": {
-        "message": "Créer une sauvegarde tous les :",
+        "message": "Créer une sauvegarde tous les:",
         "description": "Create backup every:"
     },
     "autoBackupIntervalKeyMinutes": {
@@ -842,7 +846,7 @@
         "description": "logging was auto-enabled due to an error in addon"
     },
     "loggingDescription": {
-        "message": "Veuillez cocher cette case uniquement si vous devez enregistrer le bug et m'envoyer les fichiers journaux. L'activation de cette case entraînera un ralentissement notable de l'extension, car toutes les actions de l'extension sont enregistrées. Lorsque vous aurez reproduit l'erreur, décochez cette case, et l'extension vous proposera d'enregistrer le fichier journal. Cette option pourra aussi s'activer d'elle-même si une erreur se produit ; vous devrez alors décocher la case DEBUG et enregistrer le fichier journal.<br> Veuillez m'envoyer ce fichier journal par courrier électronique : <a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com</a><br> <span class=\"has-text-danger\">Attention : il n'y a pas de données personnelles, de mots de passe, de signets etc. dans ce fichier journal !</span><br> Ceci est nécessaire pour pouvoir reproduire le problème et essayer de le résoudre.<br> Cordialement",
+        "message": "Veuillez cocher cette case uniquement si vous devez enregistrer le bug et m'envoyer les fichiers journaux. L'activation de cette case entraînera un ralentissement notable de l'extension, car toutes les actions de l'extension sont enregistrées. Lorsque vous aurez reproduit l'erreur, décochez cette case, et l'extension vous proposera d'enregistrer le fichier journal. Cette option pourra aussi s'activer d'elle-même si une erreur se produit ; vous devrez alors décocher la case DEBUG et enregistrer le fichier journal.<br> Veuillez m'envoyer ce fichier journal par courrier électronique: <a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com</a><br> <span class=\"has-text-danger\">Attention: il n'y a pas de données personnelles, de mots de passe, de signets etc. dans ce fichier journal !</span><br> Ceci est nécessaire pour pouvoir reproduire le problème et essayer de le résoudre.<br> Cordialement",
         "description": "logging description"
     },
     "archiveGroup": {
@@ -926,7 +930,7 @@
         }
     },
     "helpPageOpenInContainerSubTitle": {
-        "message": "l'extension ne peut pas ouvrir l'URL :",
+        "message": "l'extension ne peut pas ouvrir l'URL:",
         "description": "addon can't open URL:"
     },
     "helpPageOpenInContainerDesc1": {
@@ -944,7 +948,7 @@
         }
     },
     "helpPageOpenInContainerDesc2": {
-        "message": "Une autre extension :",
+        "message": "Une autre extension:",
         "description": "Another addon:"
     },
     "helpPageOpenInContainerDesc3": {
@@ -1060,7 +1064,7 @@
         "description": "Database error in Simple Tab Groups"
     },
     "helpPageDbErrorReinstallDescription": {
-        "message": "Malheureusement, une erreur s'est produite lors de la lecture des données de l'extension STG dans la base de données Firefox. Pour l'instant, l'extension est arrêtée. Pour redémarrer l'extension, procédez comme suit :",
+        "message": "Malheureusement, une erreur s'est produite lors de la lecture des données de l'extension STG dans la base de données Firefox. Pour l'instant, l'extension est arrêtée. Pour redémarrer l'extension, procédez comme suit:",
         "description": "Unfortunately, an error occurred while reading data from the STG addon from the Firefox database. At the moment, the addon is stopped. To resume the add-on, do the following:"
     },
     "helpPageDbErrorReinstallDescription2": {
@@ -1068,7 +1072,7 @@
         "description": "Restart Firefox Browser (for Linux and Mac OS with process termination)"
     },
     "helpPageDbErrorReinstallDescription3": {
-        "message": "Si vous voyez à nouveau cette fenêtre, essayez de réinstaller l'extension :",
+        "message": "Si vous voyez à nouveau cette fenêtre, essayez de réinstaller l'extension:",
         "description": "If you see this window again, try reinstalling the addon:"
     },
     "helpPageDbErrorReinstallDescription4": {
@@ -1104,7 +1108,7 @@
         "description": "Backup number as day of month"
     },
     "autoBackupByDayIndexDescription": {
-        "message": "Cela aide à éliminer un grand nombre de sauvegarde dans le dossier de téléchargements. Le fichier de sauvegarde sera nommé de la façon suivante : \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
+        "message": "Cela aide à éliminer un grand nombre de sauvegarde dans le dossier de téléchargements. Le fichier de sauvegarde sera nommé de la façon suivante: \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
         "description": "Backup by day description"
     },
     "clickHereForInfo": {
@@ -1124,12 +1128,28 @@
         "description": "Extensions that conflict with STG"
     },
     "helpPageExtensionsThatConflictWithStgDesc1": {
-        "message": "L'extension Simple Tab Groups est en conflit avec les extensions activées suivantes :",
+        "message": "L'extension Simple Tab Groups est en conflit avec les extensions activées suivantes:",
         "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
     },
     "helpPageExtensionsThatConflictWithStgDesc2": {
         "message": "Pour éviter de perdre les onglets ou leur emplacement dans les fenêtres et les groupes, il est fortement recommandé de désactiver ou de supprimer les extensions activées qui entrent en conflit avec l'extension Simple Tab Groups. Vous pouvez le faire sur la page des paramètres des extensions \"about:addons\" ou en appuyant sur la combinaison de touches <code>Ctrl+Shift+A</code>.",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
+    },
+    "ignoreConflictedExtIgnore": {
+        "message": "Ignorer cette extension",
+        "description": "Ignore conflicted extension"
+    },
+    "ignoreConflictedExtDontIgnore": {
+        "message": "Ne pas ignorer cette extension",
+        "description": "Don't ignore this extension"
+    },
+    "ignoreConflictedExtIgnoredText": {
+        "message": "ignorée",
+        "description": "Extension is ignored"
+    },
+    "ignoreConflictedExtConfirm": {
+        "message": "Cette extension va interférer avec STG, vous risquerez de perdre des onglets.\nL’ignorer quand même?",
+        "description": "This addon will interfere with the STG, which may cause you to lose tabs.\nStill ignore it?"
     },
     "theme": {
         "message": "Thème",
@@ -1184,7 +1204,7 @@
         "description": "Default group"
     },
     "moveToGroupIfNoneCatchTabRules": {
-        "message": "Si aucune des expressions régulières ne correspond à l'onglet, déplacer celui-ci vers le groupe :",
+        "message": "Si aucune des expressions régulières ne correspond à l'onglet, déplacer celui-ci vers le groupe:",
         "description": "If none of the regular expressions match the tab, move it to the group:"
     },
     "dontMove": {
