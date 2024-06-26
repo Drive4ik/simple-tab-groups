@@ -930,7 +930,12 @@ const onCreatedWindow = catchFunc(async function (win) {
 
     log.log('grand restore for', win.id, 'finish');
 
-    await Cache.loadWindowSession(win);
+    win = await Windows.get(win.id).catch(log.onCatch(['window not found', win], false));
+
+    if (!win) {
+        log.stopError();
+        return;
+    }
 
     if (!win.groupId && options.createNewGroupWhenOpenNewWindow) {
         log.log('add group to window', win.id);

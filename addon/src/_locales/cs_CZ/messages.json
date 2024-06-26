@@ -57,6 +57,10 @@
         "message": "Zrušit",
         "description": "Cancel"
     },
+    "close": {
+        "message": "Zavřít",
+        "description": "Close"
+    },
     "searchPlaceholder": {
         "message": "Vyhledat panel...",
         "description": "Search placeholder"
@@ -83,13 +87,21 @@
         "message": "Zavřít vyskakovací okno po změně skupiny",
         "description": "Close popup after changing group"
     },
+    "closePopupAfterSelectTab": {
+        "message": "Zavřít vyskakovací okno po vybrání záložky",
+        "description": "Close the popup window after selecting a tab"
+    },
     "openManageGroupsInTab": {
         "message": "Otevřít \"Správu skupin\" v novém panelu",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
         "message": "Vyžadovat potvrzení před smazáním skupiny",
-        "description": "Show confirm dialog before group delete"
+        "description": "Show confirmation dialog before deleting the group"
+    },
+    "showConfirmDialogBeforeGroupArchiving": {
+        "message": "Vyžadovat potvrzení před archivací skupiny",
+        "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
         "message": "Zálohovat Simple Tab Groups",
@@ -289,6 +301,10 @@
         "message": "Vybrat skupinu",
         "description": "Select group"
     },
+    "unknownGroup": {
+        "message": "Neznámá skupina",
+        "description": "Unknown group"
+    },
     "hotkeyActionTitleLoadNextGroup": {
         "message": "Načíst další skupinu",
         "description": "Load next group"
@@ -304,6 +320,14 @@
     "hotkeyActionTitleLoadPrevUnloadedGroup": {
         "message": "Načíst předchozí nenačtenou skupinu",
         "description": "Load previous unloaded group"
+    },
+    "hotkeyActionTitleLoadNextNonEmptyGroup": {
+        "message": "Načíst další neprázdnou skupinu",
+        "description": "Load next non-empty group"
+    },
+    "hotkeyActionTitleLoadPrevNonEmptyGroup": {
+        "message": "Načíst předchozí neprázdnou skupinu",
+        "description": "Load previous non-empty group"
     },
     "hotkeyActionTitleLoadHistoryNextGroup": {
         "message": "Načíst následující skupinu z historie",
@@ -393,6 +417,14 @@
         "message": "Styl ikony",
         "description": "Icon style"
     },
+    "discardTabsAfterHide": {
+        "message": "Uvolnit záložky z paměti po zavření skupiny",
+        "description": "Unload tabs from memory after closing a group"
+    },
+    "discardExcludeAudioTabs": {
+        "message": "Vynechat záložky se zvukem",
+        "description": "Exclude tabs with sound"
+    },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Není možné změnit skupinu, protože jeden z otevřených panelů sdílí mikrofon nebo kameru",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
@@ -440,6 +472,14 @@
     "showTabAfterMovingItIntoThisGroup": {
         "message": "Zobrazit panel po automatickém přesunu do této skupiny",
         "description": "Show the tab after auto-moving it into this group"
+    },
+    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
+        "message": "Pouze pokud byla aktivní záložka posunuta",
+        "description": "Only if the active tab has been moved"
+    },
+    "showNotificationAfterMovingTabIntoThisGroup": {
+        "message": "Upozornit když jsou záložky přesunuty do této skupiny",
+        "description": "Show a notification when tabs are moved to this group"
     },
     "tabMoving": {
         "message": "Přesun panelu",
@@ -522,6 +562,10 @@
     "autoBackupCreateEveryTitle": {
         "message": "Zálohovat jednou za",
         "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyMinutes": {
+        "message": "minuta/y",
+        "description": "minute(s)"
     },
     "autoBackupIntervalKeyHours": {
         "message": "hod.",
@@ -785,6 +829,10 @@
         "message": "Umožnit ladění",
         "description": "Enable DEBUG"
     },
+    "disableDebugTitle": {
+        "message": "Zakázat ladění",
+        "description": "Disable DEBUG"
+    },
     "loggingIsEnabledTitle": {
         "message": "Zaznamenávání je povoleno",
         "description": "logging is enabled"
@@ -800,6 +848,16 @@
     "archiveGroup": {
         "message": "Archivovat",
         "description": "Archive"
+    },
+    "confirmArchiveGroup": {
+        "message": "Chcete archivovat skupinu \"$grouptitle$\"?\nPři archivaci skupiny se záložky uloží do úložiště tohoto rozšíření a budou odstraněny z prohlížeče.",
+        "description": "Do you want to archive the group",
+        "placeholders": {
+            "grouptitle": {
+                "content": "$1",
+                "example": "Group title"
+            }
+        }
     },
     "unArchiveGroup": {
         "message": "Obnovit archiv",
@@ -885,6 +943,10 @@
             }
         }
     },
+    "helpPageOpenInContainerDesc2": {
+        "message": "Další rozšíření:",
+        "description": "Another addon:"
+    },
     "helpPageOpenInContainerDesc3": {
         "message": "zkouší otevřít tuto URL adresu v kontejneru <container-name>$containerName$</container-name>. Přesuňte panel do jiné skupiny nebo zakažte doplňku <strong>$addonName$</strong> provádět tuto akci.",
         "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
@@ -959,6 +1021,16 @@
             }
         }
     },
+    "helpPageOpenInContainerIgnoreAppForSession": {
+        "message": "Ignorovat rozšíření \"<strong>$addonName$</strong>\" dokud se prohlížeč nevypne",
+        "description": "Ignore addon for session",
+        "placeholders": {
+            "addonName": {
+                "content": "$1",
+                "example": "Facebook Container"
+            }
+        }
+    },
     "muteTab": {
         "message": "Ztlumit zvuk panelu",
         "description": "Mute tab"
@@ -1022,5 +1094,17 @@
     "eraseAndImportAddonBackupButton": {
         "message": "Smazat a obnovit zálohu",
         "description": "Erase and restore backup"
+    },
+    "searchOnlyGroups": {
+        "message": "Pouze skupiny",
+        "description": "Only groups"
+    },
+    "autoBackupByDayIndexTitle": {
+        "message": "Číslo zálohy podle dne v měsíci",
+        "description": "Backup number as day of month"
+    },
+    "autoBackupByDayIndexDescription": {
+        "message": "Pomáhá zbavit se velkého množství zálohových souborů ve složce se staženými soubory. Jméno zálohového souboru bude ve tvaru: \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
+        "description": "Backup by day description"
     }
 }

@@ -20,7 +20,7 @@
         "description": "Move tab to group title"
     },
     "moveTabToGroupMessage": {
-        "message": "la pestaña \"$tabtitle$\" fue movida al grupo \"$grouptitle$\".\n\nHaga click aquí para ver esta pestaña.",
+        "message": "La pestaña \"$tabtitle$\" fue movida al grupo \"$grouptitle$\".\n\nTocá acá para ver esta pestaña.",
         "description": "Tab moved popup title",
         "placeholders": {
             "grouptitle": {
@@ -57,12 +57,16 @@
         "message": "Cancelar",
         "description": "Cancel"
     },
+    "close": {
+        "message": "Cerrar",
+        "description": "Close"
+    },
     "searchPlaceholder": {
         "message": "Buscar una pestaña...",
         "description": "Search placeholder"
     },
     "invalidRegExpRuleTitle": {
-        "message": "Regla '$regexp$' no es validad y sera omitida.",
+        "message": "La regla '$regexp$' no es válida y será omitida.",
         "description": "Invalid rule description",
         "placeholders": {
             "regexp": {
@@ -76,19 +80,23 @@
         "description": "Grid display"
     },
     "manageGroupViewFreeArrange": {
-        "message": "Organizador libre (en versiones futuras)",
+        "message": "Organizar libremente (en versiones futuras)",
         "description": "Free arrange"
     },
     "closePopupAfterChangeGroup": {
         "message": "Cerrar ventanas emergentes después de cambiar de grupo",
         "description": "Close popup after changing group"
     },
+    "closePopupAfterSelectTab": {
+        "message": "Cerrar ventanas emergentes despues de seleccionar una pestaña",
+        "description": "Close the popup window after selecting a tab"
+    },
     "openManageGroupsInTab": {
         "message": "Abrir \"Administrar Grupos\" en una nueva pestaña.",
         "description": "Open \"Manage Groups\" in new tab"
     },
     "showConfirmDialogBeforeGroupDelete": {
-        "message": "Mostrar dialogo para confirmar antes de borrar el grupo",
+        "message": "Mostrar diálogo para confirmar antes de borrar el grupo",
         "description": "Show confirmation dialog before deleting the group"
     },
     "showConfirmDialogBeforeGroupArchiving": {
@@ -96,7 +104,7 @@
         "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
-        "message": "Resguardar tus Simple Tab Groups",
+        "message": "Hacer una copia de seguridad de tus Simple Tab Groups",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
@@ -104,7 +112,7 @@
         "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
     },
     "exportAddonSettingsButton": {
-        "message": "Crear una copia de resguardo",
+        "message": "Crear una copia de seguridad",
         "description": "Create backup"
     },
     "includeTabThumbnailsIntoBackup": {
@@ -293,6 +301,10 @@
         "message": "Seleccioná un grupo",
         "description": "Select group"
     },
+    "unknownGroup": {
+        "message": "Grupo desconocido",
+        "description": "Unknown group"
+    },
     "hotkeyActionTitleLoadNextGroup": {
         "message": "Cargar el próximo grupo",
         "description": "Load next group"
@@ -405,12 +417,16 @@
         "message": "Estilo del icono",
         "description": "Icon style"
     },
+    "discardTabsAfterHide": {
+        "message": "Poner pestañas en resposo despues de cerrar un grupo",
+        "description": "Unload tabs from memory after closing a group"
+    },
     "discardExcludeAudioTabs": {
-        "message": "Excluir tabs con sonido",
+        "message": "Excluir pestañas con sonido",
         "description": "Exclude tabs with sound"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
-        "message": "No se puede cambiar de grupo porque una de las pestañas abiertas comparte micrófono o cámara",
+        "message": "No se puede cambiar de grupo porque una de las pestañas abiertas están usando el micrófono o la cámara",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
     },
     "foundHiddenUnSyncTabsDescription": {
@@ -422,7 +438,7 @@
         "description": "Move all of these tabs into current group/window"
     },
     "actionHiddenUnSyncWindowTabsCreateGroup": {
-        "message": "Crear nuevo grupo con las pestañas de la ventana actual solamente",
+        "message": "Crear nuevo grupo solamente con las pestañas de la ventana actual",
         "description": "Create new group with tabs only from the current window"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
@@ -434,7 +450,7 @@
         "description": "Close all of these tabs"
     },
     "updateTabThumbnail": {
-        "message": "Actualizar miniatura de esta pestaña",
+        "message": "Actualizar la miniatura de esta pestaña",
         "description": "Update thumbnail for this tab"
     },
     "notFoundWindowsAddonStoppedWorking": {
@@ -456,6 +472,14 @@
     "showTabAfterMovingItIntoThisGroup": {
         "message": "Mostrar la pestaña después de que se mueva automáticamente a este grupo",
         "description": "Show the tab after auto-moving it into this group"
+    },
+    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
+        "message": "Solamente si la pestaña activa fue movida",
+        "description": "Only if the active tab has been moved"
+    },
+    "showNotificationAfterMovingTabIntoThisGroup": {
+        "message": "Mostrar una notificación cuando se muevan pestañas a este grupo",
+        "description": "Show a notification when tabs are moved to this group"
     },
     "tabMoving": {
         "message": "Movimiento de pestaña",
@@ -797,13 +821,21 @@
         "message": "Por favor activá \"Restaurar sesión previa\" en los ajustes del navegadr.<br>Esto es necesario para mantener la comunicación entre el grupo y la pestaña, <br>sino las pestañas no se abrirían cuando el navegador inicia y se perderían en la extensión -<br>la extensión dejará de funcionar.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
+    "exportToBookmarksWhenAutoBackup": {
+        "message": "Guardar pestañas en marcadores al realizar un guardado automático",
+        "description": "Save the group to bookmarks when auto backup"
+    },
     "leaveBookmarksOfClosedTabs": {
-        "message": "Dejar marcadores de las pestañas cerradas",
+        "message": "Crear marcadores al cerrar pestañas",
         "description": "Leave bookmarks of closed tabs"
     },
     "enableDebugTitle": {
         "message": "Activar DEPURACION",
         "description": "Enable DEBUG"
+    },
+    "disableDebugTitle": {
+        "message": "Desactivar DEPURACION",
+        "description": "Disable DEBUG"
     },
     "loggingIsEnabledTitle": {
         "message": "está activado el loggeo",
@@ -1103,6 +1135,22 @@
         "message": "Para evitar perder pestañas o su ubicación en ventanas y grupos, se recomienda desactivar o borrar las extensiones activadas que sean incompatibles con Simple Tab Groups. Puede hacerlo en la página de configuración de extensiones \"about:addons\" o presionando la combinación de teclas <code>Ctrl+Shift+A</code>",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     },
+    "ignoreConflictedExtIgnore": {
+        "message": "Ignorar esta extensión",
+        "description": "Ignore conflicted extension"
+    },
+    "ignoreConflictedExtDontIgnore": {
+        "message": "No ignorar esta extensión",
+        "description": "Don't ignore this extension"
+    },
+    "ignoreConflictedExtIgnoredText": {
+        "message": "Ignorado",
+        "description": "Extension is ignored"
+    },
+    "ignoreConflictedExtConfirm": {
+        "message": "Este addon va a interferir con el STG, lo que podría causar que se pierdan pestañas. ¿Ignorar de todas formas?",
+        "description": "This addon will interfere with the STG, which may cause you to lose tabs.\nStill ignore it?"
+    },
     "theme": {
         "message": "Tema",
         "description": "Select theme"
@@ -1130,5 +1178,47 @@
     "group": {
         "message": "Grupo",
         "description": "Group"
+    },
+    "helpPageUnsupportedUrlTitle": {
+        "message": "URL no soportada",
+        "description": "Unsupported URL"
+    },
+    "copyURL": {
+        "message": "Copiar URL",
+        "description": "Copy URL"
+    },
+    "helpPageStgDebugTitle": {
+        "message": "Pagina de depuración de STG",
+        "description": "STG debug page"
+    },
+    "helpPageStgDebugAutoDebugMainTitle": {
+        "message": "Ocurrió un error con el addon",
+        "description": "An error occurred in the addon"
+    },
+    "windowNotHaveGroup": {
+        "message": "La ventana no tiene ningún grupo cargado",
+        "description": "This window does not have a loaded group"
+    },
+    "defaultGroup": {
+        "message": "Grupo predeterminado",
+        "description": "Default group"
+    },
+    "moveToGroupIfNoneCatchTabRules": {
+        "message": "Si ninguna de las expresiones coincide con la pestaña, moverla al grupo:",
+        "description": "If none of the regular expressions match the tab, move it to the group:"
+    },
+    "dontMove": {
+        "message": "No mover",
+        "description": "Don't move"
+    },
+    "groupArchivedTitle": {
+        "message": "$groupName$ archivado",
+        "description": "My group (archived)",
+        "placeholders": {
+            "groupName": {
+                "content": "$1",
+                "example": "My group"
+            }
+        }
     }
 }

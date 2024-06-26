@@ -1,6 +1,6 @@
 {
     "extensionDescription": {
-        "message": "建立、編輯、及快速切換分頁群組",
+        "message": "建立、修改、及快速切換分頁群組",
         "description": "Description of the extension."
     },
     "openSettings": {
@@ -66,7 +66,7 @@
         "description": "Search placeholder"
     },
     "invalidRegExpRuleTitle": {
-        "message": "正規表示式 '$regexp$' 語法錯誤。",
+        "message": "'$regexp$' 不是有效的正規表示式。",
         "description": "Invalid rule description",
         "placeholders": {
             "regexp": {
@@ -164,11 +164,11 @@
         }
     },
     "sortGroupsAZ": {
-        "message": "群組排序 [A-Z]",
+        "message": "群組正向排序 [A-Z]",
         "description": "Sort groups [A-Z]"
     },
     "sortGroupsZA": {
-        "message": "群組排序 [Z-A]",
+        "message": "群組反向排序 [Z-A]",
         "description": "Sort groups [Z-A]"
     },
     "generalTitle": {
@@ -270,7 +270,7 @@
         "description": "Regular expressions"
     },
     "regexpForTabsHelp": {
-        "message": "在這裡輸入正規表示式，網址符合規則的分頁會被自動移到此群組。\n每列一條規則，可設定多條。\n例如：\ngithub\\.com/drive4ik/simple-tab-groups - 捕捉此附加元件版本庫的所有頁面\nbugzilla\\.mozilla\\.org - 捕捉 Firefox 錯誤回報的頁面\n(facebook|twitter|youtube)\\.com - 捕捉社群網站頁面",
+        "message": "在這裡輸入正規表示式，網址符合規則的分頁會被自動移到此群組。\n每列一條規則，可設定多條。\n例如：\ngithub\\.com/drive4ik/simple-tab-groups - 捕捉 STG 開發儲存庫的所有頁面\nbugzilla\\.mozilla\\.org - 捕捉 Firefox 錯誤回報的頁面\n(facebook|twitter|youtube)\\.com - 捕捉社群網站頁面",
         "description": "Regular exceptions helper"
     },
     "hotkeysTitle": {
@@ -278,7 +278,7 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "也可以在 <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Manage extension shortcuts in Firefox</a> 設定全域快速鍵。",
+        "message": "可以在這裡設定快速鍵，也可以在「<a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">管理擴充套件快速鍵</a>」頁面中設定。",
         "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
@@ -290,7 +290,7 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "輸入快速鍵",
+        "message": "按下想設定的組合鍵",
         "description": "Type a shortcut"
     },
     "selectAction": {
@@ -300,6 +300,10 @@
     "selectGroup": {
         "message": "選擇群組",
         "description": "Select group"
+    },
+    "unknownGroup": {
+        "message": "未知群組",
+        "description": "Unknown group"
     },
     "hotkeyActionTitleLoadNextGroup": {
         "message": "載入下一個群組",
@@ -450,11 +454,11 @@
         "description": "Update thumbnail for this tab"
     },
     "notFoundWindowsAddonStoppedWorking": {
-        "message": "錯誤：找不到任何正常的非隱私/匿名/彈出窗。\n附加元件停止運作，請重新啟動瀏覽器。",
+        "message": "錯誤：找不到任何正常的非隱私/匿名/彈出窗。\n附加元件已停止運作，請重新啟動瀏覽器。",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
     },
     "ffFailedAndLostDataMessage": {
-        "message": "Firefox 發生了錯誤，將遺失所有群組。\n請由備份檔還原群組資料。",
+        "message": "Firefox 發生了錯誤，所有群組已遺失。\n請由備份檔還原群組資料。",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
     },
     "openGroupInNewWindow": {
@@ -486,7 +490,7 @@
         "description": "Include tab fav-icons in backup (makes backup file size bigger)"
     },
     "groupRemovedByExtension": {
-        "message": "群組\"$group$\" 被附加元件\"$extension$\"移除",
+        "message": "群組 \"$group$\" 被擴充套件 \"$extension$\" 移除",
         "description": "Group \"$group$\" removed by extension: $extension$",
         "placeholders": {
             "group": {
@@ -504,7 +508,7 @@
         "description": "Something went wrong, click here to reload STG addon"
     },
     "extendedTabSearch": {
-        "message": "附加元件搜尋",
+        "message": "進階搜尋",
         "description": "Extended search"
     },
     "movingMultipleTabsText": {
@@ -584,19 +588,19 @@
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {
-        "message": "從 photodiode 的 “Panorama View” 還原",
+        "message": "從 photodiode 的 \"Panorama View\" 還原",
         "description": "Restore photodiode's \"Panorama View\""
     },
     "importSettingsPanoramaViewAddonDescription": {
-        "message": "載入 “Panorama View” 附加元件的備份檔。",
+        "message": "載入 \"Panorama View\" 附加元件的備份檔。",
         "description": "Load a backup file from \"Panorama View\" addon."
     },
     "importSettingsSyncTabGroupsAddonTitle": {
-        "message": "從 Morikko 的 ”Sync Tab Groups“ 還原",
+        "message": "從 Morikko 的 \"Sync Tab Groups\" 還原",
         "description": "Restore Morikko's \"Sync Tab Groups\""
     },
     "importSettingsSyncTabGroupsAddonDescription": {
-        "message": "載入 “Sync Tab Groups” 附加元件的備份檔。",
+        "message": "載入 \"Sync Tab Groups\" 附加元件的備份檔。",
         "description": "Load a backup file from \"Sync Tab Groups\" addon."
     },
     "browseFileTitle": {
@@ -616,7 +620,7 @@
         "description": "Prepend group title to window title"
     },
     "allowAccessToBookmarks": {
-        "message": "允許附加元件存取書籤",
+        "message": "允許存取書籤",
         "description": "Allow access to bookmarks"
     },
     "openBookmarkInGroup": {
@@ -654,7 +658,7 @@
         "description": "No groups created"
     },
     "noAccessToBookmarks": {
-        "message": "無書籤存取權限，請在附加元件管理中設定權限。",
+        "message": "無書籤存取權限，請在附加元件管理頁面中設定權限。",
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
     "exportGroupToBookmarks": {
@@ -1022,7 +1026,7 @@
         }
     },
     "helpPageOpenInContainerIgnoreAppForSession": {
-        "message": "忽略附加元件 \"<strong>$addonName$</strong>\" 直至瀏覽器關閉",
+        "message": "忽略擴充套件 \"<strong>$addonName$</strong>\" 直至瀏覽器關閉",
         "description": "Ignore addon for session",
         "placeholders": {
             "addonName": {
@@ -1060,7 +1064,7 @@
         "description": "Database error in Simple Tab Groups"
     },
     "helpPageDbErrorReinstallDescription": {
-        "message": "很不幸地，STG 附加元件嘗試從 Firefox 資料庫內讀取設定資料時發生錯誤。此時附加元件已停止，請照下列步驟繼續使用：",
+        "message": "很不幸地，STG 附加元件嘗試從 Firefox 資料庫內讀取設定資料時發生錯誤。此時附加元件已停止運作，請照下列步驟繼續使用：",
         "description": "Unfortunately, an error occurred while reading data from the STG addon from the Firefox database. At the moment, the addon is stopped. To resume the add-on, do the following:"
     },
     "helpPageDbErrorReinstallDescription2": {
@@ -1120,16 +1124,32 @@
         "description": "Disabled text"
     },
     "helpPageExtensionsThatConflictWithStgTitle": {
-        "message": "有其他附加元件干擾 STG",
+        "message": "有其他擴充套件干擾 STG",
         "description": "Extensions that conflict with STG"
     },
     "helpPageExtensionsThatConflictWithStgDesc1": {
-        "message": "有類似性質的分頁管理(如下)附加元件干擾 STG:",
+        "message": "有類似性質的分頁管理擴充套件(如下)干擾 STG:",
         "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
     },
     "helpPageExtensionsThatConflictWithStgDesc2": {
-        "message": "為免遺失所有分頁與群組設定，強烈建議關閉或移除干擾 STG 的其他附加元件，可以到 \"about:addons\" 或按 <code>Ctrl+Shift+A</code> 設定。",
+        "message": "為免遺失所有分頁與群組設定，強烈建議先關閉或移除干擾 STG 的其他擴充套件，可以到 \"about:addons\" (或按 <code>Ctrl+Shift+A</code>) 設定。",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
+    },
+    "ignoreConflictedExtIgnore": {
+        "message": "忽略此擴充套件",
+        "description": "Ignore conflicted extension"
+    },
+    "ignoreConflictedExtDontIgnore": {
+        "message": "不忽略此擴充套件",
+        "description": "Don't ignore this extension"
+    },
+    "ignoreConflictedExtIgnoredText": {
+        "message": "已忽略",
+        "description": "Extension is ignored"
+    },
+    "ignoreConflictedExtConfirm": {
+        "message": "此擴充套件仍將影響 STG，可能會導致分頁遺失。\n繼續忽略?",
+        "description": "This addon will interfere with the STG, which may cause you to lose tabs.\nStill ignore it?"
     },
     "theme": {
         "message": "主題",
