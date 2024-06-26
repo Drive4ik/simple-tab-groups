@@ -20,7 +20,7 @@
         "description": "Move tab to group title"
     },
     "moveTabToGroupMessage": {
-        "message": "La scheda \"$tabtitle$\" è stata spostata dal gruppo \"$grouptitle$\".\n\nClicca qui per vedere la scheda.",
+        "message": "La scheda \"$tabtitle$\" è stata spostata nel gruppo \"$grouptitle$\".\n\nClicca qui per vedere la scheda.",
         "description": "Tab moved popup title",
         "placeholders": {
             "grouptitle": {
@@ -57,6 +57,10 @@
         "message": "Annulla",
         "description": "Cancel"
     },
+    "close": {
+        "message": "Chiudi",
+        "description": "Close"
+    },
     "searchPlaceholder": {
         "message": "Cerca una scheda...",
         "description": "Search placeholder"
@@ -83,6 +87,10 @@
         "message": "Chiudi il popup dopo aver cambiato il gruppo",
         "description": "Close popup after changing group"
     },
+    "closePopupAfterSelectTab": {
+        "message": "Chiudi la finestra popup dopo aver selezionato una scheda",
+        "description": "Close the popup window after selecting a tab"
+    },
     "openManageGroupsInTab": {
         "message": "Apri \"Gestione gruppi\" in una nuova scheda",
         "description": "Open \"Manage Groups\" in new tab"
@@ -96,11 +104,11 @@
         "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
-        "message": "Effettua il backup dei gruppi di Simple Tab Groups",
+        "message": "Effettua il backup di Simple Tab Groups",
         "description": "Backup your Simple Tab Groups"
     },
     "exportAddonSettingsDescription": {
-        "message": "Esporta i tuoi gruppi di schede in un file di backup per preservarli e ripristinarli in seguito se fosse necessario.",
+        "message": "Esporta i gruppi di schede in un file di backup per conservarli e ripristinarli in seguito se necessario",
         "description": "Export your tab groups into a backup file for safe-keeping, so that you can restore them at a later time if necessary."
     },
     "exportAddonSettingsButton": {
@@ -108,15 +116,15 @@
         "description": "Create backup"
     },
     "includeTabThumbnailsIntoBackup": {
-        "message": "Includi le anteprime delle schede all'interno del backup (la dimensione del file di backup diventerà maggiore)",
+        "message": "Includi le anteprime nel backup (il backup sarà più grande)",
         "description": "Include tab thumbnails in backup (makes backup file size bigger)"
     },
     "importAddonSettingsTitle": {
-        "message": "Ripristina i gruppi di Simple Tabs Groups",
+        "message": "Ripristina i gruppi di Simple Tabs Groups dal backup",
         "description": "Restore Simple Tab Groups"
     },
     "importAddonSettingsDescription": {
-        "message": "Carica un file di backup contenente i gruppi di schede che si vogliono ripristinare.",
+        "message": "Carica un file di backup con i gruppi di schede da ripristinare",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
     "importAddonSettingsButton": {
@@ -128,7 +136,7 @@
         "description": "Restore Quicksaver's \"Tab Groups\""
     },
     "importSettingsOldTabGroupsAddonDescription": {
-        "message": "Carica un file di backup dall'estensione \"Tab Groups\".",
+        "message": "Carica un file di backup dalla vecchia estensione \"Tab Groups\"",
         "description": "Load a backup file old \"Tab Groups\" addon."
     },
     "openGroupAfterChange": {
@@ -176,7 +184,7 @@
         "description": "Delete group"
     },
     "confirmDeleteGroup": {
-        "message": "Vuoi eliminare il gruppo \"$grouptitle$\"? <br> La rimozione del gruppo comporta la sia la chiusura di tutte le schede del gruppo e della finestra!",
+        "message": "Vuoi eliminare il gruppo \"$grouptitle$\"? <br>La rimozione di gruppi implica la chiusura delle schede e finestre se aperte!",
         "description": "Delete group?",
         "placeholders": {
             "grouptitle": {
@@ -186,7 +194,7 @@
         }
     },
     "groupTabsCount": {
-        "message": "$count$ tab",
+        "message": "$count$ schede",
         "description": "Group tabs count",
         "placeholders": {
             "count": {
@@ -214,7 +222,7 @@
         "description": "Delete tab"
     },
     "createNewTab": {
-        "message": "Apri una nuova scheda",
+        "message": "Apri nuova scheda",
         "description": "Open new tab"
     },
     "createNewGroup": {
@@ -222,7 +230,7 @@
         "description": "Create new group"
     },
     "goBackButtonTitle": {
-        "message": "Torna indietro",
+        "message": "Indietro",
         "description": "Go back"
     },
     "goBackToGroupsButtonTitle": {
@@ -238,11 +246,11 @@
         "description": "Icon color"
     },
     "selectUserGroupIcon": {
-        "message": "Carica l'icona",
+        "message": "Carica icona",
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Mi dispiace, ma non puoi caricare icone personalizzate in questo popup, ma puoi caricare un'icona personalizzata per il gruppo all'interno della \"Gestione gruppi\".\nAprire \"Gestione gruppi\"?",
+        "message": "Non puoi caricare icone personalizzate in questo popup, ma puoi caricare un'icona personalizzata del gruppo all'interno di \"Gestione gruppi\".\nAprire \"Gestione gruppi\"?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -250,11 +258,11 @@
         "description": "Set random color"
     },
     "catchTabContainers": {
-        "message": "Prendi le schede con contenitori e spostale in questo gruppo",
+        "message": "Individua le schede con contenitori e spostale in questo gruppo",
         "description": "Catch and move tabs with containers to this group"
     },
     "regexpForTabsTitle": {
-        "message": "Espressioni regolari per selezionare le schede",
+        "message": "Espressioni regolari per individuare le schede",
         "description": "Regular expressions for catch tabs"
     },
     "regexpForTabsPlaceholder": {
@@ -286,75 +294,79 @@
         "description": "Type a shortcut"
     },
     "selectAction": {
-        "message": "Seleziona l'azione",
+        "message": "Seleziona azione",
         "description": "Select action"
     },
     "selectGroup": {
-        "message": "Seleziona il gruppo",
+        "message": "Seleziona gruppo",
         "description": "Select group"
     },
+    "unknownGroup": {
+        "message": "Gruppo sconosciuto",
+        "description": "Unknown group"
+    },
     "hotkeyActionTitleLoadNextGroup": {
-        "message": "Carica il gruppo successivo",
+        "message": "Carica gruppo successivo",
         "description": "Load next group"
     },
     "hotkeyActionTitleLoadPrevGroup": {
-        "message": "Carica il gruppo precedente",
+        "message": "Carica gruppo precedente",
         "description": "Load previous group"
     },
     "hotkeyActionTitleLoadNextUnloadedGroup": {
-        "message": "Carica il gruppo sospeso successivo",
+        "message": "Carica gruppo sospeso successivo",
         "description": "Load next unloaded group"
     },
     "hotkeyActionTitleLoadPrevUnloadedGroup": {
-        "message": "Carica il gruppo sospeso precedence",
+        "message": "Carica gruppo sospeso precedente",
         "description": "Load previous unloaded group"
     },
     "hotkeyActionTitleLoadNextNonEmptyGroup": {
-        "message": "Carica prossimo gruppo non vuoto",
+        "message": "Carica gruppo successivo non vuoto",
         "description": "Load next non-empty group"
     },
     "hotkeyActionTitleLoadPrevNonEmptyGroup": {
-        "message": "Carica precedente gruppo non vuoto",
+        "message": "Carica gruppo precedente non vuoto",
         "description": "Load previous non-empty group"
     },
     "hotkeyActionTitleLoadHistoryNextGroup": {
-        "message": "Carica il gruppo successivo dalla cronologia",
+        "message": "Carica gruppo successivo dalla cronologia",
         "description": "Load next group from history"
     },
     "hotkeyActionTitleLoadHistoryPrevGroup": {
-        "message": "Carica il gruppo precedente dalla cronologia",
+        "message": "Carica gruppo precedente dalla cronologia",
         "description": "Load previous group from history"
     },
     "hotkeyActionTitleLoadFirstGroup": {
-        "message": "Carica il primo gruppo",
+        "message": "Carica primo gruppo",
         "description": "Load first group"
     },
     "hotkeyActionTitleLoadLastGroup": {
-        "message": "Carica l'ultimo gruppo",
+        "message": "Carica ultimo gruppo",
         "description": "Load last group"
     },
     "hotkeyActionTitleLoadCustomGroup": {
-        "message": "Carica un gruppo personalizzato",
+        "message": "Carica gruppo personalizzato",
         "description": "Load custom group"
     },
     "hotkeyActionTitleAddNewGroup": {
-        "message": "Aggiungi un nuovo gruppo",
+        "message": "Aggiungi nuovo gruppo",
         "description": "Add new group"
     },
     "hotkeyActionTitleDeleteCurrentGroup": {
-        "message": "Elimina il gruppo corrente",
+        "message": "Elimina gruppo corrente",
         "description": "Delete current group"
     },
     "hotkeyActionTitleOpenManageGroups": {
-        "message": "Apri la gestione dei gruppi",
+        "message": "Apri gestione gruppi",
         "description": "Open manage groups"
     },
     "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
-        "message": "Sposta le schede selezionata in un gruppo personalizzato",
+        "message": "Sposta le schede selezionate in un gruppo personalizzato",
         "description": "Move selected tabs to custom group"
     },
     "hotkeyActionTitleDiscardGroup": {
-        "message": "Sospendi il gruppo",
+        "message": "Sospendi gruppo",
         "description": "Hotkey action Discard group"
     },
     "hotkeyActionTitleDiscardOtherGroups": {
@@ -362,7 +374,7 @@
         "description": "Hotkey action Discard other groups"
     },
     "hotkeyActionTitleReloadAllTabsInCurrentGroup": {
-        "message": "Carica di nuovo tutte le schede di questo gruppo",
+        "message": "Ricarica tutte le schede di questo gruppo",
         "description": "Reload all tabs in current group"
     },
     "whatsWrongMessage": {
@@ -374,7 +386,7 @@
         "description": "Save last error logs into JSON file"
     },
     "undoRemoveGroupItemTitle": {
-        "message": "Ripristina il gruppo \"$grouptitle$\" che è stato chiuso",
+        "message": "Ripristina il gruppo \"$grouptitle$\"",
         "description": "Undelete a group menu title",
         "placeholders": {
             "grouptitle": {
@@ -384,7 +396,7 @@
         }
     },
     "undoRemoveGroupNotification": {
-        "message": "Clicca qui per annullare la cancellazione del gruppo $grouptitle$",
+        "message": "Clicca qui per annullare l'eliminazione del gruppo $grouptitle$",
         "description": "Click here to cancel the deletion of the group title",
         "placeholders": {
             "grouptitle": {
@@ -405,24 +417,28 @@
         "message": "Stile icona",
         "description": "Icon style"
     },
+    "discardTabsAfterHide": {
+        "message": "Sospendi le schede dopo aver chiuso un gruppo",
+        "description": "Unload tabs from memory after closing a group"
+    },
     "discardExcludeAudioTabs": {
         "message": "Escludi schede con suono",
         "description": "Exclude tabs with sound"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
-        "message": "Non è possibile cambiare il gruppo perché una delle schede aperte sta utilizzando il microfono o la fotocamera",
+        "message": "Non è possibile modificare il gruppo perché una delle schede aperte sta utilizzando il microfono o la fotocamera",
         "description": "It is not possible to change the group because one of the opened tabs share microphone or camera"
     },
     "foundHiddenUnSyncTabsDescription": {
-        "message": "Sono state trovate delle schede nascoste che non sono sincronizzate. Clicca qui per mostrarle all'interno del gruppo o della finestra corrente",
+        "message": "Trovate delle schede nascoste che non sono sincronizzate. Clicca qui per mostrarle all'interno del gruppo o della finestra corrente",
         "description": "Found hidden unsynchronized tabs. Click on tab to show it into current group/window or:"
     },
     "actionHiddenUnSyncTabsMoveAllTabsToCurrentGroup": {
-        "message": "Sposta tutte queste tab nel gruppo o nella finestra corrente",
+        "message": "Sposta tutte queste schede nel gruppo o nella finestra corrente",
         "description": "Move all of these tabs into current group/window"
     },
     "actionHiddenUnSyncWindowTabsCreateGroup": {
-        "message": "Crea un nuovo gruppo dalle schede nella finestra corrente",
+        "message": "Crea un nuovo gruppo con le schede della finestra corrente",
         "description": "Create new group with tabs only from the current window"
     },
     "actionHiddenUnSyncTabsCreateGroup": {
@@ -457,12 +473,20 @@
         "message": "Mostra la scheda dopo che è stata spostata all'interno di questo gruppo",
         "description": "Show the tab after auto-moving it into this group"
     },
+    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
+        "message": "Solo se la scheda attiva è stata spostata",
+        "description": "Only if the active tab has been moved"
+    },
+    "showNotificationAfterMovingTabIntoThisGroup": {
+        "message": "Mostra una notifica quando le schede vengono spostate in questo gruppo",
+        "description": "Show a notification when tabs are moved to this group"
+    },
     "tabMoving": {
-        "message": "Spostamento della scheda",
+        "message": "Spostamento scheda",
         "description": "Tab moving"
     },
     "includeTabFavIconsIntoBackup": {
-        "message": "Inserisci le icone dei siti per le schede all'interno dei backup (questa operazione renderà la dimensione dei backup maggiore)",
+        "message": "Inserisci le icone dei siti nel backup (il backup sarà più grande)",
         "description": "Include tab fav-icons in backup (makes backup file size bigger)"
     },
     "groupRemovedByExtension": {
@@ -480,7 +504,7 @@
         }
     },
     "clickHereToReloadAddon": {
-        "message": "Qualcosa non ha funzionato. Clicca qui per ricaricare l'estensione",
+        "message": "Qualcosa non ha funzionato, clicca qui per ricaricare l'estensione",
         "description": "Something went wrong, click here to reload STG addon"
     },
     "extendedTabSearch": {
@@ -488,7 +512,7 @@
         "description": "Extended search"
     },
     "movingMultipleTabsText": {
-        "message": "Spostamento di $count$ tab",
+        "message": "Spostamento della scheda $count$",
         "description": "Moving $count$ tabs",
         "placeholders": {
             "count": {
@@ -502,7 +526,7 @@
         "description": "Pinned tabs are not supported"
     },
     "thisUrlsAreNotSupported": {
-        "message": "Questo URL \"$urls$\" non è supportato",
+        "message": "Questi URL \"$urls$\" non sono supportati",
         "description": "This urls \"$urls$\" are not supported",
         "placeholders": {
             "urls": {
@@ -522,7 +546,7 @@
         }
     },
     "moveMultipleTabsToGroupMessage": {
-        "message": "$tabscount$ tab sono state spostate. Clicca qui per aprire la prima scheda.",
+        "message": "$tabscount$ schede sono state spostate. Clicca qui per aprire la prima scheda.",
         "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",
         "placeholders": {
             "tabscount": {
@@ -532,7 +556,7 @@
         }
     },
     "autoBackupEnableTitle": {
-        "message": "Abilita il backup automatico.",
+        "message": "Abilita il backup automatico",
         "description": "Enable auto backup"
     },
     "autoBackupCreateEveryTitle": {
@@ -592,7 +616,7 @@
         "description": "Create a new group when opening a new window"
     },
     "prependTitleToWindow": {
-        "message": "Aggiungi il nome del gruppo in testa al titolo della finestra",
+        "message": "Anteponi il nome del gruppo al titolo della finestra",
         "description": "Prepend group title to window title"
     },
     "allowAccessToBookmarks": {
@@ -612,7 +636,7 @@
         "description": "Open link in group title"
     },
     "showContextMenuOnTabs": {
-        "message": "Mostra il menù contestuale sulle schede",
+        "message": "Mostra il menù contestuale nelle schede",
         "description": "Show context menu on tabs"
     },
     "showContextMenuOnLinks": {
@@ -642,7 +666,7 @@
         "description": "Export group to bookmarks"
     },
     "defaultBookmarkFolderLocation": {
-        "message": "Cartella dei segnalibri di default",
+        "message": "Cartella dei segnalibri predefinita",
         "description": "Default bookmark folder location"
     },
     "groupExportedToBookmarks": {
@@ -676,7 +700,7 @@
         "description": "Folder name title"
     },
     "backupSuccessfullyRestored": {
-        "message": "Il backup è stato ripristinato correttamente",
+        "message": "Backup ripristinato correttamente!",
         "description": "Backup successfully restored"
     },
     "loading": {
@@ -766,7 +790,7 @@
         "description": "Pinned tabs"
     },
     "eraseAddonSettingsWarningTitle": {
-        "message": "Questa azione <b>CANCELLERÀ COMPLEMENTE</b> tutte le impostazioni correnti e tutti i gruppi! Le schede non saranno chiuse.",
+        "message": "Questa azione <b>ELIMINERÀ COMPLEMENTE</b> tutte le impostazioni e tutti i gruppi!<br>Le schede non saranno chiuse.",
         "description": "This action will <b>FULL ERASE</b> all existing settings and groups!<br>Tabs will not be affected."
     },
     "clear": {
@@ -774,11 +798,11 @@
         "description": "Clear"
     },
     "deleteAllAddonDataAndSettings": {
-        "message": "Cancella tutti i dati e le impostazioni dell'estensione",
+        "message": "Elimina tutti i dati e le impostazioni dell'estensione",
         "description": "Delete all addon data and settings"
     },
     "warningAllDataWillRemove": {
-        "message": "Attenzione! Saranno rimossi TUTTI I DATI dell'estensione! Sei veramente sicuro?",
+        "message": "Attenzione! Saranno rimossi TUTTI I DATI dell'estensione! Vuoi procedere?",
         "description": "Warning! Removing ALL addon data! Are you really sure?"
     },
     "ifDifferentContainerReOpen": {
@@ -786,7 +810,7 @@
         "description": "If the container is different from the selected one - change the container"
     },
     "deleteAllAddonDataAndSettingsBeforeRestoringBackup": {
-        "message": "Cancella tutti i dati e le impostazioni prima di ricaricarli dal backup",
+        "message": "Elimina tutti i dati e le impostazioni prima di ricaricarli dal backup",
         "description": "Delete all addon data and settings before restoring backup"
     },
     "helpPageWelcomeTitle": {
@@ -794,16 +818,24 @@
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "Abilita \"Ripristina la sessione precedente\" nelle impostazioni del browser. <br>Questa impostazione è necessaria per mantere la comunicazione tra il gruppo corrente e le schede, <br> altrimenti le schede non saranno aperte quando il browser si avvia, le informazioni del gruppo saranno perse dall'estensione<br> e l'estensione smetterà di funzionare.",
+        "message": "Abilita \"Ripristina la sessione precedente\" nelle impostazioni del browser. <br>Questa impostazione è necessaria per mantere la comunicazione tra il gruppo corrente e le schede, <br>altrimenti le schede non saranno aperte quando il browser si avvia e le informazioni del gruppo saranno perse dall'estensione<br> e l'estensione smetterà di funzionare.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
+    "exportToBookmarksWhenAutoBackup": {
+        "message": "Salva il gruppo nei segnalibri durante il backup automatico",
+        "description": "Save the group to bookmarks when auto backup"
+    },
     "leaveBookmarksOfClosedTabs": {
-        "message": "Lascia i segnalibri della schede chiuse",
+        "message": "Lascia i segnalibri delle schede chiuse",
         "description": "Leave bookmarks of closed tabs"
     },
     "enableDebugTitle": {
         "message": "Abilita modalità DEBUG",
         "description": "Enable DEBUG"
+    },
+    "disableDebugTitle": {
+        "message": "Disabilita modalità DEBUG",
+        "description": "Disable DEBUG"
     },
     "loggingIsEnabledTitle": {
         "message": "Telemetria abilitata",
@@ -846,7 +878,7 @@
         }
     },
     "updateAddonToLatestVersion": {
-        "message": "Si prega di aggiornare l'estensione all'ultima versione",
+        "message": "Aggiornare l'estensione all'ultima versione",
         "description": "Please, update addon to latest version"
     },
     "hotkeyActionTitleRenameGroup": {
@@ -964,7 +996,7 @@
         "description": "Search or right arrow to focus on active tab/group"
     },
     "noContainerTitle": {
-        "message": "Nessun contenitore",
+        "message": "Predefinito",
         "description": "No container"
     },
     "reopenTabsWithTemporaryContainersInNew": {
@@ -1036,15 +1068,15 @@
         "description": "Unfortunately, an error occurred while reading data from the STG addon from the Firefox database. At the moment, the addon is stopped. To resume the add-on, do the following:"
     },
     "helpPageDbErrorReinstallDescription2": {
-        "message": "Riavvia il Browser Firefox (con terminazione del processo su Mac e Linux)",
+        "message": "Riavvia il Browser Firefox (termina il processo su Mac e Linux)",
         "description": "Restart Firefox Browser (for Linux and Mac OS with process termination)"
     },
     "helpPageDbErrorReinstallDescription3": {
-        "message": "Se vedi di nuovo questa finestra, prova a reinstallare l'estensione",
+        "message": "Se vedi di nuovo questa finestra, prova a reinstallare l'estensione:",
         "description": "If you see this window again, try reinstalling the addon:"
     },
     "helpPageDbErrorReinstallDescription4": {
-        "message": "Componente aggiuntivo STG rimosso.",
+        "message": "Componente aggiuntivo STG rimosso",
         "description": "Remove STG Addon"
     },
     "helpPageDbErrorReinstallDescription5": {
@@ -1064,7 +1096,7 @@
         "description": "Open Firefox downloads folder"
     },
     "eraseAndImportAddonBackupButton": {
-        "message": "Cancella e ripristina il backup",
+        "message": "Elimina e ripristina il backup",
         "description": "Erase and restore backup"
     },
     "searchOnlyGroups": {
@@ -1103,12 +1135,28 @@
         "message": "Per evitare di perdere schede o la loro posizione in finestre e gruppi, si consiglia vivamente di disattivare o rimuovere le estensioni attivate che confliggono con l'addon Simple Tab Groups. Puoi farlo nella pagina delle impostazioni degli addon \"about:addons\" o premendo la combinazione di tasti <code>Ctrl+Shift+A</code>",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     },
+    "ignoreConflictedExtIgnore": {
+        "message": "Ignora questa estensione",
+        "description": "Ignore conflicted extension"
+    },
+    "ignoreConflictedExtDontIgnore": {
+        "message": "Non ignorare questa estensione",
+        "description": "Don't ignore this extension"
+    },
+    "ignoreConflictedExtIgnoredText": {
+        "message": "ignorata",
+        "description": "Extension is ignored"
+    },
+    "ignoreConflictedExtConfirm": {
+        "message": "Questa estensione interferirà con STG, potrebbe farti perdere le schede.\nIgnorare comunque?",
+        "description": "This addon will interfere with the STG, which may cause you to lose tabs.\nStill ignore it?"
+    },
     "theme": {
         "message": "Tema",
         "description": "Select theme"
     },
     "themeAuto": {
-        "message": "Tema del sistema — automatico",
+        "message": "Tema di sistema — automatico",
         "description": "Auto theme"
     },
     "themeLight": {
@@ -1130,5 +1178,47 @@
     "group": {
         "message": "Gruppo",
         "description": "Group"
+    },
+    "helpPageUnsupportedUrlTitle": {
+        "message": "URL non supportato",
+        "description": "Unsupported URL"
+    },
+    "copyURL": {
+        "message": "Copia URL",
+        "description": "Copy URL"
+    },
+    "helpPageStgDebugTitle": {
+        "message": "Pagina di debug di STG",
+        "description": "STG debug page"
+    },
+    "helpPageStgDebugAutoDebugMainTitle": {
+        "message": "Si è verificato un errore nell'estensione",
+        "description": "An error occurred in the addon"
+    },
+    "windowNotHaveGroup": {
+        "message": "Questa finestra non ha un gruppo caricato",
+        "description": "This window does not have a loaded group"
+    },
+    "defaultGroup": {
+        "message": "Gruppo predefinito",
+        "description": "Default group"
+    },
+    "moveToGroupIfNoneCatchTabRules": {
+        "message": "Se nessuna delle espressioni regolari corrisponde alla scheda, spostala nel gruppo:",
+        "description": "If none of the regular expressions match the tab, move it to the group:"
+    },
+    "dontMove": {
+        "message": "Non spostare",
+        "description": "Don't move"
+    },
+    "groupArchivedTitle": {
+        "message": "$groupName$ (archiviato)",
+        "description": "My group (archived)",
+        "placeholders": {
+            "groupName": {
+                "content": "$1",
+                "example": "My group"
+            }
+        }
     }
 }
