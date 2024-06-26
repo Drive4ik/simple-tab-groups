@@ -1148,7 +1148,7 @@
         "description": "Extension is ignored"
     },
     "ignoreConflictedExtConfirm": {
-        "message": "Dieses Addon hat Wechselwirkungen mit STG, was zu Verlust von Tabs führen kann. Dennoch ignorieren?",
+        "message": "Dieses Addon wird Probleme mit STG erzeugen, was zu einem Verlust deiner Tabs führen kann.\nTrotzdem ignorieren?",
         "description": "This addon will interfere with the STG, which may cause you to lose tabs.\nStill ignore it?"
     },
     "theme": {
@@ -1188,7 +1188,7 @@
         "description": "Copy URL"
     },
     "helpPageStgDebugTitle": {
-        "message": "STG Debug-Seite",
+        "message": "STG debug Seite",
         "description": "STG debug page"
     },
     "helpPageStgDebugAutoDebugMainTitle": {
