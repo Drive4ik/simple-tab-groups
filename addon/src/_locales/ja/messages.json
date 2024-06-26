@@ -88,7 +88,7 @@
         "description": "Close popup after changing group"
     },
     "closePopupAfterSelectTab": {
-        "message": "タブを選択後にポップアップウィンドウを閉じる",
+        "message": "タブを選択した後、ポップアップ ウィンドウを閉じる",
         "description": "Close the popup window after selecting a tab"
     },
     "openManageGroupsInTab": {
@@ -318,7 +318,7 @@
         "description": "Load next unloaded group"
     },
     "hotkeyActionTitleLoadPrevUnloadedGroup": {
-        "message": "前の未読み込みのグループを読み込む",
+        "message": "前の読み込まれていないグループを読み込む",
         "description": "Load previous unloaded group"
     },
     "hotkeyActionTitleLoadNextNonEmptyGroup": {
@@ -418,7 +418,7 @@
         "description": "Icon style"
     },
     "discardTabsAfterHide": {
-        "message": "グループを閉じた後メモリからタブをアンロードする",
+        "message": "グループを閉じた後にタブをメモリからアンロードする",
         "description": "Unload tabs from memory after closing a group"
     },
     "discardExcludeAudioTabs": {
@@ -818,7 +818,7 @@
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "ブラウザーの設定で [以前のセッションを復元する] を有効にしてください。<br>これはグループとタブの間の通信を管理するために必要です。<br>これが無効になっている場合、ブラウザーの起動時にタブが開かず、アドオンからタブの情報が失われます。<br>つまり、アドオンの動作が停止するでしょう。",
+        "message": "ブラウザーの設定で [前回のウィンドウとタブを開く] を有効にしてください。<br>これはグループとタブの間の通信を管理するために必要です。<br>これが無効になっている場合、ブラウザーの起動時にタブが開かず、アドオンからタブの情報が失われます。<br>つまり、アドオンの動作が停止するでしょう。",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
     "exportToBookmarksWhenAutoBackup": {
@@ -830,11 +830,11 @@
         "description": "Leave bookmarks of closed tabs"
     },
     "enableDebugTitle": {
-        "message": "DEBUG を有効にする",
+        "message": "デバッグを有効にする",
         "description": "Enable DEBUG"
     },
     "disableDebugTitle": {
-        "message": "DEBUG を無効にする",
+        "message": "デバッグを無効にする",
         "description": "Disable DEBUG"
     },
     "loggingIsEnabledTitle": {
@@ -948,7 +948,7 @@
         }
     },
     "helpPageOpenInContainerDesc2": {
-        "message": "別のアドオン",
+        "message": "他のアドオン:",
         "description": "Another addon:"
     },
     "helpPageOpenInContainerDesc3": {
@@ -1026,7 +1026,7 @@
         }
     },
     "helpPageOpenInContainerIgnoreAppForSession": {
-        "message": "ブラウザを閉じるまで拡張子\"<strong>$addonName$</strong>\"を無視する",
+        "message": "ブラウザを閉じるまで拡張機能「<strong>$addonName$</strong>」を無視します",
         "description": "Ignore addon for session",
         "placeholders": {
             "addonName": {
@@ -1115,6 +1115,14 @@
         "message": "詳細はこちら",
         "description": "Click here for more info"
     },
+    "enabled": {
+        "message": "有効",
+        "description": "Enabled text"
+    },
+    "disabled": {
+        "message": "無効",
+        "description": "Disabled text"
+    },
     "helpPageExtensionsThatConflictWithStgTitle": {
         "message": "STGと競合する拡張機能",
         "description": "Extensions that conflict with STG"
@@ -1135,6 +1143,10 @@
         "message": "この拡張機能を無視しない",
         "description": "Don't ignore this extension"
     },
+    "ignoreConflictedExtIgnoredText": {
+        "message": "無視された",
+        "description": "Extension is ignored"
+    },
     "ignoreConflictedExtConfirm": {
         "message": "このアドオンはSTGに干渉し、タブを失う可能性があります。\nそれでも無視しますか？",
         "description": "This addon will interfere with the STG, which may cause you to lose tabs.\nStill ignore it?"
@@ -1154,6 +1166,10 @@
     "themeDark": {
         "message": "ダーク",
         "description": "Dark theme"
+    },
+    "contextMenuEditor": {
+        "message": "コンテキストメニューエディタ",
+        "description": "Context menu editor"
     },
     "tab": {
         "message": "タブ",
