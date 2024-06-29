@@ -715,6 +715,10 @@
         "message": "Toon notificatie na het verwijderen van een groep",
         "description": "Show notification after group delete"
     },
+    "disableAllNotifications": {
+        "message": "Schakel alle meldingen volledig uit (let op: dit kan belangrijke waarschuwingen/fouten verbergen)",
+        "description": "Completely disable all notifications (note: this may hide important warnings/errors)"
+    },
     "reloadTab": {
         "message": "Tab vernieuwen",
         "description": "Reload tab"

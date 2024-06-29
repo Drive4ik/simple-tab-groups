@@ -715,6 +715,10 @@
         "message": "Показване на известие след изтриване на група",
         "description": "Show notification after group delete"
     },
+    "disableAllNotifications": {
+        "message": "Напълно деактивирайте всички известия (забележка: това може да скрие важни предупреждения/грешки)",
+        "description": "Completely disable all notifications (note: this may hide important warnings/errors)"
+    },
     "reloadTab": {
         "message": "Презареждане на раздела",
         "description": "Reload tab"
