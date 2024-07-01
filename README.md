@@ -98,6 +98,7 @@ Conflicted addons:
  * Totally not Panorama (Tab Groups with tab hiding)
  * Panorama Tab Groups
  * Panorama View (etc.)
+ * Tree Style Tab
 
 Open popup shortcut: `F8`. [You can change this hotkey](https://support.mozilla.org/kb/manage-extension-shortcuts-firefox)
 
