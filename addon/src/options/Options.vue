@@ -20,9 +20,12 @@
     import JSON from '/js/json.js';
 
     import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
+    import syncCloudMixin from '/js/mixins/sync-cloud.mixin.js';
 
     window.logger = new Logger('Options');
 
+    Vue.mixin(defaultGroupMixin);
+    Vue.mixin(syncCloudMixin);
     Vue.config.errorHandler = errorEventHandler.bind(window.logger);
 
     const SECTION_GENERAL = 'general',
@@ -34,7 +37,7 @@
 
     export default {
         name: 'options-page',
-        mixins: [defaultGroupMixin],
+        // mixins: [defaultGroupMixin, syncCloudMixin],
         data() {
             this.HOTKEY_ACTIONS = Constants.HOTKEY_ACTIONS;
             this.HOTKEY_ACTIONS_WITH_CUSTOM_GROUP = Constants.HOTKEY_ACTIONS_WITH_CUSTOM_GROUP;
@@ -1203,7 +1206,8 @@
 
     .button.is-info,
     .button.is-danger,
-    .button.is-success {
+    .button.is-success,
+    .button.is-primary {
         --fill-color: #fff;
     }
 

@@ -49,6 +49,10 @@
         "message": "OK",
         "description": "OK button"
     },
+    "load": {
+        "message": "Load",
+        "description": "Load"
+    },
     "save": {
         "message": "Save",
         "description": "Save"
@@ -1233,20 +1237,96 @@
         "message": "Help",
         "description": "Help"
     },
+    "lastUpdateAgo": {
+        "message": "Last update: $relativeTime$",
+        "description": "Last update/active relative time",
+        "placeholders": {
+            "relativeTime": {
+                "content": "$1",
+                "example": "5 days ago"
+            }
+        }
+    },
+    "syncStart": {
+        "message": "Start synchronization",
+        "description": "Start synchronization"
+    },
     "syncEnableTitle": {
         "message": "Enable auto backup to the cloud",
         "description": "Enable auto backup to the cloud"
+    },
+    "syncSettingsLocation": {
+        "message": "Sync settings location",
+        "description": "Enable auto backup to the cloud"
+    },
+    "githubSecretTitle": {
+        "message": "Secret",
+        "description": "Secret"
+    },
+    "githubGistCloudSettingsTitle": {
+        "message": "GitHub Gist cloud settings",
+        "description": "GitHub Gist cloud settings"
     },
     "githubGistTokenTitle": {
         "message": "Personal access token",
         "description": "Github gist Personal access token"
     },
-    "checkGithubGistToken": {
+    "githubGistCheckToken": {
         "message": "Check token",
         "description": "Check Github gist personal access token"
     },
     "githubGistBackupDescription": {
         "message": "Simple Tab Groups backup file for cloud sync",
         "description": "Simple Tab Groups backup file for cloud sync"
+    },
+    "githubCantUploadBackupToGist": {
+        "message": "Failed to upload the backup to GitHub Gist. Please try again later.",
+        "description": "Failed to upload the backup to GitHub Gist. Please try again later."
+    },
+    "githubCantCreateBackupIntoGist": {
+        "message": "Cannot create a backup to GitHub Gist. Please try again later.",
+        "description": "Cannot create a backup to GitHub Gist. Please try again later."
+    },
+    "githubInvalidGistContent": {
+        "message": "GitHub Gist backup has incorrect data",
+        "description": "GitHub Gist backup has incorrect data"
+    },
+    "githubInvalidToken": {
+        "message": "Your GitHub token is invalid",
+        "description": "Your GitHub token is invalid"
+    },
+    "githubTokenNoAccess": {
+        "message": "Your GitHub token doesn't have the right access.",
+        "description": "Your GitHub token doesn't have the right access."
+    },
+    "syncOptionLocatedFFSync": {
+        "message": "Use settings located in Firefox synchronisation",
+        "description": "Use settings located in Firefox synchronisation"
+    },
+    "syncOptionLocatedLocally": {
+        "message": "Use settings located locally in the current browser profile",
+        "description": "Use settings located locally in the current browser profile"
+    },
+    "browserIsNotFirefox": {
+        "message": "Your browser is: $browserName$, it doesn't support <a href=\"https://www.mozilla.org/firefox/sync/\" target=\"_blank\" class=\"is-underlined\">Firefox Sync</a>",
+        "description": "Browser doesn't support FF sync",
+        "placeholders": {
+            "browserName": {
+                "content": "$1",
+                "example": "some Gecko browser"
+            }
+        }
+    },
+    "downloadFirefox": {
+        "message": "Download Firefox",
+        "description": "Download Firefox"
+    },
+    "saveSettings": {
+        "message": "Save settings",
+        "description": "Save settings"
+    },
+    "ffSyncNotSupported": {
+        "message": "Firefox sync isn't supported",
+        "description": "Firefox sync isn't supported"
     }
 }

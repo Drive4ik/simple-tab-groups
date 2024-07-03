@@ -224,26 +224,12 @@ hr {
     display: inline-flex;
 }
 
-.is-align-items-center {
-    align-items: center;
-}
-
 .is-column {
     flex-direction: column;
 }
 
 .is-flex > .is-full-width {
     flex-grow: 1;
-}
-
-.is-flex > .is-start,
-.is-inline-flex > .is-start {
-    align-self: flex-start;
-}
-
-.is-flex > .is-end,
-.is-inline-flex > .is-end {
-    align-self: flex-end;
 }
 
 .tab-discarded {

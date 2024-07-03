@@ -1,6 +1,7 @@
 <script>
 
 import * as Constants from '/js/constants.js';
+import {CloudError} from '/js/sync/cloud/cloud.js';
 import GithubGist from '/js/sync/cloud/githubgist.js';
 
 export default {
@@ -25,12 +26,15 @@ export default {
     data() {
         this.FILE_NAME_PARTS = Constants.GIT_GIST_FILE_NAME_PARTS;
 
-        this.GithubGistCloud = new GithubGist();
-
         return {
             tokenLoading: false,
             tokenCheched: null,
         };
+    },
+    watch: {
+        internalToken() {
+            this.tokenCheched = null;
+        },
     },
     computed: {
         internalToken: {
@@ -39,7 +43,6 @@ export default {
             },
             set(value) {
                 this.$emit('update:token', value);
-                this.tokenCheched = null;
             },
         },
         internalFileName: {
@@ -70,12 +73,15 @@ export default {
             try {
                 this.tokenLoading = true;
                 this.tokenCheched = null;
-                this.GithubGistCloud.token = this.token;
-                await this.GithubGistCloud.checkToken();
+
+                const GithubGistCloud = new GithubGist(this.token);
+
+                await GithubGistCloud.checkToken();
+
                 this.tokenCheched = true;
                 this.$emit('update:error', '');
-            } catch (e) {
-                this.$emit('update:error', e.message);
+            } catch ({message}) {
+                this.$emit('update:error', new CloudError(message).toString());
                 this.tokenCheched = false;
             } finally {
                 this.tokenLoading = false;
@@ -109,7 +115,7 @@ export default {
                     </span>
                 </div>
                 <div class="control">
-                    <button class="button" @click="checkToken" :disabled="tokenLoading" v-text="lang('checkGithubGistToken')"></button>
+                    <button class="button" @click="checkToken" :disabled="tokenLoading" v-text="lang('githubGistCheckToken')"></button>
                 </div>
             </div>
         </div>
@@ -137,7 +143,6 @@ export default {
     </div>
     <div class="field error-field">
         <p class="has-text-danger has-text-right" v-text="error"></p>
-        <!-- <p class="has-text-danger has-text-right" v-text="lang(error)"></p> TODO need lang -->
     </div>
 </div>
 </template>

@@ -15,7 +15,7 @@ import * as Tabs from '/js/tabs.js';
 import * as Windows from '/js/windows.js';
 import * as Management from '/js/management.js';
 import * as Hotkeys from '/js/hotkeys.js';
-import {sync, CloudError} from '/js/sync/cloud/cloud.js';
+import {sync} from '/js/sync/cloud/cloud.js';
 
 self.IS_TEMPORARY = false;
 
@@ -1954,7 +1954,7 @@ const onBeforeTabRequest = catchFunc(async function ({ tabId, url, cookieStoreId
             params.asInfo = true;
         }
 
-        return Utils.setUrlSearchParams(Urls.getURL('open-in-container', true), params);
+        return Urls.setUrlSearchParams(Urls.getURL('open-in-container', true), params);
     }
 
     if (Constants.IGNORE_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER.includes(originExt.id) && originExt.enabled) {
@@ -3103,18 +3103,19 @@ async function cloudSync() {
     const log = logger.start('cloudSync');
 
     try {
-        const result = await sync();
+        sendMessage('sync-start');
 
-        console.debug('result', result)
+        const result = await sync(progress => {
+            log.debug('progress', progress);
+            sendMessage('sync-progress', {progress});
+        });
+
+        sendMessage('sync-end');
     } catch (e) {
-        if (e instanceof CloudError) {
-            log.log(e);
-        } else {
-            log.throwError('cant sync', e);
-        }
+        sendMessage('sync-error', {
+            message: String(e),
+        });
     }
-
-
 
     log.stop();
 }
@@ -4242,9 +4243,9 @@ async function init() {
         // }
 
         // Urls.openUrl('/popup/popup.html#sidebar');
-        Urls.openUrl('/popup/popup.html');
+        // Urls.openUrl('/popup/popup.html');
 
-        // Urls.openOptionsPage('backup');
+        Urls.openOptionsPage('backup');
     } catch (e) {
         setActionToReloadAddon();
 

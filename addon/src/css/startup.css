@@ -146,3 +146,7 @@ html[data-theme=dark] .select:not(.is-multiple):not(.is-loading):hover::after {
 .pr-indent {
     padding-right: var(--indent);
 }
+
+.indent-gap {
+    gap: var(--indent);
+}

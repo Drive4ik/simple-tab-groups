@@ -99,7 +99,7 @@ function showGroupsPopup(data) {
         return;
     }
 
-    const wrapper = document.createElement('div'),
+    const wrapper = document.createElement('aside'),
         closeGroupsPopup = wrapper.remove.bind(wrapper),
         isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 

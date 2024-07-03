@@ -32,6 +32,9 @@
 
     window.logger = new Logger(isSidebar ? 'Sidebar' : 'Popup');
 
+    Vue.mixin(defaultGroupMixin);
+    Vue.mixin(startUpData);
+    Vue.mixin(syncCloudMixin);
     Vue.config.errorHandler = errorEventHandler.bind(window.logger);
 
     const loadingNode = document.getElementById('loading');
@@ -73,7 +76,7 @@
 
     export default {
         name: 'popup-page',
-        mixins: [defaultGroupMixin, startUpData, syncCloudMixin],
+        // mixins: [defaultGroupMixin, startUpData, syncCloudMixin],
         data() {
             return {
                 isSidebar: isSidebar,

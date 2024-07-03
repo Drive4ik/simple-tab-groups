@@ -18,7 +18,7 @@ import backgroundSelf from '/js/background.js';
 const logger = new Logger('Cloud');
 
 export function CloudError(langId) {
-    console.error('CloudError:', langId)
+    logger.error('CloudError:', langId)
     this.id = langId;
     this.message = browser.i18n.getMessage(langId);
 
@@ -32,7 +32,7 @@ export function CloudError(langId) {
 const TRUTH_LOCAL = 'local';
 const TRUTH_CLOUD = 'cloud';
 
-export async function sync() {
+export async function sync(progressFunc = null) {
     const log = logger.start('sync');
 
     const {syncOptionsLocation} = await Storage.get('syncOptionsLocation');
@@ -43,47 +43,11 @@ export async function sync() {
         }
     }
 
+    progressFunc?.(0);
+
     const syncOptions = syncOptionsLocation === Constants.SYNC_STORAGE_FSYNC
         ? await SyncStorage.get()
         : await Storage.get(null, Constants.DEFAULT_SYNC_OPTIONS);
-
-    const GithubGistCloud = new GithubGist(syncOptions.githubGistToken, syncOptions.githubGistFileName, syncOptions.githubGistId);
-
-    // try {
-    //     await GithubGistCloud.checkToken();
-    // } catch (e) {
-    //     throw new CloudError(e.message);
-    // }
-
-    // throw error only on invalid json content
-    async function getGistData() {
-        try {
-            const gist = await GithubGistCloud.getGist();
-
-            try {
-                return JSON.parse(gist.content);
-            } catch (e) {
-                throw Error('githubInvalidGistContent');
-            }
-        } catch ({message}) {
-            if (message === 'githubNotFound') {
-                return null;
-            }
-
-            throw new CloudError(message);
-        }
-    }
-
-    let cloudData = await getGistData(),
-        githubGistId = null;
-
-    if (!cloudData) {
-        githubGistId = await GithubGistCloud.findGistId();
-
-        if (githubGistId) {
-            cloudData = await getGistData();
-        }
-    }
 
     async function saveNewGistId(githubGistId) {
         syncOptionsLocation === Constants.SYNC_STORAGE_FSYNC
@@ -91,9 +55,45 @@ export async function sync() {
             : await Storage.set({githubGistId});
     }
 
-    if (cloudData && githubGistId) {
-        await saveNewGistId(githubGistId);
+    const GithubGistCloud = new GithubGist(
+        syncOptions.githubGistToken,
+        syncOptions.githubGistFileName,
+        syncOptions.githubGistId
+    );
+
+    const cloudProgressFunc = function(currentProgress, progressDuration, fetchProgress) {
+        const durationPart = 100 / progressDuration;
+        const mainPercent = currentProgress + Math.floor(fetchProgress / durationPart);
+        log.log('main and fetch progress', mainPercent, fetchProgress);
+        progressFunc(mainPercent);
+    };
+
+    async function getGistData() {
+        try {
+            if (progressFunc) {
+                GithubGistCloud.progressFunc = cloudProgressFunc.bind(null, 5, 35);
+            }
+
+            const result = await GithubGistCloud.getGist();
+
+            GithubGistCloud.progressFunc = null;
+
+            return result;
+        } catch (e) {
+            GithubGistCloud.progressFunc = null;
+            log.stopError(e);
+            throw new CloudError(e.message);
+        }
     }
+
+    const oldGistId = GithubGistCloud.gistId,
+        cloudData = await getGistData();
+
+    if (cloudData && GithubGistCloud.gistId && oldGistId !== GithubGistCloud.gistId) {
+        await saveNewGistId(GithubGistCloud.gistId);
+    }
+
+    progressFunc?.(40);
 
     const localData = await Promise.all([Storage.get(), Groups.load(null, true)])
         .then(([data, {groups}]) => {
@@ -102,8 +102,11 @@ export async function sync() {
             return data;
         });
 
-    // console.debug('before', JSON.clone(localData), JSON.clone(cloudData));
+    progressFunc?.(45);
+
     const syncResult = await syncData(localData, cloudData);
+
+    progressFunc?.(50);
 
     console.debug('syncResult', syncResult);
 
@@ -143,9 +146,10 @@ export async function sync() {
         await Tabs.remove(Array.from(syncResult.changes.tabsToRemove));
     }
 
-    // let syncId;
-    log.debug('before cloud syncId:', syncResult.cloudData.syncId);
-    log.debug('before local syncId:', syncResult.localData.syncId);
+    progressFunc?.(55);
+
+    // log.debug('before cloud syncId:', syncResult.cloudData.syncId);
+    // log.debug('before local syncId:', syncResult.localData.syncId);
 
     if (syncResult.changes.cloud) {
         syncResult.changes.local = true; // syncId must be equal in cloud and local
@@ -154,54 +158,50 @@ export async function sync() {
         syncResult.localData.syncId = syncResult.cloudData.syncId;
     }
 
-
-    // if (syncResult.sourceOfTruth === TRUTH_CLOUD) {
-    //     if (syncResult.changes.cloud) {
-    //         syncResult.localData.syncId = syncResult.cloudData.syncId = Date.now();
-    //     } else {
-    //         // syncResult.changes.local = true; // TODO check if its needed
-    //         syncResult.localData.syncId = syncResult.cloudData.syncId;
-    //     }
-    // } else if (syncResult.sourceOfTruth === TRUTH_LOCAL) {
-
-    //     // syncResult.changes.local never be TRUE,
-    //     // ONLY (!!!) if local options key doesn't exist, than it clone from cloud
-
-    //     if (syncResult.changes.cloud) {
-    //         syncResult.localData.syncId = syncResult.cloudData.syncId = Date.now();
-    //     }
-    // }
-
-    log.debug('trust:', syncResult.sourceOfTruth);
-    log.debug('changes.cloud:', syncResult.changes.cloud, syncResult.cloudData.syncId);
-    log.debug('changes.local:', syncResult.changes.local, syncResult.localData.syncId);
-
-    // syncResult.cloudData.syncId = syncResult.localData.syncId = syncId;
+    // log.debug('trust:', syncResult.sourceOfTruth);
+    // log.debug('changes.cloud:', syncResult.changes.cloud, syncResult.cloudData.syncId);
+    // log.debug('changes.local:', syncResult.changes.local, syncResult.localData.syncId);
 
     // TODO syncData for all tabs: Date.now() + tab.url
     // await Promise.all(allTabIds.map(tabId => Cache.setSyncId(tabId, syncId)));
+
+    if (progressFunc) {
+        GithubGistCloud.progressFunc = cloudProgressFunc.bind(null, 55, 35);
+    }
 
     if (GithubGistCloud.gistId) {
         if (syncResult.changes.cloud) {
             try {
                 await GithubGistCloud.updateGist(syncResult.cloudData);
             } catch (e) {
+                // GithubGistCloud.progressFunc = null;
+                // log.error(String(e));
+                log.stopError(e);
                 throw new CloudError('githubCantUploadBackupToGist');
             }
         }
     } else {
         try {
-            const result = await GithubGistCloud.createGist(syncResult.cloudData, 'Simple Tab Groups backup');
+            const description = browser.i18n.getMessage('githubGistBackupDescription');
+            const result = await GithubGistCloud.createGist(syncResult.cloudData, description);
             await saveNewGistId(result.id);
         } catch (e) {
+            // GithubGistCloud.progressFunc = null;
+            log.stopError(e);
             throw new CloudError('githubCantCreateBackupIntoGist');
         }
     }
+
+    // GithubGistCloud.progressFunc = null;
+
+    progressFunc?.(95);
 
     if (syncResult.changes.local) {
         // TODO normal save options
         await Storage.set(syncResult.localData);
     }
+
+    progressFunc?.(100);
 
     log.stop();
 

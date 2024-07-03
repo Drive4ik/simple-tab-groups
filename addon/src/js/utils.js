@@ -282,16 +282,6 @@ function getUUIDFromUrl(url) {
     return uuid;
 }*/
 
-export function setUrlSearchParams(url, params = {}) {
-    const urlObj = new URL(url, Constants.STG_BASE_URL);
-
-    for (const [key, value] of Object.entries(params)) {
-        urlObj.searchParams.set(key, value);
-    }
-
-    return urlObj.href;
-}
-
 export function isTabPinned(tab) {
     return tab.pinned === true;
 }
@@ -672,3 +662,28 @@ export const DATE_LOCALE_VARIABLES = Object.freeze({
         return (new Date).toLocaleString(UI_LANG, {second: '2-digit'});
     },
 });
+
+export function timeAgo(input, lang = UI_LANG, style = 'long', numeric = 'auto') {
+    const date = (input instanceof Date) ? input : new Date(input);
+    const formatter = new Intl.RelativeTimeFormat(lang, {style, numeric});
+    const ranges = {
+        year: 3600 * 24 * 365,
+        month: 3600 * 24 * 30,
+        week: 3600 * 24 * 7,
+        day: 3600 * 24,
+        hour: 3600,
+        minute: 60,
+        second: 1,
+    };
+
+    const secondsElapsed = (date.getTime() - Date.now()) / 1000;
+
+    for (const key in ranges) {
+        if (ranges[key] < Math.abs(secondsElapsed)) {
+            const delta = secondsElapsed / ranges[key];
+            return formatter.format(Math.round(delta), key);
+        }
+    }
+
+    return formatter.format(0, 'second');
+}

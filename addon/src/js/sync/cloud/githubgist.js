@@ -1,72 +1,105 @@
 
 import JSON from '/js/json.js';
-import * as Utils from '/js/utils.js';
+import * as Urls from '/js/urls.js';
 
 const GISTS_PER_PAGE = 30; // max = 100
 
 const GITHUB_API_URL = 'https://api.github.com';
-const GISTS_URL = `${GITHUB_API_URL}/gists`;
+const GITHUB_USER_URL = `${GITHUB_API_URL}/user`;
+const GISTS_URL = `${GITHUB_API_URL}/gists{/gistId}`;
 
 const GISTS_GLOBAL_HEADERS = {
     Accept: 'application/vnd.github+json',
     'Content-Type': 'application/json',
+    'X-GitHub-Api-Version': '2022-11-28',
 };
 
-export default function GithubGist(token, fileName, gistId = null) {
+export default function GithubGist(token, fileName, gistId = '') {
     this.token = token;
     this.fileName = fileName;
     this.gistId = gistId;
 }
 
-GithubGist.prototype.checkToken = async function() {
-    await this.request('get', GITHUB_API_URL);
+GithubGist.prototype.loadUser = async function() {
+    return this.request('get', GITHUB_USER_URL);
 }
+
+GithubGist.prototype.checkToken = GithubGist.prototype.loadUser;
 
 GithubGist.prototype.findGistId = async function() {
-    this.gistId = null;
-    return this.gistId = await findGistId.call(this, this.fileName);
+    this.gistId = '';
+
+    const gist = await findGist.call(this);
+
+    if (gist) {
+        this.gistId = gist.id;
+    }
+
+    return this.gistId;
 }
 
-async function findGistId(fileName, page = 1) {
+async function findGist(page = 1) {
     const gists = await this.request('get', GISTS_URL, {
             page,
             per_page: GISTS_PER_PAGE,
         }),
-        gist = gists.find(g => !g.public && g.files.hasOwnProperty(fileName));
+        gist = gists.find(g => !g.public && g.files.hasOwnProperty(this.fileName));
 
-    if (gist?.id) {
-        return gist.id;
-    } else if (gists.length === GISTS_PER_PAGE) {
-        if ((page * GISTS_PER_PAGE) > 1000) {
-            throw Error('You have too many gists.\nCreate gist and write id in addon options'); // TODO move to lang
-        }
+    if (gist) {
+        return gist;
+    }
 
-        return findGistId.call(this, fileName, ++page);
+    if (gists.length === GISTS_PER_PAGE) {
+        return findGist.call(this, ++page);
     }
 
     return null;
 }
 
-GithubGist.prototype.getGist = async function() {
-    if (!this.gistId) {
-        throw Error('githubNotFound');
+GithubGist.prototype.getGist = async function(onlyInfo = false) {
+    try {
+        const gist = await this.request('get', [GISTS_URL, this], undefined, {cache: 'no-store'});
+
+        const file = gist.files[this.fileName];
+
+        if (!file) {
+            throw Error('githubNotFoundBackup');
+        }
+
+        if (onlyInfo) {
+            return gist;
+        }
+
+        if (file.truncated) {
+            return await this.request('get', file.raw_url, undefined, {cache: 'no-store'});
+        }
+
+        delete this.secondTry;
+
+        return JSON.parse(file.content);
+    } catch (e) {
+        if (e instanceof SyntaxError) {
+            throw Error('githubInvalidGistContent');
+        }
+
+        if (e.message === 'githubNotFoundBackup') {
+            if (!this.secondTry) {
+                this.secondTry = true;
+
+                await this.findGistId();
+
+                if (this.gistId) {
+                    return this.getGist();
+                }
+            }
+
+            delete this.secondTry;
+
+            return null;
+        }
+
+        throw e;
     }
-
-    const data = await this.request('get', `${GISTS_URL}/${this.gistId}`, undefined, {cache: 'no-store'}),
-        file = data.files[this.fileName];
-
-    if (file?.truncated) {
-        file.content = await fetch(file.raw_url).then(res => res.json());
-    }
-
-    if (!file?.content) {
-        throw Error('githubNotFound');
-    }
-
-    return {
-        content: file.content,
-        updated_at: data.updated_at,
-    };
 }
 
 GithubGist.prototype.createGist = async function(content, description = '') {
@@ -80,7 +113,7 @@ GithubGist.prototype.createGist = async function(content, description = '') {
 }
 
 GithubGist.prototype.updateGist = async function(content) {
-    return this.request('patch', `${GISTS_URL}/${this.gistId}`, {
+    return this.request('patch', [GISTS_URL, this], {
         files: {
             [this.fileName]: {content},
         },
@@ -88,7 +121,7 @@ GithubGist.prototype.updateGist = async function(content) {
 }
 
 GithubGist.prototype.renameGist = async function(newFileName) {
-    const result = await this.request('patch', `${GISTS_URL}/${this.gistId}`, {
+    const result = await this.request('patch', [GISTS_URL, this], {
         files: {
             [this.fileName]: {newFileName},
         },
@@ -104,23 +137,25 @@ GithubGist.prototype.request = async function(method, url, body = {}, reqOptions
         throw Error('githubInvalidToken');
     }
 
-    method = method.toUpperCase();
+    url = Urls.formatUrl(...[url].flat());
 
-    const headers = reqOptions.headers ?? {};
-    delete reqOptions.headers;
+    const isApi = url.startsWith(GITHUB_API_URL);
 
     const options = {
-        method,
-        headers: {
-            ...GISTS_GLOBAL_HEADERS,
-            Authorization: `token ${this.token}`,
-            ...headers,
-        },
+        method: method.toUpperCase(),
         ...reqOptions,
     };
 
-    if (method === 'GET') {
-        url = Utils.setUrlSearchParams(url, body);
+    if (isApi) {
+        options.headers ??= {};
+        Object.assign(options.headers, GISTS_GLOBAL_HEADERS);
+        options.headers.Authorization = `token ${this.token}`;
+    }
+
+    let contentLength;
+
+    if (options.method === 'GET') {
+        url = Urls.setUrlSearchParams(url, body);
     } else if (body) {
         if (body.files) {
             for (const value of Object.values(body.files)) {
@@ -130,41 +165,81 @@ GithubGist.prototype.request = async function(method, url, body = {}, reqOptions
             }
         }
 
+        // const compressFormat = 'gzip'; // gzip compress, now it doesn't support by github :(
+        // const blob = new Blob([JSON.stringify(body)], {type: 'application/json'});
+        // const stream = blob.stream();
+        // const compressedReadableStream = stream.pipeThrough(new CompressionStream(compressFormat));
+        // const compressedResponse = new Response(compressedReadableStream);
+        // options.body = await compressedResponse.blob();
+        // options.headers['Content-Encoding'] = compressFormat;
+
         options.body = JSON.stringify(body);
+
+        contentLength = options.body.length + 46_000; // for github api, it doesn't get header content-length
     }
 
-    const response = await fetch(url, options);
+    let response = await fetch(url, options);
 
-    const hasGistAccess = response.headers.get('x-oauth-scopes')?.split(/\s*,\s*/).includes('gist');
+    if (isApi) {
+        const hasGistAccess = response.headers.get('x-oauth-scopes')?.split(/\s*,\s*/).includes('gist');
 
-    if (!hasGistAccess) {
-        throw Error('githubTokenNoAccess');
+        if (!hasGistAccess) {
+            throw Error('githubTokenNoAccess');
+        }
     }
 
     if (response.ok) {
+        if (this.progressFunc) {
+            response = await readBody(response, this.progressFunc, contentLength);
+        }
+
         return response.json();
     }
 
     if (response.status === 404) {
-        throw Error('githubNotFound');
+        throw Error('githubNotFoundBackup');
+    } else if (response.status === 401) {
+        throw Error('githubInvalidToken');
     }
 
-    throw Error('githubInvalidToken');
+    const result = await response.json();
 
-    // TMP
-    // let message = null;
+    throw Error(`${response.status}: ${result.message}`);
+}
 
-    // if (response.headers.get('content-type')?.includes('json')) {
-    //     ({message} = await response.json());
-    // } else {
-    //     message = await response.text();
-    // }
 
-    // message = message.slice(0, 150);
+async function readBody(response, progressFunc, length = null) {
+    length ??= +response.headers.get('content-length');
 
-    // const errorMessage = `GitHub Gist error: ${response.status} ${response.statusText}\n${message}`;
+    const onProgress = received => {
+        // for github api, it doesn't get header content-length
+        if (length <= 0) {
+            length = received * 7;
+        }
 
-    // console.error(errorMessage);
+        if (length < received) {
+            length = received;
+        }
 
-    // throw Error(errorMessage);
+        const percent = Math.floor(100 * received / length);
+        progressFunc(percent);
+    };
+
+    const stream = new ReadableStream({
+        async start(controller) {
+            let receivedLength = 0;
+
+            for await (const chunk of response.body) {
+                controller.enqueue(chunk);
+                receivedLength += chunk.length;
+                onProgress(receivedLength);
+            }
+
+            controller.close();
+        },
+    });
+
+    return new Response(stream, {
+        headers: new Headers([...response.headers]),
+    });
 }
