@@ -413,6 +413,15 @@
         <div class="field">
             <div class="control">
                 <label class="checkbox">
+                    <input type="checkbox" v-model="group.dontUploadToCloud" />
+                    <span v-text="lang('dontUploadToCloud')"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="field">
+            <div class="control">
+                <label class="checkbox">
                     <input
                         v-model="group.exportToBookmarksWhenAutoBackup"
                         @click="$event => setPermissionsBookmarks($event, 'exportToBookmarksWhenAutoBackup')"

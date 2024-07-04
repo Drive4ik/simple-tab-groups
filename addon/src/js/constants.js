@@ -16,7 +16,7 @@ export const DEFAULT_COOKIE_STORE_ID = 'firefox-default';
 
 export const CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP = 'stg-undo-remove-group-id-';
 
-export const AUTO_BACKUP_INTERVAL_KEY = Object.freeze({
+export const INTERVAL_KEY = Object.freeze({
     minutes: 'minutes',
     hours: 'hours',
     days: 'days',
@@ -329,20 +329,19 @@ export const DEFAULT_OPTIONS = Object.freeze({
     ],
 
     autoBackupEnable: true,
-    autoBackupLastBackupTimeStamp: 1,
-    autoBackupIntervalKey: AUTO_BACKUP_INTERVAL_KEY.days, // minutes, hours, days
+    autoBackupIntervalKey: INTERVAL_KEY.days, // minutes, hours, days
     autoBackupIntervalValue: 1,
     autoBackupIncludeTabThumbnails: true,
     autoBackupIncludeTabFavIcons: true,
     autoBackupFolderName: '',
     autoBackupByDayIndex: true,
 
-    syncEnable: true,
+    syncEnable: false,
     syncOptionsLocation: IS_AVAILABLE_SYNC_STORAGE ? SYNC_STORAGE_FSYNC : SYNC_STORAGE_LOCAL,
     syncId: 1,
-    syncIntervalKey: AUTO_BACKUP_INTERVAL_KEY.days, // minutes, hours, days
+    syncIntervalKey: INTERVAL_KEY.days, // hours, days
     syncIntervalValue: 1,
-    syncTabFavIcons: true,
+    syncTabFavIcons: false,
 
     theme: 'auto', // auto, light, dark
 
@@ -362,10 +361,6 @@ export const DEFAULT_OPTIONS = Object.freeze({
 export const ONLY_BOOL_OPTION_KEYS = Object.freeze(Object.keys(DEFAULT_OPTIONS).filter(key => 'boolean' === typeof DEFAULT_OPTIONS[key]));
 
 export const ALL_OPTIONS_KEYS = Object.freeze(Object.keys(DEFAULT_OPTIONS).filter(key => !['version', 'groups', 'lastCreatedGroupPosition'].includes(key)));
-
-export const MINUTE_SEC = 60;
-export const HOUR_SEC = 60 * MINUTE_SEC;
-export const DAY_SEC = 24 * HOUR_SEC;
 
 export const ON_UPDATED_TAB_PROPERTIES = browser.tabs ? Object.freeze([ // browser.tabs not defined into web page scripts
     browser.tabs.UpdatePropertyName.TITLE, // for cache

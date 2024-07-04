@@ -28,6 +28,7 @@
         "contextualIdentities",
         "cookies",
         "sessions",
+        "alarms",
         "downloads",
         "management",
         "webRequest",

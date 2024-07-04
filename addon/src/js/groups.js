@@ -92,6 +92,7 @@ export function create(id, title, defaultGroupProps = {}) {
         discardTabsAfterHide: false,
         discardExcludeAudioTabs: false,
         prependTitleToWindow: false,
+        dontUploadToCloud: false,
         exportToBookmarksWhenAutoBackup: true,
         leaveBookmarksOfClosedTabs: false,
         newTabContainer: Constants.DEFAULT_COOKIE_STORE_ID,

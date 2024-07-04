@@ -2022,6 +2022,16 @@ const onPermissionsChanged = catchFunc(async function ({ origins, permissions })
     await updateMoveTabMenus(); // TODO ???
 });
 
+async function onAlarm({name}) {
+    logger.info('onAlarm', {name});
+
+    if (name === LOCAL_BACKUP_ALARM_NAME) {
+        createBackup(options.autoBackupIncludeTabFavIcons, options.autoBackupIncludeTabThumbnails, true);
+    } else if (name === CLOUD_SYNC_ALARM_NAME) {
+        cloudSync();
+    }
+}
+
 // wait for reload addon if found update
 browser.runtime.onUpdateAvailable.addListener(() => Utils.safeReloadAddon());
 
@@ -2066,6 +2076,7 @@ function addEvents() {
     browser.permissions.onAdded.addListener(onPermissionsChanged);
     browser.permissions.onRemoved.addListener(onPermissionsChanged);
 
+    browser.alarms.onAlarm.addListener(onAlarm);
 }
 
 function removeEvents() {
@@ -2085,6 +2096,8 @@ function removeEvents() {
 
     browser.permissions.onAdded.removeListener(onPermissionsChanged);
     browser.permissions.onRemoved.removeListener(onPermissionsChanged);
+
+    browser.alarms.onAlarm.removeListener(onAlarm);
 
     removeListenerOnBeforeRequest();
 }
@@ -2713,7 +2726,7 @@ async function saveOptions(_options) {
 
     _options = JSON.clone(_options);
 
-    let optionsKeys = Object.keys(_options);
+    const optionsKeys = Object.keys(_options);
 
     if (!optionsKeys.every(key => Constants.ALL_OPTIONS_KEYS.includes(key))) {
         log.throwError(['some key in save options are not supported:', optionsKeys]);
@@ -2725,8 +2738,8 @@ async function saveOptions(_options) {
 
     if (optionsKeys.includes('hotkeys')) {
         const tabs = await Tabs.get(null, null, null, {
-            discarded: false,
-        }),
+                discarded: false,
+            }),
             actionData = JSON.clone({
                 action: 'update-hotkeys',
                 hotkeys: options.hotkeys,
@@ -2736,7 +2749,11 @@ async function saveOptions(_options) {
     }
 
     if (optionsKeys.some(key => ['autoBackupEnable', 'autoBackupIntervalKey', 'autoBackupIntervalValue'].includes(key))) {
-        resetAutoBackup();
+        resetLocalBackupAlarm();
+    }
+
+    if (optionsKeys.some(key => ['syncEnable', 'syncOptionsLocation', 'syncIntervalKey', 'syncIntervalValue'].includes(key))) {
+        resetSyncAlarm();
     }
 
     if (optionsKeys.includes('temporaryContainerTitle')) {
@@ -2752,64 +2769,70 @@ async function saveOptions(_options) {
     log.stop();
 }
 
-let _autoBackupTimer = 0;
-async function resetAutoBackup() {
-    if (_autoBackupTimer) {
-        clearTimeout(_autoBackupTimer);
-        _autoBackupTimer = 0;
-    }
+const LOCAL_BACKUP_ALARM_NAME = 'local-backup';
 
-    if (!options.autoBackupEnable) {
+async function resetLocalBackupAlarm() {
+    await resetAlarm(
+        LOCAL_BACKUP_ALARM_NAME,
+        options.autoBackupEnable,
+        options.autoBackupIntervalKey,
+        options.autoBackupIntervalValue,
+        window.localStorage.autoBackupLastTimeStamp
+    );
+}
+
+const CLOUD_SYNC_ALARM_NAME = 'cloud-sync';
+
+async function resetSyncAlarm() {
+    await resetAlarm(
+        CLOUD_SYNC_ALARM_NAME,
+        options.syncEnable,
+        options.syncIntervalKey,
+        options.syncIntervalValue,
+        window.localStorage.autoSyncLastTimeStamp
+    );
+}
+
+async function resetAlarm(
+    name,
+    isEnable,
+    intervalKey,
+    intervalValue,
+    lastAlarmRunUnixTime = Utils.unixNow(),
+    minDelayMinutes = 0.5
+) {
+    const log = logger.start('resetAlarm', {name, isEnable, intervalKey, intervalValue, lastAlarmRunUnixTime, minDelayMinutes});
+
+    await browser.alarms.clear(name);
+
+    if (!isEnable) {
+        log.stop(name, 'is disabled');
         return;
     }
 
-    let now = Utils.unixNow(),
-        timer = 0,
-        value = Number(options.autoBackupIntervalValue);
+    let periodInMinutes;
 
-    if (isNaN(value) || value < 1) {
-        throw Error(errorEventMessage('invalid autoBackupIntervalValue', options));
+    if (Constants.INTERVAL_KEY.minutes === intervalKey) {
+        periodInMinutes = intervalValue;
+    } else if (Constants.INTERVAL_KEY.hours === intervalKey) {
+        periodInMinutes = 60 * intervalValue;
+    } else if (Constants.INTERVAL_KEY.days === intervalKey) {
+        periodInMinutes = 60 * 24 * intervalValue;
     }
 
-    let intervalSec = null;
+    const minutesNow = Math.floor(Utils.unixNow() / 60);
+    const minutesWhenBackup = periodInMinutes + Math.floor(lastAlarmRunUnixTime / 60);
 
-    if (Constants.AUTO_BACKUP_INTERVAL_KEY.minutes === options.autoBackupIntervalKey) {
-        if (value > 59) {
-            throw Error(errorEventMessage('invalid autoBackupIntervalValue', options));
-        }
+    const delayInMinutes = minutesWhenBackup > minutesNow
+        ? minutesWhenBackup - minutesNow
+        : minDelayMinutes;
 
-        intervalSec = Constants.MINUTE_SEC;
-    } else if (Constants.AUTO_BACKUP_INTERVAL_KEY.hours === options.autoBackupIntervalKey) {
-        if (value > 24) {
-            throw Error(errorEventMessage('invalid autoBackupIntervalValue', options));
-        }
+    await browser.alarms.create(name, {
+        delayInMinutes,
+        periodInMinutes,
+    });
 
-        intervalSec = Constants.HOUR_SEC;
-    } else if (Constants.AUTO_BACKUP_INTERVAL_KEY.days === options.autoBackupIntervalKey) {
-        if (value > 30) {
-            throw Error(errorEventMessage('invalid autoBackupIntervalValue', options));
-        }
-
-        if (value === 1) {
-            // if backup will create every day - overwrite backups every 2 hours in order to keep as recent changes as possible
-            intervalSec = Constants.HOUR_SEC * 2;
-        } else {
-            intervalSec = Constants.DAY_SEC;
-        }
-    } else {
-        throw Error(errorEventMessage('invalid autoBackupIntervalKey', options));
-    }
-
-    let timeToBackup = value * intervalSec + options.autoBackupLastBackupTimeStamp;
-
-    if (now > timeToBackup) {
-        createBackup(options.autoBackupIncludeTabFavIcons, options.autoBackupIncludeTabThumbnails, true);
-        timer = value * intervalSec;
-    } else {
-        timer = timeToBackup - now;
-    }
-
-    _autoBackupTimer = setTimeout(resetAutoBackup, (timer + 10) * 1000);
+    log.stop();
 }
 
 async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBackup = false) {
@@ -2871,15 +2894,11 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
     data.containers = Containers.getToExport(data);
 
     if (isAutoBackup) {
-        data.autoBackupLastBackupTimeStamp = options.autoBackupLastBackupTimeStamp = Utils.unixNow();
-
         File.backup(data, true, options.autoBackupByDayIndex);
 
         exportAllGroupsToBookmarks(false, true);
 
-        Storage.set({
-            autoBackupLastBackupTimeStamp: data.autoBackupLastBackupTimeStamp,
-        });
+        window.localStorage.autoBackupLastTimeStamp = Utils.unixNow();
     } else {
         await File.backup(data, false);
     }
@@ -3106,18 +3125,19 @@ async function cloudSync() {
         sendMessage('sync-start');
 
         const result = await sync(progress => {
-            log.debug('progress', progress);
+            log.log('progress', progress);
             sendMessage('sync-progress', {progress});
         });
 
         sendMessage('sync-end');
+        log.stop();
     } catch (e) {
+        log.runError('cant sync', e);
+        log.stopError();
         sendMessage('sync-error', {
             message: String(e),
         });
     }
-
-    log.stop();
 }
 
 async function exportAllGroupsToBookmarks(showFinishMessage, isAutoBackup) {
@@ -3747,6 +3767,16 @@ async function runMigrateForData(data) {
                 });
             },
         },
+        {
+            version: '5.5',
+            remove: ['autoBackupLastBackupTimeStamp'],
+            async migration() {
+                data.groups.forEach(group => group.dontUploadToCloud = false);
+
+                window.localStorage.autoBackupLastTimeStamp = data.autoBackupLastBackupTimeStamp;
+                // TODO see, if need to add other code ....
+            },
+        },
     ];
 
     // start migration
@@ -4206,7 +4236,8 @@ async function init() {
 
         log.log('restoreOldExtensionUrls finish');
 
-        window.setTimeout(resetAutoBackup, 10000);
+        resetLocalBackupAlarm();
+        resetSyncAlarm();
 
         createMoveTabMenus(data.groups);
 

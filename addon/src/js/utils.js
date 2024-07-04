@@ -399,6 +399,10 @@ export function getRandomInt(min = 1, max = Number.MAX_SAFE_INTEGER, step = 1) {
     return result;
 }
 
+export function minMaxRange(value, min = 0, max = 999) {
+    return Math.min(Math.max(value, min), max);
+}
+
 export function randomColor() {
     return 'hsl(' + getRandomInt(0, 360, 10) + ', 100%, 50%)';
 }

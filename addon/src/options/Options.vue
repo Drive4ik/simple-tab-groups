@@ -42,7 +42,7 @@
             this.HOTKEY_ACTIONS = Constants.HOTKEY_ACTIONS;
             this.HOTKEY_ACTIONS_WITH_CUSTOM_GROUP = Constants.HOTKEY_ACTIONS_WITH_CUSTOM_GROUP;
             this.GROUP_ICON_VIEW_TYPES = Constants.GROUP_ICON_VIEW_TYPES;
-            this.AUTO_BACKUP_INTERVAL_KEY = Constants.AUTO_BACKUP_INTERVAL_KEY;
+            this.INTERVAL_KEY = Constants.INTERVAL_KEY;
 
             this.SECTION_GENERAL = SECTION_GENERAL;
             this.SECTION_HOTKEYS = SECTION_HOTKEYS;
@@ -144,6 +144,8 @@
 
                 defaultBookmarksParents: [],
 
+                autoBackupLastTimeStamp: +window.localStorage.autoBackupLastTimeStamp,
+
                 showLoadingMessage: false,
 
                 showClearAddonConfirmPopup: false,
@@ -175,6 +177,7 @@
                 ...Constants.ONLY_BOOL_OPTION_KEYS,
                 'defaultBookmarksParent',
                 'autoBackupIntervalKey',
+                'syncIntervalKey',
                 'theme',
                 'contextMenuTab',
                 'contextMenuGroup',
@@ -217,17 +220,17 @@
                     return;
                 }
 
-                if (
-                    value < 1 ||
-                    (Constants.AUTO_BACKUP_INTERVAL_KEY.minutes === this.options.autoBackupIntervalKey && value > 59) ||
-                    (Constants.AUTO_BACKUP_INTERVAL_KEY.hours === this.options.autoBackupIntervalKey && value > 24) ||
-                    (Constants.AUTO_BACKUP_INTERVAL_KEY.days === this.options.autoBackupIntervalKey && value > 30)
-                    ) {
-                    value = 1;
+                Messages.sendMessageModule('BG.saveOptions', {
+                    autoBackupIntervalValue: Utils.minMaxRange(value, 1, 50),
+                });
+            },
+            'options.syncIntervalValue': function(value, oldValue) {
+                if (!value || null == oldValue) {
+                    return;
                 }
 
                 Messages.sendMessageModule('BG.saveOptions', {
-                    autoBackupIntervalValue: value,
+                    syncIntervalValue: Utils.minMaxRange(value, 1, 50),
                 });
             },
             'options.theme': 'updateTheme',
@@ -949,14 +952,14 @@
                         <div v-html="lang('autoBackupCreateEveryTitle')"></div>
                         <div class="field has-addons">
                             <div class="control">
-                                <input type="number" class="input backup-time-input" v-model.number="options.autoBackupIntervalValue" min="1" max="20" />
+                                <input type="number" class="input backup-time-input" v-model.lazy.number="options.autoBackupIntervalValue" min="1" max="50" />
                             </div>
                             <div class="control">
                                 <div class="select">
                                     <select v-model="options.autoBackupIntervalKey">
-                                        <option :value="AUTO_BACKUP_INTERVAL_KEY.minutes" v-text="lang('autoBackupIntervalKeyMinutes')"></option>
-                                        <option :value="AUTO_BACKUP_INTERVAL_KEY.hours" v-text="lang('autoBackupIntervalKeyHours')"></option>
-                                        <option :value="AUTO_BACKUP_INTERVAL_KEY.days" v-text="lang('autoBackupIntervalKeyDays')"></option>
+                                        <option :value="INTERVAL_KEY.minutes" v-text="lang('autoBackupIntervalKeyMinutes')"></option>
+                                        <option :value="INTERVAL_KEY.hours" v-text="lang('autoBackupIntervalKeyHours')"></option>
+                                        <option :value="INTERVAL_KEY.days" v-text="lang('autoBackupIntervalKeyDays')"></option>
                                     </select>
                                 </div>
                             </div>
@@ -965,7 +968,7 @@
 
                     <div class="field">
                         <span v-text="lang('autoBackupLastBackupTitle')"></span>
-                        <span v-if="options.autoBackupLastBackupTimeStamp > 1" v-text="new Date(options.autoBackupLastBackupTimeStamp * 1000).toLocaleString()"></span>
+                        <span v-if="autoBackupLastTimeStamp > 1" v-text="new Date(autoBackupLastTimeStamp * 1000).toLocaleString()"></span>
                         <span v-else>&mdash;</span>
                     </div>
 
@@ -976,7 +979,7 @@
                                 <label class="field" v-text="lang('folderNameTitle') + ':'"></label>
                             </div>
                             <div class="control">
-                                <input type="text" v-model.trim="options.autoBackupFolderName" maxlength="200" class="input" />
+                                <input type="text" v-model.lazy.trim="options.autoBackupFolderName" maxlength="200" class="input" />
                             </div>
                             <div class="control">
                                 <button class="button" @click="openBackupFolder" v-text="lang('openBackupFolder')"></button>
@@ -1007,14 +1010,13 @@
                         <div v-html="lang('autoBackupCreateEveryTitle')"></div>
                         <div class="field has-addons">
                             <div class="control">
-                                <input type="number" class="input backup-time-input" v-model.number="options.syncIntervalValue" min="1" max="20" />
+                                <input type="number" class="input backup-time-input" v-model.lazy.number="options.syncIntervalValue" min="1" max="50" />
                             </div>
                             <div class="control">
                                 <div class="select">
                                     <select v-model="options.syncIntervalKey">
-                                        <option :value="AUTO_BACKUP_INTERVAL_KEY.minutes" v-text="lang('autoBackupIntervalKeyMinutes')"></option>
-                                        <option :value="AUTO_BACKUP_INTERVAL_KEY.hours" v-text="lang('autoBackupIntervalKeyHours')"></option>
-                                        <option :value="AUTO_BACKUP_INTERVAL_KEY.days" v-text="lang('autoBackupIntervalKeyDays')"></option>
+                                        <option :value="INTERVAL_KEY.hours" v-text="lang('autoBackupIntervalKeyHours')"></option>
+                                        <option :value="INTERVAL_KEY.days" v-text="lang('autoBackupIntervalKeyDays')"></option>
                                     </select>
                                 </div>
                             </div>
@@ -1286,6 +1288,10 @@
 
     html[data-theme="dark"] {
         --background-color: #202023;
+
+        a[href] {
+            color: #7585ff;
+        }
 
         .tabs {
             a {

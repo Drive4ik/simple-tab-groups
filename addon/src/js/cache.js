@@ -98,35 +98,6 @@ export async function removeTabGroup(tabId) {
     return browser.sessions.removeTabValue(tabId, 'groupId').catch(() => {});
 }
 
-// syncId
-async function loadSyncId(tabId) {
-    if (tabs[tabId]) {
-        if (tabs[tabId].syncId) {
-            return tabs[tabId].syncId;
-        }
-
-        return tabs[tabId].syncId = await browser.sessions.getTabValue(tabId, 'syncId');
-    }
-}
-
-// export async function setSyncId(tabId, syncId) {
-//     if (syncId) {
-//         if (tabs[tabId]) {
-//             tabs[tabId].syncId = syncId;
-//         } else {
-//             tabs[tabId] = {syncId};
-//         }
-
-//         return browser.sessions.setTabValue(tabId, 'syncId', syncId);
-//     }
-// }
-
-export async function removeSyncId(tabId) {
-    delete tabs[tabId]?.syncId;
-    return browser.sessions.removeTabValue(tabId, 'syncId').catch(() => {});
-}
-
-
 // favIconUrl
 async function loadTabFavIcon(tabId) {
     if (tabs[tabId]) {
@@ -205,7 +176,6 @@ export async function loadTabSession(tab, includeFavIconUrl = true, includeThumb
 
     await Promise.all([
         loadTabGroup(tab.id),
-        loadSyncId(tab.id),
         includeFavIconUrl ? loadTabFavIcon(tab.id) : null,
         includeThumbnail ? loadTabThumbnail(tab.id) : null,
     ]);
@@ -216,7 +186,6 @@ export async function loadTabSession(tab, includeFavIconUrl = true, includeThumb
 export async function setTabSession(tab) {
     await Promise.all([
         setTabGroup(tab.id, tab.groupId),
-        loadSyncId(tab.id, tab.syncId),
         setTabFavIcon(tab.id, tab.favIconUrl),
         setTabThumbnail(tab.id, tab.thumbnail),
     ]);
@@ -226,7 +195,6 @@ export async function setTabSession(tab) {
 
 export function applySession(toObj, fromObj) {
     fromObj.groupId && (toObj.groupId = fromObj.groupId);
-    fromObj.syncId && (toObj.syncId = fromObj.syncId);
     fromObj.favIconUrl && (toObj.favIconUrl = fromObj.favIconUrl);
     fromObj.thumbnail && (toObj.thumbnail = fromObj.thumbnail);
 
@@ -240,7 +208,6 @@ export function applyTabSession(tab) {
 export async function removeTabSession(tabId) {
     return Promise.all([
         removeTabGroup(tabId),
-        removeSyncId(tabId),
         removeTabFavIcon(tabId),
         removeTabThumbnail(tabId),
     ]);

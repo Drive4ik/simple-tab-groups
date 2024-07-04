@@ -103,7 +103,7 @@ export async function sync(progressFunc = null) {
         });
 
     progressFunc?.(45);
-
+// throw Error('aaa');
     const syncResult = await syncData(localData, cloudData);
 
     progressFunc?.(50);
@@ -162,9 +162,6 @@ export async function sync(progressFunc = null) {
     // log.debug('changes.cloud:', syncResult.changes.cloud, syncResult.cloudData.syncId);
     // log.debug('changes.local:', syncResult.changes.local, syncResult.localData.syncId);
 
-    // TODO syncData for all tabs: Date.now() + tab.url
-    // await Promise.all(allTabIds.map(tabId => Cache.setSyncId(tabId, syncId)));
-
     if (progressFunc) {
         GithubGistCloud.progressFunc = cloudProgressFunc.bind(null, 55, 35);
     }
@@ -174,8 +171,6 @@ export async function sync(progressFunc = null) {
             try {
                 await GithubGistCloud.updateGist(syncResult.cloudData);
             } catch (e) {
-                // GithubGistCloud.progressFunc = null;
-                // log.error(String(e));
                 log.stopError(e);
                 throw new CloudError('githubCantUploadBackupToGist');
             }
@@ -186,13 +181,10 @@ export async function sync(progressFunc = null) {
             const result = await GithubGistCloud.createGist(syncResult.cloudData, description);
             await saveNewGistId(result.id);
         } catch (e) {
-            // GithubGistCloud.progressFunc = null;
             log.stopError(e);
             throw new CloudError('githubCantCreateBackupIntoGist');
         }
     }
-
-    // GithubGistCloud.progressFunc = null;
 
     progressFunc?.(95);
 
@@ -200,6 +192,8 @@ export async function sync(progressFunc = null) {
         // TODO normal save options
         await Storage.set(syncResult.localData);
     }
+
+    window.localStorage.autoSyncLastTimeStamp = Utils.unixNow();
 
     progressFunc?.(100);
 
@@ -252,25 +246,13 @@ async function syncData(localData, cloudData = null) {
 }
 
 async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
-    const log = logger.start('syncGroups', {sourceOfTruth});
+    const log = logger.start('syncGroups', {sourceOfTruth, syncTabFavIcons: localData.syncTabFavIcons});
 
     const localGroups = localData.groups;
     const cloudGroups = cloudData.groups;
 
     const resultLocalGroups = [];
     const resultCloudGroups = [];
-
-    // tab.sync == String(options.syncId + tab.url)
-    // if tabs was synced -
-    // tab.sync.id === options.syncId
-    // AND
-    // tab.sync.url === tab.url
-    // else - it's new tab or not synced tab or old synced tab
-
-    // check real exist tab or archive tab
-    // const isLocalTabSynced = localTab => localTab.noSync ? false : Tabs.isSynced(localData.syncId, localTab);
-
-    // const START_TIME = +self.localStorage.START_TIME;
 
     function prepareForSaveTab(tab, includeLastAccessed) {
         // include includeLastAccessed, tab id and openerId only for local tabs
@@ -287,7 +269,7 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
             const resultLocalGroup = localGroup;
             const resultCloudGroup = {...localGroup}; // unlink tabs key
 
-            if (resultLocalGroup.dontUploadToCloud) { // TODO check & do this on all code
+            if (resultLocalGroup.dontUploadToCloud) {
                 resultLocalGroups.push(resultLocalGroup);
             } else {
                 resultCloudGroup.tabs = prepareForSave(resultLocalGroup.tabs, false);
@@ -324,7 +306,7 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
                 localGroup = localGroups.find(localGroup => localGroup.id === cloudGroup.id);
             }
 
-            if (localGroup?.dontUploadToCloud) { // TODO check & do this on all code
+            if (localGroup?.dontUploadToCloud) {
                 resultLocalGroups.push(localGroup); // leave group in local
                 resultCloudGroups.push(cloudGroup); // leave in cloud, beacause other comp. can sync with this group
                 return;
@@ -411,8 +393,7 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
                 resultCloudGroup.tabs = resultCloudTabs;
             }
 
-            /* TODO
-            убрать всякие noSync и syncId у вкладок, и переделать по системе:
+            /*
             если lastAccessed у вкладки меньше чем cloudData.syncId - тогда удаляем эти вкладки,
             если больше оставляем их. будет проблема с активной вкладкой, её lastAccessed всегда текущее время, поэтому оставляем её, синкаем как новую вкладку. если пользователь захочет узалить её из облака вообще - удаляет локально и тут же нажимает синк. на другом компе её уже нет, и удалять нечего.
             */

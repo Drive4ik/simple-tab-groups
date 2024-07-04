@@ -1233,6 +1233,10 @@
         "message": "File name",
         "description": "File name"
     },
+    "dontUploadToCloud": {
+        "message": "Don't upload to the cloud",
+        "description": "Don't upload to the cloud, leave it local only"
+    },
     "helpTitle": {
         "message": "Help",
         "description": "Help"

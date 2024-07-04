@@ -80,7 +80,11 @@ export default {
         this.sync.load();
 
         this.local.load().then(() => {
-            this.$watch('local.options.syncOptionsLocation', syncOptionsLocation => Storage.set({syncOptionsLocation}));
+            this.$watch('local.options.syncOptionsLocation', syncOptionsLocation => {
+                Storage.set({syncOptionsLocation});
+                this.area.error = '';
+                this.synchronisationProgress = 0;
+            });
         })
 
         this.loadBrowserInfo();
@@ -141,6 +145,7 @@ export default {
                         }, {
                             url: gist.html_url,
                             text: GithubGistCloud.fileName,
+                            isBold: true,
                         },
                     ],
                     lastUpdateAgo: Utils.timeAgo(gist.updated_at),
@@ -272,7 +277,7 @@ export default {
                                     v-for="(breadcrumb, i) in area.gist.breadcrumb"
                                     :key="i"
                                     >
-                                    <a :href="breadcrumb.url" target="_blank" rel="noreferrer noopener">
+                                    <a :href="breadcrumb.url" :class="{'has-text-weight-semibold': breadcrumb.isBold}" target="_blank" rel="noreferrer noopener">
                                         <figure v-show="breadcrumb.imageLoaded" class="image is-24x24 mr-2">
                                             <img :src="breadcrumb.image" @load="breadcrumb.imageLoaded = true" loading="lazy" decoding="async" />
                                         </figure>

@@ -840,15 +840,3 @@ export function getTitle({id, index, title, url, discarded, windowId, lastAccess
 
     return sliceLength ? Utils.sliceText(title, sliceLength) : title;
 }
-
-export function isSynced(optionsSyncId, tab) { // TODO remove this function
-    return tab.sync === `${optionsSyncId}${tab.url}`;
-}
-
-// const TIMESTAMP_LENGTH = 13;
-// export function getTabSync(tab) {
-//     return {
-//         id: Number(tab.sync?.slice(0, TIMESTAMP_LENGTH)) || null,
-//         url: tab.sync?.slice(TIMESTAMP_LENGTH) || null,
-//     };
-// }

@@ -138,7 +138,7 @@ function setLoggerFuncs() {
         return this;
     }.bind(this);
 
-    this.runError = function(message, error) {
+    this.runError = function(message, error) { // TODO rename to logError
         this.onError(message, false)(error);
         return this;
     }.bind(this);
