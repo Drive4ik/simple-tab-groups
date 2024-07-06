@@ -4,8 +4,7 @@ import Messages from '/js/messages.js';
 
 const logger = new Logger('sync.cloud-mixin');
 
-let instance,
-    clearProgressTimer;
+const instances = new Set;
 
 const {disconnect} = Messages.connectToBackground('sync-progress-mixin', [
     'sync-start',
@@ -13,29 +12,9 @@ const {disconnect} = Messages.connectToBackground('sync-progress-mixin', [
     'sync-end',
     'sync-error',
 ], ({action, progress, message}) => {
-    logger.assert(instance, 'instance of vue not found');
     logger.log(action, progress, message);
 
-    if (!instance) {
-        return;
-    }
-
-    clearTimeout(clearProgressTimer);
-
-    if (action === 'sync-start') {
-        instance.synchronisationError = '';
-        instance.synchronisationInProgress = true;
-    } if (action === 'sync-progress') {
-        instance.synchronisationProgress = progress;
-        instance.synchronisationInProgress = true;
-    } else if (action === 'sync-end') {
-        // instance.synchronisationError = '';
-        instance.synchronisationInProgress = false;
-    } else if (action === 'sync-error') {
-        instance.synchronisationError = message;
-        instance.synchronisationInProgress = false;
-        clearProgressTimer = setTimeout(() => instance.synchronisationProgress = 0, 5000);
-    }
+    instances.forEach(instance => instance.$emit(action, {progress, message}));
 });
 
 window.addEventListener('unload', disconnect);
@@ -48,9 +27,34 @@ export default {
             synchronisationError: '',
         };
     },
+    created() {
+        instances.add(this);
+
+        this
+            .$on(['sync-start', 'sync-progress', 'sync-end', 'sync-error'], () => {
+                clearTimeout(this.clearProgressTimer);
+            })
+            .$on('sync-start', () => {
+                this.synchronisationError = '';
+                this.synchronisationInProgress = true;
+            })
+            .$on('sync-progress', ({progress}) => {
+                this.synchronisationProgress = progress;
+                this.synchronisationInProgress = true;
+            })
+            .$on('sync-end', () => {
+                this.synchronisationInProgress = false;
+                this.$emit('sync-finish');
+            })
+            .$on('sync-error', ({message}) => {
+                this.synchronisationError = message;
+                this.synchronisationInProgress = false;
+                this.clearProgressTimer = setTimeout(() => this.synchronisationProgress = 0, 5000);
+                this.$emit('sync-finish');
+            });
+    },
     methods: {
         async syncCloud() {
-            instance = this;
             await Messages.sendMessageModule('BG.cloudSync');
         },
     },

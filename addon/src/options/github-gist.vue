@@ -10,7 +10,10 @@ import * as SyncStorage from '/js/sync/sync-storage.js';
 import GithubGist from '/js/sync/cloud/githubgist.js';
 import {CloudError} from '/js/sync/cloud/cloud.js';
 
+import syncCloudMixin from '/js/mixins/sync-cloud.mixin.js';
+
 export default {
+    mixins: [syncCloudMixin],
     data() {
         this.SYNC_STORAGE_IS_AVAILABLE = SyncStorage.IS_AVAILABLE;
         // this.SYNC_STORAGE_IS_AVAILABLE = false;
@@ -85,7 +88,9 @@ export default {
                 this.area.error = '';
                 this.synchronisationProgress = 0;
             });
-        })
+        });
+
+        this.$on('sync-finish', () => this.area.load());
 
         this.loadBrowserInfo();
     },
@@ -186,7 +191,6 @@ export default {
             this.area.error = '';
 
             await this.syncCloud();
-            await this.area.load();
         },
     },
 };
