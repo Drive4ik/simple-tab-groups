@@ -211,7 +211,13 @@ async function syncData(localData, cloudData = null) {
 
     cloudData ??= JSON.clone(localData);
 
-    // TODO runMigrate !!!
+    const resultMigrate = await backgroundSelf.runMigrateForData(cloudData, false);
+
+    if (resultMigrate.migrated) {
+        cloudData = resultMigrate.data;
+    } else if (resultMigrate.error) {
+        throw new CloudError(resultMigrate.error);
+    }
 
     const sourceOfTruth = cloudData.syncId > localData.syncId ? TRUTH_CLOUD : TRUTH_LOCAL;
 

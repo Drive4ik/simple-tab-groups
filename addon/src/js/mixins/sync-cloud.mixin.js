@@ -55,7 +55,7 @@ export default {
     },
     methods: {
         async syncCloud() {
-            await Messages.sendMessageModule('BG.cloudSync');
+            return await Messages.sendMessageModule('BG.cloudSync');
         },
     },
 }

@@ -361,12 +361,12 @@
                     return;
                 }
 
-                const resultMigrate = await Messages.sendMessageModule('BG.runMigrateForData', data);
+                const resultMigrate = await Messages.sendMessageModule('BG.runMigrateForData', data, false);
 
                 if (resultMigrate.migrated) {
                     data = resultMigrate.data;
                 } else if (resultMigrate.error) {
-                    Utils.notify(resultMigrate.error);
+                    Utils.notify(browser.i18n.getMessage(resultMigrate.error));
                     return;
                 }
 

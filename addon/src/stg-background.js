@@ -3211,8 +3211,8 @@ self.skipCreateTab = false;
 self.skipAddGroupToNextNewWindow = false;
 
 
-async function runMigrateForData(data) {
-    const log = logger.create('runMigrateForData');
+async function runMigrateForData(data, applyToStorage = true) {
+    const log = logger.create('runMigrateForData', {applyToStorage});
 
     const currentVersion = Constants.MANIFEST.version;
 
@@ -3806,7 +3806,7 @@ async function runMigrateForData(data) {
             (dataMajor == currentMajor && dataMinor > currentMinor) ||
             (dataMajor == currentMajor && dataMinor == currentMinor && dataPatch > currentPatch)
         ) {
-            resultMigrate.error = browser.i18n.getMessage('updateAddonToLatestVersion');
+            resultMigrate.error = 'updateAddonToLatestVersion';
             log.stopError(resultMigrate.error, 'data.version:', data.version, 'currentVersion:', currentVersion);
             return resultMigrate;
         }
@@ -3817,7 +3817,9 @@ async function runMigrateForData(data) {
     if (keysToRemoveFromStorage.size) {
         keysToRemoveFromStorage.forEach(key => delete data[key]);
         log.log('remove keys in storage', Array.from(keysToRemoveFromStorage));
-        await Storage.remove(Array.from(keysToRemoveFromStorage));
+        if (applyToStorage) {
+            await Storage.remove(Array.from(keysToRemoveFromStorage));
+        }
     }
     // end migration
 
@@ -4170,7 +4172,7 @@ async function init() {
             dataChanged.add(true);
             log.log('runMigrateForData finish');
         } else if (resultMigrate.error) {
-            Utils.notify(resultMigrate.error);
+            Utils.notify(browser.i18n.getMessage(resultMigrate.error));
             throw '';
         }
 
