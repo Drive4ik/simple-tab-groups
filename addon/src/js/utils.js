@@ -546,7 +546,7 @@ export function assignKeys(toObj, fromObj, keys) {
 }
 
 export function extractKeys(obj, keys, useClone = false) {
-    let newObj = {};
+    const newObj = {};
 
     keys.forEach(key => newObj[key] = (useClone ? JSON.clone(obj[key]) : obj[key]));
 

@@ -2717,24 +2717,37 @@ async function onBackgroundMessage(message, sender) {
 }
 
 async function saveOptions(_options) {
-    const log = logger.start('saveOptions', _options);
+    const log = logger.start('saveOptions');
 
     if (!self.inited) {
         log.stopError('background not yet inited');
-        return null;
+        return;
     }
 
-    _options = JSON.clone(_options);
+    const optionsToSave = {};
 
-    const optionsKeys = Object.keys(_options);
-
-    if (!optionsKeys.every(key => Constants.ALL_OPTIONS_KEYS.includes(key))) {
-        log.throwError(['some key in save options are not supported:', optionsKeys]);
+    for (const [key, value] of Object.entries(_options)) {
+        if (Constants.ALL_OPTION_KEYS.includes(key)) {
+            if (Utils.isPrimitive(value)) {
+                optionsToSave[key] = value;
+            } else {
+                optionsToSave[key] = JSON.clone(value);
+            }
+        } else if (Constants.DEFAULT_OPTIONS[key] === undefined) {
+            log.throwError(`option key "${key}" is unknown`);
+        }
     }
 
-    Object.assign(options, _options);
+    const optionsKeys = Object.keys(optionsToSave);
 
-    await Storage.set(_options);
+    if (!optionsKeys.length) {
+        log.stop('options not found');
+        return;
+    }
+
+    await Storage.set(optionsToSave);
+
+    Object.assign(options, optionsToSave);
 
     if (optionsKeys.includes('hotkeys')) {
         const tabs = await Tabs.get(null, null, null, {
@@ -4176,7 +4189,7 @@ async function init() {
             throw '';
         }
 
-        Utils.assignKeys(options, data, Constants.ALL_OPTIONS_KEYS);
+        Utils.assignKeys(options, data, Constants.ALL_OPTION_KEYS);
 
         dataChanged.add(Groups.normalizeContainersInGroups(data.groups));
 

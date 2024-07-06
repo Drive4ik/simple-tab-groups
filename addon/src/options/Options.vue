@@ -160,7 +160,7 @@
         async created() {
             const data = await Storage.get();
 
-            const options = Utils.assignKeys({}, data, Constants.ALL_OPTIONS_KEYS);
+            const options = Utils.extractKeys(data, Constants.ALL_OPTION_KEYS);
 
             options.autoBackupFolderName = await File.getAutoBackupFolderName();
 

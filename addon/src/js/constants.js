@@ -358,9 +358,13 @@ export const DEFAULT_OPTIONS = Object.freeze({
     ],
 });
 
-export const ONLY_BOOL_OPTION_KEYS = Object.freeze(Object.keys(DEFAULT_OPTIONS).filter(key => 'boolean' === typeof DEFAULT_OPTIONS[key]));
+const DEFAULT_OPTION_KEYS = Object.keys(DEFAULT_OPTIONS);
 
-export const ALL_OPTIONS_KEYS = Object.freeze(Object.keys(DEFAULT_OPTIONS).filter(key => !['version', 'groups', 'lastCreatedGroupPosition'].includes(key)));
+export const ONLY_BOOL_OPTION_KEYS = Object.freeze(DEFAULT_OPTION_KEYS.filter(key => 'boolean' === typeof DEFAULT_OPTIONS[key]));
+
+export const NON_OPTION_KEYS = Object.freeze(['version', 'groups', 'lastCreatedGroupPosition']);
+
+export const ALL_OPTION_KEYS = Object.freeze(DEFAULT_OPTION_KEYS.filter(key => !NON_OPTION_KEYS.includes(key)));
 
 export const ON_UPDATED_TAB_PROPERTIES = browser.tabs ? Object.freeze([ // browser.tabs not defined into web page scripts
     browser.tabs.UpdatePropertyName.TITLE, // for cache

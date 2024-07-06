@@ -103,7 +103,7 @@ export async function sync(progressFunc = null) {
         });
 
     progressFunc?.(45);
-// throw Error('aaa');
+
     const syncResult = await syncData(localData, cloudData);
 
     progressFunc?.(50);
@@ -189,8 +189,8 @@ export async function sync(progressFunc = null) {
     progressFunc?.(95);
 
     if (syncResult.changes.local) {
-        // TODO normal save options
-        await Storage.set(syncResult.localData);
+        await backgroundSelf.saveOptions(syncResult.localData);
+        await Storage.set(Utils.extractKeys(syncResult.localData, Constants.NON_OPTION_KEYS));
     }
 
     window.localStorage.autoSyncLastTimeStamp = Utils.unixNow();
@@ -594,7 +594,7 @@ async function syncOptions(localData, cloudData, sourceOfTruth, changes) {
         'sync',
     ];
 
-    for (const key of Constants.ALL_OPTIONS_KEYS) {
+    for (const key of Constants.ALL_OPTION_KEYS) {
         if (EXCLUDE_OPTION_KEY_STARTS_WITH.some(exKey => key.startsWith(exKey))) {
             continue;
         }

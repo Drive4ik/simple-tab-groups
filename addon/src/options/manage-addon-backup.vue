@@ -111,7 +111,7 @@
                     return false;
                 }
 
-                return Constants.ALL_OPTIONS_KEYS.includes(key);
+                return Constants.ALL_OPTION_KEYS.includes(key);
             },
 
             getData() {
