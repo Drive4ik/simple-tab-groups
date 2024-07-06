@@ -571,15 +571,15 @@
         "message": "Create backup every:",
         "description": "Create backup every:"
     },
-    "autoBackupIntervalKeyMinutes": {
+    "intervalKeyMinutes": {
         "message": "minute(s)",
         "description": "minute(s)"
     },
-    "autoBackupIntervalKeyHours": {
+    "intervalKeyHours": {
         "message": "hour(s)",
         "description": "hour(s)"
     },
-    "autoBackupIntervalKeyDays": {
+    "intervalKeyDays": {
         "message": "day(s)",
         "description": "day(s)"
     },
@@ -587,11 +587,7 @@
         "message": "Last backup:",
         "description": "Last backup:"
     },
-    "enableDarkTheme": {
-        "message": "Enable dark theme",
-        "description": "Enable dark theme"
-    },
-    "enableDarkThemeNotification": {
+    "darkThemeNotification": {
         "message": "To fully support the dark theme, enable the <code>svg.context-properties.content.enabled</code> parameter to <code>true</code> on the <code>about:config</code> page<br><a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">How to do it?</a>",
         "description": "Fully support the dark theme text"
     },

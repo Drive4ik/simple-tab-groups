@@ -469,11 +469,11 @@
         "message": "Intervall för automatisk säkerhetskopia:",
         "description": "Create backup every:"
     },
-    "autoBackupIntervalKeyHours": {
+    "intervalKeyHours": {
         "message": "timmar",
         "description": "hour(s)"
     },
-    "autoBackupIntervalKeyDays": {
+    "intervalKeyDays": {
         "message": "dagar",
         "description": "day(s)"
     },
@@ -481,11 +481,7 @@
         "message": "Senaste säkerhetskopia:",
         "description": "Last backup:"
     },
-    "enableDarkTheme": {
-        "message": "Aktivera mörkt tema",
-        "description": "Enable dark theme"
-    },
-    "enableDarkThemeNotification": {
+    "darkThemeNotification": {
         "message": "För att det mörka temat skall visas korrekt överallt, sätt <code>svg.context-properties.content.enabled</code>-inställningen till <code>true</code> på <code>about:config</code>-sidan<br>Klicka <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">här</a> för ytterligare instruktioner.",
         "description": "Fully support the dark theme text"
     },

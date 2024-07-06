@@ -563,15 +563,15 @@
         "message": "Crear un respaldo cada:",
         "description": "Create backup every:"
     },
-    "autoBackupIntervalKeyMinutes": {
+    "intervalKeyMinutes": {
         "message": "minuto(s)",
         "description": "minute(s)"
     },
-    "autoBackupIntervalKeyHours": {
+    "intervalKeyHours": {
         "message": "hora(s)",
         "description": "hour(s)"
     },
-    "autoBackupIntervalKeyDays": {
+    "intervalKeyDays": {
         "message": "día(s)",
         "description": "day(s)"
     },
@@ -579,11 +579,7 @@
         "message": "Último respaldo",
         "description": "Last backup:"
     },
-    "enableDarkTheme": {
-        "message": "Habilitar el tema oscuro",
-        "description": "Enable dark theme"
-    },
-    "enableDarkThemeNotification": {
+    "darkThemeNotification": {
         "message": "Para darle soporte adecuado al tema oscuro, establece el parámetro <code>svg.context-properties.content.enabled</code> como <code>true</code> en <code>about:config</code><br><a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">¿Cómo hacerlo?</a>",
         "description": "Fully support the dark theme text"
     },

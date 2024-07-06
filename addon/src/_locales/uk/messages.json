@@ -563,15 +563,15 @@
         "message": "Створювати резервні копії кожні:",
         "description": "Create backup every:"
     },
-    "autoBackupIntervalKeyMinutes": {
+    "intervalKeyMinutes": {
         "message": "хвилин",
         "description": "minute(s)"
     },
-    "autoBackupIntervalKeyHours": {
+    "intervalKeyHours": {
         "message": "годин",
         "description": "hour(s)"
     },
-    "autoBackupIntervalKeyDays": {
+    "intervalKeyDays": {
         "message": "днів",
         "description": "day(s)"
     },
@@ -579,11 +579,7 @@
         "message": "Останнє резервне копіювання:",
         "description": "Last backup:"
     },
-    "enableDarkTheme": {
-        "message": "Включити темну тему",
-        "description": "Enable dark theme"
-    },
-    "enableDarkThemeNotification": {
+    "darkThemeNotification": {
         "message": "Для повної підтримки темної теми встановіть параметр <code>svg.context-properties.content.enabled</code> в <code>true</code> на сторінці <code>about:config</code><br><a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">Як це зробити?</a>",
         "description": "Fully support the dark theme text"
     },

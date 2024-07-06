@@ -563,15 +563,15 @@
         "message": "バックアップの作成間隔:",
         "description": "Create backup every:"
     },
-    "autoBackupIntervalKeyMinutes": {
+    "intervalKeyMinutes": {
         "message": "分毎",
         "description": "minute(s)"
     },
-    "autoBackupIntervalKeyHours": {
+    "intervalKeyHours": {
         "message": "時間毎",
         "description": "hour(s)"
     },
-    "autoBackupIntervalKeyDays": {
+    "intervalKeyDays": {
         "message": "日毎",
         "description": "day(s)"
     },
@@ -579,11 +579,7 @@
         "message": "最新のバックアップ:",
         "description": "Last backup:"
     },
-    "enableDarkTheme": {
-        "message": "ダークテーマを有効にする",
-        "description": "Enable dark theme"
-    },
-    "enableDarkThemeNotification": {
+    "darkThemeNotification": {
         "message": "ダークテーマをフルサポートにするために <code>svg.context-properties.content.enabled</code> のパラメータを <code>true</code> へ変更してください <code>about:config</code> page<br><a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">How to do it?</a>",
         "description": "Fully support the dark theme text"
     },

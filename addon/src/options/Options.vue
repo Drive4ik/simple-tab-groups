@@ -268,7 +268,7 @@
             },
         },
         computed: {
-            showEnableDarkThemeNotification() {
+            showDarkThemeNotification() {
                 return Utils.getThemeApply(this.options.theme) === 'dark';
             },
             groupIds() {
@@ -795,7 +795,7 @@
                 </div>
             </div>
 
-            <div v-if="showEnableDarkThemeNotification" class="field mb-6" v-html="lang('enableDarkThemeNotification')"></div>
+            <div v-if="showDarkThemeNotification" class="field mb-6" v-html="lang('darkThemeNotification')"></div>
 
             <hr/>
 
@@ -957,9 +957,9 @@
                             <div class="control">
                                 <div class="select">
                                     <select v-model="options.autoBackupIntervalKey">
-                                        <option :value="INTERVAL_KEY.minutes" v-text="lang('autoBackupIntervalKeyMinutes')"></option>
-                                        <option :value="INTERVAL_KEY.hours" v-text="lang('autoBackupIntervalKeyHours')"></option>
-                                        <option :value="INTERVAL_KEY.days" v-text="lang('autoBackupIntervalKeyDays')"></option>
+                                        <option :value="INTERVAL_KEY.minutes" v-text="lang('intervalKeyMinutes')"></option>
+                                        <option :value="INTERVAL_KEY.hours" v-text="lang('intervalKeyHours')"></option>
+                                        <option :value="INTERVAL_KEY.days" v-text="lang('intervalKeyDays')"></option>
                                     </select>
                                 </div>
                             </div>
@@ -1015,8 +1015,8 @@
                             <div class="control">
                                 <div class="select">
                                     <select v-model="options.syncIntervalKey">
-                                        <option :value="INTERVAL_KEY.hours" v-text="lang('autoBackupIntervalKeyHours')"></option>
-                                        <option :value="INTERVAL_KEY.days" v-text="lang('autoBackupIntervalKeyDays')"></option>
+                                        <option :value="INTERVAL_KEY.hours" v-text="lang('intervalKeyHours')"></option>
+                                        <option :value="INTERVAL_KEY.days" v-text="lang('intervalKeyDays')"></option>
                                     </select>
                                 </div>
                             </div>

@@ -539,15 +539,15 @@
         "message": "Buat cadangan setiap:",
         "description": "Create backup every:"
     },
-    "autoBackupIntervalKeyMinutes": {
+    "intervalKeyMinutes": {
         "message": "menit)",
         "description": "minute(s)"
     },
-    "autoBackupIntervalKeyHours": {
+    "intervalKeyHours": {
         "message": "jam)",
         "description": "hour(s)"
     },
-    "autoBackupIntervalKeyDays": {
+    "intervalKeyDays": {
         "message": "hari",
         "description": "day(s)"
     },
@@ -555,11 +555,7 @@
         "message": "Cadangan terakhir:",
         "description": "Last backup:"
     },
-    "enableDarkTheme": {
-        "message": "Aktifkan tema gelap",
-        "description": "Enable dark theme"
-    },
-    "enableDarkThemeNotification": {
+    "darkThemeNotification": {
         "message": "Untuk mendukung sepenuhnya tema gelap, aktifkan parameter <code>svg.context-properties.content.enabled</code> ke <code>true</code> pada halaman <code>about:config</code><br ><a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">Bagaimana cara melakukannya?</a>",
         "description": "Fully support the dark theme text"
     },

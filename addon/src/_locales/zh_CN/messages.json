@@ -563,15 +563,15 @@
         "message": "创建备份每：",
         "description": "Create backup every:"
     },
-    "autoBackupIntervalKeyMinutes": {
+    "intervalKeyMinutes": {
         "message": "分钟",
         "description": "minute(s)"
     },
-    "autoBackupIntervalKeyHours": {
+    "intervalKeyHours": {
         "message": "小时",
         "description": "hour(s)"
     },
-    "autoBackupIntervalKeyDays": {
+    "intervalKeyDays": {
         "message": "天",
         "description": "day(s)"
     },
@@ -579,11 +579,7 @@
         "message": "最后一次备份：",
         "description": "Last backup:"
     },
-    "enableDarkTheme": {
-        "message": "启用暗色主题",
-        "description": "Enable dark theme"
-    },
-    "enableDarkThemeNotification": {
+    "darkThemeNotification": {
         "message": "要完整支持暗色主题，在<br><code>about:config</code> 页面修改<br><code>svg.context-properties.content.enabled</code> 参数为 <code>true</code><br><br><a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">怎么做？</a>",
         "description": "Fully support the dark theme text"
     },

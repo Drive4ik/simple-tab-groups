@@ -519,15 +519,15 @@
         "message": "Δημιουργία backup κάθε:",
         "description": "Create backup every:"
     },
-    "autoBackupIntervalKeyMinutes": {
+    "intervalKeyMinutes": {
         "message": "λεπτό(ά)",
         "description": "minute(s)"
     },
-    "autoBackupIntervalKeyHours": {
+    "intervalKeyHours": {
         "message": "ώρα(ες)",
         "description": "hour(s)"
     },
-    "autoBackupIntervalKeyDays": {
+    "intervalKeyDays": {
         "message": "ημέρα(ες)",
         "description": "day(s)"
     },
@@ -535,11 +535,7 @@
         "message": "Τελευταίο backup:",
         "description": "Last backup:"
     },
-    "enableDarkTheme": {
-        "message": "Ενεργοποίησηdark theme",
-        "description": "Enable dark theme"
-    },
-    "enableDarkThemeNotification": {
+    "darkThemeNotification": {
         "message": "Για πλήρη υποστήριξη του dark theme, ενεργοποιείστε την <code>svg.context-properties.content.enabled</code> παράμετρο σε <code>true</code> στην <code>about:config</code> σελίδα<br><a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">How to do it?</a>",
         "description": "Fully support the dark theme text"
     },

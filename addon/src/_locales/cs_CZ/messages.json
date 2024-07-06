@@ -563,15 +563,15 @@
         "message": "Zálohovat jednou za",
         "description": "Create backup every:"
     },
-    "autoBackupIntervalKeyMinutes": {
+    "intervalKeyMinutes": {
         "message": "minuta/y",
         "description": "minute(s)"
     },
-    "autoBackupIntervalKeyHours": {
+    "intervalKeyHours": {
         "message": "hod.",
         "description": "hour(s)"
     },
-    "autoBackupIntervalKeyDays": {
+    "intervalKeyDays": {
         "message": "den/dny",
         "description": "day(s)"
     },
@@ -579,11 +579,7 @@
         "message": "Poslední záloha:",
         "description": "Last backup:"
     },
-    "enableDarkTheme": {
-        "message": "Zapnout tmavé téma",
-        "description": "Enable dark theme"
-    },
-    "enableDarkThemeNotification": {
+    "darkThemeNotification": {
         "message": "Pro plnou podporu tmavého tématu je potřeba přepnout parametr <code>svg.context-properties.content.enabled</code> na <code>true</code> na stránce <code>about:config</code>.<br><a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">Jak na to?</a>",
         "description": "Fully support the dark theme text"
     },

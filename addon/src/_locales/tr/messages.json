@@ -463,25 +463,21 @@
         "message": "Sabitlenmiş sekmeler desteklenmiyor",
         "description": "Pinned tabs are not supported"
     },
-    "autoBackupIntervalKeyMinutes": {
+    "intervalKeyMinutes": {
         "message": "dakika(lar)",
         "description": "minute(s)"
     },
-    "autoBackupIntervalKeyHours": {
+    "intervalKeyHours": {
         "message": "saat(ler)",
         "description": "hour(s)"
     },
-    "autoBackupIntervalKeyDays": {
+    "intervalKeyDays": {
         "message": "gün(ler)",
         "description": "day(s)"
     },
     "autoBackupLastBackupTitle": {
         "message": "Son yedekleme:",
         "description": "Last backup:"
-    },
-    "enableDarkTheme": {
-        "message": "Karanlık temayı etkinleştir",
-        "description": "Enable dark theme"
     },
     "browseFileTitle": {
         "message": "Göz at...",
