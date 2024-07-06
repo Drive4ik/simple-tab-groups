@@ -641,7 +641,7 @@ async function browserTabs(funcName, tabs, log) {
     try {
         await browser.tabs[funcName](tabIds);
     } catch (e) {
-        log.runError(e.message, e);
+        log.logError(e.message, e);
 
         log.warn(funcName, 'tabs one by one', tabIds);
 

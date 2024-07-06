@@ -138,7 +138,7 @@ function setLoggerFuncs() {
         return this;
     }.bind(this);
 
-    this.runError = function(message, error) { // TODO rename to logError
+    this.logError = function(message, error) {
         this.onError(message, false)(error);
         return this;
     }.bind(this);
@@ -356,7 +356,7 @@ function errorEventHandler(event) {
 
     if (logger) {
         logger.fromErrorEventHandler = true;
-        logger.runError(event.message, event);
+        logger.logError(event.message, event);
     } else {
         console.error(event.message, event);
     }

@@ -923,7 +923,7 @@ const onCreatedWindow = catchFunc(async function (win) {
         grandRestoringPromise = null;
     } catch (e) {
         grandRestoringPromise = null;
-        log.runError('GrandRestoreWindows', e);
+        log.logError('GrandRestoreWindows', e);
         log.stopError();
         return;
     }
@@ -2708,7 +2708,7 @@ async function onBackgroundMessage(message, sender) {
 
     } catch (e) {
         result.error = '[STG] ' + String(e);
-        log.runError(e.message || e, e);
+        log.logError(e.message || e, e);
     }
 
     result.error ? log.stopError() : log.stop();
@@ -3132,7 +3132,7 @@ async function cloudSync() {
         sendMessage('sync-end');
         log.stop();
     } catch (e) {
-        log.runError('cant sync', e);
+        log.logError('cant sync', e);
         log.stopError();
         sendMessage('sync-error', {
             message: String(e),
@@ -3955,7 +3955,7 @@ async function tryRestoreMissedTabs() {
         await createTabsSafe(tabsToRestore, true);
     } catch (e) {
         setActionToReloadAddon();
-        log.runError('cant createTabsSafe', e);
+        log.logError('cant createTabsSafe', e);
         log.stopError();
         return;
     }
@@ -4200,7 +4200,7 @@ async function init() {
                     grandRestoringPromise = null;
                 }));
             } catch (e) {
-                log.runError('cant grand restore', e);
+                log.logError('cant grand restore', e);
                 browser.runtime.reload();
                 return;
             }

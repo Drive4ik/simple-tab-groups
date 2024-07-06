@@ -115,7 +115,7 @@ export async function save(data, fileName = 'file-name', saveAs = true, clearOnC
     } catch (e) {
         URL.revokeObjectURL(url);
         if (!String(e.message || e).toLowerCase().includes('canceled')) {
-            log.runError(e.message || e, e);
+            log.logError(e.message || e, e);
             log.stopError();
         } else {
             log.stop();
