@@ -4,12 +4,18 @@ import * as Utils from '/utils.js';
 
 const $ = document.querySelector.bind(document),
     groupsSelect = $('#groups-select'),
+    groupIcon = $('#group-icon'),
     needInstallSTGExtension = $('#needInstallSTGExtension');
 
-groupsSelect.addEventListener('change', async function() {
-    const groupId = parseInt(groupsSelect.value, 10);
+groupIcon.addEventListener('load', () => groupIcon.hidden = false);
+groupIcon.addEventListener('error', () => groupIcon.hidden = true);
 
-    await browser.storage.local.set({groupId});
+groupsSelect.addEventListener('change', async () => {
+    const [option] = groupsSelect.selectedOptions;
+
+    await browser.storage.local.set({groupId: option.value});
+
+    groupIcon.src = option.dataset.iconUrl;
 
     const backgroundSelf = await browser.runtime.getBackgroundPage();
 
@@ -53,6 +59,11 @@ async function init() {
         option.value = group.id;
         option.innerText = group.title;
         option.selected = group.id === groupId;
+        option.dataset.iconUrl = group.iconUrl;
+
+        if (option.selected) {
+            groupIcon.src = option.dataset.iconUrl;
+        }
 
         groupsSelect.append(option);
     });

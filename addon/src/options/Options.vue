@@ -356,7 +356,7 @@
                     return;
                 }
 
-                if ('object' !== Utils.type(data) || !Array.isArray(data.groups) || !Number.isSafeInteger(data.lastCreatedGroupPosition)) {
+                if ('object' !== Utils.type(data) || 'object' !== Utils.type(data.defaultGroupProps) || !Array.isArray(data.groups) || !data.version) {
                     Utils.notify('This is wrong backup!');
                     return;
                 }
@@ -406,7 +406,7 @@
 
                     Object.values(oldGroups).forEach(function({id, title, catchRules}) {
                         groups[id] = {
-                            title: Groups.createTitle(title, id),
+                            title,
                             tabs: [],
                             catchTabRules: catchRules || '',
                         };
@@ -479,9 +479,9 @@
                     panoramaOptions.windows.forEach(function(win) {
                         let groups = {};
 
-                        win.groups.forEach(function({id, name}) {
+                        win.groups.forEach(function({id, name: title}) {
                             groups[id] = {
-                                title: Groups.createTitle(name, id),
+                                title,
                                 tabs: [],
                             };
                         });
@@ -515,7 +515,7 @@
 
                             if (groupTabs.length) {
                                 data.groups.push({
-                                    title: Groups.createTitle(title, groupTabs.length),
+                                    title,
                                     tabs: groupTabs,
                                 });
                             }
@@ -574,7 +574,7 @@
                         .filter(Boolean);
 
                     data.groups.push({
-                        title: Groups.createTitle(title, id),
+                        title,
                         tabs: tabs.filter(tab => !tab.pinned),
                     });
 
@@ -594,7 +594,7 @@
                 return {
                     value: '',
                     action: '',
-                    groupId: 0,
+                    groupId: null,
                 };
             },
 
@@ -865,8 +865,8 @@
                     <div v-if="HOTKEY_ACTIONS_WITH_CUSTOM_GROUP.includes(hotkey.action)" class="is-flex is-align-items-center custom-group">
                         <div :class="['control', {'has-icons-left': hotkey.groupId}]">
                             <div class="select">
-                                <select v-model.number="hotkey.groupId">
-                                    <option :value="0" v-text="lang('selectGroup')"></option>
+                                <select v-model="hotkey.groupId">
+                                    <option :value="null" v-text="lang('selectGroup')"></option>
                                     <option v-if="hotkey.groupId && !groupIds.includes(hotkey.groupId)" disabled :value="hotkey.groupId" v-text="lang('unknownGroup')"></option>
                                     <option v-for="group in groups" :key="group.id" :value="group.id" v-text="getGroupTitle(group)"></option>
                                 </select>

@@ -762,20 +762,17 @@
             },
 
             async createNewGroup(tabIds, proposalTitle, applyGroupWithTabId) {
-                let newGroupTitle = '';
-
                 if (this.options.alwaysAskNewGroupName) {
-                    newGroupTitle = await Groups.getNextTitle();
+                    const {defaultGroupProps} = await Groups.getDefaults();
+                    proposalTitle = await this.showPrompt(this.lang('createNewGroup'), Groups.createTitle(proposalTitle, null, defaultGroupProps));
 
-                    newGroupTitle = await this.showPrompt(this.lang('createNewGroup'), proposalTitle || newGroupTitle);
-
-                    if (!newGroupTitle) {
+                    if (!proposalTitle) {
                         return false;
                     }
                 }
 
                 let newGroupWindowId = Cache.getWindowGroup(this.currentWindow.id) ? undefined : this.currentWindow.id,
-                    newGroup = await Groups.add(newGroupWindowId, tabIds, newGroupTitle);
+                    newGroup = await Groups.add(newGroupWindowId, tabIds, proposalTitle);
 
                 if (applyGroupWithTabId) {
                     this.applyGroup(newGroup, {id: applyGroupWithTabId});

@@ -80,6 +80,15 @@ export async function save(groups, withMessage = false) {
     return groups;
 }
 
+export function createId() {
+    return self.crypto.randomUUID();
+}
+
+// extract "uid" from "group.id" that matches UUID
+export function extractUId(groupId) {
+    return groupId?.slice(0, 4);
+}
+
 export function create(id, title, defaultGroupProps = {}) {
     const group = {
         id,
@@ -114,7 +123,7 @@ export function create(id, title, defaultGroupProps = {}) {
     if (id) { // create title for group
         group.title = createTitle(title, id, defaultGroupProps);
     } else { // create title for default group, if needed
-        group.title ??= createTitle(title, id, defaultGroupProps);
+        group.title ??= createTitle(title, null, defaultGroupProps);
     }
 
     group.iconColor ??= Utils.randomColor();
@@ -169,24 +178,19 @@ export async function add(windowId, tabIds = [], title = null) {
         }
     }
 
-    let [
-        {lastCreatedGroupPosition},
+    const [
+        {groups},
         {defaultGroupProps},
     ] = await Promise.all([
-        Storage.get('lastCreatedGroupPosition'),
+        load(),
         getDefaults(),
     ]);
 
-    lastCreatedGroupPosition++;
-
-    const {groups} = await load(),
-        newGroup = create(lastCreatedGroupPosition, title, defaultGroupProps);
+    const newGroup = create(createId(), title, defaultGroupProps);
 
     groups.push(newGroup);
 
     await save(groups);
-
-    await Storage.set({lastCreatedGroupPosition});
 
     if (windowId) {
         await Cache.setWindowGroup(windowId, newGroup.id);
@@ -290,7 +294,7 @@ export async function update(groupId, updateData) {
     const log = logger.start('update', {groupId, updateData});
 
     if (updateData.iconUrl?.startsWith('chrome:')) {
-        Utils.notify('Icon not supported');
+        // Utils.notify('Icon not supported');
         delete updateData.iconUrl;
     }
 
@@ -308,8 +312,9 @@ export async function update(groupId, updateData) {
 
     // updateData = JSON.clone(updateData); // clone need for fix bug: dead object after close tab which create object
 
-    if (updateData.title) {
-        updateData.title = updateData.title.slice(0, 256);
+    if (updateData.hasOwnProperty('title')) {
+        const {defaultGroupProps} = await getDefaults();
+        updateData.title = createTitle(updateData.title, groupId, defaultGroupProps).slice(0, 256);
     }
 
     Object.assign(group, updateData);
@@ -555,18 +560,6 @@ export function setNewTabsParams(tabs, group) {
     return tabs.map(tab => Object.assign(tab, newTabParams));
 }
 
-export async function getNextTitle() {
-    const [
-        {lastCreatedGroupPosition},
-        {defaultGroupProps},
-    ] = await Promise.all([
-        Storage.get('lastCreatedGroupPosition'),
-        getDefaults(),
-    ]);
-
-    return createTitle(null, lastCreatedGroupPosition + 1, defaultGroupProps);
-}
-
 function isCatchedUrl(url, catchTabRules) {
     return catchTabRules
         .split(/\s*\n\s*/)
@@ -770,16 +763,22 @@ export function getIconUrl(group, keyInObj = null) {
     return result;
 }
 
-export function createTitle(title = null, groupId = null, defaultGroupProps = {}) {
+export function createTitle(title = null, groupId = null, defaultGroupProps = {}, format = true) {
+    const uid = extractUId(groupId) || '{uid}';
+
     if (title) {
-        return String(title);
+        title = String(title);
+    } else if (defaultGroupProps.title) {
+        title = defaultGroupProps.title;
+    } else {
+        title = browser.i18n.getMessage('newGroupTitle', uid);
     }
 
-    if (defaultGroupProps.title && groupId) {
-        return Utils.format(defaultGroupProps.title, {index: groupId}, Utils.DATE_LOCALE_VARIABLES);
+    if (format) {
+        return Utils.format(title, {uid}, Utils.DATE_LOCALE_VARIABLES);
     }
 
-    return browser.i18n.getMessage('newGroupTitle', groupId || '{index}');
+    return title;
 }
 
 export function getTitle({id, title, isArchive, isSticky, tabs, iconViewType, newTabContainer}, args = '') {

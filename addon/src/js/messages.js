@@ -30,7 +30,7 @@ export function sendExternalMessage(exId, ...args) {
 
     self.logger?.info('sending', `SEND-EXTERNAL-MESSAGE#${message.action}`, 'to:', exId);
 
-    browser.runtime.sendMessage(exId, message).catch(() => {});
+    return browser.runtime.sendMessage(exId, message).catch(() => {});
 }
 
 export function connectToBackground(name, listeners = null, callback = null) {

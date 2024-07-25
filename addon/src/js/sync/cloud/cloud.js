@@ -297,20 +297,8 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
         // const localTabsToRemove = new Set;
 
         cloudGroups.forEach(cloudGroup => {
-            let localGroup;
-
-            // if first sync - add cloud group as new. This will duplicate groups, sorry ¯\_(ツ)_/¯
-            // it is impossible otherwise, because the id of the group on one computer
-            // and the same id on another computer do not mean the same groups
-            if (localData.syncId === Constants.DEFAULT_OPTIONS.syncId) {
-                // nevertheless, we are trying to find a group with the same name and the same id,
-                // this will happen when restoring groups from a backup on different computers with data cleansing
-                // (then the id of the groups are saved)
-                localGroup = localGroups.find(localGroup => localGroup.id === cloudGroup.id && localGroup.title === cloudGroup.title);
-            } else {
-                // find local group
-                localGroup = localGroups.find(localGroup => localGroup.id === cloudGroup.id);
-            }
+            // find local group
+            let localGroup = localGroups.find(localGroup => localGroup.id === cloudGroup.id);
 
             if (localGroup?.dontUploadToCloud) {
                 resultLocalGroups.push(localGroup); // leave group in local
@@ -323,7 +311,7 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
                 changes.local = true;
 
                 log.log('create/clone new local group from cloud:', cloudGroup.id);
-                // TODO work with group id => to timestamp
+
                 localGroup = JSON.clone(cloudGroup);
 
                 if (!localGroup.isArchive) {

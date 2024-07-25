@@ -267,9 +267,7 @@ function showGroupsPopup(data) {
         }
     }
 
-    if (!Array.isArray(data.disableGroupIds)) {
-        data.disableGroupIds = [];
-    }
+    data.disableGroupIds ??= [];
 
     data.groups.forEach(group => groupsWrapper.append(createGroupNode(group, !data.disableGroupIds.includes(group.id))));
 

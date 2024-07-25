@@ -282,7 +282,6 @@ export const SYNC_STORAGE_LOCAL = 'local';
 export const DEFAULT_OPTIONS = Object.freeze({
     version: MANIFEST.version,
     groups: [],
-    lastCreatedGroupPosition: 0, // TODO remove
 
     // options
 
@@ -349,11 +348,11 @@ export const DEFAULT_OPTIONS = Object.freeze({
         {
             value: `${IS_MAC ? 'Mac' : ''}Ctrl+Backquote`,
             action: 'load-next-group',
-            groupId: 0,
+            groupId: null,
         }, {
             value: `${IS_MAC ? 'Mac' : ''}Ctrl+Shift+Backquote`,
             action: 'load-prev-group',
-            groupId: 0,
+            groupId: null,
         },
     ],
 });
@@ -362,7 +361,7 @@ const DEFAULT_OPTION_KEYS = Object.keys(DEFAULT_OPTIONS);
 
 export const ONLY_BOOL_OPTION_KEYS = Object.freeze(DEFAULT_OPTION_KEYS.filter(key => 'boolean' === typeof DEFAULT_OPTIONS[key]));
 
-export const NON_OPTION_KEYS = Object.freeze(['version', 'groups', 'lastCreatedGroupPosition']);
+export const NON_OPTION_KEYS = Object.freeze(['version', 'groups']);
 
 export const ALL_OPTION_KEYS = Object.freeze(DEFAULT_OPTION_KEYS.filter(key => !NON_OPTION_KEYS.includes(key)));
 

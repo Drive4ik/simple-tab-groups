@@ -52,8 +52,8 @@ export async function openManageGroups() {
             await Windows.setFocus(win.id);
         } else {
             await Windows.createPopup(MANAGE_TABS_URL, {
-                width: Number(window.localStorage.manageGroupsWindowWidth) || 1000,
-                height: Number(window.localStorage.manageGroupsWindowHeight) || 700,
+                width: +window.localStorage.manageGroupsWindowWidth || 1000,
+                height: +window.localStorage.manageGroupsWindowHeight || 700,
             });
         }
     }

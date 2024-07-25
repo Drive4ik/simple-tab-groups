@@ -11,9 +11,20 @@ body {
     margin: 0;
 }
 
+#wrapper {
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+}
+
 #groups-select {
     min-width: 200px;
     width: auto;
+}
+
+#group-icon {
+    width: 16px;
+    height: 16px;
 }
 
 @media screen and (max-width: 700px) {

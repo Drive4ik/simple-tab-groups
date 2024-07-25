@@ -49,7 +49,7 @@
             this.DEFAULT_COOKIE_STORE_ID = Constants.DEFAULT_COOKIE_STORE_ID;
             this.GROUP_ICON_VIEW_TYPES = Constants.GROUP_ICON_VIEW_TYPES;
             this.TITLE_VARIABLES = {
-                index: '{index}',
+                uid: '{uid}',
                 ...Utils.DATE_LOCALE_VARIABLES,
             };
 
@@ -265,13 +265,13 @@
                 this.group.title = title.slice(0, selectionStart) + value + title.slice(selectionEnd, title.length);
             },
 
-            triggerChanges() {
+            async triggerChanges() {
                 const changes = {};
 
-                for(const [key, value] of Object.entries(this.group)) {
+                for (const [key, value] of Object.entries(this.group)) {
                     const defaultValue = this.groupToCompare[key];
 
-                    if (value !== Object(value)) { // is primitive
+                    if (Utils.isPrimitive(value)) {
                         if (value !== defaultValue) {
                             changes[key] = value;
                         }
@@ -284,7 +284,8 @@
 
                 if (changes.hasOwnProperty('title')) {
                     const groupId = this.isDefaultGroup ? null : this.group.id;
-                    changes.title = Groups.createTitle(changes.title, groupId);
+                    const {defaultGroupProps} = await Groups.getDefaults();
+                    changes.title = Groups.createTitle(changes.title, groupId, defaultGroupProps, !this.isDefaultGroup);
                 }
 
                 changes.catchTabRules

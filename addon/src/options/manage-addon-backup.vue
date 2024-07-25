@@ -124,10 +124,6 @@
                         result.containers = this.data.containers;
                     }
 
-                    if (this.data.lastCreatedGroupPosition) {
-                        result.lastCreatedGroupPosition = this.data.lastCreatedGroupPosition;
-                    }
-
                     if (this.readyPinnedTabs) {
                         result.pinnedTabs = this.data.pinnedTabs;
                     }

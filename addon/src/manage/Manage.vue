@@ -593,9 +593,8 @@
                     tabIds = this.getTabIdsForMove(tabId);
 
                 if (this.options.alwaysAskNewGroupName) {
-                    newGroupTitle = await Groups.getNextTitle();
-
-                    newGroupTitle = await this.showPrompt(this.lang('createNewGroup'), newGroupTitle);
+                    const {defaultGroupProps} = await Groups.getDefaults();
+                    newGroupTitle = await this.showPrompt(this.lang('createNewGroup'), Groups.createTitle(null, null, defaultGroupProps));
 
                     if (!newGroupTitle) {
                         return;
@@ -671,10 +670,8 @@
                 return new Vue({
                     data: group,
                     watch: {
-                        title: function(title) {
-                            Messages.sendMessageModule('Groups.update', this.id, {
-                                title: Groups.createTitle(title, this.id),
-                            });
+                        title(title) {
+                            Messages.sendMessageModule('Groups.update', this.id, {title});
                         },
                     },
                     computed: {

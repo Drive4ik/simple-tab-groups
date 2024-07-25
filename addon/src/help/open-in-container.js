@@ -58,7 +58,7 @@ async function init() {
         anotherCookieStoreId = urlParams.get('anotherCookieStoreId'),
         destCookieStoreId = urlParams.get('destCookieStoreId'),
         conflictedExtId = urlParams.get('conflictedExtId'),
-        groupId = Number(urlParams.get('groupId')),
+        groupId = urlParams.get('groupId'),
         asInfo = urlParams.get('asInfo'),
         conflictedExt = await loadConflictedExt(conflictedExtId),
         group = await loadGroup(groupId),
