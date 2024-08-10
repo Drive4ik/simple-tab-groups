@@ -301,6 +301,10 @@
         "message": "Wybierz grupę",
         "description": "Select group"
     },
+    "unknownGroup": {
+        "message": "Nieznana grupa",
+        "description": "Unknown group"
+    },
     "hotkeyActionTitleLoadNextGroup": {
         "message": "Wczytaj następną grupę",
         "description": "Load next group"
@@ -412,6 +416,10 @@
     "iconStyle": {
         "message": "Styl ikony",
         "description": "Icon style"
+    },
+    "discardTabsAfterHide": {
+        "message": "Wyczyść zakładki z pamięci po zamknięciu grupy",
+        "description": "Unload tabs from memory after closing a group"
     },
     "discardExcludeAudioTabs": {
         "message": "Wyklucz zakładki odtwarzające dźwięki",
@@ -813,6 +821,10 @@
         "message": "Włącz \"Przywracanie poprzedniej sesji\" w ustawieniach przeglądarki.<br>Jest to niezbędne do utrzymania komunikacji pomiędzy grupą a kartą,<br>w przeciwnym wypadku karty nie zostaną otwarte podczas uruchamiania przeglądarki i rozszerzenie straci informację o nich -<br>rozszerzenie nie będzie działać.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
+    "exportToBookmarksWhenAutoBackup": {
+        "message": "Zapisz grupę w zakładkach przy automatycznym tworzeniu kopii",
+        "description": "Save the group to bookmarks when auto backup"
+    },
     "leaveBookmarksOfClosedTabs": {
         "message": "Pozostaw zakładki zamkniętych kart",
         "description": "Leave bookmarks of closed tabs"
@@ -1123,6 +1135,22 @@
         "message": "Aby uniknąć ryzyka utraty zakładek lub ich lokalizacji w grupach zaleca się wyłączenie lub usunięcie rozszerzeń, które są w konflikcie z dodatkiem Simple Tab Groups <code>Ctrl+Shift+A</code>",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     },
+    "ignoreConflictedExtIgnore": {
+        "message": "Ignoruj to rozszerzenie",
+        "description": "Ignore conflicted extension"
+    },
+    "ignoreConflictedExtDontIgnore": {
+        "message": "Nie ignoruj tego rozszerzenia",
+        "description": "Don't ignore this extension"
+    },
+    "ignoreConflictedExtIgnoredText": {
+        "message": "ignorowane",
+        "description": "Extension is ignored"
+    },
+    "ignoreConflictedExtConfirm": {
+        "message": "Ten dodatek spowoduje konflikt z STG, co może spowodować utratę zakładek. Na pewno zignorować?",
+        "description": "This addon will interfere with the STG, which may cause you to lose tabs.\nStill ignore it?"
+    },
     "theme": {
         "message": "Motyw",
         "description": "Select theme"
@@ -1170,5 +1198,27 @@
     "windowNotHaveGroup": {
         "message": "Okno nie zawiera załadowanej grupy",
         "description": "This window does not have a loaded group"
+    },
+    "defaultGroup": {
+        "message": "Domyślna grupa",
+        "description": "Default group"
+    },
+    "moveToGroupIfNoneCatchTabRules": {
+        "message": "Jeśli żadne z wyrażeń nie pasuje do zakładki, przenieś do grupy:",
+        "description": "If none of the regular expressions match the tab, move it to the group:"
+    },
+    "dontMove": {
+        "message": "Nie ruszaj",
+        "description": "Don't move"
+    },
+    "groupArchivedTitle": {
+        "message": "$groupName$ (zarchiwizowana)",
+        "description": "My group (archived)",
+        "placeholders": {
+            "groupName": {
+                "content": "$1",
+                "example": "My group"
+            }
+        }
     }
 }

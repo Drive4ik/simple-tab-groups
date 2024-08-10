@@ -37,6 +37,10 @@
             }
         }
     },
+    "openOptions": {
+        "message": "选项",
+        "description": "Options"
+    },
     "importBackup": {
         "message": "加载笔记备份",
         "description": "Load notes backup"
@@ -44,5 +48,21 @@
     "exportBackup": {
         "message": "保存笔记备份",
         "description": "Save notes backup"
+    },
+    "tabFaviconAsGroup": {
+        "message": "设置群组图标为笔记标签页图标",
+        "description": "Set the group icon as the notes tab icon"
+    },
+    "editorLineNumbers": {
+        "message": "显示行号",
+        "description": "Show line numbers"
+    },
+    "editorLineWrapping": {
+        "message": "换行",
+        "description": "Line wrapping"
+    },
+    "editorUseRTLDirection": {
+        "message": "使用 RTL 方向",
+        "description": "Use RTL direction"
     }
 }

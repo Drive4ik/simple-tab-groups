@@ -301,6 +301,10 @@
         "message": "Selecione o grupo",
         "description": "Select group"
     },
+    "unknownGroup": {
+        "message": "Grupo desconhecido",
+        "description": "Unknown group"
+    },
     "hotkeyActionTitleLoadNextGroup": {
         "message": "Carregar o próximo grupo",
         "description": "Load next group"
@@ -413,6 +417,10 @@
         "message": "Estilo do ícone",
         "description": "Icon style"
     },
+    "discardTabsAfterHide": {
+        "message": "Desative abas da memória depois de fechar um grupo",
+        "description": "Unload tabs from memory after closing a group"
+    },
     "discardExcludeAudioTabs": {
         "message": "Excluir abas com som",
         "description": "Exclude tabs with sound"
@@ -464,6 +472,14 @@
     "showTabAfterMovingItIntoThisGroup": {
         "message": "Exibir a aba depois de movê-la automaticamente para este grupo",
         "description": "Show the tab after auto-moving it into this group"
+    },
+    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
+        "message": "Somente se a aba ativa foi removida",
+        "description": "Only if the active tab has been moved"
+    },
+    "showNotificationAfterMovingTabIntoThisGroup": {
+        "message": "Mostre uma notificação quando abas forem movidas para esse grupo",
+        "description": "Show a notification when tabs are moved to this group"
     },
     "tabMoving": {
         "message": "Movendo aba",
@@ -805,6 +821,10 @@
         "message": "Por favor, habilite \"Restaurar sessão anterior\" nas configurações do navegador.<br>Isso é necessário para manter a comunicação entre o grupo e a aba, <br>caso contrário as abas não abrirão quando o navegador iniciar e serão perdidas do addon -<br >o addon irá parar de funcionar.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
+    "exportToBookmarksWhenAutoBackup": {
+        "message": "Salve o grupo aos favoritos quando o backup for automático",
+        "description": "Save the group to bookmarks when auto backup"
+    },
     "leaveBookmarksOfClosedTabs": {
         "message": "Deixe os favoritos das abas fechadas",
         "description": "Leave bookmarks of closed tabs"
@@ -1115,6 +1135,22 @@
         "message": "Para evitar a perda de guias ou sua localização em janelas e grupos, é altamente recomendável desativar ou remover extensões habilitadas que entram em conflito com o complemento Simple Tab Groups. Você pode fazer isso na página de configurações de addons \"about:addons\" ou pressionando a combinação de teclas <code>Ctrl+Shift+A</code>",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     },
+    "ignoreConflictedExtIgnore": {
+        "message": "Ignore essa extensão",
+        "description": "Ignore conflicted extension"
+    },
+    "ignoreConflictedExtDontIgnore": {
+        "message": "Não ignore essa extensão",
+        "description": "Don't ignore this extension"
+    },
+    "ignoreConflictedExtIgnoredText": {
+        "message": "ignorado",
+        "description": "Extension is ignored"
+    },
+    "ignoreConflictedExtConfirm": {
+        "message": "Esse complemento irá interferir com o STG, o que poderá causar a perda de abas. Ainda deseja ignorar?",
+        "description": "This addon will interfere with the STG, which may cause you to lose tabs.\nStill ignore it?"
+    },
     "theme": {
         "message": "Tema",
         "description": "Select theme"
@@ -1154,5 +1190,35 @@
     "helpPageStgDebugTitle": {
         "message": "Página de debug do STG",
         "description": "STG debug page"
+    },
+    "helpPageStgDebugAutoDebugMainTitle": {
+        "message": "Um erro ocorreu no complemento",
+        "description": "An error occurred in the addon"
+    },
+    "windowNotHaveGroup": {
+        "message": "Essa janela não tem um grupo carregado",
+        "description": "This window does not have a loaded group"
+    },
+    "defaultGroup": {
+        "message": "Grupo padrão",
+        "description": "Default group"
+    },
+    "moveToGroupIfNoneCatchTabRules": {
+        "message": "Se nenhuma das expressões regulares corresponder a aba, mova para o grupo:",
+        "description": "If none of the regular expressions match the tab, move it to the group:"
+    },
+    "dontMove": {
+        "message": "Não mova",
+        "description": "Don't move"
+    },
+    "groupArchivedTitle": {
+        "message": "$groupName$ (arquivado)",
+        "description": "My group (archived)",
+        "placeholders": {
+            "groupName": {
+                "content": "$1",
+                "example": "My group"
+            }
+        }
     }
 }

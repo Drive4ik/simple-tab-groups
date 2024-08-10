@@ -89,7 +89,11 @@
     },
     "showConfirmDialogBeforeGroupDelete": {
         "message": "Να εμφανίζεται μήνυμα επιβεβαίωσης πριν την διαγραφή ενός  group",
-        "description": "Show confirm dialog before group delete"
+        "description": "Show confirmation dialog before deleting the group"
+    },
+    "showConfirmDialogBeforeGroupArchiving": {
+        "message": "Εμφάνιση μηνύματος επιβεβαίωσης πριν την αρχειοθέτηση του group",
+        "description": "Show confirmation dialog before archiving the group"
     },
     "exportAddonSettingsTitle": {
         "message": "Αντίγραφο ασφαλείας (backup) των Simple Tab Groups",
@@ -191,6 +195,20 @@
             }
         }
     },
+    "groupTabsCountActive": {
+        "message": "$active$/$count$ ενεργές καρτέλες",
+        "description": "Group tabs count active",
+        "placeholders": {
+            "active": {
+                "content": "$1",
+                "example": "2"
+            },
+            "count": {
+                "content": "$2",
+                "example": "4"
+            }
+        }
+    },
     "deleteTab": {
         "message": "Διαγραφή tab",
         "description": "Delete tab"
@@ -260,7 +278,7 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Πληκτρολογήστε μια συντόμευση",
+        "message": "Πιέστε τα πλήκτρα που θέλετε",
         "description": "Type a shortcut"
     },
     "selectAction": {
@@ -278,6 +296,30 @@
     "hotkeyActionTitleLoadPrevGroup": {
         "message": "Φόρτωση προηγούμενου group",
         "description": "Load previous group"
+    },
+    "hotkeyActionTitleLoadNextUnloadedGroup": {
+        "message": "Φόρτωση επόμενου μη φορτωμένου group",
+        "description": "Load next unloaded group"
+    },
+    "hotkeyActionTitleLoadPrevUnloadedGroup": {
+        "message": "Φόρτωση προηγούμενου μη φορτωμένου group",
+        "description": "Load previous unloaded group"
+    },
+    "hotkeyActionTitleLoadNextNonEmptyGroup": {
+        "message": "Φόρτωση επόμενου μη κενού group",
+        "description": "Load next non-empty group"
+    },
+    "hotkeyActionTitleLoadPrevNonEmptyGroup": {
+        "message": "Φόρτωση προηγούμενου μη κενού group",
+        "description": "Load previous non-empty group"
+    },
+    "hotkeyActionTitleLoadHistoryNextGroup": {
+        "message": "Φόρτωση επόμενου group από το ιστορικό",
+        "description": "Load next group from history"
+    },
+    "hotkeyActionTitleLoadHistoryPrevGroup": {
+        "message": "Φόρτωση προηγούμενου group από το ιστορικό",
+        "description": "Load previous group from history"
     },
     "hotkeyActionTitleLoadFirstGroup": {
         "message": "Φόρτωση πρώτου group",
@@ -302,6 +344,10 @@
     "hotkeyActionTitleOpenManageGroups": {
         "message": "Άνοιγμα Διαχείρισης groups",
         "description": "Open manage groups"
+    },
+    "hotkeyActionTitleMoveSelectedTabsToCustomGroup": {
+        "message": "Μετακίνηση επιλεγμένων tabs σε custom group",
+        "description": "Move selected tabs to custom group"
     },
     "whatsWrongMessage": {
         "message": "Κάτι δεν πήγε καλά...\nΠαρακαλώ επικοινωνείστε με τον δημιουργό στο support email με τα τελευταία αρχεία καταγραφής σφαλμάτων (υπάρχει σχετικό κουμπί στο τέλος των options)",
@@ -342,6 +388,10 @@
     "iconStyle": {
         "message": "Στυλ εικονιδίου",
         "description": "Icon style"
+    },
+    "discardTabsAfterHide": {
+        "message": "Απόρριψη των tabs μετά την απόκρυψη (εξοικονόμηση μνήμης)",
+        "description": "Unload tabs from memory after closing a group"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Δεν είναι δυνατόν να αλλάξετε το group, γιατί ένα από τα ανοικτά tabs χρησιμοποιούν το μικρόφωνο ή την camera",
@@ -453,7 +503,7 @@
     },
     "moveMultipleTabsToGroupMessage": {
         "message": "$tabscount$ tabs μετακινήθηκαν.\nΚλικ εδώ για να ανοίξετε το πρώτο tab",
-        "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
+        "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",
         "placeholders": {
             "tabscount": {
                 "content": "$1",
@@ -462,12 +512,16 @@
         }
     },
     "autoBackupEnableTitle": {
-        "message": "Εναργοποίηση αυτόματου αντιγράφου backup",
+        "message": "Ενεργοποίηση αυτόματου αντιγράφου backup",
         "description": "Enable auto backup"
     },
     "autoBackupCreateEveryTitle": {
         "message": "Δημιουργία backup κάθε:",
         "description": "Create backup every:"
+    },
+    "autoBackupIntervalKeyMinutes": {
+        "message": "λεπτό(ά)",
+        "description": "minute(s)"
     },
     "autoBackupIntervalKeyHours": {
         "message": "ώρα(ες)",
@@ -516,5 +570,25 @@
     "createNewGroupWhenOpenNewWindow": {
         "message": "Δημιουργία νέου group όταν ανοίγει νέο παράθυρο",
         "description": "Create a new group when opening a new window"
+    },
+    "theme": {
+        "message": "Θέμα",
+        "description": "Select theme"
+    },
+    "themeLight": {
+        "message": "Ανοιχτό",
+        "description": "Light theme"
+    },
+    "themeDark": {
+        "message": "Σκούρο",
+        "description": "Dark theme"
+    },
+    "tab": {
+        "message": "Καρτέλα",
+        "description": "Tab"
+    },
+    "group": {
+        "message": "Group",
+        "description": "Group"
     }
 }
