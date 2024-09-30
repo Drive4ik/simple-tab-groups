@@ -1,9 +1,12 @@
+import './prefixed-storage.js';
+
 import Logger from './logger.js';
 import backgroundSelf from './background.js';
 import * as Constants from './constants.js';
 import * as Storage from './storage.js';
 import * as Cache from './cache.js';
 import * as Containers from './containers.js';
+import * as Bookmarks from './bookmarks.js';
 // import Messages from './messages.js';
 // import JSON from './json.js';
 import * as Tabs from './tabs.js';
@@ -102,8 +105,7 @@ export function create(id, title, defaultGroupProps = {}) {
         discardExcludeAudioTabs: false,
         prependTitleToWindow: false,
         dontUploadToCloud: false,
-        exportToBookmarksWhenAutoBackup: true,
-        leaveBookmarksOfClosedTabs: false,
+        exportToBookmarks: true,
         newTabContainer: Constants.DEFAULT_COOKIE_STORE_ID,
         ifDifferentContainerReOpen: false,
         excludeContainersForReOpen: [],
@@ -115,7 +117,6 @@ export function create(id, title, defaultGroupProps = {}) {
         showTabAfterMovingItIntoThisGroup: false,
         showOnlyActiveTabAfterMovingItIntoThisGroup: false,
         showNotificationAfterMovingTabIntoThisGroup: true,
-        bookmarkId: null,
 
         ...defaultGroupProps,
     };
@@ -275,7 +276,12 @@ export async function remove(groupId) {
         backgroundSelf.updateMoveTabMenus();
     }
 
-    backgroundSelf.removeGroupBookmark(group).catch(log.onCatch('cant remove group bookmark', false));
+    if (await Bookmarks.hasPermission()) {
+        backgroundSelf.onBackgroundMessage({
+            action: 'remove-group-from-bookmarks',
+            groupId: group.id,
+        }, backgroundSelf);
+    }
 
     backgroundSelf.sendMessage('group-removed', {
         groupId: groupId,
@@ -312,7 +318,7 @@ export async function update(groupId, updateData) {
 
     // updateData = JSON.clone(updateData); // clone need for fix bug: dead object after close tab which create object
 
-    if (updateData.hasOwnProperty('title')) {
+    if (updateDataKeys.includes('title')) {
         const {defaultGroupProps} = await getDefaults();
         updateData.title = createTitle(updateData.title, groupId, defaultGroupProps).slice(0, 256);
     }
@@ -334,14 +340,23 @@ export async function update(groupId, updateData) {
         });
     }
 
-    if (KEYS_RESPONSIBLE_VIEW.some(key => updateData.hasOwnProperty(key))) {
+    if (KEYS_RESPONSIBLE_VIEW.some(key => updateDataKeys.includes(key))) {
         backgroundSelf.updateMoveTabMenus();
 
         await backgroundSelf.updateBrowserActionData(groupId);
     }
 
-    if (updateData.hasOwnProperty('title')) {
-        backgroundSelf.updateGroupBookmarkTitle(group);
+    if (await Bookmarks.hasPermission()) {
+        if (updateDataKeys.includes('title')) {
+            await Bookmarks.updateGroupTitle(group);
+        }
+
+        if (updateDataKeys.includes('exportToBookmarks')) {
+            await backgroundSelf.onBackgroundMessage({
+                action: updateData.exportToBookmarks ? 'export-group-to-bookmarks' : 'remove-group-from-bookmarks',
+                groupId: group.id,
+            }, backgroundSelf);
+        }
     }
 
     log.stop();
@@ -831,9 +846,9 @@ export function getTitle({id, title, isArchive, isSticky, tabs, iconViewType, ne
         }
     }
 
-    if (window.localStorage.enableDebug) {
+    if (backgroundSelf.storage.enableDebug) {
         let windowId = Cache.getWindowId(id) || tabs?.[0]?.windowId || 'no window';
-        title = `@${windowId}:#${id} ${title}`;
+        title = `@${windowId}:#${id.slice(-4)} ${title}`;
     }
 
     return title;

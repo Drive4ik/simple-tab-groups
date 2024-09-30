@@ -817,14 +817,6 @@
         "message": "Oтметнете „Възстановяване на предишната сесия“ в настройките на четеца.<br>Това е необходимо, за да бъде запазена връзката между групите и разделите.<br>В противен случай при отваряне на четеца разделите няма да бъдат заредени<br>и ще бъдат недостъпни за добавката и тя ще спре да работи.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
-    "exportToBookmarksWhenAutoBackup": {
-        "message": "Запазване на групите в отметките при автоматично резервно копие",
-        "description": "Save the group to bookmarks when auto backup"
-    },
-    "leaveBookmarksOfClosedTabs": {
-        "message": "Преместване на отметките на затворените раздели под разделителя",
-        "description": "Leave bookmarks of closed tabs"
-    },
     "enableDebugTitle": {
         "message": "Включване на режим DEBUG",
         "description": "Enable DEBUG"

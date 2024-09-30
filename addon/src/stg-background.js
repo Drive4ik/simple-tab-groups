@@ -1,7 +1,8 @@
 import '/js/cache-storage.js';
+import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
 import * as Messages from '/js/messages.js';
-import Logger, { catchFunc, addLog, showLog, getLogs, clearLogs, getErrors, clearErrors } from '/js/logger.js';
+import Logger, { catchFunc, addLog, showLog, getLogs, clearLogs, getErrors, clearErrors, storage as logsStorage } from '/js/logger.js';
 import * as Utils from '/js/utils.js';
 import JSON from '/js/json.js';
 import * as Urls from '/js/urls.js';
@@ -14,15 +15,19 @@ import * as Groups from '/js/groups.js';
 import * as Tabs from '/js/tabs.js';
 import * as Windows from '/js/windows.js';
 import * as Management from '/js/management.js';
+import * as Bookmarks from '/js/bookmarks.js';
 import * as Hotkeys from '/js/hotkeys.js';
 import {sync} from '/js/sync/cloud/cloud.js';
 
 self.IS_TEMPORARY = false;
 
-self.localStorage.START_TIME = Date.now();
+const storage = localStorage.create('main');
+self.storage = storage;
 
-if (self.localStorage.enableDebug == 2) { // if debug was auto-enabled - disable on next start addon/browser
-    delete self.localStorage.enableDebug;
+storage.START_TIME = Date.now();
+
+if (storage.enableDebug === 2) { // if debug was auto-enabled - disable on next start addon/browser
+    delete storage.enableDebug;
 }
 
 self.logger = new Logger('BG');
@@ -291,9 +296,9 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
 
                 await Tabs.hide(tabs);
 
-                let showNotif = +window.localStorage.showTabsInThisWindowWereHidden || 0;
+                let showNotif = storage.showTabsInThisWindowWereHidden ?? 0;
                 if (showNotif < 5) {
-                    window.localStorage.showTabsInThisWindowWereHidden = ++showNotif;
+                    storage.showTabsInThisWindowWereHidden = ++showNotif;
                     Utils.notify(['tabsInThisWindowWereHidden'], undefined, 'tabsInThisWindowWereHidden');
                 }
             }
@@ -1444,7 +1449,20 @@ async function createMoveTabMenus() {
         icon: '/icons/bookmark.svg',
         contexts: [Menus.ContextType.ACTION],
         async onClick() {
-            await exportAllGroupsToBookmarks(true);
+            if (!await Bookmarks.hasPermission()) {
+                Utils.notify(['noAccessToBookmarks'], undefined, undefined, undefined, () => Urls.openOptionsPage());
+                return;
+            }
+
+            await loadingBrowserAction();
+
+            const {groups} = await Groups.load(null, true);
+
+            await Bookmarks.exportGroups(groups);
+
+            loadingBrowserAction(false);
+
+            // Utils.notify(['allGroupsExportedToBookmarks']); // ? maybe not needed anymore
         },
     }));
 
@@ -1497,195 +1515,6 @@ async function createMoveTabMenus() {
     }));
 
     log.stop();
-}
-
-async function findGroupBookmark(group, parentId, createIfNeed) {
-    let bookmark = null;
-
-    if (group.bookmarkId) {
-        [bookmark] = await browser.bookmarks.get(group.bookmarkId).catch(() => [bookmark]);
-    }
-
-    if (!bookmark && createIfNeed) {
-        bookmark = await browser.bookmarks.create({
-            title: group.title,
-            parentId,
-            type: browser.bookmarks.BookmarkTreeNodeType.FOLDER,
-        });
-    }
-
-    if (bookmark) {
-        bookmark.children = await browser.bookmarks.getChildren(bookmark.id);
-    }
-
-    return bookmark;
-}
-
-async function getGroupBookmark(group, createIfNeed) {
-    const hasBookmarksPermission = await browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS);
-
-    if (!hasBookmarksPermission) {
-        return;
-    }
-
-    let rootBookmark = {
-        id: options.defaultBookmarksParent,
-    };
-
-    let likeGroup = {
-        title: browser.i18n.getMessage('extensionName'),
-        bookmarkId: window.localStorage.mainBookmarksFolderId,
-    };
-
-    rootBookmark = await findGroupBookmark(likeGroup, rootBookmark.id, createIfNeed);
-
-    if (!rootBookmark) {
-        delete window.localStorage.mainBookmarksFolderId;
-        return;
-    }
-
-    window.localStorage.mainBookmarksFolderId = rootBookmark.id;
-
-    return findGroupBookmark(group, rootBookmark.id, createIfNeed);
-}
-
-async function removeGroupBookmark(group) {
-    const groupBookmarkFolder = await getGroupBookmark(group);
-
-    if (groupBookmarkFolder) {
-        await browser.bookmarks.removeTree(groupBookmarkFolder.id);
-    }
-}
-
-async function updateGroupBookmarkTitle(group) {
-    const groupBookmarkFolder = await getGroupBookmark(group);
-
-    if (groupBookmarkFolder) {
-        await browser.bookmarks.update(groupBookmarkFolder.id, {
-            title: group.title,
-        });
-    }
-}
-
-async function exportGroupToBookmarks(group, groupIndex, showMessages = true) {
-    const log = logger.start('exportGroupToBookmarks', {groupId: group.id, showMessages});
-
-    const hasBookmarksPermission = await browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS);
-
-    if (!hasBookmarksPermission) {
-        showMessages && Utils.notify(['noAccessToBookmarks'], undefined, undefined, undefined, () => Urls.openOptionsPage());
-        log.stop('no permission');
-        return false;
-    }
-
-    if (showMessages) {
-        await loadingBrowserAction(true);
-    }
-
-    const { BOOKMARK, FOLDER, SEPARATOR } = browser.bookmarks.BookmarkTreeNodeType;
-
-    const { bookmarkId: oldGroupGookmarkId } = group,
-        groupBookmarkFolder = await getGroupBookmark(group, true);
-
-    if (groupBookmarkFolder.parentId === window.localStorage.mainBookmarksFolderId && groupBookmarkFolder.index !== groupIndex) {
-        await browser.bookmarks.move(groupBookmarkFolder.id, {
-            index: groupIndex,
-        });
-    }
-
-    const bookmarksToRemove = [];
-
-    if (group.leaveBookmarksOfClosedTabs) {
-        group.tabs.forEach(function (tab) {
-            groupBookmarkFolder.children = groupBookmarkFolder.children.filter(function (bookmark) {
-                if (bookmark.type === BOOKMARK) {
-                    if (bookmark.url === tab.url) {
-                        bookmarksToRemove.push(bookmark.id);
-                        return false;
-                    }
-
-                    return true;
-                }
-            });
-        });
-
-        await Promise.all(bookmarksToRemove.map(id => browser.bookmarks.remove(id).catch(() => { })));
-
-        let children = await browser.bookmarks.getChildren(groupBookmarkFolder.id);
-
-        if (children.length) {
-            if (children[0].type !== SEPARATOR) {
-                await browser.bookmarks.create({
-                    type: SEPARATOR,
-                    index: 0,
-                    parentId: groupBookmarkFolder.id,
-                });
-            }
-
-            // found and remove duplicated separators
-            let duplicatedSeparators = children.filter(function (separator, index) {
-                return separator.type === SEPARATOR && children[index - 1] && children[index - 1].type === SEPARATOR;
-            });
-
-            if (children[children.length - 1].type === SEPARATOR && !duplicatedSeparators.includes(children[children.length - 1])) {
-                duplicatedSeparators.push(children[children.length - 1]);
-            }
-
-            if (duplicatedSeparators.length) {
-                await Promise.all(duplicatedSeparators.map(separator => browser.bookmarks.remove(separator.id).catch(() => {})));
-            }
-        }
-
-        for (const [index, tab] of group.tabs.entries()) {
-            await browser.bookmarks.create({
-                title: tab.title,
-                url: tab.url,
-                type: BOOKMARK,
-                index,
-                parentId: groupBookmarkFolder.id,
-            }).catch(() => {});
-        }
-    } else {
-        let foundedBookmarks = new Set;
-
-        for (const [index, tab] of group.tabs.entries()) {
-            const bookmark = groupBookmarkFolder.children.find(({id, type, url}) => {
-                return !foundedBookmarks.has(id) && type === BOOKMARK && url === tab.url;
-            });
-
-            if (bookmark) {
-                foundedBookmarks.add(bookmark.id);
-                await browser.bookmarks.move(bookmark.id, {index});
-            } else {
-                await browser.bookmarks.create({
-                    title: tab.title,
-                    url: tab.url,
-                    type: BOOKMARK,
-                    index,
-                    parentId: groupBookmarkFolder.id,
-                }).catch(() => {});
-            }
-        }
-
-        groupBookmarkFolder.children.forEach(({id, type}) => type !== FOLDER && !foundedBookmarks.has(id) && bookmarksToRemove.push(id));
-
-        await Promise.all(bookmarksToRemove.map(id => browser.bookmarks.remove(id).catch(() => {})));
-    }
-
-    if (oldGroupGookmarkId !== groupBookmarkFolder.id) {
-        await Groups.update(group.id, {
-            bookmarkId: groupBookmarkFolder.id,
-        });
-    }
-
-    if (showMessages) {
-        await loadingBrowserAction(false);
-        Utils.notify(['groupExportedToBookmarks', group.title], 7);
-    }
-
-    log.stop();
-
-    return true;
 }
 
 async function setBrowserAction(windowId, title, icon, enable, isSticky) {
@@ -1933,10 +1762,10 @@ const onBeforeTabRequest = catchFunc(async function ({ tabId, url, cookieStoreId
     }
 
     if (Constants.IGNORE_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER.includes(originExt.id) && originExt.enabled) {
-        let showNotif = +window.localStorage.ignoreExtensionsForReopenTabInContainer || 0;
+        let showNotif = storage.ignoreExtensionsForReopenTabInContainer ?? 0;
 
         if (showNotif < 10) {
-            window.localStorage.ignoreExtensionsForReopenTabInContainer = ++showNotif;
+            storage.ignoreExtensionsForReopenTabInContainer = ++showNotif;
             let str = browser.i18n.getMessage('helpPageOpenInContainerMainTitle', Containers.get(newTabContainer, 'name'));
 
             str = str.replace(/(\<.+?\>)/g, '') + '\n\n' + browser.i18n.getMessage('clickHereForInfo');
@@ -2477,6 +2306,11 @@ async function onBackgroundMessage(message, sender) {
                 }
                 break;
             case 'export-group-to-bookmarks':
+                if (!await Bookmarks.hasPermission()) {
+                    result.error = browser.i18n.getMessage('noAccessToBookmarks');
+                    break;
+                }
+
                 if (data.groupId) {
                     const {
                         group: groupToExport,
@@ -2484,14 +2318,18 @@ async function onBackgroundMessage(message, sender) {
                     } = await Groups.load(data.groupId, true);
 
                     if (groupToExport) {
-                        const showMessages = Utils.isPrimitive(data.showMessages) ? data.showMessages : undefined;
-                        result.ok = await exportGroupToBookmarks(groupToExport, groupIndex, showMessages);
+                        await loadingBrowserAction(true);
 
-                        if (!result.ok) {
-                            result.error = browser.i18n.getMessage('noAccessToBookmarks');
+                        result.ok = await Bookmarks.exportGroup(groupToExport, groupIndex);
+
+                        await loadingBrowserAction(false);
+
+                        if (data.showMessages) {
+                            Utils.notify(['groupExportedToBookmarks', group.title], 7);
                         }
                     } else {
-                        delete data.groupId;
+                        // delete data.groupId;
+                        result.error = browser.i18n.getMessage('groupNotFound');
                     }
                 }
 
@@ -2513,6 +2351,28 @@ async function onBackgroundMessage(message, sender) {
                         result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleRenameGroup')]);
                         Utils.notify(result.error, 15, 'impossibleToAskUserAboutAction', undefined, Urls.openNotSupportedUrlHelper);
                     }
+                }
+                break;
+            case 'remove-group-from-bookmarks':
+                if (!await Bookmarks.hasPermission()) {
+                    result.error = browser.i18n.getMessage('noAccessToBookmarks');
+                    break;
+                }
+
+                if (data.groupId) {
+                    const {group} = await Groups.load(data.groupId);
+
+                    if (group) {
+                        await loadingBrowserAction(true);
+
+                        result.ok = await Bookmarks.removeGroup(group);
+
+                        await loadingBrowserAction(false);
+                    } else {
+                        result.error = browser.i18n.getMessage('groupNotFound');
+                    }
+                } else {
+                    result.error = browser.i18n.getMessage('groupNotFound');
                 }
                 break;
             case 'delete-current-group':
@@ -2770,7 +2630,7 @@ async function resetLocalBackupAlarm() {
         options.autoBackupEnable,
         options.autoBackupIntervalKey,
         options.autoBackupIntervalValue,
-        window.localStorage.autoBackupLastTimeStamp
+        storage.autoBackupLastTimeStamp ?? undefined
     );
 }
 
@@ -2782,7 +2642,7 @@ async function resetSyncAlarm() {
         options.syncEnable,
         options.syncIntervalKey,
         options.syncIntervalValue,
-        window.localStorage.autoSyncLastTimeStamp
+        storage.autoSyncLastTimeStamp ?? undefined
     );
 }
 
@@ -2889,9 +2749,11 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
     if (isAutoBackup) {
         File.backup(data, true, options.autoBackupByDayIndex);
 
-        exportAllGroupsToBookmarks(false, true);
+        if (await Bookmarks.hasPermission()) {
+            await Bookmarks.exportGroups(data.groups);
+        }
 
-        window.localStorage.autoBackupLastTimeStamp = Utils.unixNow();
+        storage.autoBackupLastTimeStamp = Utils.unixNow();
     } else {
         await File.backup(data, false);
     }
@@ -3047,7 +2909,7 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
 
     await Utils.wait(200);
 
-    window.localStorage.isBackupRestoring = 1;
+    storage.isBackupRestoring = true;
 
     browser.runtime.reload(); // reload addon
 }
@@ -3099,40 +2961,6 @@ async function cloudSync() {
     }
 }
 
-async function exportAllGroupsToBookmarks(showFinishMessage, isAutoBackup) {
-    const hasBookmarksPermission = await browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS);
-
-    if (!hasBookmarksPermission) {
-        logger.log('exportAllGroupsToBookmarks no bookmarks permission');
-        return;
-    }
-
-    const log = logger.start('exportAllGroupsToBookmarks', { showFinishMessage, isAutoBackup });
-
-    if (showFinishMessage) {
-        await loadingBrowserAction();
-    }
-
-    const { groups } = await Groups.load(null, true);
-
-    for (const [groupIndex, group] of groups.entries()) {
-        if (isAutoBackup && !group.exportToBookmarksWhenAutoBackup) {
-            log.log('skip group', group.id);
-            continue;
-        }
-
-        await exportGroupToBookmarks(group, groupIndex, false);
-    }
-
-    if (showFinishMessage) {
-        loadingBrowserAction(false);
-
-        Utils.notify(['allGroupsExportedToBookmarks']);
-    }
-
-    log.stop();
-}
-
 self.saveOptions = saveOptions;
 
 self.createTabsSafe = createTabsSafe;
@@ -3150,8 +2978,6 @@ self.updateMoveTabMenus = updateMoveTabMenus;
 
 self.loadingBrowserAction = loadingBrowserAction;
 
-self.updateGroupBookmarkTitle = updateGroupBookmarkTitle;
-self.removeGroupBookmark = removeGroupBookmark;
 self.applyGroup = applyGroup;
 
 self.addListenerOnBeforeRequest = addListenerOnBeforeRequest;
@@ -3596,7 +3422,7 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
 
                 let rootFolder = await _bookmarkFolderFromTitle(data.autoBackupBookmarksFolderName, data.defaultBookmarksParent);
                 if (rootFolder) {
-                    window.localStorage.mainBookmarksFolderId = rootFolder.id;
+                    storage.mainBookmarksFolderId = rootFolder.id;
                 }
             },
         },
@@ -3749,10 +3575,39 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
                 'lastCreatedGroupPosition',
             ],
             async migration() {
-                data.groups.forEach(group => group.dontUploadToCloud = false);
+                data.groups.forEach(group => {
+                    group.dontUploadToCloud = false;
+                    delete group.leaveBookmarksOfClosedTabs;
+                    group.exportToBookmarks = group.exportToBookmarksWhenAutoBackup;
+                    delete group.exportToBookmarksWhenAutoBackup;
+                    delete group.bookmarkId;
+                });
+
+                delete data.defaultGroupProps.leaveBookmarksOfClosedTabs;
+
+                if (data.defaultGroupProps.exportToBookmarksWhenAutoBackup !== undefined) {
+                    data.defaultGroupProps.exportToBookmarks = data.defaultGroupProps.exportToBookmarksWhenAutoBackup;
+                }
+
+                delete data.defaultGroupProps.exportToBookmarksWhenAutoBackup;
 
                 if (applyToCurrentInstance) {
-                    window.localStorage.autoBackupLastTimeStamp = data.autoBackupLastBackupTimeStamp;
+                    storage.autoBackupLastTimeStamp = data.autoBackupLastBackupTimeStamp;
+                    storage.mainBookmarksFolderId = localStorage.mainBookmarksFolderId;
+
+                    delete localStorage.mainBookmarksFolderId;
+                    delete localStorage.START_TIME;
+                    delete localStorage.autoBackupLastTimeStamp;
+
+                    try {
+                        let errorLogs = localStorage.errorLogs;
+                        delete localStorage.errorLogs;
+                        errorLogs = JSON.parse(errorLogs);
+
+                        if (Array.isArray(errorLogs) && errorLogs.length) {
+                            logsStorage.errors = errorLogs;
+                        }
+                    } catch (e) {}
                 }
 
                 // ! MIGRATE group ids from small int to UUID
@@ -4190,7 +4045,7 @@ async function initializeGroupWindows(windows, currentGroupIds) {
                 }
             } else if (win.groupId) {
                 if (!tab.hidden) {
-                    if (Utils.isTabLoading(tab) || tab.url.startsWith('file:') || tab.lastAccessed > self.localStorage.START_TIME) {
+                    if (Utils.isTabLoading(tab) || tab.url.startsWith('file:') || tab.lastAccessed > storage.START_TIME) {
                         tab.groupId = win.groupId;
                         Cache.setTabGroup(tab.id, win.groupId).catch(log.onCatch(['cant setTabGroup', tab.id, 'group', win.groupId], false));
                     } else {
@@ -4289,11 +4144,11 @@ async function init() {
 
         if (!windows.length) {
             log.error('no windows found');
-            window.localStorage.notFoundWindowsAddonStoppedWorking = 1;
+            storage.notFoundWindowsAddonStoppedWorking = true;
             Utils.notify(['notFoundWindowsAddonStoppedWorking']);
             browser.windows.onCreated.addListener(() => browser.runtime.reload());
             throw '';
-        } else if (window.localStorage.notFoundWindowsAddonStoppedWorking) {
+        } else if (storage.notFoundWindowsAddonStoppedWorking) {
             log.log('try run grand restore');
             try {
                 await Promise.all(windows.map(async win => {
@@ -4309,7 +4164,7 @@ async function init() {
 
             log.log('grand restore finish');
 
-            delete window.localStorage.notFoundWindowsAddonStoppedWorking;
+            delete storage.notFoundWindowsAddonStoppedWorking;
         }
 
         await tryRestoreMissedTabs();
@@ -4354,8 +4209,8 @@ async function init() {
 
         Groups.load(null, true, true).catch(log.onCatch('cant load groups')); // load favIconUrls, speed up first run popup
 
-        if (window.localStorage.isBackupRestoring) {
-            delete window.localStorage.isBackupRestoring;
+        if (storage.isBackupRestoring) {
+            delete storage.isBackupRestoring;
             Utils.notify(['backupSuccessfullyRestored']);
         }
 
@@ -4378,7 +4233,7 @@ async function init() {
         // Urls.openUrl('/popup/popup.html#sidebar');
         // Urls.openUrl('/popup/popup.html');
 
-        Urls.openOptionsPage('backup');
+        // Urls.openOptionsPage('backup');
     } catch (e) {
         setActionToReloadAddon();
 

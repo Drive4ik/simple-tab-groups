@@ -11,6 +11,7 @@
     import contextMenuTabNew from '../components/context-menu-tab-new.vue';
     import contextMenuGroup from '../components/context-menu-group.vue';
 
+    import '/js/prefixed-storage.js';
     import backgroundSelf from '/js/background.js';
     import * as Constants from '/js/constants.js';
     import Messages from '/js/messages.js';
@@ -30,7 +31,10 @@
 
     const isSidebar = '#sidebar' === window.location.hash;
 
-    window.logger = new Logger(isSidebar ? 'Sidebar' : 'Popup');
+    const winLocName = isSidebar ? 'Sidebar' : 'Popup';
+    window.logger = new Logger(winLocName);
+
+    const storage = localStorage.create(winLocName.toLowerCase());
 
     Vue.mixin(defaultGroupMixin);
     Vue.mixin(startUpData);
@@ -48,7 +52,7 @@
     }
 
     function showDebugMode() {
-        if (localStorage.enableDebug) {
+        if (backgroundSelf.storage.enableDebug) {
             const div = document.createElement('div');
             div.innerText = browser.i18n.getMessage('loggingIsEnabledTitle');
             Object.assign(div.style, {
@@ -108,7 +112,7 @@
                 search: '',
                 searchDelay: '',
                 searchDelayTimer: 0,
-                searchOnlyGroups: window.localStorage.searchOnlyGroupsInPopup == 1,
+                searchOnlyGroups: storage.searchOnlyGroupsInPopup ?? false,
                 extendedSearch: false,
 
                 currentWindow: null,
@@ -126,7 +130,7 @@
                 showUnSyncTabs: false,
                 unSyncTabs: [],
 
-                showArchivedGroupsInPopup: window.localStorage.hasOwnProperty('showArchivedGroupsInPopup') ? window.localStorage.showArchivedGroupsInPopup == 1 : true,
+                showArchivedGroupsInPopup: storage.showArchivedGroupsInPopup ?? true,
 
                 multipleTabIds: [], // TODO try use Set Object
             };
@@ -198,7 +202,7 @@
                 }
             },
             searchOnlyGroups(value) {
-                window.localStorage.searchOnlyGroupsInPopup = value ? 1 : 0;
+                storage.searchOnlyGroupsInPopup = !!value;
             },
             groups(groups) {
                 if (this.groupToShow) {
@@ -206,7 +210,7 @@
                 }
             },
             showArchivedGroupsInPopup(value) {
-                window.localStorage.showArchivedGroupsInPopup = value ? 1 : 0;
+                storage.showArchivedGroupsInPopup = !!value;
             },
         },
         computed: {

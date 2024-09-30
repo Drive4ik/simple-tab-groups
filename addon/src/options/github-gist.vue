@@ -283,7 +283,7 @@ export default {
                                     >
                                     <a :href="breadcrumb.url" :class="{'has-text-weight-semibold': breadcrumb.isBold}" target="_blank" rel="noreferrer noopener">
                                         <figure v-show="breadcrumb.imageLoaded" class="image is-24x24 mr-2">
-                                            <img :src="breadcrumb.image" @load="breadcrumb.imageLoaded = true" loading="lazy" decoding="async" />
+                                            <img :src="breadcrumb.image" @load="breadcrumb.imageLoaded = true" decoding="async" />
                                         </figure>
 
                                         <span v-if="breadcrumb.text" v-text="breadcrumb.text"></span>

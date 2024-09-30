@@ -28,6 +28,8 @@
 
     window.logger = new Logger('Manage');
 
+    const storage = localStorage.create('manage-groups');
+
     // import dnd from '../js/dnd';
     // import { Drag, Drop } from 'vue-drag-drop';
     // import draggable from 'vuedraggable';
@@ -37,7 +39,7 @@
     Vue.config.errorHandler = errorEventHandler.bind(window.logger);
 
     function showDebugMode() {
-        if (localStorage.enableDebug) {
+        if (backgroundSelf.storage.enableDebug) {
             const div = document.createElement('div');
             div.innerText = browser.i18n.getMessage('loggingIsEnabledTitle');
             Object.assign(div.style, {
@@ -99,7 +101,7 @@
 
                 containers: Containers.getAll(true),
                 options: {},
-                showArchivedGroupsInManageGroups: !!window.localStorage.showArchivedGroupsInManageGroups,
+                showArchivedGroups: !!storage.showArchivedGroups,
 
                 groups: [],
 
@@ -156,11 +158,11 @@
                         .then(() => value && this.loadAvailableTabThumbnails());
                 }
             },
-            showArchivedGroupsInManageGroups(value) {
+            showArchivedGroups(value) {
                 if (value) {
-                    window.localStorage.showArchivedGroupsInManageGroups = 1;
+                    storage.showArchivedGroups = true;
                 } else {
-                    delete window.localStorage.showArchivedGroupsInManageGroups;
+                    delete storage.showArchivedGroups;
                 }
             },
             searchDelay(search) {
@@ -178,7 +180,7 @@
         computed: {
             filteredGroups() {
                 let searchStr = this.search.toLowerCase(),
-                    groups = this.showArchivedGroupsInManageGroups ? this.groups : this.groups.filter(group => !group.isArchive);
+                    groups = this.showArchivedGroups ? this.groups : this.groups.filter(group => !group.isArchive);
 
                 return groups.map(group => {
                     group.filteredTabs = group.tabs.filter(tab => Utils.mySearchFunc(searchStr, Tabs.getTitle(tab, true), this.extendedSearch));
@@ -534,12 +536,12 @@
 
                 if (!this.isCurrentWindowIsAllow) {
                     window.addEventListener('resize', function() {
-                        if (window.localStorage.manageGroupsWindowWidth != window.innerWidth) {
-                            window.localStorage.manageGroupsWindowWidth = window.innerWidth;
+                        if (storage.windowWidth != window.innerWidth) {
+                            storage.windowWidth = window.innerWidth;
                         }
 
-                        if (window.localStorage.manageGroupsWindowHeight != window.innerHeight) {
-                            window.localStorage.manageGroupsWindowHeight = window.innerHeight;
+                        if (storage.windowHeight != window.innerHeight) {
+                            storage.windowHeight = window.innerHeight;
                         }
                     });
                 }
@@ -1017,7 +1019,7 @@
                     </label>
                     <br>
                     <label class="checkbox">
-                        <input v-model="showArchivedGroupsInManageGroups" type="checkbox" />
+                        <input v-model="showArchivedGroups" type="checkbox" />
                         <span v-text="lang('showArchivedGroups')"></span>
                     </label>
                 </div>

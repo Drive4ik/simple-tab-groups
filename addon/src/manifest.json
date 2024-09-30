@@ -77,7 +77,7 @@
         "page": "stg-background.html"
     },
 
-    "content_security_policy": "default-src 'self' https://api.github.com https://gist.githubusercontent.com; object-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data:; script-src 'self'",
+    "content_security_policy": "default-src 'self' https://api.github.com https://gist.githubusercontent.com;  script-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data:;",
 
     "default_locale": "en",
 

@@ -24,6 +24,8 @@
 
     window.logger = new Logger('Options');
 
+    const storage = localStorage.create('options');
+
     Vue.mixin(defaultGroupMixin);
     Vue.mixin(syncCloudMixin);
     Vue.config.errorHandler = errorEventHandler.bind(window.logger);
@@ -49,7 +51,7 @@
             this.SECTION_BACKUP = SECTION_BACKUP;
 
             return {
-                section: window.localStorage.optionsSection || SECTION_GENERAL,
+                section: storage.section || SECTION_GENERAL,
 
                 contextMenuTabTitles: {
                     'open-in-new-window': {
@@ -144,7 +146,7 @@
 
                 defaultBookmarksParents: [],
 
-                autoBackupLastTimeStamp: +window.localStorage.autoBackupLastTimeStamp,
+                autoBackupLastTimeStamp: storage.autoBackupLastTimeStamp,
 
                 showLoadingMessage: false,
 
@@ -196,7 +198,7 @@
         },
         watch: {
             section(section) {
-                window.localStorage.optionsSection = section;
+                storage.section = section;
             },
             'options.autoBackupFolderName': function(value, oldValue) {
                 if (null == oldValue) {

@@ -1,9 +1,13 @@
+import './prefixed-storage.js';
 
 import * as Constants from './constants.js';
 import JSON from './json.js';
 import * as Utils from './utils.js';
 import Messages from './messages.js';
 import {normalizeError, getStack} from './logger-utils.js';
+
+export const storage = localStorage.create('logs');
+const mainStorage = localStorage.create('main');
 
 const consoleKeys = ['log', 'info', 'warn', 'error', 'debug', 'assert'];
 
@@ -107,7 +111,7 @@ function setLoggerFuncs() {
 
             const args = [...[message].flat(), normalizeError(error)];
 
-            if (window.localStorage.enableDebug && !this.fromErrorEventHandler) {
+            if (mainStorage.enableDebug && !this.fromErrorEventHandler) {
                 throwError = true;
             }
 
@@ -144,7 +148,7 @@ function setLoggerFuncs() {
     }.bind(this);
 
     this.isEnabled = function(cKey) {
-        return this.enabled || !!localStorage.enableDebug || cKey === 'error' || cKey === 'assert';
+        return this.enabled || !!mainStorage.enableDebug || cKey === 'error' || cKey === 'assert';
     }.bind(this);
 
     this.enable = function() {
@@ -223,7 +227,7 @@ export function showLog(log, {cKey, args}) {
         return;
     }
 
-    if (self.localStorage.enableDebug || self.IS_TEMPORARY) {
+    if (mainStorage.enableDebug || self.IS_TEMPORARY) {
         let argsToConsole = cKey === 'assert'
             ? [args[0], this.prefixes.join('.'), ...args.slice(1)]
             : log[`console.${cKey}`].slice();
@@ -299,19 +303,17 @@ function getIndentAndRemoveScope(indentCount, args) {
 
 const Errors = {
     get() {
-        return JSON.parse(self.localStorage.errorLogs || null) || [];
+        return storage.errors ?? [];
     },
     add(error) {
-        const errorLogs = Errors.get();
+        const errors = Errors.get();
 
-        errorLogs.push(error);
+        errors.push(error);
 
-        try {
-            self.localStorage.errorLogs = JSON.stringify(errorLogs.slice(-50));
-        } catch (e) {}
+        storage.errors = errors.slice(-50);
     },
     clear() {
-        delete self.localStorage.errorLogs;
+        delete storage.errors;
     },
 };
 
@@ -350,7 +352,7 @@ function errorEventHandler(event) {
     event.preventDefault?.();
     event.stopImmediatePropagation?.();
 
-    self.localStorage.enableDebug = 2;
+    mainStorage.enableDebug = 2;
 
     const logger = this instanceof Logger ? this : self.logger;
 

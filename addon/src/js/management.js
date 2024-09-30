@@ -1,9 +1,12 @@
+import '/js/prefixed-storage.js';
 import Logger from './logger.js';
 import * as Constants from './constants.js';
 import * as Urls from './urls.js';
 import cacheStorage, {createStorage} from './cache-storage.js';
 
 const logger = new Logger('Management');
+
+const storage = localStorage.create('management');
 
 const extensions = cacheStorage.extensions ??= createStorage({});
 
@@ -70,20 +73,19 @@ export function isIgnoredConflictedExtension(extId) {
 
 export function ignoreConflictedExtension(extId) {
     const ignored = getIgnoredConflictedExtensions();
+
     if (!ignored.includes(extId)) {
         ignored.push(extId);
+        storage.ignoredConflictedExtensions = ignored;
     }
-    localStorage.ignoredConflictedExtensions = JSON.stringify(ignored);
 }
 
 export function dontIgnoreConflictedExtension(extId) {
-    let ignored = getIgnoredConflictedExtensions();
-    ignored = ignored.filter(id => id !== extId);
-    localStorage.ignoredConflictedExtensions = JSON.stringify(ignored);
+    storage.ignoredConflictedExtensions = getIgnoredConflictedExtensions().filter(id => id !== extId);
 }
 
 export function getIgnoredConflictedExtensions() {
-    return JSON.parse(localStorage.ignoredConflictedExtensions || null) || [];
+    return storage.ignoredConflictedExtensions ?? [];
 }
 
 // can't have permission to read other addon icon :((

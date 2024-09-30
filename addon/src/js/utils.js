@@ -145,7 +145,7 @@ export async function notify(message, sec = 20, id = null, iconUrl = null, onCli
     if (id) {
         await browser.notifications.clear(id);
     } else {
-        id = String(Date.now());
+        id = String(getRandomInt());
     }
 
     // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/notifications/NotificationOptions

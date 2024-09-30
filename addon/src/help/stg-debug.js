@@ -1,4 +1,5 @@
 import './translate-help-pages.js';
+import '/js/prefixed-storage.js';
 
 import Messages from '/js/messages.js';
 import backgroundSelf from '/js/background.js';
@@ -23,30 +24,30 @@ Messages.connectToBackground('stg-debug', 'show-error-notification', () => {
 });
 
 function reloadState() {
-    enableDebugButton.classList.toggle('hidden', !!window.localStorage.enableDebug);
-    disableDebugButton.classList.toggle('hidden', !window.localStorage.enableDebug);
+    enableDebugButton.classList.toggle('hidden', !!backgroundSelf.storage.enableDebug);
+    disableDebugButton.classList.toggle('hidden', !backgroundSelf.storage.enableDebug);
 
     if (wasAutoDebug || isAutoDebug()) {
         debugStatus.classList = 'auto-enabled';
         $('#mainTitle').innerText = browser.i18n.getMessage('helpPageStgDebugAutoDebugMainTitle');
-    } else if (window.localStorage.enableDebug) {
+    } else if (backgroundSelf.storage.enableDebug) {
         debugStatus.classList = 'enabled';
     }
 }
 
 function isAutoDebug() {
-    return window.localStorage.enableDebug == 2;
+    return backgroundSelf.storage.enableDebug == 2;
 }
 
 function enableDebug() {
-    window.localStorage.enableDebug = 1;
+    backgroundSelf.storage.enableDebug = 1;
     debugStatus.classList = 'enabled';
     enableDebugButton.classList.add('hidden');
     disableDebugButton.classList.remove('hidden');
 }
 
 async function disableDebug() {
-    delete window.localStorage.enableDebug;
+    delete backgroundSelf.storage.enableDebug;
     debugStatus.classList = '';
     enableDebugButton.classList.remove('hidden');
     disableDebugButton.classList.add('hidden');
@@ -159,8 +160,8 @@ async function saveConsoleLogs() {
         CRITICAL_ERRORS,
         addon: {
             version: Constants.MANIFEST.version,
-            upTime: self.localStorage.START_TIME
-                ? Math.ceil((Date.now() - self.localStorage.START_TIME) / 1000) + ' sec'
+            upTime: backgroundSelf.storage.START_TIME
+                ? Math.ceil((Date.now() - backgroundSelf.storage.START_TIME) / 1000) + ' sec'
                 : 'unknown',
             UUID: Constants.STG_BASE_URL,
             permissions: {
@@ -191,7 +192,7 @@ async function saveConsoleLogs() {
 
 function onClosePage() {
     if (wasAutoDebug || isAutoDebug()) {
-        delete window.localStorage.enableDebug;
+        delete backgroundSelf.storage.enableDebug;
         Messages.sendMessage('safe-reload-addon');
     }
 }

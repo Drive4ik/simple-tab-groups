@@ -193,7 +193,7 @@ export async function sync(progressFunc = null) {
         await Storage.set(Utils.extractKeys(syncResult.localData, Constants.NON_OPTION_KEYS));
     }
 
-    window.localStorage.autoSyncLastTimeStamp = Utils.unixNow();
+    backgroundSelf.storage.autoSyncLastTimeStamp = Utils.unixNow();
 
     progressFunc?.(100);
 
@@ -517,7 +517,6 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
 
 const EXCLUDE_GROUP_KEYS = [
     'tabs',
-    'bookmarkId',
 ];
 
 function assignGroupKeys(localGroup, cloudGroup, sourceOfTruth, changes) {

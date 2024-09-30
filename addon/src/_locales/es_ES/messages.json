@@ -817,14 +817,6 @@
         "message": "Por favor, activa la opción \"Restaurar sesión previa\" en la configuración del navegador.<br>Esto es necesario para mantener la comunicación entre grupos y pestañas, <br>de lo contrario las pestañas no se abrirán cuando se inicie el navegador y se perderán del complemento -<br>el complemento dejará de funcionar.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
-    "exportToBookmarksWhenAutoBackup": {
-        "message": "Guarda el grupo en los marcadores cuando se realice una copia de seguridad automática",
-        "description": "Save the group to bookmarks when auto backup"
-    },
-    "leaveBookmarksOfClosedTabs": {
-        "message": "Mantener marcadores de pestañas cerradas",
-        "description": "Leave bookmarks of closed tabs"
-    },
     "enableDebugTitle": {
         "message": "Activar DEPURACIÓN",
         "description": "Enable DEBUG"

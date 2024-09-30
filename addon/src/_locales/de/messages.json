@@ -817,14 +817,6 @@
         "message": "Bitte aktiviere die Browsereinstellung \"Vorherige Sitzung wiederherstellen\". Dies ist nötig um die Kommunikation zwischen den Tabs und ihren Gruppen aufrecht zu erhalten, <br>andernfalls werden sich keine Tabs beim Browserstart öffnen und ihre Daten sind verloren -<br> das Addon wird funktionsunfähig.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
-    "exportToBookmarksWhenAutoBackup": {
-        "message": "Speichere die Gruppe in den Lesezeichen bei einer automatischen Sicherung",
-        "description": "Save the group to bookmarks when auto backup"
-    },
-    "leaveBookmarksOfClosedTabs": {
-        "message": "Erzeuge Lesezeichen wenn Tabs geschlossen werden",
-        "description": "Leave bookmarks of closed tabs"
-    },
     "enableDebugTitle": {
         "message": "Aktiviere die Fehlerprotokollierung (DEBUG)",
         "description": "Enable DEBUG"

@@ -817,14 +817,6 @@
         "message": "ブラウザーの設定で [前回のウィンドウとタブを開く] を有効にしてください。<br>これはグループとタブの間の通信を管理するために必要です。<br>これが無効になっている場合、ブラウザーの起動時にタブが開かず、アドオンからタブの情報が失われます。<br>つまり、アドオンの動作が停止するでしょう。",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
-    "exportToBookmarksWhenAutoBackup": {
-        "message": "自動バックアップ時にブックマークにグループを保存",
-        "description": "Save the group to bookmarks when auto backup"
-    },
-    "leaveBookmarksOfClosedTabs": {
-        "message": "閉じたタブのブックマークを残す",
-        "description": "Leave bookmarks of closed tabs"
-    },
     "enableDebugTitle": {
         "message": "デバッグを有効にする",
         "description": "Enable DEBUG"

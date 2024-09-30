@@ -141,8 +141,8 @@
             delete newGroup.tabs;
             delete newGroup.filteredTabs;
 
-            if (newGroup.exportToBookmarksWhenAutoBackup) {
-                newGroup.exportToBookmarksWhenAutoBackup = this.permissions.bookmarks;
+            if (newGroup.exportToBookmarks) {
+                newGroup.exportToBookmarks = this.permissions.bookmarks;
             }
 
             this.$set(this, 'group', JSON.clone(newGroup));
@@ -424,18 +424,10 @@
             <div class="control">
                 <label class="checkbox">
                     <input
-                        v-model="group.exportToBookmarksWhenAutoBackup"
-                        @click="$event => setPermissionsBookmarks($event, 'exportToBookmarksWhenAutoBackup')"
+                        v-model="group.exportToBookmarks"
+                        @click="$event => setPermissionsBookmarks($event, 'exportToBookmarks')"
                         type="checkbox" />
-                    <span v-text="lang('exportToBookmarksWhenAutoBackup')"></span>
-                </label>
-            </div>
-        </div>
-        <div class="field ml-3">
-            <div class="control">
-                <label class="checkbox" :disabled="!group.exportToBookmarksWhenAutoBackup">
-                    <input v-model="group.leaveBookmarksOfClosedTabs" :disabled="!group.exportToBookmarksWhenAutoBackup" type="checkbox" />
-                    <span v-text="lang('leaveBookmarksOfClosedTabs')"></span>
+                    <span v-text="lang('exportGroupToBookmarks')"></span>
                 </label>
             </div>
         </div>

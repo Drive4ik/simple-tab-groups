@@ -817,14 +817,6 @@
         "message": "Włącz \"Przywracanie poprzedniej sesji\" w ustawieniach przeglądarki.<br>Jest to niezbędne do utrzymania komunikacji pomiędzy grupą a kartą,<br>w przeciwnym wypadku karty nie zostaną otwarte podczas uruchamiania przeglądarki i rozszerzenie straci informację o nich -<br>rozszerzenie nie będzie działać.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
-    "exportToBookmarksWhenAutoBackup": {
-        "message": "Zapisz grupę w zakładkach przy automatycznym tworzeniu kopii",
-        "description": "Save the group to bookmarks when auto backup"
-    },
-    "leaveBookmarksOfClosedTabs": {
-        "message": "Pozostaw zakładki zamkniętych kart",
-        "description": "Leave bookmarks of closed tabs"
-    },
     "enableDebugTitle": {
         "message": "Włącz tryb DEBUG",
         "description": "Enable DEBUG"

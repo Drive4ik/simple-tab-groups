@@ -826,7 +826,7 @@ export function getTitle({id, index, title, url, discarded, windowId, lastAccess
         title = (discarded ? Constants.DISCARDED_SYMBOL : Constants.ACTIVE_SYMBOL) + ' ' + title;
     }
 
-    if (window.localStorage.enableDebug && id) {
+    if (backgroundSelf.storage.enableDebug && id) {
         let lastDate = new Date(lastAccessed);
 
         if (lastDate.getTime()) {

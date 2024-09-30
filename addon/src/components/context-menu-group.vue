@@ -79,7 +79,7 @@ export default {
                     <span v-text="lang('hotkeyActionTitleDiscardOtherGroups')"></span>
                 </li>
                 <li
-                    v-if="menu.includes('export-to-bookmarks')"
+                    v-if="menu.includes('export-to-bookmarks') && data.group.exportToBookmarks"
                     @click="$emit('export-to-bookmarks', data.group)">
                     <img src="/icons/bookmark.svg" class="size-16" />
                     <span v-text="lang('exportGroupToBookmarks')"></span>

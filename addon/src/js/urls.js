@@ -3,6 +3,9 @@ import * as Constants from './constants.js';
 import * as Tabs from './tabs.js';
 import * as Windows from './windows.js';
 
+const optionsStorage = localStorage.create('options');
+const manageGroupsStorage = localStorage.create('manage-groups');
+
 export const MANAGE_TABS_URL = getURL('/manage/manage.html');
 export const HELP_PAGE_UNSUPPORTED_URL = getURL('stg-unsupported-url');
 
@@ -25,7 +28,7 @@ export async function openUrl(page, asWindow = false) {
 }
 
 export function openOptionsPage(section = 'general') {
-    window.localStorage.optionsSection = section;
+    optionsStorage.section = section;
 
     return browser.runtime.openOptionsPage()
         .catch(self.logger?.onCatch('openOptionsPage', false))
@@ -52,8 +55,8 @@ export async function openManageGroups() {
             await Windows.setFocus(win.id);
         } else {
             await Windows.createPopup(MANAGE_TABS_URL, {
-                width: +window.localStorage.manageGroupsWindowWidth || 1000,
-                height: +window.localStorage.manageGroupsWindowHeight || 700,
+                width: manageGroupsStorage.windowWidth ?? 1000,
+                height: manageGroupsStorage.windowHeight ?? 700,
             });
         }
     }
