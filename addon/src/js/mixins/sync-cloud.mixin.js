@@ -4,6 +4,11 @@ import Messages from '/js/messages.js';
 
 const logger = new Logger('sync.cloud-mixin');
 
+const allowedInstanceNames = new Set([
+    'popup-page',
+    'github-gist',
+]);
+
 const instances = new Set;
 
 const {disconnect} = Messages.connectToBackground('sync-progress-mixin', [
@@ -11,10 +16,16 @@ const {disconnect} = Messages.connectToBackground('sync-progress-mixin', [
     'sync-progress',
     'sync-end',
     'sync-error',
-], ({action, progress, message}) => {
-    logger.log(action, progress, message);
+], (syncEvent) => {
+    logger.log(syncEvent.action, syncEvent);
 
-    instances.forEach(instance => instance.$emit(action, {progress, message}));
+    for (const instance of instances) {
+        instance.$emit(syncEvent.action, syncEvent);
+
+        if (['sync-end', 'sync-error'].includes(syncEvent.action)) {
+            instance.$emit('sync-finish', syncEvent);
+        }
+    }
 });
 
 window.addEventListener('unload', disconnect);
@@ -28,11 +39,16 @@ export default {
         };
     },
     created() {
+        if (!allowedInstanceNames.has(this.$options.name)) {
+            return;
+        }
+
         instances.add(this);
 
         this
             .$on(['sync-start', 'sync-progress', 'sync-end', 'sync-error'], () => {
-                clearTimeout(this.clearProgressTimer);
+                clearTimeout(this.synchronisationProgressTimer);
+                clearTimeout(this.synchronisationInProgressTimer);
             })
             .$on('sync-start', () => {
                 this.synchronisationError = '';
@@ -40,18 +56,18 @@ export default {
             })
             .$on('sync-progress', ({progress}) => {
                 this.synchronisationProgress = progress;
-                this.synchronisationInProgress = true;
             })
             .$on('sync-end', () => {
-                this.synchronisationInProgress = false;
-                this.$emit('sync-finish');
+                this.synchronisationInProgressTimer = setTimeout(() => this.synchronisationInProgress = false, 500);
             })
             .$on('sync-error', ({message}) => {
                 this.synchronisationError = message;
-                this.synchronisationInProgress = false;
-                this.clearProgressTimer = setTimeout(() => this.synchronisationProgress = 0, 5000);
-                this.$emit('sync-finish');
+                this.synchronisationProgressTimer = setTimeout(() => this.synchronisationProgress = 0, 5000);
+                this.synchronisationInProgressTimer = setTimeout(() => this.synchronisationInProgress = false, 500);
             });
+    },
+    beforeDestroy() {
+        instances.delete(this);
     },
     methods: {
         async syncCloud() {

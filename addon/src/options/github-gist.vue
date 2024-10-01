@@ -13,6 +13,7 @@ import {CloudError} from '/js/sync/cloud/cloud.js';
 import syncCloudMixin from '/js/mixins/sync-cloud.mixin.js';
 
 export default {
+    name: 'github-gist',
     mixins: [syncCloudMixin],
     data() {
         this.SYNC_STORAGE_IS_AVAILABLE = SyncStorage.IS_AVAILABLE;

@@ -20,11 +20,8 @@ const logger = new Logger('Cloud');
 export function CloudError(langId) {
     logger.error('CloudError:', langId)
     this.id = langId;
-    this.message = browser.i18n.getMessage(langId);
-
-    if (!this.message) {
-        this.message = langId;
-    }
+    this.name = 'CloudError';
+    this.message = browser.i18n.getMessage(langId) || langId;
 
     this.toString = () => 'CloudError: ' + this.message;
 }
@@ -108,7 +105,7 @@ export async function sync(progressFunc = null) {
 
     progressFunc?.(50);
 
-    console.debug('syncResult', syncResult);
+    // console.debug('syncResult', syncResult);
 
     if (syncResult.changes.local) {
         for (const group of syncResult.localData.groups) {

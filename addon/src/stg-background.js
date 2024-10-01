@@ -30,7 +30,8 @@ if (storage.enableDebug === 2) { // if debug was auto-enabled - disable on next 
     delete storage.enableDebug;
 }
 
-self.logger = new Logger('BG');
+const logger = new Logger('BG');
+self.logger = logger;
 
 self.loggerFuncs = {
     getLogs,
@@ -1832,7 +1833,7 @@ async function onAlarm({name}) {
     if (name === LOCAL_BACKUP_ALARM_NAME) {
         createBackup(options.autoBackupIncludeTabFavIcons, options.autoBackupIncludeTabThumbnails, true);
     } else if (name === CLOUD_SYNC_ALARM_NAME) {
-        cloudSync();
+        cloudSync(true);
     }
 }
 
@@ -2939,13 +2940,13 @@ async function clearAddon(reloadAddonOnFinish = true) {
     }
 }
 
-async function cloudSync() {
-    const log = logger.start('cloudSync');
+async function cloudSync(auto = false) {
+    const log = logger.start('cloudSync', {auto});
 
     try {
         sendMessage('sync-start');
 
-        const result = await sync(progress => {
+        await sync(progress => {
             log.log('progress', progress);
             sendMessage('sync-progress', {progress});
         });
@@ -2953,10 +2954,18 @@ async function cloudSync() {
         sendMessage('sync-end');
         log.stop();
     } catch (e) {
+        const message = String(e);
+
+        if (auto) {
+            Utils.notify(message, undefined, undefined, undefined, () => Urls.openOptionsPage('backup sync'));
+        }
+
         log.logError('cant sync', e);
         log.stopError();
         sendMessage('sync-error', {
-            message: String(e),
+            id: e.id,
+            name: e.name,
+            message: message,
         });
     }
 }

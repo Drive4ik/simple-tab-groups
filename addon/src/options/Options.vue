@@ -37,6 +37,8 @@
 
     document.title = browser.i18n.getMessage('openSettings');
 
+    const [section, element = null] = (storage.section || SECTION_GENERAL).split(' ');
+
     export default {
         name: 'options-page',
         // mixins: [defaultGroupMixin, syncCloudMixin],
@@ -51,7 +53,8 @@
             this.SECTION_BACKUP = SECTION_BACKUP;
 
             return {
-                section: storage.section || SECTION_GENERAL,
+                section,
+                element,
 
                 contextMenuTabTitles: {
                     'open-in-new-window': {
@@ -195,6 +198,13 @@
                         });
                     });
                 });
+        },
+        mounted() {
+            if (this.element === 'sync') {
+                setTimeout(() => {
+                    Utils.scrollTo('#sync-block');
+                }, 1000);
+            }
         },
         watch: {
             section(section) {
@@ -993,7 +1003,7 @@
 
             <hr>
 
-            <div class="field">
+            <div id="sync-block" class="field">
                 <div class="field">
                     <label class="checkbox">
                         <input v-model="options.syncEnable" type="checkbox" />

@@ -305,6 +305,30 @@
                     .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
                     .$on('drag-over', (item, isOver) => item.isOver = isOver);
 
+                this
+                    .$on('sync-error', async ({name, message}) => {
+                        if (this.synchronisationProgress < 5) {
+                            this.synchronisationProgress = 15;
+                        }
+
+                        if (this.syncCloudTriggeredByThis) {
+                            const ok = await this.showConfirm(name, message, 'openSettings', 'is-info');
+
+                            if (ok) {
+                                Messages.sendMessage('open-options-page', {
+                                    section: 'backup',
+                                });
+                                this.closeWindow();
+                            }
+                        }
+                    })
+                    .$on('sync-finish', () => {
+                        this.clearProgressTimer = setTimeout(() => {
+                            this.synchronisationProgress = 0;
+                            this.syncCloudTriggeredByThis = false;
+                        }, 3000);
+                    });
+
                 let lazyRemoveTabTimer = 0,
                     lazyRemoveTabIds = [];
                 const removeTab = (tabId, withAllTabs = false) => {
@@ -1279,6 +1303,21 @@
                     parent && parent.classList.add('is-context-active');
                 }
             },
+
+            syncCloudClick() {
+                if (this.syncCloudTriggeredByThis) {
+                    return;
+                }
+
+                this.syncCloudTriggeredByThis = true;
+                this.syncCloud();
+            },
+            syncCloudOptions() {
+                Messages.sendMessage('open-options-page', {
+                    section: 'backup sync',
+                });
+                this.closeWindow();
+            },
         },
     }
 </script>
@@ -1714,13 +1753,27 @@
             </div>
             <div class="is-flex is-align-items-center is-vertical-separator"></div>
             <div
+                v-if="options.syncEnable"
                 tabindex="0"
-                class="is-flex is-align-items-center is-full-height"
-                @click="syncCloud"
-                @keydown.enter="syncCloud"
-                :title="lang('openSettings')"
+                class="is-full-height is-flex is-align-items-center is-justify-content-center p-4"
+                @click="syncCloudClick"
+                @keydown.enter="syncCloudClick"
+                :title="lang('syncStart')"
+                @contextmenu="$refs.syncContextMenu.open($event)"
                 >
-                <img class="size-16" src="/icons/cloud-arrow-up-solid.svg" />
+                <div
+                    class="circle-progress is-flex is-align-items-center is-justify-content-center"
+                    :class="{
+                        'in-progress': synchronisationInProgress,
+                        'is-success': !synchronisationError && synchronisationProgress === 100,
+                        'is-danger': synchronisationError,
+                    }"
+                    :style="{
+                        '--sync-progress-percent': `${synchronisationProgress}%`,
+                    }"
+                    >
+                    <img class="size-16" src="/icons/cloud-arrow-up-solid.svg" />
+                </div>
             </div>
             <div class="is-flex is-align-items-center is-vertical-separator"></div>
             <div
@@ -1734,6 +1787,15 @@
                 <img class="size-16" src="/icons/settings.svg" />
             </div>
         </footer>
+
+        <context-menu ref="syncContextMenu">
+            <ul class="is-unselectable">
+                <li @click="syncCloudOptions">
+                    <img src="/icons/settings.svg" class="size-16" />
+                    <span v-text="lang('githubGistCloudSettingsTitle')"></span>
+                </li>
+            </ul>
+        </context-menu>
 
         <context-menu ref="settingsContextMenu">
             <ul class="is-unselectable">
@@ -1881,6 +1943,12 @@
 </template>
 
 <style lang="scss">
+    @property --sync-progress-percent {
+        syntax: '<percentage>';
+        initial-value: 0%;
+        inherits: false;
+    }
+
     :root {
         --popup-width: 450px;
         --max-popup-width: 100%;
@@ -1981,10 +2049,12 @@
             bottom: 0;
             height: var(--footer-height);
             align-items: center;
-            background-color: var(--footer-background-color);
+            --current-background-color: var(--footer-background-color);
+            background-color: var(--current-background-color);
 
             > :hover {
-                background-color: var(--footer-background-hover-color);
+                --current-background-color: var(--footer-background-hover-color);
+                background-color: var(--current-background-color);
             }
 
             .manage-groups span {
@@ -1999,6 +2069,39 @@
                 background-color: var(--color-hr);
                 width: 1px;
                 height: 75%;
+            }
+
+            .is-vertical-separator + .is-vertical-separator {
+                display: none !important;
+            }
+
+            .circle-progress {
+                --indent: 17px;
+                --progress-color: hsl(from currentColor h s calc(l + 70));
+                --progress-background: var(--current-background-color);
+
+                height: calc(var(--footer-height) - var(--indent));
+                width: calc(var(--footer-height) - var(--indent));
+                border-radius: 50%;
+                background:
+                    radial-gradient(
+                        closest-side,
+                        var(--progress-background) 85%, transparent 80% 100%
+                    ),
+                    conic-gradient(
+                        var(--progress-color) var(--sync-progress-percent),
+                        transparent 0
+                    );
+
+                &.in-progress {
+                    transition: --sync-progress-percent linear .3s;
+                }
+                &.is-success {
+                    --progress-color: hsl(153, 53%, 53%);
+                }
+                &.is-danger {
+                    --progress-color: red;
+                }
             }
         }
 
