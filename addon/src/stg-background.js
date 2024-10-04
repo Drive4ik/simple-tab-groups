@@ -3590,6 +3590,10 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
                     group.exportToBookmarks = group.exportToBookmarksWhenAutoBackup;
                     delete group.exportToBookmarksWhenAutoBackup;
                     delete group.bookmarkId;
+
+                    if (group.isArchive) {
+                        Management.replaceMozExtensionTabUrls(group.tabs, 'id');
+                    }
                 });
 
                 delete data.defaultGroupProps.leaveBookmarksOfClosedTabs;

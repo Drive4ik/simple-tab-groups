@@ -7,6 +7,7 @@ import * as Storage from './storage.js';
 import * as Cache from './cache.js';
 import * as Containers from './containers.js';
 import * as Bookmarks from './bookmarks.js';
+import * as Management from './management.js';
 // import Messages from './messages.js';
 // import JSON from './json.js';
 import * as Tabs from './tabs.js';
@@ -501,6 +502,8 @@ export async function archiveToggle(groupId) {
     if (group.isArchive) {
         group.isArchive = false;
 
+        Management.replaceMozExtensionTabUrls(group.tabs, 'uuid');
+
         await backgroundSelf.createTabsSafe(setNewTabsParams(group.tabs, group), true);
 
         group.tabs = [];
@@ -515,6 +518,8 @@ export async function archiveToggle(groupId) {
 
             ({group, groups} = await load(groupId, true));
         }
+
+        Management.replaceMozExtensionTabUrls(group.tabs, 'id');
 
         tabsToRemove = group.tabs;
 

@@ -101,13 +101,48 @@ export function getIgnoredConflictedExtensions() {
 } */
 
 export function getExtensionByUUID(uuid, extensionsStorage = extensions) {
-    if (!uuid) {
-        return;
+    if (isUUID(uuid)) {
+        for (let i in extensionsStorage) {
+            if (extensionsStorage[i]?.hostPermissions?.some(url => url.includes(uuid))) {
+                return extensionsStorage[i];
+            }
+        }
     }
+}
 
-    for (let i in extensionsStorage) {
-        if (extensionsStorage[i]?.hostPermissions?.some(url => url.includes(uuid))) {
-            return extensionsStorage[i];
+const UUID_REGEXP = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function isUUID(uuid) {
+    return UUID_REGEXP.test(uuid);
+}
+
+const MOZ_EXTENSION_URL_REGEXP = /^moz-extension:\/\/([^\/]+)/;
+
+export function UUIDtoId(uuid, extensionsStorage = extensions) {
+    return getExtensionByUUID(uuid, extensionsStorage)?.id;
+}
+
+export function idToUUID(id, extensionsStorage = extensions) {
+    if (extensionsStorage[id]) {
+        for (const url of extensionsStorage[id].hostPermissions) {
+            const [, uuid] = MOZ_EXTENSION_URL_REGEXP.exec(url) ?? [];
+
+            if (uuid) {
+                return uuid;
+            }
+        }
+    }
+}
+
+export function replaceMozExtensionTabUrls(tabs, replaceTo, extensionsStorage = extensions) {
+    const func = replaceTo === 'id' ? UUIDtoId : idToUUID;
+
+    for (const tab of tabs) {
+        if (tab.url.startsWith('moz-extension')) {
+            tab.url = tab.url.replace(MOZ_EXTENSION_URL_REGEXP, (match, value) => {
+                value = func(value, extensionsStorage) ?? value;
+                return `moz-extension://${value}`;
+            });
         }
     }
 }
