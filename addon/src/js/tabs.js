@@ -5,6 +5,7 @@ import * as Urls from './urls.js';
 import * as Utils from './utils.js';
 import * as Cache from './cache.js';
 import * as Containers from './containers.js';
+import * as Management from './management.js';
 import * as Groups from './groups.js';
 import * as Windows from './windows.js';
 
@@ -15,7 +16,17 @@ export async function createNative({url, active, pinned, title, index, windowId,
 
     if (url) {
         if (Utils.isUrlAllowToCreate(url)) {
-            tab.url = url;
+            if (url.startsWith('moz-extension')) {
+                const uuid = Management.extractUUID(url);
+
+                if (Management.isUUID(uuid)) {
+                    tab.url = url;
+                } else {
+                    tab.url = Urls.HELP_PAGE_UNSUPPORTED_URL + '#' + url;
+                }
+            } else {
+                tab.url = url;
+            }
         } else if (url !== 'about:newtab') {
             tab.url = Urls.HELP_PAGE_UNSUPPORTED_URL + '#' + url;
         }

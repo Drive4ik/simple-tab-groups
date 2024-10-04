@@ -2712,12 +2712,17 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
     pinnedTabs = pinnedTabs.filter(tab => Utils.isUrlAllowToCreate(tab.url));
 
     if (pinnedTabs.length) {
+        Management.replaceMozExtensionTabUrls(pinnedTabs, 'id');
         data.pinnedTabs = Tabs.prepareForSave(pinnedTabs); // TODO remove from all
     }
 
     // const containersToExport = new Set;
 
     data.groups = groups.map(group => {
+        if (!group.isArchive) {
+            Management.replaceMozExtensionTabUrls(group.tabs, 'id');
+        }
+
         group.tabs = Tabs.prepareForSave(group.tabs, false, includeTabFavIcons, includeTabThumbnails);
 
         // group.tabs.forEach(({ cookieStoreId }) => {
@@ -2833,6 +2838,10 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
             }
         }
 
+        if (!newGroup.isArchive) {
+            Management.replaceMozExtensionTabUrls(newGroup.tabs, 'uuid');
+        }
+
         for (const tab of newGroup.tabs) {
             if (tab.cookieStoreId && !Containers.isTemporary(tab.cookieStoreId)) {
                 neededContainers.add(tab.cookieStoreId);
@@ -2884,12 +2893,15 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
     if (Array.isArray(data.pinnedTabs)) {
         const currentPinnedTabs = await Tabs.get(null, true, null);
 
+        Management.replaceMozExtensionTabUrls(currentPinnedTabs, 'id');
+
         data.pinnedTabs = data.pinnedTabs.filter(tab => {
             tab.pinned = true;
             return !currentPinnedTabs.some(t => t.url === tab.url);
         });
 
         if (data.pinnedTabs.length) {
+            Management.replaceMozExtensionTabUrls(data.pinnedTabs, 'uuid');
             await createTabsSafe(data.pinnedTabs, false, false);
         }
     }

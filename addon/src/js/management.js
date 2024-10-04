@@ -112,11 +112,16 @@ export function getExtensionByUUID(uuid, extensionsStorage = extensions) {
 
 const UUID_REGEXP = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+const MOZ_EXTENSION_URL_REGEXP = /^moz-extension:\/\/([^\/]+)/;
+
 export function isUUID(uuid) {
     return UUID_REGEXP.test(uuid);
 }
 
-const MOZ_EXTENSION_URL_REGEXP = /^moz-extension:\/\/([^\/]+)/;
+export function extractUUID(url) {
+    const [, uuid] = MOZ_EXTENSION_URL_REGEXP.exec(url) ?? [];
+    return uuid;
+}
 
 export function UUIDtoId(uuid, extensionsStorage = extensions) {
     return getExtensionByUUID(uuid, extensionsStorage)?.id;
@@ -125,7 +130,7 @@ export function UUIDtoId(uuid, extensionsStorage = extensions) {
 export function idToUUID(id, extensionsStorage = extensions) {
     if (extensionsStorage[id]) {
         for (const url of extensionsStorage[id].hostPermissions) {
-            const [, uuid] = MOZ_EXTENSION_URL_REGEXP.exec(url) ?? [];
+            const uuid = extractUUID(url);
 
             if (uuid) {
                 return uuid;

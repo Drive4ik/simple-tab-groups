@@ -3,7 +3,7 @@ import * as Constants from '/js/constants.js';
 import * as Containers from '/js/containers.js';
 import * as Tabs from '/js/tabs.js';
 import * as Groups from '/js/groups.js';
-// import * as Cache from '/js/cache.js';
+import * as Management from '/js/management.js';
 import * as Utils from '/js/utils.js';
 import JSON from '/js/json.js';
 import Logger from '/js/logger.js';
@@ -257,6 +257,12 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
     const resultLocalGroups = [];
     const resultCloudGroups = [];
 
+    for (const group of localGroups) {
+        if (!group.isArchive) {
+            Management.replaceMozExtensionTabUrls(group.tabs, 'id');
+        }
+    }
+
     function prepareForSaveTab(tab, includeLastAccessed) {
         // include includeLastAccessed, tab id and openerId only for local tabs
         const includeId = includeLastAccessed;
@@ -504,6 +510,12 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
                 localGroup.tabs.forEach(tabToRemove => changes.tabsToRemove.add(tabToRemove));
             }
         });
+    }
+
+    for (const group of resultLocalGroups) {
+        if (!group.isArchive) {
+            Management.replaceMozExtensionTabUrls(group.tabs, 'uuid');
+        }
     }
 
     localData.groups = resultLocalGroups;
