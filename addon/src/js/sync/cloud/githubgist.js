@@ -1,6 +1,8 @@
 
+import '/js/prefixed-storage.js';
 import JSON from '/js/json.js';
 import * as Urls from '/js/urls.js';
+import * as Utils from '/js/utils.js';
 
 const GISTS_PER_PAGE = 30; // max = 100
 
@@ -13,6 +15,13 @@ const GISTS_GLOBAL_HEADERS = {
     'Content-Type': 'application/json',
     'X-GitHub-Api-Version': '2022-11-28',
 };
+
+const storage = localStorage.create('github');
+
+function processGistInfo(gist) {
+    storage.updated_at = gist.updated_at;
+    return gist;
+}
 
 export default function GithubGist(token, fileName, gistId = '') {
     this.token = token;
@@ -33,6 +42,7 @@ GithubGist.prototype.findGistId = async function() {
 
     if (gist) {
         this.gistId = gist.id;
+        processGistInfo(gist);
     }
 
     return this.gistId;
@@ -65,6 +75,8 @@ GithubGist.prototype.getGist = async function(onlyInfo = false) {
         if (!file) {
             throw Error('githubNotFoundBackup');
         }
+
+        processGistInfo(gist);
 
         if (onlyInfo) {
             return gist;
@@ -103,21 +115,29 @@ GithubGist.prototype.getGist = async function(onlyInfo = false) {
 }
 
 GithubGist.prototype.createGist = async function(content, description = '') {
-    return this.request('post', GISTS_URL, {
+    const gist = this.request('post', GISTS_URL, {
         public: false,
         description,
         files: {
             [this.fileName]: {content},
         },
     });
+
+    processGistInfo(gist);
+
+    return gist;
 }
 
 GithubGist.prototype.updateGist = async function(content) {
-    return this.request('patch', [GISTS_URL, this], {
+    const gist = await this.request('patch', [GISTS_URL, this], {
         files: {
             [this.fileName]: {content},
         },
     });
+
+    processGistInfo(gist);
+
+    return gist;
 }
 
 GithubGist.prototype.renameGist = async function(newFileName) {

@@ -36,6 +36,8 @@
 
     const storage = localStorage.create(winLocName.toLowerCase());
 
+    const githubStorage = localStorage.create('github');
+
     Vue.mixin(defaultGroupMixin);
     Vue.mixin(startUpData);
     Vue.mixin(syncCloudMixin);
@@ -133,6 +135,8 @@
                 showArchivedGroupsInPopup: storage.showArchivedGroupsInPopup ?? true,
 
                 multipleTabIds: [], // TODO try use Set Object
+
+                syncLastUpdateAgo: null,
             };
         },
         components: {
@@ -250,6 +254,15 @@
             allTabsCount() {
                 return Object.keys(this.allTabs).length;
             },
+            syncTitle() {
+                let result = this.lang('syncStart');
+
+                if (this.syncLastUpdateAgo) {
+                    result += ' (' + this.lang('lastUpdateAgo', this.syncLastUpdateAgo) + ')';
+                }
+
+                return result;
+            },
         },
         methods: {
             lang: browser.i18n.getMessage,
@@ -323,11 +336,12 @@
                         }
                     })
                     .$on('sync-finish', () => {
-                        this.clearProgressTimer = setTimeout(() => {
-                            this.synchronisationProgress = 0;
-                            this.syncCloudTriggeredByThis = false;
-                        }, 3000);
+                        this.updateSyncData();
+                        this.syncCloudTriggeredByThis = false;
                     });
+
+                this.updateSyncData();
+                setInterval(this.updateSyncData.bind(this), 30_000);
 
                 let lazyRemoveTabTimer = 0,
                     lazyRemoveTabIds = [];
@@ -1318,6 +1332,11 @@
                 });
                 this.closeWindow();
             },
+            updateSyncData() {
+                if (githubStorage.updated_at) {
+                    this.syncLastUpdateAgo = Utils.timeAgo(githubStorage.updated_at);
+                }
+            },
         },
     }
 </script>
@@ -1758,7 +1777,7 @@
                 class="is-full-height is-flex is-align-items-center is-justify-content-center p-4"
                 @click="syncCloudClick"
                 @keydown.enter="syncCloudClick"
-                :title="lang('syncStart')"
+                :title="syncTitle"
                 @contextmenu="$refs.syncContextMenu.open($event)"
                 >
                 <div
@@ -1766,7 +1785,7 @@
                     :class="{
                         'in-progress': synchronisationInProgress,
                         'is-success': !synchronisationError && synchronisationProgress === 100,
-                        'is-danger': synchronisationError,
+                        'is-danger': !!synchronisationError,
                     }"
                     :style="{
                         '--sync-progress-percent': `${synchronisationProgress}%`,

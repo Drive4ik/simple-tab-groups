@@ -328,7 +328,8 @@ export default {
                 <div class="column">
                     <div class="simple-progress">
                         <div :class="['position', {
-                            'has-background-success': !area.error,
+                            'in-progress': synchronisationInProgress,
+                            'has-background-success': !area.error && synchronisationProgress === 100,
                             'has-background-danger': !!area.error,
                         }]"
                         :style="{
@@ -362,23 +363,30 @@ export default {
 html[data-theme="dark"] .box {
     color: unset;
     background-color: #313131;
+
+    .subtitle {
+        color: #cecece;
+    }
 }
-html[data-theme="dark"] .box .subtitle {
-    color: #cecece;
-}
+
 
 .simple-progress {
     display: flex;
     width: 100%;
     height: 1em;
-}
 
-.simple-progress > .position {
-    --transition-time: .2s;
+    > .position {
+        --transition-time: 0ms;
+        transition: width var(--transition-time), background-color var(--transition-time);
 
-    transition: width var(--transition-time), background-color var(--transition-time);
-    width: var(--progress-value, 0px);
-    border-radius: 999px;
+        width: var(--progress-value, 0px);
+        background-color: hsla(0, 0%, 50%, .5);
+        border-radius: 999px;
+
+        &.in-progress {
+            --transition-time: .2s;
+        }
+    }
 }
 
 </style>

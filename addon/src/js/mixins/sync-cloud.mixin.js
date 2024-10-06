@@ -58,11 +58,15 @@ export default {
                 this.synchronisationProgress = progress;
             })
             .$on('sync-end', () => {
-                this.synchronisationInProgressTimer = setTimeout(() => this.synchronisationInProgress = false, 500);
+                //
             })
             .$on('sync-error', ({message}) => {
                 this.synchronisationError = message;
-                this.synchronisationProgressTimer = setTimeout(() => this.synchronisationProgress = 0, 5000);
+            })
+            .$on('sync-finish', ({action}) => {
+                const hideProgressMs = action === 'sync-error' ? 5000 : 600;
+                this.synchronisationProgressTimer = setTimeout(() => this.synchronisationProgress = 0, hideProgressMs);
+
                 this.synchronisationInProgressTimer = setTimeout(() => this.synchronisationInProgress = false, 500);
             });
     },
