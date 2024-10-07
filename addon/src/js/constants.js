@@ -335,7 +335,7 @@ export const DEFAULT_OPTIONS = Object.freeze({
     autoBackupFolderName: '',
     autoBackupByDayIndex: true,
 
-    syncEnable: false,
+    syncEnable: true,
     syncOptionsLocation: IS_AVAILABLE_SYNC_STORAGE ? SYNC_STORAGE_FSYNC : SYNC_STORAGE_LOCAL,
     syncId: 1,
     syncIntervalKey: INTERVAL_KEY.days, // hours, days
