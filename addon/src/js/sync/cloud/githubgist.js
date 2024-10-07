@@ -2,7 +2,6 @@
 import '/js/prefixed-storage.js';
 import JSON from '/js/json.js';
 import * as Urls from '/js/urls.js';
-import * as Utils from '/js/utils.js';
 
 const GISTS_PER_PAGE = 30; // max = 100
 
@@ -33,7 +32,17 @@ GithubGist.prototype.loadUser = async function() {
     return this.request('get', GITHUB_USER_URL);
 }
 
-GithubGist.prototype.checkToken = GithubGist.prototype.loadUser;
+GithubGist.prototype.checkToken = async function() {
+    try {
+        await this.request('post', [GISTS_URL, {}], undefined, undefined, true);
+    } catch (e) {
+        if (e.status === 422) {
+            return true;
+        }
+
+        throw e;
+    }
+};
 
 GithubGist.prototype.findGistId = async function() {
     this.gistId = '';
@@ -73,7 +82,7 @@ GithubGist.prototype.getGist = async function(onlyInfo = false) {
         const file = gist.files[this.fileName];
 
         if (!file) {
-            throw Error('githubNotFoundBackup');
+            throw Error('githubNotFound');
         }
 
         processGistInfo(gist);
@@ -94,14 +103,14 @@ GithubGist.prototype.getGist = async function(onlyInfo = false) {
             throw Error('githubInvalidGistContent');
         }
 
-        if (e.message === 'githubNotFoundBackup') {
+        if (e.message === 'githubNotFound') {
             if (!this.secondTry) {
                 this.secondTry = true;
 
                 await this.findGistId();
 
                 if (this.gistId) {
-                    return this.getGist();
+                    return this.getGist(onlyInfo);
                 }
             }
 
@@ -115,7 +124,7 @@ GithubGist.prototype.getGist = async function(onlyInfo = false) {
 }
 
 GithubGist.prototype.createGist = async function(content, description = '') {
-    const gist = this.request('post', GISTS_URL, {
+    const gist = await this.request('post', GISTS_URL, {
         public: false,
         description,
         files: {
@@ -152,7 +161,7 @@ GithubGist.prototype.renameGist = async function(newFileName) {
     return result;
 }
 
-GithubGist.prototype.request = async function(method, url, body = {}, reqOptions = {}) {
+GithubGist.prototype.request = async function(method, url, body = {}, reqOptions = {}, throwUnknownResponse = false) {
     if (!this.token) {
         throw Error('githubInvalidToken');
     }
@@ -200,26 +209,44 @@ GithubGist.prototype.request = async function(method, url, body = {}, reqOptions
 
     let response = await fetch(url, options);
 
-    if (isApi) {
-        const hasGistAccess = response.headers.get('x-oauth-scopes')?.split(/\s*,\s*/).includes('gist');
-
-        if (!hasGistAccess) {
-            throw Error('githubTokenNoAccess');
-        }
-    }
-
     if (response.ok) {
         if (this.progressFunc) {
             response = await readBody(response, this.progressFunc, contentLength);
         }
 
+        if (options.method !== 'GET') {
+            delete storage.hasError;
+        }
+
         return response.json();
     }
 
-    if (response.status === 404) {
-        throw Error('githubNotFoundBackup');
-    } else if (response.status === 401) {
+    if (!throwUnknownResponse) {
+        storage.hasError = true;
+    }
+
+    if (isApi) {
+        const classicScopes = response.headers.get('x-oauth-scopes');
+
+        if (classicScopes && !classicScopes.includes('gist')) {
+            throw Error('githubTokenNoAccess');
+        }
+    }
+
+    if (response.status === 401) {
         throw Error('githubInvalidToken');
+    }
+
+    if (response.status === 403) {
+        throw Error('githubTokenNoAccess');
+    }
+
+    if (response.status === 404) {
+        throw Error('githubNotFound');
+    }
+
+    if (throwUnknownResponse) {
+        throw response;
     }
 
     const result = await response.json();

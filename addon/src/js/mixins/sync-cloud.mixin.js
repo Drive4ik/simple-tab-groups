@@ -60,8 +60,8 @@ export default {
             .$on('sync-end', () => {
                 //
             })
-            .$on('sync-error', ({message}) => {
-                this.synchronisationError = message;
+            .$on('sync-error', ({name, message}) => {
+                this.synchronisationError = `${name}: ${message}`;
             })
             .$on('sync-finish', ({action}) => {
                 const hideProgressMs = action === 'sync-error' ? 5000 : 600;

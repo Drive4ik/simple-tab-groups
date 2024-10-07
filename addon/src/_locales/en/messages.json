@@ -1271,14 +1271,6 @@
         "message": "Simple Tab Groups backup file for cloud sync",
         "description": "Simple Tab Groups backup file for cloud sync"
     },
-    "githubCantUploadBackupToGist": {
-        "message": "Failed to upload the backup to GitHub Gist. Please try again later.",
-        "description": "Failed to upload the backup to GitHub Gist. Please try again later."
-    },
-    "githubCantCreateBackupIntoGist": {
-        "message": "Cannot create a backup to GitHub Gist. Please try again later.",
-        "description": "Cannot create a backup to GitHub Gist. Please try again later."
-    },
     "githubInvalidGistContent": {
         "message": "GitHub Gist backup has incorrect data",
         "description": "GitHub Gist backup has incorrect data"

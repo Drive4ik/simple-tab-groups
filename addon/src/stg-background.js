@@ -2966,10 +2966,8 @@ async function cloudSync(auto = false) {
         sendMessage('sync-end');
         log.stop();
     } catch (e) {
-        const message = String(e);
-
         if (auto) {
-            Utils.notify(message, undefined, undefined, undefined, () => Urls.openOptionsPage('backup sync'));
+            Utils.notify(String(e), undefined, undefined, undefined, () => Urls.openOptionsPage('backup sync'));
         }
 
         log.logError('cant sync', e);
@@ -2977,7 +2975,7 @@ async function cloudSync(auto = false) {
         sendMessage('sync-error', {
             id: e.id,
             name: e.name,
-            message: message,
+            message: e.message,
         });
     }
 }

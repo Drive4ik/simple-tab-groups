@@ -23,7 +23,7 @@ export function CloudError(langId) {
     this.name = 'CloudError';
     this.message = browser.i18n.getMessage(langId) || langId;
 
-    this.toString = () => 'CloudError: ' + this.message;
+    this.toString = () => `${this.name}: ${this.message}`;
 }
 
 const TRUTH_LOCAL = 'local';
@@ -169,7 +169,7 @@ export async function sync(progressFunc = null) {
                 await GithubGistCloud.updateGist(syncResult.cloudData);
             } catch (e) {
                 log.stopError(e);
-                throw new CloudError('githubCantUploadBackupToGist');
+                throw new CloudError(e.message);
             }
         }
     } else {
@@ -179,7 +179,7 @@ export async function sync(progressFunc = null) {
             await saveNewGistId(result.id);
         } catch (e) {
             log.stopError(e);
-            throw new CloudError('githubCantCreateBackupIntoGist');
+            throw new CloudError(e.message);
         }
     }
 

@@ -104,7 +104,7 @@ export default {
                     'is-loading': tokenLoading,
                     'has-icons-right': tokenCheched !== null,
                     }]">
-                    <input type="text" v-model.trim="internalToken" maxlength="40" class="input" />
+                    <input type="text" v-model.trim="internalToken" class="input" />
 
                     <span class="icon is-left">
                         <img class="size-16" src="/icons/key-solid.svg">

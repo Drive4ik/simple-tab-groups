@@ -130,6 +130,7 @@ export default {
 
         async loadGistInfo(area) {
             area.gist = null;
+            // area.error = '';
 
             if (!area.options.githubGistId) {
                 area.gist = false;

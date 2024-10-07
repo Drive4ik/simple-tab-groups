@@ -137,6 +137,7 @@
                 multipleTabIds: [], // TODO try use Set Object
 
                 syncLastUpdateAgo: null,
+                syncHasError: false,
             };
         },
         components: {
@@ -1336,6 +1337,8 @@
                 if (githubStorage.updated_at) {
                     this.syncLastUpdateAgo = Utils.timeAgo(githubStorage.updated_at);
                 }
+
+                this.syncHasError = !!githubStorage.hasError;
             },
         },
     }
@@ -1792,6 +1795,7 @@
                     }"
                     >
                     <img class="size-16" src="/icons/cloud-arrow-up-solid.svg" />
+                    <img v-if="syncHasError" id="sync-error-icon" src="/icons/exclamation-triangle-yellow.svg">
                 </div>
             </div>
             <div class="is-flex is-align-items-center is-vertical-separator"></div>
@@ -2099,6 +2103,7 @@
                 --progress-color: hsl(from currentColor h s calc(l + 70));
                 --progress-background: var(--current-background-color);
 
+                position: relative;
                 height: calc(var(--footer-height) - var(--indent));
                 width: calc(var(--footer-height) - var(--indent));
                 border-radius: 50%;
@@ -2120,6 +2125,14 @@
                 }
                 &.is-danger {
                     --progress-color: red;
+                }
+
+                #sync-error-icon {
+                    position: absolute;
+                    right: 0;
+                    bottom: 0;
+                    width: 10px;
+                    height: 10px;
                 }
             }
         }
