@@ -93,6 +93,10 @@ img,
     overflow: hidden;
 }
 
+.hidden-empty:empty {
+    display: none !important;
+}
+
 /*
 .no-events {
     pointer-events: none;

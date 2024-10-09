@@ -277,7 +277,25 @@ export const DEFAULT_SYNC_OPTIONS = Object.freeze({
     githubGistId: '',
 });
 
-export const IS_AVAILABLE_SYNC_STORAGE = browser.storage.sync instanceof Object;
+export const BROWSER = await browser.runtime.getBrowserInfo?.();
+
+export const BROWSERS_WITH_FF_ACCOUNT = Object.freeze([{
+    name: 'Firefox',
+    vendor: 'Mozilla',
+}, {
+    name: 'Zen',
+    vendor: 'Mozilla',
+}, {
+    name: 'Floorp',
+    vendor: 'Mozilla',
+}, {
+    name: 'Waterfox',
+    vendor: 'WaterfoxLimited',
+}]);
+
+export const BROWSER_HAS_FSYNC = BROWSERS_WITH_FF_ACCOUNT.some(({name, vendor}) => name === BROWSER?.name && vendor === BROWSER?.vendor);
+
+export const IS_AVAILABLE_SYNC_STORAGE = browser.storage.sync instanceof Object && BROWSER_HAS_FSYNC;
 export const SYNC_STORAGE_FSYNC = 'ff-sync';
 export const SYNC_STORAGE_LOCAL = 'local';
 

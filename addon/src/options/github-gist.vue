@@ -16,24 +16,16 @@ export default {
     name: 'github-gist',
     mixins: [syncCloudMixin],
     data() {
-        this.SYNC_STORAGE_IS_AVAILABLE = SyncStorage.IS_AVAILABLE;
-        // this.SYNC_STORAGE_IS_AVAILABLE = false;
-        this.SYNC_STORAGE_FSYNC = Constants.SYNC_STORAGE_FSYNC;
-        this.SYNC_STORAGE_LOCAL = Constants.SYNC_STORAGE_LOCAL;
+        this.browserName = `${Constants.BROWSER.name} ${Constants.BROWSER.vendor} v${Constants.BROWSER.version}`;
 
         return {
             isActiveHelp: false,
 
-            browserInfo: {
-                name: null,
-                version: null,
-            },
-
             sync: {
                 title: 'syncOptionLocatedFFSync',
-                disabled: !this.SYNC_STORAGE_IS_AVAILABLE,
+                disabled: !SyncStorage.IS_AVAILABLE,
                 loading: false,
-                value: this.SYNC_STORAGE_FSYNC,
+                value: Constants.SYNC_STORAGE_FSYNC,
                 options: {...Constants.DEFAULT_SYNC_OPTIONS},
                 load: this.loadSyncOptions.bind(this),
                 save: this.saveSyncOptions.bind(this),
@@ -48,7 +40,7 @@ export default {
                 title: 'syncOptionLocatedLocally',
                 disabled: false,
                 loading: false,
-                value: this.SYNC_STORAGE_LOCAL,
+                value: Constants.SYNC_STORAGE_LOCAL,
                 options: {...Constants.DEFAULT_SYNC_OPTIONS, syncOptionsLocation: Constants.DEFAULT_OPTIONS.syncOptionsLocation},
                 load: this.loadLocalOptions.bind(this),
                 save: this.saveLocalOptions.bind(this),
@@ -70,9 +62,6 @@ export default {
         },
     },
     computed: {
-        browserName() {
-            return `${this.browserInfo.name} v${this.browserInfo.version}`;
-        },
         areas() {
             return [this.sync, this.local];
         },
@@ -92,15 +81,9 @@ export default {
         });
 
         this.$on('sync-finish', () => this.area.load());
-
-        this.loadBrowserInfo();
     },
     methods: {
         lang: browser.i18n.getMessage,
-
-        async loadBrowserInfo() {
-            Object.assign(this.browserInfo, await browser.runtime.getBrowserInfo());
-        },
 
         createCloud({githubGistToken, githubGistFileName, githubGistId}) {
             return new GithubGist(githubGistToken, githubGistFileName, githubGistId);
@@ -108,7 +91,7 @@ export default {
 
         // SYNC
         async loadSyncOptions() {
-            if (this.SYNC_STORAGE_IS_AVAILABLE) {
+            if (!this.sync.disabled) {
                 Object.assign(this.sync.options, await SyncStorage.get());
                 await this.loadGistInfo(this.sync);
             }
@@ -129,13 +112,14 @@ export default {
         },
 
         async loadGistInfo(area) {
-            area.gist = null;
             // area.error = '';
 
             if (!area.options.githubGistId) {
                 area.gist = false;
                 return;
             }
+
+            area.gist = null;
 
             const GithubGistCloud = this.createCloud(area.options);
 
@@ -250,7 +234,7 @@ export default {
                         </div>
                     </div>
 
-                    <template v-if="area === sync && sync.disabled">
+                    <template v-if="area.disabled">
                         <div class="mt-3 mb-3" v-html="lang('browserIsNotFirefox', [browserName])"></div>
                         <div>
                             <a class="button is-link" href="https://www.mozilla.org/firefox/new/" target="_blank">
@@ -274,8 +258,8 @@ export default {
                 :error.sync="area.error"
             ></github-gist-fields>
 
-            <div class="is-flex is-justify-content-space-between is-align-items-center">
-                <div class="is-flex-grow-1">
+            <div class="is-flex is-align-items-center">
+                <div v-if="!area.disabled" class="hidden-empty">
                     <div v-if="area.gist" class="is-flex is-align-items-center indent-gap">
                         <div class="breadcrumb mb-0">
                             <ul class="is-align-items-center">
@@ -300,24 +284,22 @@ export default {
                         <img class="size-16" src="/icons/animate-spinner.svg">
                     </div>
                 </div>
-                <div>
-                    <div class="field is-grouped">
-                        <div class="control">
-                            <button class="button is-info" @click="area.load">
-                                <span class="icon">
-                                    <img class="size-16" :src="area.icon.load">
-                                </span>
-                                <span v-text="lang('load')"></span>
-                            </button>
-                        </div>
-                        <div class="control">
-                            <button :class="['button is-success', {'is-loading': area.loading}]" @click="save(area)">
-                                <span class="icon">
-                                    <img class="size-16" :src="area.icon.save">
-                                </span>
-                                <span v-text="lang('saveSettings')"></span>
-                            </button>
-                        </div>
+                <div class="field is-grouped is-grouped-right is-flex-grow-1">
+                    <div class="control">
+                        <button class="button is-info" @click="area.load">
+                            <span class="icon">
+                                <img class="size-16" :src="area.icon.load">
+                            </span>
+                            <span v-text="lang('load')"></span>
+                        </button>
+                    </div>
+                    <div class="control">
+                        <button :class="['button is-success', {'is-loading': area.loading}]" @click="save(area)">
+                            <span class="icon">
+                                <img class="size-16" :src="area.icon.save">
+                            </span>
+                            <span v-text="lang('saveSettings')"></span>
+                        </button>
                     </div>
                 </div>
             </div>

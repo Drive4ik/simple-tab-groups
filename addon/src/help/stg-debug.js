@@ -109,7 +109,6 @@ function onCatch(message, resultObjType, ...args) {
 
 async function saveConsoleLogs() {
     const [
-            browserInfo,
             platformInfo,
             extensions,
             storage,
@@ -117,7 +116,6 @@ async function saveConsoleLogs() {
             windows,
             tabs,
         ] = await Promise.all([
-            browser.runtime.getBrowserInfo().catch(onCatch('getBrowserInfo', Object)),
             browser.runtime.getPlatformInfo().catch(onCatch('getPlatformInfo', Object)),
             browser.management.getAll().catch(onCatch('management', Array)),
             browser.storage.local.get().catch(onCatch('storage', Object)),
@@ -172,7 +170,7 @@ async function saveConsoleLogs() {
         browserInfo: {
             browserAndOS: {
                 ...platformInfo,
-                ...browserInfo,
+                ...Constants.BROWSER,
             },
             extensions: filteredExtensions,
         },
