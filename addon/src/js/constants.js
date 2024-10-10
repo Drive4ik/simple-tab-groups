@@ -279,21 +279,14 @@ export const DEFAULT_SYNC_OPTIONS = Object.freeze({
 
 export const BROWSER = await browser.runtime.getBrowserInfo?.();
 
-export const BROWSERS_WITH_FF_ACCOUNT = Object.freeze([{
-    name: 'Firefox',
-    vendor: 'Mozilla',
-}, {
-    name: 'Zen',
-    vendor: 'Mozilla',
-}, {
-    name: 'Floorp',
-    vendor: 'Mozilla',
-}, {
-    name: 'Waterfox',
-    vendor: 'WaterfoxLimited',
-}]);
+const BROWSERS_WITH_FF_ACCOUNT = new Set([
+    'Firefox Mozilla',
+    'Zen Mozilla',
+    'Floorp Mozilla',
+    'Waterfox WaterfoxLimited',
+]);
 
-export const BROWSER_HAS_FSYNC = BROWSERS_WITH_FF_ACCOUNT.some(({name, vendor}) => name === BROWSER?.name && vendor === BROWSER?.vendor);
+export const BROWSER_HAS_FSYNC = BROWSERS_WITH_FF_ACCOUNT.has(`${BROWSER?.name} ${BROWSER?.vendor}`);
 
 export const IS_AVAILABLE_SYNC_STORAGE = browser.storage.sync instanceof Object && BROWSER_HAS_FSYNC;
 export const SYNC_STORAGE_FSYNC = 'ff-sync';
