@@ -11,6 +11,7 @@
     },
     "dependencies": {
         "vue": "^2.7.14",
+        "vue-simple-accordion": "^0.1.0",
         "vue-swatches": "^2.1.0"
     },
     "devDependencies": {
