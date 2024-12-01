@@ -25,12 +25,13 @@ export const INTERVAL_KEY = Object.freeze({
 });
 
 export const STG_HELP_PAGES = Object.freeze([
-    'db-error-reinstall',
+    'welcome',
     'extensions-that-conflict-with-stg',
     'open-in-container',
+    'how-to-github-gist',
     'stg-unsupported-url',
     'stg-debug',
-    'welcome',
+    'db-error-reinstall',
 ]);
 
 // permission "<all_urls>" need for tab thumbnails and webRequestBlocking

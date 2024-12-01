@@ -1312,5 +1312,65 @@
     "ffSyncNotSupported": {
         "message": "Firefox sync isn't supported",
         "description": "Firefox sync isn't supported"
+    },
+    "or": {
+        "message": "or",
+        "description": "one or the other"
+    },
+    "helpPageHowToGithubGistTitle": {
+        "message": "Configuring STG synchronization via GitHub Gist",
+        "description": "Configuring STG synchronization via GitHub Gist"
+    },
+    "helpPageHowToGithubGistWhatIsQ": {
+        "message": "What is this for?",
+        "description": "What is this for?"
+    },
+    "helpPageHowToGithubGistWhatIsDesc": {
+        "message": "This is to synchronize your tabs and Simple Tab Groups settings between two or more computers.<br>Your data will be stored in a GitHub Gist file. This file will be private. Apart from you, no one will have access to it unless you yourself provide a GitHub Gist link to this data to another person. STG will only send this data to your GitHub account.",
+        "description": "What is description"
+    },
+    "helpPageHowToGithubGistHowSetupQ": {
+        "message": "How do I set up synchronization?",
+        "description": "How do I set up synchronization?"
+    },
+    "helpPageHowToGithubGistCreateAccount": {
+        "message": "You need to <a github>create a GitHub account</a> (if you don't have one)",
+        "description": "How set up gist, 1th step"
+    },
+    "helpPageHowToGithubGistCreateTokenDesc": {
+        "message": "You need to create a private token in your GitHub account. The token should only be stored by you and in the STG settings. It will be used to transfer your tabs to your GitHub account.",
+        "description": "How set up gist, 2th step"
+    },
+    "helpPageHowToGithubGistCreateTokenPermission": {
+        "message": "The token must be given permission to write data to Gist!",
+        "description": "How set up gist, permission"
+    },
+    "helpPageHowToGithubGistTokenPersonal": {
+        "message": "<a personal>Create fine-grained personal access token</a>. See <a example>example</a>.",
+        "description": "How set up gist, personal token"
+    },
+    "helpPageHowToGithubGistTokenClassic": {
+        "message": "<a classic>Create classic token</a>. See <a example>example</a>",
+        "description": "How set up gist, personal token"
+    },
+    "helpPageHowToGithubGistWriteToSettings": {
+        "message": "Write the created token to the STG settings.",
+        "description": "How set up gist, write token to the STG settings"
+    },
+    "helpPageHowToGithubGistSave": {
+        "message": "Click the \"Save settings\" button",
+        "description": "How set up gist, click save"
+    },
+    "helpPageHowToGithubGistStartSync": {
+        "message": "Click the \"Start synchronization\" button",
+        "description": "How set up gist, click sync"
+    },
+    "helpPageHowToGithubGistHowCreatePersonalToken": {
+        "message": "How create fine-grained personal access token:",
+        "description": "How set up gist, create personal token"
+    },
+    "helpPageHowToGithubGistHowCreateClassicToken": {
+        "message": "How create classic access token:",
+        "description": "How set up gist, create classic token"
     }
 }

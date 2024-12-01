@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title data-i18n-id="helpPageHowToGithubGistTitle">Configuring STG synchronization via Github Gist</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="/icons/icon.svg"/>
+    <link rel="stylesheet" type="text/css" href="browser-style.css"/>
+
+    <style>
+        body {
+            padding: 0 40px;
+        }
+
+        img {
+            image-rendering: high-quality;
+        }
+
+        .shadow {
+            filter: drop-shadow(3px 3px 6px hsla(0, 0%, 50%, 0.5));
+        }
+
+        .none-list-style {
+            list-style: none;
+        }
+
+        .icon-text {
+            display: flex;
+            align-items: center;
+            gap: .5em;
+        }
+
+        .info-icon {
+            fill: var(--icon-color-information);
+        }
+
+        .mt-6 {
+            margin-block-start: 3em;
+        }
+        .mb-6 {
+            margin-block-end: 3em;
+        }
+    </style>
+
+    <script type="module" src="translate-help-pages.js"></script>
+</head>
+
+<body>
+    <main>
+        <div class="title">
+            <h1 class="title-text" data-i18n-id="helpPageHowToGithubGistTitle">
+                Configuring STG synchronization via Github Gist
+            </h1>
+        </div>
+
+        <div>
+            <h3 data-i18n-id="helpPageHowToGithubGistWhatIsQ">What is this for?</h3>
+            <span data-i18n-id="helpPageHowToGithubGistWhatIsDesc">
+                This is to synchronize your tabs and Simple Tab Groups settings between two or more computers.<br>
+                Your data will be stored in a Github Gist file. This file will be private. Apart from you, no one will have access to it unless you yourself provide a Github Gist link to this data to another person. STG will only send this data to your Github account.
+            </span>
+
+            <h3 data-i18n-id="helpPageHowToGithubGistHowSetupQ">How do I set up synchronization?</h3>
+            <ol>
+                <li>
+                    <span
+                        data-i18n-id="helpPageHowToGithubGistCreateAccount"
+                        data-i18n-link-github-href="https://github.com/"
+                        data-i18n-link-github-target="_blank"
+                        >
+                        You need to <a github>create a Github account</a> (if you don't have one), and confirm your email.
+                    </span>
+                </li>
+                <li>
+                    <span data-i18n-id="helpPageHowToGithubGistCreateTokenDesc">
+                        You need to create a private token in your Github account. The token should only be stored by you and in the STG settings. It will be used to transfer your tabs to your Github account.
+                    </span>
+                    <br>
+                    <p class="icon-text">
+                        <span class="icon">
+                            <img class="info-icon" src="/icons/info.svg">
+                        </span>
+                        <strong data-i18n-id="helpPageHowToGithubGistCreateTokenPermission">
+                            The token must be given permission to write data to Gist!
+                        </strong>
+                    </p>
+                    <ul>
+                        <li
+                            data-i18n-id="helpPageHowToGithubGistTokenPersonal"
+                            data-i18n-link-personal-href="https://github.com/settings/personal-access-tokens/new"
+                            data-i18n-link-personal-target="_blank"
+                            data-i18n-link-example-href="#example-personal"
+                            >
+                            <a personal>Create fine-grained personal access token</a>. See <a example>example</a>.
+                        </li>
+                        <li class="none-list-style" data-i18n-id="or">or</li>
+                        <li
+                            data-i18n-id="helpPageHowToGithubGistTokenClassic"
+                            data-i18n-link-classic-href="https://github.com/settings/tokens/new"
+                            data-i18n-link-classic-target="_blank"
+                            data-i18n-link-example-href="#example-classic"
+                            >
+                            <a classic>Create classic token</a>. See <a example>example</a>
+                        </li>
+                    </ul>
+                </li>
+                <li data-i18n-id="helpPageHowToGithubGistWriteToSettings">Write the created token to the STG settings.</li>
+                <li data-i18n-id="helpPageHowToGithubGistSave">Click the "Save settings" button</li>
+                <li data-i18n-id="helpPageHowToGithubGistStartSync">Click the "Start synchronization" button</li>
+            </ol>
+        </div>
+
+        <div id="example-personal" class="mt-6">
+            <h2 data-i18n-id="helpPageHowToGithubGistHowCreatePersonalToken">How create fine-grained personal access token:</h2>
+            <picture>
+                <source srcset="how-to-github-gist-token-personal-light.png" media="(prefers-color-scheme: light)"/>
+                <source srcset="how-to-github-gist-token-personal-dark.png"  media="(prefers-color-scheme: dark)"/>
+                <img src="how-to-github-gist-token-personal-light.png" class="shadow" alt="token-personal" width="100%"/>
+            </picture>
+        </div>
+
+
+        <div id="example-classic" class="mt-6 mb-6">
+            <h2 data-i18n-id="helpPageHowToGithubGistHowCreateClassicToken">How create classic access token:</h2>
+            <picture>
+                <source srcset="how-to-github-gist-token-classic-light.png" media="(prefers-color-scheme: light)"/>
+                <source srcset="how-to-github-gist-token-classic-dark.png"  media="(prefers-color-scheme: dark)"/>
+                <img src="how-to-github-gist-token-classic-light.png" class="shadow" alt="token-classic" width="100%"/>
+            </picture>
+        </div>
+    </main>
+</body>
+
+</html>

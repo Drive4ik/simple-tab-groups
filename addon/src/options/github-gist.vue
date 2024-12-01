@@ -6,6 +6,7 @@ import * as Constants from '/js/constants.js';
 import Logger from '/js/logger.js';
 import * as Storage from '/js/storage.js';
 import * as Utils from '/js/utils.js';
+import * as Urls from '/js/urls.js';
 import * as SyncStorage from '/js/sync/sync-storage.js';
 import GithubGist from '/js/sync/cloud/githubgist.js';
 import {CloudError} from '/js/sync/cloud/cloud.js';
@@ -17,10 +18,9 @@ export default {
     mixins: [syncCloudMixin],
     data() {
         this.browserName = `${Constants.BROWSER.name} ${Constants.BROWSER.vendor} v${Constants.BROWSER.version}`;
+        this.helpLink = Urls.getURL('how-to-github-gist');
 
         return {
-            isActiveHelp: false,
-
             sync: {
                 title: 'syncOptionLocatedFFSync',
                 disabled: !SyncStorage.IS_AVAILABLE,
@@ -188,29 +188,17 @@ export default {
         <div class="field level">
             <div class="level-left">
                 <div class="level-item">
-                    <div class="subtitle" v-text="lang('githubGistCloudSettingsTitle')"></div>
+                    <div class="subtitle">
+                        <span v-text="lang('githubGistCloudSettingsTitle')"></span>
+                        <span class="tag is-info ml-2">BETA</span>
+                    </div>
                 </div>
             </div>
             <div class="level-right">
                 <div class="level-item">
-                    <div :class="['dropdown is-right', isActiveHelp && 'is-active']">
-                        <div class="dropdown-trigger">
-                            <button class="button is-info" @click="isActiveHelp = !isActiveHelp">
-                                <span v-text="lang('helpTitle')"></span>
-                                <span class="icon">
-                                    <img class="size-16" src="/icons/arrow-down.svg">
-                                </span>
-                            </button>
-                        </div>
-                        <div class="dropdown-menu">
-                            <div class="dropdown-content">
-                                <div class="dropdown-item content">
-                                    <div>how create github account</div>
-                                    <p class="is-size-5">Add the <code>is-right</code> modifier for a <strong>right-aligned</strong> dropdown.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <a class="button is-link" :href="helpLink" target="_blank">
+                        <span v-text="lang('helpTitle')"></span>
+                    </a>
                 </div>
             </div>
         </div>
