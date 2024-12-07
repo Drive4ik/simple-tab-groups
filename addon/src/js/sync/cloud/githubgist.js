@@ -1,292 +1,304 @@
 
 import '/js/prefixed-storage.js';
-import JSON from '/js/json.js';
 import * as Urls from '/js/urls.js';
-
-const GISTS_PER_PAGE = 30; // max = 100
-
-const GITHUB_API_URL = 'https://api.github.com';
-const GITHUB_USER_URL = `${GITHUB_API_URL}/user`;
-const GISTS_URL = `${GITHUB_API_URL}/gists{/gistId}`;
-
-const GISTS_GLOBAL_HEADERS = {
-    Accept: 'application/vnd.github+json',
-    'Content-Type': 'application/json',
-    'X-GitHub-Api-Version': '2022-11-28',
-};
 
 const storage = localStorage.create('github');
 
-function processGistInfo(gist) {
-    storage.updated_at = gist.updated_at;
-    return gist;
-}
+export default class GithubGist {
+    #token = null;
+    #fileName = null;
+    #gistId = null;
 
-export default function GithubGist(token, fileName, gistId = '') {
-    this.token = token;
-    this.fileName = fileName;
-    this.gistId = gistId;
-}
+    #perPage = null; // max = 100
+    #throwOnceUnknownResponse = false;
 
-GithubGist.prototype.loadUser = async function() {
-    return this.request('get', GITHUB_USER_URL);
-}
+    progressFunc = null;
 
-GithubGist.prototype.checkToken = async function() {
-    try {
-        await this.request('post', [GISTS_URL, {}], undefined, undefined, true);
-    } catch (e) {
-        if (e.status === 422) {
-            return true;
+    constructor(token, fileName, perPage = 30) {
+        if (!token) {
+            throw new Error('githubInvalidToken');
+        } else if (!fileName) {
+            throw new Error('githubInvalidFileName');
+        } else if (perPage < 1 || perPage > 100) {
+            throw new Error('githubInvalidPerPage');
         }
 
-        throw e;
-    }
-};
-
-GithubGist.prototype.findGistId = async function() {
-    this.gistId = '';
-
-    const gist = await findGist.call(this);
-
-    if (gist) {
-        this.gistId = gist.id;
-        processGistInfo(gist);
+        this.#token = token;
+        this.#fileName = fileName;
+        this.#perPage = perPage;
     }
 
-    return this.gistId;
-}
+    static apiUrl = 'https://api.github.com';
+    static defaultHeaders = {
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json',
+        'X-GitHub-Api-Version': '2022-11-28',
+    };
 
-async function findGist(page = 1) {
-    const gists = await this.request('get', GISTS_URL, {
-            page,
-            per_page: GISTS_PER_PAGE,
-        }),
-        gist = gists.find(g => !g.public && g.files.hasOwnProperty(this.fileName));
+    get #mainUrl() {
+        return `${GithubGist.apiUrl}/gists`;
+    }
 
-    if (gist) {
+    get #gistUrl() {
+        return `${this.#mainUrl}/${this.#gistId}`;
+    }
+
+    get hasGist() {
+        return this.#gistId !== null;
+    }
+
+    #processInfo(gist) {
+        storage.updated_at = gist.updated_at;
         return gist;
     }
 
-    if (gists.length === GISTS_PER_PAGE) {
-        return findGist.call(this, ++page);
+    async checkToken() {
+        try {
+            this.#throwOnceUnknownResponse = true;
+            await this.#request('POST', this.#mainUrl);
+        } catch (e) {
+            if (e.status === 422) {
+                return true;
+            }
+
+            throw e;
+        }
     }
 
-    return null;
-}
+    async #findGist() {
+        this.#gistId = null;
 
-GithubGist.prototype.getGist = async function(onlyInfo = false) {
-    try {
-        const gist = await this.request('get', [GISTS_URL, this], undefined, {cache: 'no-store'});
+        const gist = await this.#findGistRecursive();
 
-        const file = gist.files[this.fileName];
+        if (gist) {
+            this.#gistId = gist.id;
+            this.#processInfo(gist);
+        }
+    }
 
-        if (!file) {
+    async #findGistRecursive(page = 1) {
+        const gists = await this.#request('GET', this.#mainUrl, {
+            page,
+            per_page: this.#perPage,
+        });
+
+        const gist = gists.find(g => !g.public && g.files[this.#fileName]);
+
+        if (gist) {
+            return gist;
+        } else if (gists.length === this.#perPage) {
+            return this.#findGistRecursive(++page);
+        }
+
+        return null;
+    }
+
+    async getInfo() {
+        this.hasGist || await this.#findGist();
+
+        if (!this.hasGist) {
             throw Error('githubNotFound');
         }
 
-        processGistInfo(gist);
+        const gist = await this.#request('GET', this.#gistUrl);
 
-        if (onlyInfo) {
-            return gist;
+        return this.#processInfo(gist);
+    }
+
+    async getContent() {
+        try {
+            const gist = await this.getInfo();
+
+            const file = gist.files[this.#fileName];
+
+            if (file.truncated) {
+                return await this.#request('GET', file.raw_url);
+            }
+
+            return JSON.parse(file.content);
+        } catch (e) {
+            if (e instanceof SyntaxError) {
+                throw Error('githubInvalidGistContent');
+            }
+
+            throw e;
+        }
+    }
+
+    async setContent(content, description = '') {
+        this.hasGist || await this.#findGist();
+
+        const files = {
+            [this.#fileName]: {content},
+        };
+
+        let gist;
+
+        if (this.hasGist) {
+            gist = await this.#request('PATCH', this.#gistUrl, {
+                files,
+            });
+        } else {
+            gist = await this.#request('POST', this.#mainUrl, {
+                public: false,
+                description,
+                files,
+            });
+
+            this.#gistId = gist.id;
         }
 
-        if (file.truncated) {
-            return await this.request('get', file.raw_url, undefined, {cache: 'no-store'});
+        return this.#processInfo(gist);
+    }
+
+    async rename(filename) {
+        this.hasGist || await this.#findGist();
+
+        if (!this.hasGist) {
+            throw Error('githubNotFound');
         }
 
-        delete this.secondTry;
+        const gist = await this.#request('PATCH', this.#gistUrl, {
+            files: {
+                [this.#fileName]: {filename},
+            },
+        });
 
-        return JSON.parse(file.content);
-    } catch (e) {
-        if (e instanceof SyntaxError) {
-            throw Error('githubInvalidGistContent');
+        this.#fileName = filename;
+
+        return this.#processInfo(gist);
+    }
+
+    async #request(method, url, body = {}, options = {}) {
+        const throwOnceUnknownResponse = this.#throwOnceUnknownResponse;
+        this.#throwOnceUnknownResponse = false;
+
+        if (!this.#token) {
+            throw Error('githubInvalidToken');
         }
 
-        if (e.message === 'githubNotFound') {
-            if (!this.secondTry) {
-                this.secondTry = true;
+        body ??= {};
+        options.method = method;
 
-                await this.findGistId();
+        const isApi = url.startsWith(GithubGist.apiUrl);
 
-                if (this.gistId) {
-                    return this.getGist(onlyInfo);
+        if (isApi) {
+            options.headers ??= {};
+            Object.assign(options.headers, GithubGist.defaultHeaders);
+            options.headers.Authorization = `token ${this.#token}`;
+        }
+
+        let contentLength;
+
+        if (options.method === 'GET') {
+            options.cache ??= 'no-store';
+            url = Urls.setUrlSearchParams(url, body);
+        } else if (body) {
+            if (body.files) {
+                for (const value of Object.values(body.files)) {
+                    if (value.content && typeof value.content !== 'string') {
+                        value.content = JSON.stringify(value.content, null, 2);
+                    }
                 }
             }
 
-            delete this.secondTry;
+            // const compressFormat = 'gzip'; // gzip compress, now it doesn't support by github :(
+            // const blob = new Blob([JSON.stringify(body)], {type: 'application/json'});
+            // const stream = blob.stream();
+            // const compressedReadableStream = stream.pipeThrough(new CompressionStream(compressFormat));
+            // const compressedResponse = new Response(compressedReadableStream);
+            // options.body = await compressedResponse.blob();
+            // options.headers['Content-Encoding'] = compressFormat;
 
-            return null;
+            options.body = JSON.stringify(body);
+
+            contentLength = options.body.length + 46_000; // for github api, it doesn't get header content-length
         }
 
-        throw e;
-    }
-}
+        let response = await fetch(url, options);
 
-GithubGist.prototype.createGist = async function(content, description = '') {
-    const gist = await this.request('post', GISTS_URL, {
-        public: false,
-        description,
-        files: {
-            [this.fileName]: {content},
-        },
-    });
-
-    processGistInfo(gist);
-
-    return gist;
-}
-
-GithubGist.prototype.updateGist = async function(content) {
-    const gist = await this.request('patch', [GISTS_URL, this], {
-        files: {
-            [this.fileName]: {content},
-        },
-    });
-
-    processGistInfo(gist);
-
-    return gist;
-}
-
-GithubGist.prototype.renameGist = async function(newFileName) {
-    const result = await this.request('patch', [GISTS_URL, this], {
-        files: {
-            [this.fileName]: {newFileName},
-        },
-    });
-
-    this.fileName = newFileName;
-
-    return result;
-}
-
-GithubGist.prototype.request = async function(method, url, body = {}, reqOptions = {}, throwUnknownResponse = false) {
-    if (!this.token) {
-        throw Error('githubInvalidToken');
-    }
-
-    url = Urls.formatUrl(...[url].flat());
-
-    const isApi = url.startsWith(GITHUB_API_URL);
-
-    const options = {
-        method: method.toUpperCase(),
-        ...reqOptions,
-    };
-
-    if (isApi) {
-        options.headers ??= {};
-        Object.assign(options.headers, GISTS_GLOBAL_HEADERS);
-        options.headers.Authorization = `token ${this.token}`;
-    }
-
-    let contentLength;
-
-    if (options.method === 'GET') {
-        url = Urls.setUrlSearchParams(url, body);
-    } else if (body) {
-        if (body.files) {
-            for (const value of Object.values(body.files)) {
-                if (value.content && typeof value.content !== 'string') {
-                    value.content = JSON.stringify(value.content, 2);
-                }
+        if (response.ok) {
+            if (this.progressFunc) {
+                response = await this.#readBody(response, this.progressFunc, contentLength);
             }
+
+            if (options.method !== 'GET') {
+                delete storage.hasError;
+            }
+
+            return response.json();
         }
 
-        // const compressFormat = 'gzip'; // gzip compress, now it doesn't support by github :(
-        // const blob = new Blob([JSON.stringify(body)], {type: 'application/json'});
-        // const stream = blob.stream();
-        // const compressedReadableStream = stream.pipeThrough(new CompressionStream(compressFormat));
-        // const compressedResponse = new Response(compressedReadableStream);
-        // options.body = await compressedResponse.blob();
-        // options.headers['Content-Encoding'] = compressFormat;
-
-        options.body = JSON.stringify(body);
-
-        contentLength = options.body.length + 46_000; // for github api, it doesn't get header content-length
-    }
-
-    let response = await fetch(url, options);
-
-    if (response.ok) {
-        if (this.progressFunc) {
-            response = await readBody(response, this.progressFunc, contentLength);
+        if (!throwOnceUnknownResponse) {
+            storage.hasError = true;
         }
 
-        if (options.method !== 'GET') {
-            delete storage.hasError;
+        if (isApi) {
+            const classicScopes = response.headers.get('x-oauth-scopes');
+            if (classicScopes && !classicScopes.includes('gist')) {
+                throw Error('githubTokenNoAccess');
+            }
+
+            // const personalScopes = response.headers.get('x-accepted-github-permissions');
+            // if (personalScopes && !personalScopes.includes('gists=write')) {
+            //     throw Error('githubTokenNoAccess');
+            // }
         }
 
-        return response.json();
-    }
+        if (response.status === 401) {
+            throw Error('githubInvalidToken');
+        }
 
-    if (!throwUnknownResponse) {
-        storage.hasError = true;
-    }
-
-    if (isApi) {
-        const classicScopes = response.headers.get('x-oauth-scopes');
-
-        if (classicScopes && !classicScopes.includes('gist')) {
+        if (response.status === 403) {
             throw Error('githubTokenNoAccess');
         }
-    }
 
-    if (response.status === 401) {
-        throw Error('githubInvalidToken');
-    }
-
-    if (response.status === 403) {
-        throw Error('githubTokenNoAccess');
-    }
-
-    if (response.status === 404) {
-        throw Error('githubNotFound');
-    }
-
-    if (throwUnknownResponse) {
-        throw response;
-    }
-
-    const result = await response.json();
-
-    throw Error(`${response.status}: ${result.message}`);
-}
-
-
-async function readBody(response, progressFunc, length = null) {
-    length ??= +response.headers.get('content-length');
-
-    const onProgress = received => {
-        // for github api, it doesn't get header content-length
-        if (length <= 0) {
-            length = received * 7;
+        if (response.status === 404) {
+            throw Error('githubNotFound');
         }
 
-        if (length < received) {
-            length = received;
+        if (throwOnceUnknownResponse) {
+            throw response;
         }
 
-        const percent = Math.floor(100 * received / length);
-        progressFunc(percent);
-    };
+        const result = await response.json();
 
-    const stream = new ReadableStream({
-        async start(controller) {
-            let receivedLength = 0;
+        throw Error(`${response.status}: ${result.message}`);
+    }
 
-            for await (const chunk of response.body) {
-                controller.enqueue(chunk);
-                receivedLength += chunk.length;
-                onProgress(receivedLength);
+    async #readBody(response, progressFunc, length = null) {
+        length ??= +response.headers.get('content-length');
+
+        const onProgress = received => {
+            // for github api, it doesn't get header content-length
+            if (length <= 0) {
+                length = received * 7;
             }
 
-            controller.close();
-        },
-    });
+            if (length < received) {
+                length = received;
+            }
 
-    return new Response(stream, {
-        headers: new Headers([...response.headers]),
-    });
+            const percent = Math.floor(100 * received / length);
+            progressFunc(percent);
+        };
+
+        const stream = new ReadableStream({
+            async start(controller) {
+                let receivedLength = 0;
+
+                for await (const chunk of response.body) {
+                    controller.enqueue(chunk);
+                    receivedLength += chunk.length;
+                    onProgress(receivedLength);
+                }
+
+                controller.close();
+            },
+        });
+
+        return new Response(stream, {
+            headers: new Headers([...response.headers]),
+        });
+    }
 }

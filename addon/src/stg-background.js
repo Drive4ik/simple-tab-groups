@@ -2958,10 +2958,14 @@ async function cloudSync(auto = false) {
     try {
         sendMessage('sync-start');
 
-        await sync(progress => {
+        const syncResult = await sync(progress => {
             log.log('progress', progress);
             sendMessage('sync-progress', {progress});
         });
+
+        if (syncResult.changes.local) {
+            sendMessage('sync-has-local-changes');
+        }
 
         sendMessage('sync-end');
         log.stop();

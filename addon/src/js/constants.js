@@ -275,7 +275,6 @@ export const DEFAULT_SYNC_OPTIONS = Object.freeze({
     version: MANIFEST.version,
     githubGistToken: '',
     githubGistFileName: GIT_GIST_FILE_NAME_PARTS.start + 'backup' + GIT_GIST_FILE_NAME_PARTS.end,
-    githubGistId: '',
 });
 
 export const BROWSER = await browser.runtime.getBrowserInfo?.();

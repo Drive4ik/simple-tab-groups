@@ -176,6 +176,9 @@
 
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.updateTheme());
 
+            const {disconnect} = Messages.connectToBackground(logger.prefixes.join('.'), ['sync-has-local-changes'], () => window.location.reload());
+            window.addEventListener('unload', disconnect);
+
             this.loadBookmarksParents();
 
             [

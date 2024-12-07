@@ -40,22 +40,19 @@ export async function sync(progressFunc = null) {
         }
     }
 
+    if (SyncStorage.IS_AVAILABLE && browser.runtime.id === 'simple-tab-groups-sync-test@drive4ik') {
+        SyncStorage.remove('githubGistId').catch(() => {});
+    }
+
     progressFunc?.(0);
 
     const syncOptions = syncOptionsLocation === Constants.SYNC_STORAGE_FSYNC
         ? await SyncStorage.get()
         : await Storage.get(null, Constants.DEFAULT_SYNC_OPTIONS);
 
-    async function saveNewGistId(githubGistId) {
-        syncOptionsLocation === Constants.SYNC_STORAGE_FSYNC
-            ? await SyncStorage.set({githubGistId})
-            : await Storage.set({githubGistId});
-    }
-
     const GithubGistCloud = new GithubGist(
         syncOptions.githubGistToken,
-        syncOptions.githubGistFileName,
-        syncOptions.githubGistId
+        syncOptions.githubGistFileName
     );
 
     const cloudProgressFunc = function(currentProgress, progressDuration, fetchProgress) {
@@ -65,30 +62,24 @@ export async function sync(progressFunc = null) {
         progressFunc(mainPercent);
     };
 
-    async function getGistData() {
-        try {
-            if (progressFunc) {
-                GithubGistCloud.progressFunc = cloudProgressFunc.bind(null, 5, 35);
-            }
+    if (progressFunc) {
+        GithubGistCloud.progressFunc = cloudProgressFunc.bind(null, 5, 35);
+    }
 
-            const result = await GithubGistCloud.getGist();
+    let cloudData = null;
 
-            GithubGistCloud.progressFunc = null;
-
-            return result;
-        } catch (e) {
-            GithubGistCloud.progressFunc = null;
+    try {
+        cloudData = await GithubGistCloud.getContent();
+    } catch (e) {
+        if (e.message === 'githubNotFound') {
+            //
+        } else {
             log.stopError(e);
             throw new CloudError(e.message);
         }
     }
 
-    const oldGistId = GithubGistCloud.gistId,
-        cloudData = await getGistData();
-
-    if (cloudData && GithubGistCloud.gistId && oldGistId !== GithubGistCloud.gistId) {
-        await saveNewGistId(GithubGistCloud.gistId);
-    }
+    GithubGistCloud.progressFunc = null;
 
     progressFunc?.(40);
 
@@ -163,20 +154,10 @@ export async function sync(progressFunc = null) {
         GithubGistCloud.progressFunc = cloudProgressFunc.bind(null, 55, 35);
     }
 
-    if (GithubGistCloud.gistId) {
-        if (syncResult.changes.cloud) {
-            try {
-                await GithubGistCloud.updateGist(syncResult.cloudData);
-            } catch (e) {
-                log.stopError(e);
-                throw new CloudError(e.message);
-            }
-        }
-    } else {
+    if (syncResult.changes.cloud) {
         try {
             const description = browser.i18n.getMessage('githubGistBackupDescription');
-            const result = await GithubGistCloud.createGist(syncResult.cloudData, description);
-            await saveNewGistId(result.id);
+            await GithubGistCloud.setContent(syncResult.cloudData, description);
         } catch (e) {
             log.stopError(e);
             throw new CloudError(e.message);

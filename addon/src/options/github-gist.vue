@@ -85,8 +85,8 @@ export default {
     methods: {
         lang: browser.i18n.getMessage,
 
-        createCloud({githubGistToken, githubGistFileName, githubGistId}) {
-            return new GithubGist(githubGistToken, githubGistFileName, githubGistId);
+        createCloud({githubGistToken, githubGistFileName}) {
+            return new GithubGist(githubGistToken, githubGistFileName);
         },
 
         // SYNC
@@ -114,7 +114,7 @@ export default {
         async loadGistInfo(area) {
             // area.error = '';
 
-            if (!area.options.githubGistId) {
+            if (!area.options.githubGistToken) {
                 area.gist = false;
                 return;
             }
@@ -123,7 +123,7 @@ export default {
 
             const GithubGistCloud = this.createCloud(area.options);
 
-            const gist = await GithubGistCloud.getGist(true).catch(e => false);
+            const gist = await GithubGistCloud.getInfo().catch(e => false);
 
             if (gist) {
                 area.gist = {
@@ -135,7 +135,7 @@ export default {
                             text: gist.owner.login,
                         }, {
                             url: gist.html_url,
-                            text: GithubGistCloud.fileName,
+                            text: area.options.githubGistFileName,
                             isBold: true,
                         },
                     ],
@@ -159,9 +159,6 @@ export default {
                     const GithubGistCloud = this.createCloud(area.options);
 
                     await GithubGistCloud.checkToken();
-                    await GithubGistCloud.findGistId();
-
-                    area.options.githubGistId = GithubGistCloud.gistId;
                 }
 
                 await area.save();
@@ -185,7 +182,18 @@ export default {
 
 <template>
     <div class="box">
-        <div class="field level">
+        <div class="columns is-mobile is-vcentered">
+            <div class="column">
+                <span class="is-size-5" v-text="lang('githubGistCloudSettingsTitle')"></span>
+                <span class="tag is-info ml-2">BETA</span>
+            </div>
+            <div class="column is-narrow has-text-right">
+                <a class="button is-link" :href="helpLink" target="_blank">
+                    <span v-text="lang('helpTitle')"></span>
+                </a>
+            </div>
+        </div>
+        <!-- <div class="field level">
             <div class="level-left">
                 <div class="level-item">
                     <div class="subtitle">
@@ -196,12 +204,10 @@ export default {
             </div>
             <div class="level-right">
                 <div class="level-item">
-                    <a class="button is-link" :href="helpLink" target="_blank">
-                        <span v-text="lang('helpTitle')"></span>
-                    </a>
+
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <div class="field is-horizontal">
             <div class="field-label is-normal">
@@ -242,7 +248,6 @@ export default {
                 class="field"
                 :token.sync="area.options.githubGistToken"
                 :file-name.sync="area.options.githubGistFileName"
-                :gistId.sync="area.options.githubGistId"
                 :error.sync="area.error"
             ></github-gist-fields>
 
@@ -309,7 +314,7 @@ export default {
                         ></div>
                     </div>
                 </div>
-                <div class="column is-narrow">
+                <div class="column is-narrow has-text-right">
                     <button
                         :class="['button is-primary', {
                             'is-loading': synchronisationInProgress || area.loading,

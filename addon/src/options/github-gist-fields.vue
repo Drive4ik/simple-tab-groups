@@ -14,10 +14,6 @@ export default {
             type: String,
             required: true,
         },
-        gistId: {
-            type: String,
-            required: true,
-        },
         error: {
             type: String,
             default: '',
@@ -51,15 +47,6 @@ export default {
             },
             set(value) {
                 this.$emit('update:fileName', this.FILE_NAME_PARTS.start + value + this.FILE_NAME_PARTS.end);
-                this.internalGistId = '';
-            },
-        },
-        internalGistId: {
-            get() {
-                return this.gistId;
-            },
-            set(value) {
-                this.$emit('update:gistId', value);
             },
         },
         isValidFileName() {
@@ -74,7 +61,7 @@ export default {
                 this.tokenLoading = true;
                 this.tokenCheched = null;
 
-                const GithubGistCloud = new GithubGist(this.token);
+                const GithubGistCloud = new GithubGist(this.token, 'check-token');
 
                 await GithubGistCloud.checkToken();
 

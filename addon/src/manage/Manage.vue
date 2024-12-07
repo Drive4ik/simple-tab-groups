@@ -473,6 +473,7 @@
                         this.containers = Containers.getAll(true);
                         Object.values(this.allTabs).forEach(this.mapTabContainer);
                     },
+                    'sync-has-local-changes': () => listeners['groups-updated'](),
                     'lock-addon': () => {
                         this.isLoading = true;
                         removeEvents();
