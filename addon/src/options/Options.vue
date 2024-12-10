@@ -163,44 +163,20 @@
             'github-gist': githubGist,
         },
         async created() {
-            const data = await Storage.get();
-
-            const options = Utils.extractKeys(data, Constants.ALL_OPTION_KEYS);
-
-            options.autoBackupFolderName = await File.getAutoBackupFolderName();
-
+            this.loadBookmarksParents();
             this.permissions.bookmarks = await browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS);
 
-            this.groups = data.groups; // set before for watch hotkeys
-            this.options = options;
+            this.updateThemeBinded = this.updateTheme.bind(this);
+            this.themeMatcher = window.matchMedia('(prefers-color-scheme: dark)');
 
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.updateTheme());
-
-            const {disconnect} = Messages.connectToBackground(logger.prefixes.join('.'), ['sync-has-local-changes'], () => window.location.reload());
+            const {disconnect} = Messages.connectToBackground(
+                logger.prefixes.join('.'),
+                'sync-has-local-changes',
+                () => this.reload()
+            );
             window.addEventListener('unload', disconnect);
 
-            this.loadBookmarksParents();
-
-            [
-                ...Constants.ONLY_BOOL_OPTION_KEYS,
-                'defaultBookmarksParent',
-                'autoBackupIntervalKey',
-                'syncIntervalKey',
-                'theme',
-                'contextMenuTab',
-                'contextMenuGroup',
-                ]
-                .forEach(option => {
-                    this.$watch(`options.${option}`, function(value, oldValue) {
-                        if (null == oldValue) {
-                            return;
-                        }
-
-                        Messages.sendMessageModule('BG.saveOptions', {
-                            [option]: value,
-                        });
-                    });
-                });
+            await this.reload();
         },
         mounted() {
             if (this.element === 'sync') {
@@ -213,74 +189,6 @@
             section(section) {
                 storage.section = section;
             },
-            'options.autoBackupFolderName': function(value, oldValue) {
-                if (null == oldValue) {
-                    return;
-                }
-
-                while (folderNameRegExp.exec(value)) {
-                    value = value.replace(folderNameRegExp, '').trim();
-                }
-
-                if (value.length > 200) {
-                    value = '';
-                }
-
-                Messages.sendMessageModule('BG.saveOptions', {
-                    autoBackupFolderName: value,
-                });
-            },
-            'options.autoBackupIntervalValue': function(value, oldValue) {
-                if (!value || null == oldValue) {
-                    return;
-                }
-
-                Messages.sendMessageModule('BG.saveOptions', {
-                    autoBackupIntervalValue: Utils.minMaxRange(value, 1, 50),
-                });
-            },
-            'options.syncIntervalValue': function(value, oldValue) {
-                if (!value || null == oldValue) {
-                    return;
-                }
-
-                Messages.sendMessageModule('BG.saveOptions', {
-                    syncIntervalValue: Utils.minMaxRange(value, 1, 50),
-                });
-            },
-            'options.theme': 'updateTheme',
-            'options.temporaryContainerTitle': function(temporaryContainerTitle, oldValue) {
-                if (!temporaryContainerTitle || null == oldValue) {
-                    return;
-                }
-
-                Messages.sendMessageModule('BG.saveOptions', {
-                    temporaryContainerTitle,
-                });
-            },
-            'options.hotkeys': {
-                handler(hotkeys, oldValue) {
-                    hotkeys = hotkeys.filter((hotkey, index, self) => {
-                        return self.findIndex(h => h.value === hotkey.value) === index;
-                    });
-
-                    const hotheysIsValid = hotkeys.every(hotkey => hotkey.action && isValidHotkeyValue(hotkey.value));
-
-                    if (hotheysIsValid && oldValue) {
-                        Messages.sendMessageModule('BG.saveOptions', {hotkeys});
-                    }
-                },
-                deep: true,
-            },
-            'options.showTabsWithThumbnailsInManageGroups': function(value, oldValue) {
-                if (null == oldValue) {
-                    return;
-                }
-
-                if (!value) {
-                    this.includeTabThumbnailsIntoBackup = this.options.autoBackupIncludeTabThumbnails = false;
-                }
-            },
         },
         computed: {
             showDarkThemeNotification() {
@@ -291,6 +199,88 @@
             },
         },
         methods: {
+            async reload() {
+                this.unwatchers ??= new Set;
+                this.unwatchers.forEach(unwatch => unwatch());
+                this.unwatchers.clear();
+                this.themeMatcher.removeEventListener('change', this.updateThemeBinded);
+
+                // load
+                const data = await Storage.get();
+                const options = Utils.extractKeys(data, Constants.ALL_OPTION_KEYS);
+
+                options.autoBackupFolderName = await File.getAutoBackupFolderName();
+
+                this.groups = data.groups;
+                this.options = options;
+
+                this.themeMatcher.addEventListener('change', this.updateThemeBinded);
+                this.updateTheme();
+
+                [
+                    ...Constants.ONLY_BOOL_OPTION_KEYS,
+                    'defaultBookmarksParent',
+                    'autoBackupIntervalKey',
+                    'syncIntervalKey',
+                    'theme',
+                    'contextMenuTab',
+                    'contextMenuGroup',
+                    ]
+                    .forEach(option => {
+                        this.unwatchers.add(this.$watch(`options.${option}`, value => {
+                            Messages.sendMessageModule('BG.saveOptions', {
+                                [option]: value,
+                            });
+                        }));
+                    });
+
+                this.unwatchers.add(this.$watch('options.autoBackupFolderName', value => {
+                    while (folderNameRegExp.exec(value)) {
+                        value = value.replace(folderNameRegExp, '').trim();
+                    }
+
+                    if (value.length > 200) {
+                        value = '';
+                    }
+
+                    Messages.sendMessageModule('BG.saveOptions', {
+                        autoBackupFolderName: value,
+                    });
+                }));
+                this.unwatchers.add(this.$watch('options.autoBackupIntervalValue', value => {
+                    value && Messages.sendMessageModule('BG.saveOptions', {
+                        autoBackupIntervalValue: Utils.minMaxRange(value, 1, 50),
+                    });
+                }));
+                this.unwatchers.add(this.$watch('options.syncIntervalValue', value => {
+                    value && Messages.sendMessageModule('BG.saveOptions', {
+                        syncIntervalValue: Utils.minMaxRange(value, 1, 50),
+                    });
+                }));
+                this.unwatchers.add(this.$watch('options.theme', this.updateTheme));
+                this.unwatchers.add(this.$watch('options.temporaryContainerTitle', value => {
+                    value && Messages.sendMessageModule('BG.saveOptions', {
+                        temporaryContainerTitle: value,
+                    });
+                }));
+                this.unwatchers.add(this.$watch('options.hotkeys', hotkeys => {
+                    hotkeys = hotkeys.filter((hotkey, index, self) => {
+                        return self.findIndex(h => h.value === hotkey.value) === index;
+                    });
+
+                    const hotheysIsValid = hotkeys.every(hotkey => hotkey.action && isValidHotkeyValue(hotkey.value));
+
+                    if (hotheysIsValid) {
+                        Messages.sendMessageModule('BG.saveOptions', {hotkeys});
+                    }
+                }, {deep: true}));
+                this.unwatchers.add(this.$watch('options.showTabsWithThumbnailsInManageGroups', value => {
+                    if (!value) {
+                        this.includeTabThumbnailsIntoBackup = this.options.autoBackupIncludeTabThumbnails = false;
+                    }
+                }));
+            },
+
             lang: browser.i18n.getMessage,
             getHotkeyActionTitle: action => browser.i18n.getMessage('hotkeyActionTitle' + Utils.capitalize(Utils.toCamelCase(action))),
 
