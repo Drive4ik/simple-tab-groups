@@ -80,7 +80,7 @@ export default {
             });
         });
 
-        this.$on('sync-finish', () => this.area.load());
+        this.$on('sync-finish', () => this.area.load(false));
     },
     methods: {
         lang: browser.i18n.getMessage,
@@ -90,10 +90,10 @@ export default {
         },
 
         // SYNC
-        async loadSyncOptions() {
+        async loadSyncOptions(resetState) {
             if (!this.sync.disabled) {
                 Object.assign(this.sync.options, await SyncStorage.get());
-                await this.loadGistInfo(this.sync);
+                await this.loadGistInfo(this.sync, resetState);
             }
         },
 
@@ -102,17 +102,20 @@ export default {
         },
 
         // LOCAL
-        async loadLocalOptions() {
+        async loadLocalOptions(resetState) {
             Object.assign(this.local.options, await Storage.get(this.local.options));
-            await this.loadGistInfo(this.local);
+            await this.loadGistInfo(this.local, resetState);
         },
 
         async saveLocalOptions() {
             await Storage.set({...this.local.options});
         },
 
-        async loadGistInfo(area) {
-            // area.error = '';
+        async loadGistInfo(area, resetState = true) {
+            if (resetState) {
+                area.error = '';
+                this.synchronisationProgress = 0;
+            }
 
             if (!area.options.githubGistToken) {
                 area.gist = false;
@@ -150,8 +153,6 @@ export default {
         // MAIN
         async save(area) {
             try {
-                this.synchronisationProgress = 0;
-
                 area.error = '';
                 area.loading = true;
 
@@ -228,94 +229,95 @@ export default {
             </div>
         </div>
 
-        <fieldset class="field" :disabled="area.disabled || area.loading">
-            <github-gist-fields
-                class="field"
-                :token.sync="area.options.githubGistToken"
-                :file-name.sync="area.options.githubGistFileName"
-                :error.sync="area.error"
-            ></github-gist-fields>
+        <form class="field" @submit.prevent="save(area)" @reset.prevent="area.load">
+            <fieldset :disabled="area.disabled || area.loading">
+                <github-gist-fields
+                    class="field"
+                    :token.sync="area.options.githubGistToken"
+                    :file-name.sync="area.options.githubGistFileName"
+                    :error.sync="area.error"
+                ></github-gist-fields>
 
-            <div class="is-flex is-align-items-center">
-                <div v-if="!area.disabled" class="hidden-empty">
-                    <div v-if="area.gist" class="is-flex is-align-items-center indent-gap">
-                        <div class="breadcrumb mb-0">
-                            <ul class="is-align-items-center">
-                                <li
-                                    v-for="(breadcrumb, i) in area.gist.breadcrumb"
-                                    :key="i"
-                                    >
-                                    <a :href="breadcrumb.url" :class="{'has-text-weight-semibold': breadcrumb.isBold}" target="_blank" rel="noreferrer noopener">
-                                        <figure v-show="breadcrumb.imageLoaded" class="image is-24x24 mr-2">
-                                            <img :src="breadcrumb.image" @load="breadcrumb.imageLoaded = true" decoding="async" />
-                                        </figure>
+                <div class="is-flex is-align-items-center">
+                    <div v-if="!area.disabled" class="hidden-empty">
+                        <div v-if="area.gist" class="is-flex is-align-items-center indent-gap">
+                            <div class="breadcrumb mb-0">
+                                <ul class="is-align-items-center">
+                                    <li
+                                        v-for="(breadcrumb, i) in area.gist.breadcrumb"
+                                        :key="i"
+                                        >
+                                        <a :href="breadcrumb.url" :class="{'has-text-weight-semibold': breadcrumb.isBold}" target="_blank" rel="noreferrer noopener">
+                                            <figure v-show="breadcrumb.imageLoaded" class="image is-24x24 mr-2">
+                                                <img :src="breadcrumb.image" @load="breadcrumb.imageLoaded = true" decoding="async" />
+                                            </figure>
 
-                                        <span v-if="breadcrumb.text" v-text="breadcrumb.text"></span>
-                                    </a>
-                                </li>
-                            </ul>
+                                            <span v-if="breadcrumb.text" v-text="breadcrumb.text"></span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                            <span class="tag is-dark is-rounded" v-text="lang('githubSecretTitle')"></span>
+                            <span :title="area.gist.lastUpdateFull" v-text="lang('lastUpdateAgo', area.gist.lastUpdateAgo)"></span>
                         </div>
-                        <span class="tag is-dark is-rounded" v-text="lang('githubSecretTitle')"></span>
-                        <span :title="area.gist.lastUpdateFull" v-text="lang('lastUpdateAgo', area.gist.lastUpdateAgo)"></span>
+                        <div v-else-if="area.gist === null">
+                            <img class="size-16" src="/icons/animate-spinner.svg">
+                        </div>
                     </div>
-                    <div v-else-if="area.gist === null">
-                        <img class="size-16" src="/icons/animate-spinner.svg">
+                    <div class="field is-grouped is-grouped-right is-flex-grow-1">
+                        <div class="control">
+                            <button type="reset" class="button is-info">
+                                <span class="icon">
+                                    <img class="size-16" :src="area.icon.load">
+                                </span>
+                                <span v-text="lang('load')"></span>
+                            </button>
+                        </div>
+                        <div class="control">
+                            <button type="submit" class="button is-success" :class="{'is-loading': area.loading}">
+                                <span class="icon">
+                                    <img class="size-16" :src="area.icon.save">
+                                </span>
+                                <span v-text="lang('saveSettings')"></span>
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div class="field is-grouped is-grouped-right is-flex-grow-1">
-                    <div class="control">
-                        <button class="button is-info" @click="area.load">
+
+                <hr>
+
+                <div class="columns is-vcentered">
+                    <div class="column">
+                        <div class="simple-progress">
+                            <div class="position" :class="{
+                                'in-progress': synchronisationInProgress,
+                                'has-background-success': !area.error && synchronisationProgress === 100,
+                                'has-background-danger': !!area.error,
+                            }"
+                            :style="{
+                                '--progress-value': `${synchronisationProgress}%`,
+                            }"
+                            ></div>
+                        </div>
+                    </div>
+                    <div class="column is-narrow has-text-right">
+                        <button
+                            class="button is-primary"
+                            :class="{
+                                'is-loading': synchronisationInProgress || area.loading,
+                            }"
+                            :disabled="synchronisationInProgress || area.loading"
+                            @click.prevent="startCloudSync"
+                            >
                             <span class="icon">
-                                <img class="size-16" :src="area.icon.load">
+                                <img class="size-16" src="/icons/cloud-arrow-up-solid.svg">
                             </span>
-                            <span v-text="lang('load')"></span>
+                            <span v-text="lang('syncStart')"></span>
                         </button>
                     </div>
-                    <div class="control">
-                        <button :class="['button is-success', {'is-loading': area.loading}]" @click="save(area)">
-                            <span class="icon">
-                                <img class="size-16" :src="area.icon.save">
-                            </span>
-                            <span v-text="lang('saveSettings')"></span>
-                        </button>
-                    </div>
                 </div>
-            </div>
-
-
-            <hr>
-
-            <div class="columns is-vcentered">
-                <div class="column">
-                    <div class="simple-progress">
-                        <div :class="['position', {
-                            'in-progress': synchronisationInProgress,
-                            'has-background-success': !area.error && synchronisationProgress === 100,
-                            'has-background-danger': !!area.error,
-                        }]"
-                        :style="{
-                            '--progress-value': `${synchronisationProgress}%`,
-                        }"
-                        ></div>
-                    </div>
-                </div>
-                <div class="column is-narrow has-text-right">
-                    <button
-                        :class="['button is-primary', {
-                            'is-loading': synchronisationInProgress || area.loading,
-                        }]"
-                        :disabled="synchronisationInProgress || area.loading"
-                        @click="startCloudSync"
-                        >
-                        <span class="icon">
-                            <img class="size-16" src="/icons/cloud-arrow-up-solid.svg">
-                        </span>
-                        <span v-text="lang('syncStart')"></span>
-                    </button>
-                </div>
-            </div>
-
-        </fieldset>
+            </fieldset>
+        </form>
     </div>
 </template>
 

@@ -87,11 +87,8 @@ export default {
         </div>
         <div class="field-body">
             <div class="field has-addons">
-                <div :class="['control is-expanded has-icons-left', {
-                    'is-loading': tokenLoading,
-                    'has-icons-right': tokenCheched !== null,
-                    }]">
-                    <input type="text" v-model.trim="internalToken" class="input" />
+                <div class="control is-expanded has-icons-left has-icons-right">
+                    <input type="text" v-model.trim="internalToken" maxlength="100" class="input" />
 
                     <span class="icon is-left">
                         <img class="size-16" src="/icons/key-solid.svg">
@@ -102,7 +99,7 @@ export default {
                     </span>
                 </div>
                 <div class="control">
-                    <button class="button" @click="checkToken" :disabled="tokenLoading" v-text="lang('githubGistCheckToken')"></button>
+                    <button type="button" class="button" :class="{'is-loading': tokenLoading}" @click.prevent="checkToken" v-text="lang('githubGistCheckToken')"></button>
                 </div>
             </div>
         </div>
@@ -117,7 +114,7 @@ export default {
                     <a class="button is-static" v-text="FILE_NAME_PARTS.start"></a>
                 </div>
                 <div class="control is-expanded" :class="{'has-icons-right': !isValidFileName}">
-                    <input type="text" v-model.trim="internalFileName" maxlength="100" class="input" />
+                    <input required type="text" v-model.trim="internalFileName" maxlength="100" class="input" />
                     <span v-if="!isValidFileName" class="icon is-right">
                         <img class="size-16" src="/icons/close.svg">
                     </span>
