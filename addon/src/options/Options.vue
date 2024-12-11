@@ -171,8 +171,8 @@
 
             const {disconnect} = Messages.connectToBackground(
                 logger.prefixes.join('.'),
-                'sync-has-local-changes',
-                () => this.reload()
+                'sync-end',
+                ({changes}) => changes.local && this.reload()
             );
             window.addEventListener('unload', disconnect);
 

@@ -600,7 +600,7 @@
                         this.containers = Containers.getAll(true);
                         Object.values(this.allTabs).forEach(this.mapTabContainer);
                     },
-                    'sync-has-local-changes': () => listeners['groups-updated'](),
+                    'sync-end': ({changes}) => changes.local && listeners['groups-updated'](),
                     'lock-addon': () => {
                         fullLoading(true);
                         removeEvents();
@@ -1320,13 +1320,18 @@
                 }
             },
 
-            syncCloudClick() {
+            async syncCloudClick() {
                 if (this.syncCloudTriggeredByThis) {
                     return;
                 }
 
                 this.syncCloudTriggeredByThis = true;
-                this.syncCloud();
+
+                const syncResult = await this.syncCloud();
+
+                if (!syncResult) {
+                    this.syncCloudTriggeredByThis = false;
+                }
             },
             syncCloudOptions() {
                 Messages.sendMessage('open-options-page', {

@@ -2569,11 +2569,7 @@ async function saveOptions(_options) {
 
     for (const [key, value] of Object.entries(_options)) {
         if (Constants.ALL_OPTION_KEYS.includes(key)) {
-            if (Utils.isPrimitive(value)) {
-                optionsToSave[key] = value;
-            } else {
-                optionsToSave[key] = JSON.clone(value);
-            }
+            optionsToSave[key] = Utils.isPrimitive(value) ? value : JSON.clone(value);
         } else if (Constants.DEFAULT_OPTIONS[key] === undefined) {
             log.throwError(`option key "${key}" is unknown`);
         }
@@ -2955,6 +2951,8 @@ async function clearAddon(reloadAddonOnFinish = true) {
 async function cloudSync(auto = false) {
     const log = logger.start('cloudSync', {auto});
 
+    let ok = false;
+
     try {
         sendMessage('sync-start');
 
@@ -2963,12 +2961,12 @@ async function cloudSync(auto = false) {
             sendMessage('sync-progress', {progress});
         });
 
-        if (syncResult.changes.local) {
-            sendMessage('sync-has-local-changes');
-        }
+        ok = true;
 
-        sendMessage('sync-end');
+        sendMessage('sync-end', syncResult);
+
         log.stop();
+        return syncResult;
     } catch (e) {
         if (auto) {
             Utils.notify(String(e), undefined, undefined, undefined, () => Urls.openOptionsPage('backup sync'));
@@ -2981,6 +2979,8 @@ async function cloudSync(auto = false) {
             name: e.name,
             message: e.message,
         });
+    } finally {
+        sendMessage('sync-finish', {ok});
     }
 }
 

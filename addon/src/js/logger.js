@@ -223,7 +223,8 @@ export function addLog(log) {
 export function showLog(log, {cKey, args}) {
     setLoggerFuncs.call(this);
 
-    if (!this.isEnabled(cKey)) {
+    // if (!this.isEnabled(cKey)) {
+    if (!this.enabled) {
         return;
     }
 

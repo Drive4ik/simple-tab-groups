@@ -6,7 +6,7 @@ export function normalizeSendData(action, data = {}) {
         return action;
     }
 
-    return {action, ...data};
+    return {...data, action};
 }
 
 export async function sendMessage(...args) {

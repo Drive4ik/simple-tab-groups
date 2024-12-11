@@ -16,15 +16,12 @@ const {disconnect} = Messages.connectToBackground('sync-progress-mixin', [
     'sync-progress',
     'sync-end',
     'sync-error',
+    'sync-finish',
 ], (syncEvent) => {
     logger.log(syncEvent.action, syncEvent);
 
     for (const instance of instances) {
         instance.$emit(syncEvent.action, syncEvent);
-
-        if (['sync-end', 'sync-error'].includes(syncEvent.action)) {
-            instance.$emit('sync-finish', syncEvent);
-        }
     }
 });
 
@@ -32,6 +29,10 @@ window.addEventListener('unload', disconnect);
 
 export default {
     data() {
+        if (!allowedInstanceNames.has(this.$options.name)) {
+            return {};
+        }
+
         return {
             synchronisationInProgress: false,
             synchronisationProgress: 0,
@@ -46,7 +47,7 @@ export default {
         instances.add(this);
 
         this
-            .$on(['sync-start', 'sync-progress', 'sync-end', 'sync-error'], () => {
+            .$on(['sync-start', 'sync-progress', 'sync-end', 'sync-error', 'sync-finish'], () => {
                 clearTimeout(this.synchronisationProgressTimer);
                 clearTimeout(this.synchronisationInProgressTimer);
             })
@@ -63,8 +64,8 @@ export default {
             .$on('sync-error', ({name, message}) => {
                 this.synchronisationError = `${name}: ${message}`;
             })
-            .$on('sync-finish', ({action}) => {
-                const hideProgressMs = action === 'sync-error' ? 5000 : 600;
+            .$on('sync-finish', ({ok}) => {
+                const hideProgressMs = ok ? 600 : 5000;
                 this.synchronisationProgressTimer = setTimeout(() => this.synchronisationProgress = 0, hideProgressMs);
 
                 this.synchronisationInProgressTimer = setTimeout(() => this.synchronisationInProgress = false, 500);
@@ -75,7 +76,9 @@ export default {
     },
     methods: {
         async syncCloud() {
-            return await Messages.sendMessageModule('BG.cloudSync');
+            if (!this.synchronisationInProgress) {
+                return await Messages.sendMessageModule('BG.cloudSync');
+            }
         },
     },
 }

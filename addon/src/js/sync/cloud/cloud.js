@@ -146,10 +146,6 @@ export async function sync(progressFunc = null) {
         syncResult.localData.syncId = syncResult.cloudData.syncId;
     }
 
-    // log.debug('trust:', syncResult.sourceOfTruth);
-    // log.debug('changes.cloud:', syncResult.changes.cloud, syncResult.cloudData.syncId);
-    // log.debug('changes.local:', syncResult.changes.local, syncResult.localData.syncId);
-
     if (progressFunc) {
         GithubGistCloud.progressFunc = cloudProgressFunc.bind(null, 55, 35);
     }
@@ -176,6 +172,9 @@ export async function sync(progressFunc = null) {
     progressFunc?.(100);
 
     log.stop();
+
+    delete syncResult.localData;
+    delete syncResult.cloudData;
 
     return syncResult;
 }

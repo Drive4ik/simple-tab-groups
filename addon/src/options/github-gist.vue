@@ -193,21 +193,6 @@ export default {
                 </a>
             </div>
         </div>
-        <!-- <div class="field level">
-            <div class="level-left">
-                <div class="level-item">
-                    <div class="subtitle">
-                        <span v-text="lang('githubGistCloudSettingsTitle')"></span>
-                        <span class="tag is-info ml-2">BETA</span>
-                    </div>
-                </div>
-            </div>
-            <div class="level-right">
-                <div class="level-item">
-
-                </div>
-            </div>
-        </div> -->
 
         <div class="field is-horizontal">
             <div class="field-label is-normal">

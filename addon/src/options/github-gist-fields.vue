@@ -68,8 +68,8 @@ export default {
                 this.tokenCheched = true;
                 this.$emit('update:error', '');
             } catch ({message}) {
-                this.$emit('update:error', new CloudError(message).toString());
                 this.tokenCheched = false;
+                this.$emit('update:error', new CloudError(message).toString());
             } finally {
                 this.tokenLoading = false;
             }
