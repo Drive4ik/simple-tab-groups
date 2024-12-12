@@ -50,10 +50,17 @@ export async function sync(progressFunc = null) {
         ? await SyncStorage.get()
         : await Storage.get(null, Constants.DEFAULT_SYNC_OPTIONS);
 
-    const GithubGistCloud = new GithubGist(
-        syncOptions.githubGistToken,
-        syncOptions.githubGistFileName
-    );
+    let GithubGistCloud;
+
+    try {
+        GithubGistCloud = new GithubGist(
+            syncOptions.githubGistToken,
+            syncOptions.githubGistFileName
+        );
+    } catch (e) {
+        log.stopError(e);
+        throw new CloudError(e.message);
+    }
 
     const cloudProgressFunc = function(currentProgress, progressDuration, fetchProgress) {
         const durationPart = 100 / progressDuration;
