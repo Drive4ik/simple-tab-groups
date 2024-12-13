@@ -327,13 +327,7 @@
 
                         if (this.syncCloudTriggeredByThis) {
                             const ok = await this.showConfirm(name, message, 'openSettings', 'is-info');
-
-                            if (ok) {
-                                Messages.sendMessage('open-options-page', {
-                                    section: 'backup',
-                                });
-                                this.closeWindow();
-                            }
+                            ok && this.syncCloudOptions();
                         }
                     })
                     .$on('sync-finish', () => {
