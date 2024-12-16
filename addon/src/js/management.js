@@ -61,7 +61,7 @@ export function detectConflictedExtensions(extensionsStorage = extensions) {
                 Urls.openUrl('extensions-that-conflict-with-stg', true);
                 return true;
             }
-        } else if (extensionsStorage[id] && isIgnoredConflictedExtension(id)) {
+        } else if (isIgnoredConflictedExtension(id)) {
             dontIgnoreConflictedExtension(id);
         }
     });
@@ -102,9 +102,9 @@ export function getIgnoredConflictedExtensions() {
 
 export function getExtensionByUUID(uuid, extensionsStorage = extensions) {
     if (isUUID(uuid)) {
-        for (let i in extensionsStorage) {
-            if (extensionsStorage[i]?.hostPermissions?.some(url => url.includes(uuid))) {
-                return extensionsStorage[i];
+        for (const id in extensionsStorage) {
+            if (extensionsStorage[id]?.hostPermissions?.some(url => url.includes(uuid))) {
+                return extensionsStorage[id];
             }
         }
     }
@@ -128,7 +128,7 @@ export function UUIDtoId(uuid, extensionsStorage = extensions) {
 }
 
 export function idToUUID(id, extensionsStorage = extensions) {
-    if (extensionsStorage[id]) {
+    if (extensionsStorage[id]?.hostPermissions) {
         for (const url of extensionsStorage[id].hostPermissions) {
             const uuid = extractUUID(url);
 
