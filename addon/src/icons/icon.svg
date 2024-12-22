@@ -1,5 +1,5 @@
-<svg width="128" height="128" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
-    <g fill="context-fill" fill-opacity="context-fill-opacity">
+<svg width="128" height="128" xmlns="http://www.w3.org/2000/svg" style="color-scheme: light dark" fill="context-fill light-dark(#5b5b66, #fbfbfe)">
+    <g>
         <rect height="32" width="32" />
         <rect height="32" width="32" x="48" />
         <rect height="32" width="32" x="96" y="48" />

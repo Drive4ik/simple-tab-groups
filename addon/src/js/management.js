@@ -50,6 +50,10 @@ async function load(extensionsStorage = extensions) {
     return extensionsStorage;
 }
 
+export function isInstalled(id, extensionsStorage = extensions) {
+    return !!extensionsStorage[id];
+}
+
 export function isEnabled(id, extensionsStorage = extensions) {
     return extensionsStorage[id]?.enabled;
 }

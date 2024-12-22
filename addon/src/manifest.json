@@ -9,9 +9,10 @@
     },
 
     "name": "__MSG_extensionName__",
+    "short_name": "STG",
     "description": "__MSG_extensionDescription__",
     "version": "5.5",
-    "author": "Drive4ik",
+    "author": "Vitalii Bavykin",
     "homepage_url": "https://github.com/drive4ik/simple-tab-groups",
 
     "incognito": "not_allowed",

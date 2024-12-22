@@ -1372,5 +1372,49 @@
     "helpPageHowToGithubGistHowCreateClassicToken": {
         "message": "How create classic access token:",
         "description": "How set up gist, create classic token"
+    },
+    "author": {
+        "message": "Author",
+        "description": "Author title"
+    },
+    "email": {
+        "message": "Email",
+        "description": "Email title"
+    },
+    "homepage": {
+        "message": "Homepage",
+        "description": "Homepage title"
+    },
+    "aboutExtension": {
+        "message": "About extension",
+        "description": "About extension title"
+    },
+    "aboutMadeIn": {
+        "message": "Made in Ukraine 🇺🇦 with love!",
+        "description": "Made in Ukraine 🇺🇦 with love!"
+    },
+    "aboutExtensionPage": {
+        "message": "Extension page",
+        "description": "Extension page title"
+    },
+    "aboutLibraries": {
+        "message": "Libraries",
+        "description": "Libraries title"
+    },
+    "aboutThanksText": {
+        "message": "Thanks for using Simple Tab Groups!",
+        "description": "Thanks text"
+    },
+    "donateItemHelpEthereum": {
+        "message": "ETH Coin or any ERC20 Tokens",
+        "description": "Help for Ethereum"
+    },
+    "donateItemHelpBnbSmartchain": {
+        "message": "BNB Coin or any BEP20 Tokens",
+        "description": "Help for BNB smartchain"
+    },
+    "donateItemHelpTronUsdt": {
+        "message": "TRX Coin or any TRC20 Tokens",
+        "description": "Help for Tron"
     }
 }

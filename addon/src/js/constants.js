@@ -122,6 +122,7 @@ export const CONFLICTED_EXTENSIONS = Object.freeze([
 
 export const EXTENSIONS_WHITE_LIST = Object.freeze({
     'stg-plugin-create-new-group@drive4ik': {
+        id: 932675,
         title: '[STG plugin] Create new group',
         url: 'https://addons.mozilla.org/firefox/addon/stg-plugin-create-new-group/',
         postActions: [],
@@ -131,6 +132,7 @@ export const EXTENSIONS_WHITE_LIST = Object.freeze({
         ],
     },
     'stg-plugin-load-custom-group@drive4ik': {
+        id: 932681,
         title: '[STG plugin] Load custom group',
         url: 'https://addons.mozilla.org/firefox/addon/stg-plugin-load-custom-group/',
         postActions: [
@@ -146,14 +148,16 @@ export const EXTENSIONS_WHITE_LIST = Object.freeze({
         ],
     },
     'stg-plugin-manage-groups@drive4ik': {
+        id: 986719,
         title: '[STG plugin] Open Manage groups',
-        url: 'https://addons.mozilla.org/firefox/addon/stg-plugin-open-manage-groups/',
+        url: 'https://addons.mozilla.org/firefox/addon/stg-plugin-manage-groups/',
         postActions: [],
         getActions: [
             'open-manage-groups',
         ],
     },
     'stg-plugin-del-current-group@drive4ik': {
+        id: 1459086,
         title: '[STG plugin] Delete current group',
         url: 'https://addons.mozilla.org/firefox/addon/stg-plugin-del-current-group/',
         postActions: [],
@@ -162,6 +166,7 @@ export const EXTENSIONS_WHITE_LIST = Object.freeze({
         ],
     },
     'stg-plugin-group-notes@drive4ik': {
+        id: 2670858,
         title: '[STG plugin] Group notes',
         url: 'https://addons.mozilla.org/firefox/addon/stg-plugin-group-notes/',
         postActions: [
@@ -178,6 +183,7 @@ export const EXTENSIONS_WHITE_LIST = Object.freeze({
         ],
     },
     'stg-plugin-create-new-tab@drive4ik': {
+        id: 2609558,
         title: '[STG plugin] Create new tab',
         url: 'https://addons.mozilla.org/firefox/addon/stg-plugin-create-new-tab/',
         postActions: [
@@ -193,6 +199,7 @@ export const EXTENSIONS_WHITE_LIST = Object.freeze({
         ],
     },
     'stg-plugin-create-temp-tab@drive4ik': {
+        id: 2667177,
         title: '[STG plugin] Create new tab in temporary container',
         url: 'https://addons.mozilla.org/firefox/addon/stg-plugin-create-temp-tab/',
         postActions: [],
@@ -263,6 +270,38 @@ export const EXTENSIONS_WHITE_LIST = Object.freeze({
             'create-temp-tab',
             'create-backup',
         ],
+    },
+});
+
+export const DONATE_ITEMS = Object.freeze({
+    'paypal': {
+        title: 'PayPal',
+        link: 'https://www.paypal.com/donate/?hosted_button_id=E428H4972XMEW',
+        linkText: 'drive4ik@protonmail.com',
+        hasQr: true,
+    },
+    'bitcoin': {
+        title: 'Bitcoin',
+        wallet: 'bc1qkmpzhl96jegd60t5ym2s9wvsl5yqy3m6pu3kn5',
+        hasQr: true,
+    },
+    'ethereum': {
+        title: 'Ethereum',
+        wallet: '0x90C056f99992484cDBb367f40315f63BC4D2092E',
+        hasQr: true,
+        hasHelp: true,
+    },
+    'bnb-smartchain': {
+        title: 'BNB (Smart Chain)',
+        wallet: '0x90C056f99992484cDBb367f40315f63BC4D2092E',
+        hasQr: true,
+        hasHelp: true,
+    },
+    'tron-usdt': {
+        title: 'Tron USDT',
+        wallet: 'TU84P6EUT94JWhQkjNwMvfSSiik1w9gnyr',
+        hasQr: true,
+        hasHelp: true,
     },
 });
 

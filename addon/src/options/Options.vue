@@ -12,6 +12,7 @@
     import Messages from '/js/messages.js';
     import Logger from '/js/logger.js';
     import * as Utils from '/js/utils.js';
+    import * as Management from '/js/management.js';
     import * as Storage from '/js/storage.js';
     import * as File from '/js/file.js';
     import * as Urls from '/js/urls.js';
@@ -33,6 +34,7 @@
     const SECTION_GENERAL = 'general',
         SECTION_HOTKEYS = 'hotkeys',
         SECTION_BACKUP = 'backup',
+        SECTION_ABOUT = 'about',
         folderNameRegExp = /[\<\>\:\"\/\\\|\?\*\x00-\x1F]|^(?:aux|con|nul|prn|com\d|lpt\d)$|^\.+|\.+$/gi;
 
     document.title = browser.i18n.getMessage('openSettings');
@@ -43,14 +45,23 @@
         name: 'options-page',
         // mixins: [defaultGroupMixin, syncCloudMixin],
         data() {
+            this.MANIFEST = Constants.MANIFEST;
+
             this.HOTKEY_ACTIONS = Constants.HOTKEY_ACTIONS;
             this.HOTKEY_ACTIONS_WITH_CUSTOM_GROUP = Constants.HOTKEY_ACTIONS_WITH_CUSTOM_GROUP;
             this.GROUP_ICON_VIEW_TYPES = Constants.GROUP_ICON_VIEW_TYPES;
             this.INTERVAL_KEY = Constants.INTERVAL_KEY;
 
+            this.PLUGINS = Object.fromEntries(
+                Object.entries(Constants.EXTENSIONS_WHITE_LIST).filter(([id]) => id.startsWith('stg'))
+            );
+
+            this.DONATE_ITEMS = Constants.DONATE_ITEMS;
+
             this.SECTION_GENERAL = SECTION_GENERAL;
             this.SECTION_HOTKEYS = SECTION_HOTKEYS;
             this.SECTION_BACKUP = SECTION_BACKUP;
+            this.SECTION_ABOUT = SECTION_ABOUT;
 
             return {
                 section,
@@ -283,6 +294,7 @@
 
             lang: browser.i18n.getMessage,
             getHotkeyActionTitle: action => browser.i18n.getMessage('hotkeyActionTitle' + Utils.capitalize(Utils.toCamelCase(action))),
+            getDonateItemHelp: item => browser.i18n.getMessage('donateItemHelp' + Utils.capitalize(Utils.toCamelCase(item))),
 
             updateTheme() {
                 document.documentElement.dataset.theme = Utils.getThemeApply(this.options.theme);
@@ -633,6 +645,22 @@
             openDebugPage() {
                 Urls.openDebugPage();
             },
+
+            copyTextSelector(selector) {
+                const content = document.querySelector(selector).textContent.trim();
+                navigator.clipboard.writeText(content);
+            },
+
+            isInstalledExtension(id) {
+                return Management.isInstalled(id);
+            },
+            isEnabledExtension(id) {
+                return Management.isEnabled(id);
+            },
+            getPluginIcon(id) {
+                const firstPart = String(id).slice(0, -3);
+                return `https://addons.mozilla.org/user-media/addon_icons/${firstPart}/${id}-64.png`;
+            },
         },
     }
 </script>
@@ -663,6 +691,14 @@
                             <img class="size-16" src="/icons/cloud-arrow-up-solid.svg">
                         </span>
                         <span v-text="lang('exportAddonSettingsTitle')"></span>
+                    </a>
+                </li>
+                <li :class="{'is-active': section === SECTION_ABOUT}">
+                    <a @click="section = SECTION_ABOUT" @keydown.enter="section = SECTION_ABOUT" tabindex="0">
+                        <span class="icon">
+                            <img class="size-16" src="/icons/info.svg">
+                        </span>
+                        <span v-text="lang('aboutExtension')"></span>
                     </a>
                 </li>
             </ul>
@@ -1116,6 +1152,170 @@
 
         </div>
 
+        <div v-show="section === SECTION_ABOUT">
+            <div class="columns is-mobile">
+                <div class="column is-narrow">
+                    <figure class="image is-96x96">
+                        <img :src="MANIFEST.icons[128]" />
+                    </figure>
+                </div>
+                <div class="column is-flex is-flex-direction-column is-justify-content-space-between">
+                    <div>
+                        <div class="title">
+                            <span v-text="MANIFEST.name"></span> v<span v-text="MANIFEST.version"></span>
+                        </div>
+                        <div class="subtitle">
+                            <span v-text="MANIFEST.description"></span>
+                        </div>
+                    </div>
+                    <div class="is-size-5" v-text="lang('aboutMadeIn')"></div>
+                </div>
+            </div>
+
+            <div class="is-size-5 mt-6">
+                <div class="columns is-mobile">
+                    <div class="column is-one-fifth">
+                        <span class="icon-text is-flex-wrap-nowrap">
+                            <span class="icon">
+                                <figure class="image is-16x16">
+                                    <img src="/icons/user.svg" />
+                                </figure>
+                            </span>
+                            <span v-text="lang('author')"></span>
+                        </span>
+                    </div>
+                    <div class="column">
+                        <span>Vitalii Bavykin</span>
+                        <span>(Drive4ik)</span>
+                        <br>
+                        <span v-text="lang('email')"></span>:
+                        <a href="mailto:drive4ik+stg@protonmail.com" target="_blank">drive4ik+stg@protonmail.com</a>
+                    </div>
+                </div>
+
+                <div class="columns is-mobile">
+                    <div class="column is-one-fifth">
+                        <span class="icon-text is-flex-wrap-nowrap">
+                            <span class="icon">
+                                <img src="/icons/house.svg" />
+                            </span>
+                            <span v-text="lang('homepage')"></span>
+                        </span>
+                    </div>
+                    <div class="column">
+                        <a :href="MANIFEST.homepage_url" target="_blank">
+                            <span class="icon-text">
+                                <span class="icon">
+                                    <img src="/icons/github.svg" />
+                                </span>
+                                <span>GitHub</span>
+                            </span>
+                        </a>
+                        <br>
+                        <a href="https://addons.mozilla.org/firefox/addon/simple-tab-groups/" target="_blank">
+                            <span class="icon-text">
+                                <span class="icon">
+                                    <img src="/icons/extension-generic.svg" />
+                                </span>
+                                <span v-text="lang('aboutExtensionPage')"></span>
+                            </span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="columns is-mobile">
+                    <div class="column is-one-fifth">
+                        <span class="icon-text is-flex-wrap-nowrap">
+                            <span class="icon">
+                                <img src="/icons/cubes.svg" />
+                            </span>
+                            <span v-text="lang('aboutLibraries')"></span>
+                        </span>
+                    </div>
+                    <div class="column">
+                        <a href="https://v2.vuejs.org/" target="_blank">Vue 2</a><br>
+                        <a href="https://saintplay.github.io/vue-swatches/" target="_blank">vue-swatches</a><br>
+                        <a href="https://bulma.io/" target="_blank">Bulma</a><br>
+                    </div>
+                </div>
+
+                <div class="thanks-wrapper mt-6 pb-6">
+                    <span class="icon-text">
+                        <span class="icon">
+                            <img class="heart" src="/icons/heart.svg" />
+                        </span>
+                        <span v-text="lang('aboutThanksText')"></span>
+                    </span>
+                </div>
+
+                <div class="donate-section mb-6">
+                    <div v-for="(item, name) in DONATE_ITEMS" :key="name" :class="name" class="columns is-mobile">
+                        <div class="column is-one-fifth is-align-content-center">
+                            <span class="icon-text">
+                                <span class="icon">
+                                    <img :src="`/icons/${name}.svg`" />
+                                </span>
+                                <span v-text="item.title"></span>
+                                <span v-if="item.hasHelp" class="icon" :title="getDonateItemHelp(name)">
+                                    <img src="/icons/info.svg" />
+                                </span>
+                            </span>
+                        </div>
+                        <div class="column">
+                            <div class="is-flex is-align-items-center indent-gap">
+                                <a v-if="item.link" data-copy-target :href="item.link" target="_blank" v-text="item.linkText"></a>
+                                <!-- eslint-disable-next-line vue/no-v-text-v-html-on-component -->
+                                <wallet v-else-if="item.wallet" data-copy-target class="is-family-monospace" v-text="item.wallet"></wallet>
+
+                                <button class="button" @click="copyTextSelector(`.${name} [data-copy-target]`)">
+                                    <span class="icon">
+                                        <img src="/icons/copy.svg" />
+                                    </span>
+                                </button>
+
+                                <!--
+                                    https://qrcodemate.com/
+                                    https://qrgenerator.org/
+                                    https://ezgif.com/svg-to-png
+                                -->
+                                <button v-if="item.hasQr" class="button" :style="{
+                                        '--image-url': `url(/icons/qrcode-${name}.png)`,
+                                    }">
+                                    <span class="icon">
+                                        <img src="/icons/qrcode.svg" />
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="block">
+                    <div class="has-text-weight-bold mb-5">
+                        <a href="https://addons.mozilla.org/firefox/user/1017663/" target="_blank">STG plugins:</a>
+                    </div>
+
+                    <div class="columns is-mobile is-variable is-2 initial-line-height" v-for="(plugin, uuid) in PLUGINS" :key="plugin.url">
+                        <div class="column is-narrow">
+                            <span class="icon">
+                                <img :src="getPluginIcon(plugin.id)" alt="icon">
+                            </span>
+                        </div>
+                        <div class="column is-narrow">
+                            <a :href="plugin.url" target="_blank" v-text="plugin.title"></a>
+                        </div>
+                        <div v-if="isInstalledExtension(uuid)" class="column">
+                            <span class="icon">
+                                <img v-if="isEnabledExtension(uuid)" class="has-text-success" src="/icons/check-square.svg" />
+                                <img v-else src="/icons/square-xmark.svg" />
+                            </span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
         <popup
             v-if="openEditDefaultGroup"
             :title="lang('defaultGroup')"
@@ -1211,11 +1411,79 @@
         transition: background-color ease .2s;
     }
 
+    .title,
+    .subtitle {
+        color: var(--text-color);
+    }
+
     .button.is-info,
     .button.is-danger,
     .button.is-success,
     .button.is-primary {
         --fill-color: #fff;
+    }
+
+    .initial-line-height {
+        line-height: 1.5rem;
+    }
+
+    @property --icon-light {
+        syntax: "<percentage>";
+        inherits: false;
+        initial-value: 76%;
+    }
+
+    .thanks-wrapper {
+        .heart {
+            image-rendering: high-quality;
+            animation: heartbeat 2.5s ease;
+            --fill-color: hsl(0, 100%, var(--icon-light));
+        }
+
+        &:hover,
+        &:has(~ .donate-section:hover) {
+            .heart {
+                animation-iteration-count: infinite;
+            }
+        }
+    }
+
+    @keyframes heartbeat {
+        0% { transform: scale(1); --icon-light: 76%; }
+        10% { transform: scale(1.25); --icon-light: 66%; }
+        20% { transform: scale(1.1); --icon-light: 76%; }
+        30% { transform: scale(1.3); --icon-light: 50%; }
+        50% { transform: scale(1); --icon-light: 76%; }
+        100% { transform: scale(1); }
+    }
+
+    .donate-section {
+        .icon:has([src*="info"]) {
+            cursor: help;
+        }
+
+        .button:has([src*="copy"]):active {
+            --fill-color: hsl(from var(--input-text-color) h s calc(l + 30));
+        }
+    }
+
+    .button:has([src*="qrcode"]) {
+        &::after {
+            --size: 200px;
+            width: var(--size);
+            height: var(--size);
+            border-radius: 5px;
+            position: absolute;
+            left: calc(100% + var(--indent));
+            background-color: #fff;
+            background-repeat: round;
+            background-image: var(--image-url);
+            z-index: 1;
+        }
+
+        &:focus::after {
+            content: '';
+        }
     }
 
     #stg-options {
@@ -1241,7 +1509,7 @@
                 --in-content-border-focus: transparent;
                 outline: 2px solid dodgerblue;
             }
-            :not(.key-error) > .control.key-success .input:focus {
+            &:not(.key-error) > .control.key-success .input:focus {
                 --in-content-border-focus: transparent;
                 outline: 2px solid limegreen;
             }
@@ -1249,38 +1517,38 @@
                 --in-content-border-focus: transparent;
                 outline: 2px solid orangered;
             }
-        }
 
-        .hotkeys > .field {
-            &:not(:last-child) {
-                border-bottom: 1px solid var(--color-hr);
-                padding-bottom: .75rem;
-            }
-
-            > * > :not(:last-child) {
-                margin-right: var(--indent);
-            }
-
-            > :not(.custom-group) .select {
-                flex-grow: 1;
-
-                select {
-                    width: 100%;
+            > .field {
+                &:not(:last-child) {
+                    border-bottom: 1px solid var(--color-hr);
+                    padding-bottom: .75rem;
                 }
-            }
 
-            .custom-group {
-                justify-content: end;
-                margin-right: calc(16px + var(--indent));
-                margin-top: .75rem;
-
-                > .control {
-                    max-width: 100%;
+                > * > :not(:last-child) {
+                    margin-right: var(--indent);
                 }
-            }
 
-            .delete-button {
-                line-height: 1;
+                > :not(.custom-group) .select {
+                    flex-grow: 1;
+
+                    select {
+                        width: 100%;
+                    }
+                }
+
+                .custom-group {
+                    justify-content: end;
+                    margin-right: calc(16px + var(--indent));
+                    margin-top: .75rem;
+
+                    > .control {
+                        max-width: 100%;
+                    }
+                }
+
+                .delete-button {
+                    line-height: 1;
+                }
             }
         }
     }

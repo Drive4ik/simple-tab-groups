@@ -322,7 +322,7 @@
                     @click="$refs.groupNameVariables.open($event)"
                     @contextmenu.prevent="$refs.groupNameVariables.open($event)">
                     <span class="icon">
-                        <img src="/icons/circle-info-solid.svg" class="size-16" />
+                        <img src="/icons/info.svg" class="size-16" />
                     </span>
                 </button>
             </div>
