@@ -25,6 +25,7 @@ export default {
         return {
             tokenLoading: false,
             tokenCheched: null,
+            tokenHidden: true,
         };
     },
     watch: {
@@ -88,7 +89,7 @@ export default {
         <div class="field-body">
             <div class="field has-addons">
                 <div class="control is-expanded has-icons-left has-icons-right">
-                    <input type="text" v-model.trim="internalToken" maxlength="100" class="input" />
+                    <input :type="tokenHidden ? 'password' : 'text'" v-model.trim="internalToken" maxlength="100" class="input" />
 
                     <span class="icon is-left">
                         <img class="size-16" src="/icons/key-solid.svg">
@@ -97,6 +98,21 @@ export default {
                         <img v-if="tokenCheched" class="size-16" src="/icons/check.svg">
                         <img v-else class="size-16" src="/icons/close.svg">
                     </span>
+                </div>
+                <div class="control">
+                    <button type="button" class="button"
+                        @mousedown.prevent="tokenHidden = false"
+                        @keydown.prevent.space="tokenHidden = false"
+                        @keyup.prevent.space="tokenHidden = true"
+                        @blur.prevent="tokenHidden = true"
+                        @mouseup.prevent="tokenHidden = true"
+                        @mouseleave.prevent="tokenHidden = true"
+                        >
+                        <span class="icon">
+                            <img v-if="tokenHidden" src="/icons/eye.svg">
+                            <img v-else src="/icons/eye-slash.svg">
+                        </span>
+                    </button>
                 </div>
                 <div class="control">
                     <button type="button" class="button" :class="{'is-loading': tokenLoading}" @click.prevent="checkToken" v-text="lang('githubGistCheckToken')"></button>
