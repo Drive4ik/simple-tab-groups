@@ -3020,7 +3020,7 @@ self.skipAddGroupToNextNewWindow = false;
 
 
 async function runMigrateForData(data, applyToCurrentInstance = true) {
-    const log = logger.create('runMigrateForData', {applyToCurrentInstance});
+    const log = logger.create('runMigrateForData', {version: data.version, applyToCurrentInstance});
 
     const currentVersion = Constants.MANIFEST.version;
 

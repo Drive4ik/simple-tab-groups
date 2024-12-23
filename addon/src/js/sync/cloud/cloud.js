@@ -65,7 +65,6 @@ export async function sync(progressFunc = null) {
     const cloudProgressFunc = function(currentProgress, progressDuration, fetchProgress) {
         const durationPart = 100 / progressDuration;
         const mainPercent = currentProgress + Math.floor(fetchProgress / durationPart);
-        log.log('main and fetch progress', mainPercent, fetchProgress);
         progressFunc(mainPercent);
     };
 
