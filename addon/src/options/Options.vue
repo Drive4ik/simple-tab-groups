@@ -1253,7 +1253,7 @@
                         <div class="column is-one-fifth is-align-content-center">
                             <span class="icon-text">
                                 <span class="icon">
-                                    <img :src="`/icons/${name}.svg`" />
+                                    <img :src="`/icons/logo-${name}.svg`" />
                                 </span>
                                 <span v-text="item.title"></span>
                                 <span v-if="item.hasHelp" class="icon" :title="getDonateItemHelp(name)">

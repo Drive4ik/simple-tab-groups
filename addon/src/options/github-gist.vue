@@ -219,7 +219,7 @@ export default {
                         <div>
                             <a class="button is-link" href="https://www.mozilla.org/firefox/new/" target="_blank">
                                 <span class="icon">
-                                    <img class="size-16" src="/icons/firefox-logo.svg">
+                                    <img class="size-16" src="/icons/logo-firefox.svg">
                                 </span>
                                 <span v-text="lang('downloadFirefox')"></span>
                             </a>
