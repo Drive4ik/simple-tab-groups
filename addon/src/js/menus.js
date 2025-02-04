@@ -69,7 +69,9 @@ export async function remove(id) {
         return;
     }
 
-    await browser.menus.remove(id);
+    try {
+        await browser.menus.remove(id);
+    } catch(e) {}
 
     browser.menus.onClicked.removeListener(menusMap.get(id).onMenuClick);
     menusMap.delete(id);
@@ -85,7 +87,9 @@ export async function update(id, updateProperties) {
         return;
     }
 
-    await browser.menus.update(id, updateProperties);
+    try {
+        await browser.menus.update(id, updateProperties);
+    } catch(e) {}
 
     // log.stop();
 }
