@@ -36,6 +36,7 @@ export async function sync(progressFunc = null) {
 
     if (syncOptionsLocation === Constants.SYNC_STORAGE_FSYNC) {
         if (!SyncStorage.IS_AVAILABLE) {
+            log.stopError('ffSyncNotSupported');
             throw new CloudError('ffSyncNotSupported');
         }
     }
@@ -199,10 +200,17 @@ async function syncData(localData, cloudData = null) {
     if (resultMigrate.migrated) {
         cloudData = resultMigrate.data;
     } else if (resultMigrate.error) {
+        log.stopError(resultMigrate.error);
         throw new CloudError(resultMigrate.error);
     }
 
     const sourceOfTruth = cloudData.syncId > localData.syncId ? TRUTH_CLOUD : TRUTH_LOCAL;
+
+    log.log({
+        sourceOfTruth,
+        'cloudData.syncId': cloudData.syncId,
+        'localData.syncId': localData.syncId,
+    });
 
     const changes = {
         // nextSyncId: Date.now(),
@@ -235,7 +243,7 @@ async function syncData(localData, cloudData = null) {
 }
 
 async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
-    const log = logger.start('syncGroups', {sourceOfTruth, syncTabFavIcons: localData.syncTabFavIcons});
+    const log = logger.start('syncGroups', {syncTabFavIcons: localData.syncTabFavIcons});
 
     const localGroups = localData.groups;
     const cloudGroups = cloudData.groups;
@@ -568,7 +576,7 @@ function assignGroupKeys(localGroup, cloudGroup, sourceOfTruth, changes) {
 }
 
 async function syncOptions(localData, cloudData, sourceOfTruth, changes) {
-    const log = logger.start('syncOptions', {sourceOfTruth});
+    const log = logger.start('syncOptions');
 
     const EXCLUDE_OPTION_KEY_STARTS_WITH = [
         'defaultGroupProps',
