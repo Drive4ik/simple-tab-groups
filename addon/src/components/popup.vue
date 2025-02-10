@@ -69,7 +69,7 @@
     </div>
 </template>
 
-<style lang="scss">
+<style>
     .modal-card-title {
         font-size: 1.2rem;
         color: inherit;

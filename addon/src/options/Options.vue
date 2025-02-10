@@ -1154,9 +1154,9 @@
     </div>
 </template>
 
-<style lang="scss">
+<style>
     body {
-        // background-color: #f9f9fa;
+        /* background-color: #f9f9fa; */
         transition: background-color ease .2s;
     }
 

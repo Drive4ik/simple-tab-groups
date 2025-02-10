@@ -6,7 +6,7 @@ import {zip, COMPRESSION_LEVEL} from 'zip-a-folder';
 import { fileURLToPath } from 'url';
 import webpack from 'webpack';
 import config from '../webpack.config.mjs';
-import manifest from '../src/manifest.json' assert { type: 'json' };
+import manifest from '../src/manifest.json' with { type: 'json' };
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

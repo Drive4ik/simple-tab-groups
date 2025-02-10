@@ -11,10 +11,10 @@ I use Windows 10 x64
 
 ```
 $ node -v
-v18.15.0
+v22.13.1
 
 $ npm -v
-9.5.0
+10.9.2
 ```
 
 Build code:
@@ -39,8 +39,8 @@ This addon uses the third-party javascript library - Vue.
 The Vue framework does not have an official CDN. So I took the file "vue.runtime.esm.js" from the CDN which is listed on their official website:
 https://v2.vuejs.org/v2/guide/installation.html#CDN
 
-The file `src/js/vue.runtime.esm.js` has version `2.7.14`, and downloaded from:
-https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.runtime.esm.js
+The file `src/js/vue.runtime.esm.js` has version `2.7.16`, and downloaded from:
+https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.runtime.esm.js
 
 This is the stable production version.
 
