@@ -10,22 +10,20 @@
         "build-zip": "node scripts/build-zip.js"
     },
     "dependencies": {
-        "vue": "^2.7.14",
-        "vue-swatches": "^2.1.0"
+        "vue": "^2.7.16",
+        "vue-swatches": "^2.1.1"
     },
     "devDependencies": {
         "copy-webpack-plugin": "^11.0.0",
-        "css-loader": "^6.7.3",
-        "eslint": "^8.38.0",
-        "eslint-plugin-vue": "^9.11.0",
-        "fs-extra": "^11.1.0",
-        "mini-css-extract-plugin": "^2.7.2",
-        "node-sass": "^8.0.0",
-        "sass-loader": "^13.2.0",
-        "vue-loader": "^15.10.1",
-        "vue-template-compiler": "^2.7.14",
-        "webpack": "^5.75.0",
-        "webpack-cli": "^5.0.1",
-        "zip-a-folder": "^1.1.5"
+        "css-loader": "^6.11.0",
+        "eslint": "^9.20.0",
+        "eslint-plugin-vue": "^9.32.0",
+        "fs-extra": "^11.3.0",
+        "mini-css-extract-plugin": "^2.9.2",
+        "vue-loader": "^15.11.1",
+        "vue-template-compiler": "^0.1.0",
+        "webpack": "^5.97.1",
+        "webpack-cli": "^6.0.1",
+        "zip-a-folder": "^3.1.8"
     }
 }

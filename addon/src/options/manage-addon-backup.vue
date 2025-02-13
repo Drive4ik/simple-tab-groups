@@ -237,7 +237,7 @@
     </div>
 </template>
 
-<style lang="scss">
+<style>
     #manageAddonBackup {
         .group-title {
             word-wrap: anywhere;

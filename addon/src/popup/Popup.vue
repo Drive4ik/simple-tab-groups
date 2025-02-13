@@ -1965,7 +1965,7 @@
     </div>
 </template>
 
-<style lang="scss">
+<style>
     @property --sync-progress-percent {
         syntax: '<percentage>';
         initial-value: 0%;
@@ -2013,7 +2013,7 @@
         min-height: var(--min-popup-height);
         max-width: var(--max-popup-width);
         min-width: 200px;
-        // max-height: calc(var(--max-popup-height) - 10px);
+        /* max-height: calc(var(--max-popup-height) - 10px); */
         overflow-x: hidden;
 
         &.full-popup-width {
@@ -2059,7 +2059,7 @@
         max-width: var(--max-popup-width);
 
         overflow-y: auto;
-        // margin: 0 auto;
+        /* margin: 0 auto; */
 
         scrollbar-width: thin;
 

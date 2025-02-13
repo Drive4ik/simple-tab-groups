@@ -41,7 +41,7 @@
     </div>
 </template>
 
-<style lang="scss">
+<style>
     #editGroupPopup {
         display: flex;
         flex-direction: column;

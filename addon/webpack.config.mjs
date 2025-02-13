@@ -81,11 +81,10 @@ export default {
                 loader: 'vue-loader',
             },
             {
-                test: /\.(scss|css)$/,
+                test: /\.css$/,
                 use: [
                     MiniCssExtractPlugin.loader,
                     'css-loader',
-                    'sass-loader',
                 ]
             },
         ],

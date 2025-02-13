@@ -1428,7 +1428,7 @@
 
 </template>
 
-<style lang="scss">
+<style>
     :root {
         --margin: 5px;
         --is-in-multiple-drop-text-color: #ffffff;
@@ -1442,7 +1442,7 @@
 
         --tab-active-shadow: var(--group-active-shadow);
         --tab-active-border: var(--group-active-border);
-        // --tab-hover-outline-color: #cfcfcf;
+        /* --tab-hover-outline-color: #cfcfcf; */
 
         --tab-inner-padding: 3px;
         --tab-inner-border-color: #c6ced4;
@@ -1515,7 +1515,7 @@
     }
 
     #result {
-        // GRID VIEW
+        /* GRID VIEW */
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
@@ -1722,10 +1722,10 @@
                     }
                 }
 
-                // &:hover,
-                // &:hover > * {
-                //     background-color: var(--active-tab-bg-color);
-                // }
+                /* &:hover,
+                &:hover > * {
+                     background-color: var(--active-tab-bg-color);
+                } */
 
                 &.is-active-element {
                     box-shadow: var(--tab-active-shadow);
@@ -1734,10 +1734,10 @@
                     -moz-outline-radius: var(--border-radius);
                 }
 
-                // &:not(.is-active-element):not(.drag-moving):hover {
-                //     outline: 1px solid var(--tab-hover-outline-color);
-                //     outline-offset: 1px;
-                // }
+                /* &:not(.is-active-element):not(.drag-moving):hover {
+                    outline: 1px solid var(--tab-hover-outline-color);
+                    outline-offset: 1px;
+                } */
 
                 &.is-in-multiple-drop,
                 &.is-in-multiple-drop > * {

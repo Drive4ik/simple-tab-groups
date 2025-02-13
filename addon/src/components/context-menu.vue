@@ -87,7 +87,7 @@
     </div>
 </template>
 
-<style lang="scss" scoped>
+<style>
     .v-context-menu {
         --main-inden: 6px;
         --scroll-indent: 20px;

@@ -339,7 +339,7 @@ export function catchFunc(asyncFunc) {
 
     return async function() {
         try {
-            return await asyncFunc(...Array.from(arguments));
+            return await asyncFunc.call(this, ...arguments);
         } catch (e) {
             e.message = `[catchFunc]: ${e.message}`;
             e.stack = [fromStack, 'Native error stack:', e.stack].join('\n');

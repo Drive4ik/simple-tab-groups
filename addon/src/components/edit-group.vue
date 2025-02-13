@@ -595,7 +595,7 @@
     </div>
 </template>
 
-<style lang="scss">
+<style>
     .edit-group {
         .word-break-all {
             word-break: break-word;
