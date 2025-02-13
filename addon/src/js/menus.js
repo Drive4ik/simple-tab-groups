@@ -8,6 +8,28 @@ const logger = new Logger('Menus').disable();
 
 const menusMap = new Map;
 
+browser.menus.onClicked.addListener(onMenuClick);
+
+async function onMenuClick(info, tab) {
+    const menu = menusMap.get(info.menuItemId);
+
+    if (menu.onClick) {
+        const log = logger.start('onMenuClick', info.menuItemId, {info, tab});
+
+        info.button ??= 0;
+
+        info.button = {
+            LEFT: info.button === MENU_ITEM_BUTTON.LEFT,
+            MIDDLE: info.button === MENU_ITEM_BUTTON.MIDDLE,
+            RIGHT: info.button === MENU_ITEM_BUTTON.RIGHT,
+        };
+
+        await catchFunc(menu.onClick).call(menu, info, tab);
+
+        log.stop();
+    }
+}
+
 export async function create(createProperties) {
     const id = createProperties.id ??= String(Utils.getRandomInt(100000));
 
@@ -15,7 +37,6 @@ export async function create(createProperties) {
 
     if (menusMap.has(id)) {
         log.throwError([id, 'id already exist']);
-        return;
     }
 
     const {icon, onClick} = createProperties;
@@ -29,36 +50,12 @@ export async function create(createProperties) {
 
     await browser.menus.create(createProperties);
 
-    const menuListenerOptions = {
-        id,
-        onClick: onClick ? catchFunc(onClick) : null,
-    };
+    createProperties.onClick = onClick;
+    menusMap.set(id, createProperties);
 
-    menuListenerOptions.onMenuClick = onMenuClick.bind(menuListenerOptions);
+    log.stop(id);
 
-    menusMap.set(id, menuListenerOptions);
-
-    browser.menus.onClicked.addListener(menuListenerOptions.onMenuClick);
-
-    return log.stop(id);
-}
-
-async function onMenuClick(info, tab) {
-    if (this.id === info.menuItemId) {
-        const log = logger.start('onMenuClick', {info, tab});
-
-        info.button ??= 0;
-
-        info.button = {
-            LEFT: info.button === MENU_ITEM_BUTTON.LEFT,
-            MIDDLE: info.button === MENU_ITEM_BUTTON.MIDDLE,
-            RIGHT: info.button === MENU_ITEM_BUTTON.RIGHT,
-        };
-
-        await this.onClick?.(info, tab);
-
-        log.stop();
-    }
+    return id;
 }
 
 export async function remove(id) {
@@ -66,28 +63,35 @@ export async function remove(id) {
 
     if (!menusMap.has(id)) {
         log.throwError([id, 'doesn\'t exist']);
-        return;
     }
 
-    await browser.menus.remove(id).catch(() => {});
-
-    browser.menus.onClicked.removeListener(menusMap.get(id).onMenuClick);
     menusMap.delete(id);
 
-    return log.stop(id);
+    await browser.menus.remove(id);
+
+    log.stop();
+}
+
+export async function removeAll() {
+    const log = logger.start('removeAll');
+
+    menusMap.clear();
+
+    await browser.menus.removeAll();
+
+    log.stop();
 }
 
 export async function update(id, updateProperties) {
-    // const log = logger.start('update', id, updateProperties);
+    const log = logger.start('update', id, updateProperties);
 
     if (!menusMap.has(id)) {
-        // log.throwError([id, 'doesn\'t exist']);
-        return;
+        log.throwError([id, 'doesn\'t exist']);
     }
 
-    await browser.menus.update(id, updateProperties).catch(() => {});
+    await browser.menus.update(id, updateProperties);
 
-    // log.stop();
+    log.stop();
 }
 
 export async function enable(id) {

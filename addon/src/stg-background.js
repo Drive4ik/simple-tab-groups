@@ -38,7 +38,6 @@ self.inited = false;
 self.options = {};
 
 let reCreateTabsOnRemoveWindow = [],
-    menuIds = [],
     excludeTabIds = new Set,
     ignoreExtForReopenContainer = new Set,
 
@@ -953,9 +952,13 @@ function onFocusChangedWindow(windowId) {
     !self.IS_TEMPORARY && logger.log('onFocusChangedWindow', windowId);
 
     if (browser.windows.WINDOW_ID_NONE !== windowId && options.showContextMenuOnTabs) {
-        Menus.update('set-tab-icon-as-group-icon', {
-            enabled: Boolean(Cache.getWindowGroup(windowId)),
-        });
+        const menuId = 'set-tab-icon-as-group-icon';
+
+        if (Cache.getWindowGroup(windowId)) {
+            Menus.enable(menuId);
+        } else {
+            Menus.disable(menuId);
+        }
     }
 }
 
@@ -1057,53 +1060,42 @@ async function addUndoRemoveGroupItem(groupToRemove) {
 }
 
 async function updateMoveTabMenus() {
-    await removeMoveTabMenus();
-    await createMoveTabMenus();
-}
+    const log = logger.start('updateMoveTabMenus');
 
-async function removeMoveTabMenus() {
-    if (menuIds.length) {
-        await Promise.all(menuIds.map(Menus.remove));
-        menuIds = [];
-    }
-}
+    await Menus.removeAll();
 
-async function createMoveTabMenus() {
-    let hasBookmarksPermission = await browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS);
+    const hasBookmarksPermission = await browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS);
 
     if (!options.showContextMenuOnTabs && !options.showContextMenuOnLinks && !hasBookmarksPermission) {
+        log.stop('there are no menu creation permissions/options');
         return;
     }
-
-    const log = logger.start('createMoveTabMenus')
-
-    await removeMoveTabMenus();
 
     const { groups } = await Groups.load(),
         temporaryContainer = Containers.get(Constants.TEMPORARY_CONTAINER);
 
-    hasBookmarksPermission && menuIds.push(await Menus.create({
-        id: 'stg-open-bookmark-parent',
+    hasBookmarksPermission && await Menus.create({
+        id: Menus.ContextType.BOOKMARK,
         title: browser.i18n.getMessage('openBookmarkInGroup'),
         contexts: [Menus.ContextType.BOOKMARK],
-    }));
+    });
 
-    options.showContextMenuOnTabs && menuIds.push(await Menus.create({
-        id: 'stg-move-tab-parent',
+    options.showContextMenuOnTabs && await Menus.create({
+        id: Menus.ContextType.TAB,
         title: browser.i18n.getMessage('moveTabToGroupDisabledTitle'),
         contexts: [Menus.ContextType.TAB],
-    }));
+    });
 
-    options.showContextMenuOnLinks && menuIds.push(await Menus.create({
-        id: 'stg-open-link-parent',
+    options.showContextMenuOnLinks && await Menus.create({
+        id: Menus.ContextType.LINK,
         title: browser.i18n.getMessage('openLinkInGroupDisabledTitle'),
         contexts: [Menus.ContextType.LINK],
-    }));
+    });
 
-    options.showContextMenuOnTabs && menuIds.push(await Menus.create({
+    options.showContextMenuOnTabs && await Menus.create({
         title: temporaryContainer.name,
         icon: temporaryContainer.iconUrl,
-        parentId: 'stg-move-tab-parent',
+        parentId: Menus.ContextType.TAB,
         contexts: [Menus.ContextType.TAB],
         async onClick(info, tab) {
             if (!Utils.isUrlAllowToCreate(tab.url)) {
@@ -1117,13 +1109,13 @@ async function createMoveTabMenus() {
                 cookieStoreId: Constants.TEMPORARY_CONTAINER,
             });
         },
-    }));
+    });
 
-    options.showContextMenuOnTabs && menuIds.push(await Menus.create({
+    options.showContextMenuOnTabs && await Menus.create({
         id: 'set-tab-icon-as-group-icon',
         title: browser.i18n.getMessage('setTabIconAsGroupIcon'),
         icon: '/icons/image.svg',
-        parentId: 'stg-move-tab-parent',
+        parentId: Menus.ContextType.TAB,
         contexts: [Menus.ContextType.TAB],
         async onClick(info, tab) {
             const groupId = Cache.getWindowGroup(tab.windowId);
@@ -1139,18 +1131,18 @@ async function createMoveTabMenus() {
 
             await Groups.setIconUrl(groupId, tab.favIconUrl);
         },
-    }));
+    });
 
-    options.showContextMenuOnTabs && groups.length && menuIds.push(await Menus.create({
+    options.showContextMenuOnTabs && groups.length && await Menus.create({
         type: Menus.ItemType.SEPARATOR,
-        parentId: 'stg-move-tab-parent',
+        parentId: Menus.ContextType.TAB,
         contexts: [Menus.ContextType.TAB],
-    }));
+    });
 
-    options.showContextMenuOnLinks && menuIds.push(await Menus.create({
+    options.showContextMenuOnLinks && await Menus.create({
         title: temporaryContainer.name,
         icon: temporaryContainer.iconUrl,
-        parentId: 'stg-open-link-parent',
+        parentId: Menus.ContextType.LINK,
         contexts: [Menus.ContextType.LINK],
         async onClick(info) {
             if (!Utils.isUrlAllowToCreate(info.linkUrl)) {
@@ -1169,18 +1161,18 @@ async function createMoveTabMenus() {
                 cookieStoreId: Constants.TEMPORARY_CONTAINER,
             });
         },
-    }));
+    });
 
-    options.showContextMenuOnLinks && groups.length && menuIds.push(await Menus.create({
+    options.showContextMenuOnLinks && groups.length && await Menus.create({
         type: Menus.ItemType.SEPARATOR,
-        parentId: 'stg-open-link-parent',
+        parentId: Menus.ContextType.LINK,
         contexts: [Menus.ContextType.LINK],
-    }));
+    });
 
-    hasBookmarksPermission && menuIds.push(await Menus.create({
+    hasBookmarksPermission && await Menus.create({
         title: temporaryContainer.name,
         icon: temporaryContainer.iconUrl,
-        parentId: 'stg-open-bookmark-parent',
+        parentId: Menus.ContextType.BOOKMARK,
         contexts: [Menus.ContextType.BOOKMARK],
         async onClick(info) {
             if (!info.bookmarkId) {
@@ -1207,13 +1199,13 @@ async function createMoveTabMenus() {
                 cookieStoreId: Constants.TEMPORARY_CONTAINER,
             });
         },
-    }));
+    });
 
-    hasBookmarksPermission && groups.length && menuIds.push(await Menus.create({
+    hasBookmarksPermission && groups.length && await Menus.create({
         type: Menus.ItemType.SEPARATOR,
-        parentId: 'stg-open-bookmark-parent',
+        parentId: Menus.ContextType.BOOKMARK,
         contexts: [Menus.ContextType.BOOKMARK],
-    }));
+    });
 
     await Promise.all(groups.map(async group => {
         if (group.isArchive) {
@@ -1224,10 +1216,10 @@ async function createMoveTabMenus() {
             groupIcon = Groups.getIconUrl(group),
             groupTitle = String(Groups.getTitle(group, 'withSticky withActiveGroup withContainer'));
 
-        options.showContextMenuOnTabs && menuIds.push(await Menus.create({
+        options.showContextMenuOnTabs && await Menus.create({
             title: groupTitle,
             icon: groupIcon,
-            parentId: 'stg-move-tab-parent',
+            parentId: Menus.ContextType.TAB,
             contexts: [Menus.ContextType.TAB],
             async onClick(info, tab) {
                 const tabIds = await Tabs.getHighlightedIds(tab.windowId, tab);
@@ -1241,12 +1233,12 @@ async function createMoveTabMenus() {
                     await Tabs.discard(tabIds);
                 }
             },
-        }));
+        });
 
-        options.showContextMenuOnLinks && menuIds.push(await Menus.create({
+        options.showContextMenuOnLinks && await Menus.create({
             title: groupTitle,
             icon: groupIcon,
-            parentId: 'stg-open-link-parent',
+            parentId: Menus.ContextType.LINK,
             contexts: [Menus.ContextType.LINK],
             async onClick(info) {
                 if (!Utils.isUrlAllowToCreate(info.linkUrl)) {
@@ -1260,12 +1252,12 @@ async function createMoveTabMenus() {
                     await applyGroup(newTab.windowId, groupId, newTab.id);
                 }
             },
-        }));
+        });
 
-        hasBookmarksPermission && menuIds.push(await Menus.create({
+        hasBookmarksPermission && await Menus.create({
             title: groupTitle,
             icon: groupIcon,
-            parentId: 'stg-open-bookmark-parent',
+            parentId: Menus.ContextType.BOOKMARK,
             contexts: [Menus.ContextType.BOOKMARK],
             async onClick(info) {
                 if (!info.bookmarkId) {
@@ -1313,13 +1305,13 @@ async function createMoveTabMenus() {
                     Utils.notify(['tabsNotCreated'], 7);
                 }
             },
-        }));
+        });
     }));
 
-    options.showContextMenuOnTabs && menuIds.push(await Menus.create({
+    options.showContextMenuOnTabs && await Menus.create({
         title: browser.i18n.getMessage('createNewGroup'),
         icon: '/icons/group-new.svg',
-        parentId: 'stg-move-tab-parent',
+        parentId: Menus.ContextType.TAB,
         contexts: [Menus.ContextType.TAB],
         async onClick(info, tab) {
             const tabIds = await Tabs.getHighlightedIds(tab.windowId, tab);
@@ -1331,12 +1323,12 @@ async function createMoveTabMenus() {
                 windowId: info.button.RIGHT ? tab.windowId : undefined,
             }, self);
         },
-    }));
+    });
 
-    options.showContextMenuOnLinks && menuIds.push(await Menus.create({
+    options.showContextMenuOnLinks && await Menus.create({
         title: browser.i18n.getMessage('createNewGroup'),
         icon: '/icons/group-new.svg',
-        parentId: 'stg-open-link-parent',
+        parentId: Menus.ContextType.LINK,
         contexts: [Menus.ContextType.LINK],
         async onClick(info) {
             if (!Utils.isUrlAllowToCreate(info.linkUrl)) {
@@ -1362,12 +1354,12 @@ async function createMoveTabMenus() {
                 }
             }
         },
-    }));
+    });
 
-    hasBookmarksPermission && menuIds.push(await Menus.create({
+    hasBookmarksPermission && await Menus.create({
         title: browser.i18n.getMessage('createNewGroup'),
         icon: '/icons/group-new.svg',
-        parentId: 'stg-open-bookmark-parent',
+        parentId: Menus.ContextType.BOOKMARK,
         contexts: [Menus.ContextType.BOOKMARK],
         async onClick(info) {
             if (!info.bookmarkId) {
@@ -1442,18 +1434,18 @@ async function createMoveTabMenus() {
                 Utils.notify(['bookmarkNotAllowed'], 7, 'bookmarkNotAllowed');
             }
         },
-    }));
+    });
 
-    hasBookmarksPermission && menuIds.push(await Menus.create({
+    hasBookmarksPermission && await Menus.create({
         title: browser.i18n.getMessage('exportAllGroupsToBookmarks'),
         icon: '/icons/bookmark.svg',
         contexts: [Menus.ContextType.ACTION],
         async onClick() {
             await exportAllGroupsToBookmarks(true);
         },
-    }));
+    });
 
-    menuIds.push(await Menus.create({
+    await Menus.create({
         title: browser.i18n.getMessage('reopenTabsWithTemporaryContainersInNew'),
         icon: Containers.temporaryContainerOptions.iconUrl,
         contexts: [Menus.ContextType.ACTION],
@@ -1499,7 +1491,7 @@ async function createMoveTabMenus() {
                 await loadingBrowserAction(false);
             }
         },
-    }));
+    });
 
     log.stop();
 }
@@ -4181,9 +4173,9 @@ async function init() {
 
         window.setTimeout(resetAutoBackup, 10000);
 
-        createMoveTabMenus(data.groups);
+        await updateMoveTabMenus();
 
-        log.log('createMoveTabMenus finish');
+        log.log('updateMoveTabMenus finish');
 
         addEvents();
 
