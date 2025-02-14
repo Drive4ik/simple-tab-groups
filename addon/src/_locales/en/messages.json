@@ -719,6 +719,10 @@
         "message": "Show notification after group delete",
         "description": "Show notification after group delete"
     },
+    "disableAllNotifications": {
+        "message": "Completely disable all notifications (note: this may hide important warnings/errors)",
+        "description": "Completely disable all notifications (note: this may hide important warnings/errors)"
+    },
     "reloadTab": {
         "message": "Reload tab",
         "description": "Reload tab"

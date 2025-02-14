@@ -715,6 +715,10 @@
         "message": "Показать уведомление после удаления группы",
         "description": "Show notification after group delete"
     },
+    "disableAllNotifications": {
+        "message": "Полностью отключите все уведомления (примечание: это может скрыть важные предупреждения/ошибки)",
+        "description": "Completely disable all notifications (note: this may hide important warnings/errors)"
+    },
     "reloadTab": {
         "message": "Обновить вкладку",
         "description": "Reload tab"
