@@ -4,13 +4,13 @@
     "browser_specific_settings": {
         "gecko": {
             "id": "simple-tab-groups@drive4ik",
-            "strict_min_version": "102.0"
+            "strict_min_version": "117.0"
         }
     },
 
     "name": "__MSG_extensionName__",
     "description": "__MSG_extensionDescription__",
-    "version": "5.3",
+    "version": "5.3.1",
     "author": "Drive4ik",
     "homepage_url": "https://github.com/drive4ik/simple-tab-groups",
 

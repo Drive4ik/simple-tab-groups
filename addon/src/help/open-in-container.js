@@ -138,13 +138,14 @@ async function init() {
     $('#helpPageOpenInContainerDesc1')[INNER_HTML] = lang('helpPageOpenInContainerDesc1', [safeHtml(group.title), safeHtml(destContainer.name)]);
     applyContainerStyles($('#helpPageOpenInContainerDesc1'), destContainer);
     // $('#another-addon-img').src = Management.getExtensionIcon(conflictedExt);//can't have permission to read other addon icon :((
-    $('#another-addon-img').src = '/icons/extension-generic.svg';
     $('#another-addon-name').innerText = conflictedExt.name;
     $('#helpPageOpenInContainerDesc3')[INNER_HTML] = lang('helpPageOpenInContainerDesc3', [safeHtml(anotherContainer.name), safeHtml(conflictedExt.name)]);
     applyContainerStyles($('#helpPageOpenInContainerDesc3'), anotherContainer);
 
     // load favicon
-    $('#redirect-img').src = 'https://www.google.com/s2/favicons?sz=16&domain_url=' + encodeURIComponent(new URL(url).origin);
+    const redirectImg = $('#redirect-img');
+    redirectImg.addEventListener('load', () => redirectImg.hidden = false);
+    redirectImg.src = new URL(url).origin + '/favicon.ico';
 
     if (asInfo) {
         $('main').classList.add('as-info');
