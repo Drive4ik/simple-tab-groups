@@ -735,6 +735,12 @@
                     <span v-text="lang('openManageGroupsInTab')"></span>
                 </label>
             </div>
+            <div class ="field">
+                <label class="checkbox">
+                    <input v-model="options.openGroupsInNewWindow" type="checkbox" />
+                    <span v-text="lang('openGroupsInNewWindow')"></span>
+                </label>
+            </div>
             <div class="field">
                 <label class="checkbox">
                     <input v-model="options.showConfirmDialogBeforeGroupDelete" type="checkbox" />
