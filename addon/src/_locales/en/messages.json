@@ -99,6 +99,10 @@
         "message": "Open \"Manage Groups\" in new tab",
         "description": "Open \"Manage Groups\" in new tab"
     },
+    "openGroupsInNewWindow": {
+        "message": "Always open groups in new window",
+        "description": "Always open groups in new window"
+    },
     "showConfirmDialogBeforeGroupDelete": {
         "message": "Show confirmation dialog before deleting the group",
         "description": "Show confirmation dialog before deleting the group"
