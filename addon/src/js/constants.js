@@ -281,6 +281,7 @@ export const DEFAULT_OPTIONS = Object.freeze({
     alwaysAskNewGroupName: true,
     createNewGroupWhenOpenNewWindow: false,
     openManageGroupsInTab: true,
+    openGroupsInNewWindow: false,
     showConfirmDialogBeforeGroupArchiving: true,
     showConfirmDialogBeforeGroupDelete: true,
     showNotificationAfterGroupDelete: true,
