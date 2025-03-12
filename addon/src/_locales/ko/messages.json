@@ -679,6 +679,10 @@
         "message": "그룹 삭제 후 알림 표시",
         "description": "Show notification after group delete"
     },
+    "disableAllNotifications": {
+        "message": "모든 알림을 완전히 비활성화합니다(참고: 중요한 경고/오류가 숨겨질 수 있음).",
+        "description": "Completely disable all notifications (note: this may hide important warnings/errors)"
+    },
     "reloadTab": {
         "message": "탭 새로고침",
         "description": "Reload tab"
