@@ -952,10 +952,12 @@
                 } else {
                     this.someGroupAreLoading = true;
 
-                    let loadGroupPromise = Messages.sendMessage('load-custom-group', {
-                        groupId: group.id,
-                        tabId: tab?.id,
-                    });
+                    // Open group in current window, or in new window if openGroupsInNewWindow (settings) is enabled
+                    if (this.options.openGroupsInNewWindow) {
+                        let loadGroupPromise = this.openGroupInNewWindow(group, tab);
+                    } else {
+                        let loadGroupPromise = this.openGroupInThisWindow(group, tab);
+                    }
 
                     if (!isSidebar && this.options.closePopupAfterSelectTab && tab) {
                         this.someGroupAreLoading = false;
@@ -1035,6 +1037,13 @@
                     groupId: group.id,
                     tabId: tab?.id,
                     windowId: 'new',
+                });
+            },
+
+            openGroupInThisWindow(group, tab) {
+                Messages.sendMessage('load-custom-group', {
+                    groupId: group.id,
+                    tabId: tab?.id,
                 });
             },
 
