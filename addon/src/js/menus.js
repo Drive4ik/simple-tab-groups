@@ -75,9 +75,9 @@ export async function remove(id) {
 export async function removeAll() {
     const log = logger.start('removeAll');
 
-    menusMap.clear();
-
     await browser.menus.removeAll();
+
+    menusMap.clear();
 
     log.stop();
 }

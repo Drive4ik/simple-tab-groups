@@ -310,7 +310,7 @@
         <label class="label" v-text="lang('title')"></label>
         <div :class="['field', isDefaultGroup && 'has-addons']">
             <div class="control is-expanded has-icons-left">
-                <input ref="groupTitle" v-model.trim="group.title" type="text" maxlength="256" class="input" :placeholder="lang('title')" />
+                <input ref="groupTitle" v-model.trim="group.title" type="text" maxlength="256" class="input" :placeholder="lang('title')" @keydown.stop @keyup.stop />
                 <span class="icon is-left">
                     <figure class="image is-16x16 is-inline-block">
                         <img :src="iconUrlToDisplay" />
@@ -548,9 +548,8 @@
             <div class="control">
                 <textarea class="textarea reg-exp"
                     :rows="canLoadFile ? false : 2"
-                    @keydown.enter.stop
-                    @keypress.enter.stop
-                    @keyup.enter.stop
+                    @keydown.stop
+                    @keyup.stop
                     v-model.trim="group.catchTabRules"
                     :disabled="isDefaultGroup"
                     :placeholder="lang('regexpForTabsPlaceholder')"></textarea>

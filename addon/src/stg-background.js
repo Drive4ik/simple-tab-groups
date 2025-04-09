@@ -48,7 +48,7 @@ self.options = {};
 
 let reCreateTabsOnRemoveWindow = [],
     excludeTabIds = new Set,
-    ignoreExtForReopenContainer = new Set,
+    ignoreExtForReopenContainer = new Set([...Constants.SAFE_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER]),
 
     groupsHistory = (function () {
         let index = -1,
@@ -1754,10 +1754,10 @@ const onBeforeTabRequest = catchFunc(async function ({ tabId, url, cookieStoreId
         return Urls.setUrlSearchParams(Urls.getURL('open-in-container', true), params);
     }
 
-    if (Constants.IGNORE_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER.includes(originExt.id) && originExt.enabled) {
+    if (Constants.CONFLICTED_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER.includes(originExt.id) && originExt.enabled) {
         let showNotif = storage.ignoreExtensionsForReopenTabInContainer ?? 0;
 
-        if (showNotif < 10) {
+        if (showNotif < 3) {
             storage.ignoreExtensionsForReopenTabInContainer = ++showNotif;
             let str = browser.i18n.getMessage('helpPageOpenInContainerMainTitle', Containers.get(newTabContainer, 'name'));
 
@@ -1772,7 +1772,7 @@ const onBeforeTabRequest = catchFunc(async function ({ tabId, url, cookieStoreId
             });
         }
 
-        log.stop('ignore tab, by extension', originExt.id);
+        log.stop('deny reopen tab in required conteiner by extension', originExt.id);
         return {};
     }
 

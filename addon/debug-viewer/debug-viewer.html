@@ -5,28 +5,28 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.1/svgs/solid/bug.svg"/>
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.4/css/bulma.min.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/1.0.3/css/bulma.min.css"/>
 
     <style>
-        details {
-            border: 1px solid #aaa;
-            border-radius: 4px;
-            padding: 0.5em 0.5em 0;
-        }
-
         summary {
             font-weight: bold;
             margin: -0.5em -0.5em 0;
             padding: 0.5em;
         }
 
-        details[open] {
-            padding: 0.5em;
-        }
+        details {
+            border: 1px solid #aaa;
+            border-radius: 4px;
+            padding: 0.5em 0.5em 0;
 
-        details[open] summary {
-            border-bottom: 1px solid #aaa;
-            margin-bottom: 0.5em;
+            &[open] {
+                padding: 0.5em;
+
+                summary {
+                    border-bottom: 1px solid #aaa;
+                    margin-bottom: 0.5em;
+                }
+            }
         }
 
         .host:not(:first-child) {
@@ -36,11 +36,19 @@
         .stack-icon {
             background-repeat: no-repeat;
             background-image: url("https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.3.0/svgs/solid/layer-group.svg");
+
+            @media (prefers-color-scheme: dark) {
+                filter: invert(1);
+            }
         }
 
         .highlight-icon {
             background-repeat: no-repeat;
             background-image: url("https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.3.0/svgs/solid/highlighter.svg");
+
+            @media (prefers-color-scheme: dark) {
+                filter: invert(1);
+            }
         }
 
         .log.indent-line[data-action="START"]::before {
@@ -96,21 +104,25 @@
             vertical-align: middle;
         }
 
-        code.expanded-on-focus:not(:focus) {
-            max-width: 500px;
-            display: inline-block;
-            max-height: 2em;
-            overflow: hidden;
-            vertical-align: bottom;
-        }
-        code.expanded-on-focus:not(:focus)::before {
-            content: "(click to expand)";
-            display: inline-block;
-        }
-        code.expanded-on-focus:focus {
-            white-space: pre;
-            display: block;
-            margin-top: 1em;
+        code.expanded-on-focus {
+            &:focus {
+                white-space: pre;
+                display: block;
+                margin-top: 1em;
+            }
+
+            &:not(:focus) {
+                max-width: 500px;
+                display: inline-block;
+                max-height: 2em;
+                overflow: hidden;
+                vertical-align: bottom;
+
+                &::before {
+                    content: "(click to expand)";
+                    display: inline-block;
+                }
+            }
         }
     </style>
 </head>
@@ -209,7 +221,7 @@
 
 
             <h1 id="logs-title" class="title has-text-centered mt-5">logs (count: {{logs.length}})</h1>
-            <div class="is-relative" :style="{
+            <div id="logs" class="is-relative" :style="{
                     marginLeft: logsIndent + 'px',
                 }">
                 <div v-for="(log, i) in logs" :key="i + 'log'" :data-action="log.action" :data-key="log.key"
@@ -256,19 +268,19 @@
 
 
             <div id="logs-indent" class="buttons are-small">
-                <button class="button is-light" @click="logsIndent -= 50">◁</button>
-                <button class="button is-light" @click="logsIndent += 50">▷</button>
+                <button class="button" @click="logsIndent -= 50">◁</button>
+                <button class="button" @click="logsIndent += 50">▷</button>
             </div>
 
             <div id="page-navigation" class="is-flex is-flex-direction-column is-align-items-end">
-                <button class="button is-light field" @click="scrollTo('input[type=file]')">top</button>
-                <button class="button is-light field" @click="scrollTo('#windows-title', 'start')">windows</button>
-                <button class="button is-light field" @click="scrollTo('#groups-title', 'start')">groups</button>
-                <button class="button is-light field" @click="scrollTo('#logs-title', 'start')">logs</button>
-                <button class="button is-light field" title="Right click - prev error"
-                    @click="scrollTo('.tag.is-danger:not(.is-light), .has-background-danger', undefined, true)"
-                    @contextmenu.prevent.stop="scrollTo('.tag.is-danger:not(.is-light), .has-background-danger', undefined, true, true)">🛑 error</button>
-                <button class="button is-light field" @click="scrollTo('#errors-title')">errors</button>
+                <button class="button field" @click="scrollTo('input[type=file]')">top</button>
+                <button class="button field" @click="scrollTo('#windows-title', 'start')">windows</button>
+                <button class="button field" @click="scrollTo('#groups-title', 'start')">groups</button>
+                <button class="button field" @click="scrollTo('#logs-title', 'start')">logs</button>
+                <button class="button field" title="Right click - prev error"
+                    @click="scrollTo('#logs .tag.is-danger:not(.is-light), .has-background-danger', undefined, true)"
+                    @contextmenu.prevent.stop="scrollTo('#logs .tag.is-danger:not(.is-light), .has-background-danger', undefined, true, true)">🛑 error</button>
+                <button class="button field" @click="scrollTo('#errors-title')">errors</button>
             </div>
 
         </div>

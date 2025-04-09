@@ -14,7 +14,7 @@ export const TEMPORARY_CONTAINER = 'temporary-container';
 export const TEMPORARY_CONTAINER_ICON = 'chill';
 
 export const DEFAULT_COOKIE_STORE_ID = await browser.cookies?.getAllCookieStores()
-    .then(stores => stores.find(store => store.id.includes('default')).id) ?? 'firefox-default';
+    .then(stores => stores.find(store => store.id.includes('default'))?.id) ?? 'firefox-default';
 
 export const CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP = 'stg-undo-remove-group-id-';
 
@@ -91,7 +91,7 @@ export const TREE_TABS_EXTENSIONS = Object.freeze([
     '{8d808887-ed13-4931-9f5a-4c0bff979a5a}',
 ]);
 
-export const IGNORE_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER = Object.freeze([
+export const CONFLICTED_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER = Object.freeze([
     '@testpilot-containers', // https://addons.mozilla.org/firefox/addon/multi-account-containers/
     '@contain-google', // https://addons.mozilla.org/firefox/addon/google-container/
     '@contain-facebook', // https://addons.mozilla.org/firefox/addon/facebook-container/
@@ -272,6 +272,16 @@ export const EXTENSIONS_WHITE_LIST = Object.freeze({
         ],
     },
 });
+
+export const SAFE_EXTENSIONS_FOR_REOPEN_TAB_IN_CONTAINER = Object.freeze([
+    ...Object.keys(EXTENSIONS_WHITE_LIST).filter(extId => extId.endsWith('@drive4ik')),
+
+    'newtaboverride@agenedia.com', // https://addons.mozilla.org/firefox/addon/new-tab-override/
+    'extension@tabliss.io', // https://addons.mozilla.org/firefox/addon/tabliss/
+    'newtabtools@darktrojan.net', // https://addons.mozilla.org/firefox/addon/new-tab-tools/
+    '{66E978CD-981F-47DF-AC42-E3CF417C1467}', // https://addons.mozilla.org/firefox/addon/new-tab-homepage/
+    '{166411f2-402a-4bca-a3da-38b795ec8007}', // https://addons.mozilla.org/firefox/addon/renewed-tab/
+]);
 
 export const DONATE_ITEMS = Object.freeze({
     'paypal': {

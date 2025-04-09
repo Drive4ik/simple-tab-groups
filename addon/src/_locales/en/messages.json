@@ -79,7 +79,7 @@
         "placeholders": {
             "regexp": {
                 "content": "$1",
-                "example": "googlecom"
+                "example": "google\\.com"
             }
         }
     },
