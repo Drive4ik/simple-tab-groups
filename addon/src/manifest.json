@@ -76,7 +76,8 @@
     },
 
     "background": {
-        "page": "stg-background.html"
+        "type": "module",
+        "scripts": ["background.js"]
     },
 
     "content_security_policy": "default-src 'self' https://api.github.com https://gist.githubusercontent.com;  script-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data:;",

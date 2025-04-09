@@ -109,8 +109,7 @@ export default {
 
                 // js
                 'js',
-                'stg-background.js',
-                'stg-background.html',
+                'background.js',
 
                 // pages
                 'popup/popup.html',

@@ -2,7 +2,7 @@
 export const MANIFEST = Object.freeze(browser.runtime.getManifest());
 export const STG_BASE_URL = browser.runtime.getURL('');
 
-export const IS_BACKGROUND_PAGE = self.location.href.startsWith(MANIFEST.background.page);
+export const IS_BACKGROUND_PAGE = self.location.href.includes('background');
 
 export const IS_MAC = (navigator.userAgentData?.platform || navigator.platform || '').toLowerCase().includes('mac');
 
