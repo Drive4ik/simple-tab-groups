@@ -534,60 +534,26 @@ const onUpdatedTab = catchFunc(async function(tabId, changeInfo, tab) {
             changeInfo.hidden && log.log('remove group', tabGroupId, 'for hidden tab', tab.id);
             Cache.removeTabGroup(tab.id)
                 .catch(log.onCatch(['[0] cant remove group from tab', tab.id], false));
-        } else {
+        } else if (changeInfo.pinned === false) {
+            if (winGroupId) {
+                log.log('set group', winGroupId, ' for unhidden tab', tab.id);
+                Cache.setTabGroup(tab.id, winGroupId)
+                    .catch(log.onCatch(['[1] cant set group', winGroupId, 'to tab', tab.id], false));
+            } else {
+                log.log('remove group', tabGroupId, 'for unhidden tab', tab.id);
+                Cache.removeTabGroup(tab.id)
+                    .catch(log.onCatch(['[1] cant remove group from tab', tab.id], false));
+            }
+        } else if (changeInfo.hidden === false) {
+            log.log('tab is showing', tab.id);
 
-            if (false === changeInfo.pinned) {
-                if (winGroupId) {
-                    log.log('set group', winGroupId, ' for unhidden tab', tab.id);
-                    Cache.setTabGroup(tab.id, winGroupId)
-                        .catch(log.onCatch(['[1] cant set group', winGroupId, 'to tab', tab.id], false));
-                } else {
-                    log.log('remove group', tabGroupId, 'for unhidden tab', tab.id);
-                    Cache.removeTabGroup(tab.id)
-                        .catch(log.onCatch(['[1] cant remove group from tab', tab.id], false));
-                }
-            } else if (false === changeInfo.hidden) {
-                log.log('tab is showing', tab.id);
-
-                if (tabGroupId) {
-                    if (winGroupId) {
-                        const { group: winGroup } = await Groups.load(winGroupId, true);
-
-                        if (winGroup.tabs.length) {
-                            log.stop('applyGroup for tab', tab.id);
-                            applyGroup(tab.windowId, tabGroupId, tab.id);
-                            return;
-                        }
-                    }
-
-                    let tabs = await Tabs.get(tab.windowId, null);
-
-                    tabs = tabs.filter(tab => !tab.groupId);
-
-                    let activePinnedTab = await Tabs.setActive(null, tabs.filter(tab => tab.pinned));
-
-                    if (!activePinnedTab) {
-                        let unSyncTabs = tabs.filter(tab => !tab.pinned);
-
-                        if (unSyncTabs.length) {
-                            await Tabs.setActive(null, unSyncTabs);
-                        } else {
-                            await Tabs.createTempActiveTab(tab.windowId, false);
-                        }
-                    }
-
-                    await Tabs.safeHide(tab);
-                } else {
-                    if (winGroupId) {
-                        log.log('set group', winGroupId, ' for unhidden tab', tab.id);
-                        Cache.setTabGroup(tab.id, winGroupId)
-                            .catch(log.onCatch(['[2] cant set group', winGroupId, 'to tab', tab.id], false));
-                    } else {
-                        log.log('remove group', tabGroupId, 'for unhidden tab', tab.id);
-                        Cache.removeTabGroup(tab.id)
-                            .catch(log.onCatch(['[2] cant remove group from tab', tab.id], false));
-                    }
-                }
+            if (tabGroupId) {
+                log.log('applyGroup for tab', tab.id, 'groupId', tabGroupId);
+                applyGroup(tab.windowId, tabGroupId, tab.id);
+            } else if (winGroupId) {
+                log.log('set group', winGroupId, ' for unhidden tab', tab.id);
+                Cache.setTabGroup(tab.id, winGroupId)
+                    .catch(log.onCatch(['[2] cant set group', winGroupId, 'to tab', tab.id], false));
             }
         }
 
