@@ -136,13 +136,11 @@ async function saveConsoleLogs() {
     const logs = getLogs();
     const errorLogs = getErrors();
 
-    const loadedWindows = await Promise.all(
-        windows.map(win => win?.id && Cache.loadWindowSession(win).catch(onCatch('window', Object, win)))
-    );
+    let loadedWindows = await Promise.all(windows.map(Cache.loadWindowSession));
+    loadedWindows = loadedWindows.filter(Boolean);
 
-    const loadedTabs = await Promise.all(
-        tabs.map(tab => tab?.id && Cache.loadTabSession(tab, false, false).catch(onCatch('tab', Object, tab)))
-    );
+    let loadedTabs = await Promise.all(tabs.map(Cache.loadTabSession));
+    loadedTabs = loadedTabs.filter(Boolean);
 
     const filteredExtensions = (function() {
         try {

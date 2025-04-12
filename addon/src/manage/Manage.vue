@@ -193,7 +193,7 @@
                 return this.unSyncTabs.filter(tab => Utils.mySearchFunc(searchStr, Tabs.getTitle(tab, true), this.extendedSearch));
             },
             isCurrentWindowIsAllow() {
-                return this.currentWindow && Utils.isWindowAllow(this.currentWindow);
+                return Utils.isWindowAllow(this.currentWindow);
             },
             allTabsCount() {
                 return Object.keys(this.allTabs).length;

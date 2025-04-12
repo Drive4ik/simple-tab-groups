@@ -176,7 +176,7 @@ export async function get(
     };
 
     for (const key in query) {
-        if (null === query[key]) {
+        if (query[key] == null) {
             delete query[key];
         }
     }
@@ -187,10 +187,7 @@ export async function get(
 
     if (!query.pinned) {
         tabs = await Promise.all(
-            tabs.map(tab =>
-                Cache.loadTabSession(Utils.normalizeTabUrl(tab), includeFavIconUrl, includeThumbnail)
-                .catch(log.onCatch(['cant load tab session', tab], false))
-            )
+            tabs.map(tab => Cache.loadTabSession(Utils.normalizeTabUrl(tab), includeFavIconUrl, includeThumbnail))
         );
     }
 
@@ -531,7 +528,7 @@ export async function move(tabIds, groupId, {
         if (group && tab) {
             let winId = Cache.getWindowId(groupId) || await Windows.getLastFocusedNormalWindow();
 
-            backgroundSelf.applyGroup(winId, groupId, tabId).catch(log.onCatch(['applyGroup from notif', winId, groupId, tabId]));
+            winId && backgroundSelf.applyGroup(winId, groupId, tabId).catch(log.onCatch(['applyGroup from notif', winId, groupId, tabId]));
         }
     }.bind(null, groupId, firstTab.id));
 

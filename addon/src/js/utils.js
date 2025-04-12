@@ -219,14 +219,10 @@ export function getSupportedExternalExtensionName(extId) {
 
 const cspUrls = [
     'chrome://mozapps/skin/',
-    'chrome://devtools/skin/images/profiler-stopwatch.svg',
+    'chrome://devtools/skin/',
 ];
 export function isAvailableFavIconUrl(favIconUrl) {
-    if (!favIconUrl) {
-        return false;
-    }
-
-    return !cspUrls.some(url => favIconUrl.startsWith(url));
+    return !cspUrls.some(url => favIconUrl?.startsWith?.(url));
 }
 
 export function normalizeTabFavIcon(tab) {
@@ -237,11 +233,11 @@ export function normalizeTabFavIcon(tab) {
     return tab;
 }
 
-export function isWindowAllow({type}) {
-    return browser.windows.WindowType.NORMAL === type;
+export function isWindowAllow(win) {
+    return win?.type === browser.windows.WindowType.NORMAL;
 }
 
-const createTabUrlRegexp = /^((http|ftp|moz-extension)|about:blank)/,
+const createTabUrlRegexp = /^((http|moz-extension|view-source)|about:blank)/,
     emptyUrlsArray = new Set(['about:blank', 'about:newtab', 'about:home']);
 
 export function isUrlEmpty(url) {
@@ -252,18 +248,17 @@ export function isUrlAllowToCreate(url) {
     return createTabUrlRegexp.test(url);
 }
 
+const readerUrl = 'about:reader?url=';
 export function normalizeUrl(url) {
-    if (null == url || 'string' !== typeof url) {
-        url = '';
-    }
-
-    if (url.startsWith('moz-extension')) {
-        let urlObj = new URL(url),
+    if (!url || typeof url !== 'string') {
+        return '';
+    } else if (url.startsWith('moz-extension')) {
+        const urlObj = new URL(url),
             urlStr = urlObj.searchParams.get('url') || urlObj.searchParams.get('u') || urlObj.searchParams.get('go');
 
         return urlStr ? normalizeUrl(urlStr) : url;
-    } else if (url.startsWith('about:reader')) {
-        return decodeURIComponent(url.slice(17));
+    } else if (url.startsWith(readerUrl)) {
+        return decodeURIComponent(url.slice(readerUrl.length));
     }
 
     return url;

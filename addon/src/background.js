@@ -197,8 +197,11 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
 
     windowId = windowId || await Windows.getLastFocusedNormalWindow();
 
-    if (_loadingGroupInWindow.has(windowId)) {
-        log.stopError('window in loading state now', windowId);
+    if (!windowId) {
+        log.stopError('no window was found for applyGroup');
+        return false;
+    } else if (_loadingGroupInWindow.has(windowId)) {
+        log.stopWarn('window in loading state now', windowId);
         return false;
     }
 
@@ -896,7 +899,7 @@ const onCreatedWindow = catchFunc(async function (win) {
     win = await Windows.get(win.id).catch(log.onCatch(['window not found', win], false));
 
     if (!win) {
-        log.stopError();
+        log.stopError('window not found');
         return;
     }
 
@@ -2039,12 +2042,17 @@ async function onBackgroundMessage(message, sender) {
     );
 
     try {
-        let currentWindow = await Windows.getLastFocusedNormalWindow(false),
-            {
-                group: currentGroup,
-                groups,
-                notArchivedGroups,
-            } = await Groups.load(currentWindow.groupId);
+        const currentWindow = await Windows.getLastFocusedNormalWindow(false);
+
+        if (!currentWindow) {
+            throw new Error('no windows found');
+        }
+
+        const {
+            group: currentGroup,
+            groups,
+            notArchivedGroups,
+        } = await Groups.load(currentWindow.groupId);
 
         if (data.windowId === browser.windows.WINDOW_ID_CURRENT) {
             data.windowId = currentWindow.id;
@@ -2076,12 +2084,16 @@ async function onBackgroundMessage(message, sender) {
                 }
                 break;
             case 'load-next-non-empty-group':
-                ({ notArchivedGroups } = await Groups.load(null, true))
-                result.ok = await applyGroupByPosition('next', notArchivedGroups.filter(group => group.tabs.length), currentGroup?.id);
+                {
+                    const { notArchivedGroups } = await Groups.load(null, true);
+                    result.ok = await applyGroupByPosition('next', notArchivedGroups.filter(group => group.tabs.length), currentGroup?.id);
+                }
                 break;
             case 'load-prev-non-empty-group':
-                ({ notArchivedGroups } = await Groups.load(null, true))
-                result.ok = await applyGroupByPosition('prev', notArchivedGroups.filter(group => group.tabs.length), currentGroup?.id);
+                {
+                    const { notArchivedGroups } = await Groups.load(null, true);
+                    result.ok = await applyGroupByPosition('prev', notArchivedGroups.filter(group => group.tabs.length), currentGroup?.id);
+                }
                 break;
             case 'load-history-next-group':
                 result.ok = await applyGroupByHistory('next', notArchivedGroups);
@@ -2402,35 +2414,37 @@ async function onBackgroundMessage(message, sender) {
                 }
                 break;
             case 'discard-group':
-                ({ groups, notArchivedGroups } = await Groups.load(null, true));
+                {
+                    const { groups, notArchivedGroups } = await Groups.load(null, true);
 
-                let groupToDiscard = groups.find(group => group.id === data.groupId);
+                    let groupToDiscard = groups.find(group => group.id === data.groupId);
 
-                if (groupToDiscard) {
-                    if (groupToDiscard.isArchive) {
-                        result.error = browser.i18n.getMessage('groupIsArchived', groupToDiscard.title);
-                        Utils.notify(result.error, 7, 'groupIsArchived');
+                    if (groupToDiscard) {
+                        if (groupToDiscard.isArchive) {
+                            result.error = browser.i18n.getMessage('groupIsArchived', groupToDiscard.title);
+                            Utils.notify(result.error, 7, 'groupIsArchived');
+                        } else {
+                            await Tabs.discard(groupToDiscard.tabs);
+                            result.ok = true;
+                        }
                     } else {
-                        await Tabs.discard(groupToDiscard.tabs);
-                        result.ok = true;
-                    }
-                } else {
-                    let activeTab = await Tabs.getActive();
+                        let activeTab = await Tabs.getActive();
 
-                    if (Tabs.isCanSendMessage(activeTab)) {
-                        Tabs.sendMessage(activeTab.id, {
-                            action: 'show-groups-popup',
-                            popupAction: 'discard-group',
-                            popupTitle: browser.i18n.getMessage('hotkeyActionTitleDiscardGroup'),
-                            groups: notArchivedGroups.map(Groups.mapForExternalExtension),
-                            focusedGroupId: currentGroup?.id,
-                            disableNewGroupItem: true,
-                        });
+                        if (Tabs.isCanSendMessage(activeTab)) {
+                            Tabs.sendMessage(activeTab.id, {
+                                action: 'show-groups-popup',
+                                popupAction: 'discard-group',
+                                popupTitle: browser.i18n.getMessage('hotkeyActionTitleDiscardGroup'),
+                                groups: notArchivedGroups.map(Groups.mapForExternalExtension),
+                                focusedGroupId: currentGroup?.id,
+                                disableNewGroupItem: true,
+                            });
 
-                        result.ok = true;
-                    } else {
-                        result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleDiscardGroup')]);
-                        Utils.notify(result.error, 15, 'impossibleToAskUserAboutAction', undefined, Urls.openNotSupportedUrlHelper);
+                            result.ok = true;
+                        } else {
+                            result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleDiscardGroup')]);
+                            Utils.notify(result.error, 15, 'impossibleToAskUserAboutAction', undefined, Urls.openNotSupportedUrlHelper);
+                        }
                     }
                 }
                 break;
