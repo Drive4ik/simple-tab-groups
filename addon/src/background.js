@@ -2666,7 +2666,7 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
         Groups.load(null, true, includeTabFavIcons, includeTabThumbnails),
     ]);
 
-    if (isAutoBackup && (!groups.length || groups.every(gr => !gr.tabs.length))) {
+    if (isAutoBackup && (!groups.length || groups.filter(gr => !gr.isArchive).every(gr => !gr.tabs.length))) {
         logger.warn('skip create auto backup, groups are empty');
         return false;
     }
