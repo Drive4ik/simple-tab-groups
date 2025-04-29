@@ -1,4 +1,5 @@
 
+import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
 import * as Containers from '/js/containers.js';
 import * as Tabs from '/js/tabs.js';
@@ -17,6 +18,8 @@ import backgroundSelf from '/js/background.js';
 
 const logger = new Logger('Cloud');
 
+export const storage = localStorage.create('github');
+
 export function CloudError(langId) {
     logger.error('CloudError:', langId)
     this.id = langId;
@@ -26,11 +29,15 @@ export function CloudError(langId) {
     this.toString = () => `${this.name}: ${this.message}`;
 }
 
-const TRUTH_LOCAL = 'local';
-const TRUTH_CLOUD = 'cloud';
+export const TRUTH_LOCAL = 'local';
+export const TRUTH_CLOUD = 'cloud';
 
-export async function sync(progressFunc = null) {
-    const log = logger.start('sync');
+export async function sync(trust = null, progressFunc = null) {
+    const log = logger.start('sync', {trust});
+
+    if (trust && trust !== TRUTH_LOCAL && trust !== TRUTH_CLOUD) {
+        log.throwError('unknown source of trust argument');
+    }
 
     const {syncOptionsLocation} = await Storage.get('syncOptionsLocation');
 
@@ -99,7 +106,7 @@ export async function sync(progressFunc = null) {
 
     progressFunc?.(45);
 
-    const syncResult = await syncData(localData, cloudData);
+    const syncResult = await syncData(localData, cloudData, trust);
 
     progressFunc?.(50);
 
@@ -167,6 +174,8 @@ export async function sync(progressFunc = null) {
         }
     }
 
+    storage.lastSyncFileName = syncOptions.githubGistFileName;
+
     progressFunc?.(95);
 
     if (syncResult.changes.local) {
@@ -186,8 +195,8 @@ export async function sync(progressFunc = null) {
     return syncResult;
 }
 
-async function syncData(localData, cloudData = null) {
-    const log = logger.start('syncData');
+async function syncData(localData, cloudData = null, trust = null) {
+    const log = logger.start('syncData', {trust});
 
     // syncTabFavIcons
 
@@ -204,9 +213,13 @@ async function syncData(localData, cloudData = null) {
         throw new CloudError(resultMigrate.error);
     }
 
-    const sourceOfTruth = cloudData.syncId > localData.syncId ? TRUTH_CLOUD : TRUTH_LOCAL;
+    const sourceOfTruth =
+        trust
+        ? trust
+        : cloudData.syncId > localData.syncId ? TRUTH_CLOUD : TRUTH_LOCAL;
 
     log.log({
+        trust,
         sourceOfTruth,
         'cloudData.syncId': cloudData.syncId,
         'localData.syncId': localData.syncId,

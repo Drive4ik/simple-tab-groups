@@ -2,14 +2,15 @@
 
 import GithubGistFields from './github-gist-fields.vue';
 
+import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
-import Logger from '/js/logger.js';
+// import Logger from '/js/logger.js';
 import * as Storage from '/js/storage.js';
 import * as Utils from '/js/utils.js';
 import * as Urls from '/js/urls.js';
 import * as SyncStorage from '/js/sync/sync-storage.js';
 import GithubGist from '/js/sync/cloud/githubgist.js';
-import {CloudError} from '/js/sync/cloud/cloud.js';
+import {CloudError, TRUTH_LOCAL, TRUTH_CLOUD, storage as CloudStorage} from '/js/sync/cloud/cloud.js';
 
 import syncCloudMixin from '/js/mixins/sync-cloud.mixin.js';
 
@@ -17,6 +18,9 @@ export default {
     name: 'github-gist',
     mixins: [syncCloudMixin],
     data() {
+        this.TRUTH_LOCAL = TRUTH_LOCAL;
+        this.TRUTH_CLOUD = TRUTH_CLOUD;
+
         this.browserName = `${Constants.BROWSER.name} ${Constants.BROWSER.vendor} v${Constants.BROWSER.version}`;
         this.helpLink = Urls.getURL('how-to-github-gist');
 
@@ -27,6 +31,7 @@ export default {
                 loading: false,
                 value: Constants.SYNC_STORAGE_FSYNC,
                 options: {...Constants.DEFAULT_SYNC_OPTIONS},
+                optionsBackup: {},
                 load: this.loadSyncOptions.bind(this),
                 save: this.saveSyncOptions.bind(this),
                 gist: null,
@@ -42,6 +47,7 @@ export default {
                 loading: false,
                 value: Constants.SYNC_STORAGE_LOCAL,
                 options: {...Constants.DEFAULT_SYNC_OPTIONS, syncOptionsLocation: Constants.DEFAULT_OPTIONS.syncOptionsLocation},
+                optionsBackup: {},
                 load: this.loadLocalOptions.bind(this),
                 save: this.saveLocalOptions.bind(this),
                 gist: null,
@@ -68,6 +74,24 @@ export default {
         area() {
             return this.areas.find(area => area.value === this.local.options.syncOptionsLocation);
         },
+        isLoadingSyncButton() {
+            return this.synchronisationInProgress || this.area.loading;
+        },
+        isDisableSyncButton() {
+            return this.isLoadingSyncButton || this.area.disabled;
+        },
+        showTrustSyncButtons() {
+            if (
+                !this.isDisableSyncButton &&
+                this.area.gist &&
+                CloudStorage.lastSyncFileName &&
+                CloudStorage.lastSyncFileName !== this.area.optionsBackup.githubGistFileName
+            ) {
+                return true;
+            }
+
+            return false;
+        },
     },
     created() {
         this.sync.load();
@@ -93,6 +117,7 @@ export default {
         async loadSyncOptions(resetState) {
             if (!this.sync.disabled) {
                 Object.assign(this.sync.options, await SyncStorage.get());
+                this.sync.optionsBackup = {...this.sync.options};
                 await this.loadGistInfo(this.sync, resetState);
             }
         },
@@ -104,6 +129,7 @@ export default {
         // LOCAL
         async loadLocalOptions(resetState) {
             Object.assign(this.local.options, await Storage.get(this.local.options));
+            this.local.optionsBackup = {...this.local.options};
             await this.loadGistInfo(this.local, resetState);
         },
 
@@ -171,10 +197,21 @@ export default {
             }
         },
 
-        async startCloudSync() {
+        async startCloudSync(trust) {
             this.area.error = '';
 
-            await this.syncCloud();
+            if (
+                this.area.options.githubGistToken !== this.area.optionsBackup.githubGistToken ||
+                this.area.options.githubGistFileName !== this.area.optionsBackup.githubGistFileName
+            ) {
+                await this.save(this.area);
+
+                if (this.showTrustSyncButtons || this.area.error) {
+                    return;
+                }
+            }
+
+            await this.syncCloud(trust);
         },
     },
 };
@@ -283,55 +320,87 @@ export default {
                         </div>
                     </div>
                 </div>
+            </fieldset>
+        </form>
 
-                <hr>
+        <hr>
 
-                <div class="columns is-vcentered">
-                    <div class="column">
-                        <div class="simple-progress">
-                            <div class="position" :class="{
-                                'in-progress': synchronisationInProgress,
-                                'has-background-success': !area.error && synchronisationProgress === 100,
-                                'has-background-danger': !!area.error,
-                            }"
-                            :style="{
-                                '--progress-value': `${synchronisationProgress}%`,
-                            }"
-                            ></div>
-                        </div>
-                    </div>
-                    <div class="column is-narrow has-text-right">
+        <div class="columns is-vcentered">
+            <div class="column">
+                <div class="simple-progress">
+                    <div class="position" :class="{
+                        'in-progress': synchronisationInProgress,
+                        'has-background-success': !area.error && synchronisationProgress === 100,
+                        'has-background-danger': !!area.error,
+                    }"
+                    :style="{
+                        '--progress-value': `${synchronisationProgress}%`,
+                    }"
+                    ></div>
+                </div>
+            </div>
+            <div class="column is-narrow">
+                <div class="is-right" :class="{'dropdown is-active': showTrustSyncButtons}">
+                    <div :class="{'dropdown-trigger': showTrustSyncButtons}">
                         <button
                             class="button is-primary"
-                            :class="{
-                                'is-loading': synchronisationInProgress || area.loading,
-                            }"
-                            :disabled="synchronisationInProgress || area.loading"
-                            @click.prevent="startCloudSync"
+                            :class="{'is-loading': isLoadingSyncButton}"
+                            :disabled="isDisableSyncButton"
+                            :aria-haspopup="String(showTrustSyncButtons)"
+                            :aria-controls="showTrustSyncButtons ? 'sync-dropdown-menu' : false"
+                            @click="startCloudSync()"
                             >
                             <span class="icon">
                                 <img class="size-16" src="/icons/cloud-arrow-up-solid.svg">
                             </span>
                             <span v-text="lang('syncStart')"></span>
+                            <span v-if="showTrustSyncButtons" class="icon">
+                                <img class="size-16" src="/icons/arrow-down.svg">
+                            </span>
                         </button>
                     </div>
+                    <div v-if="showTrustSyncButtons" class="dropdown-menu" id="sync-dropdown-menu" role="menu">
+                        <div class="dropdown-content">
+                            <div class="dropdown-item">
+                                <p v-text="lang('syncDataInCloudCanBeDifferent')"></p>
+                            </div>
+                            <a href="#" class="dropdown-item" @click.prevent="startCloudSync()" v-text="lang('syncStart')"></a>
+                            <a href="#" class="dropdown-item" @click.prevent="startCloudSync(TRUTH_LOCAL)" v-text="lang('syncStartTrustLocal')"></a>
+                            <a href="#" class="dropdown-item" @click.prevent="startCloudSync(TRUTH_CLOUD)" v-text="lang('syncStartTrustCloud')"></a>
+                        </div>
+                    </div>
                 </div>
-            </fieldset>
-        </form>
+            </div>
+        </div>
     </div>
 </template>
 
 
-<style scoped>
-html[data-theme="dark"] .box {
-    color: unset;
-    background-color: #313131;
+<style>
+html[data-theme="dark"] {
+    .box {
+        color: var(--text-color);
+        --background-color: #313131;
+        background-color: var(--background-color);
 
-    .subtitle {
-        color: #cecece;
+        .subtitle {
+            color: #cecece;
+        }
+    }
+
+    .dropdown-content {
+        background-color: var(--background-color);
+
+        .dropdown-item {
+            color: var(--text-color);
+        }
+
+        a.dropdown-item:hover,
+        button.dropdown-item:hover {
+            background-color: hsl(from var(--background-color) h s calc(l + 10));
+        }
     }
 }
-
 
 .simple-progress {
     display: flex;

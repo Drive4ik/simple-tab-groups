@@ -2920,7 +2920,7 @@ async function clearAddon(reloadAddonOnFinish = true) {
     }
 }
 
-async function cloudSync(auto = false) {
+async function cloudSync(auto = false, trust = null) {
     const log = logger.start('cloudSync', {auto});
 
     let ok = false;
@@ -2928,7 +2928,7 @@ async function cloudSync(auto = false) {
     try {
         sendMessage('sync-start');
 
-        const syncResult = await sync(progress => {
+        const syncResult = await sync(trust, progress => {
             log.log('progress', progress);
             sendMessage('sync-progress', {progress});
         });

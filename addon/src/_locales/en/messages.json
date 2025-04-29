@@ -1243,6 +1243,18 @@
         "message": "Start synchronization",
         "description": "Start synchronization"
     },
+    "syncStartTrustLocal": {
+        "message": "Start synchronization and trust local data",
+        "description": "Start synchronization and trust local data"
+    },
+    "syncStartTrustCloud": {
+        "message": "Start synchronization and trust cloud data",
+        "description": "Start synchronization and trust cloud data"
+    },
+    "syncDataInCloudCanBeDifferent": {
+        "message": "The data in the cloud can be very different from the current state.",
+        "description": "The data in the cloud can be very different from the current state."
+    },
     "syncEnableTitle": {
         "message": "Enable auto backup to the cloud",
         "description": "Enable auto backup to the cloud"

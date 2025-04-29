@@ -75,9 +75,9 @@ export default {
         instances.delete(this);
     },
     methods: {
-        async syncCloud() {
+        async syncCloud(trust) {
             if (!this.synchronisationInProgress) {
-                return await Messages.sendMessageModule('BG.cloudSync');
+                return await Messages.sendMessageModule('BG.cloudSync', false, trust);
             }
         },
     },
