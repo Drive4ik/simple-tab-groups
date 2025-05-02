@@ -23,24 +23,23 @@ export function type(obj) {
     return Object.prototype.toString.call(obj).replace(TYPE_REGEXP, '').toLowerCase();
 }
 
-const DEFAULT_BRACKETS = ['{', '}'];
 // if last element is Boolean true - remove empty keys, else
 // aaa {a!b} ccc => aaa b ccc
 export function format(str, ...args) {
-    const lastArg = args[args.length - 1];
+    const DEFAULT_BRACKETS = ['{', '}'];
 
     let removeEmptyKeys = false,
         beforeValueFunc = value => value;
 
+    const lastArg = args[args.length - 1];
+
     if (lastArg === true) {
-        removeEmptyKeys = true;
-        args.pop();
+        removeEmptyKeys = args.pop();
     } else if (typeof lastArg === 'function') { // if last argument is function = call this func for every value in set
-        beforeValueFunc = lastArg;
-        args.pop();
+        beforeValueFunc = args.pop();
     }
 
-    args = args.map(function(arg, key) {
+    args = args.map((arg, key) => {
         if (arg !== Object(arg)) { // if primitive type: string, integer, float, null, undefined
             return {
                 [key]: arg,
@@ -50,38 +49,38 @@ export function format(str, ...args) {
         return arg;
     });
 
-    const [bracketStart, bracketEnd] = Array.isArray(this) ? this : DEFAULT_BRACKETS,
-        replaceRegExp = new RegExp(bracketStart + '(.+?)' + bracketEnd, 'g'), // /{\s*(.+?)\s*}/g
-        result = str
-            .replace(replaceRegExp, function(match, key) {
-                const [clearKey, defaultKeyValue] = key.split('!'),
-                    keyParts = clearKey.trim().split('.'),
-                    res = args.reduce(function(accum, arg) {
-                        if (false !== accum) {
-                            return accum;
-                        }
+    const [bracketStart, bracketEnd] = (Array.isArray(this) ? this : DEFAULT_BRACKETS);
+    const [bracketStartEscaped, bracketEndEscaped] = [bracketStart, bracketEnd].map(s => s.split('').map(s => `\\${s}`).join(''));
 
-                        return keyParts.reduce(function(keyAcc, k) {
-                            if (keyAcc === Object(keyAcc) && undefined !== keyAcc[k]) {
-                                return beforeValueFunc(false === keyAcc[k] ? 'false' : keyAcc[k]);
-                            }
+    const replaceRegExp = new RegExp(bracketStartEscaped + '(.+?)' + bracketEndEscaped, 'g'); // /{\s*(.+?)\s*}/g
 
-                            return false;
-                        }, arg);
-                    }, false);
-
-                if (false === res) {
-                    if (removeEmptyKeys) {
-                        return defaultKeyValue === undefined ? '' : defaultKeyValue;
-                    } else {
-                        return defaultKeyValue === undefined ? bracketStart + key + bracketEnd : defaultKeyValue;
-                    }
+    return str.replace(replaceRegExp, (match, key) => {
+        const [clearKey, defaultKeyValue] = key.split('!'),
+            keyParts = clearKey.trim().split('.'),
+            res = args.reduce((accum, arg) => {
+                if (false !== accum) {
+                    return accum;
                 }
 
-                return res !== Object(res) ? res : JSON.stringify(res);
-            });
+                return keyParts.reduce((keyAcc, k) => {
+                    if (keyAcc === Object(keyAcc) && undefined !== keyAcc[k]) {
+                        return beforeValueFunc(false === keyAcc[k] ? 'false' : keyAcc[k]);
+                    }
 
-    return result;
+                    return false;
+                }, arg);
+            }, false);
+
+        if (false === res) {
+            if (removeEmptyKeys) {
+                return defaultKeyValue === undefined ? '' : defaultKeyValue;
+            } else {
+                return defaultKeyValue === undefined ? bracketStart + key + bracketEnd : defaultKeyValue;
+            }
+        }
+
+        return res !== Object(res) ? res : JSON.stringify(res);
+    });
 }
 
 export function isEqualPrimitiveArrays(array1, array2) {

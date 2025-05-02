@@ -710,77 +710,54 @@ export function getIconUrl(group, keyInObj = null) {
     if (group.iconUrl) {
         result = group.iconUrl;
     } else {
-        if (!group.iconColor) {
-            group.iconColor = 'transparent';
+        const iconColor = group.iconColor || 'transparent';
+
+        let svg = Constants.GROUP_ICON_VIEW_TYPES[group.iconViewType];
+
+        switch (group.iconViewType) {
+            case 'main-squares':
+                if (iconColor !== 'transparent') {
+                    svg = svg.replace('transparent', iconColor);
+                }
+                break;
+            case 'circle':
+                svg = svg.replace('fill=""', `fill="${iconColor}"`);
+
+                if (iconColor === 'transparent') {
+                    svg = svg.replace('stroke-width="0"', 'stroke-width="1"');
+                }
+                break;
+            case 'squares':
+                if (iconColor !== 'transparent') {
+                    svg = svg.replace('fill=""', `fill="${iconColor}"`);
+                }
+                break;
+            case 'old-tab-groups':
+                if (iconColor !== 'transparent') {
+                    svg = svg.replace('fill=""', `fill="${iconColor}"`);
+                }
+                break;
+            case 'title':
+                const emoji = getEmojiIcon(group);
+
+                svg = svg
+                    .replace('position=""', emoji ? 'text-anchor="middle" x="50%"' : 'x="0"')
+                    .replace('text-content', emoji || group.title);
+
+                if (iconColor !== 'transparent') {
+                    svg = svg.replace('fill=""', `fill="${iconColor}"`);
+                }
+                break;
         }
 
-        const stroke = 'transparent' === group.iconColor ? 'stroke="#606060" stroke-width="1"' : '',
-            emoji = getEmojiIcon(group),
-            title = emoji || group.title;
-
-        const icons = {
-            'main-squares': `
-            <svg width="128" height="128" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
-                <g fill="context-fill" fill-opacity="context-fill-opacity">
-                    <rect height="32" width="32" />
-                    <rect height="32" width="32" x="48" />
-                    <rect height="32" width="32" x="96" y="48" />
-                    <rect height="32" width="32" y="48" />
-                    <rect height="32" width="32" x="48" y="48" />
-                    <rect height="32" width="32" x="96" />
-                    <rect height="32" width="32" y="96" />
-                    <rect height="32" width="32" x="48" y="96" />
-                    <rect height="32" width="32" x="96" y="96" />
-                    <path transform="rotate(-90, 73, 71)" fill="${group.iconColor}" d="m16.000351,126.001527l0,-110.000003l108.999285,110.000003l-108.999285,0z"/>
-                </g>
-            </svg>
-        `,
-            circle: `
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                <circle fill="${group.iconColor}" cx="8" cy="8" r="8" ${stroke} />
-            </svg>
-        `,
-            squares: `
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                <g fill="context-fill" fill-opacity="context-fill-opacity">
-                    <rect x="1" y="1" width="6" height="6" rx="1" ry="1"></rect>
-                    <rect x="9" y="1" width="6" height="6" rx="1" ry="1"></rect>
-                    <rect x="1" y="9" width="6" height="6" rx="1" ry="1"></rect>
-                    <rect x="9" y="9" width="6" height="6" rx="1" ry="1" fill="${group.iconColor}"></rect>
-                </g>
-            </svg>
-        `,
-            'old-tab-groups': `
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                <g fill="context-fill" fill-opacity="context-fill-opacity">
-                    <rect width="9" height="6" x="1" y="1" rx="1"></rect>
-                    <rect width="4" height="6" x="11" y="1" rx="1"></rect>
-                    <rect width="5" height="7" x="1" y="8" rx="1"></rect>
-                    <rect width="8" height="7" x="7" y="8" rx="1" fill="${group.iconColor}"></rect>
-                </g>
-            </svg>
-        `,
-            'title': `
-            <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg">
-                <text ${emoji ? 'text-anchor="middle" x="50%"' : 'x="0"'} y="13" fill="${group.iconColor}" font-family="Segoe UI, Verdana, Arial, sans-serif" font-size="12px">${title}</text>
-            </svg>
-        `,
-        };
-
         try {
-            result = Utils.convertSvgToUrl(icons[group.iconViewType].trim());
+            result = Utils.convertSvgToUrl(svg.trim());
         } catch (e) {
             result = getIconUrl(UNKNOWN_GROUP_ICON_PROPS);
         }
     }
 
-    if (keyInObj) {
-        return {
-            [keyInObj]: result,
-        };
-    }
-
-    return result;
+    return keyInObj ? {[keyInObj]: result} : result;
 }
 
 export function createTitle(title = null, groupId = null, defaultGroupProps = {}, format = true) {

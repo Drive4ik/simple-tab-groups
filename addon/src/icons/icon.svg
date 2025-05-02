@@ -1,14 +1,12 @@
-<svg width="128" height="128" xmlns="http://www.w3.org/2000/svg" style="color-scheme: light dark" fill="context-fill light-dark(#5b5b66, #fbfbfe)">
-    <g>
-        <rect height="32" width="32" />
-        <rect height="32" width="32" x="48" />
-        <rect height="32" width="32" x="96" y="48" />
-        <rect height="32" width="32" y="48" />
-        <rect height="32" width="32" x="48" y="48" />
-        <rect height="32" width="32" x="96" />
-        <rect height="32" width="32" y="96" />
-        <rect height="32" width="32" x="48" y="96" />
-        <rect height="32" width="32" x="96" y="96" />
-        <path transform="rotate(-90, 73, 71)" fill="transparent" d="m16.000351,126.001527l0,-110.000003l108.999285,110.000003l-108.999285,0z"/>
-    </g>
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" style="color-scheme: light dark;" fill="context-fill light-dark(#5b5b66,#fbfbfe)">
+    <rect height="32" width="32" />
+    <rect height="32" width="32" x="48" />
+    <rect height="32" width="32" x="96" y="48" />
+    <rect height="32" width="32" y="48" />
+    <rect height="32" width="32" x="48" y="48" />
+    <rect height="32" width="32" x="96" />
+    <rect height="32" width="32" y="96" />
+    <rect height="32" width="32" x="48" y="96" />
+    <rect height="32" width="32" x="96" y="96" />
+    <polygon points="16,128 128,16 128,128" fill="transparent" />
 </svg>

@@ -227,7 +227,7 @@
                 return Groups.getIconUrl({
                     title: this.group.title,
                     iconViewType: iconType,
-                    iconColor: this.group.iconColor || 'rgb(66, 134, 244)',
+                    iconColor: this.group.iconColor,
                 });
             },
 
@@ -357,7 +357,7 @@
                         @keypress.native.enter.stop
                         @keyup.native.enter.stop></swatches>
                 </div>
-                <div v-for="iconViewType in GROUP_ICON_VIEW_TYPES" :key="iconViewType" class="control">
+                <div v-for="(data, iconViewType) in GROUP_ICON_VIEW_TYPES" :key="iconViewType" class="control">
                     <button @click="setIconView(iconViewType)" :class="['button', {'is-focused': !group.iconUrl && iconViewType === group.iconViewType}]">
                         <figure class="image is-16x16 is-inline-block">
                             <img :src="getIconTypeUrl(iconViewType)" />

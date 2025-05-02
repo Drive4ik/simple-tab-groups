@@ -1,10 +1,8 @@
-<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg">
-    <g fill="context-fill #4e4f50" fill-opacity="context-fill-opacity">
-        <rect x="0" y="0" width="8" height="8" />
-        <rect x="24" y="0" width="8" height="8" />
-        <rect x="0" y="24" width="8" height="8" />
-        <rect x="24" y="24" width="8" height="8" />
-        <rect x="0" width="32" height="5" y="13.5" rx="2"/>
-        <rect y="0" height="32" width="5" x="13.5" rx="2"/>
-    </g>
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" style="color-scheme: light dark;" fill="context-fill light-dark(#5b5b66,#fbfbfe)">
+    <rect x="0" y="0" width="8" height="8" />
+    <rect x="24" y="0" width="8" height="8" />
+    <rect x="0" y="24" width="8" height="8" />
+    <rect x="24" y="24" width="8" height="8" />
+    <rect x="0" width="32" height="5" y="13.5" rx="2"/>
+    <rect y="0" height="32" width="5" x="13.5" rx="2"/>
 </svg>

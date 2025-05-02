@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" style="color-scheme: light dark;" fill="context-fill light-dark(#5b5b66,#fbfbfe)">
+    <style>
+        text {
+            font: message-box;
+            font-size: 12px;
+        }
+    </style>
+    <text position="" y="13" fill="">text-content</text>
+</svg>

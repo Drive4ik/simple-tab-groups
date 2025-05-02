@@ -1,16 +1,16 @@
-
-/* reset styles */
-#stg-select-group-popup-wrapper,
-#stg-select-group-popup-wrapper div {
-    width: unset;
-    margin: unset;
-    padding: unset;
-    border-radius: unset;
-    background-color: unset;
-    box-shadow: unset;
-}
+@import "chrome://browser/content/usercontext/usercontext.css";
 
 #stg-select-group-popup-wrapper {
+    &,
+    * {
+        width: unset;
+        margin: unset;
+        padding: unset;
+        border-radius: unset;
+        background-color: unset;
+        box-shadow: unset;
+    }
+
     position: fixed;
     left: 0;
     top: 0;

@@ -166,15 +166,9 @@ function showGroupsPopup(data) {
         groupNode.append(figureNode);
 
         if (group.contextualIdentity) {
-            const containerImgNode = document.createElement('img');
-
-            containerImgNode.title = group.contextualIdentity.name;
-            containerImgNode.src = group.contextualIdentity.iconUrl;
-            containerImgNode.style.fill = group.contextualIdentity.colorCode;
-
             const containerFigureNode = document.createElement('figure');
-            containerFigureNode.classList = 'container-icon';
-            containerFigureNode.append(containerImgNode);
+            containerFigureNode.title = group.contextualIdentity.name;
+            containerFigureNode.classList = `container-icon userContext-icon identity-icon-${group.contextualIdentity.icon} identity-color-${group.contextualIdentity.color}`;
 
             groupNode.append(containerFigureNode);
         }

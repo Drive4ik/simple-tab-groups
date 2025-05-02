@@ -1474,7 +1474,7 @@
                                 :title="getTabTitle(tab, true)"
                                 >
                                 <div class="item-icon">
-                                    <img v-if="isTabLoading(tab)" src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
+                                    <img v-if="isTabLoading(tab)" src="/icons/tab-loading.svg" class="size-16 align-text-bottom" />
                                     <img v-else :src="tab.favIconUrl" class="size-16" loading="lazy" decoding="async" />
                                 </div>
                                 <div class="item-title clip-text">
@@ -1625,7 +1625,7 @@
                             tabindex="0"
                             >
                             <div class="item-icon">
-                                <img v-if="isTabLoading(tab)" src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
+                                <img v-if="isTabLoading(tab)" src="/icons/tab-loading.svg" class="size-16 align-text-bottom" />
                                 <img v-else :src="tab.favIconUrl" class="size-16" loading="lazy" decoding="async" />
                             </div>
                             <div class="item-title clip-text">
@@ -1732,7 +1732,7 @@
                             @dragend="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
                             >
                             <div class="item-icon">
-                                <img v-if="isTabLoading(tab)" src="/icons/refresh.svg" class="spin size-16 align-text-bottom" />
+                                <img v-if="isTabLoading(tab)" src="/icons/tab-loading.svg" class="size-16 align-text-bottom" />
                                 <img v-else :src="tab.favIconUrl" class="size-16" loading="lazy" decoding="async" />
                             </div>
                             <div class="item-title clip-text">
@@ -1995,15 +1995,14 @@
         left: 0;
         height: 100vh;
         width: 100vw;
-        background-color: #ffffff;
+        background-color: hsla(0, 0%, 50%, 0.3);
         display: flex;
         justify-content: center;
         align-items: center;
         z-index: 1;
-        opacity: .9;
 
         > img {
-            width: 30px;
+            width: 3em;
         }
     }
 

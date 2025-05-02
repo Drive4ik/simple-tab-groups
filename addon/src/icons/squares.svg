@@ -1,8 +1,6 @@
-<svg width="16" height="16" xmlns="http://www.w3.org/2000/svg">
-    <g fill="#606060">
-        <rect x="1" y="1" width="6" height="6" rx="1" ry="1"></rect>
-        <rect x="9" y="1" width="6" height="6" rx="1" ry="1"></rect>
-        <rect x="1" y="9" width="6" height="6" rx="1" ry="1"></rect>
-        <rect x="9" y="9" width="6" height="6" rx="1" ry="1" fill="transparent"></rect>
-    </g>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" style="color-scheme: light dark;" fill="context-fill light-dark(#5b5b66,#fbfbfe)">
+    <rect x="1" y="1" width="6" height="6" rx="1" ry="1"></rect>
+    <rect x="9" y="1" width="6" height="6" rx="1" ry="1"></rect>
+    <rect x="1" y="9" width="6" height="6" rx="1" ry="1"></rect>
+    <rect x="9" y="9" width="6" height="6" rx="1" ry="1" fill=""></rect>
 </svg>

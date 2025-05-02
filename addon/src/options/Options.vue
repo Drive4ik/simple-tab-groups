@@ -49,7 +49,6 @@
 
             this.HOTKEY_ACTIONS = Constants.HOTKEY_ACTIONS;
             this.HOTKEY_ACTIONS_WITH_CUSTOM_GROUP = Constants.HOTKEY_ACTIONS_WITH_CUSTOM_GROUP;
-            this.GROUP_ICON_VIEW_TYPES = Constants.GROUP_ICON_VIEW_TYPES;
             this.INTERVAL_KEY = Constants.INTERVAL_KEY;
 
             this.PLUGINS = Object.fromEntries(
@@ -828,9 +827,9 @@
                 <div class="control">
                     <div class="select">
                         <select v-model="options.theme">
-                            <option value="auto" v-text="lang('themeAuto')"></option>
-                            <option value="light" v-text="lang('themeLight')"></option>
-                            <option value="dark" v-text="lang('themeDark')"></option>
+                            <option value="auto">💻 <span v-text="lang('themeAuto')"></span></option>
+                            <option value="light">🔆 <span v-text="lang('themeLight')"></span></option>
+                            <option value="dark">🌒 <span v-text="lang('themeDark')"></span></option>
                         </select>
                     </div>
                 </div>

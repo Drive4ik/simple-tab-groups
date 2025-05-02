@@ -1,0 +1,22 @@
+<!-- https://github.com/n3r4zzurr0/svg-spinners -->
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" style="color-scheme: light dark;" fill="context-fill light-dark(#5b5b66,#fbfbfe)">
+    <style>
+        @keyframes spinner {
+            93.75%, to {
+                r: 3px;
+            }
+
+            46.875% {
+                r: .2px;
+            }
+        }
+
+        .spinner {
+            animation: spinner .8s linear infinite
+        }
+    </style>
+
+    <circle class="spinner" cx="4" cy="12" r="3"/>
+    <circle class="spinner" cx="12" cy="12" r="3" style="animation-delay: -.65s"/>
+    <circle class="spinner" cx="20" cy="12" r="3" style="animation-delay: -.5s"/>
+</svg>

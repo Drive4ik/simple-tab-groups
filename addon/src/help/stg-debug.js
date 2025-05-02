@@ -4,7 +4,6 @@ import '/js/prefixed-storage.js';
 import Messages from '/js/messages.js';
 import backgroundSelf from '/js/background.js';
 import * as Constants from '/js/constants.js';
-import * as BrowserConstants from '/js/browser-constants.js';
 import * as File from '/js/file.js';
 import * as Cache from '/js/cache.js';
 
@@ -13,8 +12,6 @@ const $ = document.querySelector.bind(document),
     debugStatus = $('#debugStatus'),
     enableDebugButton = $('#enableDebug'),
     disableDebugButton = $('#disableDebug');
-
-$('#debugStatusIcon').src = BrowserConstants.getContainerIconUrl('circle');
 
 reloadState();
 

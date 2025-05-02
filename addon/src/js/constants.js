@@ -41,15 +41,20 @@ export const PERMISSIONS = Object.freeze({
     },
 });
 
-export const GROUP_ICON_VIEW_TYPES = Object.freeze([
-    'main-squares',
-    'circle',
-    'squares',
-    'old-tab-groups',
-    'title',
-]);
+const GROUP_ICON_VIEW_TYPES = {
+    'main-squares': 'icon',
+    'circle': 'circle',
+    'squares': 'squares',
+    'old-tab-groups': 'old-tab-groups',
+    'title': 'text',
+};
+await Promise.all(Object.entries(GROUP_ICON_VIEW_TYPES).map(async ([key, icon]) => {
+    GROUP_ICON_VIEW_TYPES[key] = await fetch(`/icons/${icon}.svg`).then(response => response.text());
+}))
+Object.freeze(GROUP_ICON_VIEW_TYPES);
+export { GROUP_ICON_VIEW_TYPES };
 
-export const DEFAULT_GROUP_ICON_VIEW_TYPE = GROUP_ICON_VIEW_TYPES[0];
+export const DEFAULT_GROUP_ICON_VIEW_TYPE = Object.keys(GROUP_ICON_VIEW_TYPES)[0];
 
 export const DEFAULT_BOOKMARKS_PARENTS = Object.freeze([
     'toolbar_____',
