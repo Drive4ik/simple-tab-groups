@@ -2711,7 +2711,7 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
     });
 
     // if (containersToExport.size) {
-    //     const allContainers = Containers.getAll();
+    //     const allContainers = Containers.query({temporaryContainer: true});
 
     //     data.containers = {};
 

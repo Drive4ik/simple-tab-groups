@@ -15,7 +15,7 @@ export default {
     methods: {
         open(...args) {
             let [, {group}] = args,
-                containers = Object.values(Containers.getAll());
+                containers = Object.values(Containers.query({temporaryContainer: true}));
 
             if (group.ifDifferentContainerReOpen) {
                 containers = containers.filter(container => {

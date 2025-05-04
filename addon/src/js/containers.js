@@ -3,7 +3,6 @@ import * as BrowserConstants from '/js/browser-constants.js';
 import Logger, {catchFunc} from './logger.js';
 import * as Utils from './utils.js';
 import * as Groups from './groups.js';
-import JSON from './json.js';
 import backgroundSelf from './background.js';
 import cacheStorage, {createStorage} from './cache-storage.js';
 
@@ -242,34 +241,37 @@ export function get(cookieStoreId, key = null, withDefaultContainer = false, con
     return null;
 }
 
-export function getAll(withDefaultContainer, containersStorage = containers) {
-    let containers = JSON.clone(containersStorage);
+export function query(params = {}, containersStorage = containers) {
+    params.defaultContainer ??= false;
+    params.temporaryContainers ??= false;
+    params.temporaryContainer ??= false;
 
-    for (const cookieStoreId in containers) {
-        if (isTemporary(cookieStoreId, undefined, undefined, containersStorage)) {
-            delete containers[cookieStoreId];
+    const result = {};
+
+    if (params.defaultContainer) {
+        // add default container to start of obj
+        result[Constants.DEFAULT_COOKIE_STORE_ID] = {...defaultContainerOptions};
+    }
+
+    for (const cookieStoreId in containersStorage) {
+        if (cookieStoreId === Constants.TEMPORARY_CONTAINER) {
+            continue;
+        }
+
+        if (
+            params.temporaryContainers ||
+            !isTemporary(cookieStoreId, undefined, undefined, containersStorage)
+        ) {
+            result[cookieStoreId] = {...containersStorage[cookieStoreId]};
         }
     }
 
-    if (withDefaultContainer) {
-        containers = {
-            [Constants.DEFAULT_COOKIE_STORE_ID]: {...defaultContainerOptions},
-            ...containers,
-        };
+    if (params.temporaryContainer) {
+        // add temporary container to end of obj
+        result[Constants.TEMPORARY_CONTAINER] = {...temporaryContainerOptions};
     }
 
-    // add temporary container to end of obj
-    containers[Constants.TEMPORARY_CONTAINER] = {...temporaryContainerOptions};
-
-    return containers;
-}
-
-export function getExisting(containersStorage = containers) {
-    const result = {...containersStorage};
-
-    delete result[Constants.TEMPORARY_CONTAINER];
-
-    return JSON.clone(result);
+    return result;
 }
 
 export function getToExport(storageData, containersStorage = containers) {

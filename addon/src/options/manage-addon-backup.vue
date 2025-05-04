@@ -83,7 +83,7 @@
             return {
                 TEMPORARY_CONTAINER: Constants.TEMPORARY_CONTAINER,
                 DEFAULT_COOKIE_STORE_ID: Constants.DEFAULT_COOKIE_STORE_ID,
-                allContainers: Containers.getAll(),
+                allContainers: Containers.query({temporaryContainer: true}),
 
                 filteredGroups,
 

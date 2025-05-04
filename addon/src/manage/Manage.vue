@@ -99,7 +99,7 @@
 
                 groupToEdit: null,
 
-                containers: Containers.getAll(true),
+                containers: Containers.query({defaultContainer: true, temporaryContainer: true}),
                 options: {},
                 showArchivedGroups: !!storage.showArchivedGroups,
 
@@ -470,7 +470,7 @@
                         this.loadOptions();
                     },
                     'containers-updated': () => {
-                        this.containers = Containers.getAll(true);
+                        this.containers = Containers.qyery({defaultContainer: true, temporaryContainer: true});
                         Object.values(this.allTabs).forEach(this.mapTabContainer);
                     },
                     'sync-end': ({changes}) => changes.local && listeners['groups-updated'](),

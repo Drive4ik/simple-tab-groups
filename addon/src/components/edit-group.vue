@@ -188,12 +188,8 @@
             async loadContainers() {
                 Containers.setTemporaryContainerTitle(backgroundSelf.options.temporaryContainerTitle)
                 const containersStorage = await Containers.load({});
-                const containersWithDefault = Containers.getAll(true, containersStorage);
-                const containersExcludeTemp = {...containersWithDefault};
-                delete containersExcludeTemp[Constants.TEMPORARY_CONTAINER];
-
-                this.containersWithDefault = containersWithDefault;
-                this.containersExcludeTemp = containersExcludeTemp;
+                this.containersWithDefault = Containers.query({defaultContainer: true, temporaryContainer: true}, containersStorage);
+                this.containersExcludeTemp = Containers.query({defaultContainer: true}, containersStorage);
             },
 
             addCurrentDomain(domainRegexpStr) {

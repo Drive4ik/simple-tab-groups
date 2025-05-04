@@ -593,7 +593,7 @@ function isCatchedUrl(url, catchTabRules) {
 }
 
 export function normalizeContainersInGroups(groups) {
-    const allContainers = Containers.getAll(true);
+    const allContainers = Containers.query({defaultContainer: true, temporaryContainer: true});
 
     let hasChanges = false;
 
