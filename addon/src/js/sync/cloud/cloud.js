@@ -712,7 +712,7 @@ async function mapContainers(localData, cloudData) {
     localData.containers.map = new Map;
 
     // fill local containers map
-    for (const [cookieStoreId, container] of Object.entries(Containers.getAll())) {
+    for (const [cookieStoreId, container] of Object.entries(Containers.getExisting())) {
         if (Containers.isTemporary(cookieStoreId)) {
             localData.containers.map.set(cookieStoreId, Constants.TEMPORARY_CONTAINER);
         } else {

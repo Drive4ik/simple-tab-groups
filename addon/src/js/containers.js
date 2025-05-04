@@ -264,6 +264,14 @@ export function getAll(withDefaultContainer, containersStorage = containers) {
     return containers;
 }
 
+export function getExisting(containersStorage = containers) {
+    const result = {...containersStorage};
+
+    delete result[Constants.TEMPORARY_CONTAINER];
+
+    return JSON.clone(result);
+}
+
 export function getToExport(storageData, containersStorage = containers) {
     const containersToExport = new Set;
 
