@@ -69,8 +69,6 @@
         data() {
             return {
                 DEFAULT_COOKIE_STORE_ID: Constants.DEFAULT_COOKIE_STORE_ID,
-                TEMPORARY_CONTAINER: Constants.TEMPORARY_CONTAINER,
-
                 VIEW_GRID,
 
                 view: VIEW_DEFAULT,
@@ -712,7 +710,7 @@
             },
 
             mapTabContainer(tab) {
-                tab.container = Containers.get(tab.cookieStoreId);
+                tab.container = Containers.isDefault(tab.cookieStoreId) ? null : Containers.get(tab.cookieStoreId);
                 return tab;
             },
 

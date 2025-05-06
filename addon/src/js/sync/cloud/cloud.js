@@ -101,6 +101,7 @@ export async function sync(trust = null, progressFunc = null) {
         .then(([data, {groups}]) => {
             data.groups = groups;
             data.containers = Containers.getToExport(data);
+            Containers.mapDefaultContainer(data, Constants.DEFAULT_COOKIE_STORE_ID_FIREFOX);
             return data;
         });
 

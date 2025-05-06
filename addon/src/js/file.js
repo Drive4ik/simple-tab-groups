@@ -1,4 +1,5 @@
 
+import * as Constants from './constants.js';
 import Logger from './logger.js';
 import * as Storage from './storage.js';
 
@@ -156,8 +157,7 @@ export async function getAutoBackupFolderName() {
         /^STG\-backups\-FF\-[a-z\d\.]+$/.test(autoBackupFolderName) ||
         /^STG\-backups\-(win|linux|mac|openbsd)\-\d+$/.test(autoBackupFolderName)
     ) {
-        let {version} = await browser.runtime.getBrowserInfo(),
-            newAutoBackupFolderName = `STG-backups-FF-${version}`;
+        const newAutoBackupFolderName = `STG-backups-FF-${Constants.BROWSER.version}`;
 
         if (autoBackupFolderName !== newAutoBackupFolderName) {
             autoBackupFolderName = newAutoBackupFolderName;

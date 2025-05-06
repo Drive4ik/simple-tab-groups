@@ -1041,8 +1041,7 @@ async function updateMoveTabMenus() {
         return;
     }
 
-    const { groups } = await Groups.load(),
-        temporaryContainer = Containers.get(Constants.TEMPORARY_CONTAINER);
+    const {groups} = await Groups.load();
 
     hasBookmarksPermission && await Menus.create({
         id: Menus.ContextType.BOOKMARK,
@@ -1063,8 +1062,8 @@ async function updateMoveTabMenus() {
     });
 
     options.showContextMenuOnTabs && await Menus.create({
-        title: temporaryContainer.name,
-        icon: temporaryContainer.iconUrl,
+        title: Containers.TEMPORARY.name,
+        icon: Containers.TEMPORARY.iconUrl,
         parentId: Menus.ContextType.TAB,
         contexts: [Menus.ContextType.TAB],
         async onClick(info, tab) {
@@ -1110,8 +1109,8 @@ async function updateMoveTabMenus() {
     });
 
     options.showContextMenuOnLinks && await Menus.create({
-        title: temporaryContainer.name,
-        icon: temporaryContainer.iconUrl,
+        title: Containers.TEMPORARY.name,
+        icon: Containers.TEMPORARY.iconUrl,
         parentId: Menus.ContextType.LINK,
         contexts: [Menus.ContextType.LINK],
         async onClick(info) {
@@ -1140,8 +1139,8 @@ async function updateMoveTabMenus() {
     });
 
     hasBookmarksPermission && await Menus.create({
-        title: temporaryContainer.name,
-        icon: temporaryContainer.iconUrl,
+        title: Containers.TEMPORARY.name,
+        icon: Containers.TEMPORARY.iconUrl,
         parentId: Menus.ContextType.BOOKMARK,
         contexts: [Menus.ContextType.BOOKMARK],
         async onClick(info) {
@@ -1430,7 +1429,7 @@ async function updateMoveTabMenus() {
 
     await Menus.create({
         title: browser.i18n.getMessage('reopenTabsWithTemporaryContainersInNew'),
-        icon: Containers.temporaryContainerOptions.iconUrl,
+        icon: Containers.TEMPORARY.iconUrl,
         contexts: [Menus.ContextType.ACTION],
         async onClick(info) {
             const allTabs = await Tabs.get(null, null, null, undefined, true, true),
@@ -1728,7 +1727,7 @@ const onBeforeTabRequest = catchFunc(async function ({ tabId, url, cookieStoreId
 
         if (showNotif < 3) {
             storage.ignoreExtensionsForReopenTabInContainer = ++showNotif;
-            let str = browser.i18n.getMessage('helpPageOpenInContainerMainTitle', Containers.get(newTabContainer, 'name'));
+            let str = browser.i18n.getMessage('helpPageOpenInContainerMainTitle', Containers.get(newTabContainer).name);
 
             str = str.replace(/(\<.+?\>)/g, '') + '\n\n' + browser.i18n.getMessage('clickHereForInfo');
 
@@ -2500,7 +2499,7 @@ async function onBackgroundMessage(message, sender) {
             case 'exclude-container-for-group':
                 let group = groups.find(group => group.id === data.groupId);
 
-                if (!group || !data.cookieStoreId || Containers.get(data.cookieStoreId, 'cookieStoreId', true) !== data.cookieStoreId) {
+                if (!group || !data.cookieStoreId || Containers.get(data.cookieStoreId).cookieStoreId !== data.cookieStoreId) {
                     throw Error('invalid groupId or cookieStoreId');
                 }
 
@@ -2751,6 +2750,8 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         // await Utils.wait(1000);
     }
 
+    Containers.mapDefaultContainer(data, Constants.DEFAULT_COOKIE_STORE_ID);
+
     if (data.temporaryContainerTitle) {
         await Containers.updateTemporaryContainerTitle(data.temporaryContainerTitle);
     }
@@ -2811,9 +2812,11 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
         }
 
         for (const tab of newGroup.tabs) {
-            if (tab.cookieStoreId && !Containers.isTemporary(tab.cookieStoreId)) {
-                neededContainers.add(tab.cookieStoreId);
+            if (Containers.isDefault(tab.cookieStoreId) || Containers.isTemporary(tab.cookieStoreId)) {
+                continue;
             }
+
+            neededContainers.add(tab.cookieStoreId);
         }
 
         return newGroup;
@@ -3570,7 +3573,7 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
                 'lastCreatedGroupPosition',
             ],
             async migration() {
-                data.groups.forEach(group => {
+                for (const group of data.groups) {
                     group.dontUploadToCloud = false;
                     delete group.leaveBookmarksOfClosedTabs;
                     group.exportToBookmarks = group.exportToBookmarksWhenAutoBackup;
@@ -3580,7 +3583,7 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
                     if (group.isArchive) {
                         Management.replaceMozExtensionTabUrls(group.tabs, 'id');
                     }
-                });
+                }
 
                 delete data.defaultGroupProps.leaveBookmarksOfClosedTabs;
 

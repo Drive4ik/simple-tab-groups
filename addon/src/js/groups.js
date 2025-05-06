@@ -602,7 +602,7 @@ export function normalizeContainersInGroups(groups) {
             oldCatchTabContainersLength = group.catchTabContainers.length,
             oldExcludeContainersForReOpenLength = group.excludeContainersForReOpen.length;
 
-        group.newTabContainer = Containers.get(group.newTabContainer, 'cookieStoreId', true);
+        group.newTabContainer = Containers.get(group.newTabContainer).cookieStoreId;
         group.catchTabContainers = group.catchTabContainers.filter(cookieStoreId => allContainers[cookieStoreId]);
         group.excludeContainersForReOpen = group.excludeContainersForReOpen.filter(cookieStoreId => allContainers[cookieStoreId]);
 
@@ -791,7 +791,7 @@ export function getTitle({id, title, isArchive, isSticky, tabs, iconViewType, ne
     }
 
     if (withContainer && newTabContainer !== Constants.DEFAULT_COOKIE_STORE_ID) {
-        beforeTitle.push('[' + Containers.get(newTabContainer, 'name') + ']');
+        beforeTitle.push('[' + Containers.get(newTabContainer).name + ']');
     }
 
     if (withActiveGroup) {

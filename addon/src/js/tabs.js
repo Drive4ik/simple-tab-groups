@@ -67,7 +67,7 @@ export async function createNative({url, active, pinned, title, index, windowId,
     if (tab.cookieStoreId === Constants.TEMPORARY_CONTAINER) {
         tab.cookieStoreId = await Containers.createTemporaryContainer();
     } else {
-        tab.cookieStoreId = Containers.get(tab.cookieStoreId, 'cookieStoreId', true);
+        tab.cookieStoreId = Containers.get(tab.cookieStoreId).cookieStoreId;
     }
 
     const newTab = await browser.tabs.create(tab);

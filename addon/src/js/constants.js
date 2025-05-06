@@ -1,6 +1,9 @@
 
 export const MANIFEST = Object.freeze(browser.runtime.getManifest());
 export const STG_BASE_URL = browser.runtime.getURL('');
+export const BROWSER = await browser.runtime.getBrowserInfo();
+
+export const BROWSER_FULL_NAME = `${BROWSER?.name} ${BROWSER?.vendor}`;
 
 export const IS_BACKGROUND_PAGE = self.location.href.includes('background');
 
@@ -10,11 +13,13 @@ export const ACTIVE_SYMBOL = '〇';
 export const DISCARDED_SYMBOL = '✱';
 export const STICKY_SYMBOL = '📌';
 
+export const DEFAULT_COOKIE_STORE_ID_FIREFOX = 'firefox-default';
+export const DEFAULT_COOKIE_STORE_ID = {
+    'IceCat GNU': 'icecat-default',
+}[BROWSER_FULL_NAME] ?? DEFAULT_COOKIE_STORE_ID_FIREFOX;
+
 export const TEMPORARY_CONTAINER = 'temporary-container';
 export const TEMPORARY_CONTAINER_ICON = 'chill';
-
-export const DEFAULT_COOKIE_STORE_ID = await browser.cookies?.getAllCookieStores()
-    .then(stores => stores.find(store => store.id.includes('default'))?.id) ?? 'firefox-default';
 
 export const CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP = 'stg-undo-remove-group-id-';
 
@@ -331,16 +336,13 @@ export const DEFAULT_SYNC_OPTIONS = Object.freeze({
     githubGistFileName: GIT_GIST_FILE_NAME_PARTS.start + 'backup' + GIT_GIST_FILE_NAME_PARTS.end,
 });
 
-export const BROWSER = await browser.runtime.getBrowserInfo?.();
-
-const BROWSERS_WITH_FF_ACCOUNT = new Set([
+const BROWSER_HAS_FSYNC = [
     'Firefox Mozilla',
     'Zen Mozilla',
     'Floorp Mozilla',
     'Waterfox WaterfoxLimited',
-]);
-
-export const BROWSER_HAS_FSYNC = BROWSERS_WITH_FF_ACCOUNT.has(`${BROWSER?.name} ${BROWSER?.vendor}`);
+    'r3dfox ESR Eclipse Community',
+].includes(BROWSER_FULL_NAME);
 
 export const IS_AVAILABLE_SYNC_STORAGE = browser.storage.sync instanceof Object && BROWSER_HAS_FSYNC;
 export const SYNC_STORAGE_FSYNC = 'ff-sync';
@@ -432,11 +434,11 @@ export const NON_OPTION_KEYS = Object.freeze(['version', 'groups']);
 
 export const ALL_OPTION_KEYS = Object.freeze(DEFAULT_OPTION_KEYS.filter(key => !NON_OPTION_KEYS.includes(key)));
 
-export const ON_UPDATED_TAB_PROPERTIES = browser.tabs ? Object.freeze([ // browser.tabs not defined into web page scripts
-    browser.tabs.UpdatePropertyName.TITLE, // for cache
-    browser.tabs.UpdatePropertyName.STATUS, // for check update url and thumbnail
-    // browser.tabs.UpdatePropertyName.URL, // for check update url and thumbnail
-    browser.tabs.UpdatePropertyName.FAVICONURL, // for session
-    browser.tabs.UpdatePropertyName.HIDDEN,
-    browser.tabs.UpdatePropertyName.PINNED,
-]) : null;
+export const ON_UPDATED_TAB_PROPERTIES = Object.freeze([ // browser.tabs not defined into web page scripts
+    browser.tabs?.UpdatePropertyName.TITLE, // for cache
+    browser.tabs?.UpdatePropertyName.STATUS, // for check update url and thumbnail
+    // browser.tabs?.UpdatePropertyName.URL, // for check update url and thumbnail
+    browser.tabs?.UpdatePropertyName.FAVICONURL, // for session
+    browser.tabs?.UpdatePropertyName.HIDDEN,
+    browser.tabs?.UpdatePropertyName.PINNED,
+]);

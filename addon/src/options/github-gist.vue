@@ -21,7 +21,7 @@ export default {
         this.TRUTH_LOCAL = TRUTH_LOCAL;
         this.TRUTH_CLOUD = TRUTH_CLOUD;
 
-        this.browserName = `${Constants.BROWSER.name} ${Constants.BROWSER.vendor} v${Constants.BROWSER.version}`;
+        this.browserName = `${Constants.BROWSER_FULL_NAME} v${Constants.BROWSER.version}`;
         this.helpLink = Urls.getURL('how-to-github-gist');
 
         return {

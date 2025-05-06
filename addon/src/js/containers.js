@@ -10,12 +10,12 @@ const logger = new Logger('Containers');
 
 const containers = cacheStorage.containers ??= createStorage({});
 
-const defaultContainerOptions = {
+export const DEFAULT = {
     cookieStoreId: Constants.DEFAULT_COOKIE_STORE_ID,
     name: browser.i18n.getMessage('noContainerTitle'),
 };
 
-export const temporaryContainerOptions = containers[Constants.TEMPORARY_CONTAINER] ??= createStorage({
+export const TEMPORARY = cacheStorage.TEMPORARY ??= createStorage({
     color: 'toolbar',
     colorCode: false,
     cookieStoreId: Constants.TEMPORARY_CONTAINER,
@@ -53,10 +53,8 @@ export async function load(containersStorage = containers) {
 
     const loadedContainers = await browser.contextualIdentities.query({}).catch(log.onCatch('cant load containers'));
 
-    for(const cookieStoreId in containersStorage) {
-        if (cookieStoreId !== Constants.TEMPORARY_CONTAINER) {
-            delete containersStorage[cookieStoreId];
-        }
+    for (const cookieStoreId in containersStorage) {
+        delete containersStorage[cookieStoreId];
     }
 
     log.stop();
@@ -66,7 +64,7 @@ export async function load(containersStorage = containers) {
 function onCreated({contextualIdentity}) {
     containers[contextualIdentity.cookieStoreId] = contextualIdentity;
 
-    if (contextualIdentity.name === (temporaryContainerOptions.name + tmpUniq)) {
+    if (contextualIdentity.name === (TEMPORARY.name + tmpUniq)) {
         return;
     }
 
@@ -75,7 +73,7 @@ function onCreated({contextualIdentity}) {
 
 function onUpdated({contextualIdentity}) {
     const {cookieStoreId} = contextualIdentity,
-        isOldContainerNameAreTmp = containers[cookieStoreId].name === (temporaryContainerOptions.name + tmpUniq);
+        isOldContainerNameAreTmp = containers[cookieStoreId].name === (TEMPORARY.name + tmpUniq);
 
     if (!isOldContainerNameAreTmp && containers[cookieStoreId].name !== contextualIdentity.name) {
         if (isTemporary(cookieStoreId) && !isTemporary(null, contextualIdentity)) {
@@ -123,21 +121,15 @@ async function onRemoved({contextualIdentity}) {
 
 
 export function isDefault(cookieStoreId) {
-    return Constants.DEFAULT_COOKIE_STORE_ID === cookieStoreId || !cookieStoreId;
+    return !cookieStoreId || DEFAULT.cookieStoreId === cookieStoreId || cookieStoreId.includes('default');
 }
 
-export function isTemporary(cookieStoreId, contextualIdentity, excludeMainTemporaryContainerName = false, containersStorage = containers) {
-    if (cookieStoreId === Constants.TEMPORARY_CONTAINER) {
-        if (excludeMainTemporaryContainerName) {
-            return false;
-        }
-
+export function isTemporary(cookieStoreId, contextualIdentity = null, containersStorage = containers) {
+    if (cookieStoreId === TEMPORARY.cookieStoreId) {
         return true;
     }
 
-    if (!contextualIdentity) {
-        contextualIdentity = containersStorage[cookieStoreId];
-    }
+    contextualIdentity ??= containersStorage[cookieStoreId];
 
     if (!contextualIdentity) {
         return false;
@@ -148,15 +140,15 @@ export function isTemporary(cookieStoreId, contextualIdentity, excludeMainTempor
 
 const containerIdRegExp = /\d+$/;
 function getTemporaryContainerName(cookieStoreId) {
-    let [containerId] = containerIdRegExp.exec(cookieStoreId);
-    return temporaryContainerOptions.name + ' ' + containerId;
+    const [containerId] = containerIdRegExp.exec(cookieStoreId);
+    return TEMPORARY.name + ' ' + containerId;
 }
 
 export async function createTemporaryContainer(containersStorage = containers) {
-    let {cookieStoreId} = await create({
-        name: temporaryContainerOptions.name + tmpUniq,
-        color: temporaryContainerOptions.color,
-        icon: temporaryContainerOptions.icon,
+    const {cookieStoreId} = await create({
+        name: TEMPORARY.name + tmpUniq,
+        color: TEMPORARY.color,
+        icon: TEMPORARY.icon,
     }, containersStorage);
 
     await update(cookieStoreId, {
@@ -174,10 +166,12 @@ export async function update(cookieStoreId, details, containersStorage = contain
 }
 
 export async function remove(cookieStoreIds, containersStorage = containers) {
-    await Promise.all(cookieStoreIds.map(async cookieStoreId => {
-        delete containersStorage[cookieStoreId];
-        await browser.contextualIdentities.remove(cookieStoreId).catch(() => {});
-    }));
+    for (const cookieStoreId of [cookieStoreIds].flat()) {
+        try {
+            await browser.contextualIdentities.remove(cookieStoreId);
+            delete containersStorage[cookieStoreId];
+        } catch {}
+    }
 }
 
 export async function create(details, containersStorage = containers) {
@@ -188,7 +182,7 @@ export async function create(details, containersStorage = containers) {
 
 export async function findExistOrCreateSimilar(cookieStoreId, containerData = null, storageMap = new Map, containersStorage = containers) {
     if (isDefault(cookieStoreId)) {
-        return Constants.DEFAULT_COOKIE_STORE_ID;
+        return DEFAULT.cookieStoreId;
     }
 
     if (containersStorage[cookieStoreId]) {
@@ -199,7 +193,7 @@ export async function findExistOrCreateSimilar(cookieStoreId, containerData = nu
         if (containerData) {
             for (const csId in containersStorage) {
                 if (
-                    !isTemporary(csId, undefined, undefined, containersStorage) &&
+                    !isTemporary(csId, undefined, containersStorage) &&
                     containerData.name === containersStorage[csId].name &&
                     containerData.color === containersStorage[csId].color &&
                     containerData.icon === containersStorage[csId].icon
@@ -225,17 +219,13 @@ export async function findExistOrCreateSimilar(cookieStoreId, containerData = nu
     return storageMap.get(cookieStoreId);
 }
 
-export function get(cookieStoreId, key = null, withDefaultContainer = false, containersStorage = containers) {
-    let result = null;
-
+export function get(cookieStoreId, containersStorage = containers) {
     if (containersStorage[cookieStoreId]) {
-        result = containersStorage[cookieStoreId];
-    } else if (withDefaultContainer) {
-        result = defaultContainerOptions;
-    }
-
-    if (result) {
-        return key ? result[key] : {...result};
+        return {...containersStorage[cookieStoreId]};
+    } else if (isDefault(cookieStoreId)) {
+        return {...DEFAULT};
+    } else if (isTemporary(cookieStoreId, undefined, containersStorage)) {
+        return {...TEMPORARY};
     }
 
     return null;
@@ -250,17 +240,13 @@ export function query(params = {}, containersStorage = containers) {
 
     if (params.defaultContainer) {
         // add default container to start of obj
-        result[Constants.DEFAULT_COOKIE_STORE_ID] = {...defaultContainerOptions};
+        result[DEFAULT.cookieStoreId] = {...DEFAULT};
     }
 
     for (const cookieStoreId in containersStorage) {
-        if (cookieStoreId === Constants.TEMPORARY_CONTAINER) {
-            continue;
-        }
-
         if (
             params.temporaryContainers ||
-            !isTemporary(cookieStoreId, undefined, undefined, containersStorage)
+            !isTemporary(cookieStoreId, undefined, containersStorage)
         ) {
             result[cookieStoreId] = {...containersStorage[cookieStoreId]};
         }
@@ -268,7 +254,7 @@ export function query(params = {}, containersStorage = containers) {
 
     if (params.temporaryContainer) {
         // add temporary container to end of obj
-        result[Constants.TEMPORARY_CONTAINER] = {...temporaryContainerOptions};
+        result[TEMPORARY.cookieStoreId] = {...TEMPORARY};
     }
 
     return result;
@@ -277,29 +263,61 @@ export function query(params = {}, containersStorage = containers) {
 export function getToExport(storageData, containersStorage = containers) {
     const containersToExport = new Set;
 
-    storageData.groups.forEach(group => {
-        group.tabs.forEach(tab => {
-            if (!isTemporary(tab.cookieStoreId, undefined, undefined, containersStorage)) {
-                containersToExport.add(tab.cookieStoreId);
-            }
-        });
-
+    for (const group of storageData.groups) {
+        group.tabs.forEach(tab => containersToExport.add(tab.cookieStoreId));
         containersToExport.add(group.newTabContainer);
-
         group.catchTabContainers.forEach(cookieStoreId => containersToExport.add(cookieStoreId));
         group.excludeContainersForReOpen.forEach(cookieStoreId => containersToExport.add(cookieStoreId));
-    });
+    }
 
-    containersToExport.delete(Constants.DEFAULT_COOKIE_STORE_ID);
-    containersToExport.delete(Constants.TEMPORARY_CONTAINER);
+    for (const cookieStoreId of containersToExport) {
+        if (isDefault(cookieStoreId) || isTemporary(cookieStoreId, undefined, containersStorage)) {
+            containersToExport.delete(cookieStoreId);
+        }
+    }
 
     const result = {};
 
-    [...containersToExport]
-        .filter(Boolean)
-        .forEach(cookieStoreId => result[cookieStoreId] = {...containersStorage[cookieStoreId]});
+    for (const cookieStoreId of containersToExport) {
+        result[cookieStoreId] = {...containersStorage[cookieStoreId]};
+    }
 
     return result;
+}
+
+// normalize default cookie store id: icecat-default => firefox-default
+export function mapDefaultContainer(storageData, defaultCookieStoreId) {
+    function normalize(group) {
+        if (!group) {
+            return;
+        }
+
+        group.tabs?.forEach(tab => {
+            if (tab.cookieStoreId && isDefault(tab.cookieStoreId)) {
+                tab.cookieStoreId = defaultCookieStoreId;
+            }
+        });
+
+        if (group.newTabContainer && isDefault(group.newTabContainer)) {
+            group.newTabContainer = defaultCookieStoreId;
+        }
+
+        if (group.catchTabContainers) {
+            group.catchTabContainers = group.catchTabContainers.map(cookieStoreId => {
+                return isDefault(cookieStoreId) ? defaultCookieStoreId : cookieStoreId;
+            });
+        }
+
+        if (group.excludeContainersForReOpen) {
+            group.excludeContainersForReOpen = group.excludeContainersForReOpen.map(cookieStoreId => {
+                return isDefault(cookieStoreId) ? defaultCookieStoreId : cookieStoreId;
+            });
+        }
+    }
+
+    storageData.groups?.forEach(normalize);
+
+    normalize(storageData.defaultGroupProps);
 }
 
 export async function removeUnusedTemporaryContainers(tabs, containersStorage = containers) {
@@ -308,10 +326,11 @@ export async function removeUnusedTemporaryContainers(tabs, containersStorage = 
     const tabContainers = new Set(tabs.map(tab => tab.cookieStoreId));
 
     const tempContainersToRemove = Object.keys(containersStorage)
-        .filter(cookieStoreId => isTemporary(cookieStoreId, null, true, containersStorage) && !tabContainers.has(cookieStoreId));
+        .filter(cookieStoreId => isTemporary(cookieStoreId, null, containersStorage) && !tabContainers.has(cookieStoreId));
 
     if (!tempContainersToRemove.length) {
-        return log.stop('not found');
+        log.stop('not found');
+        return;
     }
 
     log.log('removing...');
@@ -322,16 +341,16 @@ export async function removeUnusedTemporaryContainers(tabs, containersStorage = 
 }
 
 export function setTemporaryContainerTitle(temporaryContainerTitle) {
-    temporaryContainerOptions.name = temporaryContainerTitle;
+    TEMPORARY.name = temporaryContainerTitle;
 }
 
 export function getTemporaryContainerTitle() {
-    return temporaryContainerOptions.name;
+    return TEMPORARY.name;
 }
 
 export async function updateTemporaryContainerTitle(temporaryContainerTitle, containersStorage = containers) {
     const cookieStoreIds = Object.keys(containersStorage)
-        .filter(cookieStoreId => isTemporary(cookieStoreId, null, true, containersStorage));
+        .filter(cookieStoreId => isTemporary(cookieStoreId, null, containersStorage));
 
     setTemporaryContainerTitle(temporaryContainerTitle);
 

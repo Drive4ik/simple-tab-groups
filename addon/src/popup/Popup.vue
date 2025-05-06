@@ -92,8 +92,6 @@
                 SECTION_GROUP_TABS,
 
                 DEFAULT_COOKIE_STORE_ID: Constants.DEFAULT_COOKIE_STORE_ID,
-                TEMPORARY_CONTAINER: Constants.TEMPORARY_CONTAINER,
-
                 section: SECTION_DEFAULT,
 
                 showPromptPopup: false,
@@ -726,7 +724,7 @@
             },
 
             mapTabContainer(tab) {
-                tab.container = Containers.get(tab.cookieStoreId);
+                tab.container = Containers.isDefault(tab.cookieStoreId) ? null : Containers.get(tab.cookieStoreId);
                 return tab;
             },
 
@@ -1151,9 +1149,10 @@
             getGroupTitle: Groups.getTitle,
             groupTabsCountMessage: Groups.tabsCountMessage,
             getLastActiveTabContainer(tabs, key = null) {
-                let tab = Utils.getLastActiveTab(tabs);
+                const tab = Utils.getLastActiveTab(tabs),
+                    container = tab ? Containers.get(tab.cookieStoreId) : null;
 
-                return tab ? Containers.get(tab.cookieStoreId, key) : null;
+                return container?.[key] ?? null;
             },
 
             openOptionsPage() {
