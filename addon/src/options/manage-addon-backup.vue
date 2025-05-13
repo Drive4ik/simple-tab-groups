@@ -219,7 +219,7 @@
                             <figure v-if="group.newTabContainer === TEMPORARY_CONTAINER" class="image is-16x16 is-inline-block">
                                 <img :src="allContainers[TEMPORARY_CONTAINER].iconUrl" class="size-16 fill-context" />
                             </figure>
-                            <figure v-else-if="data.containers && data.containers[group.newTabContainer] && data.containers[group.newTabContainer].iconUrl" class="image is-16x16 is-inline-block">
+                            <figure v-else-if="data.containers?.[group.newTabContainer]?.iconUrl" class="image is-16x16 is-inline-block">
                                 <span :class="`size-16 userContext-icon identity-icon-${data.containers[group.newTabContainer].icon} identity-color-${data.containers[group.newTabContainer].color}`"></span>
                             </figure>
                         </template>

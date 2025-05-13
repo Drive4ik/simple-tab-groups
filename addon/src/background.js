@@ -2780,22 +2780,28 @@ async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
     data.groups ??= [];
     data.hotkeys ??= [];
 
-    const groupIds = new Set([
-        ...currentData.groups.map(({id}) => id),
-        ...data.groups.map(({id}) => id),
-    ]);
+    const existGroupIds = new Set(currentData.groups.map(({id}) => id));
+    const restoreGroupIds = new Set(data.groups.map(({id}) => id));
 
-    data.groups.forEach(groupToRestore => {
-        if (groupToRestore.moveToGroupIfNoneCatchTabRules && !groupIds.has(groupToRestore.moveToGroupIfNoneCatchTabRules)) {
+    for (const groupToRestore of data.groups) {
+        if (
+            groupToRestore.moveToGroupIfNoneCatchTabRules &&
+            !existGroupIds.has(groupToRestore.moveToGroupIfNoneCatchTabRules) &&
+            !restoreGroupIds.has(groupToRestore.moveToGroupIfNoneCatchTabRules)
+        ) {
             groupToRestore.moveToGroupIfNoneCatchTabRules = null;
         }
-    });
+    }
 
     const neededContainers = new Set;
     const defaultGroupProps = clearAddonDataBeforeRestore ? data.defaultGroupProps : options.defaultGroupProps;
 
     data.groups = data.groups.map(group => {
-        const newGroup = Groups.create(group.id || Groups.createId(), group.title, defaultGroupProps);
+        const newGroupId = existGroupIds.has(group.id)
+            ? Groups.createId()
+            : (group.id || Groups.createId());
+
+        const newGroup = Groups.create(newGroupId, group.title, defaultGroupProps);
 
         for (const key in group) {
             if (key === 'id') {

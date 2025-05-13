@@ -127,11 +127,11 @@ export function extractUUID(url) {
     return uuid;
 }
 
-export function UUIDtoId(uuid, extensionsStorage = extensions) {
+function UUIDtoId(uuid, extensionsStorage = extensions) {
     return getExtensionByUUID(uuid, extensionsStorage)?.id;
 }
 
-export function idToUUID(id, extensionsStorage = extensions) {
+function idToUUID(id, extensionsStorage = extensions) {
     if (extensionsStorage[id]?.hostPermissions) {
         for (const url of extensionsStorage[id].hostPermissions) {
             const uuid = extractUUID(url);
@@ -147,11 +147,9 @@ export function replaceMozExtensionTabUrls(tabs, replaceTo, extensionsStorage = 
     const func = replaceTo === 'id' ? UUIDtoId : idToUUID;
 
     for (const tab of tabs) {
-        if (tab.url.startsWith('moz-extension')) {
-            tab.url = tab.url.replace(MOZ_EXTENSION_URL_REGEXP, (match, value) => {
-                value = func(value, extensionsStorage) ?? value;
-                return `moz-extension://${value}`;
-            });
-        }
+        tab.url = tab.url.replace(MOZ_EXTENSION_URL_REGEXP, (match, value) => {
+            value = func(value, extensionsStorage) ?? value;
+            return `moz-extension://${value}`;
+        });
     }
 }
