@@ -1,6 +1,8 @@
 # gitignore file
 
-/.vscode/
+/.*/
+!/.github/
+
 /STG-backups/
 
 /*.sublime-*

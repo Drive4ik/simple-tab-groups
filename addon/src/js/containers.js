@@ -1,6 +1,7 @@
 import * as Constants from './constants.js';
 import * as BrowserConstants from '/js/browser-constants.js';
 import Logger, {catchFunc} from './logger.js';
+import Notification from './notification.js';
 import * as Utils from './utils.js';
 import * as Groups from './groups.js';
 import backgroundSelf from './background.js';
@@ -77,9 +78,9 @@ function onUpdated({contextualIdentity}) {
 
     if (!isOldContainerNameAreTmp && containers[cookieStoreId].name !== contextualIdentity.name) {
         if (isTemporary(cookieStoreId) && !isTemporary(null, contextualIdentity)) {
-            Utils.notify(['thisContainerIsNotTemporary', contextualIdentity.name]);
+            Notification(['thisContainerIsNotTemporary', contextualIdentity.name]);
         } else if (!isTemporary(cookieStoreId) && isTemporary(null, contextualIdentity)) {
-            Utils.notify(['thisContainerNowIsTemporary', contextualIdentity.name]);
+            Notification(['thisContainerNowIsTemporary', contextualIdentity.name]);
         }
     }
 

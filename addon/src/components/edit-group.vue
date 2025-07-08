@@ -13,6 +13,7 @@
     import * as Containers from '/js/containers.js';
     import * as Storage from '/js/storage.js';
     import Messages from '/js/messages.js';
+    import Notification from '/js/notification.js';
     import * as File from '/js/file.js';
     import * as Tabs from '/js/tabs.js';
     import * as Groups from '/js/groups.js';
@@ -238,7 +239,7 @@
                     iconUrl = await Utils.normalizeGroupIcon(iconUrl);
                     this.setIconUrl(iconUrl);
                 } catch (e) {
-                    Utils.notify(e);
+                    Notification(e);
                 }
             },
 
@@ -286,7 +287,7 @@
                         try {
                             new RegExp(regExpStr);
                         } catch (e) {
-                            Utils.notify(['invalidRegExpRuleTitle', regExpStr]);
+                            Notification(['invalidRegExpRuleTitle', regExpStr]);
                         }
                     });
 

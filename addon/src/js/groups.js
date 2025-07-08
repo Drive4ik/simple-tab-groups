@@ -5,6 +5,7 @@ import backgroundSelf from './background.js';
 import * as Constants from './constants.js';
 import * as Storage from './storage.js';
 import * as Cache from './cache.js';
+import Notification from './notification.js';
 import * as Containers from './containers.js';
 import * as Bookmarks from './bookmarks.js';
 import * as Management from './management.js';
@@ -301,7 +302,7 @@ export async function update(groupId, updateData) {
     const log = logger.start('update', {groupId, updateData});
 
     if (updateData.iconUrl?.startsWith('chrome:')) {
-        // Utils.notify('Icon not supported');
+        // Notification('Icon not supported');
         delete updateData.iconUrl;
     }
 
@@ -413,31 +414,31 @@ export async function unload(groupId) {
     const log = logger.start('unload', groupId);
 
     if (!groupId) {
-        Utils.notify(['groupNotFound'], 7, 'groupNotFound');
+        Notification('groupNotFound', {time: 7});
         return log.stopError(false, 'groupNotFound');
     }
 
     const windowId = Cache.getWindowId(groupId);
 
     if (!windowId) {
-        Utils.notify(['groupNotLoaded'], 7, 'groupNotLoaded');
+        Notification('groupNotLoaded', {time: 7});
         return log.stopError(false, 'groupNotLoaded');
     }
 
     const {group} = await load(groupId, true);
 
     if (!group) {
-        Utils.notify(['groupNotFound'], 7, 'groupNotFound');
+        Notification('groupNotFound', {time: 7});
         return log.stopError(false, 'groupNotFound');
     }
 
     if (group.isArchive) {
-        Utils.notify(['groupIsArchived', group.title], 7, 'groupIsArchived');
+        Notification(['groupIsArchived', group.title], {time: 7});
         return log.stopError(false, 'groupIsArchived');
     }
 
     if (group.tabs.some(Utils.isTabCanNotBeHidden)) {
-        Utils.notify(['notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera']);
+        Notification('notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera');
         return log.stopError(false, 'some Tab Can Not Be Hidden');
     }
 
@@ -682,7 +683,7 @@ export async function setIconUrl(groupId, iconUrl) {
             iconUrl: await Utils.normalizeGroupIcon(iconUrl),
         });
     } catch (e) {
-        Utils.notify(e);
+        Notification(e);
     }
 }
 

@@ -140,57 +140,6 @@ export function sliceText(text, length = 50) {
     return (text?.length > length) ? (text.slice(0, length - 3) + '...') : (text || '');
 }
 
-export async function notify(message, sec = 20, id = null, iconUrl = null, onClick = null, onClose = null) {
-    if (id) {
-        await browser.notifications.clear(id);
-    } else {
-        id = String(getRandomInt());
-    }
-
-    // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/notifications/NotificationOptions
-    // Only 'type', 'iconUrl', 'title', and 'message' are supported.
-    await browser.notifications.create(id, {
-        type: 'basic',
-        iconUrl: iconUrl || '/icons/icon.svg',
-        title: browser.i18n.getMessage('extensionName'),
-        message: Array.isArray(message) ? browser.i18n.getMessage(...message) : String(message),
-    });
-
-    let rejectTimer = null,
-        listener = function(id, calledId) {
-            if (id !== calledId) {
-                return;
-            }
-
-            browser.notifications.onClicked.removeListener(listener);
-            browser.notifications.onClosed.removeListener(onClosedListener);
-
-            clearTimeout(rejectTimer);
-            onClick && onClick(id);
-        }.bind(null, id),
-        onClosedListener = function(id, calledId, calledBy) {
-            if (id !== calledId) {
-                return;
-            }
-
-            browser.notifications.onClicked.removeListener(listener);
-            browser.notifications.onClosed.removeListener(onClosedListener);
-            browser.notifications.clear(id);
-
-            if (calledBy !== 'timeout') {
-                clearTimeout(rejectTimer);
-                onClose && onClose(id);
-            }
-        }.bind(null, id);
-
-    rejectTimer = setTimeout(onClosedListener, sec * 1000, id, 'timeout');
-
-    browser.notifications.onClicked.addListener(listener);
-    browser.notifications.onClosed.addListener(onClosedListener);
-
-    return id;
-}
-
 export function isAllowExternalRequestAndSender(request, sender, extensionRules = {}) {
     // if (sender?.id?.startsWith('test-stg-action')) {
     //     return true;

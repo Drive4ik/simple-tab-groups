@@ -11,6 +11,7 @@
     import * as Constants from '/js/constants.js';
     import Messages from '/js/messages.js';
     import Logger from '/js/logger.js';
+    import Notification from '/js/notification.js';
     import * as Utils from '/js/utils.js';
     import * as Management from '/js/management.js';
     import * as Storage from '/js/storage.js';
@@ -368,12 +369,17 @@
                 try {
                     data = await File.load();
                 } catch (e) {
-                    Utils.notify(e);
+                    Notification(e);
                     return;
                 }
 
-                if ('object' !== Utils.type(data) || 'object' !== Utils.type(data.defaultGroupProps) || !Array.isArray(data.groups) || !data.version) {
-                    Utils.notify('This is wrong backup!');
+                if (
+                    'object' !== Utils.type(data) ||
+                    'object' !== Utils.type(data.defaultGroupProps) ||
+                    !Array.isArray(data.groups) ||
+                    !data.version
+                ) {
+                    Notification('This is wrong backup!');
                     return;
                 }
 
@@ -382,7 +388,7 @@
                 if (resultMigrate.migrated) {
                     data = resultMigrate.data;
                 } else if (resultMigrate.error) {
-                    Utils.notify(browser.i18n.getMessage(resultMigrate.error));
+                    Notification(resultMigrate.error);
                     return;
                 }
 
@@ -395,12 +401,12 @@
                 try {
                     oldOptions = await File.load();
                 } catch (e) {
-                    Utils.notify(e);
+                    Notification(e);
                     return;
                 }
 
                 if (!oldOptions || !Array.isArray(oldOptions.windows) || !oldOptions.session) {
-                    Utils.notify('This is not "Tab Groups" backup!');
+                    Notification('This is not "Tab Groups" backup!');
                     return;
                 }
 
@@ -416,7 +422,7 @@
                     try {
                         oldGroups = JSON.parse(win.extData['tabview-group']);
                     } catch (e) {
-                        Utils.notify('Error: cannot parse backup file - ' + e);
+                        Notification(`Error: cannot parse backup file - ${e}`);
                         return;
                     }
 
@@ -453,7 +459,7 @@
                                 return;
                             }
                         } catch (e) {
-                            return Utils.notify('Cannot parse groups: ' + e);
+                            return Notification(`Cannot parse groups: ${e}`);
                         }
 
                         if (groups[tabData.groupID]) {
@@ -477,12 +483,12 @@
                 try {
                     panoramaOptions = await File.load();
                 } catch (e) {
-                    Utils.notify(e);
+                    Notification(e);
                     return;
                 }
 
                 if (!panoramaOptions || !panoramaOptions.file || 'panoramaView' !== panoramaOptions.file.type || !Array.isArray(panoramaOptions.windows)) {
-                    Utils.notify('This is not "Panorama View" backup!');
+                    Notification('This is not "Panorama View" backup!');
                     return;
                 }
 
@@ -546,7 +552,7 @@
                         });
                     });
                 } else {
-                    Utils.notify('"Panorama View" backup has unsupported version');
+                    Notification('"Panorama View" backup has unsupported version');
                     return;
                 }
 
@@ -559,17 +565,17 @@
                 try {
                     syncTabOptions = await File.load();
                 } catch (e) {
-                    Utils.notify(e);
+                    Notification(e);
                     return;
                 }
 
                 if (!syncTabOptions || !syncTabOptions.version || 'syncTabGroups' !== syncTabOptions.version[0] || !Array.isArray(syncTabOptions.groups)) {
-                    Utils.notify('This is not "Sync Tab Groups" backup!');
+                    Notification('This is not "Sync Tab Groups" backup!');
                     return;
                 }
 
                 if (1 !== syncTabOptions.version[1]) {
-                    Utils.notify('"Sync Tab Groups" backup has unsupported version');
+                    Notification('"Sync Tab Groups" backup has unsupported version');
                     return;
                 }
 

@@ -1,5 +1,6 @@
 import Logger from './logger.js';
 import backgroundSelf from './background.js';
+import Notification from './notification.js';
 import * as Constants from './constants.js';
 import * as Urls from './urls.js';
 import * as Utils from './utils.js';
@@ -473,13 +474,13 @@ export async function move(tabIds, groupId, {
     }
 
     if (showPinnedMessage) {
-        log.log('notify pinnedTabsAreNotSupported')
-        Utils.notify(['pinnedTabsAreNotSupported']);
+        log.log('notify pinnedTabsAreNotSupported');
+        Notification('pinnedTabsAreNotSupported');
     }
 
     if (tabsCantHide.size) {
-        log.log('notify thisTabsCanNotBeHidden')
-        Utils.notify(['thisTabsCanNotBeHidden', Array.from(tabsCantHide).join(', ')]);
+        log.log('notify thisTabsCanNotBeHidden');
+        Notification(['thisTabsCanNotBeHidden', Array.from(tabsCantHide).join(', ')]);
     }
 
     if (!tabs.length) {
@@ -521,16 +522,22 @@ export async function move(tabIds, groupId, {
         iconUrl = firstTab.favIconUrl;
     }
 
-    Utils.notify(message, undefined, undefined, iconUrl, async function(groupId, tabId) {
-        let {group} = await Groups.load(groupId),
-            tab = await getOne(tabId);
+    Notification(message, {
+        iconUrl,
+        onClick: async () => {
+            const {group} = await Groups.load(groupId),
+                tab = await getOne(firstTab.id);
 
-        if (group && tab) {
-            let winId = Cache.getWindowId(groupId) || await Windows.getLastFocusedNormalWindow();
+            if (group && tab) {
+                const winId = Cache.getWindowId(groupId) || await Windows.getLastFocusedNormalWindow();
 
-            winId && backgroundSelf.applyGroup(winId, groupId, tabId).catch(log.onCatch(['applyGroup from notif', winId, groupId, tabId]));
-        }
-    }.bind(null, groupId, firstTab.id));
+                if (winId) {
+                    backgroundSelf.applyGroup(winId, groupId, firstTab.id)
+                        .catch(log.onCatch(['applyGroup from notif', winId, groupId, firstTab.id]))
+                };
+            }
+        },
+    });
 
     log.stop(tabs, 'with notify');
     return tabs;
