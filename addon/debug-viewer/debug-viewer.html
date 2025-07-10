@@ -4,8 +4,8 @@
     <title>Debug viewer</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="shortcut icon" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.1/svgs/solid/bug.svg"/>
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/1.0.3/css/bulma.min.css"/>
+    <link rel="shortcut icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiBzdHlsZT0iY29sb3Itc2NoZW1lOiBsaWdodCBkYXJrOyIgZmlsbD0iY29udGV4dC1maWxsIGxpZ2h0LWRhcmsoIzViNWI2NiwjZmJmYmZlKSI+PHBhdGggZD0iTTI1NiAwYzUzIDAgOTYgNDMgOTYgOTZ2My42YzAgMTUuNy0xMi43IDI4LjQtMjguNCAyOC40SDE4OC40Yy0xNS43IDAtMjguNC0xMi43LTI4LjQtMjguNFY5NmMwLTUzIDQzLTk2IDk2LTk2ek00MS40IDEwNS40YzEyLjUtMTIuNSAzMi44LTEyLjUgNDUuMyAwbDY0IDY0Yy43IC43IDEuMyAxLjQgMS45IDIuMWMxNC4yLTcuMyAzMC40LTExLjQgNDcuNS0xMS40SDMxMmMxNy4xIDAgMzMuMiA0LjEgNDcuNSAxMS40Yy42LS43IDEuMi0xLjQgMS45LTIuMWw2NC02NGMxMi41LTEyLjUgMzIuOC0xMi41IDQ1LjMgMHMxMi41IDMyLjggMCA0NS4zbC02NCA2NGMtLjcgLjctMS40IDEuMy0yLjEgMS45YzYuMiAxMiAxMC4xIDI1LjMgMTEuMSAzOS41SDQ4MGMxNy43IDAgMzIgMTQuMyAzMiAzMnMtMTQuMyAzMi0zMiAzMkg0MTZjMCAyNC42LTUuNSA0Ny44LTE1LjQgNjguNmMyLjIgMS4zIDQuMiAyLjkgNiA0LjhsNjQgNjRjMTIuNSAxMi41IDEyLjUgMzIuOCAwIDQ1LjNzLTMyLjggMTIuNS00NS4zIDBsLTYzLjEtNjMuMWMtMjQuNSAyMS44LTU1LjggMzYuMi05MC4zIDM5LjZWMjQwYzAtOC44LTcuMi0xNi0xNi0xNnMtMTYgNy4yLTE2IDE2VjQ3OS4yYy0zNC41LTMuNC02NS44LTE3LjgtOTAuMy0zOS42TDg2LjYgNTAyLjZjLTEyLjUgMTIuNS0zMi44IDEyLjUtNDUuMyAwcy0xMi41LTMyLjggMC00NS4zbDY0LTY0YzEuOS0xLjkgMy45LTMuNCA2LTQuOEMxMDEuNSAzNjcuOCA5NiAzNDQuNiA5NiAzMjBIMzJjLTE3LjcgMC0zMi0xNC4zLTMyLTMyczE0LjMtMzIgMzItMzJIOTYuM2MxLjEtMTQuMSA1LTI3LjUgMTEuMS0zOS41Yy0uNy0uNi0xLjQtMS4yLTIuMS0xLjlsLTY0LTY0Yy0xMi41LTEyLjUtMTIuNS0zMi44IDAtNDUuM3oiLz48L3N2Zz4="/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/1.0.4/css/bulma.min.css" integrity="sha512-yh2RE0wZCVZeysGiqTwDTO/dKelCbS9bP2L94UvOFtl/FKXcNAje3Y2oBg/ZMZ3LS1sicYk4dYVGtDex75fvvA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <style>
         summary {
@@ -33,22 +33,18 @@
             margin-left: 1.5rem;
         }
 
+        input {
+            color-scheme: light dark;
+        }
+
         .stack-icon {
             background-repeat: no-repeat;
-            background-image: url("https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.3.0/svgs/solid/layer-group.svg");
-
-            @media (prefers-color-scheme: dark) {
-                filter: invert(1);
-            }
+            background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1NzYgNTEyIiBzdHlsZT0iY29sb3Itc2NoZW1lOiBsaWdodCBkYXJrOyIgZmlsbD0iY29udGV4dC1maWxsIGxpZ2h0LWRhcmsoIzViNWI2NiwjZmJmYmZlKSI+PHBhdGggZD0iTTI2NC41IDUuMmMxNC45LTYuOSAzMi4xLTYuOSA0NyAwbDIxOC42IDEwMWM4LjUgMy45IDEzLjkgMTIuNCAxMy45IDIxLjhzLTUuNCAxNy45LTEzLjkgMjEuOGwtMjE4LjYgMTAxYy0xNC45IDYuOS0zMi4xIDYuOS00NyAwTDQ1LjkgMTQ5LjhDMzcuNCAxNDUuOCAzMiAxMzcuMyAzMiAxMjhzNS40LTE3LjkgMTMuOS0yMS44TDI2NC41IDUuMnpNNDc2LjkgMjA5LjZsNTMuMiAyNC42YzguNSAzLjkgMTMuOSAxMi40IDEzLjkgMjEuOHMtNS40IDE3LjktMTMuOSAyMS44bC0yMTguNiAxMDFjLTE0LjkgNi45LTMyLjEgNi45LTQ3IDBMNDUuOSAyNzcuOEMzNy40IDI3My44IDMyIDI2NS4zIDMyIDI1NnM1LjQtMTcuOSAxMy45LTIxLjhsNTMuMi0yNC42IDE1MiA3MC4yYzIzLjQgMTAuOCA1MC40IDEwLjggNzMuOCAwbDE1Mi03MC4yem0tMTUyIDE5OC4ybDE1Mi03MC4yIDUzLjIgMjQuNmM4LjUgMy45IDEzLjkgMTIuNCAxMy45IDIxLjhzLTUuNCAxNy45LTEzLjkgMjEuOGwtMjE4LjYgMTAxYy0xNC45IDYuOS0zMi4xIDYuOS00NyAwTDQ1LjkgNDA1LjhDMzcuNCA0MDEuOCAzMiAzOTMuMyAzMiAzODRzNS40LTE3LjkgMTMuOS0yMS44bDUzLjItMjQuNiAxNTIgNzAuMmMyMy40IDEwLjggNTAuNCAxMC44IDczLjggMHoiLz48L3N2Zz4=");
         }
 
         .highlight-icon {
             background-repeat: no-repeat;
-            background-image: url("https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.3.0/svgs/solid/highlighter.svg");
-
-            @media (prefers-color-scheme: dark) {
-                filter: invert(1);
-            }
+            background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1NzYgNTEyIiBzdHlsZT0iY29sb3Itc2NoZW1lOiBsaWdodCBkYXJrOyIgZmlsbD0iY29udGV4dC1maWxsIGxpZ2h0LWRhcmsoIzViNWI2NiwjZmJmYmZlKSI+PHBhdGggZD0iTTMxNSAzMTVsMTU4LjQtMjE1TDQ0NC4xIDcwLjYgMjI5IDIyOSAzMTUgMzE1em0tMTg3IDVsMCAwVjI0OC4zYzAtMTUuMyA3LjItMjkuNiAxOS41LTM4LjZMNDIwLjYgOC40QzQyOCAyLjkgNDM3IDAgNDQ2LjIgMGMxMS40IDAgMjIuNCA0LjUgMzAuNSAxMi42bDU0LjggNTQuOGM4LjEgOC4xIDEyLjYgMTkgMTIuNiAzMC41YzAgOS4yLTIuOSAxOC4yLTguNCAyNS42TDMzNC40IDM5Ni41Yy05IDEyLjMtMjMuNCAxOS41LTM4LjYgMTkuNUgyMjRsLTI1LjQgMjUuNGMtMTIuNSAxMi41LTMyLjggMTIuNS00NS4zIDBsLTUwLjctNTAuN2MtMTIuNS0xMi41LTEyLjUtMzIuOCAwLTQ1LjNMMTI4IDMyMHpNNyA0NjYuM2w2My02MyA3MC42IDcwLjYtMzEgMzFjLTQuNSA0LjUtMTAuNiA3LTE3IDdIMjRjLTEzLjMgMC0yNC0xMC43LTI0LTI0di00LjdjMC02LjQgMi41LTEyLjUgNy0xN3oiLz48L3N2Zz4=");
         }
 
         .log.indent-line[data-action="START"]::before {
@@ -93,7 +89,7 @@
 
         .log {
             word-wrap: anywhere;
-            width: 100%;
+            width: 94vw;
         }
 
         pre {
@@ -173,7 +169,7 @@
                         <div v-for="(val, key) in file.browserInfo.browserAndOS" :key="key + 'browser'" class="control">
                             <div class="tags has-addons">
                                 <span class="tag">{{key}}</span>
-                                <span class="tag is-info is-light">{{val}}</span>
+                                <span class="tag is-info">{{val}}</span>
                             </div>
                         </div>
                     </div>
@@ -268,8 +264,8 @@
 
 
             <div id="logs-indent" class="buttons are-small">
-                <button class="button" @click="logsIndent -= 50">◁</button>
-                <button class="button" @click="logsIndent += 50">▷</button>
+                <button class="button" @click="logsIndent += 50" @contextmenu.prevent="logsIndent += 200">◁</button>
+                <button class="button" @click="logsIndent -= 50" @contextmenu.prevent="logsIndent -= 200">▷</button>
             </div>
 
             <div id="page-navigation" class="is-flex is-flex-direction-column is-align-items-end">
@@ -286,7 +282,7 @@
         </div>
     </div>
 
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.7.14/vue.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.7.16/vue.js" integrity="sha512-LnT1nhi1a/7Iu/cSAwUdqMMTSrh6WXC15R9Tge+5IY4EanqNDRuSPy0Sf9ls2qE1EnKmfb1IZYTWL/WHu/40VA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script type="text/javascript" src="./debug-viewer.js"></script>
 </body>
 </html>
