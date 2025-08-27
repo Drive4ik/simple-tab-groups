@@ -9,7 +9,7 @@
     import githubGist from './github-gist.vue';
 
     import * as Constants from '/js/constants.js';
-    import Messages from '/js/messages.js';
+    import * as Messages from '/js/messages.js';
     import Logger from '/js/logger.js';
     import Notification from '/js/notification.js';
     import * as Utils from '/js/utils.js';

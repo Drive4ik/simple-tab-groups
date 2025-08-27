@@ -1,11 +1,12 @@
 import './translate-help-pages.js';
 import '/js/prefixed-storage.js';
 
-import Messages from '/js/messages.js';
+import * as Messages from '/js/messages.js';
 import backgroundSelf from '/js/background.js';
 import * as Constants from '/js/constants.js';
 import * as File from '/js/file.js';
 import * as Cache from '/js/cache.js';
+import * as Utils from '/js/utils.js';
 
 const $ = document.querySelector.bind(document),
     wasAutoDebug = isAutoDebug(),
@@ -184,6 +185,10 @@ async function saveConsoleLogs() {
 }
 
 function onClosePage() {
+    if (Utils.isDeadObject(backgroundSelf)) {
+        return;
+    }
+
     if (wasAutoDebug || isAutoDebug()) {
         delete backgroundSelf.storage.enableDebug;
         Messages.sendMessage('safe-reload-addon');

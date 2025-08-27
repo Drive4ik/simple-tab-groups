@@ -1295,6 +1295,16 @@
         "message": "Your GitHub token doesn't have the right access.",
         "description": "Your GitHub token doesn't have the right access."
     },
+    "githubRateLimit": {
+        "message": "The GitHub API speed limit has been exceeded.\nThe limit will be reset $relativeTime$.",
+        "description": "The GitHub API rate limit has been exceeded",
+        "placeholders": {
+            "relativeTime": {
+                "content": "$1",
+                "example": "in 28 minutes"
+            }
+        }
+    },
     "syncOptionLocatedFFSync": {
         "message": "Use settings located in Firefox synchronisation",
         "description": "Use settings located in Firefox synchronisation"

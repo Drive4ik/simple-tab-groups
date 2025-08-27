@@ -1,5 +1,6 @@
 
 import * as Constants from './constants.js';
+import * as BrowserConstants from '/js/browser-constants.js';
 import JSON from './json.js';
 
 const tagsToReplace = {
@@ -21,6 +22,15 @@ export function unixNow() {
 const TYPE_REGEXP = /(^\[.+\ |\]$)/g;
 export function type(obj) {
     return Object.prototype.toString.call(obj).replace(TYPE_REGEXP, '').toLowerCase();
+}
+
+export function isDeadObject(obj) {
+    try {
+        type(obj);
+        return false;
+    } catch (e) {
+        return e instanceof TypeError;
+    }
 }
 
 // if last element is Boolean true - remove empty keys, else
@@ -165,17 +175,22 @@ export function getSupportedExternalExtensionName(extId) {
     return Constants.EXTENSIONS_WHITE_LIST[extId] ? Constants.EXTENSIONS_WHITE_LIST[extId].title : 'Unknown';
 }
 
-const cspUrls = [
-    'chrome://mozapps/skin/',
-    'chrome://devtools/skin/',
-];
+const invalidBrowserFavIconUrlsRegExp = /^chrome:\/\/(mozapps|devtools)\/skin\//;
 export function isAvailableFavIconUrl(favIconUrl) {
-    return !cspUrls.some(url => favIconUrl?.startsWith?.(url));
+    if (!favIconUrl) {
+        return false;
+    }
+
+    if (invalidBrowserFavIconUrlsRegExp.test(favIconUrl)) {
+        return false;
+    }
+
+    return true;
 }
 
 export function normalizeTabFavIcon(tab) {
     if (!isAvailableFavIconUrl(tab.favIconUrl)) {
-        tab.favIconUrl = '/icons/tab.svg';
+        tab.favIconUrl = BrowserConstants.DEFAULT_FAVICON;
     }
 
     return tab;
@@ -610,7 +625,7 @@ export const DATE_LOCALE_VARIABLES = Object.freeze({
     },
 });
 
-export function timeAgo(input, lang = UI_LANG, style = 'long', numeric = 'auto') {
+export function relativeTime(input, lang = UI_LANG, style = 'long', numeric = 'auto') {
     const date = (input instanceof Date) ? input : new Date(input);
     const formatter = new Intl.RelativeTimeFormat(lang, {style, numeric});
     const ranges = {

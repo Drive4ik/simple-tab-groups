@@ -10,7 +10,7 @@ import * as Utils from '/js/utils.js';
 import * as Urls from '/js/urls.js';
 import * as SyncStorage from '/js/sync/sync-storage.js';
 import GithubGist from '/js/sync/cloud/githubgist.js';
-import {CloudError, TRUTH_LOCAL, TRUTH_CLOUD, storage as CloudStorage} from '/js/sync/cloud/cloud.js';
+import {CloudError, LOCAL, CLOUD, storage as CloudStorage} from '/js/sync/cloud/cloud.js';
 
 import syncCloudMixin from '/js/mixins/sync-cloud.mixin.js';
 
@@ -18,8 +18,8 @@ export default {
     name: 'github-gist',
     mixins: [syncCloudMixin],
     data() {
-        this.TRUTH_LOCAL = TRUTH_LOCAL;
-        this.TRUTH_CLOUD = TRUTH_CLOUD;
+        this.LOCAL = LOCAL;
+        this.CLOUD = CLOUD;
 
         this.browserName = `${Constants.BROWSER_FULL_NAME} v${Constants.BROWSER.version}`;
         this.helpLink = Urls.getURL('how-to-github-gist');
@@ -168,7 +168,7 @@ export default {
                             isBold: true,
                         },
                     ],
-                    lastUpdateAgo: Utils.timeAgo(gist.updated_at),
+                    lastUpdateAgo: Utils.relativeTime(gist.updated_at),
                     lastUpdateFull: new Date(gist.updated_at).toLocaleString(Utils.UI_LANG, {timeZoneName: 'longOffset'}),
                 };
             } else {
@@ -365,8 +365,8 @@ export default {
                                 <p v-text="lang('syncDataInCloudCanBeDifferent')"></p>
                             </div>
                             <a href="#" class="dropdown-item" @click.prevent="startCloudSync()" v-text="lang('syncStart')"></a>
-                            <a href="#" class="dropdown-item" @click.prevent="startCloudSync(TRUTH_LOCAL)" v-text="lang('syncStartTrustLocal')"></a>
-                            <a href="#" class="dropdown-item" @click.prevent="startCloudSync(TRUTH_CLOUD)" v-text="lang('syncStartTrustCloud')"></a>
+                            <a href="#" class="dropdown-item" @click.prevent="startCloudSync(LOCAL)" v-text="lang('syncStartTrustLocal')"></a>
+                            <a href="#" class="dropdown-item" @click.prevent="startCloudSync(CLOUD)" v-text="lang('syncStartTrustCloud')"></a>
                         </div>
                     </div>
                 </div>

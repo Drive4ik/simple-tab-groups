@@ -12,7 +12,7 @@
 
     import backgroundSelf from '/js/background.js';
     import * as Constants from '/js/constants.js';
-    import Messages from '/js/messages.js';
+    import * as Messages from '/js/messages.js';
     import Logger, {catchFunc} from '/js/logger.js';
     import * as Containers from '/js/containers.js';
     import * as Urls from '/js/urls.js';
@@ -30,6 +30,8 @@
 
     const storage = localStorage.create('manage-groups');
 
+    Vue.mixin(defaultGroupMixin);
+    Vue.mixin(startUpData);
     // import dnd from '../js/dnd';
     // import { Drag, Drop } from 'vue-drag-drop';
     // import draggable from 'vuedraggable';
@@ -65,7 +67,6 @@
 
     export default {
         name: 'manage-page',
-        mixins: [defaultGroupMixin, startUpData],
         data() {
             return {
                 DEFAULT_COOKIE_STORE_ID: Constants.DEFAULT_COOKIE_STORE_ID,
@@ -1278,7 +1279,7 @@
 
         <transition name="fade">
             <div class="loading" v-show="isLoading">
-                <img src="/icons/animate-spinner.svg" />
+                <img src="/icons/icon-animate.svg" />
             </div>
         </transition>
 

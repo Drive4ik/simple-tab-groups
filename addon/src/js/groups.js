@@ -9,7 +9,7 @@ import Notification from './notification.js';
 import * as Containers from './containers.js';
 import * as Bookmarks from './bookmarks.js';
 import * as Management from './management.js';
-// import Messages from './messages.js';
+// import * as Messages from './messages.js';
 // import JSON from './json.js';
 import * as Tabs from './tabs.js';
 import * as Utils from './utils.js';
@@ -91,7 +91,7 @@ export function createId() {
 
 // extract "uid" from "group.id" that matches UUID
 export function extractUId(groupId) {
-    return groupId?.slice(0, 4);
+    return groupId?.slice(-4);
 }
 
 export function create(id, title, defaultGroupProps = {}) {
@@ -408,6 +408,25 @@ export async function sort(vector = 'asc') {
     backgroundSelf.updateMoveTabMenus();
 
     log.stop();
+}
+
+export function isLoaded(groupId) {
+    const log = logger.start('isLoaded', groupId);
+
+    if (!groupId) {
+        log.stopWarn('groupId is not defined');
+        return false;
+    }
+
+    const windowId = Cache.getWindowId(groupId);
+
+    if (!windowId) {
+        log.stop('group is not loaded');
+        return false;
+    }
+
+    log.stop('group is loaded', windowId);
+    return true;
 }
 
 export async function unload(groupId) {

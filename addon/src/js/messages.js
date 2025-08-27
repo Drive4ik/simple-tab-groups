@@ -51,7 +51,7 @@ export function connectToBackground(name, listeners = null, callback = null) {
 const CSPorts = new Set;
 
 function onConnectedBackground(onMessageListener, port) {
-    let {name, listeners} = JSON.parse(port.name);
+    const {name, listeners} = JSON.parse(port.name);
 
     self.logger?.info(name, 'connected');
 
@@ -74,12 +74,12 @@ function sendMessageFromBackground(...args) {
 
     let sended = false;
 
-    CSPorts.forEach(({port, listeners}) => {
+    for (const {port, listeners} of CSPorts) {
         if (listeners?.includes('*') || listeners?.includes(message.action)) {
             port.postMessage(message);
             sended = true;
         }
-    });
+    }
 
     return sended;
 }
@@ -88,13 +88,4 @@ export function initBackground(onMessageListener) {
     browser.runtime.onConnect.addListener(onConnectedBackground.bind(null, onMessageListener));
 
     return sendMessageFromBackground;
-}
-
-export default {
-    normalizeSendData,
-    sendMessage,
-    sendMessageModule,
-    sendExternalMessage,
-    initBackground,
-    connectToBackground,
 }

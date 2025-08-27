@@ -113,7 +113,7 @@ export default {
                     <hr>
 
                     <li @click="$emit('reload-all-tabs', data.group, $event.ctrlKey || $event.metaKey)">
-                        <img src="/icons/refresh.svg" class="size-16" />
+                        <img src="/icons/reload.svg" class="size-16" />
                         <span v-text="lang('reloadAllTabsInGroup')"></span>
                     </li>
                 </template>

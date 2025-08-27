@@ -48,7 +48,7 @@ export default class GithubGist {
     }
 
     #processInfo(gist) {
-        storage.updated_at = gist.updated_at;
+        storage.updated_at = gist.lastUpdate = gist.updated_at;
         return gist;
     }
 
@@ -105,17 +105,19 @@ export default class GithubGist {
         return this.#processInfo(gist);
     }
 
-    async getContent() {
+    async getContent(withInfo = false) {
         try {
             const gist = await this.getInfo();
 
             const file = gist.files[this.#fileName];
 
-            if (file.truncated) {
-                return await this.#request('GET', file.raw_url);
-            }
+            const content = file.truncated
+                ? await this.#request('GET', file.raw_url)
+                : JSON.parse(file.content);
 
-            return JSON.parse(file.content);
+            return withInfo
+                ? [content, gist]
+                : content;
         } catch (e) {
             if (e instanceof SyntaxError) {
                 throw Error('githubInvalidGistContent');
@@ -132,14 +134,12 @@ export default class GithubGist {
             [this.#fileName]: {content},
         };
 
-        let gist;
-
         if (this.hasGist) {
-            gist = await this.#request('PATCH', this.#gistUrl, {
+            await this.#request('PATCH', this.#gistUrl, {
                 files,
             });
         } else {
-            gist = await this.#request('POST', this.#mainUrl, {
+            const gist = await this.#request('POST', this.#mainUrl, {
                 public: false,
                 description,
                 files,
@@ -148,7 +148,9 @@ export default class GithubGist {
             this.#gistId = gist.id;
         }
 
-        return this.#processInfo(gist);
+        // sometimes git make wrong update the field "updated_at" minus 1 second :(
+        // thats why we have to get info after update gist
+        return await this.getInfo();
     }
 
     async rename(filename) {
@@ -250,6 +252,11 @@ export default class GithubGist {
         }
 
         if (response.status === 403) {
+            if (response.headers.get('x-ratelimit-remaining') === '0') {
+                const unix = response.headers.get('x-ratelimit-reset');
+                throw new Error(`githubRateLimit:${unix}000`);
+            }
+
             throw Error('githubTokenNoAccess');
         }
 
@@ -272,7 +279,7 @@ export default class GithubGist {
         const onProgress = received => {
             // for github api, it doesn't get header content-length
             if (length <= 0) {
-                length = received * 7;
+                length = received * 5;
             }
 
             if (length < received) {

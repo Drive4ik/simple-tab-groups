@@ -3,7 +3,7 @@ import './prefixed-storage.js';
 import * as Constants from './constants.js';
 import JSON from './json.js';
 import * as Utils from './utils.js';
-import Messages from './messages.js';
+import * as Messages from './messages.js';
 import {normalizeError, getStack} from './logger-utils.js';
 
 export const storage = localStorage.create('logs');

@@ -101,6 +101,7 @@
     .modal-card-body {
         background-color: var(--background-color);
         scrollbar-width: thin;
+        white-space: pre-line;
     }
 
     .modal-card-head {

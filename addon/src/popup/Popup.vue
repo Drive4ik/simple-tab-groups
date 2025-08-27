@@ -14,7 +14,7 @@
     import '/js/prefixed-storage.js';
     import backgroundSelf from '/js/background.js';
     import * as Constants from '/js/constants.js';
-    import Messages from '/js/messages.js';
+    import * as Messages from '/js/messages.js';
     import Logger, {catchFunc} from '/js/logger.js';
     import * as Containers from '/js/containers.js';
     import * as Urls from '/js/urls.js';
@@ -82,7 +82,6 @@
 
     export default {
         name: 'popup-page',
-        // mixins: [defaultGroupMixin, startUpData, syncCloudMixin],
         data() {
             return {
                 isSidebar: isSidebar,
@@ -1334,7 +1333,7 @@
             },
             updateSyncData() {
                 if (githubStorage.updated_at) {
-                    this.syncLastUpdateAgo = Utils.timeAgo(githubStorage.updated_at);
+                    this.syncLastUpdateAgo = Utils.relativeTime(githubStorage.updated_at);
                 }
 
                 this.syncHasError = !!githubStorage.hasError;

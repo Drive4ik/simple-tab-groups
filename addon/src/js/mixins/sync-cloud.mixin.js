@@ -1,6 +1,6 @@
 
 import Logger from '/js/logger.js';
-import Messages from '/js/messages.js';
+import * as Messages from '/js/messages.js';
 
 const logger = new Logger('sync.cloud-mixin');
 

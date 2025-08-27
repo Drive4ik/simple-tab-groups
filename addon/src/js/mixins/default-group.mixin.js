@@ -1,6 +1,6 @@
 
 import * as Groups from '/js/groups.js';
-import Messages from '/js/messages.js';
+import * as Messages from '/js/messages.js';
 
 export default {
     data() {

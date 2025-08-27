@@ -18,3 +18,5 @@ export const MenusItemType = browser.menus.ItemType;
 export function getContainerIconUrl(icon) {
     return `resource://usercontext-content/${icon}.svg`;
 }
+
+export const DEFAULT_FAVICON = 'chrome://branding/content/icon32.png';

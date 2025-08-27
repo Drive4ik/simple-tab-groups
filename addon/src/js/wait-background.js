@@ -1,6 +1,6 @@
 
 import * as Constants from './constants.js';
-import Messages from './messages.js';
+import * as Messages from './messages.js';
 import backgroundSelf from './background.js';
 
 function reloadPageOnAddonReady() {

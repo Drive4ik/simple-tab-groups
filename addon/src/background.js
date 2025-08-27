@@ -2,9 +2,20 @@ import '/js/cache-storage.js';
 import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
 import * as Messages from '/js/messages.js';
-import Logger, { catchFunc, addLog, showLog, getLogs, clearLogs, getErrors, clearErrors, storage as logsStorage } from '/js/logger.js';
+import Logger, {
+    catchFunc,
+    addLog,
+    showLog,
+    getLogs,
+    clearLogs,
+    getErrors,
+    clearErrors,
+    storage as logsStorage
+} from '/js/logger.js';
 import * as Utils from '/js/utils.js';
-import Notification, {clear as clearNotification} from '/js/notification.js';
+import Notification, {
+    clear as clearNotification
+} from '/js/notification.js';
 import JSON from '/js/json.js';
 import * as Urls from '/js/urls.js';
 import * as Containers from '/js/containers.js';
@@ -17,7 +28,7 @@ import * as Tabs from '/js/tabs.js';
 import * as Windows from '/js/windows.js';
 import * as Management from '/js/management.js';
 import * as Bookmarks from '/js/bookmarks.js';
-import * as Hotkeys from '/js/hotkeys.js';
+// import * as Hotkeys from '/js/hotkeys.js';
 import {sync} from '/js/sync/cloud/cloud.js';
 
 self.IS_TEMPORARY = false;
@@ -1021,7 +1032,7 @@ async function addUndoRemoveGroupItem(groupToRemove) {
 
     if (options.showNotificationAfterGroupDelete) {
         Notification(['undoRemoveGroupNotification', groupToRemove.title], {
-            id: CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + groupToRemove.id,
+            id: Constants.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + groupToRemove.id,
             time: 7,
             onClick: restoreGroup,
         });
@@ -1175,9 +1186,9 @@ async function updateMoveTabMenus() {
         contexts: [Menus.ContextType.BOOKMARK],
     });
 
-    await Promise.all(groups.map(async group => {
+    for (const group of groups) {
         if (group.isArchive) {
-            return;
+            continue;
         }
 
         const groupId = group.id,
@@ -1274,7 +1285,7 @@ async function updateMoveTabMenus() {
                 }
             },
         });
-    }));
+    }
 
     options.showContextMenuOnTabs && await Menus.create({
         title: browser.i18n.getMessage('createNewGroup'),
@@ -1488,7 +1499,7 @@ async function setBrowserAction(windowId, title, icon, enable, isSticky) {
     }
 
     if ('loading' === icon) {
-        icon = '/icons/animate-spinner.svg';
+        icon = '/icons/icon-animate.svg';
     }
 
     if (title?.startsWith('lang:')) {
@@ -2598,7 +2609,7 @@ async function saveOptions(_options) {
         resetLocalBackupAlarm();
     }
 
-    if (optionsKeys.some(key => ['syncEnable', 'syncOptionsLocation', 'syncIntervalKey', 'syncIntervalValue'].includes(key))) {
+    if (optionsKeys.some(key => ['syncEnable', 'syncLastUpdate', 'syncOptionsLocation', 'syncIntervalKey', 'syncIntervalValue'].includes(key))) {
         resetSyncAlarm();
     }
 

@@ -53,7 +53,7 @@ export default {
                 <li
                     v-if="menu.includes('reload')"
                     @click="$emit('reload', data.tab, $event.ctrlKey || $event.metaKey)">
-                    <img src="/icons/refresh.svg" class="size-16" />
+                    <img src="/icons/reload.svg" class="size-16" />
                     <span v-text="lang('reloadTab')"></span>
                 </li>
                 <li

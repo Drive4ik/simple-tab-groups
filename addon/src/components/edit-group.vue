@@ -12,7 +12,7 @@
     import * as Constants from '/js/constants.js';
     import * as Containers from '/js/containers.js';
     import * as Storage from '/js/storage.js';
-    import Messages from '/js/messages.js';
+    import * as Messages from '/js/messages.js';
     import Notification from '/js/notification.js';
     import * as File from '/js/file.js';
     import * as Tabs from '/js/tabs.js';

@@ -22,20 +22,27 @@ export const storage = localStorage.create('github');
 
 export function CloudError(langId) {
     logger.error('CloudError:', langId)
+
     this.id = langId;
     this.name = 'CloudError';
-    this.message = browser.i18n.getMessage(langId) || langId;
+
+    if (langId.startsWith('githubRateLimit')) {
+        const relativeTime = Utils.relativeTime(Number(langId.split(':').pop()));
+        this.message = browser.i18n.getMessage('githubRateLimit', relativeTime);
+    } else {
+        this.message = browser.i18n.getMessage(langId) || langId;
+    }
 
     this.toString = () => `${this.name}: ${this.message}`;
 }
 
-export const TRUTH_LOCAL = 'local';
-export const TRUTH_CLOUD = 'cloud';
+export const LOCAL = 'local';
+export const CLOUD = 'cloud';
 
 export async function sync(trust = null, progressFunc = null) {
     const log = logger.start('sync', {trust});
 
-    if (trust && trust !== TRUTH_LOCAL && trust !== TRUTH_CLOUD) {
+    if (trust && trust !== LOCAL && trust !== CLOUD) {
         log.throwError('unknown source of trust argument');
     }
 
@@ -48,20 +55,16 @@ export async function sync(trust = null, progressFunc = null) {
         }
     }
 
-    if (SyncStorage.IS_AVAILABLE && browser.runtime.id === 'simple-tab-groups-sync-test@drive4ik') {
-        SyncStorage.remove('githubGistId').catch(() => {});
-    }
-
     progressFunc?.(0);
 
     const syncOptions = syncOptionsLocation === Constants.SYNC_STORAGE_FSYNC
         ? await SyncStorage.get()
         : await Storage.get(null, Constants.DEFAULT_SYNC_OPTIONS);
 
-    let GithubGistCloud;
+    let cloudInstance;
 
     try {
-        GithubGistCloud = new GithubGist(
+        cloudInstance = new GithubGist(
             syncOptions.githubGistToken,
             syncOptions.githubGistFileName
         );
@@ -70,6 +73,8 @@ export async function sync(trust = null, progressFunc = null) {
         throw new CloudError(e.message);
     }
 
+    const Cloud = cloudInstance;
+
     const cloudProgressFunc = function(currentProgress, progressDuration, fetchProgress) {
         const durationPart = 100 / progressDuration;
         const mainPercent = currentProgress + Math.floor(fetchProgress / durationPart);
@@ -77,13 +82,13 @@ export async function sync(trust = null, progressFunc = null) {
     };
 
     if (progressFunc) {
-        GithubGistCloud.progressFunc = cloudProgressFunc.bind(null, 5, 35);
+        Cloud.progressFunc = cloudProgressFunc.bind(null, 5, 35);
     }
 
-    let cloudData = null;
+    let cloudData, cloudInfo;
 
     try {
-        cloudData = await GithubGistCloud.getContent();
+        [cloudData, cloudInfo] = await Cloud.getContent(true);
     } catch (e) {
         if (e.message === 'githubNotFound') {
             //
@@ -93,27 +98,101 @@ export async function sync(trust = null, progressFunc = null) {
         }
     }
 
-    GithubGistCloud.progressFunc = null;
-
     progressFunc?.(40);
 
     const localData = await Promise.all([Storage.get(), Groups.load(null, true)])
         .then(([data, {groups}]) => {
             data.groups = groups;
             data.containers = Containers.getToExport(data);
+            // map cookie-store-id to Firefox browser
             Containers.mapDefaultContainer(data, Constants.DEFAULT_COOKIE_STORE_ID_FIREFOX);
             return data;
         });
 
     progressFunc?.(45);
 
-    const syncResult = await syncData(localData, cloudData, trust);
+    const localLastUpdate = new Date(localData.syncLastUpdate).getTime();
+    const cloudLastUpdate = new Date(cloudInfo?.lastUpdate ?? 0).getTime();
+
+    const sourceOfTruth =
+        trust
+        ? trust
+        : cloudLastUpdate > localLastUpdate ? CLOUD : LOCAL;
+
+    log.info('sourceOfTruth:', sourceOfTruth);
+
+    const hasCloudData = Boolean(cloudData);
+
+    cloudData ??= JSON.clone(localData);
+
+    localData.syncId = localLastUpdate;
+    cloudData.syncId = cloudLastUpdate;
+
+    const syncResult = await syncData(localData, cloudData, sourceOfTruth);
+
+    delete syncResult.localData.syncId;
+    delete syncResult.cloudData.syncId;
+
+    // log.log('changes1', {
+    //     hasCloudData,
+    //     local: syncResult.changes.local,
+    //     cloud: syncResult.changes.cloud,
+
+    //     localUpdate: localData.syncLastUpdate,
+    //     cloudUpdate: cloudInfo.lastUpdate,
+    // });
+
+    if (!hasCloudData) {
+        syncResult.changes.cloud = true;
+    }
 
     progressFunc?.(50);
 
-    // console.debug('syncResult', syncResult);
+    if (syncResult.changes.cloud) {
+        if (progressFunc) {
+            Cloud.progressFunc = cloudProgressFunc.bind(null, 50, 35);
+        }
+
+        try {
+            const description = browser.i18n.getMessage('githubGistBackupDescription');
+            cloudInfo = await Cloud.setContent(syncResult.cloudData, description);
+        } catch (e) {
+            log.stopError(e);
+            throw new CloudError(e.message);
+        }
+
+        syncResult.changes.local = true; // sync date must be equal in cloud and local
+    }
+
+    progressFunc?.(90);
+
+    // remove unnecessary groups
+    for (const groupToRemove of syncResult.changes.groupsToRemove) {
+        syncResult.changes.local = true;
+
+        if (Groups.isLoaded(groupToRemove.id)) {
+            // remove group from windows
+            await Groups.unload(groupToRemove.id);
+
+            // remove tabs
+            if (!groupToRemove.isArchive) {
+                for (const tabToRemove of groupToRemove.tabs) {
+                    syncResult.changes.tabsToRemove.add(tabToRemove);
+                }
+            }
+        }
+    }
+
+    // remove unnecessary tabs
+    if (syncResult.changes.tabsToRemove.size) {
+        await Tabs.remove(Array.from(syncResult.changes.tabsToRemove));
+    }
 
     if (syncResult.changes.local) {
+        // map cookie-store-id to gecko browser
+        Containers.mapDefaultContainer(syncResult.localData, Constants.DEFAULT_COOKIE_STORE_ID);
+
+        // sync changes with current profile
         for (const group of syncResult.localData.groups) {
             if (group.isArchive) {
                 continue;
@@ -142,48 +221,14 @@ export async function sync(trust = null, progressFunc = null) {
             // sorting tabs
             group.tabs = await Tabs.moveNative(group.tabs, moveTabsParams);
         }
-    }
 
-    // remove unnecessary tabs
-    if (syncResult.changes.tabsToRemove.size) {
-        await Tabs.remove(Array.from(syncResult.changes.tabsToRemove));
-    }
+        syncResult.localData.syncLastUpdate = cloudInfo.lastUpdate;
 
-    progressFunc?.(55);
-
-    // log.debug('before cloud syncId:', syncResult.cloudData.syncId);
-    // log.debug('before local syncId:', syncResult.localData.syncId);
-
-    if (syncResult.changes.cloud) {
-        syncResult.changes.local = true; // syncId must be equal in cloud and local
-        syncResult.localData.syncId = syncResult.cloudData.syncId = Date.now();
-    } else if (syncResult.changes.local) { // will be true if syncResult.sourceOfTruth === TRUTH_CLOUD
-        syncResult.localData.syncId = syncResult.cloudData.syncId;
-    }
-
-    if (progressFunc) {
-        GithubGistCloud.progressFunc = cloudProgressFunc.bind(null, 55, 35);
-    }
-
-    if (syncResult.changes.cloud) {
-        try {
-            const description = browser.i18n.getMessage('githubGistBackupDescription');
-            await GithubGistCloud.setContent(syncResult.cloudData, description);
-        } catch (e) {
-            log.stopError(e);
-            throw new CloudError(e.message);
-        }
+        await backgroundSelf.saveOptions(syncResult.localData);
+        await Groups.save(syncResult.localData.groups);
     }
 
     storage.lastSyncFileName = syncOptions.githubGistFileName;
-
-    progressFunc?.(95);
-
-    if (syncResult.changes.local) {
-        await backgroundSelf.saveOptions(syncResult.localData);
-        await Storage.set(Utils.extractKeys(syncResult.localData, Constants.NON_OPTION_KEYS));
-    }
-
     backgroundSelf.storage.autoSyncLastTimeStamp = Utils.unixNow();
 
     progressFunc?.(100);
@@ -196,14 +241,8 @@ export async function sync(trust = null, progressFunc = null) {
     return syncResult;
 }
 
-async function syncData(localData, cloudData = null, trust = null) {
-    const log = logger.start('syncData', {trust});
-
-    // syncTabFavIcons
-
-    const hasCloudData = Boolean(cloudData);
-
-    cloudData ??= JSON.clone(localData);
+async function syncData(localData, cloudData, sourceOfTruth) {
+    const log = logger.start('syncData');
 
     const resultMigrate = await backgroundSelf.runMigrateForData(cloudData, false);
 
@@ -214,26 +253,12 @@ async function syncData(localData, cloudData = null, trust = null) {
         throw new CloudError(resultMigrate.error);
     }
 
-    const sourceOfTruth =
-        trust
-        ? trust
-        : cloudData.syncId > localData.syncId ? TRUTH_CLOUD : TRUTH_LOCAL;
-
-    log.log({
-        trust,
-        sourceOfTruth,
-        'cloudData.syncId': cloudData.syncId,
-        'localData.syncId': localData.syncId,
-    });
-
     const changes = {
-        // nextSyncId: Date.now(),
+        groupsToRemove: new Set,
         tabsToRemove: new Set,
         local: false,
-        cloud: !hasCloudData,
+        cloud: false,
     };
-
-    // don't care if cloudData not exist before, and it's clone of local data
 
     await mapContainers(localData, cloudData);
 
@@ -257,7 +282,7 @@ async function syncData(localData, cloudData = null, trust = null) {
 }
 
 async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
-    const log = logger.start('syncGroups', {syncTabFavIcons: localData.syncTabFavIcons});
+    const log = logger.start('syncGroups');
 
     const localGroups = localData.groups;
     const cloudGroups = cloudData.groups;
@@ -271,30 +296,53 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
         }
     }
 
-    function prepareForSaveTab(tab, includeLastAccessed) {
-        // include includeLastAccessed, tab id and openerId only for local tabs
-        const includeId = includeLastAccessed;
-        return Tabs.prepareForSaveTab(tab, false, localData.syncTabFavIcons, false, includeId, includeLastAccessed);
+    const isAvailableFavIconToSync = favIconUrl => favIconUrl?.startsWith('data:');
+
+    const favIconUrlsMap = new Map;
+    for (const tab of Utils.concatTabs([...localGroups, ...cloudGroups])) {
+        if (isAvailableFavIconToSync(tab.favIconUrl)) {
+            favIconUrlsMap.set(tab.url, tab.favIconUrl);
+        }
     }
 
-    function prepareForSave(tabs, includeLastAccessed) {
-        return tabs.map(tab => prepareForSaveTab(tab, includeLastAccessed));
+    const hasSomeTreeTabsExtension = Constants.TREE_TABS_EXTENSIONS.some(id => Management.isEnabled(id));
+
+    function prepareForSaveTabs(tabs, prepareFor, groupIsArchive) {
+        if (prepareFor !== LOCAL && prepareFor !== CLOUD) throw new Error('invalid "prepareFor" argument');
+
+        // local syncTabFavIcons have already been synchronized and it's equal to cloud
+        const includeFavIconUrl = localData.syncTabFavIcons;
+
+        if (prepareFor === CLOUD && includeFavIconUrl) {
+            for (const tab of tabs) {
+                if (!isAvailableFavIconToSync(tab.favIconUrl)) {
+                    tab.favIconUrl = null;
+                }
+
+                tab.favIconUrl ??= favIconUrlsMap.get(tab.url);
+            }
+        }
+
+        const includeId = hasSomeTreeTabsExtension;
+        const includeLastAccessed = prepareFor === LOCAL || groupIsArchive === true;
+
+        return Tabs.prepareForSave(tabs, false, includeFavIconUrl, false, includeId, includeLastAccessed);
     }
 
-    if (sourceOfTruth === TRUTH_LOCAL) {
-        localGroups.forEach(localGroup => {
+    if (sourceOfTruth === LOCAL) {
+        for (const localGroup of localGroups) {
             const resultLocalGroup = localGroup;
             const resultCloudGroup = {...localGroup}; // unlink tabs key
 
             if (resultLocalGroup.dontUploadToCloud) {
                 resultLocalGroups.push(resultLocalGroup);
             } else {
-                resultCloudGroup.tabs = prepareForSave(resultLocalGroup.tabs, false);
+                resultCloudGroup.tabs = prepareForSaveTabs(resultLocalGroup.tabs, CLOUD, resultCloudGroup.isArchive);
 
                 resultLocalGroups.push(resultLocalGroup);
                 resultCloudGroups.push(resultCloudGroup);
             }
-        });
+        }
 
         if (!changes.cloud) {
             changes.cloud = resultCloudGroups.length !== cloudGroups.length;
@@ -304,17 +352,19 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
             changes.cloud = JSON.stringify(resultCloudGroups) !== JSON.stringify(cloudGroups);
         }
 
-    } else if (sourceOfTruth === TRUTH_CLOUD) {
-        // const localTabsToRemove = new Set;
+    } else if (sourceOfTruth === CLOUD) {
 
-        cloudGroups.forEach(cloudGroup => {
+        const isFirstLocalSync = localData.syncId === new Date(Constants.DEFAULT_OPTIONS.syncLastUpdate).getTime();
+
+        for (const cloudGroup of cloudGroups) {
             // find local group
             let localGroup = localGroups.find(localGroup => localGroup.id === cloudGroup.id);
 
             if (localGroup?.dontUploadToCloud) {
-                resultLocalGroups.push(localGroup); // leave group in local
-                resultCloudGroups.push(cloudGroup); // leave in cloud, beacause other comp. can sync with this group
-                return;
+                // leave local and cloud groups without changes
+                resultLocalGroups.push(localGroup);
+                resultCloudGroups.push(cloudGroup);
+                continue;
             }
 
             // if not found, create it
@@ -331,13 +381,15 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
 
                 resultLocalGroups.push(localGroup);
                 resultCloudGroups.push(cloudGroup);
-                return;
+                continue;
             }
+
+            // if local group exist in cloud
 
             const resultLocalGroup = localGroup;
             const resultCloudGroup = cloudGroup;
 
-            log.log('group:', cloudGroup.id);
+            log.log('sync cloud group:', resultCloudGroup.id);
             log.log('group archive state local:', resultLocalGroup.isArchive, 'cloud:', resultCloudGroup.isArchive);
 
             function findEqualLocalTab(cloudTab, excludeTabs = []) {
@@ -385,7 +437,7 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
                         return;
                     }
 
-                    let addOffset = eachNotPreparedLocalTabFunc(localTab, localTabIndex + offset, resultLocalTabs, resultCloudTabs);
+                    const addOffset = eachNotPreparedLocalTabFunc(localTab, localTabIndex + offset, resultLocalTabs, resultCloudTabs);
 
                     if (addOffset === true) {
                         offset++;
@@ -433,8 +485,8 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
                     }
                 );
 
-                resultLocalGroup.tabs = prepareForSave(resultLocalGroup.tabs);
-                resultCloudGroup.tabs = prepareForSave(resultCloudGroup.tabs, false);
+                resultLocalGroup.tabs = prepareForSaveTabs(resultLocalGroup.tabs, LOCAL, resultLocalGroup.isArchive);
+                resultCloudGroup.tabs = prepareForSaveTabs(resultCloudGroup.tabs, CLOUD, resultCloudGroup.isArchive);
 
                 if (resultLocalGroup.isArchive) { // UN archive local group
                     resultLocalGroup.tabs.forEach(tab => tab.new = true);
@@ -457,7 +509,7 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
                         if (localTab.lastAccessed > cloudData.syncId) {
                             resultLocalTabs.splice(localTabIndex, 0, localTab);
 
-                            const cloudTab = prepareForSaveTab(localTab, false);
+                            const [cloudTab] = prepareForSaveTabs([localTab], CLOUD, resultCloudGroup.isArchive);
                             resultCloudTabs.splice(localTabIndex, 0, cloudTab);
 
                             changes.cloud = true;
@@ -483,7 +535,7 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
                         if (localTab.lastAccessed > cloudData.syncId) {
                             resultLocalTabs.splice(localTabIndex, 0, localTab);
 
-                            const cloudTab = prepareForSaveTab(localTab, false);
+                            const [cloudTab] = prepareForSaveTabs([localTab], CLOUD, resultCloudGroup.isArchive);
                             resultCloudTabs.splice(localTabIndex, 0, cloudTab);
 
                             changes.cloud = true;
@@ -503,21 +555,41 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
 
             resultLocalGroups.push(resultLocalGroup);
             resultCloudGroups.push(resultCloudGroup);
-        });
+        }
 
-        // remove groups which are not in the cloud
-        localGroups.forEach(localGroup => {
-            if (localGroup.isArchive) {
-                return;
+        for (const [localIndex, localGroup] of localGroups.entries()) {
+            const localGroupProcessed = resultLocalGroups.some(group => group.id === localGroup.id);
+
+            if (localGroupProcessed) {
+                continue;
             }
 
-            const keepLocalGroup = resultLocalGroups.some(group => localGroup.id === group.id);
+            // localGroup is not in the cloud
 
-            if (!keepLocalGroup) {
+            if (localGroup.dontUploadToCloud) {
+                log.log('skip upload local group to cloud:', localGroup.id);
+
+                // changes.local = true;
+                resultLocalGroups.splice(localIndex, 0, localGroup); // leave group in local and don't add it to the cloud
+                // resultLocalGroups.push(localGroup); // leave group in local and don't add it to the cloud
+            } else if (isFirstLocalSync) {
+                // don't remove group because it must be synced with another computer
+                log.log('add local group to cloud:', localGroup.id);
+
+                const cloudGroup = JSON.clone(localGroup);
+                cloudGroup.tabs = prepareForSaveTabs(localGroup.tabs, CLOUD, cloudGroup.isArchive);
+
+                // changes.local = true;
+                resultLocalGroups.push(localGroup);
+                resultCloudGroups.push(cloudGroup);
+            } else {
+                // local group is skipped and deleted...
+                log.log('remove local group:', localGroup.id);
+
+                changes.groupsToRemove.add(localGroup);
                 changes.local = true;
-                localGroup.tabs.forEach(tabToRemove => changes.tabsToRemove.add(tabToRemove));
             }
-        });
+        }
     }
 
     for (const group of resultLocalGroups) {
@@ -557,7 +629,7 @@ function assignGroupKeys(localGroup, cloudGroup, sourceOfTruth, changes) {
             continue;
         }
 
-        if (sourceOfTruth === TRUTH_LOCAL) {
+        if (sourceOfTruth === LOCAL) {
             changes.cloud = true;
 
             if (isDefaultGroup) {
@@ -571,7 +643,7 @@ function assignGroupKeys(localGroup, cloudGroup, sourceOfTruth, changes) {
             }
 
             log.log('cloud group key changed:', key);
-        } else if (sourceOfTruth === TRUTH_CLOUD) {
+        } else if (sourceOfTruth === CLOUD) {
             changes.local = true;
 
             if (isDefaultGroup) {
@@ -587,6 +659,8 @@ function assignGroupKeys(localGroup, cloudGroup, sourceOfTruth, changes) {
             log.log('local group key changed:', key);
         }
     }
+
+    log.stop();
 }
 
 async function syncOptions(localData, cloudData, sourceOfTruth, changes) {
@@ -612,7 +686,7 @@ async function syncOptions(localData, cloudData, sourceOfTruth, changes) {
             if (jsonLocalValue === undefined) {
                 log.warn(`local options key "${key}" is undefined. creating it.`);
 
-                if (sourceOfTruth === TRUTH_LOCAL || jsonCloudValue === undefined) {
+                if (sourceOfTruth === LOCAL || jsonCloudValue === undefined) {
                     localData[key] = JSON.clone(Constants.DEFAULT_OPTIONS[key]);
                 } else {
                     localData[key] = JSON.parse(jsonCloudValue);
@@ -624,7 +698,7 @@ async function syncOptions(localData, cloudData, sourceOfTruth, changes) {
             if (jsonCloudValue === undefined) {
                 log.warn(`cloud options key "${key}" is undefined. creating it.`);
 
-                if (sourceOfTruth === TRUTH_CLOUD || jsonLocalValue === undefined) {
+                if (sourceOfTruth === CLOUD || jsonLocalValue === undefined) {
                     cloudData[key] = JSON.clone(Constants.DEFAULT_OPTIONS[key]);
                 } else {
                     cloudData[key] = JSON.parse(jsonLocalValue);
@@ -637,11 +711,11 @@ async function syncOptions(localData, cloudData, sourceOfTruth, changes) {
         }
 
         if (jsonLocalValue !== jsonCloudValue) {
-            if (sourceOfTruth === TRUTH_LOCAL) {
+            if (sourceOfTruth === LOCAL) {
                 cloudData[key] = JSON.parse(jsonLocalValue);
                 changes.cloud = true;
                 log.log('cloud has changed options key:', key);
-            } else if (sourceOfTruth === TRUTH_CLOUD) {
+            } else if (sourceOfTruth === CLOUD) {
                 localData[key] = JSON.parse(jsonCloudValue);
                 changes.local = true;
                 log.log('local has changed options key:', key);

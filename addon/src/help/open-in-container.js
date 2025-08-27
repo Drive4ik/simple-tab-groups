@@ -1,7 +1,7 @@
 
 import './translate-help-pages.js';
 
-import Messages from '/js/messages.js';
+import * as Messages from '/js/messages.js';
 import * as Constants from '/js/constants.js';
 import * as Storage from '/js/storage.js';
 

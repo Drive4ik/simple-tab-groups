@@ -406,7 +406,7 @@ export const DEFAULT_OPTIONS = Object.freeze({
 
     syncEnable: true,
     syncOptionsLocation: IS_AVAILABLE_SYNC_STORAGE ? SYNC_STORAGE_FSYNC : SYNC_STORAGE_LOCAL,
-    syncId: 1,
+    syncLastUpdate: "1970-01-01T00:00:00Z",
     syncIntervalKey: INTERVAL_KEY.days, // hours, days
     syncIntervalValue: 1,
     syncTabFavIcons: false,
