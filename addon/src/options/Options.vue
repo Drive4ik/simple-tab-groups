@@ -42,6 +42,8 @@
 
     const [section, element = null] = (storage.section || SECTION_GENERAL).split(' ');
 
+    storage.section = section;
+
     export default {
         name: 'options-page',
         // mixins: [defaultGroupMixin, syncCloudMixin],
