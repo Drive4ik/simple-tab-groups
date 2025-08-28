@@ -372,7 +372,7 @@ export function safeColor(color) {
 }
 
 export function convertSvgToUrl(svg) {
-    return 'data:image/svg+xml,' + encodeURIComponent(svg);
+    return 'data:image/svg+xml;base64,' + b64EncodeUnicode(svg);
 }
 
 export function isSvg(url) {
