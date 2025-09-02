@@ -536,7 +536,7 @@
         "description": "Last backup:"
     },
     "darkThemeNotification": {
-        "message": "Για πλήρη υποστήριξη του dark theme, ενεργοποιείστε την <code>svg.context-properties.content.enabled</code> παράμετρο σε <code>true</code> στην <code>about:config</code> σελίδα<br><a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">How to do it?</a>",
+        "message": "Για πλήρη υποστήριξη του dark theme, ενεργοποιείστε την <code>svg.context-properties.content.enabled</code> παράμετρο σε <code>true</code> στην <code>about:config</code> σελίδα. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">How to do it?</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {

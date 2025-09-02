@@ -24,14 +24,15 @@
     import JSON from '/js/json.js';
 
     import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
-    import startUpData from '/js/mixins/start-up-data.mixin.js';
+    import optionsMixin from '/js/mixins/options.mixin.js';
+    import startUpDataMixin from '/js/mixins/start-up-data.mixin.js';
 
     window.logger = new Logger('Manage');
 
     const storage = localStorage.create('manage-groups');
 
     Vue.mixin(defaultGroupMixin);
-    Vue.mixin(startUpData);
+    Vue.mixin(startUpDataMixin);
     // import dnd from '../js/dnd';
     // import { Drag, Drop } from 'vue-drag-drop';
     // import draggable from 'vuedraggable';
@@ -67,10 +68,13 @@
 
     export default {
         name: 'manage-page',
+        mixins: [optionsMixin],
         data() {
             return {
                 DEFAULT_COOKIE_STORE_ID: Constants.DEFAULT_COOKIE_STORE_ID,
                 VIEW_GRID,
+
+                optionsWatchKeys: ['showTabsWithThumbnailsInManageGroups', 'showArchivedGroups'],
 
                 view: VIEW_DEFAULT,
 
@@ -99,8 +103,6 @@
                 groupToEdit: null,
 
                 containers: Containers.query({defaultContainer: true, temporaryContainer: true}),
-                options: {},
-                showArchivedGroups: !!storage.showArchivedGroups,
 
                 groups: [],
 
@@ -120,13 +122,11 @@
             'context-menu-tab-new': contextMenuTabNew,
             'context-menu-group': contextMenuGroup,
         },
-        created() {
-            this.loadOptions();
-
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.updateTheme());
-        },
         async mounted() {
             const log = logger.start('mounted');
+
+            await this.optionsLoadPromise;
+
             const startUpData = await this.startUpData(this.options.showTabsWithThumbnailsInManageGroups);
 
             this.loadWindows(startUpData);
@@ -135,34 +135,17 @@
 
             log.log('loaded');
 
-            this.$nextTick(function() {
-                this.isLoading = false;
-                this.setFocusOnSearch();
-                this.setupListeners();
+            await this.$nextTick();
 
-                if (this.options.showTabsWithThumbnailsInManageGroups) {
-                    this.loadAvailableTabThumbnails();
-                }
+            this.isLoading = false;
+            this.setFocusOnSearch();
+            this.setupListeners();
 
-                log.stop();
-            });
+            log.stop();
         },
         watch: {
-            'options.theme': 'updateTheme',
-            'options.showTabsWithThumbnailsInManageGroups': function(value, oldValue) {
-                if (null != oldValue) {
-                    Messages.sendMessageModule('BG.saveOptions', {
-                            showTabsWithThumbnailsInManageGroups: value,
-                        })
-                        .then(() => value && this.loadAvailableTabThumbnails());
-                }
-            },
-            showArchivedGroups(value) {
-                if (value) {
-                    storage.showArchivedGroups = true;
-                } else {
-                    delete storage.showArchivedGroups;
-                }
+            'options.showTabsWithThumbnailsInManageGroups'(value) {
+                value && this.loadAvailableTabThumbnails();
             },
             searchDelay(search) {
                 if (search.length && this.allTabsCount > 200) {
@@ -179,7 +162,7 @@
         computed: {
             filteredGroups() {
                 let searchStr = this.search.toLowerCase(),
-                    groups = this.showArchivedGroups ? this.groups : this.groups.filter(group => !group.isArchive);
+                    groups = this.options.showArchivedGroups ? this.groups : this.groups.filter(group => !group.isArchive);
 
                 return groups.map(group => {
                     group.filteredTabs = group.tabs.filter(tab => Utils.mySearchFunc(searchStr, Tabs.getTitle(tab, true), this.extendedSearch));
@@ -201,16 +184,8 @@
         methods: {
             lang: browser.i18n.getMessage,
 
-            updateTheme() {
-                document.documentElement.dataset.theme = Utils.getThemeApply(this.options.theme);
-            },
-
             setFocusOnSearch() {
                 this.$nextTick(() => this.$refs.search.focus());
-            },
-
-            loadOptions() {
-                this.options = JSON.clone(backgroundSelf.options);
             },
 
             async loadWindows({currendWindow, windows} = {}) {
@@ -465,11 +440,8 @@
                     'window-closed': () => {
                         this.loadWindows();
                     },
-                    'options-updated': () => {
-                        this.loadOptions();
-                    },
                     'containers-updated': () => {
-                        this.containers = Containers.qyery({defaultContainer: true, temporaryContainer: true});
+                        this.containers = Containers.query({defaultContainer: true, temporaryContainer: true});
                         Object.values(this.allTabs).forEach(this.mapTabContainer);
                     },
                     'sync-end': ({changes}) => changes.local && listeners['groups-updated'](),
@@ -548,15 +520,17 @@
             },
 
             loadAvailableTabThumbnails() {
-                this.groups.forEach(function(group) {
-                    if (!group.isArchive) {
-                        group.tabs.forEach(function(tab) {
-                            if (!tab.thumbnail && !tab.discarded && Utils.isTabLoaded(tab)) {
-                                Messages.sendMessageModule('Tabs.updateThumbnail', tab.id);
-                            }
-                        });
+                for (const group of this.groups) {
+                    if (group.isArchive) {
+                        continue;
                     }
-                });
+
+                    for (const tab of group.tabs) {
+                        if (!tab.thumbnail && !tab.discarded && Utils.isTabLoaded(tab)) {
+                            this.updateTabThumbnail(tab);
+                        }
+                    }
+                }
             },
 
             async loadGroupTabs(groupId) {
@@ -1001,63 +975,91 @@
     <!-- grid display -->
     <!-- free arrange -->
 
-    <div id="stg-manage" class="is-flex is-column" tabindex="-1"
+    <div id="stg-manage" class="is-flex is-flex-direction-column" tabindex="-1"
         @contextmenu="['INPUT', 'TEXTAREA'].includes($event.target.nodeName) ? null : $event.preventDefault()"
         @click="multipleTabIds = []"
         @keydown.esc="closeThisWindow"
         @keydown.f3.stop.prevent="setFocusOnSearch"
         >
-        <header class="is-flex is-align-items-center">
-            <span class="page-title">
+        <header class="field is-flex is-align-items-center gap-indent">
+            <span class="is-size-4">
                 <span v-text="lang('extensionName')"></span> - <span v-text="lang('manageGroupsTitle')"></span>
             </span>
-            <span>
-                <div>
-                    <label class="checkbox">
-                        <input v-model="options.showTabsWithThumbnailsInManageGroups" type="checkbox" />
-                        <span v-text="lang('showTabsWithThumbnailsInManageGroups')"></span>
-                    </label>
-                    <br>
-                    <label class="checkbox">
-                        <input v-model="showArchivedGroups" type="checkbox" />
-                        <span v-text="lang('showArchivedGroups')"></span>
-                    </label>
-                </div>
-                <div class="buttons has-addons" style="display: none;">
-                    <span class="button is-small is-primary" v-text="lang('manageGroupViewGrid')"></span>
-                    <span class="button is-small" disabled v-text="lang('manageGroupViewFreeArrange')"></span>
-                </div>
-            </span>
-            <div class="is-full-width has-text-right">
-                <button class="button" @click="addGroup" @contextmenu="$refs.newGroupContextMenu.open($event)">
-                    <span class="icon">
-                        <img class="size-16" src="/icons/group-new.svg">
-                    </span>
-                    <span v-text="lang('createNewGroup')"></span>
-                </button>
+            <div>
+                <label class="checkbox">
+                    <input v-model="options.showTabsWithThumbnailsInManageGroups" type="checkbox" />
+                    <span v-text="lang('showTabsWithThumbnailsInManageGroups')"></span>
+                </label>
+                <br>
+                <label class="checkbox">
+                    <input v-model="options.showArchivedGroups" type="checkbox" />
+                    <span v-text="lang('showArchivedGroups')"></span>
+                </label>
             </div>
-            <span>
-                <div id="search-wrapper" :class="['field', {'has-addons': searchDelay.length}]">
-                    <div :class="['control is-expanded', {'is-loading': searchDelayTimer}]">
+            <div class="buttons has-addons is-hidden">
+                <span class="button is-small is-primary" v-text="lang('manageGroupViewGrid')"></span>
+                <span class="button is-small" disabled v-text="lang('manageGroupViewFreeArrange')"></span>
+            </div>
+            <div class="is-flex-grow-1 is-flex is-justify-content-end gap-indent">
+                <div class="field has-addons">
+                    <p class="control">
+                        <button class="button" @click="addGroup">
+                            <span class="icon">
+                                <figure class="image is-16x16">
+                                    <img src="/icons/group-new.svg" />
+                                </figure>
+                            </span>
+                            <span v-text="lang('createNewGroup')"></span>
+                        </button>
+                    </p>
+                    <p class="control">
+                        <button class="button" @click="openDefaultGroup" :title="lang('defaultGroup')">
+                            <span class="icon">
+                                <figure class="image is-16x16">
+                                    <img src="/icons/wrench.svg"/>
+                                </figure>
+                            </span>
+                        </button>
+                    </p>
+                </div>
+                <div id="search-wrapper" :class="{'has-addons': searchDelay.length}">
+                    <div :class="['control has-icons-left is-expanded', {'is-loading': searchDelayTimer}]">
                         <input
                             type="text"
-                            class="input search-input fill-context"
+                            class="input"
                             ref="search"
                             v-model.trim="searchDelay"
                             autocomplete="off"
                             @click.stop
                             :placeholder="lang('searchPlaceholder')"
                             :readonly="isLoading" />
+                        <span class="icon is-small is-left">
+                            <figure class="image is-16x16">
+                                <img class="no-fill" src="/icons/search.svg"></img>
+                            </figure>
+                        </span>
                     </div>
                     <div v-show="searchDelay.length" class="control">
-                        <label class="button" :title="lang('extendedTabSearch')">
-                            <input type="checkbox" v-model="extendedSearch" />
-                        </label>
+                        <button class="button" @click="extendedSearch = !extendedSearch" :title="lang('extendedTabSearch')">
+                            <span class="icon">
+                                <figure class="image is-16x16">
+                                    <img v-if="extendedSearch" src="/icons/check-square.svg" />
+                                    <img v-else src="/icons/square.svg" />
+                                </figure>
+                            </span>
+                        </button>
                     </div>
                 </div>
-            </span>
-            <div :title="lang('openSettings')" @click="openOptionsPage" class="cursor-pointer">
-                <img class="size-20" src="/icons/settings.svg" />
+                <div>
+                    <button class="button" @click="openOptionsPage">
+                        <span class="icon">
+                            <figure class="image is-16x16">
+                                <img src="/icons/settings.svg" />
+                            </figure>
+                        </span>
+                        <span v-text="lang('openSettings')"></span>
+                    </button>
+                </div>
             </div>
         </header>
 
@@ -1093,11 +1095,11 @@
                             </figure>
                         </div>
                         <div class="other-icon" v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID">
-                            <span :class="`size-16 userContext-icon identity-icon-${containers[group.newTabContainer]?.icon} identity-color-${containers[group.newTabContainer]?.color}`"></span>
+                            <figure :class="`image is-16x16 userContext-icon identity-icon-${containers[group.newTabContainer]?.icon} identity-color-${containers[group.newTabContainer]?.color}`"></figure>
                         </div>
                         <div class="other-icon" v-if="group.isArchive">
                             <figure class="image is-16x16">
-                                <img src="/icons/archive.svg" class="size-16"/>
+                                <img src="/icons/archive.svg" />
                             </figure>
                         </div>
                         <div class="group-title">
@@ -1112,12 +1114,12 @@
                                 />
                         </div>
                         <div class="tabs-count" v-text="groupTabsCountMessage(group.filteredTabs, group.isArchive)"></div>
-                        <div class="other-icon cursor-pointer is-unselectable" @click="openGroupSettings(group)" :title="lang('groupSettings')">
+                        <div class="other-icon is-clickable is-unselectable" @click="openGroupSettings(group)" @keydown.enter.stop.prevent="openGroupSettings(group)" tabindex="0" :title="lang('groupSettings')">
                             <figure class="image is-16x16">
                                 <img src="/icons/settings.svg" />
                             </figure>
                         </div>
-                        <div class="other-icon cursor-pointer is-unselectable" @click="removeGroup(group)" :title="lang('deleteGroup')">
+                        <div class="other-icon is-clickable is-unselectable" @click="removeGroup(group)" @keydown.enter.stop.prevent="removeGroup(group)" tabindex="0" :title="lang('deleteGroup')">
                             <figure class="image is-16x16">
                                 <img src="/icons/group-delete.svg" />
                             </figure>
@@ -1153,32 +1155,42 @@
                             >
                             <template v-if="options.showTabsWithThumbnailsInManageGroups">
                                 <div class="tab-icon">
-                                    <img class="size-16" :src="tab.favIconUrl" loading="lazy" decoding="async" />
+                                    <figure class="image is-16x16">
+                                        <img :src="tab.favIconUrl" loading="lazy" decoding="async" />
+                                    </figure>
                                 </div>
                                 <div v-if="isTabLoading(tab)" class="refresh-icon">
-                                    <img class="size-16" src="/icons/tab-loading.svg"/>
+                                    <figure class="image is-16x16">
+                                        <img src="/icons/tab-loading.svg" />
+                                    </figure>
                                 </div>
                             </template>
                             <template v-else>
                                 <div class="tab-icon">
-                                    <img v-if="isTabLoading(tab)" class="size-16" src="/icons/tab-loading.svg"/>
-                                    <img v-else class="size-16" :src="tab.favIconUrl" loading="lazy" decoding="async" />
+                                    <figure class="image is-16x16">
+                                        <img v-if="isTabLoading(tab)" src="/icons/tab-loading.svg"/>
+                                        <img v-else :src="tab.favIconUrl" loading="lazy" decoding="async" />
+                                    </figure>
                                 </div>
                             </template>
                             <div v-if="tab.cookieStoreId && tab.cookieStoreId !== DEFAULT_COOKIE_STORE_ID" class="cookie-container">
-                                <span :title="tab.container?.name" :class="`is-inline-block size-16 userContext-icon identity-icon-${tab.container?.icon} identity-color-${tab.container?.color}`"></span>
+                                <figure :title="tab.container?.name" :class="`image is-16x16 userContext-icon identity-icon-${tab.container?.icon} identity-color-${tab.container?.color}`"></figure>
                             </div>
                             <div v-if="options.showTabsWithThumbnailsInManageGroups" class="screenshot">
                                 <img v-if="tab.thumbnail" :src="tab.thumbnail" loading="lazy" decoding="async">
                             </div>
+
                             <div
                                 @mousedown.middle.prevent
                                 @mouseup.middle.prevent="!group.isArchive && removeTab(tab)"
                                 class="tab-title clip-text"
-                                v-text="getTabTitle(tab, false, 0, !group.isArchive && !tab.discarded)"></div>
+                                :class="{'discarded-color': group.isArchive || tab.discarded}"
+                                v-text="getTabTitle(tab)"></div>
 
                             <div v-if="!group.isArchive" class="delete-tab-button" @click.stop="removeTab(tab)" :title="lang('deleteTab')">
-                                <img class="size-16" src="/icons/close.svg" />
+                                <figure class="image is-16x16">
+                                    <img src="/icons/close.svg" />
+                                </figure>
                             </div>
                         </div>
 
@@ -1188,12 +1200,20 @@
                             tabindex="0"
                             :title="lang('createNewTab')"
                             @click="addTab(group)"
+                            @keydown.enter.stop.prevent="addTab(group)"
                             @contextmenu.stop.prevent="$refs.contextMenuTabNew.open($event, {group})"
                             >
                             <div :class="options.showTabsWithThumbnailsInManageGroups ? 'screenshot' : 'tab-icon'">
-                                <img src="/icons/tab-new.svg">
+                                <figure class="image is-16x16">
+                                    <img src="/icons/tab-new.svg" />
+                                </figure>
                             </div>
-                            <div :class="['tab-title', {'clip-text': options.showTabsWithThumbnailsInManageGroups}]" v-text="lang('createNewTab')"></div>
+                            <span class="tab-title icon-text">
+                                <span class="is-flex-grow-1" v-text="lang('createNewTab')"></span>
+                                <figure class="icon image is-16x16" @click.stop="$refs.contextMenuTabNew.open($event, {group})">
+                                    <img src="/icons/wrench.svg" />
+                                </figure>
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -1230,20 +1250,26 @@
                             >
                             <template v-if="options.showTabsWithThumbnailsInManageGroups">
                                 <div class="tab-icon">
-                                    <img class="size-16" :src="tab.favIconUrl" loading="lazy" decoding="async" />
+                                    <figure class="image is-16x16">
+                                        <img :src="tab.favIconUrl" loading="lazy" decoding="async" />
+                                    </figure>
                                 </div>
                                 <div v-if="isTabLoading(tab)" class="refresh-icon">
-                                    <img class="size-16" src="/icons/tab-loading.svg"/>
+                                    <figure class="image is-16x16">
+                                        <img src="/icons/tab-loading.svg"/>
+                                    </figure>
                                 </div>
                             </template>
                             <template v-else>
                                 <div class="tab-icon">
-                                    <img v-if="isTabLoading(tab)" class="size-16" src="/icons/tab-loading.svg"/>
-                                    <img v-else class="size-16" :src="tab.favIconUrl" loading="lazy" decoding="async" />
+                                    <figure class="image is-16x16">
+                                        <img v-if="isTabLoading(tab)" src="/icons/tab-loading.svg"/>
+                                        <img v-else :src="tab.favIconUrl" loading="lazy" decoding="async" />
+                                    </figure>
                                 </div>
                             </template>
                             <div v-if="tab.cookieStoreId && tab.cookieStoreId !== DEFAULT_COOKIE_STORE_ID" class="cookie-container">
-                                <span :title="tab.container?.name" :class="`is-inline-block size-16 userContext-icon identity-icon-${tab.container?.icon} identity-color-${tab.container?.color}`"></span>
+                                <figure :title="tab.container?.name" :class="`image is-16x16 userContext-icon identity-icon-${tab.container?.icon} identity-color-${tab.container?.color}`"></figure>
                             </div>
                             <div v-if="options.showTabsWithThumbnailsInManageGroups" class="screenshot">
                                 <img v-if="tab.thumbnail" :src="tab.thumbnail" loading="lazy" decoding="async">
@@ -1252,38 +1278,42 @@
                                 @mousedown.middle.prevent
                                 @mouseup.middle.prevent="removeTab(tab)"
                                 class="tab-title clip-text"
-                                v-text="getTabTitle(tab, false, 0, !tab.discarded)"></div>
+                                :class="{'discarded-color': tab.discarded}"
+                                v-text="getTabTitle(tab)"></div>
 
                             <div class="delete-tab-button" @click.stop="removeTab(tab)" :title="lang('deleteTab')">
-                                <img class="size-16" src="/icons/close.svg" />
+                                <figure class="image is-16x16">
+                                    <img src="/icons/close.svg"/>
+                                </figure>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="group new cursor-pointer"
+                <div class="group new is-clickable"
                     @click="addGroup"
-
                     draggable="true"
                     @dragover="dragHandle($event, 'tab', ['tab'])"
                     @drop="dragHandle($event, 'tab', ['tab'], {item: {id: 'new-group'}})"
 
                     >
-                    <div class="body">
-                        <img src="/icons/group-new.svg">
-                        <div class="h-margin-top-10" v-text="lang('createNewGroup')"></div>
-                    </div>
+                    <figure class="image is-96x96">
+                        <img src="/icons/group-new.svg" />
+                    </figure>
+                    <div v-text="lang('createNewGroup')"></div>
                 </div>
             </div>
         </main>
 
         <transition name="fade">
             <div class="loading" v-show="isLoading">
-                <img src="/icons/icon-animate.svg" />
+                <figure class="image">
+                    <img src="/icons/icon-animate.svg" />
+                </figure>
             </div>
         </transition>
 
-        <div id="multipleTabsText"></div>
+        <div id="multipleTabsText" class="notification is-success"></div>
 
         <context-menu-tab-new ref="contextMenuTabNew" @add="addTab"></context-menu-tab-new>
 
@@ -1319,15 +1349,6 @@
             @move-tab="moveTabs"
             @move-tab-new-group="moveTabToNewGroup"
             ></context-menu-tab>
-
-        <context-menu ref="newGroupContextMenu">
-            <ul class="is-unselectable">
-                <li @click="openDefaultGroup">
-                    <img src="/icons/icon.svg" class="size-16" />
-                    <span v-text="lang('defaultGroup')"></span>
-                </li>
-            </ul>
-        </context-menu>
 
         <popup
             v-if="openEditDefaultGroup"
@@ -1427,37 +1448,21 @@
 
 <style>
     :root {
-        --margin: 5px;
-        --is-in-multiple-drop-text-color: #ffffff;
-        --border-radius: 3px;
-
-        --group-bg-color: #f5f5f5;
-        --group-active-shadow-color: rgba(3, 102, 214, 0.3);
-        --group-active-shadow: 0 0 0 3.5px var(--group-active-shadow-color);
-        --group-active-border-color: #2188ff;
-        --group-active-border: 1px solid var(--group-active-border-color);
+        --group-active-shadow: 0 0 0 3.5px hsla(from var(--bulma-info-50) h s l / .4);
+        --group-active-border-color: var(--bulma-info-50);
+        --group-active-border: var(--border-width) solid var(--group-active-border-color);
 
         --tab-active-shadow: var(--group-active-shadow);
         --tab-active-border: var(--group-active-border);
-        /* --tab-hover-outline-color: #cfcfcf; */
+        --tab-inner-border-color: var(--bulma-scheme-main-quater);
+        --tab-icons-radius: 75%;
+        --tab-icons-size: 20px;
 
-        --tab-inner-padding: 3px;
-        --tab-inner-border-color: #c6ced4;
-        --tab-border-width: 1px;
-        --tab-buttons-radius: 75%;
-        --tab-buttons-size: 25px;
-        --active-tab-bg-color: #e4e4e4;
-        --multiple-drag-tab-bg-color: #1e88e5;
-    }
+        --multiple-tab-text-color: var(--bulma-white);
+        --multiple-tab-bg-color: light-dark(var(--bulma-info-55), var(--bulma-info-30));
 
-    html[data-theme="dark"] {
-        --text-color: #e0e0e0;
-
-        --group-bg-color: #444444;
-        --group-active-shadow-color: rgba(255, 255, 255, 0.3);
-        --group-active-border-color: #e0e0e0;
-
-        --discarded-text-color: #979797;
+        --border-width: 1px;
+        --border-radius: 0.375rem;
     }
 
     .fade-enter-active, .fade-leave-active {
@@ -1468,48 +1473,32 @@
     }
 
     #stg-manage {
-        padding: var(--indent) var(--indent) calc(var(--indent) * 10);
-
-        > header {
-            > :not(:first-child) {
-                margin-left: 20px;
-            }
-
-            .page-title {
-                font-size: 18px;
-            }
-        }
-
-        > main {
-            margin-top: var(--indent);
-        }
+        padding: var(--bulma-block-spacing) var(--bulma-block-spacing) calc(var(--bulma-block-spacing) * 10);
     }
 
     #search-wrapper {
-        width: 300px;
+        width: 20em;
     }
 
     .loading {
-        position: absolute;
-        top: calc(100vh / 2 - 25px);
-        left: calc(100vw / 2 - 25px);
+        --image-size: 48px;
 
-        img {
-            width: 3em;
+        position: absolute;
+        top: calc(50vh - var(--image-size) / 2);
+        left: calc(50vw - var(--image-size) / 2);
+
+        figure {
+            width: var(--image-size);
+            height: var(--image-size);
         }
     }
 
     #multipleTabsText {
         position: fixed;
         text-align: center;
-        color: #000;
-        background-color: #fff;
-        border-radius: 10px;
         left: -1000%;
-        max-width: 450px;
-        padding: 15px;
+        max-width: 20em;
         pointer-events: none;
-        box-shadow: 10px 5px rgba(0, 0, 0, 0.6);
     }
 
     #result {
@@ -1518,74 +1507,53 @@
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
             /* grid-template-rows: minmax(auto, 600px) minmax(auto, 600px); */
-            grid-gap: 10px;
+            grid-gap: var(--gap-indent);
         }
 
         .group {
             display: flex;
             flex-direction: column;
-            border: 1px solid rgba(0, 0, 0, 0.15);
+            border: var(--border-width) solid var(--bulma-border);
             max-height: 600px;
-            background-color: var(--group-bg-color);
+            background-color: var(--bulma-scheme-main-bis);
             border-radius: var(--border-radius);
+            user-select: none;
 
             &.drag-over {
-                outline-offset: 3px;
+                outline-offset: 0.3rem;
             }
 
             > .header {
                 display: flex;
                 align-items: center;
-                padding: var(--margin);
-
-                > * {
-                    display: flex;
-                }
+                gap: var(--gap-indent);
+                padding: var(--gap-indent-mini) var(--gap-indent);
 
                 > .group-title {
                     flex-grow: 1;
                 }
 
-                > .delete-group-button {
-                    line-height: 0;
-                }
-
-                > :not(:first-child) {
-                    padding-left: var(--margin);
-                }
-
-                > .group-icon {
-                    position: relative;
-                }
-
-                > .group-icon > *,
-                > .other-icon > * {
+                figure {
                     pointer-events: none;
                 }
             }
 
             > .body {
-                user-select: none;
-
                 overflow-y: auto;
-                padding: var(--margin);
-                min-height: 110px;
-                /* flex-grow: 1; */
-
+                padding: var(--gap-indent-mini);
                 scrollbar-width: thin;
+                min-height: 10em;
 
                 &:not(.in-list-view) {
                     display: grid;
-                    grid-gap: var(--margin);
-                    /* grid-gap: 10px; */
+                    grid-gap: var(--gap-indent-mini);
                     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-                    grid-auto-rows: 100px;
+                    grid-auto-rows: 10em;
                 }
 
                 &.in-list-view {
                     display: flex;
                     flex-direction: column;
-                    margin-bottom: 30px;
                 }
             }
 
@@ -1598,12 +1566,18 @@
             }
 
             > .body:not(.in-list-view) > .tab {
-                padding: var(--tab-inner-padding);
+                --inner-indent: var(--gap-indent-mini);
+                --half-inner-indent: calc(var(--inner-indent) / 2);
+                --text-height: 1.3em;
+                --icon-size: 16px;
+                --half-icon-size: calc(var(--icon-size) / 2);
+
+                padding: var(--inner-indent);
                 border-radius: var(--border-radius);
 
                 > * {
                     border: 0 solid var(--identity-tab-color, var(--tab-inner-border-color));
-                    background-color: var(--group-bg-color);
+                    background-color: var(--bulma-scheme-main-bis);
                 }
 
                 > .tab-icon,
@@ -1612,42 +1586,42 @@
                 > .refresh-icon,
                 > .tab-title {
                     position: absolute;
+                    display: flex;
                 }
 
                 &:not(.has-thumbnail) > .tab-icon {
-                    display: flex;
-                    width: 16px;
-                    height: 16px;
-                    top: calc((calc(100% - 1em - var(--tab-inner-padding)) / 2) - 8px);
-                    left: calc((100% / 2) - 8px);
+                    align-items: start;
+                    justify-content: start;
+                    width: var(--icon-size);
+                    height: var(--icon-size);
+                    top: calc(50% - var(--half-icon-size) + var(--inner-indent) + var(--border-width) - var(--text-height));
+                    left: calc(50% - var(--half-icon-size));
                 }
 
                 &.has-thumbnail > .tab-icon {
-                    display: flex;
                     align-items: start;
-                    justify-content: left;
-                    top: var(--tab-inner-padding);
-                    left: var(--tab-inner-padding);
-                    width: var(--tab-buttons-size);
-                    height: var(--tab-buttons-size);
-                    border-bottom-width: var(--tab-border-width);
-                    border-right-width: var(--tab-border-width);
-                    border-bottom-right-radius: var(--tab-buttons-radius);
+                    justify-content: start;
+                    top: var(--inner-indent);
+                    left: var(--inner-indent);
+                    width: var(--tab-icons-size);
+                    height: var(--tab-icons-size);
+                    border-bottom-width: var(--border-width);
+                    border-right-width: var(--border-width);
+                    border-bottom-right-radius: var(--tab-icons-radius);
                 }
 
                 > .delete-tab-button {
-                    display: flex;
                     visibility: hidden;
                     align-items: start;
-                    justify-content: right;
-                    top: var(--tab-inner-padding);
-                    right: var(--tab-inner-padding);
-                    height: var(--tab-buttons-size);
-                    width: var(--tab-buttons-size);
+                    justify-content: end;
+                    top: var(--inner-indent);
+                    right: var(--inner-indent);
+                    height: var(--tab-icons-size);
+                    width: var(--tab-icons-size);
                     line-height: 0;
-                    border-bottom-width: var(--tab-border-width);
-                    border-left-width: var(--tab-border-width);
-                    border-bottom-left-radius: var(--tab-buttons-radius);
+                    border-bottom-width: var(--border-width);
+                    border-left-width: var(--border-width);
+                    border-bottom-left-radius: var(--tab-icons-radius);
                 }
 
                 &:hover > .delete-tab-button {
@@ -1657,44 +1631,41 @@
                 > .cookie-container {
                     display: flex;
                     align-items: end;
-                    justify-content: left;
-                    left: var(--tab-inner-padding);
-                    bottom: calc(1em + var(--tab-inner-padding) * 2);
-                    width: var(--tab-buttons-size);
-                    height: var(--tab-buttons-size);
-                    border-right-width: var(--tab-border-width);
-                    border-top-width: var(--tab-border-width);
-                    border-top-right-radius: var(--tab-buttons-radius);
-                    padding-bottom: 1px;
+                    justify-content: start;
+                    left: var(--inner-indent);
+                    bottom: calc(var(--inner-indent) + var(--text-height) + var(--border-width));
+                    width: var(--tab-icons-size);
+                    height: var(--tab-icons-size);
+                    border-right-width: var(--border-width);
+                    border-top-width: var(--border-width);
+                    border-top-right-radius: var(--tab-icons-radius);
                 }
 
                 > .refresh-icon {
                     display: flex;
                     align-items: end;
-                    justify-content: right;
-                    bottom: calc(1em + var(--tab-inner-padding) * 2);
-                    right: var(--tab-inner-padding);
-                    width: var(--tab-buttons-size);
-                    height: var(--tab-buttons-size);
-                    border-left-width: var(--tab-border-width);
-                    border-top-width: var(--tab-border-width);
-                    border-top-left-radius: var(--tab-buttons-radius);
+                    justify-content: end;
+                    bottom: calc(var(--inner-indent) + var(--text-height) + var(--border-width));
+                    right: var(--inner-indent);
+                    width: var(--tab-icons-size);
+                    height: var(--tab-icons-size);
+                    border-left-width: var(--border-width);
+                    border-top-width: var(--border-width);
+                    border-top-left-radius: var(--tab-icons-radius);
                 }
 
                 > .tab-title {
-                    line-height: 1.3em;
-                    position: absolute;
-                    text-align: center;
-                    left: var(--tab-inner-padding);
-                    right: var(--tab-inner-padding);
-                    bottom: var(--tab-inner-padding);
+                    line-height: var(--text-height);
+                    left: var(--inner-indent);
+                    right: var(--inner-indent);
+                    bottom: var(--inner-indent);
                     white-space: nowrap;
                 }
 
                 > .screenshot {
-                    height: calc(100% - 1em - var(--tab-inner-padding) - 1px);
+                    height: calc(100% - var(--text-height) - var(--border-width));
                     overflow: hidden;
-                    border-width: var(--tab-border-width);
+                    border-width: var(--border-width);
                     border-radius: var(--border-radius);
 
                     > img {
@@ -1712,46 +1683,29 @@
                     justify-content: center;
                     align-items: center;
                     border-style: dashed;
-                    border-width: var(--tab-border-width);
-
-                    > img {
-                        width: 16px;
-                        opacity: 0.7;
-                    }
                 }
-
-                /* &:hover,
-                &:hover > * {
-                     background-color: var(--active-tab-bg-color);
-                } */
 
                 &.is-active-element {
                     box-shadow: var(--tab-active-shadow);
                     outline: var(--tab-active-border);
                     outline-offset: -1px;
-                    -moz-outline-radius: var(--border-radius);
                 }
-
-                /* &:not(.is-active-element):not(.drag-moving):hover {
-                    outline: 1px solid var(--tab-hover-outline-color);
-                    outline-offset: 1px;
-                } */
 
                 &.is-in-multiple-drop,
                 &.is-in-multiple-drop > * {
-                    --fill-color: var(--is-in-multiple-drop-text-color);
-                    background-color: var(--multiple-drag-tab-bg-color);
+                    color: var(--multiple-tab-text-color);
+                    background-color: var(--multiple-tab-bg-color);
+
+                    img {
+                        color-scheme: dark;
+                    }
                 }
 
                 &.drag-over {
                     &.drag-moving,
                     &.is-in-multiple-drop {
-                        outline-offset: 4px;
+                        outline-offset: 0.3rem;
                     }
-                }
-
-                &.is-in-multiple-drop > .tab-title {
-                    color: var(--is-in-multiple-drop-text-color);
                 }
             }
 
@@ -1759,66 +1713,45 @@
                 display: flex;
                 align-items: center;
                 justify-content: left;
+                gap: var(--gap-indent);
                 height: 27px;
-                padding: var(--tab-inner-padding);
+                padding: var(--gap-indent-mini);
 
                 &.new {
-                    justify-content: center;
-                    border: var(--tab-border-width) dashed var(--tab-inner-border-color);
-
-                    > .tab-title {
-                        flex-grow: 0;
-                    }
+                    border: var(--border-width) dashed var(--tab-inner-border-color);
                 }
 
                 &:hover {
-                    background-color: rgba(126, 126, 126, 0.3);
-                }
-
-                > .tab-icon {
-                    display: flex;
+                    background-color: var(--bulma-scheme-main-ter);
                 }
 
                 > .delete-tab-button {
-                    display: none;
-                    justify-content: right;
+                    display: flex;
+                    visibility: hidden;
                 }
 
                 &:hover > .delete-tab-button {
-                    display: flex;
-                }
-
-                > .cookie-container {
-                    padding-left: var(--margin);
-                    display: flex;
-                    align-items: center;
-                }
-
-                > .refresh-icon {
-                    display: flex;
-                    padding-left: var(--margin);
+                    visibility: visible;
                 }
 
                 > .tab-title {
                     flex-grow: 1;
-                    padding: 0 var(--margin);
                     white-space: nowrap;
                 }
 
                 &.is-active-element {
-                    outline: 1px solid var(--identity-tab-color, var(--group-active-border-color));
+                    outline: var(--border-width) solid var(--identity-tab-color, var(--group-active-border-color));
                     outline-offset: -1px;
-                    -moz-outline-radius: var(--border-radius);
                 }
 
                 &.is-in-multiple-drop,
                 &.is-in-multiple-drop > * {
-                    --fill-color: var(--is-in-multiple-drop-text-color);
-                    background-color: var(--multiple-drag-tab-bg-color);
-                }
+                    color: var(--multiple-tab-text-color);
+                    background-color: var(--multiple-tab-bg-color);
 
-                &.is-in-multiple-drop > .tab-title {
-                    color: var(--is-in-multiple-drop-text-color);
+                    img {
+                        color-scheme: dark;
+                    }
                 }
             }
 
@@ -1829,21 +1762,12 @@
 
             &.new {
                 display: flex;
-                align-content: center;
+                align-items: center;
                 justify-content: center;
-                min-height: 250px;
+                gap: var(--gap-indent);
+                min-height: 20em;
                 border: 2px dashed var(--tab-inner-border-color);
                 background-color: transparent;
-
-                > .body {
-                    display: block;
-                    text-align: center;
-
-                    > img {
-                        width: 100px;
-                        opacity: 0.7;
-                    }
-                }
             }
         }
 

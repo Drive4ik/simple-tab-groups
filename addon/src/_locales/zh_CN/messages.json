@@ -580,7 +580,7 @@
         "description": "Last backup:"
     },
     "darkThemeNotification": {
-        "message": "要完整支持暗色主题，在<br><code>about:config</code> 页面修改<br><code>svg.context-properties.content.enabled</code> 参数为 <code>true</code><br><br><a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">怎么做？</a>",
+        "message": "要完整支持暗色主题，在<br><code>about:config</code> 页面修改<br><code>svg.context-properties.content.enabled</code> 参数为 <code>true</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">怎么做？</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {

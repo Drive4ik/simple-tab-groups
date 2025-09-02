@@ -580,7 +580,7 @@
         "description": "Last backup:"
     },
     "darkThemeNotification": {
-        "message": "Aby uzyskać pełne wsparcie ciemnego motywu, ustaw parametr <code>svg.context-properties.content.enabled</code>na <code>true</code> w <code>about:config</config>.<br><a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">Jak to zrobić?</a>",
+        "message": "Aby uzyskać pełne wsparcie ciemnego motywu, ustaw parametr <code>svg.context-properties.content.enabled</code>na <code>true</code> w <code>about:config</config>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Jak to zrobić?</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {

@@ -357,7 +357,17 @@ export function getRandomInt(min = 1, max = Number.MAX_SAFE_INTEGER, step = 1) {
     return result;
 }
 
-export function minMaxRange(value, min = 0, max = 999) {
+export function clamp(value, min = 0, max = 999) {
+    if (min >= max) {
+        throw new Error('invalid clamp args');
+    }
+
+    value = parseFloat(value, 10);
+
+    if (isNaN(value)) {
+        value = min;
+    }
+
     return Math.min(Math.max(value, min), max);
 }
 
@@ -555,9 +565,11 @@ export function safeReloadAddon(sec = 3) {
 }
 
 export function getThemeApply(theme) {
-    let isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (theme === 'auto') {
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
 
-    return (theme === 'auto' && isDark) ? 'dark' : theme;
+    return theme;
 }
 
 export const UI_LANG = browser.i18n.getUILanguage();

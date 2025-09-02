@@ -149,99 +149,78 @@
 
 <template>
     <div id="manageAddonBackup">
-        <div v-if="allowClearAddonData" class="field">
-            <div class="field">
-                <label class="checkbox">
-                    <input type="checkbox" v-model="clearAddonData" />
-                    <span class="has-text-weight-bold" v-text="lang('deleteAllAddonDataAndSettingsBeforeRestoringBackup')"></span>
-                </label>
-                <br>
-                <span class="has-text-danger has-text-weight-bold" v-html="lang('eraseAddonSettingsWarningTitle')"></span>
-            </div>
-            <hr>
+        <div v-if="allowClearAddonData" class="block">
+            <label class="checkbox">
+                <input type="checkbox" v-model="clearAddonData" />
+                <span class="has-text-weight-bold" v-text="lang('deleteAllAddonDataAndSettingsBeforeRestoringBackup')"></span>
+            </label>
+            <br>
+            <span class="has-text-danger has-text-weight-bold" v-html="lang('eraseAddonSettingsWarningTitle')"></span>
         </div>
 
-        <div v-if="showPinnedTabs" class="field">
-            <div class="field">
-                <label class="checkbox">
-                    <input type="checkbox" v-model="includePinnedTabs" />
+        <hr/>
+
+        <div v-if="showPinnedTabs" class="block">
+            <label class="checkbox">
+                <input type="checkbox" v-model="includePinnedTabs" />
+                <span>
                     <span v-text="lang('pinnedTabs')"></span>
-                    &nbsp;
-                    <small class="is-italic">
-                        (<span v-text="lang('groupTabsCount', data.pinnedTabs.length)"></span>)
-                    </small>
-                </label>
-            </div>
-            <hr>
+                    <small class="is-italic brackets-round" v-text="lang('groupTabsCount', data.pinnedTabs.length)"></small>
+                </span>
+            </label>
         </div>
 
-        <div v-if="showGeneral || showHotkeys" class="field">
+        <hr/>
+
+        <div v-if="showGeneral || showHotkeys" class="block">
             <label class="label" v-text="lang('importAddonSettings')"></label>
-            <div v-if="showGeneral" class="field">
-                <label class="checkbox">
+            <div class="checkboxes as-column">
+                <label v-if="showGeneral" class="checkbox">
                     <input type="checkbox" v-model="includeGeneral" />
                     <span v-text="lang('generalTitle')"></span>
                 </label>
-            </div>
-            <div v-if="showHotkeys" class="field">
-                <label class="checkbox">
+                <label v-if="showHotkeys" class="checkbox">
                     <input type="checkbox" v-model="includeHotkeys" />
                     <span v-text="lang('hotkeysTitle')"></span>
                 </label>
             </div>
-            <hr>
         </div>
 
-        <div class="field">
-            <div class="field">
-                <div class="control">
-                    <label class="label checkbox">
-                        <input type="checkbox" v-model="checkAllGroups" />
-                        <span v-text="lang('importGroups')"></span>
-                    </label>
-                </div>
-            </div>
+        <hr/>
 
-            <div class="field" v-for="group in data.groups" :key="group.id">
-                <div class="control">
-                    <label class="checkbox indent-children" :disabled="disabledGroups.includes(group)">
-                        <input type="checkbox" v-model="groups" :value="group" :disabled="disabledGroups.includes(group)" />
+        <div class="block">
+            <div class="checkboxes as-column">
+                <label class="checkbox label">
+                    <input type="checkbox" v-model="checkAllGroups" />
+                    <span v-text="lang('importGroups')"></span>
+                </label>
 
-                        <figure v-if="group.iconUrl || group.iconColor" class="image is-16x16 is-inline-block">
+                <label v-for="group in data.groups" :key="group.id" class="checkbox" :disabled="disabledGroups.includes(group)">
+                    <input type="checkbox" v-model="groups" :value="group" :disabled="disabledGroups.includes(group)" />
+
+                    <span class="icon-text is-flex-wrap-nowrap">
+                        <figure v-if="group.iconViewType" class="icon image is-16x16">
                             <img :src="getGroupIconUrl(group)" />
                         </figure>
 
-                        <figure v-if="group.isArchive" class="image is-16x16">
+                        <figure v-if="group.isArchive" class="icon image is-16x16">
                             <img src="/icons/archive.svg" />
                         </figure>
 
-                        <template v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID">
-                            <figure v-if="group.newTabContainer === TEMPORARY_CONTAINER" class="image is-16x16 is-inline-block">
-                                <img :src="allContainers[TEMPORARY_CONTAINER].iconUrl" class="size-16 fill-context" />
-                            </figure>
-                            <figure v-else-if="data.containers?.[group.newTabContainer]?.iconUrl" class="image is-16x16 is-inline-block">
-                                <span :class="`size-16 userContext-icon identity-icon-${data.containers[group.newTabContainer].icon} identity-color-${data.containers[group.newTabContainer].color}`"></span>
-                            </figure>
-                        </template>
+                        <figure v-if="group.newTabContainer === TEMPORARY_CONTAINER" class="icon image is-16x16">
+                            <img :src="allContainers[TEMPORARY_CONTAINER].iconUrl" />
+                        </figure>
+                        <figure v-else-if="data.containers?.[group.newTabContainer]?.iconUrl" :class="`icon image is-16x16 userContext-icon identity-icon-${data.containers[group.newTabContainer]?.icon} identity-color-${data.containers[group.newTabContainer]?.color}`">
+                            <figure></figure>
+                        </figure>
 
-                        <span class="group-title" v-text="getGroupTitle(group)"></span>
+                        <span class="word-wrap-anywhere" v-text="getGroupTitle(group)"></span>
 
-                        <small class="is-italic">
-                            (<span v-text="lang('groupTabsCount', group.tabs.length)"></span>)
-                        </small>
-                    </label>
-                </div>
+                        <small class="brackets-round is-italic" v-text="lang('groupTabsCount', group.tabs.length)"></small>
+                    </span>
+                </label>
             </div>
         </div>
 
     </div>
 </template>
-
-<style>
-    #manageAddonBackup {
-        .group-title {
-            word-wrap: anywhere;
-        }
-    }
-
-</style>

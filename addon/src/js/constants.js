@@ -96,6 +96,41 @@ export const HOTKEY_ACTIONS_WITH_CUSTOM_GROUP = Object.freeze([
     'rename-group',
 ]);
 
+export const POPUP_SETTINGS_MENU_ITEMS = Object.freeze([
+    {
+        key: 'showArchivedGroups',
+        optionsCheckbox: true,
+    }, {
+        key: 'closePopupAfterChangeGroup',
+        optionsCheckbox: true,
+    }, {
+        key: 'closePopupAfterSelectTab',
+        optionsCheckbox: true,
+    }, {
+        key: 'openGroupAfterChange',
+        optionsCheckbox: true,
+    }, {
+        key: 'showExtendGroupsPopupWithActiveTabs',
+        optionsCheckbox: true,
+    }, {
+        key: 'fullPopupWidth',
+        optionsCheckbox: true,
+    }, {
+        key: 'alwaysAskNewGroupName',
+        optionsCheckbox: true,
+    }, {
+        key: 'hr',
+    }, {
+        key: 'syncCloudOptions',
+        sendMessage: ['open-options-page', {
+            section: 'backup sync',
+        }],
+        title: 'githubGistCloudSettingsTitle',
+        icon: 'settings',
+        closePopup: true,
+    },
+]);
+
 export const TREE_TABS_EXTENSIONS = Object.freeze([
     'treestyletab@piro.sakura.ne.jp',
     '{8d808887-ed13-4931-9f5a-4c0bff979a5a}',
@@ -360,6 +395,7 @@ export const DEFAULT_OPTIONS = Object.freeze({
     closePopupAfterChangeGroup: true,
     closePopupAfterSelectTab: false,
     openGroupAfterChange: false,
+    showArchivedGroups: true,
     alwaysAskNewGroupName: true,
     createNewGroupWhenOpenNewWindow: false,
     openManageGroupsInTab: true,

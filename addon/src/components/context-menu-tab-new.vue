@@ -42,7 +42,7 @@ export default {
                     v-for="container in containers" :key="container.cookieStoreId"
                     @click="$emit('add', data.group, container.cookieStoreId)"
                     >
-                    <span :class="`size-16 userContext-icon identity-icon-${container.icon} identity-color-${container.color}`"></span>
+                    <figure :class="`image is-16x16 userContext-icon identity-icon-${container.icon} identity-color-${container.color}`"></figure>
                     <span v-text="container.name"></span>
                 </li>
             </ul>

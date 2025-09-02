@@ -304,8 +304,8 @@
             <div class="control is-expanded has-icons-left">
                 <input ref="groupTitle" v-model.trim="group.title" type="text" maxlength="256" class="input" :placeholder="lang('title')" @keydown.stop @keyup.stop />
                 <span class="icon is-left">
-                    <figure class="image is-16x16 is-inline-block">
-                        <img :src="iconUrlToDisplay" />
+                    <figure class="image is-16x16">
+                        <img class="no-fill" :src="iconUrlToDisplay" />
                     </figure>
                 </span>
             </div>
@@ -314,7 +314,9 @@
                     @click="$refs.groupNameVariables.open($event)"
                     @contextmenu.prevent="$refs.groupNameVariables.open($event)">
                     <span class="icon">
-                        <img src="/icons/info.svg" class="size-16" />
+                        <figure class="image is-16x16">
+                            <img src="/icons/info.svg" />
+                        </figure>
                     </span>
                 </button>
             </div>
@@ -330,214 +332,169 @@
 
         <div class="field">
             <label class="label" v-text="lang('iconStyle')"></label>
-            <div class="field is-grouped icon-buttons">
-                <div class="control">
-                    <swatches
-                        v-model.trim="group.iconColor"
-                        :title="lang('iconColor')"
-                        swatches="text-advanced"
-                        popover-x="right"
-                        show-fallback
-                        :trigger-style="{
-                            width: '41px',
-                            height: '30px',
-                            borderRadius: '4px',
-                            borderWidth: '1px',
-                            borderColor: '#dbdbdb',
-                        }"
-                        @keydown.native.enter.stop
-                        @keypress.native.enter.stop
-                        @keyup.native.enter.stop></swatches>
-                </div>
-                <div v-for="(data, iconViewType) in GROUP_ICON_VIEW_TYPES" :key="iconViewType" class="control">
-                    <button @click="setIconView(iconViewType)" :class="['button', {'is-focused': !group.iconUrl && iconViewType === group.iconViewType}]">
-                        <figure class="image is-16x16 is-inline-block">
+            <div class="buttons">
+                <swatches
+                    v-model.trim="group.iconColor"
+                    :title="lang('iconColor')"
+                    swatches="text-advanced"
+                    popover-x="right"
+                    show-fallback
+                    background-color="var(--bulma-background)"
+                    fallback-input-class="input"
+                    :trigger-style="{
+                        width: 'var(--trigger-size)',
+                        height: 'var(--trigger-size)',
+                        borderRadius: 'var(--bulma-control-radius)',
+                    }"
+                    @keydown.native.enter.stop
+                    @keypress.native.enter.stop
+                    @keyup.native.enter.stop></swatches>
+                <button
+                    v-for="(data, iconViewType) in GROUP_ICON_VIEW_TYPES"
+                    :key="iconViewType"
+                    @click="setIconView(iconViewType)"
+                    :class="['button', {'is-focused': !group.iconUrl && iconViewType === group.iconViewType}]">
+                    <span class="icon">
+                        <figure class="image is-16x16">
                             <img :src="getIconTypeUrl(iconViewType)" />
                         </figure>
-                    </button>
-                </div>
-                <div class="control">
-                    <button @click="setRandomColor" class="button" :title="lang('setRandomColor')">
-                        <img src="/icons/refresh.svg" class="size-16" />
-                    </button>
-                </div>
-                <div class="control">
-                    <button @click="selectUserGroupIcon" class="button" :title="lang('selectUserGroupIcon')">
-                        <img src="/icons/image.svg" class="size-16" />
-                    </button>
-                </div>
+                    </span>
+                </button>
+                <button @click="setRandomColor" class="button" :title="lang('setRandomColor')">
+                    <span class="icon">
+                        <figure class="image is-16x16">
+                            <img src="/icons/refresh.svg" />
+                        </figure>
+                    </span>
+                </button>
+                <button @click="selectUserGroupIcon" class="button" :title="lang('selectUserGroupIcon')">
+                    <span class="icon">
+                        <figure class="image is-16x16">
+                            <img src="/icons/image.svg" />
+                        </figure>
+                    </span>
+                </button>
             </div>
         </div>
 
-        <div class="field">
-            <div class="control">
-                <label class="checkbox">
-                    <input type="checkbox" v-model="group.discardTabsAfterHide" />
-                    <span v-text="lang('discardTabsAfterHide')"></span>
-                </label>
-            </div>
-        </div>
-        <div class="field ml-3">
-            <div class="control">
-                <label class="checkbox" :disabled="!group.discardTabsAfterHide">
-                    <input v-model="group.discardExcludeAudioTabs" :disabled="!group.discardTabsAfterHide" type="checkbox" />
-                    <span v-text="lang('discardExcludeAudioTabs')"></span>
-                </label>
-            </div>
-        </div>
-        <div class="field">
-            <div class="control">
-                <label class="checkbox">
-                    <input type="checkbox" v-model="group.muteTabsWhenGroupCloseAndRestoreWhenOpen" />
-                    <span v-text="lang('muteTabsWhenGroupCloseAndRestoreWhenOpen')"></span>
-                </label>
-            </div>
-        </div>
-
-        <div class="field">
-            <div class="control">
-                <label class="checkbox">
-                    <input type="checkbox" v-model="group.prependTitleToWindow" />
-                    <span v-text="lang('prependTitleToWindow')"></span>
-                </label>
-            </div>
-        </div>
-
-        <div class="field">
-            <div class="control">
-                <label class="checkbox">
-                    <input type="checkbox" v-model="group.dontUploadToCloud" />
-                    <span v-text="lang('dontUploadToCloud')"></span>
-                </label>
-            </div>
-        </div>
-
-        <div class="field">
-            <div class="control">
-                <label class="checkbox">
-                    <input
-                        v-model="group.exportToBookmarks"
-                        @click="$event => setPermissionsBookmarks($event, 'exportToBookmarks')"
-                        type="checkbox" />
-                    <span v-text="lang('exportGroupToBookmarks')"></span>
-                </label>
-            </div>
+        <div class="block checkboxes as-column">
+            <label class="checkbox">
+                <input type="checkbox" v-model="group.discardTabsAfterHide" />
+                <span v-text="lang('discardTabsAfterHide')"></span>
+            </label>
+            <label class="checkbox ml-3" :disabled="!group.discardTabsAfterHide">
+                <input type="checkbox" v-model="group.discardExcludeAudioTabs" :disabled="!group.discardTabsAfterHide" />
+                <span v-text="lang('discardExcludeAudioTabs')"></span>
+            </label>
+            <label class="checkbox">
+                <input type="checkbox" v-model="group.muteTabsWhenGroupCloseAndRestoreWhenOpen" />
+                <span v-text="lang('muteTabsWhenGroupCloseAndRestoreWhenOpen')"></span>
+            </label>
+            <label class="checkbox">
+                <input type="checkbox" v-model="group.prependTitleToWindow" />
+                <span v-text="lang('prependTitleToWindow')"></span>
+            </label>
+            <label class="checkbox">
+                <input type="checkbox" v-model="group.dontUploadToCloud" />
+                <span v-text="lang('dontUploadToCloud')"></span>
+            </label>
+            <label class="checkbox">
+                <input type="checkbox" v-model="group.exportToBookmarks" @click="$event => setPermissionsBookmarks($event, 'exportToBookmarks')" />
+                <span v-text="lang('exportGroupToBookmarks')"></span>
+            </label>
         </div>
 
         <div class="field">
             <label class="label" v-text="lang('alwaysOpenTabsInContainer')"></label>
-            <div class="containers-wrapper">
-                <div class="control">
-                    <label class="radio indent-children">
-                        <input type="radio" :value="DEFAULT_CONTAINER.cookieStoreId" v-model="group.newTabContainer" />
-                        <span class="word-break-all" v-text="DEFAULT_CONTAINER.name"></span>
-                    </label>
-                </div>
-                <div v-for="container in containers" :key="container.cookieStoreId + 'open'" class="control">
-                    <label class="radio indent-children">
-                        <input type="radio" :value="container.cookieStoreId" v-model="group.newTabContainer" />
-                        <span :class="`size-16 userContext-icon identity-icon-${container.icon} identity-color-${container.color}`"></span>
-                        <span class="word-break-all" v-text="container.name"></span>
-                    </label>
-                </div>
-                <div class="control">
-                    <label class="radio indent-children">
-                        <input type="radio" :value="TEMPORARY_CONTAINER.cookieStoreId" v-model="group.newTabContainer" />
-                        <span :class="`size-16 userContext-icon identity-icon-${TEMPORARY_CONTAINER.icon} identity-color-${TEMPORARY_CONTAINER.color}`"></span>
-                        <span class="word-break-all" v-text="TEMPORARY_CONTAINER.name"></span>
-                    </label>
-                </div>
-            </div>
-            <div class="control h-margin-top-10">
-                <label class="checkbox">
-                    <input type="checkbox" v-model="group.ifDifferentContainerReOpen" />
-                    <span v-text="lang('ifDifferentContainerReOpen')"></span>
-                </label>
-            </div>
-            <div v-if="group.ifDifferentContainerReOpen" class="field h-margin-top-10">
-                <label class="label" v-text="lang('excludeContainersForReOpen')"></label>
-                <div class="containers-wrapper">
-                    <div class="control">
-                        <label class="checkbox indent-children" :disabled="group.newTabContainer === DEFAULT_CONTAINER.cookieStoreId">
-                            <input type="checkbox" :disabled="group.newTabContainer === DEFAULT_CONTAINER.cookieStoreId" :value="DEFAULT_CONTAINER.cookieStoreId" v-model="group.excludeContainersForReOpen" />
-                            <span class="word-break-all" v-text="DEFAULT_CONTAINER.name"></span>
-                        </label>
-                    </div>
-                    <div v-for="container in containers" :key="container.cookieStoreId + 'reopen'" class="control">
-                        <label
-                            class="checkbox indent-children"
-                            :disabled="container.cookieStoreId === group.newTabContainer">
-                            <input
-                                type="checkbox"
-                                :disabled="container.cookieStoreId === group.newTabContainer"
+            <div class="field">
+                <div class="control" :class="{'has-icons-left': group.newTabContainer !== DEFAULT_CONTAINER.cookieStoreId}">
+                    <div class="select is-fullwidth">
+                        <select v-model="group.newTabContainer">
+                            <option
+                                v-for="container in {DEFAULT_CONTAINER, ...containers, TEMPORARY_CONTAINER}"
+                                :key="container.cookieStoreId"
                                 :value="container.cookieStoreId"
-                                v-model="group.excludeContainersForReOpen" />
-                            <span :class="`size-16 userContext-icon identity-icon-${container.icon} identity-color-${container.color}`"></span>
-                            <span class="word-break-all" v-text="container.name"></span>
-                        </label>
+                                v-text="container.name"></option>
+                        </select>
                     </div>
+                    <span v-if="group.newTabContainer !== DEFAULT_CONTAINER.cookieStoreId" class="icon is-left">
+                        <figure :class="`image is-16x16 userContext-icon identity-icon-${(containers[group.newTabContainer] ?? TEMPORARY_CONTAINER).icon} identity-color-${(containers[group.newTabContainer] ?? TEMPORARY_CONTAINER).color}`"></figure>
+                    </span>
+                </div>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <label class="checkbox">
+                        <input type="checkbox" v-model="group.ifDifferentContainerReOpen" />
+                        <span v-text="lang('ifDifferentContainerReOpen')"></span>
+                    </label>
+                </div>
+            </div>
+            <div v-if="group.ifDifferentContainerReOpen" class="field">
+                <label class="label" v-text="lang('excludeContainersForReOpen')"></label>
+                <div class="checkboxes as-column containers">
+                    <label class="checkbox" :disabled="group.newTabContainer === DEFAULT_CONTAINER.cookieStoreId">
+                        <input type="checkbox" v-model="group.excludeContainersForReOpen" :value="DEFAULT_CONTAINER.cookieStoreId" :disabled="group.newTabContainer === DEFAULT_CONTAINER.cookieStoreId" />
+                        <span class="word-break-word" v-text="DEFAULT_CONTAINER.name"></span>
+                    </label>
+                    <label v-for="container in containers" :key="container.cookieStoreId" class="checkbox" :disabled="container.cookieStoreId === group.newTabContainer">
+                        <input type="checkbox" v-model="group.excludeContainersForReOpen" :value="container.cookieStoreId" :disabled="container.cookieStoreId === group.newTabContainer" />
+                        <span class="icon-text">
+                            <figure :class="`icon image is-16x16 userContext-icon identity-icon-${container.icon} identity-color-${container.color}`"></figure>
+                            <span class="word-break-word" v-text="container.name"></span>
+                        </span>
+                    </label>
                 </div>
             </div>
         </div>
 
         <hr>
 
-        <div class="field">
-            <label class="label" v-text="lang('tabMoving')"></label>
-            <div class="control is-inline-flex indent-children">
-                <label class="checkbox">
-                    <input type="checkbox" v-model="group.isSticky" />
+        <div class="block checkboxes as-column">
+            <label class="checkbox">
+                <input type="checkbox" v-model="group.isSticky" />
+                <span class="icon-text">
                     <span v-text="lang('isStickyGroupTitle')"></span>
-                </label>
-                <span class="cursor-help" :title="lang('isStickyGroupHelp')">
-                    <img class="size-18" src="/icons/help.svg" />
+                    <figure class="icon image is-16x16 cursor-help" :title="lang('isStickyGroupHelp')">
+                        <img src="/icons/help.svg" />
+                    </figure>
                 </span>
-            </div>
-        </div>
-        <div class="field">
-            <div class="control">
-                <label class="checkbox">
-                    <input type="checkbox" v-model="group.showTabAfterMovingItIntoThisGroup" />
-                    <span v-text="lang('showTabAfterMovingItIntoThisGroup')"></span>
-                </label>
-            </div>
-        </div>
-        <div class="field ml-3">
-            <div class="control">
-                <label class="checkbox" :disabled="!group.showTabAfterMovingItIntoThisGroup">
-                    <input type="checkbox" :disabled="!group.showTabAfterMovingItIntoThisGroup" v-model="group.showOnlyActiveTabAfterMovingItIntoThisGroup" />
-                    <span v-text="lang('showOnlyActiveTabAfterMovingItIntoThisGroup')"></span>
-                </label>
-            </div>
-        </div>
-        <div class="field">
-            <div class="control">
-                <label class="checkbox">
-                    <input type="checkbox" v-model="group.showNotificationAfterMovingTabIntoThisGroup" />
-                    <span v-text="lang('showNotificationAfterMovingTabIntoThisGroup')"></span>
-                </label>
-            </div>
+            </label>
+            <label class="checkbox">
+                <input type="checkbox" v-model="group.showTabAfterMovingItIntoThisGroup" />
+                <span v-text="lang('showTabAfterMovingItIntoThisGroup')"></span>
+            </label>
+            <label class="checkbox ml-3" :disabled="!group.showTabAfterMovingItIntoThisGroup">
+                <input type="checkbox" :disabled="!group.showTabAfterMovingItIntoThisGroup" v-model="group.showOnlyActiveTabAfterMovingItIntoThisGroup" />
+                <span v-text="lang('showOnlyActiveTabAfterMovingItIntoThisGroup')"></span>
+            </label>
+            <label class="checkbox">
+                <input type="checkbox" v-model="group.showNotificationAfterMovingTabIntoThisGroup" />
+                <span v-text="lang('showNotificationAfterMovingTabIntoThisGroup')"></span>
+            </label>
         </div>
 
         <div class="field">
             <label class="label" v-text="lang('catchTabContainers')"></label>
-            <div :class="['containers-wrapper', isDefaultGroup && 'no-y-scroll']">
-                <div v-for="container in {DEFAULT_CONTAINER, ...containers}" :key="container.cookieStoreId + 'catch'" class="control">
-                    <label class="checkbox indent-children" :disabled="isDisabledContainer(container.cookieStoreId)">
-                        <input type="checkbox" :disabled="isDisabledContainer(container.cookieStoreId)" :value="container.cookieStoreId" v-model="group.catchTabContainers" />
-                        <span v-if="container.iconUrl" :class="`size-16 userContext-icon identity-icon-${container.icon} identity-color-${container.color}`"></span>
-                        <span class="word-break-all" v-text="container.name"></span>
-                        <i v-if="disabledContainers.hasOwnProperty(container.cookieStoreId)" class="word-break-all">({{disabledContainers[container.cookieStoreId]}})</i>
-                    </label>
-                </div>
+            <div class="checkboxes as-column containers">
+                <label v-for="container in {DEFAULT_CONTAINER, ...containers}" :key="container.cookieStoreId" class="checkbox" :disabled="isDisabledContainer(container.cookieStoreId)">
+                    <input type="checkbox" v-model="group.catchTabContainers" :value="container.cookieStoreId" :disabled="isDisabledContainer(container.cookieStoreId)" />
+                    <span class="icon-text">
+                        <figure v-if="container.iconUrl" :class="`icon image is-16x16 userContext-icon identity-icon-${container.icon} identity-color-${container.color}`"></figure>
+                        <span class="word-break-word" v-text="container.name"></span>
+                    </span>
+                    <em class="brackets-round word-break-word hidden-empty" v-text="disabledContainers[container.cookieStoreId] ?? ''"></em>
+                </label>
             </div>
         </div>
 
         <div class="field">
-            <label class="label is-inline-flex indent-children">
-                <span v-text="lang('regexpForTabsTitle')"></span>
-                <span class="cursor-help" :title="lang('regexpForTabsHelp')">
-                    <img class="size-18" src="/icons/help.svg" />
+            <label class="label">
+                <span class="icon-text">
+                    <span v-text="lang('regexpForTabsTitle')"></span>
+                    <figure class="icon image is-16x16 cursor-help" :title="lang('regexpForTabsHelp')">
+                        <img src="/icons/help.svg" />
+                    </figure>
                 </span>
             </label>
         </div>
@@ -555,9 +512,9 @@
             </div>
         </div>
 
-        <div class="field h-margin-bottom-10">
+        <div class="field">
             <div class="control">
-                <textarea class="textarea reg-exp"
+                <textarea class="textarea is-family-monospace"
                     :rows="canLoadFile ? false : 2"
                     @keydown.stop
                     @keyup.stop
@@ -569,7 +526,7 @@
 
         <div class="field">
             <label class="label" v-text="lang('moveToGroupIfNoneCatchTabRules')"></label>
-            <div :class="['control', group.moveToGroupIfNoneCatchTabRules && 'has-icons-left']">
+            <div class="control" :class="{'has-icons-left': group.moveToGroupIfNoneCatchTabRules}">
                 <div class="select is-fullwidth">
                     <select v-model="group.moveToGroupIfNoneCatchTabRules">
                         <option :value="null" v-text="lang('dontMove')"></option>
@@ -581,7 +538,9 @@
                     </select>
                 </div>
                 <span v-if="group.moveToGroupIfNoneCatchTabRules" class="icon is-left">
-                    <img :src="selectedMoveGroupToImage" alt="" class="size-16" />
+                    <figure class="image is-16x16">
+                        <img class="no-fill" :src="selectedMoveGroupToImage" />
+                    </figure>
                 </span>
             </div>
         </div>
@@ -607,40 +566,38 @@
 
 <style>
     .edit-group {
-        .word-break-all {
-            word-break: break-word;
-        }
-
-        .icon-buttons {
-            flex-wrap: wrap;
-        }
-
-        .field.is-grouped > .control:not(:last-child) {
-            margin-right: .68rem;
-        }
-
-        .field .control {
-            cursor: default;
-        }
-
-        .containers-wrapper {
-            max-height: 155px;
-            overflow-y: auto;
+        .checkboxes.containers {
+            max-height: calc((var(--bulma-body-font-size) + 1em) * 6 + .5em);
+            overflow-x: auto;
             scrollbar-width: thin;
+            padding-block-end: var(--bulma-block-spacing);
+
+            .field > & {
+                margin-block-end: calc(var(--bulma-block-spacing) * -1);
+            }
         }
 
-        .checkbox,
-        .radio {
+        .vue-swatches {
+            --trigger-size: 2.4em;
             display: flex;
-            align-items: center;
-        }
 
-        .reg-exp {
-            font-family: Monaco, Consolas, Andale Mono, Lucida Console;
-        }
+            .vue-swatches__fallback__wrapper {
+                display: flex;
+                gap: 1em;
+                padding-block-start: 5px;
 
-        .no-y-scroll {
-            overflow-y: hidden;
+                .vue-swatches__fallback__input--wrapper {
+                    flex-grow: 1;
+
+                    .vue-swatches__fallback__input {
+                        background-color: hsl(var(--bulma-input-h),var(--bulma-input-s),calc(var(--bulma-input-background-l) + var(--bulma-input-background-l-delta)));
+                        border-color: var(--bulma-input-border-color);
+                        border-radius: var(--bulma-input-radius);
+                        color: hsl(var(--bulma-input-h),var(--bulma-input-s),var(--bulma-input-color-l));
+                        padding-block: 0;
+                    }
+                }
+            }
         }
     }
 

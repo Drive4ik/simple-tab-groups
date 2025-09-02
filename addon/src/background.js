@@ -575,7 +575,7 @@ const onUpdatedTab = catchFunc(async function(tabId, changeInfo, tab) {
         return log.stop();
     }
 
-    if (Utils.isTabLoaded(changeInfo)/*  && (tabGroupId || winGroupId) */) {
+    if (options.showTabsWithThumbnailsInManageGroups && Utils.isTabLoaded(changeInfo)/* && (tabGroupId || winGroupId) */) {
         await Tabs.updateThumbnail(tab.id);
     }
 
@@ -1716,7 +1716,7 @@ const onBeforeTabRequest = catchFunc(async function ({ tabId, url, cookieStoreId
         return {};
     }
 
-    const originExt = Management.getExtensionByUUID(originUrl.slice(0, 50)) || {};
+    const originExt = Management.getExtensionByUUID(Management.extractUUID(originUrl)) || {};
 
     function getNewAddonTabUrl(asInfo) {
         const params = {
@@ -3636,6 +3636,8 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
                 }
 
                 delete data.defaultGroupProps.exportToBookmarksWhenAutoBackup;
+
+                data.showArchivedGroups = true;
 
                 if (applyToCurrentInstance) {
                     storage.autoBackupLastTimeStamp = data.autoBackupLastBackupTimeStamp;

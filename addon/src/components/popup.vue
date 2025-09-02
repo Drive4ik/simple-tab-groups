@@ -22,11 +22,11 @@
             lang: browser.i18n.getMessage,
         },
         mounted() {
-            this.$nextTick(function() {
+            this.$nextTick(() => {
                 if (this.buttons.length) {
                     let focusedButtonIndex = this.buttons.findIndex(button => button.hasOwnProperty('focused'));
 
-                    if (-1 === focusedButtonIndex) {
+                    if (focusedButtonIndex === -1) {
                         focusedButtonIndex = 1;
                     } else if (this.buttons[focusedButtonIndex].focused) {
                         focusedButtonIndex++;
@@ -49,20 +49,21 @@
     <div class="modal popup is-active" @keydown.stop.esc="$emit('close-popup')" @keyup.stop>
         <div class="modal-background" @click="$emit('close-popup')"></div>
         <div class="modal-card">
-            <header class="modal-card-head">
-                <p class="modal-card-title" v-text="title"></p>
+            <header class="modal-card-head gap-indent">
+                <p class="modal-card-title is-flex-shrink-1 is-size-5" v-text="title"></p>
                 <button class="delete" aria-label="close" @click="$emit('close-popup')"></button>
             </header>
             <section class="modal-card-body">
                 <slot></slot>
             </section>
-            <footer v-if="buttonsClone.length" class="modal-card-foot">
+            <footer v-if="buttonsClone.length" class="modal-card-foot is-justify-content-end gap-indent">
                 <button
                     v-for="button in buttonsClone"
                     :key="button.lang"
                     :disabled="button.disabled"
                     @click="button.event && $emit(button.event)"
-                    :class="['button', button.classList]"
+                    class="button is-soft"
+                    :class="button.classList"
                     v-text="lang(button.lang)"></button>
             </footer>
         </div>
@@ -70,46 +71,13 @@
 </template>
 
 <style>
-    .modal-card-title {
-        font-size: 1.2rem;
-        color: inherit;
-        max-width: 97%;
-    }
+    .modal {
+        --bulma-modal-card-head-padding: var(--bulma-block-spacing);
+        --bulma-modal-card-body-padding: var(--bulma-block-spacing);
+        --bulma-modal-content-width: 50rem;
 
-    @media screen and (max-width: 769px) {
-        .modal-card,
-        .modal-content {
-            width: calc(100% - var(--indent) * 2);
+        .modal-card-body {
+            white-space: pre-line;
         }
-    }
-
-    .modal-card-head,
-    .modal-card-body,
-    .modal-card-foot {
-        padding: var(--indent);
-    }
-
-    .modal-background {
-        background-color: rgba(10, 10, 10, 0.6);
-    }
-
-    .modal-card-foot,
-    .modal-card-head {
-        background-color: var(--background-color-other);
-    }
-
-    .modal-card-body {
-        background-color: var(--background-color);
-        scrollbar-width: thin;
-        white-space: pre-line;
-    }
-
-    .modal-card-head {
-        border-bottom-color: var(--color-hr);
-    }
-
-    .modal-card-foot {
-        border-top-color: var(--color-hr);
-        justify-content: flex-end;
     }
 </style>

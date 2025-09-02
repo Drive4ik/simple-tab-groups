@@ -26,32 +26,34 @@
         .block-content-buttons {
             flex-grow: 1;
             text-align: right;
-        }
 
-        .block-content-buttons > button {
-            margin: 0;
-        }
+            > button {
+                margin: 0;
 
-        .block-content-buttons > button:not(:last-child) {
-            margin-right: 5px;
+                &:not(:last-child) {
+                    margin-right: 5px;
+                }
+            }
         }
 
         .ignored-text {
             margin-left: 5px;
-        }
 
-        .ignored-text::before {
-            content: "(";
-        }
+            &::before {
+                content: "(";
+            }
 
-        .ignored-text::after {
-            content: ")";
+            &::after {
+                content: ")";
+            }
         }
 
         .hidden {
             display: none;
         }
     </style>
+
+    <script type="module" src="extensions-that-conflict-with-stg.js"></script>
 </head>
 
 <body>
@@ -73,8 +75,6 @@
             <p data-i18n-id="helpPageExtensionsThatConflictWithStgDesc2">To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page "about:addons" or by pressing the key combination <code>Ctrl+Shift+A</code></p>
         </div>
     </main>
-
-    <script type="module" src="extensions-that-conflict-with-stg.js"></script>
 </body>
 
 </html>

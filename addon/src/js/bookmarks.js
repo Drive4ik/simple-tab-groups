@@ -110,6 +110,8 @@ export async function exportGroup(group, groupIndex) {
     const bookmarksToSave = new Set;
 
     for (const [index, tab] of group.tabs.entries()) {
+        tab.title ??= tab.url;
+
         let bookmark = bookmarks.find(({id, url}) => !bookmarksToSave.has(id) && url === tab.url);
 
         if (bookmark) {

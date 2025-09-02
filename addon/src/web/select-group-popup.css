@@ -71,6 +71,7 @@
             .stg-popup-group {
                 display: flex;
                 align-items: center;
+                gap: .75rem;
                 height: calc(var(--font-size) * 2);
                 margin: 4px 0 0 0;
                 padding: 0 5px;
@@ -87,32 +88,25 @@
 
                 &.stg-popup-disabled {
                     cursor: not-allowed;
-
-                    span {
-                        color: GrayText !important;
-                    }
-                }
-
-                img {
-                    width: 16px;
-                    min-width: 16px;
-                    height: 16px;
-                    min-height: 16px;
-                    position: relative !important;
-                    -moz-context-properties: fill;
-                }
-
-                .group-icon img/*,
-                img.archive-icon*/ {
-                    fill: var(--fill-group-icon-color) !important;
+                    --text-color: GrayText;
                 }
 
                 figure {
+                    --image-size: 16px;
+
                     position: relative;
                     margin: 0;
                     line-height: 0;
-                    height: 16px;
-                    width: 16px;
+                    width: var(--image-size);
+                    height: var(--image-size);
+
+                    img {
+                        width: var(--image-size);
+                        height: var(--image-size);
+                        min-width: var(--image-size);
+                        min-height: var(--image-size);
+                        position: relative !important;
+                    }
                 }
 
                 .is-sticky::after {
@@ -122,10 +116,6 @@
                     right: -5px;
                     font-size: 10px !important;
                     line-height: 1 !important;
-                }
-
-                * + * {
-                    margin: 0 0 0 7px !important;
                 }
             }
         }

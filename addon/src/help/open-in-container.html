@@ -12,21 +12,8 @@
     <style type="text/css">
         container-name {
             font-weight: bold;
-        }
-
-        container-name[class]::before {
-            content: "";
-            display: inline-block;
-            height: 1em;
-            width: 1em;
-            background-image: var(--identity-icon);
-            -moz-context-properties: fill;
-            fill: var(--identity-icon-color);
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            margin-right: 5px;
-            margin-left: 2px;
+            background-position-x: left !important;
+            padding-inline-start: 1.5em;
         }
 
         .button-container > button {
@@ -36,20 +23,18 @@
         .check-label {
             align-items: center;
             display: flex;
-        }
 
-        .check-label + .check-label {
-            margin-top: 15px;
-        }
-
-        .check-label > span {
-            user-select: none;
+            + & {
+                margin-top: 1em;
+            }
         }
 
         .as-info .hide-as-info {
             display: none;
         }
     </style>
+
+    <script type="module" src="open-in-container.js"></script>
 </head>
 
 <body>
@@ -62,7 +47,7 @@
         <div>
             <p><strong data-i18n-id="extensionName"></strong> <span data-i18n-id="helpPageOpenInContainerSubTitle">addon can't open URL:</span></p>
             <div class="block-content">
-                <img id="redirect-img" src="" hidden class="fill-context" />
+                <img id="redirect-img" src="" hidden />
                 <span id="redirect-url">https://example.com/</span>
             </div>
             <p id="helpPageOpenInContainerDesc1">Group <strong>Group 1</strong> was assigned to open tabs in <container-name>Personal</container-name> container.</p>
@@ -92,8 +77,6 @@
             </div>
         </div>
     </main>
-
-    <script type="module" src="open-in-container.js"></script>
 </body>
 
 </html>

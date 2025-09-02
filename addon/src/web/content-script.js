@@ -165,7 +165,7 @@ function showGroupsPopup(data) {
 
         groupNode.append(figureNode);
 
-        if (group.contextualIdentity) {
+        if (group.contextualIdentity?.iconUrl) {
             const containerFigureNode = document.createElement('figure');
             containerFigureNode.title = group.contextualIdentity.name;
             containerFigureNode.classList = `container-icon userContext-icon identity-icon-${group.contextualIdentity.icon} identity-color-${group.contextualIdentity.color}`;

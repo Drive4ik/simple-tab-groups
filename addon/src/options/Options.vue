@@ -22,6 +22,7 @@
     import JSON from '/js/json.js';
 
     import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
+    import optionsMixin from '/js/mixins/options.mixin.js';
     import syncCloudMixin from '/js/mixins/sync-cloud.mixin.js';
 
     window.logger = new Logger('Options');
@@ -46,7 +47,7 @@
 
     export default {
         name: 'options-page',
-        // mixins: [defaultGroupMixin, syncCloudMixin],
+        mixins: [optionsMixin],
         data() {
             this.MANIFEST = Constants.MANIFEST;
 
@@ -68,6 +69,16 @@
             return {
                 section,
                 element,
+
+                optionsWatchKeys: [
+                    ...Constants.ONLY_BOOL_OPTION_KEYS,
+                    'defaultBookmarksParent',
+                    'autoBackupIntervalKey',
+                    'syncIntervalKey',
+                    'theme',
+                    'contextMenuTab',
+                    'contextMenuGroup',
+                ],
 
                 contextMenuTabTitles: {
                     'open-in-new-window': {
@@ -148,7 +159,6 @@
                 includeTabThumbnailsIntoBackup: false,
                 includeTabFavIconsIntoBackup: true,
 
-                options: {},
                 groups: [],
 
                 manageAddonSettings: null,
@@ -176,20 +186,23 @@
             'github-gist': githubGist,
         },
         async created() {
-            this.loadBookmarksParents();
-            this.permissions.bookmarks = await browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS);
+            this.$on('options-reloaded', () => this.addCustomWatchers());
 
-            this.updateThemeBinded = this.updateTheme.bind(this);
-            this.themeMatcher = window.matchMedia('(prefers-color-scheme: dark)');
+            this.loadBookmarksParents();
 
             const {disconnect} = Messages.connectToBackground(
                 logger.prefixes.join('.'),
                 'sync-end',
-                ({changes}) => changes.local && this.reload()
+                ({changes}) => {
+                    if (changes.local) {
+                        this.optionsReload();
+                        this.loadGroups();
+                    }
+                }
             );
             window.addEventListener('unload', disconnect);
 
-            await this.reload();
+            this.loadGroups();
         },
         mounted() {
             if (this.element === 'sync') {
@@ -212,42 +225,8 @@
             },
         },
         methods: {
-            async reload() {
-                this.unwatchers ??= new Set;
-                this.unwatchers.forEach(unwatch => unwatch());
-                this.unwatchers.clear();
-                this.themeMatcher.removeEventListener('change', this.updateThemeBinded);
-
-                // load
-                const data = await Storage.get();
-                const options = Utils.extractKeys(data, Constants.ALL_OPTION_KEYS);
-
-                options.autoBackupFolderName = await File.getAutoBackupFolderName();
-
-                this.groups = data.groups;
-                this.options = options;
-
-                this.themeMatcher.addEventListener('change', this.updateThemeBinded);
-                this.updateTheme();
-
-                [
-                    ...Constants.ONLY_BOOL_OPTION_KEYS,
-                    'defaultBookmarksParent',
-                    'autoBackupIntervalKey',
-                    'syncIntervalKey',
-                    'theme',
-                    'contextMenuTab',
-                    'contextMenuGroup',
-                    ]
-                    .forEach(option => {
-                        this.unwatchers.add(this.$watch(`options.${option}`, value => {
-                            Messages.sendMessageModule('BG.saveOptions', {
-                                [option]: value,
-                            });
-                        }));
-                    });
-
-                this.unwatchers.add(this.$watch('options.autoBackupFolderName', value => {
+            addCustomWatchers() {
+                this.optionsWatch('autoBackupFolderName', async value => {
                     while (folderNameRegExp.exec(value)) {
                         value = value.replace(folderNameRegExp, '').trim();
                     }
@@ -256,27 +235,16 @@
                         value = '';
                     }
 
-                    Messages.sendMessageModule('BG.saveOptions', {
-                        autoBackupFolderName: value,
-                    });
-                }));
-                this.unwatchers.add(this.$watch('options.autoBackupIntervalValue', value => {
-                    value && Messages.sendMessageModule('BG.saveOptions', {
-                        autoBackupIntervalValue: Utils.minMaxRange(value, 1, 50),
-                    });
-                }));
-                this.unwatchers.add(this.$watch('options.syncIntervalValue', value => {
-                    value && Messages.sendMessageModule('BG.saveOptions', {
-                        syncIntervalValue: Utils.minMaxRange(value, 1, 50),
-                    });
-                }));
-                this.unwatchers.add(this.$watch('options.theme', this.updateTheme));
-                this.unwatchers.add(this.$watch('options.temporaryContainerTitle', value => {
-                    value && Messages.sendMessageModule('BG.saveOptions', {
-                        temporaryContainerTitle: value,
-                    });
-                }));
-                this.unwatchers.add(this.$watch('options.hotkeys', hotkeys => {
+                    return value;
+                });
+
+                this.optionsWatch('autoBackupIntervalValue', value => Utils.clamp(value, 1, 50));
+
+                this.optionsWatch('syncIntervalValue', value => Utils.clamp(value, 1, 50));
+
+                this.optionsWatch('temporaryContainerTitle', value => value || undefined);
+
+                this.optionsWatch('hotkeys', hotkeys => {
                     hotkeys = hotkeys.filter((hotkey, index, self) => {
                         return self.findIndex(h => h.value === hotkey.value) === index;
                     });
@@ -284,23 +252,25 @@
                     const hotheysIsValid = hotkeys.every(hotkey => hotkey.action && isValidHotkeyValue(hotkey.value));
 
                     if (hotheysIsValid) {
-                        Messages.sendMessageModule('BG.saveOptions', {hotkeys});
+                        return hotkeys;
                     }
-                }, {deep: true}));
-                this.unwatchers.add(this.$watch('options.showTabsWithThumbnailsInManageGroups', value => {
+                }, {deep: true});
+
+                this.optionsWatch('showTabsWithThumbnailsInManageGroups', value => {
                     if (!value) {
-                        this.includeTabThumbnailsIntoBackup = this.options.autoBackupIncludeTabThumbnails = false;
+                        this.options.autoBackupIncludeTabThumbnails = this.includeTabThumbnailsIntoBackup = false;
                     }
-                }));
+                });
+            },
+
+            async loadGroups() {
+                const {groups} = await Storage.get('groups');
+                this.groups = groups;
             },
 
             lang: browser.i18n.getMessage,
             getHotkeyActionTitle: action => browser.i18n.getMessage('hotkeyActionTitle' + Utils.capitalize(Utils.toCamelCase(action))),
             getDonateItemHelp: item => browser.i18n.getMessage('donateItemHelp' + Utils.capitalize(Utils.toCamelCase(item))),
-
-            updateTheme() {
-                document.documentElement.dataset.theme = Utils.getThemeApply(this.options.theme);
-            },
 
             openBackupFolder: File.openBackupFolder,
             getGroupTitle: Groups.getTitle,
@@ -673,13 +643,15 @@
 </script>
 
 <template>
-    <div id="stg-options">
+    <div id="stg-options" class="container is-max-desktop mt-3 mb-6">
         <div class="tabs is-boxed is-fullwidth">
             <ul>
                 <li :class="{'is-active': section === SECTION_GENERAL}">
                     <a @click="section = SECTION_GENERAL" @keydown.enter="section = SECTION_GENERAL" tabindex="0">
                         <span class="icon">
-                            <img class="size-16" src="/icons/cog.svg">
+                            <figure class="image is-16x16">
+                                <img src="/icons/cog.svg" />
+                            </figure>
                         </span>
                         <span v-text="lang('generalTitle')"></span>
                     </a>
@@ -687,7 +659,9 @@
                 <li :class="{'is-active': section === SECTION_HOTKEYS}">
                     <a @click="section = SECTION_HOTKEYS" @keydown.enter="section = SECTION_HOTKEYS" tabindex="0">
                         <span class="icon">
-                            <img class="size-16" src="/icons/keyboard-o.svg">
+                            <figure class="image is-16x16">
+                                <img src="/icons/keyboard-o.svg" />
+                            </figure>
                         </span>
                         <span v-text="lang('hotkeysTitle')"></span>
                     </a>
@@ -695,7 +669,9 @@
                 <li :class="{'is-active': section === SECTION_BACKUP}">
                     <a @click="section = SECTION_BACKUP" @keydown.enter="section = SECTION_BACKUP" tabindex="0">
                         <span class="icon">
-                            <img class="size-16" src="/icons/cloud-arrow-up-solid.svg">
+                            <figure class="image is-16x16">
+                                <img src="/icons/cloud-arrow-up-solid.svg" />
+                            </figure>
                         </span>
                         <span v-text="lang('exportAddonSettingsTitle')"></span>
                     </a>
@@ -703,7 +679,9 @@
                 <li :class="{'is-active': section === SECTION_ABOUT}">
                     <a @click="section = SECTION_ABOUT" @keydown.enter="section = SECTION_ABOUT" tabindex="0">
                         <span class="icon">
-                            <img class="size-16" src="/icons/info.svg">
+                            <figure class="image is-16x16">
+                                <img src="/icons/info.svg" />
+                            </figure>
                         </span>
                         <span v-text="lang('aboutExtension')"></span>
                     </a>
@@ -712,124 +690,6 @@
         </div>
 
         <div v-show="section === SECTION_GENERAL">
-            <div class="field">
-                <label class="checkbox">
-                    <input v-model="permissions.bookmarks" @click="setPermissionsBookmarks" type="checkbox" />
-                    <span v-text="lang('allowAccessToBookmarks')"></span>
-                </label>
-            </div>
-            <div class="field h-margin-left-10">
-                <label class="label" v-text="lang('defaultBookmarkFolderLocation')"></label>
-                <div class="control has-icons-left">
-                    <div class="select">
-                        <select v-model="options.defaultBookmarksParent" :disabled="!permissions.bookmarks">
-                            <option v-for="bookmark in defaultBookmarksParents" :key="bookmark.id" :value="bookmark.id" v-text="bookmark.title"></option>
-                        </select>
-                    </div>
-                    <div class="icon is-left">
-                        <img class="size-16" src="/icons/bookmark.svg" />
-                    </div>
-                </div>
-            </div>
-            <div class="field">
-                <label class="checkbox">
-                    <input v-model="options.showContextMenuOnTabs" type="checkbox" />
-                    <span v-text="lang('showContextMenuOnTabs')"></span>
-                </label>
-            </div>
-            <div class="field">
-                <label class="checkbox">
-                    <input v-model="options.showContextMenuOnLinks" type="checkbox" />
-                    <span v-text="lang('showContextMenuOnLinks')"></span>
-                </label>
-            </div>
-            <div class="field">
-                <label class="checkbox">
-                    <input v-model="options.closePopupAfterChangeGroup" type="checkbox" />
-                    <span v-text="lang('closePopupAfterChangeGroup')"></span>
-                </label>
-            </div>
-            <div class="field">
-                <label class="checkbox">
-                    <input v-model="options.closePopupAfterSelectTab" type="checkbox" />
-                    <span v-text="lang('closePopupAfterSelectTab')"></span>
-                </label>
-            </div>
-            <div class="field">
-                <label class="checkbox">
-                    <input v-model="options.fullPopupWidth" type="checkbox" />
-                    <span v-text="lang('fullPopupWidth')"></span>
-                </label>
-            </div>
-            <div class="field">
-                <label class="checkbox">
-                    <input v-model="options.openGroupAfterChange" type="checkbox" />
-                    <span v-text="lang('openGroupAfterChange')"></span>
-                </label>
-            </div>
-            <div class="field">
-                <label class="checkbox">
-                    <input v-model="options.createNewGroupWhenOpenNewWindow" type="checkbox" />
-                    <span v-text="lang('createNewGroupWhenOpenNewWindow')"></span>
-                </label>
-            </div>
-            <div class="field">
-                <label class="checkbox">
-                    <input v-model="options.showExtendGroupsPopupWithActiveTabs" type="checkbox" />
-                    <span v-text="lang('showExtendGroupsPopupWithActiveTabs')"></span>
-                </label>
-            </div>
-            <div class="field">
-                <label class="checkbox">
-                    <input v-model="options.alwaysAskNewGroupName" type="checkbox" />
-                    <span v-text="lang('alwaysAskNewGroupName')"></span>
-                </label>
-            </div>
-            <div class="field">
-                <label class="checkbox">
-                    <input v-model="options.openManageGroupsInTab" type="checkbox" />
-                    <span v-text="lang('openManageGroupsInTab')"></span>
-                </label>
-            </div>
-            <div class="field">
-                <label class="checkbox">
-                    <input v-model="options.showConfirmDialogBeforeGroupDelete" type="checkbox" />
-                    <span v-text="lang('showConfirmDialogBeforeGroupDelete')"></span>
-                </label>
-            </div>
-            <div class="field">
-                <label class="checkbox">
-                    <input v-model="options.showConfirmDialogBeforeGroupArchiving" type="checkbox" />
-                    <span v-text="lang('showConfirmDialogBeforeGroupArchiving')"></span>
-                </label>
-            </div>
-            <div class="field">
-                <label class="checkbox">
-                    <input v-model="options.showNotificationAfterGroupDelete" type="checkbox" />
-                    <span v-text="lang('showNotificationAfterGroupDelete')"></span>
-                </label>
-            </div>
-            <div class="field">
-                <label class="checkbox">
-                    <input v-model="options.showTabsWithThumbnailsInManageGroups" type="checkbox" />
-                    <span v-text="lang('showTabsWithThumbnailsInManageGroups')"></span>
-                </label>
-            </div>
-            <div class="field">
-                <button class="button is-success" @click="openDefaultGroup">
-                    <span class="icon">
-                        <img class="size-16" src="/icons/icon.svg" />
-                    </span>
-                    <span class="h-margin-left-5" v-text="lang('defaultGroup')"></span>
-                </button>
-            </div>
-            <div class="field">
-                <label class="label" v-text="lang('temporaryContainerTitleDescription')"></label>
-                <div class="control">
-                    <input v-model.lazy.trim="options.temporaryContainerTitle" class="input tmp-container-input" type="text" :placeholder="lang('temporaryContainerTitle')">
-                </div>
-            </div>
-
             <div class="field">
                 <label class="label" v-text="lang('theme')"></label>
                 <div class="control">
@@ -841,125 +701,251 @@
                         </select>
                     </div>
                 </div>
+                <div v-if="showDarkThemeNotification" class="help is-warning" v-html="lang('darkThemeNotification')"></div>
             </div>
 
-            <div v-if="showDarkThemeNotification" class="field mb-6" v-html="lang('darkThemeNotification')"></div>
+            <div class="field">
+                <button class="button is-primary is-soft" @click="openDefaultGroup">
+                    <span class="icon">
+                        <figure class="image is-16x16">
+                            <img src="/icons/wrench.svg" />
+                        </figure>
+                    </span>
+                    <span v-text="lang('defaultGroup')"></span>
+                </button>
+            </div>
 
             <hr/>
 
-            <div class="field">
-                <label class="label" v-text="lang('contextMenuEditor')"></label>
+            <div class="block checkboxes as-column">
+                <label class="checkbox">
+                    <input v-model="permissions.bookmarks" @click="setPermissionsBookmarks" type="checkbox" />
+                    <span v-text="lang('allowAccessToBookmarks')"></span>
+                </label>
+                <div class="ml-5">
+                    <label class="label" v-text="lang('defaultBookmarkFolderLocation')"></label>
+                    <div class="control has-icons-left">
+                        <div class="select">
+                            <select v-model="options.defaultBookmarksParent" :disabled="!permissions.bookmarks">
+                                <option v-for="bookmark in defaultBookmarksParents" :key="bookmark.id" :value="bookmark.id" v-text="bookmark.title"></option>
+                            </select>
+                        </div>
+                        <div class="icon is-left">
+                            <figure class="image is-16x16">
+                                <img src="/icons/bookmark.svg" />
+                            </figure>
+                        </div>
+                    </div>
+                </div>
+                <label class="checkbox">
+                    <input v-model="options.showArchivedGroups" type="checkbox" />
+                    <span v-text="lang('showArchivedGroups')"></span>
+                </label>
+                <label class="checkbox">
+                    <input v-model="options.closePopupAfterChangeGroup" type="checkbox" />
+                    <span v-text="lang('closePopupAfterChangeGroup')"></span>
+                </label>
+                <label class="checkbox">
+                    <input v-model="options.closePopupAfterSelectTab" type="checkbox" />
+                    <span v-text="lang('closePopupAfterSelectTab')"></span>
+                </label>
+                <label class="checkbox">
+                    <input v-model="options.openGroupAfterChange" type="checkbox" />
+                    <span v-text="lang('openGroupAfterChange')"></span>
+                </label>
+                <label class="checkbox">
+                    <input v-model="options.showExtendGroupsPopupWithActiveTabs" type="checkbox" />
+                    <span v-text="lang('showExtendGroupsPopupWithActiveTabs')"></span>
+                </label>
+                <label class="checkbox">
+                    <input v-model="options.fullPopupWidth" type="checkbox" />
+                    <span v-text="lang('fullPopupWidth')"></span>
+                </label>
+                <label class="checkbox">
+                    <input v-model="options.createNewGroupWhenOpenNewWindow" type="checkbox" />
+                    <span v-text="lang('createNewGroupWhenOpenNewWindow')"></span>
+                </label>
+                <label class="checkbox">
+                    <input v-model="options.alwaysAskNewGroupName" type="checkbox" />
+                    <span v-text="lang('alwaysAskNewGroupName')"></span>
+                </label>
+                <label class="checkbox">
+                    <input v-model="options.openManageGroupsInTab" type="checkbox" />
+                    <span v-text="lang('openManageGroupsInTab')"></span>
+                </label>
+                <label class="checkbox">
+                    <input v-model="options.showConfirmDialogBeforeGroupDelete" type="checkbox" />
+                    <span v-text="lang('showConfirmDialogBeforeGroupDelete')"></span>
+                </label>
+                <label class="checkbox">
+                    <input v-model="options.showNotificationAfterGroupDelete" type="checkbox" />
+                    <span v-text="lang('showNotificationAfterGroupDelete')"></span>
+                </label>
+                <label class="checkbox">
+                    <input v-model="options.showConfirmDialogBeforeGroupArchiving" type="checkbox" />
+                    <span v-text="lang('showConfirmDialogBeforeGroupArchiving')"></span>
+                </label>
+                <label class="checkbox">
+                    <input v-model="options.showTabsWithThumbnailsInManageGroups" type="checkbox" />
+                    <span v-text="lang('showTabsWithThumbnailsInManageGroups')"></span>
+                </label>
+            </div>
+
+            <div class="field is-horizontal">
+                <div class="field-label">
+                    <label class="label" v-text="lang('temporaryContainerTitleDescription')"></label>
+                </div>
+                <div class="field-body">
+                    <div class="field">
+                        <div class="control">
+                            <input v-model.lazy.trim="options.temporaryContainerTitle" class="input tmp-container-input" type="text" :placeholder="lang('temporaryContainerTitle')">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="box">
+                <label class="label is-medium" v-text="lang('contextMenuEditor')"></label>
+
+                <div class="block checkboxes as-column">
+                    <label class="checkbox">
+                        <input v-model="options.showContextMenuOnTabs" type="checkbox" />
+                        <span v-text="lang('showContextMenuOnTabs')"></span>
+                    </label>
+                    <label class="checkbox">
+                        <input v-model="options.showContextMenuOnLinks" type="checkbox" />
+                        <span v-text="lang('showContextMenuOnLinks')"></span>
+                    </label>
+                </div>
+
+                <hr/>
 
                 <div class="columns">
                     <div class="column">
-                        <label class="label" v-text="lang('tab') + ':'"></label>
-                        <template v-for="(item, id) in contextMenuTabTitles">
-                            <hr v-if="id === 'hr'" :key="id">
-                            <div v-else class="field" :key="item.title">
-                                <label class="checkbox">
+                        <label class="label colon" v-text="lang('tab')"></label>
+                        <div class="checkboxes as-column">
+                            <template v-for="(item, id) in contextMenuTabTitles">
+                                <hr v-if="id === 'hr'" :key="id">
+                                <label v-else :key="item.title" class="checkbox">
                                     <input v-model="options.contextMenuTab" :value="id" type="checkbox" />
-                                    <img v-if="item.icon" class="size-16 mr-3" :src="`/icons/${item.icon}.svg`" />
-                                    <span v-text="lang(item.title)"></span>
+                                    <span class="icon-text">
+                                        <figure v-if="item.icon" class="icon image is-16x16">
+                                            <img :src="`/icons/${item.icon}.svg`" />
+                                        </figure>
+                                        <span v-text="lang(item.title)"></span>
+                                    </span>
                                 </label>
-                            </div>
-                        </template>
+                            </template>
+                        </div>
                     </div>
                     <div class="column">
-                        <label class="label" v-text="lang('group') + ':'"></label>
-                        <template v-for="(item, id) in contextMenuGroupTitles">
-                            <hr v-if="id === 'hr'" :key="id">
-                            <div v-else class="field" :key="item.title">
-                                <label class="checkbox">
+                        <label class="label colon" v-text="lang('group')"></label>
+                        <div class="checkboxes as-column">
+                            <template v-for="(item, id) in contextMenuGroupTitles">
+                                <hr v-if="id === 'hr'" :key="id">
+                                <label v-else :key="item.title" class="checkbox">
                                     <input v-model="options.contextMenuGroup" :value="id" type="checkbox" />
-                                    <img v-if="item.icon" class="size-16 mr-3" :src="`/icons/${item.icon}.svg`" />
-                                    <span v-text="lang(item.title)"></span>
+                                    <span class="icon-text">
+                                        <figure v-if="item.icon" class="icon image is-16x16">
+                                            <img :src="`/icons/${item.icon}.svg`" />
+                                        </figure>
+                                        <span v-text="lang(item.title)"></span>
+                                    </span>
                                 </label>
-                            </div>
-                        </template>
+                            </template>
+                        </div>
                     </div>
                 </div>
-
             </div>
 
-            <hr/>
-
             <div class="mt-5">
-                <button class="button is-warning" @click="openDebugPage" v-text="lang('helpPageStgDebugTitle')"></button>
+                <button class="button is-warning is-soft" @click="openDebugPage" v-text="lang('helpPageStgDebugTitle')"></button>
             </div>
         </div>
 
         <div v-show="section === SECTION_HOTKEYS">
             <label class="has-text-weight-bold" v-text="lang('hotkeysTitle')"></label>
-            <div class="h-margin-bottom-10" v-html="lang('hotkeysDescription')"></div>
-            <div class="hotkeys">
-                <div v-for="(hotkey, hotkeyIndex) in options.hotkeys" :key="hotkeyIndex" class="field">
-                    <div class="is-flex is-align-items-center" :class="hasEqualHotkeys(hotkey) && 'key-error'">
-                        <div class="control input-command">
-                            <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(hotkey, $event)" @blur="onBlurHotkey" :value="hotkey.value" autocomplete="off" class="input" :placeholder="lang('hotkeyPlaceholder')" tabindex="-1" />
-                        </div>
-                        <div class="select">
-                            <select v-model="hotkey.action">
-                                <option v-if="!hotkey.action" disabled value="" v-text="lang('selectAction')"></option>
-                                <option v-for="action in HOTKEY_ACTIONS" :key="action" :value="action" v-text="getHotkeyActionTitle(action)"></option>
-                            </select>
-                        </div>
-                        <div class="delete-button">
-                            <span @click="options.hotkeys.splice(hotkeyIndex, 1)" class="cursor-pointer" :title="lang('deleteHotKeyButton')">
-                                <img class="size-16" src="/icons/delete.svg" />
-                            </span>
-                        </div>
-                    </div>
-
-                    <div v-if="HOTKEY_ACTIONS_WITH_CUSTOM_GROUP.includes(hotkey.action)" class="is-flex is-align-items-center custom-group">
-                        <div :class="['control', {'has-icons-left': hotkey.groupId}]">
-                            <div class="select">
-                                <select v-model="hotkey.groupId">
-                                    <option :value="null" v-text="lang('selectGroup')"></option>
-                                    <option v-if="hotkey.groupId && !groupIds.includes(hotkey.groupId)" disabled :value="hotkey.groupId" v-text="lang('unknownGroup')"></option>
-                                    <option v-for="group in groups" :key="group.id" :value="group.id" v-text="getGroupTitle(group)"></option>
-                                </select>
-                            </div>
-                            <span class="icon is-left" v-if="hotkey.groupId">
-                                <img class="size-16" :src="getGroupIconUrl(hotkey.groupId)">
-                            </span>
-                        </div>
+            <div class="block" v-html="lang('hotkeysDescription')"></div>
+            <div
+                v-for="(hotkey, hotkeyIndex) in options.hotkeys"
+                :key="hotkeyIndex"
+                class="block hotkey is-flex"
+                :class="hasEqualHotkeys(hotkey) && 'key-error'"
+                >
+                <div class="control">
+                    <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(hotkey, $event)" @blur="onBlurHotkey" :value="hotkey.value" autocomplete="off" class="input is-shadowless" :placeholder="lang('hotkeyPlaceholder')" tabindex="-1" />
+                </div>
+                <div class="control is-flex-grow-1">
+                    <div class="select is-fullwidth">
+                        <select v-model="hotkey.action">
+                            <option v-if="!hotkey.action" disabled value="" v-text="lang('selectAction')"></option>
+                            <option v-for="action in HOTKEY_ACTIONS" :key="action" :value="action" v-text="getHotkeyActionTitle(action)"></option>
+                        </select>
                     </div>
                 </div>
-            </div>
-            <div class="control h-margin-top-10">
-                <button @click="options.hotkeys.push(createHotkey())" class="button">
-                    <span class="icon">
-                        <img class="size-16" src="/icons/new.svg" />
+                <div v-if="HOTKEY_ACTIONS_WITH_CUSTOM_GROUP.includes(hotkey.action)" :class="['control', {'has-icons-left': hotkey.groupId}]">
+                    <div class="select">
+                        <select v-model="hotkey.groupId">
+                            <option :value="null" v-text="lang('selectGroup')"></option>
+                            <option v-if="hotkey.groupId && !groupIds.includes(hotkey.groupId)" disabled :value="hotkey.groupId" v-text="lang('unknownGroup')"></option>
+                            <option v-for="group in groups" :key="group.id" :value="group.id" v-text="getGroupTitle(group)"></option>
+                        </select>
+                    </div>
+                    <span class="icon is-left" v-if="hotkey.groupId">
+                        <figure class="image is-16x16">
+                            <img class="no-fill" :src="getGroupIconUrl(hotkey.groupId)" />
+                        </figure>
                     </span>
-                    <span v-text="lang('addHotKeyButton')"></span>
-                </button>
+                </div>
+                <div class="control">
+                    <button class="button" @click="options.hotkeys.splice(hotkeyIndex, 1)" :title="lang('deleteHotKeyButton')">
+                        <span class="icon">
+                            <figure class="image is-16x16">
+                                <img src="/icons/delete.svg" />
+                            </figure>
+                        </span>
+                    </button>
+                </div>
+            </div>
+            <div class="block">
+                <div class="control">
+                    <button @click="options.hotkeys.push(createHotkey())" class="button">
+                        <span class="icon">
+                            <figure class="image is-16x16">
+                                <img src="/icons/new.svg" />
+                            </figure>
+                        </span>
+                        <span v-text="lang('addHotKeyButton')"></span>
+                    </button>
+                </div>
             </div>
         </div>
 
         <div v-show="section === SECTION_BACKUP">
             <div class="field">
-                <div class="has-text-weight-bold h-margin-bottom-5" v-text="lang('exportAddonSettingsTitle')"></div>
-                <div class="h-margin-bottom-5" v-html="lang('exportAddonSettingsDescription')"></div>
-                <div class="field">
+                <div class="field has-text-weight-bold" v-text="lang('exportAddonSettingsTitle')"></div>
+                <div class="field" v-html="lang('exportAddonSettingsDescription')"></div>
+
+                <div class="block checkboxes as-column">
                     <label class="checkbox" :disabled="!options.showTabsWithThumbnailsInManageGroups">
-                        <input v-if="options.showTabsWithThumbnailsInManageGroups" v-model="includeTabThumbnailsIntoBackup" type="checkbox" />
-                        <input v-else disabled="" type="checkbox" />
+                        <input type="checkbox" v-model="includeTabThumbnailsIntoBackup" :disabled="!options.showTabsWithThumbnailsInManageGroups" />
                         <span v-text="lang('includeTabThumbnailsIntoBackup')"></span>
                     </label>
-                </div>
-                <div class="field">
                     <label class="checkbox">
                         <input v-model="includeTabFavIconsIntoBackup" type="checkbox" />
                         <span v-text="lang('includeTabFavIconsIntoBackup')"></span>
                     </label>
                 </div>
+
                 <div class="field">
                     <div class="control">
-                        <button @click="exportAddonSettings" class="button is-info">
+                        <button @click="exportAddonSettings" class="button is-info is-soft">
                             <span class="icon">
-                                <img class="size-16" src="/icons/download.svg" />
+                                <figure class="image is-16x16">
+                                    <img src="/icons/download.svg" />
+                                </figure>
                             </span>
-                            <span class="h-margin-left-5" v-text="lang('exportAddonSettingsButton')"></span>
+                            <span v-text="lang('exportAddonSettingsButton')"></span>
                         </button>
                     </div>
                 </div>
@@ -974,67 +960,77 @@
                         <span v-text="lang('autoBackupEnableTitle')"></span>
                     </label>
                 </div>
-                <div v-if="options.autoBackupEnable" class="field">
-                    <div class="field">
+
+                <template v-if="options.autoBackupEnable">
+                    <div class="block checkboxes as-column">
                         <label class="checkbox" :disabled="!options.showTabsWithThumbnailsInManageGroups">
                             <input v-if="options.showTabsWithThumbnailsInManageGroups" v-model="options.autoBackupIncludeTabThumbnails" type="checkbox" />
                             <input v-else disabled="" type="checkbox" />
                             <span v-text="lang('includeTabThumbnailsIntoBackup')"></span>
                         </label>
-                    </div>
-                    <div class="field">
                         <label class="checkbox">
                             <input v-model="options.autoBackupIncludeTabFavIcons" type="checkbox" />
                             <span v-text="lang('includeTabFavIconsIntoBackup')"></span>
                         </label>
-                    </div>
-                    <div class="field">
                         <label class="checkbox">
                             <input v-model="options.autoBackupByDayIndex" type="checkbox" />
-                            <span v-text="lang('autoBackupByDayIndexTitle')"></span>
+                            <span class="icon-text">
+                                <span v-text="lang('autoBackupByDayIndexTitle')"></span>
+                                <figure class="icon image is-16x16" :title="lang('autoBackupByDayIndexDescription')">
+                                    <img src="/icons/info.svg" />
+                                </figure>
+                            </span>
                         </label>
-                        <p class="help is-medium" v-text="lang('autoBackupByDayIndexDescription')"></p>
                     </div>
 
-                    <div class="field is-flex is-align-items-center indent-children">
-                        <div v-html="lang('autoBackupCreateEveryTitle')"></div>
-                        <div class="field has-addons">
-                            <div class="control">
-                                <input type="number" class="input backup-time-input" v-model.lazy.number="options.autoBackupIntervalValue" min="1" max="50" />
-                            </div>
-                            <div class="control">
-                                <div class="select">
-                                    <select v-model="options.autoBackupIntervalKey">
-                                        <option :value="INTERVAL_KEY.minutes" v-text="lang('intervalKeyMinutes')"></option>
-                                        <option :value="INTERVAL_KEY.hours" v-text="lang('intervalKeyHours')"></option>
-                                        <option :value="INTERVAL_KEY.days" v-text="lang('intervalKeyDays')"></option>
-                                    </select>
+                    <div class="field is-horizontal">
+                        <div class="field-label is-normal">
+                            <label class="label" v-text="lang('autoBackupCreateEveryTitle')"></label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field has-addons">
+                                <div class="control is-expanded">
+                                    <input type="number" class="input" v-model.lazy.number="options.autoBackupIntervalValue" min="1" max="50" />
+                                </div>
+                                <div class="control">
+                                    <div class="select">
+                                        <select v-model="options.autoBackupIntervalKey">
+                                            <option :value="INTERVAL_KEY.minutes" v-text="lang('intervalKeyMinutes')"></option>
+                                            <option :value="INTERVAL_KEY.hours" v-text="lang('intervalKeyHours')"></option>
+                                            <option :value="INTERVAL_KEY.days" v-text="lang('intervalKeyDays')"></option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="field">
-                        <span v-text="lang('autoBackupLastBackupTitle')"></span>
-                        <span v-if="autoBackupLastTimeStamp > 1" v-text="new Date(autoBackupLastTimeStamp * 1000).toLocaleString()"></span>
-                        <span v-else>&mdash;</span>
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <label class="label" v-text="lang('autoBackupLastBackupTitle')"></label>
+                        </div>
+                        <div class="field-body">
+                            <span v-if="autoBackupLastTimeStamp > 1" v-text="new Date(autoBackupLastTimeStamp * 1000).toLocaleString()"></span>
+                            <span v-else>&mdash;</span>
+                        </div>
                     </div>
 
-                    <!-- files -->
-                    <div class="field">
-                        <div class="field is-grouped is-align-items-center">
-                            <div class="control">
-                                <label class="field" v-text="lang('folderNameTitle') + ':'"></label>
-                            </div>
-                            <div class="control">
-                                <input type="text" v-model.lazy.trim="options.autoBackupFolderName" maxlength="200" class="input" />
-                            </div>
-                            <div class="control">
-                                <button class="button" @click="openBackupFolder" v-text="lang('openBackupFolder')"></button>
+                    <div class="field is-horizontal">
+                        <div class="field-label is-normal">
+                            <label class="label colon" v-text="lang('folderNameTitle')"></label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field has-addons">
+                                <div class="control is-expanded">
+                                    <input type="text" v-model.lazy.trim="options.autoBackupFolderName" maxlength="200" class="input" />
+                                </div>
+                                <div class="control">
+                                    <button class="button" @click="openBackupFolder" v-text="lang('openBackupFolder')"></button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </template>
             </div>
 
             <hr>
@@ -1046,7 +1042,8 @@
                         <span v-text="lang('syncEnableTitle')"></span>
                     </label>
                 </div>
-                <div v-if="options.syncEnable" class="field">
+
+                <template v-if="options.syncEnable">
                     <div class="field">
                         <label class="checkbox">
                             <input v-model="options.syncTabFavIcons" type="checkbox" />
@@ -1054,109 +1051,119 @@
                         </label>
                     </div>
 
-                    <div class="field is-flex is-align-items-center indent-children">
-                        <div v-html="lang('autoBackupCreateEveryTitle')"></div>
-                        <div class="field has-addons">
-                            <div class="control">
-                                <input type="number" class="input backup-time-input" v-model.lazy.number="options.syncIntervalValue" min="1" max="50" />
-                            </div>
-                            <div class="control">
-                                <div class="select">
+                    <div class="field is-horizontal">
+                        <div class="field-label is-normal">
+                            <label class="label" v-text="lang('autoBackupCreateEveryTitle')"></label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field has-addons">
+                                <div class="control is-expanded">
+                                    <input type="number" class="input" v-model.lazy.number="options.syncIntervalValue" min="1" max="50" />
+                                </div>
+                                <div class="control">
+                                    <div class="select">
                                     <select v-model="options.syncIntervalKey">
                                         <option :value="INTERVAL_KEY.hours" v-text="lang('intervalKeyHours')"></option>
                                         <option :value="INTERVAL_KEY.days" v-text="lang('intervalKeyDays')"></option>
                                     </select>
+                                </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <github-gist></github-gist>
-                </div>
+                </template>
             </div>
 
             <hr>
 
-            <div class="field">
-                <div class="has-text-weight-bold h-margin-bottom-5" v-text="lang('importAddonSettingsTitle')"></div>
-                <div class="h-margin-bottom-5" v-html="lang('importAddonSettingsDescription')"></div>
-                <div class="field is-grouped is-align-items-center">
-                    <div class="control">
-                        <button @click="importAddonSettings" class="button is-info">
-                            <span class="icon">
-                                <img class="size-16" src="/icons/icon.svg" />
-                            </span>
-                            <span class="h-margin-left-5" v-text="lang('importAddonSettingsButton')"></span>
-                        </button>
+            <div class="columns is-multiline">
+                <div class="column is-full">
+                    <div class="field has-text-weight-bold" v-text="lang('importAddonSettingsTitle')"></div>
+                    <div class="field" v-html="lang('importAddonSettingsDescription')"></div>
+                    <div class="field is-grouped is-align-items-center">
+                        <div class="control">
+                            <button @click="importAddonSettings" class="button is-info is-soft">
+                                <span class="icon">
+                                    <figure class="image is-16x16">
+                                        <img src="/icons/icon.svg" />
+                                    </figure>
+                                </span>
+                                <span v-text="lang('importAddonSettingsButton')"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="field has-text-weight-bold" v-text="lang('importSettingsOldTabGroupsAddonTitle')"></div>
+                    <div class="field" v-html="lang('importSettingsOldTabGroupsAddonDescription')"></div>
+                    <div class="field">
+                        <div class="control">
+                            <button @click="importSettingsOldTabGroupsAddonButton" class="button">
+                                <span class="icon">
+                                    <figure class="image is-16x16">
+                                        <img src="/icons/old-tab-groups.svg" />
+                                    </figure>
+                                </span>
+                                <span v-text="lang('browseFileTitle')"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="field has-text-weight-bold" v-text="lang('importSettingsPanoramaViewAddonTitle')"></div>
+                    <div class="field" v-html="lang('importSettingsPanoramaViewAddonDescription')"></div>
+                    <div class="field">
+                        <div class="control">
+                            <button @click="importSettingsPanoramaViewAddonButton" class="button">
+                                <span class="icon">
+                                    <figure class="image is-16x16">
+                                        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAADsOAAA7DgHMtqGDAAACL0lEQVR42m2Ty05UYRCEv+rzz03GQZORnTExuPMdeAv2JibudYO6x507fQjfgkdwYaJi8BajzAzCYQ6eOZf/bxcDgmJtuyuV6qoO6fn9R8AW+JhLEIhdYAMDEjtU8Q6zEr4Vs2JaPwvAFv4/MiAH1MMU2D+BoumxX8JxRXHk49ncH4c/yn4uCkACqhaKxmki7P6EJKdOFD8S02+JctQdB3TGcGgdyhbyCg4WcFxDTCBHJtyhmDqTt5HYEYejAYHjGubNkpTXUDRQR3CHTNA1yKBNMJ86Pz9GYg1NN+OQAYHXE1gkaNK5BRNIYIBhysSXTy3pBPMgNIR5v88idAgkdgn0MPNLRzQMsz1MVYuwvu/pmkjRUp6tiL5VgUwbSIG/+QYgkxNUPn31dfpgdUS9fmVT8h5J1NbBOrTh79iEMqsmbw4naw+v8+5Fc0OxGdy7u3arFlClVBN4yxotGYYTSL5D9B4Jx7CY0t7q+rXN9y8bsuivWOi2t57OavGLQIvw4PIBVSCmOzQOCcqTRH4CC/eeJYeS2577TcqlvYiYcoUWoYGDRJBDu3Dyz5H8yIkjSxou4/DWE6XjhSMgp88RffysdUMIx4dO/iFS/kgw1GkRdSmQBmOfERGdTx3C5HskFX76Nxcm/+CAFeb0ljs66wsEOprpqsYY0BMKaBkiKCAfwIIuU66eCxjYCqjLLNDVtlbtiQ98rEzQp6KjFoCBVyhjNhzR0CG7+OVdZuqy/RuUhxWxRglzCQAAAABJRU5ErkJggg==" />
+                                    </figure>
+                                </span>
+                                <span v-text="lang('browseFileTitle')"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="field has-text-weight-bold" v-text="lang('importSettingsSyncTabGroupsAddonTitle')"></div>
+                    <div class="field" v-html="lang('importSettingsSyncTabGroupsAddonDescription')"></div>
+                    <div class="field">
+                        <div class="control">
+                            <button @click="importSettingsSyncTabGroupsAddonButton" class="button">
+                                <span class="icon">
+                                    <figure class="image is-16x16">
+                                        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAC4ElEQVR42m1Tu09TcRQ+bVx0dyFYZGiqCelQaAwNVtMApe/29t375LYNCqSFxISBRBdD1MV/wsHBaDQScTYmYkV0MDGBQRExGAddhF65v+M55eXgTb6c331833deFxJ3zlxLP4YfuWeA0iIIjkfnp2CnlwCLd8/fBLrSUvJ2sVgUhD1Jkn7mcrkIMFl/A2gQOnHl+Ky9Btt878D4A+eaVI32qBVt26yOo6Zptq7rGI1GP0Nu6YC0ckw+jFoLRHXViYlF2EpMXvLrcvWPMa6joiiCRDCZTCJwqv/NoNURsM1VB6aewKY0ddGnlo1dTVdRlmWbRDAej9uQpTrZST9w1I/JQl0mgRYJPGKBkE8uaTuqpmC5XLYJIhaL7UH+uYMJlvpqHxpjeT8qL6BtvnRayYdcQsCvFg2rLJetQqHQLpVKFgkgRO7DhrIKOLHmwNpHQPMDYJVgvqP4lkAZxe7Bujld6spm8tuKqnATMZvN4vDwcAsat1RX8vq5+lkJZjwlaPjqp+a9+omFAYp9irM52DjdlG9c6OYxqqra6/f7m263u0ljvDo7O3sS5hpzrmxcrrtdfU2/d6ip5mu9/LEsyd3BwXCzz9PfHBq4PN/v718IBALzXq+34fF4Zo4E0pnURrU+jtONKbwyOYHlSmHbNM2uVCaxbpg66oaGFaVMna8gLRA3sINUKoWhUKgFPI5arWYZhtEmWFSfRep+mvEWpWwRqU1Ns/L5vEWbx++sdDrdieFwGIFHQo6CyDaBZ7xDJF8ikdhkcTrbRBaETuMymYwg9w6oiXtA4xAkgLSaNne3UqnssgAtySadkYj2IZlckdx5AwVvIQnYwHURUfB6krsgUqcEmvFXrpWIgu4FOR+RKTveQjEyMkKrLEm/+ccgAZtqRqrzFz3riUQiXyg7FrDZ+R8BJAGbRYLB4HfgX5LcPrHy2NgY1zbRGaMs65Qi8rPR0VEGMjhtgiDyNzJ0/QXvYtJ0HU94ewAAAABJRU5ErkJggg==" />
+                                    </figure>
+                                </span>
+                                <span v-text="lang('browseFileTitle')"></span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <hr>
 
-            <div class="has-text-weight-bold h-margin-bottom-5" v-text="lang('importSettingsOldTabGroupsAddonTitle')"></div>
-            <div class="h-margin-bottom-5" v-html="lang('importSettingsOldTabGroupsAddonDescription')"></div>
-            <div class="field">
+            <div class="field has-text-weight-bold" v-text="lang('deleteAllAddonDataAndSettings')"></div>
+            <div class="field has-text-weight-bold has-text-danger">
+                <span v-text="lang('warning')"></span>
+                <span v-html="lang('eraseAddonSettingsWarningTitle')"></span>
+            </div>
+            <div class="field is-grouped is-align-items-center">
                 <div class="control">
-                    <button @click="importSettingsOldTabGroupsAddonButton" class="button">
+                    <button @click="showClearAddonConfirmPopup = true" class="button is-danger">
                         <span class="icon">
-                            <img class="size-16" src="/icons/old-tab-groups.svg" />
+                            <figure class="image is-16x16">
+                                <img src="/icons/close.svg" data-theme="light" />
+                            </figure>
                         </span>
-                        <span class="h-margin-left-5" v-text="lang('browseFileTitle')"></span>
+                        <span v-text="lang('clear')"></span>
                     </button>
                 </div>
             </div>
-
-            <hr>
-
-            <div class="has-text-weight-bold h-margin-bottom-5" v-text="lang('importSettingsPanoramaViewAddonTitle')"></div>
-            <div class="h-margin-bottom-5" v-html="lang('importSettingsPanoramaViewAddonDescription')"></div>
-            <div class="field">
-                <div class="control">
-                    <button @click="importSettingsPanoramaViewAddonButton" class="button">
-                        <span class="icon">
-                            <img class="size-16" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAADsOAAA7DgHMtqGDAAACL0lEQVR42m2Ty05UYRCEv+rzz03GQZORnTExuPMdeAv2JibudYO6x507fQjfgkdwYaJi8BajzAzCYQ6eOZf/bxcDgmJtuyuV6qoO6fn9R8AW+JhLEIhdYAMDEjtU8Q6zEr4Vs2JaPwvAFv4/MiAH1MMU2D+BoumxX8JxRXHk49ncH4c/yn4uCkACqhaKxmki7P6EJKdOFD8S02+JctQdB3TGcGgdyhbyCg4WcFxDTCBHJtyhmDqTt5HYEYejAYHjGubNkpTXUDRQR3CHTNA1yKBNMJ86Pz9GYg1NN+OQAYHXE1gkaNK5BRNIYIBhysSXTy3pBPMgNIR5v88idAgkdgn0MPNLRzQMsz1MVYuwvu/pmkjRUp6tiL5VgUwbSIG/+QYgkxNUPn31dfpgdUS9fmVT8h5J1NbBOrTh79iEMqsmbw4naw+v8+5Fc0OxGdy7u3arFlClVBN4yxotGYYTSL5D9B4Jx7CY0t7q+rXN9y8bsuivWOi2t57OavGLQIvw4PIBVSCmOzQOCcqTRH4CC/eeJYeS2577TcqlvYiYcoUWoYGDRJBDu3Dyz5H8yIkjSxou4/DWE6XjhSMgp88RffysdUMIx4dO/iFS/kgw1GkRdSmQBmOfERGdTx3C5HskFX76Nxcm/+CAFeb0ljs66wsEOprpqsYY0BMKaBkiKCAfwIIuU66eCxjYCqjLLNDVtlbtiQ98rEzQp6KjFoCBVyhjNhzR0CG7+OVdZuqy/RuUhxWxRglzCQAAAABJRU5ErkJggg==" />
-                        </span>
-                        <span class="h-margin-left-5" v-text="lang('browseFileTitle')"></span>
-                    </button>
-                </div>
-            </div>
-
-            <hr>
-
-            <div class="has-text-weight-bold h-margin-bottom-5" v-text="lang('importSettingsSyncTabGroupsAddonTitle')"></div>
-            <div class="h-margin-bottom-5" v-html="lang('importSettingsSyncTabGroupsAddonDescription')"></div>
-            <div class="field">
-                <div class="control">
-                    <button @click="importSettingsSyncTabGroupsAddonButton" class="button">
-                        <span class="icon">
-                            <img class="size-16" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAC4ElEQVR42m1Tu09TcRQ+bVx0dyFYZGiqCelQaAwNVtMApe/29t375LYNCqSFxISBRBdD1MV/wsHBaDQScTYmYkV0MDGBQRExGAddhF65v+M55eXgTb6c331833deFxJ3zlxLP4YfuWeA0iIIjkfnp2CnlwCLd8/fBLrSUvJ2sVgUhD1Jkn7mcrkIMFl/A2gQOnHl+Ky9Btt878D4A+eaVI32qBVt26yOo6Zptq7rGI1GP0Nu6YC0ckw+jFoLRHXViYlF2EpMXvLrcvWPMa6joiiCRDCZTCJwqv/NoNURsM1VB6aewKY0ddGnlo1dTVdRlmWbRDAej9uQpTrZST9w1I/JQl0mgRYJPGKBkE8uaTuqpmC5XLYJIhaL7UH+uYMJlvpqHxpjeT8qL6BtvnRayYdcQsCvFg2rLJetQqHQLpVKFgkgRO7DhrIKOLHmwNpHQPMDYJVgvqP4lkAZxe7Bujld6spm8tuKqnATMZvN4vDwcAsat1RX8vq5+lkJZjwlaPjqp+a9+omFAYp9irM52DjdlG9c6OYxqqra6/f7m263u0ljvDo7O3sS5hpzrmxcrrtdfU2/d6ip5mu9/LEsyd3BwXCzz9PfHBq4PN/v718IBALzXq+34fF4Zo4E0pnURrU+jtONKbwyOYHlSmHbNM2uVCaxbpg66oaGFaVMna8gLRA3sINUKoWhUKgFPI5arWYZhtEmWFSfRep+mvEWpWwRqU1Ns/L5vEWbx++sdDrdieFwGIFHQo6CyDaBZ7xDJF8ikdhkcTrbRBaETuMymYwg9w6oiXtA4xAkgLSaNne3UqnssgAtySadkYj2IZlckdx5AwVvIQnYwHURUfB6krsgUqcEmvFXrpWIgu4FOR+RKTveQjEyMkKrLEm/+ccgAZtqRqrzFz3riUQiXyg7FrDZ+R8BJAGbRYLB4HfgX5LcPrHy2NgY1zbRGaMs65Qi8rPR0VEGMjhtgiDyNzJ0/QXvYtJ0HU94ewAAAABJRU5ErkJggg==" />
-                        </span>
-                        <span class="h-margin-left-5" v-text="lang('browseFileTitle')"></span>
-                    </button>
-                </div>
-            </div>
-
-            <hr>
-
-            <div class="field">
-                <div class="has-text-weight-bold h-margin-bottom-5" v-text="lang('deleteAllAddonDataAndSettings')"></div>
-                <div class="has-text-danger has-text-weight-bold h-margin-bottom-5">
-                    <span v-text="lang('warning')"></span>
-                    <span v-html="lang('eraseAddonSettingsWarningTitle')"></span>
-                </div>
-                <div class="field is-grouped is-align-items-center">
-                    <div class="control">
-                        <button @click="showClearAddonConfirmPopup = true" class="button is-danger">
-                            <span class="icon">
-                                <img class="size-16" src="/icons/close.svg" />
-                            </span>
-                            <span class="h-margin-left-5" v-text="lang('clear')"></span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
         </div>
 
         <div v-show="section === SECTION_ABOUT">
@@ -1180,7 +1187,7 @@
             </div>
 
             <div class="is-size-5 mt-6">
-                <div class="columns is-mobile">
+                <div class="columns is-mobile is-multiline">
                     <div class="column is-one-fifth">
                         <span class="icon-text is-flex-wrap-nowrap">
                             <span class="icon">
@@ -1191,29 +1198,31 @@
                             <span v-text="lang('author')"></span>
                         </span>
                     </div>
-                    <div class="column">
+                    <div class="column is-four-fifths">
                         <span>Vitalii Bavykin</span>
                         <span>(Drive4ik)</span>
                         <br>
                         <span v-text="lang('email')"></span>:
                         <a href="mailto:drive4ik+stg@protonmail.com" target="_blank">drive4ik+stg@protonmail.com</a>
                     </div>
-                </div>
 
-                <div class="columns is-mobile">
                     <div class="column is-one-fifth">
                         <span class="icon-text is-flex-wrap-nowrap">
                             <span class="icon">
-                                <img src="/icons/house.svg" />
+                                <figure class="image is-16x16">
+                                    <img src="/icons/house.svg" />
+                                </figure>
                             </span>
                             <span v-text="lang('homepage')"></span>
                         </span>
                     </div>
-                    <div class="column">
+                    <div class="column is-four-fifths">
                         <a :href="MANIFEST.homepage_url" target="_blank">
                             <span class="icon-text">
                                 <span class="icon">
-                                    <img src="/icons/github.svg" />
+                                    <figure class="image is-16x16">
+                                        <img class="no-fill" src="/icons/github.svg" />
+                                    </figure>
                                 </span>
                                 <span>GitHub</span>
                             </span>
@@ -1222,24 +1231,26 @@
                         <a href="https://addons.mozilla.org/firefox/addon/simple-tab-groups/" target="_blank">
                             <span class="icon-text">
                                 <span class="icon">
-                                    <img src="/icons/extension-generic.svg" />
+                                    <figure class="image is-16x16">
+                                        <img class="no-fill" src="/icons/extension-generic.svg" />
+                                    </figure>
                                 </span>
                                 <span v-text="lang('aboutExtensionPage')"></span>
                             </span>
                         </a>
                     </div>
-                </div>
 
-                <div class="columns is-mobile">
                     <div class="column is-one-fifth">
                         <span class="icon-text is-flex-wrap-nowrap">
                             <span class="icon">
-                                <img src="/icons/cubes.svg" />
+                                <figure class="image is-16x16">
+                                    <img src="/icons/cubes.svg" />
+                                </figure>
                             </span>
                             <span v-text="lang('aboutLibraries')"></span>
                         </span>
                     </div>
-                    <div class="column">
+                    <div class="column is-four-fifths">
                         <a href="https://v2.vuejs.org/" target="_blank">Vue 2</a><br>
                         <a href="https://saintplay.github.io/vue-swatches/" target="_blank">vue-swatches</a><br>
                         <a href="https://bulma.io/" target="_blank">Bulma</a><br>
@@ -1249,51 +1260,63 @@
                 <div class="thanks-wrapper mt-6 pb-6">
                     <span class="icon-text">
                         <span class="icon">
-                            <img class="heart" src="/icons/heart.svg" />
+                            <figure class="image is-16x16">
+                                <img class="heart" src="/icons/heart.svg" />
+                            </figure>
                         </span>
                         <span v-text="lang('aboutThanksText')"></span>
                     </span>
                 </div>
 
                 <div class="donate-section mb-6">
-                    <div v-for="(item, name) in DONATE_ITEMS" :key="name" :class="name" class="columns is-mobile">
-                        <div class="column is-one-fifth is-align-content-center">
-                            <span class="icon-text">
-                                <span class="icon">
-                                    <img :src="`/icons/logo-${name}.svg`" />
-                                </span>
-                                <span v-text="item.title"></span>
-                                <span v-if="item.hasHelp" class="icon" :title="getDonateItemHelp(name)">
-                                    <img src="/icons/info.svg" />
-                                </span>
-                            </span>
-                        </div>
-                        <div class="column">
-                            <div class="is-flex is-align-items-center indent-gap">
-                                <a v-if="item.link" data-copy-target :href="item.link" target="_blank" v-text="item.linkText"></a>
-                                <!-- eslint-disable-next-line vue/no-v-text-v-html-on-component -->
-                                <wallet v-else-if="item.wallet" data-copy-target class="is-family-monospace" v-text="item.wallet"></wallet>
-
-                                <button class="button" @click="copyTextSelector(`.${name} [data-copy-target]`)">
+                    <div class="columns is-mobile is-multiline is-2">
+                        <template v-for="(item, name) in DONATE_ITEMS">
+                            <div class="column is-one-fifth is-align-content-center">
+                                <span class="icon-text">
                                     <span class="icon">
-                                        <img src="/icons/copy.svg" />
+                                        <figure class="image is-16x16">
+                                            <img :src="`/icons/logo-${name}.svg`" />
+                                        </figure>
                                     </span>
-                                </button>
-
-                                <!--
-                                    https://qrcodemate.com/
-                                    https://qrgenerator.org/
-                                    https://ezgif.com/svg-to-png
-                                -->
-                                <button v-if="item.hasQr" class="button" :style="{
-                                        '--image-url': `url(/icons/qrcode-${name}.png)`,
-                                    }">
-                                    <span class="icon">
-                                        <img src="/icons/qrcode.svg" />
+                                    <span v-text="item.title"></span>
+                                    <span v-if="item.hasHelp" class="icon" :title="getDonateItemHelp(name)">
+                                        <figure class="image is-16x16">
+                                            <img src="/icons/info.svg" />
+                                        </figure>
                                     </span>
-                                </button>
+                                </span>
                             </div>
-                        </div>
+                            <div class="column is-four-fifths">
+                                <div class="is-flex is-align-items-center gap-indent">
+                                    <a v-if="item.link" data-copy-target :href="item.link" target="_blank" v-text="item.linkText"></a>
+                                    <!-- eslint-disable-next-line vue/no-v-text-v-html-on-component -->
+                                    <wallet v-else-if="item.wallet" data-copy-target class="is-family-monospace" v-text="item.wallet"></wallet>
+
+                                    <button class="button" @click="copyTextSelector(`.${name} [data-copy-target]`)">
+                                        <span class="icon">
+                                            <figure class="image is-16x16">
+                                                <img src="/icons/copy.svg" />
+                                            </figure>
+                                        </span>
+                                    </button>
+
+                                    <!--
+                                        https://qrcodemate.com/
+                                        https://qrgenerator.org/
+                                        https://ezgif.com/svg-to-png
+                                    -->
+                                    <button v-if="item.hasQr" class="button" :style="{
+                                            '--image-url': `url(/icons/qrcode-${name}.png)`,
+                                        }">
+                                        <span class="icon">
+                                            <figure class="image is-16x16">
+                                                <img src="/icons/qrcode.svg" />
+                                            </figure>
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
                     </div>
                 </div>
 
@@ -1302,23 +1325,20 @@
                         <a href="https://addons.mozilla.org/firefox/user/1017663/" target="_blank">STG plugins:</a>
                     </div>
 
-                    <div class="columns is-mobile is-variable is-2 initial-line-height" v-for="(plugin, uuid) in PLUGINS" :key="plugin.url">
-                        <div class="column is-narrow">
-                            <span class="icon">
-                                <img :src="getPluginIcon(plugin.id)" alt="icon">
-                            </span>
-                        </div>
-                        <div class="column is-narrow">
+                    <div v-for="(plugin, uuid) in PLUGINS" :key="uuid" class="field">
+                        <span class="icon-text">
+                            <figure class="icon image is-16x16">
+                                <img :src="getPluginIcon(plugin.id)" alt="plugin icon">
+                            </figure>
+
                             <a :href="plugin.url" target="_blank" v-text="plugin.title"></a>
-                        </div>
-                        <div v-if="isInstalledExtension(uuid)" class="column">
-                            <span class="icon">
+
+                            <figure v-if="isInstalledExtension(uuid)" class="icon image is-16x16">
                                 <img v-if="isEnabledExtension(uuid)" class="has-text-success" src="/icons/check-square.svg" />
                                 <img v-else src="/icons/square-xmark.svg" />
-                            </span>
-                        </div>
+                            </figure>
+                        </span>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -1413,27 +1433,6 @@
 </template>
 
 <style>
-    body {
-        /* background-color: #f9f9fa; */
-        transition: background-color ease .2s;
-    }
-
-    .title,
-    .subtitle {
-        color: var(--text-color);
-    }
-
-    .button.is-info,
-    .button.is-danger,
-    .button.is-success,
-    .button.is-primary {
-        --fill-color: #fff;
-    }
-
-    .initial-line-height {
-        line-height: 1.5rem;
-    }
-
     @property --icon-light {
         syntax: "<percentage>";
         inherits: false;
@@ -1444,7 +1443,7 @@
         .heart {
             image-rendering: high-quality;
             animation: heartbeat 2.5s ease;
-            --fill-color: hsl(0, 100%, var(--icon-light));
+            fill: hsl(0, 100%, var(--icon-light));
         }
 
         &:hover,
@@ -1469,129 +1468,51 @@
             cursor: help;
         }
 
-        .button:has([src*="copy"]):active {
-            --fill-color: hsl(from var(--input-text-color) h s calc(l + 30));
+        .button:has([src*="qrcode"]) {
+            &::after {
+                --size: 200px;
+                width: var(--size);
+                height: var(--size);
+                border-radius: 5px;
+                position: absolute;
+                left: calc(100% + var(--gap-indent));
+                background-color: var(--bulma-white);
+                background-image: var(--image-url);
+                background-repeat: round;
+                z-index: 1;
+            }
+
+            &:focus::after {
+                content: '';
+            }
         }
     }
 
-    .button:has([src*="qrcode"]) {
-        &::after {
-            --size: 200px;
-            width: var(--size);
-            height: var(--size);
-            border-radius: 5px;
-            position: absolute;
-            left: calc(100% + var(--indent));
-            background-color: #fff;
-            background-repeat: round;
-            background-image: var(--image-url);
-            z-index: 1;
-        }
-
-        &:focus::after {
-            content: '';
-        }
-    }
 
     #stg-options {
-        overflow-x: auto;
-        max-width: 1024px;
-        margin: 0 auto;
-        padding: 10px 20px 50px;
+        .hotkey {
+            gap: var(--gap-indent);
 
-        .backup-time-input {
-            width: 100px;
-        }
-
-        .tmp-container-input {
-            width: 300px;
-        }
-
-        .hotkeys {
             .control .input {
                 width: 15em;
-                ime-mode: disabled;
+                outline: 2px solid var(--outline-color, transparent);
             }
+
             .control:not(.key-success):not(.key-error) .input:focus {
-                --in-content-border-focus: transparent;
-                outline: 2px solid dodgerblue;
+                --outline-color: var(--bulma-info-50);
+                border-color: transparent;
             }
-            &:not(.key-error) > .control.key-success .input:focus {
-                --in-content-border-focus: transparent;
-                outline: 2px solid limegreen;
+            &:not(.key-error) .control.key-success .input:focus {
+                --outline-color: var(--bulma-success);
+                border-color: transparent;
             }
-            .key-error .input {
-                --in-content-border-focus: transparent;
-                outline: 2px solid orangered;
-            }
-
-            > .field {
-                &:not(:last-child) {
-                    border-bottom: 1px solid var(--color-hr);
-                    padding-bottom: .75rem;
-                }
-
-                > * > :not(:last-child) {
-                    margin-right: var(--indent);
-                }
-
-                > :not(.custom-group) .select {
-                    flex-grow: 1;
-
-                    select {
-                        width: 100%;
-                    }
-                }
-
-                .custom-group {
-                    justify-content: end;
-                    margin-right: calc(16px + var(--indent));
-                    margin-top: .75rem;
-
-                    > .control {
-                        max-width: 100%;
-                    }
-                }
-
-                .delete-button {
-                    line-height: 1;
+            &.key-error,
+            .control.key-error {
+                .input {
+                    --outline-color: var(--bulma-danger);
+                    border-color: transparent;
                 }
             }
-        }
-    }
-
-    .tabs {
-        ul {
-            border-bottom-color: var(--color-hr);
-        }
-    }
-
-    html[data-theme="dark"] {
-        --background-color: #202023;
-
-        a[href] {
-            color: #7585ff;
-        }
-
-        .tabs {
-            a {
-                color: #a6a5a5;
-            }
-
-            &.is-boxed {
-                li.is-active a {
-                    border-color: var(--color-hr);
-                }
-
-                li.is-active a,
-                a:hover {
-                    background-color: var(--background-color);
-                }
-            }
-        }
-
-        .delete-button:hover img {
-            fill: #0078d7;
         }
     }
 

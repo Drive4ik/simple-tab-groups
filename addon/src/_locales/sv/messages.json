@@ -482,7 +482,7 @@
         "description": "Last backup:"
     },
     "darkThemeNotification": {
-        "message": "För att det mörka temat skall visas korrekt överallt, sätt <code>svg.context-properties.content.enabled</code>-inställningen till <code>true</code> på <code>about:config</code>-sidan<br>Klicka <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">här</a> för ytterligare instruktioner.",
+        "message": "För att det mörka temat skall visas korrekt överallt, sätt <code>svg.context-properties.content.enabled</code>-inställningen till <code>true</code> på <code>about:config</code>-sidan. Klicka <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">här</a> för ytterligare instruktioner.",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {

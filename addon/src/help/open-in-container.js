@@ -48,7 +48,7 @@ function loadConflictedExt(id) {
 }
 
 function applyContainerStyles(parentNode, container) {
-    parentNode.querySelector('container-name').classList = `identity-icon-${container.icon} identity-color-${container.color}`;
+    parentNode.querySelector('container-name').classList = `userContext-icon identity-icon-${container.icon} identity-color-${container.color}`;
 }
 
 async function init() {

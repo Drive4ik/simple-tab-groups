@@ -544,7 +544,7 @@
         "description": "Last backup:"
     },
     "darkThemeNotification": {
-        "message": "어두운 테마를 완전히 지원하려면 <code>about:config</code> 페이지에서 <code>svg.context-properties.content.enabled</code> 매개변수를 <code>true</code>로 활성화하세요.<br ><a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">어떻게 해야 하나요?</a>",
+        "message": "어두운 테마를 완전히 지원하려면 <code>about:config</code> 페이지에서 <code>svg.context-properties.content.enabled</code> 매개변수를 <code>true</code>로 활성화하세요. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">어떻게 해야 하나요?</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {

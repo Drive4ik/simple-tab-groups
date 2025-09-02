@@ -22,20 +22,27 @@
     <div id="editGroupPopup">
         <div class="popup-back-toolbar">
             <div tabindex="0" class="back-button" @click="$emit('close-popup')" @keydown.enter="$emit('close-popup')" :title="lang('goBackButtonTitle')">
-                <img class="size-16" src="/icons/arrow-left.svg" />
+                <figure class="image is-16x16">
+                    <img src="/icons/arrow-left.svg" />
+                </figure>
             </div>
             <div class="text" v-text="lang(title)"></div>
         </div>
 
         <hr>
 
-        <div class="body is-full-width" tabindex="-1">
+        <div class="body is-flex-grow-1" tabindex="-1">
             <slot></slot>
         </div>
 
         <div class="field is-grouped is-grouped-right action-buttons">
             <div class="control" v-for="button in buttons" :key="button.lang">
-                <button @click="$emit(button.event)" :class="['button', button.classList]" v-text="lang(button.lang)"></button>
+                <button
+                    @click="$emit(button.event)"
+                    class="button"
+                    :class="button.classList"
+                    v-text="lang(button.lang)"
+                    ></button>
             </div>
         </div>
     </div>
@@ -51,7 +58,7 @@
         left: 0;
         width: 100vw;
         height: 100vh;
-        background-color: var(--background-color);
+        background-color: var(--bulma-body-background-color);
         z-index: 5;
 
         > hr {
@@ -60,13 +67,13 @@
 
         .body {
             flex-grow: 1;
-            padding: 0 var(--indent) var(--indent);
+            padding: 0 var(--bulma-block-spacing) var(--bulma-block-spacing);
             overflow-y: auto;
             scrollbar-width: thin;
         }
 
         .action-buttons {
-            padding: var(--indent);
+            padding: var(--bulma-block-spacing);
         }
 
         .popup-back-toolbar {
@@ -81,11 +88,11 @@
                 display: flex;
 
                 &:hover {
-                    background-color: var(--item-background-color-hover);
+                    background-color: var(--bulma-scheme-main-ter);
                 }
 
                 &:active {
-                    background-color: var(--item-background-color-active-hover);
+                    background-color: var(--bulma-scheme-main-bis);
                 }
 
             }

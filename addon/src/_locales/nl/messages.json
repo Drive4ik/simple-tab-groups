@@ -580,7 +580,7 @@
         "description": "Last backup:"
     },
     "darkThemeNotification": {
-        "message": "Voor een volledige ondersteuning van het donkere thema, zet u parameter <code>svg.context-properties.content.enabled</code> op <code>true</code> via de <code>about:config</code> pagina<br><a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">Configuratie-editor voor Firefox</a>",
+        "message": "Voor een volledige ondersteuning van het donkere thema, zet u parameter <code>svg.context-properties.content.enabled</code> op <code>true</code> via de <code>about:config</code> pagina. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Configuratie-editor voor Firefox</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {

@@ -89,11 +89,10 @@
 
 <style>
     .v-context-menu {
-        --main-inden: 6px;
         --scroll-indent: 20px;
 
-        background: #f2f2f2;
-        border: 1px solid #bdbdbd;
+        background: var(--bulma-scheme-main-bis);
+        border: 1px solid var(--bulma-border);
         box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
         display: block;
         margin: 0;
@@ -109,69 +108,35 @@
 
         ul {
             list-style: none;
-            padding: var(--main-inden) 0;
+            padding: var(--gap-indent-mini) 0;
             font-size: 12px;
             font-weight: normal;
 
             li {
                 display: flex;
                 align-items: center;
+                gap: var(--gap-indent);
                 margin: 0;
-                padding: 0 var(--scroll-indent) 0 var(--main-inden);
+                padding: 0 var(--bulma-block-spacing);
                 cursor: pointer;
-                height: 25px;
+                height: 2.2em;
                 white-space: nowrap;
-
-                > img {
-                    width: 16px;
-                    height: 16px;
-                }
-
-                > img,
-                > figure.image,
-                > span.userContext-icon {
-                    margin-right: var(--main-inden);
-                }
-
-                &.is-disabled {
-                    color: GrayText;
-                }
-
-                &.is-disabled:hover {
-                    background: #e3e3e3;
-                }
+                overflow: hidden;
+                text-overflow: ellipsis;
 
                 &:not(.is-disabled):hover,
                 &:not(.is-disabled):focus {
-                    background: #91c9f7;
+                    background: var(--bulma-scheme-main-ter);
+                }
+
+                &.is-disabled {
+                    color: var(--bulma-text-05-invert);
+                    cursor: default;
                 }
             }
 
             hr {
-                margin: var(--main-inden) 0 var(--main-inden) calc(16px + var(--main-inden) * 2);
-            }
-
-            hr:first-child,
-            hr:last-child,
-            hr:only-child,
-            hr + hr {
-                display: none;
-            }
-        }
-    }
-
-    [data-theme="dark"] {
-        .v-context-menu {
-            background-color: var(--input-background-color);
-
-            li {
-                &.is-disabled:hover {
-                    background: #393939;
-                }
-
-                &:not(.is-disabled):hover {
-                    background: #5d5d5d;
-                }
+                margin-block: var(--gap-indent-mini);
             }
         }
     }

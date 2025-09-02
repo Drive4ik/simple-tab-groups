@@ -556,7 +556,7 @@
         "description": "Last backup:"
     },
     "darkThemeNotification": {
-        "message": "Untuk mendukung sepenuhnya tema gelap, aktifkan parameter <code>svg.context-properties.content.enabled</code> ke <code>true</code> pada halaman <code>about:config</code><br ><a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">Bagaimana cara melakukannya?</a>",
+        "message": "Untuk mendukung sepenuhnya tema gelap, aktifkan parameter <code>svg.context-properties.content.enabled</code> ke <code>true</code> pada halaman <code>about:config</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Bagaimana cara melakukannya?</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {

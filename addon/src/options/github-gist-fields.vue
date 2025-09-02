@@ -84,7 +84,7 @@ export default {
 <div>
     <div class="field is-horizontal">
         <div class="field-label is-normal">
-            <label class="label" v-text="lang('githubGistTokenTitle') + ':'"></label>
+            <label class="label colon" v-text="lang('githubGistTokenTitle')"></label>
         </div>
         <div class="field-body">
             <div class="field has-addons">
@@ -92,11 +92,15 @@ export default {
                     <input :type="tokenHidden ? 'password' : 'text'" v-model.trim="internalToken" maxlength="100" class="input" />
 
                     <span class="icon is-left">
-                        <img class="size-16" src="/icons/key-solid.svg">
+                        <figure class="image is-16x16">
+                            <img src="/icons/key-solid.svg" />
+                        </figure>
                     </span>
                     <span v-if="tokenCheched !== null" class="icon is-right">
-                        <img v-if="tokenCheched" class="size-16" src="/icons/check.svg">
-                        <img v-else class="size-16" src="/icons/close.svg">
+                        <figure class="image is-16x16">
+                            <img v-if="tokenCheched" src="/icons/check.svg" />
+                            <img v-else src="/icons/close.svg" />
+                        </figure>
                     </span>
                 </div>
                 <div class="control">
@@ -109,8 +113,10 @@ export default {
                         @mouseleave.prevent="tokenHidden = true"
                         >
                         <span class="icon">
-                            <img v-if="tokenHidden" src="/icons/eye.svg">
-                            <img v-else src="/icons/eye-slash.svg">
+                            <figure class="image is-16x16">
+                                <img v-if="tokenHidden" src="/icons/eye.svg" />
+                                <img v-else src="/icons/eye-slash.svg" />
+                            </figure>
                         </span>
                     </button>
                 </div>
@@ -122,7 +128,7 @@ export default {
     </div>
     <div class="field is-horizontal">
         <div class="field-label is-normal">
-            <label class="label" v-text="lang('fileNameTitle') + ':'"></label>
+            <label class="label colon" v-text="lang('fileNameTitle')"></label>
         </div>
         <div class="field-body">
             <div class="field has-addons">
@@ -132,7 +138,9 @@ export default {
                 <div class="control is-expanded" :class="{'has-icons-right': !isValidFileName}">
                     <input required type="text" v-model.trim="internalFileName" maxlength="100" class="input" />
                     <span v-if="!isValidFileName" class="icon is-right">
-                        <img class="size-16" src="/icons/close.svg">
+                        <figure class="image is-16x16">
+                            <img src="/icons/close.svg" />
+                        </figure>
                     </span>
                 </div>
                 <div class="control">

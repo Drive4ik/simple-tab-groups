@@ -253,37 +253,36 @@ export async function add(groupId, cookieStoreId, url, title) {
 }
 
 export async function updateThumbnail(tabId) {
-    if (!backgroundSelf.options.showTabsWithThumbnailsInManageGroups) {
-        return;
-    }
+    const log = logger.start('updateThumbnail', {tabId});
 
-    let tab = await getOne(tabId);
+    const tab = await getOne(tabId);
 
     if (!tab) {
+        log.stop('!tab');
         return;
     }
 
     if (!Utils.isTabLoaded(tab)) {
+        log.stop('tab is loading');
         return;
     }
 
     if (tab.discarded) {
         reload(tab.id);
+        log.stop('tab is discarded, reloading');
         return;
     }
 
-    let thumbnail = null;
-
     try {
-        let thumbnailBase64 = await browser.tabs.captureTab(tab.id, {
+        const thumbnailBase64 = await browser.tabs.captureTab(tab.id, {
             format: browser.extensionTypes.ImageFormat.JPEG,
             quality: 25,
         });
 
-        thumbnail = await new Promise(function(resolve, reject) {
-            let img = new Image();
+        const thumbnail = await new Promise((resolve, reject) => {
+            const img = new Image();
 
-            img.onload = function() {
+            img.onload = () => {
                 resolve(Utils.resizeImage(img, 192, Math.floor(img.width * 192 / img.height), false, 'image/jpeg', 0.7));
             };
 
@@ -298,7 +297,12 @@ export async function updateThumbnail(tabId) {
             tabId: tab.id,
             thumbnail: thumbnail,
         });
-    } catch (e) {}
+
+        log.stop('success');
+    } catch (e) {
+        log.logError('cant create thumbnail', e);
+        log.stopError(String(e));
+    }
 }
 
 export async function move(tabIds, groupId, {

@@ -11,6 +11,10 @@
         "message": "Settings",
         "description": "Settings context button title"
     },
+    "settingsMenu": {
+        "message": "Settings menu",
+        "description": "Settings menu title"
+    },
     "manageGroupsTitle": {
         "message": "Manage groups",
         "description": "Manage groups"
@@ -588,7 +592,7 @@
         "description": "Last backup:"
     },
     "darkThemeNotification": {
-        "message": "To fully support the dark theme, enable the <code>svg.context-properties.content.enabled</code> parameter to <code>true</code> on the <code>about:config</code> page<br><a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\">How to do it?</a>",
+        "message": "To fully support the dark theme, enable the <code>svg.context-properties.content.enabled</code> parameter to <code>true</code> on the <code>about:config</code> page. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">How to do it?</a>",
         "description": "Fully support the dark theme text"
     },
     "importSettingsPanoramaViewAddonTitle": {

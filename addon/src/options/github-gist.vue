@@ -165,7 +165,7 @@ export default {
                         }, {
                             url: gist.html_url,
                             text: area.options.githubGistFileName,
-                            isBold: true,
+                            // isBold: true,
                         },
                     ],
                     lastUpdateAgo: Utils.relativeTime(gist.updated_at),
@@ -227,6 +227,11 @@ export default {
             </div>
             <div class="column is-narrow has-text-right">
                 <a class="button is-link" :href="helpLink" target="_blank">
+                    <span class="icon">
+                        <figure class="image is-16x16">
+                            <img src="/icons/help.svg" />
+                        </figure>
+                    </span>
                     <span v-text="lang('helpTitle')"></span>
                 </a>
             </div>
@@ -234,7 +239,7 @@ export default {
 
         <div class="field is-horizontal">
             <div class="field-label is-normal">
-                <label class="label" v-text="lang('syncSettingsLocation') + ':'"></label>
+                <label class="label colon" v-text="lang('syncSettingsLocation')"></label>
             </div>
             <div class="field-body">
                 <div class="field">
@@ -246,7 +251,9 @@ export default {
                                 </select>
                             </div>
                             <span class="icon is-left">
-                                <img class="size-16" :src="area.icon.save">
+                                <figure class="image is-16x16">
+                                    <img :src="area.icon.save">
+                                </figure>
                             </span>
                         </div>
                     </div>
@@ -256,7 +263,9 @@ export default {
                         <div>
                             <a class="button is-link" href="https://www.mozilla.org/firefox/new/" target="_blank">
                                 <span class="icon">
-                                    <img class="size-16" src="/icons/logo-firefox.svg">
+                                    <figure class="image is-16x16">
+                                        <img src="/icons/logo-firefox.svg">
+                                    </figure>
                                 </span>
                                 <span v-text="lang('downloadFirefox')"></span>
                             </a>
@@ -277,7 +286,7 @@ export default {
 
                 <div class="is-flex is-align-items-center">
                     <div v-if="!area.disabled" class="hidden-empty">
-                        <div v-if="area.gist" class="is-flex is-align-items-center indent-gap">
+                        <div v-if="area.gist" class="is-flex is-align-items-center gap-indent">
                             <div class="breadcrumb mb-0">
                                 <ul class="is-align-items-center">
                                     <li
@@ -297,23 +306,27 @@ export default {
                             <span class="tag is-dark is-rounded" v-text="lang('githubSecretTitle')"></span>
                             <span :title="area.gist.lastUpdateFull" v-text="lang('lastUpdateAgo', area.gist.lastUpdateAgo)"></span>
                         </div>
-                        <div v-else-if="area.gist === null">
-                            <img class="size-16" src="/icons/animate-spinner.svg">
-                        </div>
+                        <figure v-else-if="area.gist === null" class="image is-16x16">
+                            <img src="/icons/animate-spinner.svg">
+                        </figure>
                     </div>
                     <div class="field is-grouped is-grouped-right is-flex-grow-1">
                         <div class="control">
-                            <button type="reset" class="button is-info">
+                            <button type="reset" class="button is-info is-soft">
                                 <span class="icon">
-                                    <img class="size-16" :src="area.icon.load">
+                                    <figure class="image is-16x16">
+                                        <img :src="area.icon.load">
+                                    </figure>
                                 </span>
                                 <span v-text="lang('load')"></span>
                             </button>
                         </div>
                         <div class="control">
-                            <button type="submit" class="button is-success" :class="{'is-loading': area.loading}">
+                            <button type="submit" class="button is-success is-soft" :class="{'is-loading': area.loading}">
                                 <span class="icon">
-                                    <img class="size-16" :src="area.icon.save">
+                                    <figure class="image is-16x16">
+                                        <img :src="area.icon.save">
+                                    </figure>
                                 </span>
                                 <span v-text="lang('saveSettings')"></span>
                             </button>
@@ -343,7 +356,7 @@ export default {
                 <div class="is-right" :class="{'dropdown is-active': showTrustSyncButtons}">
                     <div :class="{'dropdown-trigger': showTrustSyncButtons}">
                         <button
-                            class="button is-primary"
+                            class="button is-primary is-soft"
                             :class="{'is-loading': isLoadingSyncButton}"
                             :disabled="isDisableSyncButton"
                             :aria-haspopup="String(showTrustSyncButtons)"
@@ -351,11 +364,15 @@ export default {
                             @click="startCloudSync()"
                             >
                             <span class="icon">
-                                <img class="size-16" src="/icons/cloud-arrow-up-solid.svg">
+                                <figure class="image is-16x16">
+                                    <img src="/icons/cloud-arrow-up-solid.svg" />
+                                </figure>
                             </span>
                             <span v-text="lang('syncStart')"></span>
                             <span v-if="showTrustSyncButtons" class="icon">
-                                <img class="size-16" src="/icons/arrow-down.svg">
+                                <figure class="image is-16x16">
+                                    <img src="/icons/arrow-down.svg" />
+                                </figure>
                             </span>
                         </button>
                     </div>
@@ -377,7 +394,7 @@ export default {
 
 
 <style>
-html[data-theme="dark"] {
+/* html[data-theme="dark"] {
     .box {
         color: var(--text-color);
         --background-color: #313131;
@@ -400,20 +417,21 @@ html[data-theme="dark"] {
             background-color: hsl(from var(--background-color) h s calc(l + 10));
         }
     }
-}
+} */
 
 .simple-progress {
     display: flex;
     width: 100%;
-    height: 1em;
+    --height: 1em;
+    height: var(--height);
 
     > .position {
         --transition-time: 0ms;
         transition: width var(--transition-time), background-color var(--transition-time);
 
         width: var(--progress-value, 0px);
-        background-color: hsla(0, 0%, 50%, .5);
-        border-radius: 999px;
+        background-color: var(--bulma-text-05-invert);
+        border-radius: var(--height);
 
         &.in-progress {
             --transition-time: .2s;

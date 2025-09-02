@@ -26,7 +26,8 @@
     import JSON from '/js/json.js';
 
     import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
-    import startUpData from '/js/mixins/start-up-data.mixin.js';
+    import optionsMixin from '/js/mixins/options.mixin.js';
+    import startUpDataMixin from '/js/mixins/start-up-data.mixin.js';
     import syncCloudMixin from '/js/mixins/sync-cloud.mixin.js';
 
     const isSidebar = '#sidebar' === window.location.hash;
@@ -34,12 +35,12 @@
     const winLocName = isSidebar ? 'Sidebar' : 'Popup';
     window.logger = new Logger(winLocName);
 
-    const storage = localStorage.create(winLocName.toLowerCase());
+    const storage = localStorage.create('popup');
 
     const githubStorage = localStorage.create('github');
 
     Vue.mixin(defaultGroupMixin);
-    Vue.mixin(startUpData);
+    Vue.mixin(startUpDataMixin);
     Vue.mixin(syncCloudMixin);
     Vue.config.errorHandler = errorEventHandler.bind(window.logger);
 
@@ -82,14 +83,20 @@
 
     export default {
         name: 'popup-page',
+        mixins: [optionsMixin],
         data() {
             return {
                 isSidebar: isSidebar,
+
+                optionsWatchKeys: Constants.POPUP_SETTINGS_MENU_ITEMS
+                    .map(item => item.optionsCheckbox && item.key)
+                    .filter(Boolean),
 
                 SECTION_SEARCH,
                 SECTION_GROUPS_LIST,
                 SECTION_GROUP_TABS,
 
+                POPUP_SETTINGS_MENU_ITEMS: Constants.POPUP_SETTINGS_MENU_ITEMS,
                 DEFAULT_COOKIE_STORE_ID: Constants.DEFAULT_COOKIE_STORE_ID,
                 section: SECTION_DEFAULT,
 
@@ -121,15 +128,12 @@
                 groupToEdit: null,
 
                 containers: Containers.query({defaultContainer: true, temporaryContainer: true}),
-                options: {},
                 groups: [],
 
                 allTabs: {},
 
                 showUnSyncTabs: false,
                 unSyncTabs: [],
-
-                showArchivedGroupsInPopup: storage.showArchivedGroupsInPopup ?? true,
 
                 multipleTabIds: [], // TODO try use Set Object
 
@@ -146,17 +150,11 @@
             'context-menu-tab-new': contextMenuTabNew,
             'context-menu-group': contextMenuGroup,
         },
-        created() {
-            this.loadOptions();
-
-            if (!isSidebar && this.options.fullPopupWidth) {
-                document.documentElement.classList.add('full-popup-width');
-            }
-
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.updateTheme());
-        },
         async mounted() {
             const log = logger.start('mounted');
+
+            await this.optionsLoadPromise;
+
             const startUpData = await this.startUpData();
 
             this.loadWindows(startUpData);
@@ -165,20 +163,24 @@
 
             log.log('loaded');
 
-            this.$nextTick(function() {
-                fullLoading(false);
-                this.setFocusOnSearch();
-                this.setupListeners();
+            await this.$nextTick();
 
-                if (this.options.openGroupAfterChange && this.currentGroup) {
-                    this.showSectionGroupTabs(this.currentGroup);
-                }
+            fullLoading(false);
+            this.setFocusOnSearch();
+            this.setupListeners();
 
-                log.stop();
-            });
+            if (this.options.openGroupAfterChange && this.currentGroup) {
+                this.showSectionGroupTabs(this.currentGroup);
+            }
+
+            log.stop();
         },
         watch: {
-            'options.theme': 'updateTheme',
+            'options.fullPopupWidth'(fullPopupWidth) {
+                if (!isSidebar) {
+                    document.documentElement.classList.toggle('full-popup-width', fullPopupWidth);
+                }
+            },
             section() {
                 this.multipleTabIds = [];
             },
@@ -211,9 +213,6 @@
                     this.groupToShow = groups.find(gr => gr.id === this.groupToShow.id) || null;
                 }
             },
-            showArchivedGroupsInPopup(value) {
-                storage.showArchivedGroupsInPopup = !!value;
-            },
         },
         computed: {
             currentGroup() {
@@ -221,7 +220,7 @@
             },
             filteredGroups() {
                 let searchStr = this.search.toLowerCase(),
-                    groups = this.showArchivedGroupsInPopup ? this.groups : this.groups.filter(group => !group.isArchive),
+                    groups = this.options.showArchivedGroups ? this.groups : this.groups.filter(group => !group.isArchive),
                     filteredGroups = [];
 
                 groups.forEach(group => {
@@ -265,17 +264,9 @@
         methods: {
             lang: browser.i18n.getMessage,
 
-            updateTheme() {
-                document.documentElement.dataset.theme = Utils.getThemeApply(this.options.theme);
-            },
-
             async loadWindows({currendWindow, windows} = {}) {
                 this.currentWindow = currendWindow || await Windows.get();
                 this.openedWindows = windows || await Windows.load();
-            },
-
-            loadOptions() {
-                this.options = JSON.clone(backgroundSelf.options);
             },
 
             setFocusOnSearch() {
@@ -583,9 +574,6 @@
                     },
                     'window-closed': () => {
                         this.loadWindows();
-                    },
-                    'options-updated': () => {
-                        this.loadOptions();
                     },
                     'containers-updated': () => {
                         this.containers = Containers.query({defaultContainer: true, temporaryContainer: true});
@@ -1147,11 +1135,13 @@
             isTabLoading: Utils.isTabLoading,
             getGroupTitle: Groups.getTitle,
             groupTabsCountMessage: Groups.tabsCountMessage,
-            getLastActiveTabContainer(tabs, key = null) {
-                const tab = Utils.getLastActiveTab(tabs),
-                    container = tab ? Containers.get(tab.cookieStoreId) : null;
+            getLastActiveTabContainer({tabs, newTabContainer}, key) {
+                const tab = Utils.getLastActiveTab(tabs);
+                const container = (tab && tab.cookieStoreId !== newTabContainer)
+                    ? Containers.get(tab.cookieStoreId)
+                    : null;
 
-                return container?.[key] ?? null;
+                return container?.[key];
             },
 
             openOptionsPage() {
@@ -1234,20 +1224,20 @@
                 }
             },
 
-            scrollToActiveElement(event) {
+            async scrollToActiveElement(event) {
                 if (-1 == event.target.tabIndex || this.multipleTabIds.length) {
                     return;
                 }
 
-                setTimeout(() => {
-                    this.$nextTick(() => {
-                        if (this.groupToEdit || this.dragData || this.multipleTabIds.length) {
-                            return;
-                        }
+                await Utils.wait(150);
 
-                        Utils.scrollTo(document.activeElement);
-                    });
-                }, 150);
+                this.$nextTick(() => {
+                    if (this.groupToEdit || this.openEditDefaultGroup || this.dragData || this.multipleTabIds.length) {
+                        return;
+                    }
+
+                    Utils.scrollTo(document.activeElement);
+                });
             },
 
             focusToNextElement(event) {
@@ -1325,6 +1315,17 @@
                     this.syncCloudTriggeredByThis = false;
                 }
             },
+            settingsMenuAction({optionsCheckbox, sendMessage, key, closePopup}) {
+                if (optionsCheckbox) {
+                    this.optionsSave(key, !this.options[key]);
+                } else if (sendMessage) {
+                    Messages.sendMessage(...sendMessage);
+                }
+
+                if (closePopup) {
+                    this.closeWindow();
+                }
+            },
             syncCloudOptions() {
                 Messages.sendMessage('open-options-page', {
                     section: 'backup sync',
@@ -1358,12 +1359,12 @@
         @keydown.left="searchDelay.length ? null : showSectionDefault()"
 
         >
-        <header class="p-indent">
+        <header>
             <div :class="['field', {'has-addons': searchDelay.length}]">
-                <div :class="['control is-expanded', {'is-loading': searchDelayTimer}]">
+                <div :class="['control has-icons-left is-expanded', {'is-loading': searchDelayTimer}]">
                     <input
                         type="text"
-                        class="input search-input fill-context"
+                        class="input"
                         ref="search"
                         v-model.trim="searchDelay"
                         autocomplete="off"
@@ -1372,12 +1373,22 @@
                         @keydown.up="focusToNextElement"
                         @input="searchDelay.length ? null : showSectionDefault()"
                         :placeholder="lang('searchOrGoToActive')" />
+                    <span class="icon is-small is-left">
+                        <figure class="image is-16x16">
+                            <img class="no-fill" src="/icons/search.svg"></img>
+                        </figure>
+                    </span>
                 </div>
                 <template v-if="searchDelay.length">
                     <div v-show="!searchOnlyGroups" class="control">
-                        <label class="button" :title="lang('extendedTabSearch')">
-                            <input type="checkbox" v-model="extendedSearch" />
-                        </label>
+                        <button class="button" @click="extendedSearch = !extendedSearch" :title="lang('extendedTabSearch')">
+                            <span class="icon">
+                                <figure class="image is-16x16">
+                                    <img v-if="extendedSearch" src="/icons/check-square.svg" />
+                                    <img v-else src="/icons/square.svg" />
+                                </figure>
+                            </span>
+                        </button>
                     </div>
                     <div class="control">
                         <button :class="['button', {'is-active': searchOnlyGroups}]" @click="searchOnlyGroups = !searchOnlyGroups" v-text="lang('searchOnlyGroups')"></button>
@@ -1386,7 +1397,7 @@
             </div>
         </header>
 
-        <main id="result" :class="['is-full-width', dragData ? 'drag-' + dragData.itemType : false]">
+        <main id="result" :class="['field is-flex-grow-1', dragData ? 'drag-' + dragData.itemType : false]">
             <!-- SEARCH TABS -->
             <div v-if="section === SECTION_SEARCH">
                 <div v-if="filteredGroups.length" class="search-scrollable no-outline">
@@ -1412,29 +1423,29 @@
                                         <img :src="group.iconUrlToDisplay" />
                                     </figure>
                                 </div>
-                                <div class="item-title clip-text">
-                                    <figure v-if="group.isArchive" class="image is-16x16">
+                                <div class="item-title clip-text icon-text">
+                                    <figure v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID" :class="`icon image is-16x16 userContext-icon identity-icon-${containers[group.newTabContainer]?.icon} identity-color-${containers[group.newTabContainer]?.color}`"></figure>
+                                    <figure v-if="group.isArchive" class="icon image is-16x16">
                                         <img src="/icons/archive.svg" />
                                     </figure>
-                                    <span v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID" :class="`size-16 userContext-icon identity-icon-${containers[group.newTabContainer]?.icon} identity-color-${containers[group.newTabContainer]?.color}`"></span>
                                     <figure
                                         v-if="showMuteIconGroup(group)"
-                                        class="image is-16x16"
+                                        class="icon image is-16x16"
                                         @click.stop="toggleMuteGroup(group)"
                                         :title="group.tabs.some(tab => tab.audible) ? lang('muteGroup') : lang('unMuteGroup')"
                                         >
-                                        <img
-                                            :src="group.tabs.some(tab => tab.audible) ? '/icons/audio.svg' : '/icons/audio-mute.svg'"
-                                            class="align-text-bottom" />
+                                        <img :src="group.tabs.some(tab => tab.audible) ? '/icons/audio.svg' : '/icons/audio-mute.svg'" />
                                     </figure>
                                     <span v-text="getGroupTitle(group)"></span>
                                     <span v-if="options.showExtendGroupsPopupWithActiveTabs && !group.isArchive" class="tab-title">
-                                        <span v-if="getLastActiveTabContainer(group.tabs)" :title="getLastActiveTabContainer(group.tabs, 'name')" :class="`size-16 userContext-icon identity-icon-${getLastActiveTabContainer(group.tabs, 'icon')} identity-color-${getLastActiveTabContainer(group.tabs, 'color')}`"></span>
+                                        <figure v-if="getLastActiveTabContainer(group, 'icon')" :title="getLastActiveTabContainer(group, 'name')" :class="`image is-16x16 userContext-icon identity-icon-${getLastActiveTabContainer(group, 'icon')} identity-color-${getLastActiveTabContainer(group, 'color')}`"></figure>
                                         <span v-text="getLastActiveTabTitle(group.tabs)"></span>
                                     </span>
                                 </div>
                                 <div class="item-action bold-hover is-unselectable" @click.stop="showSectionGroupTabs(group)">
-                                    <img class="size-16 rotate-180" src="/icons/arrow-left.svg" />
+                                    <figure class="image is-16x16">
+                                        <img class="rotate-180" src="/icons/arrow-left.svg" />
+                                    </figure>
                                     <span class="tabs-text" v-text="groupTabsCountMessage(group.tabs, group.isArchive, false)"></span>
                                 </div>
                         </div>
@@ -1445,11 +1456,13 @@
                                 :title="getTabTitle(tab, true)"
                                 >
                                 <div class="item-icon">
-                                    <img :src="tab.favIconUrl" class="size-16" loading="lazy" decoding="async" />
+                                    <figure class="image is-16x16">
+                                        <img :src="tab.favIconUrl" loading="lazy" decoding="async" />
+                                    </figure>
                                 </div>
-                                <div class="item-title clip-text">
-                                    <span v-if="tab.container" :title="tab.container?.name" :class="`size-16 userContext-icon identity-icon-${tab.container?.icon} identity-color-${tab.container?.color}`"></span>
-                                    <span class="tab-discarded" v-text="getTabTitle(tab)"></span>
+                                <div class="item-title clip-text icon-text">
+                                    <figure v-if="tab.container" :title="tab.container?.name" :class="`icon image is-16x16 userContext-icon identity-icon-${tab.container?.icon} identity-color-${tab.container?.color}`"></figure>
+                                    <span class="discarded-color" v-text="getTabTitle(tab)"></span>
                                 </div>
                             </div>
                         </template>
@@ -1469,24 +1482,26 @@
                                     'is-active-element': group === currentGroup && tab.active,
                                     'is-multiple-tab-to-move': multipleTabIds.includes(tab.id),
                                 }]"
+                                :style="{
+                                    '--group-icon-color': group.iconColor,
+                                }"
                                 :title="getTabTitle(tab, true)"
                                 >
-                                <div class="item-icon">
-                                    <img v-if="isTabLoading(tab)" src="/icons/tab-loading.svg" class="size-16 align-text-bottom" />
-                                    <img v-else :src="tab.favIconUrl" class="size-16" loading="lazy" decoding="async" />
-                                </div>
-                                <div class="item-title clip-text">
-                                    <span v-if="showMuteIconTab(tab)" @click.stop="toggleMuteTab(tab)"
-                                        :title="tab.audible ? lang('muteTab') : lang('unMuteTab')">
-                                        <img :src="tab.audible ? '/icons/audio.svg' : '/icons/audio-mute.svg'" class="size-16 align-text-bottom" />
-                                    </span>
-                                    <span v-if="tab.container" :title="tab.container?.name" :class="`size-16 userContext-icon identity-icon-${tab.container?.icon} identity-color-${tab.container?.color}`"></span>
-                                    <span :class="{'tab-discarded': tab.discarded}" v-text="getTabTitle(tab)"></span>
+                                <figure class="item-icon image is-16x16">
+                                    <img v-if="isTabLoading(tab)" src="/icons/tab-loading.svg" />
+                                    <img v-else :src="tab.favIconUrl" loading="lazy" decoding="async" />
+                                </figure>
+                                <div class="item-title clip-text icon-text">
+                                    <figure v-if="showMuteIconTab(tab)" class="icon image is-16x16" @click.stop="toggleMuteTab(tab)" :title="tab.audible ? lang('muteTab') : lang('unMuteTab')">
+                                        <img :src="tab.audible ? '/icons/audio.svg' : '/icons/audio-mute.svg'" />
+                                    </figure>
+                                    <figure v-if="tab.container" :title="tab.container?.name" :class="`image is-16x16 userContext-icon identity-icon-${tab.container?.icon} identity-color-${tab.container?.color}`"></figure>
+                                    <span :class="{'discarded-color': tab.discarded}" v-text="getTabTitle(tab)"></span>
                                 </div>
                                 <div class="item-action flex-on-hover">
-                                    <span class="size-16 cursor-pointer" @click.stop="removeTab(tab)" :title="lang('deleteTab')">
+                                    <figure class="image is-16x16 is-clickable" @click.stop="removeTab(tab)" :title="lang('deleteTab')">
                                         <img src="/icons/close.svg" />
-                                    </span>
+                                    </figure>
                                 </div>
                             </div>
                         </template>
@@ -1536,29 +1551,29 @@
                                     <img :src="group.iconUrlToDisplay" />
                                 </figure>
                             </div>
-                            <div class="item-title clip-text">
-                                <figure v-if="group.isArchive" class="image is-16x16">
+                            <div class="item-title clip-text icon-text">
+                                <figure v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID" :title="containers[group.newTabContainer]?.name" :class="`icon image is-16x16 userContext-icon identity-icon-${containers[group.newTabContainer]?.icon} identity-color-${containers[group.newTabContainer]?.color}`"></figure>
+                                <figure v-if="group.isArchive" class="icon image is-16x16">
                                     <img src="/icons/archive.svg" />
                                 </figure>
-                                <span v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID" :title="containers[group.newTabContainer]?.name" :class="`size-16 userContext-icon identity-icon-${containers[group.newTabContainer]?.icon} identity-color-${containers[group.newTabContainer]?.color}`"></span>
                                 <figure
                                     v-if="showMuteIconGroup(group)"
-                                    class="image is-16x16"
+                                    class="icon image is-16x16"
                                     @click.stop="toggleMuteGroup(group)"
                                     :title="group.tabs.some(tab => tab.audible) ? lang('muteGroup') : lang('unMuteGroup')"
                                     >
-                                    <img
-                                        :src="group.tabs.some(tab => tab.audible) ? '/icons/audio.svg' : '/icons/audio-mute.svg'"
-                                        class="align-text-bottom" />
+                                    <img :src="group.tabs.some(tab => tab.audible) ? '/icons/audio.svg' : '/icons/audio-mute.svg'" />
                                 </figure>
                                 <span v-text="getGroupTitle(group)"></span>
                                 <span v-if="options.showExtendGroupsPopupWithActiveTabs && !group.isArchive" class="tab-title">
-                                    <span v-if="getLastActiveTabContainer(group.tabs)" :title="getLastActiveTabContainer(group.tabs, 'name')" :class="`size-16 userContext-icon identity-icon-${getLastActiveTabContainer(group.tabs, 'icon')} identity-color-${getLastActiveTabContainer(group.tabs, 'color')}`"></span>
+                                    <figure v-if="getLastActiveTabContainer(group, 'icon')" :title="getLastActiveTabContainer(group, 'name')" :class="`image is-16x16 userContext-icon identity-icon-${getLastActiveTabContainer(group, 'icon')} identity-color-${getLastActiveTabContainer(group, 'color')}`"></figure>
                                     <span v-text="getLastActiveTabTitle(group.tabs)"></span>
                                 </span>
                             </div>
                             <div class="item-action bold-hover is-unselectable" @click.stop="showSectionGroupTabs(group)">
-                                <img class="size-16 rotate-180" src="/icons/arrow-left.svg" />
+                                <figure class="image is-16x16">
+                                    <img class="rotate-180" src="/icons/arrow-left.svg" />
+                                </figure>
                                 <span class="tabs-text" v-text="groupTabsCountMessage(group.tabs, group.isArchive, false)"></span>
                             </div>
                     </div>
@@ -1570,28 +1585,32 @@
                 <div class="create-new-group">
                     <div class="item" tabindex="0"
                         @click="createNewGroup()"
-                        @keydown.enter="createNewGroup()"
-                        @contextmenu="$refs.newGroupContextMenu.open($event)">
-                        <div class="item-icon">
-                            <img class="size-16" src="/icons/group-new.svg" />
-                        </div>
+                        @keydown.enter="createNewGroup()">
+                        <figure class="item-icon image is-16x16">
+                            <img src="/icons/group-new.svg" />
+                        </figure>
                         <div class="item-title" v-text="lang('createNewGroup')"></div>
+                        <div class="item-action bold-hover" @click.stop="openDefaultGroup" :title="lang('defaultGroup')">
+                            <figure class="image is-16x16">
+                                <img src="/icons/wrench.svg" />
+                            </figure>
+                        </div>
                     </div>
                 </div>
 
                 <div v-if="unSyncTabs.length && !showUnSyncTabs">
                     <hr>
                     <div class="item" tabindex="0" @click="showUnSyncTabs = true" @keydown.enter="showUnSyncTabs = true">
-                        <div class="item-icon">
-                            <img class="size-16" src="/icons/arrow-down.svg" />
-                        </div>
+                        <figure class="item-icon image is-16x16">
+                            <img src="/icons/arrow-down.svg" />
+                        </figure>
                         <div class="item-title" v-text="lang('showOtherTabs')"></div>
                     </div>
                 </div>
 
                 <div v-if="unSyncTabs.length && showUnSyncTabs" class="not-sync-tabs">
                     <hr>
-                    <p class="h-margin-bottom-10">
+                    <p class="mb-3">
                         <span v-text="lang('foundHiddenUnSyncTabsDescription')"></span>
                         <ul>
                             <li>
@@ -1622,22 +1641,21 @@
                             :title="getTabTitle(tab, true)"
                             tabindex="0"
                             >
-                            <div class="item-icon">
-                                <img v-if="isTabLoading(tab)" src="/icons/tab-loading.svg" class="size-16 align-text-bottom" />
-                                <img v-else :src="tab.favIconUrl" class="size-16" loading="lazy" decoding="async" />
-                            </div>
-                            <div class="item-title clip-text">
-                                <span v-if="showMuteIconTab(tab)" @click.stop="toggleMuteTab(tab)"
-                                    :title="tab.audible ? lang('muteTab') : lang('unMuteTab')">
-                                    <img :src="tab.audible ? '/icons/audio.svg' : '/icons/audio-mute.svg'" class="size-16 align-text-bottom" />
-                                </span>
-                                <span v-if="tab.container" :title="tab.container?.name" :class="`size-16 userContext-icon identity-icon-${tab.container?.icon} identity-color-${tab.container?.color}`"></span>
-                                <span :class="{'tab-discarded': tab.discarded}" v-text="getTabTitle(tab)"></span>
+                            <figure class="item-icon image is-16x16">
+                                <img v-if="isTabLoading(tab)" src="/icons/tab-loading.svg" />
+                                <img v-else :src="tab.favIconUrl" loading="lazy" decoding="async" />
+                            </figure>
+                            <div class="item-title clip-text icon-text">
+                                <figure v-if="showMuteIconTab(tab)" class="icon image is-16x16" @click.stop="toggleMuteTab(tab)" :title="tab.audible ? lang('muteTab') : lang('unMuteTab')">
+                                    <img :src="tab.audible ? '/icons/audio.svg' : '/icons/audio-mute.svg'" />
+                                </figure>
+                                <figure v-if="tab.container" :title="tab.container?.name" :class="`icon image is-16x16 userContext-icon identity-icon-${tab.container?.icon} identity-color-${tab.container?.color}`"></figure>
+                                <span :class="{'discarded-color': tab.discarded}" v-text="getTabTitle(tab)"></span>
                             </div>
                             <div class="item-action flex-on-hover">
-                                <span class="size-16 cursor-pointer" @click.stop="removeTab(tab)" :title="lang('deleteTab')">
+                                <figure class="image is-16x16 is-clickable" @click.stop="removeTab(tab)" :title="lang('deleteTab')">
                                     <img src="/icons/close.svg" />
-                                </span>
+                                </figure>
                             </div>
                         </div>
 
@@ -1646,38 +1664,42 @@
             </div>
 
             <!-- GROUP -->
-            <div v-if="section === SECTION_GROUP_TABS" class="tabs-list">
+            <div v-if="section === SECTION_GROUP_TABS" class="tabs-list"
+                :style="{
+                    '--group-icon-color': groupToShow.iconColor,
+                }"
+                >
                 <div class="item is-unselectable" tabindex="0" @click="showSectionDefault" @keydown.enter="showSectionDefault">
-                    <span class="item-icon">
-                        <img class="size-16" src="/icons/arrow-left.svg" />
-                    </span>
+                    <figure class="item-icon image is-16x16">
+                        <img src="/icons/arrow-left.svg" />
+                    </figure>
                     <span class="item-title" v-text="lang('goBackToGroupsButtonTitle')"></span>
                 </div>
 
                 <hr>
 
-                <div class="group-info item no-hover mb-indent">
-                    <div class="item-icon">
-                        <img :src="groupToShow.iconUrlToDisplay" class="is-inline-block size-16" />
-                    </div>
-                    <div class="item-title clip-text">
-                        <figure v-if="groupToShow.isArchive" class="image is-16x16">
+                <div class="group-info item no-hover field">
+                    <figure class="item-icon image is-16x16">
+                        <img :src="groupToShow.iconUrlToDisplay" />
+                    </figure>
+                    <div class="item-title icon-text is-justify-content-center clip-text">
+                        <figure v-if="groupToShow.newTabContainer !== DEFAULT_COOKIE_STORE_ID" :title="containers[groupToShow.newTabContainer]?.name" :class="`icon image is-16x16 userContext-icon identity-icon-${containers[groupToShow.newTabContainer]?.icon} identity-color-${containers[groupToShow.newTabContainer]?.color}`"></figure>
+                        <figure v-if="groupToShow.isArchive" class="icon image is-16x16">
                             <img src="/icons/archive.svg" />
                         </figure>
-                        <span v-if="groupToShow.newTabContainer !== DEFAULT_COOKIE_STORE_ID" :title="containers[groupToShow.newTabContainer]?.name" :class="`size-16 userContext-icon identity-icon-${containers[groupToShow.newTabContainer]?.icon} identity-color-${containers[groupToShow.newTabContainer]?.color}`"></span>
                         <span class="group-title" v-text="getGroupTitle(groupToShow)"></span>
                     </div>
                     <div class="item-action is-unselectable">
-                        <span tabindex="0" @click="openGroupSettings(groupToShow)" @keydown.enter="openGroupSettings(groupToShow)" class="size-16 cursor-pointer" :title="lang('groupSettings')">
+                        <figure tabindex="0" @click="openGroupSettings(groupToShow)" @keydown.enter="openGroupSettings(groupToShow)" class="image is-16x16 is-clickable" :title="lang('groupSettings')">
                             <img src="/icons/settings.svg" />
-                        </span>
-                        <span tabindex="0" @click="removeGroup(groupToShow)" @keydown.enter="removeGroup(groupToShow)" class="size-16 cursor-pointer" :title="lang('deleteGroup')">
+                        </figure>
+                        <figure tabindex="0" @click="removeGroup(groupToShow)" @keydown.enter="removeGroup(groupToShow)" class="image is-16x16 is-clickable" :title="lang('deleteGroup')">
                             <img src="/icons/group-delete.svg" />
-                        </span>
+                        </figure>
                     </div>
                 </div>
 
-                <div class="archive-tabs-scrollable no-outline" v-if="groupToShow.isArchive">
+                <div v-if="groupToShow.isArchive" class="archive-tabs-scrollable no-outline">
                     <div
                         v-for="(tab, tabIndex) in groupToShow.tabs"
                         :key="tabIndex"
@@ -1685,12 +1707,12 @@
                         :title="getTabTitle(tab, true)"
                         @mousedown.middle.prevent
                         >
-                        <div class="item-icon">
-                            <img :src="tab.favIconUrl" class="size-16" loading="lazy" decoding="async" />
-                        </div>
-                        <div class="item-title clip-text">
-                            <span v-if="tab.container" :title="tab.container?.name" :class="`size-16 userContext-icon identity-icon-${tab.container?.icon} identity-color-${tab.container?.color}`"></span>
-                            <span class="tab-discarded" v-text="getTabTitle(tab)"></span>
+                        <figure class="item-icon image is-16x16">
+                            <img :src="tab.favIconUrl" loading="lazy" decoding="async" />
+                        </figure>
+                        <div class="item-title clip-text icon-text">
+                            <figure v-if="tab.container" :title="tab.container?.name" :class="`icon image is-16x16 userContext-icon identity-icon-${tab.container?.icon} identity-color-${tab.container?.color}`"></figure>
+                            <span class="discarded-color" v-text="getTabTitle(tab)"></span>
                         </div>
                     </div>
                 </div>
@@ -1729,25 +1751,26 @@
                             @drop="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
                             @dragend="dragHandle($event, 'tab', ['tab'], {item: tab, group: groupToShow})"
                             >
-                            <div class="item-icon">
-                                <img v-if="isTabLoading(tab)" src="/icons/tab-loading.svg" class="size-16 align-text-bottom" />
-                                <img v-else :src="tab.favIconUrl" class="size-16" loading="lazy" decoding="async" />
-                            </div>
-                            <div class="item-title clip-text">
-                                <span
+                            <figure class="item-icon image is-16x16">
+                                <img v-if="isTabLoading(tab)" src="/icons/tab-loading.svg" />
+                                <img v-else :src="tab.favIconUrl" loading="lazy" decoding="async" />
+                            </figure>
+                            <div class="item-title clip-text icon-text">
+                                <figure
                                     v-if="showMuteIconTab(tab)"
                                     @click.stop="toggleMuteTab(tab)"
                                     :title="tab.audible ? lang('muteTab') : lang('unMuteTab')"
+                                    class="icon image is-16x16"
                                     >
-                                    <img :src="tab.audible ? '/icons/audio.svg' : '/icons/audio-mute.svg'" class="size-16 align-text-bottom" />
-                                </span>
-                                <span v-if="tab.container" :title="tab.container?.name" :class="`size-16 userContext-icon identity-icon-${tab.container?.icon} identity-color-${tab.container?.color}`"></span>
-                                <span :class="{'tab-discarded': tab.discarded}" v-text="getTabTitle(tab)"></span>
+                                    <img :src="tab.audible ? '/icons/audio.svg' : '/icons/audio-mute.svg'" />
+                                </figure>
+                                <figure v-if="tab.container" :title="tab.container?.name" :class="`icon image is-16x16 userContext-icon identity-icon-${tab.container?.icon} identity-color-${tab.container?.color}`"></figure>
+                                <span :class="{'discarded-color': tab.discarded}" v-text="getTabTitle(tab)"></span>
                             </div>
                             <div class="item-action flex-on-hover">
-                                <span class="size-16 cursor-pointer" @click.stop="removeTab(tab)" :title="lang('deleteTab')">
+                                <figure class="image is-16x16 is-clickable" @click.stop="removeTab(tab)" :title="lang('deleteTab')">
                                     <img src="/icons/close.svg" />
-                                </span>
+                                </figure>
                             </div>
                         </div>
                     </div>
@@ -1756,33 +1779,43 @@
 
                     <div class="create-new-tab">
                         <div class="item" tabindex="0" @contextmenu="$refs.contextMenuTabNew.open($event, {group: groupToShow})" @click="addTab(groupToShow)" @keydown.enter="addTab(groupToShow)">
-                            <div class="item-icon">
-                                <img class="size-16" src="/icons/tab-new.svg">
+                            <figure class="item-icon image is-16x16">
+                                <img src="/icons/tab-new.svg" />
+                            </figure>
+                            <div class="item-title">
+                                <span class="icon-text">
+                                    <figure v-if="containers[groupToShow.newTabContainer]?.icon" :title="containers[groupToShow.newTabContainer].name" :class="`icon image is-16x16 userContext-icon identity-icon-${containers[groupToShow.newTabContainer].icon} identity-color-${containers[groupToShow.newTabContainer].color}`"></figure>
+                                    <span v-text="lang('createNewTab')"></span>
+                                </span>
                             </div>
-                            <div class="item-title" v-text="lang('createNewTab')"></div>
+                            <div class="item-action bold-hover" @click.stop="$refs.contextMenuTabNew.open($event, {group: groupToShow})">
+                                <figure class="image is-16x16">
+                                    <img src="/icons/ellipsis-v.svg" />
+                                </figure>
+                            </div>
                         </div>
                     </div>
                 </template>
             </div>
         </main>
 
-        <footer class="is-flex is-unselectable mt-indent">
-            <div tabindex="0" class="is-flex is-align-items-center manage-groups is-full-height is-full-width" @click="openManageGroups" @keydown.enter="openManageGroups" :title="lang('manageGroupsTitle')">
-                <img class="size-16" src="/icons/icon.svg" />
-                <span class="h-margin-left-10" v-text="lang('manageGroupsTitle')"></span>
+        <footer class="is-unselectable">
+            <div tabindex="0" class="is-flex-grow-1 manage-groups" @click="openManageGroups" @keydown.enter="openManageGroups" :title="lang('manageGroupsTitle')">
+                <figure class="image is-16x16">
+                    <img src="/icons/icon.svg" />
+                </figure>
+                <span v-text="lang('manageGroupsTitle')"></span>
             </div>
-            <div class="is-flex is-align-items-center is-vertical-separator"></div>
             <div
                 v-if="options.syncEnable"
                 tabindex="0"
-                class="is-full-height is-flex is-align-items-center is-justify-content-center p-4"
+                class="sync"
                 @click="syncCloudClick"
                 @keydown.enter="syncCloudClick"
                 :title="syncTitle"
-                @contextmenu="$refs.syncContextMenu.open($event)"
                 >
                 <div
-                    class="circle-progress is-flex is-align-items-center is-justify-content-center"
+                    class="circle-progress"
                     :class="{
                         'in-progress': synchronisationInProgress,
                         'is-success': !synchronisationError && synchronisationProgress === 100,
@@ -1792,47 +1825,50 @@
                         '--sync-progress-percent': `${synchronisationProgress}%`,
                     }"
                     >
-                    <img class="size-16" src="/icons/cloud-arrow-up-solid.svg" />
-                    <img v-if="syncHasError" id="sync-error-icon" src="/icons/exclamation-triangle-yellow.svg">
+                    <figure class="image is-16x16">
+                        <img src="/icons/cloud-arrow-up-solid.svg" />
+                        <img v-if="syncHasError" id="sync-error-icon" src="/icons/exclamation-triangle-yellow.svg">
+                    </figure>
                 </div>
             </div>
-            <div class="is-flex is-align-items-center is-vertical-separator"></div>
             <div
                 tabindex="0"
-                class="is-flex is-align-items-center is-full-height"
+                class="settings"
                 @click="openOptionsPage"
                 @keydown.enter="openOptionsPage"
                 :title="lang('openSettings')"
-                @contextmenu="$refs.settingsContextMenu.open($event)"
                 >
-                <img class="size-16" src="/icons/settings.svg" />
+                <figure class="image is-16x16">
+                    <img src="/icons/settings.svg" />
+                </figure>
+            </div>
+            <div
+                class="settings-menu"
+                @click="$refs.settingsMenu.open($event)"
+                @contextmenu="$refs.settingsMenu.open($event)"
+                :title="lang('settingsMenu')"
+                >
+                <figure class="image is-16x16">
+                    <img src="/icons/ellipsis-v.svg" />
+                </figure>
             </div>
         </footer>
 
-        <context-menu ref="syncContextMenu">
+        <context-menu ref="settingsMenu">
             <ul class="is-unselectable">
-                <li @click="syncCloudOptions">
-                    <img src="/icons/settings.svg" class="size-16" />
-                    <span v-text="lang('githubGistCloudSettingsTitle')"></span>
-                </li>
-            </ul>
-        </context-menu>
-
-        <context-menu ref="settingsContextMenu">
-            <ul class="is-unselectable">
-                <li @click="showArchivedGroupsInPopup = !showArchivedGroupsInPopup">
-                    <img :src="showArchivedGroupsInPopup ? '/icons/check-square.svg' : '/icons/square.svg'" class="size-16" />
-                    <span v-text="lang('showArchivedGroups')"></span>
-                </li>
-            </ul>
-        </context-menu>
-
-        <context-menu ref="newGroupContextMenu">
-            <ul class="is-unselectable">
-                <li @click="openDefaultGroup">
-                    <img src="/icons/icon.svg" class="size-16" />
-                    <span v-text="lang('defaultGroup')"></span>
-                </li>
+                <template v-for="(item, i) in POPUP_SETTINGS_MENU_ITEMS">
+                    <hr v-if="item.key === 'hr'" :key="i" />
+                    <li v-else :key="item.key" @click="settingsMenuAction(item)">
+                        <figure v-if="item.optionsCheckbox" class="image is-16x16">
+                            <img v-if="options[item.key]" src="/icons/check-square.svg" />
+                            <img v-else src="/icons/square.svg" />
+                        </figure>
+                        <figure v-else class="image is-16x16">
+                            <img :src="`/icons/${item.icon}.svg`" />
+                        </figure>
+                        <span v-text="lang(item.title || item.key)"></span>
+                    </li>
+                </template>
             </ul>
         </context-menu>
 
@@ -1977,12 +2013,12 @@
         --max-popup-height: 600px;
         --min-popup-height: 125px;
 
-        --item-background-color-active: var(--color-light-gray);
-        --item-background-color-hover: var(--color-gray);
-        --item-background-color-active-hover: var(--color-dark-gray);
+        --item-background-color-active: var(--bulma-scheme-main-bis);
+        --item-background-color-hover: var(--bulma-scheme-main-ter);
+        --item-background-color-active-hover: var(--bulma-scheme-main-quater);
 
-        --footer-background-color: var(--item-background-color-active);
-        --footer-background-hover-color: var(--item-background-color-hover);
+        --footer-background-color: var(--bulma-scheme-main-bis);
+        --footer-background-hover-color: var(--bulma-scheme-main-ter);
     }
 
     #loading {
@@ -1993,7 +2029,7 @@
         left: 0;
         height: 100vh;
         width: 100vw;
-        background-color: hsla(0, 0%, 50%, 0.3);
+        background-color: hsla(var(--bulma-scheme-h), var(--bulma-scheme-s), var(--bulma-scheme-invert-l), 0.46);
         display: flex;
         justify-content: center;
         align-items: center;
@@ -2010,7 +2046,6 @@
         min-height: var(--min-popup-height);
         max-width: var(--max-popup-width);
         min-width: 200px;
-        /* max-height: calc(var(--max-popup-height) - 10px); */
         overflow-x: hidden;
 
         &.full-popup-width {
@@ -2023,17 +2058,21 @@
         }
     }
 
-    html[data-theme="dark"] {
-        --item-background-color-active: #686869;
-        --item-background-color-hover: var(--input-background-color);
-        --item-background-color-active-hover: #4b4b4b;
-
-        --footer-background-color: var(--item-background-color-active-hover);
-        --footer-background-hover-color: var(--item-background-color-hover);
-    }
-
     #stg-popup {
-        --footer-height: 45px;
+        --item-height: 2.3em;
+        --footer-height: calc(var(--bulma-block-spacing) * 2 + var(--item-height));
+
+        width: var(--popup-width);
+        min-height: var(--min-popup-height);
+        max-height: var(--max-popup-height);
+        max-width: var(--max-popup-width);
+
+        overflow-y: auto;
+        scrollbar-width: thin;
+
+        > header {
+            padding: var(--bulma-block-spacing);
+        }
 
         &.is-sidebar {
             --max-popup-height: 100vh;
@@ -2045,64 +2084,65 @@
                 flex-grow: 1;
             }
 
-            > footer > :not(.is-vertical-separator) {
+            > footer > * {
                 height: var(--footer-height);
             }
         }
-
-        width: var(--popup-width);
-        min-height: var(--min-popup-height);
-        max-height: var(--max-popup-height);
-        max-width: var(--max-popup-width);
-
-        overflow-y: auto;
-        /* margin: 0 auto; */
-
-        scrollbar-width: thin;
 
         &.edit-group-popup {
             min-height: var(--max-popup-height);
         }
 
         > footer {
+            display: flex;
+            align-items: stretch;
             position: sticky;
             bottom: 0;
             height: var(--footer-height);
-            align-items: center;
             --current-background-color: var(--footer-background-color);
             background-color: var(--current-background-color);
 
-            > :hover {
-                --current-background-color: var(--footer-background-hover-color);
-                background-color: var(--current-background-color);
-            }
+            > * {
+                display: flex;
+                align-items: center;
+                padding: var(--bulma-block-spacing);
+                gap: var(--gap-indent);
+                position: relative;
 
-            .manage-groups span {
-                flex-grow: 1;
-            }
+                &:not(.manage-groups) {
+                    width: var(--footer-height);
+                    justify-content: center;
+                }
 
-            > *:not(.is-vertical-separator) {
-                padding: 0 20px;
-            }
+                &.settings-menu {
+                    width: calc(var(--gap-indent) * 2 + 14px);
+                }
 
-            .is-vertical-separator {
-                background-color: var(--color-hr);
-                width: 1px;
-                height: 75%;
-            }
+                &:not(:first-child)::before {
+                    content: "";
+                    background-color: var(--bulma-hr-background-color);
+                    width: var(--bulma-hr-height);
+                    height: calc(100% - var(--gap-indent) * 1.5);
+                    position: absolute;
+                    left: calc(var(--bulma-hr-height) / 2 * -1);
+                }
 
-            .is-vertical-separator + .is-vertical-separator {
-                display: none !important;
+                &:hover {
+                    --current-background-color: var(--footer-background-hover-color);
+                    background-color: var(--current-background-color);
+                }
             }
 
             .circle-progress {
-                --indent: 17px;
                 --progress-color: hsl(from currentColor h s calc(l + 70));
                 --progress-background: var(--current-background-color);
 
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 position: relative;
-                height: calc(var(--footer-height) - var(--indent));
-                width: calc(var(--footer-height) - var(--indent));
+                height: 100%;
+                width: 100%;
                 border-radius: 50%;
                 background:
                     radial-gradient(
@@ -2155,16 +2195,13 @@
             flex-wrap: nowrap;
             align-items: center;
             cursor: default;
-            height: 28px;
-            min-height: 28px;
-            padding-left: var(--indent);
+            height: var(--item-height);
+            min-height: var(--item-height);
+            padding-inline-start: var(--bulma-block-spacing);
+            gap: var(--gap-indent);
 
             &.space-left {
-                padding-left: calc(var(--indent) * 2);
-            }
-
-            > :last-child {
-                padding-right: var(--indent);
+                padding-inline-start: calc(var(--bulma-block-spacing) * 2);
             }
 
             &.is-active-element:before,
@@ -2172,7 +2209,7 @@
             &.is-multiple-tab-to-move:before {
                 content: '';
                 position: absolute;
-                background-color: var(--identity-tab-color, var(--in-content-border-focus));
+                background-color: var(--group-icon-color, var(--bulma-info-50));
                 left: 0;
                 top: 0;
                 bottom: 0;
@@ -2198,37 +2235,25 @@
                 background-color: var(--item-background-color-active-hover);
             }
 
-            .item-icon {
-                position: relative;
-                width: 20px;
-                max-width: 20px;
-                min-width: 20px;
-                text-align: center;
-                line-height: 1;
-            }
+            /* .item-icon {
+
+            } */
 
             .item-title {
                 flex-grow: 1;
                 white-space: nowrap;
                 overflow: hidden;
-                padding-left: calc(var(--indent) / 2);
-                padding-right: calc(var(--indent) / 2);
                 cursor: default;
                 display: flex;
                 align-items: center;
-
-                > * + * {
-                    margin-left: calc(var(--indent) / 2);
-                }
+                flex-wrap: nowrap;
+                gap: var(--gap-indent);
 
                 .tab-title {
                     display: flex;
                     align-items: center;
                     color: var(--discarded-text-color);
-
-                    > * + * {
-                        margin-left: calc(var(--indent) / 2);
-                    }
+                    gap: var(--gap-indent);
                 }
             }
 
@@ -2236,12 +2261,9 @@
                 display: flex;
                 align-items: center;
                 align-self: stretch;
-                padding-left: calc(var(--indent) / 2);
+                padding-inline: var(--bulma-block-spacing);
                 white-space: nowrap;
-            }
-
-            .item-action > :not(:first-child) {
-                margin-left: var(--indent);
+                gap: var(--gap-indent);
             }
 
             .flex-on-hover {
@@ -2254,28 +2276,22 @@
             }
         }
 
-        .tabs-list .group-info.item .item-title {
-            justify-content: center;
-
-            > img {
-                pointer-events: auto;
-            }
+        .search-scrollable,
+        .archive-tabs-scrollable,
+        .tabs-scrollable {
+            max-height: calc(var(--max-popup-height) - var(--footer-height) - var(--minus-height-delta));
+            scrollbar-width: thin;
+            overflow-y: auto;
         }
 
         .search-scrollable {
-            max-height: calc(var(--max-popup-height) - var(--footer-height) - 60px);
-            scrollbar-width: thin;
-            overflow-y: auto;
+            --minus-height-delta: 60px; /* minus search bar */
         }
         .archive-tabs-scrollable {
-            max-height: calc(var(--max-popup-height) - var(--footer-height) - 150px);
-            scrollbar-width: thin;
-            overflow-y: auto;
+            --minus-height-delta: 150px; /* minus create new tab */
         }
         .tabs-scrollable {
-            max-height: calc(var(--max-popup-height) - var(--footer-height) - 210px);
-            scrollbar-width: thin;
-            overflow-y: auto;
+            --minus-height-delta: 210px; /* minus all */
         }
     }
 
@@ -2306,18 +2322,7 @@
     }
 
     .not-sync-tabs > p {
-        padding: 0 var(--indent);
+        padding: 0 var(--bulma-block-spacing);
     }
-
-
-    /* media */
-    /*
-    @media screen and (min-height: 600px) {
-        #stg-popup {
-            padding-right: 17px;
-        }
-    }
-     */
-
 
 </style>

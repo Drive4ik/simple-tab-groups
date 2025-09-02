@@ -1,152 +1,48 @@
+@charset "UTF-8";
+
+@import "bulma.min.css";
 
 :root {
-    --stg-icon: url("/icons/icon.svg");
+    color-scheme: light dark;
 
-    --indent: 10px;
-    --color-hr: #d7d7d7;
+    --bulma-block-spacing: var(--bulma-field-block-spacing);
+    --bulma-hr-margin: var(--bulma-block-spacing) 0;
+    --bulma-hr-height: 1px;
 
-    --fill-color: #5d5d5d;
+    --scheme-delta: 6%;
 
-    --background-color: #ffffff;
-    --text-color: inherit;
-    --discarded-text-color: gray;
+    --gap-indent: 0.5rem;
+    --gap-indent-mini: 0.375rem;
 
-    --input-background-color: var(--background-color);
-    --input-text-color: var(--text-color);
+    --clip-text-mask: linear-gradient(to left, transparent, black 2em);
 
-    --color-light-gray: #eceded;
-    --color-gray: #e3e3e3;
-    --color-dark-gray: #d4d4d4;
-    --color-dark-dark-gray: #bababa;
+    --discarded-text-color: light-dark(var(--bulma-text-60), var(--bulma-text-40));
 
-    --outline-color: rgba(0, 0, 0, 0.5);
-
-    --background-color-other: var(--color-gray);
-
-    --in-content-border-focus: #0a84ff;
+    --bulma-scheme-main-quater: hsl(var(--bulma-scheme-h), var(--bulma-scheme-s), var(--bulma-scheme-main-quater-l));
 }
 
-html[data-theme=dark] {
-    --color-hr: #5c5c61;
+[data-theme=light] {
+    color-scheme: light;
 
-    --fill-color: #bebebe;
+    --bulma-scheme-main-l: 100%;
+    --bulma-scheme-main-bis-l: calc(var(--bulma-scheme-main-l) - var(--scheme-delta));
+    --bulma-scheme-main-ter-l: calc(var(--bulma-scheme-main-bis-l) - var(--scheme-delta));
+    --bulma-scheme-main-quater-l: calc(var(--bulma-scheme-main-ter-l) - var(--scheme-delta));
 
-    --background-color: #323234;
-    --text-color: silver;
-
-    --input-background-color: #404040;
-    --input-text-color: var(--text-color);
-
-    --outline-color: var(--text-color);
-
-    --background-color-other: var(--input-background-color);
+    --bulma-background-l: calc(96% - var(--scheme-delta) * 2);
 }
 
-html[data-theme=dark] a:hover {
-    color: #22519c;
-}
+[data-theme=dark] {
+    color-scheme: dark;
 
-html[data-theme=dark] .checkbox:not([disabled]):hover,
-html[data-theme=dark] .radio:not([disabled]):hover,
-html[data-theme=dark] label:not([disabled]) {
-    color: var(--input-text-color);
-}
+    --bulma-scheme-h: 248;
+    --bulma-scheme-s: 11%;
+    --bulma-scheme-main-l: 12%;
 
-html[data-theme=dark] .input,
-html[data-theme=dark] .textarea,
-html[data-theme=dark] .button {
-    color: var(--input-text-color);
-    box-shadow: unset;
-    border-color: var(--color-hr);
-}
+    /* --bulma-scheme-main-l: 11%; */
+    --bulma-scheme-main-bis-l: calc(var(--bulma-scheme-main-l) + var(--scheme-delta));
+    --bulma-scheme-main-ter-l: calc(var(--bulma-scheme-main-bis-l) + var(--scheme-delta));
+    --bulma-scheme-main-quater-l: calc(var(--bulma-scheme-main-ter-l) + var(--scheme-delta));
 
-html[data-theme=dark] .input,
-html[data-theme=dark] .textarea,
-html[data-theme=dark] .select select {
-    background-color: var(--input-background-color);
-}
-
-html[data-theme=dark] .select select {
-    color: #f7f9fa;
-    border-color: #4c4c4e;
-}
-
-html[data-theme=dark] .button {
-    background-color: transparent;
-}
-
-html[data-theme=dark] .input:focus,
-html[data-theme=dark] .textarea:focus,
-html[data-theme=dark] .button:focus {
-    border-color: #0078d7;
-}
-
-html[data-theme=dark] .button.is-focused:not(:active) {
-    box-shadow: 0 0 0 .125em rgba(34, 109, 230, 0.74);
-}
-
-html[data-theme=dark] code {
-    background-color: #404040;
-    color: #b1b1b1;
-}
-
-html[data-theme=dark] .select:not(.is-multiple):not(.is-loading)::after {
-    border-color: var(--text-color);
-}
-
-html[data-theme=dark] .select:not(.is-multiple):not(.is-loading):hover::after {
-    border-color: #3273dc;
-}
-
-/* global-classes */
-.m-indent,
-.my-indent,
-.mb-indent,
-.mb-indent-last:last-child {
-    margin-bottom: var(--indent);
-}
-.m-indent,
-.my-indent,
-.mt-indent,
-.mt-indent-first:first-child {
-    margin-top: var(--indent);
-}
-
-.m-indent,
-.mx-indent,
-.ml-indent {
-    margin-left: var(--indent);
-}
-.m-indent,
-.mx-indent,
-.mr-indent {
-    margin-right: var(--indent);
-}
-
-.p-indent,
-.py-indent,
-.pb-indent,
-.pb-indent-last:last-child {
-    padding-bottom: var(--indent);
-}
-.p-indent,
-.py-indent,
-.pt-indent,
-.pt-indent-first:first-child {
-    padding-top: var(--indent);
-}
-
-.p-indent,
-.px-indent,
-.pl-indent {
-    padding-left: var(--indent);
-}
-.p-indent,
-.px-indent,
-.pr-indent {
-    padding-right: var(--indent);
-}
-
-.indent-gap {
-    gap: var(--indent);
+    --bulma-background-l: calc(14% + var(--scheme-delta) * 2);
 }
