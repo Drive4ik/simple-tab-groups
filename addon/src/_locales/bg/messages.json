@@ -1176,8 +1176,8 @@
         "description": "Default group"
     },
     "moveToGroupIfNoneCatchTabRules": {
-        "message": "Ако никой от регулярните изрази не съвпада с раздела, да бъде преместен в група:",
-        "description": "If none of the regular expressions match the tab, move it to the group:"
+        "message": "Ако никой от регулярните изрази не съвпада с раздела, да бъде преместен в група",
+        "description": "If none of the regular expressions match the tab, move it to the group"
     },
     "dontMove": {
         "message": "Без преместване",

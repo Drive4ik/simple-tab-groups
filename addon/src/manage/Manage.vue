@@ -33,8 +33,6 @@
 
     const storage = localStorage.create('manage-groups');
 
-    Vue.mixin(defaultGroupMixin);
-    Vue.mixin(startUpDataMixin);
     // import dnd from '../js/dnd';
     // import { Drag, Drop } from 'vue-drag-drop';
     // import draggable from 'vuedraggable';
@@ -70,7 +68,7 @@
 
     export default {
         name: 'manage-page',
-        mixins: [optionsMixin],
+        mixins: [defaultGroupMixin, optionsMixin, startUpDataMixin],
         data() {
             return {
                 DEFAULT_COOKIE_STORE_ID: Constants.DEFAULT_COOKIE_STORE_ID,

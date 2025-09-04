@@ -1192,8 +1192,8 @@
         "description": "Default group"
     },
     "moveToGroupIfNoneCatchTabRules": {
-        "message": "Si aucune des expressions régulières ne correspond à l'onglet, déplacer celui-ci vers le groupe:",
-        "description": "If none of the regular expressions match the tab, move it to the group:"
+        "message": "Si aucune des expressions régulières ne correspond à l'onglet, déplacer celui-ci vers le groupe",
+        "description": "If none of the regular expressions match the tab, move it to the group"
     },
     "dontMove": {
         "message": "Ne pas déplacer",

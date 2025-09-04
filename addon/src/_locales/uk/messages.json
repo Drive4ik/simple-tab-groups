@@ -1192,8 +1192,8 @@
         "description": "Default group"
     },
     "moveToGroupIfNoneCatchTabRules": {
-        "message": "Якщо жоден із регулярних виразів не відповідає вкладці, перемістити її в групу:",
-        "description": "If none of the regular expressions match the tab, move it to the group:"
+        "message": "Якщо жоден із регулярних виразів не відповідає вкладці, перемістити її в групу",
+        "description": "If none of the regular expressions match the tab, move it to the group"
     },
     "dontMove": {
         "message": "Не переміщати",

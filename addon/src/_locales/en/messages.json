@@ -1204,8 +1204,8 @@
         "description": "Default group"
     },
     "moveToGroupIfNoneCatchTabRules": {
-        "message": "If none of the regular expressions match the tab, move it to the group:",
-        "description": "If none of the regular expressions match the tab, move it to the group:"
+        "message": "If none of the regular expressions match the tab, move it to the group",
+        "description": "If none of the regular expressions match the tab, move it to the group"
     },
     "dontMove": {
         "message": "Don't move",

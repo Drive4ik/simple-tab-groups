@@ -1192,8 +1192,8 @@
         "description": "Default group"
     },
     "moveToGroupIfNoneCatchTabRules": {
-        "message": "Если ни одно из регулярных выражений не соответствует вкладке, переместить её в группу:",
-        "description": "If none of the regular expressions match the tab, move it to the group:"
+        "message": "Если ни одно из регулярных выражений не соответствует вкладке, переместить её в группу",
+        "description": "If none of the regular expressions match the tab, move it to the group"
     },
     "dontMove": {
         "message": "Не перемещать",

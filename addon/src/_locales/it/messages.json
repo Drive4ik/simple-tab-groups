@@ -1192,8 +1192,8 @@
         "description": "Default group"
     },
     "moveToGroupIfNoneCatchTabRules": {
-        "message": "Se nessuna delle espressioni regolari corrisponde alla scheda, spostala nel gruppo:",
-        "description": "If none of the regular expressions match the tab, move it to the group:"
+        "message": "Se nessuna delle espressioni regolari corrisponde alla scheda, spostala nel gruppo",
+        "description": "If none of the regular expressions match the tab, move it to the group"
     },
     "dontMove": {
         "message": "Non spostare",

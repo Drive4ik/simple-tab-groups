@@ -23,7 +23,6 @@
 
     import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
     import optionsMixin from '/js/mixins/options.mixin.js';
-    import syncCloudMixin from '/js/mixins/sync-cloud.mixin.js';
 
     const MODULE_NAME = Utils.capitalize(Utils.getNameFromPath(location.href));
 
@@ -31,8 +30,6 @@
 
     const storage = localStorage.create(MODULE_NAME.toLowerCase());
 
-    Vue.mixin(defaultGroupMixin);
-    Vue.mixin(syncCloudMixin);
     Vue.config.errorHandler = errorEventHandler.bind(window.logger);
 
     const SECTION_GENERAL = 'general',
@@ -71,7 +68,7 @@
 
     export default {
         name: 'options-page',
-        mixins: [optionsMixin],
+        mixins: [defaultGroupMixin, optionsMixin],
         data() {
             this.MANIFEST = Constants.MANIFEST;
 

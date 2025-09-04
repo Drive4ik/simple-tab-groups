@@ -1192,8 +1192,8 @@
         "description": "Default group"
     },
     "moveToGroupIfNoneCatchTabRules": {
-        "message": "將不符合任何正規表示式的分頁移至此群組:",
-        "description": "If none of the regular expressions match the tab, move it to the group:"
+        "message": "將不符合任何正規表示式的分頁移至此群組",
+        "description": "If none of the regular expressions match the tab, move it to the group"
     },
     "dontMove": {
         "message": "不要移動",

@@ -21,26 +21,31 @@
         methods: {
             lang: browser.i18n.getMessage,
         },
-        mounted() {
-            this.$nextTick(() => {
-                if (this.buttons.length) {
-                    let focusedButtonIndex = this.buttons.findIndex(button => button.hasOwnProperty('focused'));
+        async mounted() {
+            document.documentElement.classList.add('is-clipped');
 
-                    if (focusedButtonIndex === -1) {
-                        focusedButtonIndex = 1;
-                    } else if (this.buttons[focusedButtonIndex].focused) {
-                        focusedButtonIndex++;
-                    } else {
-                        focusedButtonIndex = 0;
-                    }
+            await this.$nextTick();
 
-                    if (focusedButtonIndex) {
-                        this.$el.querySelector(`footer button:nth-child(${focusedButtonIndex})`).focus();
-                    }
+            if (this.buttons.length) {
+                let focusedButtonIndex = this.buttons.findIndex(button => button.hasOwnProperty('focused'));
+
+                if (focusedButtonIndex === -1) {
+                    focusedButtonIndex = 1;
+                } else if (this.buttons[focusedButtonIndex].focused) {
+                    focusedButtonIndex++;
+                } else {
+                    focusedButtonIndex = 0;
                 }
 
-                this.$emit('show-popup');
-            });
+                if (focusedButtonIndex) {
+                    this.$el.querySelector(`footer button:nth-child(${focusedButtonIndex})`).focus();
+                }
+            }
+
+            this.$emit('show-popup');
+        },
+        beforeDestroy() {
+            document.documentElement.classList.remove('is-clipped');
         },
     }
 </script>

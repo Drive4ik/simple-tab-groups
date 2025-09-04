@@ -1192,8 +1192,8 @@
         "description": "Default group"
     },
     "moveToGroupIfNoneCatchTabRules": {
-        "message": "Si ninguna de las expresiones coincide con la pestaña, moverla al grupo:",
-        "description": "If none of the regular expressions match the tab, move it to the group:"
+        "message": "Si ninguna de las expresiones coincide con la pestaña, moverla al grupo",
+        "description": "If none of the regular expressions match the tab, move it to the group"
     },
     "dontMove": {
         "message": "No mover",

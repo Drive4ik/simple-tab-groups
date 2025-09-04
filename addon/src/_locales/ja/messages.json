@@ -1193,7 +1193,7 @@
     },
     "moveToGroupIfNoneCatchTabRules": {
         "message": "どの正規表現もタブにマッチしない場合は、そのタブをグループに移動する",
-        "description": "If none of the regular expressions match the tab, move it to the group:"
+        "description": "If none of the regular expressions match the tab, move it to the group"
     },
     "dontMove": {
         "message": "移動しない",

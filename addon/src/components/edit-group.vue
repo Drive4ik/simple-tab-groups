@@ -299,7 +299,7 @@
 
 <template>
     <div v-if="show" @keydown.stop.enter="triggerChanges" @keyup.stop tabindex="-1" class="no-outline edit-group">
-        <label class="label" v-text="lang('title')"></label>
+        <label class="label colon" v-text="lang('title')"></label>
         <div :class="['field', isDefaultGroup && 'has-addons']">
             <div class="control is-expanded has-icons-left">
                 <input ref="groupTitle" v-model.trim="group.title" type="text" maxlength="256" class="input" :placeholder="lang('title')" @keydown.stop @keyup.stop />
@@ -331,7 +331,7 @@
         </context-menu>
 
         <div class="field">
-            <label class="label" v-text="lang('iconStyle')"></label>
+            <label class="label colon" v-text="lang('iconStyle')"></label>
             <div class="buttons">
                 <swatches
                     v-model.trim="group.iconColor"
@@ -405,7 +405,7 @@
         </div>
 
         <div class="field">
-            <label class="label" v-text="lang('alwaysOpenTabsInContainer')"></label>
+            <label class="label colon" v-text="lang('alwaysOpenTabsInContainer')"></label>
             <div class="field">
                 <div class="control" :class="{'has-icons-left': group.newTabContainer !== DEFAULT_CONTAINER.cookieStoreId}">
                     <div class="select is-fullwidth">
@@ -431,7 +431,7 @@
                 </div>
             </div>
             <div v-if="group.ifDifferentContainerReOpen" class="field">
-                <label class="label" v-text="lang('excludeContainersForReOpen')"></label>
+                <label class="label colon" v-text="lang('excludeContainersForReOpen')"></label>
                 <div class="checkboxes as-column containers">
                     <label class="checkbox" :disabled="group.newTabContainer === DEFAULT_CONTAINER.cookieStoreId">
                         <input type="checkbox" v-model="group.excludeContainersForReOpen" :value="DEFAULT_CONTAINER.cookieStoreId" :disabled="group.newTabContainer === DEFAULT_CONTAINER.cookieStoreId" />
@@ -475,7 +475,7 @@
         </div>
 
         <div class="field">
-            <label class="label" v-text="lang('catchTabContainers')"></label>
+            <label class="label colon" v-text="lang('catchTabContainers')"></label>
             <div class="checkboxes as-column containers">
                 <label v-for="container in {DEFAULT_CONTAINER, ...containers}" :key="container.cookieStoreId" class="checkbox" :disabled="isDisabledContainer(container.cookieStoreId)">
                     <input type="checkbox" v-model="group.catchTabContainers" :value="container.cookieStoreId" :disabled="isDisabledContainer(container.cookieStoreId)" />
@@ -525,7 +525,7 @@
         </div>
 
         <div class="field">
-            <label class="label" v-text="lang('moveToGroupIfNoneCatchTabRules')"></label>
+            <label class="label colon" v-text="lang('moveToGroupIfNoneCatchTabRules')"></label>
             <div class="control" :class="{'has-icons-left': group.moveToGroupIfNoneCatchTabRules}">
                 <div class="select is-fullwidth">
                     <select v-model="group.moveToGroupIfNoneCatchTabRules">
