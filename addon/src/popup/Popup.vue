@@ -31,9 +31,9 @@
     import syncCloudMixin from '/js/mixins/sync-cloud.mixin.js';
 
     const isSidebar = '#sidebar' === window.location.hash;
+    const MODULE_NAME = isSidebar ? 'Sidebar' : 'Popup';
 
-    const winLocName = isSidebar ? 'Sidebar' : 'Popup';
-    window.logger = new Logger(winLocName);
+    window.logger = new Logger(MODULE_NAME);
 
     const storage = localStorage.create('popup');
 
@@ -609,7 +609,7 @@
                 browser.tabs.onDetached.addListener(onDetachedTab);
                 browser.tabs.onAttached.addListener(onAttachedTab);
 
-                const {disconnect} = Messages.connectToBackground(logger.prefixes.join('.'), Object.keys(listeners), onMessage);
+                const {disconnect} = Messages.connectToBackground(MODULE_NAME, Object.keys(listeners), onMessage, false);
 
                 function removeEvents() {
                     browser.tabs.onCreated.removeListener(onCreatedTab);

@@ -12,7 +12,7 @@ const mainStorage = localStorage.create('main');
 const consoleKeys = ['log', 'info', 'warn', 'error', 'debug', 'assert'];
 
 const connectToBG = function(log) {
-    let prefixes = log?.prefixes.join(' ') || '';
+    const prefixes = log?.prefixes.join(' ') || '';
     return this.messagePort ??= Messages.connectToBackground(`${prefixes} Logger`);
 }.bind({
     messagePort: null,
@@ -82,8 +82,6 @@ function setLoggerFuncs() {
 
         return logger;
     }.bind(this);
-
-    this.create = this.start; // alias
 
     this.onCatch = function(message, throwError = true) {
         if (Array.isArray(message)) {

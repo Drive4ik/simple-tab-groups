@@ -18,16 +18,18 @@
     import * as File from '/js/file.js';
     import * as Urls from '/js/urls.js';
     import * as Groups from '/js/groups.js';
-    import {isValidHotkeyEvent, isValidHotkeyValue, eventToHotkeyValue} from '/js/hotkeys.js';
+    import {isValidHotkeyValue, eventToHotkeyValue} from '/js/hotkeys.js';
     import JSON from '/js/json.js';
 
     import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
     import optionsMixin from '/js/mixins/options.mixin.js';
     import syncCloudMixin from '/js/mixins/sync-cloud.mixin.js';
 
-    window.logger = new Logger('Options');
+    const MODULE_NAME = Utils.capitalize(Utils.getNameFromPath(location.href));
 
-    const storage = localStorage.create('options');
+    window.logger = new Logger(MODULE_NAME);
+
+    const storage = localStorage.create(MODULE_NAME.toLowerCase());
 
     Vue.mixin(defaultGroupMixin);
     Vue.mixin(syncCloudMixin);
@@ -44,6 +46,28 @@
     const [section, element = null] = (storage.section || SECTION_GENERAL).split(' ');
 
     storage.section = section;
+
+    let instance;
+
+    const {
+        sendMessage,
+        sendMessageModule,
+    } = Messages.connectToBackground(MODULE_NAME, [
+        'group-added',
+        'group-removed',
+        'group-updated',
+        'groups-updated',
+        'sync-end',
+    ], ({action, changes}) => {
+        if (action.startsWith('group')) {
+            instance?.loadGroups();
+        } else if (action === 'sync-end') {
+            if (changes.local) {
+                instance?.optionsReload();
+                instance?.loadGroups();
+            }
+        }
+    });
 
     export default {
         name: 'options-page',
@@ -186,21 +210,11 @@
             'github-gist': githubGist,
         },
         async created() {
+            instance = this;
+
             this.$on('options-reloaded', () => this.addCustomWatchers());
 
             this.loadBookmarksParents();
-
-            const {disconnect} = Messages.connectToBackground(
-                logger.prefixes.join('.'),
-                'sync-end',
-                ({changes}) => {
-                    if (changes.local) {
-                        this.optionsReload();
-                        this.loadGroups();
-                    }
-                }
-            );
-            window.addEventListener('unload', disconnect);
 
             this.loadGroups();
         },
@@ -245,15 +259,15 @@
                 this.optionsWatch('temporaryContainerTitle', value => value || undefined);
 
                 this.optionsWatch('hotkeys', hotkeys => {
-                    hotkeys = hotkeys.filter((hotkey, index, self) => {
+                    const isValid = hotkeys.every(hotkey => hotkey.action && isValidHotkeyValue(hotkey.value));
+
+                    if (!isValid) {
+                        return;
+                    }
+
+                    return hotkeys.filter((hotkey, index, self) => {
                         return self.findIndex(h => h.value === hotkey.value) === index;
                     });
-
-                    const hotheysIsValid = hotkeys.every(hotkey => hotkey.action && isValidHotkeyValue(hotkey.value));
-
-                    if (hotheysIsValid) {
-                        return hotkeys;
-                    }
                 }, {deep: true});
 
                 this.optionsWatch('showTabsWithThumbnailsInManageGroups', value => {
@@ -275,34 +289,23 @@
             openBackupFolder: File.openBackupFolder,
             getGroupTitle: Groups.getTitle,
 
-            hasEqualHotkeys(hotkey) {
+            drawDangerHotkey(hotkey) {
+                if (!hotkey.value) {
+                    return false;
+                }
+
+                if (!isValidHotkeyValue(hotkey.value)) {
+                    return true;
+                }
+
+                // hasEqualHotkeys
                 return this.options.hotkeys.filter(h => h.value && h.value === hotkey.value).length > 1;
             },
 
-            getHotkeyParentNode(event) {
-                return event.target.closest('.control');
-            },
-
-            onBlurHotkey(event) {
-                const inputParent = this.getHotkeyParentNode(event);
-
-                inputParent.classList.remove('key-success');
-            },
-
-            saveHotkeyKeyCodeAndStopEvent(hotkey, event, withKeyCode) {
+            saveHotkeyKeyCodeAndStopEvent(hotkey, event) {
                 event.preventDefault();
                 event.stopPropagation();
                 event.stopImmediatePropagation();
-
-                const inputParent = this.getHotkeyParentNode(event);
-
-                if (isValidHotkeyEvent(event)) {
-                    inputParent.classList.add('key-success');
-                    inputParent.classList.remove('key-error');
-                } else {
-                    inputParent.classList.add('key-error');
-                    inputParent.classList.remove('key-success');
-                }
 
                 hotkey.value = eventToHotkeyValue(event);
             },
@@ -325,11 +328,11 @@
 
                 this.showLoadingMessage = true;
 
-                Messages.sendMessageModule('BG.restoreBackup', data, clearAddonData);
+                sendMessageModule('BG.restoreBackup', data, clearAddonData);
             },
 
             exportAddonSettings() {
-                Messages.sendMessage('create-backup', {
+                sendMessage('create-backup', {
                     includeTabFavIcons: this.includeTabFavIconsIntoBackup,
                     includeTabThumbnails: this.includeTabThumbnailsIntoBackup,
                 });
@@ -355,7 +358,7 @@
                     return;
                 }
 
-                const resultMigrate = await Messages.sendMessageModule('BG.runMigrateForData', data, false);
+                const resultMigrate = await sendMessageModule('BG.runMigrateForData', data, false);
 
                 if (resultMigrate.migrated) {
                     data = resultMigrate.data;
@@ -581,7 +584,7 @@
             runClearAddonConfirm() {
                 this.showClearAddonConfirmPopup = false;
                 this.showLoadingMessage = true;
-                Messages.sendMessageModule('BG.clearAddon');
+                sendMessageModule('BG.clearAddon');
             },
 
             createHotkey() {
@@ -866,45 +869,54 @@
         <div v-show="section === SECTION_HOTKEYS">
             <label class="has-text-weight-bold" v-text="lang('hotkeysTitle')"></label>
             <div class="block" v-html="lang('hotkeysDescription')"></div>
-            <div
-                v-for="(hotkey, hotkeyIndex) in options.hotkeys"
-                :key="hotkeyIndex"
-                class="block hotkey is-flex"
-                :class="hasEqualHotkeys(hotkey) && 'key-error'"
-                >
-                <div class="control">
-                    <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(hotkey, $event)" @blur="onBlurHotkey" :value="hotkey.value" autocomplete="off" class="input is-shadowless" :placeholder="lang('hotkeyPlaceholder')" tabindex="-1" />
-                </div>
-                <div class="control is-flex-grow-1">
-                    <div class="select is-fullwidth">
-                        <select v-model="hotkey.action">
-                            <option v-if="!hotkey.action" disabled value="" v-text="lang('selectAction')"></option>
-                            <option v-for="action in HOTKEY_ACTIONS" :key="action" :value="action" v-text="getHotkeyActionTitle(action)"></option>
-                        </select>
+            <div class="block hotkeys">
+                <div class="field is-grouped" v-for="(hotkey, hotkeyIndex) in options.hotkeys" :key="hotkeyIndex">
+                    <div class="control">
+                        <input
+                            type="text"
+                            class="input is-shadowless is-palette-info"
+                            :class="{'is-palette-danger': drawDangerHotkey(hotkey)}"
+                            @keydown="saveHotkeyKeyCodeAndStopEvent(hotkey, $event)"
+                            :value="hotkey.value"
+                            autocomplete="off"
+                            :placeholder="lang('hotkeyPlaceholder')"
+                            tabindex="-1" />
                     </div>
-                </div>
-                <div v-if="HOTKEY_ACTIONS_WITH_CUSTOM_GROUP.includes(hotkey.action)" :class="['control', {'has-icons-left': hotkey.groupId}]">
-                    <div class="select">
-                        <select v-model="hotkey.groupId">
-                            <option :value="null" v-text="lang('selectGroup')"></option>
-                            <option v-if="hotkey.groupId && !groupIds.includes(hotkey.groupId)" disabled :value="hotkey.groupId" v-text="lang('unknownGroup')"></option>
-                            <option v-for="group in groups" :key="group.id" :value="group.id" v-text="getGroupTitle(group)"></option>
-                        </select>
+                    <div class="control is-expanded">
+                        <div class="select is-fullwidth">
+                            <select v-model="hotkey.action">
+                                <option v-if="!hotkey.action" disabled value="" v-text="lang('selectAction')"></option>
+                                <option v-for="action in HOTKEY_ACTIONS" :key="action" :value="action" v-text="getHotkeyActionTitle(action)"></option>
+                            </select>
+                        </div>
                     </div>
-                    <span class="icon is-left" v-if="hotkey.groupId">
-                        <figure class="image is-16x16">
-                            <img class="no-fill" :src="getGroupIconUrl(hotkey.groupId)" />
-                        </figure>
-                    </span>
-                </div>
-                <div class="control">
-                    <button class="button" @click="options.hotkeys.splice(hotkeyIndex, 1)" :title="lang('deleteHotKeyButton')">
-                        <span class="icon">
+                    <div
+                        v-if="HOTKEY_ACTIONS_WITH_CUSTOM_GROUP.includes(hotkey.action)"
+                        class="control is-expanded"
+                        :class="{'has-icons-left': hotkey.groupId}"
+                        >
+                        <div class="select is-fullwidth">
+                            <select v-model="hotkey.groupId">
+                                <option :value="null" v-text="lang('selectGroup')"></option>
+                                <option v-if="hotkey.groupId && !groupIds.includes(hotkey.groupId)" disabled hidden :value="hotkey.groupId" v-text="lang('unknownGroup')"></option>
+                                <option v-for="group in groups" :key="group.id" :value="group.id" v-text="getGroupTitle(group)"></option>
+                            </select>
+                        </div>
+                        <span class="icon is-left" v-if="hotkey.groupId">
                             <figure class="image is-16x16">
-                                <img src="/icons/delete.svg" />
+                                <img class="no-fill" :src="getGroupIconUrl(hotkey.groupId)" />
                             </figure>
                         </span>
-                    </button>
+                    </div>
+                    <div class="control">
+                        <button class="button" @click="options.hotkeys.splice(hotkeyIndex, 1)" :title="lang('deleteHotKeyButton')">
+                            <span class="icon">
+                                <figure class="image is-16x16">
+                                    <img src="/icons/delete.svg" />
+                                </figure>
+                            </span>
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="block">
@@ -1490,34 +1502,23 @@
 
 
     #stg-options {
-        .hotkey {
-            gap: var(--gap-indent);
+        .hotkeys {
+            --width-normal: 15rem;
 
-            .control .input {
-                width: 15em;
-                outline: 2px solid var(--outline-color, transparent);
+            .control:has(.select) {
+                min-width: var(--width-normal);
             }
 
-            .control:not(.key-success):not(.key-error) .input:focus {
-                --outline-color: var(--bulma-info-50);
-                border-color: transparent;
-            }
-            &:not(.key-error) .control.key-success .input:focus {
-                --outline-color: var(--bulma-success);
-                border-color: transparent;
-            }
-            &.key-error,
-            .control.key-error {
-                .input {
-                    --outline-color: var(--bulma-danger);
+            .input {
+                width: var(--width-normal);
+
+                &:focus,
+                &.is-palette-danger {
+                    outline: 2px solid var(--color);
                     border-color: transparent;
                 }
             }
         }
-    }
-
-    .help.is-medium {
-        font-size: 1rem;
     }
 
 </style>

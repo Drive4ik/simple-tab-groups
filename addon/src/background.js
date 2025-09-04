@@ -2621,7 +2621,9 @@ async function saveOptions(_options) {
         await updateMoveTabMenus();
     }
 
-    sendMessage('options-updated');
+    sendMessage('options-updated', {
+        keys: optionsKeys,
+    });
 
     log.stop();
 }
@@ -3039,7 +3041,7 @@ self.skipAddGroupToNextNewWindow = false;
 
 
 async function runMigrateForData(data, applyToCurrentInstance = true) {
-    const log = logger.create('runMigrateForData', {version: data.version, applyToCurrentInstance});
+    const log = logger.start('runMigrateForData', {version: data.version, applyToCurrentInstance});
 
     const currentVersion = Constants.MANIFEST.version;
 

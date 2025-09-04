@@ -18,11 +18,18 @@ export async function sendMessage(...args) {
         .catch(self.logger?.onCatch(['sendMessage', message]));
 }
 
-export function sendMessageModule(ModuleFunc, ...args) {
-    return sendMessage(ModuleFunc, {
-        args,
-        from: nativeErrorToObj(new Error),
-    });
+function getArgumentsModuleCall(ModuleFunc, ...args) {
+    return [
+        ModuleFunc,
+        {
+            args,
+            from: nativeErrorToObj(new Error),
+        }
+    ];
+}
+
+export function sendMessageModule(...args) {
+    return sendMessage(...getArgumentsModuleCall(...args));
 }
 
 export function sendExternalMessage(exId, ...args) {
@@ -33,7 +40,7 @@ export function sendExternalMessage(exId, ...args) {
     return browser.runtime.sendMessage(exId, message).catch(() => {});
 }
 
-export function connectToBackground(name, listeners = null, callback = null) {
+export function connectToBackground(name, listeners = null, callback = null, autoDisconnectOnUnload = true) {
     const port = browser.runtime.connect({
         name: JSON.stringify({name, listeners}),
     });
@@ -42,9 +49,16 @@ export function connectToBackground(name, listeners = null, callback = null) {
         port.onMessage.addListener(callback);
     }
 
+    const disconnect = port.disconnect.bind(port);
+
+    if (autoDisconnectOnUnload) {
+        window.addEventListener('unload', disconnect);
+    }
+
     return {
         sendMessage: (...args) => port.postMessage(normalizeSendData(...args)),
-        disconnect: port.disconnect.bind(port),
+        sendMessageModule: (...args) => port.postMessage(normalizeSendData(...getArgumentsModuleCall(...args))),
+        disconnect,
     };
 }
 

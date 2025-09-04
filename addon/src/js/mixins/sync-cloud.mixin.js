@@ -1,8 +1,10 @@
 
 import Logger from '/js/logger.js';
+import * as Utils from '/js/utils.js';
 import * as Messages from '/js/messages.js';
 
-const logger = new Logger('sync.cloud-mixin');
+const MODULE_NAME = Utils.capitalize(Utils.getNameFromPath(import.meta.url));
+const logger = new Logger(MODULE_NAME, [Utils.getNameFromPath(location.href)]);
 
 const allowedInstanceNames = new Set([
     'popup-page',
@@ -11,21 +13,19 @@ const allowedInstanceNames = new Set([
 
 const instances = new Set;
 
-const {disconnect} = Messages.connectToBackground('sync-progress-mixin', [
+const {sendMessageModule} = Messages.connectToBackground(MODULE_NAME, [
     'sync-start',
     'sync-progress',
     'sync-end',
     'sync-error',
     'sync-finish',
 ], (syncEvent) => {
-    logger.log(syncEvent.action, syncEvent);
+    logger.info(syncEvent.action, syncEvent);
 
     for (const instance of instances) {
         instance.$emit(syncEvent.action, syncEvent);
     }
 });
-
-window.addEventListener('unload', disconnect);
 
 export default {
     data() {
@@ -77,7 +77,7 @@ export default {
     methods: {
         async syncCloud(trust) {
             if (!this.synchronisationInProgress) {
-                return await Messages.sendMessageModule('BG.cloudSync', false, trust);
+                return await sendMessageModule('BG.cloudSync', false, trust);
             }
         },
     },

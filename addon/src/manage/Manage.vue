@@ -27,7 +27,9 @@
     import optionsMixin from '/js/mixins/options.mixin.js';
     import startUpDataMixin from '/js/mixins/start-up-data.mixin.js';
 
-    window.logger = new Logger('Manage');
+    const MODULE_NAME = Utils.capitalize(Utils.getNameFromPath(location.href));
+
+    window.logger = new Logger(MODULE_NAME);
 
     const storage = localStorage.create('manage-groups');
 
@@ -491,7 +493,7 @@
                 browser.tabs.onDetached.addListener(onDetachedTab);
                 browser.tabs.onAttached.addListener(onAttachedTab);
 
-                const {disconnect} = Messages.connectToBackground(logger.prefixes.join('.'), Object.keys(listeners), onMessage);
+                const {disconnect} = Messages.connectToBackground(MODULE_NAME, Object.keys(listeners), onMessage, false);
 
                 function removeEvents() {
                     browser.tabs.onCreated.removeListener(onCreatedTab);

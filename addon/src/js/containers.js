@@ -94,7 +94,7 @@ function onUpdated({contextualIdentity}) {
 }
 
 async function onRemoved({contextualIdentity}) {
-    const log = logger.create('onRemoved', contextualIdentity)
+    const log = logger.start('onRemoved', contextualIdentity)
     let isTemporaryContainer = isTemporary(contextualIdentity.cookieStoreId, contextualIdentity);
 
     delete containers[contextualIdentity.cookieStoreId];
