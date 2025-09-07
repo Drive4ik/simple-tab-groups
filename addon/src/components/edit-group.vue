@@ -8,13 +8,14 @@
     import contextMenu from '../components/context-menu.vue';
     import 'vue-swatches/dist/vue-swatches.css';
 
-    import backgroundSelf from '/js/background.js';
+    // import backgroundSelf from '/js/background.js';
     import * as Constants from '/js/constants.js';
     import * as Containers from '/js/containers.js';
     import * as Storage from '/js/storage.js';
     import * as Messages from '/js/messages.js';
     import Notification from '/js/notification.js';
     import * as File from '/js/file.js';
+    import * as Bookmarks from '/js/bookmarks.js';
     import * as Tabs from '/js/tabs.js';
     import * as Groups from '/js/groups.js';
     import * as Utils from '/js/utils.js';
@@ -125,15 +126,9 @@
             },
         },
         async created() {
-            const [
-                {groups},
-                bookmarksPermission,
-            ] = await Promise.all([
-                Storage.get('groups'),
-                browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS),
-            ]);
+            this.permissions.bookmarks = await Bookmarks.hasPermission();
 
-            this.permissions.bookmarks = bookmarksPermission;
+            const {groups} = await Storage.get('groups');
 
             const newGroup = {...this.groupToEdit};
 
@@ -146,6 +141,8 @@
 
             this.$set(this, 'group', JSON.clone(newGroup));
 
+            // TODO исключить перемещение в текущую группу
+            // и обязательно сделать перемещение независимо от липкости группы
             this.groupsMoveToIfNoneCatchTabRules = groups.filter(group => {
                 group.titleToView = Groups.getTitle(group);
 
@@ -245,7 +242,7 @@
 
             async setPermissionsBookmarks(event, groupOptionKey) {
                 if (!this.permissions.bookmarks && event.target.checked) {
-                    this.permissions.bookmarks = await browser.permissions.request(Constants.PERMISSIONS.BOOKMARKS);
+                    this.permissions.bookmarks = await Bookmarks.requestPermission();
                     this[groupOptionKey] = this.permissions.bookmarks;
                 }
             },

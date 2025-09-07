@@ -10,10 +10,11 @@
     import contextMenuTabNew from '../components/context-menu-tab-new.vue';
     import contextMenuGroup from '../components/context-menu-group.vue';
 
+    import '/js/prefixed-storage.js';
     import backgroundSelf from '/js/background.js';
     import * as Constants from '/js/constants.js';
     import * as Messages from '/js/messages.js';
-    import Logger, {catchFunc} from '/js/logger.js';
+    import Logger, {catchFunc, errorEventHandler} from '/js/logger.js';
     import * as Containers from '/js/containers.js';
     import * as Urls from '/js/urls.js';
     import * as Cache from '/js/cache.js';
@@ -27,11 +28,10 @@
     import optionsMixin from '/js/mixins/options.mixin.js';
     import startUpDataMixin from '/js/mixins/start-up-data.mixin.js';
 
-    const MODULE_NAME = Utils.capitalize(Utils.getNameFromPath(location.href));
+    window.logger = new Logger(Constants.MODULES.MANAGE);
 
-    window.logger = new Logger(MODULE_NAME);
-
-    const storage = localStorage.create('manage-groups');
+    const storage = localStorage.create(Constants.MODULES.MANAGE);
+    const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 
     // import dnd from '../js/dnd';
     // import { Drag, Drop } from 'vue-drag-drop';
@@ -42,7 +42,7 @@
     Vue.config.errorHandler = errorEventHandler.bind(window.logger);
 
     function showDebugMode() {
-        if (backgroundSelf.storage.enableDebug) {
+        if (mainStorage.enableDebug) {
             const div = document.createElement('div');
             div.innerText = browser.i18n.getMessage('loggingIsEnabledTitle');
             Object.assign(div.style, {
@@ -491,7 +491,12 @@
                 browser.tabs.onDetached.addListener(onDetachedTab);
                 browser.tabs.onAttached.addListener(onAttachedTab);
 
-                const {disconnect} = Messages.connectToBackground(MODULE_NAME, Object.keys(listeners), onMessage, false);
+                const {disconnect} = Messages.connectToBackground(
+                    Constants.MODULES.MANAGE,
+                    Object.keys(listeners),
+                    onMessage,
+                    false
+                );
 
                 function removeEvents() {
                     browser.tabs.onCreated.removeListener(onCreatedTab);
@@ -964,7 +969,7 @@
             },
 
             openOptionsPage() {
-                Urls.openOptionsPage();
+                Messages.sendMessage('open-options-page');
             },
         },
     }
@@ -985,12 +990,11 @@
             <span class="is-size-4">
                 <span v-text="lang('extensionName')"></span> - <span v-text="lang('manageGroupsTitle')"></span>
             </span>
-            <div>
+            <div class="checkboxes as-column">
                 <label class="checkbox">
                     <input v-model="options.showTabsWithThumbnailsInManageGroups" type="checkbox" />
                     <span v-text="lang('showTabsWithThumbnailsInManageGroups')"></span>
                 </label>
-                <br>
                 <label class="checkbox">
                     <input v-model="options.showArchivedGroups" type="checkbox" />
                     <span v-text="lang('showArchivedGroups')"></span>

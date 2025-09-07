@@ -10,7 +10,7 @@ import Logger, {
     clearLogs,
     getErrors,
     clearErrors,
-    storage as logsStorage
+    errorEventHandler,
 } from '/js/logger.js';
 import * as Utils from '/js/utils.js';
 import Notification, {
@@ -31,19 +31,16 @@ import * as Bookmarks from '/js/bookmarks.js';
 // import * as Hotkeys from '/js/hotkeys.js';
 import {sync} from '/js/sync/cloud/cloud.js';
 
-self.IS_TEMPORARY = false;
-
-const storage = localStorage.create('main');
-self.storage = storage;
+const storage = localStorage.create(Constants.MODULES.BACKGROUND);
 
 storage.START_TIME = Date.now();
+storage.IS_TEMPORARY = Constants.ON_INSTALLED_DETAILS.temporary === true;
 
-if (storage.enableDebug === 2) { // if debug was auto-enabled - disable on next start addon/browser
+if (storage.enableDebug === Constants.DEBUG.AUTO) { // if debug was auto-enabled - disable on next start addon/browser
     delete storage.enableDebug;
 }
 
-const logger = new Logger('BG');
-self.logger = logger;
+const logger = self.logger = new Logger(Constants.MODULES.BACKGROUND);
 
 self.loggerFuncs = {
     getLogs,
@@ -51,8 +48,6 @@ self.loggerFuncs = {
     getErrors,
     clearErrors,
 };
-
-self.sendMessage = Messages.initBackground(onBackgroundMessage);
 
 self.inited = false;
 
@@ -193,14 +188,11 @@ function sendExternalMessage(...args) {
 
     const message = Messages.normalizeSendData(...args);
 
-    Object.keys(Constants.EXTENSIONS_WHITE_LIST).forEach(exId => {
-        if (
-            Constants.EXTENSIONS_WHITE_LIST[exId].postActions.includes(message.action) &&
-            Management.isEnabled(exId)
-        ) {
+    for (const [exId, params] of Object.entries(Constants.EXTENSIONS_WHITE_LIST)) {
+        if (params.postActions?.includes(message.action) && Management.isEnabled(exId)) {
             Messages.sendExternalMessage(exId, message);
         }
-    });
+    }
 }
 
 let _loadingGroupInWindow = new Set; // windowId: true;
@@ -415,7 +407,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
             }
         }
 
-        sendMessage('group-loaded', {
+        sendMessageFromBackground('group-loaded', {
             groupId,
             windowId,
             addTabs,
@@ -489,11 +481,13 @@ const onCreatedTab = catchFunc(async function(tab) {
     Cache.setTab(tab);
 
     if (self.skipCreateTab) {
-        return log.stop('skip tab', tab.id);
+        log.stop('skip tab', tab.id);
+        return;
     }
 
     if (Utils.isTabPinned(tab)) {
-        return log.stop('skip pinned tab', tab.id);
+        log.stop('skip pinned tab', tab.id);
+        return;
     }
 
     const groupId = Cache.getWindowGroup(tab.windowId);
@@ -572,7 +566,8 @@ const onUpdatedTab = catchFunc(async function(tabId, changeInfo, tab) {
             }
         }
 
-        return log.stop();
+        log.stop();
+        return;
     }
 
     if (options.showTabsWithThumbnailsInManageGroups && Utils.isTabLoaded(changeInfo)/* && (tabGroupId || winGroupId) */) {
@@ -931,7 +926,7 @@ const onCreatedWindow = catchFunc(async function (win) {
 });
 
 function onFocusChangedWindow(windowId) {
-    !self.IS_TEMPORARY && logger.log('onFocusChangedWindow', windowId);
+    !storage.IS_TEMPORARY && logger.log('onFocusChangedWindow', windowId);
 
     if (browser.windows.WINDOW_ID_NONE !== windowId && options.showContextMenuOnTabs) {
         const menuId = 'set-tab-icon-as-group-icon';
@@ -950,7 +945,7 @@ const onRemovedWindow = catchFunc(async function (windowId) {
     let groupId = Cache.getWindowGroup(windowId);
 
     if (groupId) {
-        sendMessage('window-closed', { windowId });
+        sendMessageFromBackground('window-closed', { windowId });
     }
 
     Cache.removeWindow(windowId);
@@ -1018,7 +1013,7 @@ async function addUndoRemoveGroupItem(groupToRemove) {
             await loadingBrowserAction(false);
         }
 
-        sendMessage('group-added', { group });
+        sendMessageFromBackground('group-added', { group });
 
     }.bind(null, JSON.clone(groupToRemove));
 
@@ -1044,7 +1039,7 @@ async function updateMoveTabMenus() {
 
     await Menus.removeAll();
 
-    const hasBookmarksPermission = await browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS);
+    const hasBookmarksPermission = await Bookmarks.hasPermission();
 
     if (!options.showContextMenuOnTabs && !options.showContextMenuOnLinks && !hasBookmarksPermission) {
         log.stop('there are no menu creation permissions/options');
@@ -1548,7 +1543,8 @@ async function updateBrowserActionData(groupId, windowId) {
     }
 
     if (!windowId) {
-        return log.stop(null, 'no window id');
+        log.stop('no window id');
+        return;
     }
 
     log.log({ groupId, windowId })
@@ -1883,11 +1879,11 @@ function removeEvents() {
 
 window.addEventListener('unload', removeEvents);
 
-browser.commands.onCommand.addListener(function (name) {
-    onBackgroundMessage(name, self);
-});
+self.sendMessageFromBackground = Messages.sendMessageFromBackground;
 
+browser.runtime.onConnect.addListener(Messages.createListenerOnConnectedBackground(onBackgroundMessage));
 browser.runtime.onMessage.addListener(onBackgroundMessage);
+browser.commands.onCommand.addListener(name => onBackgroundMessage(name, self));
 
 browser.runtime.onMessageExternal.addListener(async function onMessageExternal(request, sender) {
     const log = logger.start(['info', 'onMessageExternal'], `RECEIVED-EXTERNAL-ACTION#${request?.action}`, { request, sender });
@@ -2004,7 +2000,7 @@ async function onBackgroundMessage(message, sender) {
             return result;
 
         case 'show-error-notification':
-            const isMessageSended = sendMessage('show-error-notification');
+            const isMessageSended = sendMessageFromBackground('show-error-notification');
 
             Notification('whatsWrongMessage', {
                 iconUrl: '/icons/exclamation-triangle-yellow.svg',
@@ -2068,7 +2064,7 @@ async function onBackgroundMessage(message, sender) {
             data.windowId = currentWindow.id;
         }
 
-        log.log('check action');
+        log.log('check action, data:', data);
 
         switch (data.action) {
             case 'get-groups-list':
@@ -2559,7 +2555,7 @@ async function onBackgroundMessage(message, sender) {
         log.logError(e.message || e, e);
     }
 
-    result.error ? log.stopError() : log.stop();
+    result.error ? log.stopError(result.error) : log.stop();
 
     return result;
 }
@@ -2621,7 +2617,7 @@ async function saveOptions(_options) {
         await updateMoveTabMenus();
     }
 
-    sendMessage('options-updated', {
+    sendMessageFromBackground('options-updated', {
         keys: optionsKeys,
     });
 
@@ -2695,16 +2691,13 @@ async function resetAlarm(
 }
 
 async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBackup = false) {
-    const [
-        data,
-        { groups },
-    ] = await Promise.all([
-        Storage.get(),
-        Groups.load(null, true, includeTabFavIcons, includeTabThumbnails),
-    ]);
+    const log = logger.start('createBackup', {includeTabFavIcons, includeTabThumbnails, isAutoBackup});
+
+    const data = await Storage.get();
+    const {groups} = await Groups.load(null, true, includeTabFavIcons, includeTabThumbnails);
 
     if (isAutoBackup && (!groups.length || groups.filter(gr => !gr.isArchive).every(gr => !gr.tabs.length))) {
-        logger.warn('skip create auto backup, groups are empty');
+        log.stopWarn('skip create auto backup, groups are empty');
         return false;
     }
 
@@ -2760,14 +2753,14 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
     if (isAutoBackup) {
         File.backup(data, true, options.autoBackupByDayIndex);
 
-        if (await Bookmarks.hasPermission()) {
-            await Bookmarks.exportGroups(data.groups);
-        }
+        await Bookmarks.exportGroups(data.groups).catch(log.onCatch('cant create bookmarks', false));
 
         storage.autoBackupLastTimeStamp = Utils.unixNow();
     } else {
         await File.backup(data, false);
     }
+
+    log.stop();
 
     return true;
 }
@@ -2776,7 +2769,7 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
 async function restoreBackup(data, clearAddonDataBeforeRestore = false) {
     removeEvents();
 
-    sendMessage('lock-addon');
+    sendMessageFromBackground('lock-addon');
 
     await loadingBrowserAction();
 
@@ -2946,7 +2939,7 @@ async function clearAddon(reloadAddonOnFinish = true) {
     if (reloadAddonOnFinish) {
         await loadingBrowserAction();
 
-        sendMessage('lock-addon');
+        sendMessageFromBackground('lock-addon');
     }
 
     removeEvents();
@@ -2960,7 +2953,7 @@ async function clearAddon(reloadAddonOnFinish = true) {
 
     Cache.clear();
 
-    window.localStorage.clear();
+    localStorage.clear();
 
     if (reloadAddonOnFinish) {
         browser.runtime.reload(); // reload addon
@@ -2973,16 +2966,16 @@ async function cloudSync(auto = false, trust = null) {
     let ok = false;
 
     try {
-        sendMessage('sync-start');
+        sendMessageFromBackground('sync-start');
 
         const syncResult = await sync(trust, progress => {
             log.log('progress', progress);
-            sendMessage('sync-progress', {progress});
+            sendMessageFromBackground('sync-progress', {progress});
         });
 
         ok = true;
 
-        sendMessage('sync-end', syncResult);
+        sendMessageFromBackground('sync-end', syncResult);
 
         log.stop();
         return syncResult;
@@ -2995,13 +2988,13 @@ async function cloudSync(auto = false, trust = null) {
 
         log.logError('cant sync', e);
         log.stopError();
-        sendMessage('sync-error', {
+        sendMessageFromBackground('sync-error', {
             id: e.id,
             name: e.name,
             message: e.message,
         });
     } finally {
-        sendMessage('sync-finish', {ok});
+        sendMessageFromBackground('sync-finish', {ok});
     }
 }
 
@@ -3293,7 +3286,7 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
             version: '4.4',
             migration() {
                 if (applyToCurrentInstance) {
-                    window.localStorage.clear();
+                    localStorage.clear();
                 }
 
                 data.groups.forEach(function (group) {
@@ -3428,7 +3421,7 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
                     return;
                 }
 
-                let hasBookmarksPermission = await browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS);
+                let hasBookmarksPermission = await Bookmarks.hasPermission();
 
                 if (!hasBookmarksPermission) {
                     return;
@@ -3466,7 +3459,7 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
 
                 let rootFolder = await _bookmarkFolderFromTitle(data.autoBackupBookmarksFolderName, data.defaultBookmarksParent);
                 if (rootFolder) {
-                    storage.mainBookmarksFolderId = rootFolder.id;
+                    localStorage.mainBookmarksFolderId = rootFolder.id;
                 }
             },
         },
@@ -3639,15 +3632,22 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
 
                 delete data.defaultGroupProps.exportToBookmarksWhenAutoBackup;
 
-                data.showArchivedGroups = true;
+                data.showArchivedGroups = localStorage.showArchivedGroupsInPopup === '1';
 
                 if (applyToCurrentInstance) {
+                    // TODO review line below
                     storage.autoBackupLastTimeStamp = data.autoBackupLastBackupTimeStamp;
                     storage.mainBookmarksFolderId = localStorage.mainBookmarksFolderId;
+                    storage.showTabsInThisWindowWereHidden = Number(localStorage.showTabsInThisWindowWereHidden) || 0;
 
-                    delete localStorage.mainBookmarksFolderId;
                     delete localStorage.START_TIME;
                     delete localStorage.autoBackupLastTimeStamp;
+                    delete localStorage.mainBookmarksFolderId;
+                    delete localStorage.showArchivedGroupsInPopup;
+                    delete localStorage.showTabsInThisWindowWereHidden;
+                    delete localStorage.optionsSection;
+                    delete localStorage.enableDebug;
+                    delete localStorage['main/enableDebug'];
 
                     try {
                         let errorLogs = localStorage.errorLogs;
@@ -3655,7 +3655,7 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
                         errorLogs = JSON.parse(errorLogs);
 
                         if (Array.isArray(errorLogs) && errorLogs.length) {
-                            logsStorage.errors = errorLogs;
+                            localStorage.create(Constants.MODULES.LOGGER).errors = errorLogs;
                         }
                     } catch (e) {}
                 }
@@ -3985,7 +3985,7 @@ async function tryRestoreMissedTabs() {
     }
 
     if (tabsToRestore.length) {
-        sendMessage('groups-updated');
+        sendMessageFromBackground('groups-updated');
     }
 
     await Promise.all(windows.map(win => loadingBrowserAction(false, win.id)));
@@ -4018,18 +4018,12 @@ async function restoreOldExtensionUrls(parseUrlFunc) {
 
 // { reason: "update", previousVersion: "3.0.1", temporary: true }
 // { reason: "install", temporary: true }
-browser.runtime.onInstalled.addListener(function ({ reason, previousVersion, temporary }) {
-    const log = logger.start('onInstalled', { reason, previousVersion, temporary });
+function processOnInstalled() {
+    const log = logger.start('processOnInstalled', Constants.ON_INSTALLED_DETAILS);
 
-    // browser.runtime.onInstalled.removeListener(onInstalled);
-
-    // if (!self.inited) {
-    //     setTimeout(onInstalled, 150, {previousVersion, reason, temporary});
-    //     return log.stop('background not inited');
-    // }
+    const {reason, previousVersion, temporary} = Constants.ON_INSTALLED_DETAILS;
 
     if (temporary) {
-        self.IS_TEMPORARY = true;
         log.log('addon is temp');
     } else if (
         reason === browser.runtime.OnInstalledReason.INSTALL ||
@@ -4043,7 +4037,7 @@ browser.runtime.onInstalled.addListener(function ({ reason, previousVersion, tem
     }
 
     log.stop();
-});
+}
 
 async function initializeGroupWindows(windows, currentGroupIds) {
     const log = logger.start('initializeGroupWindows windows count:', windows.length);
@@ -4268,15 +4262,17 @@ async function init() {
 
         self.inited = true;
 
+        processOnInstalled();
+
         // send message for addon pages if it's open
-        sendMessage('i-am-back');
+        sendMessageFromBackground('i-am-back');
 
         // send message for addon plugins
         sendExternalMessage('i-am-back');
 
         log.stop();
 
-        // if (self.IS_TEMPORARY && !Logger.logs.some(l => l['console.error'])) {
+        // if (storage.IS_TEMPORARY && !Logger.logs.some(l => l['console.error'])) {
         //     console.clear();
         // }
 

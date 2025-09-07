@@ -561,7 +561,7 @@
     },
     "autoBackupCreateEveryTitle": {
         "message": "На всеки",
-        "description": "Create backup every:"
+        "description": "Create backup every"
     },
     "intervalKeyMinutes": {
         "message": "минута(и)",
@@ -577,7 +577,7 @@
     },
     "autoBackupLastBackupTitle": {
         "message": "Последното копие е от",
-        "description": "Last backup:"
+        "description": "Last backup"
     },
     "darkThemeNotification": {
         "message": "За пълна поддръжка на тъмната тема трябва да зададете на свойството <code>svg.context-properties.content.enabled</code> стойност <code>true</code> в страницата на <code>about:config</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Как да го направя?</a>",

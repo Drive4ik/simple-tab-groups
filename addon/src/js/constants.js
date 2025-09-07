@@ -1,13 +1,21 @@
 
+export let ON_INSTALLED_DETAILS = {};
+browser.runtime.onInstalled.addListener(details => ON_INSTALLED_DETAILS = details); // need to be before any await
+
 export const MANIFEST = Object.freeze(browser.runtime.getManifest());
 export const STG_BASE_URL = browser.runtime.getURL('');
 export const BROWSER = await browser.runtime.getBrowserInfo();
 
 export const BROWSER_FULL_NAME = `${BROWSER?.name} ${BROWSER?.vendor}`;
 
-export const IS_BACKGROUND_PAGE = self.location.href.includes('background');
+export const IS_BACKGROUND_PAGE = self.location.pathname.includes('background');
 
 export const IS_MAC = (navigator.userAgentData?.platform || navigator.platform || '').toLowerCase().includes('mac');
+
+export const DEBUG = Object.freeze({
+    MANUAL: 'manual',
+    AUTO: 'auto',
+});
 
 export const ACTIVE_SYMBOL = '〇';
 export const DISCARDED_SYMBOL = '✱';
@@ -128,6 +136,16 @@ export const POPUP_SETTINGS_MENU_ITEMS = Object.freeze([
         title: 'githubGistCloudSettingsTitle',
         icon: 'settings',
         closePopup: true,
+    }, {
+        key: 'hr',
+    }, {
+        key: 'aboutAddon',
+        sendMessage: ['open-options-page', {
+            section: 'about',
+        }],
+        title: 'aboutExtension',
+        icon: 'info',
+        closePopup: true,
     },
 ]);
 
@@ -168,7 +186,7 @@ export const CONFLICTED_EXTENSIONS = Object.freeze([
 export const EXTENSIONS_WHITE_LIST = Object.freeze({
     'stg-plugin-create-new-group@drive4ik': {
         id: 932675,
-        title: '[STG plugin] Create new group',
+        title: 'Create new group',
         url: 'https://addons.mozilla.org/firefox/addon/stg-plugin-create-new-group/',
         postActions: [],
         getActions: [
@@ -178,7 +196,7 @@ export const EXTENSIONS_WHITE_LIST = Object.freeze({
     },
     'stg-plugin-load-custom-group@drive4ik': {
         id: 932681,
-        title: '[STG plugin] Load custom group',
+        title: 'Load custom group',
         url: 'https://addons.mozilla.org/firefox/addon/stg-plugin-load-custom-group/',
         postActions: [
             'i-am-back',
@@ -194,7 +212,7 @@ export const EXTENSIONS_WHITE_LIST = Object.freeze({
     },
     'stg-plugin-manage-groups@drive4ik': {
         id: 986719,
-        title: '[STG plugin] Open Manage groups',
+        title: 'Open Manage groups',
         url: 'https://addons.mozilla.org/firefox/addon/stg-plugin-manage-groups/',
         postActions: [],
         getActions: [
@@ -203,7 +221,7 @@ export const EXTENSIONS_WHITE_LIST = Object.freeze({
     },
     'stg-plugin-del-current-group@drive4ik': {
         id: 1459086,
-        title: '[STG plugin] Delete current group',
+        title: 'Delete current group',
         url: 'https://addons.mozilla.org/firefox/addon/stg-plugin-del-current-group/',
         postActions: [],
         getActions: [
@@ -212,7 +230,7 @@ export const EXTENSIONS_WHITE_LIST = Object.freeze({
     },
     'stg-plugin-group-notes@drive4ik': {
         id: 2670858,
-        title: '[STG plugin] Group notes',
+        title: 'Group notes',
         url: 'https://addons.mozilla.org/firefox/addon/stg-plugin-group-notes/',
         postActions: [
             'i-am-back',
@@ -229,7 +247,7 @@ export const EXTENSIONS_WHITE_LIST = Object.freeze({
     },
     'stg-plugin-create-new-tab@drive4ik': {
         id: 2609558,
-        title: '[STG plugin] Create new tab',
+        title: 'Create new tab',
         url: 'https://addons.mozilla.org/firefox/addon/stg-plugin-create-new-tab/',
         postActions: [
             'i-am-back',
@@ -245,7 +263,7 @@ export const EXTENSIONS_WHITE_LIST = Object.freeze({
     },
     'stg-plugin-create-temp-tab@drive4ik': {
         id: 2667177,
-        title: '[STG plugin] Create new tab in temporary container',
+        title: 'Create new tab in temporary container',
         url: 'https://addons.mozilla.org/firefox/addon/stg-plugin-create-temp-tab/',
         postActions: [],
         getActions: [
@@ -478,3 +496,16 @@ export const ON_UPDATED_TAB_PROPERTIES = Object.freeze([ // browser.tabs not def
     browser.tabs?.UpdatePropertyName.HIDDEN,
     browser.tabs?.UpdatePropertyName.PINNED,
 ]);
+
+export const MODULES = Object.freeze({
+    BACKGROUND: 'Background',
+    MANAGE: 'Manage',
+    POPUP: 'Popup',
+    SIDEBAR: 'Sidebar',
+    OPTIONS: 'Options',
+    GROUPS: 'Groups',
+    BOOKMARKS: 'Bookmarks',
+    MANAGEMENT: 'Management',
+    CLOUD: 'Cloud',
+    LOGGER: 'Logger',
+});

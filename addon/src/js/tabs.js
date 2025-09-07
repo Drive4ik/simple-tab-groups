@@ -1,3 +1,5 @@
+
+import './prefixed-storage.js';
 import Logger from './logger.js';
 import backgroundSelf from './background.js';
 import Notification from './notification.js';
@@ -12,6 +14,8 @@ import * as Windows from './windows.js';
 
 const logger = new Logger('Tabs');
 
+const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
+
 export async function createNative({url, active, pinned, title, index, windowId, openerTabId, cookieStoreId, newTabContainer, ifDifferentContainerReOpen, excludeContainersForReOpen, groupId, favIconUrl, thumbnail}) {
     const tab = {};
 
@@ -20,7 +24,7 @@ export async function createNative({url, active, pinned, title, index, windowId,
             if (url.startsWith('moz-extension')) {
                 const uuid = Management.extractUUID(url);
 
-                if (Management.isUUID(uuid)) {
+                if (Utils.isUUID(uuid)) {
                     tab.url = url;
                 } else {
                     tab.url = Urls.HELP_PAGE_UNSUPPORTED_URL + '#' + url;
@@ -133,7 +137,8 @@ export async function setActive(tabId = null, tabs = []) {
         }).catch(log.onCatch(tabToActive.id));
     }
 
-    return log.stop(tabToActive);
+    log.stop();
+    return tabToActive;
 }
 
 export async function getActive(windowId = browser.windows.WINDOW_ID_CURRENT) {
@@ -241,15 +246,19 @@ export async function createTempActiveTab(windowId, createPinnedTab = true, newT
 
 export async function add(groupId, cookieStoreId, url, title) {
     const log = logger.start('add', {groupId, cookieStoreId, url, title});
-    let {group} = await Groups.load(groupId),
-        [tab] = await backgroundSelf.createTabsSafe([{
-            url,
-            title,
-            cookieStoreId,
-            ...Groups.getNewTabParams(group),
-        }]);
 
-    return log.stop(), tab;
+    const {group} = await Groups.load(groupId);
+
+    // TODO get rid of BG
+    const [tab] = await backgroundSelf.createTabsSafe([{
+        url,
+        title,
+        cookieStoreId,
+        ...Groups.getNewTabParams(group),
+    }]);
+
+    log.stop(tab);
+    return tab;
 }
 
 export async function updateThumbnail(tabId) {
@@ -293,7 +302,7 @@ export async function updateThumbnail(tabId) {
 
         await Cache.setTabThumbnail(tab.id, thumbnail);
 
-        backgroundSelf.sendMessage('thumbnail-updated', {
+        backgroundSelf.sendMessageFromBackground('thumbnail-updated', {
             tabId: tab.id,
             thumbnail: thumbnail,
         });
@@ -472,7 +481,7 @@ export async function move(tabIds, groupId, {
 
         backgroundSelf.removeExcludeTabIds(tabIds);
 
-        backgroundSelf.sendMessage('groups-updated');
+        backgroundSelf.sendMessageFromBackground('groups-updated');
 
         log.log('end moving');
     }
@@ -845,11 +854,11 @@ export function getTitle({id, index, title, url, discarded, windowId, lastAccess
         title = (discarded ? Constants.DISCARDED_SYMBOL : Constants.ACTIVE_SYMBOL) + ' ' + title;
     }
 
-    if (backgroundSelf.storage.enableDebug && id) {
+    if (mainStorage.enableDebug && id) {
         let lastDate = new Date(lastAccessed);
 
         if (lastDate.getTime()) {
-            lastDate = `(${lastDate.getMinutes()}:${lastDate.getSeconds()}.${lastDate.getMilliseconds()})${title}`;
+            lastDate = `(${lastDate.getMinutes()}:${lastDate.getSeconds()}.${lastDate.getMilliseconds()})`;
         } else {
             lastDate = '';
         }

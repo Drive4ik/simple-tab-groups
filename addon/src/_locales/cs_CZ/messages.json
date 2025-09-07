@@ -561,7 +561,7 @@
     },
     "autoBackupCreateEveryTitle": {
         "message": "Zálohovat jednou za",
-        "description": "Create backup every:"
+        "description": "Create backup every"
     },
     "intervalKeyMinutes": {
         "message": "minuta/y",
@@ -576,8 +576,8 @@
         "description": "day(s)"
     },
     "autoBackupLastBackupTitle": {
-        "message": "Poslední záloha:",
-        "description": "Last backup:"
+        "message": "Poslední záloha",
+        "description": "Last backup"
     },
     "darkThemeNotification": {
         "message": "Pro plnou podporu tmavého tématu je potřeba přepnout parametr <code>svg.context-properties.content.enabled</code> na <code>true</code> na stránce <code>about:config</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Jak na to?</a>",

@@ -1,12 +1,13 @@
 import '/js/prefixed-storage.js';
 import Logger from './logger.js';
 import * as Constants from './constants.js';
+import * as Utils from './utils.js';
 import * as Urls from './urls.js';
 import cacheStorage, {createStorage} from './cache-storage.js';
 
-const logger = new Logger('Management');
+const logger = new Logger(Constants.MODULES.MANAGEMENT);
 
-const storage = localStorage.create('management');
+const storage = localStorage.create(Constants.MODULES.MANAGEMENT);
 
 const extensions = cacheStorage.extensions ??= createStorage({});
 
@@ -105,7 +106,7 @@ export function getIgnoredConflictedExtensions() {
 } */
 
 export function getExtensionByUUID(uuid, extensionsStorage = extensions) {
-    if (isUUID(uuid)) {
+    if (Utils.isUUID(uuid)) {
         for (const id in extensionsStorage) {
             if (extensionsStorage[id]?.hostPermissions?.some(url => url.includes(uuid))) {
                 return extensionsStorage[id];
@@ -114,13 +115,7 @@ export function getExtensionByUUID(uuid, extensionsStorage = extensions) {
     }
 }
 
-const UUID_REGEXP = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
 const MOZ_EXTENSION_URL_REGEXP = /^moz-extension:\/\/([^\/]+)/;
-
-export function isUUID(uuid) {
-    return UUID_REGEXP.test(uuid);
-}
 
 export function extractUUID(url) {
     const [, uuid] = MOZ_EXTENSION_URL_REGEXP.exec(url) ?? [];

@@ -560,8 +560,8 @@
         "description": "Enable auto backup"
     },
     "autoBackupCreateEveryTitle": {
-        "message": "バックアップの作成間隔:",
-        "description": "Create backup every:"
+        "message": "バックアップの作成間隔",
+        "description": "Create backup every"
     },
     "intervalKeyMinutes": {
         "message": "分毎",
@@ -576,8 +576,8 @@
         "description": "day(s)"
     },
     "autoBackupLastBackupTitle": {
-        "message": "最新のバックアップ:",
-        "description": "Last backup:"
+        "message": "最新のバックアップ",
+        "description": "Last backup"
     },
     "darkThemeNotification": {
         "message": "ダークテーマをフルサポートにするために <code>svg.context-properties.content.enabled</code> のパラメータを <code>true</code> へ変更してください <code>about:config</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">How to do it?</a>",

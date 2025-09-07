@@ -8,12 +8,14 @@
     import manageAddonBackup from './manage-addon-backup.vue';
     import githubGist from './github-gist.vue';
 
+    import '/js/prefixed-storage.js';
     import * as Constants from '/js/constants.js';
     import * as Messages from '/js/messages.js';
-    import Logger from '/js/logger.js';
+    import Logger, {errorEventHandler} from '/js/logger.js';
     import Notification from '/js/notification.js';
     import * as Utils from '/js/utils.js';
     import * as Management from '/js/management.js';
+    import * as Bookmarks from '/js/bookmarks.js';
     import * as Storage from '/js/storage.js';
     import * as File from '/js/file.js';
     import * as Urls from '/js/urls.js';
@@ -24,11 +26,9 @@
     import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
     import optionsMixin from '/js/mixins/options.mixin.js';
 
-    const MODULE_NAME = Utils.capitalize(Utils.getNameFromPath(location.href));
+    window.logger = new Logger(Constants.MODULES.OPTIONS);
 
-    window.logger = new Logger(MODULE_NAME);
-
-    const storage = localStorage.create(MODULE_NAME.toLowerCase());
+    const storage = localStorage.create(Constants.MODULES.OPTIONS);
 
     Vue.config.errorHandler = errorEventHandler.bind(window.logger);
 
@@ -49,7 +49,7 @@
     const {
         sendMessage,
         sendMessageModule,
-    } = Messages.connectToBackground(MODULE_NAME, [
+    } = Messages.connectToBackground(Constants.MODULES.OPTIONS, [
         'group-added',
         'group-removed',
         'group-updated',
@@ -67,7 +67,7 @@
     });
 
     export default {
-        name: 'options-page',
+        name: Constants.MODULES.OPTIONS,
         mixins: [defaultGroupMixin, optionsMixin],
         data() {
             this.MANIFEST = Constants.MANIFEST;
@@ -86,6 +86,8 @@
             this.SECTION_HOTKEYS = SECTION_HOTKEYS;
             this.SECTION_BACKUP = SECTION_BACKUP;
             this.SECTION_ABOUT = SECTION_ABOUT;
+
+            this.autoBackupLastTimeStamp = localStorage.create(Constants.MODULES.BACKGROUND).autoBackupLastTimeStamp;
 
             return {
                 section,
@@ -193,8 +195,6 @@
 
                 defaultBookmarksParents: [],
 
-                autoBackupLastTimeStamp: storage.autoBackupLastTimeStamp,
-
                 showLoadingMessage: false,
 
                 showClearAddonConfirmPopup: false,
@@ -217,9 +217,7 @@
         },
         mounted() {
             if (this.element === 'sync') {
-                setTimeout(() => {
-                    Utils.scrollTo('#sync-block');
-                }, 1000);
+                Utils.wait(1000).then(() => Utils.scrollTo('#sync-block'));
             }
         },
         watch: {
@@ -228,9 +226,6 @@
             },
         },
         computed: {
-            showDarkThemeNotification() {
-                return Utils.getThemeApply(this.options.theme) === 'dark';
-            },
             groupIds() {
                 return this.groups.map(group => group.id);
             },
@@ -594,7 +589,7 @@
 
             async setPermissionsBookmarks(event) {
                 if (event.target.checked) {
-                    this.permissions.bookmarks = await browser.permissions.request(Constants.PERMISSIONS.BOOKMARKS);
+                    this.permissions.bookmarks = await Bookmarks.requestPermission();
                 } else {
                     await browser.permissions.remove(Constants.PERMISSIONS.BOOKMARKS);
                 }
@@ -607,7 +602,7 @@
                     return;
                 }
 
-                this.permissions.bookmarks = await browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS);
+                this.permissions.bookmarks = await Bookmarks.hasPermission();
 
                 if (this.permissions.bookmarks) {
                     this.defaultBookmarksParents = await browser.bookmarks.get(Constants.DEFAULT_BOOKMARKS_PARENTS);
@@ -691,7 +686,7 @@
 
         <div v-show="section === SECTION_GENERAL">
             <div class="field">
-                <label class="label" v-text="lang('theme')"></label>
+                <label class="label colon" v-text="lang('theme')"></label>
                 <div class="control">
                     <div class="select">
                         <select v-model="options.theme">
@@ -701,7 +696,7 @@
                         </select>
                     </div>
                 </div>
-                <div v-if="showDarkThemeNotification" class="help is-warning" v-html="lang('darkThemeNotification')"></div>
+                <div class="has-text-warning show-on-dark-scheme" v-html="lang('darkThemeNotification')"></div>
             </div>
 
             <div class="field">
@@ -723,7 +718,7 @@
                     <span v-text="lang('allowAccessToBookmarks')"></span>
                 </label>
                 <div class="ml-5">
-                    <label class="label" v-text="lang('defaultBookmarkFolderLocation')"></label>
+                    <label class="label colon" v-text="lang('defaultBookmarkFolderLocation')"></label>
                     <div class="control has-icons-left">
                         <div class="select">
                             <select v-model="options.defaultBookmarksParent" :disabled="!permissions.bookmarks">
@@ -793,7 +788,7 @@
 
             <div class="field is-horizontal">
                 <div class="field-label">
-                    <label class="label" v-text="lang('temporaryContainerTitleDescription')"></label>
+                    <label class="label colon" v-text="lang('temporaryContainerTitleDescription')"></label>
                 </div>
                 <div class="field-body">
                     <div class="field">
@@ -864,7 +859,7 @@
         </div>
 
         <div v-show="section === SECTION_HOTKEYS">
-            <label class="has-text-weight-bold" v-text="lang('hotkeysTitle')"></label>
+            <label class="label" v-text="lang('hotkeysTitle')"></label>
             <div class="block" v-html="lang('hotkeysDescription')"></div>
             <div class="block hotkeys">
                 <div class="field is-grouped" v-for="(hotkey, hotkeyIndex) in options.hotkeys" :key="hotkeyIndex">
@@ -932,7 +927,7 @@
 
         <div v-show="section === SECTION_BACKUP">
             <div class="field">
-                <div class="field has-text-weight-bold" v-text="lang('exportAddonSettingsTitle')"></div>
+                <label class="label" v-text="lang('exportAddonSettingsTitle')"></label>
                 <div class="field" v-html="lang('exportAddonSettingsDescription')"></div>
 
                 <div class="block checkboxes as-column">
@@ -994,7 +989,7 @@
 
                     <div class="field is-horizontal">
                         <div class="field-label is-normal">
-                            <label class="label" v-text="lang('autoBackupCreateEveryTitle')"></label>
+                            <label class="label colon" v-text="lang('autoBackupCreateEveryTitle')"></label>
                         </div>
                         <div class="field-body">
                             <div class="field has-addons">
@@ -1016,7 +1011,7 @@
 
                     <div class="field is-horizontal">
                         <div class="field-label">
-                            <label class="label" v-text="lang('autoBackupLastBackupTitle')"></label>
+                            <label class="label colon" v-text="lang('autoBackupLastBackupTitle')"></label>
                         </div>
                         <div class="field-body">
                             <span v-if="autoBackupLastTimeStamp > 1" v-text="new Date(autoBackupLastTimeStamp * 1000).toLocaleString()"></span>
@@ -1062,7 +1057,7 @@
 
                     <div class="field is-horizontal">
                         <div class="field-label is-normal">
-                            <label class="label" v-text="lang('autoBackupCreateEveryTitle')"></label>
+                            <label class="label colon" v-text="lang('autoBackupCreateEveryTitle')"></label>
                         </div>
                         <div class="field-body">
                             <div class="field has-addons">
@@ -1089,7 +1084,7 @@
 
             <div class="columns is-multiline">
                 <div class="column is-full">
-                    <div class="field has-text-weight-bold" v-text="lang('importAddonSettingsTitle')"></div>
+                    <label class="label" v-text="lang('importAddonSettingsTitle')"></label>
                     <div class="field" v-html="lang('importAddonSettingsDescription')"></div>
                     <div class="field is-grouped is-align-items-center">
                         <div class="control">
@@ -1105,7 +1100,7 @@
                     </div>
                 </div>
                 <div class="column">
-                    <div class="field has-text-weight-bold" v-text="lang('importSettingsOldTabGroupsAddonTitle')"></div>
+                    <label class="label" v-text="lang('importSettingsOldTabGroupsAddonTitle')"></label>
                     <div class="field" v-html="lang('importSettingsOldTabGroupsAddonDescription')"></div>
                     <div class="field">
                         <div class="control">
@@ -1121,7 +1116,7 @@
                     </div>
                 </div>
                 <div class="column">
-                    <div class="field has-text-weight-bold" v-text="lang('importSettingsPanoramaViewAddonTitle')"></div>
+                    <label class="label" v-text="lang('importSettingsPanoramaViewAddonTitle')"></label>
                     <div class="field" v-html="lang('importSettingsPanoramaViewAddonDescription')"></div>
                     <div class="field">
                         <div class="control">
@@ -1137,7 +1132,7 @@
                     </div>
                 </div>
                 <div class="column">
-                    <div class="field has-text-weight-bold" v-text="lang('importSettingsSyncTabGroupsAddonTitle')"></div>
+                    <label class="label" v-text="lang('importSettingsSyncTabGroupsAddonTitle')"></label>
                     <div class="field" v-html="lang('importSettingsSyncTabGroupsAddonDescription')"></div>
                     <div class="field">
                         <div class="control">
@@ -1156,7 +1151,7 @@
 
             <hr>
 
-            <div class="field has-text-weight-bold" v-text="lang('deleteAllAddonDataAndSettings')"></div>
+            <label class="label" v-text="lang('deleteAllAddonDataAndSettings')"></label>
             <div class="field has-text-weight-bold has-text-danger">
                 <span v-text="lang('warning')"></span>
                 <span v-html="lang('eraseAddonSettingsWarningTitle')"></span>
@@ -1331,7 +1326,7 @@
 
                 <div class="block">
                     <div class="has-text-weight-bold mb-5">
-                        <a href="https://addons.mozilla.org/firefox/user/1017663/" target="_blank">STG plugins:</a>
+                        <a href="https://addons.mozilla.org/firefox/user/1017663/" target="_blank" class="colon" v-text="lang('plugins')"></a>
                     </div>
 
                     <div v-for="(plugin, uuid) in PLUGINS" :key="uuid" class="field">

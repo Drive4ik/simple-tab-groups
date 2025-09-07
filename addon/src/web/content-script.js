@@ -1,7 +1,7 @@
 'use strict';
 
 import './select-group-popup.css';
-import {isValidHotkeyEvent, eventToHotkeyValue, NOT_SUPPORTED_CODE_KEYS} from '../js/hotkeys.js';
+import {isValidHotkeyEvent, eventToHotkeyValue, NOT_SUPPORTED_CODE_KEYS} from '/js/hotkeys.js';
 
 let hotkeys = [],
     foundHotKey = false;

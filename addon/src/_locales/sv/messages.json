@@ -466,8 +466,8 @@
         "description": "Enable auto backup"
     },
     "autoBackupCreateEveryTitle": {
-        "message": "Intervall för automatisk säkerhetskopia:",
-        "description": "Create backup every:"
+        "message": "Intervall för automatisk säkerhetskopia",
+        "description": "Create backup every"
     },
     "intervalKeyHours": {
         "message": "timmar",
@@ -478,8 +478,8 @@
         "description": "day(s)"
     },
     "autoBackupLastBackupTitle": {
-        "message": "Senaste säkerhetskopia:",
-        "description": "Last backup:"
+        "message": "Senaste säkerhetskopia",
+        "description": "Last backup"
     },
     "darkThemeNotification": {
         "message": "För att det mörka temat skall visas korrekt överallt, sätt <code>svg.context-properties.content.enabled</code>-inställningen till <code>true</code> på <code>about:config</code>-sidan. Klicka <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">här</a> för ytterligare instruktioner.",

@@ -560,8 +560,8 @@
         "description": "Enable auto backup"
     },
     "autoBackupCreateEveryTitle": {
-        "message": "创建备份每：",
-        "description": "Create backup every:"
+        "message": "创建备份每",
+        "description": "Create backup every"
     },
     "intervalKeyMinutes": {
         "message": "分钟",
@@ -576,8 +576,8 @@
         "description": "day(s)"
     },
     "autoBackupLastBackupTitle": {
-        "message": "最后一次备份：",
-        "description": "Last backup:"
+        "message": "最后一次备份",
+        "description": "Last backup"
     },
     "darkThemeNotification": {
         "message": "要完整支持暗色主题，在<br><code>about:config</code> 页面修改<br><code>svg.context-properties.content.enabled</code> 参数为 <code>true</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">怎么做？</a>",

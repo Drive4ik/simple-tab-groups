@@ -1,5 +1,5 @@
 import * as Constants from './constants.js';
-import * as BrowserConstants from '/js/browser-constants.js';
+import * as ConstantsBrowser from './constants-browser.js';
 import Logger, {catchFunc} from './logger.js';
 import Notification from './notification.js';
 import * as Utils from './utils.js';
@@ -21,7 +21,7 @@ export const TEMPORARY = cacheStorage.TEMPORARY ??= createStorage({
     colorCode: false,
     cookieStoreId: Constants.TEMPORARY_CONTAINER,
     icon: Constants.TEMPORARY_CONTAINER_ICON,
-    iconUrl: BrowserConstants.getContainerIconUrl(Constants.TEMPORARY_CONTAINER_ICON),
+    iconUrl: ConstantsBrowser.getContainerIconUrl(Constants.TEMPORARY_CONTAINER_ICON),
     name: browser.i18n.getMessage('temporaryContainerTitle'),
 });
 
@@ -69,7 +69,7 @@ function onCreated({contextualIdentity}) {
         return;
     }
 
-    backgroundSelf.sendMessage('containers-updated');
+    backgroundSelf.sendMessageFromBackground('containers-updated');
 }
 
 function onUpdated({contextualIdentity}) {
@@ -90,7 +90,7 @@ function onUpdated({contextualIdentity}) {
         return;
     }
 
-    backgroundSelf.sendMessage('containers-updated');
+    backgroundSelf.sendMessageFromBackground('containers-updated');
 }
 
 async function onRemoved({contextualIdentity}) {
@@ -116,7 +116,7 @@ async function onRemoved({contextualIdentity}) {
         await Groups.save(groups);
     }
 
-    backgroundSelf.sendMessage('containers-updated');
+    backgroundSelf.sendMessageFromBackground('containers-updated');
     log.stop();
 }
 
@@ -372,6 +372,6 @@ export async function updateTemporaryContainerTitle(temporaryContainerTitle, con
             browser.contextualIdentities.onUpdated.addListener(onUpdated);
         }
 
-        backgroundSelf.sendMessage('containers-updated'); // update container temporary name on tabs will work only on not archived groups
+        backgroundSelf.sendMessageFromBackground('containers-updated'); // update container temporary name on tabs will work only on not archived groups
     }
 }

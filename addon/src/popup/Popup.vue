@@ -15,7 +15,7 @@
     import backgroundSelf from '/js/background.js';
     import * as Constants from '/js/constants.js';
     import * as Messages from '/js/messages.js';
-    import Logger, {catchFunc} from '/js/logger.js';
+    import Logger, {catchFunc, errorEventHandler} from '/js/logger.js';
     import * as Containers from '/js/containers.js';
     import * as Urls from '/js/urls.js';
     import * as Cache from '/js/cache.js';
@@ -31,28 +31,21 @@
     import syncCloudMixin from '/js/mixins/sync-cloud.mixin.js';
 
     const isSidebar = '#sidebar' === window.location.hash;
-    const MODULE_NAME = isSidebar ? 'Sidebar' : 'Popup';
+    const MODULE_NAME = isSidebar ? Constants.MODULES.SIDEBAR : Constants.MODULES.POPUP;
 
     window.logger = new Logger(MODULE_NAME);
 
-    const storage = localStorage.create('popup');
-
-    const githubStorage = localStorage.create('github');
+    const storage = localStorage.create(Constants.MODULES.POPUP);
+    const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 
     Vue.config.errorHandler = errorEventHandler.bind(window.logger);
 
-    const loadingNode = document.getElementById('loading');
-
     function fullLoading(show) {
-        if (show) {
-            loadingNode.classList.remove('is-hidden');
-        } else {
-            loadingNode.classList.add('is-hidden');
-        }
+        document.getElementById('loading').classList.toggle('is-hidden', !show);
     }
 
     function showDebugMode() {
-        if (backgroundSelf.storage.enableDebug) {
+        if (mainStorage.enableDebug) {
             const div = document.createElement('div');
             div.innerText = browser.i18n.getMessage('loggingIsEnabledTitle');
             Object.assign(div.style, {
@@ -79,7 +72,7 @@
         availableTabKeys = new Set(['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'lastAccessed', 'audible', 'mutedInfo', 'windowId']);
 
     export default {
-        name: 'popup-page',
+        name: Constants.MODULES.POPUP,
         mixins: [defaultGroupMixin, optionsMixin, startUpDataMixin, syncCloudMixin],
         data() {
             return {
@@ -133,9 +126,6 @@
                 unSyncTabs: [],
 
                 multipleTabIds: [], // TODO try use Set Object
-
-                syncLastUpdateAgo: null,
-                syncHasError: false,
             };
         },
         components: {
@@ -251,8 +241,8 @@
             syncTitle() {
                 let result = this.lang('syncStart');
 
-                if (this.syncLastUpdateAgo) {
-                    result += ' (' + this.lang('lastUpdateAgo', this.syncLastUpdateAgo) + ')';
+                if (this.syncCloudLastUpdateAgo) {
+                    result += ' (' + this.lang('lastUpdateAgo', this.syncCloudLastUpdateAgo) + ')';
                 }
 
                 return result;
@@ -306,22 +296,24 @@
 
                 this
                     .$on('sync-error', async ({name, message}) => {
-                        if (this.synchronisationProgress < 5) {
-                            this.synchronisationProgress = 15;
+                        if (this.syncCloudProgress < 5) {
+                            this.syncCloudProgress = 15;
                         }
 
-                        if (this.syncCloudTriggeredByThis) {
+                        if (this.syncCloudTriggeredByPopup) {
                             const ok = await this.showConfirm(name, message, 'openSettings', 'is-info');
-                            ok && this.syncCloudOptions();
+
+                            if (ok) {
+                                Messages.sendMessage('open-options-page', {
+                                    section: 'backup sync',
+                                });
+                                this.closeWindow();
+                            }
                         }
                     })
                     .$on('sync-finish', () => {
-                        this.updateSyncData();
-                        this.syncCloudTriggeredByThis = false;
+                        this.syncCloudTriggeredByPopup = false;
                     });
-
-                this.updateSyncData();
-                setInterval(this.updateSyncData.bind(this), 30_000);
 
                 let lazyRemoveTabTimer = 0,
                     lazyRemoveTabIds = [];
@@ -1299,17 +1291,18 @@
                 }
             },
 
-            async syncCloudClick() {
-                if (this.syncCloudTriggeredByThis) {
+            async syncCloudClickInPopup() {
+                if (this.syncCloudTriggeredByPopup) {
                     return;
                 }
 
-                this.syncCloudTriggeredByThis = true;
+                this.syncCloudTriggeredByPopup = true;
 
                 const syncResult = await this.syncCloud();
 
+                // TODO check if need result? make try catch
                 if (!syncResult) {
-                    this.syncCloudTriggeredByThis = false;
+                    this.syncCloudTriggeredByPopup = false;
                 }
             },
             settingsMenuAction({optionsCheckbox, sendMessage, key, closePopup}) {
@@ -1322,19 +1315,6 @@
                 if (closePopup) {
                     this.closeWindow();
                 }
-            },
-            syncCloudOptions() {
-                Messages.sendMessage('open-options-page', {
-                    section: 'backup sync',
-                });
-                this.closeWindow();
-            },
-            updateSyncData() {
-                if (githubStorage.updated_at) {
-                    this.syncLastUpdateAgo = Utils.relativeTime(githubStorage.updated_at);
-                }
-
-                this.syncHasError = !!githubStorage.hasError;
             },
         },
     }
@@ -1807,24 +1787,24 @@
                 v-if="options.syncEnable"
                 tabindex="0"
                 class="sync"
-                @click="syncCloudClick"
-                @keydown.enter="syncCloudClick"
+                @click="syncCloudClickInPopup"
+                @keydown.enter="syncCloudClickInPopup"
                 :title="syncTitle"
                 >
                 <div
                     class="circle-progress"
                     :class="{
-                        'in-progress': synchronisationInProgress,
-                        'is-success': !synchronisationError && synchronisationProgress === 100,
-                        'is-danger': !!synchronisationError,
+                        'in-progress': syncCloudInProgress,
+                        'is-success': !syncCloudErrorMessage && syncCloudProgress === 100,
+                        'is-danger': !!syncCloudErrorMessage,
                     }"
                     :style="{
-                        '--sync-progress-percent': `${synchronisationProgress}%`,
+                        '--sync-progress-percent': `${syncCloudProgress}%`,
                     }"
                     >
                     <figure class="image is-16x16">
                         <img src="/icons/cloud-arrow-up-solid.svg" />
-                        <img v-if="syncHasError" id="sync-error-icon" src="/icons/exclamation-triangle-yellow.svg">
+                        <img v-if="syncCloudHasError" id="sync-error-icon" src="/icons/exclamation-triangle-yellow.svg">
                     </figure>
                 </div>
             </div>

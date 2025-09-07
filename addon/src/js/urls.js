@@ -1,10 +1,9 @@
 
+import './prefixed-storage.js';
 import * as Constants from './constants.js';
 import * as Tabs from './tabs.js';
 import * as Windows from './windows.js';
-
-const optionsStorage = localStorage.create('options');
-const manageGroupsStorage = localStorage.create('manage-groups');
+import * as Storage from './storage.js';
 
 export const MANAGE_TABS_URL = getURL('/manage/manage.html');
 export const HELP_PAGE_UNSUPPORTED_URL = getURL('stg-unsupported-url');
@@ -28,7 +27,7 @@ export async function openUrl(page, asWindow = false) {
 }
 
 export function openOptionsPage(section = 'general') {
-    optionsStorage.section = section;
+    localStorage.create(Constants.MODULES.OPTIONS).section = section;
 
     return browser.runtime.openOptionsPage()
         .catch(self.logger?.onCatch('openOptionsPage', false))
@@ -43,27 +42,29 @@ function loadPopupWindows() {
 }
 
 export async function openManageGroups() {
-    const {default: backgroundSelf} = await import('./background.js');
+    const {openManageGroupsInTab} = await Storage.get('openManageGroupsInTab');
 
-    if (backgroundSelf.options.openManageGroupsInTab) {
+    if (openManageGroupsInTab) {
         await Tabs.createUrlOnce(MANAGE_TABS_URL);
     } else {
-        let allPopupWindows = await loadPopupWindows(),
+        const allPopupWindows = await loadPopupWindows(),
             win = allPopupWindows.find(win => win.tabs[0].url.startsWith(MANAGE_TABS_URL));
 
         if (win) {
             await Windows.setFocus(win.id);
         } else {
+            const manageStorage = localStorage.create(Constants.MODULES.MANAGE);
+
             await Windows.createPopup(MANAGE_TABS_URL, {
-                width: manageGroupsStorage.windowWidth ?? 1000,
-                height: manageGroupsStorage.windowHeight ?? 700,
+                width: manageStorage.windowWidth ?? 1000,
+                height: manageStorage.windowHeight ?? 700,
             });
         }
     }
 }
 
 export async function openDebugPage() {
-    let allPopupWindows = await loadPopupWindows(),
+    const allPopupWindows = await loadPopupWindows(),
         debugPageUrl = getURL('stg-debug'),
         win = allPopupWindows.find(win => win.tabs[0].url.startsWith(debugPageUrl));
 

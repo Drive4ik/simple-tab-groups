@@ -476,8 +476,8 @@
         "description": "day(s)"
     },
     "autoBackupLastBackupTitle": {
-        "message": "Son yedekleme:",
-        "description": "Last backup:"
+        "message": "Son yedekleme",
+        "description": "Last backup"
     },
     "browseFileTitle": {
         "message": "Göz at...",

@@ -2,19 +2,21 @@
 import * as Constants from './constants.js';
 
 const UNNECESSARY_LOG_STRINGS = [
+    Constants.STG_BASE_URL + 'js/',
     Constants.STG_BASE_URL,
     'async*',
     'Async*',
-    '../node_modules/vue-loader/lib/index.js??vue-loader-options!./popup/Popup.vue?vue&type=script&lang=js&',
-    '../node_modules/vue-loader/lib/index.js??vue-loader-options!./manage/Manage.vue?vue&type=script&lang=js&',
-    '../node_modules/vue-loader/lib/index.js??vue-loader-options!./options/Options.vue?vue&type=script&lang=js&',
 ];
 
 function removeUnnecessaryStrings(str) {
     return UNNECESSARY_LOG_STRINGS.reduce((s, strToDel) => s.replaceAll(strToDel, ''), String(str));
 }
 
-const DELETE_LOG_STARTS_WITH = [
+const DELETE_LOG_LINE_INCLUDES = [
+    'vue.runtime.esm.js',
+];
+
+const DELETE_LOG_LINE_STARTS_WITH = [
     'Log',
     'normalizeError',
     'setLoggerFuncs',
@@ -24,10 +26,10 @@ const DELETE_LOG_STARTS_WITH = [
 
 export function getStack(e, start = 0, to = 50) {
     return removeUnnecessaryStrings(e.stack)
-        .trim()
         .split('\n')
         .filter(Boolean)
-        .filter(str => !DELETE_LOG_STARTS_WITH.some(unlogStr => str.startsWith(unlogStr)))
+        .filter(line => !DELETE_LOG_LINE_INCLUDES.some(str => line.includes(str)))
+        .filter(line => !DELETE_LOG_LINE_STARTS_WITH.some(str => line.startsWith(str)))
         .slice(start, to);
 }
 

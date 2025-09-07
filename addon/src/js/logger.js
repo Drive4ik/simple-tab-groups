@@ -6,19 +6,16 @@ import * as Utils from './utils.js';
 import * as Messages from './messages.js';
 import {normalizeError, getStack} from './logger-utils.js';
 
-export const storage = localStorage.create('logs');
-const mainStorage = localStorage.create('main');
+const storage = localStorage.create(Constants.MODULES.LOGGER);
+const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 
 const consoleKeys = ['log', 'info', 'warn', 'error', 'debug', 'assert'];
 
-const connectToBG = function(log) {
-    const prefixes = log?.prefixes.join(' ') || '';
-    return this.messagePort ??= Messages.connectToBackground(`${prefixes} Logger`);
-}.bind({
-    messagePort: null,
-})
-
 const logs = [];
+
+const backgroundConnect = Constants.IS_BACKGROUND_PAGE
+    ? null
+    : Messages.connectToBackground(Constants.MODULES.LOGGER);
 
 export default function Logger(prefix, prefixes = []) {
     if (this) { // create new logger with prefix
@@ -56,29 +53,17 @@ function setLoggerFuncs() {
             startArgs = [...startArgs[0], ...startArgs.slice(1)];
         }
 
-        const uniq = Utils.getRandomInt(),
-            logger = new Logger(startArgs.shift(), this.prefixes.slice());
+        const logger = new Logger(startArgs.shift(), this.prefixes.slice());
 
         logger.enabled = this.enabled;
-        logger.scope = uniq;
+        logger.scope = Utils.getRandomInt();
         logger.stopMessage = `STOP ${logger.scope}`;
 
         logger[cKey](`START ${logger.scope}`, ...startArgs);
 
-        logger.stop = (...args) => {
-            logger.log.call(logger, logger.stopMessage, ...args);
-            return args[0];
-        };
-
-        logger.stopWarn = (...args) => {
-            logger.warn.call(logger, logger.stopMessage, ...args);
-            return args[0];
-        };
-
-        logger.stopError = (...args) => {
-            logger.error.call(logger, logger.stopMessage, ...args);
-            return args[0];
-        };
+        logger.stop = (...args) => logger.log(logger.stopMessage, ...args);
+        logger.stopWarn = (...args) => logger.warn(logger.stopMessage, ...args);
+        logger.stopError = (...args) => logger.error(logger.stopMessage, ...args);
 
         return logger;
     }.bind(this);
@@ -109,7 +94,8 @@ function setLoggerFuncs() {
 
             const args = [...[message].flat(), normalizeError(error)];
 
-            if (mainStorage.enableDebug && !this.fromErrorEventHandler) {
+            // fromErrorEventHandler need for prevent loop throw/catch
+            if (mainStorage.IS_TEMPORARY && mainStorage.enableDebug && !this.fromErrorEventHandler) {
                 throwError = true;
             }
 
@@ -131,17 +117,14 @@ function setLoggerFuncs() {
         }
     }.bind(this);
 
-    this.onError = function(...args) {
-        return this.onCatch(...args);
-    }.bind(this);
-
     this.throwError = function(message, error) {
-        this.onError(message, true)(error);
+        // this.stopError(message); // TODO
+        this.onCatch(message, true)(error);
         return this;
     }.bind(this);
 
     this.logError = function(message, error) {
-        this.onError(message, false)(error);
+        this.onCatch(message, false)(error);
         return this;
     }.bind(this);
 
@@ -201,7 +184,7 @@ function Log(cKey, ...args) {
     if (Constants.IS_BACKGROUND_PAGE) {
         addLog(log);
     } else {
-        connectToBG(this).sendMessage('save-log', {
+        backgroundConnect.sendMessage('save-log', {
             log,
             logger: JSON.clone(this),
             options: {
@@ -226,7 +209,7 @@ export function showLog(log, {cKey, args}) {
         return;
     }
 
-    if (mainStorage.enableDebug || self.IS_TEMPORARY) {
+    if (mainStorage.enableDebug || mainStorage.IS_TEMPORARY) {
         let argsToConsole = cKey === 'assert'
             ? [args[0], this.prefixes.join('.'), ...args.slice(1)]
             : log[`console.${cKey}`].slice();
@@ -325,7 +308,7 @@ export function clearErrors() {
 }
 
 export function getLogs() {
-    return logs.slice(-3000);
+    return logs.slice(-5_000);
 }
 
 export function clearLogs() {
@@ -342,16 +325,16 @@ export function catchFunc(asyncFunc) {
             e.message = `[catchFunc]: ${e.message}`;
             e.stack = [fromStack, 'Native error stack:', e.stack].join('\n');
             e.arguments = JSON.clone(Array.from(arguments));
-            self.errorEventHandler(e);
+            errorEventHandler(e);
         }
     };
 }
 
-function errorEventHandler(event) {
+export function errorEventHandler(event) {
     event.preventDefault?.();
     event.stopImmediatePropagation?.();
 
-    mainStorage.enableDebug = 2;
+    mainStorage.enableDebug = Constants.DEBUG.AUTO;
 
     const logger = this instanceof Logger ? this : self.logger;
 
@@ -369,12 +352,12 @@ function showErrorNotificationMessage(logger) {
     if (Constants.IS_BACKGROUND_PAGE) {
         self.onBackgroundMessage('show-error-notification', self);
     } else {
-        connectToBG(logger).sendMessage('show-error-notification');
+        backgroundConnect.sendMessage('show-error-notification');
     }
 }
 
-self.errorEventHandler = errorEventHandler; // add to self if need remove Listener
-self.unhandledrejection = e => self.errorEventHandler(e.reason); // add to self if need remove Listener
+// self.errorEventHandler = errorEventHandler; // add to self if need remove Listener
+// self.unhandledrejection = e => errorEventHandler(e.reason); // add to self if need remove Listener
 
-self.addEventListener('error', self.errorEventHandler);
-self.addEventListener('unhandledrejection', self.unhandledrejection);
+self.addEventListener('error', errorEventHandler);
+self.addEventListener('unhandledrejection', e => errorEventHandler(e.reason));

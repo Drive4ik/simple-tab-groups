@@ -516,8 +516,8 @@
         "description": "Enable auto backup"
     },
     "autoBackupCreateEveryTitle": {
-        "message": "Δημιουργία backup κάθε:",
-        "description": "Create backup every:"
+        "message": "Δημιουργία backup κάθε",
+        "description": "Create backup every"
     },
     "intervalKeyMinutes": {
         "message": "λεπτό(ά)",
@@ -532,8 +532,8 @@
         "description": "day(s)"
     },
     "autoBackupLastBackupTitle": {
-        "message": "Τελευταίο backup:",
-        "description": "Last backup:"
+        "message": "Τελευταίο backup",
+        "description": "Last backup"
     },
     "darkThemeNotification": {
         "message": "Για πλήρη υποστήριξη του dark theme, ενεργοποιείστε την <code>svg.context-properties.content.enabled</code> παράμετρο σε <code>true</code> στην <code>about:config</code> σελίδα. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">How to do it?</a>",

@@ -560,8 +560,8 @@
         "description": "Enable auto backup"
     },
     "autoBackupCreateEveryTitle": {
-        "message": "Створювати резервні копії кожні:",
-        "description": "Create backup every:"
+        "message": "Створювати резервні копії кожні",
+        "description": "Create backup every"
     },
     "intervalKeyMinutes": {
         "message": "хвилин",
@@ -576,8 +576,8 @@
         "description": "day(s)"
     },
     "autoBackupLastBackupTitle": {
-        "message": "Останнє резервне копіювання:",
-        "description": "Last backup:"
+        "message": "Останнє резервне копіювання",
+        "description": "Last backup"
     },
     "darkThemeNotification": {
         "message": "Для повної підтримки темної теми встановіть параметр <code>svg.context-properties.content.enabled</code> в <code>true</code> на сторінці <code>about:config</code>, <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Як це зробити?</a>",

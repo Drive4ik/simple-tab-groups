@@ -560,8 +560,8 @@
         "description": "Enable auto backup"
     },
     "autoBackupCreateEveryTitle": {
-        "message": "Criar backup a cada:",
-        "description": "Create backup every:"
+        "message": "Criar backup a cada",
+        "description": "Create backup every"
     },
     "intervalKeyMinutes": {
         "message": "minuto(s)",
@@ -576,8 +576,8 @@
         "description": "day(s)"
     },
     "autoBackupLastBackupTitle": {
-        "message": "Último backup:",
-        "description": "Last backup:"
+        "message": "Último backup",
+        "description": "Last backup"
     },
     "darkThemeNotification": {
         "message": "Para ter suporte completo ao tema escuro, habilite o parâmetro <code>svg.context-properties.content.enabled</code> para <code>true</code> na página <code>about:config</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Como fazer isso?</a>",

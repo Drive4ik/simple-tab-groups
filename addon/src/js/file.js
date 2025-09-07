@@ -112,7 +112,9 @@ export async function save(data, fileName = 'file-name', saveAs = true, clearOnC
 
         URL.revokeObjectURL(url);
 
-        return log.stop(id);
+        log.stop(id);
+
+        return id;
     } catch (e) {
         URL.revokeObjectURL(url);
         if (!String(e.message || e).toLowerCase().includes('canceled')) {

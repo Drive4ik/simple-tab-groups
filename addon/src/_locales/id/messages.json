@@ -536,8 +536,8 @@
         "description": "Enable auto backup"
     },
     "autoBackupCreateEveryTitle": {
-        "message": "Buat cadangan setiap:",
-        "description": "Create backup every:"
+        "message": "Buat cadangan setiap",
+        "description": "Create backup every"
     },
     "intervalKeyMinutes": {
         "message": "menit)",
@@ -552,8 +552,8 @@
         "description": "day(s)"
     },
     "autoBackupLastBackupTitle": {
-        "message": "Cadangan terakhir:",
-        "description": "Last backup:"
+        "message": "Cadangan terakhir",
+        "description": "Last backup"
     },
     "darkThemeNotification": {
         "message": "Untuk mendukung sepenuhnya tema gelap, aktifkan parameter <code>svg.context-properties.content.enabled</code> ke <code>true</code> pada halaman <code>about:config</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Bagaimana cara melakukannya?</a>",

@@ -4,14 +4,23 @@ import Logger from './logger.js';
 import * as Constants from './constants.js';
 import * as Storage from './storage.js';
 
-const logger = new Logger('Bookmarks');
+const logger = new Logger(Constants.MODULES.BOOKMARKS);
 
-const storage = localStorage.create('bookmarks');
+const storage = localStorage.create(Constants.MODULES.BOOKMARKS);
 
 const MAX_LENGTH = 1024 * 60;
 
+const ROOT = {
+    id: 'rootId',
+    title: browser.i18n.getMessage('extensionName'),
+};
+
 export async function hasPermission() {
     return browser.permissions.contains(Constants.PERMISSIONS.BOOKMARKS);
+}
+
+export async function requestPermission() {
+    return browser.permissions.request(Constants.PERMISSIONS.BOOKMARKS);
 }
 
 async function findGroup(group, parentId, createIfNeed = false) {
@@ -22,6 +31,26 @@ async function findGroup(group, parentId, createIfNeed = false) {
 
         if (!bookmark && !createIfNeed) {
             delete storage[group.id];
+        }
+    }
+
+    if (!bookmark && group.id === ROOT.id) {
+        const bookmarks = await browser.bookmarks.search({
+            title: ROOT.title,
+        });
+
+        for (const bookmarkCandidate of bookmarks) {
+            if (
+                bookmarkCandidate.parentId === parentId &&
+                bookmarkCandidate.type === browser.bookmarks.BookmarkTreeNodeType.FOLDER
+            ) {
+                bookmark = bookmarkCandidate;
+                break;
+            }
+        }
+
+        if (bookmark) {
+            storage[group.id] = bookmark.id;
         }
     }
 
@@ -45,10 +74,7 @@ async function findGroup(group, parentId, createIfNeed = false) {
 async function getGroup(group, createIfNeed) {
     const {defaultBookmarksParent} = await Storage.get('defaultBookmarksParent');
 
-    const rootBookmark = await findGroup({
-        id: 'rootId',
-        title: browser.i18n.getMessage('extensionName'),
-    }, defaultBookmarksParent, createIfNeed);
+    const rootBookmark = await findGroup(ROOT, defaultBookmarksParent, createIfNeed);
 
     if (rootBookmark) {
         return findGroup(group, rootBookmark.id, createIfNeed);
@@ -56,43 +82,56 @@ async function getGroup(group, createIfNeed) {
 }
 
 export async function removeGroup(group) {
-    const groupBookmarkFolder = await getGroup(group);
+    const log = logger.start('removeGroup', group.id);
 
-    if (groupBookmarkFolder) {
-        try {
-            await browser.bookmarks.removeTree(groupBookmarkFolder.id);
+    if (await hasPermission()) {
+        const groupBookmarkFolder = await getGroup(group);
+
+        if (groupBookmarkFolder) {
+            await browser.bookmarks.removeTree(groupBookmarkFolder.id)
+                .catch(log.onCatch(groupBookmarkFolder));
 
             delete storage[group.id];
 
+            log.stop('success');
+
             return true;
-        } catch (e) {
-            logger.logError('removeGroup', e);
         }
     }
+
+    log.stop();
 
     return false;
 }
 
 export async function updateGroupTitle(group) {
-    const groupBookmarkFolder = await getGroup(group);
+    const log = logger.start('updateGroupTitle', {groupId: group.id, title: group.title});
 
-    if (groupBookmarkFolder) {
-        try {
+    if (await hasPermission()) {
+        const groupBookmarkFolder = await getGroup(group);
+
+        if (groupBookmarkFolder) {
             await browser.bookmarks.update(groupBookmarkFolder.id, {
                 title: group.title,
-            });
+            }).catch(log.onCatch(groupBookmarkFolder));
+
+            log.stop('success');
 
             return true;
-        } catch (e) {
-            logger.logError(['updateGroupTitle', {groupId: group.id, title: group.title}], e);
         }
     }
+
+    log.stop();
 
     return false;
 }
 
 export async function exportGroup(group, groupIndex) {
     const log = logger.start('exportGroup', {groupId: group.id, groupIndex});
+
+    if (!await hasPermission()) {
+        log.stop('no permission');
+    }
 
     const {BOOKMARK} = browser.bookmarks.BookmarkTreeNodeType;
 
@@ -149,6 +188,10 @@ export async function exportGroup(group, groupIndex) {
 
 export async function exportGroups(groups) {
     const log = logger.start('exportGroups');
+
+    if (!await hasPermission()) {
+        log.stop('no permission');
+    }
 
     for (const [groupIndex, group] of groups.entries()) {
         if (group.exportToBookmarks) {

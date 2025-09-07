@@ -10,9 +10,11 @@ import * as Utils from '/js/utils.js';
 import * as Urls from '/js/urls.js';
 import * as SyncStorage from '/js/sync/sync-storage.js';
 import GithubGist from '/js/sync/cloud/githubgist.js';
-import {CloudError, LOCAL, CLOUD, storage as CloudStorage} from '/js/sync/cloud/cloud.js';
+import {CloudError, LOCAL, CLOUD} from '/js/sync/cloud/cloud.js';
 
 import syncCloudMixin from '/js/mixins/sync-cloud.mixin.js';
+
+const storage = localStorage.create(Constants.MODULES.CLOUD);
 
 export default {
     name: 'github-gist',
@@ -63,8 +65,8 @@ export default {
         GithubGistFields,
     },
     watch: {
-        synchronisationError() {
-            this.area.error = this.synchronisationError;
+        syncCloudErrorMessage() {
+            this.area.error = this.syncCloudErrorMessage;
         },
     },
     computed: {
@@ -75,7 +77,7 @@ export default {
             return this.areas.find(area => area.value === this.local.options.syncOptionsLocation);
         },
         isLoadingSyncButton() {
-            return this.synchronisationInProgress || this.area.loading;
+            return this.syncCloudInProgress || this.area.loading;
         },
         isDisableSyncButton() {
             return this.isLoadingSyncButton || this.area.disabled;
@@ -84,8 +86,8 @@ export default {
             if (
                 !this.isDisableSyncButton &&
                 this.area.gist &&
-                CloudStorage.lastSyncFileName &&
-                CloudStorage.lastSyncFileName !== this.area.optionsBackup.githubGistFileName
+                storage.lastSyncFileName &&
+                storage.lastSyncFileName !== this.area.optionsBackup.githubGistFileName
             ) {
                 return true;
             }
@@ -100,7 +102,7 @@ export default {
             this.$watch('local.options.syncOptionsLocation', syncOptionsLocation => {
                 Storage.set({syncOptionsLocation});
                 this.area.error = '';
-                this.synchronisationProgress = 0;
+                this.syncCloudProgress = 0;
             });
         });
 
@@ -140,7 +142,7 @@ export default {
         async loadGistInfo(area, resetState = true) {
             if (resetState) {
                 area.error = '';
-                this.synchronisationProgress = 0;
+                this.syncCloudProgress = 0;
             }
 
             if (!area.options.githubGistToken) {
@@ -342,12 +344,12 @@ export default {
             <div class="column">
                 <div class="simple-progress">
                     <div class="position" :class="{
-                        'in-progress': synchronisationInProgress,
-                        'has-background-success': !area.error && synchronisationProgress === 100,
+                        'in-progress': syncCloudInProgress,
+                        'has-background-success': !area.error && syncCloudProgress === 100,
                         'has-background-danger': !!area.error,
                     }"
                     :style="{
-                        '--progress-value': `${synchronisationProgress}%`,
+                        '--progress-value': `${syncCloudProgress}%`,
                     }"
                     ></div>
                 </div>

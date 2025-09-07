@@ -8,6 +8,8 @@ import * as File from '/js/file.js';
 import * as Cache from '/js/cache.js';
 import * as Utils from '/js/utils.js';
 
+const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
+
 const $ = document.querySelector.bind(document),
     wasAutoDebug = isAutoDebug(),
     debugStatus = $('#debugStatus'),
@@ -22,30 +24,30 @@ Messages.connectToBackground('stg-debug', 'show-error-notification', () => {
 });
 
 function reloadState() {
-    enableDebugButton.classList.toggle('hidden', !!backgroundSelf.storage.enableDebug);
-    disableDebugButton.classList.toggle('hidden', !backgroundSelf.storage.enableDebug);
+    enableDebugButton.classList.toggle('hidden', !!mainStorage.enableDebug);
+    disableDebugButton.classList.toggle('hidden', !mainStorage.enableDebug);
 
     if (wasAutoDebug || isAutoDebug()) {
         debugStatus.classList = 'auto-enabled';
         $('#mainTitle').innerText = browser.i18n.getMessage('helpPageStgDebugAutoDebugMainTitle');
-    } else if (backgroundSelf.storage.enableDebug) {
+    } else if (mainStorage.enableDebug) {
         debugStatus.classList = 'enabled';
     }
 }
 
 function isAutoDebug() {
-    return backgroundSelf.storage.enableDebug == 2;
+    return mainStorage.enableDebug === Constants.DEBUG.AUTO;
 }
 
 function enableDebug() {
-    backgroundSelf.storage.enableDebug = 1;
+    mainStorage.enableDebug = Constants.DEBUG.MANUAL;
     debugStatus.classList = 'enabled';
     enableDebugButton.classList.add('hidden');
     disableDebugButton.classList.remove('hidden');
 }
 
 async function disableDebug() {
-    delete backgroundSelf.storage.enableDebug;
+    delete mainStorage.enableDebug;
     debugStatus.classList = '';
     enableDebugButton.classList.remove('hidden');
     disableDebugButton.classList.add('hidden');
@@ -154,8 +156,8 @@ async function saveConsoleLogs() {
         CRITICAL_ERRORS,
         addon: {
             version: Constants.MANIFEST.version,
-            upTime: backgroundSelf.storage.START_TIME
-                ? Math.ceil((Date.now() - backgroundSelf.storage.START_TIME) / 1000) + ' sec'
+            upTime: mainStorage.START_TIME
+                ? Math.ceil((Date.now() - mainStorage.START_TIME) / 1000) + ' sec'
                 : 'unknown',
             UUID: Constants.STG_BASE_URL,
             permissions: {
@@ -190,7 +192,7 @@ function onClosePage() {
     }
 
     if (wasAutoDebug || isAutoDebug()) {
-        delete backgroundSelf.storage.enableDebug;
+        delete mainStorage.enableDebug;
         Messages.sendMessage('safe-reload-addon');
     }
 }

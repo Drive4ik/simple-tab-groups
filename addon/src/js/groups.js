@@ -14,7 +14,9 @@ import * as Management from './management.js';
 import * as Tabs from './tabs.js';
 import * as Utils from './utils.js';
 
-const logger = new Logger('Groups');
+const logger = new Logger(Constants.MODULES.GROUPS);
+
+const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 
 // if set return {group, groups, groupIndex}
 export async function load(groupId = null, withTabs = false, includeFavIconUrl, includeThumbnail) {
@@ -77,7 +79,7 @@ export async function save(groups, withMessage = false) {
     }
 
     if (withMessage) {
-        backgroundSelf.sendMessage('groups-updated');
+        backgroundSelf.sendMessageFromBackground('groups-updated');
     }
 
     log.stop();
@@ -181,13 +183,8 @@ export async function add(windowId, tabIds = [], title = null) {
         }
     }
 
-    const [
-        {groups},
-        {defaultGroupProps},
-    ] = await Promise.all([
-        load(),
-        getDefaults(),
-    ]);
+    const {groups} = await load();
+    const {defaultGroupProps} = await getDefaults();
 
     const newGroup = create(createId(), title, defaultGroupProps);
 
@@ -213,7 +210,7 @@ export async function add(windowId, tabIds = [], title = null) {
         });
     }
 
-    backgroundSelf.sendMessage('group-added', {
+    backgroundSelf.sendMessageFromBackground('group-added', {
         group: newGroup,
     });
 
@@ -221,7 +218,8 @@ export async function add(windowId, tabIds = [], title = null) {
         group: mapForExternalExtension(newGroup),
     });
 
-    return log.stop(newGroup);
+    log.stop(newGroup.id);
+    return newGroup;
 }
 
 export async function remove(groupId) {
@@ -240,20 +238,15 @@ export async function remove(groupId) {
         }
     }
 
-    const [
-        {group, groups, groupIndex},
-        {defaultGroupProps},
-    ] = await Promise.all([
-        load(groupId, true),
-        getDefaults(),
-    ]);
+    const {group, groups, groupIndex} = await load(groupId, true);
+    const {defaultGroupProps} = await getDefaults();
 
     if (!group) {
         log.stopError('groupId', groupId, 'not found');
         return;
     }
 
-    backgroundSelf.addUndoRemoveGroupItem(group);
+    backgroundSelf.addUndoRemoveGroupItem(group); // TODO cant add menu
 
     groups.splice(groupIndex, 1);
 
@@ -278,14 +271,9 @@ export async function remove(groupId) {
         backgroundSelf.updateMoveTabMenus();
     }
 
-    if (await Bookmarks.hasPermission()) {
-        backgroundSelf.onBackgroundMessage({
-            action: 'remove-group-from-bookmarks',
-            groupId: group.id,
-        }, backgroundSelf);
-    }
+    await Bookmarks.removeGroup(group).catch(log.onCatch('cant remove bookmark', false));
 
-    backgroundSelf.sendMessage('group-removed', {
+    backgroundSelf.sendMessageFromBackground('group-removed', {
         groupId: groupId,
         windowId: groupWindowId,
     });
@@ -309,7 +297,8 @@ export async function update(groupId, updateData) {
     const updateDataKeys = Object.keys(updateData);
 
     if (!updateDataKeys.length) {
-        return log.stop(null, 'no updateData keys to update');
+        log.stop('no updateData keys to update');
+        return;
     }
 
     const {group, groups} = await load(groupId);
@@ -329,7 +318,7 @@ export async function update(groupId, updateData) {
 
     await save(groups);
 
-    backgroundSelf.sendMessage('group-updated', {
+    backgroundSelf.sendMessageFromBackground('group-updated', {
         group: {
             id: groupId,
             ...updateData,
@@ -345,19 +334,19 @@ export async function update(groupId, updateData) {
     if (KEYS_RESPONSIBLE_VIEW.some(key => updateDataKeys.includes(key))) {
         backgroundSelf.updateMoveTabMenus();
 
-        await backgroundSelf.updateBrowserActionData(groupId);
+        await backgroundSelf.updateBrowserActionData(group.id);
     }
 
-    if (await Bookmarks.hasPermission()) {
-        if (updateDataKeys.includes('title')) {
-            await Bookmarks.updateGroupTitle(group);
-        }
+    if (updateDataKeys.includes('title')) {
+        await Bookmarks.updateGroupTitle(group).catch(log.onCatch('cant update title', false));
+    }
 
-        if (updateDataKeys.includes('exportToBookmarks')) {
-            await backgroundSelf.onBackgroundMessage({
-                action: updateData.exportToBookmarks ? 'export-group-to-bookmarks' : 'remove-group-from-bookmarks',
-                groupId: group.id,
-            }, backgroundSelf);
+    if (updateDataKeys.includes('exportToBookmarks')) {
+        if (updateData.exportToBookmarks) {
+            const {group: groupToExport, groupIndex} = await load(group.id, true);
+            await Bookmarks.exportGroup(groupToExport, groupIndex).catch(log.onCatch('cant update bookmark', false));
+        } else {
+            await Bookmarks.removeGroup(group).catch(log.onCatch('cant remove bookmark', false));
         }
     }
 
@@ -434,31 +423,36 @@ export async function unload(groupId) {
 
     if (!groupId) {
         Notification('groupNotFound', {time: 7});
-        return log.stopError(false, 'groupNotFound');
+        log.stopError('groupNotFound');
+        return false;
     }
 
     const windowId = Cache.getWindowId(groupId);
 
     if (!windowId) {
         Notification('groupNotLoaded', {time: 7});
-        return log.stopError(false, 'groupNotLoaded');
+        log.stopError('groupNotLoaded');
+        return false;
     }
 
     const {group} = await load(groupId, true);
 
     if (!group) {
         Notification('groupNotFound', {time: 7});
-        return log.stopError(false, 'groupNotFound');
+        log.stopError('groupNotFound (2)');
+        return false;
     }
 
     if (group.isArchive) {
         Notification(['groupIsArchived', group.title], {time: 7});
-        return log.stopError(false, 'groupIsArchived');
+        log.stopError('groupIsArchived');
+        return false;
     }
 
     if (group.tabs.some(Utils.isTabCanNotBeHidden)) {
         Notification('notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera');
-        return log.stopError(false, 'some Tab Can Not Be Hidden');
+        log.stopError('some Tab Can Not Be Hidden');
+        return false;
     }
 
     log.log('windowId', windowId);
@@ -489,14 +483,14 @@ export async function unload(groupId) {
             tabs = group.tabs.filter(tab => !tab.audible);
         }
 
-        Tabs.discard(tabs).catch(log.onCatch(['Tabs.discard from unload group', tabs]));
+        await Tabs.discard(tabs).catch(log.onCatch(['cant discard', tabs]));
     }
 
     await backgroundSelf.updateBrowserActionData(null, windowId);
 
-    backgroundSelf.updateMoveTabMenus();
+    await backgroundSelf.updateMoveTabMenus();
 
-    backgroundSelf.sendMessage('group-unloaded', {
+    backgroundSelf.sendMessageFromBackground('group-unloaded', {
         groupId,
         windowId,
     });
@@ -506,7 +500,8 @@ export async function unload(groupId) {
         windowId,
     });
 
-    return log.stop(true);
+    log.stop();
+    return true;
 }
 
 export async function archiveToggle(groupId) {
@@ -555,7 +550,7 @@ export async function archiveToggle(groupId) {
         backgroundSelf.removeExcludeTabIds(tabsToRemove);
     }
 
-    backgroundSelf.sendMessage('groups-updated');
+    backgroundSelf.sendMessageFromBackground('groups-updated');
 
     backgroundSelf.sendExternalMessage('group-updated', {
         group: mapForExternalExtension(group),
@@ -634,7 +629,7 @@ export function normalizeContainersInGroups(groups) {
             hasChanges = true;
 
             if (backgroundSelf.inited) {
-                backgroundSelf.sendMessage('group-updated', {
+                backgroundSelf.sendMessageFromBackground('group-updated', {
                     group: {
                         id: group.id,
                         newTabContainer: group.newTabContainer,
@@ -799,7 +794,7 @@ export function createTitle(title = null, groupId = null, defaultGroupProps = {}
 }
 
 export function getTitle({id, title, isArchive, isSticky, tabs, iconViewType, newTabContainer}, args = '') {
-    let withActiveGroup = args.includes('withActiveGroup'),
+    const withActiveGroup = args.includes('withActiveGroup'),
         withCountTabs = args.includes('withCountTabs'),
         withContainer = args.includes('withContainer'),
         withSticky = args.includes('withSticky'),
@@ -848,8 +843,8 @@ export function getTitle({id, title, isArchive, isSticky, tabs, iconViewType, ne
         }
     }
 
-    if (backgroundSelf.storage.enableDebug) {
-        let windowId = Cache.getWindowId(id) || tabs?.[0]?.windowId || 'no window';
+    if (mainStorage.enableDebug) {
+        const windowId = Cache.getWindowId(id) || tabs?.[0]?.windowId || 'no window';
         title = `@${windowId}:#${id.slice(-4)} ${title}`;
     }
 

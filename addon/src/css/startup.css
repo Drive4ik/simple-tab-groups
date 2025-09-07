@@ -46,3 +46,11 @@
 
     --bulma-background-l: calc(14% + var(--scheme-delta) * 2);
 }
+
+.show-on-dark-scheme {
+    display: none;
+
+    html[data-theme=dark] & {
+        display: block;
+    }
+}

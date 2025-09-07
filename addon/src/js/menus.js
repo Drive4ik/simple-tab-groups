@@ -1,6 +1,6 @@
 
 // import * as Constants from './constants.js';
-import {MENU_ITEM_BUTTON, MenusContextType, MenusItemType} from './browser-constants.js';
+import {MENU_ITEM_BUTTON, MenusContextType, MenusItemType} from './constants-browser.js';
 import Logger, {catchFunc} from './logger.js';
 import * as Utils from './utils.js';
 

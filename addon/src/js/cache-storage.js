@@ -45,14 +45,14 @@ function createDeepCloneObjProxy(obj) {
 let _cacheStorage;
 
 if (Constants.IS_BACKGROUND_PAGE) {
-    console.info('set cache-storage to background');
+    // console.info('set cache-storage to background');
     _cacheStorage = backgroundSelf._cacheStorage = createDeepCloneObjProxy({});
 } else {
     if (backgroundSelf) {
-        console.info('set cache-storage from background');
+        // console.info('set cache-storage from background');
         _cacheStorage = backgroundSelf._cacheStorage;
     } else {
-        console.warn('create new cache-storage');
+        // console.warn('create new cache-storage');
         _cacheStorage = createDeepCloneObjProxy({}); // create clear storage
     }
 }

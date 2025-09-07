@@ -16,6 +16,11 @@ function errorEventHandler(event) {
     alert(event)
 }
 
+const UUID_REGEXP = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+function isUUID(uuid) {
+    return UUID_REGEXP.test(uuid);
+}
+
 window.addEventListener('error', errorEventHandler);
 Vue.config.errorHandler = errorEventHandler;
 
@@ -106,7 +111,7 @@ new Vue({
             for (let i = 0, k; i < log[log.consoleKey].length; i++) {
                 k = log[log.consoleKey][i];
 
-                if (Number.isFinite(k) || k === null || this.isBool(k)) {
+                if (Number.isFinite(k) || k === null || this.isBool(k) || isUUID(k)) {
                     title.push(`<code>${k}</code>`);
                 } else if (typeof k === 'object' && k.stack !== undefined) {
                     try {
@@ -142,8 +147,8 @@ new Vue({
                     title.push(`
                     <div class="is-inline-block">
                         <div class="tags has-addons">
-                            <span class="tag">${action}</span>
-                            <span class="tag is-success">${message}</span>
+                            <span class="tag is-dark">${action}</span>
+                            <span class="tag is-info">${message}</span>
                         </div>
                     </div>
                     `);

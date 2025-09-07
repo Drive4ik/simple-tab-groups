@@ -560,8 +560,8 @@
         "description": "Enable auto backup"
     },
     "autoBackupCreateEveryTitle": {
-        "message": "Maak een reservekopie aan elke:",
-        "description": "Create backup every:"
+        "message": "Maak een reservekopie aan elke",
+        "description": "Create backup every"
     },
     "intervalKeyMinutes": {
         "message": "minu(u)t(en)",
@@ -576,8 +576,8 @@
         "description": "day(s)"
     },
     "autoBackupLastBackupTitle": {
-        "message": "Laatste reservekopie:",
-        "description": "Last backup:"
+        "message": "Laatste reservekopie",
+        "description": "Last backup"
     },
     "darkThemeNotification": {
         "message": "Voor een volledige ondersteuning van het donkere thema, zet u parameter <code>svg.context-properties.content.enabled</code> op <code>true</code> via de <code>about:config</code> pagina. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Configuratie-editor voor Firefox</a>",

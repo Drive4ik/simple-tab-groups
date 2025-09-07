@@ -1,6 +1,6 @@
 
 import * as Constants from './constants.js';
-import * as BrowserConstants from '/js/browser-constants.js';
+import * as ConstantsBrowser from '/js/constants-browser.js';
 import JSON from './json.js';
 
 const tagsToReplace = {
@@ -190,7 +190,7 @@ export function isAvailableFavIconUrl(favIconUrl) {
 
 export function normalizeTabFavIcon(tab) {
     if (!isAvailableFavIconUrl(tab.favIconUrl)) {
-        tab.favIconUrl = BrowserConstants.DEFAULT_FAVICON;
+        tab.favIconUrl = ConstantsBrowser.DEFAULT_FAVICON;
     }
 
     return tab;
@@ -233,12 +233,10 @@ export function normalizeTabUrl(tab) {
     return tab;
 }
 
-/*const UUIDRegExp = /^moz-extension:\/\/([a-f\-\d]+)\//;
-
-function getUUIDFromUrl(url) {
-    let [, uuid] = UUIDRegExp.exec(url);
-    return uuid;
-}*/
+const UUID_REGEXP = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+export function isUUID(uuid) {
+    return UUID_REGEXP.test(uuid);
+}
 
 export function isTabPinned(tab) {
     return tab.pinned === true;

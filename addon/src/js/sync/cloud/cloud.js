@@ -16,9 +16,10 @@ import backgroundSelf from '/js/background.js';
 //     default as GithubGist,
 // } from './githubgist.js';
 
-const logger = new Logger('Cloud');
+const logger = new Logger(Constants.MODULES.CLOUD);
 
-export const storage = localStorage.create('github');
+const storage = localStorage.create(Constants.MODULES.CLOUD);
+const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 
 export function CloudError(langId) {
     logger.error('CloudError:', langId)
@@ -228,8 +229,8 @@ export async function sync(trust = null, progressFunc = null) {
         await Groups.save(syncResult.localData.groups);
     }
 
-    storage.lastSyncFileName = syncOptions.githubGistFileName;
-    backgroundSelf.storage.autoSyncLastTimeStamp = Utils.unixNow();
+    storage.lastSyncFileName = syncOptions.githubGistFileName; // TODO check
+    mainStorage.autoSyncLastTimeStamp = Utils.unixNow();
 
     progressFunc?.(100);
 

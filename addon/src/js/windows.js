@@ -104,13 +104,15 @@ export async function createPopup(url, createData = {}) {
         ...createData,
     };
 
-    for(let key in createData) {
+    for (const key in createData) {
         if (createData[key] === null) {
             delete createData[key];
         }
     }
 
-    const win = await browser.windows.create(createData).catch(log.onCatch(['create popup window', createData]));
+    const win = await browser.windows.create(createData).catch(log.onCatch(createData));
 
-    return log.stop(win, 'is created popup window');
+    log.stop('created window', win);
+
+    return win;
 }

@@ -1,8 +1,9 @@
 
 import '/js/prefixed-storage.js';
+import * as Constants from '/js/constants.js';
 import * as Urls from '/js/urls.js';
 
-const storage = localStorage.create('github');
+const storage = localStorage.create(Constants.MODULES.CLOUD);
 
 export default class GithubGist {
     #token = null;
@@ -48,7 +49,7 @@ export default class GithubGist {
     }
 
     #processInfo(gist) {
-        storage.updated_at = gist.lastUpdate = gist.updated_at;
+        storage.lastUpdate = gist.lastUpdate = gist.updated_at;
         return gist;
     }
 

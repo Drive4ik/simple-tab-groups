@@ -6,21 +6,23 @@ import * as Utils from '/js/utils.js';
 import * as File from '/js/file.js';
 import Logger from '/js/logger.js';
 
-const MODULE_NAME = Utils.capitalize(Utils.getNameFromPath(import.meta.url));
+const MODULE_NAME = 'options.mixin';
 const logger = new Logger(MODULE_NAME, [Utils.getNameFromPath(location.href)]);
 
-let instance;
+const instances = new Set;
 
 const {sendMessageModule} = Messages.connectToBackground(MODULE_NAME, 'options-updated', ({keys}) => {
     logger.info('updated keys:', keys);
 
-    if (instance?.$options.name === 'options-page' && keys.join() === 'hotkeys') {
-        // do not update hotkeys on options page to prevent removing duplicated hotkeys
-        logger.info('prevent update hotkeys');
-        return;
-    }
+    for (const instance of instances) {
+        if (instance.$options.name === Constants.MODULES.OPTIONS && keys.join() === 'hotkeys') {
+            // do not update hotkeys on options page to prevent removing duplicated hotkeys
+            logger.info('prevent update hotkeys');
+            return;
+        }
 
-    instance?.optionsReload();
+        instance.optionsReload();
+    }
 });
 
 export default {
@@ -30,14 +32,17 @@ export default {
         };
     },
     created() {
-        instance = this;
+        instances.add(this);
 
         this.optionsLoadPromise = this.optionsReload();
 
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.updateTheme());
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.optionsUpdateTheme());
     },
     watch: {
-        'options.theme': 'updateTheme',
+        'options.theme': 'optionsUpdateTheme',
+    },
+    beforeDestroy() {
+        instances.delete(this);
     },
     methods: {
         async optionsReload() {
@@ -73,7 +78,7 @@ export default {
         async optionsSave(key, value) {
             return await sendMessageModule('BG.saveOptions', {[key]: value});
         },
-        updateTheme() {
+        optionsUpdateTheme() {
             document.documentElement.dataset.theme = Utils.getThemeApply(this.options.theme);
         },
     },
