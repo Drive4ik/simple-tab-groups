@@ -2092,7 +2092,7 @@
                 }
 
                 &.settings-menu {
-                    width: calc(var(--gap-indent) * 2 + 14px);
+                    width: auto;
                 }
 
                 &:not(:first-child)::before {

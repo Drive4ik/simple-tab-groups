@@ -93,13 +93,13 @@ export default {
 
                     <span class="icon is-left">
                         <figure class="image is-16x16">
-                            <img src="/icons/key-solid.svg" />
+                            <img class="no-fill" src="/icons/key-solid.svg" />
                         </figure>
                     </span>
                     <span v-if="tokenCheched !== null" class="icon is-right">
                         <figure class="image is-16x16">
-                            <img v-if="tokenCheched" src="/icons/check.svg" />
-                            <img v-else src="/icons/close.svg" />
+                            <img v-if="tokenCheched" class="no-fill" src="/icons/check.svg" />
+                            <img v-else class="no-fill" src="/icons/close.svg" />
                         </figure>
                     </span>
                 </div>
