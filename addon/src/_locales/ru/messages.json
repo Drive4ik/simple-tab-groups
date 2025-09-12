@@ -579,7 +579,7 @@
         "message": "Последнее резервное копирование",
         "description": "Last backup"
     },
-    "darkThemeNotification": {
+    "darkColorSchemeNotification": {
         "message": "Для полной поддержки тёмной темы установите параметр <code>svg.context-properties.content.enabled</code> в <code>true</code> на странице <code>about:config</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Как это сделать?</a>",
         "description": "Fully support the dark theme text"
     },
@@ -1139,19 +1139,19 @@
         "message": "Это расширение вмешивается в работу STG, что может привести к потере вкладок.\nИгнорировать его?",
         "description": "This addon will interfere with the STG, which may cause you to lose tabs.\nStill ignore it?"
     },
-    "theme": {
+    "colorScheme": {
         "message": "Тема",
         "description": "Select theme"
     },
-    "themeAuto": {
+    "colorSchemeAuto": {
         "message": "Системная тема — авто",
         "description": "Auto theme"
     },
-    "themeLight": {
+    "colorSchemeLight": {
         "message": "Светлая",
         "description": "Light theme"
     },
-    "themeDark": {
+    "colorSchemeDark": {
         "message": "Тёмная",
         "description": "Dark theme"
     },

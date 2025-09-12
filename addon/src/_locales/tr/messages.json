@@ -561,19 +561,19 @@
         "message": "Devre dışı",
         "description": "Disabled text"
     },
-    "theme": {
+    "colorScheme": {
         "message": "Tema",
         "description": "Select theme"
     },
-    "themeAuto": {
+    "colorSchemeAuto": {
         "message": "Sistem teması - oto",
         "description": "Auto theme"
     },
-    "themeLight": {
+    "colorSchemeLight": {
         "message": "Aydınlık",
         "description": "Light theme"
     },
-    "themeDark": {
+    "colorSchemeDark": {
         "message": "Karanlık",
         "description": "Dark theme"
     },

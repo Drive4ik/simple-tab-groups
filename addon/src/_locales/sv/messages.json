@@ -481,7 +481,7 @@
         "message": "Senaste säkerhetskopia",
         "description": "Last backup"
     },
-    "darkThemeNotification": {
+    "darkColorSchemeNotification": {
         "message": "För att det mörka temat skall visas korrekt överallt, sätt <code>svg.context-properties.content.enabled</code>-inställningen till <code>true</code> på <code>about:config</code>-sidan. Klicka <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">här</a> för ytterligare instruktioner.",
         "description": "Fully support the dark theme text"
     },

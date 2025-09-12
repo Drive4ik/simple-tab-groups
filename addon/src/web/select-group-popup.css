@@ -63,6 +63,9 @@
         }
 
         .stg-popup-groups-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
             overflow-y: auto;
             min-height: 150px;
             max-height: calc(100vh - 100px);
@@ -72,8 +75,7 @@
                 display: flex;
                 align-items: center;
                 gap: .75rem;
-                height: calc(var(--font-size) * 2);
-                margin: 4px 0 0 0;
+                min-height: calc(var(--font-size) * 2);
                 padding: 0 5px;
                 border-radius: 3px;
                 cursor: default;

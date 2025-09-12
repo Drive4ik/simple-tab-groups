@@ -566,14 +566,6 @@ export function safeReloadAddon(sec = 3) {
     return setTimeout(() => browser.runtime.reload(), sec * 1000);
 }
 
-export function getThemeApply(theme) {
-    if (theme === 'auto') {
-        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-
-    return theme;
-}
-
 export const UI_LANG = browser.i18n.getUILanguage();
 
 export const DATE_LOCALE_VARIABLES = Object.freeze({

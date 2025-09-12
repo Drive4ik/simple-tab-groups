@@ -1275,7 +1275,7 @@
 
                 const syncResult = await this.syncCloud();
 
-                // TODO check if need result? make try catch
+                // disabled when event this.$on('sync-finish')
                 if (!syncResult) {
                     this.syncCloudTriggeredByPopup = false;
                 }

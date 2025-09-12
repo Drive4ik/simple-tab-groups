@@ -543,7 +543,7 @@
         "message": "마지막 백업",
         "description": "Last backup"
     },
-    "darkThemeNotification": {
+    "darkColorSchemeNotification": {
         "message": "어두운 테마를 완전히 지원하려면 <code>about:config</code> 페이지에서 <code>svg.context-properties.content.enabled</code> 매개변수를 <code>true</code>로 활성화하세요. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">어떻게 해야 하나요?</a>",
         "description": "Fully support the dark theme text"
     },
@@ -1011,19 +1011,19 @@
         "message": "창 및 그룹에서 탭이나 탭의 위치를 ​​잃지 않으려면 Simple Tab Groups 확장 프로그램과 충돌하는 활성화된 확장 프로그램을 끄거나 제거하는 것이 좋습니다. 확장 프로그램 설정 페이지 \"about:addons\"에서 또는 키 조합 <code>Ctrl+Shift+A</code>를 눌러 이 작업을 수행할 수 있습니다.",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     },
-    "theme": {
+    "colorScheme": {
         "message": "테마",
         "description": "Select theme"
     },
-    "themeAuto": {
+    "colorSchemeAuto": {
         "message": "시스템 테마 — 자동",
         "description": "Auto theme"
     },
-    "themeLight": {
+    "colorSchemeLight": {
         "message": "밝게",
         "description": "Light theme"
     },
-    "themeDark": {
+    "colorSchemeDark": {
         "message": "어둡게",
         "description": "Dark theme"
     },

@@ -535,7 +535,7 @@
         "message": "Τελευταίο backup",
         "description": "Last backup"
     },
-    "darkThemeNotification": {
+    "darkColorSchemeNotification": {
         "message": "Για πλήρη υποστήριξη του dark theme, ενεργοποιείστε την <code>svg.context-properties.content.enabled</code> παράμετρο σε <code>true</code> στην <code>about:config</code> σελίδα. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">How to do it?</a>",
         "description": "Fully support the dark theme text"
     },
@@ -567,15 +567,15 @@
         "message": "Δημιουργία νέου group όταν ανοίγει νέο παράθυρο",
         "description": "Create a new group when opening a new window"
     },
-    "theme": {
+    "colorScheme": {
         "message": "Θέμα",
         "description": "Select theme"
     },
-    "themeLight": {
+    "colorSchemeLight": {
         "message": "Ανοιχτό",
         "description": "Light theme"
     },
-    "themeDark": {
+    "colorSchemeDark": {
         "message": "Σκούρο",
         "description": "Dark theme"
     },

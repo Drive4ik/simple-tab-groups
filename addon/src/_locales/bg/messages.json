@@ -579,7 +579,7 @@
         "message": "Последното копие е от",
         "description": "Last backup"
     },
-    "darkThemeNotification": {
+    "darkColorSchemeNotification": {
         "message": "За пълна поддръжка на тъмната тема трябва да зададете на свойството <code>svg.context-properties.content.enabled</code> стойност <code>true</code> в страницата на <code>about:config</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Как да го направя?</a>",
         "description": "Fully support the dark theme text"
     },
@@ -1123,19 +1123,19 @@
         "message": "За да предотвратите загуба на раздели или разпиляването им из прозорци и раздели е силно препоръчително да изключите добавките, които са в конфликт с разширението Simple Tab Groups. Можете да го направите от страницата за настройка на добавки „about:addons“ или чрез клавишната комбинация <code>Ctrl+Shift+A</code>",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     },
-    "theme": {
+    "colorScheme": {
         "message": "Тема",
         "description": "Select theme"
     },
-    "themeAuto": {
+    "colorSchemeAuto": {
         "message": "Спрямо системната - автоматична",
         "description": "Auto theme"
     },
-    "themeLight": {
+    "colorSchemeLight": {
         "message": "Светла",
         "description": "Light theme"
     },
-    "themeDark": {
+    "colorSchemeDark": {
         "message": "Тъмна",
         "description": "Dark theme"
     },

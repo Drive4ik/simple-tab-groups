@@ -579,7 +579,7 @@
         "message": "最后一次备份",
         "description": "Last backup"
     },
-    "darkThemeNotification": {
+    "darkColorSchemeNotification": {
         "message": "要完整支持暗色主题，在<br><code>about:config</code> 页面修改<br><code>svg.context-properties.content.enabled</code> 参数为 <code>true</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">怎么做？</a>",
         "description": "Fully support the dark theme text"
     },
@@ -1139,19 +1139,19 @@
         "message": "该扩展会干扰 STG，这可能会导致您丢失标签。仍然忽略它吗？",
         "description": "This addon will interfere with the STG, which may cause you to lose tabs.\nStill ignore it?"
     },
-    "theme": {
+    "colorScheme": {
         "message": "主题",
         "description": "Select theme"
     },
-    "themeAuto": {
+    "colorSchemeAuto": {
         "message": "系统主题 — 自动",
         "description": "Auto theme"
     },
-    "themeLight": {
+    "colorSchemeLight": {
         "message": "明亮",
         "description": "Light theme"
     },
-    "themeDark": {
+    "colorSchemeDark": {
         "message": "深邃",
         "description": "Dark theme"
     },

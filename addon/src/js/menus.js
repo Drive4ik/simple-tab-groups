@@ -9,7 +9,7 @@ export {
     MenusItemType as ItemType,
 } from './constants-browser.js';
 
-const logger = new Logger('Menus'); //.disable(); // TODO uncomment disable
+const logger = new Logger('Menus').disable();
 
 const menusMap = new Map;
 

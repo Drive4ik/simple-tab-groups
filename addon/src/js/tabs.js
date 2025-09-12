@@ -769,7 +769,7 @@ export function extractId(tab) {
 }
 
 export function sendMessage(tabId, message) {
-    message.theme = backgroundSelf.options.theme;
+    message.colorScheme = backgroundSelf.options.colorScheme;
 
     return browser.tabs.sendMessage(tabId, message).catch(() => {});
 }

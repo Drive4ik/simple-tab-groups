@@ -36,10 +36,10 @@ export default {
 
         this.optionsLoadPromise = this.optionsReload();
 
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.optionsUpdateTheme());
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.optionsUpdateColorScheme());
     },
     watch: {
-        'options.theme': 'optionsUpdateTheme',
+        'options.colorScheme': 'optionsUpdateColorScheme',
     },
     beforeDestroy() {
         instances.delete(this);
@@ -78,8 +78,14 @@ export default {
         async optionsSave(key, value) {
             return await sendMessageModule('BG.saveOptions', {[key]: value});
         },
-        optionsUpdateTheme() {
-            document.documentElement.dataset.theme = Utils.getThemeApply(this.options.theme);
+        optionsUpdateColorScheme() {
+            if (this.options.colorScheme === 'auto') {
+                document.documentElement.dataset.theme = window.matchMedia('(prefers-color-scheme: dark)').matches
+                    ? 'dark'
+                    : 'light';
+            } else {
+                document.documentElement.dataset.theme = this.options.colorScheme;
+            }
         },
     },
 }

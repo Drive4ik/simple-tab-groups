@@ -579,7 +579,7 @@
         "message": "Poslední záloha",
         "description": "Last backup"
     },
-    "darkThemeNotification": {
+    "darkColorSchemeNotification": {
         "message": "Pro plnou podporu tmavého tématu je potřeba přepnout parametr <code>svg.context-properties.content.enabled</code> na <code>true</code> na stránce <code>about:config</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Jak na to?</a>",
         "description": "Fully support the dark theme text"
     },

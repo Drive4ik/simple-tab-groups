@@ -579,7 +579,7 @@
         "message": "Letztes Sicherung",
         "description": "Last backup"
     },
-    "darkThemeNotification": {
+    "darkColorSchemeNotification": {
         "message": "Um das dunkle Thema vollständig zu unterstützen, setze den Parameter <code>svg.context-properties.content.enabled</code> auf <code>true</code>, in den <code>about:config</code>-Einstellungen. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Wie geht das?</a>",
         "description": "Fully support the dark theme text"
     },
@@ -1139,19 +1139,19 @@
         "message": "Dieses Addon wird Probleme mit STG erzeugen, was zu einem Verlust deiner Tabs führen kann.\nTrotzdem ignorieren?",
         "description": "This addon will interfere with the STG, which may cause you to lose tabs.\nStill ignore it?"
     },
-    "theme": {
+    "colorScheme": {
         "message": "Thema",
         "description": "Select theme"
     },
-    "themeAuto": {
+    "colorSchemeAuto": {
         "message": "Systemthema — Automatisch",
         "description": "Auto theme"
     },
-    "themeLight": {
+    "colorSchemeLight": {
         "message": "Hell",
         "description": "Light theme"
     },
-    "themeDark": {
+    "colorSchemeDark": {
         "message": "Dunkel",
         "description": "Dark theme"
     },

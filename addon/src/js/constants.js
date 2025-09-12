@@ -465,7 +465,7 @@ export const DEFAULT_OPTIONS = Object.freeze({
     syncIntervalValue: 1,
     syncTabFavIcons: false,
 
-    theme: 'auto', // auto, light, dark
+    colorScheme: 'auto', // auto, light, dark
 
     hotkeys: [
         {

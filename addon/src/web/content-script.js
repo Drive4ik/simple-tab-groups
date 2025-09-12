@@ -1,7 +1,6 @@
-'use strict';
 
 import './select-group-popup.css';
-import {isValidHotkeyEvent, eventToHotkeyValue, NOT_SUPPORTED_CODE_KEYS} from '/js/hotkeys.js';
+import {isValidHotkeyEvent, eventToHotkeyValue, NOT_SUPPORTED_CODE_KEYS} from '../js/hotkeys.js'; // ../js/ is required
 
 let hotkeys = [],
     foundHotKey = false;
@@ -60,7 +59,7 @@ function checkKey(event) {
 
     const hotkeyValue = eventToHotkeyValue(event);
 
-    hotkeys.some(hotkey => {
+    for (const hotkey of hotkeys) {
         if (hotkeyValue === hotkey.value) {
             foundHotKey = true;
 
@@ -68,9 +67,9 @@ function checkKey(event) {
 
             browser.runtime.sendMessage(hotkey).catch(() => {});
 
-            return true;
+            break;
         }
-    });
+    }
 }
 
 function stopEvent(e) {
@@ -83,17 +82,18 @@ function showGroupsPopup(data) {
         return;
     }
 
-    const wrapper = document.createElement('aside'),
-        closeGroupsPopup = wrapper.remove.bind(wrapper),
-        isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const wrapper = document.createElement('aside');
+    const closeGroupsPopup = wrapper.remove.bind(wrapper);
 
-    wrapper.dataset.theme = (data.theme === 'auto' && isDark) ? 'dark' : data.theme;
+    if (data.colorScheme === 'auto') {
+        wrapper.dataset.theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    } else {
+        wrapper.dataset.theme = data.colorScheme;
+    }
 
-    Object.assign(wrapper, {
-        id: POPUP_ID,
-        onclick: closeGroupsPopup,
-        onkeydown: ({code}) => code === 'Escape' ? closeGroupsPopup() : null,
-    });
+    wrapper.id = POPUP_ID;
+    wrapper.onclick = closeGroupsPopup;
+    wrapper.onkeydown = ({code}) => code === 'Escape' ? closeGroupsPopup() : null;
     document.body.append(wrapper);
 
     const main = document.createElement('div');
@@ -102,22 +102,20 @@ function showGroupsPopup(data) {
 
     const header = document.createElement('div');
     header.classList = 'stg-popup-has-text stg-popup-header';
-    Object.assign(header, {
-        tabIndex: -1,
-        innerText: data.popupTitle,
-        onclick: e => e.stopPropagation(),
-        onkeydown: function(e) {
-            if (checkUpDownKeys(e)) {
-                return;
-            }
+    header.tabIndex = -1;
+    header.innerText = data.popupTitle;
+    header.onclick = e => e.stopPropagation();
+    header.onkeydown = e => {
+        if (checkUpDownKeys(e)) {
+            return;
+        }
 
-            if (e.code === 'ArrowDown') {
-                setFocusToNextElement(groupsWrapper.lastElementChild, 'down', e);
-            } else if (e.code === 'ArrowUp') {
-                setFocusToNextElement(groupsWrapper.firstElementChild, 'up', e);
-            }
-        },
-    });
+        if (e.code === 'ArrowDown') {
+            setFocusToNextElement(groupsWrapper.lastElementChild, 'down', e);
+        } else if (e.code === 'ArrowUp') {
+            setFocusToNextElement(groupsWrapper.firstElementChild, 'up', e);
+        }
+    };
     main.append(header);
 
     const groupsWrapper = document.createElement('div');
@@ -176,16 +174,16 @@ function showGroupsPopup(data) {
 
             groupNode.onmouseover = () => groupsWrapper.contains(document.activeElement) && header.focus();
 
-            groupNode.onclick = function(sendData) {
-                browser.runtime.sendMessage(sendData).catch(() => {});
+            groupNode.onclick = () => {
+                browser.runtime.sendMessage({
+                    ...data,
+                    action: data.popupAction,
+                    groupId: group.id,
+                }).catch(() => {});
                 closeGroupsPopup();
-            }.bind(null, {
-                ...data,
-                action: data.popupAction,
-                groupId: group.id,
-            });
+            };
 
-            groupNode.onkeydown = function(e) {
+            groupNode.onkeydown = e => {
                 if (checkUpDownKeys(e)) {
                     return;
                 }
@@ -204,7 +202,7 @@ function showGroupsPopup(data) {
         } else {
             groupNode.tabIndex = -1;
             groupNode.classList.add('stg-popup-disabled');
-            groupNode.onclick = function(e) {
+            groupNode.onclick = e => {
                 e.stopPropagation();
                 header.focus();
             };
@@ -247,7 +245,10 @@ function showGroupsPopup(data) {
 
     data.disableGroupIds ??= [];
 
-    data.groups.forEach(group => groupsWrapper.append(createGroupNode(group, !data.disableGroupIds.includes(group.id))));
+    for (const group of data.groups) {
+        const node = createGroupNode(group, !data.disableGroupIds.includes(group.id));
+        groupsWrapper.append(node);
+    }
 
     if (true !== data.disableNewGroupItem) {
         const newGroupNode = createGroupNode({
@@ -261,13 +262,13 @@ function showGroupsPopup(data) {
         groupsWrapper.append(newGroupNode);
     }
 
-    setTimeout(function() {
+    setTimeout(() => {
         wrapper.style.transform = 'none';
         wrapper.style.opacity = '1';
         wrapper.style.visibility = 'visible';
 
         if (data.focusedGroupId) {
-            [...groupsWrapper.children].some(function(groupNode) {
+            [...groupsWrapper.children].some(groupNode => {
                 if (data.focusedGroupId == groupNode.dataset.groupId) {
                     groupNode.focus();
                     return true;
@@ -296,7 +297,7 @@ async function showPrompt({promptTitle, value}) {
 
     promptNowShowing = true;
 
-    let newValue = prompt(promptTitle, value || '');
+    const newValue = prompt(promptTitle, value || '');
 
     promptNowShowing = false;
 

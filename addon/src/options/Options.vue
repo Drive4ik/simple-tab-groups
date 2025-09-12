@@ -97,7 +97,7 @@
                     'defaultBookmarksParent',
                     'autoBackupIntervalKey',
                     'syncIntervalKey',
-                    'theme',
+                    'colorScheme',
                     'contextMenuTab',
                     'contextMenuGroup',
                 ],
@@ -690,17 +690,17 @@
 
         <div v-show="section === SECTION_GENERAL">
             <div class="field">
-                <label class="label colon" v-text="lang('theme')"></label>
+                <label class="label colon" v-text="lang('colorScheme')"></label>
                 <div class="control">
                     <div class="select">
-                        <select v-model="options.theme">
-                            <option value="auto">💻 <span v-text="lang('themeAuto')"></span></option>
-                            <option value="light">🔆 <span v-text="lang('themeLight')"></span></option>
-                            <option value="dark">🌒 <span v-text="lang('themeDark')"></span></option>
+                        <select v-model="options.colorScheme">
+                            <option value="auto">💻 <span v-text="lang('colorSchemeAuto')"></span></option>
+                            <option value="light">🔆 <span v-text="lang('colorSchemeLight')"></span></option>
+                            <option value="dark">🌒 <span v-text="lang('colorSchemeDark')"></span></option>
                         </select>
                     </div>
                 </div>
-                <div class="has-text-warning show-on-dark-scheme" v-html="lang('darkThemeNotification')"></div>
+                <div class="has-text-warning show-on-dark-scheme" v-html="lang('darkColorSchemeNotification')"></div>
             </div>
 
             <div class="field">

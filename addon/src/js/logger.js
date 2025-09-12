@@ -118,7 +118,6 @@ function setLoggerFuncs() {
     }.bind(this);
 
     this.throwError = function(message, error) {
-        // this.stopError(message); // TODO
         this.onCatch(message, true)(error);
         return this;
     }.bind(this);

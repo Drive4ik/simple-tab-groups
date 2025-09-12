@@ -579,7 +579,7 @@
         "message": "Dernière sauvegarde",
         "description": "Last backup"
     },
-    "darkThemeNotification": {
+    "darkColorSchemeNotification": {
         "message": "Pour activer complétement le thème sombre, activez le paramètre <code>svg.context-properties.content.enabled</code> en lui mettant la valeur <code>true</code> sur la page de configuration <code>about:config</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Comment faire ?</a>",
         "description": "Fully support the dark theme text"
     },
@@ -1139,19 +1139,19 @@
         "message": "Cette extension va interférer avec STG, vous risquerez de perdre des onglets.\nL’ignorer quand même?",
         "description": "This addon will interfere with the STG, which may cause you to lose tabs.\nStill ignore it?"
     },
-    "theme": {
+    "colorScheme": {
         "message": "Thème",
         "description": "Select theme"
     },
-    "themeAuto": {
+    "colorSchemeAuto": {
         "message": "Thème système - automatique",
         "description": "Auto theme"
     },
-    "themeLight": {
+    "colorSchemeLight": {
         "message": "Clair",
         "description": "Light theme"
     },
-    "themeDark": {
+    "colorSchemeDark": {
         "message": "Sombre",
         "description": "Dark theme"
     },

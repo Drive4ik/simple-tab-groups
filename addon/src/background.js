@@ -3373,7 +3373,7 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
             version: '4.7.2',
             remove: ['enableDarkTheme', 'autoBackupBookmarksFolderName'],
             async migration() {
-                data.theme = data.enableDarkTheme ? 'dark' : Constants.DEFAULT_OPTIONS.theme;
+                data.theme = data.enableDarkTheme ? 'dark' : Constants.DEFAULT_OPTIONS.colorScheme;
                 data.groups.forEach(group => {
                     group.title = String(group.title);
                     group.bookmarkId = null;
@@ -3572,6 +3572,7 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
             remove: [
                 'autoBackupLastBackupTimeStamp',
                 'lastCreatedGroupPosition',
+                'theme',
             ],
             async migration() {
                 for (const group of data.groups) {
@@ -3595,6 +3596,8 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
                 delete data.defaultGroupProps.exportToBookmarksWhenAutoBackup;
 
                 data.showArchivedGroups = localStorage.showArchivedGroupsInPopup === '1';
+
+                data.colorScheme = data.theme;
 
                 if (applyToCurrentInstance) {
                     storage.autoBackupLastTimeStamp = data.autoBackupLastBackupTimeStamp;

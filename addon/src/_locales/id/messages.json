@@ -555,7 +555,7 @@
         "message": "Cadangan terakhir",
         "description": "Last backup"
     },
-    "darkThemeNotification": {
+    "darkColorSchemeNotification": {
         "message": "Untuk mendukung sepenuhnya tema gelap, aktifkan parameter <code>svg.context-properties.content.enabled</code> ke <code>true</code> pada halaman <code>about:config</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Bagaimana cara melakukannya?</a>",
         "description": "Fully support the dark theme text"
     },
@@ -1095,19 +1095,19 @@
         "message": "Untuk menghindari kehilangan tab atau lokasinya di jendela dan grup, sangat disarankan untuk mematikan atau menghapus ekstensi aktif yang bertentangan dengan addon Grup Tab Sederhana. Anda dapat melakukannya di halaman pengaturan addons \"about:addons\" atau dengan menekan kombinasi tombol <code>Ctrl+Shift+A</code>",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     },
-    "theme": {
+    "colorScheme": {
         "message": "Tema",
         "description": "Select theme"
     },
-    "themeAuto": {
+    "colorSchemeAuto": {
         "message": "Tema sistem — otomatis",
         "description": "Auto theme"
     },
-    "themeLight": {
+    "colorSchemeLight": {
         "message": "Terang",
         "description": "Light theme"
     },
-    "themeDark": {
+    "colorSchemeDark": {
         "message": "Gelap",
         "description": "Dark theme"
     },
