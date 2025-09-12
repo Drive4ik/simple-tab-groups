@@ -49,12 +49,13 @@ const excludeExtensions = new Set([
     'addons-search-detection@mozilla.com',
 ]);
 
-const htmlTagArgumentRegExp = /^[A-Z\d\-\_]+#[a-z\-]+$/;
+const htmlTagArgumentRegExp = /^[a-z\d\-\_]+#[a-z\d\-\_]+$/i;
 
 new Vue({
     el: '#app',
     data: {
         file: null,
+        fileName: null,
 
         logsIndent: 0,
 
@@ -248,6 +249,7 @@ new Vue({
             let file;
 
             try {
+                this.fileName = target.files[0].name;
                 file = await this.readFile(target);
             } catch (e) {
                 alert(`can't read JSON log file: ${e}`);

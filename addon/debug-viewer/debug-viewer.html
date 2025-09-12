@@ -124,15 +124,22 @@
 </head>
 <body>
     <div id="app" class="container is-fluid pt-4" style="margin-bottom: 200px;" v-cloak>
-        <div class="field">
-            <div class="columns">
-                <div class="column">
-                    <label>
-                        Select debug file
-                        <input type="file" @change="changeFile" accept="application/json" />
-                    </label>
-                </div>
-            </div>
+        <div class="file is-fullwidth is-info has-name">
+            <label class="file-label">
+                <input class="file-input" type="file" @change="changeFile" accept="application/json" />
+                <span class="file-cta">
+                    <span class="file-icon">
+                        <span class="icon">
+                            <figure class="image is-16x16">
+                                <img src="https://github.com/FortAwesome/Font-Awesome/raw/refs/heads/7.x/svgs/solid/upload.svg">
+                            </figure>
+                        </span>
+                    </span>
+                    <span class="file-label">Select debug file...</span>
+                </span>
+                <span v-if="fileName" class="file-name" v-text="fileName"></span>
+                <span v-else class="file-name">No file uploaded</span>
+            </label>
         </div>
         <div v-if="file" class="field">
             <template v-if="file.CRITICAL_ERRORS.length">
@@ -143,7 +150,7 @@
             <h1 class="title has-text-centered">info</h1>
             <div class="columns">
                 <div class="column is-narrow">
-                    Version: <span class="tag is-info">{{addon.version}}</span><br>
+                    Version: <span class="tag is-info has-text-weight-bold">{{addon.version}}</span><br>
                     UP time: <code>{{upTime}}</code><br>
                     UUID: <code>{{addon.UUID}}</code><br>
                     <div v-for="(val, key) in addon.permissions" :key="key + 'perm'" class="control mt-1">
