@@ -14,11 +14,11 @@ const logger = new Logger('Menus'); //.disable(); // TODO uncomment disable
 const menusMap = new Map;
 
 if (Constants.IS_BACKGROUND_PAGE) {
-    browser.menus.onClicked.addListener(catchFunc(onMenuClick, logger));
+    browser.menus.onClicked.addListener(catchFunc(onClicked, logger));
 }
 
-async function onMenuClick(info, tab) {
-    const log = logger.start('onMenuClick', info.menuItemId, {info, tab});
+async function onClicked(info, tab) {
+    const log = logger.start('onClicked', info.menuItemId, {info, tab});
 
     const menu = menusMap.get(info.menuItemId);
 

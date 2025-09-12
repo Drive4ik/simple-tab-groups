@@ -41,7 +41,6 @@
     document.title = browser.i18n.getMessage('openSettings');
 
     const [section, element = null] = (storage.section || SECTION_GENERAL).split(' ');
-
     storage.section = section;
 
     let instance;
@@ -216,8 +215,13 @@
             this.loadGroups();
         },
         mounted() {
-            if (this.element === 'sync') {
-                Utils.wait(1000).then(() => Utils.scrollTo('#sync-block'));
+            const scrollNodeSelector = {
+                sync: '#sync-block',
+                debug: '#debug-block',
+            }[this.element];
+
+            if (scrollNodeSelector) {
+                Utils.wait(1000).then(() => Utils.scrollTo(scrollNodeSelector));
             }
         },
         watch: {
@@ -853,7 +857,9 @@
                 </div>
             </div>
 
-            <div class="mt-5">
+            <hr/>
+
+            <div id="debug-block">
                 <button class="button is-warning is-soft" @click="openDebugPage" v-text="lang('helpPageStgDebugTitle')"></button>
             </div>
         </div>

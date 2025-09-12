@@ -1,5 +1,5 @@
 import '/js/prefixed-storage.js';
-import Logger from './logger.js';
+import Logger, {catchFunc} from './logger.js';
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
 import * as Urls from './urls.js';
@@ -11,21 +11,26 @@ const storage = localStorage.create(Constants.MODULES.MANAGEMENT);
 
 const extensions = cacheStorage.extensions ??= createStorage({});
 
+if (Constants.IS_BACKGROUND_PAGE) {
+    const onChangedBinded = catchFunc(onChanged, logger);
+
+    browser.management.onEnabled.addListener(onChangedBinded);
+    browser.management.onDisabled.addListener(onChangedBinded);
+    browser.management.onInstalled.addListener(onChangedBinded);
+    browser.management.onUninstalled.addListener(onChangedBinded);
+}
+
 export async function init() {
     const log = logger.start('init');
 
     await load();
-
-    browser.management.onEnabled.addListener(onChanged);
-    browser.management.onDisabled.addListener(onChanged);
-    browser.management.onInstalled.addListener(onChanged);
-    browser.management.onUninstalled.addListener(onChanged);
 
     log.stop();
 }
 
 async function onChanged({type}) {
     if (type === browser.management.ExtensionType.EXTENSION) {
+        logger.log('onChanged', type);
         await load();
         detectConflictedExtensions();
     }
@@ -34,17 +39,19 @@ async function onChanged({type}) {
 async function load(extensionsStorage = extensions) {
     const log = logger.start('load');
 
-    await new Promise(res => setTimeout(res, 100));
+    for (const id in extensionsStorage) {
+        delete extensionsStorage[id];
+    }
+
+    await Utils.wait(100);
 
     const addons = await browser.management.getAll().catch(log.onCatch('cant load extensions'));
 
-    for (const id in extensionsStorage) delete extensionsStorage[id];
-
-    addons.forEach(addon => {
+    for (const addon of addons) {
         if (addon.type === browser.management.ExtensionType.EXTENSION) {
             extensionsStorage[addon.id] = addon;
         }
-    });
+    }
 
     log.stop();
 
@@ -60,16 +67,17 @@ export function isEnabled(id, extensionsStorage = extensions) {
 }
 
 export function detectConflictedExtensions(extensionsStorage = extensions) {
-    Constants.CONFLICTED_EXTENSIONS.some(id => {
+    for (const id of Constants.CONFLICTED_EXTENSIONS) {
         if (isEnabled(id, extensionsStorage)) {
             if (!isIgnoredConflictedExtension(id)) {
+                logger.warn('detectConflictedExtensions', id);
                 Urls.openUrl('extensions-that-conflict-with-stg', true);
-                return true;
+                break;
             }
         } else if (isIgnoredConflictedExtension(id)) {
             dontIgnoreConflictedExtension(id);
         }
-    });
+    }
 }
 
 export function isIgnoredConflictedExtension(extId) {

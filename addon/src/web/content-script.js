@@ -9,11 +9,10 @@ let hotkeys = [],
 const POPUP_ID = 'stg-select-group-popup-wrapper';
 
 browser.runtime.onMessage.addListener(onMessageListener);
-
-// window.addEventListener('unload', unsubscribeAllListeners);
+window.addEventListener('keydown', checkKey);
+window.addEventListener('keyup', resetFoundHotKey);
 
 loadHotkeys();
-addWindowListeners();
 
 async function loadHotkeys(errorCounter = 0) {
     try {
@@ -42,21 +41,6 @@ function onMessageListener(request) {
         return showPrompt(request);
     }
 }
-
-// function removeWindowListeners() {
-//     window.removeEventListener('keydown', checkKey);
-//     window.removeEventListener('keyup', resetFoundHotKey);
-// }
-
-function addWindowListeners() {
-    window.addEventListener('keydown', checkKey);
-    window.addEventListener('keyup', resetFoundHotKey);
-}
-
-// function unsubscribeAllListeners() {
-//     removeWindowListeners();
-//     browser.runtime.onMessage.removeListener(onMessageListener);
-// }
 
 function resetFoundHotKey() {
     foundHotKey = false;

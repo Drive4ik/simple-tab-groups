@@ -41,27 +41,6 @@
 
     Vue.config.errorHandler = errorEventHandler.bind(window.logger);
 
-    function showDebugMode() {
-        if (mainStorage.enableDebug) {
-            const div = document.createElement('div');
-            div.innerText = browser.i18n.getMessage('loggingIsEnabledTitle');
-            Object.assign(div.style, {
-                position: 'fixed',
-                backgroundColor: 'coral',
-                padding: '0 4px',
-                borderRadius: '3px',
-                top: 0,
-                left: '50%',
-                transform: 'translate(-50%)',
-                cursor: 'pointer',
-            });
-            div.addEventListener('click', () => Messages.sendMessage('open-options-page', 'general'));
-            document.body.appendChild(div);
-        }
-    }
-
-    showDebugMode();
-
     const VIEW_GRID = 'grid',
         VIEW_DEFAULT = VIEW_GRID,
         availableTabKeys = new Set(['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'thumbnail', 'windowId']);
@@ -71,6 +50,8 @@
         mixins: [defaultGroupMixin, optionsMixin, startUpDataMixin],
         data() {
             return {
+                enableDebug: mainStorage.enableDebug,
+
                 DEFAULT_COOKIE_STORE_ID: Constants.DEFAULT_COOKIE_STORE_ID,
                 VIEW_GRID,
 
@@ -968,8 +949,8 @@
                 }
             },
 
-            openOptionsPage() {
-                Messages.sendMessage('open-options-page');
+            openOptionsPage(section = 'general') {
+                Messages.sendMessage('open-options-page', {section});
             },
         },
     }
@@ -1055,7 +1036,7 @@
                     </div>
                 </div>
                 <div>
-                    <button class="button" @click="openOptionsPage">
+                    <button class="button" @click="openOptionsPage()">
                         <span class="icon">
                             <figure class="image is-16x16">
                                 <img src="/icons/settings.svg" />
@@ -1446,6 +1427,14 @@
         <!-- <footer class="is-flex is-unselectable">
             footer
         </footer> -->
+
+        <div
+            v-if="enableDebug"
+            id="debug-message"
+            class="tag is-warning is-medium is-clickable"
+            @click="openOptionsPage('general debug')"
+            v-text="lang('loggingIsEnabledTitle')"
+            ></div>
     </div>
 
 </template>
@@ -1796,6 +1785,13 @@
         .drag-tab .tab.is-in-multiple-drop {
             opacity: 0.4;
         }
+    }
+
+    #debug-message {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
     }
 
 </style>

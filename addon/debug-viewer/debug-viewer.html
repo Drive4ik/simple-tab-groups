@@ -58,11 +58,6 @@
             border-left: 2px dotted red;
         }
 
-        #page-navigation > *,
-        #logs-indent > * {
-            border: 1px solid #363636;
-        }
-
         code {
             word-break: break-all;
         }
@@ -77,14 +72,8 @@
 
         #page-navigation {
             position: fixed;
-            right: 20px;
+            right: 32px;
             top: 70px;
-        }
-
-        #logs-indent {
-            position: fixed;
-            right: 20px;
-            top: 20px;
         }
 
         .log {
@@ -269,21 +258,19 @@
                 </div>
             </div>
 
-
-            <div id="logs-indent" class="buttons are-small">
-                <button class="button" @click="logsIndent += 50" @contextmenu.prevent="logsIndent += 200">◁</button>
-                <button class="button" @click="logsIndent -= 50" @contextmenu.prevent="logsIndent -= 200">▷</button>
-            </div>
-
-            <div id="page-navigation" class="is-flex is-flex-direction-column is-align-items-end">
-                <button class="button field" @click="scrollTo('input[type=file]')">top</button>
-                <button class="button field" @click="scrollTo('#windows-title', 'start')">windows</button>
-                <button class="button field" @click="scrollTo('#groups-title', 'start')">groups</button>
-                <button class="button field" @click="scrollTo('#logs-title', 'start')">logs</button>
-                <button class="button field" title="Right click - prev error"
+            <div id="page-navigation" class="buttons is-flex-direction-column is-align-items-end">
+                <button class="button" @click="scrollTo('input[type=file]')">top</button>
+                <button class="button" @click="scrollTo('#windows-title', 'start')">windows</button>
+                <button class="button" @click="scrollTo('#groups-title', 'start')">groups</button>
+                <button class="button" @click="scrollTo('#logs-title', 'start')">logs</button>
+                <div class="buttons are-small m-0">
+                    <button class="button" @click="logsIndent += 50" @contextmenu.prevent="logsIndent += 200">◁</button>
+                    <button class="button" @click="logsIndent -= 50" @contextmenu.prevent="logsIndent -= 200">▷</button>
+                </div>
+                <button class="button" title="Right click - prev error"
                     @click="scrollTo('#logs .tag.is-danger:not(.is-light), .has-background-danger', undefined, true)"
                     @contextmenu.prevent.stop="scrollTo('#logs .tag.is-danger:not(.is-light), .has-background-danger', undefined, true, true)">🛑 error</button>
-                <button class="button field" @click="scrollTo('#errors-title')">errors</button>
+                <button class="button" @click="scrollTo('#errors-title')">errors</button>
             </div>
 
         </div>

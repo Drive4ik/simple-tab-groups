@@ -44,27 +44,6 @@
         document.getElementById('loading').classList.toggle('is-hidden', !show);
     }
 
-    function showDebugMode() {
-        if (mainStorage.enableDebug) {
-            const div = document.createElement('div');
-            div.innerText = browser.i18n.getMessage('loggingIsEnabledTitle');
-            Object.assign(div.style, {
-                position: 'fixed',
-                backgroundColor: 'coral',
-                padding: '0 4px',
-                borderRadius: '3px',
-                top: 0,
-                left: '50%',
-                transform: 'translate(-50%)',
-                cursor: 'pointer',
-            });
-            div.addEventListener('click', () => Messages.sendMessage('open-options-page', 'general'));
-            document.body.appendChild(div);
-        }
-    }
-
-    showDebugMode();
-
     const SECTION_SEARCH = 'search',
         SECTION_GROUPS_LIST = 'groupsList',
         SECTION_GROUP_TABS = 'groupTabs',
@@ -76,6 +55,8 @@
         mixins: [defaultGroupMixin, optionsMixin, startUpDataMixin, syncCloudMixin],
         data() {
             return {
+                enableDebug: mainStorage.enableDebug,
+
                 isSidebar: isSidebar,
 
                 optionsWatchKeys: Constants.POPUP_SETTINGS_MENU_ITEMS
@@ -302,13 +283,7 @@
 
                         if (this.syncCloudTriggeredByPopup) {
                             const ok = await this.showConfirm(name, message, 'openSettings', 'is-info');
-
-                            if (ok) {
-                                Messages.sendMessage('open-options-page', {
-                                    section: 'backup sync',
-                                });
-                                this.closeWindow();
-                            }
+                            ok && this.openOptionsPage('backup sync');
                         }
                     })
                     .$on('sync-finish', () => {
@@ -1133,8 +1108,8 @@
                 return container?.[key];
             },
 
-            openOptionsPage() {
-                Messages.sendMessage('open-options-page');
+            openOptionsPage(section = 'general') {
+                Messages.sendMessage('open-options-page', {section});
                 this.closeWindow();
             },
             openManageGroups() {
@@ -1811,8 +1786,8 @@
             <div
                 tabindex="0"
                 class="settings"
-                @click="openOptionsPage"
-                @keydown.enter="openOptionsPage"
+                @click="openOptionsPage()"
+                @keydown.enter="openOptionsPage()"
                 :title="lang('openSettings')"
                 >
                 <figure class="image is-16x16">
@@ -1973,6 +1948,13 @@
             <span v-html="confirmText"></span>
         </popup>
 
+        <div
+            v-if="enableDebug"
+            id="debug-message"
+            class="tag is-warning is-medium is-clickable"
+            @click="openOptionsPage('general debug')"
+            v-text="lang('loggingIsEnabledTitle')"
+            ></div>
     </div>
 </template>
 
@@ -2300,6 +2282,13 @@
 
     .not-sync-tabs > p {
         padding: 0 var(--bulma-block-spacing);
+    }
+
+    #debug-message {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
     }
 
 </style>

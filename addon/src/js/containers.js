@@ -27,7 +27,12 @@ export const TEMPORARY = cacheStorage.TEMPORARY ??= createStorage({
 
 const tmpUniq = Utils.getRandomInt();
 
-// TODO refactor addListener to: if (Constants.IS_BACKGROUND_PAGE) {
+let LISTENING_EVENTS = true;
+if (Constants.IS_BACKGROUND_PAGE) {
+    browser.contextualIdentities.onCreated.addListener(catchFunc(onCreated, logger));
+    browser.contextualIdentities.onUpdated.addListener(catchFunc(onUpdated, logger));
+    browser.contextualIdentities.onRemoved.addListener(catchFunc(onRemoved, logger));
+}
 
 export async function init(temporaryContainerTitle) {
     const log = logger.start('init', {temporaryContainerTitle});
@@ -43,10 +48,6 @@ export async function init(temporaryContainerTitle) {
     // name: "Personal"
 
     await load();
-
-    browser.contextualIdentities.onCreated.addListener(onCreated);
-    browser.contextualIdentities.onUpdated.addListener(onUpdated);
-    browser.contextualIdentities.onRemoved.addListener(catchFunc(onRemoved, log));
 
     log.stop();
 }
@@ -65,6 +66,10 @@ export async function load(containersStorage = containers) {
 }
 
 function onCreated({contextualIdentity}) {
+    if (!LISTENING_EVENTS) {
+        return;
+    }
+
     containers[contextualIdentity.cookieStoreId] = contextualIdentity;
 
     if (contextualIdentity.name === (TEMPORARY.name + tmpUniq)) {
@@ -75,6 +80,10 @@ function onCreated({contextualIdentity}) {
 }
 
 function onUpdated({contextualIdentity}) {
+    if (!LISTENING_EVENTS) {
+        return;
+    }
+
     const {cookieStoreId} = contextualIdentity,
         isOldContainerNameAreTmp = containers[cookieStoreId].name === (TEMPORARY.name + tmpUniq);
 
@@ -96,8 +105,13 @@ function onUpdated({contextualIdentity}) {
 }
 
 async function onRemoved({contextualIdentity}) {
-    const log = logger.start('onRemoved', contextualIdentity)
-    let isTemporaryContainer = isTemporary(contextualIdentity.cookieStoreId, contextualIdentity);
+    if (!LISTENING_EVENTS) {
+        return;
+    }
+
+    const log = logger.start('onRemoved', contextualIdentity);
+
+    const isTemporaryContainer = isTemporary(contextualIdentity.cookieStoreId, contextualIdentity);
 
     delete containers[contextualIdentity.cookieStoreId];
 
@@ -111,8 +125,8 @@ async function onRemoved({contextualIdentity}) {
         return;
     }
 
-    let {groups} = await Groups.load(),
-        needSaveGroups = Groups.normalizeContainersInGroups(groups);
+    const {groups} = await Groups.load();
+    const needSaveGroups = Groups.normalizeContainersInGroups(groups);
 
     if (needSaveGroups) {
         await Groups.save(groups);
@@ -148,38 +162,63 @@ function getTemporaryContainerName(cookieStoreId) {
 }
 
 export async function createTemporaryContainer(containersStorage = containers) {
+    const log = logger.start('createTemporaryContainer');
+
     const {cookieStoreId} = await create({
         name: TEMPORARY.name + tmpUniq,
         color: TEMPORARY.color,
         icon: TEMPORARY.icon,
-    }, containersStorage);
+    }, containersStorage).catch(log.onCatch("can't create"));
 
     await update(cookieStoreId, {
         name: getTemporaryContainerName(cookieStoreId),
-    }, containersStorage);
+    }, containersStorage).catch(log.onCatch("can't update"));
+
+    log.stop(cookieStoreId);
 
     return cookieStoreId;
 }
 
 export async function update(cookieStoreId, details, containersStorage = containers) {
+    const log = logger.start('update', cookieStoreId, details);
+
     Object.assign(containersStorage[cookieStoreId], details);
-    const contextualIdentity = await browser.contextualIdentities.update(cookieStoreId, details);
+
+    const contextualIdentity = await browser.contextualIdentities.update(cookieStoreId, details)
+        .catch(log.onCatch("can't update"));
+
     containersStorage[cookieStoreId] = contextualIdentity;
+
+    log.stop();
+
     return contextualIdentity;
 }
 
 export async function remove(cookieStoreIds, containersStorage = containers) {
+    const log = logger.start('remove', cookieStoreIds);
+
     for (const cookieStoreId of [cookieStoreIds].flat()) {
         try {
             await browser.contextualIdentities.remove(cookieStoreId);
             delete containersStorage[cookieStoreId];
-        } catch {}
+        } catch (e) {
+            log.logError("can't remove", e);
+        }
     }
+
+    log.stop();
 }
 
 export async function create(details, containersStorage = containers) {
-    const contextualIdentity = await browser.contextualIdentities.create(details);
+    const log = logger.start('create', details);
+
+    const contextualIdentity = await browser.contextualIdentities.create(details)
+        .catch(log.onCatch("can't create"));
+
     containersStorage[contextualIdentity.cookieStoreId] = contextualIdentity;
+
+    log.stop();
+
     return contextualIdentity;
 }
 
@@ -352,28 +391,28 @@ export function getTemporaryContainerTitle() {
 }
 
 export async function updateTemporaryContainerTitle(temporaryContainerTitle, containersStorage = containers) {
+    const log = logger.start('updateTemporaryContainerTitle', temporaryContainerTitle);
+
     const cookieStoreIds = Object.keys(containersStorage)
         .filter(cookieStoreId => isTemporary(cookieStoreId, null, containersStorage));
 
     setTemporaryContainerTitle(temporaryContainerTitle);
 
+    log.log('cookieStoreIds', cookieStoreIds);
+
     if (cookieStoreIds.length) {
-        const isInternalStorage = containersStorage === containers;
+        LISTENING_EVENTS = false;
 
-        if (isInternalStorage) {
-            browser.contextualIdentities.onUpdated.removeListener(onUpdated);
-        }
-
-        await Promise.all(cookieStoreIds.map(async cookieStoreId => {
+        for (const cookieStoreId of cookieStoreIds) {
             await update(cookieStoreId, {
                 name: getTemporaryContainerName(cookieStoreId),
-            }, containersStorage);
-        }));
-
-        if (isInternalStorage) {
-            browser.contextualIdentities.onUpdated.addListener(onUpdated);
+            }, containersStorage).catch(log.onCatch(["can't update", cookieStoreId]));
         }
+
+        LISTENING_EVENTS = true;
 
         backgroundSelf.sendMessageFromBackground('containers-updated'); // update container temporary name on tabs will work only on not archived groups
     }
+
+    log.stop();
 }
