@@ -5,10 +5,11 @@ import backgroundSelf from './background.js';
 import * as Constants from './constants.js';
 import * as Storage from './storage.js';
 import * as Cache from './cache.js';
-import Notification from './notification.js';
+import Notification, {clear as clearNotification} from './notification.js';
 import * as Containers from './containers.js';
 import * as Bookmarks from './bookmarks.js';
 import * as Management from './management.js';
+import * as Menus from './menus.js';
 // import * as Messages from './messages.js';
 // import JSON from './json.js';
 import * as Tabs from './tabs.js';
@@ -197,8 +198,6 @@ export async function add(windowId, tabIds = [], title = null) {
         await backgroundSelf.updateBrowserActionData(newGroup.id);
     }
 
-    backgroundSelf.updateMoveTabMenus();
-
     if (windowId && !tabIds.length) {
         tabIds = await Tabs.get(windowId).then(tabs => tabs.map(Tabs.extractId));
     }
@@ -217,6 +216,8 @@ export async function add(windowId, tabIds = [], title = null) {
     backgroundSelf.sendExternalMessage('group-added', {
         group: mapForExternalExtension(newGroup),
     });
+
+    await backgroundSelf.updateMoveTabMenus();
 
     log.stop(newGroup.id);
     return newGroup;
@@ -246,8 +247,6 @@ export async function remove(groupId) {
         return;
     }
 
-    backgroundSelf.addUndoRemoveGroupItem(group); // TODO cant add menu
-
     groups.splice(groupIndex, 1);
 
     groups.forEach(gr => {
@@ -268,8 +267,10 @@ export async function remove(groupId) {
     if (!group.isArchive) {
         await Tabs.remove(group.tabs);
 
-        backgroundSelf.updateMoveTabMenus();
+        await backgroundSelf.updateMoveTabMenus();
     }
+
+    await addUndoRemove(group); // after updateMoveTabMenus
 
     await Bookmarks.removeGroup(group).catch(log.onCatch('cant remove bookmark', false));
 
@@ -285,6 +286,53 @@ export async function remove(groupId) {
 
     log.stop();
 }
+
+async function addUndoRemove(groupToRemove) {
+    await Menus.create({
+        id: Constants.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + groupToRemove.id,
+        title: browser.i18n.getMessage('undoRemoveGroupItemTitle', groupToRemove.title),
+        contexts: [Menus.ContextType.ACTION],
+        icons: getIconUrl(groupToRemove, 16),
+        onClick: () => restore(groupToRemove),
+    });
+
+    const {showNotificationAfterGroupDelete} = await Storage.get('showNotificationAfterGroupDelete');
+
+    if (showNotificationAfterGroupDelete) {
+        Notification(['undoRemoveGroupNotification', groupToRemove.title], {
+            id: Constants.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + groupToRemove.id,
+            time: 7,
+            onClick: () => restore(groupToRemove),
+        });
+    }
+}
+
+async function restore(group) {
+    Menus.remove(Constants.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id);
+    clearNotification(Constants.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id);
+
+    const {groups} = await load();
+
+    groups.push(group);
+
+    normalizeContainersInGroups(groups);
+
+    const tabs = group.tabs;
+
+    await save(groups);
+
+    await backgroundSelf.updateMoveTabMenus();
+
+    if (tabs.length && !group.isArchive) {
+        await backgroundSelf.loadingBrowserAction();
+
+        group.tabs = await backgroundSelf.createTabsSafe(setNewTabsParams(tabs, group), true);
+
+        await backgroundSelf.loadingBrowserAction(false);
+    }
+
+    backgroundSelf.sendMessageFromBackground('group-added', {group});
+};
 
 export async function update(groupId, updateData) {
     const log = logger.start('update', {groupId, updateData});
@@ -332,7 +380,7 @@ export async function update(groupId, updateData) {
     }
 
     if (KEYS_RESPONSIBLE_VIEW.some(key => updateDataKeys.includes(key))) {
-        backgroundSelf.updateMoveTabMenus();
+        await backgroundSelf.updateMoveTabMenus();
 
         await backgroundSelf.updateBrowserActionData(group.id);
     }
@@ -372,7 +420,7 @@ export async function move(groupId, newGroupIndex) {
 
     await save(groups, true);
 
-    backgroundSelf.updateMoveTabMenus();
+    await backgroundSelf.updateMoveTabMenus();
 
     log.stop();
 }
@@ -394,7 +442,7 @@ export async function sort(vector = 'asc') {
 
     await save(groups, true);
 
-    backgroundSelf.updateMoveTabMenus();
+    await backgroundSelf.updateMoveTabMenus();
 
     log.stop();
 }
@@ -558,7 +606,7 @@ export async function archiveToggle(groupId) {
 
     backgroundSelf.loadingBrowserAction(false).catch(log.onCatch('loadingBrowserAction'));
 
-    backgroundSelf.updateMoveTabMenus();
+    await backgroundSelf.updateMoveTabMenus();
 
     log.stop();
 }

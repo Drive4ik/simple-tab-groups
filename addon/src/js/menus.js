@@ -1,21 +1,28 @@
 
-// import * as Constants from './constants.js';
-import {MENU_ITEM_BUTTON, MenusContextType, MenusItemType} from './constants-browser.js';
+import * as Constants from './constants.js';
+import {MENU_ITEM_BUTTON} from './constants-browser.js';
 import Logger, {catchFunc} from './logger.js';
 import * as Utils from './utils.js';
 
-const logger = new Logger('Menus').disable();
+export {
+    MenusContextType as ContextType,
+    MenusItemType as ItemType,
+} from './constants-browser.js';
+
+const logger = new Logger('Menus'); //.disable(); // TODO uncomment disable
 
 const menusMap = new Map;
 
-browser.menus.onClicked.addListener(onMenuClick);
+if (Constants.IS_BACKGROUND_PAGE) {
+    browser.menus.onClicked.addListener(catchFunc(onMenuClick, logger));
+}
 
 async function onMenuClick(info, tab) {
+    const log = logger.start('onMenuClick', info.menuItemId, {info, tab});
+
     const menu = menusMap.get(info.menuItemId);
 
     if (menu.onClick) {
-        const log = logger.start('onMenuClick', info.menuItemId, {info, tab});
-
         info.button ??= 0;
 
         info.button = {
@@ -24,14 +31,20 @@ async function onMenuClick(info, tab) {
             RIGHT: info.button === MENU_ITEM_BUTTON.RIGHT,
         };
 
-        await catchFunc(menu.onClick).call(menu, info, tab);
+        log.log('execute onClick', info);
 
-        log.stop();
+        await menu.onClick.call(menu, info, tab);
     }
+
+    log.stop();
+}
+
+export function has(id) {
+    return menusMap.has(id);
 }
 
 export async function create(createProperties) {
-    const id = createProperties.id ??= String(Utils.getRandomInt(100000));
+    const id = createProperties.id ??= String(Utils.getRandomInt(100_000));
 
     const log = logger.start('create', createProperties);
 
@@ -48,7 +61,15 @@ export async function create(createProperties) {
         createProperties.icons = {16: icon};
     }
 
-    await browser.menus.create(createProperties);
+    await new Promise((resolve, reject) => {
+        browser.menus.create(createProperties, () => {
+            if (browser.runtime.lastError) {
+                reject(new Error(browser.runtime.lastError));
+            } else {
+                resolve();
+            }
+        });
+    }).catch(log.onCatch(["can't create", createProperties]));
 
     createProperties.onClick = onClick;
     menusMap.set(id, createProperties);
@@ -61,26 +82,46 @@ export async function create(createProperties) {
 export async function remove(id) {
     const log = logger.start('remove', id);
 
-    if (!menusMap.has(id)) {
+    const menu = menusMap.get(id);
+
+    if (!menu) {
         log.throwError([id, 'doesn\'t exist']);
+    } else if (menu.parentId && !menusMap.has(menu.parentId)) {
+        log.throwError(['parentId', `"${menu.parentId}"`, 'of', `"${id}"`, 'already removed']);
     }
+
+    await browser.menus.remove(id)
+        .catch(log.onCatch(["can't remove", id]));
 
     menusMap.delete(id);
 
-    await browser.menus.remove(id);
+    for (const [menuId, menuProperties] of menusMap) {
+        if (menuProperties.parentId === id) {
+            menusMap.delete(menuId);
+        }
+    }
 
     log.stop();
 }
 
-export async function removeAll() {
+/* export async function removeAll() {
     const log = logger.start('removeAll');
 
-    await browser.menus.removeAll();
+    for (const id of menusMap.keys()) {
+        if (!menusMap.has(id)) {
+            continue;
+        }
 
-    menusMap.clear();
+        if (!id.startsWith(Constants.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP)) {
+            await remove(id);
+        }
+    }
+
+    // await browser.menus.removeAll().catch(log.onCatch("can't remove all"));
+    // menusMap.clear();
 
     log.stop();
-}
+} */
 
 export async function update(id, updateProperties) {
     const log = logger.start('update', id, updateProperties);
@@ -89,28 +130,8 @@ export async function update(id, updateProperties) {
         log.throwError([id, 'doesn\'t exist']);
     }
 
-    await browser.menus.update(id, updateProperties);
+    await browser.menus.update(id, updateProperties)
+        .catch(log.onCatch(["can't update all", id, updateProperties]));
 
     log.stop();
-}
-
-export async function enable(id) {
-    const log = logger.start('enable', id);
-
-    await update(id, {enabled: true});
-
-    log.stop();
-}
-
-export async function disable(id) {
-    const log = logger.start('disable', id);
-
-    await update(id, {enabled: false});
-
-    log.stop();
-}
-
-export {
-    MenusContextType as ContextType,
-    MenusItemType as ItemType,
 }

@@ -783,8 +783,8 @@
                     }
                 }
 
-                let newGroupWindowId = Cache.getWindowGroup(this.currentWindow.id) ? undefined : this.currentWindow.id,
-                    newGroup = await Groups.add(newGroupWindowId, tabIds, proposalTitle);
+                const newGroupWindowId = Cache.getWindowGroup(this.currentWindow.id) ? undefined : this.currentWindow.id;
+                const newGroup = Messages.sendMessageModule('Groups.add', newGroupWindowId, tabIds, proposalTitle);
 
                 if (applyGroupWithTabId) {
                     this.applyGroup(newGroup, {id: applyGroupWithTabId});

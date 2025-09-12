@@ -27,6 +27,8 @@ export const TEMPORARY = cacheStorage.TEMPORARY ??= createStorage({
 
 const tmpUniq = Utils.getRandomInt();
 
+// TODO refactor addListener to: if (Constants.IS_BACKGROUND_PAGE) {
+
 export async function init(temporaryContainerTitle) {
     const log = logger.start('init', {temporaryContainerTitle});
 
@@ -44,7 +46,7 @@ export async function init(temporaryContainerTitle) {
 
     browser.contextualIdentities.onCreated.addListener(onCreated);
     browser.contextualIdentities.onUpdated.addListener(onUpdated);
-    browser.contextualIdentities.onRemoved.addListener(catchFunc(onRemoved));
+    browser.contextualIdentities.onRemoved.addListener(catchFunc(onRemoved, log));
 
     log.stop();
 }

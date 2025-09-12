@@ -229,7 +229,7 @@ export async function sync(trust = null, progressFunc = null) {
         await Groups.save(syncResult.localData.groups);
     }
 
-    storage.lastSyncFileName = syncOptions.githubGistFileName; // TODO check
+    storage.githubGistFileName = syncOptions.githubGistFileName;
     mainStorage.autoSyncLastTimeStamp = Utils.unixNow();
 
     progressFunc?.(100);

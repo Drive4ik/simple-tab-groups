@@ -315,17 +315,18 @@ export function clearLogs() {
     logs.length = 0;
 }
 
-export function catchFunc(asyncFunc) {
+export function catchFunc(asyncFunc, logger) {
+    const name = asyncFunc.name || 'anonymous';
     const fromStack = new Error().stack;
 
     return async function() {
         try {
             return await asyncFunc.call(this, ...arguments);
         } catch (e) {
-            e.message = `[catchFunc]: ${e.message}`;
+            e.message = `catchFunc(${name}), error message: ${e.message}`;
             e.stack = [fromStack, 'Native error stack:', e.stack].join('\n');
             e.arguments = JSON.clone(Array.from(arguments));
-            errorEventHandler(e);
+            errorEventHandler.call(logger, e);
         }
     };
 }

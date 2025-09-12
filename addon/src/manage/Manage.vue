@@ -582,8 +582,8 @@
                     }
                 }
 
-                let newGroupWindowId = showTabAfterMovingItIntoThisGroup ? this.currentWindow.id : undefined,
-                    newGroup = await Groups.add(newGroupWindowId, tabIds, newGroupTitle);
+                const newGroupWindowId = showTabAfterMovingItIntoThisGroup ? this.currentWindow.id : undefined;
+                const newGroup = await Messages.sendMessageModule('Groups.add', newGroupWindowId, tabIds, newGroupTitle);
 
                 if (showTabAfterMovingItIntoThisGroup) {
                     this.applyGroup(newGroup, {id: tabId});
@@ -720,7 +720,7 @@
                     this.$nextTick(() => [...document.querySelectorAll('input[type="text"]')].pop().select());
                 });
 
-                Groups.add();
+                Messages.sendMessageModule('Groups.add');
             },
 
             addTab(group, cookieStoreId) {

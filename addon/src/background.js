@@ -475,7 +475,7 @@ const onActivatedTab = function(activeInfo) {
     logger.log('onActivated', activeInfo)
 }
 
-const onCreatedTab = catchFunc(async function(tab) {
+const onCreatedTab = catchFunc(async function onCreatedTab(tab) {
     const log = logger.start('onCreatedTab', tab);
 
     Cache.setTab(tab);
@@ -497,7 +497,7 @@ const onCreatedTab = catchFunc(async function(tab) {
     }
 
     log.stop();
-});
+}, logger);
 
 function addExcludeTabIds(tabIds) {
     tabIds.forEach(excludeTabIds.add, excludeTabIds);
@@ -507,7 +507,7 @@ function removeExcludeTabIds(tabIds) {
     tabIds.forEach(excludeTabIds.delete, excludeTabIds);
 }
 
-const onUpdatedTab = catchFunc(async function(tabId, changeInfo, tab) {
+const onUpdatedTab = catchFunc(async function onUpdatedTab(tabId, changeInfo, tab) {
     if (excludeTabIds.has(tab.id)) {
         Cache.setTab(tab);
         logger.log('onUpdatedTab 🛑 tab was excluded', tab.id);
@@ -575,7 +575,7 @@ const onUpdatedTab = catchFunc(async function(tabId, changeInfo, tab) {
     }
 
     log.stop();
-});
+}, logger);
 
 function onRemovedTab(tabId, { isWindowClosing, windowId }) {
     const log = logger.start('onRemovedTab', tabId, { isWindowClosing, windowId });
@@ -869,7 +869,7 @@ async function GrandRestoreWindows({ id }, needRestoreMissedTabsMap) {
     log.stop();
 }
 
-const onCreatedWindow = catchFunc(async function (win) {
+const onCreatedWindow = catchFunc(async function onCreatedWindow(win) {
     const log = logger.start(['info', 'onCreatedWindow'], win.id, 'skip created:', self.skipAddGroupToNextNewWindow);
 
     if (self.skipAddGroupToNextNewWindow) {
@@ -923,23 +923,19 @@ const onCreatedWindow = catchFunc(async function (win) {
     }
 
     log.stop();
-});
+}, logger);
 
 function onFocusChangedWindow(windowId) {
     !storage.IS_TEMPORARY && logger.log('onFocusChangedWindow', windowId);
 
     if (browser.windows.WINDOW_ID_NONE !== windowId && options.showContextMenuOnTabs) {
-        const menuId = 'set-tab-icon-as-group-icon';
-
-        if (Cache.getWindowGroup(windowId)) {
-            Menus.enable(menuId);
-        } else {
-            Menus.disable(menuId);
-        }
+        Menus.update('set-tab-icon-as-group-icon', {
+            enabled: Boolean(Cache.getWindowGroup(windowId)),
+        }).catch(() => {});
     }
 }
 
-const onRemovedWindow = catchFunc(async function (windowId) {
+const onRemovedWindow = catchFunc(async function onRemovedWindow(windowId) {
     const log = logger.start(['info', 'onRemovedWindow'], windowId);
 
     let groupId = Cache.getWindowGroup(windowId);
@@ -971,7 +967,7 @@ const onRemovedWindow = catchFunc(async function (windowId) {
     }
 
     log.stop();
-});
+}, logger);
 
 let _currentWindowForLoadingBrowserAction = null;
 async function loadingBrowserAction(start = true, windowId) {
@@ -988,56 +984,22 @@ async function loadingBrowserAction(start = true, windowId) {
     }
 }
 
-async function addUndoRemoveGroupItem(groupToRemove) {
-    const restoreGroup = async function(group) {
-        Menus.remove(Constants.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id);
-        clearNotification(Constants.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id);
-
-        const { groups } = await Groups.load();
-
-        groups.push(group);
-
-        Groups.normalizeContainersInGroups(groups);
-
-        const tabs = group.tabs;
-
-        await Groups.save(groups);
-
-        await updateMoveTabMenus();
-
-        if (tabs.length && !group.isArchive) {
-            await loadingBrowserAction();
-
-            group.tabs = await createTabsSafe(Groups.setNewTabsParams(tabs, group), true);
-
-            await loadingBrowserAction(false);
-        }
-
-        sendMessageFromBackground('group-added', { group });
-
-    }.bind(null, JSON.clone(groupToRemove));
-
-    await Menus.create({
-        id: Constants.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + groupToRemove.id,
-        title: browser.i18n.getMessage('undoRemoveGroupItemTitle', groupToRemove.title),
-        contexts: [Menus.ContextType.ACTION],
-        icons: Groups.getIconUrl(groupToRemove, 16),
-        onClick: restoreGroup,
-    });
-
-    if (options.showNotificationAfterGroupDelete) {
-        Notification(['undoRemoveGroupNotification', groupToRemove.title], {
-            id: Constants.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + groupToRemove.id,
-            time: 7,
-            onClick: restoreGroup,
-        });
-    }
-}
-
 async function updateMoveTabMenus() {
     const log = logger.start('updateMoveTabMenus');
 
-    await Menus.removeAll();
+    const menusToRemove = [
+        Menus.ContextType.BOOKMARK,
+        Menus.ContextType.TAB,
+        Menus.ContextType.LINK,
+        'exportAllGroupsToBookmarks',
+        'reopenTabsWithTemporaryContainersInNew',
+    ];
+
+    for (const id of menusToRemove) {
+        if (Menus.has(id)) {
+            await Menus.remove(id);
+        }
+    }
 
     const hasBookmarksPermission = await Bookmarks.hasPermission();
 
@@ -1095,7 +1057,7 @@ async function updateMoveTabMenus() {
             const groupId = Cache.getWindowGroup(tab.windowId);
 
             if (!groupId) {
-                Menus.disable(info.menuItemId);
+                Menus.update(info.menuItemId, {enabled: false});
                 return;
             }
 
@@ -1411,6 +1373,7 @@ async function updateMoveTabMenus() {
     });
 
     hasBookmarksPermission && await Menus.create({
+        id: 'exportAllGroupsToBookmarks',
         title: browser.i18n.getMessage('exportAllGroupsToBookmarks'),
         icon: '/icons/bookmark.svg',
         contexts: [Menus.ContextType.ACTION],
@@ -1435,6 +1398,7 @@ async function updateMoveTabMenus() {
     });
 
     await Menus.create({
+        id: 'reopenTabsWithTemporaryContainersInNew',
         title: browser.i18n.getMessage('reopenTabsWithTemporaryContainersInNew'),
         icon: Containers.TEMPORARY.iconUrl,
         contexts: [Menus.ContextType.ACTION],
@@ -1595,7 +1559,7 @@ function addTabToLazyMove(tabId, groupId) {
 
     _tabsLazyMovingMap.set(tabId, groupId);
 
-    _tabsLazyMovingTimer = window.setTimeout(catchFunc(async function () {
+    _tabsLazyMovingTimer = window.setTimeout(catchFunc(async function tabsLazyMovingTimer() {
         let tabsEntries = Array.from(_tabsLazyMovingMap.entries());
 
         _tabsLazyMovingMap.clear();
@@ -1610,11 +1574,11 @@ function addTabToLazyMove(tabId, groupId) {
         for (let groupId in moveData) {
             await Tabs.move(moveData[groupId], groupId, groups.find(gr => gr.id === groupId));
         }
-    }), 100);
+    }, logger), 100);
 }
 
 let canceledRequests = new Set;
-const onBeforeTabRequest = catchFunc(async function ({ tabId, url, cookieStoreId, originUrl, requestId, frameId }) {
+const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({tabId, url, cookieStoreId, originUrl, requestId, frameId}) {
     const log = logger.start('onBeforeTabRequest', { tabId, url, cookieStoreId, originUrl, requestId, frameId });
 
     if (frameId !== 0 || tabId === browser.tabs.TAB_ID_NONE || Containers.isTemporary(cookieStoreId)) {
@@ -1790,12 +1754,12 @@ const onBeforeTabRequest = catchFunc(async function ({ tabId, url, cookieStoreId
     return {
         cancel: true,
     };
-});
+}, logger);
 
-const onPermissionsChanged = catchFunc(async function ({ origins, permissions }) {
-    logger.log('onPermissionsChanged', { origins, permissions });
-    await updateMoveTabMenus(); // TODO ???
-});
+const onPermissionsChanged = catchFunc(async function onPermissionsChanged({origins, permissions}) {
+    logger.log('onPermissionsChanged', {origins, permissions});
+    await updateMoveTabMenus();
+}, logger);
 
 async function onAlarm({name}) {
     logger.info('onAlarm', {name});
@@ -2024,13 +1988,13 @@ async function onBackgroundMessage(message, sender) {
     }
 
     if (isSTGMessage) {
-        let [module, funcName] = data.action.split('.');
+        const [moduleName, funcName] = data.action.split('.');
 
-        if (INTERNAL_MODULES_NAMES.has(module) || INTERNAL_MODULES_NAMES.has(data.action)) {
-            logger.log('onBackgroundMessage internal module', data.action);
+        if (INTERNAL_MODULES_NAMES.has(moduleName) || INTERNAL_MODULES_NAMES.has(data.action)) {
+            logger.info('onBackgroundMessage internal module', data.action);
 
             try {
-                return await INTERNAL_MODULES[module][funcName](...data.args);
+                return await INTERNAL_MODULES[moduleName][funcName](...data.args);
             } catch (e) {
                 logger.throwError([
                     'onBackgroundMessage call internal module:', data.action,
@@ -3002,8 +2966,6 @@ self.saveOptions = saveOptions;
 
 self.createTabsSafe = createTabsSafe;
 
-self.addUndoRemoveGroupItem = addUndoRemoveGroupItem;
-
 self.excludeTabIds = excludeTabIds;
 self.addExcludeTabIds = addExcludeTabIds;
 self.removeExcludeTabIds = removeExcludeTabIds;
@@ -3635,7 +3597,6 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
                 data.showArchivedGroups = localStorage.showArchivedGroupsInPopup === '1';
 
                 if (applyToCurrentInstance) {
-                    // TODO review line below
                     storage.autoBackupLastTimeStamp = data.autoBackupLastBackupTimeStamp;
                     storage.mainBookmarksFolderId = localStorage.mainBookmarksFolderId;
                     storage.showTabsInThisWindowWereHidden = Number(localStorage.showTabsInThisWindowWereHidden) || 0;
@@ -3647,7 +3608,6 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
                     delete localStorage.showTabsInThisWindowWereHidden;
                     delete localStorage.optionsSection;
                     delete localStorage.enableDebug;
-                    delete localStorage['main/enableDebug'];
 
                     try {
                         let errorLogs = localStorage.errorLogs;

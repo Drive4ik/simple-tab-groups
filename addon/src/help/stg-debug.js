@@ -55,6 +55,10 @@ async function disableDebug() {
 }
 
 const normalizeAndClear = function(obj, objKey) {
+    if (mainStorage.IS_TEMPORARY) {
+        return obj;
+    }
+
     if (Array.isArray(obj)) {
         return obj.map(normalizeAndClear);
     } else if (typeof obj === 'object') {

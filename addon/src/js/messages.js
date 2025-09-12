@@ -21,6 +21,15 @@ export async function sendMessage(...args) {
         .catch(self.logger?.onCatch(['sendMessage', message]));
 }
 
+export function sendExternalMessage(exId, ...args) {
+    const message = normalizeSendData(...args);
+
+    self.logger?.info('sending', `SEND-EXTERNAL-MESSAGE#${message.action}`, 'to:', exId);
+
+    return browser.runtime.sendMessage(exId, message).catch(() => {});
+}
+
+// MODULES
 function getArgumentsModuleCall(ModuleFunc, ...args) {
     return [
         ModuleFunc,
@@ -33,14 +42,6 @@ function getArgumentsModuleCall(ModuleFunc, ...args) {
 
 export function sendMessageModule(...args) {
     return sendMessage(...getArgumentsModuleCall(...args));
-}
-
-export function sendExternalMessage(exId, ...args) {
-    const message = normalizeSendData(...args);
-
-    self.logger?.info('sending', `SEND-EXTERNAL-MESSAGE#${message.action}`, 'to:', exId);
-
-    return browser.runtime.sendMessage(exId, message).catch(() => {});
 }
 
 export function connectToBackground(name, listeners = null, callback = null, autoDisconnectOnUnload = true) {
@@ -101,6 +102,7 @@ async function postMessageToBackground(port, ...args) {
     });
 }
 
+// BACKGROUND
 export function createListenerOnConnectedBackground(onMessageListener) {
     return port => {
         const {name, listeners} = JSON.parse(port.name);
@@ -146,7 +148,7 @@ export function sendMessageFromBackground(...args) {
 
     for (const {name, port, listeners} of CSPorts) {
         if (listeners?.includes('*') || listeners?.includes(message.action)) {
-            self.logger?.info('postMessage:', message.action, 'to:', name);
+            self.logger?.info(`postMessage#${message.action}`, 'to', name);
             port.postMessage(message);
             sended = true;
         }

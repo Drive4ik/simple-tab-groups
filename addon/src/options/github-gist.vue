@@ -86,8 +86,8 @@ export default {
             if (
                 !this.isDisableSyncButton &&
                 this.area.gist &&
-                storage.lastSyncFileName &&
-                storage.lastSyncFileName !== this.area.optionsBackup.githubGistFileName
+                storage.githubGistFileName &&
+                storage.githubGistFileName !== this.area.optionsBackup.githubGistFileName
             ) {
                 return true;
             }

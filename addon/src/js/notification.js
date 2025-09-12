@@ -1,9 +1,34 @@
 
-import * as Utils from '/js/utils.js';
+import * as Constants from './constants.js';
+import * as Utils from './utils.js';
 
 const notificationsMap = new Map;
 
+if (Constants.IS_BACKGROUND_PAGE) {
+    browser.notifications.onClicked.addListener((notificationId) => {
+        const options = notificationsMap.get(notificationId);
+
+        if (options) {
+            clear(notificationId);
+            options.onClick?.(notificationId);
+        }
+    });
+
+    browser.notifications.onClosed.addListener((notificationId, byUser) => {
+        const options = notificationsMap.get(notificationId);
+
+        if (options) {
+            clear(notificationId);
+            options.onClose?.(notificationId);
+        }
+    });
+}
+
 export default async function(message, options = {}) {
+    if (!Constants.IS_BACKGROUND_PAGE && (options.onClick || options.onClose)) {
+        throw new Error('Notification options with actions must be called in background');
+    }
+
     if (typeof message === 'string') {
         if (message.includes(' ')) {
             // untranslatable string
@@ -59,21 +84,3 @@ export async function clear(notificationId) {
         await browser.notifications.clear(notificationId);
     }
 }
-
-browser.notifications.onClicked.addListener((notificationId) => {
-    const options = notificationsMap.get(notificationId);
-
-    if (options) {
-        clear(notificationId);
-        options.onClick?.(notificationId);
-    }
-});
-
-browser.notifications.onClosed.addListener((notificationId, byUser) => {
-    const options = notificationsMap.get(notificationId);
-
-    if (options) {
-        clear(notificationId);
-        options.onClose?.(notificationId);
-    }
-});
