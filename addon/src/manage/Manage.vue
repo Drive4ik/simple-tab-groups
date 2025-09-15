@@ -26,7 +26,6 @@
 
     import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
     import optionsMixin from '/js/mixins/options.mixin.js';
-    import startUpDataMixin from '/js/mixins/start-up-data.mixin.js';
 
     window.logger = new Logger(Constants.MODULES.MANAGE);
 
@@ -45,9 +44,14 @@
         VIEW_DEFAULT = VIEW_GRID,
         availableTabKeys = new Set(['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'thumbnail', 'windowId']);
 
+    const {sendMessage} = Messages.connectToBackground(Constants.MODULES.MANAGE + '-temp');
+
+    const startUpDataPromise = sendMessage('get-startup-data', {manage: true});
+    await Containers.init();
+
     export default {
         name: 'manage-page',
-        mixins: [defaultGroupMixin, optionsMixin, startUpDataMixin],
+        mixins: [defaultGroupMixin, optionsMixin],
         data() {
             return {
                 enableDebug: mainStorage.enableDebug,
@@ -108,9 +112,9 @@
 
             await this.optionsLoadPromise;
 
-            const startUpData = await this.startUpData(this.options.showTabsWithThumbnailsInManageGroups);
+            const startUpData = await startUpDataPromise;
 
-            this.loadWindows(startUpData);
+            await this.loadWindows(startUpData);
             this.loadGroups(startUpData);
             this.loadUnsyncedTabs(startUpData);
 
@@ -169,8 +173,8 @@
                 this.$nextTick(() => this.$refs.search.focus());
             },
 
-            async loadWindows({currendWindow, windows} = {}) {
-                this.currentWindow = currendWindow || await Windows.get();
+            async loadWindows({windows} = {}) {
+                this.currentWindow = await Windows.get();
                 this.openedWindows = windows || await Windows.load();
             },
 
@@ -682,19 +686,22 @@
 
                 this.multipleTabIds = [];
             },
-            async loadUnsyncedTabs({unSyncTabs} = {}) {
-                if (unSyncTabs) {
-                    return this.unSyncTabs = unSyncTabs.map(this.mapTab, this);
+            async loadUnsyncedTabs({windows} = {}) {
+                windows ??= await Windows.load(true, true, true);
+
+                const tabs = [];
+
+                for (const win of windows) {
+                    if (win.id === this.currentWindow.id) {
+                        for (const tab of win.tabs) {
+                            if (!tab.groupId) {
+                                tabs.push(tab);
+                            }
+                        }
+                    }
                 }
 
-                let windows = await Windows.load(true, true, true);
-
-                this.unSyncTabs = windows
-                    .reduce(function(acc, win) {
-                        win.tabs.forEach(tab => !tab.groupId && acc.push(tab));
-                        return acc;
-                    }, [])
-                    .map(this.mapTab, this);
+                this.unSyncTabs = tabs.map(this.mapTab, this);
             },
             addGroup() {
                 this.$once('group-added', () => {

@@ -1,20 +1,21 @@
 
+import './prefixed-storage.js';
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
 import backgroundSelf from './background.js';
-import cacheStorage, {createStorage} from './cache-storage.js';
 
-cacheStorage.cacheTabs ??= createStorage({
-    tabs: {},
-    lastTabsState: {},
-    windows: {},
-});
+export const tabs = Constants.IS_BACKGROUND_PAGE
+    ? {}
+    : backgroundSelf.CacheTabs;
+// bug https://bugzilla.mozilla.org/show_bug.cgi?id=1818392
+export const lastTabsState = Constants.IS_BACKGROUND_PAGE
+    ? {}
+    : backgroundSelf.CacheLastTabsState;
+export const windows = Constants.IS_BACKGROUND_PAGE
+    ? {}
+    : backgroundSelf.CacheWindows;
 
-const tabs = cacheStorage.cacheTabs.tabs;
-const lastTabsState = cacheStorage.cacheTabs.lastTabsState; // bug https://bugzilla.mozilla.org/show_bug.cgi?id=1818392
-const windows = cacheStorage.cacheTabs.windows;
-
-export function setLastTabState({id, url, title, status, hidden, pinned, favIconUrl}) {
+function setLastTabState({id, url, title, status, hidden, pinned, favIconUrl}) {
     lastTabsState[id] = {id, url, title, status, hidden, pinned, favIconUrl};
 }
 
@@ -23,21 +24,21 @@ export function getRealTabStateChanged(tab) {
     let changeInfo = null;
 
     if (lastTabsState[tab.id]) {
-        Constants.ON_UPDATED_TAB_PROPERTIES.forEach(key => {
+        for (const key of Constants.ON_UPDATED_TAB_PROPERTIES) {
             if (tab[key] !== lastTabsState[tab.id][key]) {
                 changeInfo ??= {};
                 changeInfo[key] = tab[key];
             }
-        });
+        }
     }
 
     return changeInfo;
 }
 
 export function clear() {
-    for(const key in tabs) delete tabs[key];
-    for(const key in lastTabsState) delete lastTabsState[key];
-    for(const key in windows) delete windows[key];
+    for (const key in tabs) delete tabs[key];
+    for (const key in lastTabsState) delete lastTabsState[key];
+    for (const key in windows) delete windows[key];
 }
 
 // TABS

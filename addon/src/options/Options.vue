@@ -15,6 +15,7 @@
     import Notification from '/js/notification.js';
     import * as Utils from '/js/utils.js';
     import * as Management from '/js/management.js';
+    import * as Containers from '/js/containers.js';
     import * as Bookmarks from '/js/bookmarks.js';
     import * as Storage from '/js/storage.js';
     import * as File from '/js/file.js';
@@ -64,6 +65,9 @@
             }
         }
     });
+
+    await Containers.init();
+    await Management.init();
 
     export default {
         name: Constants.MODULES.OPTIONS,

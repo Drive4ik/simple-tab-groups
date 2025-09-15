@@ -143,6 +143,7 @@ async function saveConsoleLogs() {
     let loadedWindows = await Promise.all(windows.map(Cache.loadWindowSession));
     loadedWindows = loadedWindows.filter(Boolean);
 
+    tabs.forEach(tab => delete tab.groupId); // TODO temp
     let loadedTabs = await Promise.all(tabs.map(Cache.loadTabSession));
     loadedTabs = loadedTabs.filter(Boolean);
 

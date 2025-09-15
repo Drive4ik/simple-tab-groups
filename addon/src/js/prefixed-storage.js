@@ -1,12 +1,22 @@
 
+/*
+const main = sessionStorage.create('main');
+main.mainKey = {};
+main.mainKey.mainKeyIncludes = {}
+main.mainKey.mainKeyIncludes.dynamicKey = 'dynamic-value';
+
+sessionStorage:
+"main/mainKey": "{}"
+"main/mainKey/mainKeyIncludes": "{}"
+"main/mainKey/mainKeyIncludes/dynamicKey": '"dynamic-value"'
+*/
+
 Storage.prototype.create = function(prefix, delimiter) {
     return createProxy(this, prefix, delimiter);
 }
 
-function createProxy(storage, prefixes, delimiter = '/') {
-    prefixes = [prefixes].flat().filter(Boolean);
-
-    const getKey = key => [...prefixes, key].filter(Boolean).join(delimiter);
+function createProxy(storage, prefix, delimiter = '/') {
+    const getKey = (key = '') => `${prefix}${delimiter}${key}`;
 
     const handler = {
         get(target, prop, receiver) {
@@ -17,12 +27,18 @@ function createProxy(storage, prefixes, delimiter = '/') {
             } else if (prop === 'removeItem') {
                 return prop => this.deleteProperty(target, prop);
             } else if (prop === 'clear') {
-                return () => {
-                    const prefix = getKey();
+                return (withSubStorages = false) => {
+                    if (withSubStorages) { // remove all with sub-storages, all keys which starts with prefix/
+                        const prefix = getKey();
 
-                    for (const key of Reflect.ownKeys(target)) {
-                        if (key.startsWith(prefix)) {
-                            Reflect.deleteProperty(target, key);
+                        for (const key of Reflect.ownKeys(target)) {
+                            if (key.startsWith(prefix)) {
+                                Reflect.deleteProperty(target, key);
+                            }
+                        }
+                    } else { // remove only keys which only in current prefix storage without sub-storages
+                        for (const key of Object.keys(receiver)) {
+                            Reflect.deleteProperty(target, getKey(key));
                         }
                     }
                 }
@@ -32,35 +48,39 @@ function createProxy(storage, prefixes, delimiter = '/') {
 
             try {
                 prop = getKey(prop);
-
                 const storageValue = Reflect.get(target, prop, receiver);
-
                 return JSON.parse(storageValue ?? null);
-            } catch (e) {
+            } catch {
                 return null;
             }
         },
         set(target, prop, value = null, receiver) {
             prop = getKey(prop);
-
             value = JSON.stringify(value, getCircularReplacer());
-
             return Reflect.set(target, prop, value, receiver);
         },
         has(target, prop) {
             prop = getKey(prop);
-
-            return prop in target;
+            return Reflect.has(target, prop);
         },
         ownKeys(target) {
             const prefix = getKey();
-
-            return Reflect.ownKeys(target).filter(key => key.startsWith(prefix));
+            return Reflect.ownKeys(target)
+                .filter(key => key.startsWith(prefix))
+                .map(key => key.replace(prefix, ''))
+                .filter(key => !key.includes(delimiter));
         },
         deleteProperty(target, prop) {
             prop = getKey(prop);
-
             return Reflect.deleteProperty(target, prop);
+        },
+        getOwnPropertyDescriptor(target, prop) { // need for ownKeys
+            return {
+                configurable: true,
+                enumerable: true,
+                writable: true,
+                // value: target[prop],
+            };
         },
     };
 

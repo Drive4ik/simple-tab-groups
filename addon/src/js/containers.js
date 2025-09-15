@@ -4,26 +4,26 @@ import Logger, {catchFunc} from './logger.js';
 import Notification from './notification.js';
 import * as Utils from './utils.js';
 import * as Groups from './groups.js';
+import * as Storage from './storage.js';
 import backgroundSelf from './background.js';
-import cacheStorage, {createStorage} from './cache-storage.js';
 
 const logger = new Logger('Containers');
 
-const containers = cacheStorage.containers ??= createStorage({});
+const containers = {};
 
 export const DEFAULT = {
     cookieStoreId: Constants.DEFAULT_COOKIE_STORE_ID,
     name: browser.i18n.getMessage('noContainerTitle'),
 };
 
-export const TEMPORARY = cacheStorage.TEMPORARY ??= createStorage({
+export const TEMPORARY = {
     color: 'toolbar',
     colorCode: false,
     cookieStoreId: Constants.TEMPORARY_CONTAINER,
     icon: Constants.TEMPORARY_CONTAINER_ICON,
     iconUrl: ConstantsBrowser.getContainerIconUrl(Constants.TEMPORARY_CONTAINER_ICON),
     name: browser.i18n.getMessage('temporaryContainerTitle'),
-});
+};
 
 const tmpUniq = Utils.getRandomInt();
 
@@ -34,18 +34,13 @@ if (Constants.IS_BACKGROUND_PAGE) {
     browser.contextualIdentities.onRemoved.addListener(catchFunc(onRemoved, logger));
 }
 
-export async function init(temporaryContainerTitle) {
-    const log = logger.start('init', {temporaryContainerTitle});
+export async function init() {
+    const log = logger.start('init');
+
+    const {temporaryContainerTitle} = await Storage.get('temporaryContainerTitle')
+        .catch(log.onCatch("can't get storage"));
 
     setTemporaryContainerTitle(temporaryContainerTitle);
-
-    // CONTAINER PROPS:
-    // color: "blue"
-    // colorCode: "#37adff"
-    // cookieStoreId: "firefox-container-1"
-    // icon: "fingerprint"
-    // iconUrl: "resource://usercontext-content/fingerprint.svg"
-    // name: "Personal"
 
     await load();
 
@@ -55,7 +50,8 @@ export async function init(temporaryContainerTitle) {
 export async function load(containersStorage = containers) {
     const log = logger.start('load');
 
-    const loadedContainers = await browser.contextualIdentities.query({}).catch(log.onCatch('cant load containers'));
+    const loadedContainers = await browser.contextualIdentities.query({})
+        .catch(log.onCatch('cant load containers'));
 
     for (const cookieStoreId in containersStorage) {
         delete containersStorage[cookieStoreId];
@@ -383,6 +379,7 @@ export async function removeUnusedTemporaryContainers(tabs, containersStorage = 
 }
 
 export function setTemporaryContainerTitle(temporaryContainerTitle) {
+    logger.log('setTemporaryContainerTitle', temporaryContainerTitle);
     TEMPORARY.name = temporaryContainerTitle;
 }
 

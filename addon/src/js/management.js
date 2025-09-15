@@ -3,13 +3,12 @@ import Logger, {catchFunc} from './logger.js';
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
 import * as Urls from './urls.js';
-import cacheStorage, {createStorage} from './cache-storage.js';
 
 const logger = new Logger(Constants.MODULES.MANAGEMENT);
 
 const storage = localStorage.create(Constants.MODULES.MANAGEMENT);
 
-const extensions = cacheStorage.extensions ??= createStorage({});
+const extensions = {};
 
 if (Constants.IS_BACKGROUND_PAGE) {
     const onChangedBinded = catchFunc(onChanged, logger);
@@ -28,14 +27,6 @@ export async function init() {
     log.stop();
 }
 
-async function onChanged({type}) {
-    if (type === browser.management.ExtensionType.EXTENSION) {
-        logger.log('onChanged', type);
-        await load();
-        detectConflictedExtensions();
-    }
-}
-
 async function load(extensionsStorage = extensions) {
     const log = logger.start('load');
 
@@ -45,7 +36,7 @@ async function load(extensionsStorage = extensions) {
 
     await Utils.wait(100);
 
-    const addons = await browser.management.getAll().catch(log.onCatch('cant load extensions'));
+    const addons = await browser.management.getAll().catch(log.onCatch("can't load extensions"));
 
     for (const addon of addons) {
         if (addon.type === browser.management.ExtensionType.EXTENSION) {
@@ -56,6 +47,14 @@ async function load(extensionsStorage = extensions) {
     log.stop();
 
     return extensionsStorage;
+}
+
+async function onChanged({type}) {
+    if (type === browser.management.ExtensionType.EXTENSION) {
+        logger.log('onChanged', arguments[0]);
+        await load();
+        detectConflictedExtensions();
+    }
 }
 
 export function isInstalled(id, extensionsStorage = extensions) {

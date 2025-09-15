@@ -1,4 +1,4 @@
-import '/js/cache-storage.js';
+
 import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
 import * as Messages from '/js/messages.js';
@@ -101,6 +101,11 @@ let reCreateTabsOnRemoveWindow = [],
             },
         };
     })();
+
+// TODO temp
+self.CacheTabs = Cache.tabs;
+self.CacheLastTabsState = Cache.lastTabsState;
+self.CacheWindows = Cache.windows;
 
 async function createTabsSafe(tabs, tryRestoreOpeners, hideTabs = true) {
     const log = logger.start('createTabsSafe', { tryRestoreOpeners, hideTabs }, tabs.map(tab => Utils.extractKeys(tab, [
@@ -1841,7 +1846,7 @@ function removeEvents() {
     removeListenerOnBeforeRequest();
 }
 
-window.addEventListener('unload', removeEvents);
+// window.addEventListener('unload', removeEvents);
 
 self.sendMessageFromBackground = Messages.sendMessageFromBackground;
 
@@ -2510,6 +2515,24 @@ async function onBackgroundMessage(message, sender) {
             case 'create-backup':
                 result.ok = await createBackup(data.includeTabFavIcons === true, data.includeTabThumbnails === true);
                 break;
+            case 'get-startup-data':
+                {
+                    const includeThumbnail = data.manage
+                        ? options.showTabsWithThumbnailsInManageGroups
+                        : false;
+
+                    [
+                        result.windows,
+                        {groups: result.groups},
+                    ] = await Promise.all([
+                        Windows.load(true, true, includeThumbnail),
+                        Groups.load(null, true, true, includeThumbnail),
+                    ]);
+
+                    result.ok = true;
+                }
+
+                break;
             default:
                 throw Error(`Action '${data.action}' is wrong`);
         }
@@ -3094,6 +3117,7 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
 
                     if (tabs.length) {
                         tabs.forEach(tab => delete tab.openerTabId);
+                        tabs.forEach(tab => delete tab.groupId); // TODO temp
 
                         await Promise.all(tabs.map(tab => Tabs.createNative(Utils.normalizeTabUrl(tab))));
 
@@ -3690,6 +3714,7 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
                     });
 
                     await Promise.allSettled(tabs.map(async tab => {
+                        delete tab.groupId; // TODO temp
                         const groupId = await browser.sessions.getTabValue(tab.id, 'groupId');
                         const newGroupId = groupIdsMap.get(groupId);
 

@@ -77,6 +77,8 @@ export async function createNative({url, active, pinned, title, index, windowId,
 
     const newTab = await browser.tabs.create(tab);
 
+    delete newTab.groupId; // TODO temp
+
     Cache.setTab(newTab);
 
     Cache.applySession(newTab, {groupId, favIconUrl, thumbnail});
@@ -191,6 +193,8 @@ export async function get(
 
     let tabs = await browser.tabs.query(query);
 
+    tabs.forEach(tab => delete tab.groupId); // TODO temp
+
     if (!query.pinned) {
         tabs = await Promise.all(
             tabs.map(tab => Cache.loadTabSession(Utils.normalizeTabUrl(tab), includeFavIconUrl, includeThumbnail))
@@ -205,7 +209,8 @@ export async function get(
 
 export async function getOne(id) {
     try {
-        let tab = await browser.tabs.get(id);
+        const tab = await browser.tabs.get(id);
+        delete tab.groupId; // TODO temp
         return Utils.normalizeTabUrl(tab);
     } catch (e) {
         return null;
@@ -213,10 +218,8 @@ export async function getOne(id) {
 }
 
 export async function getList(tabIds, includeFavIconUrl, includeThumbnail) {
-    let tabs = await Promise.all(tabIds.map(id => {
-        return browser.tabs.get(id)
-            .then(tab => Cache.loadTabSession(Utils.normalizeTabUrl(tab), includeFavIconUrl, includeThumbnail))
-            .catch(() => {});
+    const tabs = await Promise.all(tabIds.map(id => {
+        return getOne(id).then(tab => Cache.loadTabSession(tab, includeFavIconUrl, includeThumbnail));
     }));
 
     return tabs.filter(Boolean);
@@ -568,6 +571,7 @@ async function filterExist(tabs, returnTabIds = false) {
             .then(returnFunc, log.onCatch(['not found tab', tab], false));
     }));
     tabs = tabs.filter(Boolean);
+    tabs.forEach(tab => delete tab.groupId); // TODO temp
 
     log.assert(lengthBefore === tabs.length, 'tabs length after filter are not equal. not found tabs:',
         tabIds.filter(tabId => !tabs.some(tab => tab.id === tabId)));

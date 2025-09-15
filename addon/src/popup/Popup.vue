@@ -27,7 +27,6 @@
 
     import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
     import optionsMixin from '/js/mixins/options.mixin.js';
-    import startUpDataMixin from '/js/mixins/start-up-data.mixin.js';
     import syncCloudMixin from '/js/mixins/sync-cloud.mixin.js';
 
     const isSidebar = '#sidebar' === window.location.hash;
@@ -44,6 +43,11 @@
         document.getElementById('loading').classList.toggle('is-hidden', !show);
     }
 
+    const {sendMessage} = Messages.connectToBackground(MODULE_NAME + '-temp');
+
+    const startUpDataPromise = sendMessage('get-startup-data');
+    await Containers.init();
+
     const SECTION_SEARCH = 'search',
         SECTION_GROUPS_LIST = 'groupsList',
         SECTION_GROUP_TABS = 'groupTabs',
@@ -52,7 +56,7 @@
 
     export default {
         name: Constants.MODULES.POPUP,
-        mixins: [defaultGroupMixin, optionsMixin, startUpDataMixin, syncCloudMixin],
+        mixins: [defaultGroupMixin, optionsMixin, syncCloudMixin],
         data() {
             return {
                 enableDebug: mainStorage.enableDebug,
@@ -123,9 +127,9 @@
 
             await this.optionsLoadPromise;
 
-            const startUpData = await this.startUpData();
+            const startUpData = await startUpDataPromise;
 
-            this.loadWindows(startUpData);
+            await this.loadWindows(startUpData);
             this.loadGroups(startUpData);
             this.loadUnsyncedTabs(startUpData);
 
@@ -232,8 +236,8 @@
         methods: {
             lang: browser.i18n.getMessage,
 
-            async loadWindows({currendWindow, windows} = {}) {
-                this.currentWindow = currendWindow || await Windows.get();
+            async loadWindows({windows} = {}) {
+                this.currentWindow = await Windows.get();
                 this.openedWindows = windows || await Windows.load();
             },
 
@@ -690,19 +694,22 @@
 
                 this.multipleTabIds = [];
             },
-            async loadUnsyncedTabs({unSyncTabs} = {}) {
-                if (unSyncTabs) {
-                    return this.unSyncTabs = unSyncTabs.map(this.mapTab, this);
+            async loadUnsyncedTabs({windows} = {}) {
+                windows ??= await Windows.load(true, true);
+
+                const tabs = [];
+
+                for (const win of windows) {
+                    if (win.id === this.currentWindow.id) {
+                        for (const tab of win.tabs) {
+                            if (!tab.groupId) {
+                                tabs.push(tab);
+                            }
+                        }
+                    }
                 }
 
-                let windows = await Windows.load(true, true);
-
-                this.unSyncTabs = windows
-                    .reduce(function(acc, win) {
-                        win.tabs.forEach(tab => !tab.groupId && acc.push(tab));
-                        return acc;
-                    }, [])
-                    .map(this.mapTab, this);
+                this.unSyncTabs = tabs.map(this.mapTab, this);
             },
 
             showPrompt(title, value) {
@@ -1551,7 +1558,7 @@
                 </div>
 
                 <div v-if="unSyncTabs.length && !showUnSyncTabs">
-                    <hr>
+                    <hr class="is-display-block" />
                     <div class="item" tabindex="0" @click="showUnSyncTabs = true" @keydown.enter="showUnSyncTabs = true">
                         <figure class="item-icon image is-16x16">
                             <img src="/icons/arrow-down.svg" />
@@ -1561,7 +1568,7 @@
                 </div>
 
                 <div v-if="unSyncTabs.length && showUnSyncTabs" class="not-sync-tabs">
-                    <hr>
+                    <hr class="is-display-block" />
                     <p class="mb-3">
                         <span v-text="lang('foundHiddenUnSyncTabsDescription')"></span>
                         <ul>
