@@ -94,21 +94,27 @@ export default class GithubGist {
         return null;
     }
 
-    async getInfo() {
+    async getInfo(revision = null) {
         this.hasGist || await this.#findGist();
 
         if (!this.hasGist) {
             throw Error('githubNotFound');
         }
 
-        const gist = await this.#request('GET', this.#gistUrl);
+        let gistUrl = this.#gistUrl;
+
+        if (revision) {
+            gistUrl += `/${revision}`;
+        }
+
+        const gist = await this.#request('GET', gistUrl);
 
         return this.#processInfo(gist);
     }
 
-    async getContent(withInfo = false) {
+    async getContent(revision, withInfo = false) {
         try {
-            const gist = await this.getInfo();
+            const gist = await this.getInfo(revision);
 
             const file = gist.files[this.#fileName];
 

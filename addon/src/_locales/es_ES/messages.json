@@ -127,7 +127,7 @@
         "message": "Carga un archivo de respaldo que contenga los grupos de pestañas que deseas restaurar.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsButton": {
+    "restoreBackup": {
         "message": "Restaurar respaldo",
         "description": "Restore backup"
     },
@@ -574,10 +574,6 @@
     "intervalKeyDays": {
         "message": "día(s)",
         "description": "day(s)"
-    },
-    "autoBackupLastBackupTitle": {
-        "message": "Último respaldo",
-        "description": "Last backup"
     },
     "darkColorSchemeNotification": {
         "message": "Para darle soporte adecuado al tema oscuro, establece el parámetro <code>svg.context-properties.content.enabled</code> como <code>true</code> en <code>about:config</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">¿Cómo hacerlo?</a>",

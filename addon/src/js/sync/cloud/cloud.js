@@ -40,8 +40,14 @@ export function CloudError(langId) {
 export const LOCAL = 'local';
 export const CLOUD = 'cloud';
 
-export async function sync(trust = null, progressFunc = null) {
-    const log = logger.start('sync', {trust});
+export async function sync(trust = null, revision = null, progressFunc = null) {
+    const isRestoring = !!revision;
+
+    if (isRestoring) {
+        trust = CLOUD;
+    }
+
+    const log = logger.start('sync', {trust, isRestoring});
 
     if (trust && trust !== LOCAL && trust !== CLOUD) {
         log.throwError('unknown source of trust argument');
@@ -89,7 +95,7 @@ export async function sync(trust = null, progressFunc = null) {
     let cloudData, cloudInfo;
 
     try {
-        [cloudData, cloudInfo] = await Cloud.getContent(true);
+        [cloudData, cloudInfo] = await Cloud.getContent(revision, true);
     } catch (e) {
         if (e.message === 'githubNotFound') {
             //
@@ -129,7 +135,7 @@ export async function sync(trust = null, progressFunc = null) {
     localData.syncId = localLastUpdate;
     cloudData.syncId = cloudLastUpdate;
 
-    const syncResult = await syncData(localData, cloudData, sourceOfTruth);
+    const syncResult = await syncData(localData, cloudData, sourceOfTruth).catch(log.onCatch('cant sync'));
 
     delete syncResult.localData.syncId;
     delete syncResult.cloudData.syncId;
@@ -143,7 +149,7 @@ export async function sync(trust = null, progressFunc = null) {
     //     cloudUpdate: cloudInfo.lastUpdate,
     // });
 
-    if (!hasCloudData) {
+    if (!hasCloudData || isRestoring) {
         syncResult.changes.cloud = true;
     }
 
@@ -243,7 +249,10 @@ export async function sync(trust = null, progressFunc = null) {
 }
 
 async function syncData(localData, cloudData, sourceOfTruth) {
-    const log = logger.start('syncData');
+    const log = logger.start('syncData', {
+        localVersion: localData.version,
+        cloudVersion: cloudData.version,
+    });
 
     const resultMigrate = await backgroundSelf.runMigrateForData(cloudData, false);
 

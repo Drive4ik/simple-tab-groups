@@ -119,7 +119,7 @@
         "message": "Muat file cadangan yang berisi grup tab yang ingin Anda pulihkan.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsButton": {
+    "restoreBackup": {
         "message": "Pulihkan cadangan",
         "description": "Restore backup"
     },
@@ -550,10 +550,6 @@
     "intervalKeyDays": {
         "message": "hari",
         "description": "day(s)"
-    },
-    "autoBackupLastBackupTitle": {
-        "message": "Cadangan terakhir",
-        "description": "Last backup"
     },
     "darkColorSchemeNotification": {
         "message": "Untuk mendukung sepenuhnya tema gelap, aktifkan parameter <code>svg.context-properties.content.enabled</code> ke <code>true</code> pada halaman <code>about:config</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Bagaimana cara melakukannya?</a>",

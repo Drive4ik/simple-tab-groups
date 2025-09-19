@@ -1,21 +1,19 @@
 <script>
-    'use strict';
-
-    export default {
-        props: {
-            title: {
-                type: String,
-                default: 'groupSettings',
-            },
-            buttons: {
-                required: true,
-                type: Array,
-            },
+export default {
+    props: {
+        title: {
+            type: String,
+            default: 'groupSettings',
         },
-        methods: {
-            lang: browser.i18n.getMessage,
+        buttons: {
+            required: true,
+            type: Array,
         },
-    }
+    },
+    methods: {
+        lang: browser.i18n.getMessage,
+    },
+}
 </script>
 
 <template>

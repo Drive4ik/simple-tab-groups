@@ -127,7 +127,7 @@
         "message": "加载一个备份文件，以恢复你的标签页群组。",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsButton": {
+    "restoreBackup": {
         "message": "恢复备份",
         "description": "Restore backup"
     },
@@ -574,10 +574,6 @@
     "intervalKeyDays": {
         "message": "天",
         "description": "day(s)"
-    },
-    "autoBackupLastBackupTitle": {
-        "message": "最后一次备份",
-        "description": "Last backup"
     },
     "darkColorSchemeNotification": {
         "message": "要完整支持暗色主题，在<br><code>about:config</code> 页面修改<br><code>svg.context-properties.content.enabled</code> 参数为 <code>true</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">怎么做？</a>",

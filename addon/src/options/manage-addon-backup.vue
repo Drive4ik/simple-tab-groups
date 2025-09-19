@@ -1,6 +1,4 @@
 <script>
-    'use strict';
-
     import * as Constants from '/js/constants.js';
     import * as Containers from '/js/containers.js';
     import * as Groups from '/js/groups.js';

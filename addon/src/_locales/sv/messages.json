@@ -115,7 +115,7 @@
         "message": "Återställ flikar och inställningar från en fil som innehåller en säkerhetskopia.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsButton": {
+    "restoreBackup": {
         "message": "Återställ från säkerhetskopia",
         "description": "Restore backup"
     },
@@ -476,10 +476,6 @@
     "intervalKeyDays": {
         "message": "dagar",
         "description": "day(s)"
-    },
-    "autoBackupLastBackupTitle": {
-        "message": "Senaste säkerhetskopia",
-        "description": "Last backup"
     },
     "darkColorSchemeNotification": {
         "message": "För att det mörka temat skall visas korrekt överallt, sätt <code>svg.context-properties.content.enabled</code>-inställningen till <code>true</code> på <code>about:config</code>-sidan. Klicka <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">här</a> för ytterligare instruktioner.",

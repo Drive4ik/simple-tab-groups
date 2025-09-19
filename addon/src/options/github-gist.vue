@@ -1,5 +1,6 @@
 <script>
 
+import popup from '../components/popup.vue';
 import GithubGistFields from './github-gist-fields.vue';
 
 import '/js/prefixed-storage.js';
@@ -9,8 +10,8 @@ import * as Storage from '/js/storage.js';
 import * as Utils from '/js/utils.js';
 import * as Urls from '/js/urls.js';
 import * as SyncStorage from '/js/sync/sync-storage.js';
+import * as Cloud from '/js/sync/cloud/cloud.js';
 import GithubGist from '/js/sync/cloud/githubgist.js';
-import {CloudError, LOCAL, CLOUD} from '/js/sync/cloud/cloud.js';
 
 import syncCloudMixin from '/js/mixins/sync-cloud.mixin.js';
 
@@ -20,13 +21,15 @@ export default {
     name: 'github-gist',
     mixins: [syncCloudMixin],
     data() {
-        this.LOCAL = LOCAL;
-        this.CLOUD = CLOUD;
+        this.LOCAL = Cloud.LOCAL;
+        this.CLOUD = Cloud.CLOUD;
 
         this.browserName = `${Constants.BROWSER_FULL_NAME} v${Constants.BROWSER.version}`;
         this.helpLink = Urls.getURL('how-to-github-gist');
 
         return {
+            confirmRestoreBackupItem: null,
+
             sync: {
                 title: 'syncOptionLocatedFFSync',
                 disabled: !SyncStorage.IS_AVAILABLE,
@@ -62,6 +65,7 @@ export default {
         };
     },
     components: {
+        popup,
         GithubGistFields,
     },
     watch: {
@@ -93,6 +97,10 @@ export default {
             }
 
             return false;
+        },
+        isCredentialsChanged() {
+            return this.area.options.githubGistToken !== this.area.optionsBackup.githubGistToken ||
+                this.area.options.githubGistFileName !== this.area.optionsBackup.githubGistFileName;
         },
     },
     created() {
@@ -139,6 +147,10 @@ export default {
             await Storage.set({...this.local.options});
         },
 
+        formatDate(date, options = {}) {
+            return date.toLocaleString(Utils.UI_LANG, {timeStyle: 'short', ...options});
+        },
+
         async loadGistInfo(area, resetState = true) {
             if (resetState) {
                 area.error = '';
@@ -157,6 +169,28 @@ export default {
             const gist = await GithubGistCloud.getInfo().catch(e => false);
 
             if (gist) {
+                const history = gist.history.map((item, index) => {
+                    delete item.user;
+
+                    item.committed_at_date = new Date(item.committed_at);
+                    item.committed_at_relative = Utils.relativeTime(item.committed_at_date);
+
+                    const prevItem = gist.history[index - 1];
+
+                    if (prevItem?.committed_at_relative === item.committed_at_relative) {
+                        item.committed_at_time_short = this.formatDate(item.committed_at_date);
+                        prevItem.committed_at_time_short ??= this.formatDate(prevItem.committed_at_date);
+                    }
+
+                    item.committed_at_full = this.formatDate(item.committed_at_date, {dateStyle: 'full'});
+                    item.web_url = `${gist.html_url}/${item.version}`;
+                    item.version_short = item.version.slice(0, 5);
+
+                    return item;
+                });
+
+                const lastUpdate = new Date(gist.updated_at);
+
                 area.gist = {
                     breadcrumb: [
                         {
@@ -170,8 +204,10 @@ export default {
                             // isBold: true,
                         },
                     ],
-                    lastUpdateAgo: Utils.relativeTime(gist.updated_at),
-                    lastUpdateFull: new Date(gist.updated_at).toLocaleString(Utils.UI_LANG, {timeZoneName: 'longOffset'}),
+                    lastUpdateAgo: Utils.relativeTime(lastUpdate),
+                    lastUpdateFull: this.formatDate(lastUpdate, {dateStyle: 'full'}),
+                    lastUpdateISO: lastUpdate.toISOString(),
+                    history,
                 };
             } else {
                 area.gist = false;
@@ -193,7 +229,7 @@ export default {
                 await area.save();
                 await area.load();
             } catch ({message}) {
-                area.error = new CloudError(message).toString();
+                area.error = new Cloud.CloudError(message).toString();
             } finally {
                 area.loading = false;
             }
@@ -202,10 +238,7 @@ export default {
         async startCloudSync(trust) {
             this.area.error = '';
 
-            if (
-                this.area.options.githubGistToken !== this.area.optionsBackup.githubGistToken ||
-                this.area.options.githubGistFileName !== this.area.optionsBackup.githubGistFileName
-            ) {
+            if (this.isCredentialsChanged) {
                 await this.save(this.area);
 
                 if (this.showTrustSyncButtons || this.area.error) {
@@ -214,6 +247,10 @@ export default {
             }
 
             await this.syncCloud(trust);
+        },
+
+        async restoreBackup({version}) {
+            await this.syncCloud(Cloud.CLOUD, version);
         },
     },
 };
@@ -291,10 +328,7 @@ export default {
                         <div v-if="area.gist" class="is-flex is-align-items-center gap-indent">
                             <div class="breadcrumb mb-0">
                                 <ul class="is-align-items-center">
-                                    <li
-                                        v-for="(breadcrumb, i) in area.gist.breadcrumb"
-                                        :key="i"
-                                        >
+                                    <li v-for="(breadcrumb, i) in area.gist.breadcrumb" :key="i">
                                         <a :href="breadcrumb.url" :class="{'has-text-weight-semibold': breadcrumb.isBold}" target="_blank" rel="noreferrer noopener">
                                             <figure v-show="breadcrumb.imageLoaded" class="image is-24x24 mr-2">
                                                 <img :src="breadcrumb.image" @load="breadcrumb.imageLoaded = true" decoding="async" />
@@ -305,8 +339,58 @@ export default {
                                     </li>
                                 </ul>
                             </div>
-                            <span class="tag is-dark is-rounded" v-text="lang('githubSecretTitle')"></span>
-                            <span :title="area.gist.lastUpdateFull" v-text="lang('lastUpdateAgo', area.gist.lastUpdateAgo)"></span>
+                            <span class="tag is-rounded" v-text="lang('githubSecretTitle')"></span>
+                            <span>
+                                <span class="colon" v-text="lang('lastUpdate')"></span>
+                                <time class="is-underline-dotted" :title="area.gist.lastUpdateFull" :datetime="area.gist.lastUpdateISO" v-text="area.gist.lastUpdateAgo"></time>
+                            </span>
+                            <div v-if="area.gist.history.length" class="dropdown focus-within">
+                                <div class="dropdown-trigger">
+                                    <button
+                                        type="button"
+                                        class="button is-ghost"
+                                        aria-haspopup="true"
+                                        aria-controls="restore-dropdown-menu"
+                                        :disabled="isCredentialsChanged"
+                                        >
+                                        <span v-text="lang('restoreBackup')"></span>
+                                        <span class="icon">
+                                            <figure class="image is-16x16">
+                                                <img src="/icons/arrow-down.svg" />
+                                            </figure>
+                                        </span>
+                                    </button>
+                                </div>
+                                <div class="dropdown-menu" id="restore-dropdown-menu" role="menu">
+                                    <div class="dropdown-content">
+                                        <a
+                                            v-for="item in area.gist.history"
+                                            :key="item.version"
+                                            class="dropdown-item"
+                                            :title="lang('restoreBackup') + `: &quot;${item.version_short}&quot; ${item.committed_at_full}`"
+                                            @click.prevent="confirmRestoreBackupItem = item"
+                                            tabindex="0"
+                                            >
+                                            <code>
+                                                <a
+                                                    :href="item.web_url"
+                                                    target="_blank"
+                                                    rel="noreferrer noopener"
+                                                    @click.stop
+                                                    :title="lang('viewBackup') + `: &quot;${item.version_short}&quot;`"
+                                                    v-text="item.version_short"
+                                                    ></a>
+                                            </code>
+                                            <span class="is-underline-dotted" v-text="item.committed_at_relative"></span>
+                                            <span v-text="item.committed_at_time_short"></span>
+                                            <small v-if="item.change_status?.total" class="brackets-round">
+                                                <span class="colon">changes</span>
+                                                <span class="changes" v-text="item.change_status.total"></span>
+                                            </small>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <figure v-else-if="area.gist === null" class="image is-16x16">
                             <img src="/icons/animate-spinner.svg">
@@ -391,35 +475,45 @@ export default {
                 </div>
             </div>
         </div>
+
+        <popup
+            v-if="confirmRestoreBackupItem"
+            :title="lang('restoreBackup')"
+            @restore="restoreBackup(confirmRestoreBackupItem); confirmRestoreBackupItem = null"
+            @close-popup="confirmRestoreBackupItem = null"
+            :buttons="
+                [{
+                    event: 'restore',
+                    classList: 'is-primary is-soft',
+                    lang: 'restoreBackup',
+                    focused: true,
+                }, {
+                    event: 'close-popup',
+                    lang: 'cancel',
+                }]
+            ">
+            <div class="block">
+                <span v-text="lang('areYouSureRestoreBackup')"></span>
+                <a :href="confirmRestoreBackupItem.web_url" target="_blank" rel="noreferrer noopener" :title="lang('viewBackup')">
+                    <span class="tag is-medium" v-text="confirmRestoreBackupItem.version_short"></span>
+                    <span v-text="confirmRestoreBackupItem.committed_at_full"></span>
+                </a>
+            </div>
+            <strong v-text="lang('overwriteCurrent')"></strong>
+        </popup>
+
     </div>
 </template>
 
 
 <style>
-/* html[data-theme="dark"] {
-    .box {
-        color: var(--text-color);
-        --background-color: #313131;
-        background-color: var(--background-color);
 
-        .subtitle {
-            color: #cecece;
-        }
-    }
-
+#restore-dropdown-menu {
     .dropdown-content {
-        background-color: var(--background-color);
-
-        .dropdown-item {
-            color: var(--text-color);
-        }
-
-        a.dropdown-item:hover,
-        button.dropdown-item:hover {
-            background-color: hsl(from var(--background-color) h s calc(l + 10));
-        }
+        max-height: 30em;
+        overflow: auto;
     }
-} */
+}
 
 .simple-progress {
     display: flex;

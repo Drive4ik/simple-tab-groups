@@ -127,7 +127,7 @@
         "message": "Carica un file di backup con i gruppi di schede da ripristinare",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsButton": {
+    "restoreBackup": {
         "message": "Ripristina da backup",
         "description": "Restore backup"
     },
@@ -574,10 +574,6 @@
     "intervalKeyDays": {
         "message": "giorno/i",
         "description": "day(s)"
-    },
-    "autoBackupLastBackupTitle": {
-        "message": "Ultimo backup",
-        "description": "Last backup"
     },
     "darkColorSchemeNotification": {
         "message": "Per abilitare completamente il tema scuro, modificare il parametro <code>svg.context-properties.content.enabled</code> in <code>true</code> all'interno della pagina <code>about:config</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Per maggiori informazioni, clicca qui</a>",

@@ -22,6 +22,7 @@ const DELETE_LOG_LINE_STARTS_WITH = [
     'setLoggerFuncs',
     'sendMessage',
     'sendExternalMessage',
+    'getArgumentsModuleCall',
 ];
 
 export function getStack(e, start = 0, to = 50) {

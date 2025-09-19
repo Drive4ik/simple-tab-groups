@@ -127,7 +127,7 @@
         "message": "復元するバックアップファイルを読み込んでください",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsButton": {
+    "restoreBackup": {
         "message": "バックアップを復元",
         "description": "Restore backup"
     },
@@ -574,10 +574,6 @@
     "intervalKeyDays": {
         "message": "日毎",
         "description": "day(s)"
-    },
-    "autoBackupLastBackupTitle": {
-        "message": "最新のバックアップ",
-        "description": "Last backup"
     },
     "darkColorSchemeNotification": {
         "message": "ダークテーマをフルサポートにするために <code>svg.context-properties.content.enabled</code> のパラメータを <code>true</code> へ変更してください <code>about:config</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">How to do it?</a>",

@@ -1,6 +1,4 @@
 <script>
-    'use strict';
-
     // import Vue from 'vue';
 
     import popup from './popup.vue';

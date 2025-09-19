@@ -139,9 +139,13 @@
         "message": "Load a backup file containing the tab groups you want to restore.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsButton": {
+    "restoreBackup": {
         "message": "Restore backup",
         "description": "Restore backup"
+    },
+    "viewBackup": {
+        "message": "View backup",
+        "description": "View backup"
     },
     "importSettingsOldTabGroupsAddonTitle": {
         "message": "Restore Quicksaver's \"Tab Groups\"",
@@ -586,10 +590,6 @@
     "intervalKeyDays": {
         "message": "day(s)",
         "description": "day(s)"
-    },
-    "autoBackupLastBackupTitle": {
-        "message": "Last backup",
-        "description": "Last backup"
     },
     "darkColorSchemeNotification": {
         "message": "To fully support the dark theme, enable the <code>svg.context-properties.content.enabled</code> parameter to <code>true</code> on the <code>about:config</code> page. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">How to do it?</a>",
@@ -1221,6 +1221,14 @@
             }
         }
     },
+    "areYouSureRestoreBackup": {
+        "message": "Are you sure you want to restore the backup:",
+        "description": "Are you sure you want to restore the backup:"
+    },
+    "overwriteCurrent": {
+        "message": "This action will overwrite current data!",
+        "description": "This action will overwrite current data!"
+    },
     "fileNameTitle": {
         "message": "File name",
         "description": "File name"
@@ -1233,15 +1241,9 @@
         "message": "Help",
         "description": "Help"
     },
-    "lastUpdateAgo": {
-        "message": "Last update: $relativeTime$",
-        "description": "Last update/active relative time",
-        "placeholders": {
-            "relativeTime": {
-                "content": "$1",
-                "example": "5 days ago"
-            }
-        }
+    "lastUpdate": {
+        "message": "Last update",
+        "description": "Last update/active relative time"
     },
     "syncStart": {
         "message": "Start synchronization",

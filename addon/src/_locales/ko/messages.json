@@ -119,7 +119,7 @@
         "message": "복원하려는 탭 그룹이 포함된 백업 파일을 로드합니다.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsButton": {
+    "restoreBackup": {
         "message": "백업 복원",
         "description": "Restore backup"
     },
@@ -538,10 +538,6 @@
     "intervalKeyDays": {
         "message": "날짜(s)",
         "description": "day(s)"
-    },
-    "autoBackupLastBackupTitle": {
-        "message": "마지막 백업",
-        "description": "Last backup"
     },
     "darkColorSchemeNotification": {
         "message": "어두운 테마를 완전히 지원하려면 <code>about:config</code> 페이지에서 <code>svg.context-properties.content.enabled</code> 매개변수를 <code>true</code>로 활성화하세요. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">어떻게 해야 하나요?</a>",

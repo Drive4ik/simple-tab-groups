@@ -70,6 +70,10 @@ input {
     content: ":";
 }
 
+.is-underline-dotted {
+    text-decoration: underline dotted;
+}
+
 .gap-indent {
     gap: var(--gap-indent);
 }
@@ -135,6 +139,16 @@ input {
             align-self: normal;
             margin: 0;
         }
+    }
+}
+
+.dropdown {
+    &.focus-within:focus-within .dropdown-menu {
+        display: block;
+    }
+
+    .dropdown-item {
+        font-size: var(--bulma-body-font-size);
     }
 }
 

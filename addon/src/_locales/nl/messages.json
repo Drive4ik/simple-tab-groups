@@ -127,7 +127,7 @@
         "message": "Laad een reservekopie van de tabgroepen die je wilt herstellen.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsButton": {
+    "restoreBackup": {
         "message": "Reservekopie herstellen",
         "description": "Restore backup"
     },
@@ -574,10 +574,6 @@
     "intervalKeyDays": {
         "message": "dag(en)",
         "description": "day(s)"
-    },
-    "autoBackupLastBackupTitle": {
-        "message": "Laatste reservekopie",
-        "description": "Last backup"
     },
     "darkColorSchemeNotification": {
         "message": "Voor een volledige ondersteuning van het donkere thema, zet u parameter <code>svg.context-properties.content.enabled</code> op <code>true</code> via de <code>about:config</code> pagina. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Configuratie-editor voor Firefox</a>",

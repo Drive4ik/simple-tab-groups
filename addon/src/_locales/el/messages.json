@@ -119,7 +119,7 @@
         "message": "Φόρτωμα αντιγράφου ασφαλείας που περιέχει τα tab groups που θέλετε να επαναφέρετε.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsButton": {
+    "restoreBackup": {
         "message": "Επαναφορά από backup",
         "description": "Restore backup"
     },
@@ -530,10 +530,6 @@
     "intervalKeyDays": {
         "message": "ημέρα(ες)",
         "description": "day(s)"
-    },
-    "autoBackupLastBackupTitle": {
-        "message": "Τελευταίο backup",
-        "description": "Last backup"
     },
     "darkColorSchemeNotification": {
         "message": "Για πλήρη υποστήριξη του dark theme, ενεργοποιείστε την <code>svg.context-properties.content.enabled</code> παράμετρο σε <code>true</code> στην <code>about:config</code> σελίδα. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">How to do it?</a>",

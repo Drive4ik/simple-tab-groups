@@ -127,7 +127,7 @@
         "message": "Načíst záložní soubor obsahující skupiny panelů, které chcete obnovit.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsButton": {
+    "restoreBackup": {
         "message": "Obnovit zálohu",
         "description": "Restore backup"
     },
@@ -574,10 +574,6 @@
     "intervalKeyDays": {
         "message": "den/dny",
         "description": "day(s)"
-    },
-    "autoBackupLastBackupTitle": {
-        "message": "Poslední záloha",
-        "description": "Last backup"
     },
     "darkColorSchemeNotification": {
         "message": "Pro plnou podporu tmavého tématu je potřeba přepnout parametr <code>svg.context-properties.content.enabled</code> na <code>true</code> na stránce <code>about:config</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Jak na to?</a>",

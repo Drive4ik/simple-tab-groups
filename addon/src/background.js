@@ -29,7 +29,7 @@ import * as Windows from '/js/windows.js';
 import * as Management from '/js/management.js';
 import * as Bookmarks from '/js/bookmarks.js';
 // import * as Hotkeys from '/js/hotkeys.js';
-import {sync} from '/js/sync/cloud/cloud.js';
+import * as Cloud from '/js/sync/cloud/cloud.js';
 
 const storage = localStorage.create(Constants.MODULES.BACKGROUND);
 
@@ -1767,13 +1767,20 @@ const onPermissionsChanged = catchFunc(async function onPermissionsChanged({orig
 }, logger);
 
 async function onAlarm({name}) {
-    logger.info('onAlarm', {name});
+    const log = logger.start('onAlarm', {name});
 
     if (name === LOCAL_BACKUP_ALARM_NAME) {
-        createBackup(options.autoBackupIncludeTabFavIcons, options.autoBackupIncludeTabThumbnails, true);
+        await createBackup(options.autoBackupIncludeTabFavIcons, options.autoBackupIncludeTabThumbnails, true)
+            .catch(log.onCatch(["can't createBackup()", {
+                autoBackupIncludeTabFavIcons: options.autoBackupIncludeTabFavIcons,
+                autoBackupIncludeTabThumbnails: options.autoBackupIncludeTabThumbnails,
+            }]));
     } else if (name === CLOUD_SYNC_ALARM_NAME) {
-        cloudSync(true);
+        await cloudSync(true)
+            .catch(log.onCatch("can't cloudSync(true)"));
     }
+
+    log.stop();
 }
 
 // wait for reload addon if found update
@@ -2947,7 +2954,7 @@ async function clearAddon(reloadAddonOnFinish = true) {
     }
 }
 
-async function cloudSync(auto = false, trust = null) {
+async function cloudSync(auto = false, trust = null, revision = null) {
     const log = logger.start('cloudSync', {auto});
 
     let ok = false;
@@ -2955,7 +2962,7 @@ async function cloudSync(auto = false, trust = null) {
     try {
         sendMessageFromBackground('sync-start');
 
-        const syncResult = await sync(trust, progress => {
+        const syncResult = await Cloud.sync(trust, revision, progress => {
             log.log('progress', progress);
             sendMessageFromBackground('sync-progress', {progress});
         });
@@ -2968,9 +2975,14 @@ async function cloudSync(auto = false, trust = null) {
         return syncResult;
     } catch (e) {
         if (auto) {
-            Notification(e, {
-                onClick: () => Urls.openOptionsPage('backup sync'),
-            });
+            const isInvalidToken = e.id === 'githubInvalidToken';
+            const isNetworkError = e.message.startsWith('NetworkError');
+
+            if (!isNetworkError && !isInvalidToken) {
+                Notification(e, {
+                    onClick: () => Urls.openOptionsPage('backup sync'),
+                });
+            }
         }
 
         log.logError('cant sync', e);

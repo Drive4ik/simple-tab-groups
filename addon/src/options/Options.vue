@@ -1,6 +1,4 @@
 <script>
-    'use strict';
-
     import Vue from 'vue';
 
     import popup from '../components/popup.vue';
@@ -90,7 +88,16 @@
             this.SECTION_BACKUP = SECTION_BACKUP;
             this.SECTION_ABOUT = SECTION_ABOUT;
 
-            this.autoBackupLastTimeStamp = localStorage.create(Constants.MODULES.BACKGROUND).autoBackupLastTimeStamp;
+            const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
+
+            if (mainStorage.autoBackupLastTimeStamp) {
+                const lastBackupDate = new Date(mainStorage.autoBackupLastTimeStamp * 1000);
+                this.lastAutoBackup = {
+                    ago: Utils.relativeTime(lastBackupDate),
+                    full: lastBackupDate.toLocaleString(Utils.UI_LANG, {dateStyle: 'full', timeStyle: 'short'}),
+                    ISO: lastBackupDate.toISOString(),
+                };
+            }
 
             return {
                 section,
@@ -1021,10 +1028,15 @@
 
                     <div class="field is-horizontal">
                         <div class="field-label">
-                            <label class="label colon" v-text="lang('autoBackupLastBackupTitle')"></label>
+                            <label class="label colon" v-text="lang('lastUpdate')"></label>
                         </div>
                         <div class="field-body">
-                            <span v-if="autoBackupLastTimeStamp > 1" v-text="new Date(autoBackupLastTimeStamp * 1000).toLocaleString()"></span>
+                            <time
+                                v-if="lastAutoBackup"
+                                class="is-underline-dotted"
+                                :title="lastAutoBackup.full"
+                                :datetime="lastAutoBackup.ISO"
+                                v-text="lastAutoBackup.ago"></time>
                             <span v-else>&mdash;</span>
                         </div>
                     </div>
@@ -1104,7 +1116,7 @@
                                         <img src="/icons/icon.svg" />
                                     </figure>
                                 </span>
-                                <span v-text="lang('importAddonSettingsButton')"></span>
+                                <span v-text="lang('restoreBackup')"></span>
                             </button>
                         </div>
                     </div>
@@ -1438,7 +1450,7 @@
                 @clear-addon-data-update="value =>
                     Object.assign($refs.mng.buttonsClone[0], value ?
                         {lang: 'eraseAndImportAddonBackupButton', classList: 'is-danger'} :
-                        {lang: 'importAddonSettingsButton', classList: 'is-primary'})
+                        {lang: 'restoreBackup', classList: 'is-primary'})
                 "
                 ></manage-addon-backup>
         </popup>

@@ -127,7 +127,7 @@
         "message": "Abrir um arquivo de backup contendo os grupos de aba que você quer restaurar.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsButton": {
+    "restoreBackup": {
         "message": "Restaurar backup",
         "description": "Restore backup"
     },
@@ -574,10 +574,6 @@
     "intervalKeyDays": {
         "message": "dia(s)",
         "description": "day(s)"
-    },
-    "autoBackupLastBackupTitle": {
-        "message": "Último backup",
-        "description": "Last backup"
     },
     "darkColorSchemeNotification": {
         "message": "Para ter suporte completo ao tema escuro, habilite o parâmetro <code>svg.context-properties.content.enabled</code> para <code>true</code> na página <code>about:config</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Como fazer isso?</a>",

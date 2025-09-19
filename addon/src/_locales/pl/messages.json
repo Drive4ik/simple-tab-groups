@@ -127,7 +127,7 @@
         "message": "Wczytaj plik kopii zapasowej zawierający grupy kart, które chcesz przywrócić.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsButton": {
+    "restoreBackup": {
         "message": "Przywróć kopię",
         "description": "Restore backup"
     },
@@ -574,10 +574,6 @@
     "intervalKeyDays": {
         "message": "dzień(dni)",
         "description": "day(s)"
-    },
-    "autoBackupLastBackupTitle": {
-        "message": "Ostatnia kopia zapasowa",
-        "description": "Last backup"
     },
     "darkColorSchemeNotification": {
         "message": "Aby uzyskać pełne wsparcie ciemnego motywu, ustaw parametr <code>svg.context-properties.content.enabled</code>na <code>true</code> w <code>about:config</config>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Jak to zrobić?</a>",

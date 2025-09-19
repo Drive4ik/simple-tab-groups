@@ -83,7 +83,7 @@
         "message": "Erstelle Backup",
         "description": "Create backup"
     },
-    "importAddonSettingsButton": {
+    "restoreBackup": {
         "message": "Stelle Backup wieder her",
         "description": "Restore backup"
     },

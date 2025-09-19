@@ -127,7 +127,7 @@
         "message": "Загрузите файл резервной копии для того чтобы восстановить вкладки и настройки.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsButton": {
+    "restoreBackup": {
         "message": "Восстановить бекап",
         "description": "Restore backup"
     },
@@ -574,10 +574,6 @@
     "intervalKeyDays": {
         "message": "день",
         "description": "day(s)"
-    },
-    "autoBackupLastBackupTitle": {
-        "message": "Последнее резервное копирование",
-        "description": "Last backup"
     },
     "darkColorSchemeNotification": {
         "message": "Для полной поддержки тёмной темы установите параметр <code>svg.context-properties.content.enabled</code> в <code>true</code> на странице <code>about:config</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Как это сделать?</a>",

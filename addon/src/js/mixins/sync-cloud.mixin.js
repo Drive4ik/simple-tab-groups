@@ -75,9 +75,9 @@ export default {
         clearInterval(this.syncCloudUpdateInfoTimer);
     },
     methods: {
-        async syncCloud(trust) {
+        async syncCloud(trust, revision) {
             if (!this.syncCloudInProgress) {
-                return await sendMessageModule('BG.cloudSync', false, trust);
+                return await sendMessageModule('BG.cloudSync', false, trust, revision);
             }
         },
         syncCloudUpdateInfo() {

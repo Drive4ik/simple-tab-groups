@@ -119,7 +119,7 @@
         "message": "Geri yüklemek istediğiniz sekme gruplarını içeren bir yedekleme dosyası yükleyin.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsButton": {
+    "restoreBackup": {
         "message": "Yedeği geri yükle",
         "description": "Restore backup"
     },
@@ -474,10 +474,6 @@
     "intervalKeyDays": {
         "message": "gün(ler)",
         "description": "day(s)"
-    },
-    "autoBackupLastBackupTitle": {
-        "message": "Son yedekleme",
-        "description": "Last backup"
     },
     "browseFileTitle": {
         "message": "Göz at...",

@@ -127,7 +127,7 @@
         "message": "Charger un fichier de sauvegarde contenant les groupes d'onglets que vous souhaitez restaurer.",
         "description": "Load a backup file containing the tab groups you want to restore."
     },
-    "importAddonSettingsButton": {
+    "restoreBackup": {
         "message": "Restaurer une sauvegarde",
         "description": "Restore backup"
     },
@@ -574,10 +574,6 @@
     "intervalKeyDays": {
         "message": "jour(s)",
         "description": "day(s)"
-    },
-    "autoBackupLastBackupTitle": {
-        "message": "Dernière sauvegarde",
-        "description": "Last backup"
     },
     "darkColorSchemeNotification": {
         "message": "Pour activer complétement le thème sombre, activez le paramètre <code>svg.context-properties.content.enabled</code> en lui mettant la valeur <code>true</code> sur la page de configuration <code>about:config</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Comment faire ?</a>",

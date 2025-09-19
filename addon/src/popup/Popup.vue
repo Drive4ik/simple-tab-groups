@@ -1,6 +1,4 @@
 <script>
-    'use strict';
-
     import Vue from 'vue';
 
     import popup from '../components/popup.vue';
@@ -227,7 +225,7 @@
                 let result = this.lang('syncStart');
 
                 if (this.syncCloudLastUpdateAgo) {
-                    result += ' (' + this.lang('lastUpdateAgo', this.syncCloudLastUpdateAgo) + ')';
+                    result += ' (' + this.lang('lastUpdate') + `: ${this.syncCloudLastUpdateAgo})`;
                 }
 
                 return result;
