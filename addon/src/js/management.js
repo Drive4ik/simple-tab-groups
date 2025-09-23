@@ -126,7 +126,7 @@ const MOZ_EXTENSION_URL_REGEXP = /^moz-extension:\/\/([^\/]+)/;
 
 export function extractUUID(url) {
     const [, uuid] = MOZ_EXTENSION_URL_REGEXP.exec(url) ?? [];
-    return uuid;
+    return Utils.isUUID(uuid) ? uuid : null;
 }
 
 function UUIDtoId(uuid, extensionsStorage = extensions) {

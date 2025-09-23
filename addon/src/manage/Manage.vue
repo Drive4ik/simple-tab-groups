@@ -990,54 +990,58 @@
                 <span class="button is-small is-primary" v-text="lang('manageGroupViewGrid')"></span>
                 <span class="button is-small" disabled v-text="lang('manageGroupViewFreeArrange')"></span>
             </div>
-            <div class="is-flex-grow-1 is-flex is-justify-content-end gap-indent">
-                <div class="field has-addons">
-                    <p class="control">
-                        <button class="button" @click="addGroup">
-                            <span class="icon">
-                                <figure class="image is-16x16">
-                                    <img src="/icons/group-new.svg" />
-                                </figure>
-                            </span>
-                            <span v-text="lang('createNewGroup')"></span>
-                        </button>
-                    </p>
-                    <p class="control">
-                        <button class="button" @click="openDefaultGroup" :title="lang('defaultGroup')">
-                            <span class="icon">
-                                <figure class="image is-16x16">
-                                    <img src="/icons/wrench.svg"/>
-                                </figure>
-                            </span>
-                        </button>
-                    </p>
-                </div>
-                <div id="search-wrapper" :class="{'has-addons': searchDelay.length}">
-                    <div :class="['control has-icons-left is-expanded', {'is-loading': searchDelayTimer}]">
-                        <input
-                            type="text"
-                            class="input"
-                            ref="search"
-                            v-model.trim="searchDelay"
-                            autocomplete="off"
-                            @click.stop
-                            :placeholder="lang('searchPlaceholder')"
-                            :readonly="isLoading" />
-                        <span class="icon is-small is-left">
-                            <figure class="image is-16x16">
-                                <img class="no-fill" src="/icons/search.svg"></img>
-                            </figure>
-                        </span>
+            <div class="is-flex-grow-1 is-flex is-flex-wrap-wrap is-justify-content-end gap-indent">
+                <div>
+                    <div class="field has-addons">
+                        <p class="control">
+                            <button class="button" @click="addGroup">
+                                <span class="icon">
+                                    <figure class="image is-16x16">
+                                        <img src="/icons/group-new.svg" />
+                                    </figure>
+                                </span>
+                                <span v-text="lang('createNewGroup')"></span>
+                            </button>
+                        </p>
+                        <p class="control">
+                            <button class="button" @click="openDefaultGroup" :title="lang('defaultGroup')">
+                                <span class="icon">
+                                    <figure class="image is-16x16">
+                                        <img src="/icons/wrench.svg"/>
+                                    </figure>
+                                </span>
+                            </button>
+                        </p>
                     </div>
-                    <div v-show="searchDelay.length" class="control">
-                        <button class="button" @click="extendedSearch = !extendedSearch" :title="lang('extendedTabSearch')">
-                            <span class="icon">
+                </div>
+                <div>
+                    <div id="search-wrapper" class="field" :class="{'has-addons': searchDelay.length}">
+                        <div :class="['control has-icons-left is-expanded', {'is-loading': searchDelayTimer}]">
+                            <input
+                                type="text"
+                                class="input"
+                                ref="search"
+                                v-model.trim="searchDelay"
+                                autocomplete="off"
+                                @click.stop
+                                :placeholder="lang('searchPlaceholder')"
+                                :readonly="isLoading" />
+                            <span class="icon is-small is-left">
                                 <figure class="image is-16x16">
-                                    <img v-if="extendedSearch" src="/icons/check-square.svg" />
-                                    <img v-else src="/icons/square.svg" />
+                                    <img class="no-fill" src="/icons/search.svg"></img>
                                 </figure>
                             </span>
-                        </button>
+                        </div>
+                        <div v-show="searchDelay.length" class="control">
+                            <button class="button" @click="extendedSearch = !extendedSearch" :title="lang('extendedTabSearch')">
+                                <span class="icon">
+                                    <figure class="image is-16x16">
+                                        <img v-if="extendedSearch" src="/icons/check-square.svg" />
+                                        <img v-else src="/icons/square.svg" />
+                                    </figure>
+                                </span>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div>
