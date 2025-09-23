@@ -8,6 +8,7 @@ import * as Storage from './storage.js';
 import backgroundSelf from './background.js';
 
 const logger = new Logger('Containers');
+const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 
 const containers = {};
 
@@ -116,7 +117,7 @@ async function onRemoved({contextualIdentity}) {
         return;
     }
 
-    if (!backgroundSelf.inited) {
+    if (!mainStorage.inited) {
         log.stopError('background not inited');
         return;
     }

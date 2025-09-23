@@ -30,7 +30,9 @@ export async function load(withTabs = false, includeFavIconUrl, includeThumbnail
 export async function get(windowId = browser.windows.WINDOW_ID_CURRENT) {
     const log = logger.start('get', {windowId});
 
-    const win = await browser.windows.get(windowId).then(Cache.loadWindowSession);
+    const win = await browser.windows.get(windowId)
+        .then(Cache.loadWindowSession)
+        .catch(log.onCatch(['get', windowId]));
 
     log.assert(win, 'windowId', windowId, 'not found');
     log.stop(win);
@@ -44,7 +46,9 @@ export async function create(groupId, activeTabId) {
         log.throwError('No group id');
     }
 
-    let groupWindowId = Cache.getWindowId(groupId);
+    const groupWindowId = Cache.getWindowId(groupId);
+
+    log.log('groupWindowId', groupWindowId);
 
     if (groupWindowId) {
         await backgroundSelf.applyGroup(groupWindowId, groupId, activeTabId);
@@ -52,7 +56,9 @@ export async function create(groupId, activeTabId) {
     } else {
         backgroundSelf.skipAddGroupToNextNewWindow = true;
 
-        let win = await browser.windows.create();
+        const win = await browser.windows.create();
+
+        Cache.setWindow(win);
 
         await backgroundSelf.applyGroup(win.id, groupId, activeTabId);
         log.stop('load new window', win.id);
@@ -67,6 +73,7 @@ export function setFocus(windowId) {
 
 export async function getLastFocusedNormalWindow(returnId = true) {
     const log = logger.start('getLastFocusedNormalWindow', {returnId});
+
     let lastFocusedWindow = await browser.windows.getLastFocused().catch(log.onCatch('windows.getLastFocused', false));
 
     if (Utils.isWindowAllow(lastFocusedWindow)) {
@@ -111,6 +118,8 @@ export async function createPopup(url, createData = {}) {
     }
 
     const win = await browser.windows.create(createData).catch(log.onCatch(createData));
+
+    Cache.setWindow(win);
 
     log.stop('created window', win);
 

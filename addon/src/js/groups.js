@@ -676,7 +676,7 @@ export function normalizeContainersInGroups(groups) {
         ) {
             hasChanges = true;
 
-            if (backgroundSelf.inited) {
+            if (mainStorage.inited) {
                 backgroundSelf.sendMessageFromBackground('group-updated', {
                     group: {
                         id: group.id,

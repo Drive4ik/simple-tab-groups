@@ -1,16 +1,24 @@
 
+import './prefixed-storage.js';
 import * as Constants from './constants.js';
 import * as Messages from './messages.js';
 import backgroundSelf from './background.js';
 
+const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
+
+let continueLoad;
+const waitBackgroundPromise = new Promise(resolve => continueLoad = resolve);
+
 function reloadPageOnAddonReady() {
-    Messages.connectToBackground(`${location.pathname} wait`, 'i-am-back', () => location.reload());
+    if (mainStorage.inited) {
+        continueLoad();
+    } else {
+        Messages.connectToBackground(`[${location.pathname} wait connecting]`, 'i-am-back', continueLoad);
+    }
 }
 
 if (backgroundSelf) {
-    if (!backgroundSelf.inited) {
-        reloadPageOnAddonReady();
-    }
+    reloadPageOnAddonReady();
 } else {
     // current tab was opened not in default cookie container, reopen this tab
     browser.tabs.getCurrent()
@@ -30,5 +38,7 @@ if (backgroundSelf) {
             }
         })
         // .catch(() => browser.tabs.create({url: self.location.href}))
-        .catch(console.error.bind(console, 'no STG background page, cant reopen current'));
+        .catch(e => console.error('no STG background page, cant reopen current', e));
 }
+
+await waitBackgroundPromise;

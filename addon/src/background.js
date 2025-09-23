@@ -33,6 +33,7 @@ import * as Cloud from '/js/sync/cloud/cloud.js';
 
 const storage = localStorage.create(Constants.MODULES.BACKGROUND);
 
+delete storage.inited;
 storage.START_TIME = Date.now();
 storage.IS_TEMPORARY = Constants.ON_INSTALLED_DETAILS.temporary === true;
 
@@ -48,8 +49,6 @@ self.loggerFuncs = {
     getErrors,
     clearErrors,
 };
-
-self.inited = false;
 
 self.options = {};
 
@@ -186,7 +185,7 @@ async function createTabsSafe(tabs, tryRestoreOpeners, hideTabs = true) {
 }
 
 function sendExternalMessage(...args) {
-    if (!self.inited) {
+    if (!storage.inited) {
         logger.warn('sendExternalMessage addon not yet loaded');
         return;
     }
@@ -876,6 +875,8 @@ async function GrandRestoreWindows({ id }, needRestoreMissedTabsMap) {
 
 const onCreatedWindow = catchFunc(async function onCreatedWindow(win) {
     const log = logger.start(['info', 'onCreatedWindow'], win.id, 'skip created:', self.skipAddGroupToNextNewWindow);
+
+    Cache.setWindow(win);
 
     if (self.skipAddGroupToNextNewWindow) {
         self.skipAddGroupToNextNewWindow = false;
@@ -1872,7 +1873,7 @@ browser.runtime.onMessageExternal.addListener(async function onMessageExternal(r
         };
     }
 
-    if (!self.inited) {
+    if (!storage.inited) {
         log.stop('background not inited');
         return {
             ok: false,
@@ -1966,7 +1967,7 @@ async function onBackgroundMessage(message, sender) {
     // simple messages
     switch (data.action) {
         case 'are-you-here':
-            result.ok = self.inited;
+            result.ok = storage.inited === true;
             return result;
 
         case 'save-log':
@@ -2557,7 +2558,7 @@ async function onBackgroundMessage(message, sender) {
 async function saveOptions(_options) {
     const log = logger.start('saveOptions');
 
-    if (!self.inited) {
+    if (!storage.inited) {
         log.stopError('background not yet inited');
         return;
     }
@@ -4260,7 +4261,7 @@ async function init() {
 
         await setBrowserAction(undefined, undefined, undefined, true);
 
-        self.inited = true;
+        storage.inited = true;
 
         processOnInstalled();
 
