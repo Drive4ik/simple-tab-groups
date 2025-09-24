@@ -9,8 +9,6 @@ import {normalizeError, getStack} from './logger-utils.js';
 const storage = localStorage.create(Constants.MODULES.LOGGER);
 const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 
-const consoleKeys = ['log', 'info', 'warn', 'error', 'debug', 'assert'];
-
 const logs = [];
 
 const backgroundConnect = Constants.IS_BACKGROUND_PAGE
@@ -39,6 +37,8 @@ export default function Logger(prefix, prefixes = []) {
 }
 
 function setLoggerFuncs() {
+    const consoleKeys = ['log', 'info', 'warn', 'error', 'debug', 'assert'];
+
     if (consoleKeys.every(cKey => typeof this[cKey] === 'function')) {
         return;
     }
@@ -355,9 +355,6 @@ function showErrorNotificationMessage(logger) {
         backgroundConnect.sendMessage('show-error-notification');
     }
 }
-
-// self.errorEventHandler = errorEventHandler; // add to self if need remove Listener
-// self.unhandledrejection = e => errorEventHandler(e.reason); // add to self if need remove Listener
 
 self.addEventListener('error', errorEventHandler);
 self.addEventListener('unhandledrejection', e => errorEventHandler(e.reason));
