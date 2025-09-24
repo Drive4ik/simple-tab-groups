@@ -35,17 +35,17 @@ export default {
 </script>
 
 <template>
-    <context-menu ref="contextMenu">
-        <template v-slot="{data}">
-            <ul v-if="data" class="is-unselectable">
-                <li
-                    v-for="container in containers" :key="container.cookieStoreId"
-                    @click="$emit('add', data.group, container.cookieStoreId)"
-                    >
-                    <figure :class="`image is-16x16 userContext-icon identity-icon-${container.icon} identity-color-${container.color}`"></figure>
-                    <span v-text="container.name"></span>
-                </li>
-            </ul>
-        </template>
-    </context-menu>
+<context-menu ref="contextMenu">
+    <template v-slot="{data}">
+        <ul v-if="data" class="is-unselectable">
+            <li
+                v-for="container in containers" :key="container.cookieStoreId"
+                @click="$emit('add', data.group, container.cookieStoreId)"
+                >
+                <figure :class="`image is-16x16 userContext-icon identity-icon-${container.icon} identity-color-${container.color}`"></figure>
+                <span v-text="container.name"></span>
+            </li>
+        </ul>
+    </template>
+</context-menu>
 </template>

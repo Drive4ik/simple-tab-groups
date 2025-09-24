@@ -258,251 +258,251 @@ export default {
 </script>
 
 <template>
-    <div class="box">
-        <div class="columns is-mobile is-vcentered">
-            <div class="column">
-                <span class="is-size-5" v-text="lang('githubGistCloudSettingsTitle')"></span>
-                <span class="tag is-info ml-2">BETA</span>
-            </div>
-            <div class="column is-narrow has-text-right">
-                <a class="button is-link" :href="helpLink" target="_blank">
-                    <span class="icon">
-                        <figure class="image is-16x16">
-                            <img src="/icons/help.svg" />
-                        </figure>
-                    </span>
-                    <span v-text="lang('helpTitle')"></span>
-                </a>
+<div class="box">
+    <div class="columns is-mobile is-vcentered">
+        <div class="column">
+            <span class="is-size-5" v-text="lang('githubGistCloudSettingsTitle')"></span>
+            <span class="tag is-info ml-2">BETA</span>
+        </div>
+        <div class="column is-narrow has-text-right">
+            <a class="button is-link" :href="helpLink" target="_blank">
+                <span class="icon">
+                    <figure class="image is-16x16">
+                        <img src="/icons/help.svg" />
+                    </figure>
+                </span>
+                <span v-text="lang('helpTitle')"></span>
+            </a>
+        </div>
+    </div>
+
+    <div class="field is-horizontal">
+        <div class="field-label is-normal">
+            <label class="label colon" v-text="lang('syncSettingsLocation')"></label>
+        </div>
+        <div class="field-body">
+            <div class="field">
+                <div class="field">
+                    <div class="control has-icons-left">
+                        <div class="select">
+                            <select v-model="local.options.syncOptionsLocation">
+                                <option v-for="area in areas" :key="area.value" :value="area.value" v-text="lang(area.title)"></option>
+                            </select>
+                        </div>
+                        <span class="icon is-left">
+                            <figure class="image is-16x16">
+                                <img :src="area.icon.save">
+                            </figure>
+                        </span>
+                    </div>
+                </div>
+
+                <template v-if="area.disabled">
+                    <div class="mt-3 mb-3" v-html="lang('browserIsNotFirefox', [browserName])"></div>
+                    <div>
+                        <a class="button is-link" href="https://www.mozilla.org/firefox/new/" target="_blank">
+                            <span class="icon">
+                                <figure class="image is-16x16">
+                                    <img src="/icons/logo-firefox.svg">
+                                </figure>
+                            </span>
+                            <span v-text="lang('downloadFirefox')"></span>
+                        </a>
+                    </div>
+                </template>
             </div>
         </div>
+    </div>
 
-        <div class="field is-horizontal">
-            <div class="field-label is-normal">
-                <label class="label colon" v-text="lang('syncSettingsLocation')"></label>
-            </div>
-            <div class="field-body">
-                <div class="field">
-                    <div class="field">
-                        <div class="control has-icons-left">
-                            <div class="select">
-                                <select v-model="local.options.syncOptionsLocation">
-                                    <option v-for="area in areas" :key="area.value" :value="area.value" v-text="lang(area.title)"></option>
-                                </select>
+    <form class="field" @submit.prevent="save(area)" @reset.prevent="area.load">
+        <fieldset :disabled="area.disabled || area.loading">
+            <github-gist-fields
+                class="field"
+                :token.sync="area.options.githubGistToken"
+                :file-name.sync="area.options.githubGistFileName"
+                :error.sync="area.error"
+            ></github-gist-fields>
+
+            <div class="is-flex is-align-items-center">
+                <div v-if="!area.disabled" class="hidden-empty">
+                    <div v-if="area.gist" class="is-flex is-align-items-center gap-indent">
+                        <div class="breadcrumb mb-0">
+                            <ul class="is-align-items-center">
+                                <li v-for="(breadcrumb, i) in area.gist.breadcrumb" :key="i">
+                                    <a :href="breadcrumb.url" :class="{'has-text-weight-semibold': breadcrumb.isBold}" target="_blank" rel="noreferrer noopener">
+                                        <figure v-show="breadcrumb.imageLoaded" class="image is-24x24 mr-2">
+                                            <img :src="breadcrumb.image" @load="breadcrumb.imageLoaded = true" decoding="async" />
+                                        </figure>
+
+                                        <span v-if="breadcrumb.text" v-text="breadcrumb.text"></span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <span class="tag is-rounded" v-text="lang('githubSecretTitle')"></span>
+                        <span>
+                            <span class="colon" v-text="lang('lastUpdate')"></span>
+                            <time class="is-underline-dotted" :title="area.gist.lastUpdateFull" :datetime="area.gist.lastUpdateISO" v-text="area.gist.lastUpdateAgo"></time>
+                        </span>
+                        <div v-if="area.gist.history.length" class="dropdown focus-within">
+                            <div class="dropdown-trigger">
+                                <button
+                                    type="button"
+                                    class="button is-ghost"
+                                    aria-haspopup="true"
+                                    aria-controls="restore-dropdown-menu"
+                                    :disabled="isCredentialsChanged"
+                                    >
+                                    <span v-text="lang('restoreBackup')"></span>
+                                    <span class="icon">
+                                        <figure class="image is-16x16">
+                                            <img src="/icons/arrow-down.svg" />
+                                        </figure>
+                                    </span>
+                                </button>
                             </div>
-                            <span class="icon is-left">
+                            <div class="dropdown-menu" id="restore-dropdown-menu" role="menu">
+                                <div class="dropdown-content">
+                                    <a
+                                        v-for="item in area.gist.history"
+                                        :key="item.version"
+                                        class="dropdown-item"
+                                        :title="lang('restoreBackup') + `: &quot;${item.version_short}&quot; ${item.committed_at_full}`"
+                                        @click.prevent="confirmRestoreBackupItem = item"
+                                        tabindex="0"
+                                        >
+                                        <code>
+                                            <a
+                                                :href="item.web_url"
+                                                target="_blank"
+                                                rel="noreferrer noopener"
+                                                @click.stop
+                                                :title="lang('viewBackup') + `: &quot;${item.version_short}&quot;`"
+                                                v-text="item.version_short"
+                                                ></a>
+                                        </code>
+                                        <span class="is-underline-dotted" v-text="item.committed_at_relative"></span>
+                                        <span v-text="item.committed_at_time_short"></span>
+                                        <small v-if="item.change_status?.total" class="brackets-round">
+                                            <span class="colon">changes</span>
+                                            <span class="changes" v-text="item.change_status.total"></span>
+                                        </small>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <figure v-else-if="area.gist === null" class="image is-16x16">
+                        <img src="/icons/animate-spinner.svg">
+                    </figure>
+                </div>
+                <div class="field is-grouped is-grouped-right is-flex-grow-1">
+                    <div class="control">
+                        <button type="reset" class="button is-info is-soft">
+                            <span class="icon">
+                                <figure class="image is-16x16">
+                                    <img :src="area.icon.load">
+                                </figure>
+                            </span>
+                            <span v-text="lang('load')"></span>
+                        </button>
+                    </div>
+                    <div class="control">
+                        <button type="submit" class="button is-success is-soft" :class="{'is-loading': area.loading}">
+                            <span class="icon">
                                 <figure class="image is-16x16">
                                     <img :src="area.icon.save">
                                 </figure>
                             </span>
-                        </div>
-                    </div>
-
-                    <template v-if="area.disabled">
-                        <div class="mt-3 mb-3" v-html="lang('browserIsNotFirefox', [browserName])"></div>
-                        <div>
-                            <a class="button is-link" href="https://www.mozilla.org/firefox/new/" target="_blank">
-                                <span class="icon">
-                                    <figure class="image is-16x16">
-                                        <img src="/icons/logo-firefox.svg">
-                                    </figure>
-                                </span>
-                                <span v-text="lang('downloadFirefox')"></span>
-                            </a>
-                        </div>
-                    </template>
-                </div>
-            </div>
-        </div>
-
-        <form class="field" @submit.prevent="save(area)" @reset.prevent="area.load">
-            <fieldset :disabled="area.disabled || area.loading">
-                <github-gist-fields
-                    class="field"
-                    :token.sync="area.options.githubGistToken"
-                    :file-name.sync="area.options.githubGistFileName"
-                    :error.sync="area.error"
-                ></github-gist-fields>
-
-                <div class="is-flex is-align-items-center">
-                    <div v-if="!area.disabled" class="hidden-empty">
-                        <div v-if="area.gist" class="is-flex is-align-items-center gap-indent">
-                            <div class="breadcrumb mb-0">
-                                <ul class="is-align-items-center">
-                                    <li v-for="(breadcrumb, i) in area.gist.breadcrumb" :key="i">
-                                        <a :href="breadcrumb.url" :class="{'has-text-weight-semibold': breadcrumb.isBold}" target="_blank" rel="noreferrer noopener">
-                                            <figure v-show="breadcrumb.imageLoaded" class="image is-24x24 mr-2">
-                                                <img :src="breadcrumb.image" @load="breadcrumb.imageLoaded = true" decoding="async" />
-                                            </figure>
-
-                                            <span v-if="breadcrumb.text" v-text="breadcrumb.text"></span>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                            <span class="tag is-rounded" v-text="lang('githubSecretTitle')"></span>
-                            <span>
-                                <span class="colon" v-text="lang('lastUpdate')"></span>
-                                <time class="is-underline-dotted" :title="area.gist.lastUpdateFull" :datetime="area.gist.lastUpdateISO" v-text="area.gist.lastUpdateAgo"></time>
-                            </span>
-                            <div v-if="area.gist.history.length" class="dropdown focus-within">
-                                <div class="dropdown-trigger">
-                                    <button
-                                        type="button"
-                                        class="button is-ghost"
-                                        aria-haspopup="true"
-                                        aria-controls="restore-dropdown-menu"
-                                        :disabled="isCredentialsChanged"
-                                        >
-                                        <span v-text="lang('restoreBackup')"></span>
-                                        <span class="icon">
-                                            <figure class="image is-16x16">
-                                                <img src="/icons/arrow-down.svg" />
-                                            </figure>
-                                        </span>
-                                    </button>
-                                </div>
-                                <div class="dropdown-menu" id="restore-dropdown-menu" role="menu">
-                                    <div class="dropdown-content">
-                                        <a
-                                            v-for="item in area.gist.history"
-                                            :key="item.version"
-                                            class="dropdown-item"
-                                            :title="lang('restoreBackup') + `: &quot;${item.version_short}&quot; ${item.committed_at_full}`"
-                                            @click.prevent="confirmRestoreBackupItem = item"
-                                            tabindex="0"
-                                            >
-                                            <code>
-                                                <a
-                                                    :href="item.web_url"
-                                                    target="_blank"
-                                                    rel="noreferrer noopener"
-                                                    @click.stop
-                                                    :title="lang('viewBackup') + `: &quot;${item.version_short}&quot;`"
-                                                    v-text="item.version_short"
-                                                    ></a>
-                                            </code>
-                                            <span class="is-underline-dotted" v-text="item.committed_at_relative"></span>
-                                            <span v-text="item.committed_at_time_short"></span>
-                                            <small v-if="item.change_status?.total" class="brackets-round">
-                                                <span class="colon">changes</span>
-                                                <span class="changes" v-text="item.change_status.total"></span>
-                                            </small>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <figure v-else-if="area.gist === null" class="image is-16x16">
-                            <img src="/icons/animate-spinner.svg">
-                        </figure>
-                    </div>
-                    <div class="field is-grouped is-grouped-right is-flex-grow-1">
-                        <div class="control">
-                            <button type="reset" class="button is-info is-soft">
-                                <span class="icon">
-                                    <figure class="image is-16x16">
-                                        <img :src="area.icon.load">
-                                    </figure>
-                                </span>
-                                <span v-text="lang('load')"></span>
-                            </button>
-                        </div>
-                        <div class="control">
-                            <button type="submit" class="button is-success is-soft" :class="{'is-loading': area.loading}">
-                                <span class="icon">
-                                    <figure class="image is-16x16">
-                                        <img :src="area.icon.save">
-                                    </figure>
-                                </span>
-                                <span v-text="lang('saveSettings')"></span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </fieldset>
-        </form>
-
-        <hr>
-
-        <div class="columns is-vcentered">
-            <div class="column">
-                <div class="simple-progress">
-                    <div class="position" :class="{
-                        'in-progress': syncCloudInProgress,
-                        'has-background-success': !area.error && syncCloudProgress === 100,
-                        'has-background-danger': !!area.error,
-                    }"
-                    :style="{
-                        '--progress-value': `${syncCloudProgress}%`,
-                    }"
-                    ></div>
-                </div>
-            </div>
-            <div class="column is-narrow">
-                <div class="is-right" :class="{'dropdown is-active': showTrustSyncButtons}">
-                    <div :class="{'dropdown-trigger': showTrustSyncButtons}">
-                        <button
-                            class="button is-primary is-soft"
-                            :class="{'is-loading': isLoadingSyncButton}"
-                            :disabled="isDisableSyncButton"
-                            :aria-haspopup="String(showTrustSyncButtons)"
-                            :aria-controls="showTrustSyncButtons ? 'sync-dropdown-menu' : false"
-                            @click="startCloudSync()"
-                            >
-                            <span class="icon">
-                                <figure class="image is-16x16">
-                                    <img src="/icons/cloud-arrow-up-solid.svg" />
-                                </figure>
-                            </span>
-                            <span v-text="lang('syncStart')"></span>
-                            <span v-if="showTrustSyncButtons" class="icon">
-                                <figure class="image is-16x16">
-                                    <img src="/icons/arrow-down.svg" />
-                                </figure>
-                            </span>
+                            <span v-text="lang('saveSettings')"></span>
                         </button>
                     </div>
-                    <div v-if="showTrustSyncButtons" class="dropdown-menu" id="sync-dropdown-menu" role="menu">
-                        <div class="dropdown-content">
-                            <div class="dropdown-item">
-                                <p v-text="lang('syncDataInCloudCanBeDifferent')"></p>
-                            </div>
-                            <a href="#" class="dropdown-item" @click.prevent="startCloudSync()" v-text="lang('syncStart')"></a>
-                            <a href="#" class="dropdown-item" @click.prevent="startCloudSync(LOCAL)" v-text="lang('syncStartTrustLocal')"></a>
-                            <a href="#" class="dropdown-item" @click.prevent="startCloudSync(CLOUD)" v-text="lang('syncStartTrustCloud')"></a>
+                </div>
+            </div>
+        </fieldset>
+    </form>
+
+    <hr>
+
+    <div class="columns is-vcentered">
+        <div class="column">
+            <div class="simple-progress">
+                <div class="position" :class="{
+                    'in-progress': syncCloudInProgress,
+                    'has-background-success': !area.error && syncCloudProgress === 100,
+                    'has-background-danger': !!area.error,
+                }"
+                :style="{
+                    '--progress-value': `${syncCloudProgress}%`,
+                }"
+                ></div>
+            </div>
+        </div>
+        <div class="column is-narrow">
+            <div class="is-right" :class="{'dropdown is-active': showTrustSyncButtons}">
+                <div :class="{'dropdown-trigger': showTrustSyncButtons}">
+                    <button
+                        class="button is-primary is-soft"
+                        :class="{'is-loading': isLoadingSyncButton}"
+                        :disabled="isDisableSyncButton"
+                        :aria-haspopup="String(showTrustSyncButtons)"
+                        :aria-controls="showTrustSyncButtons ? 'sync-dropdown-menu' : false"
+                        @click="startCloudSync()"
+                        >
+                        <span class="icon">
+                            <figure class="image is-16x16">
+                                <img src="/icons/cloud-arrow-up-solid.svg" />
+                            </figure>
+                        </span>
+                        <span v-text="lang('syncStart')"></span>
+                        <span v-if="showTrustSyncButtons" class="icon">
+                            <figure class="image is-16x16">
+                                <img src="/icons/arrow-down.svg" />
+                            </figure>
+                        </span>
+                    </button>
+                </div>
+                <div v-if="showTrustSyncButtons" class="dropdown-menu" id="sync-dropdown-menu" role="menu">
+                    <div class="dropdown-content">
+                        <div class="dropdown-item">
+                            <p v-text="lang('syncDataInCloudCanBeDifferent')"></p>
                         </div>
+                        <a href="#" class="dropdown-item" @click.prevent="startCloudSync()" v-text="lang('syncStart')"></a>
+                        <a href="#" class="dropdown-item" @click.prevent="startCloudSync(LOCAL)" v-text="lang('syncStartTrustLocal')"></a>
+                        <a href="#" class="dropdown-item" @click.prevent="startCloudSync(CLOUD)" v-text="lang('syncStartTrustCloud')"></a>
                     </div>
                 </div>
             </div>
         </div>
-
-        <popup
-            v-if="confirmRestoreBackupItem"
-            :title="lang('restoreBackup')"
-            @restore="restoreBackup(confirmRestoreBackupItem); confirmRestoreBackupItem = null"
-            @close-popup="confirmRestoreBackupItem = null"
-            :buttons="
-                [{
-                    event: 'restore',
-                    classList: 'is-primary is-soft',
-                    lang: 'restoreBackup',
-                    focused: true,
-                }, {
-                    event: 'close-popup',
-                    lang: 'cancel',
-                }]
-            ">
-            <div class="block">
-                <span v-text="lang('areYouSureRestoreBackup')"></span>
-                <a :href="confirmRestoreBackupItem.web_url" target="_blank" rel="noreferrer noopener" :title="lang('viewBackup')">
-                    <span class="tag is-medium" v-text="confirmRestoreBackupItem.version_short"></span>
-                    <span v-text="confirmRestoreBackupItem.committed_at_full"></span>
-                </a>
-            </div>
-            <strong v-text="lang('overwriteCurrent')"></strong>
-        </popup>
-
     </div>
+
+    <popup
+        v-if="confirmRestoreBackupItem"
+        :title="lang('restoreBackup')"
+        @restore="restoreBackup(confirmRestoreBackupItem); confirmRestoreBackupItem = null"
+        @close-popup="confirmRestoreBackupItem = null"
+        :buttons="
+            [{
+                event: 'restore',
+                classList: 'is-primary is-soft',
+                lang: 'restoreBackup',
+                focused: true,
+            }, {
+                event: 'close-popup',
+                lang: 'cancel',
+            }]
+        ">
+        <div class="block">
+            <span v-text="lang('areYouSureRestoreBackup')"></span>
+            <a :href="confirmRestoreBackupItem.web_url" target="_blank" rel="noreferrer noopener" :title="lang('viewBackup')">
+                <span class="tag is-medium" v-text="confirmRestoreBackupItem.version_short"></span>
+                <span v-text="confirmRestoreBackupItem.committed_at_full"></span>
+            </a>
+        </div>
+        <strong v-text="lang('overwriteCurrent')"></strong>
+    </popup>
+
+</div>
 </template>
 
 
