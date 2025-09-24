@@ -187,37 +187,67 @@ new Vue({
             log.showStack = !log.showStack;
             this.calculateIndentLineHeight();
         },
-        isHighlighted(log) {
-            return this.highlightedLogs.includes(log.key);
+        isHighlighted(log, byStack = false) {
+            function reduceStackFuncs(l) {
+                return l.stacks
+                    .flat(Infinity)
+                    .filter(s => !s.startsWith?.('From') && !s.startsWith?.('Native'))
+                    .map(s => s.stack || s)
+                    .flat(Infinity)
+                    .map(s => s.split(':')[0]);
+            }
+
+            if (byStack) {
+                const stacks = reduceStackFuncs(log);
+
+                const logIndex = this.logs.indexOf(log);
+
+                return this.highlightedLogs.some(hLog => {
+                    if (log.indentIndex < hLog.indentIndex) {
+                        return false;
+                    }
+
+                    const startIndex = this.logs.findIndex(l => l.key === hLog.key && l.action === 'START');
+                    const stopIndex = this.logs.findIndex(l => l.key === hLog.key && l.action === 'STOP');
+
+                    if (logIndex < startIndex || logIndex > stopIndex) {
+                        return false;
+                    }
+
+                    return stacks.includes(reduceStackFuncs(hLog)[0]);
+                });
+            } else {
+                return this.highlightedLogs.some(l => l.key === log.key);
+            }
         },
         toggleHighlight(log) {
-            if (this.highlightedLogs.includes(log.key)) {
-                this.highlightedLogs.splice(this.highlightedLogs.indexOf(log.key), 1);
+            if (this.isHighlighted(log)) {
+                this.highlightedLogs = this.highlightedLogs.filter(l => l.key !== log.key);
             } else {
-                this.highlightedLogs.push(log.key);
+                this.highlightedLogs.push(log);
 
                 this.calculateIndentLineHeight();
             }
         },
-        calculateIndentLineHeight() {
-            this.$nextTick(() => {
-                this.highlightedLogs.forEach(key => {
-                    const log = this.logs.find(l => l.key === key && l.action === 'START');
+        async calculateIndentLineHeight() {
+            await this.$nextTick();
 
-                    if (!log) {
-                        return;
-                    }
+            for (const hLog of this.highlightedLogs) {
+                const log = this.logs.find(l => l.key === hLog.key && l.action === 'START');
 
-                    let startNode = $(`.log[data-action="START"][data-key="${log.key}"]`),
-                        stopNode = $(`.log[data-action="STOP"][data-key="${log.key}"]`);
+                if (!log) {
+                    continue;
+                }
 
-                    if (!startNode || !stopNode) {
-                        return;
-                    }
+                let startNode = $(`.log[data-action="START"][data-key="${log.key}"]`),
+                    stopNode = $(`.log[data-action="STOP"][data-key="${log.key}"]`);
 
-                    log.indentLineHeight = (stopNode.offsetTop - startNode.offsetTop - startNode.clientHeight) + 'px';
-                });
-            });
+                if (!startNode || !stopNode) {
+                    continue;
+                }
+
+                log.indentLineHeight = (stopNode.offsetTop - startNode.offsetTop - startNode.clientHeight) + 'px';
+            }
         },
 
         async readFile(inputTag) {

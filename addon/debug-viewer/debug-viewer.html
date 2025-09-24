@@ -218,7 +218,8 @@
                 }">
                 <div v-for="(log, i) in logs" :key="i + 'log'" :data-action="log.action" :data-key="log.key"
                     :class="['is-relative field log p-1', {
-                        'has-background-success-40 has-text-white indent-line': isHighlighted(log),
+                        'has-background-success-soft indent-line': isHighlighted(log),
+                        'has-background-info-soft': isHighlighted(log, true),
                     }]"
                     :style="{
                         marginLeft: log.indent,
