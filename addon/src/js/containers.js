@@ -5,7 +5,7 @@ import Notification from './notification.js';
 import * as Utils from './utils.js';
 import * as Groups from './groups.js';
 import * as Storage from './storage.js';
-import backgroundSelf from './background.js';
+import * as Messages from './messages.js';
 
 const logger = new Logger('Containers');
 const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
@@ -73,7 +73,7 @@ function onCreated({contextualIdentity}) {
         return;
     }
 
-    backgroundSelf.sendMessageFromBackground('containers-updated');
+    Messages.sendMessageFromBackground('containers-updated');
 }
 
 function onUpdated({contextualIdentity}) {
@@ -98,7 +98,7 @@ function onUpdated({contextualIdentity}) {
         return;
     }
 
-    backgroundSelf.sendMessageFromBackground('containers-updated');
+    Messages.sendMessageFromBackground('containers-updated');
 }
 
 async function onRemoved({contextualIdentity}) {
@@ -129,7 +129,7 @@ async function onRemoved({contextualIdentity}) {
         await Groups.save(groups);
     }
 
-    backgroundSelf.sendMessageFromBackground('containers-updated');
+    Messages.sendMessageFromBackground('containers-updated');
     log.stop();
 }
 
@@ -409,7 +409,7 @@ export async function updateTemporaryContainerTitle(temporaryContainerTitle, con
 
         LISTENING_EVENTS = true;
 
-        backgroundSelf.sendMessageFromBackground('containers-updated'); // update container temporary name on tabs will work only on not archived groups
+        Messages.sendMessageFromBackground('containers-updated'); // update container temporary name on tabs will work only on not archived groups
     }
 
     log.stop();
