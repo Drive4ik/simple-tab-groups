@@ -200,7 +200,7 @@
         "description": "Delete group"
     },
     "confirmDeleteGroup": {
-        "message": "Do you want to delete group \"$grouptitle$\" ?<br>Removing groups also closes tabs and windows if they are open!",
+        "message": "Do you want to delete group \"$grouptitle$\"?\nRemoving groups also closes tabs and windows if they are open!",
         "description": "Delete group?",
         "placeholders": {
             "grouptitle": {
@@ -854,7 +854,7 @@
         "description": "Archive"
     },
     "confirmArchiveGroup": {
-        "message": "Do you want to archive the group \"$grouptitle$\"?<br>When you archive a group, the tabs will be saved in the add-on database and will be removed from the browser.",
+        "message": "Do you want to archive the group \"$grouptitle$\"?\nWhen you archive a group, the tabs will be saved in the add-on database and will be removed from the browser.",
         "description": "Do you want to archive the group",
         "placeholders": {
             "grouptitle": {

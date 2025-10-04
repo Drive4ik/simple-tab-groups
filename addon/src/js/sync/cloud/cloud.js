@@ -62,11 +62,13 @@ export async function sync(trust = null, revision = null, progressFunc = null) {
         }
     }
 
-    progressFunc?.(0);
+    progressFunc?.(1);
 
     const syncOptions = syncOptionsLocation === Constants.SYNC_STORAGE_FSYNC
         ? await SyncStorage.get()
         : await Storage.get(null, Constants.DEFAULT_SYNC_OPTIONS);
+
+    progressFunc?.(10);
 
     let cloudInstance;
 
@@ -82,20 +84,23 @@ export async function sync(trust = null, revision = null, progressFunc = null) {
 
     const Cloud = cloudInstance;
 
-    const cloudProgressFunc = function(currentProgress, progressDuration, fetchProgress) {
-        const durationPart = 100 / progressDuration;
-        const mainPercent = currentProgress + Math.floor(fetchProgress / durationPart);
-        progressFunc(mainPercent);
-    };
+    let lastProgressPercent = 0;
+    const createCloudProgress = function(currentProgress, progressDuration) {
+        return fetchProgress => {
+            const durationPart = (progressDuration - currentProgress) / 100;
+            const mainPercent = currentProgress + Math.floor(fetchProgress * durationPart);
 
-    if (progressFunc) {
-        Cloud.progressFunc = cloudProgressFunc.bind(null, 5, 35);
-    }
+            if (lastProgressPercent !== mainPercent) {
+                lastProgressPercent = mainPercent;
+                progressFunc?.(mainPercent);
+            }
+        };
+    };
 
     let cloudData, cloudInfo;
 
     try {
-        [cloudData, cloudInfo] = await Cloud.getContent(revision, true);
+        [cloudData, cloudInfo] = await Cloud.getContent(revision, true, createCloudProgress(10, 40));
     } catch (e) {
         if (e.message === 'githubNotFound') {
             //
@@ -135,7 +140,8 @@ export async function sync(trust = null, revision = null, progressFunc = null) {
     localData.syncId = localLastUpdate;
     cloudData.syncId = cloudLastUpdate;
 
-    const syncResult = await syncData(localData, cloudData, sourceOfTruth).catch(log.onCatch('cant sync'));
+    const syncResult = await syncData(localData, cloudData, sourceOfTruth, createCloudProgress(45, 55))
+        .catch(log.onCatch('cant sync'));
 
     delete syncResult.localData.syncId;
     delete syncResult.cloudData.syncId;
@@ -153,16 +159,12 @@ export async function sync(trust = null, revision = null, progressFunc = null) {
         syncResult.changes.cloud = true;
     }
 
-    progressFunc?.(50);
+    progressFunc?.(55);
 
     if (syncResult.changes.cloud) {
-        if (progressFunc) {
-            Cloud.progressFunc = cloudProgressFunc.bind(null, 50, 35);
-        }
-
         try {
             const description = browser.i18n.getMessage('githubGistBackupDescription');
-            cloudInfo = await Cloud.setContent(syncResult.cloudData, description);
+            cloudInfo = await Cloud.setContent(syncResult.cloudData, description, createCloudProgress(55, 85));
         } catch (e) {
             log.stopError(e);
             throw new CloudError(e.message);
@@ -171,7 +173,7 @@ export async function sync(trust = null, revision = null, progressFunc = null) {
         syncResult.changes.local = true; // sync date must be equal in cloud and local
     }
 
-    progressFunc?.(90);
+    progressFunc?.(85);
 
     // remove unnecessary groups
     for (const groupToRemove of syncResult.changes.groupsToRemove) {
@@ -190,10 +192,14 @@ export async function sync(trust = null, revision = null, progressFunc = null) {
         }
     }
 
+    progressFunc?.(90);
+
     // remove unnecessary tabs
     if (syncResult.changes.tabsToRemove.size) {
         await Tabs.remove(Array.from(syncResult.changes.tabsToRemove));
     }
+
+    progressFunc?.(95);
 
     if (syncResult.changes.local) {
         // map cookie-store-id to gecko browser
@@ -248,13 +254,17 @@ export async function sync(trust = null, revision = null, progressFunc = null) {
     return syncResult;
 }
 
-async function syncData(localData, cloudData, sourceOfTruth) {
+async function syncData(localData, cloudData, sourceOfTruth, progressFunc = null) {
     const log = logger.start('syncData', {
         localVersion: localData.version,
         cloudVersion: cloudData.version,
     });
 
+    progressFunc?.(0);
+
     const resultMigrate = await backgroundSelf.runMigrateForData(cloudData, false);
+
+    progressFunc?.(10);
 
     if (resultMigrate.migrated) {
         cloudData = resultMigrate.data;
@@ -274,11 +284,17 @@ async function syncData(localData, cloudData, sourceOfTruth) {
 
     await syncOptions(localData, cloudData, sourceOfTruth, changes);
 
+    progressFunc?.(30);
+
     await syncGroups(localData, cloudData, sourceOfTruth, changes);
+
+    progressFunc?.(70);
 
     await syncContainers(localData, cloudData);
 
     cloudData = JSON.clone(cloudData);
+
+    progressFunc?.(100);
 
     // log.stop('localData:', localData, 'cloudData:', cloudData);
     log.stop();
@@ -551,7 +567,7 @@ async function syncGroups(localData, cloudData, sourceOfTruth, changes) {
                             changes.cloud = true;
                             return true;
                         } else {
-                            // delete old tab, which doensn't exist in cloud, that means it was deleted into another computer
+                            // delete old tab, which doesn't exist in cloud, that means it was deleted into another computer
                             changes.tabsToRemove.add(localTab);
                             changes.local = true;
                             return false;

@@ -11,6 +11,7 @@ import * as Containers from './containers.js';
 import * as Management from './management.js';
 import * as Groups from './groups.js';
 import * as Windows from './windows.js';
+import * as Storage from './storage.js';
 
 const logger = new Logger('Tabs');
 
@@ -317,18 +318,8 @@ export async function updateThumbnail(tabId) {
     }
 }
 
-export async function move(tabIds, groupId, {
-        newTabIndex: newTabIndex = -1,
-        showTabAfterMovingItIntoThisGroup: showTabAfterMovingItIntoThisGroup = false,
-        showOnlyActiveTabAfterMovingItIntoThisGroup: showOnlyActiveTabAfterMovingItIntoThisGroup = false,
-        showNotificationAfterMovingTabIntoThisGroup: showNotificationAfterMovingTabIntoThisGroup = false,
-    } = {}) {
-    const log = logger.start('move', {groupId}, {
-        newTabIndex,
-        showTabAfterMovingItIntoThisGroup,
-        showOnlyActiveTabAfterMovingItIntoThisGroup,
-        showNotificationAfterMovingTabIntoThisGroup,
-    }, tabIds);
+export async function move(tabIds, groupId, params = {}) {
+    const log = logger.start('move', {tabIds, groupId, params});
 
     let tabs = await getList(tabIds.slice());
 
@@ -341,15 +332,20 @@ export async function move(tabIds, groupId, {
 
     backgroundSelf.addExcludeTabIds(tabIds);
 
-    let showPinnedMessage = false,
-        tabsCantHide = new Set,
-        groupWindowId = Cache.getWindowId(groupId),
-        {group} = await Groups.load(groupId, !groupWindowId),
-        windowId = groupWindowId || (group.tabs[0]?.windowId) || await Windows.getLastFocusedNormalWindow(),
-        activeTabs = [];
+    const tabsCantHide = new Set;
+    const groupWindowId = Cache.getWindowId(groupId);
+    const {group} = await Groups.load(groupId, !groupWindowId);
+    const windowId = groupWindowId || (group.tabs[0]?.windowId) || await Windows.getLastFocusedNormalWindow();
+    const activeTabs = [];
 
     log.log('vars', {groupWindowId, windowId});
     log.log('filter active');
+
+    params.showTabAfterMovingItIntoThisGroup ??= group.showTabAfterMovingItIntoThisGroup;
+    params.showOnlyActiveTabAfterMovingItIntoThisGroup ??= group.showOnlyActiveTabAfterMovingItIntoThisGroup;
+    params.showNotificationAfterMovingTabIntoThisGroup ??= group.showNotificationAfterMovingTabIntoThisGroup;
+
+    let showPinnedMessage = false;
 
     tabs = tabs.filter(function(tab) {
         if (tab.pinned) {
@@ -419,7 +415,7 @@ export async function move(tabIds, groupId, {
                 }
             }
         }));
-        activeTabs = [];
+        activeTabs.length = 0; // reset active tabs
 
         let tabIdsToRemove = [],
             newTabParams = Groups.getNewTabParams(group);
@@ -470,7 +466,7 @@ export async function move(tabIds, groupId, {
         await remove(tabIdsToRemove);
 
         tabs = await moveNative(tabs, {
-            index: newTabIndex,
+            index: params.newTabIndex ?? -1,
             windowId,
         });
 
@@ -506,21 +502,21 @@ export async function move(tabIds, groupId, {
 
     let [firstTab] = activeTabs.length ? activeTabs : tabs;
 
-    if (showTabAfterMovingItIntoThisGroup) {
-        if (showOnlyActiveTabAfterMovingItIntoThisGroup) {
+    if (params.showTabAfterMovingItIntoThisGroup) {
+        if (params.showOnlyActiveTabAfterMovingItIntoThisGroup) {
             if (activeTabs.length) {
                 log.log('applyGroup', windowId, groupId, firstTab.id)
                 await backgroundSelf.applyGroup(windowId, groupId, firstTab.id);
-                showNotificationAfterMovingTabIntoThisGroup = false;
+                params.showNotificationAfterMovingTabIntoThisGroup = false;
             }
         } else {
             log.log('applyGroup 2', windowId, groupId, firstTab.id)
             await backgroundSelf.applyGroup(windowId, groupId, firstTab.id);
-            showNotificationAfterMovingTabIntoThisGroup = false;
+            params.showNotificationAfterMovingTabIntoThisGroup = false;
         }
     }
 
-    if (!showNotificationAfterMovingTabIntoThisGroup) {
+    if (!params.showNotificationAfterMovingTabIntoThisGroup) {
         log.stop(tabs, 'no notify');
         return tabs;
     }

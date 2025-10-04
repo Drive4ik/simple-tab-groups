@@ -1167,7 +1167,6 @@ async function updateMoveTabMenus() {
                 const tabIds = await Tabs.getHighlightedIds(tab.windowId, tab);
 
                 await Tabs.move(tabIds, groupId, {
-                    ...group,
                     showTabAfterMovingItIntoThisGroup: info.button.RIGHT,
                 });
 
@@ -1574,11 +1573,10 @@ function addTabToLazyMove(tabId, groupId) {
                 acc[groupId] ??= [];
                 acc[groupId].push(tabId);
                 return acc;
-            }, {}),
-            { groups } = await Groups.load();
+            }, {});
 
         for (let groupId in moveData) {
-            await Tabs.move(moveData[groupId], groupId, groups.find(gr => gr.id === groupId));
+            await Tabs.move(moveData[groupId], groupId);
         }
     }, logger), 100);
 }
@@ -1924,21 +1922,6 @@ const INTERNAL_MODULES = {
     Groups,
     Windows,
 };
-/*
-self.BG.callModule = async function(moduleName, ...args) {
-    let [module, funcName] = moduleName.split('.');
-
-    args = JSON.clone(args);
-
-    try {
-        return await INTERNAL_MODULES[module][funcName](...args);
-    } catch (e) {
-        logger.throwError([
-            'callModule:', moduleName,
-            'args:', args,
-        ], e);
-    }
-} */
 
 function isStgSender(sender) {
     return sender === self ||
@@ -2391,7 +2374,7 @@ async function onBackgroundMessage(message, sender) {
                             result.error = browser.i18n.getMessage('groupIsArchived', groupMoveTo.title);
                             Notification(result.error, {time: 7});
                         } else {
-                            await Tabs.move(tabIds, data.groupId, groupMoveTo);
+                            await Tabs.move(tabIds, data.groupId);
                             result.ok = true;
                         }
                     } else {

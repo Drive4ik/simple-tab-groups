@@ -1,4 +1,6 @@
 
+import * as Constants from './constants.js';
+import JSON from './json.js';
 import {nativeErrorToObj} from './logger-utils.js';
 
 const CSPorts = new Set;
@@ -83,21 +85,25 @@ export function connectToBackground(name, listeners = null, callback = null, aut
 
 // RPC
 async function postMessageToBackground(port, ...args) {
-    const timerError = new Error('RPC timeout');
+    const postId = self.crypto.randomUUID();
+    const data = normalizeSendData(...args);
+    const timerError = new Error(`RPC timeout, postId: ${postId}, args: ` + JSON.stringify(data));
+
+    if (data.action !== 'save-log') {
+        self.logger?.info(`postMessage#${data.action} postId:`, postId, 'to background');
+    }
 
     return new Promise((resolve, reject) => {
-        const postId = self.crypto.randomUUID();
-
         const timer = setTimeout(() => {
             pending.delete(postId);
             reject(timerError);
-        }, 15_000);
+        }, 60_000 * 2); // 2 minutes
 
         pending.set(postId, {resolve, reject, timer});
 
         port.postMessage({
             postId,
-            data: normalizeSendData(...args),
+            data,
         });
     });
 }
@@ -136,23 +142,31 @@ export function createListenerOnConnectedBackground(onMessageListener) {
         if (listeners?.length) {
             const CSPort = {name, port, listeners};
             CSPorts.add(CSPort);
-            port.onDisconnect.addListener(() => CSPorts.delete(CSPort));
+            port.onDisconnect.addListener(() => {
+                CSPorts.delete(CSPort);
+                self.logger?.info(name, 'disconnected');
+            });
         }
     }
 }
 
 export function sendMessageFromBackground(...args) {
+    if (!Constants.IS_BACKGROUND_PAGE) {
+        throw Error('not background');
+    }
+
     const message = normalizeSendData(...args);
 
-    let sended = false;
+    const portNamesSended = [];
 
     for (const {name, port, listeners} of CSPorts) {
         if (listeners?.includes('*') || listeners?.includes(message.action)) {
-            self.logger?.info(`postMessage#${message.action}`, 'to', name);
             port.postMessage(message);
-            sended = true;
+            portNamesSended.push(name);
         }
     }
 
-    return sended;
+    self.logger?.info(`postMessage#${message.action}`, 'to ports', portNamesSended);
+
+    return portNamesSended.length > 0;
 }

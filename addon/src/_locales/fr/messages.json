@@ -184,7 +184,7 @@
         "description": "Delete group"
     },
     "confirmDeleteGroup": {
-        "message": "Souhaitez-vous supprimer \"$grouptitle$\" ?<br>Supprimer un groupe ferme également les onglets et la fenêtre liée si elle est ouverte !",
+        "message": "Souhaitez-vous supprimer \"$grouptitle$\"?\nSupprimer un groupe ferme également les onglets et la fenêtre liée si elle est ouverte !",
         "description": "Delete group?",
         "placeholders": {
             "grouptitle": {
@@ -838,7 +838,7 @@
         "description": "Archive"
     },
     "confirmArchiveGroup": {
-        "message": "Voulez-vous archiver le groupe \"$grouptitle$\" ?<br>Quand vous archivez un groupe, les onglets sont sauvegardés dans la base de données de l'extension et sont supprimés du navigateur lui-même.",
+        "message": "Voulez-vous archiver le groupe \"$grouptitle$\" ?\nQuand vous archivez un groupe, les onglets sont sauvegardés dans la base de données de l'extension et sont supprimés du navigateur lui-même.",
         "description": "Do you want to archive the group",
         "placeholders": {
             "grouptitle": {

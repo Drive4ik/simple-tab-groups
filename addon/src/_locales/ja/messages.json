@@ -184,7 +184,7 @@
         "description": "Delete group"
     },
     "confirmDeleteGroup": {
-        "message": "\"$grouptitle$\" グループを削除しますか？<br>グループを削除するとタブが閉じられます。グループを表示しているウィンドウも閉じます。",
+        "message": "\"$grouptitle$\" グループを削除しますか？\nグループを削除するとタブが閉じられます。グループを表示しているウィンドウも閉じます。",
         "description": "Delete group?",
         "placeholders": {
             "grouptitle": {
@@ -838,7 +838,7 @@
         "description": "Archive"
     },
     "confirmArchiveGroup": {
-        "message": "\"$grouptitle$\" グループをアーカイブしますか？<br>グループをアーカイブすると、タブがアドオンのデータベース内に保存され、ブラウザーからは削除されます。",
+        "message": "\"$grouptitle$\" グループをアーカイブしますか？\nグループをアーカイブすると、タブがアドオンのデータベース内に保存され、ブラウザーからは削除されます。",
         "description": "Do you want to archive the group",
         "placeholders": {
             "grouptitle": {

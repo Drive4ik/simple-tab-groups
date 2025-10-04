@@ -176,7 +176,7 @@
         "description": "Delete group"
     },
     "confirmDeleteGroup": {
-        "message": "Apakah Anda ingin menghapus grup \"$grouptitle$\" ?<br>Menghapus grup juga akan menutup tab dan jendela jika terbuka!",
+        "message": "Apakah Anda ingin menghapus grup \"$grouptitle$\"?\nMenghapus grup juga akan menutup tab dan jendela jika terbuka!",
         "description": "Delete group?",
         "placeholders": {
             "grouptitle": {
@@ -810,7 +810,7 @@
         "description": "Archive"
     },
     "confirmArchiveGroup": {
-        "message": "Apakah Anda ingin mengarsipkan grup \"$grouptitle$\"?<br>Saat Anda mengarsipkan grup, tab akan disimpan di database add-on dan akan dihapus dari browser.",
+        "message": "Apakah Anda ingin mengarsipkan grup \"$grouptitle$\"?\nSaat Anda mengarsipkan grup, tab akan disimpan di database add-on dan akan dihapus dari browser.",
         "description": "Do you want to archive the group",
         "placeholders": {
             "grouptitle": {

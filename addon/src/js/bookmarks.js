@@ -159,7 +159,7 @@ export async function exportGroup(group, groupIndex) {
             }
         } else {
             if (tab.url.length > MAX_LENGTH || tab.title.length > MAX_LENGTH) {
-                log.warn('skip tab', tab.url.slice(0, 30), tab.title.slice(0, 10));
+                log.warn('skip tab', tab.url.slice(0, 30), tab.title.slice(0, 50));
                 continue;
             }
 

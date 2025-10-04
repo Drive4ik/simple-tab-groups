@@ -184,7 +184,7 @@
         "description": "Delete group"
     },
     "confirmDeleteGroup": {
-        "message": "Você quer deletar o grupo \"$grouptitle$\" ?<br>Remover o grupo também fechará as abas e janelas ligadas a ele!",
+        "message": "Você quer deletar o grupo \"$grouptitle$\"?\nRemover o grupo também fechará as abas e janelas ligadas a ele!",
         "description": "Delete group?",
         "placeholders": {
             "grouptitle": {
@@ -838,7 +838,7 @@
         "description": "Archive"
     },
     "confirmArchiveGroup": {
-        "message": "Deseja arquivar o grupo \"$grouptitle$\"?<br>Ao arquivar um grupo, as guias serão salvas no banco de dados do complemento e serão removidas do navegador.",
+        "message": "Deseja arquivar o grupo \"$grouptitle$\"?\nAo arquivar um grupo, as guias serão salvas no banco de dados do complemento e serão removidas do navegador.",
         "description": "Do you want to archive the group",
         "placeholders": {
             "grouptitle": {

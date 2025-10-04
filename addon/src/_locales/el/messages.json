@@ -176,7 +176,7 @@
         "description": "Delete group"
     },
     "confirmDeleteGroup": {
-        "message": "Να διαγραφεί το group \"$grouptitle$\" ?<br>τα tabs ή το παράθυρο του group θα κλείσουν!",
+        "message": "Να διαγραφεί το group \"$grouptitle$\"?\nτα tabs ή το παράθυρο του group θα κλείσουν!",
         "description": "Delete group?",
         "placeholders": {
             "grouptitle": {

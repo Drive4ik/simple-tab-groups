@@ -2,6 +2,7 @@
 import Vue from 'vue';
 
 import popup from '../components/popup.vue';
+import popupHelpers from '../components/popup-helpers.vue';
 import editGroup from '../components/edit-group.vue';
 import contextMenu from '../components/context-menu.vue';
 import contextMenuTab from '../components/context-menu-tab.vue';
@@ -24,11 +25,13 @@ import JSON from '/js/json.js';
 
 import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
 import optionsMixin from '/js/mixins/options.mixin.js';
+import popupHelpersMixin from '/js/mixins/popup-helpers.mixin.js';
+import tabGroupsMixin from '/js/mixins/tab-groups.mixin.js';
 
 window.logger = new Logger(Constants.MODULES.MANAGE);
 
 const storage = localStorage.create(Constants.MODULES.MANAGE);
-const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
+// const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 
 // import dnd from '../js/dnd';
 // import { Drag, Drop } from 'vue-drag-drop';
@@ -38,67 +41,32 @@ document.title = browser.i18n.getMessage('manageGroupsTitle');
 
 Vue.config.errorHandler = errorEventHandler.bind(window.logger);
 
-const VIEW_GRID = 'grid',
-    VIEW_DEFAULT = VIEW_GRID,
-    availableTabKeys = new Set(['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'thumbnail', 'windowId']);
-
-const {sendMessage} = Messages.connectToBackground(Constants.MODULES.MANAGE + '-temp');
-
-const startUpDataPromise = sendMessage('get-startup-data', {manage: true});
-await Containers.init();
+const VIEW_GRID = 'grid';
+const VIEW_DEFAULT = VIEW_GRID;
 
 export default {
-    name: 'manage-page',
-    mixins: [defaultGroupMixin, optionsMixin],
+    name: Constants.MODULES.MANAGE,
+    mixins: [
+        defaultGroupMixin,
+        optionsMixin,
+        popupHelpersMixin,
+        tabGroupsMixin,
+    ],
     data() {
         return {
-            enableDebug: mainStorage.enableDebug,
-
-            DEFAULT_COOKIE_STORE_ID: Constants.DEFAULT_COOKIE_STORE_ID,
-            VIEW_GRID,
-
+            extraAvailableTabKeys: ['thumbnail'],
             optionsWatchKeys: ['showTabsWithThumbnailsInManageGroups', 'showArchivedGroups'],
+
+            VIEW_GRID,
 
             view: VIEW_DEFAULT,
 
-            showPromptPopup: false,
-            promptTitle: null,
-            promptValue: '',
-            promptResolveFunc: null,
-
-            showConfirmPopup: false,
-            confirmTitle: '',
-            confirmText: '',
-            confirmLang: '',
-            confirmClass: '',
-            confirmResolveFunc: null,
-
-            isLoading: true,
-
-            search: '',
-            searchDelay: '',
-            searchDelayTimer: 0,
-            extendedSearch: false,
-
-            currentWindow: null,
-            openedWindows: [],
-
-            groupToEdit: null,
-
-            containers: Containers.query({defaultContainer: true, temporaryContainer: true}),
-
-            groups: [],
-
             allTabs: {},
-
-            unSyncTabs: [],
-
-            dragData: null,
-            multipleTabIds: [],
         };
     },
     components: {
         popup: popup,
+        'popup-helpers': popupHelpers,
         'edit-group': editGroup,
         'context-menu': contextMenu,
         'context-menu-tab': contextMenuTab,
@@ -108,15 +76,12 @@ export default {
     async mounted() {
         const log = logger.start('mounted');
 
-        await this.optionsLoadPromise;
+        await Promise.all([
+            this.optionsLoadPromise,
+            this.tabGroupsPromise,
+        ]);
 
-        const startUpData = await startUpDataPromise;
-
-        await this.loadWindows(startUpData);
-        this.loadGroups(startUpData);
-        this.loadUnsyncedTabs(startUpData);
-
-        log.log('loaded');
+        log.log('options and tab groups loaded');
 
         await this.$nextTick();
 
@@ -129,17 +94,6 @@ export default {
     watch: {
         'options.showTabsWithThumbnailsInManageGroups'(value) {
             value && this.loadAvailableTabThumbnails();
-        },
-        searchDelay(search) {
-            if (search.length && this.allTabsCount > 200) {
-                window.clearTimeout(this.searchDelayTimer);
-                this.searchDelayTimer = window.setTimeout(() => {
-                    this.search = search;
-                    this.searchDelayTimer = 0;
-                }, 500);
-            } else {
-                this.search = search;
-            }
         },
     },
     computed: {
@@ -160,21 +114,9 @@ export default {
         isCurrentWindowIsAllow() {
             return Utils.isWindowAllow(this.currentWindow);
         },
-        allTabsCount() {
-            return Object.keys(this.allTabs).length;
-        },
     },
     methods: {
         lang: browser.i18n.getMessage,
-
-        setFocusOnSearch() {
-            this.$nextTick(() => this.$refs.search.focus());
-        },
-
-        async loadWindows({windows} = {}) {
-            this.currentWindow = await Windows.get();
-            this.openedWindows = windows || await Windows.load();
-        },
 
         setupListeners() {
             this
@@ -189,7 +131,12 @@ export default {
                             groupId = this.isGroup(to.data.item) ? to.data.item.id : to.data.group.id,
                             newTabIndex = this.isGroup(to.data.item) ? undefined : to.data.item.index;
 
-                        Messages.sendMessageModule('Tabs.move', tabIds, groupId, {newTabIndex});
+                        Messages.sendMessageModule('Tabs.move', tabIds, groupId, {
+                            newTabIndex,
+                            showTabAfterMovingItIntoThisGroup: false,
+                            showOnlyActiveTabAfterMovingItIntoThisGroup: false,
+                            showNotificationAfterMovingTabIntoThisGroup: false,
+                        });
                     }
                 })
                 .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
@@ -453,7 +400,7 @@ export default {
             };
 
             const onMessage = catchFunc(async request => {
-                logger.info('take message', request.action);
+                logger.info('got message', request.action);
                 await listeners[request.action](request);
             });
 
@@ -521,44 +468,13 @@ export default {
             }
         },
 
-        async loadGroupTabs(groupId) {
-            let {group: {tabs}} = await Groups.load(groupId, true, true, true),
-                group = this.groups.find(gr => gr.id === groupId);
-
-            group.tabs = tabs.map(this.mapTab, this);
-        },
-
-        getTabIdsForMove(tabId) {
-            if (tabId && !this.multipleTabIds.includes(tabId)) {
-                this.multipleTabIds.push(tabId);
-            }
-
-            let tabs = this.multipleTabIds;
-
-            this.multipleTabIds = [];
-
-            return [...tabs];
-        },
-        async moveTabs(tabId, groupId, loadUnsync = false, showTabAfterMovingItIntoThisGroup, discardTabs) {
-            let tabIds = this.getTabIdsForMove(tabId);
-
-            await Messages.sendMessageModule('Tabs.move', tabIds, groupId, {showTabAfterMovingItIntoThisGroup});
-
-            if (discardTabs) {
-                Messages.sendMessageModule('Tabs.discard', tabIds);
-            }
-
-            if (loadUnsync) {
-                this.loadUnsyncedTabs();
-            }
-        },
         async moveTabToNewGroup(tabId, loadUnsync, showTabAfterMovingItIntoThisGroup) {
             let newGroupTitle = '',
                 tabIds = this.getTabIdsForMove(tabId);
 
             if (this.options.alwaysAskNewGroupName) {
                 const {defaultGroupProps} = await Groups.getDefaults();
-                newGroupTitle = await this.showPrompt(this.lang('createNewGroup'), Groups.createTitle(null, null, defaultGroupProps));
+                newGroupTitle = await this.prompt(this.lang('createNewGroup'), Groups.createTitle(null, null, defaultGroupProps));
 
                 if (!newGroupTitle) {
                     return;
@@ -577,130 +493,6 @@ export default {
             }
         },
 
-        showPrompt(title, value) {
-            if (this.showPromptPopup) {
-                return Promise.resolve(false);
-            }
-
-            return new Promise(resolve => {
-                this.promptTitle = title;
-                this.promptValue = value;
-
-                this.promptResolveFunc = ok => {
-                    this.showPromptPopup = false;
-
-                    if (ok && this.promptValue.length) {
-                        resolve(this.promptValue);
-                    } else {
-                        resolve(false);
-                    }
-                };
-
-                this.showPromptPopup = true;
-            });
-        },
-
-        showConfirm(title, text, confirmLang = 'ok', confirmClass = 'is-success') {
-            if (this.showConfirmPopup) {
-                return Promise.resolve(false);
-            }
-
-            return new Promise(resolve => {
-                this.confirmTitle = title;
-                this.confirmText = text;
-                this.confirmLang = confirmLang;
-                this.confirmClass = confirmClass;
-
-                this.confirmResolveFunc = ok => {
-                    this.showConfirmPopup = false;
-                    resolve(ok);
-                };
-
-                this.showConfirmPopup = true;
-            });
-        },
-
-        mapGroup(group) {
-            if (group.isArchive) {
-                group.tabs = Object.freeze(group.tabs.map(Utils.normalizeTabFavIcon).map(this.mapTabContainer));
-            } else {
-                group.tabs = group.tabs.map(this.mapTab, this);
-            }
-
-            group.draggable = true;
-            group.isMoving = false;
-            group.isOver = false;
-
-            return new Vue({
-                data: group,
-                watch: {
-                    title(title) {
-                        Messages.sendMessageModule('Groups.update', this.id, {title});
-                    },
-                },
-                computed: {
-                    iconUrlToDisplay() {
-                        return Groups.getIconUrl({
-                            title: this.title,
-                            iconUrl: this.iconUrl,
-                            iconColor: this.iconColor,
-                            iconViewType: this.iconViewType,
-                        });
-                    },
-                },
-            });
-        },
-
-        mapTab(tab) {
-            Object.keys(tab).forEach(key => !availableTabKeys.has(key) && delete tab[key]);
-
-            tab = Utils.normalizeTabFavIcon(tab);
-
-            if (!tab.thumbnail) {
-                tab.thumbnail = null;
-            }
-
-            if (tab.url === window.location.href) {
-                tab.status = browser.tabs.TabStatus.COMPLETE;
-            }
-
-            tab = this.mapTabContainer(tab);
-
-            tab.isMoving = false;
-            tab.isOver = false;
-
-            return this.allTabs[tab.id] = Vue.observable(tab);
-        },
-
-        mapTabContainer(tab) {
-            tab.container = Containers.isDefault(tab.cookieStoreId) ? null : Containers.get(tab.cookieStoreId);
-            return tab;
-        },
-
-        async loadGroups({groups} = {}) {
-            ({groups} = groups ? {groups} : await Groups.load(null, true, true, this.options.showTabsWithThumbnailsInManageGroups));
-
-            this.groups = groups.map(this.mapGroup, this);
-
-            this.multipleTabIds = [];
-        },
-        async loadUnsyncedTabs({windows} = {}) {
-            windows ??= await Windows.load(true, true, true);
-
-            const tabs = [];
-
-            for (const win of windows) {
-                if (win.id === this.currentWindow.id) {
-                    for (const tab of win.tabs) {
-                        if (!tab.groupId) {
-                            tabs.push(tab);
-                        }
-                    }
-                }
-            }
-
-            this.unSyncTabs = tabs.map(this.mapTab, this);
-        },
         addGroup() {
             this.$once('group-added', () => {
                 this.$nextTick(() => [...document.querySelectorAll('input[type="text"]')].pop().select());
@@ -709,37 +501,8 @@ export default {
             Messages.sendMessageModule('Groups.add');
         },
 
-        addTab(group, cookieStoreId) {
-            Messages.sendMessageModule('Tabs.add', group.id, cookieStoreId);
-        },
-        removeTab(tab) {
-            Messages.sendMessageModule('Tabs.remove', this.getTabIdsForMove(tab.id));
-        },
         updateTabThumbnail({id}) {
             Messages.sendMessageModule('Tabs.updateThumbnail', id);
-        },
-        discardTab(tab) {
-            Messages.sendMessageModule('Tabs.discard', this.getTabIdsForMove(tab.id));
-        },
-        discardGroup({tabs}) {
-            Messages.sendMessageModule('Tabs.discard', tabs);
-        },
-        discardOtherGroups(groupExclude) {
-            let tabs = this.groups.reduce((acc, gr) => {
-                let groupTabs = (gr.id === groupExclude.id || gr.isArchive || this.isOpenedGroup(gr)) ? [] : gr.tabs;
-
-                acc.push(...groupTabs);
-
-                return acc;
-            }, []);
-
-            Messages.sendMessageModule('Tabs.discard', tabs);
-        },
-        reloadTab(tab, bypassCache) {
-            Messages.sendMessageModule('Tabs.reload', this.getTabIdsForMove(tab.id), bypassCache);
-        },
-        reloadAllTabsInGroup(group, bypassCache) {
-            Messages.sendMessageModule('Tabs.reload', group.tabs.map(Tabs.extractId), bypassCache);
         },
 
         async applyGroup({id: groupId}, {id: tabId} = {}, openInNewWindow = false) {
@@ -758,10 +521,6 @@ export default {
             if (!this.isCurrentWindowIsAllow) {
                 this.closeThisWindow();
             }
-        },
-
-        isOpenedGroup({id}) {
-            return this.openedWindows.some(win => win.groupId === id);
         },
 
         async clickOnTab(event, tab, group) {
@@ -813,12 +572,9 @@ export default {
             }
         },
 
-        openGroupSettings(group) {
-            this.groupToEdit = group;
-        },
         async removeGroup(group) {
             if (this.options.showConfirmDialogBeforeGroupDelete) {
-                let ok = await this.showConfirm(this.lang('deleteGroup'), this.lang('confirmDeleteGroup', Utils.safeHtml(group.title)), 'delete', 'is-danger');
+                let ok = await this.confirm(this.lang('deleteGroup'), this.lang('confirmDeleteGroup', Utils.safeHtml(group.title)), 'delete', 'is-danger');
 
                 if (!ok) {
                     return;
@@ -833,49 +589,9 @@ export default {
             Groups.setIconUrl(group.id, favIconUrl);
         },
 
-        getTabTitle: Tabs.getTitle,
-        // getGroupTitle: Groups.getTitle,
-        isTabLoading: Utils.isTabLoading,
-        groupTabsCountMessage: Groups.tabsCountMessage,
-
         isGroup(obj) {
             return obj.hasOwnProperty('tabs');
         },
-
-        sortGroups(vector) {
-            Groups.sort(vector);
-        },
-        exportGroupToBookmarks(group) {
-            Messages.sendMessage('export-group-to-bookmarks', {
-                groupId: group.id,
-            });
-        },
-        unloadGroup({id}) {
-            Messages.sendMessageModule('Groups.unload', id);
-        },
-
-        saveEditedGroup(groupId, changes) {
-            this.groupToEdit = null;
-
-            if (Object.keys(changes).length) {
-                Messages.sendMessageModule('Groups.update', groupId, changes);
-            }
-        },
-
-        async toggleArchiveGroup({id, title, isArchive}) {
-            let ok = true;
-
-            if (!isArchive && this.options.showConfirmDialogBeforeGroupArchiving) {
-                ok = await this.showConfirm(this.lang('archiveGroup'), this.lang('confirmArchiveGroup', Utils.safeHtml(title)));
-            }
-
-            if (ok) {
-                this.isLoading = true;
-                await Messages.sendMessageModule('Groups.archiveToggle', id);
-                this.isLoading = false;
-            }
-        },
-
 
         // allowTypes: Array ['groups', 'tabs']
         dragHandle(event, itemType, allowTypes, data) {
@@ -977,12 +693,12 @@ export default {
             <span v-text="lang('extensionName')"></span> - <span v-text="lang('manageGroupsTitle')"></span>
         </span>
         <div class="checkboxes as-column">
-            <label class="checkbox">
-                <input v-model="options.showTabsWithThumbnailsInManageGroups" type="checkbox" />
+            <label class="checkbox" :disabled="isLoading">
+                <input v-model="options.showTabsWithThumbnailsInManageGroups" :disabled="isLoading" type="checkbox" />
                 <span v-text="lang('showTabsWithThumbnailsInManageGroups')"></span>
             </label>
-            <label class="checkbox">
-                <input v-model="options.showArchivedGroups" type="checkbox" />
+            <label class="checkbox" :disabled="isLoading">
+                <input v-model="options.showArchivedGroups" :disabled="isLoading" type="checkbox" />
                 <span v-text="lang('showArchivedGroups')"></span>
             </label>
         </div>
@@ -994,7 +710,7 @@ export default {
             <div>
                 <div class="field has-addons">
                     <p class="control">
-                        <button class="button" @click="addGroup">
+                        <button class="button" @click="addGroup" :disabled="isLoading">
                             <span class="icon">
                                 <figure class="image is-16x16">
                                     <img src="/icons/group-new.svg" />
@@ -1004,7 +720,7 @@ export default {
                         </button>
                     </p>
                     <p class="control">
-                        <button class="button" @click="openDefaultGroup" :title="lang('defaultGroup')">
+                        <button class="button" @click="openDefaultGroup" :title="lang('defaultGroup')" :disabled="isLoading">
                             <span class="icon">
                                 <figure class="image is-16x16">
                                     <img src="/icons/wrench.svg"/>
@@ -1016,7 +732,7 @@ export default {
             </div>
             <div>
                 <div id="search-wrapper" class="field" :class="{'has-addons': searchDelay.length}">
-                    <div :class="['control has-icons-left is-expanded', {'is-loading': searchDelayTimer}]">
+                    <div class="control has-icons-left is-expanded" :class="{'is-loading': searchDelayTimer}">
                         <input
                             type="text"
                             class="input"
@@ -1045,7 +761,7 @@ export default {
                 </div>
             </div>
             <div>
-                <button class="button" @click="openOptionsPage()">
+                <button class="button" @click="openOptionsPage()" :disabled="isLoading">
                     <span class="icon">
                         <figure class="image is-16x16">
                             <img src="/icons/settings.svg" />
@@ -1391,46 +1107,11 @@ export default {
             @changes="changes => saveEditedGroup(groupToEdit.id, changes)"></edit-group>
     </popup>
 
-    <popup
-        v-if="showPromptPopup"
-        :title="promptTitle"
-        @resolve="promptResolveFunc(true)"
-        @close-popup="promptResolveFunc(false)"
-        @show-popup="$refs.promptInput.focus(); $refs.promptInput.select()"
-        :buttons="
-            [{
-                event: 'resolve',
-                classList: 'is-success',
-                lang: 'ok',
-                focused: false,
-            }, {
-                event: 'close-popup',
-                lang: 'cancel',
-            }]
-        ">
-        <div class="control is-expanded">
-            <input v-model.trim="promptValue" type="text" class="input" ref="promptInput" @keydown.enter.stop="promptResolveFunc(true)" />
-        </div>
-    </popup>
-
-    <popup
-        v-if="showConfirmPopup"
-        :title="confirmTitle"
-        @resolve="confirmResolveFunc(true)"
-        @close-popup="confirmResolveFunc(false)"
-        :buttons="
-            [{
-                event: 'resolve',
-                classList: confirmClass,
-                lang: confirmLang,
-                focused: true,
-            }, {
-                event: 'close-popup',
-                lang: 'cancel',
-            }]
-        ">
-        <span v-html="confirmText"></span>
-    </popup>
+    <popup-helpers
+        v-if="promptOptions || confirmOptions"
+        :prompt="promptOptions"
+        :confirm="confirmOptions"
+        ></popup-helpers>
 
 
     <!-- <footer class="is-flex is-unselectable">

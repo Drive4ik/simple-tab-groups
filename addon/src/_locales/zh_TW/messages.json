@@ -838,7 +838,7 @@
         "description": "Archive"
     },
     "confirmArchiveGroup": {
-        "message": "確定封存 \"$grouptitle$\" 群組？<br>一旦群組被封存，所有分頁資料將被保存到附加元件資料庫內，並從瀏覽器移除。",
+        "message": "確定封存 \"$grouptitle$\" 群組？\n一旦群組被封存，所有分頁資料將被保存到附加元件資料庫內，並從瀏覽器移除。",
         "description": "Do you want to archive the group",
         "placeholders": {
             "grouptitle": {

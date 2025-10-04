@@ -184,7 +184,7 @@
         "description": "Delete group"
     },
     "confirmDeleteGroup": {
-        "message": "Czy chcesz usunąć grupę \"$grouptitle$\" ?<br>Usunięcie grupy spowoduje również zamknięcie kart i powiązanego okna, jeśli jest już otwarte!",
+        "message": "Czy chcesz usunąć grupę \"$grouptitle$\"?\nUsunięcie grupy spowoduje również zamknięcie kart i powiązanego okna, jeśli jest już otwarte!",
         "description": "Delete group?",
         "placeholders": {
             "grouptitle": {
@@ -838,7 +838,7 @@
         "description": "Archive"
     },
     "confirmArchiveGroup": {
-        "message": "Czy chcesz zarchiwizować grupę \"$grouptitle$\"?<br>Gdy to zrobisz, karty zostaną zapisane w bazie danych rozszerzenia i będą usunięte z przeglądarki",
+        "message": "Czy chcesz zarchiwizować grupę \"$grouptitle$\"?\nGdy to zrobisz, karty zostaną zapisane w bazie danych rozszerzenia i będą usunięte z przeglądarki",
         "description": "Do you want to archive the group",
         "placeholders": {
             "grouptitle": {

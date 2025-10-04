@@ -19,7 +19,7 @@ const {sendMessageModule} = Messages.connectToBackground(MODULE_NAME, [
     'sync-error',
     'sync-finish',
 ], (syncEvent) => {
-    logger.info(syncEvent.action, syncEvent);
+    logger.info('got message', syncEvent.action, syncEvent);
 
     for (const instance of instances) {
         instance.$emit(syncEvent.action, syncEvent);

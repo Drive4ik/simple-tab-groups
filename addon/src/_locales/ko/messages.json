@@ -176,7 +176,7 @@
         "description": "Delete group"
     },
     "confirmDeleteGroup": {
-        "message": "\"$grouptitle$\" 그룹을 삭제하겠습니까? <br> 그룹을 제거하면 열려 있는 탭과 창들이 닫힙니다.",
+        "message": "\"$grouptitle$\" 그룹을 삭제하겠습니까? \n 그룹을 제거하면 열려 있는 탭과 창들이 닫힙니다.",
         "description": "Delete group?",
         "placeholders": {
             "grouptitle": {
@@ -798,7 +798,7 @@
         "description": "Archive"
     },
     "confirmArchiveGroup": {
-        "message": "\"$grouptitle$\" 그룹을 보관하겠습니까?<br>그룹을 보관하면 탭이 추가 기능 데이터베이스에 저장되고 브라우저에서 제거됩니다.",
+        "message": "\"$grouptitle$\" 그룹을 보관하겠습니까?\n그룹을 보관하면 탭이 추가 기능 데이터베이스에 저장되고 브라우저에서 제거됩니다.",
         "description": "Do you want to archive the group",
         "placeholders": {
             "grouptitle": {

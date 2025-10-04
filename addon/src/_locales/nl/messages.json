@@ -184,7 +184,7 @@
         "description": "Delete group"
     },
     "confirmDeleteGroup": {
-        "message": "Wil je groep \"$grouptitle$\" verwijderen?<br>Het verwijderen van een groep sluit ook de bijhorende, openstaande tabbladen en vensters!",
+        "message": "Wil je groep \"$grouptitle$\" verwijderen?\nHet verwijderen van een groep sluit ook de bijhorende, openstaande tabbladen en vensters!",
         "description": "Delete group?",
         "placeholders": {
             "grouptitle": {
@@ -838,7 +838,7 @@
         "description": "Archive"
     },
     "confirmArchiveGroup": {
-        "message": "Wilt u de groep \"$grouptitle$\" archiveren?<br>Wanneer u een groep archiveert, worden de tabs opgeslagen in de databank van de add-on en verwijderd uit de browser.",
+        "message": "Wilt u de groep \"$grouptitle$\" archiveren?\nWanneer u een groep archiveert, worden de tabs opgeslagen in de databank van de add-on en verwijderd uit de browser.",
         "description": "Do you want to archive the group",
         "placeholders": {
             "grouptitle": {

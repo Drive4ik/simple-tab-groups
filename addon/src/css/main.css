@@ -103,6 +103,10 @@ input {
     word-wrap: anywhere;
 }
 
+.white-space-pre-line {
+    white-space: pre-line;
+}
+
 /*BULMA REWRITE*/
 .image.is-16x16 {
     --image-size: 16px;

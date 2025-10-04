@@ -184,7 +184,7 @@
         "description": "Delete group"
     },
     "confirmDeleteGroup": {
-        "message": "¿Quiere borrar el grupo \"$grouptitle$\"?<br>Borrar el grupo también cierra las pestañas y la ventana enlazada si la ventana esta activa ahora!",
+        "message": "¿Quiere borrar el grupo \"$grouptitle$\"?\nBorrar el grupo también cierra las pestañas y la ventana enlazada si la ventana esta activa ahora!",
         "description": "Delete group?",
         "placeholders": {
             "grouptitle": {
@@ -838,7 +838,7 @@
         "description": "Archive"
     },
     "confirmArchiveGroup": {
-        "message": "Querés archivar el grupo $grouptitle$?<br>Cuando archivas un grupo, las pestañas serán guardadas en la base de datos de la extensión y serán removidas del navegador.",
+        "message": "Querés archivar el grupo $grouptitle$?\nCuando archivas un grupo, las pestañas serán guardadas en la base de datos de la extensión y serán removidas del navegador.",
         "description": "Do you want to archive the group",
         "placeholders": {
             "grouptitle": {

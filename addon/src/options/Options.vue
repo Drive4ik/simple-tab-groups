@@ -31,11 +31,11 @@ const storage = localStorage.create(Constants.MODULES.OPTIONS);
 
 Vue.config.errorHandler = errorEventHandler.bind(window.logger);
 
-const SECTION_GENERAL = 'general',
-    SECTION_HOTKEYS = 'hotkeys',
-    SECTION_BACKUP = 'backup',
-    SECTION_ABOUT = 'about',
-    folderNameRegExp = /[\<\>\:\"\/\\\|\?\*\x00-\x1F]|^(?:aux|con|nul|prn|com\d|lpt\d)$|^\.+|\.+$/gi;
+const SECTION_GENERAL = 'general';
+const SECTION_HOTKEYS = 'hotkeys';
+const SECTION_BACKUP = 'backup';
+const SECTION_ABOUT = 'about';
+const folderNameRegExp = /[\<\>\:\"\/\\\|\?\*\x00-\x1F]|^(?:aux|con|nul|prn|com\d|lpt\d)$|^\.+|\.+$/gi;
 
 document.title = browser.i18n.getMessage('openSettings');
 

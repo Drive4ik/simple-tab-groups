@@ -4,10 +4,9 @@ import * as Constants from './constants.js';
 import * as Utils from './utils.js';
 import backgroundSelf from './background.js';
 
-export const tabs = Constants.IS_BACKGROUND_PAGE ? {} : backgroundSelf?.CacheTabs;
-// bug https://bugzilla.mozilla.org/show_bug.cgi?id=1818392
-export const lastTabsState = Constants.IS_BACKGROUND_PAGE ? {} : backgroundSelf?.CacheLastTabsState;
-export const windows = Constants.IS_BACKGROUND_PAGE ? {} : backgroundSelf?.CacheWindows;
+export const tabs = {};
+export const lastTabsState = {}; // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1818392
+export const windows = {};
 
 function setLastTabState({id, url, title, status, hidden, pinned, favIconUrl}) {
     lastTabsState[id] = {id, url, title, status, hidden, pinned, favIconUrl};

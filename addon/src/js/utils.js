@@ -150,6 +150,13 @@ export function sliceText(text, length = 50) {
     return (text?.length > length) ? (text.slice(0, length - 3) + '...') : (text || '');
 }
 
+export async function sha256Hex(str) {
+    const data = new TextEncoder().encode(str);
+    const hashBuffer = await self.crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 export function isAllowExternalRequestAndSender(request, sender, extensionRules = {}) {
     // if (sender?.id?.startsWith('test-stg-action')) {
     //     return true;

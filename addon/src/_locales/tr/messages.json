@@ -176,7 +176,7 @@
         "description": "Delete group"
     },
     "confirmDeleteGroup": {
-        "message": "$grouptitle$ grubunu silmek istiyor musunuz? <br> Grup içindeki sekmeler ve pencereler kapatılacaktır.",
+        "message": "$grouptitle$ grubunu silmek istiyor musunuz?\nGrup içindeki sekmeler ve pencereler kapatılacaktır.",
         "description": "Delete group?",
         "placeholders": {
             "grouptitle": {

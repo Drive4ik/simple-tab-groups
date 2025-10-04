@@ -184,7 +184,7 @@
         "description": "Delete group"
     },
     "confirmDeleteGroup": {
-        "message": "Желаете ли групата „$grouptitle$“ да бъде изтрита?<br>При изтриване на група разделите и прозорците в нея биват затваряни.",
+        "message": "Желаете ли групата „$grouptitle$“ да бъде изтрита?\nПри изтриване на група разделите и прозорците в нея биват затваряни.",
         "description": "Delete group?",
         "placeholders": {
             "grouptitle": {
@@ -838,7 +838,7 @@
         "description": "Archive"
     },
     "confirmArchiveGroup": {
-        "message": "Желаете ли група „$grouptitle$“ да бъде архивирана?<br>При този процес разделите от групата ще бъдат запазени като данни на добавката и ще бъдат премахнати от четеца.",
+        "message": "Желаете ли група „$grouptitle$“ да бъде архивирана?\nПри този процес разделите от групата ще бъдат запазени като данни на добавката и ще бъдат премахнати от четеца.",
         "description": "Do you want to archive the group",
         "placeholders": {
             "grouptitle": {

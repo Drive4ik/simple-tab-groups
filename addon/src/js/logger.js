@@ -6,6 +6,8 @@ import * as Utils from './utils.js';
 import * as Messages from './messages.js';
 import {normalizeError, getStack} from './logger-utils.js';
 
+const prefixGlue = '.'; // ➡️  →
+
 const storage = localStorage.create(Constants.MODULES.LOGGER);
 const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 
@@ -163,7 +165,7 @@ function Log(cKey, ...args) {
         return;
     }
 
-    const argsToLog = [this.prefixes.join('.'), ...args];
+    const argsToLog = [this.prefixes.join(prefixGlue), ...args];
 
     if (this.scope && !args.some(l => l?.includes?.(this.scope))) {
         argsToLog.push(`SCOPE ${this.scope}`);
@@ -210,7 +212,7 @@ export function showLog(log, {cKey, args}) {
 
     if (mainStorage.enableDebug || mainStorage.IS_TEMPORARY) {
         let argsToConsole = cKey === 'assert'
-            ? [args[0], this.prefixes.join('.'), ...args.slice(1)]
+            ? [args[0], this.prefixes.join(prefixGlue), ...args.slice(1)]
             : log[`console.${cKey}`].slice();
 
         if (!console[cKey]) {

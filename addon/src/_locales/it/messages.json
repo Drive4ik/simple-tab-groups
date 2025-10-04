@@ -184,7 +184,7 @@
         "description": "Delete group"
     },
     "confirmDeleteGroup": {
-        "message": "Vuoi eliminare il gruppo \"$grouptitle$\"? <br>La rimozione di gruppi implica la chiusura delle schede e finestre se aperte!",
+        "message": "Vuoi eliminare il gruppo \"$grouptitle$\"?\nLa rimozione di gruppi implica la chiusura delle schede e finestre se aperte!",
         "description": "Delete group?",
         "placeholders": {
             "grouptitle": {
@@ -838,7 +838,7 @@
         "description": "Archive"
     },
     "confirmArchiveGroup": {
-        "message": "Vuoi archiviare il gruppo \"$grouptitle$\"?<br>Una volta archiviato il gruppo, le schede verranno salvate nel database dell'estensione e saranno rimosse dal browser.",
+        "message": "Vuoi archiviare il gruppo \"$grouptitle$\"?\nUna volta archiviato il gruppo, le schede verranno salvate nel database dell'estensione e saranno rimosse dal browser.",
         "description": "Do you want to archive the group",
         "placeholders": {
             "grouptitle": {

@@ -184,7 +184,7 @@
         "description": "Delete group"
     },
     "confirmDeleteGroup": {
-        "message": "Willst du die Gruppe \"$grouptitle$\" entfernen?<br>Entfernen der Gruppe schließt alle ihre Tabs und Fenster, wenn sie geöffnet sind!",
+        "message": "Willst du die Gruppe \"$grouptitle$\" entfernen?\nEntfernen der Gruppe schließt alle ihre Tabs und Fenster, wenn sie geöffnet sind!",
         "description": "Delete group?",
         "placeholders": {
             "grouptitle": {
@@ -838,7 +838,7 @@
         "description": "Archive"
     },
     "confirmArchiveGroup": {
-        "message": "Willst du die Gruppe \"$grouptitle$\" archivieren? <br>Beim Archivieren der Gruppe werden dessen Tabs in der Datenbank des Add-On gespeichert und aus dem Browser entfernt.",
+        "message": "Willst du die Gruppe \"$grouptitle$\" archivieren?\nBeim Archivieren der Gruppe werden dessen Tabs in der Datenbank des Add-On gespeichert und aus dem Browser entfernt.",
         "description": "Do you want to archive the group",
         "placeholders": {
             "grouptitle": {

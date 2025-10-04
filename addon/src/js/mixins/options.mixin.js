@@ -12,16 +12,16 @@ const logger = new Logger(MODULE_NAME, [Utils.getNameFromPath(location.href)]);
 const instances = new Set;
 
 const {sendMessageModule} = Messages.connectToBackground(MODULE_NAME, 'options-updated', ({keys}) => {
-    logger.info('updated keys:', keys);
+    logger.info('got message', keys);
 
     for (const instance of instances) {
         if (instance.$options.name === Constants.MODULES.OPTIONS && keys.join() === 'hotkeys') {
             // do not update hotkeys on options page to prevent removing duplicated hotkeys
-            logger.info('prevent update hotkeys');
+            logger.info('🛑 prevent update hotkeys into options page');
             return;
         }
 
-        instance.optionsReload();
+        instance.optionsReload(keys);
     }
 });
 
@@ -45,16 +45,22 @@ export default {
         instances.delete(this);
     },
     methods: {
-        async optionsReload() {
+        async optionsReload(updateKeys = Constants.ALL_OPTION_KEYS) {
             this.optionsUnwatchers ??= new Set;
             this.optionsUnwatchers.forEach(unwatch => unwatch());
             this.optionsUnwatchers.clear();
 
-            const options = await Storage.get(Constants.ALL_OPTION_KEYS);
+            const options = await Storage.get(updateKeys);
 
-            options.autoBackupFolderName = await File.getAutoBackupFolderName();
+            if (updateKeys === Constants.ALL_OPTION_KEYS) {
+                if (this.$options.name === Constants.MODULES.OPTIONS) {
+                    options.autoBackupFolderName = await File.getAutoBackupFolderName();
+                }
 
-            this.options = options;
+                this.options = options;
+            } else {
+                Object.assign(this.options, options);
+            }
 
             const keys = this.optionsWatchKeys ?? [];
 
@@ -62,7 +68,10 @@ export default {
                 this.optionsWatch(key, value => value);
             }
 
-            this.$emit('options-reloaded');
+            this.$emit('options-reloaded', {
+                keys: updateKeys,
+                options,
+            });
         },
         optionsWatch(key, func, watchOptions = {}) {
             const unwatch = this.$watch(`options.${key}`, async (...args) => {

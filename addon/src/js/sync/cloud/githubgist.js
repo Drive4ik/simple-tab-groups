@@ -2,6 +2,7 @@
 import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
 import * as Urls from '/js/urls.js';
+import * as Utils from '/js/utils.js';
 
 const storage = localStorage.create(Constants.MODULES.CLOUD);
 
@@ -12,8 +13,6 @@ export default class GithubGist {
 
     #perPage = null; // max = 100
     #throwOnceUnknownResponse = false;
-
-    progressFunc = null;
 
     constructor(token, fileName, perPage = 30) {
         if (!token) {
@@ -32,7 +31,6 @@ export default class GithubGist {
     static apiUrl = 'https://api.github.com';
     static defaultHeaders = {
         'Accept': 'application/vnd.github+json',
-        'Content-Type': 'application/json',
         'X-GitHub-Api-Version': '2022-11-28',
     };
 
@@ -94,7 +92,7 @@ export default class GithubGist {
         return null;
     }
 
-    async getInfo(revision = null) {
+    async getInfo(revision = null, progressFunc = null) {
         this.hasGist || await this.#findGist();
 
         if (!this.hasGist) {
@@ -107,24 +105,30 @@ export default class GithubGist {
             gistUrl += `/${revision}`;
         }
 
-        const gist = await this.#request('GET', gistUrl);
+        const gist = await this.#request('GET', gistUrl, undefined, undefined, progressFunc);
 
         return this.#processInfo(gist);
     }
 
-    async getContent(revision, withInfo = false) {
+    async getContent(revision, withInfo = false, progressFunc = null) {
         try {
-            const gist = await this.getInfo(revision);
+            const progressApiFunc = this.#createProgress(0, 50, progressFunc);
+            const progressRawFunc = this.#createProgress(50, 100, progressFunc);
+
+            const gist = await this.getInfo(revision, progressApiFunc);
 
             const file = gist.files[this.#fileName];
 
-            const content = file.truncated
-                ? await this.#request('GET', file.raw_url)
-                : JSON.parse(file.content);
+            let content;
 
-            return withInfo
-                ? [content, gist]
-                : content;
+            if (file.truncated) {
+                content = await this.#request('GET', file.raw_url, undefined, undefined, progressRawFunc);
+            } else {
+                content = JSON.parse(file.content);
+                progressRawFunc(100);
+            }
+
+            return withInfo ? [content, gist] : content;
         } catch (e) {
             if (e instanceof SyntaxError) {
                 throw Error('githubInvalidGistContent');
@@ -134,30 +138,33 @@ export default class GithubGist {
         }
     }
 
-    async setContent(content, description = '') {
+    async setContent(content, description = '', progressFunc = null) {
         this.hasGist || await this.#findGist();
 
         const files = {
             [this.#fileName]: {content},
         };
 
+        const progressSend = this.#createProgress(0, 70, progressFunc);
+        const progressGet = this.#createProgress(70, 100, progressFunc);
+
         if (this.hasGist) {
             await this.#request('PATCH', this.#gistUrl, {
                 files,
-            });
+            }, undefined, progressSend);
         } else {
             const gist = await this.#request('POST', this.#mainUrl, {
                 public: false,
                 description,
                 files,
-            });
+            }, undefined, progressSend);
 
             this.#gistId = gist.id;
         }
 
         // sometimes git make wrong update the field "updated_at" minus 1 second :(
         // thats why we have to get info after update gist
-        return await this.getInfo();
+        return await this.getInfo(undefined, progressGet);
     }
 
     async rename(filename) {
@@ -178,7 +185,7 @@ export default class GithubGist {
         return this.#processInfo(gist);
     }
 
-    async #request(method, url, body = {}, options = {}) {
+    async #request(method, url, body = null, options = {}, progressFunc = null) {
         const throwOnceUnknownResponse = this.#throwOnceUnknownResponse;
         this.#throwOnceUnknownResponse = false;
 
@@ -186,51 +193,35 @@ export default class GithubGist {
             throw Error('githubInvalidToken');
         }
 
-        body ??= {};
-        options.method = method;
-
         const isApi = url.startsWith(GithubGist.apiUrl);
 
+        options.method = method;
+        options.headers ??= {};
+
         if (isApi) {
-            options.headers ??= {};
             Object.assign(options.headers, GithubGist.defaultHeaders);
             options.headers.Authorization = `token ${this.#token}`;
         }
 
-        let contentLength;
-
         if (options.method === 'GET') {
+            url = Urls.setUrlSearchParams(url, body ?? {});
             options.cache ??= 'no-store';
-            url = Urls.setUrlSearchParams(url, body);
         } else if (body) {
             if (body.files) {
-                for (const value of Object.values(body.files)) {
-                    if (value.content && typeof value.content !== 'string') {
-                        value.content = JSON.stringify(value.content, null, 2);
+                for (const file of Object.values(body.files)) {
+                    if (file.content && typeof file.content !== 'string') {
+                        file.content = JSON.stringify(file.content, null, 2);
                     }
                 }
             }
 
-            // const compressFormat = 'gzip'; // gzip compress, now it doesn't support by github :(
-            // const blob = new Blob([JSON.stringify(body)], {type: 'application/json'});
-            // const stream = blob.stream();
-            // const compressedReadableStream = stream.pipeThrough(new CompressionStream(compressFormat));
-            // const compressedResponse = new Response(compressedReadableStream);
-            // options.body = await compressedResponse.blob();
-            // options.headers['Content-Encoding'] = compressFormat;
-
             options.body = JSON.stringify(body);
-
-            contentLength = options.body.length + 46_000; // for github api, it doesn't get header content-length
+            options.headers['Content-Type'] = 'application/json';
         }
 
-        let response = await fetch(url, options);
+        const response = await this.#progressFetch(url, options, progressFunc);
 
         if (response.ok) {
-            if (this.progressFunc) {
-                response = await this.#readBody(response, this.progressFunc, contentLength);
-            }
-
             if (options.method !== 'GET') {
                 delete storage.hasError;
             }
@@ -280,39 +271,146 @@ export default class GithubGist {
         throw Error(`${response.status}: ${result.message}`);
     }
 
-    async #readBody(response, progressFunc, length = null) {
-        length ??= +response.headers.get('content-length');
+    #createProgress(currentProgress, progressDuration, progressFunc = null) {
+        return progress => this.#callProgress(currentProgress, progressDuration, progress, progressFunc);
+    }
 
-        const onProgress = received => {
-            // for github api, it doesn't get header content-length
-            if (length <= 0) {
-                length = received * 5;
+    #callProgress(currentProgress, progressDuration, progress, progressFunc = null) {
+        const durationPart = (progressDuration - currentProgress) / 100;
+        const mainPercent = currentProgress + Math.floor(progress * durationPart);
+        progressFunc?.(mainPercent);
+    }
+
+    async #progressFetch(url, options, progressFunc = null) {
+        const cacheUrlKey = await Utils.sha256Hex([this.#fileName, options.method, url].join(''));
+        const cache = storage.create('cache').create(cacheUrlKey.slice(0, 5));
+
+        if (options.method === 'GET') {
+            const response = await fetch(url, options);
+
+            const stream = new ReadableStream({
+                start: async controller => {
+                    let length = +response.headers.get('content-length') || cache.responseLength || 0;
+                    let received = 0;
+
+                    for await (const chunk of response.body) {
+                        controller.enqueue(chunk);
+
+                        received += chunk.length;
+
+                        if (length <= 0) {
+                            length = received * 7;
+                        } else if (length < received) {
+                            length = received;
+                        }
+
+                        const percent = Math.floor(received / length * 100);
+                        this.#callProgress(0, 100, percent, progressFunc);
+                    }
+
+                    if (response.ok) {
+                        cache.responseLength = length;
+                    }
+
+                    controller.close();
+                },
+            });
+
+            return new Response(stream, response);
+        } else { // POST, PATCH, ...
+            // use XMLHttpRequest for upload progress
+            // because fetch doesn't support upload progress now :(
+            // https://developer.mozilla.org/en-US/docs/Web/API/Request/body
+
+            const createXHRProgess = (currentProgress, progressDuration) => {
+                let total;
+                return event => {
+                    total ??= event.lengthComputable
+                        ? event.total
+                        : (event.target instanceof XMLHttpRequest ? (cache.responseLength || 0) : null);
+
+                    if (total <= 0) {
+                        total = event.loaded * 7;
+                    } else if (total < event.loaded) {
+                        total = event.loaded;
+                    }
+
+                    const xhrProgress = Math.floor(event.loaded / total * 100);
+                    this.#callProgress(currentProgress, progressDuration, xhrProgress, progressFunc);
+                };
             }
 
-            if (length < received) {
-                length = received;
+            const xhr = await new Promise(resolve => {
+                const xhr = new XMLHttpRequest();
+
+                xhr.open(options.method, url, true);
+
+                for (const [key, value] of Object.entries(options.headers)) {
+                    xhr.setRequestHeader(key, value);
+                }
+
+                xhr.upload.onprogress = createXHRProgess(0, 70);
+                xhr.onprogress = createXHRProgess(70, 100);
+                xhr.onload = xhr.onerror = xhr.onabort = () => resolve(xhr);
+
+                xhr.send(options.body);
+            });
+
+            if (xhr.status >= 200 && xhr.status < 204) {
+                cache.responseLength = xhr.responseText.length;
             }
 
-            const percent = Math.floor(100 * received / length);
+            const headers = xhr.getAllResponseHeaders().trim().split(/[\r\n]+/).map(header => header.split(': '));
+
+            return new Response(xhr.responseText, {
+                status: xhr.status,
+                statusText: xhr.statusText,
+                headers: new Headers(headers),
+            });
+        }
+    }
+
+    /* createProgressBody(bodyStr, progressFunc) {
+        // options.duplex = 'half'; // TODO: not supported by firefox now :(
+        // https://developer.mozilla.org/en-US/docs/Web/API/Request/duplex
+
+        const jsonBytes = new TextEncoder().encode(bodyStr); // Uint8Array
+        const length = jsonBytes.byteLength;
+        let uploaded = 0;
+
+        const onProgress = uploaded => {
+            const percent = Math.floor(uploaded / length * 100);
             progressFunc(percent);
         };
 
-        const stream = new ReadableStream({
-            async start(controller) {
-                let receivedLength = 0;
-
-                for await (const chunk of response.body) {
-                    controller.enqueue(chunk);
-                    receivedLength += chunk.length;
-                    onProgress(receivedLength);
+        const readableStream = new ReadableStream({
+            start(controller) {
+                const chunkSize = 1024 * 256; // 256 KB
+                for (let i = 0; i < length; i += chunkSize) {
+                    controller.enqueue(jsonBytes.slice(i, i + chunkSize));
                 }
-
                 controller.close();
-            },
+            }
         });
 
-        return new Response(stream, {
-            headers: new Headers([...response.headers]),
+        const transformStream = new TransformStream({
+            transform(chunk, controller) { // chunk is Uint8Array
+                uploaded += chunk.byteLength;
+                onProgress(uploaded);
+                controller.enqueue(chunk);
+            }
         });
-    }
+
+        return readableStream.pipeThrough(transformStream);
+    } */
 }
+
+
+
+// const compressFormat = 'gzip'; // gzip compress, now it doesn't support by github :(
+// const blob = new Blob([bodyStr], {type: 'application/json'});
+// const stream = blob.stream();
+// const compressedReadableStream = stream.pipeThrough(new CompressionStream(compressFormat));
+// const compressedResponse = new Response(compressedReadableStream);
+// options.body = await compressedResponse.blob();
+// options.headers['Content-Encoding'] = compressFormat;

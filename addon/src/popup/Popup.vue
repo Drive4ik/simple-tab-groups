@@ -2,6 +2,7 @@
 import Vue from 'vue';
 
 import popup from '../components/popup.vue';
+import popupHelpers from '../components/popup-helpers.vue';
 import editGroupPopup from './edit-group-popup.vue';
 import editGroup from '../components/edit-group.vue';
 import contextMenu from '../components/context-menu.vue';
@@ -25,7 +26,9 @@ import JSON from '/js/json.js';
 
 import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
 import optionsMixin from '/js/mixins/options.mixin.js';
+import popupHelpersMixin from '/js/mixins/popup-helpers.mixin.js';
 import syncCloudMixin from '/js/mixins/sync-cloud.mixin.js';
+import tabGroupsMixin from '/js/mixins/tab-groups.mixin.js';
 
 const isSidebar = '#sidebar' === window.location.hash;
 const MODULE_NAME = isSidebar ? Constants.MODULES.SIDEBAR : Constants.MODULES.POPUP;
@@ -33,34 +36,29 @@ const MODULE_NAME = isSidebar ? Constants.MODULES.SIDEBAR : Constants.MODULES.PO
 window.logger = new Logger(MODULE_NAME);
 
 const storage = localStorage.create(Constants.MODULES.POPUP);
-const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
+// const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 
 Vue.config.errorHandler = errorEventHandler.bind(window.logger);
 
-function fullLoading(show) {
-    document.getElementById('loading').classList.toggle('is-hidden', !show);
-}
-
-const {sendMessage} = Messages.connectToBackground(MODULE_NAME + '-temp');
-
-const startUpDataPromise = sendMessage('get-startup-data');
-await Containers.init();
-
-const SECTION_SEARCH = 'search',
-    SECTION_GROUPS_LIST = 'groupsList',
-    SECTION_GROUP_TABS = 'groupTabs',
-    SECTION_DEFAULT = SECTION_GROUPS_LIST,
-    availableTabKeys = new Set(['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'lastAccessed', 'audible', 'mutedInfo', 'windowId']);
+const SECTION_SEARCH = 'search';
+const SECTION_GROUPS_LIST = 'groupsList';
+const SECTION_GROUP_TABS = 'groupTabs';
+const SECTION_DEFAULT = SECTION_GROUPS_LIST;
 
 export default {
     name: Constants.MODULES.POPUP,
-    mixins: [defaultGroupMixin, optionsMixin, syncCloudMixin],
+    mixins: [
+        defaultGroupMixin,
+        optionsMixin,
+        popupHelpersMixin,
+        syncCloudMixin,
+        tabGroupsMixin,
+    ],
     data() {
         return {
-            enableDebug: mainStorage.enableDebug,
+            isSidebar,
 
-            isSidebar: isSidebar,
-
+            extraAvailableTabKeys: ['lastAccessed', 'audible', 'mutedInfo'],
             optionsWatchKeys: Constants.POPUP_SETTINGS_MENU_ITEMS
                 .map(item => item.optionsCheckbox && item.key)
                 .filter(Boolean),
@@ -70,49 +68,22 @@ export default {
             SECTION_GROUP_TABS,
 
             POPUP_SETTINGS_MENU_ITEMS: Constants.POPUP_SETTINGS_MENU_ITEMS,
-            DEFAULT_COOKIE_STORE_ID: Constants.DEFAULT_COOKIE_STORE_ID,
             section: SECTION_DEFAULT,
 
-            showPromptPopup: false,
-            promptTitle: null,
-            promptValue: '',
-            promptResolveFunc: null,
-
-            showConfirmPopup: false,
-            confirmTitle: '',
-            confirmText: '',
-            confirmLang: '',
-            confirmClass: '',
-            confirmResolveFunc: null,
-
-            dragData: null,
             someGroupAreLoading: false,
 
-            search: '',
-            searchDelay: '',
-            searchDelayTimer: 0,
             searchOnlyGroups: storage.searchOnlyGroupsInPopup ?? false,
-            extendedSearch: false,
-
-            currentWindow: null,
-            openedWindows: [],
 
             groupToShow: null,
-            groupToEdit: null,
-
-            containers: Containers.query({defaultContainer: true, temporaryContainer: true}),
-            groups: [],
 
             allTabs: {},
 
             showUnSyncTabs: false,
-            unSyncTabs: [],
-
-            multipleTabIds: [], // TODO try use Set Object
         };
     },
     components: {
         popup: popup,
+        'popup-helpers': popupHelpers,
         'edit-group-popup': editGroupPopup,
         'edit-group': editGroup,
         'context-menu': contextMenu,
@@ -123,19 +94,16 @@ export default {
     async mounted() {
         const log = logger.start('mounted');
 
-        await this.optionsLoadPromise;
+        await Promise.all([
+            this.optionsLoadPromise,
+            this.tabGroupsPromise,
+        ]);
 
-        const startUpData = await startUpDataPromise;
-
-        await this.loadWindows(startUpData);
-        this.loadGroups(startUpData);
-        this.loadUnsyncedTabs(startUpData);
-
-        log.log('loaded');
+        log.log('options and tab groups loaded');
 
         await this.$nextTick();
 
-        fullLoading(false);
+        this.isLoading = false;
         this.setFocusOnSearch();
         this.setupListeners();
 
@@ -146,8 +114,11 @@ export default {
         log.stop();
     },
     watch: {
+        isLoading() {
+            document.getElementById('loading').classList.toggle('is-hidden', !this.isLoading);
+        },
         'options.fullPopupWidth'(fullPopupWidth) {
-            if (!isSidebar) {
+            if (!this.isSidebar) {
                 document.documentElement.classList.toggle('full-popup-width', fullPopupWidth);
             }
         },
@@ -157,17 +128,6 @@ export default {
         groupToEdit(groupToEdit) {
             if (!groupToEdit) {
                 this.setFocusOnSearch();
-            }
-        },
-        searchDelay(search) {
-            if (search.length && this.allTabsCount > 200) {
-                window.clearTimeout(this.searchDelayTimer);
-                this.searchDelayTimer = window.setTimeout(() => {
-                    this.search = search;
-                    this.searchDelayTimer = 0;
-                }, 500);
-            } else {
-                this.search = search;
             }
         },
         search(search) {
@@ -218,9 +178,6 @@ export default {
         countWindowsUnSyncTabs() {
             return this.unSyncTabs.map(tab => tab.windowId).filter(Utils.onlyUniqueFilter).length;
         },
-        allTabsCount() {
-            return Object.keys(this.allTabs).length;
-        },
         syncTitle() {
             let result = this.lang('syncStart');
 
@@ -234,33 +191,24 @@ export default {
     methods: {
         lang: browser.i18n.getMessage,
 
-        async loadWindows({windows} = {}) {
-            this.currentWindow = await Windows.get();
-            this.openedWindows = windows || await Windows.load();
-        },
+        async setFocusOnActive() {
+            await this.$nextTick();
 
-        setFocusOnSearch() {
-            this.$nextTick(() => this.$refs.search.focus());
-        },
+            let activeItemNode = document.querySelector('.is-active-element');
 
-        setFocusOnActive() {
-            this.$nextTick(function() {
-                let activeItemNode = document.querySelector('.is-active-element');
+            if (!activeItemNode && this.groupToShow) {
+                const activeTab = Utils.getLastActiveTab(this.groupToShow.tabs);
 
-                if (!activeItemNode && this.groupToShow) {
-                    let activeTab = Utils.getLastActiveTab(this.groupToShow.tabs);
-
-                    if (activeTab) {
-                        activeItemNode = document.querySelector(`[data-tab-id="${activeTab.id}"]`);
-                    }
+                if (activeTab) {
+                    activeItemNode = document.querySelector(`[data-tab-id="${activeTab.id}"]`);
                 }
+            }
 
-                if (activeItemNode) {
-                    activeItemNode.focus();
-                } else {
-                    this.setFocusOnSearch();
-                }
-            });
+            if (activeItemNode) {
+                activeItemNode.focus();
+            } else {
+                this.setFocusOnSearch();
+            }
         },
 
         setupListeners() {
@@ -272,7 +220,12 @@ export default {
                     const tabIds = this.getTabIdsForMove(from.data.item.id),
                         newTabIndex = to.data.item.index;
 
-                    Messages.sendMessageModule('Tabs.move', tabIds, to.data.group.id, {newTabIndex});
+                    Messages.sendMessageModule('Tabs.move', tabIds, to.data.group.id, {
+                        newTabIndex,
+                        showTabAfterMovingItIntoThisGroup: false,
+                        showOnlyActiveTabAfterMovingItIntoThisGroup: false,
+                        showNotificationAfterMovingTabIntoThisGroup: false,
+                    });
                 })
                 .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
                 .$on('drag-over', (item, isOver) => item.isOver = isOver);
@@ -284,7 +237,7 @@ export default {
                     }
 
                     if (this.syncCloudTriggeredByPopup) {
-                        const ok = await this.showConfirm(name, message, 'openSettings', 'is-info');
+                        const ok = await this.confirm(name, message, 'openSettings', 'is-info');
                         ok && this.openOptionsPage('backup sync');
                     }
                 })
@@ -547,7 +500,7 @@ export default {
                 },
                 'sync-end': ({changes}) => changes.local && listeners['groups-updated'](),
                 'lock-addon': () => {
-                    fullLoading(true);
+                    this.isLoading = true;
                     removeEvents();
                 },
             };
@@ -591,25 +544,16 @@ export default {
             window.addEventListener('unload', removeEvents);
         },
 
-        async loadGroupTabs(groupId) {
-            let {group: {tabs}} = await Groups.load(groupId, true, true),
-                group = this.groups.find(gr => gr.id === groupId);
-
-            group.tabs = tabs.map(this.mapTab, this);
-        },
-
         showSectionGroupTabs(group) {
             this.groupToShow = group;
             this.search = this.searchDelay = '';
             this.section = SECTION_GROUP_TABS;
             this.setFocusOnSearch();
         },
-
         showSectionSearch() {
             this.groupToShow = null;
             this.section = SECTION_SEARCH;
         },
-
         showSectionDefault() {
             this.section = SECTION_DEFAULT;
             this.groupToShow = null;
@@ -632,131 +576,10 @@ export default {
             return 0; // stay
         },
 
-        mapGroup(group) {
-            if (group.isArchive) {
-                group.tabs = Object.freeze(group.tabs.map(Utils.normalizeTabFavIcon).map(this.mapTabContainer));
-            } else {
-                group.tabs = group.tabs.map(this.mapTab, this);
-            }
-
-            group.isMoving = false;
-            group.isOver = false;
-
-            return new Vue({
-                data: group,
-                computed: {
-                    iconUrlToDisplay() {
-                        return Groups.getIconUrl({
-                            title: this.title,
-                            iconUrl: this.iconUrl,
-                            iconColor: this.iconColor,
-                            iconViewType: this.iconViewType,
-                        });
-                    },
-                },
-            });
-        },
-
-        mapTab(tab) {
-            Object.keys(tab).forEach(key => !availableTabKeys.has(key) && delete tab[key]);
-
-            tab = Utils.normalizeTabFavIcon(tab);
-
-            tab = this.mapTabContainer(tab);
-
-            if (tab.url === window.location.href) {
-                tab.status = browser.tabs.TabStatus.COMPLETE;
-            }
-
-            tab.isMoving = false;
-            tab.isOver = false;
-
-            return this.allTabs[tab.id] = new Vue({
-                data: tab,
-            });
-        },
-
-        mapTabContainer(tab) {
-            tab.container = Containers.isDefault(tab.cookieStoreId) ? null : Containers.get(tab.cookieStoreId);
-            return tab;
-        },
-
-        isOpenedGroup({id}) {
-            return this.openedWindows.some(win => win.groupId === id);
-        },
-
-        async loadGroups({groups} = {}) {
-            ({groups} = groups ? {groups} : await Groups.load(null, true, true));
-
-            this.groups = groups.map(this.mapGroup, this);
-
-            this.multipleTabIds = [];
-        },
-        async loadUnsyncedTabs({windows} = {}) {
-            windows ??= await Windows.load(true, true);
-
-            const tabs = [];
-
-            for (const win of windows) {
-                if (win.id === this.currentWindow.id) {
-                    for (const tab of win.tabs) {
-                        if (!tab.groupId) {
-                            tabs.push(tab);
-                        }
-                    }
-                }
-            }
-
-            this.unSyncTabs = tabs.map(this.mapTab, this);
-        },
-
-        showPrompt(title, value) {
-            if (this.showPromptPopup) {
-                return Promise.resolve(false);
-            }
-
-            return new Promise(resolve => {
-                this.promptTitle = title;
-                this.promptValue = value;
-
-                this.promptResolveFunc = ok => {
-                    this.showPromptPopup = false;
-
-                    if (ok && this.promptValue.length) {
-                        resolve(this.promptValue);
-                    } else {
-                        resolve(false);
-                    }
-                };
-
-                this.showPromptPopup = true;
-            });
-        },
-
-        showConfirm(title, text, confirmLang = 'ok', confirmClass = 'is-success') {
-            if (this.showConfirmPopup) {
-                return Promise.resolve(false);
-            }
-
-            return new Promise(resolve => {
-                this.confirmTitle = title;
-                this.confirmText = text;
-                this.confirmLang = confirmLang;
-                this.confirmClass = confirmClass;
-
-                this.confirmResolveFunc = ok => {
-                    this.showConfirmPopup = false;
-                    resolve(ok);
-                };
-
-                this.showConfirmPopup = true;
-            });
-        },
-
         async createNewGroup(tabIds, proposalTitle, applyGroupWithTabId) {
             if (this.options.alwaysAskNewGroupName) {
                 const {defaultGroupProps} = await Groups.getDefaults();
-                proposalTitle = await this.showPrompt(this.lang('createNewGroup'), Groups.createTitle(proposalTitle, null, defaultGroupProps));
+                proposalTitle = await this.prompt(this.lang('createNewGroup'), Groups.createTitle(proposalTitle, null, defaultGroupProps));
 
                 if (!proposalTitle) {
                     return false;
@@ -771,11 +594,11 @@ export default {
             }
         },
 
-        async renameGroup({id, title}) {
-            title = await this.showPrompt(this.lang('hotkeyActionTitleRenameGroup'), title);
+        async renameGroup(group) {
+            const title = await this.prompt(this.lang('hotkeyActionTitleRenameGroup'), group.title);
 
             if (title) {
-                Messages.sendMessageModule('Groups.update', id, {title});
+                group.title = title;
             }
         },
 
@@ -785,17 +608,6 @@ export default {
             } else if (this.currentGroup) {
                 this.renameGroup(this.currentGroup);
             }
-        },
-
-        addTab(group, cookieStoreId) {
-            Tabs.add(group.id, cookieStoreId);
-        },
-        removeTab(tab) {
-            Messages.sendMessageModule('Tabs.remove', this.getTabIdsForMove(tab.id));
-        },
-
-        discardTab(tab) {
-            Messages.sendMessageModule('Tabs.discard', this.getTabIdsForMove(tab.id));
         },
 
         showMuteIconTab(tab) {
@@ -812,50 +624,6 @@ export default {
 
         toggleMuteGroup(group) {
             Messages.sendMessageModule('Tabs.setMute', group.tabs.map(Tabs.extractId), group.tabs.some(tab => tab.audible));
-        },
-
-        discardGroup({tabs}) {
-            Messages.sendMessageModule('Tabs.discard', tabs.map(Tabs.extractId));
-        },
-
-        discardOtherGroups(groupExclude) {
-            let tabs = this.groups.reduce((acc, gr) => {
-                let groupTabs = (gr.id === groupExclude.id || gr.isArchive || this.isOpenedGroup(gr)) ? [] : gr.tabs;
-
-                acc.push(...groupTabs);
-
-                return acc;
-            }, []);
-
-            Messages.sendMessageModule('Tabs.discard', tabs.map(Tabs.extractId));
-        },
-
-        async unloadGroup({id}) {
-            fullLoading(true);
-            await Messages.sendMessageModule('Groups.unload', id);
-            fullLoading(false);
-        },
-
-        async toggleArchiveGroup({id, title, isArchive}) {
-            let ok = true;
-
-            if (!isArchive && this.options.showConfirmDialogBeforeGroupArchiving) {
-                ok = await this.showConfirm(this.lang('archiveGroup'), this.lang('confirmArchiveGroup', Utils.safeHtml(title)));
-            }
-
-            if (ok) {
-                fullLoading(true);
-                await Messages.sendMessageModule('Groups.archiveToggle', id);
-                fullLoading(false);
-            }
-        },
-
-        reloadTab(tab, bypassCache) {
-            Messages.sendMessageModule('Tabs.reload', this.getTabIdsForMove(tab.id), bypassCache);
-        },
-
-        reloadAllTabsInGroup(group, bypassCache) {
-            Messages.sendMessageModule('Tabs.reload', group.tabs.map(Tabs.extractId), bypassCache);
         },
 
         clickOnTab(event, tab, group) {
@@ -907,7 +675,7 @@ export default {
         },
 
         closeWindow() {
-            if (!isSidebar) {
+            if (!this.isSidebar) {
                 window.close();
             }
         },
@@ -921,7 +689,7 @@ export default {
 
             let isCurrentGroup = group === this.currentGroup;
 
-            if (isSidebar && closePopup) {
+            if (this.isSidebar && closePopup) {
                 this.showSectionGroupTabs(group);
             }
 
@@ -950,7 +718,7 @@ export default {
                     tabId: tab?.id,
                 });
 
-                if (!isSidebar && this.options.closePopupAfterSelectTab && tab) {
+                if (!this.isSidebar && this.options.closePopupAfterSelectTab && tab) {
                     this.someGroupAreLoading = false;
                     this.closeWindow();
                     return;
@@ -977,11 +745,7 @@ export default {
             if (this.currentGroup) {
                 this.unSyncTabs = [];
 
-                await Messages.sendMessageModule('Tabs.move', tabsIds, this.currentGroup.id, {
-                    showTabAfterMovingItIntoThisGroup: this.currentGroup.showTabAfterMovingItIntoThisGroup,
-                    showOnlyActiveTabAfterMovingItIntoThisGroup: this.currentGroup.showOnlyActiveTabAfterMovingItIntoThisGroup,
-                    showNotificationAfterMovingTabIntoThisGroup: this.currentGroup.showNotificationAfterMovingTabIntoThisGroup,
-                });
+                await Messages.sendMessageModule('Tabs.move', tabsIds, this.currentGroup.id);
             } else {
                 await Messages.sendMessageModule('Tabs.moveNative', tabsIds, {
                     windowId: this.currentWindow.id,
@@ -1031,12 +795,9 @@ export default {
             });
         },
 
-        openGroupSettings(group) {
-            this.groupToEdit = group;
-        },
         async removeGroup(group) {
             if (this.options.showConfirmDialogBeforeGroupDelete) {
-                let ok = await this.showConfirm(this.lang('deleteGroup'), this.lang('confirmDeleteGroup', Utils.safeHtml(group.title)), 'delete', 'is-danger');
+                let ok = await this.confirm(this.lang('deleteGroup'), this.lang('confirmDeleteGroup', Utils.safeHtml(group.title)), 'delete', 'is-danger');
 
                 if (!ok) {
                     return;
@@ -1052,35 +813,6 @@ export default {
             await Messages.sendMessageModule('Groups.remove', group.id);
 
             if (!this.currentGroup) {
-                this.loadUnsyncedTabs();
-            }
-        },
-        getTabIdsForMove(tabId) {
-            if (tabId && !this.multipleTabIds.includes(tabId)) {
-                this.multipleTabIds.push(tabId);
-            }
-
-            const tabs = this.multipleTabIds;
-
-            this.multipleTabIds = [];
-
-            return [...tabs];
-        },
-        async moveTabs(tabId, groupId, loadUnsync = false, showTabAfterMovingItIntoThisGroup, discardTabs) {
-            const tabIds = this.getTabIdsForMove(tabId),
-                group = this.groups.find(gr => gr.id === groupId);
-
-            await Messages.sendMessageModule('Tabs.move', tabIds, groupId, {
-                showTabAfterMovingItIntoThisGroup,
-                showOnlyActiveTabAfterMovingItIntoThisGroup: group.showOnlyActiveTabAfterMovingItIntoThisGroup,
-                showNotificationAfterMovingTabIntoThisGroup: group.showNotificationAfterMovingTabIntoThisGroup,
-            });
-
-            if (discardTabs) {
-                Messages.sendMessageModule('Tabs.discard', tabIds);
-            }
-
-            if (loadUnsync) {
                 this.loadUnsyncedTabs();
             }
         },
@@ -1100,10 +832,6 @@ export default {
             return tab ? Tabs.getTitle(tab, undefined, undefined, true) : '';
         },
 
-        getTabTitle: Tabs.getTitle,
-        isTabLoading: Utils.isTabLoading,
-        getGroupTitle: Groups.getTitle,
-        groupTabsCountMessage: Groups.tabsCountMessage,
         getLastActiveTabContainer({tabs, newTabContainer}, key) {
             const tab = Utils.getLastActiveTab(tabs);
             const container = (tab && tab.cookieStoreId !== newTabContainer)
@@ -1120,22 +848,6 @@ export default {
         openManageGroups() {
             Messages.sendMessage('open-manage-groups');
             this.closeWindow();
-        },
-        sortGroups(vector) {
-            Groups.sort(vector);
-        },
-        exportGroupToBookmarks(group) {
-            Messages.sendMessage('export-group-to-bookmarks', {
-                groupId: group.id,
-            });
-        },
-
-        saveEditedGroup(groupId, changes) {
-            this.groupToEdit = null;
-
-            if (Object.keys(changes).length) {
-                Messages.sendMessageModule('Groups.update', groupId, changes);
-            }
         },
 
         // allowTypes: Array ['groups', 'tabs']
@@ -1912,46 +1624,11 @@ export default {
             @open-manage-groups="openManageGroups"></edit-group>
     </edit-group-popup>
 
-    <popup
-        v-if="showPromptPopup"
-        :title="promptTitle"
-        @resolve="promptResolveFunc(true)"
-        @close-popup="promptResolveFunc(false)"
-        @show-popup="$refs.promptInput.focus(); $refs.promptInput.select()"
-        :buttons="
-            [{
-                event: 'resolve',
-                classList: 'is-success',
-                lang: 'ok',
-                focused: false,
-            }, {
-                event: 'close-popup',
-                lang: 'cancel',
-            }]
-        ">
-        <div class="control is-expanded">
-            <input v-model.trim="promptValue" type="text" class="input" ref="promptInput" @keydown.stop @keyup.stop @keydown.enter="promptResolveFunc(true)" maxlength="256" />
-        </div>
-    </popup>
-
-    <popup
-        v-if="showConfirmPopup"
-        :title="confirmTitle"
-        @resolve="confirmResolveFunc(true)"
-        @close-popup="confirmResolveFunc(false)"
-        :buttons="
-            [{
-                event: 'resolve',
-                classList: confirmClass,
-                lang: confirmLang,
-                focused: true,
-            }, {
-                event: 'close-popup',
-                lang: 'cancel',
-            }]
-        ">
-        <span v-html="confirmText"></span>
-    </popup>
+    <popup-helpers
+        v-if="promptOptions || confirmOptions"
+        :prompt="promptOptions"
+        :confirm="confirmOptions"
+        ></popup-helpers>
 
     <div
         v-if="enableDebug"

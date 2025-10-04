@@ -184,7 +184,7 @@
         "description": "Delete group"
     },
     "confirmDeleteGroup": {
-        "message": "Вы хотите удалить группу \"$grouptitle$\"?<br>Удаление группы приведет к закрытию всех вкладок и окна этой группы!",
+        "message": "Вы хотите удалить группу \"$grouptitle$\"?\nУдаление группы приведет к закрытию всех вкладок и окна этой группы!",
         "description": "Delete group?",
         "placeholders": {
             "grouptitle": {
@@ -838,7 +838,7 @@
         "description": "Archive"
     },
     "confirmArchiveGroup": {
-        "message": "Вы хотите за архивировать группу \"$grouptitle$\"?<br>При архивации группы вкладки будут сохранены в базе аддона, и будут удалены из браузера.",
+        "message": "Вы хотите за архивировать группу \"$grouptitle$\"?\nПри архивации группы вкладки будут сохранены в базе аддона, и будут удалены из браузера.",
         "description": "Do you want to archive the group",
         "placeholders": {
             "grouptitle": {

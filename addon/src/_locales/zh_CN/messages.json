@@ -838,7 +838,7 @@
         "description": "Archive"
     },
     "confirmArchiveGroup": {
-        "message": "您想要归档群组“$grouptitle$”？<br>当您将一个群组归档，标签页将保存到扩展数据库并从浏览器中删除。",
+        "message": "您想要归档群组“$grouptitle$”？\n当您将一个群组归档，标签页将保存到扩展数据库并从浏览器中删除。",
         "description": "Do you want to archive the group",
         "placeholders": {
             "grouptitle": {

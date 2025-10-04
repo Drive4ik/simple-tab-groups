@@ -184,7 +184,7 @@
         "description": "Delete group"
     },
     "confirmDeleteGroup": {
-        "message": "Chcete smazat skupinu \"$grouptitle$\"?<br>Odstraněním skupiny zavřete přiřazené panely a okna, pokud jsou otevřena!",
+        "message": "Chcete smazat skupinu \"$grouptitle$\"?\nOdstraněním skupiny zavřete přiřazené panely a okna, pokud jsou otevřena!",
         "description": "Delete group?",
         "placeholders": {
             "grouptitle": {

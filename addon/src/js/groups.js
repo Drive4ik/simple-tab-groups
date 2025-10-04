@@ -204,7 +204,6 @@ export async function add(windowId, tabIds = [], title = null) {
 
     if (tabIds.length) {
         newGroup.tabs = await Tabs.move(tabIds, newGroup.id, {
-            ...newGroup,
             showNotificationAfterMovingTabIntoThisGroup: false,
         });
     }
