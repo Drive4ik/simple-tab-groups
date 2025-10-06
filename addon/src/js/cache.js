@@ -74,12 +74,16 @@ async function loadTabGroup(tabId) {
     }
 }
 
-export async function setTabGroup(tabId, groupId) {
+export async function setTabGroup(tabId, groupId = null, windowId = null) {
+    groupId ??= getWindowGroup(windowId);
+
     if (groupId) {
         tabs[tabId] ??= {};
         tabs[tabId].groupId = groupId;
 
-        return browser.sessions.setTabValue(tabId, 'groupId', groupId);
+        await browser.sessions.setTabValue(tabId, 'groupId', groupId);
+    } else if (getTabGroup(tabId)) {
+        await removeTabGroup(tabId).catch(() => {});
     }
 }
 
@@ -89,7 +93,7 @@ export function getTabGroup(tabId) {
 
 export async function removeTabGroup(tabId) {
     delete tabs[tabId]?.groupId;
-    return browser.sessions.removeTabValue(tabId, 'groupId').catch(() => {});
+    await browser.sessions.removeTabValue(tabId, 'groupId');
 }
 
 // favIconUrl
@@ -108,7 +112,7 @@ export async function setTabFavIcon(tabId, favIconUrl) {
         tabs[tabId] ??= {};
         tabs[tabId].favIconUrl = favIconUrl;
 
-        return browser.sessions.setTabValue(tabId, 'favIconUrl', favIconUrl);
+        await browser.sessions.setTabValue(tabId, 'favIconUrl', favIconUrl);
     }
 }
 
@@ -118,7 +122,7 @@ export function getTabFavIcon(tabId) {
 
 export async function removeTabFavIcon(tabId) {
     delete tabs[tabId]?.favIconUrl;
-    return browser.sessions.removeTabValue(tabId, 'favIconUrl').catch(() => {});
+    await browser.sessions.removeTabValue(tabId, 'favIconUrl');
 }
 
 // thumbnail
@@ -137,7 +141,7 @@ export async function setTabThumbnail(tabId, thumbnail) {
         tabs[tabId] ??= {};
         tabs[tabId].thumbnail = thumbnail;
 
-        return browser.sessions.setTabValue(tabId, 'thumbnail', thumbnail);
+        await browser.sessions.setTabValue(tabId, 'thumbnail', thumbnail);
     }
 }
 
@@ -147,7 +151,7 @@ export function getTabThumbnail(tabId) {
 
 export async function removeTabThumbnail(tabId) {
     delete tabs[tabId]?.thumbnail;
-    return browser.sessions.removeTabValue(tabId, 'thumbnail').catch(() => {});
+    await browser.sessions.removeTabValue(tabId, 'thumbnail');
 }
 
 // tab
@@ -198,7 +202,7 @@ export function applyTabSession(tab) {
 }
 
 export async function removeTabSession(tabId) {
-    return Promise.all([
+    await Promise.allSettled([
         removeTabGroup(tabId),
         removeTabFavIcon(tabId),
         removeTabThumbnail(tabId),
@@ -231,7 +235,7 @@ export async function setWindowGroup(windowId, groupId) {
     windows[windowId] ??= {};
     windows[windowId].groupId = groupId;
 
-    return browser.sessions.setWindowValue(windowId, 'groupId', groupId);
+    await browser.sessions.setWindowValue(windowId, 'groupId', groupId);
 }
 
 export function getWindowId(groupId) {
@@ -252,7 +256,7 @@ export function removeWindow(windowId) {
 
 export async function removeWindowGroup(windowId) {
     delete windows[windowId].groupId;
-    return browser.sessions.removeWindowValue(windowId, 'groupId').catch(() => {});
+    await browser.sessions.removeWindowValue(windowId, 'groupId');
 }
 
 export async function loadWindowSession(win) {
@@ -266,6 +270,11 @@ export async function loadWindowSession(win) {
 }
 
 export async function removeWindowSession(windowId) {
-    await removeWindowGroup(windowId);
-    removeWindow(windowId);
+    try {
+        await removeWindowGroup(windowId);
+    } catch {
+        //
+    } finally {
+        removeWindow(windowId);
+    }
 }

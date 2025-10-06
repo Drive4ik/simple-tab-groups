@@ -37,7 +37,7 @@ export async function load(groupId = null, withTabs = false, includeFavIconUrl, 
                     groupTabs[tab.groupId].push(tab);
                 } else {
                     delete tab.groupId;
-                    await Cache.removeTabGroup(tab.id);
+                    await Cache.removeTabGroup(tab.id).catch(() => {});
                 }
             }
         }));

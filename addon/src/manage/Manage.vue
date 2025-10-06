@@ -342,67 +342,17 @@ export default {
                 }
             };
 
-            const listeners = {
-                'group-updated': (request) => {
-                    let group = this.groups.find(gr => gr.id === request.group.id);
-                    Object.assign(group, request.group);
-                },
-                'group-added': (request) => {
-                    if (!this.groups.some(gr => gr.id === request.group.id)) {
-                        this.groups.push(this.mapGroup(request.group));
-                        this.$emit('group-added');
-                    }
-                },
-                'group-removed': (request) => {
-                    let groupIndex = this.groups.findIndex(gr => gr.id === request.groupId);
+            this.$on('thumbnail-updated', request => {
+                const tab = this.allTabs[request.tabId];
 
-                    if (-1 !== groupIndex) {
-                        this.groups.splice(groupIndex, 1);
-                    }
-                },
-                'groups-updated': () => listeners['group-unloaded'](),
-                'group-unloaded': () => {
-                    this.loadGroups();
+                if (tab) {
+                    tab.thumbnail = request.thumbnail;
+                } else {
                     this.loadUnsyncedTabs();
-                    this.loadWindows();
-                },
-                'group-loaded': () => listeners['window-closed'](),
-                'window-closed': () => {
-                    this.loadWindows();
-                },
-                'containers-updated': () => {
-                    this.containers = Containers.query({defaultContainer: true, temporaryContainer: true});
-                    Object.values(this.allTabs).forEach(this.mapTabContainer);
-                },
-                'sync-end': ({changes}) => changes.local && listeners['groups-updated'](),
-                'lock-addon': () => {
-                    this.isLoading = true;
-                    removeEvents();
-                },
-                'thumbnail-updated': (request) => {
-                    let foundTab = this.groups.some(group => {
-                        if (group.isArchive) {
-                            return;
-                        }
-
-                        let tab = group.tabs.find(tab => tab.id === request.tabId);
-
-                        if (tab) {
-                            tab.thumbnail = request.thumbnail;
-                            return true;
-                        }
-                    });
-
-                    if (!foundTab) {
-                        this.loadUnsyncedTabs();
-                    }
-                },
-            };
-
-            const onMessage = catchFunc(async request => {
-                logger.info('got message', request.action);
-                await listeners[request.action](request);
+                }
             });
+
+            // this.$on('lock-addon', removeEvents);
 
             browser.tabs.onCreated.addListener(onCreatedTab);
             browser.tabs.onUpdated.addListener(onUpdatedTab, {
@@ -421,13 +371,6 @@ export default {
             browser.tabs.onDetached.addListener(onDetachedTab);
             browser.tabs.onAttached.addListener(onAttachedTab);
 
-            const {disconnect} = Messages.connectToBackground(
-                Constants.MODULES.MANAGE,
-                Object.keys(listeners),
-                onMessage,
-                false
-            );
-
             function removeEvents() {
                 browser.tabs.onCreated.removeListener(onCreatedTab);
                 browser.tabs.onUpdated.removeListener(onUpdatedTab);
@@ -436,7 +379,6 @@ export default {
                 browser.tabs.onMoved.removeListener(onMovedTab);
                 browser.tabs.onDetached.removeListener(onDetachedTab);
                 browser.tabs.onAttached.removeListener(onAttachedTab);
-                disconnect();
             }
 
             window.addEventListener('unload', removeEvents);

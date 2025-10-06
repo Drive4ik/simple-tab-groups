@@ -145,9 +145,6 @@ export default {
         },
     },
     computed: {
-        currentGroup() {
-            return this.currentWindow && this.groups.find(group => group.id === this.currentWindow.groupId);
-        },
         filteredGroups() {
             let searchStr = this.search.toLowerCase(),
                 groups = this.options.showArchivedGroups ? this.groups : this.groups.filter(group => !group.isArchive),
@@ -450,65 +447,26 @@ export default {
                 }
             };
 
-            const listeners = {
-                'group-updated': (request) => {
-                    let group = this.groups.find(gr => gr.id === request.group.id);
-                    Object.assign(group, request.group);
-                },
-                'group-added': (request) => {
-                    if (!this.groups.some(gr => gr.id === request.group.id)) {
-                        this.groups.push(this.mapGroup(request.group));
-                    }
-                },
-                'group-removed': (request) => {
-                    if (this.groupToShow && this.groupToShow.id === request.groupId) {
-                        this.showSectionDefault();
-                    }
-
-                    let groupIndex = this.groups.findIndex(gr => gr.id === request.groupId);
-
-                    if (-1 !== groupIndex) {
-                        this.groups.splice(groupIndex, 1);
-                    }
-                },
-                'groups-updated': () => listeners['group-unloaded'](),
-                'group-unloaded': () => {
-                    this.loadGroups();
-                    this.loadUnsyncedTabs();
-                    this.loadWindows();
-                },
-                'group-loaded': async (request) => {
-                    await this.loadWindows();
-
-                    if (this.options.openGroupAfterChange) {
-                        if (this.currentGroup && this.currentGroup.id === request.groupId && this.groupToShow !== this.currentGroup) {
-                            this.showSectionGroupTabs(this.currentGroup);
-                        }
-                    }
-
-                    if (request.addTabs.length) {
-                        let group = this.groups.find(gr => gr.id === request.groupId);
-                        group.tabs.push(...request.addTabs.map(this.mapTab, this));
-                    }
-                },
-                'window-closed': () => {
-                    this.loadWindows();
-                },
-                'containers-updated': () => {
-                    this.containers = Containers.query({defaultContainer: true, temporaryContainer: true});
-                    Object.values(this.allTabs).forEach(this.mapTabContainer);
-                },
-                'sync-end': ({changes}) => changes.local && listeners['groups-updated'](),
-                'lock-addon': () => {
-                    this.isLoading = true;
-                    removeEvents();
-                },
-            };
-
-            const onMessage = catchFunc(async request => {
-                logger.info('take message', request.action);
-                await listeners[request.action](request);
+            this.$on('group-removed', request => {
+                if (this.groupToShow?.id === request.groupId) {
+                    this.showSectionDefault();
+                }
             });
+
+            this.$on('group-loaded-ready', request => {
+                if (this.options.openGroupAfterChange) {
+                    if (this.currentGroup?.id === request.groupId && this.currentGroup !== this.groupToShow) {
+                        this.showSectionGroupTabs(this.currentGroup);
+                    }
+                }
+
+                if (request.addTabs.length) {
+                    const group = this.groups.find(gr => gr.id === request.groupId);
+                    group.tabs.push(...request.addTabs.map(this.mapTab, this));
+                }
+            });
+
+            // this.$on('lock-addon', removeEvents);
 
             browser.tabs.onCreated.addListener(onCreatedTab);
             browser.tabs.onUpdated.addListener(onUpdatedTab, {
@@ -528,8 +486,6 @@ export default {
             browser.tabs.onDetached.addListener(onDetachedTab);
             browser.tabs.onAttached.addListener(onAttachedTab);
 
-            const {disconnect} = Messages.connectToBackground(MODULE_NAME, Object.keys(listeners), onMessage, false);
-
             function removeEvents() {
                 browser.tabs.onCreated.removeListener(onCreatedTab);
                 browser.tabs.onUpdated.removeListener(onUpdatedTab);
@@ -538,7 +494,6 @@ export default {
                 browser.tabs.onMoved.removeListener(onMovedTab);
                 browser.tabs.onDetached.removeListener(onDetachedTab);
                 browser.tabs.onAttached.removeListener(onAttachedTab);
-                disconnect();
             }
 
             window.addEventListener('unload', removeEvents);

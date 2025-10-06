@@ -21,6 +21,7 @@ const instances = new Set;
 const {
     sendMessage,
     sendMessageModule,
+    disconnect,
 } = Messages.connectToBackground(MODULE_NAME, '*', (syncEvent) => {
     logger.info('got message', syncEvent.action, syncEvent);
 
@@ -69,7 +70,7 @@ export default {
     },
     watch: {
         searchDelay(search) {
-            if (search.length && this.allTabsCount > 200) {
+            if (search.length && this.allTabsArray.length > 200) {
                 window.clearTimeout(this.searchDelayTimer);
                 this.searchDelayTimer = window.setTimeout(() => {
                     this.search = search;
@@ -90,8 +91,24 @@ export default {
         availableTabKeys() {
             return [...this.defaultAvailableTabKeys, ...this.extraAvailableTabKeys ?? []];
         },
-        allTabsCount() {
-            return Object.keys(this.allTabs).length;
+        currentGroup() {
+            return this.groups.find(group => group.id === this.currentWindow?.groupId);
+        },
+        allTabs() {
+            const allTabs = {};
+
+            for (const group of this.groups) {
+                if (!group.isArchive) {
+                    for (const tab of group.tabs) {
+                        allTabs[tab.id] = tab;
+                    }
+                }
+            }
+
+            return allTabs;
+        },
+        allTabsArray() {
+            return Object.values(this.allTabs);
         },
     },
     created() {
@@ -101,24 +118,60 @@ export default {
         instances.delete(this);
     },
     mounted() {
-        this.tabGroupsPromise = new Promise(async resolve => {
+        this.tabGroupsPromise = this.tabGroupsLoad(startUpDataPromise);
+
+        this.tabGroupsSetupLiteners();
+    },
+    methods: {
+        async tabGroupsLoad(startUpDataPromise = sendMessage('get-startup-data')) {
             const startUpData = await startUpDataPromise;
 
             await this.loadWindows(startUpData);
             this.loadGroups(startUpData);
             this.loadUnsyncedTabs(startUpData);
+        },
 
-            resolve();
-        });
-    },
-    methods: {
         isTabLoading: Utils.isTabLoading,
         getTabTitle: Tabs.getTitle,
         getGroupTitle: Groups.getTitle,
         groupTabsCountMessage: Groups.tabsCountMessage,
 
-        reloadContainers() {
-            this.containers = getContainers();
+        tabGroupsSetupLiteners() {
+            this.$on('containers-updated', () => {
+                this.containers = getContainers();
+                this.allTabsArray.forEach(this.mapTabContainer, this);
+            });
+
+            this.$on('window-closed', () => this.loadWindows());
+
+            this.$on('group-added', request => {
+                this.groups.push(this.mapGroup(request.group));
+            });
+            this.$on('group-updated', request => {
+                const group = this.groups.find(group => group.id === request.group.id);
+                Object.assign(group, request.group);
+            });
+            this.$on('group-removed', request => {
+                this.groups = this.groups.filter(group => group.id !== request.groupId);
+            });
+            this.$on('group-loaded', async request => {
+                await this.loadWindows();
+                this.$emit('group-loaded-ready', request);
+            });
+            this.$on('group-unloaded', () => this.tabGroupsLoad());
+
+            this.$on('groups-updated', () => this.tabGroupsLoad());
+
+            this.$on('sync-end', ({changes}) => {
+                if (changes.local) {
+                    this.$emit('groups-updated');
+                }
+            });
+
+            this.$on('lock-addon', () => {
+                this.isLoading = true;
+                disconnect();
+            });
         },
 
         async setFocusOnSearch() {

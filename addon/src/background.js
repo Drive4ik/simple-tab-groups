@@ -377,7 +377,8 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                         }
                     } else {
                         if (tabs.length === 1 && Utils.isUrlEmpty(tabs[0].url)) {
-                            await Cache.setTabGroup(tabs[0].id, groupToShow.id);
+                            await Cache.setTabGroup(tabs[0].id, groupToShow.id)
+                                .catch(log.onCatch(["can't set group", groupToShow.id, tabs[0]], false));
                             addTabs.push(Cache.applyTabSession(tabs[0]));
                         } else {
                             await Tabs.create({
@@ -485,20 +486,17 @@ const onCreatedTab = catchFunc(async function onCreatedTab(tab) {
     Cache.setTab(tab);
 
     if (self.skipCreateTab) {
-        log.stop('skip tab', tab.id);
+        log.stop('🛑 skip tab', tab.id);
         return;
     }
 
     if (Utils.isTabPinned(tab)) {
-        log.stop('skip pinned tab', tab.id);
+        log.stop('🛑 skip pinned tab', tab.id);
         return;
     }
 
-    const groupId = Cache.getWindowGroup(tab.windowId);
-
-    if (groupId) {
-        Cache.setTabGroup(tab.id, groupId).catch(log.onCatch(['cant set group', groupId, 'to tab', tab.id], false));
-    }
+    await Cache.setTabGroup(tab.id, null, tab.windowId)
+        .catch(log.onCatch("can't set group", false));
 
     log.stop();
 }, logger);
@@ -534,39 +532,35 @@ const onUpdatedTab = catchFunc(async function onUpdatedTab(tabId, changeInfo, ta
 
     const log = logger.start('onUpdatedTab', tabId, { changeInfo });
 
-    const tabGroupId = Cache.getTabGroup(tab.id),
-        winGroupId = Cache.getWindowGroup(tab.windowId);
-
-    if (changeInfo.favIconUrl/*  && (tabGroupId || winGroupId) */) {
-        await Cache.setTabFavIcon(tab.id, changeInfo.favIconUrl).catch(log.onCatch(['cant set favIcon', tab, changeInfo], false));
+    if (changeInfo.favIconUrl) {
+        await Cache.setTabFavIcon(tab.id, changeInfo.favIconUrl)
+            .catch(log.onCatch(['cant set favIcon', tab, changeInfo], false));
     }
 
     if (changeInfo.hasOwnProperty('pinned') || changeInfo.hasOwnProperty('hidden')) {
         if (changeInfo.pinned || changeInfo.hidden) {
-            changeInfo.pinned && log.log('remove group', tabGroupId, 'for pinned tab', tab.id);
-            changeInfo.hidden && log.log('remove group', tabGroupId, 'for hidden tab', tab.id);
-            Cache.removeTabGroup(tab.id)
-                .catch(log.onCatch(['[0] cant remove group from tab', tab.id], false));
+            changeInfo.pinned && log.log('remove group for pinned tab', tab.id);
+            changeInfo.hidden && log.log('remove group for hidden tab', tab.id);
+
+            await Cache.removeTabGroup(tab.id).catch(() => {});
         } else if (changeInfo.pinned === false) {
-            if (winGroupId) {
-                log.log('set group', winGroupId, ' for unhidden tab', tab.id);
-                Cache.setTabGroup(tab.id, winGroupId)
-                    .catch(log.onCatch(['[1] cant set group', winGroupId, 'to tab', tab.id], false));
-            } else {
-                log.log('remove group', tabGroupId, 'for unhidden tab', tab.id);
-                Cache.removeTabGroup(tab.id)
-                    .catch(log.onCatch(['[1] cant remove group from tab', tab.id], false));
-            }
+            log.log('tab is unpinned', tab.id);
+
+            await Cache.setTabGroup(tab.id, null, tab.windowId)
+                .catch(log.onCatch(["can't set group to tab, !pinned", tab.id], false));
         } else if (changeInfo.hidden === false) {
             log.log('tab is showing', tab.id);
 
-            if (tabGroupId) {
-                log.log('applyGroup for tab', tab.id, 'groupId', tabGroupId);
-                applyGroup(tab.windowId, tabGroupId, tab.id);
-            } else if (winGroupId) {
-                log.log('set group', winGroupId, ' for unhidden tab', tab.id);
-                Cache.setTabGroup(tab.id, winGroupId)
-                    .catch(log.onCatch(['[2] cant set group', winGroupId, 'to tab', tab.id], false));
+            Cache.applyTabSession(tab);
+
+            if (tab.groupId) {
+                log.log('call applyGroup for tab', tab.id, 'groupId', tab.groupId);
+                await applyGroup(tab.windowId, tab.groupId, tab.id)
+                    .catch(log.onCatch(["can't applyGroup", tab.groupId], false));
+            } else {
+                log.log('call setTabGroup for tab', tab.id);
+                await Cache.setTabGroup(tab.id, null, tab.windowId)
+                    .catch(log.onCatch(["can't set group to tab, !hidden", tab.id], false));
             }
         }
 
@@ -574,7 +568,7 @@ const onUpdatedTab = catchFunc(async function onUpdatedTab(tabId, changeInfo, ta
         return;
     }
 
-    if (options.showTabsWithThumbnailsInManageGroups && Utils.isTabLoaded(changeInfo)/* && (tabGroupId || winGroupId) */) {
+    if (options.showTabsWithThumbnailsInManageGroups && Utils.isTabLoaded(changeInfo)) {
         await Tabs.updateThumbnail(tab.id);
     }
 
@@ -606,23 +600,18 @@ function onMovedTab(tabId) {
     } */
 }
 
-function onAttachedTab(tabId, { newWindowId }) {
+async function onAttachedTab(tabId, {newWindowId}) {
+    const log = logger.start('onAttachedTab', {tabId, newWindowId});
+
     if (excludeTabIds.has(tabId)) {
-        logger.log('🛑 onAttachedTab', { tabId, newWindowId });
+        log.stop('🛑 onAttachedTab, tab in excludeTabIds', {tabId, newWindowId});
         return;
     }
 
-    const newTabGroupId = Cache.getWindowGroup(newWindowId);
+    await Cache.setTabGroup(tabId, null, newWindowId)
+        .catch(log.onCatch("can't set group"));
 
-    if (newTabGroupId) {
-        logger.log('onAttachedTab', { tabId, newWindowId, newTabGroupId });
-
-        Cache.setTabGroup(tabId, Cache.getWindowGroup(newWindowId));
-    } else {
-        logger.log('onAttachedTab remove tab group', { tabId, newWindowId, newTabGroupId });
-
-        Cache.removeTabGroup(tabId);
-    }
+    log.stop();
 }
 
 let windowIdsForRestoring = new Set,
@@ -1661,7 +1650,7 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({tabId, u
 
         if (new URL(tab.url).origin !== new URL(url).origin) {
             tab.favIconUrl = null;
-            Cache.removeTabThumbnail(tab.id);
+            Cache.removeTabThumbnail(tab.id).catch(() => {});
         }
 
         tab.url = url;
@@ -4039,7 +4028,7 @@ async function initializeGroupWindows(windows, currentGroupIds) {
 
             duplicateGroupWindows.forEach(function (w) {
                 delete w.groupId;
-                Cache.removeWindowSession(w.id).catch(log.onCatch(['cant removeWindowSession', w.id], false));
+                Cache.removeWindowSession(w.id);
             });
         }
 
@@ -4074,8 +4063,9 @@ async function initializeGroupWindows(windows, currentGroupIds) {
             } else if (win.groupId) {
                 if (!tab.hidden) {
                     if (Utils.isTabLoading(tab) || tab.url.startsWith('file:') || tab.lastAccessed > storage.START_TIME) {
-                        tab.groupId = win.groupId;
-                        Cache.setTabGroup(tab.id, win.groupId).catch(log.onCatch(['cant setTabGroup', tab.id, 'group', win.groupId], false));
+                        Cache.setTabGroup(tab.id, win.groupId)
+                            .then(() => tab.groupId = win.groupId)
+                            .catch(log.onCatch(["can't setTabGroup", tab.id, 'group', win.groupId], false));
                     } else {
                         tabsToHide.push(tab);
                     }
