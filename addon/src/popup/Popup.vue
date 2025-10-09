@@ -76,8 +76,6 @@ export default {
 
             groupToShow: null,
 
-            allTabs: {},
-
             showUnSyncTabs: false,
         };
     },
@@ -209,6 +207,8 @@ export default {
         },
 
         setupListeners() {
+            this.tabGroupsSetupListeners();
+
             this
                 .$on('drag-move-group', function(from, to) {
                     Groups.move(from.data.item.id, this.groups.indexOf(to.data.item));
@@ -248,7 +248,7 @@ export default {
                 lazyRemoveTabIds.push(tabId);
 
                 if (withAllTabs) {
-                    delete this.allTabs[tabId];
+                    // delete this.allTabs[tabId];
                 }
 
                 clearTimeout(lazyRemoveTabTimer);

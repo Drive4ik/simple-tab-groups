@@ -112,15 +112,14 @@ export default {
         },
     },
     created() {
+        window.$vm = this;
         instances.add(this);
     },
     beforeDestroy() {
         instances.delete(this);
     },
-    mounted() {
+    mounted() { // called before mounted in .vue files
         this.tabGroupsPromise = this.tabGroupsLoad(startUpDataPromise);
-
-        this.tabGroupsSetupLiteners();
     },
     methods: {
         async tabGroupsLoad(startUpDataPromise = sendMessage('get-startup-data')) {
@@ -136,13 +135,39 @@ export default {
         getGroupTitle: Groups.getTitle,
         groupTabsCountMessage: Groups.tabsCountMessage,
 
-        tabGroupsSetupLiteners() {
+        tabGroupsSetupListeners() {
             this.$on('containers-updated', () => {
                 this.containers = getContainers();
                 this.allTabsArray.forEach(this.mapTabContainer, this);
             });
 
             this.$on('window-closed', () => this.loadWindows());
+
+            this.$on('tab-updated', request => {
+                const tab = this.allTabs[request.tabId] ?? this.unSyncTabs.find(tab => tab.id === request.tabId);
+                tab && Object.assign(tab, request.changeInfo);
+            });
+            this.$on('tab-removed', request => {
+                if (request.groupId) {
+                    const group = this.groups.find(group => group.id === request.groupId);
+                    const tabIndex = group.tabs.findIndex(tab => tab.id === request.tabId);
+
+                    if (tabIndex !== -1) {
+                        group.tabs.splice(tabIndex, 1);
+                    }
+                } else {
+                    const tabIndex = this.unSyncTabs.findIndex(tab => tab.id === request.tabId);
+
+                    if (tabIndex !== -1) {
+                        this.unSyncTabs.splice(tabIndex, 1);
+                    }
+                }
+            });
+
+            this.$on('tabs-updated', request => {
+                const group = this.groups.find(group => group.id === request.groupId);
+                group.tabs = request.tabs.map(tab => this.mapTab(tab, group.isArchive));
+            });
 
             this.$on('group-added', request => {
                 this.groups.push(this.mapGroup(request.group));
@@ -221,10 +246,6 @@ export default {
         mapGroup(group) {
             group.tabs = group.tabs.map(tab => this.mapTab(tab, group.isArchive));
 
-            if (group.isArchive) {
-                Object.freeze(group.tabs);
-            }
-
             group.draggable = true; // isManage
             group.isMoving = false;
             group.isOver = false;
@@ -273,7 +294,7 @@ export default {
             tab.isOver = false;
 
             if (isArchive) {
-                return tab;
+                return Object.freeze(tab);
             }
 
             return Vue.observable(tab);

@@ -17,6 +17,7 @@ import Notification, {
     clear as clearNotification
 } from '/js/notification.js';
 import JSON from '/js/json.js';
+import BatchProcessor from '/js/batch-processor.js';
 import * as Urls from '/js/urls.js';
 import * as Containers from '/js/containers.js';
 import * as Storage from '/js/storage.js';
@@ -480,7 +481,21 @@ const onActivatedTab = function(activeInfo) {
     logger.log('onActivated', activeInfo)
 }
 
+const createdTabsBatch = new BatchProcessor(async (groupId) => {
+    const {group} = await Groups.load(groupId, true, true, options.showTabsWithThumbnailsInManageGroups);
+    // const tabs = await Tabs.getList(tabIds, true, options.showTabsWithThumbnailsInManageGroups, true);
+
+    if (group.tabs.length) {
+        sendMessageFromBackground('tabs-updated', {
+            groupId,
+            tabs: group.tabs,
+        });
+    }
+});
+
 const onCreatedTab = catchFunc(async function onCreatedTab(tab) {
+    delete tab.groupId; // TODO tmp
+
     const log = logger.start('onCreatedTab', tab);
 
     Cache.setTab(tab);
@@ -498,6 +513,12 @@ const onCreatedTab = catchFunc(async function onCreatedTab(tab) {
     await Cache.setTabGroup(tab.id, null, tab.windowId)
         .catch(log.onCatch("can't set group", false));
 
+    Cache.applyTabSession(tab);
+
+    if (tab.groupId) {
+        createdTabsBatch.add(tab.groupId, tab.id);
+    }
+
     log.stop();
 }, logger);
 
@@ -510,9 +531,11 @@ function removeExcludeTabIds(tabIds) {
 }
 
 const onUpdatedTab = catchFunc(async function onUpdatedTab(tabId, changeInfo, tab) {
+    const log = logger.start('onUpdatedTab', tabId, changeInfo);
+
     if (excludeTabIds.has(tab.id)) {
         Cache.setTab(tab);
-        logger.log('onUpdatedTab 🛑 tab was excluded', tab.id);
+        log.stop('🛑 tab was excluded');
         return;
     }
 
@@ -521,16 +544,14 @@ const onUpdatedTab = catchFunc(async function onUpdatedTab(tabId, changeInfo, ta
     Cache.setTab(tab);
 
     if (!changeInfo) {
-        logger.log('onUpdatedTab 🛑 changeInfo keys was not changed', tab.id);
+        log.stop('🛑 changeInfo keys was not changed');
         return;
     }
 
     if (Utils.isTabPinned(tab) && !changeInfo.hasOwnProperty('pinned')) {
-        logger.log('onUpdatedTab 🛑 tab is pinned', tab.id);
+        log.stop('🛑 tab is pinned');
         return;
     }
-
-    const log = logger.start('onUpdatedTab', tabId, { changeInfo });
 
     if (changeInfo.favIconUrl) {
         await Cache.setTabFavIcon(tab.id, changeInfo.favIconUrl)
@@ -568,6 +589,11 @@ const onUpdatedTab = catchFunc(async function onUpdatedTab(tabId, changeInfo, ta
         return;
     }
 
+    sendMessageFromBackground('tab-updated', {
+        tabId: tab.id,
+        changeInfo,
+    });
+
     if (options.showTabsWithThumbnailsInManageGroups && Utils.isTabLoaded(changeInfo)) {
         await Tabs.updateThumbnail(tab.id);
     }
@@ -575,14 +601,23 @@ const onUpdatedTab = catchFunc(async function onUpdatedTab(tabId, changeInfo, ta
     log.stop();
 }, logger);
 
-function onRemovedTab(tabId, { isWindowClosing, windowId }) {
-    const log = logger.start('onRemovedTab', tabId, { isWindowClosing, windowId });
+function onRemovedTab(tabId, {isWindowClosing, windowId}) {
+    const log = logger.start('onRemovedTab', tabId, {isWindowClosing, windowId});
+
+    // TODO BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1396758
+
+    const groupId = Cache.getTabGroup(tabId);
+
+    if (groupId) {
+        createdTabsBatch.delete(groupId, tabId);
+    }
 
     if (isWindowClosing) {
         reCreateTabsOnRemoveWindow.push(tabId);
         log.stop('add to reCreateTabsOnRemoveWindow');
     } else {
         Cache.removeTab(tabId);
+        sendMessageFromBackground('tab-removed', {tabId, groupId});
         log.stop('tab removed from Cache');
     }
 }
@@ -604,7 +639,7 @@ async function onAttachedTab(tabId, {newWindowId}) {
     const log = logger.start('onAttachedTab', {tabId, newWindowId});
 
     if (excludeTabIds.has(tabId)) {
-        log.stop('🛑 onAttachedTab, tab in excludeTabIds', {tabId, newWindowId});
+        log.stop('🛑 tab in excludeTabIds', {tabId, newWindowId});
         return;
     }
 

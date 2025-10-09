@@ -495,6 +495,8 @@ export const ON_UPDATED_TAB_PROPERTIES = Object.freeze([ // browser.tabs not def
     browser.tabs?.UpdatePropertyName.FAVICONURL, // for session
     browser.tabs?.UpdatePropertyName.HIDDEN,
     browser.tabs?.UpdatePropertyName.PINNED,
+    browser.tabs?.UpdatePropertyName.DISCARDED,
+    browser.tabs?.UpdatePropertyName.AUDIBLE,
 ]);
 
 export const MODULES = Object.freeze({

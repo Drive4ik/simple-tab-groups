@@ -60,8 +60,6 @@ export default {
             VIEW_GRID,
 
             view: VIEW_DEFAULT,
-
-            allTabs: {},
         };
     },
     components: {
@@ -119,6 +117,8 @@ export default {
         lang: browser.i18n.getMessage,
 
         setupListeners() {
+            this.tabGroupsSetupListeners();
+
             this
                 .$on('drag-move-group', function(from, to) {
                     Groups.move(from.data.item.id, this.groups.indexOf(to.data.item));
@@ -148,7 +148,7 @@ export default {
                 lazyRemoveTabIds.push(tabId);
 
                 if (withAllTabs) {
-                    delete this.allTabs[tabId];
+                    // delete this.allTabs[tabId];
                 }
 
                 clearTimeout(lazyRemoveTabTimer);
@@ -341,16 +341,6 @@ export default {
                     onAttachedUnsyncTabTimer = setTimeout(() => this.loadUnsyncedTabs(), 100);
                 }
             };
-
-            this.$on('thumbnail-updated', request => {
-                const tab = this.allTabs[request.tabId];
-
-                if (tab) {
-                    tab.thumbnail = request.thumbnail;
-                } else {
-                    this.loadUnsyncedTabs();
-                }
-            });
 
             // this.$on('lock-addon', removeEvents);
 

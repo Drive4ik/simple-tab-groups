@@ -306,9 +306,9 @@ export async function updateThumbnail(tabId) {
 
         await Cache.setTabThumbnail(tab.id, thumbnail);
 
-        backgroundSelf.sendMessageFromBackground('thumbnail-updated', {
+        backgroundSelf.sendMessageFromBackground('tab-updated', {
             tabId: tab.id,
-            thumbnail: thumbnail,
+            changeInfo: {thumbnail},
         });
 
         log.stop('success');
@@ -559,8 +559,8 @@ async function filterExist(tabs, returnTabIds = false) {
     const tabIds = tabs.map(extractId);
     const log = logger.start('filterExist', tabIds, {returnTabIds});
 
-    let lengthBefore = tabIds.length,
-        returnFunc = returnTabIds ? t => t.id : t => t;
+    const lengthBefore = tabIds.length;
+    const returnFunc = returnTabIds ? t => t.id : t => t;
 
     tabs = await Promise.all(tabs.map(tab => {
         return browser.tabs.get(extractId(tab))
@@ -634,7 +634,7 @@ export async function setMute(tabs, muted) {
     muted = !!muted;
     const log = logger.start('setMute', tabIds, 'muted:', muted);
 
-    tabs = await getList(tabIds);
+    tabs = await getList(tabIds, false, false);
 
     await Promise.all(
         tabs
