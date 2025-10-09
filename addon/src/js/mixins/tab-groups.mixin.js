@@ -168,6 +168,9 @@ export default {
                 const group = this.groups.find(group => group.id === request.groupId);
                 group.tabs = request.tabs.map(tab => this.mapTab(tab, group.isArchive));
             });
+            this.$on('unsync-tabs-updated', request => {
+                this.loadUnsyncedTabs(request);
+            });
 
             this.$on('group-added', request => {
                 this.groups.push(this.mapGroup(request.group));

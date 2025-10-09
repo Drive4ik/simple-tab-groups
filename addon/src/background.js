@@ -477,19 +477,39 @@ async function applyGroupByHistory(textPosition, groups) {
     return applyGroup(undefined, nextGroupId, undefined, true);
 }
 
-const onActivatedTab = function(activeInfo) {
-    logger.log('onActivated', activeInfo)
+const onActivatedTab = function({tabId, windowId, previousTabId = null}) {
+    logger.log('onActivated', {tabId, windowId, previousTabId})
+
+    sendMessageFromBackground('tab-updated', {
+        tabId: tabId,
+        changeInfo: {
+            active: true,
+        },
+    });
+
+    if (previousTabId) {
+        sendMessageFromBackground('tab-updated', {
+            tabId: previousTabId,
+            changeInfo: {
+                active: false,
+            },
+        });
+    }
 }
 
-const createdTabsBatch = new BatchProcessor(async (groupId) => {
-    const {group} = await Groups.load(groupId, true, true, options.showTabsWithThumbnailsInManageGroups);
-    // const tabs = await Tabs.getList(tabIds, true, options.showTabsWithThumbnailsInManageGroups, true);
+const tabsUpdatedBatch = new BatchProcessor(async (groupId) => {
+    if (groupId === 'unsync') {
+        const windows = await Windows.load(true, true, options.showTabsWithThumbnailsInManageGroups);
+        sendMessageFromBackground('unsync-tabs-updated', {windows});
+    } else {
+        const {group} = await Groups.load(groupId, true, true, options.showTabsWithThumbnailsInManageGroups);
 
-    if (group.tabs.length) {
-        sendMessageFromBackground('tabs-updated', {
-            groupId,
-            tabs: group.tabs,
-        });
+        if (group.tabs.length) {
+            sendMessageFromBackground('tabs-updated', {
+                groupId,
+                tabs: group.tabs,
+            });
+        }
     }
 });
 
@@ -516,7 +536,9 @@ const onCreatedTab = catchFunc(async function onCreatedTab(tab) {
     Cache.applyTabSession(tab);
 
     if (tab.groupId) {
-        createdTabsBatch.add(tab.groupId, tab.id);
+        tabsUpdatedBatch.add(tab.groupId, tab.id);
+    } else {
+        tabsUpdatedBatch.add('unsync', tab.id);
     }
 
     log.stop();
@@ -531,6 +553,8 @@ function removeExcludeTabIds(tabIds) {
 }
 
 const onUpdatedTab = catchFunc(async function onUpdatedTab(tabId, changeInfo, tab) {
+    delete tab.groupId; // TODO tmp
+
     const log = logger.start('onUpdatedTab', tabId, changeInfo);
 
     if (excludeTabIds.has(tab.id)) {
@@ -609,7 +633,7 @@ function onRemovedTab(tabId, {isWindowClosing, windowId}) {
     const groupId = Cache.getTabGroup(tabId);
 
     if (groupId) {
-        createdTabsBatch.delete(groupId, tabId);
+        tabsUpdatedBatch.delete(groupId, tabId);
     }
 
     if (isWindowClosing) {
@@ -622,20 +646,47 @@ function onRemovedTab(tabId, {isWindowClosing, windowId}) {
     }
 }
 
-let openerTabTimer = 0;
 function onMovedTab(tabId) {
-    /* if (excludeTabIds.has(tabId)) {
-        console.log('🛑 onMovedTab', tabId);
+    if (excludeTabIds.has(tabId)) {
+        logger.log('🛑 onMovedTab', tabId);
         return;
     }
 
+    const groupId = Cache.getTabGroup(tabId);
+
+    if (groupId) {
+        tabsUpdatedBatch.add(groupId, tabId);
+    } else {
+        tabsUpdatedBatch.add('unsync', tabId);
+    }
+
+    /*
     if (Cache.getTabGroup(tabId)) {
         clearTimeout(openerTabTimer);
         openerTabTimer = setTimeout(() => Tabs.get().catch(() => {}), 500); // load visible tabs of current window for set openerTabId
     } */
 }
 
-async function onAttachedTab(tabId, {newWindowId}) {
+async function onDetachedTab(tabId, {oldWindowId}) { // notice: called before onAttached
+    const log = logger.start('onDetachedTab', {tabId, oldWindowId});
+
+    if (excludeTabIds.has(tabId)) {
+        log.stop('🛑 tab in excludeTabIds', {tabId, oldWindowId});
+        return;
+    }
+
+    const groupId = Cache.getWindowGroup(oldWindowId);
+
+    if (groupId) {
+        tabsUpdatedBatch.add(groupId, tabId);
+    } else {
+        tabsUpdatedBatch.add('unsync', tabId);
+    }
+
+    log.stop();
+}
+
+async function onAttachedTab(tabId, {newWindowId}) { // called when tabs.move()
     const log = logger.start('onAttachedTab', {tabId, newWindowId});
 
     if (excludeTabIds.has(tabId)) {
@@ -645,6 +696,14 @@ async function onAttachedTab(tabId, {newWindowId}) {
 
     await Cache.setTabGroup(tabId, null, newWindowId)
         .catch(log.onCatch("can't set group"));
+
+    const groupId = Cache.getTabGroup(tabId);
+
+    if (groupId) {
+        tabsUpdatedBatch.add(groupId, tabId);
+    } else {
+        tabsUpdatedBatch.add('unsync', tabId);
+    }
 
     log.stop();
 }
@@ -1841,6 +1900,7 @@ function addEvents() {
     browser.tabs.onRemoved.addListener(onRemovedTab);
     browser.tabs.onMoved.addListener(onMovedTab);
 
+    browser.tabs.onDetached.addListener(onDetachedTab);
     browser.tabs.onAttached.addListener(onAttachedTab);
 
     browser.windows.onCreated.addListener(onCreatedWindow);
