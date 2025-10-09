@@ -10,18 +10,11 @@ import contextMenuTabNew from '../components/context-menu-tab-new.vue';
 import contextMenuGroup from '../components/context-menu-group.vue';
 
 import '/js/prefixed-storage.js';
-import backgroundSelf from '/js/background.js';
 import * as Constants from '/js/constants.js';
-import * as Messages from '/js/messages.js';
-import Logger, {catchFunc, errorEventHandler} from '/js/logger.js';
-import * as Containers from '/js/containers.js';
-import * as Urls from '/js/urls.js';
-import * as Cache from '/js/cache.js';
+import Logger, {errorEventHandler} from '/js/logger.js';
 import * as Groups from '/js/groups.js';
-import * as Windows from '/js/windows.js';
 import * as Tabs from '/js/tabs.js';
 import * as Utils from '/js/utils.js';
-import JSON from '/js/json.js';
 
 import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
 import optionsMixin from '/js/mixins/options.mixin.js';
@@ -29,17 +22,15 @@ import popupHelpersMixin from '/js/mixins/popup-helpers.mixin.js';
 import tabGroupsMixin from '/js/mixins/tab-groups.mixin.js';
 
 window.logger = new Logger(Constants.MODULES.MANAGE);
+Vue.config.errorHandler = errorEventHandler.bind(window.logger);
 
 const storage = localStorage.create(Constants.MODULES.MANAGE);
-// const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 
 // import dnd from '../js/dnd';
 // import { Drag, Drop } from 'vue-drag-drop';
 // import draggable from 'vuedraggable';
 
 document.title = browser.i18n.getMessage('manageGroupsTitle');
-
-Vue.config.errorHandler = errorEventHandler.bind(window.logger);
 
 const VIEW_GRID = 'grid';
 const VIEW_DEFAULT = VIEW_GRID;
@@ -120,10 +111,10 @@ export default {
             this.tabGroupsSetupListeners();
 
             this
-                .$on('drag-move-group', function(from, to) {
-                    Groups.move(from.data.item.id, this.groups.indexOf(to.data.item));
+                .$on('drag-move-group', (from, to) => {
+                    this.sendMessageModule('Groups.move', from.data.item.id, this.groups.indexOf(to.data.item));
                 })
-                .$on('drag-move-tab', function(from, to) {
+                .$on('drag-move-tab', (from, to) => {
                     if ('new-group' === to.data.item.id) {
                         this.moveTabToNewGroup(null, true);
                     } else {
@@ -131,7 +122,7 @@ export default {
                             groupId = this.isGroup(to.data.item) ? to.data.item.id : to.data.group.id,
                             newTabIndex = this.isGroup(to.data.item) ? undefined : to.data.item.index;
 
-                        Messages.sendMessageModule('Tabs.move', tabIds, groupId, {
+                        this.sendMessageModule('Tabs.move', tabIds, groupId, {
                             newTabIndex,
                             showTabAfterMovingItIntoThisGroup: false,
                             showOnlyActiveTabAfterMovingItIntoThisGroup: false,
@@ -165,12 +156,14 @@ export default {
         },
 
         async moveTabToNewGroup(tabId, loadUnsync, showTabAfterMovingItIntoThisGroup) {
-            let newGroupTitle = '',
-                tabIds = this.getTabIdsForMove(tabId);
+            const tabIds = this.getTabIdsForMove(tabId);
+
+            let newGroupTitle = '';
 
             if (this.options.alwaysAskNewGroupName) {
                 const {defaultGroupProps} = await Groups.getDefaults();
-                newGroupTitle = await this.prompt(this.lang('createNewGroup'), Groups.createTitle(null, null, defaultGroupProps));
+                newGroupTitle = Groups.createTitle(null, null, defaultGroupProps);
+                newGroupTitle = await this.prompt(this.lang('createNewGroup'), newGroupTitle);
 
                 if (!newGroupTitle) {
                     return;
@@ -178,7 +171,7 @@ export default {
             }
 
             const newGroupWindowId = showTabAfterMovingItIntoThisGroup ? this.currentWindow.id : undefined;
-            const newGroup = await Messages.sendMessageModule('Groups.add', newGroupWindowId, tabIds, newGroupTitle);
+            const newGroup = await this.sendMessageModule('Groups.add', newGroupWindowId, tabIds, newGroupTitle);
 
             if (showTabAfterMovingItIntoThisGroup) {
                 this.applyGroup(newGroup, {id: tabId});
@@ -194,11 +187,11 @@ export default {
                 this.$nextTick(() => [...document.querySelectorAll('input[type="text"]')].pop().select());
             });
 
-            Messages.sendMessageModule('Groups.add');
+            this.sendMessageModule('Groups.add');
         },
 
         updateTabThumbnail({id}) {
-            Messages.sendMessageModule('Tabs.updateThumbnail', id);
+            this.sendMessageModule('Tabs.updateThumbnail', id);
         },
 
         async applyGroup({id: groupId}, {id: tabId} = {}, openInNewWindow = false) {
@@ -208,7 +201,7 @@ export default {
                 });
             }
 
-            await Messages.sendMessage('load-custom-group', {
+            await this.sendMessage('load-custom-group', {
                 groupId,
                 tabId,
                 windowId: openInNewWindow ? 'new' : null,
@@ -257,12 +250,12 @@ export default {
             } else if (group) {
                 this.applyGroup(group, tab);
             } else if (this.isCurrentWindowIsAllow) {
-                await Messages.sendMessageModule('Tabs.moveNative', [tab.id], {
+                await this.sendMessageModule('Tabs.moveNative', [tab.id], {
                     windowId: this.currentWindow.id,
                     index: -1,
                 });
 
-                await Messages.sendMessageModule('Tabs.show', tab.id);
+                await this.sendMessageModule('Tabs.show', tab.id);
 
                 this.loadUnsyncedTabs();
             }
@@ -270,7 +263,7 @@ export default {
 
         async removeGroup(group) {
             if (this.options.showConfirmDialogBeforeGroupDelete) {
-                let ok = await this.confirm(this.lang('deleteGroup'), this.lang('confirmDeleteGroup', Utils.safeHtml(group.title)), 'delete', 'is-danger');
+                const ok = await this.confirm(this.lang('deleteGroup'), this.lang('confirmDeleteGroup', group.title), 'delete', 'is-danger');
 
                 if (!ok) {
                     return;
@@ -279,10 +272,10 @@ export default {
 
             this.groups.splice(this.groups.indexOf(group), 1);
 
-            Messages.sendMessageModule('Groups.remove', group.id);
+            this.sendMessageModule('Groups.remove', group.id);
         },
         setTabIconAsGroupIcon({favIconUrl}, group) {
-            Groups.setIconUrl(group.id, favIconUrl);
+            this.sendMessageModule('Groups.setIconUrl', group.id, favIconUrl);
         },
 
         isGroup(obj) {
@@ -358,16 +351,11 @@ export default {
         },
 
         async closeThisWindow() {
-            if (this.isCurrentWindowIsAllow) {
-                let tab = await Tabs.getActive();
-                Tabs.remove(tab.id);
-            } else {
-                browser.windows.remove(this.currentWindow.id); // close manage groups POPUP window
-            }
+            window.close();
         },
 
         openOptionsPage(section = 'general') {
-            Messages.sendMessage('open-options-page', {section});
+            this.sendMessage('open-options-page', {section});
         },
     },
 }

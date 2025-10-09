@@ -11,18 +11,12 @@ import contextMenuTabNew from '../components/context-menu-tab-new.vue';
 import contextMenuGroup from '../components/context-menu-group.vue';
 
 import '/js/prefixed-storage.js';
-import backgroundSelf from '/js/background.js';
 import * as Constants from '/js/constants.js';
-import * as Messages from '/js/messages.js';
-import Logger, {catchFunc, errorEventHandler} from '/js/logger.js';
+import Logger, {errorEventHandler} from '/js/logger.js';
 import * as Containers from '/js/containers.js';
-import * as Urls from '/js/urls.js';
-import * as Cache from '/js/cache.js';
 import * as Groups from '/js/groups.js';
-import * as Windows from '/js/windows.js';
 import * as Tabs from '/js/tabs.js';
 import * as Utils from '/js/utils.js';
-import JSON from '/js/json.js';
 
 import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
 import optionsMixin from '/js/mixins/options.mixin.js';
@@ -34,11 +28,9 @@ const isSidebar = '#sidebar' === window.location.hash;
 const MODULE_NAME = isSidebar ? Constants.MODULES.SIDEBAR : Constants.MODULES.POPUP;
 
 window.logger = new Logger(MODULE_NAME);
+Vue.config.errorHandler = errorEventHandler.bind(window.logger);
 
 const storage = localStorage.create(Constants.MODULES.POPUP);
-// const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
-
-Vue.config.errorHandler = errorEventHandler.bind(window.logger);
 
 const SECTION_SEARCH = 'search';
 const SECTION_GROUPS_LIST = 'groupsList';
@@ -210,14 +202,14 @@ export default {
             this.tabGroupsSetupListeners();
 
             this
-                .$on('drag-move-group', function(from, to) {
-                    Groups.move(from.data.item.id, this.groups.indexOf(to.data.item));
+                .$on('drag-move-group', (from, to) => {
+                    this.sendMessageModule('Groups.move', from.data.item.id, this.groups.indexOf(to.data.item));
                 })
-                .$on('drag-move-tab', function(from, to) {
+                .$on('drag-move-tab', (from, to) => {
                     const tabIds = this.getTabIdsForMove(from.data.item.id),
                         newTabIndex = to.data.item.index;
 
-                    Messages.sendMessageModule('Tabs.move', tabIds, to.data.group.id, {
+                    this.sendMessageModule('Tabs.move', tabIds, to.data.group.id, {
                         newTabIndex,
                         showTabAfterMovingItIntoThisGroup: false,
                         showOnlyActiveTabAfterMovingItIntoThisGroup: false,
@@ -296,15 +288,16 @@ export default {
         async createNewGroup(tabIds, proposalTitle, applyGroupWithTabId) {
             if (this.options.alwaysAskNewGroupName) {
                 const {defaultGroupProps} = await Groups.getDefaults();
-                proposalTitle = await this.prompt(this.lang('createNewGroup'), Groups.createTitle(proposalTitle, null, defaultGroupProps));
+                proposalTitle = Groups.createTitle(proposalTitle, null, defaultGroupProps);
+                proposalTitle = await this.prompt(this.lang('createNewGroup'), proposalTitle);
 
                 if (!proposalTitle) {
                     return false;
                 }
             }
 
-            const newGroupWindowId = Cache.getWindowGroup(this.currentWindow.id) ? undefined : this.currentWindow.id;
-            const newGroup = Messages.sendMessageModule('Groups.add', newGroupWindowId, tabIds, proposalTitle);
+            const newGroupWindowId = this.currentWindow.groupId ? undefined : this.currentWindow.id;
+            const newGroup = this.sendMessageModule('Groups.add', newGroupWindowId, tabIds, proposalTitle);
 
             if (applyGroupWithTabId) {
                 this.applyGroup(newGroup, {id: applyGroupWithTabId});
@@ -340,7 +333,7 @@ export default {
         },
 
         toggleMuteGroup(group) {
-            Messages.sendMessageModule('Tabs.setMute', group.tabs.map(Tabs.extractId), group.tabs.some(tab => tab.audible));
+            this.sendMessageModule('Tabs.setMute', group.tabs.map(Tabs.extractId), group.tabs.some(tab => tab.audible));
         },
 
         clickOnTab(event, tab, group) {
@@ -422,7 +415,7 @@ export default {
             }
 
             if (closePopup) {
-                Messages.sendMessage('load-custom-group', {
+                this.sendMessage('load-custom-group', {
                     groupId: group.id,
                     tabId: tab?.id,
                 });
@@ -430,7 +423,7 @@ export default {
             } else {
                 this.someGroupAreLoading = true;
 
-                let loadGroupPromise = Messages.sendMessage('load-custom-group', {
+                let loadGroupPromise = this.sendMessage('load-custom-group', {
                     groupId: group.id,
                     tabId: tab?.id,
                 });
@@ -462,14 +455,14 @@ export default {
             if (this.currentGroup) {
                 this.unSyncTabs = [];
 
-                await Messages.sendMessageModule('Tabs.move', tabsIds, this.currentGroup.id);
+                await this.sendMessageModule('Tabs.move', tabsIds, this.currentGroup.id);
             } else {
-                await Messages.sendMessageModule('Tabs.moveNative', tabsIds, {
+                await this.sendMessageModule('Tabs.moveNative', tabsIds, {
                     windowId: this.currentWindow.id,
                     index: -1,
                 });
 
-                await Messages.sendMessageModule('Tabs.show', tabsIds);
+                await this.sendMessageModule('Tabs.show', tabsIds);
             }
 
             this.loadGroups();
@@ -485,17 +478,17 @@ export default {
             this.unSyncTabs = [];
         },
         unsyncHiddenTabsCloseAll() {
-            Messages.sendMessageModule('Tabs.remove', this.unSyncTabs.map(Tabs.extractId));
+            this.sendMessageModule('Tabs.remove', this.unSyncTabs.map(Tabs.extractId));
 
             this.unSyncTabs = [];
         },
         async unsyncHiddenTabsShowTabIntoCurrentWindow(tab) {
-            await Messages.sendMessageModule('Tabs.moveNative', [tab.id], {
+            await this.sendMessageModule('Tabs.moveNative', [tab.id], {
                 windowId: this.currentWindow.id,
                 index: -1,
             });
 
-            await Messages.sendMessageModule('Tabs.show', tab.id);
+            await this.sendMessageModule('Tabs.show', tab.id);
 
             if (this.currentGroup) {
                 this.unSyncTabs.splice(this.unSyncTabs.indexOf(tab), 1);
@@ -505,7 +498,7 @@ export default {
         },
 
         openGroupInNewWindow(group, tab) {
-            Messages.sendMessage('load-custom-group', {
+            this.sendMessage('load-custom-group', {
                 groupId: group.id,
                 tabId: tab?.id,
                 windowId: 'new',
@@ -514,7 +507,7 @@ export default {
 
         async removeGroup(group) {
             if (this.options.showConfirmDialogBeforeGroupDelete) {
-                let ok = await this.confirm(this.lang('deleteGroup'), this.lang('confirmDeleteGroup', Utils.safeHtml(group.title)), 'delete', 'is-danger');
+                const ok = await this.confirm(this.lang('deleteGroup'), this.lang('confirmDeleteGroup', group.title), 'delete', 'is-danger');
 
                 if (!ok) {
                     return;
@@ -527,7 +520,7 @@ export default {
                 this.showSectionDefault();
             }
 
-            await Messages.sendMessageModule('Groups.remove', group.id);
+            await this.sendMessageModule('Groups.remove', group.id);
 
             if (!this.currentGroup) {
                 this.loadUnsyncedTabs();
@@ -541,29 +534,32 @@ export default {
             }
         },
         setTabIconAsGroupIcon({favIconUrl}) {
-            Groups.setIconUrl(this.groupToShow.id, favIconUrl);
+            this.sendMessageModule('Groups.setIconUrl', this.groupToShow.id, favIconUrl);
         },
         getLastActiveTabTitle(tabs) {
-            let tab = Utils.getLastActiveTab(tabs);
+            const tab = Utils.getLastActiveTab(tabs);
 
             return tab ? Tabs.getTitle(tab, undefined, undefined, true) : '';
         },
 
         getLastActiveTabContainer({tabs, newTabContainer}, key) {
             const tab = Utils.getLastActiveTab(tabs);
-            const container = (tab && tab.cookieStoreId !== newTabContainer)
-                ? Containers.get(tab.cookieStoreId)
-                : null;
 
-            return container?.[key];
+            if (tab) {
+                const tabContainer = Containers.get(tab.cookieStoreId);
+
+                if (tabContainer.cookieStoreId !== newTabContainer) {
+                    return tabContainer?.[key];
+                }
+            }
         },
 
         openOptionsPage(section = 'general') {
-            Messages.sendMessage('open-options-page', {section});
+            this.sendMessage('open-options-page', {section});
             this.closeWindow();
         },
         openManageGroups() {
-            Messages.sendMessage('open-manage-groups');
+            this.sendMessage('open-manage-groups');
             this.closeWindow();
         },
 
@@ -718,7 +714,7 @@ export default {
             if (optionsCheckbox) {
                 this.optionsSave(key, !this.options[key]);
             } else if (sendMessage) {
-                Messages.sendMessage(...sendMessage);
+                this.sendMessage(...sendMessage);
             }
 
             if (closePopup) {

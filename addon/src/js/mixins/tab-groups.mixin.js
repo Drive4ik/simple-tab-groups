@@ -38,6 +38,8 @@ const getContainers = () => Containers.query({defaultContainer: true, temporaryC
 
 export default {
     data() {
+        self.app = this;
+
         this.sendMessage = sendMessage;
         this.sendMessageModule = sendMessageModule;
 
