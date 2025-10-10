@@ -4,27 +4,15 @@ import './translate-help-pages.js';
 import * as Messages from '/js/messages.js';
 import * as Constants from '/js/constants.js';
 import * as Storage from '/js/storage.js';
+import {INNER_HTML, safeHtml} from '/js/utils.js';
 
-const INNER_HTML = 'innerHTML',
-    $ = window.document.querySelector.bind(window.document),
-    tagsToReplace = {
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;',
-        '&': '&amp;',
-    },
-    urlParams = new URLSearchParams(window.location.search);
+const $ = window.document.querySelector.bind(window.document);
+const urlParams = new URLSearchParams(window.location.search);
 
 let currentTab;
 
 function lang(...args) {
     return browser.i18n.getMessage(...args);
-}
-
-function safeHtml(html) {
-    let regExp = new RegExp('[' + Object.keys(tagsToReplace).join('') + ']', 'g');
-    return (html || '').replace(regExp, tag => tagsToReplace[tag] || tag);
 }
 
 function getContainer(cookieStoreId) {

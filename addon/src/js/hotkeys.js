@@ -1,4 +1,4 @@
-
+// do not include constants, because hotkeys includes by content-script
 const IS_MAC = (navigator.userAgentData?.platform || navigator.platform || '').toLowerCase().includes('mac');
 
 const mapValue = value => [value, value];

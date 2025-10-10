@@ -29,7 +29,6 @@ import * as Tabs from '/js/tabs.js';
 import * as Windows from '/js/windows.js';
 import * as Management from '/js/management.js';
 import * as Bookmarks from '/js/bookmarks.js';
-// import * as Hotkeys from '/js/hotkeys.js';
 import * as Cloud from '/js/sync/cloud/cloud.js';
 
 const storage = localStorage.create(Constants.MODULES.BACKGROUND);
@@ -3643,7 +3642,7 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
                     const valueParts = [];
 
                     if (hotkey.ctrlKey) {
-                        valueParts.push(Utils.IS_MAC ? 'MacCtrl' : 'Ctrl');
+                        valueParts.push(Constants.IS_MAC ? 'MacCtrl' : 'Ctrl');
                     }
 
                     if (hotkey.metaKey) {

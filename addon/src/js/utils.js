@@ -3,17 +3,7 @@ import * as Constants from './constants.js';
 import * as ConstantsBrowser from '/js/constants-browser.js';
 import JSON from './json.js';
 
-const tagsToReplace = {
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;',
-    '&': '&amp;',
-};
-
-const INNER_HTML = 'innerHTML';
-
-export const IS_MAC = (navigator.userAgentData?.platform || navigator.platform || '').toLowerCase().includes('mac');
+export const INNER_HTML = 'innerHTML';
 
 export function unixNow() {
     return Math.round(Date.now() / 1000);
@@ -114,19 +104,16 @@ export function isPrimitive(value) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + sizes[i];
 } */
 
-function objectReplaceKeyValue(obj) {
-    return Object.keys(obj).reduce((acc, key) => (acc[obj[key]] = key, acc), {});
-}
-
 export function safeHtml(html) {
-    let regExp = new RegExp('[' + Object.keys(tagsToReplace).join('') + ']', 'g');
-    return (html || '').replace(regExp, tag => tagsToReplace[tag] || tag);
+    const div = document.createElement('div');
+    div.textContent = html ?? '';
+    return div[INNER_HTML];
 }
 
 export function unSafeHtml(html) {
-    let replasedTags = objectReplaceKeyValue(tagsToReplace),
-        regExp = new RegExp('(' + Object.keys(replasedTags).join('|') + ')', 'g');
-    return (html || '').replace(regExp, tag => replasedTags[tag] || tag);
+    const div = document.createElement('div');
+    div[INNER_HTML] = html ?? '';
+    return div.textContent;
 }
 
 export function b64EncodeUnicode(str) {
