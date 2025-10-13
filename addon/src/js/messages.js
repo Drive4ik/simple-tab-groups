@@ -55,10 +55,7 @@ export function connectToBackground(name, listeners = null, callback = null, aut
         const {postId, result, error} = message;
 
         if (pending.has(postId)) {
-            const {resolve, reject, timer} = pending.get(postId);
-
-            clearTimeout(timer);
-            pending.delete(postId);
+            const {resolve, reject} = popPending(postId);
 
             if (error) {
                 reject(error);
@@ -81,6 +78,15 @@ export function connectToBackground(name, listeners = null, callback = null, aut
         sendMessageModule: (...args) => postMessageToBackground(port, ...getArgumentsModuleCall(...args)),
         disconnect,
     };
+}
+
+function popPending(postId) {
+    const {resolve, reject, timer} = pending.get(postId) ?? {};
+
+    clearTimeout(timer);
+    pending.delete(postId);
+
+    return {resolve, reject};
 }
 
 // RPC
@@ -112,41 +118,48 @@ async function postMessageToBackground(port, ...args) {
 export function createListenerOnConnectedBackground(onMessageListener) {
     return port => {
         const {name, listeners} = JSON.parse(port.name);
+        const CSPort = {name, port, listeners};
+
+        CSPorts.add(CSPort);
 
         self.logger?.info(name, 'connected');
 
         port.onMessage.addListener(async (message, ...postArgs) => {
-            if (!message?.postId) {
+            if (!message?.postId || !CSPorts.has(CSPort)) {
                 return;
             }
 
-            try {
-                const {postId, data} = message;
+            const {postId, data} = message;
 
+            try {
                 const result = await onMessageListener(data, ...postArgs);
 
-                port.postMessage({
-                    postId,
-                    result,
-                });
+                if (CSPorts.has(CSPort)) {
+                    port.postMessage({
+                        postId,
+                        result,
+                    });
+                } else {
+                    popPending(postId);
+                }
             } catch (error) {
                 self.logger?.logError(['message:', message], error);
 
-                port.postMessage({
-                    postId,
-                    error: nativeErrorToObj(error),
-                });
+                if (CSPorts.has(CSPort)) {
+                    port.postMessage({
+                        postId,
+                        error: nativeErrorToObj(error),
+                    });
+                } else {
+                    popPending(postId);
+                }
             }
         });
 
-        if (listeners?.length) {
-            const CSPort = {name, port, listeners};
-            CSPorts.add(CSPort);
-            port.onDisconnect.addListener(() => {
-                CSPorts.delete(CSPort);
-                self.logger?.info(name, 'disconnected');
-            });
-        }
+        port.onDisconnect.addListener(() => {
+            CSPorts.delete(CSPort);
+            self.logger?.info(name, 'disconnected');
+        });
     }
 }
 
