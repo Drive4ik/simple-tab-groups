@@ -591,11 +591,8 @@ export async function archiveToggle(groupId) {
 
     await save(groups);
 
-    if (tabsToRemove.length) {
-        backgroundSelf.addExcludeTabIds(tabsToRemove);
-        await Tabs.remove(tabsToRemove);
-        backgroundSelf.removeExcludeTabIds(tabsToRemove);
-    }
+    self.skipTabsTracking(tabsToRemove);
+    await Tabs.remove(tabsToRemove);
 
     backgroundSelf.sendMessageFromBackground('groups-updated');
 

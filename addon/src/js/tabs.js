@@ -18,6 +18,10 @@ const logger = new Logger('Tabs');
 const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 
 export async function createNative({url, active, pinned, title, index, windowId, openerTabId, cookieStoreId, newTabContainer, ifDifferentContainerReOpen, excludeContainersForReOpen, groupId, favIconUrl, thumbnail}) {
+    if (!Constants.IS_BACKGROUND_PAGE) {
+        throw Error('is not background');
+    }
+
     const tab = {};
 
     if (url) {
@@ -78,6 +82,8 @@ export async function createNative({url, active, pinned, title, index, windowId,
 
     const newTab = await browser.tabs.create(tab);
 
+    self.skipTabs.created.add(newTab.id);
+
     delete newTab.groupId; // TODO temp
 
     Cache.setTab(newTab);
@@ -90,15 +96,7 @@ export async function createNative({url, active, pinned, title, index, windowId,
 }
 
 export async function create(tab) {
-    backgroundSelf.groupIdForNextTab = tab.groupId;
-
-    backgroundSelf.skipCreateTab = true;
-
     const newTab = await createNative(tab);
-
-    backgroundSelf.skipCreateTab = false;
-
-    backgroundSelf.groupIdForNextTab = null;
 
     return Cache.setTabSession(newTab);
 }
@@ -194,6 +192,8 @@ export async function get(
 
     let tabs = await browser.tabs.query(query);
 
+    tabs = tabs.filter(tab => !self.skipTabs.removed.has(tab.id)); // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1396758
+
     tabs.forEach(tab => delete tab.groupId); // TODO temp
 
     if (!query.pinned) {
@@ -210,6 +210,10 @@ export async function get(
 
 export async function getOne(id) {
     try {
+        if (self.skipTabs.removed.has(id)) { // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1396758
+            return null;
+        }
+
         const tab = await browser.tabs.get(id);
         delete tab.groupId; // TODO temp
         return Utils.normalizeTabUrl(tab);
@@ -330,7 +334,7 @@ export async function move(tabIds, groupId, params = {}) {
         return [];
     }
 
-    backgroundSelf.addExcludeTabIds(tabIds);
+    const skippedTabs = self.skipTabsTracking(tabIds);
 
     const tabsCantHide = new Set;
     const groupWindowId = Cache.getWindowId(groupId);
@@ -350,14 +354,14 @@ export async function move(tabIds, groupId, params = {}) {
     tabs = tabs.filter(function(tab) {
         if (tab.pinned) {
             showPinnedMessage = true;
-            backgroundSelf.excludeTabIds.delete(tab.id);
+            self.continueTabsTracking([tab], skippedTabs);
             log.log('tab pinned', tab);
             return false;
         }
 
         if (Utils.isTabCanNotBeHidden(tab)) {
             tabsCantHide.add(getTitle(tab, false, 20));
-            backgroundSelf.excludeTabIds.delete(tab.id);
+            self.continueTabsTracking([tab], skippedTabs);
             log.log('cant move tab', tab);
             return false;
         }
@@ -420,10 +424,6 @@ export async function move(tabIds, groupId, params = {}) {
         let tabIdsToRemove = [],
             newTabParams = Groups.getNewTabParams(group);
 
-        backgroundSelf.groupIdForNextTab = group.id;
-
-        backgroundSelf.skipCreateTab = true;
-
         tabs = await Promise.all(tabs.map(async function(tab) {
             let newTabContainer = getNewTabContainer(tab, group);
 
@@ -453,15 +453,10 @@ export async function move(tabIds, groupId, params = {}) {
                 activeTabs.push({...newTab, active: true});
             }
 
-            tabIds.push(newTab.id);
-            backgroundSelf.excludeTabIds.add(newTab.id);
+            self.skipTabsTracking([newTab], skippedTabs);
 
             return Cache.setTabSession(newTab);
         }));
-
-        backgroundSelf.skipCreateTab = false;
-
-        backgroundSelf.groupIdForNextTab = null;
 
         await remove(tabIdsToRemove);
 
@@ -478,12 +473,12 @@ export async function move(tabIds, groupId, params = {}) {
 
         await Promise.all(tabs.map(tab => Cache.setTabGroup(tab.id, groupId)));
 
-        backgroundSelf.removeExcludeTabIds(tabIds);
-
         backgroundSelf.sendMessageFromBackground('groups-updated');
 
         log.log('end moving');
     }
+
+    self.continueTabsTracking(skippedTabs);
 
     if (showPinnedMessage) {
         log.log('notify pinnedTabsAreNotSupported');
@@ -566,7 +561,7 @@ async function filterExist(tabs, returnTabIds = false) {
         return browser.tabs.get(extractId(tab))
             .then(returnFunc, log.onCatch(['not found tab', tab], false));
     }));
-    tabs = tabs.filter(Boolean);
+    tabs = tabs.filter(Boolean).filter(tab => !self.skipTabs.removed.has(tab.id)); // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1396758
     tabs.forEach(tab => delete tab.groupId); // TODO temp
 
     log.assert(lengthBefore === tabs.length, 'tabs length after filter are not equal. not found tabs:',
@@ -708,13 +703,13 @@ export async function safeHide(...tabs) { // ids or tabs
     tabs = tabs.flat();
 
     if (tabs.length) {
-        let tabIds = tabs.map(extractId);
+        const tabIds = tabs.map(extractId);
 
         const log = logger.start('safeHide', tabIds);
 
-        backgroundSelf.addExcludeTabIds(tabIds);
+        self.skipTabsTracking(tabs);
         await hide(tabIds);
-        backgroundSelf.removeExcludeTabIds(tabIds);
+        self.continueTabsTracking(tabs);
 
         log.stop();
     }
@@ -726,10 +721,7 @@ export async function discard(...tabs) { // ids or tabs
     if (tabs.length) {
         const log = logger.start('discard', tabs.map(extractId));
 
-        await Promise.all(tabs.map(tab =>
-            browser.tabs.discard(extractId(tab))
-                .catch(log.onCatch(['discard tab', tab], false))
-        ));
+        await browserTabs('discard', tabs, log);
 
         log.stop();
     }
