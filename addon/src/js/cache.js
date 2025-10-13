@@ -181,7 +181,11 @@ export async function loadTabSession(tab, includeFavIconUrl = true, includeThumb
     }
 }
 
-export async function setTabSession(tab) {
+export async function setTabSession(tab, session = null) {
+    setTab(tab);
+
+    applySession(tab, session);
+
     await Promise.all([
         setTabGroup(tab.id, tab.groupId),
         setTabFavIcon(tab.id, tab.favIconUrl),

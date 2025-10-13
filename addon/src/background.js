@@ -120,8 +120,6 @@ async function createTabsSafe(tabs, tryRestoreOpeners, hideTabs = true) {
         return [];
     }
 
-    const groupIds = tabs.map(tab => tab.groupId).filter(Utils.onlyUniqueFilter);
-
     let isEnabledTreeTabsExt = Constants.TREE_TABS_EXTENSIONS.some(id => Management.isEnabled(id)),
         oldNewTabIds = {},
         newTabs = [];
@@ -134,12 +132,12 @@ async function createTabsSafe(tabs, tryRestoreOpeners, hideTabs = true) {
 
     if (tryRestoreOpeners && isEnabledTreeTabsExt && tabs.some(tab => tab.openerTabId)) {
         log.log('tryRestoreOpeners');
-        for (let tab of tabs) {
+        for (const tab of tabs) {
             if (tab.id && tab.openerTabId) {
                 tab.openerTabId = oldNewTabIds[tab.openerTabId];
             }
 
-            let newTab = await Tabs.createNative(tab);
+            const newTab = await Tabs.create(tab);
 
             if (tab.id) {
                 oldNewTabIds[tab.id] = newTab.id;
@@ -150,10 +148,8 @@ async function createTabsSafe(tabs, tryRestoreOpeners, hideTabs = true) {
     } else {
         log.log('creating tabs');
         tabs.forEach(tab => delete tab.openerTabId);
-        newTabs = await Promise.all(tabs.map(Tabs.createNative));
+        newTabs = await Promise.all(tabs.map(Tabs.create));
     }
-
-    newTabs = await Promise.all(newTabs.map(Cache.setTabSession));
 
     newTabs = await Tabs.moveNative(newTabs, {
         index: -1,
@@ -1129,7 +1125,7 @@ async function updateMoveTabMenus() {
                 return;
             }
 
-            await Tabs.createNative({
+            await Tabs.create({
                 ...tab,
                 active: info.button.RIGHT,
                 cookieStoreId: Constants.TEMPORARY_CONTAINER,
@@ -1180,7 +1176,7 @@ async function updateMoveTabMenus() {
                 return;
             }
 
-            await Tabs.createNative({
+            await Tabs.create({
                 url: info.linkUrl,
                 title: info.linkText,
                 active: info.button.RIGHT,
@@ -1218,7 +1214,7 @@ async function updateMoveTabMenus() {
                 return;
             }
 
-            await Tabs.createNative({
+            await Tabs.create({
                 url: bookmark.url,
                 title: bookmark.title,
                 active: info.button.RIGHT,
@@ -1509,11 +1505,9 @@ async function updateMoveTabMenus() {
             if (tabsToCreate.length) {
                 await loadingBrowserAction();
 
-                let newTabs = await Promise.all(tabsToCreate.map(Tabs.createNative));
+                const newTabs = await Promise.all(tabsToCreate.map(Tabs.create));
 
-                newTabs = await Promise.all(newTabs.map(Cache.setTabSession));
-
-                let tabsToHide = newTabs.filter(tab => tab.groupId && !Cache.getWindowId(tab.groupId));
+                const tabsToHide = newTabs.filter(tab => tab.groupId && !Cache.getWindowId(tab.groupId));
 
                 await Tabs.safeHide(tabsToHide);
 
@@ -2544,7 +2538,7 @@ async function onBackgroundMessage(message, sender) {
 
                 break;
             case 'create-temp-tab':
-                await Tabs.createNative({
+                await Tabs.create({
                     active: data.active,
                     cookieStoreId: Constants.TEMPORARY_CONTAINER,
                 });
@@ -3188,7 +3182,7 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
                         tabs.forEach(tab => delete tab.openerTabId);
                         tabs.forEach(tab => delete tab.groupId); // TODO temp
 
-                        await Promise.all(tabs.map(tab => Tabs.createNative(Utils.normalizeTabUrl(tab))));
+                        await Promise.all(tabs.map(tab => Tabs.create(Utils.normalizeTabUrl(tab))));
 
                         await Utils.wait(100);
 
@@ -3913,9 +3907,7 @@ async function syncTabs(groups, allTabs) {
             if (winTabIndex !== -1) {
                 const [winTab] = allTabs.splice(winTabIndex, 1);
 
-                Cache.applySession(winTab, tab);
-
-                tabs.push(Cache.setTabSession(winTab));
+                tabs.push(Cache.setTabSession(winTab, tab));
             } else {
                 tabs.push(null);
 

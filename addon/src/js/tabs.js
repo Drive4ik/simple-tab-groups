@@ -17,7 +17,7 @@ const logger = new Logger('Tabs');
 
 const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 
-export async function createNative({url, active, pinned, title, index, windowId, openerTabId, cookieStoreId, newTabContainer, ifDifferentContainerReOpen, excludeContainersForReOpen, groupId, favIconUrl, thumbnail}) {
+export async function create({url, active, pinned, title, index, windowId, openerTabId, cookieStoreId, newTabContainer, ifDifferentContainerReOpen, excludeContainersForReOpen, groupId, favIconUrl, thumbnail}) {
     if (!Constants.IS_BACKGROUND_PAGE) {
         throw Error('is not background');
     }
@@ -86,19 +86,11 @@ export async function createNative({url, active, pinned, title, index, windowId,
 
     delete newTab.groupId; // TODO temp
 
-    Cache.setTab(newTab);
+    await Cache.setTabSession(newTab, {groupId, favIconUrl, thumbnail});
 
-    Cache.applySession(newTab, {groupId, favIconUrl, thumbnail});
-
-    logger.log('createNative', newTab);
+    logger.log('create', newTab);
 
     return newTab;
-}
-
-export async function create(tab) {
-    const newTab = await createNative(tab);
-
-    return Cache.setTabSession(newTab);
 }
 
 export async function createUrlOnce(url, windowId) {
@@ -107,7 +99,7 @@ export async function createUrlOnce(url, windowId) {
     if (tab) {
         return setActive(tab.id);
     } else {
-        return createNative({
+        return create({
             active: true,
             url,
             windowId,
@@ -241,7 +233,7 @@ export async function createTempActiveTab(windowId, createPinnedTab = true, newT
             log.stop('setActive pinned');
         } else log.stop('pinned is active');
     } else {
-        const tempTab = await createNative({
+        const tempTab = await create({
             url: createPinnedTab ? (newTabUrl || 'about:blank') : (newTabUrl || 'about:newtab'),
             pinned: createPinnedTab,
             active: true,
@@ -440,7 +432,7 @@ export async function move(tabIds, groupId, params = {}) {
 
             tabIdsToRemove.push(tab.id);
 
-            let newTab = await createNative({
+            const newTab = await create({
                 ...tab,
                 ...Cache.getTabSession(tab.id), // apply session, because we can move tab from onBeforeTabRequest
                 active: false,
@@ -455,7 +447,7 @@ export async function move(tabIds, groupId, params = {}) {
 
             self.skipTabsTracking([newTab], skippedTabs);
 
-            return Cache.setTabSession(newTab);
+            return newTab;
         }));
 
         await remove(tabIdsToRemove);
