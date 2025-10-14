@@ -68,11 +68,13 @@ export function removeTab(id) {
 // groupId
 async function loadTabGroup(id) {
     if (tabs[id]) {
+        await waitPromises(tabs[id]);
+
         if (tabs[id].groupId) {
             return tabs[id].groupId;
         }
 
-        return tabs[id].groupId = await browser.sessions.getTabValue(id, 'groupId');
+        return tabs[id].groupId = await addPromise(tabs[id], browser.sessions.getTabValue(id, 'groupId'));
     }
 }
 
@@ -81,9 +83,12 @@ export async function setTabGroup(id, groupId = null, windowId = null) {
 
     if (groupId) {
         tabs[id] ??= {id};
-        tabs[id].groupId = groupId;
 
-        await browser.sessions.setTabValue(id, 'groupId', groupId);
+        await waitPromises(tabs[id]);
+
+        await addPromise(tabs[id], browser.sessions.setTabValue(id, 'groupId', groupId));
+
+        tabs[id].groupId = groupId;
     } else if (getTabGroup(id)) {
         await removeTabGroup(id).catch(() => {});
     }
@@ -94,27 +99,33 @@ export function getTabGroup(id) {
 }
 
 export async function removeTabGroup(id) {
+    await waitPromises(tabs[id]);
+    await addPromise(tabs[id], browser.sessions.removeTabValue(id, 'groupId'));
     delete tabs[id]?.groupId;
-    await browser.sessions.removeTabValue(id, 'groupId');
 }
 
 // favIconUrl
 async function loadTabFavIcon(id) {
     if (tabs[id]) {
+        await waitPromises(tabs[id]);
+
         if (tabs[id].favIconUrl) {
             return tabs[id].favIconUrl;
         }
 
-        return tabs[id].favIconUrl = await browser.sessions.getTabValue(id, 'favIconUrl');
+        return tabs[id].favIconUrl = await addPromise(tabs[id], browser.sessions.getTabValue(id, 'favIconUrl'));
     }
 }
 
 export async function setTabFavIcon(id, favIconUrl) {
     if (favIconUrl?.startsWith('data:')) {
         tabs[id] ??= {id};
-        tabs[id].favIconUrl = favIconUrl;
 
-        await browser.sessions.setTabValue(id, 'favIconUrl', favIconUrl);
+        await waitPromises(tabs[id]);
+
+        await addPromise(tabs[id], browser.sessions.setTabValue(id, 'favIconUrl', favIconUrl));
+
+        tabs[id].favIconUrl = favIconUrl;
     }
 }
 
@@ -123,27 +134,41 @@ export function getTabFavIcon(id) {
 }
 
 export async function removeTabFavIcon(id) {
+    await waitPromises(tabs[id]);
+    await addPromise(tabs[id], browser.sessions.removeTabValue(id, 'favIconUrl'));
     delete tabs[id]?.favIconUrl;
-    await browser.sessions.removeTabValue(id, 'favIconUrl');
 }
 
 // thumbnail
 async function loadTabThumbnail(id) {
-    if (backgroundSelf.options.showTabsWithThumbnailsInManageGroups && tabs[id]) {
+    if (!backgroundSelf.options.showTabsWithThumbnailsInManageGroups) {
+        return;
+    }
+
+    if (tabs[id]) {
+        await waitPromises(tabs[id]);
+
         if (tabs[id].thumbnail) {
             return tabs[id].thumbnail;
         }
 
-        return tabs[id].thumbnail = await browser.sessions.getTabValue(id, 'thumbnail');
+        return tabs[id].thumbnail = await addPromise(tabs[id], browser.sessions.getTabValue(id, 'thumbnail'));
     }
 }
 
 export async function setTabThumbnail(id, thumbnail) {
-    if (backgroundSelf.options.showTabsWithThumbnailsInManageGroups && thumbnail) {
-        tabs[id] ??= {id};
-        tabs[id].thumbnail = thumbnail;
+    if (!backgroundSelf.options.showTabsWithThumbnailsInManageGroups) {
+        return;
+    }
 
-        await browser.sessions.setTabValue(id, 'thumbnail', thumbnail);
+    if (thumbnail) {
+        tabs[id] ??= {id};
+
+        await waitPromises(tabs[id]);
+
+        await addPromise(tabs[id], browser.sessions.setTabValue(id, 'thumbnail', thumbnail));
+
+        tabs[id].thumbnail = thumbnail;
     }
 }
 
@@ -152,8 +177,9 @@ export function getTabThumbnail(id) {
 }
 
 export async function removeTabThumbnail(id) {
+    await waitPromises(tabs[id]);
+    await addPromise(tabs[id], browser.sessions.removeTabValue(id, 'thumbnail'));
     delete tabs[id]?.thumbnail;
-    await browser.sessions.removeTabValue(id, 'thumbnail');
 }
 
 // tab
@@ -162,7 +188,10 @@ export function getTabSession(id, key = null) {
         return tabs[id]?.[key];
     }
 
-    return {...tabs[id] ?? {id}};
+    const session = {...tabs[id] ?? {id}};
+    delete session.promises;
+
+    return session;
 }
 
 export async function loadTabSession(tab, includeFavIconUrl = true, includeThumbnail = true) {
@@ -223,11 +252,13 @@ export function getTabsSessionAndRemove(ids) {
                 return false;
             }
 
-            const tab = {...tabs[id]};
+            const session = {...tabs[id]};
+
+            delete session.promises;
 
             removeTab(id);
 
-            return tab;
+            return session;
         })
         .filter(Boolean);
 }
@@ -239,9 +270,12 @@ export function setWindow({id}) {
 
 export async function setWindowGroup(id, groupId) {
     windows[id] ??= {id};
-    windows[id].groupId = groupId;
 
-    await browser.sessions.setWindowValue(id, 'groupId', groupId);
+    await waitPromises(windows[id]);
+
+    await addPromise(windows[id], browser.sessions.setWindowValue(id, 'groupId', groupId));
+
+    windows[id].groupId = groupId;
 }
 
 export function getWindowId(groupId) {
@@ -261,15 +295,22 @@ export function removeWindow(id) {
 }
 
 export async function removeWindowGroup(id) {
+    await waitPromises(windows[id]);
+    await addPromise(windows[id], browser.sessions.removeWindowValue(id, 'groupId'));
     delete windows[id].groupId;
-    await browser.sessions.removeWindowValue(id, 'groupId');
 }
 
 export async function loadWindowSession(win) {
     try {
-        windows[win.id] ??= {id: win.id};
-        windows[win.id].groupId = win.groupId = await browser.sessions.getWindowValue(win.id, 'groupId');
-        return win;
+        const id = win.id;
+
+        windows[id] ??= {id};
+
+        await waitPromises(windows[id]);
+
+        windows[id].groupId = win.groupId = await addPromise(windows[id], browser.sessions.getWindowValue(id, 'groupId'));
+
+        return win; // TODO check in stg-debug.js and others
     } catch {
         removeWindow(win?.id);
     }
@@ -283,4 +324,19 @@ export async function removeWindowSession(id) {
     } finally {
         removeWindow(id);
     }
+}
+
+async function waitPromises(obj) {
+    if (obj?.promises) {
+        await Promise.allSettled([...obj.promises]);
+    }
+}
+
+async function addPromise(obj, promise) {
+    if (obj) {
+        obj.promises ??= new Set;
+        obj.promises.add(promise);
+    }
+
+    return promise.finally(() => obj?.promises.delete(promise));
 }
