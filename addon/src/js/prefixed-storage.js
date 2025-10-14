@@ -49,10 +49,10 @@ function createProxy(storage, prefix, delimiter = '/') {
             try {
                 prop = getKey(prop);
                 const storageValue = Reflect.get(target, prop, receiver);
-                return JSON.parse(storageValue ?? null);
-            } catch {
-                return null;
-            }
+                if (storageValue) {
+                    return JSON.parse(storageValue);
+                }
+            } catch { }
         },
         set(target, prop, value = null, receiver) {
             prop = getKey(prop);

@@ -6,7 +6,7 @@ import JSON from './json.js';
 export const INNER_HTML = 'innerHTML';
 
 export function unixNow() {
-    return Math.round(Date.now() / 1000);
+    return Math.floor(Date.now() / 1000);
 }
 
 const TYPE_REGEXP = /(^\[.+\ |\]$)/g;

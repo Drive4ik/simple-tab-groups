@@ -49,10 +49,11 @@ export default {
                 clearTimeout(this.syncCloudInProgressTimer);
             })
             .$on('sync-start', () => {
-                this.syncCloudErrorMessage = '';
                 this.syncCloudInProgress = true;
+                this.syncCloudErrorMessage = '';
             })
             .$on('sync-progress', ({progress}) => {
+                this.syncCloudInProgress = true;
                 this.syncCloudProgress = progress;
             })
             .$on('sync-end', () => {
@@ -63,8 +64,8 @@ export default {
             })
             .$on('sync-finish', ({ok}) => {
                 const hideProgressMs = ok ? 600 : 5000;
-                this.syncCloudProgressTimer = setTimeout(() => this.syncCloudProgress = 0, hideProgressMs);
 
+                this.syncCloudProgressTimer = setTimeout(() => this.syncCloudProgress = 0, hideProgressMs);
                 this.syncCloudInProgressTimer = setTimeout(() => this.syncCloudInProgress = false, 500);
 
                 this.syncCloudUpdateInfo();

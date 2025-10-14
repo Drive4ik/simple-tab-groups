@@ -2654,11 +2654,11 @@ async function saveOptions(_options) {
     }
 
     if (optionsKeys.some(key => ['autoBackupEnable', 'autoBackupIntervalKey', 'autoBackupIntervalValue'].includes(key))) {
-        resetLocalBackupAlarm();
+        await resetLocalBackupAlarm();
     }
 
-    if (optionsKeys.some(key => ['syncEnable', 'syncLastUpdate', 'syncOptionsLocation', 'syncIntervalKey', 'syncIntervalValue'].includes(key))) {
-        resetSyncAlarm();
+    if (optionsKeys.some(key => ['syncEnable', 'syncOptionsLocation', 'syncIntervalKey', 'syncIntervalValue'].includes(key))) {
+        await resetSyncAlarm();
     }
 
     if (optionsKeys.includes('temporaryContainerTitle')) {
@@ -2684,7 +2684,7 @@ async function resetLocalBackupAlarm() {
         options.autoBackupEnable,
         options.autoBackupIntervalKey,
         options.autoBackupIntervalValue,
-        storage.autoBackupLastTimeStamp ?? undefined
+        storage.autoBackupLastTimeStamp
     );
 }
 
@@ -2696,7 +2696,7 @@ async function resetSyncAlarm() {
         options.syncEnable,
         options.syncIntervalKey,
         options.syncIntervalValue,
-        storage.autoSyncLastTimeStamp ?? undefined
+        storage.autoSyncLastTimeStamp
     );
 }
 
@@ -2722,9 +2722,9 @@ async function resetAlarm(
     if (Constants.INTERVAL_KEY.minutes === intervalKey) {
         periodInMinutes = intervalValue;
     } else if (Constants.INTERVAL_KEY.hours === intervalKey) {
-        periodInMinutes = 60 * intervalValue;
+        periodInMinutes = intervalValue * 60;
     } else if (Constants.INTERVAL_KEY.days === intervalKey) {
-        periodInMinutes = 60 * 24 * intervalValue;
+        periodInMinutes = intervalValue * 60 * 24;
     }
 
     const minutesNow = Math.floor(Utils.unixNow() / 60);
@@ -3013,6 +3013,12 @@ async function clearAddon(reloadAddonOnFinish = true) {
 }
 
 async function cloudSync(auto = false, trust = null, revision = null) {
+    if (cloudSync.inProgress) {
+        return;
+    }
+
+    cloudSync.inProgress = true;
+
     const log = logger.start('cloudSync', {auto});
 
     let ok = false;
@@ -3052,6 +3058,7 @@ async function cloudSync(auto = false, trust = null, revision = null) {
         });
     } finally {
         sendMessageFromBackground('sync-finish', {ok});
+        cloudSync.inProgress = false;
     }
 }
 
