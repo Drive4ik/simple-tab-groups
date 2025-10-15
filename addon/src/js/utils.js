@@ -52,18 +52,18 @@ export function format(str, ...args) {
     const [bracketStart, bracketEnd] = (Array.isArray(this) ? this : DEFAULT_BRACKETS);
     const [bracketStartEscaped, bracketEndEscaped] = [bracketStart, bracketEnd].map(s => s.split('').map(s => `\\${s}`).join(''));
 
-    const replaceRegExp = new RegExp(bracketStartEscaped + '(.+?)' + bracketEndEscaped, 'g'); // /{\s*(.+?)\s*}/g
+    const replaceRegExp = new RegExp(`${bracketStartEscaped}((?!${bracketEndEscaped}).+?)${bracketEndEscaped}`, 'g'); // /{\s*([^\}]+)\s*}/g
 
     return str.replace(replaceRegExp, (match, key) => {
         const [clearKey, defaultKeyValue] = key.split('!'),
             keyParts = clearKey.trim().split('.'),
             res = args.reduce((accum, arg) => {
-                if (false !== accum) {
+                if (accum !== false) {
                     return accum;
                 }
 
                 return keyParts.reduce((keyAcc, k) => {
-                    if (keyAcc === Object(keyAcc) && undefined !== keyAcc[k]) {
+                    if (keyAcc === Object(keyAcc) && keyAcc[k] !== undefined) {
                         return beforeValueFunc(false === keyAcc[k] ? 'false' : keyAcc[k]);
                     }
 
@@ -71,7 +71,7 @@ export function format(str, ...args) {
                 }, arg);
             }, false);
 
-        if (false === res) {
+        if (res === false) {
             if (removeEmptyKeys) {
                 return defaultKeyValue === undefined ? '' : defaultKeyValue;
             } else {
@@ -79,7 +79,7 @@ export function format(str, ...args) {
             }
         }
 
-        return res !== Object(res) ? res : JSON.stringify(res);
+        return res === Object(res) ? JSON.stringify(res) : res;
     });
 }
 
@@ -116,21 +116,14 @@ export function unSafeHtml(html) {
     return div.textContent;
 }
 
-export function b64EncodeUnicode(str) {
-    // first we use encodeURIComponent to get percent-encoded UTF-8,
-    // then we convert the percent encodings into raw bytes which
-    // can be fed into btoa.
-    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
-        function toSolidBytes(match, p1) {
-            return String.fromCharCode('0x' + p1);
-        }));
+export function base64Encode(str) {
+    const bytes = new TextEncoder().encode(str);
+    return btoa(String.fromCodePoint(...bytes));
 }
 
-export function b64DecodeUnicode(str) {
-    // Going backwards: from bytestream, to percent-encoding, to original string.
-    return decodeURIComponent(atob(str).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
+export function base64Decode(str) {
+    const bytes = Uint8Array.from(Array.from(atob(str), char => char.codePointAt(0)));
+    return new TextDecoder().decode(bytes);
 }
 
 export function sliceText(text, length = 50) {
@@ -374,7 +367,7 @@ export function safeColor(color) {
 }
 
 export function convertSvgToUrl(svg) {
-    return 'data:image/svg+xml;base64,' + b64EncodeUnicode(svg);
+    return 'data:image/svg+xml;base64,' + base64Encode(svg);
 }
 
 export function isSvg(url) {
@@ -385,20 +378,20 @@ export function normalizeSvg(svgUrl) {
     let svg = null;
 
     if (svgUrl.startsWith('data:image/svg+xml;base64,')) {
-        let [, svgBase64] = svgUrl.split('data:image/svg+xml;base64,');
-        svg = b64DecodeUnicode(svgBase64);
+        const [, svgBase64] = svgUrl.split('data:image/svg+xml;base64,');
+        svg = base64Decode(svgBase64);
     } else {
-        let [, svgURI] = svgUrl.split('data:image/svg+xml,');
+        const [, svgURI] = svgUrl.split('data:image/svg+xml,');
         svg = decodeURIComponent(svgURI);
     }
 
-    let div = document.createElement('div');
+    const div = document.createElement('div');
 
     div[INNER_HTML] = svg;
 
-    let svgNode = div.querySelector('svg');
+    const svgNode = div.querySelector('svg');
 
-    [...svgNode.children].forEach(function(node) {
+    [...svgNode.children].forEach(node => {
         if (!node.attributes.fill || node.attributes.fill.textContent === 'currentColor') {
             node.setAttribute('fill', 'context-fill');
         }
