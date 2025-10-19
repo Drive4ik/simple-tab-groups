@@ -1,6 +1,8 @@
 
 export default class BatchProcessor {
     #batches = new Map;
+    #queue = new Set;
+    #processing = false;
     #processCallback;
     #processEmpty;
     #batchDelay;
@@ -11,13 +13,32 @@ export default class BatchProcessor {
         this.#batchDelay = batchDelay;
     }
 
-    #processBatch(id) {
-        const batch = this.#batches.get(id);
-        this.#batches.delete(id);
-
-        if (this.#processEmpty || batch?.items.size) {
-            this.#processCallback(id, Array.from(batch.items));
+    async #processQueue() {
+        if (this.#processing) {
+            return;
         }
+
+        this.#processing = true;
+
+        while (this.#queue.size) {
+            const [batch] = this.#queue;
+            this.#queue.delete(batch);
+
+            if (batch.items.size || this.#processEmpty) {
+                await this.#processCallback(batch.id, Array.from(batch.items));
+            }
+        }
+
+        this.#processing = false;
+    }
+
+    #addQueue(...batches) {
+        for (const batch of batches) {
+            clearTimeout(batch.timer);
+            this.#batches.delete(batch.id);
+            this.#queue.add(batch);
+        }
+        this.#processQueue();
     }
 
     add(id, item) {
@@ -29,6 +50,7 @@ export default class BatchProcessor {
 
         if (!batch) {
             batch = {
+                id,
                 items: new Set,
                 timer: null,
             };
@@ -38,7 +60,7 @@ export default class BatchProcessor {
         batch.items.add(item);
 
         clearTimeout(batch.timer);
-        batch.timer = setTimeout(() => this.#processBatch(id), this.#batchDelay);
+        batch.timer = setTimeout(() => this.#addQueue(batch), this.#batchDelay);
     }
 
     delete(id, item) {
@@ -46,9 +68,6 @@ export default class BatchProcessor {
     }
 
     flush() {
-        for (const [id, batch] of this.#batches) {
-            clearTimeout(batch.timer);
-            this.#processBatch(id);
-        }
+        this.#addQueue(...this.#batches.values());
     }
 }

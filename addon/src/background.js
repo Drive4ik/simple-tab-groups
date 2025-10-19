@@ -479,18 +479,18 @@ const onActivatedTab = function({tabId, windowId, previousTabId = null}) {
 }
 
 const tabsUpdatedBatch = new BatchProcessor(async (groupId) => {
+    logger.log('tabsUpdatedBatch', groupId);
+
     if (groupId === 'unsync') {
         const windows = await Windows.load(true, true, options.showTabsWithThumbnailsInManageGroups);
         sendMessageFromBackground('unsync-tabs-updated', {windows});
     } else {
         const {group} = await Groups.load(groupId, true, true, options.showTabsWithThumbnailsInManageGroups);
 
-        if (group.tabs.length) {
-            sendMessageFromBackground('tabs-updated', {
-                groupId,
-                tabs: group.tabs,
-            });
-        }
+        sendMessageFromBackground('tabs-updated', {
+            groupId,
+            tabs: group.tabs,
+        });
     }
 });
 
@@ -502,8 +502,6 @@ self.skipTabs = {
 
 self.skipTabsTracking = skipTabsTracking;
 self.continueTabsTracking = continueTabsTracking;
-
-// excludeTabIds
 
 function skipTabsTracking(tabs, accum = new Set) {
     tabs.forEach(tab => {
@@ -546,11 +544,7 @@ const onCreatedTab = catchFunc(async function onCreatedTab(tab) {
 
     Cache.applyTabSession(tab);
 
-    if (tab.groupId) {
-        tabsUpdatedBatch.add(tab.groupId, tab.id);
-    } else {
-        tabsUpdatedBatch.add('unsync', tab.id);
-    }
+    tabsUpdatedBatch.add(tab.groupId || 'unsync', tab.id);
 }, logger);
 
 const onUpdatedTab = catchFunc(async function onUpdatedTab(tabId, changeInfo, tab) {
@@ -634,9 +628,7 @@ function onRemovedTab(tabId, {isWindowClosing, windowId}) {
 
     logger.log('onRemovedTab', tabId, {isWindowClosing, windowId, groupId});
 
-    if (groupId) {
-        tabsUpdatedBatch.delete(groupId, tabId);
-    }
+    tabsUpdatedBatch.delete(groupId || 'unsync', tabId);
 
     if (isWindowClosing) {
         reCreateTabsOnRemoveWindow.push(tabId);
@@ -654,15 +646,11 @@ function onMovedTab(tabId) {
         return;
     }
 
-    logger.log('onMovedTab', tabId);
-
     const groupId = Cache.getTabGroup(tabId);
 
-    if (groupId) {
-        tabsUpdatedBatch.add(groupId, tabId);
-    } else {
-        tabsUpdatedBatch.add('unsync', tabId);
-    }
+    logger.log('onMovedTab', {tabId, groupId});
+
+    tabsUpdatedBatch.add(groupId || 'unsync', tabId);
 
     /*
     if (Cache.getTabGroup(tabId)) {
@@ -676,15 +664,11 @@ async function onDetachedTab(tabId, {oldWindowId}) { // notice: called before on
         return;
     }
 
-    logger.log('onDetachedTab', {tabId, oldWindowId});
-
     const groupId = Cache.getWindowGroup(oldWindowId);
 
-    if (groupId) {
-        tabsUpdatedBatch.add(groupId, tabId);
-    } else {
-        tabsUpdatedBatch.add('unsync', tabId);
-    }
+    logger.log('onDetachedTab', {tabId, oldWindowId, groupId});
+
+    tabsUpdatedBatch.add(groupId || 'unsync', tabId);
 }
 
 async function onAttachedTab(tabId, {newWindowId}) { // called when tabs.move()
@@ -699,11 +683,9 @@ async function onAttachedTab(tabId, {newWindowId}) { // called when tabs.move()
 
     const groupId = Cache.getTabGroup(tabId);
 
-    if (groupId) {
-        tabsUpdatedBatch.add(groupId, tabId);
-    } else {
-        tabsUpdatedBatch.add('unsync', tabId);
-    }
+    log.log('attached tab groupId', groupId);
+
+    tabsUpdatedBatch.add(groupId || 'unsync', tabId);
 
     log.stop();
 }
@@ -1629,32 +1611,13 @@ async function prependWindowTitle(windowId, group = null) {
     }
 }
 
-let _tabsLazyMovingMap = new Map,
-    _tabsLazyMovingTimer = 0;
+const moveTabsBatch = new BatchProcessor(async (groupId, tabIds) => {
+    const log = logger.start('moveTabsBatch', {groupId, tabIds});
+    await Tabs.move(tabIds, groupId).catch(log.onCatch('moveTabsBatch'));
+    log.stop();
+});
 
-function addTabToLazyMove(tabId, groupId) {
-    clearTimeout(_tabsLazyMovingTimer);
-
-    _tabsLazyMovingMap.set(tabId, groupId);
-
-    _tabsLazyMovingTimer = window.setTimeout(catchFunc(async function tabsLazyMovingTimer() {
-        let tabsEntries = Array.from(_tabsLazyMovingMap.entries());
-
-        _tabsLazyMovingMap.clear();
-
-        let moveData = tabsEntries.reduce((acc, [tabId, groupId]) => {
-                acc[groupId] ??= [];
-                acc[groupId].push(tabId);
-                return acc;
-            }, {});
-
-        for (let groupId in moveData) {
-            await Tabs.move(moveData[groupId], groupId);
-        }
-    }, logger), 100);
-}
-
-let canceledRequests = new Set;
+const canceledRequests = new Set;
 const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({tabId, url, cookieStoreId, originUrl, requestId, frameId}) {
     const log = logger.start('onBeforeTabRequest', {tabId, url, cookieStoreId, originUrl, requestId, frameId});
 
@@ -1741,7 +1704,7 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({tabId, u
         tab.status = browser.tabs.TabStatus.COMPLETE;
         Cache.setTab(tab);
 
-        addTabToLazyMove(tab.id, destGroup.id);
+        moveTabsBatch.add(destGroup.id, tab.id);
         log.stop('move tab from groupId:', tabGroup.id, 'to groupId:', destGroup.id);
         return {};
     }
