@@ -201,6 +201,10 @@ export async function sync(trust = null, revision = null, progressFunc = null) {
 
     progressFunc?.(95);
 
+    // set last-update before call saveOptions, saveOptions will reset alarm and it depends on last-update time
+    storage.githubGistFileName = syncOptions.githubGistFileName;
+    mainStorage.autoSyncLastTimeStamp = Utils.unixNow();
+
     if (syncResult.changes.local) {
         // map cookie-store-id to gecko browser
         Containers.mapDefaultContainer(syncResult.localData, Constants.DEFAULT_COOKIE_STORE_ID);
@@ -240,9 +244,6 @@ export async function sync(trust = null, revision = null, progressFunc = null) {
         await backgroundSelf.saveOptions(syncResult.localData);
         await Groups.save(syncResult.localData.groups);
     }
-
-    storage.githubGistFileName = syncOptions.githubGistFileName;
-    mainStorage.autoSyncLastTimeStamp = Utils.unixNow();
 
     progressFunc?.(100);
 
