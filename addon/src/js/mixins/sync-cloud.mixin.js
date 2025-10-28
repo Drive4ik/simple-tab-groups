@@ -45,15 +45,14 @@ export default {
 
         this
             .$on(['sync-start', 'sync-progress', 'sync-end', 'sync-error', 'sync-finish'], () => {
+                this.syncCloudInProgress = true; // any action means that progress is being made
                 clearTimeout(this.syncCloudProgressTimer);
                 clearTimeout(this.syncCloudInProgressTimer);
             })
             .$on('sync-start', () => {
-                this.syncCloudInProgress = true;
                 this.syncCloudErrorMessage = '';
             })
             .$on('sync-progress', ({progress}) => {
-                this.syncCloudInProgress = true;
                 this.syncCloudProgress = progress;
             })
             .$on('sync-end', () => {

@@ -33,13 +33,14 @@ export default {
             sync: {
                 title: 'syncOptionLocatedFFSync',
                 disabled: !SyncStorage.IS_AVAILABLE,
-                loading: false,
+                loadingOptions: false,
                 value: Constants.SYNC_STORAGE_FSYNC,
                 options: {...Constants.DEFAULT_SYNC_OPTIONS},
                 optionsBackup: {},
                 load: this.loadSyncOptions.bind(this),
                 save: this.saveSyncOptions.bind(this),
                 gist: null,
+                loadingGist: false,
                 error: '',
                 icon: {
                     load: '/icons/cloud-arrow-down-solid.svg',
@@ -49,13 +50,14 @@ export default {
             local: {
                 title: 'syncOptionLocatedLocally',
                 disabled: false,
-                loading: false,
+                loadingOptions: false,
                 value: Constants.SYNC_STORAGE_LOCAL,
                 options: {...Constants.DEFAULT_SYNC_OPTIONS, syncOptionsLocation: Constants.DEFAULT_OPTIONS.syncOptionsLocation},
                 optionsBackup: {},
                 load: this.loadLocalOptions.bind(this),
                 save: this.saveLocalOptions.bind(this),
                 gist: null,
+                loadingGist: false,
                 error: '',
                 icon: {
                     load: '/icons/arrow-down.svg',
@@ -81,10 +83,10 @@ export default {
             return this.areas.find(area => area.value === this.local.options.syncOptionsLocation);
         },
         isLoadingSyncButton() {
-            return this.syncCloudInProgress || this.area.loading;
+            return this.syncCloudInProgress;
         },
         isDisableSyncButton() {
-            return this.isLoadingSyncButton || this.area.disabled;
+            return this.isLoadingSyncButton || this.area.disabled || this.area.loadingGist;
         },
         showTrustSyncButtons() {
             if (
@@ -157,18 +159,19 @@ export default {
                 this.syncCloudProgress = 0;
             }
 
+            area.gist = null;
+
             if (!area.options.githubGistToken) {
-                area.gist = false;
                 return;
             }
 
-            area.gist = null;
+            try {
+                area.loadingGist = true;
 
-            const GithubGistCloud = this.createCloud(area.options);
+                const GithubGistCloud = this.createCloud(area.options);
 
-            const gist = await GithubGistCloud.getInfo().catch(e => false);
+                const gist = await GithubGistCloud.getInfo();
 
-            if (gist) {
                 const history = gist.history.map((item, index) => {
                     delete item.user;
 
@@ -209,8 +212,10 @@ export default {
                     lastUpdateISO: lastUpdate.toISOString(),
                     history,
                 };
-            } else {
-                area.gist = false;
+            } catch {
+                //
+            } finally {
+                area.loadingGist = false;
             }
         },
 
@@ -218,7 +223,7 @@ export default {
         async save(area) {
             try {
                 area.error = '';
-                area.loading = true;
+                area.loadingOptions = true;
 
                 if (area.options.githubGistToken) {
                     const GithubGistCloud = this.createCloud(area.options);
@@ -231,7 +236,7 @@ export default {
             } catch ({message}) {
                 area.error = new Cloud.CloudError(message).toString();
             } finally {
-                area.loading = false;
+                area.loadingOptions = false;
             }
         },
 
@@ -315,7 +320,7 @@ export default {
     </div>
 
     <form class="field" @submit.prevent="save(area)" @reset.prevent="area.load">
-        <fieldset :disabled="area.disabled || area.loading">
+        <fieldset :disabled="area.disabled || area.loadingOptions">
             <github-gist-fields
                 class="field"
                 :token.sync="area.options.githubGistToken"
@@ -392,7 +397,7 @@ export default {
                             </div>
                         </div>
                     </div>
-                    <figure v-else-if="area.gist === null" class="image is-16x16">
+                    <figure v-else-if="area.loadingGist" class="image is-16x16">
                         <img src="/icons/animate-spinner.svg">
                     </figure>
                 </div>
@@ -408,7 +413,7 @@ export default {
                         </button>
                     </div>
                     <div class="control">
-                        <button type="submit" class="button is-success is-soft" :class="{'is-loading': area.loading}">
+                        <button type="submit" class="button is-success is-soft" :class="{'is-loading': area.loadingOptions}">
                             <span class="icon">
                                 <figure class="image is-16x16">
                                     <img :src="area.icon.save">
