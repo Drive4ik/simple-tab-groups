@@ -24,62 +24,71 @@ export function isDeadObject(obj) {
 }
 
 // if last element is Boolean true - remove empty keys, else
-// aaa {a!b} ccc => aaa b ccc
+// aaa {a|b} ccc => aaa b ccc
 export function format(str, ...args) {
-    const DEFAULT_BRACKETS = ['{', '}'];
-
-    let removeEmptyKeys = false,
-        beforeValueFunc = value => value;
+    str = String(str);
+    if (!str) return str;
 
     const lastArg = args[args.length - 1];
+
+    let removeEmptyKeys = false;
+    let processValueFunc = value => value;
 
     if (lastArg === true) {
         removeEmptyKeys = args.pop();
     } else if (typeof lastArg === 'function') { // if last argument is function = call this func for every value in set
-        beforeValueFunc = args.pop();
+        processValueFunc = args.pop();
     }
 
-    args = args.map((arg, key) => {
-        if (arg !== Object(arg)) { // if primitive type: string, integer, float, null, undefined
-            return {
-                [key]: arg,
-            };
-        }
+    args = args.map((arg, key) => arg === Object(arg) ? arg : {[key]: arg});
 
-        return arg;
-    });
+    const [
+        BRACKET_START = '{',
+        BRACKET_END = '}',
+        KEYS_DELIMITER = '|',
+        KEY_PARTS_DELIMITER = '.',
+    ] = Array.isArray(this) ? this : [];
 
-    const [bracketStart, bracketEnd] = (Array.isArray(this) ? this : DEFAULT_BRACKETS);
-    const [bracketStartEscaped, bracketEndEscaped] = [bracketStart, bracketEnd].map(s => s.split('').map(s => `\\${s}`).join(''));
+    const regexpEscape = RegExp.escape ? RegExp.escape : s => s.split('').map(s => `\\${s}`).join('');
+    const BRACKET_START_ESCAPED = regexpEscape(BRACKET_START);
+    const BRACKET_END_ESCAPED = regexpEscape(BRACKET_END);
 
-    const replaceRegExp = new RegExp(`${bracketStartEscaped}((?!${bracketEndEscaped}).+?)${bracketEndEscaped}`, 'g'); // /{\s*([^\}]+)\s*}/g
+    const replaceRegExp = new RegExp(`${BRACKET_START_ESCAPED}((?!${BRACKET_END_ESCAPED}).+?)${BRACKET_END_ESCAPED}`, 'g');
 
-    return str.replace(replaceRegExp, (match, key) => {
-        const [clearKey, defaultKeyValue] = key.split('!'),
-            keyParts = clearKey.trim().split('.'),
-            res = args.reduce((accum, arg) => {
-                if (accum !== false) {
-                    return accum;
-                }
+    return str.replace(replaceRegExp, (match, fullKey) => {
+        const keys = fullKey.split(KEYS_DELIMITER);
 
-                return keyParts.reduce((keyAcc, k) => {
-                    if (keyAcc === Object(keyAcc) && keyAcc[k] !== undefined) {
-                        return beforeValueFunc(false === keyAcc[k] ? 'false' : keyAcc[k]);
+        const result = args.reduce((accum, data) => {
+            if (accum === undefined) {
+                for (const [keyIndex, key] of keys.entries()) {
+                    const value = key.split(KEY_PARTS_DELIMITER).map(k => k.trim()).reduce((acc, keyPart) => {
+                        if (acc === Object(acc)) {
+                            return processValueFunc(acc[keyPart], keyPart, key, keyIndex, keys.length, str);
+                        }
+                    }, data);
+
+                    if (value !== undefined) {
+                        return value;
                     }
-
-                    return false;
-                }, arg);
-            }, false);
-
-        if (res === false) {
-            if (removeEmptyKeys) {
-                return defaultKeyValue === undefined ? '' : defaultKeyValue;
-            } else {
-                return defaultKeyValue === undefined ? bracketStart + key + bracketEnd : defaultKeyValue;
+                }
             }
+
+            return accum;
+        }, undefined);
+
+        if (result !== undefined) {
+            return result;
         }
 
-        return res === Object(res) ? JSON.stringify(res) : res;
+        if (keys.length > 1) {
+            return keys[keys.length - 1];
+        }
+
+        if (removeEmptyKeys) {
+            return '';
+        }
+
+        return match;
     });
 }
 
