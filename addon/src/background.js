@@ -252,7 +252,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                 continueTabsTracking(skippedTabs);
 
                 if (groupToShow.muteTabsWhenGroupCloseAndRestoreWhenOpen) {
-                    Tabs.setMute(groupToShow.tabs, false).catch(log.onCatch('Tabs.setMute', false));
+                    await Tabs.setMute(groupToShow.tabs, false);
                 }
             }
 
@@ -269,7 +269,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
 
                 if (groupToHide) {
                     if (groupToHide.muteTabsWhenGroupCloseAndRestoreWhenOpen) {
-                        Tabs.setMute(tabs, true).catch(log.onCatch('Tabs.setMute', false));
+                        await Tabs.setMute(tabs, true);
                     }
 
                     if (groupToHide.discardTabsAfterHide) {
@@ -277,7 +277,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                             tabs = tabs.filter(tab => !tab.audible);
                         }
 
-                        Tabs.discard(tabs).catch(log.onCatch('Tabs.discard', false));
+                        Tabs.discard(tabs);
                     }
                 }
             }

@@ -530,7 +530,7 @@ export async function unload(groupId) {
             tabs = group.tabs.filter(tab => !tab.audible);
         }
 
-        await Tabs.discard(tabs).catch(log.onCatch(['cant discard', tabs]));
+        await Tabs.discard(tabs);
     }
 
     await backgroundSelf.updateBrowserActionData(null, windowId);

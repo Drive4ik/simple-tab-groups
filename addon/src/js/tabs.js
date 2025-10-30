@@ -200,13 +200,13 @@ export async function get(
     return tabs;
 }
 
-export async function getOne(id) {
+export async function getOne(tabId) {
     try {
-        if (self.skipTabs.removed.has(id)) { // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1396758
+        if (self.skipTabs.removed.has(tabId)) { // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1396758
             return null;
         }
 
-        const tab = await browser.tabs.get(id);
+        const tab = await browser.tabs.get(tabId);
         delete tab.groupId; // TODO temp
         return Utils.normalizeTabUrl(tab);
     } catch (e) {
@@ -215,8 +215,8 @@ export async function getOne(id) {
 }
 
 export async function getList(tabIds, includeFavIconUrl, includeThumbnail) {
-    const tabs = await Promise.all(tabIds.map(id => {
-        return getOne(id).then(tab => Cache.loadTabSession(tab, includeFavIconUrl, includeThumbnail));
+    const tabs = await Promise.all(tabIds.map(tabId => {
+        return getOne(tabId).then(tab => Cache.loadTabSession(tab, includeFavIconUrl, includeThumbnail));
     }));
 
     return tabs.filter(Boolean);
@@ -616,79 +616,82 @@ export async function moveNative(tabs, moveProperties = {}) {
         .filter(Boolean);
 }
 
-export async function setMute(tabs, muted) {
+const tabsActionSchema = new Map([
+    ['get', {sendOneByOne: true}], // TODO refactor to use it
+    ['discard', {sendArray: true, sendOneByOne: true}],
+    ['show', {sendArray: true, sendOneByOne: true}],
+    ['hide', {sendArray: true, sendOneByOne: true}],
+    ['remove', {sendArray: true, sendOneByOne: true}],
+    ['update', {sendOneByOne: true}],
+    ['reload', {sendOneByOne: true}],
+    ['move', {sendArray: true}], // TODO refactor to use it
+]);
+
+async function tabsAction(action, tabs, ...funcArgs) {
+    const schema = tabsActionSchema.get(action);
+
+    if (!schema) {
+        throw Error(`invalid action: ${action}`);
+    }
+
+    if (!tabs) {
+        throw Error(`invalid tabs`);
+    }
+
+    tabs = Array.isArray(tabs) ? tabs.flat() : [tabs];
+
+    if (!tabs.length) {
+        return;
+    }
+
     const tabIds = tabs.map(extractId);
-    muted = !!muted;
-    const log = logger.start('setMute', tabIds, 'muted:', muted);
+    const log = logger.start(`tabsAction browser.tabs.${action}(`, tabIds, ...funcArgs, ')');
 
-    tabs = await getList(tabIds, false, false);
+    let result = [];
 
-    await Promise.all(
-        tabs
-        .filter(tab => muted ? tab.audible : tab.mutedInfo.muted)
-        .map(tab =>
-            browser.tabs.update(tab.id, {muted})
-                .catch(log.onCatch(['mute tab', tab], false))
-        )
-    );
+    async function sendOneByOne() {
+        const settled = await Promise.allSettled(tabIds.map(tabId => {
+            return browser.tabs[action](tabId, ...funcArgs);
+        }));
 
-    log.stop();
+        for (const [index, {status, value, reason}] of settled.entries()) {
+            if (status === 'fulfilled') {
+                result.push(value || tabIds[index]);
+            } else {
+                log.warn(action, 'was rejected for tab:', tabs[index], 'reason:', reason);
+            }
+        }
+    }
+
+    if (schema.sendArray) {
+        try {
+            result = await browser.tabs[action](tabIds, ...funcArgs);
+            result ||= tabIds;
+        } catch (e) {
+            if (schema.sendOneByOne) {
+                log.logError(`fail ${action} tabs as array of ids, doing it one by one`, e);
+                await sendOneByOne();
+            } else {
+                log.throwError(`fail ${action} tabs`, e);
+            }
+        }
+    } else if (schema.sendOneByOne) {
+        await sendOneByOne();
+    } else {
+        log.throwError('invalid schema config');
+    }
+
+    log.stop(result.map(extractId), ')');
+
+    return result;
 }
 
-export async function remove(...tabs) { // id or ids or tabs
-    tabs = tabs.flat();
-
-    if (tabs.length) {
-        const log = logger.start('remove', tabs.map(extractId));
-
-        await Promise.all(tabs.map(tab =>
-            browser.tabs.remove(extractId(tab))
-                .catch(log.onCatch(['remove tab', tab], false))
-        ));
-
-        log.stop();
-    }
+export async function show(tabs) {
+    await tabsAction('show', tabs);
 }
 
-async function browserTabs(funcName, tabs, log) {
-    const tabIds = tabs.map(extractId);
-
-    try {
-        await browser.tabs[funcName](tabIds);
-    } catch (e) {
-        log.logError(e.message, e);
-
-        log.warn(funcName, 'tabs one by one', tabIds);
-
-        await Promise.all(tabs.map(tab =>
-            browser.tabs[funcName](extractId(tab))
-                .catch(log.onCatch([funcName, 'tab', tab], false))
-        ));
-    }
-}
-
-export async function show(...tabs) {
-    tabs = tabs.flat();
-
-    if (tabs.length) {
-        const log = logger.start('show', tabs.map(extractId));
-
-        await browserTabs('show', tabs, log);
-
-        log.stop();
-    }
-}
-
-export async function hide(...tabs) {
-    tabs = tabs.flat();
-
-    if (tabs.length) {
-        const log = logger.start('hide', tabs.map(extractId));
-
-        await browserTabs('hide', tabs, log);
-
-        log.stop();
-    }
+export async function hide(tabs) {
+    return await tabsAction('hide', tabs);
 }
 
 export async function safeHide(...tabs) { // ids or tabs
@@ -707,45 +710,41 @@ export async function safeHide(...tabs) { // ids or tabs
     }
 }
 
-export async function discard(...tabs) { // ids or tabs
-    tabs = tabs.flat();
-
-    if (tabs.length) {
-        const log = logger.start('discard', tabs.map(extractId));
-
-        await browserTabs('discard', tabs, log);
-
-        log.stop();
-    }
+export async function discard(tabs) {
+    await tabsAction('discard', tabs);
 }
 
-export async function reload(tabs, bypassCache = false) { // ids or tabs
-    tabs = [tabs].flat();
-
-    if (tabs.length) {
-        const log = logger.start('reload', tabs.map(extractId));
-
-        await Promise.all(tabs.map(tab =>
-            browser.tabs.reload(extractId(tab), {bypassCache})
-                .catch(log.onCatch(['reload tab', tab], false))
-        ));
-
-        log.stop();
-    }
+export async function reload(tabs, bypassCache = false) {
+    await tabsAction('reload', tabs, {bypassCache});
 }
 
-const extensionsWebextensionsRestrictedDomains = ['accounts-static.cdn.mozilla.net', 'accounts.firefox.com', 'addons.cdn.mozilla.net', 'addons.mozilla.org', 'api.accounts.firefox.com', 'content.cdn.mozilla.net', 'discovery.addons.mozilla.org', 'install.mozilla.org', 'oauth.accounts.firefox.com', 'profile.accounts.firefox.com', 'support.mozilla.org', 'sync.services.mozilla.com'];
+export async function setMute(tabs, muted) {
+    logger.log('setMute', {muted});
+
+    tabs = await getList(tabs.map(extractId), false, false);
+    muted = Boolean(muted);
+
+    tabs = tabs.filter(tab => muted ? tab.audible : tab.mutedInfo.muted);
+
+     await tabsAction('update', tabs, {muted});
+}
+
+export async function remove(tabs) {
+    await tabsAction('remove', tabs);
+}
+
+const restrictedDomainsRegExp = /^https?:\/\/(.+\.)?(mozilla\.(net|org|com)|firefox\.com)\//;
 
 export function isCanSendMessage({url}) {
     if (url === 'about:blank') {
         return true;
     }
 
-    if (url.startsWith('moz-extension') || url.startsWith('about:')) {
+    if (url.startsWith('about:') || url.startsWith('moz-extension')) {
         return false;
     }
 
-    return !extensionsWebextensionsRestrictedDomains.some(host => (new RegExp('^https?://' + host).test(url)));
+    return !restrictedDomainsRegExp.test(url);
 }
 
 export function extractId(tab) {
