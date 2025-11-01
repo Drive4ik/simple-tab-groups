@@ -441,16 +441,16 @@ export async function move(tabIds, groupId, params = {}) {
                 ...newTabParams,
             });
 
+            self.skipTabsTracking([newTab], skippedTabs);
+
             if (tab.active) {
                 activeTabs.push({...newTab, active: true});
             }
 
-            self.skipTabsTracking([newTab], skippedTabs);
-
             return newTab;
         }));
 
-        await remove(tabIdsToRemove);
+        await remove(tabIdsToRemove, true);
 
         tabs = await moveNative(tabs, {
             index: params.newTabIndex ?? -1,
@@ -617,17 +617,17 @@ export async function moveNative(tabs, moveProperties = {}) {
 }
 
 const tabsActionSchema = new Map([
-    ['get', {sendOneByOne: true}], // TODO refactor to use it
+    ['get', {sendOneByOne: true, processGroupId: true}], // TODO refactor to use it
     ['discard', {sendArray: true, sendOneByOne: true}],
     ['show', {sendArray: true, sendOneByOne: true}],
     ['hide', {sendArray: true, sendOneByOne: true}],
     ['remove', {sendArray: true, sendOneByOne: true}],
-    ['update', {sendOneByOne: true}],
+    ['update', {sendOneByOne: true, processGroupId: true}],
     ['reload', {sendOneByOne: true}],
-    ['move', {sendArray: true}], // TODO refactor to use it
+    ['move', {sendArray: true, processGroupId: true}], // TODO refactor to use it
 ]);
 
-async function tabsAction(action, tabs, ...funcArgs) {
+async function tabsAction({action, skipTracking = false, silentRemove = false}, tabs, ...funcArgs) {
     const schema = tabsActionSchema.get(action);
 
     if (!schema) {
@@ -638,14 +638,26 @@ async function tabsAction(action, tabs, ...funcArgs) {
         throw Error(`invalid tabs`);
     }
 
-    tabs = Array.isArray(tabs) ? tabs.flat() : [tabs];
+    tabs = Array.isArray(tabs) ? tabs : [tabs];
 
     if (!tabs.length) {
         return;
     }
 
     const tabIds = tabs.map(extractId);
-    const log = logger.start(`tabsAction browser.tabs.${action}(`, tabIds, ...funcArgs, ')');
+    const log = logger.start(`tabsAction`, {skipTracking, silentRemove}, `browser.tabs.${action}(`,tabIds,...funcArgs,')');
+
+    if (action === 'remove') {
+        skipTracking = true;
+
+        if (silentRemove) {
+            tabIds.forEach(tabId => self.skipTabs.removed.add(tabId));
+        }
+    }
+
+    if (skipTracking) {
+        self.skipTabsTracking(tabIds);
+    }
 
     let result = [];
 
@@ -681,41 +693,33 @@ async function tabsAction(action, tabs, ...funcArgs) {
         log.throwError('invalid schema config');
     }
 
+    if (skipTracking) {
+        self.continueTabsTracking(tabIds);
+    }
+
+    if (schema.processGroupId) {
+        result.forEach(tab => delete tab.groupId); // TODO tmp
+    }
+
     log.stop(result.map(extractId), ')');
 
     return result;
 }
 
-export async function show(tabs) {
-    await tabsAction('show', tabs);
+export async function show(tabs, skipTracking = false) {
+    return await tabsAction({action: 'show', skipTracking}, tabs);
 }
 
-export async function hide(tabs) {
-    return await tabsAction('hide', tabs);
+export async function hide(tabs, skipTracking = false) {
+    return await tabsAction({action: 'hide', skipTracking}, tabs);
 }
 
-export async function safeHide(...tabs) { // ids or tabs
-    tabs = tabs.flat();
-
-    if (tabs.length) {
-        const tabIds = tabs.map(extractId);
-
-        const log = logger.start('safeHide', tabIds);
-
-        self.skipTabsTracking(tabs);
-        await hide(tabIds);
-        self.continueTabsTracking(tabs);
-
-        log.stop();
-    }
-}
-
-export async function discard(tabs) {
-    await tabsAction('discard', tabs);
+export async function discard(tabs, skipTracking = false) {
+    return await tabsAction({action: 'discard', skipTracking}, tabs);
 }
 
 export async function reload(tabs, bypassCache = false) {
-    await tabsAction('reload', tabs, {bypassCache});
+    return await tabsAction({action: 'reload'}, tabs, {bypassCache});
 }
 
 export async function setMute(tabs, muted) {
@@ -726,11 +730,11 @@ export async function setMute(tabs, muted) {
 
     tabs = tabs.filter(tab => muted ? tab.audible : tab.mutedInfo.muted);
 
-     await tabsAction('update', tabs, {muted});
+    return await tabsAction({action: 'update'}, tabs, {muted});
 }
 
-export async function remove(tabs) {
-    await tabsAction('remove', tabs);
+export async function remove(tabs, silentRemove = false) {
+    return await tabsAction({action: 'remove', silentRemove}, tabs);
 }
 
 const restrictedDomainsRegExp = /^https?:\/\/(.+\.)?(mozilla\.(net|org|com)|firefox\.com)\//;

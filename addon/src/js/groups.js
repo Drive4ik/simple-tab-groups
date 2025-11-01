@@ -264,7 +264,8 @@ export async function remove(groupId) {
     }
 
     if (!group.isArchive) {
-        await Tabs.remove(group.tabs);
+        log.log('removing group tabs...');
+        await Tabs.remove(group.tabs, true);
 
         await backgroundSelf.updateMoveTabMenus();
     }
@@ -513,13 +514,13 @@ export async function unload(groupId) {
     tabs = tabs.filter(tab => !tab.groupId);
 
     if (tabs.length) {
-        await Tabs.show(tabs);
+        await Tabs.show(tabs, true);
         await Tabs.setActive(null, tabs);
     } else {
         await Tabs.createTempActiveTab(windowId, false);
     }
 
-    await Tabs.safeHide(group.tabs);
+    await Tabs.hide(group.tabs, true);
 
     if (group.discardTabsAfterHide) {
         log.log('run discard tabs');
@@ -591,8 +592,7 @@ export async function archiveToggle(groupId) {
 
     await save(groups);
 
-    self.skipTabsTracking(tabsToRemove);
-    await Tabs.remove(tabsToRemove);
+    await Tabs.remove(tabsToRemove, true);
 
     backgroundSelf.sendMessageFromBackground('groups-updated');
 

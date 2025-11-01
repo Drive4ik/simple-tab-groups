@@ -115,7 +115,7 @@ function setLoggerFuncs() {
                 throw error;
             }
 
-            // !ни в коем случае не делай ретурн !!! повлияет на tabs.filter(Boolean)
+            return undefined; // ! important, depends on tabs.filter(Boolean)
         }
     }.bind(this);
 

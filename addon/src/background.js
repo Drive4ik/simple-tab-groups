@@ -160,7 +160,7 @@ async function createTabsSafe(tabs, tryRestoreOpeners, hideTabs = true) {
 
         log.log('hide tabs', tabsToHide);
 
-        await Tabs.safeHide(tabsToHide);
+        await Tabs.hide(tabsToHide, true);
     }
 
     log.stop();
@@ -238,18 +238,16 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
 
             // show tabs
             if (groupToShow.tabs.length) {
-                const skippedTabs = skipTabsTracking(groupToShow.tabs);
-
                 if (!groupToShow.tabs.every(tab => tab.windowId === windowId)) {
+                    const skippedTabs = skipTabsTracking(groupToShow.tabs);
                     groupToShow.tabs = await Tabs.moveNative(groupToShow.tabs, {
                         index: -1,
                         windowId: windowId,
                     });
+                    continueTabsTracking(skippedTabs);
                 }
 
-                await Tabs.show(groupToShow.tabs);
-
-                continueTabsTracking(skippedTabs);
+                await Tabs.show(groupToShow.tabs, true);
 
                 if (groupToShow.muteTabsWhenGroupCloseAndRestoreWhenOpen) {
                     await Tabs.setMute(groupToShow.tabs, false);
@@ -262,10 +260,10 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
             // hide tabs
             await hideTabs(groupToHide?.tabs);
 
-            let activeTabGroupToHide = groupToHide?.tabs.find(tab => tab.active);
+            const activeTabGroupToHide = groupToHide?.tabs.find(tab => tab.active);
 
             async function hideTabs(tabs = []) {
-                await Tabs.safeHide(tabs);
+                await Tabs.hide(tabs, true);
 
                 if (groupToHide) {
                     if (groupToHide.muteTabsWhenGroupCloseAndRestoreWhenOpen) {
@@ -287,7 +285,7 @@ async function applyGroup(windowId, groupId, activeTabId, applyFromHistory = fal
                     return;
                 }
 
-                await Tabs.hide(tabs);
+                await Tabs.hide(tabs, true);
 
                 let showNotif = storage.showTabsInThisWindowWereHidden ?? 0;
                 if (showNotif < 5) {
@@ -459,6 +457,10 @@ async function applyGroupByHistory(textPosition, groups) {
 }
 
 const onActivatedTab = function({tabId, windowId, previousTabId = null}) {
+    if (self.skipTabs.tracking.has(tabId) || self.skipTabs.tracking.has(previousTabId) || self.skipTabs.removed.has(tabId) || self.skipTabs.removed.has(previousTabId)) {
+        return;
+    }
+
     logger.log('onActivated', {tabId, windowId, previousTabId})
 
     sendMessageFromBackground('tab-updated', {
@@ -548,6 +550,10 @@ const onCreatedTab = catchFunc(async function onCreatedTab(tab) {
 }, logger);
 
 const onUpdatedTab = catchFunc(async function onUpdatedTab(tabId, changeInfo, tab) {
+    if (self.skipTabs.removed.has(tab.id)) {
+        return;
+    }
+
     if (self.skipTabs.tracking.has(tab.id)) {
         Cache.setTab(tab);
         return;
@@ -620,15 +626,20 @@ const onUpdatedTab = catchFunc(async function onUpdatedTab(tabId, changeInfo, ta
 }, logger);
 
 function onRemovedTab(tabId, {isWindowClosing, windowId}) {
+    const silent = self.skipTabs.removed.has(tabId);
+
     self.skipTabs.removed.add(tabId); // BUG https://bugzilla.mozilla.org/show_bug.cgi?id=1396758
-    self.skipTabs.tracking.add(tabId); // just in case
-    self.skipTabs.created.add(tabId); // just in case
 
     const groupId = Cache.getTabGroup(tabId);
 
-    logger.log('onRemovedTab', tabId, {isWindowClosing, windowId, groupId});
-
     tabsUpdatedBatch.delete(groupId || 'unsync', tabId);
+
+    if (silent) {
+        Cache.removeTab(tabId);
+        return;
+    }
+
+    logger.log('onRemovedTab', tabId, {isWindowClosing, windowId, groupId});
 
     if (isWindowClosing) {
         reCreateTabsOnRemoveWindow.push(tabId);
@@ -642,7 +653,7 @@ function onRemovedTab(tabId, {isWindowClosing, windowId}) {
 }
 
 function onMovedTab(tabId) {
-    if (self.skipTabs.tracking.has(tabId)) {
+    if (self.skipTabs.tracking.has(tabId) || self.skipTabs.removed.has(tabId)) {
         return;
     }
 
@@ -660,7 +671,7 @@ function onMovedTab(tabId) {
 }
 
 async function onDetachedTab(tabId, {oldWindowId}) { // notice: called before onAttached
-    if (self.skipTabs.tracking.has(tabId)) {
+    if (self.skipTabs.tracking.has(tabId) || self.skipTabs.removed.has(tabId)) {
         return;
     }
 
@@ -672,7 +683,7 @@ async function onDetachedTab(tabId, {oldWindowId}) { // notice: called before on
 }
 
 async function onAttachedTab(tabId, {newWindowId}) { // called when tabs.move()
-    if (self.skipTabs.tracking.has(tabId)) {
+    if (self.skipTabs.tracking.has(tabId) || self.skipTabs.removed.has(tabId)) {
         return;
     }
 
@@ -909,7 +920,7 @@ async function GrandRestoreWindows({ id }, needRestoreMissedTabsMap) {
 
             if (groupToKeep.deleteTabAfterMove) {
                 await Tabs.setActive(null, groupToKeep.tabs.filter(tab => !tabsToDelete.has(tab.id)));
-                await Tabs.remove(groupToKeep.deleteTabAfterMove);
+                await Tabs.remove(groupToKeep.deleteTabAfterMove, true);
             }
         } else {
             await Tabs.hide(groupToKeep.tabs);
@@ -1491,7 +1502,7 @@ async function updateMoveTabMenus() {
 
                 const tabsToHide = newTabs.filter(tab => tab.groupId && !Cache.getWindowId(tab.groupId));
 
-                await Tabs.safeHide(tabsToHide);
+                await Tabs.hide(tabsToHide, true);
 
                 // remove old tabs
                 await Tabs.remove(tabsIdsToRemove);
@@ -1786,7 +1797,7 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({tabId, u
 
         if (tab.hidden) {
             log.log('hide tab', newTab);
-            Tabs.safeHide(newTab);
+            Tabs.hide(newTab, true);
         }
     });
 
@@ -1852,7 +1863,6 @@ function addEvents() {
     });
     browser.tabs.onRemoved.addListener(onRemovedTab);
     browser.tabs.onMoved.addListener(onMovedTab);
-
     browser.tabs.onDetached.addListener(onDetachedTab);
     browser.tabs.onAttached.addListener(onAttachedTab);
 
@@ -1874,7 +1884,7 @@ function removeEvents() {
     browser.tabs.onUpdated.removeListener(onUpdatedTab);
     browser.tabs.onRemoved.removeListener(onRemovedTab);
     browser.tabs.onMoved.removeListener(onMovedTab);
-
+    browser.tabs.onDetached.removeListener(onDetachedTab);
     browser.tabs.onAttached.removeListener(onAttachedTab);
 
     browser.windows.onCreated.removeListener(onCreatedWindow);
@@ -3260,7 +3270,7 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
                     let allTabs = Utils.concatTabs(windows);
 
                     if (allTabs.length) {
-                        await Tabs.hide(allTabs);
+                        await Tabs.hide(allTabs, true);
                     }
 
                     data.groups = await syncTabs(data.groups, allTabs);
@@ -4134,7 +4144,7 @@ async function initializeGroupWindows(windows, currentGroupIds) {
     }
 
     if (tabsToShow.length) {
-        await Tabs.show(tabsToShow);
+        await Tabs.show(tabsToShow, true);
 
         tabsToShow.forEach(tab => tab.hidden = false);
 
@@ -4158,7 +4168,7 @@ async function initializeGroupWindows(windows, currentGroupIds) {
             }
         }
 
-        await Tabs.hide(tabsToHide);
+        await Tabs.hide(tabsToHide, true);
 
         log.log('tabsToHide length', tabsToHide.length);
     }

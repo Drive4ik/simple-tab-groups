@@ -196,7 +196,8 @@ export async function sync(trust = null, revision = null, progressFunc = null) {
 
     // remove unnecessary tabs
     if (syncResult.changes.tabsToRemove.size) {
-        await Tabs.remove(Array.from(syncResult.changes.tabsToRemove));
+        // if has local changes - do silent remove. "sync-end" event will trigger "groups-updated" event and reload all groups with tabs
+        await Tabs.remove(Array.from(syncResult.changes.tabsToRemove), syncResult.changes.local);
     }
 
     progressFunc?.(95);
