@@ -1,9 +1,7 @@
 @import "chrome://browser/content/usercontext/usercontext.css";
 
-#stg-select-group-popup-wrapper {
-    &,
+#stg-select-group-dialog {
     * {
-        width: unset;
         margin: unset;
         padding: unset;
         border-radius: unset;
@@ -11,86 +9,94 @@
         box-shadow: unset;
     }
 
-    position: fixed;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    right: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    user-select: none;
-    z-index: 2147483647;
-
-    --text-color: #000;
-    --background-color: #fbfbfb;
-    --text-focus-color: #bababa;
-    --background-focus-color: #91c9f7;
-    --fill-group-icon-color: #5d5d5d;
-
-    &[data-theme="dark"] {
-        --text-color: #e0e0e0;
-        --background-color: #444444;
-        --text-focus-color: #575757;
-        --background-focus-color: rgba(159, 159, 159, 0.3);
-        --fill-group-icon-color: var(--text-color);
+    &::backdrop {
+        background-color: rgba(0, 0, 0, 0.5);
     }
 
-    --font-size: 16px;
+    --indent: .75rem;
+    --indent-small: .4rem;
+    --border-radius: 5px;
+    --font-family: system-ui, sans-serif;
+    --font-size: 15px;
+    --font-weight: 400;
 
-    .stg-popup-has-text {
+    font-size: var(--font-size);
+    font-weight: var(--font-weight);
+    user-select: none;
+    z-index: 2147483647;
+    background-color: transparent;
+    padding: 0;
+    margin: auto;
+    border: 0;
+    transform: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    outline: none;
+
+    color-scheme: light;
+
+    &[data-theme="dark"] {
+        color-scheme: dark;
+    }
+
+    --text-color: light-dark(hsl(0, 0%, 20%), hsl(0, 0%, 88%));
+    --text-focus-color: light-dark(hsl(0, 0%, 73%), hsl(0, 0%, 34%));
+    --background-color: light-dark(hsl(0, 0%, 98%), hsl(0, 0%, 27%));
+    --background-focus-color: light-dark(hsl(0, 0%, 85%), hsl(0, 0%, 40%));
+
+    .stg-has-text {
         color: var(--text-color) !important;
-        font-family: Arial, sans-serif;
+        font-family: var(--font-family) !important;
         font-size: var(--font-size) !important;
-        font-weight: normal;
+        font-weight: var(--font-weight) !important;
         line-height: calc(var(--font-size) * 1.5) !important;
         overflow: hidden;
         text-overflow: ellipsis;
     }
 
-    .stg-popup-main {
+    .stg-main {
         background-color: var(--background-color) !important;
-        border-radius: 5px;
-        padding: 10px;
+        border-radius: var(--border-radius);
+        padding: var(--indent);
         min-width: 600px;
         max-width: 75vw;
         white-space: nowrap;
 
-        .stg-popup-header {
+        .stg-header {
             text-align: center;
-            outline: none;
+            margin-block-end: var(--indent-small);
         }
 
-        .stg-popup-groups-wrapper {
+        .stg-groups {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 0;
             overflow-y: auto;
             min-height: 150px;
             max-height: calc(100vh - 100px);
             scrollbar-width: thin;
 
-            .stg-popup-group {
+            .stg-group {
                 display: flex;
                 align-items: center;
-                gap: .75rem;
+                gap: var(--indent);
                 min-height: calc(var(--font-size) * 2);
-                padding: 0 5px;
-                border-radius: 3px;
+                padding: 0 var(--indent-small);
+                border-radius: var(--border-radius);
                 cursor: default;
                 outline: none;
                 overflow: hidden;
+                border: 0;
 
-                &:not(.stg-popup-disabled):hover,
-                &:not(.stg-popup-disabled):focus {
+                &:not([disabled]):hover,
+                &:not([disabled]):focus {
                     color: var(--text-focus-color) !important;
                     background-color: var(--background-focus-color) !important;
                 }
 
-                &.stg-popup-disabled {
+                &[disabled] {
                     cursor: not-allowed;
-                    --text-color: GrayText;
+                    opacity: .5;
                 }
 
                 figure {
@@ -111,7 +117,7 @@
                     }
                 }
 
-                .is-sticky::after {
+                .stg-group-sticky::after {
                     content: '📌';
                     position: absolute;
                     top: -5px;

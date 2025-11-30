@@ -737,7 +737,8 @@ export async function remove(tabs, silentRemove = false) {
     return await tabsAction({action: 'remove', silentRemove}, tabs);
 }
 
-const restrictedDomainsRegExp = /^https?:\/\/(.+\.)?(mozilla\.(net|org|com)|firefox\.com)\//;
+// const restrictedDomainsRegExp = /^https?:\/\/(.+\.)?(mozilla\.(net|org|com)|firefox\.com)\//;
+const restrictedDomains = new Set('accounts-static.cdn.mozilla.net,accounts.firefox.com,addons.cdn.mozilla.net,addons.mozilla.org,api.accounts.firefox.com,content.cdn.mozilla.net,discovery.addons.mozilla.org,oauth.accounts.firefox.com,profile.accounts.firefox.com,support.mozilla.org,sync.services.mozilla.com'.split(','));
 
 export function isCanSendMessage({url}) {
     if (url === 'about:blank') {
@@ -748,7 +749,11 @@ export function isCanSendMessage({url}) {
         return false;
     }
 
-    return !restrictedDomainsRegExp.test(url);
+    try {
+        return !restrictedDomains.has(new URL(url).hostname);
+    } catch {
+        return false;
+    }
 }
 
 export function extractId(tab) {

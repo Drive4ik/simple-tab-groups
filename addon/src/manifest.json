@@ -65,7 +65,8 @@
             "js": ["web/content-script.js"],
             "css": ["web/content-script.css"],
             "match_about_blank": true,
-            "run_at": "document_start"
+            "all_frames": true,
+            "run_at": "document_end"
         }
     ],
 
