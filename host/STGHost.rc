@@ -1,0 +1,34 @@
+
+1 VERSIONINFO
+FILEVERSION     1,0,0,0
+PRODUCTVERSION  1,0,0,0
+FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
+FILEOS          VOS__WINDOWS32
+FILETYPE        VFT_APP
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904E4"
+        BEGIN
+            VALUE "FileDescription",  "Host for Simple Tab Groups webextension\0"
+            VALUE "FileVersion",      "1.0.0.0\0"
+            VALUE "InternalName",     "simple_tab_groups_host\0"
+            VALUE "LegalCopyright",   "Vitalii Bavykin (Drive4ik)\0"
+            VALUE "OriginalFilename", "STGHost.exe\0"
+            VALUE "ProductName",      "Simple Tab Groups Host\0"
+            VALUE "ProductVersion",   "1.0.0.0\0"
+            VALUE "Comments",         "This program is designed to save backup files for \
+the Simple Tab Groups v6.0+ add-on and its extensions. \
+If this program is moved to another folder, it must be run once so that Firefox knows its new location. \
+For portable mode, create an empty settings.ini file in the program folder.\0"
+        END
+    END
+
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0409, 1252
+    END
+END
+
+1        24   "STGHost.manifest"
+MAINICON ICON "STGHost.ico"
