@@ -19,14 +19,14 @@ type
     LogsCheckBox: TCheckBox;
     NotesBackupFolderEdit: TLabeledEdit;
     NotesBackupBrowseButton: TButton;
-    STGDeleteOldBackupEdit: TSpinEdit;
-    STGDeleteOldBackupLabel: TLabel;
+    STGDeleteBackupDaysEdit: TSpinEdit;
+    STGDeleteBackupDaysLabel: TLabel;
     PageControl1: TPageControl;
     STGTabSheet: TTabSheet;
     NotesTabSheet: TTabSheet;
     SettingsTabSheet: TTabSheet;
-    NotesDeleteOldBackupLabel: TLabel;
-    NotesDeleteOldBackupEdit: TSpinEdit;
+    NotesDeleteBackupDaysLabel: TLabel;
+    NotesDeleteBackupDaysEdit: TSpinEdit;
     STGLinkLabel: TLinkLabel;
     NotesLinkLabel: TLinkLabel;
     STGKeepBackupFilesLabel: TLabel;
@@ -42,8 +42,8 @@ type
     procedure FormShow(Sender: TObject);
     procedure NotesBackupFolderEditChange(Sender: TObject);
     procedure NotesBackupBrowseButtonClick(Sender: TObject);
-    procedure STGDeleteOldBackupEditChange(Sender: TObject);
-    procedure NotesDeleteOldBackupEditChange(Sender: TObject);
+    procedure STGDeleteBackupDaysEditChange(Sender: TObject);
+    procedure NotesDeleteBackupDaysEditChange(Sender: TObject);
     procedure LabelLinkClick(Sender: TObject; const Link: string; LinkType: TSysLinkType);
     procedure NotesKeepBackupFilesEditChange(Sender: TObject);
     procedure STGKeepBackupFilesEditChange(Sender: TObject);
@@ -59,7 +59,6 @@ var
 
 function CreateManifest: string;
 procedure AddRecordToRegistry(const ManifestPath: string);
-procedure Log(const Msg: string; const Level: string = '');
 
 implementation
 
@@ -107,39 +106,7 @@ begin
   end;
 end;
 
-procedure Log(const Msg: string; const Level: string = '');
-var
-  FullName: string;
-  Line: string;
-  Bytes: TBytes;
-begin
-  if not IsLoggingEnabled then
-    Exit;
 
-  FullName := ExeInfo.FilePath + 'logs.log';
-
-  if Msg = sLineBreak then
-    Line := sLineBreak
-  else
-  begin
-    Line := FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now) + ' ';
-    if Level <> '' then
-      Line := Line + '[' + Level + '] ';
-    Line := Line + Msg + sLineBreak;
-  end;
-
-  const MaxLogSize: Int64 = 100 * 1024; // 100 KB
-
-  if TFile.Exists(FullName) and (TFile.GetSize(FullName) > MaxLogSize) then
-  begin
-    Bytes := TFile.ReadAllBytes(FullName);
-    var Half := Length(Bytes) div 2;
-    Bytes := Copy(Bytes, Half, Length(Bytes) - Half);
-    TFile.WriteAllBytes(FullName, Bytes);
-  end;
-
-  TFile.AppendAllText(FullName, Line, TEncoding.UTF8);
-end;
 
 procedure TMainForm.LabelLinkClick(Sender: TObject; const Link: string; LinkType: TSysLinkType);
 begin
@@ -175,12 +142,12 @@ begin
     SetBackupFolder(STG, STGBackupFolderEdit.Text);
 end;
 
-procedure TMainForm.STGDeleteOldBackupEditChange(Sender: TObject);
+procedure TMainForm.STGDeleteBackupDaysEditChange(Sender: TObject);
 begin
-  if STGDeleteOldBackupEdit.Focused then
-    SetDeleteOldBackupDays(STG, STGDeleteOldBackupEdit.Value);
+  if STGDeleteBackupDaysEdit.Focused then
+    SetDeleteBackupDays(STG, STGDeleteBackupDaysEdit.Value);
 
-  STGKeepBackupFilesEdit.Enabled:= STGDeleteOldBackupEdit.Value > 0;
+  STGKeepBackupFilesEdit.Enabled:= STGDeleteBackupDaysEdit.Value > 0;
   STGKeepBackupFilesLabel.Enabled:= STGKeepBackupFilesEdit.Enabled;
 end;
 
@@ -208,8 +175,8 @@ begin
   STGBackupFolderEdit.Text := GetBackupFolder(STG, false);
   NotesBackupFolderEdit.Text := GetBackupFolder(NOTES, false);
 
-  STGDeleteOldBackupEdit.Value:= GetDeleteOldBackupDays(STG);
-  NotesDeleteOldBackupEdit.Value:= GetDeleteOldBackupDays(NOTES);
+  STGDeleteBackupDaysEdit.Value:= GetDeleteBackupDays(STG);
+  NotesDeleteBackupDaysEdit.Value:= GetDeleteBackupDays(NOTES);
 
   STGKeepBackupFilesEdit.Value:= GetKeepBackupFiles(STG);
   NotesKeepBackupFilesEdit.Value:= GetKeepBackupFiles(NOTES);
@@ -235,12 +202,12 @@ begin
     SetBackupFolder(NOTES, NotesBackupFolderEdit.Text);
 end;
 
-procedure TMainForm.NotesDeleteOldBackupEditChange(Sender: TObject);
+procedure TMainForm.NotesDeleteBackupDaysEditChange(Sender: TObject);
 begin
-  if NotesDeleteOldBackupEdit.Focused then
-    SetDeleteOldBackupDays(NOTES, NotesDeleteOldBackupEdit.Value);
+  if NotesDeleteBackupDaysEdit.Focused then
+    SetDeleteBackupDays(NOTES, NotesDeleteBackupDaysEdit.Value);
 
-  NotesKeepBackupFilesEdit.Enabled:= NotesDeleteOldBackupEdit.Value > 0;
+  NotesKeepBackupFilesEdit.Enabled:= NotesDeleteBackupDaysEdit.Value > 0;
   NotesKeepBackupFilesLabel.Enabled:= NotesKeepBackupFilesEdit.Enabled;
 end;
 

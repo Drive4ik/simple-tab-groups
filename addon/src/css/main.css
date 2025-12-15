@@ -53,7 +53,8 @@ input {
     overflow: hidden;
 }
 
-.hidden-empty:empty {
+.hidden-empty:empty,
+.hidden-empty-block:not(:has(*)) {
     display: none !important;
 }
 

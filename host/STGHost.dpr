@@ -10,13 +10,13 @@ uses
   Winapi.Windows,
   System.SysUtils,
   System.JSON,
-
   Main in 'Main.pas' {MainForm},
   About in 'About.pas' {AboutForm},
   Utils in 'Utils.pas',
   Pipe in 'Pipe.pas',
   Settings in 'Settings.pas',
-  VerInfo in 'VerInfo.pas';
+  VerInfo in 'VerInfo.pas',
+  Logger in 'Logger.pas';
 
 {$IFDEF RELEASE}
   {$SETPEFlAGS IMAGE_FILE_RELOCS_STRIPPED or IMAGE_FILE_DEBUG_STRIPPED or

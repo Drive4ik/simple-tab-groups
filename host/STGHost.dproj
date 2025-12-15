@@ -135,6 +135,7 @@
         <DCCReference Include="Pipe.pas"/>
         <DCCReference Include="Settings.pas"/>
         <DCCReference Include="VerInfo.pas"/>
+        <DCCReference Include="Logger.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

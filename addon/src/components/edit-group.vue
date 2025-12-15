@@ -310,7 +310,7 @@ export default {
                 @contextmenu.prevent="$refs.groupNameVariables.open($event)">
                 <span class="icon">
                     <figure class="image is-16x16">
-                        <img src="/icons/info.svg" />
+                        <img src="/icons/superscript.svg" />
                     </figure>
                 </span>
             </button>

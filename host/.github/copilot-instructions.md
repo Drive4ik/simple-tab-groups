@@ -10,7 +10,7 @@
 ## Key modules
 - `STGHost.dpr`: entry; detects pipe mode vs GUI, validates extension id, runs `HandleNativeMessaging`, registers manifest in HKCU for GUI mode.
 - `Settings.pas`: settings storage (INI in exe dir or HKCU `Software\STGHost`), allowed extensions map (`STG`, `NOTES`), backup folder/delete/keep settings, logging flag, `ExeInfo` metadata; init in unit initialization.
-- `Pipe.pas`: native-messaging protocol handlers. Supported actions: `save-backup`, `get-last-backup`, `get-backup-folder`, `open-backup-folder`, `select-backup-folder`. Validates size (100 MB), ensures backups stay under configured folder, adds `id` to saved JSON, prunes old backups (`DeleteOldBackupDays`, `KeepBackupFiles`). Responses include `version`, `ok`, and optional data/lang/message. Logging via `Log` from Main.
+- `Pipe.pas`: native-messaging protocol handlers. Supported actions: `save-backup`, `get-last-backup`, `get-backup-folder`, `open-backup-folder`, `select-backup-folder`. Validates size (100 MB), ensures backups stay under configured folder, adds `id` to saved JSON, prunes old backups (`DeleteBackupDays`, `KeepBackupFiles`). Responses include `version`, `ok`, and optional data/lang/message. Logging via `Log` from Main.
 - `Main.pas`: VCL UI to configure backup folders, delete/keep retention, enable logs; writes settings through `Set*` helpers. Generates native-messaging `manifest.json` and writes HKCU registration on GUI start.
 - `Utils.pas`: helpers: JSON read/write, env expansion, theme detection, shell open, EXE metadata, icon extraction, `MergeJSON` used by responses.
 - `About.pas`: about dialog displaying exe metadata and links.

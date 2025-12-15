@@ -28,7 +28,7 @@ type
 
 function CreateResponse(const ok: Boolean): TJSONObject;
 function CreateResponseMessage(ok: Boolean; const msg: string): TJSONObject;
-function CreateResponseLang(ok: Boolean; const Lang: string; Args: TJSONArray = nil): TJSONObject;
+function CreateResponseLang(ok: Boolean; const Lang: string; Args: TJSONArray = nil; const extra: TJSONValue = nil): TJSONObject;
 function CreateResponseJSON(ok: Boolean; const data: TJSONValue; const extra: TJSONValue = nil): TJSONObject;
 function WriteStdOut(const payload: string): Boolean;
 function ReadStdIn: string; // raises on error
@@ -37,19 +37,9 @@ function HandleNativeMessaging(const payload: string; const Extension: TExtensio
 implementation
 
 uses
-  System.Math, System.Generics.Defaults;
+  System.Math, System.Generics.Defaults, Logger;
 
 const MAX_MSG_SIZE = 100 * 1024 * 1024; // 100 MB
-
-procedure LogShort(const Text: string; ok: Boolean);
-var
-  level: string;
-begin
-  if not ok then
-    level:= 'error';
-
-  Log(Text.Substring(0, 300), level);
-end;
 
 function CreateResponse(const ok: Boolean): TJSONObject;
 begin
@@ -62,10 +52,9 @@ function CreateResponseMessage(ok: Boolean; const msg: string): TJSONObject;
 begin
   Result := CreateResponse(ok);
   Result.AddPair('message', msg);
-  LogShort(msg, ok);
 end;
 
-function CreateResponseLang(ok: Boolean; const Lang: string; Args: TJSONArray = nil): TJSONObject;
+function CreateResponseLang(ok: Boolean; const Lang: string; Args: TJSONArray = nil; const extra: TJSONValue = nil): TJSONObject;
 begin
   if Args = nil then
     Args:= TJSONArray.Create;
@@ -73,7 +62,7 @@ begin
   Result := CreateResponse(ok);
   Result.AddPair('lang', Lang);
   Result.AddPair('args', Args);
-  LogShort(Format('lang: %s, args: %s', [lang, Args.ToJSON]), ok);
+  MergeJSON(Result, extra);
 end;
 
 function CreateResponseJSON(ok: Boolean; const data: TJSONValue; const extra: TJSONValue = nil): TJSONObject;
@@ -81,7 +70,6 @@ begin
   Result := CreateResponse(ok);
   Result.AddPair('data', data);
   MergeJSON(Result, extra);
-  LogShort(Format('data added to response: %s', [data.ToJSON]), ok);
 end;
 
 function WriteStdOut(const payload: string): Boolean;
@@ -133,6 +121,8 @@ begin
       Log(Format('WriteStdOut: bytes written mismatch: expected %d, actual %d', [Buffer.Size, BytesWritten]), 'error');
       Exit;
     end;
+
+    Log('Response: ' + payload.Substring(0, 300));
   finally
     Buffer.Free;
   end;
@@ -223,7 +213,7 @@ begin
   );
 end;
 
-function DeleteOldBackupFiles(const Extension: TExtension): Integer;
+function DeleteBackupFiles(const Extension: TExtension): Integer;
 var
   BackupFiles: TList<TBackupFileInfo>;
   DeleteDays, KeepLatestFiles: Integer;
@@ -231,7 +221,7 @@ var
   DeleteThreshold: Int64;
 begin
   Result := 0;
-  DeleteDays := GetDeleteOldBackupDays(Extension);
+  DeleteDays := GetDeleteBackupDays(Extension);
   KeepLatestFiles:= GetKeepBackupFiles(Extension);
 
   if DeleteDays = 0 then
@@ -239,7 +229,7 @@ begin
 
   BackupFiles := GetBackupFiles(Extension);
 
-  Log(format('DeleteOldBackupFiles: DeleteDays: %d, KeepLatestFiles: %d, Found files: %d',
+  Log(format('DeleteBackupFiles: DeleteDays: %d, KeepLatestFiles: %d, Found files: %d',
     [DeleteDays, KeepLatestFiles, BackupFiles.Count]));
 
   try
@@ -254,10 +244,10 @@ begin
         try
           TFile.Delete(FileInfo.Path);
           Inc(Result);
-          Log(Format('DeleteOldBackupFiles: the file has been deleted: %s', [FileInfo.Path]));
+          Log(Format('DeleteBackupFiles: the file has been deleted: %s', [FileInfo.Path]));
         except
           on E: Exception do
-            Log(Format('DeleteOldBackupFiles: failed to delete backup file: %s, error: %s',
+            Log(Format('DeleteBackupFiles: failed to delete backup file: %s, error: %s',
               [FileInfo.Path, E.ToString]), 'error');
         end;
       end;
@@ -301,7 +291,7 @@ begin
 
   Result:= CreateResponseMessage(true, 'File saved to: ' + FileFullPath);
 
-  DeleteOldBackupFiles(Extension);
+  DeleteBackupFiles(Extension);
 end;
 
 function HandleGetLastBackup(const json: TJSONObject; const Extension: TExtension): TJSONObject;
@@ -342,19 +332,22 @@ begin
   const BackupFolder = GetBackupFolder(Extension);
 
   if not TDirectory.Exists(BackupFolder) then
-    Exit(CreateResponseLang(false, 'invalidBackupFolder', TJSONArray.Create.Add(BackupFolder)));
+  begin
+    const extra = TJSONObject.Create(TJSONPair.Create('data', BackupFolder));
+    Exit(CreateResponseLang(false, 'invalidBackupFolder', TJSONArray.Create.Add(BackupFolder), extra));
+  end;
 
   Result:= CreateResponseJSON(true, TJSONString.Create(BackupFolder));
 end;
 
 function HandleOpenBackupFolder(const json: TJSONObject; const Extension: TExtension): TJSONObject;
 begin
-  const BackupFolder = GetBackupFolder(Extension);
+  const BackupFolderResponse = HandleGetBackupFolder(json, Extension);
 
-  if not TDirectory.Exists(BackupFolder) then
-    Exit(CreateResponseLang(false, 'invalidBackupFolder', TJSONArray.Create.Add(BackupFolder)));
+  if not BackupFolderResponse.GetValue<Boolean>('ok') then
+    Exit(BackupFolderResponse);
 
-  OpenPath(BackupFolder);
+  OpenPath(BackupFolderResponse.GetValue<string>('data'));
 
   Result := CreateResponseMessage(true, 'Success');
 end;
@@ -368,11 +361,46 @@ begin
 
   var BackupFolder := SelectFolderModern(json.GetValue<string>('dialogTitle'), GetBackupFolder(Extension));
   if BackupFolder <> '' then
-  begin
     SetBackupFolder(Extension, BackupFolder);
-    Result := CreateResponseMessage(true, 'Success');
-  end else
-    Result := CreateResponseMessage(false, 'rejected');
+
+  Result := HandleGetBackupFolder(json, Extension);
+end;
+
+function HandleGetSettings(const json: TJSONObject; const Extension: TExtension): TJSONObject;
+var
+  SettingsJSON: TJSONObject;
+begin
+  SettingsJSON:= TJSONObject.Create;
+  SettingsJSON.AddPair('backupFolderResponse', HandleGetBackupFolder(json, Extension));
+  SettingsJSON.AddPair('deleteBackupDays', GetDeleteBackupDays(Extension));
+  SettingsJSON.AddPair('keepBackupFiles', GetKeepBackupFiles(Extension));
+
+  Result:= CreateResponseJSON(true, SettingsJSON);
+end;
+
+function HandleSetSettings(const json: TJSONObject; const Extension: TExtension): TJSONObject;
+begin
+  const SavedSettings = TJSONObject.Create;
+
+  Result := CreateResponseJSON(true, SavedSettings);
+
+  const SettingsJSON = json.GetValue('settings') as TJSONObject;
+
+  // Handle deleteBackupDays
+  const deleteBackupDaysJSON = SettingsJSON.GetValue('deleteBackupDays');
+  if Assigned(deleteBackupDaysJSON) then
+  begin
+    SetDeleteBackupDays(Extension, deleteBackupDaysJSON.GetValue<Integer>);
+    SavedSettings.AddPair('deleteBackupDays', GetDeleteBackupDays(Extension));
+  end;
+
+  // Handle keepBackupFiles
+  const keepBackupFilesJSON = SettingsJSON.GetValue('keepBackupFiles');
+  if Assigned(keepBackupFilesJSON) then
+  begin
+    SetKeepBackupFiles(Extension, keepBackupFilesJSON.GetValue<Integer>);
+    SavedSettings.AddPair('keepBackupFiles', GetKeepBackupFiles(Extension));
+  end;
 end;
 
 function HandleNativeMessaging(const payload: string; const Extension: TExtension): TJSONObject;
@@ -394,6 +422,8 @@ begin
     Handlers.Add('get-backup-folder', HandleGetBackupFolder);
     Handlers.Add('open-backup-folder', HandleOpenBackupFolder);
     Handlers.Add('select-backup-folder', HandleSelectBackupFolder);
+    Handlers.Add('get-settings', HandleGetSettings);
+    Handlers.Add('set-settings', HandleSetSettings);
 
     var handler: TActionHandler;
     if Handlers.TryGetValue(action, handler) then

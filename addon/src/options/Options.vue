@@ -5,6 +5,7 @@ import popup from '../components/popup.vue';
 import editGroup from '../components/edit-group.vue';
 import manageAddonBackup from './manage-addon-backup.vue';
 import githubGist from './github-gist.vue';
+import contextMenu from '../components/context-menu.vue';
 
 import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
@@ -15,6 +16,7 @@ import * as Utils from '/js/utils.js';
 import * as Management from '/js/management.js';
 import * as Containers from '/js/containers.js';
 import * as Bookmarks from '/js/bookmarks.js';
+import * as Host from '/js/host.js';
 import * as Storage from '/js/storage.js';
 import * as File from '/js/file.js';
 import * as Urls from '/js/urls.js';
@@ -71,7 +73,9 @@ export default {
     name: Constants.MODULES.OPTIONS,
     mixins: [defaultGroupMixin, optionsMixin],
     data() {
+        window.app = this;
         this.MANIFEST = Constants.MANIFEST;
+        this.IS_WINDOWS = Constants.IS_WINDOWS;
 
         this.HOTKEY_ACTIONS = Constants.HOTKEY_ACTIONS;
         this.HOTKEY_ACTIONS_WITH_CUSTOM_GROUP = Constants.HOTKEY_ACTIONS_WITH_CUSTOM_GROUP;
@@ -87,6 +91,12 @@ export default {
         this.SECTION_HOTKEYS = SECTION_HOTKEYS;
         this.SECTION_BACKUP = SECTION_BACKUP;
         this.SECTION_ABOUT = SECTION_ABOUT;
+
+        this.AUTO_BACKUP_LOCATIONS = Constants.AUTO_BACKUP_LOCATIONS;
+
+        this.AUTO_BACKUP_FILE_NAME_VARIABLES = {
+            ...Utils.DATE_LOCALE_VARIABLES,
+        };
 
         const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
 
@@ -106,6 +116,8 @@ export default {
             optionsWatchKeys: [
                 ...Constants.ONLY_BOOL_OPTION_KEYS,
                 'defaultBookmarksParent',
+                'autoBackupLocation',
+                'autoBackupFileName',
                 'autoBackupIntervalKey',
                 'syncIntervalKey',
                 'colorScheme',
@@ -201,6 +213,17 @@ export default {
 
             permissions: {
                 bookmarks: false,
+                nativeMessaging: false,
+            },
+
+            host: {
+                has: false,
+                errorMessage: '',
+                backupFolder: '',
+                backupFolderErrorMessage: '',
+                deleteBackupDays: null,
+                keepBackupFiles: null,
+                // version: null,
             },
 
             defaultBookmarksParents: [],
@@ -215,6 +238,7 @@ export default {
         'edit-group': editGroup,
         'manage-addon-backup': manageAddonBackup,
         'github-gist': githubGist,
+        'context-menu': contextMenu,
     },
     async created() {
         instance = this;
@@ -222,6 +246,10 @@ export default {
         this.$on('options-reloaded', () => this.addCustomWatchers());
 
         this.loadBookmarksParents();
+
+        if (this.IS_WINDOWS) {
+            this.loadNativeMessagingPermissions();
+        }
 
         this.loadGroups();
     },
@@ -239,6 +267,38 @@ export default {
         section(section) {
             storage.section = section;
         },
+        'host.deleteBackupDays'(value, oldValue) {
+            if (oldValue === null) {
+                return;
+            }
+
+            const newValue = Utils.clamp(value, 0, 1000);
+
+            if (newValue !== value) {
+                this.host.deleteBackupDays = newValue;
+                return; // will trigger watcher again
+            }
+
+            this.setSettingsHost({
+                deleteBackupDays: this.host.deleteBackupDays,
+            });
+        },
+        'host.keepBackupFiles'(value, oldValue) {
+            if (oldValue === null) {
+                return;
+            }
+
+            const newValue = Utils.clamp(value, 1, 1000);
+
+            if (newValue !== value) {
+                this.host.keepBackupFiles = newValue;
+                return; // will trigger watcher again
+            }
+
+            this.setSettingsHost({
+                keepBackupFiles: this.host.keepBackupFiles,
+            });
+        },
     },
     computed: {
         groupIds() {
@@ -247,6 +307,12 @@ export default {
     },
     methods: {
         addCustomWatchers() {
+            this.optionsWatch('autoBackupLocation', value => {
+                if (value === this.AUTO_BACKUP_LOCATIONS.HOST) {
+                    this.loadNativeMessagingPermissions();
+                }
+            });
+
             this.optionsWatch('autoBackupFolderName', async value => {
                 while (folderNameRegExp.exec(value)) {
                     value = value.replace(folderNameRegExp, '').trim();
@@ -607,6 +673,7 @@ export default {
                 this.permissions.bookmarks = await Bookmarks.requestPermission();
             } else {
                 await browser.permissions.remove(Constants.PERMISSIONS.BOOKMARKS);
+                this.permissions.bookmarks = false;
             }
 
             this.loadBookmarksParents();
@@ -622,6 +689,77 @@ export default {
             if (this.permissions.bookmarks) {
                 this.defaultBookmarksParents = await browser.bookmarks.get(Constants.DEFAULT_BOOKMARKS_PARENTS);
             }
+        },
+
+        async setPermissionsNativeMessaging(event) {
+            if (event.target.checked) {
+                this.permissions.nativeMessaging = await Host.requestPermission();
+            } else {
+                await browser.permissions.remove(Constants.PERMISSIONS.NATIVE_MESSAGING);
+                this.permissions.nativeMessaging = false;
+                this.options.autoBackupLocation = this.AUTO_BACKUP_LOCATIONS.DOWNLOADS;
+            }
+        },
+
+        async loadNativeMessagingPermissions() {
+            this.permissions.nativeMessaging = await Host.hasPermission();
+
+            if (this.permissions.nativeMessaging) {
+                try {
+                    const settings = await Host.getSettings();
+
+                    this.host.has = true;
+                    this.host.backupFolder = settings.backupFolderResponse.data;
+
+                    if (settings.backupFolderResponse.ok) {
+                        this.host.backupFolderErrorMessage = '';
+                    } else {
+                        this.host.backupFolderErrorMessage = Host.getErrorMessage(new Host.HostError(settings.backupFolderResponse));
+                    }
+
+                    this.host.deleteBackupDays = settings.deleteBackupDays;
+                    this.host.keepBackupFiles = settings.keepBackupFiles;
+                } catch (e) {
+                    this.host.has = false;
+                    this.host.backupFolder = '';
+                    this.host.backupFolderErrorMessage = '';
+                    this.host.errorMessage = Host.getErrorMessage(e);
+                }
+            }
+        },
+
+        async openBackupFolderHost() {
+            try {
+                await Host.openBackupFolder();
+                this.host.backupFolderErrorMessage = '';
+            } catch (e) {
+                this.host.backupFolderErrorMessage = Host.getErrorMessage(e);
+            }
+        },
+
+        async selectBackupFolderHost() {
+            try {
+                this.host.backupFolder = await Host.selectBackupFolder();
+                this.host.backupFolderErrorMessage = '';
+            } catch (e) {
+                this.host.backupFolderErrorMessage = Host.getErrorMessage(e);
+            }
+        },
+
+        async setSettingsHost(settings) {
+            try {
+                await Host.setSettings(settings);
+                this.host.errorMessage = '';
+            } catch (e) {
+                this.host.errorMessage = e;
+            }
+        },
+
+        insertValueToAutoBackupFileName(value) {
+            const {selectionStart, selectionEnd} = this.$refs.autoBackupFileName;
+            const fileName = this.options.autoBackupFileName;
+
+            this.options.autoBackupFileName = fileName.slice(0, selectionStart) + value + fileName.slice(selectionEnd, fileName.length);
         },
 
         getGroupIconUrl(groupId) {
@@ -729,7 +867,7 @@ export default {
 
         <div class="block checkboxes as-column">
             <label class="checkbox">
-                <input v-model="permissions.bookmarks" @click="setPermissionsBookmarks" type="checkbox" />
+                <input :checked="permissions.bookmarks" @click="setPermissionsBookmarks" type="checkbox" />
                 <span v-text="lang('allowAccessToBookmarks')"></span>
             </label>
             <div class="ml-5">
@@ -993,7 +1131,7 @@ export default {
                         <input v-model="options.autoBackupIncludeTabFavIcons" type="checkbox" />
                         <span v-text="lang('includeTabFavIconsIntoBackup')"></span>
                     </label>
-                    <label class="checkbox">
+                    <!-- <label class="checkbox">
                         <input v-model="options.autoBackupByDayIndex" type="checkbox" />
                         <span class="icon-text">
                             <span v-text="lang('autoBackupByDayIndexTitle')"></span>
@@ -1001,7 +1139,7 @@ export default {
                                 <img src="/icons/info.svg" />
                             </figure>
                         </span>
-                    </label>
+                    </label> -->
                 </div>
 
                 <div class="field is-horizontal">
@@ -1026,36 +1164,212 @@ export default {
                     </div>
                 </div>
 
-                <div class="field is-horizontal">
-                    <div class="field-label">
-                        <label class="label colon" v-text="lang('lastUpdate')"></label>
-                    </div>
-                    <div class="field-body">
-                        <time
-                            v-if="lastAutoBackup"
-                            class="is-underline-dotted"
-                            :title="lastAutoBackup.full"
-                            :datetime="lastAutoBackup.ISO"
-                            v-text="lastAutoBackup.ago"></time>
-                        <span v-else>&mdash;</span>
-                    </div>
-                </div>
-
-                <div class="field is-horizontal">
-                    <div class="field-label is-normal">
-                        <label class="label colon" v-text="lang('folderNameTitle')"></label>
-                    </div>
-                    <div class="field-body">
-                        <div class="field has-addons">
-                            <div class="control is-expanded">
-                                <input type="text" v-model.lazy.trim="options.autoBackupFolderName" maxlength="200" class="input" />
-                            </div>
-                            <div class="control">
-                                <button class="button" @click="openBackupFolder" v-text="lang('openBackupFolder')"></button>
+                <template v-if="IS_WINDOWS">
+                    <div class="field is-horizontal">
+                        <div class="field-label is-normal">
+                            <label class="label colon" v-text="lang('backupLocation')"></label>
+                        </div>
+                        <div class="field-body pt-2">
+                            <div class="radios">
+                                <label class="radio">
+                                    <input type="radio" :value="AUTO_BACKUP_LOCATIONS.DOWNLOADS" v-model="options.autoBackupLocation" />
+                                    <span v-text="lang('downloadsFolder')"></span>
+                                </label>
+                                <label class="radio" :disabled="!permissions.nativeMessaging">
+                                    <input type="radio" :value="AUTO_BACKUP_LOCATIONS.HOST" v-model="options.autoBackupLocation" :disabled="!permissions.nativeMessaging" />
+                                    <span v-text="lang('otherFolder')"></span>
+                                </label>
+                                <label class="checkbox">
+                                    <input :checked="permissions.nativeMessaging" @click="setPermissionsNativeMessaging" type="checkbox" />
+                                    <span v-text="lang('allowAccessToNativeMessaging')"></span>
+                                </label>
                             </div>
                         </div>
                     </div>
-                </div>
+
+                    <template v-if="options.autoBackupLocation === AUTO_BACKUP_LOCATIONS.DOWNLOADS">
+                        <div class="field is-horizontal">
+                            <div class="field-label is-normal">
+                                <label class="label colon" v-text="lang('folderNameTitle')"></label>
+                            </div>
+                            <div class="field-body">
+                                <div class="field">
+                                    <div class="field has-addons">
+                                        <div class="control is-expanded">
+                                            <input type="text" v-model.lazy.trim="options.autoBackupFolderName" maxlength="200" class="input" />
+                                        </div>
+                                        <div class="control">
+                                            <button class="button" @click="openBackupFolder" v-text="lang('openBackupFolder')"></button>
+                                        </div>
+                                    </div>
+                                    <div class="field mt-3">
+                                        <label class="checkbox">
+                                            <input v-model="options.autoBackupByDayIndex" type="checkbox" />
+                                            <span class="icon-text">
+                                                <span v-text="lang('autoBackupByDayIndexTitle')"></span>
+                                                <figure class="icon image is-16x16" :title="lang('autoBackupByDayIndexDescription')">
+                                                    <img src="/icons/info.svg" />
+                                                </figure>
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field is-horizontal">
+                            <div class="field-label">
+                                <label class="label colon is-inline-block" v-text="lang('lastUpdate')"></label>
+                            </div>
+                            <div class="field-body">
+                                <time
+                                    v-if="lastAutoBackup"
+                                    class="is-underline-dotted"
+                                    :title="lastAutoBackup.full"
+                                    :datetime="lastAutoBackup.ISO"
+                                    v-text="lastAutoBackup.ago"></time>
+                                <span v-else>&mdash;</span>
+                            </div>
+                        </div>
+                    </template>
+
+                    <div v-else-if="options.autoBackupLocation === AUTO_BACKUP_LOCATIONS.HOST" class="field">
+                        <div v-if="!host.has" class="block">
+                            download and run STGHost to enable this feature
+                        </div>
+
+                        <div class="field is-horizontal">
+                            <div class="field-label is-normal">
+                                <label class="label colon" v-text="lang('backupFolder')"></label>
+                            </div>
+                            <div class="field-body">
+                                <div class="field">
+                                    <div class="field has-addons">
+                                        <div class="control">
+                                            <button class="button" @click="selectBackupFolderHost" :title="lang('selectBackupFolder')">
+                                                <span class="icon">
+                                                    <figure class="image is-16x16">
+                                                        <img src="/icons/folder-open.svg" />
+                                                    </figure>
+                                                </span>
+                                            </button>
+                                        </div>
+                                        <div class="control is-expanded">
+                                            <input type="text" @click="selectBackupFolderHost" :value="host.backupFolder" readonly class="input is-clickable" />
+                                        </div>
+                                        <div class="control auto-backup-filename">
+                                            <input type="text" v-model.lazy.trim="options.autoBackupFileName" ref="autoBackupFileName" maxlength="200" class="input" />
+                                        </div>
+                                        <div class="control">
+                                            <a class="button is-static">.json</a>
+                                        </div>
+                                        <div class="control">
+                                            <button class="button"
+                                                @click="$refs.backupFileNameVariables.open($event)"
+                                                @contextmenu.prevent="$refs.backupFileNameVariables.open($event)">
+                                                <span class="icon">
+                                                    <figure class="image is-16x16">
+                                                        <img src="/icons/superscript.svg" />
+                                                    </figure>
+                                                </span>
+                                            </button>
+                                            <context-menu ref="backupFileNameVariables">
+                                                <ul class="is-unselectable">
+                                                    <li v-for="(value, key) in AUTO_BACKUP_FILE_NAME_VARIABLES" :key="key" @click="insertValueToAutoBackupFileName(`{${key}}`)">
+                                                        <span v-text="`{${key}} - ` + value"></span>
+                                                    </li>
+                                                </ul>
+                                            </context-menu>
+                                        </div>
+                                        <div class="control">
+                                            <button class="button" @click="openBackupFolderHost" v-text="lang('openBackupFolder')"></button>
+                                        </div>
+                                    </div>
+
+                                    <p class="help is-danger is-size-6 hidden-empty" v-text="host.backupFolderErrorMessage"></p>
+                                    <p class="help is-danger is-size-6 hidden-empty" v-text="host.errorMessage"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="field is-horizontal">
+                            <div class="field-label is-normal">
+                                <label class="label colon" v-text="lang('deleteBackupFilesOlderThan')"></label>
+                            </div>
+                            <div class="field-body">
+                                <div class="field has-addons">
+                                    <div class="control is-expanded">
+                                        <input type="number" class="input" v-model.lazy.number="host.deleteBackupDays" min="0" max="1000" step="1" />
+                                    </div>
+                                    <div class="control">
+                                        <a class="button is-static" v-text="lang('intervalKeyDays')"></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field is-horizontal">
+                            <div class="field-label is-normal">
+                                <label class="label colon" v-text="lang('keepLastBackupFiles')"></label>
+                            </div>
+                            <div class="field-body">
+                                <div class="field has-addons">
+                                    <div class="control is-expanded">
+                                        <input type="number" :disabled="host.deleteBackupDays === 0" class="input" v-model.lazy.number="host.keepBackupFiles" min="1" max="1000" step="1" />
+                                    </div>
+                                    <div class="control">
+                                        <a class="button is-static" v-text="lang('filesCount')"></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+
+                <template v-else>
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <label class="label colon" v-text="lang('lastUpdate')"></label>
+                        </div>
+                        <div class="field-body">
+                            <time
+                                v-if="lastAutoBackup"
+                                class="is-underline-dotted"
+                                :title="lastAutoBackup.full"
+                                :datetime="lastAutoBackup.ISO"
+                                v-text="lastAutoBackup.ago"></time>
+                            <span v-else>&mdash;</span>
+                        </div>
+                    </div>
+
+                    <div class="field is-horizontal">
+                        <div class="field-label is-normal">
+                            <label class="label colon" v-text="lang('folderNameTitle')"></label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <div class="field has-addons">
+                                    <div class="control is-expanded">
+                                        <input type="text" v-model.lazy.trim="options.autoBackupFolderName" maxlength="200" class="input" />
+                                    </div>
+                                    <div class="control">
+                                        <button class="button" @click="openBackupFolder" v-text="lang('openBackupFolder')"></button>
+                                    </div>
+                                </div>
+                                <div class="field mt-3">
+                                    <label class="checkbox">
+                                        <input v-model="options.autoBackupByDayIndex" type="checkbox" />
+                                        <span class="icon-text">
+                                            <span v-text="lang('autoBackupByDayIndexTitle')"></span>
+                                            <figure class="icon image is-16x16" :title="lang('autoBackupByDayIndexDescription')">
+                                                <img src="/icons/info.svg" />
+                                            </figure>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
             </template>
         </div>
 
@@ -1532,6 +1846,10 @@ export default {
                 border-color: transparent;
             }
         }
+    }
+
+    .auto-backup-filename {
+        width: 20em;
     }
 }
 

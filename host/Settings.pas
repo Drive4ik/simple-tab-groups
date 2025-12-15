@@ -29,8 +29,8 @@ procedure InitSettings;
 
 function GetBackupFolder(const Extension: TExtension; const PreparePath: Boolean = true): string;
 procedure SetBackupFolder(const Extension: TExtension; const Folder: string);
-function GetDeleteOldBackupDays(const Extension: TExtension): Integer;
-procedure SetDeleteOldBackupDays(const Extension: TExtension; const Value: Integer);
+function GetDeleteBackupDays(const Extension: TExtension): Integer;
+procedure SetDeleteBackupDays(const Extension: TExtension; const Value: Integer);
 function GetKeepBackupFiles(const Extension: TExtension): Integer;
 procedure SetKeepBackupFiles(const Extension: TExtension; const Value: Integer);
 function IsLoggingEnabled: Boolean;
@@ -88,19 +88,19 @@ begin
   SettingsIni.WriteString(Extension.Id, 'BackupFolder', Folder.Trim);
 end;
 
-function GetDeleteOldBackupDays(const Extension: TExtension): Integer;
+function GetDeleteBackupDays(const Extension: TExtension): Integer;
 begin
-  Result := Max(0, SettingsIni.ReadInteger(Extension.Id, 'DeleteBackupsAfterDays', 0));
+  Result := Max(0, SettingsIni.ReadInteger(Extension.Id, 'DeleteBackupDays', 30));
 end;
 
-procedure SetDeleteOldBackupDays(const Extension: TExtension; const Value: Integer);
+procedure SetDeleteBackupDays(const Extension: TExtension; const Value: Integer);
 begin
-  SettingsIni.WriteInteger(Extension.Id, 'DeleteBackupsAfterDays', Value);
+  SettingsIni.WriteInteger(Extension.Id, 'DeleteBackupDays', Value);
 end;
 
 function GetKeepBackupFiles(const Extension: TExtension): Integer;
 begin
-  Result := Max(1, SettingsIni.ReadInteger(Extension.Id, 'KeepBackupFiles', 1));
+  Result := Max(1, SettingsIni.ReadInteger(Extension.Id, 'KeepBackupFiles', 10));
 end;
 
 procedure SetKeepBackupFiles(const Extension: TExtension; const Value: Integer);

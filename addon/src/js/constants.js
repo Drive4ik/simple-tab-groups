@@ -5,8 +5,10 @@ browser.runtime.onInstalled.addListener(details => ON_INSTALLED_DETAILS = detail
 export const MANIFEST = Object.freeze(browser.runtime.getManifest());
 export const STG_BASE_URL = browser.runtime.getURL('');
 export const BROWSER = await browser.runtime.getBrowserInfo();
+export const PLATFORM = await browser.runtime.getPlatformInfo();
 
 export const BROWSER_FULL_NAME = `${BROWSER?.name} ${BROWSER?.vendor}`;
+export const IS_WINDOWS = PLATFORM.os === browser.runtime.PlatformOs.WIN;
 
 export const IS_BACKGROUND_PAGE = self.location.pathname.includes('background');
 
@@ -31,6 +33,8 @@ export const TEMPORARY_CONTAINER_ICON = 'chill';
 
 export const CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP = 'stg-undo-remove-group-id-';
 
+export const HOST_NAME = 'simple_tab_groups_host';
+
 export const INTERVAL_KEY = Object.freeze({
     minutes: 'minutes',
     hours: 'hours',
@@ -52,6 +56,14 @@ export const PERMISSIONS = Object.freeze({
     BOOKMARKS: {
         permissions: ['bookmarks'],
     },
+    NATIVE_MESSAGING: {
+        permissions: ['nativeMessaging'],
+    },
+});
+
+export const AUTO_BACKUP_LOCATIONS = Object.freeze({
+    DOWNLOADS: 'downloads',
+    HOST: 'host',
 });
 
 const GROUP_ICON_VIEW_TYPES = {
@@ -453,6 +465,8 @@ export const DEFAULT_OPTIONS = Object.freeze({
     autoBackupEnable: true,
     autoBackupIntervalKey: INTERVAL_KEY.days, // minutes, hours, days
     autoBackupIntervalValue: 1,
+    autoBackupLocation: AUTO_BACKUP_LOCATIONS.DOWNLOADS, // TODO new, add migrate anywhere
+    autoBackupFileName: 'STG-backup {date-full} {time-short}',
     autoBackupIncludeTabThumbnails: true,
     autoBackupIncludeTabFavIcons: true,
     autoBackupFolderName: '',

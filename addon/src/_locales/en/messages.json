@@ -591,6 +591,10 @@
         "message": "day(s)",
         "description": "day(s)"
     },
+    "filesCount": {
+        "message": "files(s)",
+        "description": "files(s)"
+    },
     "darkColorSchemeNotification": {
         "message": "To fully support the dark theme, enable the <code>svg.context-properties.content.enabled</code> parameter to <code>true</code> on the <code>about:config</code> page. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">How to do it?</a>",
         "description": "Fully support the dark theme text"
@@ -1110,6 +1114,42 @@
     "autoBackupByDayIndexDescription": {
         "message": "It helps to get rid of a large number of backup files in the downloads folder. The backup file will look like this: \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
         "description": "Backup by day description"
+    },
+    "backupLocation": {
+        "message": "Backup location",
+        "description": "Backup location"
+    },
+    "allowAccessToNativeMessaging": {
+        "message": "Allow access to \"Native Messaging\" to save backups to any folder",
+        "description": "Allow access to \"Native Messaging\" to save backups to any folder"
+    },
+    "downloadsFolder": {
+        "message": "Downloads",
+        "description": "FF downloads folder"
+    },
+    "otherFolder": {
+        "message": "Other",
+        "description": "Other folder, controled by STGHost"
+    },
+    "backupFolder": {
+        "message": "Backup folder",
+        "description": "Backup folder label"
+    },
+    "selectBackupFolder": {
+        "message": "Select a folder for backups",
+        "description": "Button and open dialog box title"
+    },
+    "invalidBackupFolder": {
+        "message": "The current backup folder is invalid. Please, select a valid backup folder.",
+        "description": "Invalid backup folder message"
+    },
+    "deleteBackupFilesOlderThan": {
+        "message": "Delete backup files older than",
+        "description": "Delete backup files older than"
+    },
+    "keepLastBackupFiles": {
+        "message": "but keep the last",
+        "description": "but keep the last"
     },
     "clickHereForInfo": {
         "message": "Click here for more info",
