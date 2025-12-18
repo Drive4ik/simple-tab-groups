@@ -1107,14 +1107,6 @@
         "message": "Only groups",
         "description": "Only groups"
     },
-    "autoBackupByDayIndexTitle": {
-        "message": "Backup number as day of month",
-        "description": "Backup number as day of month"
-    },
-    "autoBackupByDayIndexDescription": {
-        "message": "It helps to get rid of a large number of backup files in the downloads folder. The backup file will look like this: \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
-        "description": "Backup by day description"
-    },
     "backupLocation": {
         "message": "Backup location",
         "description": "Backup location"
@@ -1131,7 +1123,7 @@
         "message": "Other",
         "description": "Other folder, controled by STGHost"
     },
-    "backupFolder": {
+    "backupFolderTitle": {
         "message": "Backup folder",
         "description": "Backup folder label"
     },
@@ -1143,9 +1135,9 @@
         "message": "The current backup folder is invalid. Please, select a valid backup folder.",
         "description": "Invalid backup folder message"
     },
-    "deleteBackupFilesOlderThan": {
-        "message": "Delete backup files older than",
-        "description": "Delete backup files older than"
+    "deleteFilesOlderThan": {
+        "message": "Delete files older than",
+        "description": "Delete files older than"
     },
     "keepLastBackupFiles": {
         "message": "but keep the last",
@@ -1154,6 +1146,24 @@
     "clickHereForInfo": {
         "message": "Click here for more info",
         "description": "Click here for more info"
+    },
+    "requiredAction": {
+        "message": "Required action",
+        "description": "Required action"
+    },
+    "stgHostHowToUse": {
+        "message": "To select any folder on your computer to save tab group backups, you need the <strong>Simple Tab Groups Host</strong> program.\n\nHow to set it up:\n1. Download the <a href=\"$dowloadUrl$\" target=\"_blank\">STGHost.exe</a> program to any folder on your computer\n2. Run the program and set the path for saving backups\n3. If necessary, change other parameters in the program settings\n\n<strong>Important:</strong> If you have moved the program to another folder, you need to run it once so that Firefox recognizes the new location.\n\nAfter configuration, the program will automatically run in the background and accept commands from the extension.",
+        "description": "How to install and use the STGHost program",
+        "placeholders": {
+            "dowloadUrl": {
+                "content": "$1",
+                "example": "https://github.com/..."
+            }
+        }
+    },
+    "checkAgain": {
+        "message": "Check again",
+        "description": "Check again button label"
     },
     "enabled": {
         "message": "Enabled",
@@ -1272,6 +1282,10 @@
     "fileNameTitle": {
         "message": "File name",
         "description": "File name"
+    },
+    "filePathTitle": {
+        "message": "File path",
+        "description": "File path"
     },
     "dontUploadToCloud": {
         "message": "Don't upload to the cloud",

@@ -9,10 +9,9 @@ export const PLATFORM = await browser.runtime.getPlatformInfo();
 
 export const BROWSER_FULL_NAME = `${BROWSER?.name} ${BROWSER?.vendor}`;
 export const IS_WINDOWS = PLATFORM.os === browser.runtime.PlatformOs.WIN;
+export const IS_MAC = PLATFORM.os === browser.runtime.PlatformOs.MAC;
 
 export const IS_BACKGROUND_PAGE = self.location.pathname.includes('background');
-
-export const IS_MAC = (navigator.userAgentData?.platform || navigator.platform || '').toLowerCase().includes('mac');
 
 export const DEBUG = Object.freeze({
     MANUAL: 'manual',
@@ -33,7 +32,11 @@ export const TEMPORARY_CONTAINER_ICON = 'chill';
 
 export const CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP = 'stg-undo-remove-group-id-';
 
-export const HOST_NAME = 'simple_tab_groups_host';
+export const HOST = Object.freeze({
+    NAME: 'simple_tab_groups_host',
+    VERSION: '1.0.0.0',
+    DOWNLOAD_URL: 'https://github.com/Drive4ik/simple-tab-groups/releases',
+});
 
 export const INTERVAL_KEY = Object.freeze({
     minutes: 'minutes',
@@ -466,11 +469,10 @@ export const DEFAULT_OPTIONS = Object.freeze({
     autoBackupIntervalKey: INTERVAL_KEY.days, // minutes, hours, days
     autoBackupIntervalValue: 1,
     autoBackupLocation: AUTO_BACKUP_LOCATIONS.DOWNLOADS, // TODO new, add migrate anywhere
-    autoBackupFileName: 'STG-backup {date-full} {time-short}',
+    autoBackupFilePathHost: 'STG-backup {date-full} {time-short}',
+    autoBackupFilePathFile: 'STG-backups-FF-{ff-version}/STG-backup {date-full} {time-short}',
     autoBackupIncludeTabThumbnails: true,
     autoBackupIncludeTabFavIcons: true,
-    autoBackupFolderName: '',
-    autoBackupByDayIndex: true,
 
     syncEnable: true,
     syncOptionsLocation: IS_AVAILABLE_SYNC_STORAGE ? SYNC_STORAGE_FSYNC : SYNC_STORAGE_LOCAL,

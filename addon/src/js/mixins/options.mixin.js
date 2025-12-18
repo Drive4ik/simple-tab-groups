@@ -3,7 +3,6 @@ import * as Constants from '/js/constants.js';
 import * as Messages from '/js/messages.js';
 import * as Storage from '/js/storage.js';
 import * as Utils from '/js/utils.js';
-import * as File from '/js/file.js';
 import Logger from '/js/logger.js';
 
 const MODULE_NAME = 'options.mixin';
@@ -53,10 +52,6 @@ export default {
             const options = await Storage.get(updateKeys);
 
             if (updateKeys === Constants.ALL_OPTION_KEYS) {
-                if (this.$options.name === Constants.MODULES.OPTIONS) {
-                    options.autoBackupFolderName = await File.getAutoBackupFolderName();
-                }
-
                 this.options = options;
             } else {
                 Object.assign(this.options, options);

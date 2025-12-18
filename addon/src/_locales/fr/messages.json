@@ -1087,14 +1087,6 @@
         "message": "Groupes seulement",
         "description": "Only groups"
     },
-    "autoBackupByDayIndexTitle": {
-        "message": "Numérotation cyclique des sauvegardes (numéro de jour dans le mois)",
-        "description": "Backup number as day of month"
-    },
-    "autoBackupByDayIndexDescription": {
-        "message": "Cela aide à éliminer un grand nombre de sauvegarde dans le dossier de téléchargements. Le fichier de sauvegarde sera nommé de la façon suivante: \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
-        "description": "Backup by day description"
-    },
     "clickHereForInfo": {
         "message": "Cliquer ici pour plus d'informations",
         "description": "Click here for more info"

@@ -1087,14 +1087,6 @@
         "message": "Apenas grupos",
         "description": "Only groups"
     },
-    "autoBackupByDayIndexTitle": {
-        "message": "Número de backup como dia do mês",
-        "description": "Backup number as day of month"
-    },
-    "autoBackupByDayIndexDescription": {
-        "message": "Ajuda a se livrar de um grande número de arquivos de backup na pasta de downloads. O arquivo de backup ficará assim: \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
-        "description": "Backup by day description"
-    },
     "clickHereForInfo": {
         "message": "Clique aqui para mais informações",
         "description": "Click here for more info"

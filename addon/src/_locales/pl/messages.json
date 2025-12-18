@@ -1087,14 +1087,6 @@
         "message": "Tylko grupy",
         "description": "Only groups"
     },
-    "autoBackupByDayIndexTitle": {
-        "message": "Oznaczenie kopii = dzień miesiąca",
-        "description": "Backup number as day of month"
-    },
-    "autoBackupByDayIndexDescription": {
-        "message": "To ułatwia pozbycie się dużej ilości kopii zapasowych z folderu. Plik z kopią ma nazwę w stylu: \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
-        "description": "Backup by day description"
-    },
     "clickHereForInfo": {
         "message": "Naciśnij tu aby uzyskać więcej informacji",
         "description": "Click here for more info"

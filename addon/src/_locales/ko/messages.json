@@ -975,14 +975,6 @@
         "message": "오직 그룹만",
         "description": "Only groups"
     },
-    "autoBackupByDayIndexTitle": {
-        "message": "월 마다 백업의 번호",
-        "description": "Backup number as day of month"
-    },
-    "autoBackupByDayIndexDescription": {
-        "message": "다운로드 폴더에서 많은 수의 백업 파일을 제거하는 데 도움이 됩니다. 백업 파일은 \"auto-stg-backup-day-of-month-22@drive4ik.json\"과 같이 표시됩니다.",
-        "description": "Backup by day description"
-    },
     "clickHereForInfo": {
         "message": "자세한 정보를 보려면 여기를 클릭하십시오",
         "description": "Click here for more info"

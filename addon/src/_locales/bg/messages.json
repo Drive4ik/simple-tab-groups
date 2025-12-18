@@ -1087,14 +1087,6 @@
         "message": "Само на групи",
         "description": "Only groups"
     },
-    "autoBackupByDayIndexTitle": {
-        "message": "Номерът на резервното копие е деня от месеца",
-        "description": "Backup number as day of month"
-    },
-    "autoBackupByDayIndexDescription": {
-        "message": "Помага да се намали броя на резервните копия в папката за изтегляне. Файлът на резервното копие ще изглежда подобно на <code>auto-stg-backup-day-of-month-22@drive4ik.json</code>",
-        "description": "Backup by day description"
-    },
     "clickHereForInfo": {
         "message": "Повече информация",
         "description": "Click here for more info"

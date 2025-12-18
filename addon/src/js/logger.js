@@ -163,6 +163,8 @@ function Log(cKey, ...args) {
 
     if (cKey === 'assert' && args[0]) {
         return;
+    } else if (cKey === 'debug' && !mainStorage.IS_TEMPORARY && !mainStorage.enableDebug) {
+        return;
     }
 
     const argsToLog = [this.prefixes.join(prefixGlue), ...args];

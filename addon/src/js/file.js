@@ -1,5 +1,6 @@
 
 import * as Constants from './constants.js';
+import * as Utils from './utils.js';
 import Logger from './logger.js';
 import * as Storage from './storage.js';
 
@@ -63,8 +64,15 @@ export async function load(accept = '.json', readAs = 'json') { // readAs: json,
 }
 
 // data : Object/Array/Text
-export async function save(data, fileName = 'file-name', saveAs = true, clearOnComplete = false, tryCount = 0) {
-    const log = logger.start('save', {fileName, saveAs, clearOnComplete, tryCount});
+export async function save(data, filePath = 'file-name', options = {}) {
+    options.saveAs ??= true;
+    options.clearOnComplete ??= false;
+    options.throwError ??= false;
+    options.tryCount ??= 0;
+
+    filePath = Utils.format(filePath, Utils.getFilePathVariables());
+
+    const log = logger.start('save', {filePath, ...options});
 
     let body = null,
         type = null;
@@ -77,14 +85,14 @@ export async function save(data, fileName = 'file-name', saveAs = true, clearOnC
         body = JSON.stringify(data, null, 4);
     }
 
-    let blob = new Blob([body], {type}),
-        url = URL.createObjectURL(blob);
+    const blob = new Blob([body], {type});
+    const url = URL.createObjectURL(blob);
 
     try {
         const id = await browser.downloads.download({
-            filename: fileName,
+            filename: filePath,
             url: url,
-            saveAs: saveAs,
+            saveAs: options.saveAs,
             conflictAction: browser.downloads.FilenameConflictAction.OVERWRITE,
         });
 
@@ -95,31 +103,32 @@ export async function save(data, fileName = 'file-name', saveAs = true, clearOnC
             error: error = `Download ID not found, id: ${id}`,
         } = await waitDownload(id);
 
-        error = `Error save file:\n${fileName}\nerror: ${String(error)}`;
+        error = `Error save file:\n${filePath}\nerror: ${String(error)}`;
 
         if (browser.downloads.State.COMPLETE === state) {
-            if (clearOnComplete) {
+            if (options.clearOnComplete) {
                 await browser.downloads.erase({id});
             }
-        } else if (browser.downloads.State.INTERRUPTED === state && !saveAs && tryCount < 5) {
+        } else if (browser.downloads.State.INTERRUPTED === state && !options.saveAs && options.tryCount < 5) {
             await browser.downloads.erase({id});
-            URL.revokeObjectURL(url);
-            log.stopWarn('cant download id:', id, 'tryCount:', tryCount, error);
-            return save(data, fileName, saveAs, clearOnComplete, tryCount + 1);
+            log.stopWarn('cant download id:', id, 'tryCount:', options.tryCount, error);
+            options.tryCount++;
+            return save(data, filePath, options);
         } else {
             throw error;
         }
-
-        URL.revokeObjectURL(url);
 
         log.stop(id);
 
         return id;
     } catch (e) {
-        URL.revokeObjectURL(url);
         if (!String(e.message || e).toLowerCase().includes('canceled')) {
             log.logError(e.message || e, e);
             log.stopError();
+
+            if (options.throwError) {
+                throw e;
+            }
         } else {
             log.stop();
         }
@@ -128,65 +137,60 @@ export async function save(data, fileName = 'file-name', saveAs = true, clearOnC
     }
 }
 
-export async function backup(data, isAutoBackup, byDayIndex) {
-    let fileName = generateBackupFileName(isAutoBackup, byDayIndex);
+export async function saveBackup(data, isAutoBackup) {
+    const filePath = data.autoBackupFilePathFile + '.json';
 
-    if (isAutoBackup) {
-        let autoBackupFolderName = await getAutoBackupFolderName();
-        fileName = autoBackupFolderName + '/' + fileName;
+    return await save(data, filePath, {
+        saveAs: !isAutoBackup,
+        clearOnComplete: isAutoBackup,
+        throwError: true,
+    });
+}
+
+export async function testFilePath(filePath, exploreFolder = false) {
+    let id = null;
+
+    try {
+        id = await save({test:'test'}, filePath + '.json', {
+            saveAs: false,
+            throwError: true,
+        });
+
+        if (id && exploreFolder) {
+            await browser.downloads.show(id);
+            await Utils.wait(750);
+        }
+    } finally {
+        if (id) {
+            await browser.downloads.removeFile(id).catch(() => {});
+            await browser.downloads.erase({id}).catch(() => {});
+        }
     }
-
-    return save(data, fileName, !isAutoBackup, isAutoBackup);
 }
 
 export async function openBackupFolder() {
-    let autoBackupFolderName = await getAutoBackupFolderName(),
-        id = await save('temp file', autoBackupFolderName + '/tmp.tmp', false);
+    const TEMP_FILE_NAME = 'folder-check';
 
-    if (id) {
-        await browser.downloads.show(id);
-        await new Promise(res => setTimeout(res, 750));
-        await browser.downloads.removeFile(id);
-        await browser.downloads.erase({id});
+    let {autoBackupFilePathFile} = await Storage.get('autoBackupFilePathFile');
+
+    autoBackupFilePathFile = autoBackupFilePathFile.replaceAll('\\', '/');
+
+    const slashIndex = autoBackupFilePathFile.lastIndexOf('/');
+
+    if (slashIndex > -1) {
+        autoBackupFilePathFile = autoBackupFilePathFile.slice(0, slashIndex + 1) + TEMP_FILE_NAME;
+    } else {
+        autoBackupFilePathFile = TEMP_FILE_NAME;
+    }
+
+    try {
+        await testFilePath(autoBackupFilePathFile, true);
+    } catch (e) {
+        logger.logError(String(e), e);
     }
 }
 
-export async function getAutoBackupFolderName() {
-    let {autoBackupFolderName} = await Storage.get('autoBackupFolderName');
-
-    if (
-        !autoBackupFolderName.length ||
-        /^STG\-backups\-FF\-[a-z\d\.]+$/.test(autoBackupFolderName) ||
-        /^STG\-backups\-(win|linux|mac|openbsd)\-\d+$/.test(autoBackupFolderName)
-    ) {
-        const newAutoBackupFolderName = `STG-backups-FF-${Constants.BROWSER.version}`;
-
-        if (autoBackupFolderName !== newAutoBackupFolderName) {
-            autoBackupFolderName = newAutoBackupFolderName;
-
-            await Storage.set({autoBackupFolderName});
-        }
-    }
-
-    return autoBackupFolderName;
-}
-
-function generateBackupFileName(isAutoBackup, byDayIndex = false) {
-    let now = new Date(),
-        day = _intToStr(now.getDate()),
-        month = _intToStr(now.getMonth() + 1),
-        year = now.getFullYear(),
-        type = isAutoBackup ? 'auto' : 'manual',
-        dateOrDayIndex = (isAutoBackup && byDayIndex) ? `day-of-month-${day}` : `${year}-${month}-${day}`;
-
-    return `${type}-stg-backup-${dateOrDayIndex}@drive4ik.json`;
-}
-
-function _intToStr(i) {
-    return ('0' + i).slice(-2);
-}
-
-export async function waitDownload(id, maxWaitSec = 10) {
+async function waitDownload(id, maxWaitSec = 10) {
     let downloadObj = null;
 
     for (let i = 0; i < maxWaitSec * 5; i++) {
@@ -196,7 +200,7 @@ export async function waitDownload(id, maxWaitSec = 10) {
             break;
         }
 
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await Utils.wait(200);
     }
 
     return downloadObj || {};

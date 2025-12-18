@@ -1087,14 +1087,6 @@
         "message": "Enkel groepen",
         "description": "Only groups"
     },
-    "autoBackupByDayIndexTitle": {
-        "message": "Reservekopienummer als dag van de maand",
-        "description": "Backup number as day of month"
-    },
-    "autoBackupByDayIndexDescription": {
-        "message": "Dit helpt om verlost te zijn van een groot aantal reservekopiebestanden in de downloadmap. Het reservekopiebestand zal er zo uitzien: \"auto-stg-backup-dag-van-maand-22@drive4ik.json\"",
-        "description": "Backup by day description"
-    },
     "clickHereForInfo": {
         "message": "Klik hier voor meer info",
         "description": "Click here for more info"

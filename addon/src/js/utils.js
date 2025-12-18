@@ -627,6 +627,19 @@ export const DATE_LOCALE_VARIABLES = Object.freeze({
     },
 });
 
+export function getFilePathVariables() {
+    const variables =  {
+        ...DATE_LOCALE_VARIABLES,
+        'ff-version': Constants.BROWSER.version,
+    };
+
+    for (const key in variables) {
+        variables[key] = variables[key].replaceAll(':', '-');
+    }
+
+    return variables;
+}
+
 export function relativeTime(input, lang = UI_LANG, style = 'long', numeric = 'auto') {
     const date = (input instanceof Date) ? input : new Date(input);
     const formatter = new Intl.RelativeTimeFormat(lang, {style, numeric});

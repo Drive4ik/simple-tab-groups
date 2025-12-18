@@ -23,6 +23,7 @@ import * as Containers from '/js/containers.js';
 import * as Storage from '/js/storage.js';
 import * as Cache from '/js/cache.js';
 import * as File from '/js/file.js';
+import * as Host from '/js/host.js';
 import * as Menus from '/js/menus.js';
 import * as Groups from '/js/groups.js';
 import * as Tabs from '/js/tabs.js';
@@ -2776,13 +2777,17 @@ async function createBackup(includeTabFavIcons, includeTabThumbnails, isAutoBack
     data.containers = Containers.getToExport(data);
 
     if (isAutoBackup) {
-        File.backup(data, true, options.autoBackupByDayIndex);
+        if (data.autoBackupLocation === Constants.AUTO_BACKUP_LOCATIONS.DOWNLOADS) {
+            await File.saveBackup(data, true);
+        } else {
+            await Host.saveBackup(data);
+        }
 
         await Bookmarks.exportGroups(data.groups).catch(log.onCatch('cant create bookmarks', false));
 
         storage.autoBackupLastTimeStamp = Utils.unixNow();
     } else {
-        await File.backup(data, false);
+        await File.saveBackup(data, false);
     }
 
     log.stop();
@@ -3639,6 +3644,8 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
             remove: [
                 'autoBackupLastBackupTimeStamp',
                 'lastCreatedGroupPosition',
+                'autoBackupFolderName',
+                'autoBackupByDayIndex',
                 'theme',
             ],
             async migration() {
@@ -3809,6 +3816,25 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
                             });
                         }
                     }
+                }
+
+                // migrate backup folder to file path
+                data.autoBackupFilePathFile = data.autoBackupFolderName;
+
+                if (
+                    !data.autoBackupFolderName.length ||
+                    /^STG\-backups\-FF\-[a-z\d\.]+$/.test(data.autoBackupFolderName) ||
+                    /^STG\-backups\-(win|linux|mac|openbsd)\-\d+$/.test(data.autoBackupFolderName)
+                ) {
+                    data.autoBackupFilePathFile = `STG-backups-FF-{ff-version}/`;
+                } else {
+                    data.autoBackupFilePathFile += '/';
+                }
+
+                if (data.autoBackupByDayIndex) {
+                    data.autoBackupFilePathFile += `auto-stg-backup-day-of-month-{day-2-digit}@drive4ik`;
+                } else {
+                    data.autoBackupFilePathFile += `STG-backup {date-full} {time-short}@drive4ik`;
                 }
             },
         },
@@ -4208,6 +4234,13 @@ async function init() {
         Utils.assignKeys(options, data, Constants.ALL_OPTION_KEYS);
 
         dataChanged.add(Groups.normalizeContainersInGroups(data.groups));
+
+        if (data.autoBackupLocation === Constants.AUTO_BACKUP_LOCATIONS.HOST) {
+            if (!Constants.IS_WINDOWS || !await Host.hasPermission()) {
+                data.autoBackupLocation = Constants.AUTO_BACKUP_LOCATIONS.DOWNLOADS;
+                dataChanged.add(true);
+            }
+        }
 
         if (dataChanged.has(true)) {
             log.log('data was changed, save data');

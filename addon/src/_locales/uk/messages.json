@@ -1087,14 +1087,6 @@
         "message": "Тільки групи",
         "description": "Only groups"
     },
-    "autoBackupByDayIndexTitle": {
-        "message": "Номер резервної копії як день місяця",
-        "description": "Backup number as day of month"
-    },
-    "autoBackupByDayIndexDescription": {
-        "message": "Допомагає позбутися від великої кількості файлів бекапу в теці завантажень. Файл бекапа матиме вигляд: \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
-        "description": "Backup by day description"
-    },
     "clickHereForInfo": {
         "message": "Натисніть тут для отримання додаткової інформації",
         "description": "Click here for more info"

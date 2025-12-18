@@ -1087,14 +1087,6 @@
         "message": "Nur Gruppen",
         "description": "Only groups"
     },
-    "autoBackupByDayIndexTitle": {
-        "message": "Tag des Monat als Sicherungsnummer nutzen",
-        "description": "Backup number as day of month"
-    },
-    "autoBackupByDayIndexDescription": {
-        "message": "Es hilft eine große Anzahl von Sicherungsdateien im Downloads-Ordner zu löschen. Die Sicherungsdatei hat folgendes Format: \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
-        "description": "Backup by day description"
-    },
     "clickHereForInfo": {
         "message": "Hier klicken für weitere Informationen",
         "description": "Click here for more info"

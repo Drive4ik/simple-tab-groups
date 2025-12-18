@@ -1087,14 +1087,6 @@
         "message": "只限群組",
         "description": "Only groups"
     },
-    "autoBackupByDayIndexTitle": {
-        "message": "以天數為備份檔名每月循環覆蓋",
-        "description": "Backup number as day of month"
-    },
-    "autoBackupByDayIndexDescription": {
-        "message": "避免產生一大堆備份檔案難以管理，循環備份檔名會長得像這樣: \"auto-stg-backup-day-of-month-22@drive4ik.json\"。",
-        "description": "Backup by day description"
-    },
     "clickHereForInfo": {
         "message": "點這裡看更多資訊",
         "description": "Click here for more info"

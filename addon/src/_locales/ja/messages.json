@@ -1087,14 +1087,6 @@
         "message": "グループのみ",
         "description": "Only groups"
     },
-    "autoBackupByDayIndexTitle": {
-        "message": "日付をバックアップ番号にする",
-        "description": "Backup number as day of month"
-    },
-    "autoBackupByDayIndexDescription": {
-        "message": "ダウンロードフォルダー内にある数多くのバックアップファイルを整理するのに役立ちます。バックアップファイル名は次のようになります: \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
-        "description": "Backup by day description"
-    },
     "clickHereForInfo": {
         "message": "詳細はこちら",
         "description": "Click here for more info"

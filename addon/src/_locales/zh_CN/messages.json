@@ -1087,14 +1087,6 @@
         "message": "仅群组",
         "description": "Only groups"
     },
-    "autoBackupByDayIndexTitle": {
-        "message": "以月份日期作为备份数量",
-        "description": "Backup number as day of month"
-    },
-    "autoBackupByDayIndexDescription": {
-        "message": "它可以帮助您在下载文件夹中减少大量的备份文件。备份文件看起来像这样“auto-stg-backup-day-of-month-22@drive4ik.json”",
-        "description": "Backup by day description"
-    },
     "clickHereForInfo": {
         "message": "点击此处获取更多信息",
         "description": "Click here for more info"

@@ -1087,14 +1087,6 @@
         "message": "Solo grupos",
         "description": "Only groups"
     },
-    "autoBackupByDayIndexTitle": {
-        "message": "Día del mes como número de respaldo",
-        "description": "Backup number as day of month"
-    },
-    "autoBackupByDayIndexDescription": {
-        "message": "Ayuda a deshacerse de un gran número de archivos de respaldo en la carpeta de descargas. El archivo de respaldo se vera así: \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
-        "description": "Backup by day description"
-    },
     "clickHereForInfo": {
         "message": "Haga click aquí para más información",
         "description": "Click here for more info"

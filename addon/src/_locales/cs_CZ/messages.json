@@ -1086,13 +1086,5 @@
     "searchOnlyGroups": {
         "message": "Pouze skupiny",
         "description": "Only groups"
-    },
-    "autoBackupByDayIndexTitle": {
-        "message": "Číslo zálohy podle dne v měsíci",
-        "description": "Backup number as day of month"
-    },
-    "autoBackupByDayIndexDescription": {
-        "message": "Pomáhá zbavit se velkého množství zálohových souborů ve složce se staženými soubory. Jméno zálohového souboru bude ve tvaru: \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
-        "description": "Backup by day description"
     }
 }

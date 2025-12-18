@@ -1059,14 +1059,6 @@
         "message": "Hanya grup",
         "description": "Only groups"
     },
-    "autoBackupByDayIndexTitle": {
-        "message": "Nomor cadangan sebagai hari dalam sebulan",
-        "description": "Backup number as day of month"
-    },
-    "autoBackupByDayIndexDescription": {
-        "message": "Ini membantu untuk menyingkirkan sejumlah besar file cadangan di folder unduhan. File cadangan akan terlihat seperti ini: \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
-        "description": "Backup by day description"
-    },
     "clickHereForInfo": {
         "message": "Klik di sini untuk info lebih lanjut",
         "description": "Click here for more info"

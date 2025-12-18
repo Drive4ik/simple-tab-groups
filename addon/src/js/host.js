@@ -1,8 +1,9 @@
 
 import * as Constants from './constants.js';
+import * as Utils from './utils.js';
 import Logger from '/js/logger.js';
 
-const logger = new Logger(Constants.HOST_NAME);
+const logger = new Logger(Constants.HOST.NAME);
 
 export async function hasPermission() {
     return browser.permissions.contains(Constants.PERMISSIONS.NATIVE_MESSAGING);
@@ -12,18 +13,22 @@ export async function requestPermission() {
     return browser.permissions.request(Constants.PERMISSIONS.NATIVE_MESSAGING);
 }
 
-function normalizeResponseMessage(response) {
-    if (response.lang) {
-        response.message = browser.i18n.getMessage(response.lang, ...response.args);
-    }
-
-    return response;
-}
-
 export class HostError extends Error {
     constructor(response) {
-        const message = normalizeResponseMessage(response).message || 'Unknown host error';
+        let message;
+
+        if (response.message) {
+            message = response.message;
+        } else if (response.lang) {
+            message = browser.i18n.getMessage(response.lang, ...response.args) || response.lang;
+        } else {
+            message = 'Unknown error';
+        }
+
+        logger.error(`HostError: ${message}`, response);
+
         super(message, 'STGHost.exe');
+
         this.name = 'HostError';
         this.response = response;
     }
@@ -38,12 +43,16 @@ export function getErrorMessage(error) {
 }
 
 async function sendMessage(action, params = {}) {
-    const response = await browser.runtime.sendNativeMessage(Constants.HOST_NAME, {
+    if (params.filePath) {
+        params.filePath = Utils.format(params.filePath, Utils.getFilePathVariables());
+    }
+
+    const response = await browser.runtime.sendNativeMessage(Constants.HOST.NAME, {
         action,
         ...params,
     });
 
-    logger.assert(response.ok, 'response:', response);
+    logger.debug(response);
 
     if (response.ok) {
         return response;
@@ -76,4 +85,17 @@ export async function selectBackupFolder() {
         dialogTitle: browser.i18n.getMessage('selectBackupFolder'),
     });
     return data;
+}
+
+export async function testFilePath(filePath) {
+    await sendMessage('test-save-backup', {
+        filePath: filePath + '.json',
+    });
+}
+
+export async function saveBackup(data) {
+    await sendMessage('save-backup', {
+        filePath: data.autoBackupFilePathHost + '.json',
+        data,
+    });
 }
