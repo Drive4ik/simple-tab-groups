@@ -1147,12 +1147,12 @@
         "message": "Click here for more info",
         "description": "Click here for more info"
     },
-    "requiredAction": {
-        "message": "Required action",
-        "description": "Required action"
+    "requiredActions": {
+        "message": "Required actions",
+        "description": "Required actions"
     },
     "stgHostHowToUse": {
-        "message": "To select any folder on your computer to save tab group backups, you need the <strong>Simple Tab Groups Host</strong> program.\n\nHow to set it up:\n1. Download the <a href=\"$dowloadUrl$\" target=\"_blank\">STGHost.exe</a> program to any folder on your computer\n2. Run the program and set the path for saving backups\n3. If necessary, change other parameters in the program settings\n\n<strong>Important:</strong> If you have moved the program to another folder, you need to run it once so that Firefox recognizes the new location.\n\nAfter configuration, the program will automatically run in the background and accept commands from the extension.",
+        "message": "To select any folder on your computer to save tab group backups, you need the <strong>Simple Tab Groups Host</strong> program.\n\nHow to set it up:\n1. Download the <a href=\"$dowloadUrl$\" target=\"_blank\">STGHost.exe</a> program to any folder on your computer\n2. Run the program and set the path for saving backups\n3. If necessary, change other parameters in the program settings\n\n<strong>Important:</strong> If you have moved the program to another folder, you need to run it once so that Firefox recognizes the new location.\n\nAfter configuration, the program will automatically run in the background and accept commands from the extension and this message will disappear.",
         "description": "How to install and use the STGHost program",
         "placeholders": {
             "dowloadUrl": {
@@ -1161,9 +1161,9 @@
             }
         }
     },
-    "checkAgain": {
-        "message": "Check again",
-        "description": "Check again button label"
+    "check": {
+        "message": "Check",
+        "description": "Check button label"
     },
     "enabled": {
         "message": "Enabled",
