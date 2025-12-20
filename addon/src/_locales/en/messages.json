@@ -143,6 +143,10 @@
         "message": "Restore backup",
         "description": "Restore backup"
     },
+    "restoreLastBackup": {
+        "message": "Restore last backup",
+        "description": "Restore last backup"
+    },
     "viewBackup": {
         "message": "View backup",
         "description": "View backup"

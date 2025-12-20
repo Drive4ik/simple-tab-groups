@@ -8,12 +8,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/1.0.4/css/bulma.min.css" integrity="sha512-yh2RE0wZCVZeysGiqTwDTO/dKelCbS9bP2L94UvOFtl/FKXcNAje3Y2oBg/ZMZ3LS1sicYk4dYVGtDex75fvvA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <style>
-        summary {
-            font-weight: bold;
-            margin: -0.5em -0.5em 0;
-            padding: 0.5em;
-        }
-
         details {
             border: 1px solid #aaa;
             border-radius: 4px;
@@ -26,6 +20,12 @@
                     border-bottom: 1px solid #aaa;
                     margin-bottom: 0.5em;
                 }
+            }
+
+            summary {
+                font-weight: bold;
+                margin: -0.5em -0.5em 0;
+                padding: 0.5em;
             }
         }
 
@@ -60,10 +60,10 @@
 
         code {
             word-break: break-all;
-        }
 
-        code + code {
-            margin-left: 10px;
+            + code {
+                margin-left: 10px;
+            }
         }
 
         [v-cloak] {
@@ -91,7 +91,7 @@
 
         code.expanded-on-focus {
             &:focus {
-                white-space: pre;
+                white-space: pre-wrap;
                 display: block;
                 margin-top: 1em;
             }
@@ -120,7 +120,8 @@
                     <span class="file-icon">
                         <span class="icon">
                             <figure class="image is-16x16">
-                                <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/refs/heads/7.x/svgs/solid/upload.svg">
+                                <img v-if="fileLoading" src="https://github.com/Drive4ik/simple-tab-groups/raw/refs/heads/master/addon/src/icons/animate-spinner.svg">
+                                <img v-else src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/refs/heads/7.x/svgs/solid/upload.svg">
                             </figure>
                         </span>
                     </span>

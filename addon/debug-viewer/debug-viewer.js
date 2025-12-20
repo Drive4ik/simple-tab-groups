@@ -49,13 +49,14 @@ const excludeExtensions = new Set([
     'addons-search-detection@mozilla.com',
 ]);
 
-const htmlTagArgumentRegExp = /^[a-z\d\-\_]+#[a-z\d\-\_]+$/i;
+const htmlTagArgumentRegExp = /^[^\s]+#[^\s]+$/;
 
 new Vue({
     el: '#app',
     data: {
         file: null,
         fileName: null,
+        fileLoading: false,
 
         logsIndent: 0,
 
@@ -175,9 +176,10 @@ new Vue({
         },
         getStackToView(stack) {
             try {
-                const oldStack = stack.stack;
+                // const oldStack = stack.stack;
                 Object.assign(stack, JSON.parse(stack.message));
-                stack.stack = ['From message:', ...stack.stack.split('\n'), ...oldStack];
+                stack.stack = stack.stack.split('\n');
+                // stack.stack = ['Stack from logger arguments:', ...stack.stack.split('\n'), 'native:', ...oldStack];
             } catch (e) { }
 
             return JSON.stringify(stack, null, 4);
@@ -276,6 +278,9 @@ new Vue({
         },
 
         async changeFile({target}) {
+            this.fileLoading = true;
+            await this.$nextTick();
+
             let file;
 
             try {
@@ -284,6 +289,7 @@ new Vue({
             } catch (e) {
                 alert(`can't read JSON log file: ${e}`);
                 console.log(e);
+                this.fileLoading = false;
                 return;
             }
 
@@ -346,7 +352,10 @@ new Vue({
                     stacks = [];
 
                 log[log.consoleKey].forEach(consoleValue => {
-                    if (consoleValue?.message !== undefined && consoleValue?.time !== undefined && consoleValue?.fileName !== undefined) {
+                    if (consoleValue?.stack !== undefined) {
+                        // if (typeof consoleValue.stack === 'string') {
+                        //     consoleValue.stack = consoleValue.stack.split('\n');
+                        // }
                         stacks.push(consoleValue);
                     } else {
                         messages.push(consoleValue);
@@ -360,7 +369,7 @@ new Vue({
                 log[log.consoleKey] = messages;
 
                 if (stacks.length) {
-                    log.stacks = ['From message:', ...stacks, 'Native:', log.stack];
+                    log.stacks = ['Errors:', ...stacks, 'Native stack:', log.stack];
                 } else {
                     log.stacks = [log.stack];
                 }
@@ -380,6 +389,9 @@ new Vue({
             (file.errorLogs || []).sort(sortTime).forEach(formatLog);
 
             this.file = file;
+            await this.$nextTick();
+            await this.$nextTick();
+            this.fileLoading = false;
         },
 
         isBool(val) {

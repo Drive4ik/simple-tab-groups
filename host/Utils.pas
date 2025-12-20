@@ -7,7 +7,7 @@ interface
 
 uses
   Winapi.Windows, Vcl.Dialogs, Vcl.Forms, System.JSON, System.SysUtils, Classes, System.Win.Registry,
-  VerInfo, System.IOUtils, Winapi.ShellAPI;
+  VerInfo, System.IOUtils, Winapi.ShellAPI, System.NetEncoding;
 
 function PrivateExtractIcons(lpszFile: PChar; nIconIndex, cxIcon, cyIcon: integer; phicon: PHANDLE; piconid: PDWORD; nicon, flags: DWORD): DWORD; stdcall; external 'user32.dll' name 'PrivateExtractIconsW';
 
@@ -30,6 +30,8 @@ function MergeJSON(const baseValue, extraValue: TJSONValue): TJSONValue;
 function IsWindowsDarkTheme: Boolean;
 function ExpandEnvStr(const Str: string): string;
 function OpenPath(const Path: string): Boolean;
+function EncodeBase64(const Input: string): string;
+function DecodeBase64(const base64String: string): string;
 
 implementation
 
@@ -129,10 +131,7 @@ begin
     var BaseObj := TJSONObject(baseValue);
     for var Pair in TJSONObject(extraValue) do
     begin
-      var Key := Pair.JsonString.Value;
-      var Existing := BaseObj.Get(Key);
-      if Assigned(Existing) then
-        BaseObj.RemovePair(Key).Free;
+      BaseObj.RemovePair(Pair.JsonString.Value).Free;
       BaseObj.AddPair(Pair.Clone as TJSONPair);
     end;
     Exit;
@@ -195,6 +194,21 @@ end;
 function OpenPath(const Path: string): Boolean;
 begin
   result:= ShellExecute(0, 'open', PWideChar(Path), nil, nil, SW_SHOWNORMAL) > 32 ;
+end;
+
+function EncodeBase64(const Input: string): string;
+begin
+  var enc := TBase64Encoding.Create(-1);
+  try
+    Result := enc.Encode(Input);
+  finally
+    enc.Free;
+  end;
+end;
+
+function DecodeBase64(const base64String: string): string;
+begin
+  Result:= TNetEncoding.Base64.Decode(base64String);
 end;
 
 end.

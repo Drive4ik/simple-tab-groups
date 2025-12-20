@@ -100,6 +100,8 @@ export default {
 
                 this.deleteBackupDays = settings.deleteBackupDays;
                 this.keepBackupFiles = settings.keepBackupFiles;
+
+                this.$emit('has', true);
             } catch (e) {
                 this.hasConnection = false;
 
@@ -111,6 +113,8 @@ export default {
                 if (e instanceof Host.HostError) {
                     this.errorMessage = e;
                 }
+
+                this.$emit('has', false);
             }
         },
         insertVariableToFilePath(variable) {

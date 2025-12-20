@@ -13,6 +13,7 @@ import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
 import * as Messages from '/js/messages.js';
 import Logger, {errorEventHandler} from '/js/logger.js';
+import {objToNativeError} from '/js/logger-utils.js';
 import Notification from '/js/notification.js';
 import * as Utils from '/js/utils.js';
 import * as Management from '/js/management.js';
@@ -92,16 +93,6 @@ export default {
         this.SECTION_HOTKEYS = SECTION_HOTKEYS;
         this.SECTION_BACKUP = SECTION_BACKUP;
         this.SECTION_ABOUT = SECTION_ABOUT;
-
-        const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
-        if (mainStorage.autoBackupLastTimeStamp) {
-            const lastBackupDate = new Date(mainStorage.autoBackupLastTimeStamp * 1000);
-            this.lastAutoBackup = {
-                ago: Utils.relativeTime(lastBackupDate),
-                full: lastBackupDate.toLocaleString(Utils.UI_LANG, {dateStyle: 'full', timeStyle: 'short'}),
-                ISO: lastBackupDate.toISOString(),
-            };
-        }
 
         this.AUTO_BACKUP_LOCATIONS = Constants.AUTO_BACKUP_LOCATIONS;
 
@@ -210,6 +201,11 @@ export default {
                 nativeMessaging: false,
             },
 
+            lastAutoBackup: null,
+
+            hasHost: false,
+            loadingRestoreLastHostBackup: false,
+
             defaultBookmarksParents: [],
 
             showLoadingMessage: false,
@@ -238,6 +234,9 @@ export default {
         }
 
         this.loadGroups();
+
+        this.initLastUpdateBackups();
+        window.addEventListener('focus', () => this.initLastUpdateBackups(), false);
     },
     mounted() {
         const scrollNodeSelector = {
@@ -302,6 +301,20 @@ export default {
         lang: browser.i18n.getMessage,
         getHotkeyActionTitle: action => browser.i18n.getMessage('hotkeyActionTitle' + Utils.capitalize(Utils.toCamelCase(action))),
         getDonateItemHelp: item => browser.i18n.getMessage('donateItemHelp' + Utils.capitalize(Utils.toCamelCase(item))),
+
+        initLastUpdateBackups() {
+            const mainStorage = localStorage.create(Constants.MODULES.BACKGROUND);
+            if (mainStorage.autoBackupLastTimeStamp) {
+                const lastBackupDate = new Date(mainStorage.autoBackupLastTimeStamp * 1000);
+                this.lastAutoBackup = {
+                    ago: Utils.relativeTime(lastBackupDate),
+                    full: lastBackupDate.toLocaleString(Utils.UI_LANG, {dateStyle: 'full', timeStyle: 'short'}),
+                    ISO: lastBackupDate.toISOString(),
+                };
+            } else {
+                this.lastAutoBackup = null;
+            }
+        },
 
         openBackupFolder: File.openBackupFolder,
         getGroupTitle: Groups.getTitle,
@@ -596,6 +609,29 @@ export default {
             });
 
             this.setManageAddonSettings(data, 'importSettingsSyncTabGroupsAddonTitle', true);
+        },
+
+        async tryRestoreLastHostBackup() {
+            try {
+                this.loadingRestoreLastHostBackup = true;
+
+                const data = await Host.getLastBackup();
+
+                const resultMigrate = await sendMessageModule('BG.runMigrateForData', data, false);
+
+                if (resultMigrate.migrated) {
+                    data = resultMigrate.data;
+                } else if (resultMigrate.error) {
+                    Notification(resultMigrate.error);
+                    return;
+                }
+
+                this.setManageAddonSettings(data, 'importAddonSettingsTitle', false, true);
+            } catch (e) {
+                Notification(e);
+            } finally {
+                this.loadingRestoreLastHostBackup = false;
+            }
         },
 
         runClearAddonConfirm() {
@@ -1086,6 +1122,7 @@ export default {
 
                     <backup-location-host
                         v-else-if="options.autoBackupLocation === AUTO_BACKUP_LOCATIONS.HOST"
+                        @has="value => hasHost = value"
                         ></backup-location-host>
                 </template>
 
@@ -1142,17 +1179,28 @@ export default {
             <div class="column is-full">
                 <label class="label" v-text="lang('importAddonSettingsTitle')"></label>
                 <div class="field" v-html="lang('importAddonSettingsDescription')"></div>
-                <div class="field is-grouped is-align-items-center">
-                    <div class="control">
-                        <button @click="importAddonSettings" class="button is-info is-soft">
-                            <span class="icon">
-                                <figure class="image is-16x16">
-                                    <img src="/icons/icon.svg" />
-                                </figure>
-                            </span>
-                            <span v-text="lang('restoreBackup')"></span>
-                        </button>
-                    </div>
+                <div class="buttons">
+                    <button @click="importAddonSettings" class="button is-info is-soft">
+                        <span class="icon">
+                            <figure class="image is-16x16">
+                                <img src="/icons/icon.svg" />
+                            </figure>
+                        </span>
+                        <span v-text="lang('restoreBackup')"></span>
+                    </button>
+                    <button
+                        v-if="IS_WINDOWS && permissions.nativeMessaging && hasHost"
+                        @click="tryRestoreLastHostBackup"
+                        class="button is-info is-soft"
+                        :class="{'is-loading': loadingRestoreLastHostBackup}"
+                        >
+                        <span class="icon">
+                            <figure class="image is-16x16">
+                                <img src="/icons/icon.svg" />
+                            </figure>
+                        </span>
+                        <span v-text="lang('restoreLastBackup')"></span>
+                    </button>
                 </div>
             </div>
             <div class="column">

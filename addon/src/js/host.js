@@ -3,7 +3,7 @@ import * as Constants from './constants.js';
 import * as Utils from './utils.js';
 import Logger from '/js/logger.js';
 
-const logger = new Logger(Constants.HOST.NAME);
+const logger = new Logger('Host');
 
 export async function hasPermission() {
     return browser.permissions.contains(Constants.PERMISSIONS.NATIVE_MESSAGING);
@@ -43,6 +43,8 @@ export function getErrorMessage(error) {
 }
 
 async function sendMessage(action, params = {}) {
+    const log = logger.start('sendMessage', `HOST_ACTION#${action}`);
+
     if (params.filePath) {
         params.filePath = Utils.format(params.filePath, Utils.getFilePathVariables());
     }
@@ -52,12 +54,12 @@ async function sendMessage(action, params = {}) {
         ...params,
     });
 
-    logger.debug(response);
-
     if (response.ok) {
+        log.stop(response);
         return response;
     }
 
+    log.stopError();
     throw new HostError(response);
 }
 
@@ -85,6 +87,39 @@ export async function selectBackupFolder() {
         dialogTitle: browser.i18n.getMessage('selectBackupFolder'),
     });
     return data;
+}
+
+export async function getLastBackup() {
+    const {data} = await getLastBackupPartByParts();
+    return data;
+}
+
+async function getLastBackupPartByParts(partIndex = 0, prevData = '') {
+    const response = await sendMessage('get-last-backup', {partIndex});
+
+    if (['base64', 'json'].some(step => response.encoding?.includes(step))) {
+        response.data = prevData + response.data;
+
+        if (response.nextPartIndex) {
+            return await getLastBackupPartByParts(response.nextPartIndex, response.data);
+        }
+    }
+
+    return joinParts(response);
+}
+
+function joinParts(response) {
+    const step = response.encoding?.shift();
+
+    if (step === 'base64') {
+        response.data = Utils.base64Decode(response.data);
+    } else if (step === 'json') {
+        response.data = JSON.parse(response.data);
+    } else if (!step) {
+        return response;
+    }
+
+    return joinParts(response);
 }
 
 export async function testFilePath(filePath) {

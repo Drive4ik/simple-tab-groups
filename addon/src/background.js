@@ -12,6 +12,9 @@ import Logger, {
     clearErrors,
     errorEventHandler,
 } from '/js/logger.js';
+import {
+    objToNativeError
+} from '/js/logger-utils.js';
 import * as Utils from '/js/utils.js';
 import Notification, {
     clear as clearNotification
@@ -2035,16 +2038,16 @@ async function onBackgroundMessage(message, sender) {
         const [moduleName, funcName] = data.action.split('.');
 
         if (INTERNAL_MODULES_NAMES.has(moduleName) || INTERNAL_MODULES_NAMES.has(data.action)) {
-            logger.info('onBackgroundMessage internal module', data.action);
+            logger.info('onBackgroundMessage internal module', `ACTION#${data.action}`);
 
             try {
                 return await INTERNAL_MODULES[moduleName][funcName](...data.args);
             } catch (e) {
                 logger.throwError([
-                    'onBackgroundMessage call internal module:', data.action,
+                    'onBackgroundMessage call internal module:', `ACTION#${data.action}`,
                     'args:', data.args,
-                    'sender:', senderToLogs,
-                    'from stack:', data.from,
+                    // 'sender:', senderToLogs,
+                    objToNativeError(data.breadcrumbs),
                 ], e);
             }
         }

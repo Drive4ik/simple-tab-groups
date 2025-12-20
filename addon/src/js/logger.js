@@ -4,7 +4,7 @@ import * as Constants from './constants.js';
 import JSON from './json.js';
 import * as Utils from './utils.js';
 import * as Messages from './messages.js';
-import {normalizeError, getStack} from './logger-utils.js';
+import {normalizeArgumentValue, getStack} from './logger-utils.js';
 
 const prefixGlue = '.'; // ➡️  →
 
@@ -71,20 +71,6 @@ function setLoggerFuncs() {
     }.bind(this);
 
     this.onCatch = function(message, throwError = true) {
-        if (Array.isArray(message)) {
-            message = message.map(value => {
-                if (Array.isArray(value)) {
-                    return value.slice();
-                } else if (value === Object(value)) {
-                    return cloneObjectOnlyPrimitiveValues(value);
-                }
-
-                return value;
-            });
-        } else if (message === Object(message)) {
-            message = cloneObjectOnlyPrimitiveValues(message);
-        }
-
         return (error) => {
             if (typeof message === 'string') {
                 message = `Catch error on: ${message}`;
@@ -94,7 +80,7 @@ function setLoggerFuncs() {
 
             error ??= typeof message === 'object' ? new Error(JSON.stringify(message)) : new Error(message);
 
-            const args = [...[message].flat(), normalizeError(error)];
+            const args = [...[message].flat(), error];
 
             // fromErrorEventHandler need for prevent loop throw/catch
             if (mainStorage.IS_TEMPORARY && mainStorage.enableDebug && !this.fromErrorEventHandler) {
@@ -144,16 +130,6 @@ function setLoggerFuncs() {
     }.bind(this);
 }
 
-function cloneObjectOnlyPrimitiveValues(obj) {
-    const result = {};
-    for (const key in obj) {
-        if (typeof obj[key] !== 'object') {
-            result[key] = obj[key];
-        }
-    }
-    return result;
-}
-
 function Log(cKey, ...args) {
     setLoggerFuncs.call(this);
 
@@ -166,6 +142,8 @@ function Log(cKey, ...args) {
     } else if (cKey === 'debug' && !mainStorage.IS_TEMPORARY && !mainStorage.enableDebug) {
         return;
     }
+
+    args = normalizeArgumentValue(args);
 
     const argsToLog = [this.prefixes.join(prefixGlue), ...args];
 

@@ -24,6 +24,7 @@ type
     Path: string;
     LastWriteUnix: Int64;
     Json: TJSONObject;
+    destructor Destroy; override;
   end;
 
 function CreateResponse(const ok: Boolean): TJSONObject;
@@ -39,7 +40,13 @@ implementation
 uses
   System.Math, System.Generics.Defaults, Logger;
 
-const MAX_MSG_SIZE = 100 * 1024 * 1024; // 100 MB
+const MAX_OUT_MSG_SIZE = 1024 * 1024 * 1; // 1 MB
+
+destructor TBackupFileInfo.Destroy;
+begin
+  Json.Free;
+  inherited;
+end;
 
 function CreateResponse(const ok: Boolean): TJSONObject;
 begin
@@ -93,10 +100,10 @@ begin
   OutputBytes := TEncoding.UTF8.GetBytes(payload);
   OutputBytesCount := Length(OutputBytes);
 
-  if OutputBytesCount > MAX_MSG_SIZE then
+  if OutputBytesCount > MAX_OUT_MSG_SIZE then
   begin
     WriteStdOut(CreateResponseMessage(false, Format('WriteStdOut: output too large (%d bytes), limit %d',
-      [OutputBytesCount, MAX_MSG_SIZE])).ToJSON);
+      [OutputBytesCount, MAX_OUT_MSG_SIZE])).ToJSON);
     Exit;
   end;
 
@@ -150,8 +157,8 @@ begin
 
   MsgLength := LengthBytes[0] or (LengthBytes[1] shl 8) or (LengthBytes[2] shl 16) or (LengthBytes[3] shl 24);
 
-  if (MsgLength = 0) or (MsgLength > MAX_MSG_SIZE) then
-    raise Exception.CreateFmt('Invalid message length: %d', [MsgLength]);
+//  if (MsgLength = 0) or (MsgLength > MAX_MSG_SIZE) then
+//    raise Exception.CreateFmt('Invalid message length: %d', [MsgLength]);
 
   SetLength(Payload, MsgLength);
 
@@ -164,12 +171,12 @@ begin
   Result := TEncoding.UTF8.GetString(Payload);
 end;
 
-function GetBackupFiles(const Extension: TExtension): TList<TBackupFileInfo>;
+function GetBackupFiles(const Extension: TExtension; parseOnlyLastBackup: Boolean): TObjectList<TBackupFileInfo>;
 var
   Files: TStringDynArray;
   BackupFolder: string;
 begin
-  Result := TList<TBackupFileInfo>.Create;
+  Result := TObjectList<TBackupFileInfo>.Create(True);
 
   BackupFolder := GetBackupFolder(Extension);
 
@@ -178,44 +185,63 @@ begin
 
   Files := TDirectory.GetFiles(BackupFolder, '*' + Extension.backupExt, TSearchOption.soAllDirectories);
 
-  for var Path in Files do
-  begin
-    var FileJson := ReadJSONFile(Path);
-
-    if not Assigned(FileJson) then
-      Continue;
-
-    if not (FileJson is TJSONObject) then
-      Continue;
-
-    if FileJson.GetValue<string>('id', '') <> Extension.Id then
+  var FileInfos := TObjectList<TBackupFileInfo>.Create(True);
+  try
+    for var Path in Files do
     begin
-      FileJson.Free;
-      Continue;
+      var Info := TBackupFileInfo.Create;
+      Info.Path := Path;
+      Info.LastWriteUnix := DateTimeToUnix(TFile.GetLastWriteTime(Path), False);
+      Info.Json := nil;
+      FileInfos.Add(Info);
     end;
 
-    var Info := TBackupFileInfo.Create;
-    Info.Path := Path;
-    Info.LastWriteUnix := DateTimeToUnix(TFile.GetLastWriteTime(Path), False);
-    Info.Json := FileJson as TJSONObject;
+    // sorting: latest at the top
+    FileInfos.Sort(
+      TComparer<TBackupFileInfo>.Construct(
+        function(const Left, Right: TBackupFileInfo): Integer
+        begin
+          Result := Sign(Right.LastWriteUnix - Left.LastWriteUnix);
+        end
+      )
+    );
 
-    Result.Add(Info);
-  end;
+    for var MetaInfo in FileInfos do
+    begin
+      var FileJson := ReadJSONFile(MetaInfo.Path);
+      if not Assigned(FileJson) then
+        Continue;
 
-  // sorting: latest at the top
-  Result.Sort(
-    TComparer<TBackupFileInfo>.Construct(
-      function(const Left, Right: TBackupFileInfo): Integer
+      if not (FileJson is TJSONObject) then
       begin
-        Result := Sign(Right.LastWriteUnix - Left.LastWriteUnix);
-      end
-    )
-  );
+        FileJson.Free;
+        Continue;
+      end;
+
+      if FileJson.GetValue<string>('id', '') <> Extension.Id then
+      begin
+        FileJson.Free;
+        Continue;
+      end;
+
+      var Info := TBackupFileInfo.Create;
+      Info.Path := MetaInfo.Path;
+      Info.LastWriteUnix := MetaInfo.LastWriteUnix;
+      Info.Json := FileJson as TJSONObject;
+
+      Result.Add(Info);
+
+      if parseOnlyLastBackup then
+        Break;
+    end;
+  finally
+    FileInfos.Free;
+  end;
 end;
 
 function DeleteBackupFiles(const Extension: TExtension): Integer;
 var
-  BackupFiles: TList<TBackupFileInfo>;
+  BackupFiles: TObjectList<TBackupFileInfo>;
   DeleteDays, KeepLatestFiles: Integer;
   CurrentTime: Int64;
   DeleteThreshold: Int64;
@@ -227,7 +253,7 @@ begin
   if DeleteDays = 0 then
     Exit;
 
-  BackupFiles := GetBackupFiles(Extension);
+  BackupFiles := GetBackupFiles(Extension, False);
 
   Log(format('DeleteBackupFiles: DeleteDays: %d, KeepLatestFiles: %d, Found files: %d',
     [DeleteDays, KeepLatestFiles, BackupFiles.Count]));
@@ -310,15 +336,34 @@ end;
 function HandleGetLastBackup(const json: TJSONObject; const Extension: TExtension): TJSONObject;
 var
   LatestBackupInfo: TBackupFileInfo;
-  BackupFiles: TList<TBackupFileInfo>;
+  BackupFiles: TObjectList<TBackupFileInfo>;
   ExtraJson: TJSONObject;
+  jsonStr, base64Str, chunkStr: string;
+  overheadBytes, availableBytes, totalBytes, partIndex, currentChunkLen, startPos, chunkSize, totalParts: NativeInt;
+
+  // Calculate overhead (without payload) for current ExtraJson
+  function CalculateOverheadBytes(const aExtra: TJSONObject): Integer;
+  var
+    dummy: TJSONObject;
+  begin
+    dummy := CreateResponseJSON(true, TJSONString.Create(''), aExtra);
+    try
+      Result := TEncoding.UTF8.GetByteCount(dummy.ToJSON);
+    finally
+      dummy.Free;
+    end;
+  end;
+
 begin
   const BackupFolder = GetBackupFolder(Extension);
 
   if not TDirectory.Exists(BackupFolder) then
     Exit(CreateResponseLang(false, 'invalidBackupFolder', TJSONArray.Create.Add(BackupFolder)));
 
-  BackupFiles := GetBackupFiles(Extension);
+  BackupFiles := GetBackupFiles(Extension, True);
+
+  ExtraJson := TJSONObject.Create;
+
   try
     if BackupFiles.Count = 0 then
       Exit(CreateResponseLang(false, 'noBackupFilesFound'));
@@ -326,17 +371,60 @@ begin
     LatestBackupInfo := BackupFiles[0];
 
     // remove extension id
-    LatestBackupInfo.Json.RemovePair('id');
+    LatestBackupInfo.Json.RemovePair('id').Free;
 
-    ExtraJson:= TJSONObject.Create
+    // base extra info
+    ExtraJson
       .AddPair('relativeFilePath', ExtractRelativePath(BackupFolder, LatestBackupInfo.Path))
-      .AddPair('lastWriteUnix', LatestBackupInfo.LastWriteUnix);
+      .AddPair('lastWriteUnix', LatestBackupInfo.LastWriteUnix)
+      // used to calculate overhead
+      .AddPair('encoding', TJSONArray.Create.Add('base64').Add('json'))
+      .AddPair('nextPartIndex', 101)
+      .AddPair('lastPartIndex', 102);
 
-    Result := CreateResponseJSON(true, LatestBackupInfo.Json.Clone as TJSONObject, ExtraJson);
+    // compute how many bytes are available for the actual data by building an empty response
+    overheadBytes := CalculateOverheadBytes(ExtraJson);
 
-    ExtraJson.Free;
+    // remove temp values used only for overhead calculation
+    for var key in ['encoding', 'nextPartIndex', 'lastPartIndex'] do
+      ExtraJson.RemovePair(key).Free;
+
+    availableBytes := MAX_OUT_MSG_SIZE - overheadBytes;
+
+    jsonStr := LatestBackupInfo.Json.ToJSON;
+
+    // if it fits, return as object without encoding
+    if TEncoding.UTF8.GetByteCount(jsonStr) <= availableBytes then
+      Exit(CreateResponseJSON(true, LatestBackupInfo.Json.Clone as TJSONObject, ExtraJson));
+
+    // otherwise return the requested partIndex
+    partIndex := json.GetValue<Integer>('partIndex', 0);
+
+    base64Str := EncodeBase64(jsonStr);
+    totalBytes := Length(base64Str);
+
+    chunkSize := availableBytes;
+
+    startPos := partIndex * chunkSize;
+    if (startPos < 0) or (startPos >= totalBytes) then
+      raise Exception.Create('invalid partIndex');
+
+    currentChunkLen := Min(totalBytes - startPos, chunkSize);
+
+    // Since base64 is ASCII, Copy by characters is safe
+    chunkStr := Copy(base64Str, startPos + 1, currentChunkLen);
+
+    totalParts := (totalBytes + chunkSize - 1) div chunkSize;
+
+    ExtraJson.AddPair('encoding', TJSONArray.Create.Add('base64').Add('json'));
+    if (partIndex + 1) < totalParts then
+      ExtraJson.AddPair('nextPartIndex', TJSONNumber.Create(partIndex + 1));
+    ExtraJson.AddPair('lastPartIndex', TJSONNumber.Create(totalParts - 1));
+
+    Result := CreateResponseJSON(true, TJSONString.Create(chunkStr), ExtraJson);
   finally
     BackupFiles.Free;
+    ExtraJson.Free;
   end;
 end;
 

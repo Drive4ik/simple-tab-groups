@@ -1,7 +1,7 @@
 
 import * as Constants from './constants.js';
 import JSON from './json.js';
-import {nativeErrorToObj} from './logger-utils.js';
+import {nativeErrorToObj, objToNativeError, PageStack} from './logger-utils.js';
 
 const CSPorts = new Set;
 const pending = new Map;
@@ -37,7 +37,7 @@ function getArgumentsModuleCall(ModuleFunc, ...args) {
         ModuleFunc,
         {
             args,
-            from: nativeErrorToObj(new Error),
+            breadcrumbs: nativeErrorToObj(new PageStack),
         }
     ];
 }
@@ -58,7 +58,7 @@ export function connectToBackground(name, listeners = null, callback = null, aut
             const {resolve, reject} = popPending(postId);
 
             if (error) {
-                reject(error);
+                reject(objToNativeError(error));
             } else {
                 resolve(result);
             }
@@ -96,7 +96,7 @@ async function postMessageToBackground(port, ...args) {
     const timerError = new Error(`RPC timeout, postId: ${postId}, args: ` + JSON.stringify(data));
 
     if (data.action !== 'save-log') {
-        self.logger?.info(`postMessage#${data.action} postId:`, postId, 'to background');
+        self.logger?.info(`postMessage#${data.action}`, `postId: ${postId} to background`);
     }
 
     return new Promise((resolve, reject) => {
