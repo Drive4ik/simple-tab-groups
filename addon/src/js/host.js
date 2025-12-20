@@ -88,8 +88,9 @@ export async function selectBackupFolder() {
 }
 
 export async function testFilePath(filePath) {
-    await sendMessage('test-save-backup', {
+    await sendMessage('save-backup', {
         filePath: filePath + '.json',
+        test: true,
     });
 }
 

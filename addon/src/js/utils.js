@@ -627,6 +627,12 @@ export const DATE_LOCALE_VARIABLES = Object.freeze({
     },
 });
 
+export function insertVariable(node, value, variable) {
+    return value.slice(0, node.selectionStart) +
+        `{${variable}}` +
+        value.slice(node.selectionEnd, value.length);
+}
+
 export function getFilePathVariables() {
     const variables =  {
         ...DATE_LOCALE_VARIABLES,

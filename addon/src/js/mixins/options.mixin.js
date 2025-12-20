@@ -31,11 +31,14 @@ export default {
         };
     },
     created() {
+        if (!instances.size) {
+            window.matchMedia('(prefers-color-scheme: dark)')
+                .addEventListener('change', () => this.optionsUpdateColorScheme());
+        }
+
         instances.add(this);
 
         this.optionsLoadPromise = this.optionsReload();
-
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.optionsUpdateColorScheme());
     },
     watch: {
         'options.colorScheme': 'optionsUpdateColorScheme',

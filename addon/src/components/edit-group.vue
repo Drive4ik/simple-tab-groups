@@ -245,11 +245,12 @@ export default {
             }
         },
 
-        insertValueToGroupTitle(value) {
-            const {selectionStart, selectionEnd} = this.$refs.groupTitle,
-                title = this.group.title;
-
-            this.group.title = title.slice(0, selectionStart) + value + title.slice(selectionEnd, title.length);
+        insertVariableToGroupTitle(variable) {
+            this.group.title = Utils.insertVariable(
+                this.$refs.groupTitle,
+                this.group.title,
+                variable
+            );
         },
 
         async triggerChanges() {
@@ -319,8 +320,8 @@ export default {
 
     <context-menu ref="groupNameVariables">
         <ul class="is-unselectable">
-            <li v-for="(value, key) in TITLE_VARIABLES" :key="key" @click="insertValueToGroupTitle(`{${key}}`)">
-                <span v-text="`{${key}} - ` + value"></span>
+            <li v-for="(value, variable) in TITLE_VARIABLES" :key="variable" @click="insertVariableToGroupTitle(variable)">
+                <span v-text="`{${variable}} - ` + value"></span>
             </li>
         </ul>
     </context-menu>

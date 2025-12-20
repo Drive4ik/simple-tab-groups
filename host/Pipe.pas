@@ -257,7 +257,7 @@ begin
   end;
 end;
 
-function SaveBackupFile(const json: TJSONObject; const Extension: TExtension): TJSONObject;
+function HandleSaveBackup(const json: TJSONObject; const Extension: TExtension): TJSONObject;
 var
   FileFullPath, FilePath, FileNameBase, FileExt: string;
   data: TJSONObject;
@@ -282,31 +282,28 @@ begin
   if not SameText(FileExt, extension.backupExt) then
     Exit(CreateResponseLang(false, 'errBackupFileInvalidExt', TJSONArray.Create.Add(FileExt)));
 
-  data:= json.GetValue<TJSONObject>('data');
+  const IsTestSave = json.GetValue<Boolean>('test', false);
 
-  // add extension id
-  data.AddPair('id', Extension.Id);
+  if IsTestSave then
+  begin
+    data:= TJSONObject.Create;
+    Log('is test saving');
+  end
+  else
+  begin
+    data:= json.GetValue<TJSONObject>('data');
+
+    // add extension id
+    data.AddPair('id', Extension.Id);
+  end;
 
   WriteJSONFile(FileFullPath, data);
 
   Result:= CreateResponseJSON(true, TJSONString.Create(FileFullPath));
-end;
 
-function HandleTestSaveBackup(const json: TJSONObject; const Extension: TExtension): TJSONObject;
-begin
-  json.AddPair('data', TJSONObject.Create.AddPair('test', 'test'));
-
-  Result:= SaveBackupFile(json, Extension);
-
-  if Result.GetValue<Boolean>('ok') then
-    TFile.Delete(Result.GetValue<string>('data'));
-end;
-
-function HandleSaveBackup(const json: TJSONObject; const Extension: TExtension): TJSONObject;
-begin
-  Result:= SaveBackupFile(json, Extension);
-
-  if Result.GetValue<Boolean>('ok') then
+  if IsTestSave then
+    TFile.Delete(FileFullPath)
+  else
     DeleteBackupFiles(Extension);
 end;
 
@@ -433,7 +430,6 @@ begin
 
   var Handlers := TDictionary<string, TActionHandler>.Create;
   try
-    Handlers.Add('test-save-backup', HandleTestSaveBackup);
     Handlers.Add('save-backup', HandleSaveBackup);
     Handlers.Add('get-last-backup', HandleGetLastBackup);
     Handlers.Add('get-backup-folder', HandleGetBackupFolder);

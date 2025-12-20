@@ -37,14 +37,11 @@ export default {
             });
         },
         insertVariableToFilePath(variable) {
-            const {selectionStart, selectionEnd} = this.$refs.autoBackupFilePathFile;
-            let filePath = this.options.autoBackupFilePathFile;
-
-            filePath = filePath.slice(0, selectionStart) +
-                `{${variable}}` +
-                filePath.slice(selectionEnd, filePath.length);
-
-            this.options.autoBackupFilePathFile = filePath;
+            this.options.autoBackupFilePathFile = Utils.insertVariable(
+                this.$refs.autoBackupFilePathFile,
+                this.options.autoBackupFilePathFile,
+                variable
+            );
         },
         openBackupFolder() {
             File.openBackupFolder();

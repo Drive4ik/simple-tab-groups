@@ -114,14 +114,11 @@ export default {
             }
         },
         insertVariableToFilePath(variable) {
-            const {selectionStart, selectionEnd} = this.$refs.autoBackupFilePathHost;
-            let filePath = this.options.autoBackupFilePathHost;
-
-            filePath = filePath.slice(0, selectionStart) +
-                `{${variable}}` +
-                filePath.slice(selectionEnd, filePath.length);
-
-            this.options.autoBackupFilePathHost = filePath;
+            this.options.autoBackupFilePathHost = Utils.insertVariable(
+                this.$refs.autoBackupFilePathHost,
+                this.options.autoBackupFilePathHost,
+                variable
+            );
         },
 
         async openBackupFolder() {
