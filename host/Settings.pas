@@ -58,12 +58,19 @@ const
   SettingsFileName = 'settings.ini';
 begin
   ExeInfo:= GetExeInfo;
-
-  if TFile.Exists(ExeInfo.FilePath + SettingsFileName) then
-    SettingsIni := TMemIniFile.Create(ExeInfo.FilePath + SettingsFileName, TEncoding.Unicode)
-  else begin
-    SettingsIni := TRegistryIniFile.Create('Software\STGHost');
-    TRegistryIniFile(SettingsIni).RegIniFile.RootKey := HKEY_CURRENT_USER;
+  try
+    if TFile.Exists(ExeInfo.FilePath + SettingsFileName) then
+      SettingsIni := TMemIniFile.Create(ExeInfo.FilePath + SettingsFileName, TEncoding.Unicode)
+    else begin
+      SettingsIni := TRegistryIniFile.Create('Software\STGHost');
+      TRegistryIniFile(SettingsIni).RegIniFile.RootKey := HKEY_CURRENT_USER;
+    end;
+  except
+    on E: Exception do
+    begin
+      // don't know what to do, it happens when there are lot of calls
+      Halt;
+    end;
   end;
 end;
 
@@ -123,7 +130,15 @@ initialization
   InitSettings;
 
 finalization
-  SettingsIni.UpdateFile;
+  try
+    SettingsIni.UpdateFile;
+  except
+    on E: Exception do
+      begin
+        // don't know what to do, it happens when there are lot of calls
+        Halt;
+      end;
+  end;
   AllowedExtensionsMap.Free;
 
 end.
