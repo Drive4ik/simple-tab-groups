@@ -107,7 +107,7 @@ object MainForm: TMainForm
         Width = 107
         Height = 19
         Anchors = [akLeft, akBottom]
-        Caption = 
+        Caption =
           '<a href="https://addons.mozilla.org/firefox/addon/simple-tab-gro' +
           'ups/">WebExtension page</a>'
         TabOrder = 3
@@ -188,7 +188,7 @@ object MainForm: TMainForm
         Width = 107
         Height = 19
         Anchors = [akLeft, akBottom]
-        Caption = 
+        Caption =
           '<a href="https://addons.mozilla.org/firefox/addon/stg-plugin-gro' +
           'up-notes/">WebExtension page</a>'
         TabOrder = 3

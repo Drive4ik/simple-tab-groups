@@ -3,7 +3,13 @@
 #
 
 # Delphi form module
-*.dfm  text
+*.dfm  text eol=crlf diff
+
+# Unit with Pascal code
+*.pas  text eol=crlf diff=pascal
+
+# Lazarus resource form file
+*.rc   text diff
 
 # Delphi project options file
 *.dof  text
