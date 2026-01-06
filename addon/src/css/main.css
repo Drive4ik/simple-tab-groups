@@ -158,3 +158,56 @@ input {
 }
 
 /*BULMA REWRITE END*/
+
+/* circle-progress */
+@property --progress-percent {
+    syntax: '<percentage>';
+    initial-value: 0%;
+    inherits: true;
+}
+
+.circle-progress {
+    --progress-color: var(--current-color, var(--bulma-body-color));
+    --progress-duration: var(--bulma-duration);
+    --progress-width: 3px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    height: 100%;
+    width: 100%;
+    border-radius: 50%;
+    z-index: 1;
+
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        z-index: -1;
+
+        background: conic-gradient(
+            var(--progress-color) var(--progress-percent),
+            transparent 0
+        );
+        mask: radial-gradient(
+            closest-side,
+            transparent calc(100% - var(--progress-width)),
+            black calc(100% - var(--progress-width) + 0.5px)
+        );
+    }
+
+    &:not([style*="percent: 0%"]) {
+        transition: --progress-percent var(--progress-duration);
+    }
+
+    &.is-success {
+        --progress-color: hsl(153, 53%, 53%);
+    }
+    &.is-danger {
+        --progress-color: red;
+    }
+}
+
+/* end circle-progress */

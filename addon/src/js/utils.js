@@ -640,7 +640,9 @@ export function getFilePathVariables() {
     };
 
     for (const key in variables) {
-        variables[key] = variables[key].replaceAll(':', '-');
+        variables[key] = variables[key]
+            .replaceAll(':', '-')
+            .replaceAll('/', '-');
     }
 
     return variables;

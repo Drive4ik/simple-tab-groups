@@ -205,6 +205,7 @@ export default {
 
             hasHost: false,
             loadingRestoreLastHostBackup: false,
+            restoreLastBackupProgress: 0,
 
             defaultBookmarksParents: [],
 
@@ -369,48 +370,49 @@ export default {
         },
 
         async importAddonSettings() {
-            let data = null;
+            let file = null;
 
             try {
-                data = await File.load();
+                file = await File.loadJson();
             } catch (e) {
                 Notification(e);
                 return;
             }
 
             if (
-                'object' !== Utils.type(data) ||
-                'object' !== Utils.type(data.defaultGroupProps) ||
-                !Array.isArray(data.groups) ||
-                !data.version
+                !file.data?.version ||
+                !Array.isArray(file.data?.groups)
             ) {
                 Notification('This is wrong backup!');
                 return;
             }
 
-            const resultMigrate = await sendMessageModule('BG.runMigrateForData', data, false);
+            const resultMigrate = await sendMessageModule('BG.runMigrateForData', file.data, false);
 
             if (resultMigrate.migrated) {
-                data = resultMigrate.data;
+                file.data = resultMigrate.data;
             } else if (resultMigrate.error) {
                 Notification(resultMigrate.error);
                 return;
             }
 
-            this.setManageAddonSettings(data, 'importAddonSettingsTitle', false, true);
+            const title = this.lang('importAddonSettingsTitle') + ': ' + file.name;
+            this.setManageAddonSettings(file.data, title, false, true);
         },
 
         async importSettingsOldTabGroupsAddonButton() {
-            let oldOptions = null;
+            let file = null,
+                oldOptions = null;
 
             try {
-                oldOptions = await File.load();
+                file = await File.loadJson();
+                oldOptions = file.data;
             } catch (e) {
                 Notification(e);
                 return;
             }
 
-            if (!oldOptions || !Array.isArray(oldOptions.windows) || !oldOptions.session) {
+            if (!Array.isArray(oldOptions?.windows) || !oldOptions.session) {
                 Notification('This is not "Tab Groups" backup!');
                 return;
             }
@@ -479,14 +481,17 @@ export default {
                 data.groups.push(...Object.values(groups));
             });
 
-            this.setManageAddonSettings(data, 'importSettingsOldTabGroupsAddonTitle');
+            const title = this.lang('importSettingsOldTabGroupsAddonTitle') + ': ' + file.name;
+            this.setManageAddonSettings(data, title);
         },
 
         async importSettingsPanoramaViewAddonButton() {
-            let panoramaOptions = null;
+            let file = null,
+                panoramaOptions = null;
 
             try {
-                panoramaOptions = await File.load();
+                file = await File.loadJson();
+                panoramaOptions = file.data;
             } catch (e) {
                 Notification(e);
                 return;
@@ -561,14 +566,17 @@ export default {
                 return;
             }
 
-            this.setManageAddonSettings(data, 'importSettingsPanoramaViewAddonTitle', true);
+            const title = this.lang('importSettingsPanoramaViewAddonTitle') + ': ' + file.name;
+            this.setManageAddonSettings(data, title, true);
         },
 
         async importSettingsSyncTabGroupsAddonButton() {
-            let syncTabOptions = null;
+            let file = null,
+                syncTabOptions = null;
 
             try {
-                syncTabOptions = await File.load();
+                file = await File.loadJson();
+                syncTabOptions = file.data;
             } catch (e) {
                 Notification(e);
                 return;
@@ -608,29 +616,35 @@ export default {
                 data.pinnedTabs.push(...tabs.filter(tab => tab.pinned));
             });
 
-            this.setManageAddonSettings(data, 'importSettingsSyncTabGroupsAddonTitle', true);
+            const title = this.lang('importSettingsSyncTabGroupsAddonTitle') + ': ' + file.name;
+            this.setManageAddonSettings(data, title, true);
         },
 
         async tryRestoreLastHostBackup() {
             try {
                 this.loadingRestoreLastHostBackup = true;
 
-                const data = await Host.getLastBackup();
+                let data;
+                const response = await Host.getLastBackup(progress => this.restoreLastBackupProgress = progress);
 
-                const resultMigrate = await sendMessageModule('BG.runMigrateForData', data, false);
+                const resultMigrate = await sendMessageModule('BG.runMigrateForData', response.data, false);
 
                 if (resultMigrate.migrated) {
                     data = resultMigrate.data;
                 } else if (resultMigrate.error) {
                     Notification(resultMigrate.error);
                     return;
+                } else {
+                    data = response.data;
                 }
 
-                this.setManageAddonSettings(data, 'importAddonSettingsTitle', false, true);
+                const title = this.lang('importAddonSettingsTitle') + ': ' + response.relativeFilePath;
+                this.setManageAddonSettings(data, title, false, true);
             } catch (e) {
                 Notification(e);
             } finally {
                 this.loadingRestoreLastHostBackup = false;
+                this.restoreLastBackupProgress = 0;
             }
         },
 
@@ -1200,6 +1214,12 @@ export default {
                             </figure>
                         </span>
                         <span v-text="lang('restoreLastBackup')"></span>
+                        <span v-if="loadingRestoreLastHostBackup" class="icon">
+                            <div class="circle-progress" :style="{
+                                    '--progress-percent': `${restoreLastBackupProgress}%`,
+                                }"
+                                ></div>
+                        </span>
                     </button>
                 </div>
             </div>
@@ -1506,7 +1526,7 @@ export default {
     <popup
         v-if="manageAddonSettings"
         ref="mng"
-        :title="lang(manageAddonSettingsTitle)"
+        :title="manageAddonSettingsTitle"
         @close-popup="manageAddonSettings = null"
         @save="() => {
             $refs.mng.buttonsClone = [{lang: 'ok'}];

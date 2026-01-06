@@ -89,19 +89,19 @@ export async function selectBackupFolder() {
     return data;
 }
 
-export async function getLastBackup() {
-    const {data} = await getLastBackupPartByParts();
-    return data;
+export async function getLastBackup(progressFunc = null) {
+    return await getLastBackupPartByParts(progressFunc);
 }
 
-async function getLastBackupPartByParts(partIndex = 0, prevData = '') {
+async function getLastBackupPartByParts(progressFunc = null, partIndex = 0, prevData = '') {
     const response = await sendMessage('get-last-backup', {partIndex});
 
-    if (['base64', 'json'].some(step => response.encoding?.includes(step))) {
+    if (['base64', 'json'].some(encoding => response.encoding?.includes(encoding))) {
         response.data = prevData + response.data;
 
         if (response.nextPartIndex) {
-            return await getLastBackupPartByParts(response.nextPartIndex, response.data);
+            progressFunc?.(Math.floor(response.nextPartIndex / response.lastPartIndex * 100));
+            return await getLastBackupPartByParts(progressFunc, response.nextPartIndex, response.data);
         }
     }
 

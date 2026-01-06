@@ -4,7 +4,7 @@
     "browser_specific_settings": {
         "gecko": {
             "id": "simple-tab-groups@drive4ik",
-            "strict_min_version": "117.0"
+            "strict_min_version": "128.0"
         }
     },
 

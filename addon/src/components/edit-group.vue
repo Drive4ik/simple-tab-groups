@@ -228,14 +228,10 @@ export default {
                 return;
             }
 
-            let iconUrl = await File.load('.ico,.png,.jpg,.svg', 'url');
-
-            try {
-                iconUrl = await Utils.normalizeGroupIcon(iconUrl);
-                this.setIconUrl(iconUrl);
-            } catch (e) {
-                Notification(e);
-            }
+            await File.load('image/x-icon, image/png, image/jpeg, image/svg+xml', 'url')
+                .then(file => Utils.normalizeGroupIcon(file.data))
+                .then(iconUrl => this.setIconUrl(iconUrl))
+                .catch(Notification);
         },
 
         async setPermissionsBookmarks(event, groupOptionKey) {

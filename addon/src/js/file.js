@@ -6,61 +6,58 @@ import * as Storage from './storage.js';
 
 const logger = new Logger('File');
 
-export async function load(accept = '.json', readAs = 'json') { // readAs: json, text, url
-    if (!['json', 'text', 'url'].includes(readAs)) {
+export async function load(accept = '*/*', readAs = 'text') { // readAs: text, url
+    if (!['text', 'url'].includes(readAs)) {
         throw Error('wrong readAs parameter');
     }
 
-    let result = await new Promise(function(resolve, reject) {
-        let fileInput = document.createElement('input');
+    const {promise, resolve, reject} = Promise.withResolvers();
 
-        fileInput.type = 'file';
-        fileInput.accept = accept;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = accept;
+    input.initialValue = input.value;
 
-        if ('json' === readAs || 'text' === readAs) {
-            fileInput.acceptCharset = 'utf-8';
+    input.addEventListener('change', () => {
+        if (input.initialValue === input.value) {
+            return reject('no changes');
         }
 
-        fileInput.initialValue = fileInput.value;
+        const [file] = input.files;
 
-        fileInput.onchange = function() {
-            if (fileInput.value === fileInput.initialValue) {
-                reject('no changes');
-                return;
-            }
+        if (!file.size) {
+            return reject('empty file');
+        } else if (file.size > 2048e6) {
+            return reject('The file exceeds 2GB');
+        }
 
-            let file = fileInput.files[0];
+        const reader = new FileReader();
 
-            if (0 === file.size) {
-                reject('empty file');
-                return;
-            }
+        reader.addEventListener('loadend', () => {
+            file.data = reader.result;
+            resolve(file);
+        });
+        reader.addEventListener('error', reject);
+        reader.addEventListener('abort', reject);
 
-            if (file.size > 500e6) {
-                reject('500MB backup? I don\'t believe you');
-                return;
-            }
-
-            let reader = new FileReader();
-
-            reader.addEventListener('loadend', () => resolve(reader.result));
-            reader.addEventListener('error', reject);
-
-            if ('json' === readAs || 'text' === readAs) {
-                reader.readAsText(file, 'utf-8');
-            } else if ('url' === readAs) {
-                reader.readAsDataURL(file);
-            }
-        };
-
-        fileInput.click();
+        if ('url' === readAs) {
+            reader.readAsDataURL(file);
+        } else {
+            reader.readAsText(file);
+        }
     });
 
-    if ('json' === readAs) {
-        return JSON.parse(result);
-    }
+    input.click();
 
-    return result;
+    return promise;
+}
+
+export async function loadJson() {
+    const file = await load('application/json', 'text');
+
+    file.data = JSON.parse(file.data);
+
+    return file;
 }
 
 // data : Object/Array/Text

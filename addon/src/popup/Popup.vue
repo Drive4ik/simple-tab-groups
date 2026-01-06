@@ -1196,15 +1196,11 @@ export default {
             @keydown.enter="syncCloudClickInPopup"
             :title="syncTitle"
             >
-            <div
-                class="circle-progress"
-                :class="{
-                    'in-progress': syncCloudInProgress,
+            <div class="circle-progress" :class="{
                     'is-success': !syncCloudErrorMessage && syncCloudProgress === 100,
                     'is-danger': !!syncCloudErrorMessage,
-                }"
-                :style="{
-                    '--sync-progress-percent': `${syncCloudProgress}%`,
+                }" :style="{
+                    '--progress-percent': `${syncCloudProgress}%`,
                 }"
                 >
                 <figure class="image is-16x16">
@@ -1354,11 +1350,6 @@ export default {
 </template>
 
 <style>
-@property --sync-progress-percent {
-    syntax: '<percentage>';
-    initial-value: 0%;
-    inherits: false;
-}
 
 :root {
     --popup-width: 450px;
@@ -1488,36 +1479,6 @@ html {
         }
 
         .circle-progress {
-            --progress-color: hsl(from currentColor h s calc(l + 70));
-            --progress-background: var(--current-background-color);
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            height: 100%;
-            width: 100%;
-            border-radius: 50%;
-            background:
-                radial-gradient(
-                    closest-side,
-                    var(--progress-background) 85%, transparent 80% 100%
-                ),
-                conic-gradient(
-                    var(--progress-color) var(--sync-progress-percent),
-                    transparent 0
-                );
-
-            &.in-progress {
-                transition: --sync-progress-percent linear .3s;
-            }
-            &.is-success {
-                --progress-color: hsl(153, 53%, 53%);
-            }
-            &.is-danger {
-                --progress-color: red;
-            }
-
             #sync-error-icon {
                 position: absolute;
                 right: 0;
