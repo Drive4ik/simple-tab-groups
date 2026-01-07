@@ -1,0 +1,13 @@
+{
+    "include": ["src/**/*.js"],
+
+    "compilerOptions": {
+        "target": "es2024",
+        "module": "esnext"
+    },
+
+    "vueCompilerOptions": {
+        "extensions": [".vue"],
+        "target": 2.7
+    }
+}

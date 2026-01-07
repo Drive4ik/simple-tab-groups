@@ -14,16 +14,17 @@
         "vue-swatches": "^2.1.1"
     },
     "devDependencies": {
-        "copy-webpack-plugin": "^11.0.0",
-        "css-loader": "^6.11.0",
-        "eslint": "^9.20.0",
-        "eslint-plugin-vue": "^9.32.0",
-        "fs-extra": "^11.3.0",
-        "mini-css-extract-plugin": "^2.9.2",
+        "copy-webpack-plugin": "^13.0.1",
+        "css-loader": "^7.1.2",
+        "eslint": "^9.39.2",
+        "eslint-plugin-vue": "^10.6.2",
+        "fs-extra": "^11.3.3",
+        "globals": "^17.0.0",
+        "mini-css-extract-plugin": "^2.9.4",
         "vue-loader": "^15.11.1",
-        "vue-template-compiler": "^0.1.0",
-        "webpack": "^5.97.1",
+        "vue-template-compiler": "^2.7.16",
+        "webpack": "^5.104.1",
         "webpack-cli": "^6.0.1",
-        "zip-a-folder": "^3.1.8"
+        "zip-a-folder": "^4.0.4"
     }
 }

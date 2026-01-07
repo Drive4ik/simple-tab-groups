@@ -1,4 +1,5 @@
-### Instructions for Mozilla reviewers
+
+# Instructions for Mozilla reviewers
 
 I have the source code in the vue and js files. With the command `npm run build` you create a build on pure js which is located in the dist folder.
 The `npm run build-zip` command will create 2 zip archives in the `dist-zip` folder.
@@ -7,21 +8,21 @@ The file `simple-tab-groups@drive4ik-v5.0-prod.zip` has compiled code from the c
 All these commands and their execution are described in the `package.json` file.
 How the build is going and with what settings you can also see in the file `webpack.config.mjs`
 
-I use Windows 10 x64
+I use Windows 11 x64
 
-```
+```bash
 $ node -v
-v22.13.1
+v24.12.0
 
 $ npm -v
-10.9.2
+11.6.2
 ```
 
 Build code:
 
 ```bash
-$ npm install
-$ npm run build
+npm install
+npm run build
 ```
 
 This code will be located in the `dist` folder.
@@ -29,18 +30,18 @@ This code will be located in the `dist` folder.
 Create ZIP archives:
 
 ```bash
-$ npm install
-$ npm run build-zip
+npm install
+npm run build-zip
 ```
 
-### Third-party libraries
+## Third-party libraries
 
 This addon uses the third-party javascript library - Vue.
 The Vue framework does not have an official CDN. So I took the file "vue.runtime.esm.js" from the CDN which is listed on their official website:
-https://v2.vuejs.org/v2/guide/installation.html#CDN
+<https://v2.vuejs.org/v2/guide/installation.html#CDN>
 
 The file `src/js/vue.runtime.esm.js` has version `2.7.16`, and downloaded from:
-https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.runtime.esm.js
+<https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.runtime.esm.js>
 
 This is the stable production version.
 
