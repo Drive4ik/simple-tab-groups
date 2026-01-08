@@ -74,6 +74,7 @@ function createProxy(storage, prefix, delimiter = '/') {
             prop = getKey(prop);
             return Reflect.deleteProperty(target, prop);
         },
+        // eslint-disable-next-line no-unused-vars
         getOwnPropertyDescriptor(target, prop) { // need for ownKeys
             return {
                 configurable: true,

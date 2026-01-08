@@ -27,7 +27,7 @@ async function loadHotkeys(errorCounter = 0) {
         if (++errorCounter < 100) {
             setTimeout(loadHotkeys, 200, errorCounter);
         } else {
-            console.error('[STG] Can\'t load hotkeys from storage');
+            console.error('[STG] Can\'t load hotkeys from storage', e);
         }
     }
 }

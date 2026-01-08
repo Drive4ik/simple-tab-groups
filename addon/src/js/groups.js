@@ -647,7 +647,7 @@ function isCatchedUrl(url, catchTabRules) {
         .some(regExpStr => {
             try {
                 return new RegExp(regExpStr).test(url);
-            } catch (e) {}
+            } catch {}
         });
 }
 
@@ -811,7 +811,7 @@ export function getIconUrl(group, keyInObj = null) {
 
         try {
             result = Utils.convertSvgToUrl(svg.trim());
-        } catch (e) {
+        } catch {
             result = getIconUrl(UNKNOWN_GROUP_ICON_PROPS);
         }
     }

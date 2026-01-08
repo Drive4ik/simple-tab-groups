@@ -3697,7 +3697,7 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
                         if (Array.isArray(errorLogs) && errorLogs.length) {
                             localStorage.create(Constants.MODULES.LOGGER).errors = errorLogs;
                         }
-                    } catch (e) {}
+                    } catch {}
                 }
 
                 // ! MIGRATE group ids from small int to UUID
@@ -4290,7 +4290,7 @@ async function init() {
                 if (win.groupId) {
                     groupsHistory.add(win.groupId);
                 }
-            } catch (e) {}
+            } catch {}
         }));
 
         let tabs = Utils.concatTabs(windows);

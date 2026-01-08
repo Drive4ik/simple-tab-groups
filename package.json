@@ -1,0 +1,12 @@
+{
+    "name": "stg-root",
+    "version": "1.0.0",
+    "description": "stg root packages",
+    "author": "Drive4ik <drive4ik+stg@protonmail.com>",
+    "type": "module",
+    "dependencies": {
+        "eslint": "^9.39.2",
+        "eslint-plugin-vue": "^10.6.2",
+        "globals": "^17.0.0"
+    }
+}

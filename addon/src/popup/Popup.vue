@@ -1,7 +1,7 @@
 <script>
 import Vue from 'vue';
 
-import popup from '../components/popup.vue';
+// import popup from '../components/popup.vue';
 import popupHelpers from '../components/popup-helpers.vue';
 import editGroupPopup from './edit-group-popup.vue';
 import editGroup from '../components/edit-group.vue';
@@ -72,7 +72,7 @@ export default {
         };
     },
     components: {
-        popup: popup,
+        // popup: popup,
         'popup-helpers': popupHelpers,
         'edit-group-popup': editGroupPopup,
         'edit-group': editGroup,
@@ -593,7 +593,6 @@ export default {
                     event.stopPropagation();
                     event.dataTransfer.dropEffect = 'move';
                     return false;
-                    break;
                 case 'dragleave':
                     event.stopPropagation();
                     this.$emit('drag-over', data.item, false);
@@ -608,7 +607,6 @@ export default {
                     }
 
                     return false;
-                    break;
                 case 'dragend':
                     event.stopPropagation();
                     this.$emit('drag-moving', this.dragData.data.item, false);
@@ -757,7 +755,7 @@ export default {
                     :placeholder="lang('searchOrGoToActive')" />
                 <span class="icon is-small is-left">
                     <figure class="image is-16x16">
-                        <img class="no-fill" src="/icons/search.svg"></img>
+                        <img class="no-fill" src="/icons/search.svg" />
                     </figure>
                 </span>
             </div>

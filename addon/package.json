@@ -16,10 +16,7 @@
     "devDependencies": {
         "copy-webpack-plugin": "^13.0.1",
         "css-loader": "^7.1.2",
-        "eslint": "^9.39.2",
-        "eslint-plugin-vue": "^10.6.2",
         "fs-extra": "^11.3.3",
-        "globals": "^17.0.0",
         "mini-css-extract-plugin": "^2.9.4",
         "vue-loader": "^15.11.1",
         "vue-template-compiler": "^2.7.16",

@@ -1,5 +1,9 @@
 {
-    "include": ["src/**/*.js"],
+    "include": [
+        "addon/**/*.js",
+        "plugins/**/*.js",
+        "translate/**/*.js",
+    ],
 
     "compilerOptions": {
         "target": "es2024",

@@ -327,10 +327,10 @@ export function errorEventHandler(event) {
         console.error(event.message, event);
     }
 
-    showErrorNotificationMessage(logger);
+    showErrorNotificationMessage();
 }
 
-function showErrorNotificationMessage(logger) {
+function showErrorNotificationMessage() {
     if (Constants.IS_BACKGROUND_PAGE) {
         self.onBackgroundMessage('show-error-notification', self);
     } else {

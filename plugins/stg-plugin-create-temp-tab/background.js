@@ -10,7 +10,7 @@ browser.action.onClicked.addListener(async () => {
         if (!responce.ok) {
             Utils.notify('error', responce.error);
         }
-    } catch (e) {
+    } catch {
         Utils.notify('needInstallSTGExtension', browser.i18n.getMessage('needInstallSTGExtension'), {
             timerSec: 10,
             onClick: {

@@ -9,8 +9,18 @@ export default defineConfig([
     ...pluginVue.configs['flat/vue2-essential'],
 
     {
-        files: ['**/*.js', '**/*.vue'],
-        ignores: ['dist/', 'node_modules/', 'src/js/vue.runtime.esm.js'],
+        files: [
+            'addon/**/*.js',
+            'addon/**/*.vue',
+
+            'plugins/**/*.js',
+            'translate/**/*.js',
+        ],
+        ignores: [
+            'addon/dist/',
+            'addon/node_modules/',
+            'addon/src/js/vue.runtime.esm.js',
+        ],
         languageOptions: {
             sourceType: 'module',
             globals: {

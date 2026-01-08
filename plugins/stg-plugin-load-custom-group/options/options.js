@@ -36,7 +36,7 @@ browser.runtime.onMessageExternal.addListener(async (request, sender) => {
 
 try {
     await init();
-} catch (e) {
+} catch {
     needInstallSTGExtension.href = Constants.STG_HOME_PAGE;
     needInstallSTGExtension.classList = 'showing';
 }

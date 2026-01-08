@@ -49,7 +49,7 @@ browser.action.onClicked.addListener(async () => {
             createNewTab();
             Utils.notify('error', error);
         }
-    } catch (e) {
+    } catch {
         createNewTab();
         Utils.notify('needInstallSTGExtension', browser.i18n.getMessage('needInstallSTGExtension'), {
             timerSec: 10,

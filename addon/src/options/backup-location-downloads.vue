@@ -3,7 +3,7 @@
 import contextMenu from '../components/context-menu.vue';
 
 import '/js/prefixed-storage.js';
-import * as Constants from '/js/constants.js';
+// import * as Constants from '/js/constants.js';
 import Notification from '/js/notification.js';
 import * as Utils from '/js/utils.js';
 import * as File from '/js/file.js';

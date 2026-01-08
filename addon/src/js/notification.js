@@ -14,6 +14,7 @@ if (Constants.IS_BACKGROUND_PAGE) {
         }
     });
 
+    // eslint-disable-next-line no-unused-vars
     browser.notifications.onClosed.addListener((notificationId, byUser) => {
         const options = notificationsMap.get(notificationId);
 

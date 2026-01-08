@@ -99,7 +99,7 @@ browser.runtime.onInstalled.addListener(async ({reason, previousVersion}) => {
 
     try {
         await Utils.sendExternalMessage('ignore-ext-for-reopen-container');
-    } catch (e) {
+    } catch {
         Utils.notify('needInstallSTGExtension', browser.i18n.getMessage('needInstallSTGExtension'), {
             timerSec: 10,
             onClick: {

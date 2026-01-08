@@ -41,7 +41,7 @@ browser.action.onClicked.addListener(async () => {
         } else {
             browser.runtime.openOptionsPage();
         }
-    } catch (e) {
+    } catch {
         setBrowserAction();
         Utils.notify('needInstallSTGExtension', browser.i18n.getMessage('needInstallSTGExtension'), {
             timerSec: 10,
@@ -69,7 +69,7 @@ async function updateBrowserAction(group = null) {
         }
 
         await setBrowserAction(group?.title, group?.iconUrl);
-    } catch (e) {
+    } catch {
         await setBrowserAction();
     }
 }

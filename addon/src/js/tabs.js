@@ -11,7 +11,7 @@ import * as Containers from './containers.js';
 import * as Management from './management.js';
 import * as Groups from './groups.js';
 import * as Windows from './windows.js';
-import * as Storage from './storage.js';
+// import * as Storage from './storage.js';
 
 const logger = new Logger('Tabs');
 
@@ -209,7 +209,7 @@ export async function getOne(tabId) {
         const tab = await browser.tabs.get(tabId);
         delete tab.groupId; // TODO temp
         return Utils.normalizeTabUrl(tab);
-    } catch (e) {
+    } catch {
         return null;
     }
 }

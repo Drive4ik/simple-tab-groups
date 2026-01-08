@@ -5,7 +5,7 @@ import popup from '../components/popup.vue';
 import editGroup from '../components/edit-group.vue';
 import manageAddonBackup from './manage-addon-backup.vue';
 import githubGist from './github-gist.vue';
-import contextMenu from '../components/context-menu.vue';
+// import contextMenu from '../components/context-menu.vue';
 import backupLocationDownloads from './backup-location-downloads.vue';
 import backupLocationHost from './backup-location-host.vue';
 
@@ -13,7 +13,7 @@ import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
 import * as Messages from '/js/messages.js';
 import Logger, {errorEventHandler} from '/js/logger.js';
-import {objToNativeError} from '/js/logger-utils.js';
+// import {objToNativeError} from '/js/logger-utils.js';
 import Notification from '/js/notification.js';
 import * as Utils from '/js/utils.js';
 import * as Management from '/js/management.js';
@@ -219,7 +219,7 @@ export default {
         'edit-group': editGroup,
         'manage-addon-backup': manageAddonBackup,
         'github-gist': githubGist,
-        'context-menu': contextMenu,
+        // 'context-menu': contextMenu,
         'backup-location-downloads': backupLocationDownloads,
         'backup-location-host': backupLocationHost,
     },
@@ -597,7 +597,7 @@ export default {
                 pinnedTabs: [],
             };
 
-            syncTabOptions.groups.forEach(function({id, title, tabs}) {
+            syncTabOptions.groups.forEach(function({title, tabs}) {
                 tabs = tabs
                     .map(function({url, title, favIconUrl, pinned}) {
                         url = Utils.normalizeUrl(url);
@@ -1399,7 +1399,7 @@ export default {
             <div class="donate-section mb-6">
                 <div class="columns is-mobile is-multiline is-2">
                     <template v-for="(item, name) in DONATE_ITEMS">
-                        <div class="column is-one-fifth is-align-content-center">
+                        <div class="column is-one-fifth is-align-content-center" :key="name + '1'">
                             <span class="icon-text">
                                 <span class="icon">
                                     <figure class="image is-16x16">
@@ -1414,7 +1414,7 @@ export default {
                                 </span>
                             </span>
                         </div>
-                        <div class="column is-four-fifths">
+                        <div class="column is-four-fifths" :key="name + '2'">
                             <div class="is-flex is-align-items-center gap-indent">
                                 <a v-if="item.link" data-copy-target :href="item.link" target="_blank" v-text="item.linkText"></a>
                                 <!-- eslint-disable-next-line vue/no-v-text-v-html-on-component -->

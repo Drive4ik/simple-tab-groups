@@ -1,13 +1,5 @@
-# gitignore file
 
-/.*/
-!/.github/
+.vscode/
 
-/STG-backups/
-
-/*.sublime-*
-
-/addon/node_modules/
-/addon/dist/
-/addon/dist-zip/
-/addon/package-lock.json
+node_modules/
+package-lock.json

@@ -4,7 +4,7 @@ import Vue from 'vue';
 import popup from '../components/popup.vue';
 import popupHelpers from '../components/popup-helpers.vue';
 import editGroup from '../components/edit-group.vue';
-import contextMenu from '../components/context-menu.vue';
+// import contextMenu from '../components/context-menu.vue';
 import contextMenuTab from '../components/context-menu-tab.vue';
 import contextMenuTabNew from '../components/context-menu-tab-new.vue';
 import contextMenuGroup from '../components/context-menu-group.vue';
@@ -57,7 +57,7 @@ export default {
         popup: popup,
         'popup-helpers': popupHelpers,
         'edit-group': editGroup,
-        'context-menu': contextMenu,
+        // 'context-menu': contextMenu,
         'context-menu-tab': contextMenuTab,
         'context-menu-tab-new': contextMenuTabNew,
         'context-menu-group': contextMenuGroup,
@@ -321,7 +321,6 @@ export default {
                     event.stopPropagation();
                     event.dataTransfer.dropEffect = 'move';
                     return false;
-                    break;
                 case 'dragleave':
                     event.stopPropagation();
                     this.$emit('drag-over', data.item, false);
@@ -336,7 +335,6 @@ export default {
                     }
 
                     return false;
-                    break;
                 case 'dragend':
                     event.stopPropagation();
                     this.$emit('drag-moving', this.dragData.data.item, false);
@@ -428,7 +426,7 @@ export default {
                             :readonly="isLoading" />
                         <span class="icon is-small is-left">
                             <figure class="image is-16x16">
-                                <img class="no-fill" src="/icons/search.svg"></img>
+                                <img class="no-fill" src="/icons/search.svg" />
                             </figure>
                         </span>
                     </div>
