@@ -25,7 +25,7 @@
             }
 
             return await blob.json();
-        } catch (e) {
+        } catch {
             return defaultValue;
         }
     }
@@ -94,6 +94,8 @@
                 if (this.locale.locale && this.locale.locale.length > 1) {
                     return this.contentUrlPrefix + this.componentPath + '/_locales/' + this.locale.locale + '/messages' + LOCALE_FILE_EXT;
                 }
+
+                return null;
             },
         },
 
@@ -130,7 +132,7 @@
                 if (this.currentLocaleUrl) {
                     try {
                         this.currentLocale = await load(this.currentLocaleUrl);
-                    } catch (e) {}
+                    } catch {}
                 }
             },
         },
