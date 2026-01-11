@@ -810,8 +810,8 @@
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "ブラウザーの設定で [前回のウィンドウとタブを開く] を有効にしてください。<br>これはグループとタブの間の通信を管理するために必要です。<br>これが無効になっている場合、ブラウザーの起動時にタブが開かず、アドオンからタブの情報が失われます。<br>つまり、アドオンの動作が停止するでしょう。",
-        "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
+        "message": "ブラウザーの設定で [前回のウィンドウとタブを開く] を有効にしてください。\nこれはグループとタブの間の通信を管理するために必要です。\nこれが無効になっている場合、ブラウザーの起動時にタブが開かず、アドオンからタブの情報が失われます。\nつまり、アドオンの動作が停止するでしょう。",
+        "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, \notherwise the tabs will not open when the browser starts and will be lost from the addon -\nthe addon will stop working."
     },
     "enableDebugTitle": {
         "message": "デバッグを有効にする",
@@ -1072,8 +1072,8 @@
         "description": "Install STG Addon"
     },
     "helpPageDbErrorReinstallDescription7": {
-        "message": "最新の STG アドオンのデータのバックアップを Firefox のダウンロードフォルダー \"STG-backups\" から復元してください。<br>アドオンの設定でバックアップから復元できます。",
-        "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".<br>You can restore backup in addon settings"
+        "message": "最新の STG アドオンのデータのバックアップを Firefox のダウンロードフォルダー \"STG-backups\" から復元してください。\nアドオンの設定でバックアップから復元できます。",
+        "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".\nYou can restore backup in addon settings"
     },
     "helpPageDbErrorReinstallOpenFFDownloadsFolder": {
         "message": "Firefox のダウンロードフォルダーを開きます",

@@ -22,14 +22,12 @@ object AboutForm: TAboutForm
   object InfoLabel: TLabel
     Left = 8
     Top = 78
-    Width = 333
+    Width = 335
     Height = 105
     Anchors = [akLeft, akTop, akRight, akBottom]
     AutoSize = False
     Caption = 'InfoLabel'
     WordWrap = True
-    ExplicitWidth = 335
-    ExplicitHeight = 135
   end
   object AppImage: TImage
     Left = 8
@@ -60,7 +58,7 @@ object AboutForm: TAboutForm
     Caption = 'DescriptionLabel'
   end
   object OKButton: TButton
-    Left = 253
+    Left = 255
     Top = 208
     Width = 88
     Height = 25
@@ -68,8 +66,6 @@ object AboutForm: TAboutForm
     Caption = 'OK'
     TabOrder = 0
     OnClick = OKButtonClick
-    ExplicitLeft = 251
-    ExplicitTop = 200
   end
   object GiHubLinkLabel: TLinkLabel
     Left = 8

@@ -774,8 +774,8 @@
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "브라우저 설정에서 \"이전 세션 복원\"을 활성화하십시오.<br>이는 그룹과 탭 간의 통신을 유지하는 데 필요합니다. 그렇지 않으면 <br>브라우저가 시작될 때 탭이 열리지 않고 확장 프로그램에서 손실됩니다. > 확장 프로그램이 작동을 멈춥니다.",
-        "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
+        "message": "브라우저 설정에서 \"이전 세션 복원\"을 활성화하십시오.\n이는 그룹과 탭 간의 통신을 유지하는 데 필요합니다. 그렇지 않으면 \n브라우저가 시작될 때 탭이 열리지 않고 확장 프로그램에서 손실됩니다 확장 프로그램이 작동을 멈춥니다.",
+        "description": "Please enable \"Open previous windows and tabs\" in browser settings.\nThis is necessary to maintain communication between the group and the tab, \notherwise the tabs will not open when the browser starts and will be lost from the addon -\nthe addon will stop working."
     },
     "enableDebugTitle": {
         "message": "디버그 활성화",
@@ -960,8 +960,8 @@
         "description": "Install STG Addon"
     },
     "helpPageDbErrorReinstallDescription7": {
-        "message": "Firefox 다운로드 폴더 \"STG-backups\"에 있는 최신 Simple Tab Groups 확장 프로그램 데이터 백업을 복원합니다.<br>확장 프로그램 설정에서 백업을 복원할 수 있습니다.",
-        "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".<br>You can restore backup in addon settings"
+        "message": "Firefox 다운로드 폴더 \"STG-backups\"에 있는 최신 Simple Tab Groups 확장 프로그램 데이터 백업을 복원합니다.\n확장 프로그램 설정에서 백업을 복원할 수 있습니다.",
+        "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".\nYou can restore backup in addon settings"
     },
     "helpPageDbErrorReinstallOpenFFDownloadsFolder": {
         "message": "Firefox 다운로드 폴더 열기",

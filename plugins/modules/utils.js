@@ -107,17 +107,17 @@ export function convertSvgToUrl(svg) {
 }
 
 export function toBase64(str, type) {
-    return `data:${type};base64,` + b64EncodeUnicode(str);
+    return `data:${type};base64,` + base64Encode(str);
 }
 
-function b64EncodeUnicode(str) {
-    // first we use encodeURIComponent to get percent-encoded UTF-8,
-    // then we convert the percent encodings into raw bytes which
-    // can be fed into btoa.
-    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
-        function toSolidBytes(match, p1) {
-            return String.fromCharCode('0x' + p1);
-        }));
+export function base64Encode(str) {
+    const bytes = new TextEncoder().encode(str);
+    return btoa(String.fromCodePoint(...bytes));
+}
+
+export function base64Decode(str) {
+    const bytes = Uint8Array.from(Array.from(atob(str), char => char.codePointAt(0)));
+    return new TextDecoder().decode(bytes);
 }
 
 export async function readFileAsText(fileNode) {

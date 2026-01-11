@@ -1072,8 +1072,8 @@
         "description": "Install STG Addon"
     },
     "helpPageDbErrorReinstallDescription7": {
-        "message": "Restaura el último respaldo de los datos del complemento STG que se encuentra en la carpeta de descargas de Firefox \"STG-backups\".<br>Puedes restaurar el respaldo en la configuración del complemento",
-        "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".<br>You can restore backup in addon settings"
+        "message": "Restaura el último respaldo de los datos del complemento STG que se encuentra en la carpeta de descargas de Firefox \"STG-backups\".\nPuedes restaurar el respaldo en la configuración del complemento",
+        "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".\nYou can restore backup in addon settings"
     },
     "helpPageDbErrorReinstallOpenFFDownloadsFolder": {
         "message": "Abrir carpeta de descargas de Firefox",

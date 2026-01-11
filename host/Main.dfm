@@ -4,7 +4,7 @@ object MainForm: TMainForm
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'Simple Tab Groups Host'
-  ClientHeight = 208
+  ClientHeight = 217
   ClientWidth = 515
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -17,41 +17,46 @@ object MainForm: TMainForm
   OnShow = FormShow
   DesignSize = (
     515
-    208)
+    217)
   TextHeight = 15
   object CloseButton: TButton
     Left = 419
-    Top = 175
+    Top = 184
     Width = 88
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'Close'
     TabOrder = 3
     OnClick = CloseButtonClick
+    ExplicitLeft = 417
+    ExplicitTop = 167
   end
   object AboutButton: TButton
     Left = 8
-    Top = 175
+    Top = 184
     Width = 88
     Height = 25
     Anchors = [akLeft, akBottom]
     Caption = 'About'
     TabOrder = 1
     OnClick = AboutButtonClick
+    ExplicitTop = 167
   end
   object PageControl: TPageControl
     Left = 8
     Top = 8
     Width = 499
-    Height = 161
+    Height = 170
     ActivePage = STGTabSheet
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
+    ExplicitWidth = 497
+    ExplicitHeight = 153
     object STGTabSheet: TTabSheet
       Caption = 'Simple Tab Groups'
       DesignSize = (
         491
-        131)
+        140)
       object STGDeleteBackupDaysLabel: TLabel
         Left = 3
         Top = 57
@@ -76,6 +81,7 @@ object MainForm: TMainForm
         Caption = 'Browse...'
         TabOrder = 1
         OnClick = STGBackupBrowseButtonClick
+        ExplicitLeft = 398
       end
       object STGBackupFolderEdit: TLabeledEdit
         Left = 3
@@ -89,6 +95,7 @@ object MainForm: TMainForm
         TabOrder = 0
         Text = ''
         OnChange = STGBackupFolderEditChange
+        ExplicitWidth = 389
       end
       object STGDeleteBackupDaysEdit: TSpinEdit
         Left = 239
@@ -103,7 +110,7 @@ object MainForm: TMainForm
       end
       object STGLinkLabel: TLinkLabel
         Left = 3
-        Top = 109
+        Top = 118
         Width = 107
         Height = 19
         Anchors = [akLeft, akBottom]
@@ -113,6 +120,7 @@ object MainForm: TMainForm
         TabOrder = 3
         TabStop = True
         OnLinkClick = LabelLinkClick
+        ExplicitTop = 101
       end
       object STGKeepBackupFilesEdit: TSpinEdit
         Left = 239
@@ -132,7 +140,7 @@ object MainForm: TMainForm
       ImageIndex = 1
       DesignSize = (
         491
-        131)
+        140)
       object NotesDeleteBackupDaysLabel: TLabel
         Left = 3
         Top = 57
@@ -160,6 +168,7 @@ object MainForm: TMainForm
         TabOrder = 0
         Text = ''
         OnChange = NotesBackupFolderEditChange
+        ExplicitWidth = 389
       end
       object NotesBackupBrowseButton: TButton
         Left = 400
@@ -170,6 +179,7 @@ object MainForm: TMainForm
         Caption = 'Browse...'
         TabOrder = 1
         OnClick = NotesBackupBrowseButtonClick
+        ExplicitLeft = 398
       end
       object NotesDeleteBackupDaysEdit: TSpinEdit
         Left = 239
@@ -184,7 +194,7 @@ object MainForm: TMainForm
       end
       object NotesLinkLabel: TLinkLabel
         Left = 3
-        Top = 109
+        Top = 118
         Width = 107
         Height = 19
         Anchors = [akLeft, akBottom]
@@ -194,6 +204,7 @@ object MainForm: TMainForm
         TabOrder = 3
         TabStop = True
         OnLinkClick = LabelLinkClick
+        ExplicitTop = 101
       end
       object NotesKeepBackupFilesEdit: TSpinEdit
         Left = 239
@@ -224,12 +235,13 @@ object MainForm: TMainForm
   end
   object CheckUpdatesButton: TButton
     Left = 102
-    Top = 175
+    Top = 184
     Width = 143
     Height = 25
     Anchors = [akLeft, akBottom]
     Caption = 'Check for updates...'
     TabOrder = 2
     OnClick = CheckUpdatesButtonClick
+    ExplicitTop = 167
   end
 end

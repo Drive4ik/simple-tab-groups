@@ -1096,8 +1096,8 @@
         "description": "Install STG Addon"
     },
     "helpPageDbErrorReinstallDescription7": {
-        "message": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".<br>You can restore backup in addon settings",
-        "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".<br>You can restore backup in addon settings"
+        "message": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".\nYou can restore backup in addon settings",
+        "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".\nYou can restore backup in addon settings"
     },
     "helpPageDbErrorReinstallOpenFFDownloadsFolder": {
         "message": "Open Firefox downloads folder",
@@ -1450,7 +1450,7 @@
         "description": "What is this for?"
     },
     "helpPageHowToGithubGistWhatIsDesc": {
-        "message": "This is to synchronize your tabs and Simple Tab Groups settings between two or more computers.<br>Your data will be stored in a GitHub Gist file. This file will be private. Apart from you, no one will have access to it unless you yourself provide a GitHub Gist link to this data to another person. STG will only send this data to your GitHub account.",
+        "message": "This is to synchronize your tabs and Simple Tab Groups settings between two or more computers.\nYour data will be stored in a GitHub Gist file. This file will be private. Apart from you, no one will have access to it unless you yourself provide a GitHub Gist link to this data to another person. STG will only send this data to your GitHub account.",
         "description": "What is description"
     },
     "helpPageHowToGithubGistHowSetupQ": {

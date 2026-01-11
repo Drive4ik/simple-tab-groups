@@ -58,7 +58,7 @@ export default {
             <p class="modal-card-title is-flex-shrink-1 is-size-5" v-text="title"></p>
             <button class="delete" aria-label="close" @click="$emit('close-popup')"></button>
         </header>
-        <section class="modal-card-body">
+        <section class="modal-card-body white-space-pre-line">
             <slot></slot>
         </section>
         <footer v-if="buttonsClone.length" class="modal-card-foot is-justify-content-end gap-indent">
@@ -80,9 +80,5 @@ export default {
     --bulma-modal-card-head-padding: var(--bulma-block-spacing);
     --bulma-modal-card-body-padding: var(--bulma-block-spacing);
     --bulma-modal-content-width: 50rem;
-
-    .modal-card-body {
-        white-space: pre-line;
-    }
 }
 </style>

@@ -168,8 +168,6 @@ procedure TMainForm.CheckUpdatesButtonClick(Sender: TObject);
 var
   NewVersion, DefaultButtonTitle: String;
 begin
-  MainForm.Enabled:= false;
-
   try
     DefaultButtonTitle := CheckUpdatesButton.Caption;
     CheckUpdatesButton.Enabled := false;
@@ -209,8 +207,6 @@ begin
       MessageBox(Handle, PChar(E.ToString), PChar('Error'), MB_ICONERROR or MB_OK);
     end;
   end;
-
-  MainForm.Enabled:= true;
 end;
 
 procedure TMainForm.CloseButtonClick(Sender: TObject);

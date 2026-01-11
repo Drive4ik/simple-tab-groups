@@ -1072,8 +1072,8 @@
         "description": "Install STG Addon"
     },
     "helpPageDbErrorReinstallDescription7": {
-        "message": "Obnovte poslední zálohu doplňku, která se nachází mezi staženými soubory ve složce \"STG-backups.\"<br>Zálohu je možné obnovit v nastavení doplňku.",
-        "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".<br>You can restore backup in addon settings"
+        "message": "Obnovte poslední zálohu doplňku, která se nachází mezi staženými soubory ve složce \"STG-backups.\"\nZálohu je možné obnovit v nastavení doplňku.",
+        "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".\nYou can restore backup in addon settings"
     },
     "helpPageDbErrorReinstallOpenFFDownloadsFolder": {
         "message": "Otevřete složku stažených souborů",

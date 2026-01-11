@@ -1072,8 +1072,8 @@
         "description": "Install STG Addon"
     },
     "helpPageDbErrorReinstallDescription7": {
-        "message": "Възстановете последното резервно копие на данните на добавката STG, намиращо се в папката за изтегляния на Firefox, наречена „STG-Backups“.<br>Можете да го направите в настройките на добавката",
-        "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".<br>You can restore backup in addon settings"
+        "message": "Възстановете последното резервно копие на данните на добавката STG, намиращо се в папката за изтегляния на Firefox, наречена „STG-Backups“.\nМожете да го направите в настройките на добавката",
+        "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".\nYou can restore backup in addon settings"
     },
     "helpPageDbErrorReinstallOpenFFDownloadsFolder": {
         "message": "Папка за изтегляния на Firefox",
