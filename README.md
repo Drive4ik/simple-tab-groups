@@ -1,5 +1,5 @@
 
-# <img width="48" src="addon/src/icons/icon.svg" alt="Simple Tab Groups"> Simple Tab Groups
+# <img width="48" src="addon/src/icons/icon.svg" alt="main-icon"> Simple Tab Groups
 
 <https://addons.mozilla.org/firefox/addon/simple-tab-groups/>
 
