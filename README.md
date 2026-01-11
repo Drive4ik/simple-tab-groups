@@ -11,32 +11,23 @@ Please, help me [translate this addon](https://drive4ik.github.io/simple-tab-gro
 ## Usage
 
 ```bash
-$ cd addon
-$ npm install
-$ npm run build
+cd addon
+npm install
+npm run build
 ```
 
 ### `npm run build`
 
 Build the extension into `addon/dist` folder for **development**.
 
-### `npm run build-prod`
-
-Build the extension into `addon/dist` folder for **production**.
-
 ### `npm run watch`
 
 Watch for modifications then run `npm run build`.
-
-### `npm run watch-prod`
-
-Watch for modifications then run `npm run build-prod`.
 
 ### `npm run build-zip`
 
 Build a zip file following this format `<name>-v<version>-(dev|prod).zip`, by reading `name` and `version` from `manifest.json` file.
 Zip file is located in `dist-zip` folder.
-
 
 ## Description
 
@@ -44,20 +35,21 @@ Simple Tab Groups works across browser instances/windows too. If you select a gr
 
 This allows for easy switching between active and pre-loaded tabs across multiple browser windows.
 
-### This extension has these plugins:
+### This extension has these plugins
 
- * [Create new group](https://addons.mozilla.org/firefox/addon/stg-plugin-create-new-group/)
- * [Create new tab](https://addons.mozilla.org/firefox/addon/stg-plugin-create-new-tab/)
- * [Create new tab in temporary container](https://addons.mozilla.org/firefox/addon/stg-plugin-create-temp-tab/)
- * [Delete current group](https://addons.mozilla.org/firefox/addon/stg-plugin-del-current-group/)
- * [Group notes](https://addons.mozilla.org/firefox/addon/stg-plugin-group-notes/)
- * [Load custom group](https://addons.mozilla.org/firefox/addon/stg-plugin-load-custom-group/)
- * [Open Manage groups](https://addons.mozilla.org/firefox/addon/stg-plugin-manage-groups/)
+* [Create new group](https://addons.mozilla.org/firefox/addon/stg-plugin-create-new-group/)
+* [Create new tab](https://addons.mozilla.org/firefox/addon/stg-plugin-create-new-tab/)
+* [Create new tab in temporary container](https://addons.mozilla.org/firefox/addon/stg-plugin-create-temp-tab/)
+* [Delete current group](https://addons.mozilla.org/firefox/addon/stg-plugin-del-current-group/)
+* [Group notes](https://addons.mozilla.org/firefox/addon/stg-plugin-group-notes/)
+* [Load custom group](https://addons.mozilla.org/firefox/addon/stg-plugin-load-custom-group/)
+* [Open Manage groups](https://addons.mozilla.org/firefox/addon/stg-plugin-manage-groups/)
 
 Allow support message actions from Gesturify addon.
 Allow import groups from addons "Panorama View" and "Sync Tab Groups".
 
-### Work with Gesturefy addon
+### Work with [Gesturefy](https://addons.mozilla.org/firefox/addon/gesturefy/) addon
+
 [How to configure the work with the plugin Gesturefy](https://user-images.githubusercontent.com/7843031/44263498-dffb1b00-a227-11e8-95c7-1b9474199ef0.png)
 
 You have to copy and paste into Gesturefy addon
@@ -67,6 +59,7 @@ You have to copy and paste into Gesturefy addon
 `Parse message` -> `On`
 
 Supported actions:
+
 * `{"action": "add-new-group"}`
 * `{"action": "rename-group"}`
 * `{"action": "load-next-group"}`
@@ -89,56 +82,56 @@ Supported actions:
 * `{"action": "create-temp-tab"}`
 * `{"action": "create-backup"}`
 
-
 This extension may conflict with other programs similar in functionality.
 Conflicted addons:
- * Tab Open/Close Control
- * OneTab
- * Tiled Tab Groups
- * Totally not Panorama (Tab Groups with tab hiding)
- * Panorama Tab Groups
- * Panorama View (etc.)
+
+* Tab Open/Close Control
+* OneTab
+* Tiled Tab Groups
+* Totally not Panorama (Tab Groups with tab hiding)
+* Panorama Tab Groups
+* Panorama View (etc.)
 
 Open popup shortcut: `F8`. [You can change this hotkey](https://support.mozilla.org/kb/manage-extension-shortcuts-firefox)
 
 Current list of functionality / development notes:
 
- * Design like old add-on "Tab Groups"
- * Added colored group icon
- * Added the ability to import the backup groups of the old plug-in "Tab Groups"
- * Added support of "Firefox Multi-Account Containers"
- * Now fully supports multiple windows
- * Saves last active tab after change group
- * Show currently used group in addon icon (see screenshot)
- * Specially NOT supported Private (Incognito) Mode
- * Added close tab by middle mouse click
- * Added simple switching between groups and tabs in search mode using the up, down, right and left keys
- * "Manage groups" functional is here! (so far only "Grid")
- * Added support Drag&Drop for tabs and groups in popup window
- * Added support sorting groups (context menu in popup window)
- * Added field for search/filter tabs in "Manage Groups"
- * Added support to Backup/Restore tabs, groups and settings to/from json file
- * Custom group icons, set group icon from tab icon (by context menu)
- * Added undo remove group by context menu browser button (see in screenshots)
- * Added support for catch tabs by containers (#76)
- * Added dark theme
- * Added support SideBar
-
+* Design like old add-on "Tab Groups"
+* Added colored group icon
+* Added the ability to import the backup groups of the old plug-in "Tab Groups"
+* Added support of "Firefox Multi-Account Containers"
+* Now fully supports multiple windows
+* Saves last active tab after change group
+* Show currently used group in addon icon (see screenshot)
+* Specially NOT supported Private (Incognito) Mode
+* Added close tab by middle mouse click
+* Added simple switching between groups and tabs in search mode using the up, down, right and left keys
+* "Manage groups" functional is here! (so far only "Grid")
+* Added support Drag&Drop for tabs and groups in popup window
+* Added support sorting groups (context menu in popup window)
+* Added field for search/filter tabs in "Manage Groups"
+* Added support to Backup/Restore tabs, groups and settings to/from json file
+* Custom group icons, set group icon from tab icon (by context menu)
+* Added undo remove group by context menu browser button (see in screenshots)
+* Added support for catch tabs by containers (#76)
+* Added dark theme
+* Added support SideBar
 
 Permissions used:
- * **tabs**: for tab handling
- * **tabHide**: for hide tabs
- * **contextualIdentities & cookies**: for work with Firefox Multi-Account Containers
- * **notifications**: for notification on move tab to group etc.
- * **menus**: for creating tabs context menus
- * **sessions**: for save session data (last used group, etc)
- * **downloads**: for create auto backups
- * **management**: for automatically detect the required addons
- * **storage**: for saving groups localy
- * **unlimitedStorage**: restore tabs after close window, there can be a lot of tabs
- * **<all_urls>(Access your data for all websites)**: for tab thumbnails and catch/move/reopen tabs in needed containers/groups
- * **webRequest** & **webRequestBlocking**: for catch/move/reopen tabs in needed containers/groups</li>
- * **(optional) bookmarks**: access for create bookmarks
+
+* **tabs**: for tab handling
+* **tabHide**: for hide tabs
+* **contextualIdentities & cookies**: for work with Firefox Multi-Account Containers
+* **notifications**: for notification on move tab to group etc.
+* **menus**: for creating tabs context menus
+* **sessions**: for save session data (last used group, etc)
+* **downloads**: for create auto backups
+* **management**: for automatically detect the required addons
+* **storage**: for saving groups localy
+* **unlimitedStorage**: restore tabs after close window, there can be a lot of tabs
+* **<all_urls>(Access your data for all websites)**: for tab thumbnails and catch/move/reopen tabs in needed containers/groups
+* **webRequest** & **webRequestBlocking**: for catch/move/reopen tabs in needed containers/groups</li>
+* **(optional) bookmarks**: access for create bookmarks
 
 ## License and Credits
 
