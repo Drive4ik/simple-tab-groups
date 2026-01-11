@@ -7,6 +7,10 @@
         "message": "Налаштування",
         "description": "Settings context button title"
     },
+    "settingsMenu": {
+        "message": "Меню налаштувань",
+        "description": "Settings menu title"
+    },
     "manageGroupsTitle": {
         "message": "Управління групами",
         "description": "Manage groups"
@@ -44,6 +48,10 @@
     "ok": {
         "message": "OK",
         "description": "OK button"
+    },
+    "load": {
+        "message": "Завантажити",
+        "description": "Load"
     },
     "save": {
         "message": "Зберегти",
@@ -130,6 +138,14 @@
     "restoreBackup": {
         "message": "Завантажити резервну копію",
         "description": "Restore backup"
+    },
+    "restoreLastBackup": {
+        "message": "Відновити останню резервну копію",
+        "description": "Restore last backup"
+    },
+    "viewBackup": {
+        "message": "Переглянути резервну копію",
+        "description": "View backup"
     },
     "importSettingsOldTabGroupsAddonTitle": {
         "message": "Завантаження резервної копії від старого плагіна Quicksaver'у \"Tab Groups\"",
@@ -574,6 +590,10 @@
     "intervalKeyDays": {
         "message": "днів",
         "description": "day(s)"
+    },
+    "filesCount": {
+        "message": "файл(ів)",
+        "description": "files(s)"
     },
     "darkColorSchemeNotification": {
         "message": "Для повної підтримки темної теми встановіть параметр <code>svg.context-properties.content.enabled</code> в <code>true</code> на сторінці <code>about:config</code>, <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Як це зробити?</a>",
@@ -1087,9 +1107,101 @@
         "message": "Тільки групи",
         "description": "Only groups"
     },
+    "backupLocation": {
+        "message": "Розташування резервних копій",
+        "description": "Backup location"
+    },
+    "allowAccessToNativeMessaging": {
+        "message": "Дозвольте доступ до \"Native Messaging\", щоб зберігати резервні копії в будь-якій папці",
+        "description": "Allow access to \"Native Messaging\" to save backups to any folder"
+    },
+    "downloadsFolder": {
+        "message": "Завантаження",
+        "description": "FF downloads folder"
+    },
+    "otherFolder": {
+        "message": "Інша",
+        "description": "Other folder, controled by STGHost"
+    },
+    "backupFolderTitle": {
+        "message": "Папка резервних копій",
+        "description": "Backup folder label"
+    },
+    "selectBackupFolder": {
+        "message": "Виберіть папку для резервних копій",
+        "description": "Button and open dialog box title"
+    },
+    "hostInvalidBackupFolder": {
+        "message": "Папка резервного копіювання \"$folder$\" є недійсною. Будь ласка, виберіть дійсну папку резервного копіювання.",
+        "description": "Invalid backup folder message",
+        "placeholders": {
+            "folder": {
+                "content": "$1",
+                "example": "D:\\invalid-folder"
+            }
+        }
+    },
+    "hostErrBackupOutsideAllowedFolder": {
+        "message": "Ви не можете зберігати резервні копії поза дозволеною папкою! Ви намагаєтеся зберегти в папці \"$folder$\".",
+        "description": "Cannot save outside folder message",
+        "placeholders": {
+            "folder": {
+                "content": "$1",
+                "example": "D:\\invalid-folder"
+            }
+        }
+    },
+    "hostErrBackupFileInvalidExt": {
+        "message": "Недійсне розширення файлу резервної копії \"$ext$\".",
+        "description": "Invalid backup file extension message",
+        "placeholders": {
+            "ext": {
+                "content": "$1",
+                "example": ".txt"
+            }
+        }
+    },
+    "hostInvalidBackupFileName": {
+        "message": "Ім'я файлу резервної копії недійсне!",
+        "description": "Backup file name is invalid message"
+    },
+    "hostNoBackupFilesFound": {
+        "message": "Не знайдено файлів резервної копії.",
+        "description": "Backup files not found message"
+    },
+    "deleteFilesOlderThan": {
+        "message": "Видалити файли, старші за",
+        "description": "Delete files older than"
+    },
+    "keepLastBackupFiles": {
+        "message": "але зберегти останні",
+        "description": "but keep the last"
+    },
     "clickHereForInfo": {
         "message": "Натисніть тут для отримання додаткової інформації",
         "description": "Click here for more info"
+    },
+    "requiredActions": {
+        "message": "Необхідні дії",
+        "description": "Required actions"
+    },
+    "stgHostHowToUse": {
+        "message": "Щоб вибрати будь-яку папку на вашому комп'ютері для збереження резервних копій груп вкладок, вам потрібна програма <strong>Simple Tab Groups Host</strong>.\n\nЯк налаштувати:\n1. Завантажте програму <a href=\"$dowloadUrl$\" target=\"_blank\">STGHost.exe</a> в будь-яку папку на вашому комп'ютері\n2. Запустіть програму та встановіть шлях для збереження резервних копій\n3. За необхідності змініть інші параметри в налаштуваннях програми.\n\n<strong>Важливо:</strong> Якщо ви перемістили програму в іншу папку, вам потрібно запустити її один раз, щоб Firefox розпізнав нове місце розташування.\n\nПісля налаштування програма автоматично запускатиметься у фоновому режимі та прийматиме команди від розширення, а це повідомлення зникне.",
+        "description": "How to install and use the STGHost program",
+        "placeholders": {
+            "dowloadUrl": {
+                "content": "$1",
+                "example": "https://github.com/..."
+            }
+        }
+    },
+    "hostAppNotFound": {
+        "message": "Не знайдено файл \"STGHost.exe\".\nЗапустіть файл \"STGHost.exe\" один раз.",
+        "description": "STGHost.exe not found"
+    },
+    "check": {
+        "message": "Перевірити",
+        "description": "Check button label"
     },
     "enabled": {
         "message": "Увімкнено",
@@ -1196,5 +1308,237 @@
                 "example": "My group"
             }
         }
+    },
+    "areYouSureRestoreBackup": {
+        "message": "Ви впевнені, що хочете відновити резервну копію:",
+        "description": "Are you sure you want to restore the backup:"
+    },
+    "overwriteCurrent": {
+        "message": "Ця дія призведе до перезапису поточних даних!",
+        "description": "This action will overwrite current data!"
+    },
+    "fileNameTitle": {
+        "message": "Ім'я файлу",
+        "description": "File name"
+    },
+    "filePathTitle": {
+        "message": "Шлях до файлу",
+        "description": "File path"
+    },
+    "dontUploadToCloud": {
+        "message": "Не завантажувати в хмару",
+        "description": "Don't upload to the cloud, leave it local only"
+    },
+    "helpTitle": {
+        "message": "Допомога",
+        "description": "Help"
+    },
+    "lastUpdate": {
+        "message": "Останнє оновлення",
+        "description": "Last update/active relative time"
+    },
+    "syncStart": {
+        "message": "Синхронізувати",
+        "description": "Start synchronization"
+    },
+    "syncStartTrustLocal": {
+        "message": "Синхронізувати та довіряти локальним даним",
+        "description": "Start synchronization and trust local data"
+    },
+    "syncStartTrustCloud": {
+        "message": "Синхронізувати та довіряти хмарним даним",
+        "description": "Start synchronization and trust cloud data"
+    },
+    "syncDataInCloudCanBeDifferent": {
+        "message": "Дані в хмарі можуть сильно відрізнятися від поточного стану.",
+        "description": "The data in the cloud can be very different from the current state."
+    },
+    "syncEnableTitle": {
+        "message": "Увімкнути автоматичне резервне копіювання в хмару",
+        "description": "Enable auto backup to the cloud"
+    },
+    "syncSettingsLocation": {
+        "message": "Розташування налаштувань синхронізації",
+        "description": "Enable auto backup to the cloud"
+    },
+    "githubSecretTitle": {
+        "message": "Приватно",
+        "description": "Secret"
+    },
+    "githubGistCloudSettingsTitle": {
+        "message": "Налаштування хмарного сервісу GitHub Gist",
+        "description": "GitHub Gist cloud settings"
+    },
+    "githubGistTokenTitle": {
+        "message": "Персональний токен доступу",
+        "description": "Github gist Personal access token"
+    },
+    "githubGistCheckToken": {
+        "message": "Перевірити токен",
+        "description": "Check Github gist personal access token"
+    },
+    "githubGistBackupDescription": {
+        "message": "Simple Tab Groups файл резервної копії для синхронізації в хмарі",
+        "description": "Simple Tab Groups backup file for cloud sync"
+    },
+    "githubInvalidGistContent": {
+        "message": "Резервна копія GitHub Gist містить некоректні дані",
+        "description": "GitHub Gist backup has incorrect data"
+    },
+    "githubInvalidToken": {
+        "message": "Ваш токен GitHub недійсний",
+        "description": "Your GitHub token is invalid"
+    },
+    "githubTokenNoAccess": {
+        "message": "Ваш токен GitHub не має відповідного доступу.",
+        "description": "Your GitHub token doesn't have the right access."
+    },
+    "githubRateLimit": {
+        "message": "Перевищено обмеження спроб API GitHub.\nОбмеження буде скинуто через $relativeTime$.",
+        "description": "The GitHub API rate limit has been exceeded",
+        "placeholders": {
+            "relativeTime": {
+                "content": "$1",
+                "example": "in 28 minutes"
+            }
+        }
+    },
+    "syncOptionLocatedFFSync": {
+        "message": "Використовувати налаштування, розташовані в синхронізації Firefox",
+        "description": "Use settings located in Firefox synchronisation"
+    },
+    "syncOptionLocatedLocally": {
+        "message": "Використовувати налаштування, що знаходяться локально в поточному профілі браузера",
+        "description": "Use settings located locally in the current browser profile"
+    },
+    "browserIsNotFirefox": {
+        "message": "Ваш браузер: $browserName$, він не підтримує <a href=\"https://www.mozilla.org/firefox/sync/\" target=\"_blank\" class=\"is-underlined\">Firefox Sync</a>",
+        "description": "Browser doesn't support FF sync",
+        "placeholders": {
+            "browserName": {
+                "content": "$1",
+                "example": "some Gecko browser"
+            }
+        }
+    },
+    "downloadFirefox": {
+        "message": "Завантажити Firefox",
+        "description": "Download Firefox"
+    },
+    "saveSettings": {
+        "message": "Зберегти налаштування",
+        "description": "Save settings"
+    },
+    "ffSyncNotSupported": {
+        "message": "Синхронізація Firefox не підтримується",
+        "description": "Firefox sync isn't supported"
+    },
+    "or": {
+        "message": "або",
+        "description": "one or the other"
+    },
+    "helpPageHowToGithubGistTitle": {
+        "message": "Налаштування синхронізації STG через GitHub Gist",
+        "description": "Configuring STG synchronization via GitHub Gist"
+    },
+    "helpPageHowToGithubGistWhatIsQ": {
+        "message": "Для чого це потрібно?",
+        "description": "What is this for?"
+    },
+    "helpPageHowToGithubGistWhatIsDesc": {
+        "message": "Це потрібно для синхронізації ваших вкладок і налаштувань Simple Tab Groups між двома або більше комп'ютерами.<br>Ваші дані будуть зберігатися у файлі GitHub Gist. Цей файл буде приватним. Крім вас, ніхто не матиме до нього доступу, якщо ви самі не надасте посилання GitHub Gist на ці дані іншій особі. STG надсилатиме ці дані лише на ваш обліковий запис GitHub.",
+        "description": "What is description"
+    },
+    "helpPageHowToGithubGistHowSetupQ": {
+        "message": "Як налаштувати синхронізацію?",
+        "description": "How do I set up synchronization?"
+    },
+    "helpPageHowToGithubGistCreateAccount": {
+        "message": "Вам потрібно <a github>створити обліковий запис GitHub</a> (якщо у вас його ще немає).",
+        "description": "How set up gist, 1th step"
+    },
+    "helpPageHowToGithubGistCreateTokenDesc": {
+        "message": "Вам потрібно створити приватний токен у вашому обліковому записі GitHub. Токен повинен зберігатися тільки у вас і в налаштуваннях STG. Він буде використовуватися для перенесення ваших вкладок до вашого облікового запису GitHub.",
+        "description": "How set up gist, 2th step"
+    },
+    "helpPageHowToGithubGistCreateTokenPermission": {
+        "message": "Токен повинен мати дозвіл на запис даних у Gist!",
+        "description": "How set up gist, permission"
+    },
+    "helpPageHowToGithubGistTokenPersonal": {
+        "message": "<a personal>Створити детальний особистий токен доступу</a>. Див. <a example>приклад</a>.",
+        "description": "How set up gist, personal token"
+    },
+    "helpPageHowToGithubGistTokenClassic": {
+        "message": "<a classic>Створити класичний токен</a>. Див. <a example>приклад</a>",
+        "description": "How set up gist, personal token"
+    },
+    "helpPageHowToGithubGistWriteToSettings": {
+        "message": "Запишіть створений токен у налаштування STG.",
+        "description": "How set up gist, write token to the STG settings"
+    },
+    "helpPageHowToGithubGistSave": {
+        "message": "Натисніть кнопку \"Зберегти налаштування\"",
+        "description": "How set up gist, click save"
+    },
+    "helpPageHowToGithubGistStartSync": {
+        "message": "Натисніть кнопку \"Синхронізувати\"",
+        "description": "How set up gist, click sync"
+    },
+    "helpPageHowToGithubGistHowCreatePersonalToken": {
+        "message": "Як створити детальний особистий токен доступу:",
+        "description": "How set up gist, create personal token"
+    },
+    "helpPageHowToGithubGistHowCreateClassicToken": {
+        "message": "Як створити класичний токен доступу:",
+        "description": "How set up gist, create classic token"
+    },
+    "author": {
+        "message": "Автор",
+        "description": "Author title"
+    },
+    "email": {
+        "message": "Електронна пошта",
+        "description": "Email title"
+    },
+    "homepage": {
+        "message": "Домашня сторінка",
+        "description": "Homepage title"
+    },
+    "plugins": {
+        "message": "Плагіни",
+        "description": "Plugins title"
+    },
+    "aboutExtension": {
+        "message": "Про розширення",
+        "description": "About extension title"
+    },
+    "aboutMadeIn": {
+        "message": "Зроблено в Україні 🇺🇦 з любов'ю!",
+        "description": "Made in Ukraine 🇺🇦 with love!"
+    },
+    "aboutExtensionPage": {
+        "message": "Сторінка розширення",
+        "description": "Extension page title"
+    },
+    "aboutLibraries": {
+        "message": "Бібліотеки",
+        "description": "Libraries title"
+    },
+    "aboutThanksText": {
+        "message": "Дякуємо за використання Simple Tab Groups!",
+        "description": "Thanks text"
+    },
+    "donateItemHelpEthereum": {
+        "message": "ETH або будь-які токени ERC20",
+        "description": "Help for Ethereum"
+    },
+    "donateItemHelpBnbSmartchain": {
+        "message": "BNB або будь-які токени BEP20",
+        "description": "Help for BNB smartchain"
+    },
+    "donateItemHelpTronUsdt": {
+        "message": "TRX або будь-які токени TRC20",
+        "description": "Help for Tron"
     }
 }
