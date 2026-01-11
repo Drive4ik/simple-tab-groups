@@ -206,7 +206,6 @@ begin
     begin
       CheckUpdatesButton.Caption := DefaultButtonTitle;
       CheckUpdatesButton.Enabled := true;
-      MainForm.Enabled:= true;
       MessageBox(Handle, PChar(E.ToString), PChar('Error'), MB_ICONERROR or MB_OK);
     end;
   end;

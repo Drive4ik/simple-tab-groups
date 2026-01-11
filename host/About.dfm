@@ -22,12 +22,13 @@ object AboutForm: TAboutForm
   object InfoLabel: TLabel
     Left = 8
     Top = 78
-    Width = 335
+    Width = 333
     Height = 105
     Anchors = [akLeft, akTop, akRight, akBottom]
     AutoSize = False
     Caption = 'InfoLabel'
     WordWrap = True
+    ExplicitWidth = 335
     ExplicitHeight = 135
   end
   object AppImage: TImage
@@ -59,7 +60,7 @@ object AboutForm: TAboutForm
     Caption = 'DescriptionLabel'
   end
   object OKButton: TButton
-    Left = 255
+    Left = 253
     Top = 208
     Width = 88
     Height = 25
@@ -67,7 +68,8 @@ object AboutForm: TAboutForm
     Caption = 'OK'
     TabOrder = 0
     OnClick = OKButtonClick
-    ExplicitTop = 238
+    ExplicitLeft = 251
+    ExplicitTop = 200
   end
   object GiHubLinkLabel: TLinkLabel
     Left = 8
@@ -81,7 +83,7 @@ object AboutForm: TAboutForm
     TabOrder = 2
     TabStop = True
     OnLinkClick = LabelLinkClick
-    ExplicitTop = 244
+    ExplicitTop = 206
   end
   object HomeLinkLabel: TLinkLabel
     Left = 8
@@ -90,10 +92,11 @@ object AboutForm: TAboutForm
     Height = 19
     Anchors = [akLeft, akBottom]
     Caption = 
-      '<a href="https://github.com/Drive4ik/simple-tab-groups/releases"' +
-      '>Home page</a>'
+      '<a href="https://github.com/Drive4ik/simple-tab-groups/tree/mast' +
+      'er/host#readme">Home page</a>'
     TabOrder = 1
     TabStop = True
     OnLinkClick = LabelLinkClick
+    ExplicitTop = 181
   end
 end
