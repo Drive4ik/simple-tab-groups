@@ -7,6 +7,10 @@
         "message": "Настройки",
         "description": "Settings context button title"
     },
+    "settingsMenu": {
+        "message": "Меню настроек",
+        "description": "Settings menu title"
+    },
     "manageGroupsTitle": {
         "message": "Управление группами",
         "description": "Manage groups"
@@ -44,6 +48,10 @@
     "ok": {
         "message": "OK",
         "description": "OK button"
+    },
+    "load": {
+        "message": "Загрузить",
+        "description": "Load"
     },
     "save": {
         "message": "Сохранить",
@@ -97,7 +105,7 @@
     },
     "showConfirmDialogBeforeGroupDelete": {
         "message": "Подтверждать удаление группы",
-        "description": "Show confirm dialog before group delete"
+        "description": "Show confirmation dialog before deleting the group"
     },
     "showConfirmDialogBeforeGroupArchiving": {
         "message": "Подтверждать архивацию группы",
@@ -130,6 +138,14 @@
     "restoreBackup": {
         "message": "Восстановить бекап",
         "description": "Restore backup"
+    },
+    "restoreLastBackup": {
+        "message": "Восстановить последнюю резервную копию",
+        "description": "Restore last backup"
+    },
+    "viewBackup": {
+        "message": "Просмотр резервной копии",
+        "description": "View backup"
     },
     "importSettingsOldTabGroupsAddonTitle": {
         "message": "Восстановление резервной копии от старого плагина Quicksaver'а \"Tab Groups\"",
@@ -387,7 +403,7 @@
     },
     "undoRemoveGroupItemTitle": {
         "message": "Отменить удаление группы \"$grouptitle$\"",
-        "description": "Undo remove group menu title",
+        "description": "Undelete a group menu title",
         "placeholders": {
             "grouptitle": {
                 "content": "$1",
@@ -513,7 +529,7 @@
     },
     "movingMultipleTabsText": {
         "message": "Перемещение $count$ вкладок",
-        "description": "Перемещение $count$ вкладок",
+        "description": "Moving $count$ tabs",
         "placeholders": {
             "count": {
                 "content": "$1",
@@ -547,7 +563,7 @@
     },
     "moveMultipleTabsToGroupMessage": {
         "message": "Перемещено $tabscount$ вкладок.\nНажмите здесь для открытия первой вкладки",
-        "description": "$tabscount$ tabs has been moved.\nClick here to open the first tab",
+        "description": "$tabscount$ tabs have been moved.\nClick here to open the first tab",
         "placeholders": {
             "tabscount": {
                 "content": "$1",
@@ -565,15 +581,19 @@
     },
     "intervalKeyMinutes": {
         "message": "минут",
-        "description": "минут"
+        "description": "minute(s)"
     },
     "intervalKeyHours": {
-        "message": "час",
+        "message": "час(ов)",
         "description": "hour(s)"
     },
     "intervalKeyDays": {
-        "message": "день",
+        "message": "дней",
         "description": "day(s)"
+    },
+    "filesCount": {
+        "message": "файл(ов)",
+        "description": "files(s)"
     },
     "darkColorSchemeNotification": {
         "message": "Для полной поддержки тёмной темы установите параметр <code>svg.context-properties.content.enabled</code> в <code>true</code> на странице <code>about:config</code>. <a href=\"https://support.mozilla.org/kb/about-config-editor-firefox\" target=\"_blank\">Как это сделать?</a>",
@@ -1087,9 +1107,101 @@
         "message": "Только группы",
         "description": "Only groups"
     },
+    "backupLocation": {
+        "message": "Расположение резервной копии",
+        "description": "Backup location"
+    },
+    "allowAccessToNativeMessaging": {
+        "message": "Разрешить доступ к \"Native Messaging\" для сохранения резервных копий в любой папке",
+        "description": "Allow access to \"Native Messaging\" to save backups to any folder"
+    },
+    "downloadsFolder": {
+        "message": "Загрузки",
+        "description": "FF downloads folder"
+    },
+    "otherFolder": {
+        "message": "Другая",
+        "description": "Other folder, controled by STGHost"
+    },
+    "backupFolderTitle": {
+        "message": "Папка резервных копий",
+        "description": "Backup folder label"
+    },
+    "selectBackupFolder": {
+        "message": "Выберите папку для резервных копий",
+        "description": "Button and open dialog box title"
+    },
+    "hostInvalidBackupFolder": {
+        "message": "Папка резервного копирования \"$folder$\" недействительна. Выберите действительную папку резервных копий.",
+        "description": "Invalid backup folder message",
+        "placeholders": {
+            "folder": {
+                "content": "$1",
+                "example": "D:\\invalid-folder"
+            }
+        }
+    },
+    "hostErrBackupOutsideAllowedFolder": {
+        "message": "Вы не можете сохранять резервные копии за пределами разрешенной папки! Вы пытаетесь сохранить в папке \"$folder$\".",
+        "description": "Cannot save outside folder message",
+        "placeholders": {
+            "folder": {
+                "content": "$1",
+                "example": "D:\\invalid-folder"
+            }
+        }
+    },
+    "hostErrBackupFileInvalidExt": {
+        "message": "Недопустимое расширение файла резервной копии \"$ext$\".",
+        "description": "Invalid backup file extension message",
+        "placeholders": {
+            "ext": {
+                "content": "$1",
+                "example": ".txt"
+            }
+        }
+    },
+    "hostInvalidBackupFileName": {
+        "message": "Имя файла резервной копии неверно!",
+        "description": "Backup file name is invalid message"
+    },
+    "hostNoBackupFilesFound": {
+        "message": "Резервные копии не найдены.",
+        "description": "Backup files not found message"
+    },
+    "deleteFilesOlderThan": {
+        "message": "Удалить файлы старше",
+        "description": "Delete files older than"
+    },
+    "keepLastBackupFiles": {
+        "message": "но сохранить последнее",
+        "description": "but keep the last"
+    },
     "clickHereForInfo": {
         "message": "Нажмите здесь для получения дополнительной информации",
         "description": "Click here for more info"
+    },
+    "requiredActions": {
+        "message": "Необходимые действия",
+        "description": "Required actions"
+    },
+    "stgHostHowToUse": {
+        "message": "Чтобы выбрать любую папку на вашем компьютере для сохранения резервных копий групп вкладок, вам понадобится программа <strong>Simple Tab Groups Host</strong>.\n\nКак настроить:\n1. Загрузите программу <a href=\"$dowloadUrl$\" target=\"_blank\">STGHost.exe</a> в любую папку на вашем компьютере\n2. Запустите программу и установите путь для сохранения резервных копий\n3. При необходимости измените другие параметры в настройках программы.\n\n<strong>Важно:</strong> если вы переместили программу в другую папку, вам необходимо запустить ее один раз, чтобы Firefox распознал новое местоположение.\n\nПосле настройки программа будет автоматически запускаться в фоновом режиме и принимать команды от расширения, и это сообщение исчезнет.",
+        "description": "How to install and use the STGHost program",
+        "placeholders": {
+            "dowloadUrl": {
+                "content": "$1",
+                "example": "https://github.com/..."
+            }
+        }
+    },
+    "hostAppNotFound": {
+        "message": "Не найден файл \"STGHost.exe\".\nЗапустите файл \"STGHost.exe\" один раз.",
+        "description": "STGHost.exe not found"
+    },
+    "check": {
+        "message": "Проверить",
+        "description": "Check button label"
     },
     "enabled": {
         "message": "Включено",
@@ -1196,5 +1308,237 @@
                 "example": "My group"
             }
         }
+    },
+    "areYouSureRestoreBackup": {
+        "message": "Вы уверены, что хотите восстановить резервную копию:",
+        "description": "Are you sure you want to restore the backup:"
+    },
+    "overwriteCurrent": {
+        "message": "Это действие приведет к перезаписи текущих данных!",
+        "description": "This action will overwrite current data!"
+    },
+    "fileNameTitle": {
+        "message": "Имя файла",
+        "description": "File name"
+    },
+    "filePathTitle": {
+        "message": "Путь к файлу",
+        "description": "File path"
+    },
+    "dontUploadToCloud": {
+        "message": "Не загружать в облако",
+        "description": "Don't upload to the cloud, leave it local only"
+    },
+    "helpTitle": {
+        "message": "Помощь",
+        "description": "Help"
+    },
+    "lastUpdate": {
+        "message": "Последнее обновление",
+        "description": "Last update/active relative time"
+    },
+    "syncStart": {
+        "message": "Синхронизировать",
+        "description": "Start synchronization"
+    },
+    "syncStartTrustLocal": {
+        "message": "Синхронизировать и доверять локальным данным",
+        "description": "Start synchronization and trust local data"
+    },
+    "syncStartTrustCloud": {
+        "message": "Синхронизировать и доверьтесь облачным данным",
+        "description": "Start synchronization and trust cloud data"
+    },
+    "syncDataInCloudCanBeDifferent": {
+        "message": "Данные в облаке могут сильно отличаться от текущего состояния.",
+        "description": "The data in the cloud can be very different from the current state."
+    },
+    "syncEnableTitle": {
+        "message": "Включить автоматическое резервное копирование в облако",
+        "description": "Enable auto backup to the cloud"
+    },
+    "syncSettingsLocation": {
+        "message": "Расположение настроек синхронизации",
+        "description": "Enable auto backup to the cloud"
+    },
+    "githubSecretTitle": {
+        "message": "Приватный",
+        "description": "Secret"
+    },
+    "githubGistCloudSettingsTitle": {
+        "message": "Настройки облака GitHub Gist",
+        "description": "GitHub Gist cloud settings"
+    },
+    "githubGistTokenTitle": {
+        "message": "Персональный токен доступа",
+        "description": "Github gist Personal access token"
+    },
+    "githubGistCheckToken": {
+        "message": "Проверить токен",
+        "description": "Check Github gist personal access token"
+    },
+    "githubGistBackupDescription": {
+        "message": "Файл резервной копии Simple Tab Groups для синхронизации в облаке",
+        "description": "Simple Tab Groups backup file for cloud sync"
+    },
+    "githubInvalidGistContent": {
+        "message": "Резервная копия GitHub Gist содержит неверные данные",
+        "description": "GitHub Gist backup has incorrect data"
+    },
+    "githubInvalidToken": {
+        "message": "Ваш токен GitHub недействителен",
+        "description": "Your GitHub token is invalid"
+    },
+    "githubTokenNoAccess": {
+        "message": "Ваш токен GitHub не имеет нужных прав доступа.",
+        "description": "Your GitHub token doesn't have the right access."
+    },
+    "githubRateLimit": {
+        "message": "Превышен лимит запросов API GitHub.\nЛимит будет сброшен через $relativeTime$.",
+        "description": "The GitHub API rate limit has been exceeded",
+        "placeholders": {
+            "relativeTime": {
+                "content": "$1",
+                "example": "in 28 minutes"
+            }
+        }
+    },
+    "syncOptionLocatedFFSync": {
+        "message": "Использовать настройки, расположенные в синхронизации Firefox.",
+        "description": "Use settings located in Firefox synchronisation"
+    },
+    "syncOptionLocatedLocally": {
+        "message": "Использовать настройки, расположенные локально в текущем профиле браузера",
+        "description": "Use settings located locally in the current browser profile"
+    },
+    "browserIsNotFirefox": {
+        "message": "Ваш браузер: $browserName$, он не поддерживает <a href=\"https://www.mozilla.org/firefox/sync/\" target=\"_blank\" class=\"is-underlined\">Firefox Sync</a>",
+        "description": "Browser doesn't support FF sync",
+        "placeholders": {
+            "browserName": {
+                "content": "$1",
+                "example": "some Gecko browser"
+            }
+        }
+    },
+    "downloadFirefox": {
+        "message": "Скачать Firefox",
+        "description": "Download Firefox"
+    },
+    "saveSettings": {
+        "message": "Сохранить настройки",
+        "description": "Save settings"
+    },
+    "ffSyncNotSupported": {
+        "message": "Синхронизация Firefox не поддерживается",
+        "description": "Firefox sync isn't supported"
+    },
+    "or": {
+        "message": "или",
+        "description": "one or the other"
+    },
+    "helpPageHowToGithubGistTitle": {
+        "message": "Настройка синхронизации STG через GitHub Gist",
+        "description": "Configuring STG synchronization via GitHub Gist"
+    },
+    "helpPageHowToGithubGistWhatIsQ": {
+        "message": "Для чего это нужно?",
+        "description": "What is this for?"
+    },
+    "helpPageHowToGithubGistWhatIsDesc": {
+        "message": "Это нужно для синхронизации ваших вкладок и настроек Simple Tab Groups между двумя или более компьютерами.<br>Ваши данные будут храниться в файле GitHub Gist. Этот файл будет приватным. Кроме вас, никто не будет иметь к нему доступа, если вы сами не предоставите ссылку GitHub Gist на эти данные другому лицу. STG будет отправлять эти данные только на ваш аккаунт GitHub.",
+        "description": "What is description"
+    },
+    "helpPageHowToGithubGistHowSetupQ": {
+        "message": "Как настроить синхронизацию?",
+        "description": "How do I set up synchronization?"
+    },
+    "helpPageHowToGithubGistCreateAccount": {
+        "message": "Вам необходимо <a github>создать учетную запись GitHub</a> (если у вас ее еще нет).",
+        "description": "How set up gist, 1th step"
+    },
+    "helpPageHowToGithubGistCreateTokenDesc": {
+        "message": "Вам необходимо создать персональный токен в своей учетной записи GitHub. Токен должен храниться только у вас и в настройках STG. Он будет использоваться для переноса ваших вкладок в вашу учетную запись GitHub.",
+        "description": "How set up gist, 2th step"
+    },
+    "helpPageHowToGithubGistCreateTokenPermission": {
+        "message": "Токен должен иметь разрешение на запись данных в Gist!",
+        "description": "How set up gist, permission"
+    },
+    "helpPageHowToGithubGistTokenPersonal": {
+        "message": "<a personal>Создать точный персональный токен доступа</a>. См. <a example>пример</a>.",
+        "description": "How set up gist, personal token"
+    },
+    "helpPageHowToGithubGistTokenClassic": {
+        "message": "<a classic>Создать классический токен</a>. См. <a example>пример</a>",
+        "description": "How set up gist, personal token"
+    },
+    "helpPageHowToGithubGistWriteToSettings": {
+        "message": "Запишите созданный токен в настройки STG.",
+        "description": "How set up gist, write token to the STG settings"
+    },
+    "helpPageHowToGithubGistSave": {
+        "message": "Нажмите кнопку \"Сохранить настройки\"",
+        "description": "How set up gist, click save"
+    },
+    "helpPageHowToGithubGistStartSync": {
+        "message": "Нажмите кнопку \"Синхронизировать\"",
+        "description": "How set up gist, click sync"
+    },
+    "helpPageHowToGithubGistHowCreatePersonalToken": {
+        "message": "Как создать точный персональный токен доступа:",
+        "description": "How set up gist, create personal token"
+    },
+    "helpPageHowToGithubGistHowCreateClassicToken": {
+        "message": "Как создать классический токен доступа:",
+        "description": "How set up gist, create classic token"
+    },
+    "author": {
+        "message": "Автор",
+        "description": "Author title"
+    },
+    "email": {
+        "message": "Электронная почта",
+        "description": "Email title"
+    },
+    "homepage": {
+        "message": "Домашняя страница",
+        "description": "Homepage title"
+    },
+    "plugins": {
+        "message": "Плагины",
+        "description": "Plugins title"
+    },
+    "aboutExtension": {
+        "message": "О расширении",
+        "description": "About extension title"
+    },
+    "aboutMadeIn": {
+        "message": "Сделано в Украине 🇺🇦 с любовью!",
+        "description": "Made in Ukraine 🇺🇦 with love!"
+    },
+    "aboutExtensionPage": {
+        "message": "Страница расширения",
+        "description": "Extension page title"
+    },
+    "aboutLibraries": {
+        "message": "Библиотеки",
+        "description": "Libraries title"
+    },
+    "aboutThanksText": {
+        "message": "Спасибо, что используете Simple Tab Groups!",
+        "description": "Thanks text"
+    },
+    "donateItemHelpEthereum": {
+        "message": "ETH или любые токены ERC20",
+        "description": "Help for Ethereum"
+    },
+    "donateItemHelpBnbSmartchain": {
+        "message": "BNB или любые токены BEP20",
+        "description": "Help for BNB smartchain"
+    },
+    "donateItemHelpTronUsdt": {
+        "message": "TRX или любые токены TRC20",
+        "description": "Help for Tron"
     }
 }
