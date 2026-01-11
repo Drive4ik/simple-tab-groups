@@ -18,7 +18,7 @@ type
     AuthorLabel: TLabel;
     DescriptionLabel: TLabel;
     GiHubLinkLabel: TLinkLabel;
-    HostLinkLabel: TLinkLabel;
+    HomeLinkLabel: TLinkLabel;
     procedure OKButtonClick(Sender: TObject);
     procedure LabelLinkClick(Sender: TObject; const Link: string; LinkType: TSysLinkType);
     procedure FormShow(Sender: TObject);

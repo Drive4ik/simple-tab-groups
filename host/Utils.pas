@@ -6,8 +6,8 @@
 interface
 
 uses
-  Winapi.Windows, Vcl.Dialogs, Vcl.Forms, System.JSON, System.SysUtils, Classes, System.Win.Registry,
-  VerInfo, System.IOUtils, Winapi.ShellAPI, System.NetEncoding;
+  Winapi.Windows, Vcl.Dialogs, Vcl.Forms, System.JSON, System.SysUtils, System.Classes, System.Win.Registry,
+  VerInfo, System.IOUtils, Winapi.ShellAPI, System.NetEncoding, System.Math, Vcl.Controls;
 
 function PrivateExtractIcons(lpszFile: PChar; nIconIndex, cxIcon, cyIcon: integer; phicon: PHANDLE; piconid: PDWORD; nicon, flags: DWORD): DWORD; stdcall; external 'user32.dll' name 'PrivateExtractIconsW';
 
@@ -25,6 +25,7 @@ function ReadJSONFile(const FilePath: string; const RaiseExc: Boolean = false): 
 procedure WriteJSONFile(const FilePath: string; const json: TJSONValue; const Indent: Integer = 4;
   const LineBreakLF: Boolean = true);
 function SelectFolderModern(const Title: string = 'Select folder'; const DefaultDir: string = ''): string;
+function TrimVersion(const VerStr: string): string;
 function GetExeInfo(const ExePath: string = ''; IconIndex: Integer = -1; IconSize: Integer = 16): TEXEVersionDataExtended;
 function MergeJSON(const baseValue, extraValue: TJSONValue): TJSONValue;
 function IsWindowsDarkTheme: Boolean;
@@ -32,6 +33,8 @@ function ExpandEnvStr(const Str: string): string;
 function OpenPath(const Path: string): Boolean;
 function EncodeBase64(const Input: string): string;
 function DecodeBase64(const base64String: string): string;
+function CompareNumericVersions(const A, B: string): Integer;
+function RunApp(const aCmd: string; aShowMode: Integer = SW_SHOWNORMAL; aWait: Boolean = False; aWaitMs: Integer = 10000): DWORD;
 
 implementation
 
@@ -209,6 +212,85 @@ end;
 function DecodeBase64(const base64String: string): string;
 begin
   Result:= TNetEncoding.Base64.Decode(base64String);
+end;
+
+{ A < B : - index of version type (major=-1, minor=-2...)
+  A > B : + index of version type (major=1, minor=2...)
+  A = B : 0 }
+function CompareNumericVersions(const A, B: string): Integer;
+var
+  PartsA, PartsB: TArray<String>;
+  MaxLen, NA, NB: Integer;
+begin
+  PartsA := A.Split(['.']);
+  PartsB := B.Split(['.']);
+
+  MaxLen := Max(Length(PartsA), Length(PartsB));
+
+  for var i := 0 to MaxLen - 1 do
+  begin
+    if i < Length(PartsA) then
+      NA := StrToIntDef(PartsA[i], 0)
+    else
+      NA := 0;
+
+    if i < Length(PartsB) then
+      NB := StrToIntDef(PartsB[i], 0)
+    else
+      NB := 0;
+
+    if NA < NB then Exit(-(i + 1));
+    if NA > NB then Exit(i + 1);
+  end;
+
+  Result := 0;
+end;
+
+function RunApp(const aCmd: string; aShowMode: Integer = SW_SHOWNORMAL;
+  aWait: Boolean = False; aWaitMs: Integer = 10000): DWORD;
+var
+  StartUpInfo: TStartUpInfo;
+  ProcessInfo: TProcessInformation;
+  WaitCode, CreationFlags: DWORD;
+begin
+  Result := 0;
+
+  ZeroMemory(@StartupInfo, SizeOf(TStartupInfo));
+  StartUpInfo.cb := SizeOf(StartUpInfo);
+  StartUpInfo.wShowWindow := aShowMode;
+  StartUpInfo.dwFlags := STARTF_USESHOWWINDOW;
+
+  ZeroMemory(@ProcessInfo, SizeOf(TProcessInformation));
+
+  CreationFlags := NORMAL_PRIORITY_CLASS;
+
+  if not aWait then
+    CreationFlags := CreationFlags or CREATE_BREAKAWAY_FROM_JOB;
+
+  if not CreateProcess(nil, PChar(aCmd), nil, nil, False, CreationFlags,
+    nil, nil, StartUpInfo, ProcessInfo) then
+    RaiseLastOSError;
+
+  try
+    if aWait then
+    begin
+      WaitCode := WaitForSingleObject(ProcessInfo.hProcess, aWaitMs);
+
+      if WaitCode = WAIT_FAILED then
+        RaiseLastOSError;
+
+      if WaitCode = WAIT_TIMEOUT then
+        Result := STILL_ACTIVE
+      else
+      begin
+        if not GetExitCodeProcess(ProcessInfo.hProcess, Result) then
+          RaiseLastOSError;
+      end;
+    end;
+  finally
+    CloseHandle(ProcessInfo.hThread);
+    CloseHandle(ProcessInfo.hProcess);
+  end;
 end;
 
 end.

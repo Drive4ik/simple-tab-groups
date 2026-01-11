@@ -1135,9 +1135,43 @@
         "message": "Select a folder for backups",
         "description": "Button and open dialog box title"
     },
-    "invalidBackupFolder": {
-        "message": "The current backup folder is invalid. Please, select a valid backup folder.",
-        "description": "Invalid backup folder message"
+    "hostInvalidBackupFolder": {
+        "message": "The backup folder \"$folder$\" is invalid. Please, select a valid backup folder.",
+        "description": "Invalid backup folder message",
+        "placeholders": {
+            "folder": {
+                "content": "$1",
+                "example": "D:\\invalid-folder"
+            }
+        }
+    },
+    "hostErrBackupOutsideAllowedFolder": {
+        "message": "You cannot save backups outside the allowed folder! You are attempting to save to the folder \"$folder$\".",
+        "description": "Cannot save outside folder message",
+        "placeholders": {
+            "folder": {
+                "content": "$1",
+                "example": "D:\\invalid-folder"
+            }
+        }
+    },
+    "hostErrBackupFileInvalidExt": {
+        "message": "Invalid backup file extension \"$ext$\".",
+        "description": "Invalid backup file extension message",
+        "placeholders": {
+            "ext": {
+                "content": "$1",
+                "example": ".txt"
+            }
+        }
+    },
+    "hostInvalidBackupFileName": {
+        "message": "Backup file name is invalid!",
+        "description": "Backup file name is invalid message"
+    },
+    "hostNoBackupFilesFound": {
+        "message": "Backup files not found.",
+        "description": "Backup files not found message"
     },
     "deleteFilesOlderThan": {
         "message": "Delete files older than",
@@ -1164,6 +1198,10 @@
                 "example": "https://github.com/..."
             }
         }
+    },
+    "hostAppNotFound": {
+        "message": "\"STGHost.exe\" not found.\nPlease run the \"STGHost.exe\" file once.",
+        "description": "STGHost.exe not found"
     },
     "check": {
         "message": "Check",

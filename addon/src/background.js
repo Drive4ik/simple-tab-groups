@@ -1811,8 +1811,22 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({tabId, u
     };
 }, logger);
 
-const onPermissionsChanged = catchFunc(async function onPermissionsChanged({origins, permissions}) {
-    logger.log('onPermissionsChanged', {origins, permissions});
+const onPermissionsAdded = catchFunc(async function onPermissionsAdded({origins, permissions}) {
+    logger.log('onPermissionsAdded', {origins, permissions});
+    await updateMoveTabMenus();
+}, logger);
+
+const onPermissionsRemoved = catchFunc(async function onPermissionsRemoved({origins, permissions}) {
+    logger.log('onPermissionsRemoved', {origins, permissions});
+
+    if (permissions?.some(p => Constants.PERMISSIONS.NATIVE_MESSAGING.permissions.includes(p))) {
+        if (options.autoBackupLocation === Constants.AUTO_BACKUP_LOCATIONS.HOST) {
+            await saveOptions({
+                autoBackupLocation: Constants.AUTO_BACKUP_LOCATIONS.DOWNLOADS,
+            });
+        }
+    }
+
     await updateMoveTabMenus();
 }, logger);
 
@@ -1874,8 +1888,8 @@ function addEvents() {
     browser.windows.onFocusChanged.addListener(onFocusChangedWindow);
     browser.windows.onRemoved.addListener(onRemovedWindow);
 
-    browser.permissions.onAdded.addListener(onPermissionsChanged);
-    browser.permissions.onRemoved.addListener(onPermissionsChanged);
+    browser.permissions.onAdded.addListener(onPermissionsAdded);
+    browser.permissions.onRemoved.addListener(onPermissionsRemoved);
 
     browser.alarms.onAlarm.addListener(onAlarm);
 }
@@ -1895,8 +1909,8 @@ function removeEvents() {
     browser.windows.onFocusChanged.removeListener(onFocusChangedWindow);
     browser.windows.onRemoved.removeListener(onRemovedWindow);
 
-    browser.permissions.onAdded.removeListener(onPermissionsChanged);
-    browser.permissions.onRemoved.removeListener(onPermissionsChanged);
+    browser.permissions.onAdded.removeListener(onPermissionsAdded);
+    browser.permissions.onRemoved.removeListener(onPermissionsRemoved);
 
     browser.alarms.onAlarm.removeListener(onAlarm);
 
@@ -3847,10 +3861,10 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
     const keysToRemoveFromStorage = new Set;
 
     // if data version < required latest migrate version then need migration
-    if (-1 === Utils.compareVersions(data.version, migrations[migrations.length - 1].version)) {
+    if (Utils.compareNumericVersions(data.version, migrations[migrations.length - 1].version) < 0) {
 
         for (const migration of migrations) {
-            if (-1 === Utils.compareVersions(data.version, migration.version)) {
+            if (Utils.compareNumericVersions(data.version, migration.version) < 0) {
                 log.log('start migration to version', migration.version);
 
                 await migration.migration();
@@ -3861,15 +3875,10 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
             }
         }
 
-    } else if (1 === Utils.compareVersions(data.version, currentVersion)) {
-        const [currentMajor, currentMinor = 0, currentPatch = 0] = currentVersion.split('.'),
-            [dataMajor, dataMinor = 0, dataPatch = 0] = data.version.split('.');
+    } else {
+        const versionDiffIndex = Utils.compareNumericVersions(data.version, currentVersion);
 
-        if (
-            dataMajor > currentMajor ||
-            (dataMajor == currentMajor && dataMinor > currentMinor) ||
-            (dataMajor == currentMajor && dataMinor == currentMinor && dataPatch > currentPatch)
-        ) {
+        if (versionDiffIndex > 0 && versionDiffIndex <= 3) {
             resultMigrate.error = 'updateAddonToLatestVersion';
             log.stopError(resultMigrate.error, 'data.version:', data.version, 'currentVersion:', currentVersion);
             return resultMigrate;
@@ -4087,7 +4096,7 @@ function processOnInstalled() {
         reason === browser.runtime.OnInstalledReason.INSTALL ||
         (
             reason === browser.runtime.OnInstalledReason.UPDATE &&
-            Utils.compareVersions(previousVersion, '5.0') === -1
+            Utils.compareNumericVersions(previousVersion, '5.0') < 0
         )
     ) {
         log.log('open welcome');
@@ -4239,7 +4248,13 @@ async function init() {
         dataChanged.add(Groups.normalizeContainersInGroups(data.groups));
 
         if (data.autoBackupLocation === Constants.AUTO_BACKUP_LOCATIONS.HOST) {
-            if (!Constants.IS_WINDOWS || !await Host.hasPermission()) {
+            if (Constants.IS_WINDOWS && await Host.hasPermission()) {
+                Host.checkVersion().catch(e => {
+                    Notification(e, {
+                        onClick: () => Tabs.create({url: Constants.HOST.DOWNLOAD_URL, active: true}),
+                    });
+                });
+            } else {
                 data.autoBackupLocation = Constants.AUTO_BACKUP_LOCATIONS.DOWNLOADS;
                 dataChanged.add(true);
             }

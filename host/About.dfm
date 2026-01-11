@@ -3,7 +3,7 @@ object AboutForm: TAboutForm
   Top = 0
   BorderStyle = bsToolWindow
   Caption = 'About'
-  ClientHeight = 237
+  ClientHeight = 241
   ClientWidth = 351
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -17,18 +17,18 @@ object AboutForm: TAboutForm
   OnShow = FormShow
   DesignSize = (
     351
-    237)
+    241)
   TextHeight = 15
   object InfoLabel: TLabel
     Left = 8
     Top = 78
     Width = 335
-    Height = 101
+    Height = 105
     Anchors = [akLeft, akTop, akRight, akBottom]
     AutoSize = False
     Caption = 'InfoLabel'
     WordWrap = True
-    ExplicitHeight = 86
+    ExplicitHeight = 135
   end
   object AppImage: TImage
     Left = 8
@@ -59,19 +59,19 @@ object AboutForm: TAboutForm
     Caption = 'DescriptionLabel'
   end
   object OKButton: TButton
-    Left = 268
-    Top = 204
-    Width = 75
+    Left = 255
+    Top = 208
+    Width = 88
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'OK'
     TabOrder = 0
     OnClick = OKButtonClick
-    ExplicitTop = 258
+    ExplicitTop = 238
   end
   object GiHubLinkLabel: TLinkLabel
     Left = 8
-    Top = 210
+    Top = 214
     Width = 38
     Height = 19
     Anchors = [akLeft, akBottom]
@@ -81,33 +81,19 @@ object AboutForm: TAboutForm
     TabOrder = 2
     TabStop = True
     OnLinkClick = LabelLinkClick
-    ExplicitTop = 195
+    ExplicitTop = 244
   end
-  object HostLinkLabel: TLinkLabel
+  object HomeLinkLabel: TLinkLabel
     Left = 8
-    Top = 185
-    Width = 92
+    Top = 189
+    Width = 66
     Height = 19
     Anchors = [akLeft, akBottom]
     Caption = 
       '<a href="https://github.com/Drive4ik/simple-tab-groups/releases"' +
-      '>Host home page</a>'
+      '>Home page</a>'
     TabOrder = 1
     TabStop = True
     OnLinkClick = LabelLinkClick
-    ExplicitTop = 170
-  end
-  object NotesLinkLabel: TLinkLabel
-    Left = 8
-    Top = 279
-    Width = 177
-    Height = 19
-    Anchors = [akLeft, akBottom]
-    Caption = 
-      '<a href="https://addons.mozilla.org/firefox/addon/stg-plugin-gro' +
-      'up-notes/">Group Notes WebExtension page</a>'
-    TabOrder = 3
-    TabStop = True
-    ExplicitTop = 275
   end
 end

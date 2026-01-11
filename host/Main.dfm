@@ -4,8 +4,8 @@ object MainForm: TMainForm
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'Simple Tab Groups Host'
-  ClientHeight = 214
-  ClientWidth = 519
+  ClientHeight = 208
+  ClientWidth = 515
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -16,22 +16,22 @@ object MainForm: TMainForm
   OnCreate = FormCreate
   OnShow = FormShow
   DesignSize = (
-    519
-    214)
+    515
+    208)
   TextHeight = 15
   object CloseButton: TButton
-    Left = 423
-    Top = 181
+    Left = 419
+    Top = 175
     Width = 88
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'Close'
-    TabOrder = 2
+    TabOrder = 3
     OnClick = CloseButtonClick
   end
   object AboutButton: TButton
     Left = 8
-    Top = 181
+    Top = 175
     Width = 88
     Height = 25
     Anchors = [akLeft, akBottom]
@@ -39,19 +39,19 @@ object MainForm: TMainForm
     TabOrder = 1
     OnClick = AboutButtonClick
   end
-  object PageControl1: TPageControl
+  object PageControl: TPageControl
     Left = 8
     Top = 8
-    Width = 503
-    Height = 167
+    Width = 499
+    Height = 161
     ActivePage = STGTabSheet
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
     object STGTabSheet: TTabSheet
       Caption = 'Simple Tab Groups'
       DesignSize = (
-        495
-        137)
+        491
+        131)
       object STGDeleteBackupDaysLabel: TLabel
         Left = 3
         Top = 57
@@ -68,7 +68,7 @@ object MainForm: TMainForm
         Enabled = False
       end
       object STGBackupBrowseButton: TButton
-        Left = 404
+        Left = 400
         Top = 24
         Width = 88
         Height = 25
@@ -80,7 +80,7 @@ object MainForm: TMainForm
       object STGBackupFolderEdit: TLabeledEdit
         Left = 3
         Top = 25
-        Width = 395
+        Width = 391
         Height = 23
         Anchors = [akLeft, akTop, akRight]
         EditLabel.Width = 76
@@ -103,11 +103,11 @@ object MainForm: TMainForm
       end
       object STGLinkLabel: TLinkLabel
         Left = 3
-        Top = 115
+        Top = 109
         Width = 107
         Height = 19
         Anchors = [akLeft, akBottom]
-        Caption =
+        Caption = 
           '<a href="https://addons.mozilla.org/firefox/addon/simple-tab-gro' +
           'ups/">WebExtension page</a>'
         TabOrder = 3
@@ -131,8 +131,8 @@ object MainForm: TMainForm
       Caption = 'Group Notes'
       ImageIndex = 1
       DesignSize = (
-        495
-        137)
+        491
+        131)
       object NotesDeleteBackupDaysLabel: TLabel
         Left = 3
         Top = 57
@@ -151,7 +151,7 @@ object MainForm: TMainForm
       object NotesBackupFolderEdit: TLabeledEdit
         Left = 3
         Top = 25
-        Width = 395
+        Width = 391
         Height = 23
         Anchors = [akLeft, akTop, akRight]
         EditLabel.Width = 76
@@ -162,7 +162,7 @@ object MainForm: TMainForm
         OnChange = NotesBackupFolderEditChange
       end
       object NotesBackupBrowseButton: TButton
-        Left = 404
+        Left = 400
         Top = 24
         Width = 88
         Height = 25
@@ -184,11 +184,11 @@ object MainForm: TMainForm
       end
       object NotesLinkLabel: TLinkLabel
         Left = 3
-        Top = 115
+        Top = 109
         Width = 107
         Height = 19
         Anchors = [akLeft, akBottom]
-        Caption =
+        Caption = 
           '<a href="https://addons.mozilla.org/firefox/addon/stg-plugin-gro' +
           'up-notes/">WebExtension page</a>'
         TabOrder = 3
@@ -221,5 +221,15 @@ object MainForm: TMainForm
         OnClick = LogsCheckBoxClick
       end
     end
+  end
+  object CheckUpdatesButton: TButton
+    Left = 102
+    Top = 175
+    Width = 143
+    Height = 25
+    Anchors = [akLeft, akBottom]
+    Caption = 'Check for updates...'
+    TabOrder = 2
+    OnClick = CheckUpdatesButtonClick
   end
 end

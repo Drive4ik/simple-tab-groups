@@ -17,7 +17,8 @@ uses
   Vcl.Forms,
   Main,
   Utils,
-  Settings;
+  Settings,
+  GithubUpdater;
 
 type
   TBackupFileInfo = class
@@ -51,7 +52,6 @@ end;
 function CreateResponse(const ok: Boolean): TJSONObject;
 begin
   Result := TJSONObject.Create;
-  Result.AddPair('version', ExeInfo.Base.FileVersion);
   Result.AddPair('ok', ok);
 end;
 
@@ -283,6 +283,36 @@ begin
   end;
 end;
 
+function HandleGetVersion(const json: TJSONObject; const Extension: TExtension): TJSONObject;
+begin
+  Result:= CreateResponseJSON(true, TJSONString.Create(ExeInfo.FileVersion));
+end;
+
+function HandleUpdate(const json: TJSONObject; const Extension: TExtension): TJSONObject;
+var
+  Version, msg: String;
+  UpdateResult: Boolean;
+begin
+  UpdateResult:= False;
+
+  Version := json.GetValue<String>('version');
+
+  if Version = 'latest' then
+  begin
+    if GithubCheckLatestVersion(Version) then
+      UpdateResult:= GithubUpdateVersion(Version, false);
+  end
+  else
+    UpdateResult:= GithubUpdateVersion(Version, false);
+
+  if UpdateResult then
+    msg:= 'Success'
+  else
+    msg:= Format('Version "%s" not found on GitHub', [json.GetValue<String>('version')]);
+
+  Result := CreateResponseMessage(UpdateResult, msg);
+end;
+
 function HandleSaveBackup(const json: TJSONObject; const Extension: TExtension): TJSONObject;
 var
   FileFullPath, FilePath, FileNameBase, FileExt: string;
@@ -291,7 +321,7 @@ begin
   const BackupFolder = GetBackupFolder(Extension);
 
   if not TDirectory.Exists(BackupFolder) then
-    Exit(CreateResponseLang(false, 'invalidBackupFolder', TJSONArray.Create.Add(BackupFolder)));
+    Exit(CreateResponseLang(false, 'hostInvalidBackupFolder', TJSONArray.Create.Add(BackupFolder)));
 
   FileFullPath := ExpandFileName(BackupFolder + json.GetValue<string>('filePath'));
   FilePath:= ExtractFilePath(FileFullPath);
@@ -299,14 +329,13 @@ begin
   FileExt:= ExtractFileExt(FileFullPath);
 
   if not FileFullPath.StartsWith(BackupFolder) then
-    Exit(CreateResponseLang(false, 'errBackupOutsideAllowedFolder', TJSONArray.Create.Add(FilePath)));
-    // You cannot save backups outside the allowed folder! You are attempting to save to the folder "%s" folder.
+    Exit(CreateResponseLang(false, 'hostErrBackupOutsideAllowedFolder', TJSONArray.Create.Add(FilePath)));
 
   if FileNameBase = '' then
-    Exit(CreateResponseLang(false, 'invalidBackupFileName'));
+    Exit(CreateResponseLang(false, 'hostInvalidBackupFileName'));
 
   if not SameText(FileExt, extension.backupExt) then
-    Exit(CreateResponseLang(false, 'errBackupFileInvalidExt', TJSONArray.Create.Add(FileExt)));
+    Exit(CreateResponseLang(false, 'hostErrBackupFileInvalidExt', TJSONArray.Create.Add(FileExt)));
 
   const IsTestSave = json.GetValue<Boolean>('test', false);
 
@@ -358,7 +387,7 @@ begin
   const BackupFolder = GetBackupFolder(Extension);
 
   if not TDirectory.Exists(BackupFolder) then
-    Exit(CreateResponseLang(false, 'invalidBackupFolder', TJSONArray.Create.Add(BackupFolder)));
+    Exit(CreateResponseLang(false, 'hostInvalidBackupFolder', TJSONArray.Create.Add(BackupFolder)));
 
   BackupFiles := GetBackupFiles(Extension, True);
 
@@ -366,7 +395,7 @@ begin
 
   try
     if BackupFiles.Count = 0 then
-      Exit(CreateResponseLang(false, 'noBackupFilesFound'));
+      Exit(CreateResponseLang(false, 'hostNoBackupFilesFound'));
 
     LatestBackupInfo := BackupFiles[0];
 
@@ -435,7 +464,7 @@ begin
   if not TDirectory.Exists(BackupFolder) then
   begin
     const extra = TJSONObject.Create(TJSONPair.Create('data', BackupFolder));
-    Exit(CreateResponseLang(false, 'invalidBackupFolder', TJSONArray.Create.Add(BackupFolder), extra));
+    Exit(CreateResponseLang(false, 'hostInvalidBackupFolder', TJSONArray.Create.Add(BackupFolder), extra));
   end;
 
   Result:= CreateResponseJSON(true, TJSONString.Create(BackupFolder));
@@ -450,7 +479,7 @@ begin
 
   OpenPath(BackupFolderResponse.GetValue<string>('data'));
 
-  Result := CreateResponseMessage(true, 'Success');
+  Result := CreateResponse(true);
 end;
 
 function HandleSelectBackupFolder(const json: TJSONObject; const Extension: TExtension): TJSONObject;
@@ -481,11 +510,9 @@ end;
 
 function HandleSetSettings(const json: TJSONObject; const Extension: TExtension): TJSONObject;
 begin
-  const SavedSettings = TJSONObject.Create;
-
-  Result := CreateResponseJSON(true, SavedSettings);
-
   const SettingsJSON = json.GetValue('settings') as TJSONObject;
+
+  const SavedSettings = TJSONObject.Create;
 
   // Handle deleteBackupDays
   const deleteBackupDaysJSON = SettingsJSON.GetValue('deleteBackupDays');
@@ -502,6 +529,8 @@ begin
     SetKeepBackupFiles(Extension, keepBackupFilesJSON.GetValue<Integer>);
     SavedSettings.AddPair('keepBackupFiles', GetKeepBackupFiles(Extension));
   end;
+
+  Result := CreateResponseJSON(true, SavedSettings);
 end;
 
 function HandleNativeMessaging(const payload: string; const Extension: TExtension): TJSONObject;
@@ -518,6 +547,8 @@ begin
 
   var Handlers := TDictionary<string, TActionHandler>.Create;
   try
+    Handlers.Add('get-version', HandleGetVersion);
+    Handlers.Add('update', HandleUpdate);
     Handlers.Add('save-backup', HandleSaveBackup);
     Handlers.Add('get-last-backup', HandleGetLastBackup);
     Handlers.Add('get-backup-folder', HandleGetBackupFolder);

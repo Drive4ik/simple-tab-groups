@@ -4,6 +4,7 @@ import * as Utils from './utils.js';
 import Logger from '/js/logger.js';
 
 const logger = new Logger('Host');
+var versionChecked = false;
 
 export async function hasPermission() {
     return browser.permissions.contains(Constants.PERMISSIONS.NATIVE_MESSAGING);
@@ -42,7 +43,13 @@ export function getErrorMessage(error) {
     return String(error);
 }
 
+const NO_WAIT_ACTIONS = new Set(['get-version', 'update']);
+
 async function sendMessage(action, params = {}) {
+    if (versionChecked === null && !NO_WAIT_ACTIONS.has(action)) {
+        return Utils.wait(2000).then(() => sendMessage(action, params));
+    }
+
     const log = logger.start('sendMessage', `HOST_ACTION#${action}`);
 
     if (params.filePath) {
@@ -61,6 +68,39 @@ async function sendMessage(action, params = {}) {
 
     log.stopError();
     throw new HostError(response);
+}
+
+export async function checkVersion() {
+    versionChecked = null;
+
+    try {
+        const {data: hostVersion} = await sendMessage('get-version');
+
+        const versionDiffIndex = Utils.compareNumericVersions(Constants.HOST.VERSION, hostVersion);
+
+        if (versionDiffIndex > 0) {
+            let version;
+
+            if (versionDiffIndex === 1) {
+                version = Constants.HOST.VERSION;
+            } else {
+                version = 'latest'; // will update to latest NOT major version
+            }
+
+            await sendMessage('update', {version});
+        }
+    } catch (e) {
+        if (e instanceof HostError) {
+            throw e;
+        } else {
+            throw new HostError({
+                lang: 'hostAppNotFound',
+                args: [],
+            });
+        }
+    } finally {
+        versionChecked = true;
+    }
 }
 
 export async function getSettings() {

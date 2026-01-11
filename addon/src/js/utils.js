@@ -528,31 +528,21 @@ export function getNameFromPath(path) {
     return new URL(path).pathname.split('/').pop().split('.').slice(0, -1).join('.');
 }
 
-// -1 : a < b
-// 0 : a === b
-// 1 : a > b
-export function compareVersions(a, b) {
-    if (a === b) {
-        return 0;
-    }
+/* a < b : - index of version type (major=-1, minor=-2...)
+   a > b : + index of version type (major=1, minor=2...)
+   a = b : 0 */
+export function compareNumericVersions(a, b) {
+    const partsA = a.split('.');
+    const partsB = b.split('.');
 
-    const regExStrip0 = /(\.0+)+$/,
-        segmentsA = a.replace(regExStrip0, '').split('.'),
-        segmentsB = b.replace(regExStrip0, '').split('.'),
-        l = Math.min(segmentsA.length, segmentsB.length);
+    const maxLen = Math.max(partsA.length, partsB.length);
 
-    for (let i = 0; i < l; i++) {
-        const diff = parseInt(segmentsA[i], 10) - parseInt(segmentsB[i], 10);
+    for (let i = 0; i < maxLen; i++) {
+        const nA = parseInt(partsA[i], 10) || 0;
+        const nB = parseInt(partsB[i], 10) || 0;
 
-        if (diff) {
-            return diff > 0 ? 1 : -1;
-        }
-    }
-
-    const diff = segmentsA.length - segmentsB.length;
-
-    if (diff) {
-        return diff > 0 ? 1 : -1;
+        if (nA < nB) return -(i + 1);
+        if (nA > nB) return (i + 1);
     }
 
     return 0;

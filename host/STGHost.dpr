@@ -16,7 +16,8 @@ uses
   Pipe in 'Pipe.pas',
   Settings in 'Settings.pas',
   VerInfo in 'VerInfo.pas',
-  Logger in 'Logger.pas';
+  Logger in 'Logger.pas',
+  GithubUpdater in 'GithubUpdater.pas';
 
 {$IFDEF RELEASE}
   {$SETPEFlAGS IMAGE_FILE_RELOCS_STRIPPED or IMAGE_FILE_DEBUG_STRIPPED or

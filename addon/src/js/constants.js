@@ -34,7 +34,7 @@ export const CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP = 'stg-undo-remove-group-id-'
 
 export const HOST = Object.freeze({
     NAME: 'simple_tab_groups_host',
-    VERSION: '1.0.0.0',
+    VERSION: '1.0',
     DOWNLOAD_URL: 'https://github.com/Drive4ik/simple-tab-groups/releases',
 });
 

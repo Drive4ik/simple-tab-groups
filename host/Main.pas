@@ -8,7 +8,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, System.Win.Registry, System.IOUtils,
-  System.JSON, Vcl.Mask, About, Utils, Settings, Vcl.Samples.Spin, Vcl.ComCtrls;
+  System.JSON, Vcl.Mask, About, Utils, Settings, Vcl.Samples.Spin, Vcl.ComCtrls, GithubUpdater;
 
 type
   TMainForm = class(TForm)
@@ -21,7 +21,7 @@ type
     NotesBackupBrowseButton: TButton;
     STGDeleteBackupDaysEdit: TSpinEdit;
     STGDeleteBackupDaysLabel: TLabel;
-    PageControl1: TPageControl;
+    PageControl: TPageControl;
     STGTabSheet: TTabSheet;
     NotesTabSheet: TTabSheet;
     SettingsTabSheet: TTabSheet;
@@ -33,6 +33,7 @@ type
     STGKeepBackupFilesEdit: TSpinEdit;
     NotesKeepBackupFilesLabel: TLabel;
     NotesKeepBackupFilesEdit: TSpinEdit;
+    CheckUpdatesButton: TButton;
     procedure CloseButtonClick(Sender: TObject);
     procedure AboutButtonClick(Sender: TObject);
     procedure STGBackupBrowseButtonClick(Sender: TObject);
@@ -47,6 +48,7 @@ type
     procedure LabelLinkClick(Sender: TObject; const Link: string; LinkType: TSysLinkType);
     procedure NotesKeepBackupFilesEditChange(Sender: TObject);
     procedure STGKeepBackupFilesEditChange(Sender: TObject);
+    procedure CheckUpdatesButtonClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -160,6 +162,56 @@ end;
 procedure TMainForm.NotesBackupBrowseButtonClick(Sender: TObject);
 begin
   SelectBackupFolder(NOTES, NotesBackupFolderEdit);
+end;
+
+procedure TMainForm.CheckUpdatesButtonClick(Sender: TObject);
+var
+  NewVersion, DefaultButtonTitle: String;
+begin
+  MainForm.Enabled:= false;
+
+  try
+    DefaultButtonTitle := CheckUpdatesButton.Caption;
+    CheckUpdatesButton.Enabled := false;
+    CheckUpdatesButton.Caption := 'Checking...';
+
+    if GithubCheckLatestVersion(NewVersion) then
+    begin
+      const Title = 'Update';
+      const UpdateMessage = 'A new version of ' + ExeInfo.Base.ProductName + ' is available!' + sLineBreak + sLineBreak +
+        'Current version: ' + ExeInfo.FileVersion + sLineBreak +
+        'New version: ' + NewVersion + sLineBreak + sLineBreak +
+        'Would you like to update?';
+
+      if MessageBox(Handle, PChar(UpdateMessage), PChar(Title), MB_ICONQUESTION or MB_YESNO) = IDYES then
+      begin
+        CheckUpdatesButton.Caption := 'Updating...';
+        GithubUpdateVersion(NewVersion, true);
+        Application.Terminate;
+      end
+      else
+      begin
+        CheckUpdatesButton.Caption := DefaultButtonTitle;
+        CheckUpdatesButton.Enabled := true;
+      end;
+    end
+    else
+    begin
+      CheckUpdatesButton.Caption := DefaultButtonTitle;
+      CheckUpdatesButton.Enabled := true;
+      MessageBox(Handle, PChar('You have the latest version!'), PChar('Result'), MB_ICONINFORMATION or MB_OK);
+    end;
+  except
+    on E: Exception do
+    begin
+      CheckUpdatesButton.Caption := DefaultButtonTitle;
+      CheckUpdatesButton.Enabled := true;
+      MainForm.Enabled:= true;
+      MessageBox(Handle, PChar(E.ToString), PChar('Error'), MB_ICONERROR or MB_OK);
+    end;
+  end;
+
+  MainForm.Enabled:= true;
 end;
 
 procedure TMainForm.CloseButtonClick(Sender: TObject);

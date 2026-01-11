@@ -695,7 +695,7 @@ export default {
             } else {
                 await browser.permissions.remove(Constants.PERMISSIONS.NATIVE_MESSAGING);
                 this.permissions.nativeMessaging = false;
-                this.options.autoBackupLocation = this.AUTO_BACKUP_LOCATIONS.DOWNLOADS;
+                // this.options.autoBackupLocation = this.AUTO_BACKUP_LOCATIONS.DOWNLOADS; // will set from background listener
             }
         },
 
