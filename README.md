@@ -1,8 +1,9 @@
-<h2><a href="https://addons.mozilla.org/firefox/addon/simple-tab-groups/" target="_blank" rel="noopener noreferrer"><img width="48" src="https://rawgit.com/Drive4ik/simple-tab-groups/master/addon/src/icons/icon.svg" alt="Simple Tab Groups"></a> Simple Tab Groups</h2>
 
-[![Mozilla Add-on](https://img.shields.io/amo/v/simple-tab-groups.svg)](https://addons.mozilla.org/firefox/addon/simple-tab-groups/) [![](https://img.shields.io/amo/d/simple-tab-groups.svg)](https://addons.mozilla.org/firefox/addon/simple-tab-groups/statistics/?last=365) [![](https://img.shields.io/amo/users/simple-tab-groups.svg)](https://addons.mozilla.org/firefox/addon/simple-tab-groups/statistics/usage/?last=365) [![](https://img.shields.io/amo/rating/simple-tab-groups.svg)](https://addons.mozilla.org/firefox/addon/simple-tab-groups/reviews/)
+# <img width="48" src="addon/src/icons/icon.svg" alt="Simple Tab Groups"> Simple Tab Groups
 
-[![https://addons.mozilla.org/firefox/addon/simple-tab-groups/](https://addons.cdn.mozilla.net/static/img/addons-buttons/AMO-button_2.png)](https://addons.mozilla.org/firefox/addon/simple-tab-groups/)
+<https://addons.mozilla.org/firefox/addon/simple-tab-groups/>
+
+[![Mozilla Add-on](https://img.shields.io/amo/v/simple-tab-groups.svg)](https://addons.mozilla.org/firefox/addon/simple-tab-groups/) [![amo](https://img.shields.io/amo/dw/simple-tab-groups.svg)](https://addons.mozilla.org/firefox/addon/simple-tab-groups/statistics/?last=365) [![users](https://img.shields.io/amo/users/simple-tab-groups.svg)](https://addons.mozilla.org/firefox/addon/simple-tab-groups/statistics/usage/?last=365) [![rating](https://img.shields.io/amo/rating/simple-tab-groups.svg)](https://addons.mozilla.org/firefox/addon/simple-tab-groups/reviews/)
 
 ## Translations
 
@@ -18,7 +19,7 @@ npm run build
 
 ### `npm run build`
 
-Build the extension into `addon/dist` folder for **development**.
+Build the extension into `dist` folder for **development**.
 
 ### `npm run watch`
 
@@ -132,6 +133,7 @@ Permissions used:
 * **<all_urls>(Access your data for all websites)**: for tab thumbnails and catch/move/reopen tabs in needed containers/groups
 * **webRequest** & **webRequestBlocking**: for catch/move/reopen tabs in needed containers/groups</li>
 * **(optional) bookmarks**: access for create bookmarks
+* **(optional) nativeMessaging**: Used for [STGHost](host) to create backups in any folder (Windows only)
 
 ## License and Credits
 
