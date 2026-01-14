@@ -1151,16 +1151,6 @@
             }
         }
     },
-    "hostErrBackupFileInvalidExt": {
-        "message": "Недійсне розширення файлу резервної копії \"$ext$\".",
-        "description": "Invalid backup file extension message",
-        "placeholders": {
-            "ext": {
-                "content": "$1",
-                "example": ".txt"
-            }
-        }
-    },
     "hostInvalidBackupFileName": {
         "message": "Ім'я файлу резервної копії недійсне!",
         "description": "Backup file name is invalid message"

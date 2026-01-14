@@ -210,10 +210,12 @@ export async function add(windowId, tabIds = [], title = null) {
 
     backgroundSelf.sendMessageFromBackground('group-added', {
         group: newGroup,
+        windowId,
     });
 
     backgroundSelf.sendExternalMessage('group-added', {
         group: mapForExternalExtension(newGroup),
+        windowId,
     });
 
     await backgroundSelf.updateMoveTabMenus();
@@ -331,7 +333,13 @@ async function restore(group) {
         await backgroundSelf.loadingBrowserAction(false);
     }
 
-    backgroundSelf.sendMessageFromBackground('group-added', {group});
+    backgroundSelf.sendMessageFromBackground('group-added', {
+        group: group,
+    });
+
+    backgroundSelf.sendExternalMessage('group-added', {
+        group: mapForExternalExtension(group),
+    });
 };
 
 export async function update(groupId, updateData) {

@@ -64,5 +64,111 @@
     "editorUseRTLDirection": {
         "message": "Использовать направление RTL",
         "description": "Use RTL direction"
+    },
+    "editorPromptUrls": {
+        "message": "Запрос URL-адресов ссылок и изображений",
+        "description": "Prompt urls"
+    },
+    "editorPreviewImages": {
+        "message": "Предпросмотр изображений",
+        "description": "Preview images in editor"
+    },
+    "selectBackupFolder": {
+        "message": "Выберите папку для резервных копий",
+        "description": "Button and open dialog box title"
+    },
+    "hostInvalidBackupFolder": {
+        "message": "Папка резервного копирования \"$folder$\" недействительна. Выберите действительную папку резервных копий.",
+        "description": "Invalid backup folder message",
+        "placeholders": {
+            "folder": {
+                "content": "$1",
+                "example": "D:\\invalid-folder"
+            }
+        }
+    },
+    "hostErrBackupOutsideAllowedFolder": {
+        "message": "Вы не можете сохранять резервные копии за пределами разрешенной папки! Вы пытаетесь сохранить в папке \"$folder$\".",
+        "description": "Cannot save outside folder message",
+        "placeholders": {
+            "folder": {
+                "content": "$1",
+                "example": "D:\\invalid-folder"
+            }
+        }
+    },
+    "hostInvalidBackupFileName": {
+        "message": "Имя файла резервной копии неверно!",
+        "description": "Backup file name is invalid message"
+    },
+    "hostNoBackupFilesFound": {
+        "message": "Резервные копии не найдены.",
+        "description": "Backup files not found message"
+    },
+    "autoBackupEnable": {
+        "message": "Включить автоматическое резервное копирование",
+        "description": "Enable auto backup"
+    },
+    "allowAccessToNativeMessaging": {
+        "message": "Разрешить доступ к \"Native Messaging\" для сохранения резервных копий в любой папке",
+        "description": "Allow access to \"Native Messaging\" to save backups to any folder"
+    },
+    "intervalKeyMinutes": {
+        "message": "минут",
+        "description": "minute(s)"
+    },
+    "intervalKeyHours": {
+        "message": "час(ов)",
+        "description": "hour(s)"
+    },
+    "intervalKeyDays": {
+        "message": "дней",
+        "description": "day(s)"
+    },
+    "filesCount": {
+        "message": "файл(ов)",
+        "description": "files(s)"
+    },
+    "downloadsFolder": {
+        "message": "Загрузки",
+        "description": "FF downloads folder"
+    },
+    "otherFolder": {
+        "message": "Другая",
+        "description": "Other folder, controled by STGHost"
+    },
+    "openBackupFolder": {
+        "message": "Открыть папку бэкапов",
+        "description": "Open backup folder"
+    },
+    "notFoundHostApp": {
+        "message": "STGHost.exe не найден",
+        "description": "STGHost not found"
+    },
+    "restoreLastBackup": {
+        "message": "Восстановить последнюю резервную копию",
+        "description": "Restore last backup"
+    },
+    "confirmRestoreBackupTitle": {
+        "message": "Восстановить резервную копию: \"$relativeFilePath$\"\nсозданную в $dateTime$?",
+        "description": "Confirm restore backup",
+        "placeholders": {
+            "relativeFilePath": {
+                "content": "$1",
+                "example": "STG-notes.json"
+            },
+            "dateTime": {
+                "content": "$2",
+                "example": "1/14/2026, 4:23:09 AM"
+            }
+        }
+    },
+    "deleteFilesOlderThan": {
+        "message": "Удалить файлы старше",
+        "description": "Delete files older than"
+    },
+    "keepLastBackupFiles": {
+        "message": "но сохранить последнее",
+        "description": "but keep the last"
     }
 }

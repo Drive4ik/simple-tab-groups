@@ -11,12 +11,15 @@ uses
   System.JSON,
   System.Classes,
   System.Generics.Collections,
+  System.Generics.Defaults,
+  System.Math,
   System.IOUtils,
   System.DateUtils,
   System.Types,
   Vcl.Forms,
   Main,
   Utils,
+  Logger,
   Settings,
   GithubUpdater;
 
@@ -37,9 +40,6 @@ function ReadStdIn: string; // raises on error
 function HandleNativeMessaging(const payload: string; const Extension: TExtension): TJSONObject;
 
 implementation
-
-uses
-  System.Math, System.Generics.Defaults, Logger;
 
 const MAX_OUT_MSG_SIZE = 1024 * 1024 * 1; // 1 MB
 
@@ -169,6 +169,42 @@ begin
     raise Exception.CreateFmt('Payload bytes read mismatch: expected %d, actual %d', [MsgLength, BytesRead]);
 
   Result := TEncoding.UTF8.GetString(Payload);
+end;
+
+function DeleteEmptyDirectories(const ARootPath: string): Boolean;
+begin
+  Result := False;
+
+  if not TDirectory.Exists(ARootPath) then
+    raise EDirectoryNotFoundException.CreateFmt('Directory not found: "%s"', [ARootPath]);
+
+  var SubDirs := TDirectory.GetDirectories(ARootPath, '*', TSearchOption.soAllDirectories);
+
+  if Length(SubDirs) = 0 then
+    Exit;
+
+  TArray.Sort<string>(SubDirs, TComparer<string>.Construct(
+    function(const Left, Right: string): Integer
+    begin
+      Result := Length(Right) - Length(Left);
+    end
+  ));
+
+  for var Dir in SubDirs do
+  begin
+    var Entries := TDirectory.GetFileSystemEntries(Dir);
+
+    if Length(Entries) = 0 then
+    begin
+      try
+        TDirectory.Delete(Dir);
+        Result := True;
+      except
+        on E: Exception do
+          Log(Format('Unable to delete directory "%s": %s', [Dir, sLineBreak + E.ToString]), 'error');
+      end;
+    end;
+  end;
 end;
 
 function GetBackupFiles(const Extension: TExtension; parseOnlyLastBackup: Boolean): TObjectList<TBackupFileInfo>;
@@ -335,7 +371,9 @@ begin
     Exit(CreateResponseLang(false, 'hostInvalidBackupFileName'));
 
   if not SameText(FileExt, extension.backupExt) then
-    Exit(CreateResponseLang(false, 'hostErrBackupFileInvalidExt', TJSONArray.Create.Add(FileExt)));
+    Exit(CreateResponseMessage(false, Format('invalid extension: "%s"', [FileExt])));
+
+  TDirectory.CreateDirectory(FilePath);
 
   const IsTestSave = json.GetValue<Boolean>('test', false);
 
@@ -360,6 +398,8 @@ begin
     TFile.Delete(FileFullPath)
   else
     DeleteBackupFiles(Extension);
+
+  DeleteEmptyDirectories(BackupFolder);
 end;
 
 function HandleGetLastBackup(const json: TJSONObject; const Extension: TExtension): TJSONObject;

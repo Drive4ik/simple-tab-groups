@@ -76,8 +76,14 @@ export default {
         addCustomWatchers() {
             this.optionsWatch('autoBackupFilePathHost', async (value, oldValue) => {
                 try {
-                    await Host.testFilePath(value);
-                    return value;
+                    value = value.trim();
+
+                    if (value) {
+                        await Host.testBackupFilePath(value);
+                        return value;
+                    }
+
+                    return oldValue;
                 } catch (e) {
                     Notification(e);
                     return oldValue;

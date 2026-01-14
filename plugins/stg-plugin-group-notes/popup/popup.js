@@ -1,22 +1,21 @@
 import '/translate-page.js';
 import '/easymde/easymde.min.js';
 import * as Constants from '/constants.js';
+import * as MainConstants from '/main-constants.js';
 import * as Utils from '/utils.js';
 import * as MainUtils from '/main-utils.js';
 
-const isSidebar = self.location.hash === '#sidebar',
-    isTab = self.location.hash === '#tab';
+const isSidebar = self.location.hash === '#sidebar';
+const isTab = self.location.hash === '#tab';
 
-if (isSidebar || isTab) {
-    document.documentElement.classList.add('fluid');
-}
+document.documentElement.classList.toggle('fluid', isSidebar || isTab);
 
 if (!isSidebar && !isTab) {
     // fix bug a lot of window resize event, which makes it impossible to select text on preview side-by-side. Replicate only on popup ¯\_(ツ)_/¯
     window.addEventListener('resize', e => e.stopImmediatePropagation(), true);
 }
 
-const options = await browser.storage.local.get(MainUtils.defaultOptions);
+const options = await browser.storage.local.get(MainConstants.defaultOptions);
 
 const $ = document.querySelector.bind(document),
     groupTitleNode = $('#groupTitle'),
@@ -31,11 +30,23 @@ const $ = document.querySelector.bind(document),
         autoDownloadFontAwesome: false,
         lineNumbers: options.editorLineNumbers,
         lineWrapping: options.editorLineWrapping,
+        promptURLs: options.editorPromptUrls,
+        previewImagesInEditor: options.editorPreviewImages,
         direction: options.editorUseRTLDirection ? 'rtl' : 'ltr',
         autofocus: true,
         status: false,
-        toolbar: ['bold', 'italic', 'strikethrough', 'heading', '|', 'horizontal-rule', 'code', 'quote', 'link', 'image', '|', 'unordered-list', 'ordered-list', 'table', '|', 'preview', 'side-by-side', '|', 'guide'],
-        hideIcons: isSidebar ? ['guide', 'side-by-side', 'table', 'image', 'horizontal-rule', 'quote'] : [],
+        uploadImage: true,
+        imageUploadFunction(file, onSuccess, onError) {
+            const reader = new FileReader();
+            reader.addEventListener('load', () => onSuccess(reader.result));
+            reader.addEventListener('error', onError);
+            reader.addEventListener('abort', onError);
+            reader.readAsDataURL(file);
+        },
+        toolbar: ['bold', 'italic', 'strikethrough', 'heading', '|', 'horizontal-rule', 'code', 'quote', 'link', 'image', 'upload-image', '|', 'unordered-list', 'ordered-list', 'table', '|', 'preview', 'side-by-side', '|', 'guide'],
+        hideIcons: isSidebar
+            ? ['guide', 'side-by-side', 'table', 'heading', 'horizontal-rule', 'quote']
+            : (isTab ? [] : ['upload-image']),
         styleSelectedText: false,
         sideBySideFullscreen: false,
         shortcuts: {
@@ -161,7 +172,7 @@ async function saveCurrentGroupNotes() {
             },
         });
 
-        MainUtils.setBadge(notes.trim(), currentWindow.id);
+        MainUtils.setBadge(notes.trim().length > 0, currentWindow.id);
 
         Utils.sendMessage('notes-updated', {currentGroupId}).catch(() => {});
     }

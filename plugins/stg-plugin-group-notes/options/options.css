@@ -1,3 +1,7 @@
+:root {
+    color-scheme: light dark;
+}
+
 html {
     font-family: Segoe UI, Arial;
 }
@@ -17,10 +21,121 @@ body {
     margin-right: 2px;
 }
 
-button {
+button.manual-backup {
     padding: 5px 10px;
 }
 
 .field:not(:last-child) {
     margin-bottom: 10px;
+}
+
+.has-text-danger {
+    color: crimson;
+}
+
+.is-clickable {
+    cursor: pointer;
+}
+
+.hidden-empty:empty {
+    display: none;
+}
+
+.is-hidden {
+    display: none;
+}
+
+.is-relative {
+    position: relative;
+}
+
+.is-flex {
+    display: flex;
+}
+
+.is-flex-grow-1 {
+    flex-grow: 1;
+}
+
+.is-flex-direction-column {
+    flex-direction: column;
+}
+
+.is-align-items-start {
+    align-items: start;
+}
+
+#options {
+    max-width: 1024px;
+    margin: 0 auto;
+}
+
+.content-menu {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translate(-100%, -101%);
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid accentcolor;
+
+    &.open {
+        display: block;
+    }
+
+    button {
+        border: none;
+        white-space: nowrap;
+        padding: 3px 10px;
+        width: 100%;
+        text-align: left;
+    }
+}
+
+#auto-backup-wrapper {
+    &:not(:has(legend :checked)) .auto-backup-content {
+        display: none;
+    }
+
+    &:not(.is-windows) {
+        .locations-selector,
+        .host-settings {
+            display: none;
+        }
+    }
+
+    .error-message {
+        white-space: pre-wrap;
+    }
+
+    /* hide minutes option for backup to downloads folder */
+    &:has([name="autoBackupLocation"][value="downloads"]:checked) option[value="minutes"] {
+        display: none;
+    }
+
+    .auto-backup-content {
+        .downloads-settings, .host-settings {
+            display: none;
+        }
+
+        &:has([name="autoBackupLocation"][value="downloads"]:checked) .downloads-settings,
+        .is-windows &:has([name="autoBackupLocation"][value="host"]:checked) .host-settings {
+            display: block;
+        }
+
+        .variable-button img {
+            vertical-align: bottom;
+        }
+
+        .host-settings {
+            #host-not-found-message:not(.is-hidden) ~ * {
+                display: none;
+            }
+
+            progress[value="0"] {
+                display: none;
+            }
+        }
+    }
 }

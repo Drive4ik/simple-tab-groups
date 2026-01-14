@@ -1155,16 +1155,6 @@
             }
         }
     },
-    "hostErrBackupFileInvalidExt": {
-        "message": "Invalid backup file extension \"$ext$\".",
-        "description": "Invalid backup file extension message",
-        "placeholders": {
-            "ext": {
-                "content": "$1",
-                "example": ".txt"
-            }
-        }
-    },
     "hostInvalidBackupFileName": {
         "message": "Backup file name is invalid!",
         "description": "Backup file name is invalid message"

@@ -666,7 +666,7 @@ export default {
             if (event.target.checked) {
                 this.permissions.bookmarks = event.target.checked = await Bookmarks.requestPermission();
             } else {
-                await browser.permissions.remove(Constants.PERMISSIONS.BOOKMARKS);
+                await Bookmarks.removePermission();
                 this.permissions.bookmarks = false;
             }
 
@@ -693,7 +693,7 @@ export default {
             if (event.target.checked) {
                 this.permissions.nativeMessaging = event.target.checked = await Host.requestPermission();
             } else {
-                await browser.permissions.remove(Constants.PERMISSIONS.NATIVE_MESSAGING);
+                await Host.removePermission();
                 this.permissions.nativeMessaging = false;
                 // this.options.autoBackupLocation = this.AUTO_BACKUP_LOCATIONS.DOWNLOADS; // will set from background listener
             }

@@ -1,44 +1,60 @@
+import Listeners from './listeners.js?onExtensionStart&runtime.onInstalled&runtime.onMessageExternal&menus.onClicked&permissions.onRemoved&alarms.onAlarm&storage.local.onChanged';
 import * as Constants from './constants.js';
+import * as MainConstants from './main-constants.js';
 import * as Utils from './utils.js';
 import * as MainUtils from './main-utils.js';
+import * as Host from './host.js';
+import * as File from './file.js';
 
-browser.runtime.onMessageExternal.addListener(async (request, sender) => {
+Listeners.runtime.onMessageExternal(async (request, sender) => {
     if (sender.id !== Constants.STG_ID) {
-        console.error(`Only STG support`);
-        return;
+        throw new Error('Only STG support');
     }
 
-    const requestGroupKey = MainUtils.getGroupKey(request.groupId);
+    const requestGroupKey = MainUtils.getGroupKey(request.groupId || request.group?.id);
 
     switch (request.action) {
         case 'i-am-back':
-            Utils.sendExternalMessage('ignore-ext-for-reopen-container');
             init();
             break;
         case 'group-loaded':
             const {[requestGroupKey]: notes} = await browser.storage.local.get(requestGroupKey);
-            MainUtils.setBadge(notes?.notes?.trim(), request.windowId);
+            MainUtils.setBadge(notes?.notes.trim().length > 0, request.windowId);
             break;
         case 'group-unloaded':
             MainUtils.setBadge(false, request.windowId);
             break;
+        case 'group-added':
+            const restoredGroupNotes = await browser.storage.session.get(requestGroupKey);
+            if (restoredGroupNotes[requestGroupKey]) {
+                await browser.storage.local.set(restoredGroupNotes);
+                MainUtils.setBadge(true, request.windowId);
+            }
+            break;
         case 'group-removed':
             MainUtils.setBadge(false, request.windowId);
+            const removedGroupNotes = await browser.storage.local.get(requestGroupKey);
+            if (removedGroupNotes[requestGroupKey]?.notes.trim().length) {
+                browser.storage.session.set(removedGroupNotes);
+            }
             browser.storage.local.remove(requestGroupKey);
             break;
         case 'get-backup':
-            return {
-                backup: await browser.storage.local.get(),
-            };
+            const backup = Object.assign({...MainConstants.defaultOptions}, await browser.storage.local.get());
+            return {backup};
         case 'set-backup':
             await browser.storage.local.clear();
+            const hasPermission = await Host.hasPermission();
+            if ((!Constants.IS_WINDOWS || !hasPermission) && request.backup.autoBackupLocation === MainConstants.AUTO_BACKUP_LOCATIONS.HOST) {
+                request.backup.autoBackupLocation = MainConstants.AUTO_BACKUP_LOCATIONS.DOWNLOADS;
+            }
             await browser.storage.local.set(request.backup);
             browser.runtime.reload();
             break;
     }
 });
 
-browser.menus.onClicked.addListener(async info => {
+Listeners.menus.onClicked(async info => {
     if (info.menuItemId === 'openInTab') {
         MainUtils.openInTab();
     } else if (info.menuItemId === 'openOptions') {
@@ -48,14 +64,72 @@ browser.menus.onClicked.addListener(async info => {
     }
 });
 
-async function init() {
-    const {groupsList} = await Utils.sendExternalMessage('get-groups-list'),
-        notes = await browser.storage.local.get();
+Listeners.permissions.onRemoved(async () => {
+    await browser.storage.local.set({
+        autoBackupLocation: MainConstants.AUTO_BACKUP_LOCATIONS.DOWNLOADS,
+    });
+});
 
-    groupsList?.forEach(({id, windowId}) => MainUtils.setBadge(notes[MainUtils.getGroupKey(id)]?.notes.trim(), windowId));
+Listeners.alarms.onAlarm(async ({name}) => {
+    if (name === 'backup') {
+        const settings = Object.assign({...MainConstants.defaultOptions}, await browser.storage.local.get());
+
+        try {
+            if (settings.autoBackupLocation === MainConstants.AUTO_BACKUP_LOCATIONS.HOST) {
+                await Host.saveBackup(settings);
+            } else {
+                await File.saveBackup(settings, true);
+            }
+
+            localStorage.lastAutoBackupUnixTime = Utils.unixNow();
+        } catch (e) {
+            Utils.notify('backupFailed', String(e), {
+                timerSec: 10,
+            });
+        }
+    }
+});
+
+Listeners.storage.local.onChanged(async changes => {
+    if (changes.autoBackupEnable || changes.autoBackupIntervalKey || changes.autoBackupIntervalValue) {
+        await resetBackupAlarm();
+    }
+});
+
+async function resetBackupAlarm() {
+    const settings = await browser.storage.local.get(MainConstants.defaultOptions);
+
+    await Utils.resetAlarm(
+        'backup',
+        settings.autoBackupEnable,
+        settings.autoBackupIntervalKey,
+        settings.autoBackupIntervalValue,
+        localStorage.lastAutoBackupUnixTime,
+    );
+}
+
+async function init() {
+    await resetBackupAlarm();
+
+    const settings = Object.assign({...MainConstants.defaultOptions}, await browser.storage.local.get());
+
+    const {groupsList} = await Utils.sendExternalMessage('get-groups-list');
+
+    for (const group of groupsList) {
+        const groupKey = MainUtils.getGroupKey(group.id);
+        const hasNotes = settings[groupKey]?.notes.trim().length > 0;
+
+        MainUtils.setBadge(hasNotes, group.windowId);
+    }
 }
 
 async function setup() {
+    if (setup.done) {
+        return;
+    }
+
+    setup.done = true;
+
     await browser.action.setBadgeBackgroundColor({
         color: 'transparent',
     });
@@ -70,12 +144,6 @@ async function setup() {
     });
 
     await Utils.createMenu({
-        id: browser.menus.ItemType.SEPARATOR,
-        type: browser.menus.ItemType.SEPARATOR,
-        contexts: [browser.menus.ContextType.ACTION],
-    });
-
-    await Utils.createMenu({
         id: 'openOptions',
         title: browser.i18n.getMessage('openOptions'),
         contexts: [browser.menus.ContextType.ACTION],
@@ -83,8 +151,10 @@ async function setup() {
     });
 }
 
-browser.runtime.onStartup.addListener(setup);
-browser.runtime.onInstalled.addListener(async ({reason, previousVersion}) => {
+
+Listeners.runtime.onInstalled(async ({reason, previousVersion}) => {
+    Listeners.onExtensionStart(); // remove pending onExtensionStart call
+
     if (reason === browser.runtime.OnInstalledReason.UPDATE) {
         const [major] = previousVersion.split('.');
 
@@ -97,17 +167,7 @@ browser.runtime.onInstalled.addListener(async ({reason, previousVersion}) => {
         }
     }
 
-    try {
-        await Utils.sendExternalMessage('ignore-ext-for-reopen-container');
-    } catch {
-        Utils.notify('needInstallSTGExtension', browser.i18n.getMessage('needInstallSTGExtension'), {
-            timerSec: 10,
-            onClick: {
-                action: 'open-tab',
-                url: Constants.STG_HOME_PAGE,
-            },
-        });
-    }
-
     setup();
 });
+
+Listeners.onExtensionStart(setup);

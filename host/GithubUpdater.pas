@@ -15,7 +15,6 @@ uses
 const RELEASES_API_URL = 'https://api.github.com/repos/Drive4ik/simple-tab-groups/releases';
 const TAG_START: string = 'v';
 const TAG_END = '-host';
-const TMP_FILE_NAME = 'host.tmp';
 
 function IsHostTag(const Tag: String): Boolean;
 begin
@@ -184,10 +183,7 @@ begin
       if not IsEqualHash(Digest, MS) then
         raise Exception.Create('File hash does not match');
 
-      TmpFile := ExpandEnvStr('%temp%\' + TMP_FILE_NAME);
-
-      if TFile.Exists(TmpFile) then
-        TFile.Delete(TmpFile);
+      TmpFile := TPath.GetTempFileName;
 
       MS.SaveToFile(TmpFile);
       MS.Free;

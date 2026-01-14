@@ -1,10 +1,7 @@
 
 // import * as Constants from './constants.js';
+import * as MainConstants from './main-constants.js';
 import * as Utils from './utils.js';
-import Logger from './logger.js';
-import * as Storage from './storage.js';
-
-const logger = new Logger('File');
 
 export async function load(accept = '*/*', readAs = 'text') { // readAs: text, url
     if (!['text', 'url'].includes(readAs)) {
@@ -69,8 +66,6 @@ export async function save(data, filePath = 'file-name', options = {}) {
 
     filePath = Utils.format(filePath, Utils.getFilePathVariables());
 
-    const log = logger.start('save', {filePath, ...options});
-
     let body = null,
         type = null;
 
@@ -93,8 +88,6 @@ export async function save(data, filePath = 'file-name', options = {}) {
             conflictAction: browser.downloads.FilenameConflictAction.OVERWRITE,
         });
 
-        log.log('id download', id);
-
         let {
             state: state = browser.downloads.State.INTERRUPTED,
             error: error = `Download ID not found, id: ${id}`,
@@ -108,26 +101,21 @@ export async function save(data, filePath = 'file-name', options = {}) {
             }
         } else if (browser.downloads.State.INTERRUPTED === state && !options.saveAs && options.tryCount < 5) {
             await browser.downloads.erase({id});
-            log.stopWarn('cant download id:', id, 'tryCount:', options.tryCount, error);
+            console.warn('cant download id:', id, 'tryCount:', options.tryCount, error);
             options.tryCount++;
             return save(data, filePath, options);
         } else {
             throw error;
         }
 
-        log.stop(id);
-
         return id;
     } catch (e) {
         if (!String(e.message || e).toLowerCase().includes('canceled')) {
-            log.logError(e.message || e, e);
-            log.stopError();
+            console.error(e);
 
             if (options.throwError) {
                 throw e;
             }
-        } else {
-            log.stop();
         }
     } finally {
         URL.revokeObjectURL(url);
@@ -135,7 +123,9 @@ export async function save(data, filePath = 'file-name', options = {}) {
 }
 
 export async function saveBackup(data, isAutoBackup) {
-    const filePath = data.autoBackupFilePathFile + '.json';
+    const filePath = data.autoBackupFilePath + '.json';
+
+    data.id = browser.runtime.id;
 
     return await save(data, filePath, {
         saveAs: !isAutoBackup,
@@ -148,14 +138,14 @@ export async function testBackupFilePath(filePath, exploreFolder = false) {
     let id = null;
 
     try {
-        id = await save({test:'test'}, filePath + '.json', {
+        id = await save({}, filePath + '.json', {
             saveAs: false,
             throwError: true,
         });
 
         if (id && exploreFolder) {
             await browser.downloads.show(id);
-            await Utils.wait(750);
+            await new Promise(resolve => setTimeout(resolve, 750));
         }
     } finally {
         if (id) {
@@ -168,23 +158,19 @@ export async function testBackupFilePath(filePath, exploreFolder = false) {
 export async function openBackupFolder() {
     const TEMP_FILE_NAME = 'folder-check';
 
-    let {autoBackupFilePathFile} = await Storage.get('autoBackupFilePathFile');
+    let {autoBackupFilePath} = await browser.storage.local.get(MainConstants.defaultOptions);
 
-    autoBackupFilePathFile = autoBackupFilePathFile.replaceAll('\\', '/');
+    autoBackupFilePath = autoBackupFilePath.replaceAll('\\', '/');
 
-    const slashIndex = autoBackupFilePathFile.lastIndexOf('/');
+    const slashIndex = autoBackupFilePath.lastIndexOf('/');
 
     if (slashIndex > -1) {
-        autoBackupFilePathFile = autoBackupFilePathFile.slice(0, slashIndex + 1) + TEMP_FILE_NAME;
+        autoBackupFilePath = autoBackupFilePath.slice(0, slashIndex + 1) + TEMP_FILE_NAME;
     } else {
-        autoBackupFilePathFile = TEMP_FILE_NAME;
+        autoBackupFilePath = TEMP_FILE_NAME;
     }
 
-    try {
-        await testBackupFilePath(autoBackupFilePathFile, true);
-    } catch (e) {
-        logger.logError(String(e), e);
-    }
+    await testBackupFilePath(autoBackupFilePath, true);
 }
 
 async function waitDownload(id, maxWaitSec = 10) {
@@ -197,7 +183,7 @@ async function waitDownload(id, maxWaitSec = 10) {
             break;
         }
 
-        await Utils.wait(200);
+        await new Promise(resolve => setTimeout(resolve, 200));
     }
 
     return downloadObj || {};

@@ -4,7 +4,7 @@
     "browser_specific_settings": {
         "gecko": {
             "id": "stg-plugin-group-notes@drive4ik",
-            "strict_min_version": "112.0"
+            "strict_min_version": "128.0"
         }
     },
 
@@ -21,14 +21,14 @@
     },
 
     "action": {
-        "default_icon": "icons/icon.svg",
+        "default_icon": "icons/icon.svg?nocache",
         "default_title": "__MSG_extensionName__",
         "default_popup": "popup/popup.html",
         "browser_style": false
     },
 
     "sidebar_action": {
-        "default_icon": "icons/icon.svg",
+        "default_icon": "icons/icon.svg?nocache",
         "default_title": "__MSG_extensionName__",
         "default_panel": "popup/popup.html#sidebar",
         "browser_style": false,
@@ -41,14 +41,21 @@
     },
 
     "options_ui": {
-        "page": "options/options.html"
+        "page": "options/options.html",
+        "open_in_tab": true
     },
 
     "permissions": [
         "menus",
         "notifications",
+        "alarms",
+        "downloads",
         "storage",
         "unlimitedStorage"
+    ],
+
+    "optional_permissions": [
+        "nativeMessaging"
     ],
 
     "default_locale": "en",

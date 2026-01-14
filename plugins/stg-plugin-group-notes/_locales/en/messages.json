@@ -68,5 +68,111 @@
     "editorUseRTLDirection": {
         "message": "Use RTL direction",
         "description": "Use RTL direction"
+    },
+    "editorPromptUrls": {
+        "message": "Prompt urls for links and images",
+        "description": "Prompt urls"
+    },
+    "editorPreviewImages": {
+        "message": "Preview images",
+        "description": "Preview images in editor"
+    },
+    "selectBackupFolder": {
+        "message": "Select a folder for backups",
+        "description": "Button and open dialog box title"
+    },
+    "hostInvalidBackupFolder": {
+        "message": "The backup folder \"$folder$\" is invalid. Please, select a valid backup folder.",
+        "description": "Invalid backup folder message",
+        "placeholders": {
+            "folder": {
+                "content": "$1",
+                "example": "D:\\invalid-folder"
+            }
+        }
+    },
+    "hostErrBackupOutsideAllowedFolder": {
+        "message": "You cannot save backups outside the allowed folder! You are attempting to save to the folder \"$folder$\".",
+        "description": "Cannot save outside folder message",
+        "placeholders": {
+            "folder": {
+                "content": "$1",
+                "example": "D:\\invalid-folder"
+            }
+        }
+    },
+    "hostInvalidBackupFileName": {
+        "message": "Backup file name is invalid!",
+        "description": "Backup file name is invalid message"
+    },
+    "hostNoBackupFilesFound": {
+        "message": "Backup files not found.",
+        "description": "Backup files not found message"
+    },
+    "autoBackupEnable": {
+        "message": "Enable auto backup",
+        "description": "Enable auto backup"
+    },
+    "allowAccessToNativeMessaging": {
+        "message": "Allow access to \"Native Messaging\" to save backups to any folder",
+        "description": "Allow access to \"Native Messaging\" to save backups to any folder"
+    },
+    "intervalKeyMinutes": {
+        "message": "minute(s)",
+        "description": "minute(s)"
+    },
+    "intervalKeyHours": {
+        "message": "hour(s)",
+        "description": "hour(s)"
+    },
+    "intervalKeyDays": {
+        "message": "day(s)",
+        "description": "day(s)"
+    },
+    "filesCount": {
+        "message": "files(s)",
+        "description": "files(s)"
+    },
+    "downloadsFolder": {
+        "message": "Downloads",
+        "description": "FF downloads folder"
+    },
+    "otherFolder": {
+        "message": "Other",
+        "description": "Other folder, controled by STGHost"
+    },
+    "openBackupFolder": {
+        "message": "Open backup folder",
+        "description": "Open backup folder"
+    },
+    "notFoundHostApp": {
+        "message": "STGHost.exe not found",
+        "description": "STGHost not found"
+    },
+    "restoreLastBackup": {
+        "message": "Restore last backup",
+        "description": "Restore last backup"
+    },
+    "confirmRestoreBackupTitle": {
+        "message": "Restore backup: \"$relativeFilePath$\"\ncreated on $dateTime$?",
+        "description": "Confirm restore backup",
+        "placeholders": {
+            "relativeFilePath": {
+                "content": "$1",
+                "example": "STG-notes.json"
+            },
+            "dateTime": {
+                "content": "$2",
+                "example": "1/14/2026, 4:23:09 AM"
+            }
+        }
+    },
+    "deleteFilesOlderThan": {
+        "message": "Delete files older than",
+        "description": "Delete files older than"
+    },
+    "keepLastBackupFiles": {
+        "message": "but keep the last",
+        "description": "but keep the last"
     }
 }

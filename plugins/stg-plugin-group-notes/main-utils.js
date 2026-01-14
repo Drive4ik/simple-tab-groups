@@ -1,17 +1,10 @@
 
-export const defaultOptions = Object.freeze({
-    tabFaviconAsGroup: false,
-    editorLineNumbers: false,
-    editorLineWrapping: true,
-    editorUseRTLDirection: false,
-});
-
-const BADGE_SYMBOL = '⭐️';
+import * as MainConstants from '/main-constants.js';
 
 export async function setBadge(show, windowId) {
     if (windowId) {
         await browser.action.setBadgeText({
-            text: show ? BADGE_SYMBOL : '',
+            text: show ? MainConstants.BADGE_SYMBOL : '',
             windowId,
         });
     }

@@ -23,6 +23,10 @@ export async function requestPermission() {
     return browser.permissions.request(Constants.PERMISSIONS.BOOKMARKS);
 }
 
+export async function removePermission() {
+    return browser.permissions.remove(Constants.PERMISSIONS.BOOKMARKS);
+}
+
 async function findGroup(group, parentId, createIfNeed = false) {
     let bookmark;
 

@@ -1,21 +1,19 @@
 
-import * as Constants from './constants.js';
-import * as Utils from './utils.js';
-import Logger from '/js/logger.js';
 
-const logger = new Logger('Host');
-var versionChecked = false;
+import * as Constants from '/constants.js';
+import * as MainConstants from '/main-constants.js';
+import * as Utils from '/utils.js';
 
 export async function hasPermission() {
-    return browser.permissions.contains(Constants.PERMISSIONS.NATIVE_MESSAGING);
+    return browser.permissions.contains(MainConstants.PERMISSIONS.NATIVE_MESSAGING);
 }
 
 export async function requestPermission() {
-    return browser.permissions.request(Constants.PERMISSIONS.NATIVE_MESSAGING);
+    return browser.permissions.request(MainConstants.PERMISSIONS.NATIVE_MESSAGING);
 }
 
 export async function removePermission() {
-    return browser.permissions.remove(Constants.PERMISSIONS.NATIVE_MESSAGING);
+    return browser.permissions.remove(MainConstants.PERMISSIONS.NATIVE_MESSAGING);
 }
 
 export class HostError extends Error {
@@ -30,8 +28,6 @@ export class HostError extends Error {
             message = 'Unknown error';
         }
 
-        logger.error(`HostError: ${message}`, response);
-
         super(message, 'STGHost.exe');
 
         this.name = 'HostError';
@@ -39,23 +35,7 @@ export class HostError extends Error {
     }
 }
 
-export function getErrorMessage(error) {
-    if (error instanceof HostError) {
-        return error.message;
-    }
-
-    return String(error);
-}
-
-const NO_WAIT_ACTIONS = new Set(['get-version', 'update']);
-
 async function sendMessage(action, params = {}) {
-    if (versionChecked === null && !NO_WAIT_ACTIONS.has(action)) {
-        return Utils.wait(2000).then(() => sendMessage(action, params));
-    }
-
-    const log = logger.start('sendMessage', `HOST_ACTION#${action}`);
-
     if (params.filePath) {
         params.filePath = Utils.format(params.filePath, Utils.getFilePathVariables());
     }
@@ -65,46 +45,13 @@ async function sendMessage(action, params = {}) {
         ...params,
     });
 
+    console.debug(response)
+
     if (response.ok) {
-        log.stop(response);
         return response;
     }
 
-    log.stopError();
     throw new HostError(response);
-}
-
-export async function checkVersion() {
-    versionChecked = null;
-
-    try {
-        const {data: hostVersion} = await sendMessage('get-version');
-
-        const versionDiffIndex = Utils.compareNumericVersions(Constants.HOST.VERSION, hostVersion);
-
-        if (versionDiffIndex > 0) {
-            let version;
-
-            if (versionDiffIndex === 1) {
-                version = Constants.HOST.VERSION;
-            } else {
-                version = 'latest'; // will update to latest NOT major version
-            }
-
-            await sendMessage('update', {version});
-        }
-    } catch (e) {
-        if (e instanceof HostError) {
-            throw e;
-        } else {
-            throw new HostError({
-                lang: 'hostAppNotFound',
-                args: [],
-            });
-        }
-    } finally {
-        versionChecked = true;
-    }
 }
 
 export async function getSettings() {
@@ -175,7 +122,7 @@ export async function testBackupFilePath(filePath) {
 
 export async function saveBackup(data) {
     await sendMessage('save-backup', {
-        filePath: data.autoBackupFilePathHost + '.json',
+        filePath: data.autoBackupFilePath + '.json',
         data,
     });
 }

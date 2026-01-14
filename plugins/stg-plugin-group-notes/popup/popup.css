@@ -1,6 +1,11 @@
+
 html {
     font-family: Segoe UI, Arial;
     scrollbar-width: thin;
+    color-scheme: light dark;
+
+    --dark-border-color: hsl(0, 0%, 40%);
+    --dark-background-color: hsl(249, 11%, 12%);
 }
 
 * {
@@ -18,50 +23,53 @@ body {
     width: 800px;
 }
 
-html.fluid #root {
-    width: auto;
-}
+html.fluid {
+    #root {
+        width: auto;
+    }
 
-html.fluid,
-html.fluid body,
-html.fluid #notes-wrapper,
-html.fluid .EasyMDEContainer,
-html.fluid .EasyMDEContainer .CodeMirror,
-html.fluid .EasyMDEContainer .editor-preview {
-    height: 100%;
-}
+    &,
+    body,
+    #notes-wrapper,
+    .EasyMDEContainer,
+    .EasyMDEContainer .CodeMirror,
+    .EasyMDEContainer .editor-preview {
+        height: 100%;
+    }
 
-html.fluid body #root {
-    height: calc(100vh - 60px);
-}
+    body #root {
+        height: calc(100vh - 60px);
+    }
 
-html.fluid .EasyMDEContainer .fullscreen ~ .editor-preview {
-    height: calc(100% - 50px);
+    .EasyMDEContainer .fullscreen ~ .editor-preview {
+        height: calc(100% - 50px);
+    }
 }
 
 #group-wrapper {
     display: flex;
     align-items: center;
     margin-bottom: 5px;
-}
 
-#group-wrapper > * + * {
-    margin-left: 5px;
-}
+    > * + * {
+        margin-left: 5px;
+    }
 
-#group-wrapper .title {
-    overflow-wrap: anywhere;
-    flex-grow: 1;
+    .title {
+        overflow-wrap: anywhere;
+        flex-grow: 1;
+    }
 }
 
 .icon {
     line-height: 0;
-}
-.icon > img {
-    max-height: 16px;
-    max-width: 16px;
-    width: 16px;
-    height: 16px;
+
+    > img {
+        max-height: 16px;
+        max-width: 16px;
+        width: 16px;
+        height: 16px;
+    }
 }
 
 .clickable {
@@ -72,12 +80,35 @@ html.fluid .EasyMDEContainer .fullscreen ~ .editor-preview {
     display: none;
 }
 
-#needInstallSTGExtension:not(.hidden) ~ [id$="wrapper"],
-#windowNotHaveGroup:not(.hidden) ~ [id$="wrapper"] {
-    display: none;
+#needInstallSTGExtension,
+#windowNotHaveGroup {
+    &:not(.hidden) ~ [id$="wrapper"] {
+        display: none;
+    }
 }
 
 /* easyMDE */
+.EasyMDEContainer .CodeMirror {
+    @media (prefers-color-scheme: dark) {
+        color: currentColor;
+        border-color: var(--dark-border-color);
+        background: initial;
+
+        .CodeMirror-cursor {
+            border-color: currentColor;
+        }
+
+        .CodeMirror-selected {
+            background: AccentColor;
+        }
+
+        .CodeMirror-gutters {
+            border-color: var(--dark-border-color);
+            background-color: transparent;
+        }
+    }
+}
+
 .CodeMirror,
 .editor-preview {
     padding: 5px;
@@ -89,15 +120,24 @@ html.fluid .EasyMDEContainer .fullscreen ~ .editor-preview {
 
 .editor-toolbar {
     padding: 3px;
-}
 
-.editor-toolbar::before,
-.editor-toolbar::after {
-    content: none;
-}
+    &::before,
+    &::after {
+        content: none;
+    }
 
-.editor-toolbar i.separator {
-    margin: 0 3px;
+    i.separator {
+        margin: 0 3px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        border-color: var(--dark-border-color);
+
+        button.active,
+        button:hover {
+            background: hsla(from currentColor h s l / .2);
+        }
+    }
 }
 
 .CodeMirror-vscrollbar,
@@ -106,18 +146,36 @@ html.fluid .EasyMDEContainer .fullscreen ~ .editor-preview {
     scrollbar-width: thin;
 }
 
-.editor-preview pre {
-    white-space: break-spaces;
+.editor-preview {
+    pre {
+        white-space: break-spaces;
+    }
+
+    table {
+        border-collapse: collapse;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        background: var(--dark-background-color);
+
+        pre {
+            background: hsl(from var(--dark-background-color) h s calc(l + 10));
+        }
+    }
 }
 
-.editor-preview table {
-    border-collapse: collapse;
+.editor-preview-side {
+    @media (prefers-color-scheme: dark) {
+        border-color: var(--dark-border-color);
+    }
 }
 
-html:not(.fluid) .CodeMirror-scroll {
-    max-height: 500px;
-}
+html:not(.fluid) {
+    .CodeMirror-scroll {
+        max-height: 500px;
+    }
 
-html:not(.fluid) .editor-preview {
-    max-height: calc(100vh - 68px);
+    .editor-preview {
+        max-height: calc(100vh - 68px);
+    }
 }

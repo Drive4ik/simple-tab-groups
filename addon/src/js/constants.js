@@ -251,6 +251,7 @@ export const EXTENSIONS_WHITE_LIST = Object.freeze({
             'i-am-back',
             'group-loaded',
             'group-unloaded',
+            'group-added',
             'group-updated',
             'group-removed',
             'get-backup',

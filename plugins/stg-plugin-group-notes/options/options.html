@@ -2,11 +2,14 @@
 <html>
 <head>
     <meta charset="utf-8">
+    <title data-i18n-id="openOptions"></title>
     <link rel="stylesheet" type="text/css" href="options.css">
+    <script type="module" src="options.js"></script>
 </head>
 <body>
 
-<div>
+<div id="options">
+    <h1 data-i18n-id="extensionName"></h1>
     <div class="field">
         <label>
             <input id="tabFaviconAsGroup" type="checkbox" />
@@ -27,26 +30,122 @@
     </div>
     <div class="field">
         <label>
+            <input id="editorPromptUrls" type="checkbox" />
+            <span data-i18n-id="editorPromptUrls"></span>
+        </label>
+    </div>
+    <div class="field">
+        <label>
+            <input id="editorPreviewImages" type="checkbox" />
+            <span data-i18n-id="editorPreviewImages"></span>
+        </label>
+    </div>
+    <div class="field">
+        <label>
             <input id="editorUseRTLDirection" type="checkbox" />
             <span data-i18n-id="editorUseRTLDirection"></span>
         </label>
     </div>
 
     <div class="field">
-        <button id="importBackup">
+        <button id="importBackup" class="manual-backup">
             <img class="image" src="/icons/file-upload.svg"/>
             <span data-i18n-id="importBackup"></span>
         </button>
-    </div>
-
-    <div class="field">
-        <button id="exportBackup">
+        <button id="exportBackup" class="manual-backup">
             <img class="image" src="/icons/file-import.svg"/>
             <span data-i18n-id="exportBackup"></span>
         </button>
     </div>
+
+    <fieldset id="auto-backup-wrapper" class="field">
+        <legend>
+            <label>
+                <input id="autoBackupEnable" type="checkbox" />
+                <span data-i18n-id="autoBackupEnable"></span>
+            </label>
+        </legend>
+        <div class="auto-backup-content">
+            <div class="field">
+                <input id="autoBackupIntervalValue" type="number" min="1" max="1000" step="1" />
+                <select id="autoBackupIntervalKey">
+                    <option value="minutes" data-i18n-id="intervalKeyMinutes"></option>
+                    <option value="hours" data-i18n-id="intervalKeyHours"></option>
+                    <option value="days" data-i18n-id="intervalKeyDays"></option>
+                </select>
+            </div>
+            <div class="field locations-selector">
+                <div class="field">
+                    <label>
+                        <input type="radio" name="autoBackupLocation" value="downloads" />
+                        <span data-i18n-id="downloadsFolder"></span>
+                    </label>
+                </div>
+                <div class="field">
+                    <label>
+                        <input type="radio" name="autoBackupLocation" value="host" disabled />
+                        <span data-i18n-id="otherFolder"></span>
+                    </label>
+                    <label>
+                        <input id="nativeMessaging" type="checkbox" />
+                        <span data-i18n-id="allowAccessToNativeMessaging"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="field downloads-settings">
+                <div class="field is-flex is-align-items-start">
+                    <input id="location-downloads-input" type="text" disabled />
+                    <input data-file-path="downloads" type="text" maxlength="256" class="is-flex-grow-1" />
+                    <input type="text" value=".json" size="4" disabled />
+                    <div class="is-relative">
+                        <button id="downloads-variable-button" class="variable-button">
+                            <img src="/icons/brackets-curly.svg" />
+                        </button>
+                        <div class="content-menu"></div>
+                    </div>
+                    <button id="downloads-open-backup-folder" data-i18n-id="openBackupFolder"></button>
+                </div>
+                <div id="downloads-error-message" class="field has-text-danger error-message hidden-empty"></div>
+            </div>
+            <div class="field host-settings">
+                <span id="host-not-found-message" class="is-hidden">
+                    <a id="host-link" href="" target="_blank" data-i18n-id="notFoundHostApp"></a>
+                </span>
+                <div class="field is-flex is-align-items-start">
+                    <input id="host-backup-folder" type="text" readonly class="is-flex-grow-1 is-clickable" />
+                    <input data-file-path="host" type="text" maxlength="256" class="is-flex-grow-1" />
+                    <input type="text" value=".json" size="4" disabled />
+                    <div class="is-relative">
+                        <button id="host-variable-button" class="variable-button">
+                            <img src="/icons/brackets-curly.svg" />
+                        </button>
+                        <div class="content-menu"></div>
+                    </div>
+                    <button id="host-open-backup-folder" data-i18n-id="openBackupFolder"></button>
+                </div>
+                <div id="host-error-message" class="field has-text-danger error-message hidden-empty"></div>
+                <div class="field">
+                    <button id="host-restore-last-backup" data-i18n-id="restoreLastBackup"></button>
+                    <progress id="download-backup-progress" value="0" max="100"></progress>
+                </div>
+                <div class="field">
+                    <label>
+                        <span data-i18n-id="deleteFilesOlderThan"></span>
+                        <input id="deleteBackupDays" type="number" min="0" max="1000" step="1" />
+                        <span data-i18n-id="intervalKeyDays"></span>
+                    </label>
+                </div>
+                <div class="field">
+                    <label>
+                        <span data-i18n-id="keepLastBackupFiles"></span>
+                        <input id="keepBackupFiles" type="number" min="1" max="1000" step="1" />
+                        <span data-i18n-id="filesCount"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </fieldset>
 </div>
 
-<script type="module" src="options.js"></script>
 </body>
 </html>

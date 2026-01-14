@@ -620,7 +620,7 @@
         "description": "Browse..."
     },
     "openBackupFolder": {
-        "message": "Открыть папку резервного копирования",
+        "message": "Открыть папку бэкапов",
         "description": "Open backup folder"
     },
     "createNewGroupWhenOpenNewWindow": {
@@ -1148,16 +1148,6 @@
             "folder": {
                 "content": "$1",
                 "example": "D:\\invalid-folder"
-            }
-        }
-    },
-    "hostErrBackupFileInvalidExt": {
-        "message": "Недопустимое расширение файла резервной копии \"$ext$\".",
-        "description": "Invalid backup file extension message",
-        "placeholders": {
-            "ext": {
-                "content": "$1",
-                "example": ".txt"
             }
         }
     },
