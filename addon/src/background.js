@@ -1,4 +1,27 @@
 
+import Listeners from '/js/listeners.js\
+?onExtensionStart=[{"delay":200}]\
+&tabs.onActivated\
+&tabs.onCreated\
+&tabs.onUpdated=[{"properties":["title","status","favIconUrl","hidden","pinned","discarded","audible"]}]\
+&tabs.onRemoved\
+&tabs.onMoved\
+&tabs.onDetached\
+&tabs.onAttached\
+&webRequest.onBeforeRequest=[{"urls":["<all_urls>"],"types":["main_frame"]},["blocking"]]\
+&windows.onCreated\
+&windows.onFocusChanged\
+&windows.onRemoved\
+&permissions.onAdded\
+&permissions.onRemoved\
+&runtime.onConnect\
+&runtime.onMessage\
+&runtime.onMessageExternal\
+&runtime.onInstalled\
+&browserAction.onClicked\
+&commands.onCommand\
+&alarms.onAlarm\
+';
 import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
 import * as Messages from '/js/messages.js';
@@ -39,7 +62,7 @@ const storage = localStorage.create(Constants.MODULES.BACKGROUND);
 
 delete storage.inited;
 storage.START_TIME = Date.now();
-storage.IS_TEMPORARY = Constants.ON_INSTALLED_DETAILS.temporary === true;
+storage.IS_TEMPORARY = false;
 
 if (storage.enableDebug === Constants.DEBUG.AUTO) { // if debug was auto-enabled - disable on next start addon/browser
     delete storage.enableDebug;
@@ -1848,71 +1871,58 @@ async function onAlarm({name}) {
 }
 
 // wait for reload addon if found update
-browser.runtime.onUpdateAvailable.addListener(() => Utils.safeReloadAddon());
+// Listeners.runtime.onUpdateAvailable(() => Utils.safeReloadAddon());
 
 function addListenerOnBeforeRequest() {
-    if (!browser.webRequest.onBeforeRequest.hasListener(onBeforeTabRequest)) {
-        logger.log('addListenerOnBeforeRequest');
-
-        browser.webRequest.onBeforeRequest.addListener(onBeforeTabRequest,
-            {
-                urls: ['<all_urls>'],
-                types: [browser.webRequest.ResourceType.MAIN_FRAME],
-            },
-            [browser.webRequest.OnBeforeRequestOptions.BLOCKING]
-        );
-    }
+    logger.log('addListenerOnBeforeRequest');
+    Listeners.webRequest.onBeforeRequest(onBeforeTabRequest);
 }
 
 function removeListenerOnBeforeRequest() {
-    if (browser.webRequest.onBeforeRequest.hasListener(onBeforeTabRequest)) {
-        logger.log('removeListenerOnBeforeRequest');
-        browser.webRequest.onBeforeRequest.removeListener(onBeforeTabRequest);
-    }
+    logger.log('removeListenerOnBeforeRequest');
+    Listeners.webRequest.onBeforeRequest();
 }
 
 function addEvents() {
     logger.info('addEvents');
 
-    browser.tabs.onActivated.addListener(onActivatedTab)
-    browser.tabs.onCreated.addListener(onCreatedTab);
-    browser.tabs.onUpdated.addListener(onUpdatedTab, {
-        properties: Constants.ON_UPDATED_TAB_PROPERTIES,
-    });
-    browser.tabs.onRemoved.addListener(onRemovedTab);
-    browser.tabs.onMoved.addListener(onMovedTab);
-    browser.tabs.onDetached.addListener(onDetachedTab);
-    browser.tabs.onAttached.addListener(onAttachedTab);
+    Listeners.tabs.onActivated(onActivatedTab);
+    Listeners.tabs.onCreated(onCreatedTab);
+    Listeners.tabs.onUpdated(onUpdatedTab);
+    Listeners.tabs.onRemoved(onRemovedTab);
+    Listeners.tabs.onMoved(onMovedTab);
+    Listeners.tabs.onDetached(onDetachedTab);
+    Listeners.tabs.onAttached(onAttachedTab);
 
-    browser.windows.onCreated.addListener(onCreatedWindow);
-    browser.windows.onFocusChanged.addListener(onFocusChangedWindow);
-    browser.windows.onRemoved.addListener(onRemovedWindow);
+    Listeners.windows.onCreated(onCreatedWindow);
+    Listeners.windows.onFocusChanged(onFocusChangedWindow);
+    Listeners.windows.onRemoved(onRemovedWindow);
 
-    browser.permissions.onAdded.addListener(onPermissionsAdded);
-    browser.permissions.onRemoved.addListener(onPermissionsRemoved);
+    Listeners.permissions.onAdded(onPermissionsAdded);
+    Listeners.permissions.onRemoved(onPermissionsRemoved);
 
-    browser.alarms.onAlarm.addListener(onAlarm);
+    Listeners.alarms.onAlarm(onAlarm);
 }
 
 function removeEvents() {
     logger.info('removeEvents');
 
-    browser.tabs.onActivated.removeListener(onActivatedTab);
-    browser.tabs.onCreated.removeListener(onCreatedTab);
-    browser.tabs.onUpdated.removeListener(onUpdatedTab);
-    browser.tabs.onRemoved.removeListener(onRemovedTab);
-    browser.tabs.onMoved.removeListener(onMovedTab);
-    browser.tabs.onDetached.removeListener(onDetachedTab);
-    browser.tabs.onAttached.removeListener(onAttachedTab);
+    Listeners.tabs.onActivated();
+    Listeners.tabs.onCreated();
+    Listeners.tabs.onUpdated();
+    Listeners.tabs.onRemoved();
+    Listeners.tabs.onMoved();
+    Listeners.tabs.onDetached();
+    Listeners.tabs.onAttached();
 
-    browser.windows.onCreated.removeListener(onCreatedWindow);
-    browser.windows.onFocusChanged.removeListener(onFocusChangedWindow);
-    browser.windows.onRemoved.removeListener(onRemovedWindow);
+    Listeners.windows.onCreated();
+    Listeners.windows.onFocusChanged();
+    Listeners.windows.onRemoved();
 
-    browser.permissions.onAdded.removeListener(onPermissionsAdded);
-    browser.permissions.onRemoved.removeListener(onPermissionsRemoved);
+    Listeners.permissions.onAdded();
+    Listeners.permissions.onRemoved();
 
-    browser.alarms.onAlarm.removeListener(onAlarm);
+    Listeners.alarms.onAlarm();
 
     removeListenerOnBeforeRequest();
 }
@@ -1921,11 +1931,11 @@ function removeEvents() {
 
 self.sendMessageFromBackground = Messages.sendMessageFromBackground;
 
-browser.runtime.onConnect.addListener(Messages.createListenerOnConnectedBackground(onBackgroundMessage));
-browser.runtime.onMessage.addListener(onBackgroundMessage);
-browser.commands.onCommand.addListener(name => onBackgroundMessage(name, self));
+Listeners.runtime.onConnect(Messages.createListenerOnConnectedBackground(onBackgroundMessage));
+Listeners.runtime.onMessage(onBackgroundMessage);
+Listeners.commands.onCommand(name => onBackgroundMessage(name, self));
 
-browser.runtime.onMessageExternal.addListener(async function onMessageExternal(request, sender) {
+Listeners.runtime.onMessageExternal(async function onMessageExternal(request, sender) {
     const log = logger.start(['info', 'onMessageExternal'], `RECEIVED-EXTERNAL-ACTION#${request?.action}`, { request, sender });
 
     if (request?.action === 'ignore-ext-for-reopen-container') {
@@ -4085,12 +4095,11 @@ async function restoreOldExtensionUrls(parseUrlFunc) {
 
 // { reason: "update", previousVersion: "3.0.1", temporary: true }
 // { reason: "install", temporary: true }
-function processOnInstalled() {
-    const log = logger.start('processOnInstalled', Constants.ON_INSTALLED_DETAILS);
-
-    const {reason, previousVersion, temporary} = Constants.ON_INSTALLED_DETAILS;
+Listeners.runtime.onInstalled(({reason, previousVersion, temporary}) => {
+    const log = logger.start('runtime.onInstalled', {reason, previousVersion, temporary});
 
     if (temporary) {
+        storage.IS_TEMPORARY = true;
         log.log('addon is temp');
     } else if (
         reason === browser.runtime.OnInstalledReason.INSTALL ||
@@ -4104,7 +4113,7 @@ function processOnInstalled() {
     }
 
     log.stop();
-}
+});
 
 async function initializeGroupWindows(windows, currentGroupIds) {
     const log = logger.start('initializeGroupWindows windows count:', windows.length);
@@ -4271,7 +4280,7 @@ async function init() {
             log.error('no windows found');
             storage.notFoundWindowsAddonStoppedWorking = true;
             // Notification('notFoundWindowsAddonStoppedWorking');
-            browser.windows.onCreated.addListener(() => browser.runtime.reload());
+            Listeners.windows.onCreated(() => browser.runtime.reload());
             throw '';
         } else if (storage.notFoundWindowsAddonStoppedWorking) {
             log.log('try run grand restore');
@@ -4343,8 +4352,6 @@ async function init() {
 
         storage.inited = true;
 
-        processOnInstalled();
-
         // send message for addon pages if it's open
         sendMessageFromBackground('i-am-back');
 
@@ -4380,7 +4387,7 @@ function setActionToReloadAddon() {
         popup: '',
     });
 
-    browser.browserAction.onClicked.addListener(() => browser.runtime.reload());
+    Listeners.browserAction.onClicked(() => browser.runtime.reload());
 }
 
 browser.browserAction.setBadgeBackgroundColor({
@@ -4394,4 +4401,4 @@ setBrowserAction(undefined, 'loading', undefined, false);
 // An unexpected error occurred
 // etc.
 
-setTimeout(init, 200);
+Listeners.onExtensionStart(init); // + delay 200ms

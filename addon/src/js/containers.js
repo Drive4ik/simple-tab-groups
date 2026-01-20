@@ -1,3 +1,9 @@
+
+import Listeners from './listeners.js\
+?contextualIdentities.onCreated\
+&contextualIdentities.onUpdated\
+&contextualIdentities.onRemoved\
+';
 import * as Constants from './constants.js';
 import * as ConstantsBrowser from './constants-browser.js';
 import Logger, {catchFunc} from './logger.js';
@@ -28,11 +34,20 @@ export const TEMPORARY = {
 
 const tmpUniq = Utils.getRandomInt();
 
-let LISTENING_EVENTS = true;
 if (Constants.IS_BACKGROUND_PAGE) {
-    browser.contextualIdentities.onCreated.addListener(catchFunc(onCreated, logger));
-    browser.contextualIdentities.onUpdated.addListener(catchFunc(onUpdated, logger));
-    browser.contextualIdentities.onRemoved.addListener(catchFunc(onRemoved, logger));
+    addListeners();
+}
+
+function addListeners(options) {
+    Listeners.contextualIdentities.onCreated(catchFunc(onCreated, logger), options);
+    Listeners.contextualIdentities.onUpdated(catchFunc(onUpdated, logger), options);
+    Listeners.contextualIdentities.onRemoved(catchFunc(onRemoved, logger), options);
+}
+
+function removeListeners() {
+    Listeners.contextualIdentities.onCreated();
+    Listeners.contextualIdentities.onUpdated();
+    Listeners.contextualIdentities.onRemoved();
 }
 
 export async function init() {
@@ -63,10 +78,6 @@ export async function load(containersStorage = containers) {
 }
 
 function onCreated({contextualIdentity}) {
-    if (!LISTENING_EVENTS) {
-        return;
-    }
-
     containers[contextualIdentity.cookieStoreId] = contextualIdentity;
 
     if (contextualIdentity.name === (TEMPORARY.name + tmpUniq)) {
@@ -77,12 +88,8 @@ function onCreated({contextualIdentity}) {
 }
 
 function onUpdated({contextualIdentity}) {
-    if (!LISTENING_EVENTS) {
-        return;
-    }
-
-    const {cookieStoreId} = contextualIdentity,
-        isOldContainerNameAreTmp = containers[cookieStoreId].name === (TEMPORARY.name + tmpUniq);
+    const {cookieStoreId} = contextualIdentity;
+    const isOldContainerNameAreTmp = containers[cookieStoreId].name === (TEMPORARY.name + tmpUniq);
 
     if (!isOldContainerNameAreTmp && containers[cookieStoreId].name !== contextualIdentity.name) {
         if (isTemporary(cookieStoreId) && !isTemporary(null, contextualIdentity)) {
@@ -102,10 +109,6 @@ function onUpdated({contextualIdentity}) {
 }
 
 async function onRemoved({contextualIdentity}) {
-    if (!LISTENING_EVENTS) {
-        return;
-    }
-
     const log = logger.start('onRemoved', contextualIdentity);
 
     const isTemporaryContainer = isTemporary(contextualIdentity.cookieStoreId, contextualIdentity);
@@ -399,7 +402,7 @@ export async function updateTemporaryContainerTitle(temporaryContainerTitle, con
     log.log('cookieStoreIds', cookieStoreIds);
 
     if (cookieStoreIds.length) {
-        LISTENING_EVENTS = false;
+        removeListeners();
 
         for (const cookieStoreId of cookieStoreIds) {
             await update(cookieStoreId, {
@@ -407,7 +410,7 @@ export async function updateTemporaryContainerTitle(temporaryContainerTitle, con
             }, containersStorage).catch(log.onCatch(["can't update", cookieStoreId]));
         }
 
-        LISTENING_EVENTS = true;
+        addListeners({waitListener: false});
 
         Messages.sendMessageFromBackground('containers-updated'); // update container temporary name on tabs will work only on not archived groups
     }

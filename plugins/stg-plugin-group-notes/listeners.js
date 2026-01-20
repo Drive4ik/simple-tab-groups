@@ -1,41 +1,55 @@
 
 const listeners = {};
 
-const CUSTOM_EVENT_SCHEMES = new Map;
+export const CUSTOM_EVENT_SCHEMES = new Map;
 
+export const ON_EXTENSION_START_TIME_STORAGE_KEY = '__ext_start_time';
 CUSTOM_EVENT_SCHEMES.set('onExtensionStart', {
     event: {
-        async addListener(listener) {
-            const START_KEY = '__ext_start';
-            const storage = await browser.storage.session.get(START_KEY);
-            if (!storage[START_KEY]) {
-                await browser.storage.session.set({[START_KEY]: true});
-                listener();
+        timer: 0,
+        async addListener(listener, {delay = 0} = {}) {
+            const storage = await browser.storage.session.get(ON_EXTENSION_START_TIME_STORAGE_KEY);
+
+            if (!storage[ON_EXTENSION_START_TIME_STORAGE_KEY]) {
+                await browser.storage.session.set({
+                    [ON_EXTENSION_START_TIME_STORAGE_KEY]: Date.now(),
+                });
+                this.timer = self.setTimeout(listener, delay);
             }
+        },
+        removeListener() {
+            self.clearTimeout(this.timer);
         },
     },
 });
 
 CUSTOM_EVENT_SCHEMES.set('runtime.onMessage', {
     returnPromise: true,
-    promiseRejectionHandler: eventName => Promise.reject(new Error(`No listener for "${eventName}", please call back later`)),
+    noListenerPromiseHandler: () => Promise.reject(new Error('No listener for "runtime.onMessage", please call back later')),
 });
 
 CUSTOM_EVENT_SCHEMES.set('runtime.onMessageExternal', {
     returnPromise: true,
-    promiseRejectionHandler: eventName => Promise.reject(new Error(`No listener for "${eventName}", please call back later`)),
+    noListenerPromiseHandler: () => Promise.reject(new Error('No listener for "runtime.onMessageExternal", please call back later')),
 });
 
 CUSTOM_EVENT_SCHEMES.set('webRequest.onBeforeRequest', {
+    waitListener: false,
     returnPromise: true,
-    promiseRejectionHandler: () => ({}),
+    noListenerPromiseHandler: () => ({}),
 });
+
+const DEFAULT_EVENT_PREFS = {
+    waitListener: true,
+};
 
 for (const [eventName, eventJsonParameters] of new URL(import.meta.url).searchParams) {
     const eventPrefs = {
         name: eventName,
-        ...(CUSTOM_EVENT_SCHEMES.get(eventName) ?? {}),
+        ...DEFAULT_EVENT_PREFS,
     };
+
+    Object.assign(eventPrefs, CUSTOM_EVENT_SCHEMES.get(eventPrefs.name));
 
     let eventParameters = [];
 
@@ -43,12 +57,12 @@ for (const [eventName, eventJsonParameters] of new URL(import.meta.url).searchPa
         try {
             eventParameters = JSON.parse(eventJsonParameters);
         } catch {
-            throw new Error(`Invalid JSON value for listener event "${eventName}" json: ${eventJsonParameters}`);
+            throw new Error(`Invalid JSON value for listener event "${eventPrefs.name}" json: ${eventJsonParameters}`);
         }
     }
 
     if (!Array.isArray(eventParameters)) {
-        throw new Error(`Arguments for "${eventName}" must be an array!`);
+        throw new Error(`Arguments for "${eventPrefs.name}" must be an array!`);
     }
 
     createMockedListener(eventPrefs, ...eventParameters);
@@ -56,56 +70,71 @@ for (const [eventName, eventJsonParameters] of new URL(import.meta.url).searchPa
 
 function createMockedListener(eventPrefs, ...eventParameters) {
     let listener = null;
-    let lastArgs = null;
+    let pendingArgs = null;
     let pending = null;
+
+    const event = eventPrefs.event
+        ?? eventPrefs.name.split('.').reduce((obj, eventNamePart) => obj?.[eventNamePart], browser);
+
+    if (!event) {
+        throw new Error(`Event object for "${eventPrefs.name}" listener not found!`);
+    }
+
+    event.addListener(realListener, ...eventParameters);
+
+    const settlePending = () => pending?.resolve(eventPrefs.noListenerPromiseHandler(eventPrefs.name));
+
+    function setListener(func = null, options = {}) {
+        if (options.addListener) {
+            event.addListener(realListener, ...eventParameters);
+        } else if (options.removeListener) {
+            event.removeListener?.(realListener);
+            settlePending();
+            return;
+        }
+
+        options.waitListener ??= eventPrefs.waitListener;
+
+        listener = func;
+
+        if (listener && eventPrefs.waitListener && options.waitListener && pendingArgs) {
+            if (eventPrefs.returnPromise) {
+                pending.resolve(listener(...pendingArgs));
+            } else {
+                listener(...pendingArgs);
+            }
+        }
+
+        pendingArgs = null;
+        settlePending();
+        pending = null;
+    }
+
+    function realListener(...args) {
+        if (listener) {
+            return listener(...args);
+        }
+
+        if (eventPrefs.waitListener) {
+            pendingArgs = args;
+
+            if (eventPrefs.returnPromise) {
+                settlePending();
+                pending = Promise.withResolvers();
+                return pending.promise;
+            }
+        } else if (eventPrefs.returnPromise) {
+            return eventPrefs.noListenerPromiseHandler(eventPrefs.name);
+        }
+    }
 
     eventPrefs.name.split('.').reduce((schema, eventNamePart, index, self) => {
         if (index < self.length - 1) {
             return schema[eventNamePart] ??= {};
         }
 
-        schema[eventNamePart] = function setLateFunc(lateFunc = null, lateCall = true) {
-            if (listener && lateFunc) {
-                throw Error(`Listener for "${eventPrefs.name}" is already set`);
-            }
-
-            listener = lateFunc;
-
-            const args = lastArgs;
-            lastArgs = null;
-
-            if (!listener || !args) {
-                return;
-            }
-
-            if (eventPrefs.returnPromise) {
-                pending.resolve(listener(...args));
-                pending = null;
-            } else if (lateCall) {
-                listener(...args);
-            }
-        };
+        schema[eventNamePart] = setListener;
     }, listeners);
-
-    const event = eventPrefs.event ?? eventPrefs.name.split('.').reduce((obj, eventNamePart) => obj?.[eventNamePart], browser);
-
-    if (!event) {
-        throw new Error(`Event object for "${eventPrefs.name}" listener not found!`);
-    }
-
-    event.addListener((...args) => {
-        if (listener) {
-            return listener(...args);
-        }
-
-        lastArgs = args;
-
-        if (eventPrefs.returnPromise) {
-            pending?.resolve(eventPrefs.promiseRejectionHandler(eventPrefs.name));
-            pending = Promise.withResolvers();
-            return pending.promise;
-        }
-    }, ...eventParameters);
 }
 
 export default Object.freeze(listeners); // use like listeners.runtime.onInstalled(func);

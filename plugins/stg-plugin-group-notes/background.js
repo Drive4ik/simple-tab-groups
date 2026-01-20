@@ -1,4 +1,12 @@
-import Listeners from './listeners.js?onExtensionStart&runtime.onInstalled&runtime.onMessageExternal&menus.onClicked&permissions.onRemoved&alarms.onAlarm&storage.local.onChanged';
+import Listeners from './listeners.js\
+?onExtensionStart=[{"delay":100}]\
+&runtime.onInstalled\
+&runtime.onMessageExternal\
+&menus.onClicked\
+&permissions.onRemoved\
+&alarms.onAlarm\
+&storage.local.onChanged\
+';
 import * as Constants from './constants.js';
 import * as MainConstants from './main-constants.js';
 import * as Utils from './utils.js';
@@ -19,7 +27,7 @@ Listeners.runtime.onMessageExternal(async (request, sender) => {
             break;
         case 'group-loaded':
             const {[requestGroupKey]: notes} = await browser.storage.local.get(requestGroupKey);
-            MainUtils.setBadge(notes?.notes.trim().length > 0, request.windowId);
+            MainUtils.setBadge(notes?.notes.trim().length, request.windowId);
             break;
         case 'group-unloaded':
             MainUtils.setBadge(false, request.windowId);
@@ -113,28 +121,34 @@ async function init() {
 
     const settings = Object.assign({...MainConstants.defaultOptions}, await browser.storage.local.get());
 
+    if (settings.autoBackupLocation === MainConstants.AUTO_BACKUP_LOCATIONS.HOST) {
+        if (!Constants.IS_WINDOWS || !await Host.hasPermission()) {
+            Utils.notify('backupFailed', browser.i18n.getMessage('checkBackupSettings'), {
+                timerSec: 30,
+            });
+
+            await browser.storage.local.set({
+                autoBackupLocation: settings.autoBackupLocation = MainConstants.AUTO_BACKUP_LOCATIONS.DOWNLOADS,
+            });
+        }
+    }
+
     const {groupsList} = await Utils.sendExternalMessage('get-groups-list');
 
     for (const group of groupsList) {
         const groupKey = MainUtils.getGroupKey(group.id);
-        const hasNotes = settings[groupKey]?.notes.trim().length > 0;
+        const hasNotes = settings[groupKey]?.notes.trim().length;
 
         MainUtils.setBadge(hasNotes, group.windowId);
     }
 }
 
 async function setup() {
-    if (setup.done) {
-        return;
-    }
-
-    setup.done = true;
-
     await browser.action.setBadgeBackgroundColor({
         color: 'transparent',
     });
 
-    init();
+    init().catch(() => {});
 
     await Utils.createMenu({
         id: 'openInTab',
@@ -151,9 +165,10 @@ async function setup() {
     });
 }
 
+Listeners.onExtensionStart(setup);
 
 Listeners.runtime.onInstalled(async ({reason, previousVersion}) => {
-    Listeners.onExtensionStart(); // remove pending onExtensionStart call
+    Listeners.onExtensionStart(null, {removeListener: true});
 
     if (reason === browser.runtime.OnInstalledReason.UPDATE) {
         const [major] = previousVersion.split('.');
@@ -169,5 +184,3 @@ Listeners.runtime.onInstalled(async ({reason, previousVersion}) => {
 
     setup();
 });
-
-Listeners.onExtensionStart(setup);

@@ -56,7 +56,7 @@ async function init() {
     document.title += ' ' + url;
 
     async function loadGroup(id) {
-        let {groups} = await Storage.get('groups');
+        const {groups} = await Storage.get('groups');
         return groups.find(group => group.id === id);
     }
 
@@ -93,7 +93,7 @@ async function init() {
             return;
         }
     } else {
-        let isOk = await isDepsOk();
+        const isOk = await isDepsOk();
 
         if (!isOk) {
             return;
@@ -101,22 +101,14 @@ async function init() {
 
         window.onfocus = isDepsOk;
 
-        const onAttachedCallback = (id, {newPosition, newWindowId}) => {
+        browser.management.onDisabled.addListener(isDepsOk);
+        browser.management.onUninstalled.addListener(isDepsOk);
+        browser.tabs.onAttached.addListener((id, {newPosition, newWindowId}) => {
             if (id === currentTab.id) {
                 currentTab.index = newPosition;
                 currentTab.windowId = newWindowId;
                 isDepsOk();
             }
-        };
-
-        browser.management.onDisabled.addListener(isDepsOk);
-        browser.management.onUninstalled.addListener(isDepsOk);
-        browser.tabs.onAttached.addListener(onAttachedCallback);
-
-        window.addEventListener('unload', function() {
-            browser.management.onDisabled.removeListener(isDepsOk);
-            browser.management.onUninstalled.removeListener(isDepsOk);
-            browser.tabs.onAttached.removeListener(onAttachedCallback);
         });
     }
 

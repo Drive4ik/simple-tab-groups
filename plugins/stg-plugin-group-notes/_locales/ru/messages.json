@@ -170,5 +170,9 @@
     "keepLastBackupFiles": {
         "message": "но сохранить последнее",
         "description": "but keep the last"
+    },
+    "checkBackupSettings": {
+        "message": "Проверьте настройки резервного копирования",
+        "description": "Check your backup settings"
     }
 }

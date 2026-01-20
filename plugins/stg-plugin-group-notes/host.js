@@ -45,8 +45,6 @@ async function sendMessage(action, params = {}) {
         ...params,
     });
 
-    console.debug(response)
-
     if (response.ok) {
         return response;
     }

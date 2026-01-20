@@ -7,8 +7,8 @@ const isMainFrame = window.top === window;
 const hotkeys = [];
 let foundHotKey = false;
 
-loadHotkeys();
 browser.runtime.onMessage.addListener(onMessageListener);
+loadHotkeys();
 
 if (isMainFrame) {
     // Main frame: listen for messages from iframes and handle popups

@@ -1,4 +1,11 @@
-import '/js/prefixed-storage.js';
+
+import Listeners from './listeners.js\
+?management.onEnabled\
+&management.onDisabled\
+&management.onInstalled\
+&management.onUninstalled\
+';
+import './prefixed-storage.js';
 import Logger, {catchFunc} from './logger.js';
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
@@ -13,10 +20,10 @@ const extensions = {};
 if (Constants.IS_BACKGROUND_PAGE) {
     const onChangedBinded = catchFunc(onChanged, logger);
 
-    browser.management.onEnabled.addListener(onChangedBinded);
-    browser.management.onDisabled.addListener(onChangedBinded);
-    browser.management.onInstalled.addListener(onChangedBinded);
-    browser.management.onUninstalled.addListener(onChangedBinded);
+    Listeners.management.onEnabled(onChangedBinded);
+    Listeners.management.onDisabled(onChangedBinded);
+    Listeners.management.onInstalled(onChangedBinded);
+    Listeners.management.onUninstalled(onChangedBinded);
 }
 
 export async function init() {

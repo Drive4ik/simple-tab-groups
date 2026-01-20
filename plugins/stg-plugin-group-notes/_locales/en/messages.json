@@ -174,5 +174,9 @@
     "keepLastBackupFiles": {
         "message": "but keep the last",
         "description": "but keep the last"
+    },
+    "checkBackupSettings": {
+        "message": "Check your backup settings",
+        "description": "Check your backup settings"
     }
 }

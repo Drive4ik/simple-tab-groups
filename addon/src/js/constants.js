@@ -1,7 +1,4 @@
 
-export let ON_INSTALLED_DETAILS = {};
-browser.runtime.onInstalled.addListener(details => ON_INSTALLED_DETAILS = details); // need to be before any await
-
 export const MANIFEST = Object.freeze(browser.runtime.getManifest());
 export const STG_BASE_URL = browser.runtime.getURL('');
 export const BROWSER = await browser.runtime.getBrowserInfo();

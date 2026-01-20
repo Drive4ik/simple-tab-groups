@@ -1,28 +1,34 @@
 
+import Listeners from './listeners.js\
+?notifications.onClicked\
+&notifications.onClosed\
+';
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
 
 const notificationsMap = new Map;
 
 if (Constants.IS_BACKGROUND_PAGE) {
-    browser.notifications.onClicked.addListener((notificationId) => {
-        const options = notificationsMap.get(notificationId);
+    Listeners.notifications.onClicked(onClicked);
+    Listeners.notifications.onClosed(onClosed);
+}
 
-        if (options) {
-            clear(notificationId);
-            options.onClick?.(notificationId);
-        }
-    });
+function onClicked(notificationId) {
+    const options = notificationsMap.get(notificationId);
 
-    // eslint-disable-next-line no-unused-vars
-    browser.notifications.onClosed.addListener((notificationId, byUser) => {
-        const options = notificationsMap.get(notificationId);
+    if (options) {
+        clear(notificationId);
+        options.onClick?.(notificationId);
+    }
+}
 
-        if (options) {
-            clear(notificationId);
-            options.onClose?.(notificationId);
-        }
-    });
+function onClosed(notificationId) {
+    const options = notificationsMap.get(notificationId);
+
+    if (options) {
+        clear(notificationId);
+        options.onClose?.(notificationId);
+    }
 }
 
 export default async function(message, options = {}) {

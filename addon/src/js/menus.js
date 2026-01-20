@@ -1,4 +1,5 @@
 
+import Listeners from './listeners.js?menus.onClicked';
 import * as Constants from './constants.js';
 import {MENU_ITEM_BUTTON} from './constants-browser.js';
 import Logger, {catchFunc} from './logger.js';
@@ -14,7 +15,7 @@ const logger = new Logger('Menus').disable();
 const menusMap = new Map;
 
 if (Constants.IS_BACKGROUND_PAGE) {
-    browser.menus.onClicked.addListener(catchFunc(onClicked, logger));
+    Listeners.menus.onClicked(catchFunc(onClicked, logger));
 }
 
 async function onClicked(info, tab) {

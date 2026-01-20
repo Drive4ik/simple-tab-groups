@@ -172,7 +172,7 @@ async function saveCurrentGroupNotes() {
             },
         });
 
-        MainUtils.setBadge(notes.trim().length > 0, currentWindow.id);
+        MainUtils.setBadge(notes.trim().length, currentWindow.id);
 
         Utils.sendMessage('notes-updated', {currentGroupId}).catch(() => {});
     }

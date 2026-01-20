@@ -69,43 +69,35 @@ function createExtensionBlock(ext) {
 }
 
 async function showConflictedExtensions() {
-    let addons = await browser.management.getAll(),
-        conflictedExtensions = addons.filter(addon => Constants.CONFLICTED_EXTENSIONS.includes(addon.id)),
-        $enabledExt = $('#enabled-conflicted-extensions'),
-        $disabledExt = $('#disabled-conflicted-extensions');
+    const conflictedExtensions = await browser.management.getAll()
+        .then(addons => addons.filter(addon => Constants.CONFLICTED_EXTENSIONS.includes(addon.id)));
 
     if (!conflictedExtensions.some(ext => ext.enabled)) {
-        let {id} = await browser.tabs.getCurrent();
-
-        browser.tabs.remove(id);
+        window.close();
         return;
     }
 
+    const $enabledExt = $('#enabled-conflicted-extensions');
+    const $disabledExt = $('#disabled-conflicted-extensions');
+
     $enabledExt.textContent = $disabledExt.textContent = '';
 
-    conflictedExtensions.forEach(ext => {
+    for (const ext of conflictedExtensions) {
         if (ext.enabled) {
             $enabledExt.appendChild(createExtensionBlock(ext));
         } else {
             $disabledExt.appendChild(createExtensionBlock(ext));
         }
-    });
+    }
+
+    return true;
 }
 
-function init() {
+const doAddListeners = await showConflictedExtensions();
+
+if (doAddListeners) {
     browser.management.onEnabled.addListener(showConflictedExtensions);
     browser.management.onDisabled.addListener(showConflictedExtensions);
     browser.management.onInstalled.addListener(showConflictedExtensions);
     browser.management.onUninstalled.addListener(showConflictedExtensions);
-
-    showConflictedExtensions();
-
-    window.addEventListener('unload', function() {
-        browser.management.onEnabled.removeListener(showConflictedExtensions);
-        browser.management.onDisabled.removeListener(showConflictedExtensions);
-        browser.management.onInstalled.removeListener(showConflictedExtensions);
-        browser.management.onUninstalled.removeListener(showConflictedExtensions);
-    });
 }
-
-init();
