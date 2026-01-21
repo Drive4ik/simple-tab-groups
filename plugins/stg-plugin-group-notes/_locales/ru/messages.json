@@ -105,6 +105,10 @@
         "message": "Резервные копии не найдены.",
         "description": "Backup files not found message"
     },
+    "check": {
+        "message": "Проверить",
+        "description": "Check button label"
+    },
     "autoBackupEnable": {
         "message": "Включить автоматическое резервное копирование",
         "description": "Enable auto backup"

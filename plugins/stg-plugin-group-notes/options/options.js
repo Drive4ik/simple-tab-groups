@@ -193,6 +193,8 @@ async function setHostEvents() {
         await loadHostSettings();
     }
 
+    $('#host-check-button').addEventListener('click', loadHostSettings);
+
     $('#host-link').href = Constants.HOST.DOWNLOAD_URL;
 
     setFilePathEvents(filePathNodes.find(node => node.dataset.filePath === MainConstants.AUTO_BACKUP_LOCATIONS.HOST));
@@ -236,6 +238,7 @@ async function setHostEvents() {
 
             deleteBackupDaysNode.value = deleteBackupDays;
             keepBackupFilesNode.value = keepBackupFiles;
+            $('#host-not-found-message').classList.add('is-hidden');
         } catch {
             $('#host-not-found-message').classList.remove('is-hidden');
         }

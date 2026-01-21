@@ -109,6 +109,10 @@
         "message": "Backup files not found.",
         "description": "Backup files not found message"
     },
+    "check": {
+        "message": "Check",
+        "description": "Check button label"
+    },
     "autoBackupEnable": {
         "message": "Enable auto backup",
         "description": "Enable auto backup"

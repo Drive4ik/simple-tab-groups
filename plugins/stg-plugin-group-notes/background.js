@@ -122,11 +122,16 @@ async function init() {
     const settings = Object.assign({...MainConstants.defaultOptions}, await browser.storage.local.get());
 
     if (settings.autoBackupLocation === MainConstants.AUTO_BACKUP_LOCATIONS.HOST) {
-        if (!Constants.IS_WINDOWS || !await Host.hasPermission()) {
-            Utils.notify('backupFailed', browser.i18n.getMessage('checkBackupSettings'), {
-                timerSec: 30,
-            });
-
+        if (Constants.IS_WINDOWS) {
+            if (!await Host.hasPermission()) {
+                Utils.notify('backupFailed', browser.i18n.getMessage('checkBackupSettings'), {
+                    timerSec: 30,
+                    onClick: {
+                        action: 'open-options',
+                    },
+                });
+            }
+        } else {
             await browser.storage.local.set({
                 autoBackupLocation: settings.autoBackupLocation = MainConstants.AUTO_BACKUP_LOCATIONS.DOWNLOADS,
             });
