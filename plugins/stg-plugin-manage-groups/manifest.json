@@ -4,7 +4,7 @@
     "browser_specific_settings": {
         "gecko": {
             "id": "stg-plugin-manage-groups@drive4ik",
-            "strict_min_version": "112.0"
+            "strict_min_version": "128.0"
         }
     },
 
@@ -22,12 +22,13 @@
 
     "action": {
         "default_area": "tabstrip",
-        "default_icon": "icons/icon.svg",
+        "default_icon": "icons/icon.svg?nocache",
         "default_title": "__MSG_defaultBrowserActionTitle__"
     },
 
     "permissions": [
-        "notifications"
+        "notifications",
+        "storage"
     ],
 
     "background": {
