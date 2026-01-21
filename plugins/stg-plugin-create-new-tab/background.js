@@ -1,10 +1,15 @@
-
+import Listeners from './listeners.js\
+?onExtensionStart\
+&action.onClicked\
+&commands.onChanged\
+&runtime.onMessageExternal\
+';
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
 
 const TEMPORARY_CONTAINER = 'temporary-container';
 
-browser.runtime.onMessageExternal.addListener((request, sender) => {
+Listeners.runtime.onMessageExternal((request, sender) => {
     if (sender.id !== Constants.STG_ID) {
         console.error(`Only STG support`);
         return;
@@ -15,9 +20,7 @@ browser.runtime.onMessageExternal.addListener((request, sender) => {
             reloadWindowActions();
             break;
         case 'group-updated':
-            if (request.group.windowId) {
-                setWindowAction(request.group.windowId);
-            }
+            setWindowAction(request.group.windowId);
             break;
         case 'group-loaded':
         case 'group-unloaded':
@@ -27,7 +30,7 @@ browser.runtime.onMessageExternal.addListener((request, sender) => {
     }
 });
 
-browser.action.onClicked.addListener(async () => {
+Listeners.action.onClicked(async () => {
     try {
         const {ok, error, group} = await getWindowGroup(browser.windows.WINDOW_ID_CURRENT);
 
@@ -81,6 +84,10 @@ async function reloadWindowActions() {
 }
 
 async function setWindowAction(windowId) {
+    if (!windowId) {
+        return;
+    }
+
     const {group} = await getWindowGroup(windowId).catch(() => ({}));
     const groupContainer = group?.contextualIdentity;
     const [{shortcut}] = await browser.commands.getAll();
@@ -108,15 +115,18 @@ async function setWindowAction(windowId) {
 
 // https://dxr.mozilla.org/mozilla-central/source/browser/components/contextualidentity/content
 async function getIcon(container) {
-    if (!container) {
-        return browser.runtime.getURL('icons/icon.svg');
+    if (!container?.icon) {
+        return browser.runtime.getURL(Constants.MANIFEST.action.default_icon);
     }
 
     const {icon, colorCode, cookieStoreId} = container;
 
+    // still unable to load from resource://usercontext-content/chill.svg (* ￣︿￣)
     let svg = await fetch(`/icons/${icon}.svg`).then(req => req.text());
 
-    if (cookieStoreId !== TEMPORARY_CONTAINER) {
+    if (cookieStoreId === TEMPORARY_CONTAINER) {
+        svg = svg.replaceAll('fill="context-fill', `fill="context-fill light-dark(#5b5b66,#fbfbfe)`);
+    } else {
         svg = svg.replaceAll('fill="context-fill', `fill="${colorCode}`);
     }
 
@@ -127,5 +137,6 @@ async function setup() {
     reloadWindowActions();
 }
 
-browser.runtime.onStartup.addListener(setup);
-browser.runtime.onInstalled.addListener(setup);
+Listeners.commands.onChanged(reloadWindowActions);
+
+Listeners.onExtensionStart(setup);

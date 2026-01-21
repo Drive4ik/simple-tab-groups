@@ -45,7 +45,7 @@
     ],
 
     "browser_action": {
-        "default_icon": "icons/icon.svg",
+        "default_icon": "icons/icon.svg?nocache",
         "default_title": "__MSG_extensionName__",
         "default_popup": "popup/popup.html",
         "default_area": "navbar",
@@ -53,7 +53,7 @@
     },
 
     "sidebar_action": {
-        "default_icon": "icons/icon.svg",
+        "default_icon": "icons/icon.svg?nocache",
         "default_title": "__MSG_extensionName__",
         "default_panel": "popup/popup.html#sidebar",
         "browser_style": false,
