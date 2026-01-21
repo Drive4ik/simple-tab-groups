@@ -1,12 +1,11 @@
 
+import Listeners from './listeners.js?notifications.onClicked';
 import * as Constants from './constants.js';
 import ls, {TYPE_SESSION} from './ls.js';
 
 const notificationsStorage = ls.create('notify', TYPE_SESSION);
 
-browser.notifications.onClicked.addListener(notificationsOnClickedListener);
-
-function notificationsOnClickedListener(notificationId) {
+Listeners.notifications.onClicked(notificationId => {
     const onClick = notificationsStorage.get(notificationId);
 
     if (onClick?.action === 'open-tab') {
@@ -19,7 +18,7 @@ function notificationsOnClickedListener(notificationId) {
     } else if (onClick?.action) {
         console.error('invalid notifications action:', onClick.action);
     }
-}
+});
 
 // if last element is Boolean true - remove empty keys, else
 // aaa {a|b} ccc => aaa b ccc

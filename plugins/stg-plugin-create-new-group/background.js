@@ -1,7 +1,12 @@
+import Listeners from './listeners.js\
+?onExtensionStart\
+&action.onClicked\
+&commands.onChanged\
+';
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
 
-browser.action.onClicked.addListener(async () => {
+Listeners.action.onClicked(async () => {
     try {
         const responce = await Utils.sendExternalMessage('add-new-group');
 
@@ -39,5 +44,6 @@ async function setup() {
     updateActionTitle();
 }
 
-browser.runtime.onStartup.addListener(setup);
-browser.runtime.onInstalled.addListener(setup);
+Listeners.commands.onChanged(updateActionTitle);
+
+Listeners.onExtensionStart(setup);
