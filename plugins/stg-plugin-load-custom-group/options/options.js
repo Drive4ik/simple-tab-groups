@@ -1,71 +1,71 @@
+import Listeners from '/listeners.js?runtime.onMessageExternal';
 import '/translate-page.js';
 import * as Constants from '/constants.js';
 import * as Utils from '/utils.js';
 
-const $ = document.querySelector.bind(document),
-    groupsSelect = $('#groups-select'),
-    groupIcon = $('#group-icon'),
-    needInstallSTGExtension = $('#needInstallSTGExtension');
+const $ = document.querySelector.bind(document);
+const groupsSelect = $('#groups-select');
+const groupIcon = $('#group-icon');
+const needInstallSTGExtension = $('#needInstallSTGExtension');
 
 groupIcon.addEventListener('load', () => groupIcon.hidden = false);
 groupIcon.addEventListener('error', () => groupIcon.hidden = true);
 
+needInstallSTGExtension.href = Constants.STG_HOME_PAGE;
+
 groupsSelect.addEventListener('change', async () => {
     const [option] = groupsSelect.selectedOptions;
 
-    await browser.storage.local.set({groupId: option.value});
+    await browser.storage.local.set({
+        groupId: option.value,
+    });
 
     groupIcon.src = option.dataset.iconUrl;
 
-    const backgroundSelf = await browser.runtime.getBackgroundPage();
-
-    backgroundSelf?.updateBrowserAction();
+    Utils.sendMessage('group-selected');
 });
 
-browser.runtime.onMessageExternal.addListener(async (request, sender) => {
+Listeners.runtime.onMessageExternal(async (request, sender) => {
     if (sender.id !== Constants.STG_ID) {
         return;
     }
 
-    const backgroundSelf = await browser.runtime.getBackgroundPage();
-
-    if (backgroundSelf?.SUPPORTED_STG_ACTIONS.has(request?.action)) {
-        init();
-    }
+    init();
 });
 
-try {
-    await init();
-} catch {
-    needInstallSTGExtension.href = Constants.STG_HOME_PAGE;
-    needInstallSTGExtension.classList = 'showing';
-}
-
 async function init() {
-    needInstallSTGExtension.classList = '';
+    try {
+        const {groupId} = await browser.storage.local.get('groupId');
+        const {groupsList} = await Utils.sendExternalMessage('get-groups-list');
 
-    const {groupId} = await browser.storage.local.get('groupId'),
-        {groupsList} = await Utils.sendExternalMessage('get-groups-list');
+        groupIcon.src = '';
 
-    groupsSelect.firstElementChild.selected = true;
+        groupsSelect.firstElementChild.selected = true;
 
-    while (groupsSelect.firstElementChild.nextElementSibling) {
-        groupsSelect.firstElementChild.nextElementSibling.remove();
-    }
-
-    groupsList.forEach(group => {
-        const option = document.createElement('option');
-
-        option.value = group.id;
-        option.innerText = group.title;
-        option.selected = group.id === groupId;
-        option.dataset.iconUrl = group.iconUrl;
-
-        if (option.selected) {
-            groupIcon.src = option.dataset.iconUrl;
+        while (groupsSelect.firstElementChild.nextElementSibling) {
+            groupsSelect.firstElementChild.nextElementSibling.remove();
         }
 
-        groupsSelect.append(option);
-    });
+        for (const group of groupsList) {
+            const option = document.createElement('option');
+
+            option.value = group.id;
+            option.innerText = group.title;
+            option.selected = group.id === groupId;
+            option.dataset.iconUrl = group.iconUrl;
+
+            if (option.selected) {
+                groupIcon.src = option.dataset.iconUrl;
+            }
+
+            groupsSelect.append(option);
+        }
+
+        needInstallSTGExtension.classList.remove('showing');
+    } catch {
+        needInstallSTGExtension.classList.add('showing');
+    }
 
 }
+
+init();

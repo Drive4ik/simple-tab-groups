@@ -1,48 +1,64 @@
+import Listeners from './listeners.js\
+?onExtensionStart\
+&action.onClicked\
+&menus.onClicked\
+&commands.onChanged\
+&runtime.onMessage\
+&runtime.onMessageExternal\
+';
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
 
-const SUPPORTED_STG_ACTIONS = new Set(['i-am-back', 'group-added', 'group-updated', 'group-removed']);
-
-browser.runtime.onMessageExternal.addListener(async (request, sender) => {
+Listeners.runtime.onMessageExternal(async (request, sender) => {
     if (sender.id !== Constants.STG_ID) {
-        console.error(`Only STG support`);
-        return;
+        return 'Only STG support';
     }
 
     const {groupId} = await browser.storage.local.get('groupId');
 
     switch (request.action) {
         case 'i-am-back':
-            await updateBrowserAction();
+            updateAction();
+            break;
+        case 'group-added':
+            // used in options page
             break;
         case 'group-updated':
             if (groupId === request.group.id) {
-                await updateBrowserAction(request.group);
+                updateAction(request.group);
             }
             break;
         case 'group-removed':
             if (groupId === request.groupId) {
-                await resetState();
+                await browser.storage.local.remove('groupId');
+                setAction();
             }
             break;
     }
 });
 
-browser.action.onClicked.addListener(async () => {
+Listeners.runtime.onMessage((message, sender) => {
+    if (sender.id !== browser.runtime.id) {
+        return;
+    }
+
+    switch (message.action) {
+        case 'group-selected':
+            updateAction();
+            break;
+    }
+});
+
+Listeners.action.onClicked(async () => {
     try {
         const {groupId} = await browser.storage.local.get('groupId');
+        const responce = await Utils.sendExternalMessage('load-custom-group', {groupId});
 
-        if (groupId) {
-            const responce = await Utils.sendExternalMessage('load-custom-group', {groupId});
-
-            if (!responce.ok) {
-                Utils.notify('error', responce.error);
-            }
-        } else {
-            browser.runtime.openOptionsPage();
+        if (!responce.ok) {
+            Utils.notify('error', responce.error);
         }
     } catch {
-        setBrowserAction();
+        setAction();
         Utils.notify('needInstallSTGExtension', browser.i18n.getMessage('needInstallSTGExtension'), {
             timerSec: 10,
             onClick: {
@@ -53,66 +69,60 @@ browser.action.onClicked.addListener(async () => {
     }
 });
 
-browser.menus.onClicked.addListener(info => {
+Listeners.menus.onClicked(info => {
     if (info.menuItemId === 'openSettings') {
         browser.runtime.openOptionsPage();
     }
 });
 
-async function updateBrowserAction(group = null) {
+async function updateAction(group) {
     try {
         if (!group) {
-            const {groupId} = await browser.storage.local.get('groupId'),
-                {groupsList} = await Utils.sendExternalMessage('get-groups-list');
+            const {groupId} = await browser.storage.local.get('groupId');
 
-            group = groupsList.find(gr => gr.id === groupId);
+            if (groupId) {
+                const {groupsList} = await Utils.sendExternalMessage('get-groups-list');
+                group = groupsList.find(gr => gr.id === groupId);
+            }
         }
 
-        await setBrowserAction(group?.title, group?.iconUrl);
+        await setAction(group);
     } catch {
-        await setBrowserAction();
+        await setAction();
     }
 }
 
-async function setBrowserAction(title = null, iconUrl = null) {
+async function setAction({id, title, iconUrl} = {}) {
     const [{shortcut}] = await browser.commands.getAll();
 
-    title = title || browser.i18n.getMessage('defaultBrowserActionTitle');
-
-    const titleParts = [title];
+    const titleParts = [
+        id ? title : browser.i18n.getMessage('defaultBrowserActionTitle'),
+    ];
 
     if (shortcut) {
         titleParts.push(`(${shortcut})`);
     }
 
-    await browser.action.setIcon({
-        path: iconUrl || 'icons/icon.svg',
-    });
-
     await browser.action.setTitle({
         title: titleParts.join(' '),
     });
 
+    await browser.action.setIcon({
+        path: id ? iconUrl : 'icons/icon.svg',
+    });
+
+    await browser.action.setPopup({
+        popup: id ? '' : Constants.MANIFEST.options_ui.page,
+    });
+
     await browser.commands.update({
         name: '_execute_action',
-        description: title,
-    });
-}
-
-async function resetState() {
-    await browser.storage.local.remove('groupId');
-
-    await setBrowserAction();
-
-    await Utils.notify('needSelectGroup', browser.i18n.getMessage('needSelectGroup'), {
-        onClick: {
-            action: 'open-options',
-        },
+        description: titleParts[0],
     });
 }
 
 async function setup() {
-    updateBrowserAction();
+    updateAction();
 
     await Utils.createMenu({
         id: 'openSettings',
@@ -122,8 +132,6 @@ async function setup() {
     });
 }
 
-browser.runtime.onStartup.addListener(setup);
-browser.runtime.onInstalled.addListener(setup);
+Listeners.commands.onChanged(() => updateAction());
 
-self.updateBrowserAction = updateBrowserAction;
-self.SUPPORTED_STG_ACTIONS = SUPPORTED_STG_ACTIONS;
+Listeners.onExtensionStart(setup);

@@ -1,5 +1,6 @@
 html {
     font-family: Segoe UI, Arial;
+    color-scheme: light dark;
 }
 
 * {
@@ -9,6 +10,11 @@ html {
 body {
     padding: 10px;
     margin: 0;
+}
+
+label {
+    display: block;
+    margin-bottom: .75em;
 }
 
 #wrapper {
@@ -27,22 +33,16 @@ body {
     height: 16px;
 }
 
-@media screen and (max-width: 700px) {
-    #groups-select {
-        width: 100%;
-    }
-}
-
 #needInstallSTGExtension {
     display: none;
     font-size: 18px;
     margin-bottom: 20px;
-}
 
-#needInstallSTGExtension.showing {
-    display: block;
-}
+    &.showing {
+        display: block;
 
-#needInstallSTGExtension.showing ~ * {
-    display: none;
+        ~ * {
+            display: none;
+        }
+    }
 }
