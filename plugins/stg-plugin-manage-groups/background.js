@@ -5,19 +5,18 @@ import Listeners from './listeners.js\
 ';
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
+import Notification from './notification.js';
 
 Listeners.action.onClicked(async () => {
     try {
         const responce = await Utils.sendExternalMessage('open-manage-groups');
 
         if (!responce.ok) {
-            Utils.notify('error', responce.error);
+            Notification(responce.error);
         }
     } catch {
-        Utils.notify('needInstallSTGExtension', browser.i18n.getMessage('needInstallSTGExtension'), {
-            timerSec: 10,
-            onClick: {
-                action: 'open-tab',
+        Notification('needInstallSTGExtension', {
+            tab: {
                 url: Constants.STG_HOME_PAGE,
             },
         });

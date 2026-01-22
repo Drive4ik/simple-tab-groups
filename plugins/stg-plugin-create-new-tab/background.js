@@ -6,6 +6,7 @@ import Listeners from './listeners.js\
 ';
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
+import Notification from './notification.js';
 
 const TEMPORARY_CONTAINER = 'temporary-container';
 
@@ -50,14 +51,12 @@ Listeners.action.onClicked(async () => {
             }
         } else {
             createNewTab();
-            Utils.notify('error', error);
+            Notification(error);
         }
     } catch {
         createNewTab();
-        Utils.notify('needInstallSTGExtension', browser.i18n.getMessage('needInstallSTGExtension'), {
-            timerSec: 10,
-            onClick: {
-                action: 'open-tab',
+        Notification('needInstallSTGExtension', {
+            tab: {
                 url: Constants.STG_HOME_PAGE,
             },
         });

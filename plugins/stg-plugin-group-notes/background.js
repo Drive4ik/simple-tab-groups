@@ -13,6 +13,7 @@ import * as Utils from './utils.js';
 import * as MainUtils from './main-utils.js';
 import * as Host from './host.js';
 import * as File from './file.js';
+import Notification from './notification.js';
 
 Listeners.runtime.onMessageExternal(async (request, sender) => {
     if (sender.id !== Constants.STG_ID) {
@@ -91,9 +92,7 @@ Listeners.alarms.onAlarm(async ({name}) => {
 
             localStorage.lastAutoBackupUnixTime = Utils.unixNow();
         } catch (e) {
-            Utils.notify('backupFailed', String(e), {
-                timerSec: 10,
-            });
+            Notification(e);
         }
     }
 });
@@ -124,12 +123,7 @@ async function init() {
     if (settings.autoBackupLocation === MainConstants.AUTO_BACKUP_LOCATIONS.HOST) {
         if (Constants.IS_WINDOWS) {
             if (!await Host.hasPermission()) {
-                Utils.notify('backupFailed', browser.i18n.getMessage('checkBackupSettings'), {
-                    timerSec: 30,
-                    onClick: {
-                        action: 'open-options',
-                    },
-                });
+                Notification('checkBackupSettings', {action: 'open-options'});
             }
         } else {
             await browser.storage.local.set({

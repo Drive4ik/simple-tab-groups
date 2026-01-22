@@ -28,6 +28,7 @@
 
     "permissions": [
         "notifications",
+        "alarms",
         "storage"
     ],
 

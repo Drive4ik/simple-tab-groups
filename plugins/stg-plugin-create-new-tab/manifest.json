@@ -29,6 +29,7 @@
     "permissions": [
         "notifications",
         "cookies",
+        "alarms",
         "storage"
     ],
 

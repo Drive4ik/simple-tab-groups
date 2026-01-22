@@ -8,6 +8,7 @@ import Listeners from './listeners.js\
 ';
 import * as Constants from './constants.js';
 import * as Utils from './utils.js';
+import Notification from './notification.js';
 
 Listeners.runtime.onMessageExternal(async (request, sender) => {
     if (sender.id !== Constants.STG_ID) {
@@ -55,14 +56,12 @@ Listeners.action.onClicked(async () => {
         const responce = await Utils.sendExternalMessage('load-custom-group', {groupId});
 
         if (!responce.ok) {
-            Utils.notify('error', responce.error);
+            Notification(responce.error);
         }
     } catch {
         setAction();
-        Utils.notify('needInstallSTGExtension', browser.i18n.getMessage('needInstallSTGExtension'), {
-            timerSec: 10,
-            onClick: {
-                action: 'open-tab',
+        Notification('needInstallSTGExtension', {
+            tab: {
                 url: Constants.STG_HOME_PAGE,
             },
         });

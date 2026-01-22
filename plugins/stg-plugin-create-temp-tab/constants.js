@@ -13,6 +13,8 @@ export const PLATFORM = await browser.runtime.getPlatformInfo();
 
 export const IS_WINDOWS = PLATFORM.os === browser.runtime.PlatformOs.WIN;
 
+export const IS_BACKGROUND_PAGE = self.location.pathname.includes('background');
+
 export const INTERVAL_KEY = Object.freeze({
     minutes: 'minutes',
     hours: 'hours',
