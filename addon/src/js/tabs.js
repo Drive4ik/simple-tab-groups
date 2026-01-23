@@ -523,19 +523,7 @@ export async function move(tabIds, groupId, params = {}) {
 
     Notification(message, {
         iconUrl,
-        onClick: async () => {
-            const {group} = await Groups.load(groupId),
-                tab = await getOne(firstTab.id);
-
-            if (group && tab) {
-                const winId = Cache.getWindowId(groupId) || await Windows.getLastFocusedNormalWindow();
-
-                if (winId) {
-                    backgroundSelf.applyGroup(winId, groupId, firstTab.id)
-                        .catch(log.onCatch(['applyGroup from notif', winId, groupId, firstTab.id]))
-                };
-            }
-        },
+        module: ['background', 'applyGroup', null, groupId, firstTab.id],
     });
 
     log.stop(tabs, 'with notify');

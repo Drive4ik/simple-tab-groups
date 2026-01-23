@@ -39,9 +39,7 @@ import {
     objToNativeError
 } from '/js/logger-utils.js';
 import * as Utils from '/js/utils.js';
-import Notification, {
-    clear as clearNotification
-} from '/js/notification.js';
+import Notification from '/js/notification.js';
 import JSON from '/js/json.js';
 import BatchProcessor from '/js/batch-processor.js';
 import * as Urls from '/js/urls.js';
@@ -1141,7 +1139,7 @@ async function updateMoveTabMenus() {
         contexts: [Menus.ContextType.TAB],
         async onClick(info, tab) {
             if (!Utils.isUrlAllowToCreate(tab.url)) {
-                Notification(['thisUrlsAreNotSupported', tab.url], {time: 7});
+                Notification(['thisUrlsAreNotSupported', tab.url]);
                 return;
             }
 
@@ -1192,7 +1190,7 @@ async function updateMoveTabMenus() {
             }
 
             if (!Utils.isUrlAllowToCreate(info.linkUrl)) {
-                Notification(['thisUrlsAreNotSupported', info.linkUrl], {time: 7});
+                Notification(['thisUrlsAreNotSupported', info.linkUrl]);
                 return;
             }
 
@@ -1218,19 +1216,19 @@ async function updateMoveTabMenus() {
         contexts: [Menus.ContextType.BOOKMARK],
         async onClick(info) {
             if (!info.bookmarkId) {
-                Notification('bookmarkNotAllowed', {time: 7});
+                Notification('bookmarkNotAllowed');
                 return;
             }
 
             const [bookmark] = await browser.bookmarks.get(info.bookmarkId);
 
             if (bookmark.type !== browser.bookmarks.BookmarkTreeNodeType.BOOKMARK) {
-                Notification('bookmarkNotAllowed', {time: 7});
+                Notification('bookmarkNotAllowed');
                 return;
             }
 
             if (!Utils.isUrlAllowToCreate(bookmark.url)) {
-                Notification(['thisUrlsAreNotSupported', bookmark.url], {time: 7});
+                Notification(['thisUrlsAreNotSupported', bookmark.url]);
                 return;
             }
 
@@ -1283,7 +1281,7 @@ async function updateMoveTabMenus() {
             contexts: [Menus.ContextType.LINK],
             async onClick(info) {
                 if (!Utils.isUrlAllowToCreate(info.linkUrl)) {
-                    Notification(['thisUrlsAreNotSupported', info.linkUrl], {time: 7});
+                    Notification(['thisUrlsAreNotSupported', info.linkUrl]);
                     return;
                 }
 
@@ -1302,7 +1300,7 @@ async function updateMoveTabMenus() {
             contexts: [Menus.ContextType.BOOKMARK],
             async onClick(info) {
                 if (!info.bookmarkId) {
-                    Notification('bookmarkNotAllowed', {time: 7});
+                    Notification('bookmarkNotAllowed');
                     return;
                 }
 
@@ -1339,11 +1337,11 @@ async function updateMoveTabMenus() {
                     if (info.button.RIGHT) {
                         await applyGroup(undefined, groupId, firstTab.id);
                     } else {
-                        Notification(['tabsCreatedCount', tabsToCreate.length], {time: 7});
+                        Notification(['tabsCreatedCount', tabsToCreate.length]);
                     }
                 } else {
                     await loadingBrowserAction(false);
-                    Notification('tabsNotCreated', {time: 7});
+                    Notification('tabsNotCreated');
                 }
             },
         });
@@ -1373,7 +1371,7 @@ async function updateMoveTabMenus() {
         contexts: [Menus.ContextType.LINK],
         async onClick(info) {
             if (!Utils.isUrlAllowToCreate(info.linkUrl)) {
-                Notification(['thisUrlsAreNotSupported', info.linkUrl], {time: 7});
+                Notification(['thisUrlsAreNotSupported', info.linkUrl]);
                 return;
             }
 
@@ -1404,7 +1402,7 @@ async function updateMoveTabMenus() {
         contexts: [Menus.ContextType.BOOKMARK],
         async onClick(info) {
             if (!info.bookmarkId) {
-                Notification('bookmarkNotAllowed', {time: 7});
+                Notification('bookmarkNotAllowed');
                 return;
             }
 
@@ -1412,7 +1410,7 @@ async function updateMoveTabMenus() {
 
             if (bookmark.type === browser.bookmarks.BookmarkTreeNodeType.BOOKMARK) {
                 if (!Utils.isUrlAllowToCreate(bookmark.url)) {
-                    Notification('bookmarkNotAllowed', {time: 7});
+                    Notification('bookmarkNotAllowed');
                     return;
                 }
 
@@ -1467,12 +1465,12 @@ async function updateMoveTabMenus() {
                 await loadingBrowserAction(false);
 
                 if (groupsCreatedCount) {
-                    Notification(['groupsCreatedCount', groupsCreatedCount], {time: 7});
+                    Notification(['groupsCreatedCount', groupsCreatedCount]);
                 } else {
-                    Notification('noGroupsCreated', {time: 7});
+                    Notification('noGroupsCreated');
                 }
             } else {
-                Notification('bookmarkNotAllowed', {time: 7});
+                Notification('bookmarkNotAllowed');
             }
         },
     });
@@ -1483,13 +1481,6 @@ async function updateMoveTabMenus() {
         icon: '/icons/bookmark.svg',
         contexts: [Menus.ContextType.ACTION],
         async onClick() {
-            if (!await Bookmarks.hasPermission()) {
-                Notification('noAccessToBookmarks', {
-                    onClick: () => Urls.openOptionsPage()
-                });
-                return;
-            }
-
             await loadingBrowserAction();
 
             const {groups} = await Groups.load(null, true);
@@ -1782,13 +1773,11 @@ const onBeforeTabRequest = catchFunc(async function onBeforeTabRequest({tabId, u
             str = str.replace(/(\<.+?\>)/g, '') + '\n\n' + browser.i18n.getMessage('clickHereForInfo');
 
             Notification(str, {
-                onClick() {
-                    Tabs.create({
-                        active: true,
-                        url: getNewAddonTabUrl(true),
-                        groupId: tabGroup.id,
-                    });
-                },
+                module: ['tabs', 'create', {
+                    active: true,
+                    url: getNewAddonTabUrl(true),
+                    groupId: tabGroup.id,
+                }],
             });
         }
 
@@ -2035,11 +2024,11 @@ async function onBackgroundMessage(message, sender) {
             return result;
 
         case 'show-error-notification':
-            const isMessageSended = sendMessageFromBackground('show-error-notification');
+            sendMessageFromBackground('show-error-notification');
 
             Notification('whatsWrongMessage', {
                 iconUrl: '/icons/exclamation-triangle-yellow.svg',
-                onClick: () => !isMessageSended && Urls.openDebugPage(),
+                module: 'urls@openDebugPage',
             });
 
             result.ok = true;
@@ -2168,7 +2157,7 @@ async function onBackgroundMessage(message, sender) {
                     if (groupToLoad) {
                         if (groupToLoad.isArchive) {
                             result.error = browser.i18n.getMessage('groupIsArchived', groupToLoad.title);
-                            Notification(result.error, {time: 7});
+                            Notification(result.error);
                         } else {
                             if (data.windowId) {
                                 if (data.windowId === 'new') {
@@ -2203,8 +2192,7 @@ async function onBackgroundMessage(message, sender) {
                     } else {
                         result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleLoadCustomGroup')]);
                         Notification(result.error, {
-                            time: 15,
-                            onClick: Urls.openNotSupportedUrlHelper,
+                            module: 'urls@openNotSupportedUrlHelper',
                         });
                     }
                 }
@@ -2253,8 +2241,7 @@ async function onBackgroundMessage(message, sender) {
                         if (options.alwaysAskNewGroupName) {
                             result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('createNewGroup')]);
                             Notification(result.error, {
-                                time: 15,
-                                onClick: Urls.openNotSupportedUrlHelper,
+                                module: 'urls@openNotSupportedUrlHelper',
                             });
                         }
                     }
@@ -2263,7 +2250,7 @@ async function onBackgroundMessage(message, sender) {
             case 'rename-group':
                 if (!groups.length) {
                     result.error = browser.i18n.getMessage('noGroupsAvailable');
-                    Notification(result.error, {time: 7});
+                    Notification(result.error);
                 } else if (!data.groupId) {
                     let activeTab = await Tabs.getActive();
 
@@ -2281,8 +2268,7 @@ async function onBackgroundMessage(message, sender) {
                     } else {
                         result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleRenameGroup')]);
                         Notification(result.error, {
-                            time: 15,
-                            onClick: Urls.openNotSupportedUrlHelper,
+                            module: 'urls@openNotSupportedUrlHelper',
                         });
                     }
                 } else if (data.groupId && !data.title) {
@@ -2307,8 +2293,7 @@ async function onBackgroundMessage(message, sender) {
                         } else {
                             result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleRenameGroup')]);
                             Notification(result.error, {
-                                time: 15,
-                                onClick: Urls.openNotSupportedUrlHelper,
+                                module: 'urls@openNotSupportedUrlHelper',
                             });
                         }
                     } else {
@@ -2349,7 +2334,7 @@ async function onBackgroundMessage(message, sender) {
                         await loadingBrowserAction(false);
 
                         if (data.showMessages) {
-                            Notification(['groupExportedToBookmarks', group.title], {time: 7});
+                            Notification(['groupExportedToBookmarks', groupToExport.title]);
                         }
                     } else {
                         // delete data.groupId;
@@ -2374,8 +2359,7 @@ async function onBackgroundMessage(message, sender) {
                     } else {
                         result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleRenameGroup')]);
                         Notification(result.error, {
-                            time: 15,
-                            onClick: Urls.openNotSupportedUrlHelper,
+                            module: 'urls@openNotSupportedUrlHelper',
                         });
                     }
                 }
@@ -2447,7 +2431,7 @@ async function onBackgroundMessage(message, sender) {
                     if (groupMoveTo) {
                         if (groupMoveTo.isArchive) {
                             result.error = browser.i18n.getMessage('groupIsArchived', groupMoveTo.title);
-                            Notification(result.error, {time: 7});
+                            Notification(result.error);
                         } else {
                             await Tabs.move(tabIds, data.groupId);
                             result.ok = true;
@@ -2470,8 +2454,7 @@ async function onBackgroundMessage(message, sender) {
                     } else {
                         result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleMoveSelectedTabsToCustomGroup')]);
                         Notification(result.error, {
-                            time: 15,
-                            onClick: Urls.openNotSupportedUrlHelper,
+                            module: 'urls@openNotSupportedUrlHelper',
                         });
                     }
                 }
@@ -2485,7 +2468,7 @@ async function onBackgroundMessage(message, sender) {
                     if (groupToDiscard) {
                         if (groupToDiscard.isArchive) {
                             result.error = browser.i18n.getMessage('groupIsArchived', groupToDiscard.title);
-                            Notification(result.error, {time: 7});
+                            Notification(result.error);
                         } else {
                             await Tabs.discard(groupToDiscard.tabs);
                             result.ok = true;
@@ -2507,8 +2490,7 @@ async function onBackgroundMessage(message, sender) {
                         } else {
                             result.error = browser.i18n.getMessage('impossibleToAskUserAboutAction', [activeTab.title, browser.i18n.getMessage('hotkeyActionTitleDiscardGroup')]);
                             Notification(result.error, {
-                                time: 15,
-                                onClick: Urls.openNotSupportedUrlHelper,
+                                module: 'urls@openNotSupportedUrlHelper',
                             });
                         }
                     }
@@ -3049,7 +3031,7 @@ async function cloudSync(auto = false, trust = null, revision = null) {
 
             if (!isNetworkError && !isInvalidToken) {
                 Notification(e, {
-                    onClick: () => Urls.openOptionsPage('backup sync'),
+                    module: ['urls', 'openOptionsPage', 'backup sync'],
                 });
             }
         }
@@ -3307,7 +3289,7 @@ async function runMigrateForData(data, applyToCurrentInstance = true) {
 
                     data.groups = await syncTabs(data.groups, allTabs);
 
-                    clearNotification('loading');
+                    Notification.clear('loading');
 
                     await Utils.wait(1000);
                 }
@@ -4260,7 +4242,9 @@ async function init() {
             if (Constants.IS_WINDOWS && await Host.hasPermission()) {
                 Host.checkVersion().catch(e => {
                     Notification(e, {
-                        onClick: () => Tabs.create({url: Constants.HOST.DOWNLOAD_URL, active: true}),
+                        tab: {
+                            url: Constants.HOST.DOWNLOAD_URL,
+                        },
                     });
                 });
             } else {

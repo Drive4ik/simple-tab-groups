@@ -5,7 +5,7 @@ import backgroundSelf from './background.js';
 import * as Constants from './constants.js';
 import * as Storage from './storage.js';
 import * as Cache from './cache.js';
-import Notification, {clear as clearNotification} from './notification.js';
+import Notification from './notification.js';
 import * as Containers from './containers.js';
 import * as Bookmarks from './bookmarks.js';
 import * as Management from './management.js';
@@ -289,29 +289,50 @@ export async function remove(groupId) {
     log.stop();
 }
 
+const RESTORE_GROUP_PREFIX = 'restore-group-';
+
 async function addUndoRemove(groupToRemove) {
+    const restoreId = RESTORE_GROUP_PREFIX + groupToRemove.id;
+
+    await browser.storage.session.set({
+        [restoreId]: groupToRemove,
+    });
+
     await Menus.create({
-        id: Constants.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + groupToRemove.id,
+        id: restoreId,
         title: browser.i18n.getMessage('undoRemoveGroupItemTitle', groupToRemove.title),
         contexts: [Menus.ContextType.ACTION],
         icons: getIconUrl(groupToRemove, 16),
-        onClick: () => restore(groupToRemove),
+        onClick: () => restore(groupToRemove.id),
     });
 
     const {showNotificationAfterGroupDelete} = await Storage.get('showNotificationAfterGroupDelete');
 
     if (showNotificationAfterGroupDelete) {
-        Notification(['undoRemoveGroupNotification', groupToRemove.title], {
-            id: Constants.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + groupToRemove.id,
-            time: 7,
-            onClick: () => restore(groupToRemove),
+        await Notification(['undoRemoveGroupNotification', groupToRemove.title], {
+            id: restoreId,
+            module: ['groups', 'restore', groupToRemove.id],
+            expires: Notification.MAX_EXPIRES,
         });
     }
 }
 
-async function restore(group) {
-    Menus.remove(Constants.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id);
-    clearNotification(Constants.CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP + group.id);
+export async function restore(groupId) {
+    const log = logger.start('restore', groupId);
+
+    const restoreId = RESTORE_GROUP_PREFIX + groupId;
+
+    await Menus.remove(restoreId);
+    await Notification.clear(restoreId);
+
+    const {[restoreId]: group} = await browser.storage.session.get(restoreId);
+
+    if (!group) {
+        log.stopError('group not found');
+        return;
+    }
+
+    await browser.storage.session.remove(restoreId);
 
     const {groups} = await load();
 
@@ -340,6 +361,8 @@ async function restore(group) {
     backgroundSelf.sendExternalMessage('group-added', {
         group: mapForExternalExtension(group),
     });
+
+    log.stop('success restored', group.id);
 };
 
 export async function update(groupId, updateData) {
@@ -478,7 +501,7 @@ export async function unload(groupId) {
     const log = logger.start('unload', groupId);
 
     if (!groupId) {
-        Notification('groupNotFound', {time: 7});
+        Notification('groupNotFound');
         log.stopError('groupNotFound');
         return false;
     }
@@ -486,7 +509,7 @@ export async function unload(groupId) {
     const windowId = Cache.getWindowId(groupId);
 
     if (!windowId) {
-        Notification('groupNotLoaded', {time: 7});
+        Notification('groupNotLoaded');
         log.stopError('groupNotLoaded');
         return false;
     }
@@ -494,13 +517,13 @@ export async function unload(groupId) {
     const {group} = await load(groupId, true);
 
     if (!group) {
-        Notification('groupNotFound', {time: 7});
+        Notification('groupNotFound');
         log.stopError('groupNotFound (2)');
         return false;
     }
 
     if (group.isArchive) {
-        Notification(['groupIsArchived', group.title], {time: 7});
+        Notification(['groupIsArchived', group.title]);
         log.stopError('groupIsArchived');
         return false;
     }

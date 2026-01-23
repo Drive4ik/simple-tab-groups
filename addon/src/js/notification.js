@@ -1,93 +1,195 @@
-
 import Listeners from './listeners.js\
 ?notifications.onClicked\
-&notifications.onClosed\
+&alarms.onAlarm\
 ';
 import * as Constants from './constants.js';
-import * as Utils from './utils.js';
 
-const notificationsMap = new Map;
+export const MIN_EXPIRES = 5;
+export const MAX_EXPIRES = 2 * 60;
+const DEFAULT_EXPIRES = 45;
+const PREFIX = 'notification-';
+const ALARM_PREFIX = 'hide-notification-';
 
 if (Constants.IS_BACKGROUND_PAGE) {
     Listeners.notifications.onClicked(onClicked);
-    Listeners.notifications.onClosed(onClosed);
+    Listeners.alarms.onAlarm(onAlarm);
 }
 
-function onClicked(notificationId) {
-    const options = notificationsMap.get(notificationId);
+function wrapId(notificationId) {
+    return PREFIX + notificationId;
+}
 
-    if (options) {
-        clear(notificationId);
-        options.onClick?.(notificationId);
+function isWrappedId(wrappedId) {
+    return wrappedId.startsWith(PREFIX);
+}
+
+function extractId(wrappedId) {
+    return wrappedId.slice(PREFIX.length);
+}
+
+async function onClicked(wrappedId) {
+    if (!isWrappedId(wrappedId)) {
+        return;
+    }
+
+    const notificationId = extractId(wrappedId);
+
+    const notification = await load(notificationId);
+
+    await remove(notificationId);
+
+    if (notification.action === 'open-options') {
+        await browser.runtime.openOptionsPage();
+        return;
+    }
+
+    if (notification.tab) {
+        notification.tab.active ??= true;
+        await browser.tabs.create(notification.tab);
+        return;
+    }
+
+    if (notification.module) {
+        /* module name/url is case sensitive!
+        string - 'module-name@someFunc'   arguments are not supported!
+        array - ['module-name', 'someFunc', 'arg1', 'arg2', {arg3: true}]
+        object - {
+            name: 'module-name',
+            method: 'someFunc',
+            args: ['arg1', 'arg2', {arg3: true}],
+        }
+        */
+        let moduleName;
+        let moduleMethod;
+        let moduleArgs;
+
+        if (typeof notification.module === 'string') {
+            notification.module = notification.module.split('@', 2);
+        }
+
+        if (Array.isArray(notification.module)) {
+            [moduleName, moduleMethod, ...moduleArgs] = notification.module;
+        } else {
+            moduleName = notification.module.name;
+            moduleMethod = notification.module.method;
+            moduleArgs = notification.module.args;
+        }
+
+        moduleName = `./${moduleName}.js`;
+        moduleMethod ||= 'default';
+        moduleArgs ||= [];
+
+        try {
+            const module = await import(moduleName);
+            const methodParts = moduleMethod.split('.');
+            const method = methodParts.reduce((obj, key) => obj[key], module)
+                ?? methodParts.reduce((obj, key) => obj[key], module.default);
+
+            await method(...moduleArgs);
+        } catch (e) {
+            if (notification.logError) {
+                if (self.logger) {
+                    self.logger.logError(e, e);
+                } else {
+                    console.error(e);
+                }
+            }
+        }
+
+        return;
     }
 }
 
-function onClosed(notificationId) {
-    const options = notificationsMap.get(notificationId);
-
-    if (options) {
-        clear(notificationId);
-        options.onClose?.(notificationId);
+async function onAlarm({name}) {
+    if (name.startsWith(ALARM_PREFIX)) {
+        const notificationId = name.slice(ALARM_PREFIX.length);
+        await clear(notificationId);
     }
 }
 
-export default async function(message, options = {}) {
-    if (!Constants.IS_BACKGROUND_PAGE && (options.onClick || options.onClose)) {
-        throw new Error('Notification options with actions must be called in background');
-    }
-
+function translate(message) {
     if (typeof message === 'string') {
         if (message.includes(' ')) {
             // untranslatable string
+            return message;
         } else {
-            message = browser.i18n.getMessage(message) || message;
+            return browser.i18n.getMessage(message) || message;
         }
     } else if (Array.isArray(message)) {
         const [messageName, ...substitutions] = message;
-        message = browser.i18n.getMessage(messageName, substitutions.flat(Infinity));
+        return browser.i18n.getMessage(messageName, substitutions.flat(Infinity));
     } else {
-        message = String(message);
+        return String(message);
+    }
+}
+
+export default async function Notification(message, options = {}) {
+    if (!message) {
+        throw new Error('Notification message is required');
     }
 
-    if (options.data) {
-        message = Utils.format(message, options.data);
-    }
+    const notification = {
+        ...options,
+        message: translate(message),
+        title: translate(options.title || 'extensionName'),
+        iconUrl: options.iconUrl ?? (Constants.MANIFEST.action ?? Constants.MANIFEST.browser_action).default_icon,
+    };
 
-    if (options.id) {
-        await clear(options.id);
-    }
+    notification.id = notification.id ? String(notification.id) : self.crypto.randomUUID();
 
-    options.id ??= message.replace(/[^\w]/g, '').slice(-100, 100);
-    options.time ??= 20;
-    options.iconUrl ??= '/icons/icon.svg';
-    options.title ??= browser.i18n.getMessage('extensionName');
-    options.data ??= null; // message format data
-    options.onClick ??= null;
-    options.onClose ??= null;
+    await clear(notification.id);
 
+    await save(notification);
+
+    await create(notification);
+
+    await clearWhenExpired(notification.id, notification.expires);
+
+    return notification.id;
+}
+
+async function save(notification) {
+    await browser.storage.session.set({
+        [wrapId(notification.id)]: notification,
+    });
+}
+
+async function load(notificationId) {
+    const wrappedId = wrapId(notificationId);
+    const {[wrappedId]: notification} = await browser.storage.session.get(wrappedId);
+    return notification;
+}
+
+async function remove(notificationId) {
+    await browser.storage.session.remove(wrapId(notificationId));
+}
+
+async function clearWhenExpired(notificationId, expires) {
+    expires = Math.min(Math.max(expires, MIN_EXPIRES), MAX_EXPIRES) || DEFAULT_EXPIRES;
+
+    const name = ALARM_PREFIX + notificationId;
+    await browser.alarms.clear(name);
+    await browser.alarms.create(name, {
+        when: Date.now() + expires * 1000,
+    });
+}
+
+Notification.MIN_EXPIRES = MIN_EXPIRES;
+Notification.MAX_EXPIRES = MAX_EXPIRES;
+Notification.clear = clear;
+
+async function create({id, iconUrl, title, message}) {
     // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/notifications/NotificationOptions
     // Only 'type', 'iconUrl', 'title', and 'message' are supported.
-    await browser.notifications.create(options.id, {
+    return await browser.notifications.create(wrapId(id), {
         type: 'basic',
-        iconUrl: options.iconUrl,
-        title: options.title,
-        message: message || `empty message for: ${options.id}`,
+        iconUrl,
+        title,
+        message,
     });
-
-    options.timeoutId = setTimeout(() => clear(options.id), options.time * 1000);
-
-    notificationsMap.set(options.id, options);
-
-    return options.id;
 }
 
 export async function clear(notificationId) {
-    const options = notificationsMap.get(notificationId);
-
-    notificationsMap.delete(notificationId);
-
-    if (options) {
-        clearTimeout(options.timeoutId);
-        await browser.notifications.clear(notificationId);
-    }
+    await browser.notifications.clear(wrapId(notificationId));
+    await remove(notificationId);
 }

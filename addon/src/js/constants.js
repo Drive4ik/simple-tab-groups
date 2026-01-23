@@ -27,8 +27,6 @@ export const DEFAULT_COOKIE_STORE_ID = {
 export const TEMPORARY_CONTAINER = 'temporary-container';
 export const TEMPORARY_CONTAINER_ICON = 'chill';
 
-export const CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP = 'stg-undo-remove-group-id-';
-
 export const HOST = Object.freeze({
     NAME: 'simple_tab_groups_host',
     VERSION: '1.0',
