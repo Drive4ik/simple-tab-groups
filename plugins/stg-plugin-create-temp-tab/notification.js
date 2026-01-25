@@ -9,6 +9,9 @@ export const MAX_EXPIRES = 2 * 60;
 const DEFAULT_EXPIRES = 45;
 const PREFIX = 'notification-';
 const ALARM_PREFIX = 'hide-notification-';
+const MODULES = {
+    browser,
+};
 
 if (Constants.IS_BACKGROUND_PAGE) {
     Listeners.notifications.onClicked(onClicked);
@@ -75,15 +78,15 @@ async function onClicked(wrappedId) {
             moduleArgs = notification.module.args;
         }
 
-        moduleName = `./${moduleName}.js`;
+        moduleName = MODULES[moduleName] ? moduleName : `./${moduleName}.js`;
         moduleMethod ||= 'default';
         moduleArgs ||= [];
 
         try {
-            const module = await import(moduleName);
+            const module = await (MODULES[moduleName] ?? import(moduleName));
             const methodParts = moduleMethod.split('.');
-            const method = methodParts.reduce((obj, key) => obj[key], module)
-                ?? methodParts.reduce((obj, key) => obj[key], module.default);
+            const method = methodParts.reduce((obj, key) => obj?.[key], module)
+                ?? methodParts.reduce((obj, key) => obj?.[key], module.default);
 
             await method(...moduleArgs);
         } catch (e) {
