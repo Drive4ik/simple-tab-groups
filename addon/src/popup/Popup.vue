@@ -14,6 +14,7 @@ import '/js/prefixed-storage.js';
 import * as Constants from '/js/constants.js';
 import Logger, {errorEventHandler} from '/js/logger.js';
 import * as Containers from '/js/containers.js';
+import * as Urls from '/js/urls.js';
 import * as Groups from '/js/groups.js';
 import * as Tabs from '/js/tabs.js';
 import * as Utils from '/js/utils.js';
@@ -561,6 +562,9 @@ export default {
         openManageGroups() {
             this.sendMessage('open-manage-groups');
             this.closeWindow();
+        },
+        openDebugPage() {
+            Urls.openDebugPage();
         },
 
         // allowTypes: Array ['groups', 'tabs']
@@ -1341,7 +1345,7 @@ export default {
         v-if="enableDebug"
         id="debug-message"
         class="tag is-warning is-medium is-clickable"
-        @click="openOptionsPage('general debug')"
+        @click="openDebugPage"
         v-text="lang('loggingIsEnabledTitle')"
         ></div>
 </div>

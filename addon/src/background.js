@@ -2038,6 +2038,7 @@ async function onBackgroundMessage(message, sender) {
             Notification('whatsWrongMessage', {
                 iconUrl: '/icons/exclamation-triangle-yellow.svg',
                 module: 'urls@openDebugPage',
+                expires: Notification.MAX_EXPIRES,
             });
 
             result.ok = true;

@@ -5,7 +5,7 @@ import Listeners from './listeners.js\
 import * as Constants from './constants.js';
 
 export const MIN_EXPIRES = 5;
-export const MAX_EXPIRES = 2 * 60;
+export const MAX_EXPIRES = 10 * 60;
 const DEFAULT_EXPIRES = 45;
 const PREFIX = 'notification-';
 const ALARM_PREFIX = 'hide-notification-';
